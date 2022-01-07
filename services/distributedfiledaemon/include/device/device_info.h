@@ -12,18 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef DEVICE_INFO_H
+#define DEVICE_INFO_H
 
-#include "utils_log.h"
+#include <atomic>
+#include <string>
+
+#include "dm_device_info.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-std::string GetFileNameFromFullPath(const char *str)
-{
-    std::string fullPath(str);
-    size_t pos = fullPath.find_last_of("/");
-    return (pos == std::string::npos) ? std::string() : fullPath.substr(pos + 1);
-}
+class DeviceInfo final {
+public:
+    DeviceInfo() = default;
+    ~DeviceInfo() = default;
+    explicit DeviceInfo(const DistributedHardware::DmDeviceInfo &nodeInfo);
+    DeviceInfo(const DeviceInfo &nodeInfo);
+    DeviceInfo &operator=(const DistributedHardware::DmDeviceInfo &nodeInfo);
+
+    void SetCid(const std::string &cid);
+
+    const std::string &GetCid() const;
+
+private:
+    std::atomic<bool> initCidFlag_{false};
+    std::string cid_;
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+#endif // DEVICE_INFO_H

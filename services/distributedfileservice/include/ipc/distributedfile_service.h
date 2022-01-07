@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,33 +13,31 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_DIRECTORY_H
-#define UTILS_DIRECTORY_H
+#ifndef DISTRIBUTEDFILE_SERVICE_H
+#define DISTRIBUTEDFILE_SERVICE_H
 
-#include <functional>
-#include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include "distributedfile_service_stub.h"
+#include "iremote_stub.h"
+#include "singleton.h"
+#include "system_ability.h"
 
-#include "nocopyable.h"
+#include <mutex>
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-namespace Utils {
-enum Uid {
-    UID_ROOT = 0,
-    UID_SYSTEM = 1000,
-    UID_MEDIA_RW = 1023,
+class DistributedFileService : public SystemAbility,
+                               public DistributedFileServiceStub,
+                               public std::enable_shared_from_this<DistributedFileService> {
+    DECLARE_DELAYED_SINGLETON(DistributedFileService)
+    DECLARE_SYSTEM_ABILITY(DistributedFileService)
+public:
+    void OnDump() override;
+    void OnStart() override;
+    void OnStop() override;
 };
-
-void ForceCreateDirectory(const std::string &path);
-void ForceCreateDirectory(const std::string &path, mode_t mode);
-void ForceCreateDirectory(const std::string &path, mode_t mode, uid_t uid, gid_t gid);
-
-void ForceRemoveDirectory(const std::string &path);
-} // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // UTILS_DIRECTORY_H
+
+#endif // DISTRIBUTEDFILE_SERVICE_H

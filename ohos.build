@@ -9,8 +9,19 @@
       "module_list": [
         "//foundation/storage/distributed_file_manager/services/:services_target"
       ],
+      "inner_kits":[
+         {
+            "name": "//foundation/storage/distributed_file_manager/interfaces/innerkits/native:libdistributedfile_innerkits",
+            "header": {
+              "header_files": [
+                "i_distributedfile_service.h"
+              ],
+              "header_base": "//foundation/storage/distributed_file_manager/interfaces/innerkits/native"
+            }
+         }
+      ],
       "test_list": [
-        "//foundation/storage/distributed_file_manager/services/distributedfiledeamon/test/unittest:unittest",
+        "//foundation/storage/distributed_file_manager/services/distributedfiledaemon/test/unittest:unittest",
         "//foundation/storage/distributed_file_manager/test/moduletest:moduletest"
       ]
     }

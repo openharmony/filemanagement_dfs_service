@@ -1,0 +1,57 @@
+# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+import("//foundation/storage/distributed_file_manager/distributedfile.gni")
+
+ohos_shared_library("libdistributedfiledaemon") {
+  include_dirs = [
+    "include",
+    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
+    "//base/security/deviceauth/interfaces/innerkits",
+    "//third_party/json/include"
+  ]
+
+  sources = [
+    "src/ipc/daemon.cpp",
+    "src/ipc/daemon_stub.cpp",
+    "src/mountpoint/mount_manager.cpp",
+    "src/mountpoint/mount_point.cpp",
+    "src/device/device_info.cpp",
+    "src/device/device_manager_agent.cpp",
+    "src/network/network_agent_template.cpp",
+    "src/network/softbus/softbus_agent.cpp",
+    "src/network/softbus/softbus_session_dispatcher.cpp",
+    "src/network/softbus/softbus_session.cpp",
+    "src/network/kernel_talker.cpp",
+    "src/network/session_pool.cpp"
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk",
+    "//base/security/deviceauth/services:deviceauth_sdk"
+  ]
+  external_deps = [
+    "dsoftbus_standard:softbus_client",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+  ]
+  configs = [ "${utils_path}:compiler_configs" ]
+
+  part_name = "storage_distributed_file_manager"
+  subsystem_name = "storage"
+}
+
+group("distributedfiledaemon_target") {
+  deps = [ ":libdistributedfiledaemon" ]
+}

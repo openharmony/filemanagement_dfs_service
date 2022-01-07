@@ -13,33 +13,47 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_DIRECTORY_H
-#define UTILS_DIRECTORY_H
+#ifndef MOUNT_POINT_H
+#define MOUNT_POINT_H
 
+#include <atomic>
 #include <functional>
-#include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 #include "nocopyable.h"
+#include "utils_mount_argument.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-namespace Utils {
-enum Uid {
-    UID_ROOT = 0,
-    UID_SYSTEM = 1000,
-    UID_MEDIA_RW = 1023,
+class MountPoint final : public NoCopyable {
+public:
+    MountPoint(const Utils::MountArgument &mountArg);
+    ~MountPoint() = default;
+
+    uint32_t GetID() const
+    {
+        return id_;
+    };
+
+    std::string GetAuthGroupId() const
+    {
+        return authGroupId_;
+    }
+
+    std::string ToString() const;
+    Utils::MountArgument GetMountArgument() const;
+    bool operator==(const MountPoint &rop) const;
+
+private:
+    friend class MountManager;
+    Utils::MountArgument mountArg_;
+    void Mount() const;
+    void Umount() const;
+    static std::atomic<uint32_t> idGen_;
+    uint32_t id_{0};
+    std::string authGroupId_{""};
 };
-
-void ForceCreateDirectory(const std::string &path);
-void ForceCreateDirectory(const std::string &path, mode_t mode);
-void ForceCreateDirectory(const std::string &path, mode_t mode, uid_t uid, gid_t gid);
-
-void ForceRemoveDirectory(const std::string &path);
-} // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // UTILS_DIRECTORY_H
+#endif // MOUNT_POINT_H

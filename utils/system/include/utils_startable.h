@@ -13,17 +13,18 @@
  * limitations under the License.
  */
 
-#include "utils_log.h"
+#ifndef UTILS_STARTABLE_H
+#define UTILS_STARTABLE_H
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-std::string GetFileNameFromFullPath(const char *str)
-{
-    std::string fullPath(str);
-    size_t pos = fullPath.find_last_of("/");
-    return (pos == std::string::npos) ? std::string() : fullPath.substr(pos + 1);
-}
+class Startable {
+public:
+    virtual void Start() = 0;
+    virtual void Stop() = 0;
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+#endif // UTILS_STARTABLE_H

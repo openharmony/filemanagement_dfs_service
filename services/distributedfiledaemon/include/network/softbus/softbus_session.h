@@ -13,33 +13,34 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_DIRECTORY_H
-#define UTILS_DIRECTORY_H
+#ifndef SOFTBUS_SESSION_H
+#define SOFTBUS_SESSION_H
 
-#include <functional>
-#include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include "nocopyable.h"
+#include "network/base_session.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-namespace Utils {
-enum Uid {
-    UID_ROOT = 0,
-    UID_SYSTEM = 1000,
-    UID_MEDIA_RW = 1023,
+constexpr int32_t INVALID_SOCKET_FD = -1;
+class SoftbusSession final : public BaseSession {
+public:
+    explicit SoftbusSession(int sessionId);
+    ~SoftbusSession() = default;
+    bool IsFromServer() const override;
+    std::string GetCid() const override;
+    int32_t GetHandle() const override;
+    std::array<char, KEY_SIZE_MAX> GetKey() const override;
+    void Release() const override;
+    void DisableSessionListener() const override;
+
+private:
+    int sessionId_;
+    std::string cid_;
+    int32_t socketFd_{INVALID_SOCKET_FD};
+    std::array<char, KEY_SIZE_MAX> key_;
+    bool IsServerSide_;
 };
-
-void ForceCreateDirectory(const std::string &path);
-void ForceCreateDirectory(const std::string &path, mode_t mode);
-void ForceCreateDirectory(const std::string &path, mode_t mode, uid_t uid, gid_t gid);
-
-void ForceRemoveDirectory(const std::string &path);
-} // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // UTILS_DIRECTORY_H
+#endif // SOFTBUS_SESSION_H

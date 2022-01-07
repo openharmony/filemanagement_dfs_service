@@ -13,17 +13,25 @@
  * limitations under the License.
  */
 
-#include "utils_log.h"
+#ifndef I_DAEMON_H
+#define I_DAEMON_H
+
+#include "iremote_broker.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-std::string GetFileNameFromFullPath(const char *str)
-{
-    std::string fullPath(str);
-    size_t pos = fullPath.find_last_of("/");
-    return (pos == std::string::npos) ? std::string() : fullPath.substr(pos + 1);
-}
+class IDaemon : public IRemoteBroker {
+public:
+    enum {
+        DFS_DAEMON_CMD_ECHO = 0,
+    };
+    virtual int32_t EchoServerDemo(const std::string &echoStr) = 0;
+
+    static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.daemon")
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+#endif // I_DAEMON_H

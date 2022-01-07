@@ -13,17 +13,28 @@
  * limitations under the License.
  */
 
-#include "utils_log.h"
+#ifndef BASE_SESSION_H
+#define BASE_SESSION_H
+
+#include <array>
+#include <string>
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-std::string GetFileNameFromFullPath(const char *str)
-{
-    std::string fullPath(str);
-    size_t pos = fullPath.find_last_of("/");
-    return (pos == std::string::npos) ? std::string() : fullPath.substr(pos + 1);
-}
+constexpr int KEY_SIZE_MAX = 32;
+
+class BaseSession {
+public:
+    virtual ~BaseSession() = default;
+    virtual bool IsFromServer() const = 0;
+    virtual std::string GetCid() const = 0;
+    virtual int32_t GetHandle() const = 0;
+    virtual std::array<char, KEY_SIZE_MAX> GetKey() const = 0;
+    virtual void Release() const = 0;
+    virtual void DisableSessionListener() const = 0;
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+#endif // BASE_SESSION_H

@@ -12,18 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef DAEMON_STUB_H
+#define DAEMON_STUB_H
 
-#include "utils_log.h"
+#include <map>
+
+#include "i_daemon.h"
+#include "iremote_stub.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-std::string GetFileNameFromFullPath(const char *str)
-{
-    std::string fullPath(str);
-    size_t pos = fullPath.find_last_of("/");
-    return (pos == std::string::npos) ? std::string() : fullPath.substr(pos + 1);
-}
+class DaemonStub : public IRemoteStub<IDaemon> {
+public:
+    DaemonStub();
+    virtual ~DaemonStub() = default;
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+
+private:
+    using DaemonInterface = int32_t (DaemonStub::*)(MessageParcel &data, MessageParcel &reply);
+    std::map<uint32_t, DaemonInterface> opToInterfaceMap_;
+
+    int32_t EchoServerDemoInner(MessageParcel &data, MessageParcel &reply);
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+#endif // DAEMON_STUB_H

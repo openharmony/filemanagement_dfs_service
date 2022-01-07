@@ -13,25 +13,41 @@
 import("//build/test.gni")
 import("//foundation/storage/distributed_file_manager/distributedfile.gni")
 
-module_output_path = "storage_distributed_file_manager/distributedfiledeamon"
+module_output_path = "storage_distributed_file_manager/distributedfiledaemon"
 
 config("module_private_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
-    "${services_path}/distributedfiledeamon/include",
+    "${services_path}/distributedfiledaemon/include",
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
+    "//foundation/communication/dsoftbus/interfaces/kits/bus_center",
+    "//foundation/communication/dsoftbus/interfaces/kits/common",
+    "//base/security/deviceauth/interfaces/innerkits",
+    "//third_party/json/include",
   ]
 }
 
-ohos_moduletest("DistributedFileDeamonServiceTest") {
+ohos_moduletest("DistributedFileDaemonServiceTest") {
   module_out_path = module_output_path
 
   sources = [
-    "${services_path}/distributedfiledeamon/src/mountpoint/mount_point.cpp"
+    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
+    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
+    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
+    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
   ]
 
-  sources += [ "src/distributedfiledeamon_service_test.cpp" ]
+  sources += [ "src/distributedfiledaemon_service_test.cpp" ]
 
   configs = [
     ":module_private_config",
@@ -47,10 +63,18 @@ ohos_moduletest("DistributedFileDeamonServiceTest") {
     "//third_party/googletest:gmock",
     "${utils_path}:libdistributedfileutils",
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk",
+    "//foundation/storage/distributed_file_manager/services/distributedfiledaemon:libdistributedfiledaemon",
+    "//base/security/deviceauth/services:deviceauth_sdk",
+  ]
+
+  external_deps = [
+    "dsoftbus_standard:softbus_client",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
   ]
 }
 
 group("moduletest") {
   testonly = true
-  deps = [":DistributedFileDeamonServiceTest"]
+  deps = [":DistributedFileDaemonServiceTest"]
 }

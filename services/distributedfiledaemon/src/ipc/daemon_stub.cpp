@@ -13,16 +13,31 @@
  * limitations under the License.
  */
 
+#include "ipc/daemon_stub.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-std::string GetFileNameFromFullPath(const char *str)
+DaemonStub::DaemonStub()
 {
-    std::string fullPath(str);
-    size_t pos = fullPath.find_last_of("/");
-    return (pos == std::string::npos) ? std::string() : fullPath.substr(pos + 1);
+    opToInterfaceMap_[DFS_DAEMON_CMD_ECHO] = &DaemonStub::EchoServerDemoInner;
+}
+
+int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    auto interfaceIndex = opToInterfaceMap_.find(code);
+    if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {
+        LOGE("Cannot response request %d: unknown tranction", code);
+        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
+    return (this->*(interfaceIndex->second))(data, reply);
+}
+
+int32_t DaemonStub::EchoServerDemoInner(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("hello, world");
+    return ERR_NONE;
 }
 } // namespace DistributedFile
 } // namespace Storage

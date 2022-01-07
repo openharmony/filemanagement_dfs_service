@@ -13,17 +13,28 @@
  * limitations under the License.
  */
 
-#include "utils_log.h"
+#ifndef SOFTBUS_SESSION_NAME_H
+#define SOFTBUS_SESSION_NAME_H
+
+#include <string>
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-std::string GetFileNameFromFullPath(const char *str)
-{
-    std::string fullPath(str);
-    size_t pos = fullPath.find_last_of("/");
-    return (pos == std::string::npos) ? std::string() : fullPath.substr(pos + 1);
-}
+class SoftbusSessionName final {
+public:
+    explicit SoftbusSessionName(std::string path) : path_(path) {}
+    ~SoftbusSessionName() = default;
+    std::string ToString()
+    {
+        return prefix + path_;
+    }
+
+private:
+    const std::string prefix = "DistributedFileService";
+    std::string path_;
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+#endif // SOFTBUS_SESSION_NAME_H

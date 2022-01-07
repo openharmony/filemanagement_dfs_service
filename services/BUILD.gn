@@ -15,7 +15,9 @@ import("//build/ohos/sa_profile/sa_profile.gni")
 import("//foundation/storage/distributed_file_manager/distributedfile.gni")
 
 ohos_sa_profile("distributedfile_sa_profile") {
-  sources = [ "4901.xml" ]
+  sources = [
+      "4901.xml",
+      "4902.xml"]
   part_name = "storage_distributed_file_manager"
 }
 
@@ -26,10 +28,18 @@ ohos_prebuilt_etc("distributedfile_etc") {
   subsystem_name = "storage"
 }
 
+ohos_prebuilt_etc("distributed_file.para") {
+  source = "distributed_file.para"
+  part_name = "storage_distributed_file_manager"
+  module_install_dir = "etc/param"
+}
+
 group("services_target") {
   deps = [
     ":distributedfile_etc",
     ":distributedfile_sa_profile",
-    "distributedfiledeamon:distributedfiledeamon_target",
+    ":distributed_file.para",
+    "distributedfiledaemon:distributedfiledaemon_target",
+    "distributedfileservice:distributedfileservice_target",
   ]
 }

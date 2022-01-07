@@ -13,17 +13,34 @@
  * limitations under the License.
  */
 
-#include "utils_log.h"
+#ifndef MOUNT_MANAGER_H
+#define MOUNT_MANAGER_H
+
+#include <memory>
+#include <mutex>
+#include <vector>
+
+#include "mount_point.h"
+#include "utils_singleton.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-std::string GetFileNameFromFullPath(const char *str)
-{
-    std::string fullPath(str);
-    size_t pos = fullPath.find_last_of("/");
-    return (pos == std::string::npos) ? std::string() : fullPath.substr(pos + 1);
-}
+class MountManager final : public Utils::Singleton<MountManager> {
+public:
+    void Mount(std::unique_ptr<MountPoint> mp);
+    void Umount(std::weak_ptr<MountPoint> wmp);
+    void Umount(const std::string &groupId);
+    DECLARE_SINGLETON(MountManager);
+
+private:
+    void StartInstance() override {}
+    void StopInstance() override {}
+
+    std::mutex serializer_;
+    std::vector<std::shared_ptr<MountPoint>> mountPoints_;
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+#endif // MOUNT_MANAGER_H

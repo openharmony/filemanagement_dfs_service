@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
+#ifndef UTILS_DFS_THREAD_H
+#define UTILS_DFS_THREAD_H
 
 #include "utils_log.h"
 #include <atomic>
@@ -22,6 +23,7 @@
 #include <thread>
 
 namespace OHOS {
+namespace Storage {
 namespace DistributedFile {
 namespace Utils {
 class DfsThread {
@@ -132,4 +134,6 @@ private:
 };
 } // namespace Utils
 } // namespace DistributedFile
+} // namespace Storage
 } // namespace OHOS
+#endif // UTILS_DFS_THREAD_H
