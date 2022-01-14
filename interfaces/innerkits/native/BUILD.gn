@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/ohos.gni")
-import("//foundation/storage/distributed_file_manager/distributedfile.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 config("private_config") {
   include_dirs = [
@@ -43,6 +43,6 @@ ohos_shared_library("libdistributedfile_innerkits") {
       "${utils_path}:libdistributedfileutils",
   ]
 
-  part_name = "storage_distributed_file_manager"
-  subsystem_name = "storage"
+  part_name = "filemanagement_dfs_service"
+  subsystem_name = "filemanagement"
 }

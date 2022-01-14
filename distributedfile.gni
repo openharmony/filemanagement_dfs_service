@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-distributedfile_path = "//foundation/storage/distributed_file_manager"
+distributedfile_path = "//foundation/filemanagement/dfs_service"
 
 utils_path = "${distributedfile_path}/utils"
 services_path = "${distributedfile_path}/services"

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/test.gni")
-import("//foundation/storage/distributed_file_manager/distributedfile.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 module_output_path = "storage_distributed_file_manager/distributedfiledaemon"
 
