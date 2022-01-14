@@ -32,7 +32,6 @@ namespace Storage {
 namespace DistributedFile {
 namespace {
 constexpr int MAX_RETRY_COUNT = 7;
-constexpr int IDENTICAL_ACCOUNT_GROUP = 1;
 constexpr int PEER_TO_PEER_GROUP = 256;
 constexpr int ACROSS_ACCOUNT_AUTHORIZE_GROUP = 1282;
 } // namespace
@@ -137,7 +136,7 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
 
 void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("OnDeviceOnline begin");
+    LOGI("netwrorkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
     DeviceInfo info(deviceInfo);
     {
         unique_lock<mutex> lock(mpToNetworksMutex_);
@@ -193,19 +192,60 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
     }
 }
 
-void DeviceManagerAgent::QueryRelatedGroups(const std::string &networkId, std::vector<GroupInfo> &groupList)
+void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, std::vector<GroupInfo> &groupList)
 {
-    // piling test
-    GroupInfo g1("auth_group_test1", "groupId_12345", "wps_package", PEER_TO_PEER_GROUP);
-    groupList.emplace_back(g1);
-    GroupInfo g2("auth_group_test2", "groupId_987654", "qqMail_package", IDENTICAL_ACCOUNT_GROUP);
-    groupList.emplace_back(g2);
+    LOGI("use udid %{public}s query hichain related groups", udid.c_str());
+    int ret = InitDeviceAuthService();
+    if (ret != 0) {
+        LOGE("InitDeviceAuthService failed, ret %{public}d", ret);
+        return;
+    }
+
+    hichainDeviceGroupManager_ = GetGmInstance();
+    if (hichainDeviceGroupManager_ == nullptr) {
+        LOGE("failed to get hichain device group manager");
+        return;
+    }
+
+    char *returnGroupVec = nullptr;
+    uint32_t groupNum = 0;
+    ret = hichainDeviceGroupManager_->getRelatedGroups(IDaemon::SERVICE_NAME.c_str(), udid.c_str(), &returnGroupVec, &groupNum);
+    if (ret != 0 || returnGroupVec == nullptr) {
+        LOGE("failed to get related groups, ret %{public}d", ret);
+        return;
+    }
+
+    if (groupNum == 0) {
+        LOGE("failed to get related groups, groupNum is %{public}d", groupNum);
+        return;
+    }
+
+    std::string groups = std::string(returnGroupVec);
+    nlohmann::json jsonObject = nlohmann::json::parse(groups); // transform from cjson to cppjson
+    if (jsonObject.is_discarded()) {
+        LOGE("returnGroupVec parse failed");
+        return;
+    }
+
+    groupList = jsonObject.get<std::vector<GroupInfo>>();
+    for (auto &a : groupList) {
+        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupId] %{public}d,", a.groupName.c_str(), a.groupId.c_str(), a.groupOwner.c_str(), a.groupType);
+    }
+    return;
 }
 
 void DeviceManagerAgent::AuthGroupOnlineProc(const DeviceInfo info)
 {
+    // convert networkId to uuid
+    // todo: udid获取放到DeviceInfo类中实现
+    std::string udid;
+    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
+    int32_t ret = deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, info.GetCid(), udid);
+    std::string uuid;
+    ret += deviceManager.GetUuidByNetworkId(IDaemon::SERVICE_NAME, info.GetCid(), uuid);
+    LOGI("ret %{public}d, get udid %{public}s, uuid %{public}s", ret, udid.c_str(), uuid.c_str());
     std::vector<GroupInfo> groupList;
-    QueryRelatedGroups(info.GetCid(), groupList);
+    QueryRelatedGroups(udid, groupList);
     for (const auto &group : groupList) {
         if (!CheckIsAuthGroup(group)) {
             continue;

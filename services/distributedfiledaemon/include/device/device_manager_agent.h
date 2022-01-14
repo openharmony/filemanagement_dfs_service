@@ -84,7 +84,7 @@ private:
     void UnregisterFromExternalDm();
 
     void AuthGroupOfflineProc(const DeviceInfo &info);
-    void QueryRelatedGroups(const std::string &networkId, std::vector<GroupInfo> &groupList);
+    void QueryRelatedGroups(const std::string &udid, std::vector<GroupInfo> &groupList);
     bool CheckIsAuthGroup(const GroupInfo &group);
     void AllAuthGroupsOfflineProc();
     // We use a mutex instead of a shared_mutex to serialize online/offline procedures
