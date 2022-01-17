@@ -19,28 +19,28 @@ ohos_shared_library("libdistributedfiledaemon") {
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
     "//base/security/deviceauth/interfaces/innerkits",
     "//third_party/json/include",
-    "//utils/system/safwk/native/include"
+    "//utils/system/safwk/native/include",
   ]
 
   sources = [
+    "src/device/device_info.cpp",
+    "src/device/device_manager_agent.cpp",
     "src/ipc/daemon.cpp",
     "src/ipc/daemon_stub.cpp",
     "src/mountpoint/mount_manager.cpp",
     "src/mountpoint/mount_point.cpp",
-    "src/device/device_info.cpp",
-    "src/device/device_manager_agent.cpp",
-    "src/network/network_agent_template.cpp",
-    "src/network/softbus/softbus_agent.cpp",
-    "src/network/softbus/softbus_session_dispatcher.cpp",
-    "src/network/softbus/softbus_session.cpp",
     "src/network/kernel_talker.cpp",
-    "src/network/session_pool.cpp"
+    "src/network/network_agent_template.cpp",
+    "src/network/session_pool.cpp",
+    "src/network/softbus/softbus_agent.cpp",
+    "src/network/softbus/softbus_session.cpp",
+    "src/network/softbus/softbus_session_dispatcher.cpp",
   ]
 
   deps = [
     "${utils_path}:libdistributedfileutils",
+    "//base/security/deviceauth/services:deviceauth_sdk",
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk",
-    "//base/security/deviceauth/services:deviceauth_sdk"
   ]
   external_deps = [
     "dsoftbus_standard:softbus_client",
