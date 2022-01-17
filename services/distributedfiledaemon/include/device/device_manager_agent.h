@@ -85,14 +85,16 @@ private:
 
     void AuthGroupOfflineProc(const DeviceInfo &info);
     void QueryRelatedGroups(const std::string &udid, std::vector<GroupInfo> &groupList);
+    bool QueryGroupInfoById(const std::string &groupId, std::vector<GroupInfo> &groupList);
     bool CheckIsAuthGroup(const GroupInfo &group);
     void AllAuthGroupsOfflineProc();
     // We use a mutex instead of a shared_mutex to serialize online/offline procedures
     std::mutex mpToNetworksMutex_;
     std::map<uintptr_t, std::shared_ptr<NetworkAgentTemplate>> mpToNetworks_;
     DeviceInfo localDeviceInfo_;
-    std::unordered_map<std::string, std::set<std::string>> authGroupMap_;
-    const DeviceGroupManager *hichainDeviceGroupManager_{nullptr};
+
+    // key:groupId val:groupIdMark, the set of networkId
+    std::unordered_map<std::string, std::tuple<std::string, std::set<std::string>>> authGroupMap_;
 };
 } // namespace DistributedFile
 } // namespace Storage
