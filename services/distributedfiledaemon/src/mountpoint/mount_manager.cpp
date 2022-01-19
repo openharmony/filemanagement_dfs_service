@@ -29,17 +29,63 @@ using namespace std;
 
 MountManager::MountManager()
 {
-    Mount(make_unique<MountPoint>(Utils::MountArgumentDescriptors::Alpha()));
+    // OHOS::AccountSA::OsAccountSubscribeInfo osAccountSubscribeInfo;
+    // osAccountSubscribeInfo.SetOsAccountSubscribeType(OHOS::AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED);
+    // osAccountSubscribeInfo.SetName("distributedfile");
+    int err = OHOS::AccountSA::OsAccountManager::SubscribeOsAccount(shared_from_this());
+    if (err != 0) {
+        LOGE("register os account fail err %{public}d", err);
+    }
 }
 
 MountManager::~MountManager()
 {
     try {
-        // Umount mountpoints in reverse order to eliminate dependencies
-        for_each(mountPoints_.rbegin(), mountPoints_.rend(), [this](auto &cur_mp) { Umount(cur_mp); });
+        for (auto iter = mountPoints_.begin(); iter != mountPoints_.end();) {
+            shared_ptr<MountPoint> smp = *iter;
+            auto dm = DeviceManagerAgent::GetInstance();
+            dm->Recv(make_unique<Cmd<DeviceManagerAgent, weak_ptr<MountPoint>>>(&DeviceManagerAgent::QuitGroup, smp));
+            iter = mountPoints_.erase(iter);
+        }
+        OHOS::AccountSA::OsAccountManager::UnsubscribeOsAccount(shared_from_this());
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
+}
+
+void MountManager::OnAccountsChanged(const int &id)
+{
+    LOGE("user id changed to %{public}d", id);
+    lock_guard<mutex> lock(serializer_);
+    if (curUsrId != -1) {
+        // first stop curUsrId network
+        RemoveMPInfoByUsrId(curUsrId);
+    }
+
+    // then start new network
+    curUsrId = id;
+    auto smp = make_shared<MountPoint>(Utils::MountArgumentDescriptors::Alpha(id));
+    auto dm = DeviceManagerAgent::GetInstance();
+    dm->Recv(make_unique<Cmd<DeviceManagerAgent, weak_ptr<MountPoint>>>(&DeviceManagerAgent::JoinGroup, smp));
+    mountPoints_.push_back(smp);
+}
+
+void MountManager::RemoveMPInfoByUsrId(const int id)
+{
+    lock_guard<mutex> lock(serializer_);
+    decltype(mountPoints_.begin()) iter =
+        find_if(mountPoints_.begin(), mountPoints_.end(),
+                [id](const auto &cur_mp) { return cur_mp->mountArg_.userId_ == id; });
+    if (iter == mountPoints_.end()) {
+        LOGE("not find this user id %{public}d", id);
+        return;
+    }
+
+    shared_ptr<MountPoint> smp = *iter;
+    auto dm = DeviceManagerAgent::GetInstance();
+    dm->Recv(make_unique<Cmd<DeviceManagerAgent, weak_ptr<MountPoint>>>(&DeviceManagerAgent::QuitGroup, smp));
+    mountPoints_.erase(iter);
+    LOGE("remove mount info of user id %{public}d", id);
 }
 
 void MountManager::Mount(unique_ptr<MountPoint> mp)
@@ -89,6 +135,7 @@ void MountManager::Umount(weak_ptr<MountPoint> wmp)
 
 void MountManager::Umount(const std::string &groupId)
 {
+    lock_guard<mutex> lock(serializer_);
     if (groupId == "") {
         LOGE("groupId is null, no auth group to unmount");
         return;
