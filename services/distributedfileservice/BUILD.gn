@@ -14,24 +14,23 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_shared_library("libdistributedfileservice") {
-  include_dirs = [
-    "include/ipc",
-  ]
+  include_dirs = [ "include/ipc" ]
 
   sources = [
-    "src/ipc/distributedfile_service_stub.cpp",
     "src/ipc/distributedfile_service.cpp",
+    "src/ipc/distributedfile_service_stub.cpp",
   ]
 
   configs = [ "${utils_path}:compiler_configs" ]
 
   external_deps = [
+    "ability_runtime:app_manager",
+    "ability_runtime:want",
+    "appexecfwk_standard:appexecfwk_base",
+    "appexecfwk_standard:appexecfwk_core",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "aafwk_standard:want",
-    "appexecfwk_standard:appexecfwk_base",
-    "appexecfwk_standard:appexecfwk_core",
   ]
 
   deps = [
