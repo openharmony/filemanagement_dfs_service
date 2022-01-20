@@ -23,6 +23,7 @@ config("module_private_config") {
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
     "//base/security/deviceauth/interfaces/innerkits",
     "//third_party/json/include",
+    "//utils/system/safwk/native/include",
   ]
 }
 

@@ -26,6 +26,7 @@ config("module_private_config") {
     "//foundation/communication/dsoftbus/interfaces/kits/common",
     "//base/security/deviceauth/interfaces/innerkits",
     "//third_party/json/include",
+    "//utils/system/safwk/native/include",
   ]
 }
 
