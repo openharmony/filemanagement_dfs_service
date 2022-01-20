@@ -26,6 +26,7 @@ config("module_private_config") {
     "//foundation/communication/dsoftbus/interfaces/kits/common",
     "//base/security/deviceauth/interfaces/innerkits",
     "//third_party/json/include",
+    "//utils/system/safwk/native/include",
   ]
 }
 
@@ -33,38 +34,36 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
   module_out_path = module_output_path
 
   sources = [
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
     "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
+    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
   ]
 
   sources += [ "src/distributedfiledaemon_service_test.cpp" ]
 
   configs = [
     ":module_private_config",
-    "${utils_path}:compiler_configs"
+    "${utils_path}:compiler_configs",
   ]
 
-  defines = [
-    "private=public"
-  ]
+  defines = [ "private=public" ]
 
   deps = [
-    "//third_party/googletest:gtest_main",
-    "//third_party/googletest:gmock",
     "${utils_path}:libdistributedfileutils",
+    "//base/security/deviceauth/services:deviceauth_sdk",
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//foundation/filemanagement/dfs_service/services/distributedfiledaemon:libdistributedfiledaemon",
-    "//base/security/deviceauth/services:deviceauth_sdk",
+    "//third_party/googletest:gmock",
+    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
@@ -76,5 +75,5 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
 
 group("moduletest") {
   testonly = true
-  deps = [":DistributedFileDaemonServiceTest"]
+  deps = [ ":DistributedFileDaemonServiceTest" ]
 }

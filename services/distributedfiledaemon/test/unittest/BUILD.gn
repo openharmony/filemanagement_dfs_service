@@ -23,35 +23,33 @@ config("module_private_config") {
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
     "//base/security/deviceauth/interfaces/innerkits",
     "//third_party/json/include",
+    "//utils/system/safwk/native/include",
   ]
 }
 
 ohos_unittest("DeviceManagerAgentTest") {
   module_out_path = module_output_path
 
-  sources = [
-  ]
+  sources = []
 
   sources += [ "device/device_manager_agent_test.cpp" ]
 
   configs = [
     ":module_private_config",
-    "${utils_path}:compiler_configs"
+    "${utils_path}:compiler_configs",
   ]
 
   deps = [
-    "//third_party/googletest:gtest_main",
     "${utils_path}:libdistributedfileutils",
-    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//base/security/deviceauth/services:deviceauth_sdk",
+    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk",
+    "//third_party/googletest:gtest_main",
   ]
 
-  defines = [
-    "private=public"
-  ]
+  defines = [ "private=public" ]
 }
 
 group("unittest") {
   testonly = true
-  deps = [":DeviceManagerAgentTest"]
+  deps = [ ":DeviceManagerAgentTest" ]
 }
