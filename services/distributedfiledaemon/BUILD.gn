@@ -19,7 +19,6 @@ ohos_shared_library("libdistributedfiledaemon") {
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
     "//base/security/deviceauth/interfaces/innerkits",
     "//third_party/json/include",
-    "//utils/system/safwk/native/include",
   ]
 
   sources = [
@@ -46,6 +45,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "dsoftbus_standard:softbus_client",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "samgr_standard:samgr_proxy",
   ]
   configs = [ "${utils_path}:compiler_configs" ]
 
