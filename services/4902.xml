@@ -15,9 +15,6 @@
  -->
 <info>
     <process>distributedfileservice</process>
-    <loadlibs>
-        <libpath>libdistributedfileservice.z.so</libpath>
-    </loadlibs>
     <systemability>        <!-- Declare a sytem ability and its profile -->
         <name>4902</name>        <!-- Declare the name of system ability -->
         <libpath>libdistributedfileservice.z.so</libpath>        <!-- Declare the path of .so file which includes the system ability; Note: 1 .so file can have 1 to N system abilities. -->
