@@ -26,7 +26,6 @@ config("module_private_config") {
     "//foundation/communication/dsoftbus/interfaces/kits/common",
     "//base/security/deviceauth/interfaces/innerkits",
     "//third_party/json/include",
-    "//utils/system/safwk/native/include",
   ]
 }
 
@@ -70,6 +69,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "dsoftbus_standard:softbus_client",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "samgr_standard:samgr_proxy",
   ]
 }
 

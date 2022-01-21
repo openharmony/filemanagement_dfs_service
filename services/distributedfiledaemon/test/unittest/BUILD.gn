@@ -23,7 +23,6 @@ config("module_private_config") {
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
     "//base/security/deviceauth/interfaces/innerkits",
     "//third_party/json/include",
-    "//utils/system/safwk/native/include",
   ]
 }
 
@@ -46,6 +45,7 @@ ohos_unittest("DeviceManagerAgentTest") {
     "//third_party/googletest:gtest_main",
   ]
 
+  external_deps = [ "samgr_standard:samgr_proxy" ]
   defines = [ "private=public" ]
 }
 
