@@ -1,7 +1,7 @@
 {
   "subsystem": "filemanagement",
   "parts": {
-    "filemanagement_dfs_service": {
+    "dfs_service": {
       "variants": [
         "wearable",
         "phone"
