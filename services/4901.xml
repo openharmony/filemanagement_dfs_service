@@ -15,9 +15,6 @@
  -->
 <info>
     <process>distributedfiledaemon</process>
-    <loadlibs>
-        <libpath>libdistributedfiledaemon.z.so</libpath>
-    </loadlibs>
     <systemability>        <!-- Declare a sytem ability and its profile -->
         <name>4901</name>        <!-- Declare the name of system ability -->
         <libpath>libdistributedfiledaemon.z.so</libpath>        <!-- Declare the path of .so file which includes the system ability; Note: 1 .so file can have 1 to N system abilities. -->
