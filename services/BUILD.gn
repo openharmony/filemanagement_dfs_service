@@ -16,8 +16,9 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_sa_profile("distributedfile_sa_profile") {
   sources = [
-      "4901.xml",
-      "4902.xml"]
+    "4901.xml",
+    "4902.xml",
+  ]
   part_name = "dfs_service"
 }
 
@@ -36,9 +37,9 @@ ohos_prebuilt_etc("distributed_file.para") {
 
 group("services_target") {
   deps = [
+    ":distributed_file.para",
     ":distributedfile_etc",
     ":distributedfile_sa_profile",
-    ":distributed_file.para",
     "distributedfiledaemon:distributedfiledaemon_target",
     "distributedfileservice:distributedfileservice_target",
   ]
