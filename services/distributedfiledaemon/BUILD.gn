@@ -49,7 +49,7 @@ ohos_shared_library("libdistributedfiledaemon") {
   ]
   configs = [ "${utils_path}:compiler_configs" ]
 
-  part_name = "filemanagement_dfs_service"
+  part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
 

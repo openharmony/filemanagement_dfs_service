@@ -24,6 +24,7 @@ ohos_shared_library("libdistributedfileservice") {
   configs = [ "${utils_path}:compiler_configs" ]
 
   external_deps = [
+    "aafwk_standard:want",
     "ability_runtime:app_manager",
     "ability_runtime:want",
     "appexecfwk_standard:appexecfwk_base",
@@ -38,7 +39,7 @@ ohos_shared_library("libdistributedfileservice") {
     "../../interfaces/innerkits/native:libdistributedfile_innerkits",
   ]
 
-  part_name = "filemanagement_dfs_service"
+  part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
 

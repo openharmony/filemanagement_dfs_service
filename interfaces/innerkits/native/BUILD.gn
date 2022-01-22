@@ -14,9 +14,7 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 config("private_config") {
-  include_dirs = [
-    "../../../frameworks/native",
-  ]
+  include_dirs = [ "../../../frameworks/native" ]
 
   configs = [ "//build/config/compiler:exceptions" ]
 }
@@ -26,9 +24,7 @@ config("public_config") {
 }
 
 ohos_shared_library("libdistributedfile_innerkits") {
-  sources = [
-    "../../../frameworks/native/service_proxy.cpp"
-  ]
+  sources = [ "../../../frameworks/native/service_proxy.cpp" ]
 
   configs = [ ":private_config" ]
 
@@ -39,10 +35,8 @@ ohos_shared_library("libdistributedfile_innerkits") {
     "safwk:system_ability_fwk",
   ]
 
-  deps = [
-      "${utils_path}:libdistributedfileutils",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
-  part_name = "filemanagement_dfs_service"
+  part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }

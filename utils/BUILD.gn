@@ -65,6 +65,6 @@ ohos_shared_library("libdistributedfileutils") {
     "//utils/native/base:utils",
   ]
 
-  part_name = "filemanagement_dfs_service"
+  part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
