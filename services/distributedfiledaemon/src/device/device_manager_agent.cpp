@@ -57,8 +57,14 @@ void DeviceManagerAgent::StopInstance()
 
 void DeviceManagerAgent::Start()
 {
-    RegisterToExternalDm();
-    InitLocalNodeInfo();
+    try {
+        RegisterToExternalDm();
+        InitLocalNodeInfo();
+    } catch (const Exception &e) {
+        LOGE("interacting with devicemanager failed, err code %{public}d", e.code());
+    } catch (const std::exception &e) {
+        LOGE("Unexpect Low Level exception");
+    }
 }
 
 void DeviceManagerAgent::Stop()
