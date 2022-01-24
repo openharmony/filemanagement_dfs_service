@@ -228,7 +228,7 @@ bool DeviceManagerAgent::QueryGroupInfoById(const std::string &groupId, std::vec
 
     groupList = jsonObject.get<std::vector<GroupInfo>>();
     for (auto &a : groupList) {
-        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupId] %{public}d,",
+        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupType] %{public}d,",
              a.groupName.c_str(), a.groupId.c_str(), a.groupOwner.c_str(), a.groupType);
     }
 
@@ -273,7 +273,7 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, std::vector
 
     groupList = jsonObject.get<std::vector<GroupInfo>>();
     for (auto &a : groupList) {
-        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupId] %{public}d,",
+        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupType] %{public}d,",
              a.groupName.c_str(), a.groupId.c_str(), a.groupOwner.c_str(), a.groupType);
     }
     return;
@@ -281,16 +281,8 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, std::vector
 
 void DeviceManagerAgent::AuthGroupOnlineProc(const DeviceInfo info)
 {
-    // convert networkId to uuid
-    // todo: udid获取放到DeviceInfo类中实现
-    std::string udid;
-    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    int32_t ret = deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, info.GetCid(), udid);
-    std::string uuid;
-    ret += deviceManager.GetUuidByNetworkId(IDaemon::SERVICE_NAME, info.GetCid(), uuid);
-    LOGI("ret %{public}d, get udid %{public}s, uuid %{public}s", ret, udid.c_str(), uuid.c_str());
     std::vector<GroupInfo> groupList;
-    QueryRelatedGroups(udid, groupList);
+    QueryRelatedGroups(info.udid_, groupList);
     for (const auto &group : groupList) {
         if (!CheckIsAuthGroup(group)) {
             continue;
@@ -304,9 +296,9 @@ void DeviceManagerAgent::AuthGroupOnlineProc(const DeviceInfo info)
                 Utils::MountArgumentDescriptors::SetAuthGroupMountArgument(ss.str(), group.groupOwner, true)));
             std::get<0>(authGroupMap_[group.groupId]) = ss.str();
         }
-        auto [iter, status] = std::get<1>(authGroupMap_[group.groupId]).insert(info.GetCid());
+        auto [iter, status] = std::get<1>(authGroupMap_[group.groupId]).insert(info.cid_);
         if (status == false) {
-            LOGI("cid %{public}s has already inserted into groupId %{public}s", info.GetCid().c_str(),
+            LOGI("cid %{public}s has already inserted into groupId %{public}s", info.cid_.c_str(),
                  group.groupId.c_str());
             continue;
         }

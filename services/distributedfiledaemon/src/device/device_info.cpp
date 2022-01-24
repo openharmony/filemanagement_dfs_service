@@ -26,6 +26,10 @@ DeviceInfo::DeviceInfo(const DistributedHardware::DmDeviceInfo &nodeInfo)
 {
     cid_ = string(nodeInfo.deviceId);
     initCidFlag_ = true;
+    // convert networkId to udid
+    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
+    int32_t ret = deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, cid_, udid_);
+    LOGI("ret %{public}d, get udid %{public}s", ret, udid_.c_str());
 }
 
 DeviceInfo &DeviceInfo::operator=(const DistributedHardware::DmDeviceInfo &nodeInfo)
@@ -35,7 +39,7 @@ DeviceInfo &DeviceInfo::operator=(const DistributedHardware::DmDeviceInfo &nodeI
     return *this;
 }
 
-DeviceInfo::DeviceInfo(const DeviceInfo &nodeInfo) : cid_(nodeInfo.cid_)
+DeviceInfo::DeviceInfo(const DeviceInfo &nodeInfo) : cid_(nodeInfo.cid_), udid_(nodeInfo.udid_)
 {
     initCidFlag_.store(nodeInfo.initCidFlag_.load());
 }
