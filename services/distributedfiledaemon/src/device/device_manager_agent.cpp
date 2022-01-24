@@ -226,12 +226,6 @@ bool DeviceManagerAgent::QueryGroupInfoById(const std::string &groupId, std::vec
         return false;
     }
 
-    groupList = jsonObject.get<std::vector<GroupInfo>>();
-    for (auto &a : groupList) {
-        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupType] %{public}d,",
-             a.groupName.c_str(), a.groupId.c_str(), a.groupOwner.c_str(), a.groupType);
-    }
-
     return true;
 }
 
@@ -321,7 +315,7 @@ void DeviceManagerAgent::AuthGroupOfflineProc(const DeviceInfo &info)
         std::get<1>(authGroupMap_[groupId]).erase(info.GetCid());
         if (std::get<1>(authGroupMap_[groupId]).empty()) {
             std::vector<GroupInfo> groupList;
-            if (QueryGroupInfoById(groupId, groupList) != 0 || groupList.size() == 0) {
+            if (QueryGroupInfoById(groupId, groupList) == false || groupList.size() == 0) {
                 MountManager::GetInstance()->Umount(groupIdMark);
                 iter = authGroupMap_.erase(iter);
                 continue;
