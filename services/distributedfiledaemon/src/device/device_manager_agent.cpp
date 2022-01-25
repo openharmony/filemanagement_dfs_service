@@ -197,37 +197,6 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
         groupInfo.groupType = jsonObject.at(FIELD_GROUP_TYPE).get<int32_t>();
     }
 }
-bool DeviceManagerAgent::QueryGroupInfoById(const std::string &groupId, std::vector<GroupInfo> &groupList)
-{
-    LOGI("use groupId %{public}s query hichain related groups", groupId.c_str());
-    int ret = InitDeviceAuthService();
-    if (ret != 0) {
-        LOGE("InitDeviceAuthService failed, ret %{public}d", ret);
-        return false;
-    }
-
-    auto hichainDevGroupMgr_ = GetGmInstance();
-    if (hichainDevGroupMgr_ == nullptr) {
-        LOGE("failed to get hichain device group manager");
-        return false;
-    }
-
-    char *returnGroupVec = nullptr;
-    ret = hichainDevGroupMgr_->getGroupInfoById(IDaemon::SERVICE_NAME.c_str(), groupId.c_str(), &returnGroupVec);
-    if (ret != 0 || returnGroupVec == nullptr) {
-        LOGE("failed to get related groups, ret %{public}d", ret);
-        return false;
-    }
-
-    std::string groups = std::string(returnGroupVec);
-    nlohmann::json jsonObject = nlohmann::json::parse(groups); // transform from cjson to cppjson
-    if (jsonObject.is_discarded()) {
-        LOGE("returnGroupVec parse failed");
-        return false;
-    }
-
-    return true;
-}
 
 void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, std::vector<GroupInfo> &groupList)
 {
@@ -315,7 +284,7 @@ void DeviceManagerAgent::AuthGroupOfflineProc(const DeviceInfo &info)
         std::get<1>(authGroupMap_[groupId]).erase(info.GetCid());
         if (std::get<1>(authGroupMap_[groupId]).empty()) {
             std::vector<GroupInfo> groupList;
-            if (QueryGroupInfoById(groupId, groupList) == false || groupList.size() == 0) {
+            if (groupList.size() == 0) {
                 MountManager::GetInstance()->Umount(groupIdMark);
                 iter = authGroupMap_.erase(iter);
                 continue;
