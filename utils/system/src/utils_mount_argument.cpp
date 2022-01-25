@@ -34,7 +34,7 @@ string MountArgument::GetFullSrc() const
 {
     stringstream ss;
     if (!accountless_) {
-        ss << DATA_POINT << userId_ << "/hmdfs/storage";
+        ss << DATA_POINT << userId_ << "/hmdfs";
     } else {
         ss << DATA_POINT << userId_ << "/hmdfs/auth_groups/" << groupId_;
     }
@@ -59,6 +59,17 @@ string MountArgument::GetCachePath() const
         ss << DATA_POINT << userId_ << "/hmdfs/cache/";
     } else {
         ss << DATA_POINT << userId_ << "/hmdfs/auth_groups/" << groupId_ << "/cache/";
+    }
+    return ss.str();
+}
+
+string MountArgument::GetDataPath() const
+{
+    stringstream ss;
+    if (!accountless_) {
+        ss << DATA_POINT << userId_ << "/hmdfs/data/";
+    } else {
+        ss << DATA_POINT << userId_ << "/hmdfs/auth_groups/" << groupId_ << "/data/";
     }
     return ss.str();
 }
