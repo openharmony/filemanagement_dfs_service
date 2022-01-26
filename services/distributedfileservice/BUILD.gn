@@ -42,6 +42,3 @@ ohos_shared_library("libdistributedfileservice") {
   subsystem_name = "filemanagement"
 }
 
-group("distributedfileservice_target") {
-  deps = [ ":libdistributedfileservice" ]
-}

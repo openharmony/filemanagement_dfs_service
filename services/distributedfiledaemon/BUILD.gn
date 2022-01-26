@@ -52,7 +52,3 @@ ohos_shared_library("libdistributedfiledaemon") {
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
-
-group("distributedfiledaemon_target") {
-  deps = [ ":libdistributedfiledaemon" ]
-}

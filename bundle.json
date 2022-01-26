@@ -38,11 +38,11 @@
       },
       "build": {
         "sub_component": [
-          "//foundation/filemanagement/dfs_service/services/:services_target"
+          "//foundation/filemanagement/dfs_service:services_target"
         ],
         "inner_kits": [
           {
-            "name": "//foundation/filemanagement/dfs_service/interfaces/innerkits/native:libdistributedfile_innerkits",
+            "name": "//foundation/filemanagement/dfs_service:libdistributedfile_innerkits",
             "header": {
               "header_files": [
                 "i_distributedfile_service.h"
@@ -52,8 +52,7 @@
           }
         ],
         "test": [ 
-          "//foundation/filemanagement/dfs_service/services/distributedfiledaemon/test/unittest:unittest",
-          "//foundation/filemanagement/dfs_service/test/moduletest:moduletest"
+          "//foundation/filemanagement/dfs_service:dfs_test_moudule"
         ]
       }
     }

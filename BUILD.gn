@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("distributedfile.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 group("libdistributedfile_innerkits") {
   deps = [ "${innerkits_native_path}:libdistributedfile_innerkits" ]
@@ -23,22 +23,15 @@ group("services_target") {
     "${services_path}:distributed_file.para",
     "${services_path}:distributedfile_etc",
     "${services_path}:distributedfile_sa_profile",
-    "${services_path}/distributedfiledaemon:distributedfiledaemon_target",
-    "${services_path}/distributedfileservice:distributedfileservice_target",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${services_path}/distributedfileservice:libdistributedfileservice",
   ]
 }
 
-group("unittest") {
+group("dfs_test_moudule") {
   testonly = true
   deps = [ 
-    "${services_path}/distributedfiledaemon/test/unittest:DeviceManagerAgentTest"
+    "${services_path}/distributedfiledaemon/test/unittest:DeviceManagerAgentTest",
+    "test/moduletest:DistributedFileDaemonServiceTest",
    ] 
 }
-
-group("moduletest") {
-  testonly = true
-  deps = [ 
-    "test/moduletest:DistributedFileDaemonServiceTest"
-   ] 
-}
-
