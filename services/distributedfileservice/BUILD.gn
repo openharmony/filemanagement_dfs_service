@@ -40,4 +40,3 @@ ohos_shared_library("libdistributedfileservice") {
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
-
