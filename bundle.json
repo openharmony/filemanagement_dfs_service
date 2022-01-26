@@ -21,16 +21,14 @@
       "ram": "",
       "deps": {
         "components": [
-          "app_manager",
-          "appexecfwk_base",
-          "appexecfwk_core",
+          "ability_runtime",
+          "bundle_framework",
+          "dsoftbus_standard",
+          "ipc",
           "libhilog",
-          "ipc_core",
-          "system_ability_fwk",
-          "samgr_proxy",
-          "utils_base",
-          "softbus_client",
-          "want"
+          "safwk",
+          "samgr_standard",
+          "utils_base"
         ],
         "third_party": [ 
           "thirdparty_json"

@@ -30,8 +30,8 @@ group("services_target") {
 
 group("dfs_test_moudule") {
   testonly = true
-  deps = [ 
+  deps = [
     "${services_path}/distributedfiledaemon/test/unittest:DeviceManagerAgentTest",
     "test/moduletest:DistributedFileDaemonServiceTest",
-   ] 
+  ]
 }
