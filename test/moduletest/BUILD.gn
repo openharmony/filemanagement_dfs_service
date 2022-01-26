@@ -72,8 +72,3 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "samgr_standard:samgr_proxy",
   ]
 }
-
-group("moduletest") {
-  testonly = true
-  deps = [ ":DistributedFileDaemonServiceTest" ]
-}
