@@ -23,15 +23,15 @@
         "components": [
           "ability_runtime",
           "bundle_framework",
-          "dsoftbus_standard",
+          "dsoftbus",
           "ipc",
-          "libhilog",
+          "hilog",
           "safwk",
-          "samgr_standard",
-          "utils_base"
+          "samgr",
+          "utils"
         ],
         "third_party": [ 
-          "thirdparty_json"
+          "json_modern_c++"
         ]
       },
       "build": {
