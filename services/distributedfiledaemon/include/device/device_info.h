@@ -18,7 +18,9 @@
 #include <atomic>
 #include <string>
 
+#include "device_manager.h"
 #include "dm_device_info.h"
+#include "ipc/i_daemon.h"
 
 namespace OHOS {
 namespace Storage {
@@ -36,8 +38,10 @@ public:
     const std::string &GetCid() const;
 
 private:
+    friend class DeviceManagerAgent;
     std::atomic<bool> initCidFlag_{false};
     std::string cid_;
+    std::string udid_;
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -34,13 +34,3 @@ ohos_prebuilt_etc("distributed_file.para") {
   part_name = "dfs_service"
   module_install_dir = "etc/param"
 }
-
-group("services_target") {
-  deps = [
-    ":distributed_file.para",
-    ":distributedfile_etc",
-    ":distributedfile_sa_profile",
-    "distributedfiledaemon:distributedfiledaemon_target",
-    "distributedfileservice:distributedfileservice_target",
-  ]
-}

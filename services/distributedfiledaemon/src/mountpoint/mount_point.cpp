@@ -49,6 +49,9 @@ void MountPoint::Mount() const
     string cache = mntArg.GetCachePath();
     Utils::ForceCreateDirectory(cache, S_IRWXU | S_IRWXG | S_IXOTH);
 
+    string data = mntArg.GetDataPath();
+    Utils::ForceCreateDirectory(data, S_IRWXU | S_IRWXG | S_IXOTH);
+
     unsigned long flags = mntArg.GetFlags();
     string options = mntArg.OptionsToString();
     int ret = mount(src.c_str(), dst.c_str(), "hmdfs", flags, options.c_str());

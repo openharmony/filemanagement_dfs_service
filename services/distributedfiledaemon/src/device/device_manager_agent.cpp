@@ -32,7 +32,6 @@ namespace Storage {
 namespace DistributedFile {
 namespace {
 constexpr int MAX_RETRY_COUNT = 7;
-constexpr int IDENTICAL_ACCOUNT_GROUP = 1;
 constexpr int PEER_TO_PEER_GROUP = 256;
 constexpr int ACROSS_ACCOUNT_AUTHORIZE_GROUP = 1282;
 } // namespace
@@ -143,7 +142,7 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
 
 void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("OnDeviceOnline begin");
+    LOGI("netwrorkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
     DeviceInfo info(deviceInfo);
     {
         unique_lock<mutex> lock(mpToNetworksMutex_);
@@ -199,31 +198,70 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
     }
 }
 
-void DeviceManagerAgent::QueryRelatedGroups(const std::string &networkId, std::vector<GroupInfo> &groupList)
+void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, std::vector<GroupInfo> &groupList)
 {
-    // piling test
-    GroupInfo g1("auth_group_test1", "groupId_12345", "wps_package", PEER_TO_PEER_GROUP);
-    groupList.emplace_back(g1);
-    GroupInfo g2("auth_group_test2", "groupId_987654", "qqMail_package", IDENTICAL_ACCOUNT_GROUP);
-    groupList.emplace_back(g2);
+    LOGI("use udid %{public}s query hichain related groups", udid.c_str());
+    int ret = InitDeviceAuthService();
+    if (ret != 0) {
+        LOGE("InitDeviceAuthService failed, ret %{public}d", ret);
+        return;
+    }
+
+    auto hichainDevGroupMgr_ = GetGmInstance();
+    if (hichainDevGroupMgr_ == nullptr) {
+        LOGE("failed to get hichain device group manager");
+        return;
+    }
+
+    char *returnGroupVec = nullptr;
+    uint32_t groupNum = 0;
+    ret =
+        hichainDevGroupMgr_->getRelatedGroups(IDaemon::SERVICE_NAME.c_str(), udid.c_str(), &returnGroupVec, &groupNum);
+    if (ret != 0 || returnGroupVec == nullptr) {
+        LOGE("failed to get related groups, ret %{public}d", ret);
+        return;
+    }
+
+    if (groupNum == 0) {
+        LOGE("failed to get related groups, groupNum is %{public}d", groupNum);
+        return;
+    }
+
+    std::string groups = std::string(returnGroupVec);
+    nlohmann::json jsonObject = nlohmann::json::parse(groups); // transform from cjson to cppjson
+    if (jsonObject.is_discarded()) {
+        LOGE("returnGroupVec parse failed");
+        return;
+    }
+
+    groupList = jsonObject.get<std::vector<GroupInfo>>();
+    for (auto &a : groupList) {
+        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupType] %{public}d,",
+             a.groupName.c_str(), a.groupId.c_str(), a.groupOwner.c_str(), a.groupType);
+    }
+    return;
 }
 
 void DeviceManagerAgent::AuthGroupOnlineProc(const DeviceInfo info)
 {
     std::vector<GroupInfo> groupList;
-    QueryRelatedGroups(info.GetCid(), groupList);
+    QueryRelatedGroups(info.udid_, groupList);
     for (const auto &group : groupList) {
         if (!CheckIsAuthGroup(group)) {
             continue;
         }
         if (authGroupMap_.find(group.groupId) == authGroupMap_.end()) {
-            LOGI("groupId %{public}s not exist, then mount", group.groupId.c_str());
+            LOGI("groupId %{public}s not exist, map size %{public}d, then mount", group.groupId.c_str(),
+                 authGroupMap_.size());
+            std::stringstream ss;
+            ss << "groupId_" << authGroupMap_.size();
             MountManager::GetInstance()->Mount(make_unique<MountPoint>(
-                Utils::MountArgumentDescriptors::SetAuthGroupMountArgument(group.groupId, group.groupOwner, true)));
+                Utils::MountArgumentDescriptors::SetAuthGroupMountArgument(ss.str(), group.groupOwner, true)));
+            std::get<0>(authGroupMap_[group.groupId]) = ss.str();
         }
-        auto [iter, status] = authGroupMap_[group.groupId].insert(info.GetCid());
+        auto [iter, status] = std::get<1>(authGroupMap_[group.groupId]).insert(info.cid_);
         if (status == false) {
-            LOGI("cid %{public}s has already inserted into groupId %{public}s", info.GetCid().c_str(),
+            LOGI("cid %{public}s has already inserted into groupId %{public}s", info.cid_.c_str(),
                  group.groupId.c_str());
             continue;
         }
@@ -233,7 +271,7 @@ void DeviceManagerAgent::AuthGroupOnlineProc(const DeviceInfo info)
 void DeviceManagerAgent::AuthGroupOfflineProc(const DeviceInfo &info)
 {
     for (auto iter = authGroupMap_.begin(); iter != authGroupMap_.end();) {
-        auto set = iter->second;
+        auto [groupIdMark, set] = iter->second;
         auto groupId = iter->first;
         if (set.find(info.GetCid()) == set.end()) {
             continue;
@@ -243,11 +281,11 @@ void DeviceManagerAgent::AuthGroupOfflineProc(const DeviceInfo &info)
             LOGI("can not find groupId %{public}s ", groupId.c_str());
             continue;
         }
-        authGroupMap_[groupId].erase(info.GetCid());
-        if (authGroupMap_[groupId].empty()) {
+        std::get<1>(authGroupMap_[groupId]).erase(info.GetCid());
+        if (std::get<1>(authGroupMap_[groupId]).empty()) {
             std::vector<GroupInfo> groupList;
             if (groupList.size() == 0) {
-                MountManager::GetInstance()->Umount(groupId);
+                MountManager::GetInstance()->Umount(groupIdMark);
                 iter = authGroupMap_.erase(iter);
                 continue;
             }
@@ -259,8 +297,8 @@ void DeviceManagerAgent::AuthGroupOfflineProc(const DeviceInfo &info)
 void DeviceManagerAgent::AllAuthGroupsOfflineProc()
 {
     for (auto iter = authGroupMap_.begin(); iter != authGroupMap_.end();) {
-        auto groupId = iter->first;
-        MountManager::GetInstance()->Umount(groupId);
+        auto [groupIdMark, ignore] = iter->second;
+        MountManager::GetInstance()->Umount(groupIdMark);
         authGroupMap_.erase(iter++);
     }
 }
