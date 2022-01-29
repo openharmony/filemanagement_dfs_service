@@ -35,23 +35,22 @@ public:
         return id_;
     };
 
-    std::string GetAuthGroupId() const
+    bool isAccountLess() const
     {
-        return authGroupId_;
-    }
+        return mountArg_.accountless_;
+    };
 
     std::string ToString() const;
     Utils::MountArgument GetMountArgument() const;
     bool operator==(const MountPoint &rop) const;
 
 private:
-    friend class MountManager;
+    friend class osAccountChangeObserver;
     Utils::MountArgument mountArg_;
     void Mount() const;
     void Umount() const;
     static std::atomic<uint32_t> idGen_;
     uint32_t id_{0};
-    std::string authGroupId_{""};
 };
 } // namespace DistributedFile
 } // namespace Storage

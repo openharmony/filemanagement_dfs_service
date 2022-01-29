@@ -52,7 +52,10 @@ public:
     void ConnectDeviceAsync(const DeviceInfo info);
     void DisconnectDevice(const DeviceInfo info);
     void AcceptSession(std::shared_ptr<BaseSession> session);
-
+    std::shared_ptr<MountPoint> GetMountPoint()
+    {
+        return mountPoint_.lock();
+    };
 protected:
     virtual void JoinDomain() = 0;
     virtual void QuitDomain() = 0;

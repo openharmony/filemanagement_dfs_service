@@ -16,6 +16,8 @@
 #include "ipc/daemon.h"
 
 #include "mountpoint/mount_manager.h"
+#include "multiuser/os_account_observer.h"
+#include "os_account_manager.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -39,9 +41,23 @@ void Daemon::PublishSA()
     LOGI("Init finished successfully");
 }
 
+void Daemon::RegisterOsAcount()
+{
+    OHOS::AccountSA::OsAccountSubscribeInfo osAccountSubscribeInfo;
+    osAccountSubscribeInfo.SetOsAccountSubscribeType(OHOS::AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED);
+    osAccountSubscribeInfo.SetName("distributed_file_service");
+
+    auto subScriber = std::make_shared<osAccountChangeObserver>(osAccountSubscribeInfo);
+    int ret = OHOS::AccountSA::OsAccountManager::SubscribeOsAccount(subScriber);
+    if (ret != 0) {
+        LOGE("register os account fail ret %{public}d", ret);
+    }
+    LOGI("register os account success, ret %{public}d", ret);
+}
+
 void Daemon::StartManagers()
 {
-    MountManager::GetInstance();
+    // MountManager::GetInstance()->RegisterOsAcount();
 }
 
 void Daemon::OnStart()
@@ -54,7 +70,8 @@ void Daemon::OnStart()
 
     try {
         PublishSA();
-        StartManagers();
+        // StartManagers();
+        RegisterOsAcount();
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }

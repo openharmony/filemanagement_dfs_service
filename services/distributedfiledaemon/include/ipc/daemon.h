@@ -53,6 +53,7 @@ private:
 
     void PublishSA();
     void StartManagers();
+    void RegisterOsAcount();
 };
 } // namespace DistributedFile
 } // namespace Storage

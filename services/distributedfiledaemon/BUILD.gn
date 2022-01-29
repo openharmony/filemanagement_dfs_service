@@ -28,6 +28,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/ipc/daemon_stub.cpp",
     "src/mountpoint/mount_manager.cpp",
     "src/mountpoint/mount_point.cpp",
+    "src/multiuser/os_account_observer.cpp",
     "src/network/kernel_talker.cpp",
     "src/network/network_agent_template.cpp",
     "src/network/session_pool.cpp",

@@ -13,38 +13,36 @@
  * limitations under the License.
  */
 
-#ifndef MOUNT_MANAGER_H
-#define MOUNT_MANAGER_H
+#ifndef ACCOUNT_CHANGE_OBSERVER_H
+#define ACCOUNT_CHANGE_OBSERVER_H
 
 #include <memory>
 #include <mutex>
 #include <vector>
 
-#include "mount_point.h"
-#include "utils_singleton.h"
-#include "utils_log.h"
+#include "mountpoint/mount_point.h"
+#include "os_account_manager.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class MountManager final : public Utils::Singleton<MountManager>, public std::enable_shared_from_this<MountManager> {
+static constexpr int MOUNT_POINT_NUM = 2;
+class osAccountChangeObserver final : public AccountSA::OsAccountSubscriber {
 public:
-    void RegisterOsAcount();
-    void Mount(std::unique_ptr<MountPoint> mp);
-    void Umount(std::weak_ptr<MountPoint> wmp);
-    void Umount(const std::string &groupId);
-    DECLARE_SINGLETON(MountManager);
-    void RemoveMPInfoByUsrId(const int id);
+    osAccountChangeObserver() = default;
+    ~osAccountChangeObserver();
+    explicit osAccountChangeObserver(const AccountSA::OsAccountSubscribeInfo &subscribeInfo);
 
+    void OnAccountsChanged(const int &id) override;
 private:
-    void StartInstance() override {}
-    void StopInstance() override {}
+    void RemoveMPInfo(const int id);
+    void AddMPInfo(const int id, const std::string &relativePath);
 
     std::mutex serializer_;
-    std::vector<std::shared_ptr<MountPoint>> mountPoints_;
+    std::unordered_map<int, std::vector<std::shared_ptr<MountPoint>>> mountPoints_;
     int curUsrId{-1};
 };
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // MOUNT_MANAGER_H
+#endif // ACCOUNT_CHANGE_OBSERVER_H
