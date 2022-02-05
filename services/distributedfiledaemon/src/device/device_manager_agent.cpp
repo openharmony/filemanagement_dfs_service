@@ -91,7 +91,7 @@ void DeviceManagerAgent::JoinGroup(weak_ptr<MountPoint> mp)
             throw runtime_error(ss.str());
         }
     }
-    LOGI("smp id %{public}d", smp->GetID());
+    LOGI("smp id %{public}d, is account_less %{pubulic}d", smp->GetID(), agent->GetMountPoint()->isAccountLess());
     agent->StartActor();
 }
 
@@ -119,55 +119,50 @@ void DeviceManagerAgent::QuitGroup(weak_ptr<MountPoint> mp)
 void DeviceManagerAgent::OfflineAllDevice()
 {
     unique_lock<mutex> lock(mpToNetworksMutex_);
-    for (auto &&networkAgent : mpToNetworks_) {
+    for (auto [ignore, net] : cidNetTypeRecord_) {
         auto cmd = make_unique<Cmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::DisconnectAllDevices);
-        cmd->UpdateOption({
-            .tryTimes_ = 1,
-        });
-        networkAgent.second->Recv(move(cmd));
+        net->Recv(move(cmd));
     }
 }
 
 void DeviceManagerAgent::ReconnectOnlineDevices()
 {
     unique_lock<mutex> lock(mpToNetworksMutex_);
-    for (auto &&networkAgent : mpToNetworks_) {
+    for (auto [ignore, net] : cidNetTypeRecord_) {
         auto cmd = make_unique<Cmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::ConnectOnlineDevices);
         cmd->UpdateOption({
             .tryTimes_ = MAX_RETRY_COUNT,
         });
-        networkAgent.second->Recv(move(cmd));
+        net->Recv(move(cmd));
     }
 }
 
 std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRelation(bool isAccountless)
 {
+    LOGI("enter: isAccountless %{public}d", isAccountless);
     for (auto [ignore, net] : mpToNetworks_) {
         if (net->GetMountPoint()->isAccountLess() == isAccountless) {
             return net;
         }
     }
+    LOGE("not find this net in mpToNetworks, isAccountless %{public}d", isAccountless);
     return nullptr;
 }
 
 void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("netwrorkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
-    // 先检查 认证群组信息, 并將此cid是否是同账号信息记录到map中
+    LOGI("networkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
+    // online first query this dev's trust info, 先检查 认证群组信息, 并將此cid是否是同账号信息记录到map中
     DeviceInfo info(deviceInfo);
-    std::vector<GroupInfo> groupList;
-    QueryRelatedGroups(info.udid_, groupList);
+    QueryRelatedGroups(info.udid_, info.cid_);
+
+    // based on dev's trust info, choose corresponding network agent to obtain socket
     unique_lock<mutex> lock(mpToNetworksMutex_);
-    for (const auto &group : groupList) {
-        if (CheckIsAuthGroup(group)) {
-            cidNetTypeRecord_.insert({info.cid_, FindNetworkBaseTrustRelation(true)}); // accountless == true
-        } else {
-            cidNetTypeRecord_.insert({info.cid_, FindNetworkBaseTrustRelation(false)});
-        }
-    }
-    // 如果是同账号的，则只让同账号的去建链，所以在创建群组时就要区分出是否是同账号的
-    // 如果是异账号，则只让异账号建链
     auto networkAgent = cidNetTypeRecord_[info.cid_];
+    if (networkAgent == nullptr) {
+        LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        return;
+    }
     auto cmd = make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(
                 &NetworkAgentTemplate::ConnectDeviceAsync, info);
     cmd->UpdateOption({
@@ -185,6 +180,10 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
     auto networkAgent = cidNetTypeRecord_[info.cid_];
+    if (networkAgent == nullptr) {
+        LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        return;
+    }
     auto cmd = make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
     networkAgent->Recv(move(cmd));
     cidNetTypeRecord_.erase(info.cid_);
@@ -212,7 +211,7 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
     }
 }
 
-void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, std::vector<GroupInfo> &groupList)
+void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::string &networkId)
 {
     LOGI("use udid %{public}s query hichain related groups", udid.c_str());
     int ret = InitDeviceAuthService();
@@ -248,11 +247,22 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, std::vector
         return;
     }
 
+    std::vector<GroupInfo> groupList;
     groupList = jsonObject.get<std::vector<GroupInfo>>();
     for (auto &a : groupList) {
         LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupType] %{public}d,",
              a.groupName.c_str(), a.groupId.c_str(), a.groupOwner.c_str(), a.groupType);
     }
+
+    unique_lock<mutex> lock(mpToNetworksMutex_);
+    for (const auto &group : groupList) {
+        if (CheckIsAuthGroup(group)) {
+            cidNetTypeRecord_.insert({networkId, FindNetworkBaseTrustRelation(true)}); // accountless == true
+        } else {
+            cidNetTypeRecord_.insert({networkId, FindNetworkBaseTrustRelation(false)});
+        }
+    }
+
     return;
 }
 

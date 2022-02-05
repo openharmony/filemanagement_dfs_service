@@ -82,7 +82,7 @@ private:
     void RegisterToExternalDm();
     void UnregisterFromExternalDm();
 
-    void QueryRelatedGroups(const std::string &udid, std::vector<GroupInfo> &groupList);
+    void QueryRelatedGroups(const std::string &udid, const std::string &networkId);
     bool CheckIsAuthGroup(const GroupInfo &group);
     std::shared_ptr<NetworkAgentTemplate> FindNetworkBaseTrustRelation(bool isAccountless);
     // We use a mutex instead of a shared_mutex to serialize online/offline procedures

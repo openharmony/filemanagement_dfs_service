@@ -28,13 +28,13 @@ namespace DistributedFile {
 using namespace std;
 namespace {
 static const std::string SAME_ACCOUNT = "account";
-static const std::string ACCOUNT_LESS = "no_account";
+static const std::string ACCOUNT_LESS = "non_account";
 } // namespace
 
 osAccountChangeObserver::osAccountChangeObserver(const AccountSA::OsAccountSubscribeInfo &subscribeInfo) : OsAccountSubscriber(subscribeInfo)
 {
     LOGI("init first to create network of user 100");
-    // lock_guard<mutex> lock(serializer_);
+    lock_guard<mutex> lock(serializer_);
     curUsrId = 100;
     AddMPInfo(curUsrId, SAME_ACCOUNT);
     AddMPInfo(curUsrId, ACCOUNT_LESS);

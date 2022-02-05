@@ -41,7 +41,7 @@ void Daemon::PublishSA()
     LOGI("Init finished successfully");
 }
 
-void Daemon::RegisterOsAcount()
+void Daemon::RegisterOsAccount()
 {
     OHOS::AccountSA::OsAccountSubscribeInfo osAccountSubscribeInfo;
     osAccountSubscribeInfo.SetOsAccountSubscribeType(OHOS::AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED);
@@ -55,11 +55,6 @@ void Daemon::RegisterOsAcount()
     LOGI("register os account success, ret %{public}d", ret);
 }
 
-void Daemon::StartManagers()
-{
-    // MountManager::GetInstance()->RegisterOsAcount();
-}
-
 void Daemon::OnStart()
 {
     LOGI("Begin to start service");
@@ -70,8 +65,7 @@ void Daemon::OnStart()
 
     try {
         PublishSA();
-        // StartManagers();
-        RegisterOsAcount();
+        RegisterOsAccount();
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }

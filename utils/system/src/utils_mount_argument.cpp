@@ -65,6 +65,7 @@ string MountArgument::GetCtrlPath() const
 {
     auto dst = GetFullDst();
     auto res = MocklispHash(dst);
+
     stringstream ss;
     ss << SYSFS_HMDFS_PATH << res << "/cmd";
     return ss.str();
@@ -112,9 +113,7 @@ MountArgument MountArgumentDescriptors::Alpha(int userId, string relativePath)
         .externalFS_ = false,
         .relativePath_ = relativePath,
     };
-    if (relativePath == "account") {
-        mountArgument.accountless_ = false;
-    } else {
+    if (relativePath == "non_account") {
         mountArgument.accountless_ = true;
     }
     return mountArgument;
