@@ -45,7 +45,7 @@ public:
     bool operator==(const MountPoint &rop) const;
 
 private:
-    friend class osAccountChangeObserver;
+    friend class OsAccountObserver;
     Utils::MountArgument mountArg_;
     void Mount() const;
     void Umount() const;

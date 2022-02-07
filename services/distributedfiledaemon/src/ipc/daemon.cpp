@@ -47,7 +47,7 @@ void Daemon::RegisterOsAccount()
     osAccountSubscribeInfo.SetOsAccountSubscribeType(OHOS::AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED);
     osAccountSubscribeInfo.SetName("distributed_file_service");
 
-    auto subScriber = std::make_shared<osAccountChangeObserver>(osAccountSubscribeInfo);
+    auto subScriber = std::make_shared<OsAccountObserver>(osAccountSubscribeInfo);
     int ret = OHOS::AccountSA::OsAccountManager::SubscribeOsAccount(subScriber);
     if (ret != 0) {
         LOGE("register os account fail ret %{public}d", ret);

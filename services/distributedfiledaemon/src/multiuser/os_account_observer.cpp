@@ -15,9 +15,6 @@
 
 #include "multiuser/os_account_observer.h"
 
-#include <algorithm>
-#include <sstream>
-
 #include "device/device_manager_agent.h"
 #include "utils_log.h"
 #include "utils_mount_argument.h"
@@ -29,24 +26,25 @@ using namespace std;
 namespace {
 static const std::string SAME_ACCOUNT = "account";
 static const std::string ACCOUNT_LESS = "non_account";
+static constexpr int DEFAULT_ACCOUNT = 100;
 } // namespace
 
-osAccountChangeObserver::osAccountChangeObserver(const AccountSA::OsAccountSubscribeInfo &subscribeInfo) : OsAccountSubscriber(subscribeInfo)
+OsAccountObserver::OsAccountObserver(const AccountSA::OsAccountSubscribeInfo &subscribeInfo)
+    : OsAccountSubscriber(subscribeInfo)
 {
-    LOGI("init first to create network of user 100");
+    LOGI("init first to create network of default user");
     lock_guard<mutex> lock(serializer_);
-    curUsrId = 100;
+    curUsrId = DEFAULT_ACCOUNT;
     AddMPInfo(curUsrId, SAME_ACCOUNT);
     AddMPInfo(curUsrId, ACCOUNT_LESS);
-    LOGI("init first to create network of user 100, done");
+    LOGI("init first to create network of user %{public}d, done", DEFAULT_ACCOUNT);
 }
 
-osAccountChangeObserver::~osAccountChangeObserver()
+OsAccountObserver::~OsAccountObserver()
 {
-    // OHOS::AccountSA::OsAccountManager::UnsubscribeOsAccount(shared_from_this());
 }
 
-void osAccountChangeObserver::AddMPInfo(const int id, const std::string &relativePath)
+void OsAccountObserver::AddMPInfo(const int id, const std::string &relativePath)
 {
     auto smp = make_shared<MountPoint>(Utils::MountArgumentDescriptors::Alpha(id, relativePath));
     auto dm = DeviceManagerAgent::GetInstance();
@@ -54,11 +52,11 @@ void osAccountChangeObserver::AddMPInfo(const int id, const std::string &relativ
     mountPoints_[id].emplace_back(smp);
 }
 
-void osAccountChangeObserver::OnAccountsChanged(const int &id)
+void OsAccountObserver::OnAccountsChanged(const int &id)
 {
     LOGI("user id changed to %{public}d", id);
     lock_guard<mutex> lock(serializer_);
-    if (curUsrId != -1) { // todo: 仅仅是切断当前用户，是否需要删除之前的用户信息？ 
+    if (curUsrId != -1) {
         // first stop curUsrId network
         RemoveMPInfo(curUsrId);
     }
@@ -70,7 +68,7 @@ void osAccountChangeObserver::OnAccountsChanged(const int &id)
     LOGI("user id %{public}d, add network done", curUsrId);
 }
 
-void osAccountChangeObserver::RemoveMPInfo(const int id)
+void OsAccountObserver::RemoveMPInfo(const int id)
 {
     auto iter = mountPoints_.find(id);
     if (iter == mountPoints_.end()) {

@@ -42,7 +42,6 @@ private:
     std::map<std::string, int> OpenSessionRetriedTimesMap_;
 
     std::string sessionName_;
-    // bool accountless_{false};
 };
 } // namespace DistributedFile
 } // namespace Storage

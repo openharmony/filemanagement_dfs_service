@@ -27,11 +27,11 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 static constexpr int MOUNT_POINT_NUM = 2;
-class osAccountChangeObserver final : public AccountSA::OsAccountSubscriber {
+class OsAccountObserver final : public AccountSA::OsAccountSubscriber {
 public:
-    osAccountChangeObserver() = default;
-    ~osAccountChangeObserver();
-    explicit osAccountChangeObserver(const AccountSA::OsAccountSubscribeInfo &subscribeInfo);
+    OsAccountObserver() = default;
+    ~OsAccountObserver();
+    explicit OsAccountObserver(const AccountSA::OsAccountSubscribeInfo &subscribeInfo);
 
     void OnAccountsChanged(const int &id) override;
 private:
@@ -40,7 +40,7 @@ private:
 
     std::mutex serializer_;
     std::unordered_map<int, std::vector<std::shared_ptr<MountPoint>>> mountPoints_;
-    int curUsrId{-1};
+    int curUsrId { -1 };
 };
 } // namespace DistributedFile
 } // namespace Storage

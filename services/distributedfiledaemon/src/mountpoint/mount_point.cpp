@@ -15,9 +15,6 @@
 
 #include "mountpoint/mount_point.h"
 
-#include <sys/mount.h>
-#include <system_error>
-
 #include "utils_directory.h"
 #include "utils_log.h"
 

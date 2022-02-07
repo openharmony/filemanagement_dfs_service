@@ -90,9 +90,8 @@ private:
     std::map<uintptr_t, std::shared_ptr<NetworkAgentTemplate>> mpToNetworks_;
     DeviceInfo localDeviceInfo_;
 
-    std::unordered_map<std::string, std::shared_ptr<NetworkAgentTemplate>> cidNetTypeRecord_; // cid-->same_account/accoutless's network
-    // key:groupId val:groupIdMark, the set of networkId
-    std::unordered_map<std::string, std::tuple<std::string, std::set<std::string>>> authGroupMap_;
+    // cid-->same_account/accoutless's network
+    std::unordered_map<std::string, std::shared_ptr<NetworkAgentTemplate>> cidNetTypeRecord_;
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -29,7 +29,6 @@ using namespace std;
 
 MountManager::MountManager()
 {
-
 }
 
 MountManager::~MountManager()

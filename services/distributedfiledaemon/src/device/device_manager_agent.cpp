@@ -152,7 +152,8 @@ std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRe
 void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("networkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
-    // online first query this dev's trust info, 先检查 认证群组信息, 并將此cid是否是同账号信息记录到map中
+
+    // online first query this dev's trust info
     DeviceInfo info(deviceInfo);
     QueryRelatedGroups(info.udid_, info.cid_);
 
@@ -163,8 +164,8 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
         return;
     }
-    auto cmd = make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(
-                &NetworkAgentTemplate::ConnectDeviceAsync, info);
+    auto cmd =
+        make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
     cmd->UpdateOption({
         .tryTimes_ = MAX_RETRY_COUNT,
     });
@@ -184,11 +185,10 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
         return;
     }
+
     auto cmd = make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
     networkAgent->Recv(move(cmd));
     cidNetTypeRecord_.erase(info.cid_);
-
-    // AuthGroupOfflineProc(info);
     LOGI("OnDeviceOffline end");
 }
 
@@ -297,7 +297,6 @@ void DeviceManagerAgent::OnRemoteDied()
     StartInstance();
     ReconnectOnlineDevices();
 }
-
 DeviceInfo &DeviceManagerAgent::GetLocalDeviceInfo()
 {
     return localDeviceInfo_;

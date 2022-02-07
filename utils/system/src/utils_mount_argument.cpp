@@ -39,7 +39,7 @@ string MountArgument::GetFullSrc() const
 string MountArgument::GetFullDst() const
 {
     stringstream ss;
-   ss << BASE_MOUNT_POINT << userId_ << "/" << relativePath_;
+    ss << BASE_MOUNT_POINT << userId_ << "/" << relativePath_;
     return ss.str();
 }
 
@@ -113,11 +113,12 @@ MountArgument MountArgumentDescriptors::Alpha(int userId, string relativePath)
         .externalFS_ = false,
         .relativePath_ = relativePath,
     };
+
     if (relativePath == "non_account") {
         mountArgument.accountless_ = true;
     }
     return mountArgument;
-}
+};
 } // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage

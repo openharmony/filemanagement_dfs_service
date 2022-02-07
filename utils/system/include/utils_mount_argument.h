@@ -23,15 +23,15 @@ namespace Storage {
 namespace DistributedFile {
 namespace Utils {
 struct MountArgument final {
-    int userId_{0};
+    int userId_ { 0 };
     bool accountless_{false};
     bool needInitDir_{false};
     bool useCache_{false};
     bool caseSensitive_{false};
     bool enableMergeView_{false};
-    bool enableFixupOwnerShip_{false};
-    bool enableOfflineStash_{true};
-    bool externalFS_{false};
+    bool enableFixupOwnerShip_ { false };
+    bool enableOfflineStash_ { true };
+    bool externalFS_ { false };
     std::string relativePath_;
 
     std::string GetFullSrc() const;
@@ -51,4 +51,3 @@ public:
 } // namespace Storage
 } // namespace OHOS
 #endif // UTILS_MOUNT_ARGUMENT_H
-
