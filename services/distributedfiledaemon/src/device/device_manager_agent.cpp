@@ -84,7 +84,7 @@ void DeviceManagerAgent::JoinGroup(weak_ptr<MountPoint> mp)
     {
         unique_lock<mutex> lock(mpToNetworksMutex_);
         agent = make_shared<SoftbusAgent>(mp);
-        auto [ignored, inserted] = mpToNetworks_.insert({smp->GetID(), agent});
+        auto [ignored, inserted] = mpToNetworks_.insert({ smp->GetID(), agent });
         if (!inserted) {
             stringstream ss;
             ss << "Failed to join group: Mountpoint existed" << smp->ToString();
@@ -257,9 +257,9 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     unique_lock<mutex> lock(mpToNetworksMutex_);
     for (const auto &group : groupList) {
         if (CheckIsAuthGroup(group)) {
-            cidNetTypeRecord_.insert({networkId, FindNetworkBaseTrustRelation(true)}); // accountless == true
+            cidNetTypeRecord_.insert({ networkId, FindNetworkBaseTrustRelation(true) });
         } else {
-            cidNetTypeRecord_.insert({networkId, FindNetworkBaseTrustRelation(false)});
+            cidNetTypeRecord_.insert({ networkId, FindNetworkBaseTrustRelation(false) });
         }
     }
 

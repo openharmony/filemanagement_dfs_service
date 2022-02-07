@@ -24,11 +24,11 @@ namespace DistributedFile {
 namespace Utils {
 struct MountArgument final {
     int userId_ { 0 };
-    bool accountless_{false};
-    bool needInitDir_{false};
-    bool useCache_{false};
-    bool caseSensitive_{false};
-    bool enableMergeView_{false};
+    bool accountless_ { false };
+    bool needInitDir_ { false };
+    bool useCache_ { false };
+    bool caseSensitive_ { false };
+    bool enableMergeView_ { false };
     bool enableFixupOwnerShip_ { false };
     bool enableOfflineStash_ { true };
     bool externalFS_ { false };

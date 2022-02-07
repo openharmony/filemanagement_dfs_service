@@ -194,7 +194,7 @@ HWTEST_F(DistributedFileDaemonServiceTest, distributedFileDaemon_service_test_00
 
     const int len = sizeof(userId) / sizeof(userId[0]);
     for (int i = 0; i < len; i++) {
-        mountArgument[i] = OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(userId[i], SAME_ACCOUNT);
+        mountArgument[i] = Utils::MountArgumentDescriptors::Alpha(userId[i], SAME_ACCOUNT);
         auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument[i]);
         smpArr[i] = move(mp);
     }
