@@ -69,7 +69,6 @@ public:
 
     void OfflineAllDevice();
     void ReconnectOnlineDevices();
-    void AuthGroupOnlineProc(const DeviceInfo info);
     void OnRemoteDied() override;
 
     DeviceInfo &GetLocalDeviceInfo();
@@ -83,17 +82,16 @@ private:
     void RegisterToExternalDm();
     void UnregisterFromExternalDm();
 
-    void AuthGroupOfflineProc(const DeviceInfo &info);
-    void QueryRelatedGroups(const std::string &udid, std::vector<GroupInfo> &groupList);
+    void QueryRelatedGroups(const std::string &udid, const std::string &networkId);
     bool CheckIsAuthGroup(const GroupInfo &group);
-    void AllAuthGroupsOfflineProc();
+    std::shared_ptr<NetworkAgentTemplate> FindNetworkBaseTrustRelation(bool isAccountless);
     // We use a mutex instead of a shared_mutex to serialize online/offline procedures
     std::mutex mpToNetworksMutex_;
     std::map<uintptr_t, std::shared_ptr<NetworkAgentTemplate>> mpToNetworks_;
     DeviceInfo localDeviceInfo_;
 
-    // key:groupId val:groupIdMark, the set of networkId
-    std::unordered_map<std::string, std::tuple<std::string, std::set<std::string>>> authGroupMap_;
+    // cid-->same_account/accoutless's network
+    std::unordered_map<std::string, std::shared_ptr<NetworkAgentTemplate>> cidNetTypeRecord_;
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -26,51 +26,27 @@ using namespace std;
 namespace {
 static const std::string DATA_POINT = "/data/service/el2/";
 static const std::string BASE_MOUNT_POINT = "/mnt/hmdfs/";
-static const std::string AUTH_GROUP_MOUNT_POINT = "/mnt/hmdfs/auth_groups/";
 static const std::string SYSFS_HMDFS_PATH = "sys/fs/hmdfs/";
 } // namespace
 
 string MountArgument::GetFullSrc() const
 {
     stringstream ss;
-    if (!accountless_) {
-        ss << DATA_POINT << userId_ << "/hmdfs";
-    } else {
-        ss << DATA_POINT << userId_ << "/hmdfs/auth_groups/" << groupId_;
-    }
+    ss << DATA_POINT << userId_ << "/hmdfs/" << relativePath_;
     return ss.str();
 }
 
 string MountArgument::GetFullDst() const
 {
     stringstream ss;
-    if (!accountless_) {
-        ss << BASE_MOUNT_POINT << userId_ << "/";
-    } else {
-        ss << AUTH_GROUP_MOUNT_POINT << groupId_ << "/";
-    }
+    ss << BASE_MOUNT_POINT << userId_ << "/" << relativePath_;
     return ss.str();
 }
 
 string MountArgument::GetCachePath() const
 {
     stringstream ss;
-    if (!accountless_) {
-        ss << DATA_POINT << userId_ << "/hmdfs/cache/";
-    } else {
-        ss << DATA_POINT << userId_ << "/hmdfs/auth_groups/" << groupId_ << "/cache/";
-    }
-    return ss.str();
-}
-
-string MountArgument::GetDataPath() const
-{
-    stringstream ss;
-    if (!accountless_) {
-        ss << DATA_POINT << userId_ << "/hmdfs/data/";
-    } else {
-        ss << DATA_POINT << userId_ << "/hmdfs/auth_groups/" << groupId_ << "/data/";
-    }
+    ss << DATA_POINT << userId_ << "/hmdfs/" << relativePath_ << "/cache/";
     return ss.str();
 }
 
@@ -89,6 +65,7 @@ string MountArgument::GetCtrlPath() const
 {
     auto dst = GetFullDst();
     auto res = MocklispHash(dst);
+
     stringstream ss;
     ss << SYSFS_HMDFS_PATH << res << "/cmd";
     return ss.str();
@@ -124,38 +101,24 @@ unsigned long MountArgument::GetFlags() const
     return MS_NODEV;
 }
 
-MountArgument MountArgumentDescriptors::Alpha(int userId)
+MountArgument MountArgumentDescriptors::Alpha(int userId, string relativePath)
 {
     MountArgument mountArgument = {
-        .groupId_ = "default",
+        .userId_ = userId,
         .needInitDir_ = true,
         .useCache_ = true,
         .enableMergeView_ = true,
         .enableFixupOwnerShip_ = false,
         .enableOfflineStash_ = true,
         .externalFS_ = false,
+        .relativePath_ = relativePath,
     };
-    mountArgument.userId_ = userId;
-    return mountArgument;
-}
 
-MountArgument MountArgumentDescriptors::SetAuthGroupMountArgument(const std::string &groupId,
-                                                                  const std::string &packageName,
-                                                                  bool accountless)
-{
-    MountArgument mountArgument = {
-        .accountless_ = accountless,
-        .groupId_ = groupId,
-        .needInitDir_ = true,
-        .useCache_ = true,
-        .enableMergeView_ = true,
-        .enableFixupOwnerShip_ = false,
-        .enableOfflineStash_ = true,
-        .externalFS_ = false,
-        .packageName_ = packageName,
-    };
+    if (relativePath == "non_account") {
+        mountArgument.accountless_ = true;
+    }
     return mountArgument;
-}
+};
 } // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage

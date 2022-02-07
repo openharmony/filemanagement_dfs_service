@@ -84,14 +84,14 @@ void DeviceManagerAgent::JoinGroup(weak_ptr<MountPoint> mp)
     {
         unique_lock<mutex> lock(mpToNetworksMutex_);
         agent = make_shared<SoftbusAgent>(mp);
-        auto [ignored, inserted] = mpToNetworks_.insert({smp->GetID(), agent});
+        auto [ignored, inserted] = mpToNetworks_.insert({ smp->GetID(), agent });
         if (!inserted) {
             stringstream ss;
             ss << "Failed to join group: Mountpoint existed" << smp->ToString();
             throw runtime_error(ss.str());
         }
     }
-    LOGI("smp id %{public}d, groupId %{public}s", smp->GetID(), smp->GetAuthGroupId().c_str());
+    LOGI("smp id %{public}d, is account_less %{pubulic}d", smp->GetID(), agent->GetMountPoint()->isAccountLess());
     agent->StartActor();
 }
 
@@ -119,43 +119,57 @@ void DeviceManagerAgent::QuitGroup(weak_ptr<MountPoint> mp)
 void DeviceManagerAgent::OfflineAllDevice()
 {
     unique_lock<mutex> lock(mpToNetworksMutex_);
-    for (auto &&networkAgent : mpToNetworks_) {
+    for (auto [ignore, net] : cidNetTypeRecord_) {
         auto cmd = make_unique<Cmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::DisconnectAllDevices);
-        cmd->UpdateOption({
-            .tryTimes_ = 1,
-        });
-        networkAgent.second->Recv(move(cmd));
+        net->Recv(move(cmd));
     }
 }
 
 void DeviceManagerAgent::ReconnectOnlineDevices()
 {
     unique_lock<mutex> lock(mpToNetworksMutex_);
-    for (auto &&networkAgent : mpToNetworks_) {
+    for (auto [ignore, net] : cidNetTypeRecord_) {
         auto cmd = make_unique<Cmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::ConnectOnlineDevices);
         cmd->UpdateOption({
             .tryTimes_ = MAX_RETRY_COUNT,
         });
-        networkAgent.second->Recv(move(cmd));
+        net->Recv(move(cmd));
     }
+}
+
+std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRelation(bool isAccountless)
+{
+    LOGI("enter: isAccountless %{public}d", isAccountless);
+    for (auto [ignore, net] : mpToNetworks_) {
+        if (net->GetMountPoint()->isAccountLess() == isAccountless) {
+            return net;
+        }
+    }
+    LOGE("not find this net in mpToNetworks, isAccountless %{public}d", isAccountless);
+    return nullptr;
 }
 
 void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("netwrorkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
+    LOGI("networkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
+
+    // online first query this dev's trust info
     DeviceInfo info(deviceInfo);
-    {
-        unique_lock<mutex> lock(mpToNetworksMutex_);
-        for (auto &&networkAgent : mpToNetworks_) {
-            auto cmd = make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(
-                &NetworkAgentTemplate::ConnectDeviceAsync, info);
-            cmd->UpdateOption({
-                .tryTimes_ = MAX_RETRY_COUNT,
-            });
-            networkAgent.second->Recv(move(cmd));
-        }
+    QueryRelatedGroups(info.udid_, info.cid_);
+
+    // based on dev's trust info, choose corresponding network agent to obtain socket
+    unique_lock<mutex> lock(mpToNetworksMutex_);
+    auto networkAgent = cidNetTypeRecord_[info.cid_];
+    if (networkAgent == nullptr) {
+        LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        return;
     }
-    AuthGroupOnlineProc(info);
+    auto cmd =
+        make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
+    cmd->UpdateOption({
+        .tryTimes_ = MAX_RETRY_COUNT,
+    });
+    networkAgent->Recv(move(cmd));
 
     LOGI("OnDeviceOnline end");
 }
@@ -164,18 +178,17 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 {
     LOGI("OnDeviceOffline begin");
     DeviceInfo info(deviceInfo);
-    {
-        unique_lock<mutex> lock(mpToNetworksMutex_);
-        for (auto &&networkAgent : mpToNetworks_) {
-            auto cmd =
-                make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
-            cmd->UpdateOption({
-                .tryTimes_ = 1,
-            });
-            networkAgent.second->Recv(move(cmd));
-        }
+
+    unique_lock<mutex> lock(mpToNetworksMutex_);
+    auto networkAgent = cidNetTypeRecord_[info.cid_];
+    if (networkAgent == nullptr) {
+        LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        return;
     }
-    AuthGroupOfflineProc(info);
+
+    auto cmd = make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
+    networkAgent->Recv(move(cmd));
+    cidNetTypeRecord_.erase(info.cid_);
     LOGI("OnDeviceOffline end");
 }
 
@@ -198,7 +211,7 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
     }
 }
 
-void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, std::vector<GroupInfo> &groupList)
+void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::string &networkId)
 {
     LOGI("use udid %{public}s query hichain related groups", udid.c_str());
     int ret = InitDeviceAuthService();
@@ -234,73 +247,23 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, std::vector
         return;
     }
 
+    std::vector<GroupInfo> groupList;
     groupList = jsonObject.get<std::vector<GroupInfo>>();
     for (auto &a : groupList) {
         LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupType] %{public}d,",
              a.groupName.c_str(), a.groupId.c_str(), a.groupOwner.c_str(), a.groupType);
     }
-    return;
-}
 
-void DeviceManagerAgent::AuthGroupOnlineProc(const DeviceInfo info)
-{
-    std::vector<GroupInfo> groupList;
-    QueryRelatedGroups(info.udid_, groupList);
+    unique_lock<mutex> lock(mpToNetworksMutex_);
     for (const auto &group : groupList) {
-        if (!CheckIsAuthGroup(group)) {
-            continue;
-        }
-        if (authGroupMap_.find(group.groupId) == authGroupMap_.end()) {
-            LOGI("groupId %{public}s not exist, map size %{public}d, then mount", group.groupId.c_str(),
-                 authGroupMap_.size());
-            std::stringstream ss;
-            ss << "groupId_" << authGroupMap_.size();
-            MountManager::GetInstance()->Mount(make_unique<MountPoint>(
-                Utils::MountArgumentDescriptors::SetAuthGroupMountArgument(ss.str(), group.groupOwner, true)));
-            std::get<0>(authGroupMap_[group.groupId]) = ss.str();
-        }
-        auto [iter, status] = std::get<1>(authGroupMap_[group.groupId]).insert(info.cid_);
-        if (status == false) {
-            LOGI("cid %{public}s has already inserted into groupId %{public}s", info.cid_.c_str(),
-                 group.groupId.c_str());
-            continue;
+        if (CheckIsAuthGroup(group)) {
+            cidNetTypeRecord_.insert({ networkId, FindNetworkBaseTrustRelation(true) });
+        } else {
+            cidNetTypeRecord_.insert({ networkId, FindNetworkBaseTrustRelation(false) });
         }
     }
-}
 
-void DeviceManagerAgent::AuthGroupOfflineProc(const DeviceInfo &info)
-{
-    for (auto iter = authGroupMap_.begin(); iter != authGroupMap_.end();) {
-        auto [groupIdMark, set] = iter->second;
-        auto groupId = iter->first;
-        if (set.find(info.GetCid()) == set.end()) {
-            continue;
-        }
-
-        if (authGroupMap_.find(groupId) == authGroupMap_.end()) {
-            LOGI("can not find groupId %{public}s ", groupId.c_str());
-            continue;
-        }
-        std::get<1>(authGroupMap_[groupId]).erase(info.GetCid());
-        if (std::get<1>(authGroupMap_[groupId]).empty()) {
-            std::vector<GroupInfo> groupList;
-            if (groupList.size() == 0) {
-                MountManager::GetInstance()->Umount(groupIdMark);
-                iter = authGroupMap_.erase(iter);
-                continue;
-            }
-        }
-        iter++;
-    }
-}
-
-void DeviceManagerAgent::AllAuthGroupsOfflineProc()
-{
-    for (auto iter = authGroupMap_.begin(); iter != authGroupMap_.end();) {
-        auto [groupIdMark, ignore] = iter->second;
-        MountManager::GetInstance()->Umount(groupIdMark);
-        authGroupMap_.erase(iter++);
-    }
+    return;
 }
 
 bool DeviceManagerAgent::CheckIsAuthGroup(const GroupInfo &group)
@@ -331,11 +294,9 @@ void DeviceManagerAgent::OnRemoteDied()
     LOGI("device manager service died");
     StopInstance();
     OfflineAllDevice(); // cannot commit a cmd to queue
-    AllAuthGroupsOfflineProc();
     StartInstance();
     ReconnectOnlineDevices();
 }
-
 DeviceInfo &DeviceManagerAgent::GetLocalDeviceInfo()
 {
     return localDeviceInfo_;

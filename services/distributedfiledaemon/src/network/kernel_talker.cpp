@@ -142,9 +142,10 @@ void KernelTalker::PollRun()
         return;
     }
     string ctrlPath = spt->GetMountArgument().GetCtrlPath();
+    LOGI("Open node file ctrl path %{public}s", ctrlPath.c_str());
     cmdFd = open(ctrlPath.c_str(), O_RDWR);
     if (cmdFd < 0) {
-        LOGE("Open node file error %{public}d", errno);
+        LOGE("Open node file error %{public}d, ctrl path %{public}s", errno, ctrlPath.c_str());
         return;
     }
 
