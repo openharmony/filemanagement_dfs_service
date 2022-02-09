@@ -50,6 +50,7 @@ ohos_unittest("DeviceManagerAgentTest") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
+    "startup_l2:syspara",
   ]
 
   defines = [ "private=public" ]

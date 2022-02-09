@@ -72,5 +72,6 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "os_account_standard:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
+    "startup_l2:syspara",
   ]
 }
