@@ -26,6 +26,7 @@
 #include "softbus_bus_center.h"
 #include "utils_exception.h"
 #include "utils_log.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace Storage {
@@ -34,6 +35,7 @@ namespace {
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int PEER_TO_PEER_GROUP = 256;
 constexpr int ACROSS_ACCOUNT_AUTHORIZE_GROUP = 1282;
+const std::string SAME_ACCOUNT_MARK = "const.distributed_file_only_for_same_account_test";
 } // namespace
 using namespace std;
 
@@ -256,7 +258,7 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
     for (const auto &group : groupList) {
-        if (CheckIsAuthGroup(group)) {
+        if (CheckIsAccountless(group)) {
             cidNetTypeRecord_.insert({ networkId, FindNetworkBaseTrustRelation(true) });
         } else {
             cidNetTypeRecord_.insert({ networkId, FindNetworkBaseTrustRelation(false) });
@@ -266,8 +268,17 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     return;
 }
 
-bool DeviceManagerAgent::CheckIsAuthGroup(const GroupInfo &group)
+bool DeviceManagerAgent::CheckIsAccountless(const GroupInfo &group)
 {
+    // because of there no same_account, only for test, del later
+    LOGI("SAME_ACCOUNT_MARK val is %{public}d", system::GetBoolParameter(SAME_ACCOUNT_MARK, false));
+    if (system::GetBoolParameter(SAME_ACCOUNT_MARK, false) == true) { // isaccountless == false
+        LOGI("SAME_ACCOUNT_MARK val is true(same account)");
+        return false;
+    } else { // isaccountless == true
+        return true;
+    }
+
     if (group.groupType == PEER_TO_PEER_GROUP || group.groupType == ACROSS_ACCOUNT_AUTHORIZE_GROUP) {
         return true;
     }
