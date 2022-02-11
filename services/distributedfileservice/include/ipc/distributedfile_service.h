@@ -41,6 +41,7 @@ public:
                      const uint32_t fileCount) override;
     int32_t sendTest() override;
 
+    static inline const std::string pkgName_ { "ohos.storage.distributedfile.service" };
 private:
     void PublishSA();
     void StartManagers();

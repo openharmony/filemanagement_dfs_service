@@ -14,6 +14,7 @@
  */
 
 #include "device_manager_agent.h"
+#include "distributedfile_service.h"
 #include "softbus_agent.h"
 #include "utils_exception.h"
 #include "utils_log.h"
@@ -69,12 +70,12 @@ void DeviceManagerAgent::OnRemoteDied()
 void DeviceManagerAgent::RegisterToExternalDm()
 {
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    int errCode = deviceManager.InitDeviceManager(pkgName_, shared_from_this());
+    int errCode = deviceManager.InitDeviceManager(DistributedFileService::pkgName_, shared_from_this());
     if (errCode != 0) {
         ThrowException(errCode, "Failed to InitDeviceManager");
     }
     string extra = "";
-    errCode = deviceManager.RegisterDevStateCallback(pkgName_, extra, shared_from_this());
+    errCode = deviceManager.RegisterDevStateCallback(DistributedFileService::pkgName_, extra, shared_from_this());
     if (errCode != 0) {
         ThrowException(errCode, "Failed to RegisterDevStateCallback");
     }
@@ -84,11 +85,11 @@ void DeviceManagerAgent::RegisterToExternalDm()
 void DeviceManagerAgent::UnregisterFromExternalDm()
 {
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    int errCode = deviceManager.UnRegisterDevStateCallback(pkgName_);
+    int errCode = deviceManager.UnRegisterDevStateCallback(DistributedFileService::pkgName_);
     if (errCode != 0) {
         ThrowException(errCode, "Failed to UnRegisterDevStateCallback");
     }
-    errCode = deviceManager.UnInitDeviceManager(pkgName_);
+    errCode = deviceManager.UnInitDeviceManager(DistributedFileService::pkgName_);
     if (errCode != 0) {
         ThrowException(errCode, "Failed to UnInitDeviceManager");
     }

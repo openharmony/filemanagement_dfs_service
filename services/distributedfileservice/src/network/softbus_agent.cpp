@@ -19,6 +19,7 @@
 #include <mutex>
 #include <unistd.h>
 #include "device_manager_agent.h"
+#include "distributedfile_service.h"
 #include "session.h"
 #include "softbus_dispatcher.h"
 #include "utils_exception.h"
@@ -220,15 +221,15 @@ void SoftbusAgent::RegisterSessionListener()
         .OnSessionOpened = SoftbusDispatcher::OnSessionOpened,
         .OnSessionClosed = SoftbusDispatcher::OnSessionClosed,
     };
-    int ret = ::CreateSessionServer(pkgName_.c_str(), sessionName_.c_str(), &sessionListener);
+    int ret = ::CreateSessionServer(DistributedFileService::pkgName_.c_str(), sessionName_.c_str(), &sessionListener);
     if (ret != 0) {
         stringstream ss;
         ss << "Failed to CreateSessionServer, errno:" << ret;
         LOGE("%{public}s, sessionName:%{public}s", ss.str().c_str(), sessionName_.c_str());
         return throw runtime_error(ss.str());
     }
-    LOGD("Succeed to CreateSessionServer, pkgName %{public}s, sbusName:%{public}s", pkgName_.c_str(),
-         sessionName_.c_str());
+    LOGD("Succeed to CreateSessionServer, pkgName %{public}s, sbusName:%{public}s",
+        DistributedFileService::pkgName_.c_str(), sessionName_.c_str());
 }
 
 void SoftbusAgent::RegisterFileListener()
@@ -237,21 +238,22 @@ void SoftbusAgent::RegisterFileListener()
         .OnSendFileFinished = SoftbusDispatcher::OnSendFileFinished,
         .OnFileTransError = SoftbusDispatcher::OnFileTransError,
     };
-    int ret = ::SetFileSendListener(pkgName_.c_str(), sessionName_.c_str(), &fileSendListener);
+    std::string pkgName = DistributedFileService::pkgName_;
+    int ret = ::SetFileSendListener(pkgName.c_str(), sessionName_.c_str(), &fileSendListener);
     if (ret != 0) {
         stringstream ss;
         ss << "Failed to SetFileSendListener, errno:" << ret;
         LOGE("%{public}s, sessionName:%{public}s", ss.str().c_str(), sessionName_.c_str());
         throw runtime_error(ss.str());
     }
-    LOGD("Succeed to SetFileSendListener, pkgName %{public}s, sbusName:%{public}s", pkgName_.c_str(),
+    LOGD("Succeed to SetFileSendListener, pkgName %{public}s, sbusName:%{public}s", pkgName.c_str(),
          sessionName_.c_str());
 
     IFileReceiveListener fileRecvListener = {
         .OnReceiveFileFinished = SoftbusDispatcher::OnReceiveFileFinished,
         .OnFileTransError = SoftbusDispatcher::OnFileTransError,
     };
-    ret = ::SetFileReceiveListener(pkgName_.c_str(), sessionName_.c_str(), &fileRecvListener,
+    ret = ::SetFileReceiveListener(pkgName.c_str(), sessionName_.c_str(), &fileRecvListener,
         DEFAULT_ROOT_PATH.c_str());
     if (ret != 0) {
         stringstream ss;
@@ -259,12 +261,12 @@ void SoftbusAgent::RegisterFileListener()
         LOGE("%{public}s, sessionName:%{public}s", ss.str().c_str(), sessionName_.c_str());
         throw runtime_error(ss.str());
     }
-    LOGD("Succeed to SetFileReceiveListener, pkgName %{public}s, sbusName:%{public}s", pkgName_.c_str(),
+    LOGD("Succeed to SetFileReceiveListener, pkgName %{public}s, sbusName:%{public}s", pkgName.c_str(),
          sessionName_.c_str());
 }
 void SoftbusAgent::UnRegisterSessionListener()
 {
-    int ret = ::RemoveSessionServer(pkgName_.c_str(), sessionName_.c_str());
+    int ret = ::RemoveSessionServer(DistributedFileService::pkgName_.c_str(), sessionName_.c_str());
     if (ret != 0) {
         stringstream ss;
         ss << "Failed to RemoveSessionServer, errno:" << ret;

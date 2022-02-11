@@ -50,7 +50,6 @@ protected:
 
 private:
     std::string sessionName_ { "DistributedFileService" };
-    std::string pkgName_ { "ohos.storage.distributedfile.service" };
     std::mutex sessionMapMux_;
     std::unordered_map<std::string, std::list<int>> cidToSessionID_;
 

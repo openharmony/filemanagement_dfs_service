@@ -55,7 +55,7 @@ int DistributedFileServiceStub::test(MessageParcel &data, MessageParcel &reply)
 {
     LOGD(" DistributedFileServiceStub : sendTest enter");
     sendTest();
-    return 3;
+    return 0;
 }
 
 int32_t DistributedFileServiceStub::SendFileStub(MessageParcel &data, MessageParcel &reply)
