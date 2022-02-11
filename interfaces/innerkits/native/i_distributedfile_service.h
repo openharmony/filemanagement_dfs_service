@@ -25,9 +25,11 @@ class IDistributedFileService : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedFile.IDistributedFileService");
     // define the message code
+    enum DistributedFileSurfaceCode { INTERFACE1 = 0, SEND_FILE_DISTRIBUTED, TEST_CODE };
     // define the error code
     enum {
         DISTRIBUTEDFILE_SUCCESS = 0,
+        GET_DISTRIBUTEDFILE_DISTRIBUTED_DIR_FAIL = 1,
         DISTRIBUTEDFILE_WRITE_DESCRIPTOR_TOKEN_FAIL,
         ERR_FLATTEN_OBJECT,
         DISTRIBUTEDFILE_NO_ERROR,
@@ -42,10 +44,16 @@ public:
         DISTRIBUTEDFILE_PERMISSION_DENIED,
         ROOT_UID,
         SYSTEM_SERVICE_UID,
+        SEND_FILE_FAIL,
+        SEND_FILE_DISTRIBUTED_DESCRIPTION_FAIL
     };
+    virtual int32_t SendFile(const std::string &cid,
+                             const std::vector<std::string> &sourceFileList,
+                             const std::vector<std::string> &destinationFileList,
+                             const uint32_t fileCount) = 0;
+    virtual int32_t sendTest() = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-
-#endif // I_YANGHU_TESt_SERVICE_H
+#endif // I_DISTRIBUTEDFILE_SERVICE_H

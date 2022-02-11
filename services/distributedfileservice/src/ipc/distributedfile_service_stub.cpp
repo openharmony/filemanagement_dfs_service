@@ -25,6 +25,8 @@ namespace Storage {
 namespace DistributedFile {
 DistributedFileServiceStub::DistributedFileServiceStub()
 {
+    memberFuncMap_[SEND_FILE_DISTRIBUTED] = &DistributedFileServiceStub::SendFileStub;
+    memberFuncMap_[TEST_CODE] = &DistributedFileServiceStub::test;
 }
 
 DistributedFileServiceStub::~DistributedFileServiceStub()
@@ -37,12 +39,7 @@ int DistributedFileServiceStub::OnRemoteRequest(uint32_t code,
                                                 MessageParcel &reply,
                                                 MessageOption &option)
 {
-    std::u16string myDescriptor = DistributedFileServiceStub::GetDescriptor();
-    std::u16string remoteDescriptor = data.ReadInterfaceToken();
-    if (myDescriptor != remoteDescriptor) {
-        return DISTRIBUTEDFILE_BAD_TYPE;
-    }
-
+    LOGD("DistributedFileServiceStub : OnRemoteRequest enter, code %{public}d ", code);
     auto itFunc = memberFuncMap_.find(code);
     if (itFunc != memberFuncMap_.end()) {
         auto memberFunc = itFunc->second;
@@ -52,6 +49,18 @@ int DistributedFileServiceStub::OnRemoteRequest(uint32_t code,
     }
 
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+}
+
+int DistributedFileServiceStub::test(MessageParcel &data, MessageParcel &reply)
+{
+    LOGD(" DistributedFileServiceStub : sendTest enter");
+    sendTest();
+    return 0;
+}
+
+int32_t DistributedFileServiceStub::SendFileStub(MessageParcel &data, MessageParcel &reply)
+{
+    return 0;
 }
 } // namespace DistributedFile
 } // namespace Storage

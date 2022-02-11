@@ -30,15 +30,19 @@ public:
      *
      * @param impl
      */
-    explicit ServiceProxy(const sptr<IRemoteObject> &impl);
+    explicit ServiceProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IDistributedFileService>(impl) {}
 
-    virtual ~ServiceProxy();
+    virtual ~ServiceProxy() = default;
 
+    int32_t SendFile(const std::string &cid,
+                     const std::vector<std::string> &sourceFileList,
+                     const std::vector<std::string> &destinationFileList,
+                     const uint32_t fileCount) override;
+    int32_t sendTest() override;
 private:
     static inline BrokerDelegator<ServiceProxy> delegator_;
 };
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-
-#endif
+#endif // DISTRIBUTEDFILE_SERVICE_PROXY_H

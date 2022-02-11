@@ -36,9 +36,10 @@ private:
     using DistributedFileServiceFunc = int32_t (DistributedFileServiceStub::*)(MessageParcel &data,
                                                                                MessageParcel &reply);
     std::map<uint32_t, DistributedFileServiceFunc> memberFuncMap_;
+    int32_t SendFileStub(MessageParcel &data, MessageParcel &reply);
+    int test(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-
 #endif // DISTRIBUTEDFILE_SERVICE_STUB_H

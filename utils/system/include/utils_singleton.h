@@ -25,12 +25,14 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace Utils {
-#define DECLARE_SINGLETON(MyClass) \
-public:                            \
-    ~MyClass();                    \
-                                   \
-private:                           \
-    friend Singleton<MyClass>;     \
+#define DECLARE_SINGLETON(MyClass)                \
+public:                                           \
+    ~MyClass();                                   \
+    MyClass(const MyClass&) = delete;             \
+    MyClass& operator=(const MyClass&) = delete;  \
+                                                  \
+private:                                          \
+    friend Singleton<MyClass>;                    \
     MyClass();
 
 template<typename T>

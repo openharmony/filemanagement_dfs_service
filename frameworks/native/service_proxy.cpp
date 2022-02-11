@@ -19,9 +19,25 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-ServiceProxy::ServiceProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IDistributedFileService>(impl) {}
-ServiceProxy::~ServiceProxy() {}
 
+int32_t ServiceProxy::SendFile(const std::string &cid,
+                               const std::vector<std::string> &sourceFileList,
+                               const std::vector<std::string> &destinationFileList,
+                               const uint32_t fileCount)
+{
+    return 0;
+}
+
+int32_t ServiceProxy::sendTest()
+{
+    LOGE("sendTest enter");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    int ret = Remote()->SendRequest(TEST_CODE, data, reply, option);
+    LOGE("sendTest sendrequest done %{public}d", ret);
+    return ret;
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
