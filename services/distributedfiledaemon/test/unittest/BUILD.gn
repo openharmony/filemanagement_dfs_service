@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/test.gni")
-import("//foundation/storage/distributed_file_manager/distributedfile.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 module_output_path = "storage_distributed_file_manager/distributedfiledaemon"
 
@@ -29,29 +29,34 @@ config("module_private_config") {
 ohos_unittest("DeviceManagerAgentTest") {
   module_out_path = module_output_path
 
-  sources = [
-  ]
+  sources = []
 
   sources += [ "device/device_manager_agent_test.cpp" ]
 
   configs = [
     ":module_private_config",
-    "${utils_path}:compiler_configs"
+    "${utils_path}:compiler_configs",
   ]
 
   deps = [
-    "//third_party/googletest:gtest_main",
     "${utils_path}:libdistributedfileutils",
-    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//base/security/deviceauth/services:deviceauth_sdk",
+    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk",
+    "//third_party/googletest:gtest_main",
   ]
 
-  defines = [
-    "private=public"
+  external_deps = [
+    "dsoftbus_standard:softbus_client",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr_standard:samgr_proxy",
+    "startup_l2:syspara",
   ]
+
+  defines = [ "private=public" ]
 }
 
 group("unittest") {
   testonly = true
-  deps = [":DeviceManagerAgentTest"]
+  deps = [ ":DeviceManagerAgentTest" ]
 }

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/ohos.gni")
-import("//foundation/storage/distributed_file_manager/distributedfile.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_shared_library("libdistributedfileservice") {
   include_dirs = [
@@ -22,9 +22,8 @@ ohos_shared_library("libdistributedfileservice") {
   ]
 
   sources = [
-    "src/ipc/distributedfile_service_stub.cpp",
     "src/ipc/distributedfile_service.cpp",
-    "//foundation/storage/distributed_file_manager/frameworks/native/service_proxy.cpp",
+    "src/ipc/distributedfile_service_stub.cpp",
     "src/device/device_manager_agent.cpp",
     "src/network/softbus_agent.cpp",
     "src/network/softbus_dispatcher.cpp"
@@ -33,13 +32,13 @@ ohos_shared_library("libdistributedfileservice") {
   configs = [ "${utils_path}:compiler_configs" ]
 
   external_deps = [
+    "ability_runtime:want",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "dsoftbus_standard:softbus_client"
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "aafwk_standard:want",
-    "appexecfwk_standard:appexecfwk_base",
-    "appexecfwk_standard:appexecfwk_core",
-    "dsoftbus_standard:softbus_client"
   ]
 
   deps = [
@@ -48,10 +47,6 @@ ohos_shared_library("libdistributedfileservice") {
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk"
   ]
 
-  part_name = "storage_distributed_file_manager"
-  subsystem_name = "storage"
-}
-
-group("distributedfileservice_target") {
-  deps = [ ":libdistributedfileservice" ]
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
 }

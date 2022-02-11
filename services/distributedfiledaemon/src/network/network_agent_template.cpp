@@ -60,9 +60,6 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
             .tryTimes_ = MAX_RETRY_COUNT,
         });
         Recv(move(cmd));
-
-        dma->Recv(
-            make_unique<Cmd<DeviceManagerAgent, const DeviceInfo>>(&DeviceManagerAgent::AuthGroupOnlineProc, info));
     }
 }
 

@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/storage/distributed_file_manager/distributedfile.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 config("compiler_configs") {
   visibility = [ ":*" ]
@@ -65,6 +65,6 @@ ohos_shared_library("libdistributedfileutils") {
     "//utils/native/base:utils",
   ]
 
-  part_name = "storage_distributed_file_manager"
-  subsystem_name = "storage"
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
 }

@@ -10,33 +10,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-config("private_config") {
-  include_dirs = [ "../../../frameworks/native" ]
-
-  configs = [ "//build/config/compiler:exceptions" ]
+group("libdistributedfile_innerkits") {
+  deps = [ "${innerkits_native_path}:libdistributedfile_innerkits" ]
 }
 
-config("public_config") {
-  include_dirs = [ "." ]
-}
-
-ohos_shared_library("libdistributedfile_innerkits") {
-  sources = [ "../../../frameworks/native/service_proxy.cpp" ]
-
-  configs = [ ":private_config" ]
-
-  public_configs = [ ":public_config" ]
-
-  external_deps = [
-    "ipc:ipc_core",
-    "safwk:system_ability_fwk",
+group("services_target") {
+  deps = [
+    "${services_path}:distributed_file.para",
+    "${services_path}:distributedfile_etc",
+    "${services_path}:distributedfile_sa_profile",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${services_path}/distributedfileservice:libdistributedfileservice",
   ]
+}
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
-
-  part_name = "dfs_service"
-  subsystem_name = "filemanagement"
+group("dfs_test_moudule") {
+  testonly = true
+  deps = [
+    "${services_path}/distributedfiledaemon/test/unittest:DeviceManagerAgentTest",
+    "test/moduletest:DistributedFileDaemonServiceTest",
+  ]
 }

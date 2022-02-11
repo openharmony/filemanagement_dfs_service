@@ -52,7 +52,7 @@ private:
     bool registerToService_{false};
 
     void PublishSA();
-    void StartManagers();
+    void RegisterOsAccount();
 };
 } // namespace DistributedFile
 } // namespace Storage

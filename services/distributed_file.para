@@ -11,8 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-distributedfile_path = "//foundation/filemanagement/dfs_service"
 
-utils_path = "${distributedfile_path}/utils"
-services_path = "${distributedfile_path}/services"
-innerkits_native_path = "${distributedfile_path}/interfaces/innerkits/native"
+const.distributed_file_property.enabled=true
+const.distributed_file_only_for_same_account_test=false
+

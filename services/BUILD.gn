@@ -12,27 +12,25 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//build/ohos/sa_profile/sa_profile.gni")
-import("//foundation/storage/distributed_file_manager/distributedfile.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_sa_profile("distributedfile_sa_profile") {
   sources = [
-      "4901.xml",
-      "4902.xml"]
-  part_name = "storage_distributed_file_manager"
+    "4901.xml",
+    "4902.xml",
+  ]
+  part_name = "dfs_service"
 }
 
 ohos_prebuilt_etc("distributedfile_etc") {
   source = "distributedfile.cfg"
   relative_install_dir = "init"
-  part_name = "storage_distributed_file_manager"
-  subsystem_name = "storage"
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
 }
 
-group("services_target") {
-  deps = [
-    ":distributedfile_etc",
-    ":distributedfile_sa_profile",
-    "distributedfiledaemon:distributedfiledaemon_target",
-    "distributedfileservice:distributedfileservice_target",
-  ]
+ohos_prebuilt_etc("distributed_file.para") {
+  source = "distributed_file.para"
+  part_name = "dfs_service"
+  module_install_dir = "etc/param"
 }
