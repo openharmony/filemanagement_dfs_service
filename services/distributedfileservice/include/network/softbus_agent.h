@@ -16,10 +16,10 @@
 #ifndef DFS_SOFTBUS_AGENT_H
 #define DFS_SOFTBUS_AGENT_H
 
-#include "utils_singleton.h"
 #include <condition_variable>
 #include <list>
 #include <unordered_map>
+#include "utils_singleton.h"
 
 namespace OHOS {
 namespace Storage {
@@ -49,8 +49,8 @@ protected:
     std::string GetPeerDevId(const int sessionId);
 
 private:
-    std::string sessionName_{"DistributedFileService"};
-    std::string pkgName_{"ohos.storage.distributedfile.service"};
+    std::string sessionName_ { "DistributedFileService" };
+    std::string pkgName_ { "ohos.storage.distributedfile.service" };
     std::mutex sessionMapMux_;
     std::unordered_map<std::string, std::list<int>> cidToSessionID_;
 

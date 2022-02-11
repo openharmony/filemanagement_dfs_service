@@ -15,14 +15,14 @@
 
 #include "softbus_agent.h"
 
+#include <fcntl.h>
+#include <mutex>
+#include <unistd.h>
 #include "device_manager_agent.h"
 #include "session.h"
 #include "softbus_dispatcher.h"
 #include "utils_exception.h"
 #include "utils_log.h"
-#include <fcntl.h>
-#include <mutex>
-#include <unistd.h>
 
 namespace OHOS {
 namespace Storage {
@@ -31,6 +31,7 @@ using namespace std;
 constexpr int32_t SOFTBUS_OK = 0;
 constexpr int32_t DEVICE_ID_SIZE_MAX = 65;
 constexpr int32_t IS_CLIENT = 0;
+const std::string DEFAULT_ROOT_PATH = "/data/service/el2/100/hmdfs/non_account/data/";
 
 SoftbusAgent::SoftbusAgent() {}
 
@@ -60,7 +61,6 @@ void SoftbusAgent::OnDeviceOnline(const std::string &cid)
     const char *sFileList[1] = {"/data/user/0/xhl_sendfile_test/1.txt"};
 
     static int sendfile_cnt = 0;
-    // int ret = SendFile((*iter), sFileList, dFileList, 1);
     int ret = SendFile(cid, sFileList, nullptr, 1);
     if (ret != 0) {
         LOGE("sendfile failed, ret %{public}d", ret);
@@ -74,8 +74,7 @@ int SoftbusAgent::SendFile(const std::string &cid, const char *sFileList[], cons
     // first check whether the sessionId available
     auto alreadyOnliceDev = DeviceManagerAgent::GetInstance()->getOnlineDevs();
     if (alreadyOnliceDev.find(cid) == alreadyOnliceDev.end()) {
-        LOGE("cid:%{public}s has not been online yet", cid.c_str());
-        return -1;
+        LOGE("cid:%{public}s has not been online yet, sendfile maybe will fail, try", cid.c_str());
     }
     int sessionId = -1;
     {
@@ -123,7 +122,7 @@ void SoftbusAgent::OpenSession(const std::string &cid)
 void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
 {
     LOGD("get session res:%{public}d, sessionId:%{public}d", result, sessionId);
-    if (result != 0) { // todo:增加重试？
+    if (result != 0) {
         LOGE("open failed, result:%{public}d, sessionId:%{public}d", result, sessionId);
         return;
     }
@@ -150,21 +149,18 @@ void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
 
 int SoftbusAgent::OnSendFileFinished(const int sessionId, const std::string firstFile)
 {
-    // todo:待和js联调
     LOGD("send file finish, sessionId:%{public}d, firstFile %{public}s", sessionId, firstFile.c_str());
     return 0;
 }
 
 int SoftbusAgent::OnFileTransError(const int sessionId)
 {
-    // todo:待和js联调
     LOGD("file trans error, sessionId:%{public}d", sessionId);
     return 0;
 }
 
 void SoftbusAgent::OnReceiveFileFinished(const int sessionId, const std::string files, int fileCnt)
 {
-    // todo:待和js联调
     LOGD("recv file finish, sessionId:%{public}d, files %{public}s, cnt %{public}d", sessionId, files.c_str(), fileCnt);
 }
 
@@ -182,7 +178,7 @@ void SoftbusAgent::OnSessionClosed(int sessionId)
     return;
 }
 
-std::string SoftbusAgent::GetPeerDevId(const int sessionId) // 确认是否需要返回引用？
+std::string SoftbusAgent::GetPeerDevId(const int sessionId)
 {
     std::string cid;
     char peerDevId[DEVICE_ID_SIZE_MAX] = "";
@@ -211,7 +207,7 @@ int SoftbusAgent::CloseSession(const std::string &cid)
 
 void SoftbusAgent::OnDeviceOffline(const std::string &cid)
 {
-    if (CloseSession(cid) == -1){
+    if (CloseSession(cid) == -1) {
         return;
     }
     std::unique_lock<std::mutex> lock(sessionMapMux_);
@@ -256,7 +252,7 @@ void SoftbusAgent::RegisterFileListener()
         .OnFileTransError = SoftbusDispatcher::OnFileTransError,
     };
     ret = ::SetFileReceiveListener(pkgName_.c_str(), sessionName_.c_str(), &fileRecvListener,
-                                   "/data/user/0/"); // rootDir TODO
+        DEFAULT_ROOT_PATH.c_str());
     if (ret != 0) {
         stringstream ss;
         ss << "Failed to SetFileReceiveListener, errno:" << ret;

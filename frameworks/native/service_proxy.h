@@ -16,9 +16,9 @@
 #ifndef DISTRIBUTEDFILE_SERVICE_PROXY_H
 #define DISTRIBUTEDFILE_SERVICE_PROXY_H
 
+#include <iremote_proxy.h>
 #include "i_distributedfile_service.h"
 #include "message_parcel.h"
-#include <iremote_proxy.h>
 
 namespace OHOS {
 namespace Storage {

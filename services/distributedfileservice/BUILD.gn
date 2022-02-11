@@ -32,10 +32,7 @@ ohos_shared_library("libdistributedfileservice") {
   configs = [ "${utils_path}:compiler_configs" ]
 
   external_deps = [
-    "ability_runtime:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
-    "dsoftbus_standard:softbus_client"
+    "dsoftbus_standard:softbus_client",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",

@@ -14,11 +14,11 @@
  */
 #include "distributedfile_service.h"
 
+#include <system_ability_definition.h>
 #include "device_manager_agent.h"
 #include "utils_exception.h"
 #include "utils_log.h"
 #include "softbus_agent.h"
-#include <system_ability_definition.h>
 
 namespace OHOS {
 namespace Storage {
@@ -65,7 +65,7 @@ void DistributedFileService::OnStop()
 
 int32_t DistributedFileService::sendTest()
 {
-    LOGI("xhl DistributedFileService::sendTest");
+    LOGI("DistributedFileService::sendTest");
     return 0;
 }
 
@@ -74,35 +74,6 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
                                          const std::vector<std::string> &destinationFileList,
                                          const uint32_t fileCount)
 {
-    char **sFileList = new char*[fileCount];
-    LOGD("xhl DistributedFileService::SendFile, sessionId %{public}s, fileCount %{public}d", cid.c_str(), fileCount);
-    for (int index = 0; index < sourceFileList.size(); ++index) {
-        int32_t length = sourceFileList.at(index).length();
-        sFileList[index] = new char[length + 1];
-        memset_s(sFileList[index], length + 1, '\0', length + 1);
-        memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length);
-        sFileList[index][length] = '\0';
-    }
-    char **dFileList = new char*[fileCount];
-    for (int index = 0; index < destinationFileList.size(); ++index) {
-        int32_t length = destinationFileList.at(index).length();
-        dFileList[index] = new char[length + 1];
-        memset_s(dFileList[index], length + 1, '\0', length + 1);
-        memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length);
-        dFileList[index][length] = '\0';
-    }
-
-    auto softBusAgent = SoftbusAgent::GetInstance();
-    int result = softBusAgent->SendFile(cid, (const char **)sFileList, (const char **)dFileList, fileCount);
-    LOGI("softBusAgent::SendFile result %{public}d", result);
-
-    for (uint32_t index = 0; index < fileCount; ++index) {
-        delete[] sFileList[index];
-        delete[] dFileList[index];
-    }
-    delete[] sFileList;
-    delete[] dFileList;
-
     return 0;
 }
 } // namespace DistributedFile

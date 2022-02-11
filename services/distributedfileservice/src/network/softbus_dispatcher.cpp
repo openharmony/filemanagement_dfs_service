@@ -52,7 +52,6 @@ void SoftbusDispatcher::OnReceiveFileFinished(int sessionId, const char *files, 
     LOGD("sessionId:%{public}d", sessionId);
     SoftbusAgent::GetInstance()->OnReceiveFileFinished(sessionId, std::string(files), fileCnt);
 }
-
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

@@ -39,7 +39,7 @@ int DistributedFileServiceStub::OnRemoteRequest(uint32_t code,
                                                 MessageParcel &reply,
                                                 MessageOption &option)
 {
-    LOGD("xhl DistributedFileServiceStub : OnRemoteRequest enter, code %{public}d ", code);
+    LOGD("DistributedFileServiceStub : OnRemoteRequest enter, code %{public}d ", code);
     auto itFunc = memberFuncMap_.find(code);
     if (itFunc != memberFuncMap_.end()) {
         auto memberFunc = itFunc->second;
@@ -53,42 +53,14 @@ int DistributedFileServiceStub::OnRemoteRequest(uint32_t code,
 
 int DistributedFileServiceStub::test(MessageParcel &data, MessageParcel &reply)
 {
-    LOGD("xhl DistributedFileServiceStub : sendTest enter");
+    LOGD(" DistributedFileServiceStub : sendTest enter");
     sendTest();
     return 3;
 }
 
 int32_t DistributedFileServiceStub::SendFileStub(MessageParcel &data, MessageParcel &reply)
 {
-    std::string cid = data.ReadString();
-    if (cid.empty()) {
-        LOGE("DistributedFileServiceStub : Failed to get app device id, error: invalid device id");
-        return DISTRIBUTEDFILE_DIR_NAME_IS_EMPTY;
-    }
-
-    int32_t sourceListNumber = data.ReadInt32();
-    std::vector<std::string> srcList;
-    for (int32_t index = 0; index < sourceListNumber; ++index) {
-        srcList.push_back(data.ReadString());
-    }
-    std::vector<std::string> dstList;
-    int32_t destinationListNumber = data.ReadInt32();
-    for (int32_t index = 0; index < destinationListNumber; ++index) {
-        dstList.push_back(data.ReadString());
-    }
-    uint32_t fileCount = data.ReadUint32();
-
-    LOGI("DistributedFileServiceStub : cid %{public}s, srcList size %{public}d, dstList size %{public}d,"
-        "fileCout %{public}d", cid.c_str(), sourceListNumber, destinationListNumber, fileCount);
-
-    int32_t result = SendFile(cid, srcList, dstList, fileCount);
-    LOGD("xhl DistributedFileServiceStub : SendFileStub result = %{public}d", result);
-    if (!reply.WriteInt32(result)) {
-        LOGE("fail to write parcel");
-        return DISTRIBUTEDFILE_WRITE_REPLY_FAIL;
-    }
-
-    return result;
+    return 0;
 }
 } // namespace DistributedFile
 } // namespace Storage

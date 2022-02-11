@@ -28,8 +28,8 @@ class DistributedFileService : public SystemAbility,
                                public std::enable_shared_from_this<DistributedFileService> {
     DECLARE_SYSTEM_ABILITY(DistributedFileService)
 public:
-    DistributedFileService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate){};
-    ~DistributedFileService(){};
+    DistributedFileService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate) {};
+    ~DistributedFileService() {};
 
     void OnDump() override;
     void OnStart() override;

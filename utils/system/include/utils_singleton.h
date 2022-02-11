@@ -67,7 +67,6 @@ std::shared_ptr<T> Singleton<T>::GetInstance()
     static std::shared_ptr<T> *dummy = nullptr;
     static std::once_flag once;
     std::call_once(once, []() mutable {
-        // dummy = std::make_shared<T>();
         dummy = new std::shared_ptr<T>(new T());
         (*dummy)->StartInstance();
     });

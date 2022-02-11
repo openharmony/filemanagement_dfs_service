@@ -25,48 +25,17 @@ int32_t ServiceProxy::SendFile(const std::string &cid,
                                const std::vector<std::string> &destinationFileList,
                                const uint32_t fileCount)
 {
-    LOGI("xhl sendFile enter");
-    int32_t result = SEND_FILE_FAIL;
-    MessageOption option;
-    MessageParcel dataParcel;
-    MessageParcel replyParcel;
-
-    dataParcel.WriteString(cid);
-    int32_t sourceListNumber = sourceFileList.size();
-    dataParcel.WriteInt32(sourceListNumber);
-    for (int32_t index = 0; index < sourceListNumber; ++index) {
-        dataParcel.WriteString(sourceFileList.at(index));
-    }
-    int32_t destinationListNumber = destinationFileList.size();
-    dataParcel.WriteInt32(destinationListNumber);
-    for (int32_t index = 0; index < destinationListNumber; ++index) {
-        dataParcel.WriteString(destinationFileList.at(index));
-    }
-    dataParcel.WriteUint32(fileCount);
-
-    if (Remote() == nullptr) {
-        LOGE("Remote object address is null");
-        return DISTRIBUTEDFILE_REMOTE_ADDRESS_IS_NULL;
-    }
-
-    result = Remote()->SendRequest(SEND_FILE_DISTRIBUTED, dataParcel, replyParcel, option);
-    if (result != DISTRIBUTEDFILE_NO_ERROR) {
-        LOGE("Function RemoveBundleDistributedDirs! errCode:%{public}d", result);
-        return DISTRIBUTEDFILE_CONNECT_SYSTEM_ABILITY_STUB_FAIL;
-    }
-    LOGE("xhl sendfile sendRequest done %{public}d", result);
-
-    return replyParcel.ReadInt32();
+    return 0;
 }
 
 int32_t ServiceProxy::sendTest()
 {
-    LOGE("xhl sendTest enter");
+    LOGE("sendTest enter");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     int ret = Remote()->SendRequest(TEST_CODE, data, reply, option);
-    LOGE("xhl sendTest sendrequest done %{public}d", ret);
+    LOGE("sendTest sendrequest done %{public}d", ret);
     return ret;
 }
 } // namespace DistributedFile
