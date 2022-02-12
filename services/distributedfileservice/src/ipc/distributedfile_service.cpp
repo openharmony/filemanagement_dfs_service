@@ -92,7 +92,7 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
             sFileList[index] = new char[length + 1];
             memset_s(sFileList[index], length + 1, '\0', length + 1);
             int ret = memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length);
-            if (ret < 0) {
+            if (ret != EOK) {
                 LOGE("memory copy failed");
                 return -1;
             }
@@ -102,7 +102,7 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
             sFileList[index] = new char[length + 1];
             memset_s(sFileList[index], length + 1, '\0', length + 1);
             int ret = memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length);
-            if (ret < 0) {
+            if (ret != EOK) {
                 LOGE("memory copy failed");
                 return -1;
             }
@@ -118,7 +118,7 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
         dFileList[index] = new char[length + 1];
         memset_s(dFileList[index], length + 1, '\0', length + 1);
         int ret = memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length);
-        if (ret < 0) {
+        if (ret != EOK) {
             LOGE("memory copy failed");
             return -1;
         }

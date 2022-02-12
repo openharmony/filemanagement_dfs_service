@@ -308,7 +308,7 @@ int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>
 {
     if (deviceId.empty()) {
         LOGE("DeviceId can't be emptey.\n");
-        return -2;
+        return -1;
     }
     sptr<ISystemAbilityManager> systemAbilityMgr =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();

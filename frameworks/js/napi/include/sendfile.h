@@ -24,7 +24,6 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-
 int32_t NapiDeviceOnline(const std::string &cid);
 int32_t NapiDeviceOffline(const std::string &cid);
 int32_t NapiSendFinished(const std::string &cid, const std::string &fileName);
