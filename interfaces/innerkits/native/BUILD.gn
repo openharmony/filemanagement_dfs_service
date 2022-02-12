@@ -14,9 +14,15 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 config("private_config") {
-  include_dirs = [ "../../../frameworks/native" ]
+  include_dirs = [
+    "../../../frameworks/native/include"
+  ]
 
-  configs = [ "//build/config/compiler:exceptions" ]
+  # configs = [ "//build/config/compiler:exceptions" ]
+  defines = [
+    "LOG_TAG=\"distributedfile\"",
+    "LOG_DOMAIN=0xD001600",
+  ]
 }
 
 config("public_config") {
@@ -24,7 +30,7 @@ config("public_config") {
 }
 
 ohos_shared_library("libdistributedfile_innerkits") {
-  sources = [ "../../../frameworks/native/service_proxy.cpp" ]
+  sources = [ "${distributedfile_path}/frameworks/native/src/service_proxy.cpp" ]
 
   configs = [ ":private_config" ]
 

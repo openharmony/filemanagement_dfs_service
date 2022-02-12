@@ -15,9 +15,11 @@
 
 #include "distributedfile_service_stub.h"
 
-#include <ipc_skeleton.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
+#include "ipc_skeleton.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -26,7 +28,9 @@ namespace DistributedFile {
 DistributedFileServiceStub::DistributedFileServiceStub()
 {
     memberFuncMap_[SEND_FILE_DISTRIBUTED] = &DistributedFileServiceStub::SendFileStub;
-    memberFuncMap_[TEST_CODE] = &DistributedFileServiceStub::test;
+    memberFuncMap_[OPEN_FILE_FD] = &DistributedFileServiceStub::OpenFileStub;
+    memberFuncMap_[REGISTER_NOTIFY_CALLBACK] = &DistributedFileServiceStub::CmdRegisterNotifyCallback;
+    memberFuncMap_[IS_DEVICE_ONLINE] = &DistributedFileServiceStub::CmdIsDeviceOnline;
 }
 
 DistributedFileServiceStub::~DistributedFileServiceStub()
@@ -39,7 +43,13 @@ int DistributedFileServiceStub::OnRemoteRequest(uint32_t code,
                                                 MessageParcel &reply,
                                                 MessageOption &option)
 {
-    LOGD("DistributedFileServiceStub : OnRemoteRequest enter, code %{public}d ", code);
+    std::u16string myDescriptor = DistributedFileServiceStub::GetDescriptor();
+    std::u16string remoteDescriptor = data.ReadInterfaceToken();
+    if (myDescriptor != remoteDescriptor) {
+        LOGE("DistributedFileServiceStub descriptor information");
+        return DFS_DESCRIPTOR_IS_EMPTY;
+    }
+
     auto itFunc = memberFuncMap_.find(code);
     if (itFunc != memberFuncMap_.end()) {
         auto memberFunc = itFunc->second;
@@ -47,20 +57,93 @@ int DistributedFileServiceStub::OnRemoteRequest(uint32_t code,
             return (this->*memberFunc)(data, reply);
         }
     }
-
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
-}
-
-int DistributedFileServiceStub::test(MessageParcel &data, MessageParcel &reply)
-{
-    LOGD(" DistributedFileServiceStub : sendTest enter");
-    sendTest();
-    return 0;
 }
 
 int32_t DistributedFileServiceStub::SendFileStub(MessageParcel &data, MessageParcel &reply)
 {
-    return 0;
+    std::string cid = data.ReadString();
+    if (cid.empty()) {
+        LOGE("SendFileStub : Failed to get app device id, error: invalid device id");
+        return DFS_SESSION_ID_IS_EMPTY;
+    }
+
+    int32_t sourceListNumber = data.ReadInt32();
+    std::vector<std::string> srcList;
+    for (int32_t index = 0; index < sourceListNumber; ++index) {
+        srcList.push_back(data.ReadString());
+    }
+    std::vector<std::string> dstList;
+    int32_t destinationListNumber = data.ReadInt32();
+    for (int32_t index = 0; index < destinationListNumber; ++index) {
+        dstList.push_back(data.ReadString());
+    }
+    uint32_t fileCount = data.ReadUint32();
+
+    int32_t result = SendFile(cid, srcList, dstList, fileCount);
+    if (!reply.WriteInt32(result)) {
+        LOGE("sendfilestub fail to write parcel");
+        return DFS_WRITE_REPLY_FAIL;
+    }
+
+    return result;
+}
+
+int32_t DistributedFileServiceStub::OpenFileStub(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t fileData = data.ReadFileDescriptor();
+    int32_t fd = fcntl(fileData, F_GETFD, 0);
+    if (fd < 0) {
+        reply.WriteInt32(DFS_SET_FD_FAIL);
+        LOGE("DistributedFileServiceStub : Failed to get app device id, error: invalid device id");
+        return DFS_SET_FD_FAIL;
+    }
+
+    std::string fileName = data.ReadString();
+    if (fileName.empty()) {
+        LOGE("DistributedFileServiceStub : Failed to get app device id, error: invalid device id");
+        return DFS_NO_SUCH_FILE;
+    }
+
+    int32_t modeData = data.ReadInt32();
+    int32_t result = OpenFile(fileData, fileName, modeData);
+    if (!reply.WriteInt32(result)) {
+        LOGE("fail to write parcel");
+        return DFS_WRITE_REPLY_FAIL;
+    }
+
+    return result;
+}
+
+int32_t DistributedFileServiceStub::CmdRegisterNotifyCallback(MessageParcel &data, MessageParcel &reply)
+{
+    OHOS::sptr<IRemoteObject> remote = data.ReadRemoteObject();
+    if (remote == nullptr) {
+        LOGE("Callback ptr is nullptr.");
+        return 0;
+    }
+
+    OHOS::sptr<IFileTransferCallback> callback = iface_cast<IFileTransferCallback>(remote);
+    int32_t result = RegisterNotifyCallback(callback);
+    reply.WriteInt32(result);
+    return result;
+}
+
+int32_t DistributedFileServiceStub::CmdIsDeviceOnline(MessageParcel &data, MessageParcel &reply)
+{
+    std::string cid = data.ReadString();
+    if (cid.empty()) {
+        LOGE("DistributedFileServiceStub : Failed to get app device id, error: invalid device id");
+        return DFS_SESSION_ID_IS_EMPTY;
+    }
+
+    int32_t result = IsDeviceOnline(cid);
+    if (!reply.WriteInt32(result)) {
+        LOGE("fail to write parcel");
+        return DFS_WRITE_REPLY_FAIL;
+    }
+
+    return result;
 }
 } // namespace DistributedFile
 } // namespace Storage

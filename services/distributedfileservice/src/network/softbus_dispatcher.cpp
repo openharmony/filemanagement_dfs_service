@@ -20,7 +20,6 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-
 int SoftbusDispatcher::OnSessionOpened(int sessionId, int result)
 {
     LOGD("get session res:%{public}d, sessionId:%{public}d", result, sessionId);

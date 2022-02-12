@@ -18,7 +18,10 @@
 
 #include "distributedfile_service_stub.h"
 #include "iremote_stub.h"
+#include "singleton.h"
 #include "system_ability.h"
+
+#include <mutex>
 
 namespace OHOS {
 namespace Storage {
@@ -26,11 +29,10 @@ namespace DistributedFile {
 class DistributedFileService : public SystemAbility,
                                public DistributedFileServiceStub,
                                public std::enable_shared_from_this<DistributedFileService> {
+    DECLARE_DELAYED_SINGLETON(DistributedFileService)
     DECLARE_SYSTEM_ABILITY(DistributedFileService)
 public:
-    DistributedFileService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate) {};
-    ~DistributedFileService() {};
-
+    explicit DistributedFileService(int32_t saId, bool runOnCreate = true) : SystemAbility(saId, runOnCreate) {}
     void OnDump() override;
     void OnStart() override;
     void OnStop() override;
@@ -39,7 +41,10 @@ public:
                      const std::vector<std::string> &sourceFileList,
                      const std::vector<std::string> &destinationFileList,
                      const uint32_t fileCount) override;
-    int32_t sendTest() override;
+    int32_t OpenFile(int32_t fd, const std::string &fileName, int32_t mode) override;
+    int32_t RegisterNotifyCallback(sptr<IFileTransferCallback> &callback) override;
+    int32_t UnRegisterNotifyCallback() override;
+    int32_t IsDeviceOnline(const std::string &cid) override;
 
     static inline const std::string pkgName_ { "ohos.storage.distributedfile.service" };
 private:
@@ -49,5 +54,4 @@ private:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-
 #endif // DISTRIBUTEDFILE_SERVICE_H

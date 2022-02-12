@@ -31,7 +31,7 @@ public:
     void Mount(std::unique_ptr<MountPoint> mp);
     void Umount(std::weak_ptr<MountPoint> wmp);
     void Umount(const std::string &groupId);
-    DECLARE_SINGLETON(MountManager);
+    DECLARE_UTILS_SINGLETON(MountManager);
 
 private:
     void StartInstance() override {}

@@ -37,7 +37,9 @@ private:
                                                                                MessageParcel &reply);
     std::map<uint32_t, DistributedFileServiceFunc> memberFuncMap_;
     int32_t SendFileStub(MessageParcel &data, MessageParcel &reply);
-    int test(MessageParcel &data, MessageParcel &reply);
+    int32_t OpenFileStub(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdRegisterNotifyCallback(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdIsDeviceOnline(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace DistributedFile
 } // namespace Storage

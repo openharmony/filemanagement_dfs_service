@@ -17,6 +17,7 @@
 #define I_DISTRIBUTEDFILE_SERVICE_H
 
 #include "iremote_broker.h"
+#include "i_filetransfer_callback.h"
 
 namespace OHOS {
 namespace Storage {
@@ -25,33 +26,40 @@ class IDistributedFileService : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.DistributedFile.IDistributedFileService");
     // define the message code
-    enum DistributedFileSurfaceCode { INTERFACE1 = 0, SEND_FILE_DISTRIBUTED, TEST_CODE };
+    enum DistributedFileSurfaceCode {
+        INTERFACE1 = 0,
+        SEND_FILE_DISTRIBUTED,
+        OPEN_FILE_FD,
+        REGISTER_NOTIFY_CALLBACK,
+        UN_REGISTER_NOTIFY_CALLBACK,
+        IS_DEVICE_ONLINE
+    };
     // define the error code
     enum {
         DISTRIBUTEDFILE_SUCCESS = 0,
+        DFS_SUCCESS = 0,
+        DFS_NO_ERROR = 0,
+        DFS_SENDFILE_SUCCESS = 0,
         GET_DISTRIBUTEDFILE_DISTRIBUTED_DIR_FAIL = 1,
-        DISTRIBUTEDFILE_WRITE_DESCRIPTOR_TOKEN_FAIL,
-        ERR_FLATTEN_OBJECT,
-        DISTRIBUTEDFILE_NO_ERROR,
-        DISTRIBUTEDFILE_CONNECT_SYSTEM_ABILITY_STUB_FAIL,
-        REMOVE_DISTRIBUTEDFILE_DISTRIBUTEDDIRS_FAIL,
-        DISTRIBUTEDFILE_BAD_TYPE,
-        DISTRIBUTEDFILE_FAIL,
-        DISTRIBUTEDFILE_REMOTE_ADDRESS_IS_NULL,
-        DISTRIBUTEDFILE_WRITE_REPLY_FAIL,
-        DISTRIBUTEDFILE_DIR_NAME_IS_EMPTY,
-        DISTRIBUTEDFILE_NAME_NOT_FOUND,
-        DISTRIBUTEDFILE_PERMISSION_DENIED,
-        ROOT_UID,
-        SYSTEM_SERVICE_UID,
-        SEND_FILE_FAIL,
-        SEND_FILE_DISTRIBUTED_DESCRIPTION_FAIL
+        DFS_REMOTE_ADDRESS_IS_NULL,
+        DFS_DESCRIPTOR_IS_EMPTY,
+        DFS_SESSION_ID_IS_EMPTY,
+        DFS_WRITE_REPLY_FAIL,
+        DFS_WRITE_REMOTE_OBJECT_FAIL,
+        DFS_WRITE_DESCRIPTOR_TOKEN_FAIL,
+        DFS_CALLBACK_PARAM_ERROR,
+        DFS_NO_SUCH_FILE,
+        DFS_NO_DEVICE_ONLINE,
+        DFS_SET_FD_FAIL
     };
     virtual int32_t SendFile(const std::string &cid,
                              const std::vector<std::string> &sourceFileList,
                              const std::vector<std::string> &destinationFileList,
                              const uint32_t fileCount) = 0;
-    virtual int32_t sendTest() = 0;
+    virtual int32_t OpenFile(int32_t fd, const std::string &fileName, int32_t mode) = 0;
+    virtual int32_t RegisterNotifyCallback(sptr<IFileTransferCallback> &callback) = 0;
+    virtual int32_t UnRegisterNotifyCallback() = 0;
+    virtual int32_t IsDeviceOnline(const std::string &cid) = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -28,6 +28,12 @@ group("services_target") {
   ]
 }
 
+group("napi_target") {
+  deps = [
+    "${distributedfile_path}/frameworks/js/napi:build_kits_js",
+  ]
+}
+
 group("dfs_test_moudule") {
   testonly = true
   deps = [

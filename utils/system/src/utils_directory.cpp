@@ -78,6 +78,17 @@ void ForceRemoveDirectory(const string &path)
         throw system_error(errno, system_category());
     }
 }
+
+bool IsFileExist(const std::string &fileName)
+{
+    struct stat fileStat;
+    return (stat(fileName.c_str(), &fileStat) == 0);
+}
+
+int32_t RemoveFile(const std::string &fileName)
+{
+    return remove(fileName.c_str());
+}
 } // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage

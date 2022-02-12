@@ -18,21 +18,27 @@
 #include <fcntl.h>
 #include <mutex>
 #include <unistd.h>
+
 #include "device_manager_agent.h"
 #include "distributedfile_service.h"
+#include "i_distributedfile_service.h"
+#include "iservice_registry.h"
 #include "session.h"
 #include "softbus_dispatcher.h"
+#include "system_ability_definition.h"
 #include "utils_exception.h"
+#include "utils_directory.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-using namespace std;
-constexpr int32_t SOFTBUS_OK = 0;
-constexpr int32_t DEVICE_ID_SIZE_MAX = 65;
-constexpr int32_t IS_CLIENT = 0;
-const std::string DEFAULT_ROOT_PATH = "/data/service/el2/100/hmdfs/non_account/data/";
+namespace {
+    constexpr int32_t SOFTBUS_OK = 0;
+    constexpr int32_t DEVICE_ID_SIZE_MAX = 65;
+    constexpr int32_t IS_CLIENT = 0;
+    const std::string DEFAULT_ROOT_PATH = "/data/service/el2/100/hmdfs/non_account/data/";
+}
 
 SoftbusAgent::SoftbusAgent() {}
 
@@ -40,6 +46,7 @@ SoftbusAgent::~SoftbusAgent()
 {
     StopInstance();
 }
+
 void SoftbusAgent::StartInstance()
 {
     RegisterSessionListener();
@@ -48,9 +55,12 @@ void SoftbusAgent::StartInstance()
 
 void SoftbusAgent::StopInstance()
 {
-    for (auto iter = cidToSessionID_.begin(); iter != cidToSessionID_.end();) {
-        CloseSession(iter->first);
-        iter = cidToSessionID_.erase(iter);
+    {
+        std::unique_lock<std::mutex> lock(sessionMapMux_);
+        for (auto iter = cidToSessionID_.begin(); iter != cidToSessionID_.end();) {
+            CloseSession(iter->first);
+            iter = cidToSessionID_.erase(iter);
+        }
     }
     getSessionCV_.notify_all();
     UnRegisterSessionListener();
@@ -58,16 +68,12 @@ void SoftbusAgent::StopInstance()
 
 void SoftbusAgent::OnDeviceOnline(const std::string &cid)
 {
-    // todo:测试接口SendFile
-    const char *sFileList[1] = {"/data/user/0/xhl_sendfile_test/1.txt"};
-
-    static int sendfile_cnt = 0;
-    int ret = SendFile(cid, sFileList, nullptr, 1);
-    if (ret != 0) {
-        LOGE("sendfile failed, ret %{public}d", ret);
+    if (notifyCallback_ == nullptr) {
+        LOGE("OnDeviceOnline Nofify pointer is empty");
         return;
     }
-    LOGE("sendfile... ret %{public}d, sendfile_cnt %{public}d", ret, sendfile_cnt);
+
+    notifyCallback_->DeviceOnline(cid);
 }
 
 int SoftbusAgent::SendFile(const std::string &cid, const char *sFileList[], const char *dFileList[], uint32_t fileCnt)
@@ -102,7 +108,7 @@ int SoftbusAgent::SendFile(const std::string &cid, const char *sFileList[], cons
     }
 
     int ret = ::SendFile(sessionId, sFileList, dFileList, fileCnt);
-    LOGE("sendfile is processing, sessionId:%{publid}d, ret %{public}d", sessionId, ret);
+    LOGD("sendfile is processing, sessionId:%{public}d, ret %{public}d", sessionId, ret);
     return ret;
 }
 
@@ -122,7 +128,6 @@ void SoftbusAgent::OpenSession(const std::string &cid)
 
 void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
 {
-    LOGD("get session res:%{public}d, sessionId:%{public}d", result, sessionId);
     if (result != 0) {
         LOGE("open failed, result:%{public}d, sessionId:%{public}d", result, sessionId);
         return;
@@ -135,7 +140,7 @@ void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
 
     // client session priority use, so insert list head
     {
-        std::unique_lock<mutex> lock(sessionMapMux_);
+        std::unique_lock<std::mutex> lock(sessionMapMux_);
         if (::GetSessionSide(sessionId) == IS_CLIENT) {
             cidToSessionID_[cid].push_front(sessionId);
         } else {
@@ -143,26 +148,60 @@ void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
         }
     }
 
-    // cv 唤醒等待的sendfile流程
     getSessionCV_.notify_one();
     LOGD("get session SUCCESS, sessionId:%{public}d", sessionId);
 }
 
 int SoftbusAgent::OnSendFileFinished(const int sessionId, const std::string firstFile)
 {
-    LOGD("send file finish, sessionId:%{public}d, firstFile %{public}s", sessionId, firstFile.c_str());
+    if (notifyCallback_ == nullptr) {
+        LOGE("OnSendFileFinished Nofify pointer is empty");
+        return -1;
+    }
+    std::string cid = GetPeerDevId(sessionId);
+    notifyCallback_->SendFinished(cid, firstFile);
     return 0;
 }
 
 int SoftbusAgent::OnFileTransError(const int sessionId)
 {
-    LOGD("file trans error, sessionId:%{public}d", sessionId);
+    if (notifyCallback_ == nullptr) {
+        LOGE("OnFileTransError Nofify pointer is empty");
+        return -1;
+    }
+    std::string cid = GetPeerDevId(sessionId);
+    if (::GetSessionSide(sessionId) == IS_CLIENT) {
+        notifyCallback_->SendError(cid);
+    } else {
+        notifyCallback_->ReceiveError(cid);
+    }
     return 0;
 }
 
 void SoftbusAgent::OnReceiveFileFinished(const int sessionId, const std::string files, int fileCnt)
 {
-    LOGD("recv file finish, sessionId:%{public}d, files %{public}s, cnt %{public}d", sessionId, files.c_str(), fileCnt);
+    if (notifyCallback_ == nullptr) {
+        LOGE("OnReceiveFileFinished Nofify pointer is empty");
+        return;
+    }
+    std::string cid = GetPeerDevId(sessionId);
+    if (cid.empty()) {
+        auto alreadyOnliceDev = DeviceManagerAgent::GetInstance()->getOnlineDevs();
+        LOGI("IsDeviceOnline size, %{public}d", alreadyOnliceDev.size());
+        for (std::string item : alreadyOnliceDev) {
+            LOGI("IsDeviceOnline item, %{public}s", item.c_str());
+            cid = item;
+        }
+    }
+
+    std::string desFileName = std::string("/data/system_ce/") + files;
+    int32_t fd = open(desFileName.c_str(), O_RDONLY);
+    if (fd <= 0) {
+        LOGE("NapiWriteFile open recive distributedfile %{public}d, %{public}s, %{public}d",
+            fd, strerror(errno), errno);
+    }
+    notifyCallback_->WriteFile(fd, files);
+    notifyCallback_->ReceiveFinished(cid, files, fileCnt);
 }
 
 void SoftbusAgent::OnSessionClosed(int sessionId)
@@ -172,24 +211,26 @@ void SoftbusAgent::OnSessionClosed(int sessionId)
         LOGE("get peer device id failed");
         return;
     }
-    std::unique_lock<std::mutex> lock(sessionMapMux_);
-    if (cidToSessionID_.find(cid) != cidToSessionID_.end()) {
-        cidToSessionID_[cid].remove(sessionId);
+    {
+        std::unique_lock<std::mutex> lock(sessionMapMux_);
+        if (cidToSessionID_.find(cid) != cidToSessionID_.end()) {
+            cidToSessionID_[cid].remove(sessionId);
+        }
     }
-    return;
 }
 
 std::string SoftbusAgent::GetPeerDevId(const int sessionId)
 {
     std::string cid;
-    char peerDevId[DEVICE_ID_SIZE_MAX] = "";
+    char peerDevId[DEVICE_ID_SIZE_MAX] = { '\0' };
     int ret = ::GetPeerDeviceId(sessionId, peerDevId, sizeof(peerDevId));
     if (ret != SOFTBUS_OK) {
         LOGE("get my peer device id failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId);
         cid = "";
     } else {
-        cid = string(peerDevId);
+        cid = std::string(peerDevId);
     }
+
     return cid;
 }
 
@@ -211,8 +252,18 @@ void SoftbusAgent::OnDeviceOffline(const std::string &cid)
     if (CloseSession(cid) == -1) {
         return;
     }
-    std::unique_lock<std::mutex> lock(sessionMapMux_);
-    cidToSessionID_.erase(cid);
+
+    {
+        std::unique_lock<std::mutex> lock(sessionMapMux_);
+        cidToSessionID_.erase(cid);
+    }
+
+    if (notifyCallback_ == nullptr) {
+        LOGE("OnDeviceOffline Nofify pointer is empty");
+        return;
+    }
+
+    notifyCallback_->DeviceOffline(cid);
 }
 
 void SoftbusAgent::RegisterSessionListener()
@@ -223,10 +274,10 @@ void SoftbusAgent::RegisterSessionListener()
     };
     int ret = ::CreateSessionServer(DistributedFileService::pkgName_.c_str(), sessionName_.c_str(), &sessionListener);
     if (ret != 0) {
-        stringstream ss;
+        std::stringstream ss;
         ss << "Failed to CreateSessionServer, errno:" << ret;
         LOGE("%{public}s, sessionName:%{public}s", ss.str().c_str(), sessionName_.c_str());
-        return throw runtime_error(ss.str());
+        return throw std::runtime_error(ss.str());
     }
     LOGD("Succeed to CreateSessionServer, pkgName %{public}s, sbusName:%{public}s",
         DistributedFileService::pkgName_.c_str(), sessionName_.c_str());
@@ -241,10 +292,10 @@ void SoftbusAgent::RegisterFileListener()
     std::string pkgName = DistributedFileService::pkgName_;
     int ret = ::SetFileSendListener(pkgName.c_str(), sessionName_.c_str(), &fileSendListener);
     if (ret != 0) {
-        stringstream ss;
+        std::stringstream ss;
         ss << "Failed to SetFileSendListener, errno:" << ret;
         LOGE("%{public}s, sessionName:%{public}s", ss.str().c_str(), sessionName_.c_str());
-        throw runtime_error(ss.str());
+        throw std::runtime_error(ss.str());
     }
     LOGD("Succeed to SetFileSendListener, pkgName %{public}s, sbusName:%{public}s", pkgName.c_str(),
          sessionName_.c_str());
@@ -256,10 +307,10 @@ void SoftbusAgent::RegisterFileListener()
     ret = ::SetFileReceiveListener(pkgName.c_str(), sessionName_.c_str(), &fileRecvListener,
         DEFAULT_ROOT_PATH.c_str());
     if (ret != 0) {
-        stringstream ss;
+        std::stringstream ss;
         ss << "Failed to SetFileReceiveListener, errno:" << ret;
         LOGE("%{public}s, sessionName:%{public}s", ss.str().c_str(), sessionName_.c_str());
-        throw runtime_error(ss.str());
+        throw std::runtime_error(ss.str());
     }
     LOGD("Succeed to SetFileReceiveListener, pkgName %{public}s, sbusName:%{public}s", pkgName.c_str(),
          sessionName_.c_str());
@@ -268,12 +319,21 @@ void SoftbusAgent::UnRegisterSessionListener()
 {
     int ret = ::RemoveSessionServer(DistributedFileService::pkgName_.c_str(), sessionName_.c_str());
     if (ret != 0) {
-        stringstream ss;
+        std::stringstream ss;
         ss << "Failed to RemoveSessionServer, errno:" << ret;
         LOGE("%{public}s", ss.str().c_str());
-        throw runtime_error(ss.str());
+        throw std::runtime_error(ss.str());
     }
     LOGD("RemoveSessionServer success!");
+}
+void SoftbusAgent::SetTransCallback(sptr<IFileTransferCallback> &callback)
+{
+    notifyCallback_ = callback;
+}
+
+void SoftbusAgent::RemoveTransCallbak()
+{
+    notifyCallback_ = nullptr;
 }
 } // namespace DistributedFile
 } // namespace Storage

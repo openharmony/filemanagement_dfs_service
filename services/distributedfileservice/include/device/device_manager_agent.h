@@ -33,7 +33,7 @@ class DeviceManagerAgent : public DistributedHardware::DmInitCallback,
                            public DistributedHardware::DeviceStateCallback,
                            public std::enable_shared_from_this<DeviceManagerAgent>,
                            public Utils::Singleton<DeviceManagerAgent> {
-    DECLARE_SINGLETON(DeviceManagerAgent);
+    DECLARE_UTILS_SINGLETON(DeviceManagerAgent);
 
 public:
     void OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
@@ -57,6 +57,8 @@ private:
 
     std::mutex devsRecordMutex_;
     std::set<std::string> alreadyOnlineDev_;
+
+    std::string pkgName_{"ohos.storage.distributedfile.service"};
 };
 } // namespace DistributedFile
 } // namespace Storage

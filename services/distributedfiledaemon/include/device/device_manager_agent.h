@@ -54,7 +54,7 @@ class DeviceManagerAgent final : public DistributedHardware::DmInitCallback,
                                  public Startable,
                                  public Actor<DeviceManagerAgent>,
                                  public Utils::Singleton<DeviceManagerAgent> {
-    DECLARE_SINGLETON(DeviceManagerAgent);
+    DECLARE_UTILS_SINGLETON(DeviceManagerAgent);
 
 public:
     void Start() override;

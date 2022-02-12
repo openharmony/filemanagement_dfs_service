@@ -1,0 +1,72 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+ohos_shared_library("sendfile") {
+  include_dirs = [
+    "//third_party/libuv/include",
+    "//third_party/node/src",
+    "//foundation/ace/napi/interfaces/kits",
+    "//foundation/filemanagement/dfs_service/interfaces/innerkits/native",
+    "//foundation/filemanagement/dfs_service/frameworks/native/include",
+    "//foundation/filemanagement/dfs_service/frameworks/js/napi/include",
+    "//foundation/filemanagement/dfs_service/utils/log/include",
+    "//foundation/filemanagement/dfs_service/services/distributedfileservice/include/ipc",
+    "//foundation/filemanagement/dfs_service/services/distributedfileservice/include",
+    "//foundation/communication/ipc/interfaces/innerkits/libdbinder/include",
+    "//foundation/distributedschedule/samgr/services/samgr/native/include",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
+    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
+    "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn/include",
+  ]
+
+  sources = [
+    "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/sendfile_napi.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/sendfile.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/event_agent.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/native/src/dfs_filetransfer_callback.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/native/src/filetransfer_callback_proxy.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/native/src/filetransfer_callback_stub.cpp",
+  ]
+
+  deps = [
+    "//foundation/filemanagement/dfs_service/utils:libdistributedfileutils",
+    "//foundation/filemanagement/dfs_service/interfaces/innerkits/native:libdistributedfile_innerkits",
+    "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
+    "//foundation/ace/napi:ace_napi",
+    "//utils/native/base:utilsecurec",
+    "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn:filemgmt_libn",
+  ]
+
+  external_deps = [
+    "ipc:ipc_core",
+    "samgr_standard:samgr_common",
+    "samgr_standard:samgr_proxy",
+    "hiviewdfx_hilog_native:libhilog",
+  ]
+
+  cflags_cc = [
+    "-Wno-unused-function"
+  ]
+
+  relative_install_dir = "module"
+  subsystem_name = "filemanagement"
+  part_name = "dfs_service"
+}
+
+group("build_kits_js") {
+  deps = [
+    ":sendfile",
+  ]
+}
