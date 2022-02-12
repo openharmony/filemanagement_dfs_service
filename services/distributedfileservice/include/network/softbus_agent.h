@@ -19,6 +19,8 @@
 #include <condition_variable>
 #include <list>
 #include <unordered_map>
+
+#include "i_filetransfer_callback.h"
 #include "utils_singleton.h"
 
 namespace OHOS {
@@ -40,6 +42,8 @@ public:
     int OnSendFileFinished(const int sessionId, const std::string firstFile);
     int OnFileTransError(const int sessionId);
     void OnReceiveFileFinished(const int sessionId, const std::string files, int fileCnt);
+    void SetTransCallback(sptr<IFileTransferCallback> &callback);
+    void RemoveTransCallbak();
 
 protected:
     void StartInstance() override;
@@ -55,6 +59,7 @@ private:
 
     std::mutex getSessionCVMut_;
     std::condition_variable getSessionCV_;
+    sptr<IFileTransferCallback> notifyCallback_ = nullptr;
 };
 } // namespace DistributedFile
 } // namespace Storage

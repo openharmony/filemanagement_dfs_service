@@ -15,9 +15,11 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_shared_library("libdistributedfileservice") {
   include_dirs = [
-    "include/ipc",
     "include/device",
+    "include/ipc",
     "include/network",
+    "${distributedfile_path}/frameworks/native",
+    "${distributedfile_path}/frameworks/native/include",
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
   ]
 
@@ -34,6 +36,9 @@ ohos_shared_library("libdistributedfileservice") {
   defines = [ "LOG_TAG=\"distributedfile_service\"" ]
 
   external_deps = [
+    "ability_base:want",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "dsoftbus_standard:softbus_client",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
