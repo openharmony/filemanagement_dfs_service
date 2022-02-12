@@ -90,20 +90,20 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
             std::string tmpString("/data/system_ce/tmp");
             int32_t length = tmpString.length();
             sFileList[index] = new char[length + 1];
-            memset_s(sFileList[index], length + 1, '\0', length + 1);
-            int ret = memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length);
-            if (ret != EOK) {
-                LOGE("memory copy failed");
+            if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
+                return -1;
+            }
+            if (memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length) != EOK) {
                 return -1;
             }
             sFileList[index][length] = '\0';
         } else {
             int32_t length = sourceFileList.at(index).length();
             sFileList[index] = new char[length + 1];
-            memset_s(sFileList[index], length + 1, '\0', length + 1);
-            int ret = memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length);
-            if (ret != EOK) {
-                LOGE("memory copy failed");
+            if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
+                return -1;
+            }
+            if (memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length) != EOK) {
                 return -1;
             }
             sFileList[index][length] = '\0';
@@ -116,9 +116,10 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
             index, destinationFileList.at(index).c_str());
         int32_t length = destinationFileList.at(index).length();
         dFileList[index] = new char[length + 1];
-        memset_s(dFileList[index], length + 1, '\0', length + 1);
-        int ret = memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length);
-        if (ret != EOK) {
+        if (memset_s(dFileList[index], length + 1, '\0', length + 1) != EOK) {
+            return -1;
+        }
+        if (memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
             LOGE("memory copy failed");
             return -1;
         }

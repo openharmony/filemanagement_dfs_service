@@ -28,13 +28,13 @@ int32_t FileTransferCallbackProxy::DeviceOnline(const std::string &cid)
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(FileTransferCallbackProxy::GetDescriptor())) {
-        LOGE("xhl [---FileTransferCallbackProxy---] WriteInterfaceToken failed");
+        LOGE("[---FileTransferCallbackProxy---] WriteInterfaceToken failed");
         return DFS_CALLBACK_WRITE_DESCRIPTOR_TOKEN_FAIL;
     }
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        LOGE("xhl [---FileTransferCallbackProxy---] Remote is null");
+        LOGE("[---FileTransferCallbackProxy---] Remote is null");
         return ERR_NULL_OBJECT;
     }
 
@@ -52,13 +52,13 @@ int32_t FileTransferCallbackProxy::DeviceOffline(const std::string &cid)
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(FileTransferCallbackProxy::GetDescriptor())) {
-        LOGE("xhl [---FileTransferCallbackProxy---] WriteInterfaceToken failed");
+        LOGE("[---FileTransferCallbackProxy---] WriteInterfaceToken failed");
         return 0;
     }
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        LOGE("xhl [---FileTransferCallbackProxy---] Remote is null");
+        LOGE("[---FileTransferCallbackProxy---] Remote is null");
         return ERR_NULL_OBJECT;
     }
 
@@ -177,8 +177,6 @@ int32_t FileTransferCallbackProxy::ReceiveError(const std::string &cid)
 
 int32_t FileTransferCallbackProxy::WriteFile(int32_t fd, const std::string &fileName)
 {
-    LOGI("xhl WriteFile enter");
-    LOGI("xhl WriteFile fd %{public}d, %{public}s", fd, fileName.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(FileTransferCallbackProxy::GetDescriptor())) {
         return DFS_CALLBACK_WRITE_DESCRIPTOR_TOKEN_FAIL;
@@ -188,14 +186,14 @@ int32_t FileTransferCallbackProxy::WriteFile(int32_t fd, const std::string &file
     data.WriteString(fileName);
 
     if (Remote() == nullptr) {
-        LOGE("xhl WriteFile remote object address is null");
+        LOGE("WriteFile remote object address is null");
         return DFS_CALLBACK_REMOTE_ADDRESS_IS_NULL;
     }
 
     MessageParcel reply;
     MessageOption option;
     Remote()->SendRequest(ON_WRITE_FILE, data, reply, option);
-    LOGI("xhl WriteFile end");
+
     return reply.ReadInt32();
 }
 } // namespace DistributedFile
