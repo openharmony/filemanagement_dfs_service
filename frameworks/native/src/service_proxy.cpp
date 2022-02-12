@@ -19,10 +19,6 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-ServiceProxy::ServiceProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IDistributedFileService>(impl) {}
-
-ServiceProxy::~ServiceProxy() {}
-
 int32_t ServiceProxy::SendFile(const std::string &cid,
                                const std::vector<std::string> &sourceFileList,
                                const std::vector<std::string> &destinationFileList,

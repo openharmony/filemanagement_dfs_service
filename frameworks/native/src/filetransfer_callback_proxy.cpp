@@ -19,11 +19,6 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-FileTransferCallbackProxy::FileTransferCallbackProxy(const sptr<IRemoteObject> &impl)
-    : IRemoteProxy<IFileTransferCallback>(impl) {}
-
-FileTransferCallbackProxy::~FileTransferCallbackProxy() {}
-
 int32_t FileTransferCallbackProxy::DeviceOnline(const std::string &cid)
 {
     MessageParcel data;

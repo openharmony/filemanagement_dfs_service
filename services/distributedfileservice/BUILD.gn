@@ -19,13 +19,8 @@ ohos_shared_library("libdistributedfileservice") {
     "include/ipc",
     "include/network",
     "${distributedfile_path}/frameworks/native",
-    "//foundation/ace/napi/interfaces/kits",
-    "//third_party/node/src",
-    "//third_party/libuv/include",
+    "${distributedfile_path}/frameworks/native/include",
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
-    "//foundation/filemanagement/dfs_service/frameworks/native/include",
-    "//foundation/filemanagement/dfs_service/frameworks/native/native_module_sendfile",
-    "//foundation/filemanagement/dfs_service/frameworks/js/napi/common",
   ]
 
   sources = [
@@ -34,8 +29,6 @@ ohos_shared_library("libdistributedfileservice") {
     "src/device/device_manager_agent.cpp",
     "src/network/softbus_agent.cpp",
     "src/network/softbus_dispatcher.cpp",
-    "${distributedfile_path}/frameworks/native/src/service_proxy.cpp",
-    "${distributedfile_path}/frameworks/native/src/filetransfer_callback_proxy.cpp",
   ]
 
   configs = [ "${utils_path}:compiler_configs" ]
@@ -44,10 +37,10 @@ ohos_shared_library("libdistributedfileservice") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "dsoftbus_standard:softbus_client",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
-    "dsoftbus_standard:softbus_client",
   ]
 
   deps = [
