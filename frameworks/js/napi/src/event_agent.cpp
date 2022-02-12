@@ -121,9 +121,6 @@ void EventAgent::InsertDevice(const std::string& deviceId)
     if (deviceList_.find(deviceId) == deviceList_.end()) {
         std::unique_lock<std::mutex> lock(deviceListMut_);
         deviceList_.insert(deviceId);
-        LOGI("xhl insert device[%{public}s] into the devicelist", deviceId.c_str());
-    } else {
-        LOGI("xhl device[%{public}s] has already in the devicelist", deviceId.c_str());
     }
 }
 
@@ -132,9 +129,6 @@ void EventAgent::RemoveDevice(const std::string& deviceId)
     if (deviceList_.find(deviceId) != deviceList_.end()) {
         std::unique_lock<std::mutex> lock(deviceListMut_);
         deviceList_.erase(deviceId);
-        LOGI("xhl remove device[%{public}s] from the devicelist", deviceId.c_str());
-    } else {
-        LOGI("xhl no device[%{public}s] in the devicelist", deviceId.c_str());
     }
 }
 
