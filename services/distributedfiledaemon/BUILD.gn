@@ -52,10 +52,7 @@ ohos_shared_library("libdistributedfiledaemon") {
   ]
   configs = [ "${utils_path}:compiler_configs" ]
 
-  defines = [
-    "LOG_TAG=\"distributedfile_daemon\"",
-  ]
-
+  defines = [ "LOG_TAG=\"distributedfile_daemon\"" ]
 
   part_name = "dfs_service"
   subsystem_name = "filemanagement"

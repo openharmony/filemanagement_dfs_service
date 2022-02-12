@@ -29,11 +29,9 @@ ohos_shared_library("libdistributedfileservice") {
     "src/network/softbus_dispatcher.cpp",
   ]
 
-  configs = [ "${utils_path}:compiler_configs"]
+  configs = [ "${utils_path}:compiler_configs" ]
 
-  defines = [
-    "LOG_TAG=\"distributedfile_service\"",
-  ]
+  defines = [ "LOG_TAG=\"distributedfile_service\"" ]
 
   external_deps = [
     "dsoftbus_standard:softbus_client",
