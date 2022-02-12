@@ -139,6 +139,7 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
     if (fileExist) {
         int32_t result = remove(tmpFile);
         if (result != 0) {
+            close(fd);
             LOGE("DFS SA remove temp file result %{public}d, %{public}s, %{public}d", result, strerror(errno), errno);
             return -1;
         }
@@ -146,6 +147,7 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
 
     int32_t writeFd = open(tmpFile, O_WRONLY | O_CREAT, (S_IREAD & S_IWRITE) | S_IRGRP | S_IROTH);
     if (writeFd <= 0) {
+        close(fd);
         LOGE("DFS SA open temp file failed %{public}d, %{public}s, %{public}d", writeFd, strerror(errno), errno);
         return -1;
     }
@@ -161,11 +163,16 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
             if (errno == EINTR) {
                 actLen = FILE_BLOCK_SIZE;
             } else {
+                close(fd);
+                close(writeFd);
                 return -1;
             }
         }
     } while (actLen > 0);
+
+    close(fd);
     close(writeFd);
+
     return 0;
 }
 

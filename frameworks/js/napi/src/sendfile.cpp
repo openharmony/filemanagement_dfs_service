@@ -34,8 +34,11 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+namespace {
 const std::string DfsAppUid { "SendFileTestUid" };
 constexpr int32_t FILE_BLOCK_SIZE = 1024;
+const std::string APP_PATH { "/data/accounts/account_0/appdata/com.example.filetestkits/cache/" };
+}
 
 napi_value RegisterSendFileNotifyCallback()
 {
@@ -262,22 +265,19 @@ int32_t NapiReceiveError(const std::string &cid)
 
 int32_t NapiWriteFile(int32_t fd, const std::string &fileName)
 {
-    LOGI("NapiWriteFile start LOGI %{public}s", fileName.c_str());
-    LOGI("NapiWriteFile start LOGI %{public}d", fd);
     if (fd <= 0) {
         return -1;
     }
-    std::string filePath = std::string("/data/accounts/account_0/appdata/com.example.filetestkits/cache/") + fileName;
+    std::string filePath = APP_PATH + fileName;
     int32_t flags = O_WRONLY;
-    LOGI("flags %{public}d", flags);
+
     if (!Utils::IsFileExist(filePath)) {
-        LOGI("NapiWriteFile file not exist");
         flags |= O_CREAT;
     }
-    LOGI("flags %{public}d", flags);
-    int32_t writeFd = open(filePath.c_str(), flags, 00644);
-    // int32_t writeFd = open("/data/init_agent/test.txt", O_RDWR | O_CREAT, 00664);
+
+    int32_t writeFd = open(filePath.c_str(), flags, (S_IREAD & S_IWRITE) | S_IRGRP | S_IROTH);
     if (writeFd <= 0) {
+        close(fd);
         LOGE("NapiWriteFile open file failed %{public}d, %{public}s, %{public}d", writeFd, strerror(errno), errno);
         return -1;
     }
@@ -293,11 +293,14 @@ int32_t NapiWriteFile(int32_t fd, const std::string &fileName)
             if (errno == EINTR) {
                 actLen = FILE_BLOCK_SIZE;
             } else {
+                close(fd);
+                close(writeFd);
                 return -1;
             }
         }
     } while (actLen > 0);
 
+    close(fd);
     close(writeFd);
 
     return 0;

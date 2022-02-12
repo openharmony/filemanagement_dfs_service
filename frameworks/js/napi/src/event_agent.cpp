@@ -30,18 +30,18 @@ EventAgent::EventAgent(napi_env env, napi_value thisVar)
 EventAgent::~EventAgent()
 {
     EventListener* temp = nullptr;
-    for (EventListener* i = first_; i != nullptr; i = temp) {
-        temp = i->next;
-        if (i == first_) {
+    for (EventListener* iter = first_; iter != nullptr; iter = temp) {
+        temp = iter->next;
+        if (iter == first_) {
             first_ = first_->next;
-        } else if (i == last_) {
+        } else if (iter == last_) {
             last_ = last_->back;
         } else {
-            i->next->back = i->back;
-            i->back->next = i->next;
+            iter->next->back = iter->back;
+            iter->back->next = iter->next;
         }
-        napi_delete_reference(env_, i->handlerRef);
-        delete i;
+        napi_delete_reference(env_, iter->handlerRef);
+        delete iter;
     }
     napi_delete_reference(env_, thisVarRef_);
 }
