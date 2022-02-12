@@ -58,7 +58,7 @@ private:
     std::mutex devsRecordMutex_;
     std::set<std::string> alreadyOnlineDev_;
 
-    std::string pkgName_{"ohos.storage.distributedfile.service"};
+    std::string pkgName_ { "ohos.storage.distributedfile.service" };
 };
 } // namespace DistributedFile
 } // namespace Storage

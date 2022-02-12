@@ -32,33 +32,32 @@ ohos_shared_library("sendfile") {
   ]
 
   sources = [
-    "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/sendfile_napi.cpp",
-    "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/sendfile.cpp",
     "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/event_agent.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/sendfile.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/sendfile_napi.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/trans_event.cpp",
     "//foundation/filemanagement/dfs_service/frameworks/native/src/dfs_filetransfer_callback.cpp",
     "//foundation/filemanagement/dfs_service/frameworks/native/src/filetransfer_callback_proxy.cpp",
     "//foundation/filemanagement/dfs_service/frameworks/native/src/filetransfer_callback_stub.cpp",
   ]
 
   deps = [
-    "//foundation/filemanagement/dfs_service/utils:libdistributedfileutils",
-    "//foundation/filemanagement/dfs_service/interfaces/innerkits/native:libdistributedfile_innerkits",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/ace/napi:ace_napi",
-    "//utils/native/base:utilsecurec",
     "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn:filemgmt_libn",
+    "//foundation/filemanagement/dfs_service/interfaces/innerkits/native:libdistributedfile_innerkits",
+    "//foundation/filemanagement/dfs_service/utils:libdistributedfileutils",
+    "//utils/native/base:utilsecurec",
   ]
 
   external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr_standard:samgr_common",
     "samgr_standard:samgr_proxy",
-    "hiviewdfx_hilog_native:libhilog",
   ]
 
-  cflags_cc = [
-    "-Wno-unused-function"
-  ]
+  cflags_cc = [ "-Wno-unused-function" ]
 
   relative_install_dir = "module"
   subsystem_name = "filemanagement"
@@ -66,7 +65,5 @@ ohos_shared_library("sendfile") {
 }
 
 group("build_kits_js") {
-  deps = [
-    ":sendfile",
-  ]
+  deps = [ ":sendfile" ]
 }

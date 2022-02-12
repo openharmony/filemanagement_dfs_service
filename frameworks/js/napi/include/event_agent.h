@@ -24,7 +24,18 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-struct EventListener;
+namespace {
+    constexpr int32_t LISTENER_TYPTE_MAX_LENGTH = 64;
+}
+
+struct EventListener {
+    char type[LISTENER_TYPTE_MAX_LENGTH] = { 0 };
+    bool isOnce = false;
+    napi_ref handlerRef = nullptr;
+    EventListener* back = nullptr;
+    EventListener* next = nullptr;
+};
+
 class Event {
 public:
     virtual napi_value ToJsObject(napi_env env) = 0;

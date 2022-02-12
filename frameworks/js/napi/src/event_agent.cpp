@@ -21,17 +21,6 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-namespace {
-    constexpr int32_t LISTENER_TYPTE_MAX_LENGTH = 64;
-}
-struct EventListener {
-    char type[LISTENER_TYPTE_MAX_LENGTH] = { 0 };
-    bool isOnce = false;
-    napi_ref handlerRef = nullptr;
-    EventListener* back = nullptr;
-    EventListener* next = nullptr;
-};
-
 EventAgent::EventAgent(napi_env env, napi_value thisVar)
     : env_(env), thisVarRef_(nullptr), first_(nullptr), last_(nullptr)
 {

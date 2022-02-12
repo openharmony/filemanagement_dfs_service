@@ -19,74 +19,23 @@
 #include <unistd.h>
 #include <tuple>
 
-#include "system_ability_definition.h"
-#include "i_distributedfile_service.h"
-#include "service_proxy.h"
-#include "utils_log.h"
+#include "dfs_filetransfer_callback.h"
 #include "event_agent.h"
 #include "filetransfer_callback_proxy.h"
-#include "dfs_filetransfer_callback.h"
+#include "i_distributedfile_service.h"
+#include "iservice_registry.h"
+#include "service_proxy.h"
+#include "system_ability_definition.h"
+#include "system_ability_manager.h"
+#include "trans_event.h"
 #include "utils_directory.h"
-
-#include <iservice_registry.h>
-#include <system_ability_manager.h>
+#include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-const std::string DfsAppUid{ "SendFileTestUid" };
+const std::string DfsAppUid { "SendFileTestUid" };
 constexpr int32_t FILE_BLOCK_SIZE = 1024;
-
-napi_value TransEvent::ToJsObject(napi_env env)
-{
-    napi_value te;
-    napi_status status = napi_create_object(env, &te);
-    if (napi_ok == status) {
-        napi_value err;
-        status = napi_create_int32(env, errorCode_, &err);
-        if (napi_ok == status) {
-            status = napi_set_named_property(env, te, "errorCode", err);
-            if (napi_ok != status) {
-                LOGE("ToJsObject: package error code failed.\n");
-                return nullptr;
-            }
-        } else {
-            LOGE("ToJsObject: create error code failed.\n");
-            return nullptr;
-        }
-
-        napi_value fname;
-        status = napi_create_string_utf8(env, fileName_.c_str(), fileName_.size()+1, &fname);
-        if (napi_ok == status) {
-            status = napi_set_named_property(env, te, "fileName", fname);
-            if (napi_ok != status) {
-                LOGE("ToJsObject: package filename failed.\n");
-                return nullptr;
-            }
-        } else {
-            LOGE("ToJsObject: create filename failed.\n");
-            return nullptr;
-        }
-
-        napi_value fcount;
-        status = napi_create_int32(env, fileCount_, &fcount);
-        if (napi_ok == status) {
-            status = napi_set_named_property(env, te, "fileCount", fcount);
-            if (napi_ok != status) {
-                LOGE("ToJsObject: package file counts failed.\n");
-                return nullptr;
-            }
-        } else {
-            LOGE("ToJsObject: create file counts failed.\n");
-            return nullptr;
-        }
-    } else {
-        LOGE("ToJsObject: create object failed.\n");
-        return nullptr;
-    }
-
-    return te;
-}
 
 napi_value RegisterSendFileNotifyCallback()
 {

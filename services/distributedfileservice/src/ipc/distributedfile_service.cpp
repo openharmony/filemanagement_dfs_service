@@ -79,6 +79,9 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
                                          const std::vector<std::string> &destinationFileList,
                                          const uint32_t fileCount)
 {
+    if (fileCount < 0) {
+        return -1;
+    }
     char **sFileList = new char* [fileCount];
     for (int index = 0; index < sourceFileList.size(); ++index) {
         LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}d",
@@ -88,13 +91,21 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
             int32_t length = tmpString.length();
             sFileList[index] = new char[length + 1];
             memset_s(sFileList[index], length + 1, '\0', length + 1);
-            memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length);
+            int ret = memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length);
+            if (ret < 0) {
+                LOGE("memory copy failed");
+                return -1;
+            }
             sFileList[index][length] = '\0';
         } else {
             int32_t length = sourceFileList.at(index).length();
             sFileList[index] = new char[length + 1];
             memset_s(sFileList[index], length + 1, '\0', length + 1);
-            memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length);
+            int ret = memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length);
+            if (ret < 0) {
+                LOGE("memory copy failed");
+                return -1;
+            }
             sFileList[index][length] = '\0';
         }
     }
@@ -106,7 +117,11 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
         int32_t length = destinationFileList.at(index).length();
         dFileList[index] = new char[length + 1];
         memset_s(dFileList[index], length + 1, '\0', length + 1);
-        memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length);
+        int ret = memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length);
+        if (ret < 0) {
+            LOGE("memory copy failed");
+            return -1;
+        }
         dFileList[index][length] = '\0';
     }
 
