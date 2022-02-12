@@ -18,7 +18,6 @@
 
 #include "distributedfile_service_stub.h"
 #include "iremote_stub.h"
-#include "singleton.h"
 #include "system_ability.h"
 
 #include <mutex>
@@ -29,10 +28,10 @@ namespace DistributedFile {
 class DistributedFileService : public SystemAbility,
                                public DistributedFileServiceStub,
                                public std::enable_shared_from_this<DistributedFileService> {
-    DECLARE_DELAYED_SINGLETON(DistributedFileService)
     DECLARE_SYSTEM_ABILITY(DistributedFileService)
 public:
     explicit DistributedFileService(int32_t saId, bool runOnCreate = true) : SystemAbility(saId, runOnCreate) {}
+    ~DistributedFileService() {}
     void OnDump() override;
     void OnStart() override;
     void OnStop() override;

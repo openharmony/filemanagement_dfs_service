@@ -17,20 +17,18 @@
 #include <exception>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <system_ability_definition.h>
 
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "device_manager_agent.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "message_parcel.h"
 #include "parcel.h"
+#include "softbus_agent.h"
+#include "system_ability_definition.h"
 #include "utils_directory.h"
 #include "utils_log.h"
-
-#include "softbus_agent.h"
-#include "device_manager_agent.h"
 
 namespace OHOS {
 namespace Storage {
@@ -41,10 +39,6 @@ namespace {
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DistributedFileService, STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID, false);
-
-DistributedFileService::DistributedFileService() : SystemAbility(STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID, false) {}
-
-DistributedFileService::~DistributedFileService() {}
 
 void DistributedFileService::OnDump()
 {
@@ -64,7 +58,7 @@ void DistributedFileService::OnStop()
 
 void DistributedFileService::PublishSA()
 {
-    bool ret = SystemAbility::Publish(DelayedSingleton<DistributedFileService>::GetInstance().get());
+    bool ret = SystemAbility::Publish(this);
     if (!ret) {
         LOGE("Leave, publishing DistributedFileService failed!");
         return;
@@ -81,7 +75,10 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
                                          const std::vector<std::string> &destinationFileList,
                                          const uint32_t fileCount)
 {
-    char **sFileList = new char*[fileCount];
+    if (fileCount < 0) {
+        return -1;
+    }
+    char **sFileList = new char* [fileCount];
     for (int index = 0; index < sourceFileList.size(); ++index) {
         LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}d",
             index, sourceFileList.at(index).c_str(), sourceFileList.at(index).length());
@@ -89,26 +86,39 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
             std::string tmpString("/data/system_ce/tmp");
             int32_t length = tmpString.length();
             sFileList[index] = new char[length + 1];
-            memset_s(sFileList[index], length + 1, '\0', length + 1);
-            memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length);
+            if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
+                return -1;
+            }
+            if (memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length) != EOK) {
+                return -1;
+            }
             sFileList[index][length] = '\0';
         } else {
             int32_t length = sourceFileList.at(index).length();
             sFileList[index] = new char[length + 1];
-            memset_s(sFileList[index], length + 1, '\0', length + 1);
-            memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length);
+            if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
+                return -1;
+            }
+            if (memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length) != EOK) {
+                return -1;
+            }
             sFileList[index][length] = '\0';
         }
     }
 
-    char **dFileList = new char*[fileCount];
+    char **dFileList = new char* [fileCount];
     for (int index = 0; index < destinationFileList.size(); ++index) {
         LOGI("DistributedFileService::SendFile Destination File List %{public}d, %{public}s",
             index, destinationFileList.at(index).c_str());
         int32_t length = destinationFileList.at(index).length();
         dFileList[index] = new char[length + 1];
-        memset_s(dFileList[index], length + 1, '\0', length + 1);
-        memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length);
+        if (memset_s(dFileList[index], length + 1, '\0', length + 1) != EOK) {
+            return -1;
+        }
+        if (memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
+            LOGE("memory copy failed");
+            return -1;
+        }
         dFileList[index][length] = '\0';
     }
 

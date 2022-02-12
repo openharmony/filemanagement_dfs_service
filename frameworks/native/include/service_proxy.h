@@ -30,9 +30,8 @@ public:
      *
      * @param impl
      */
-    explicit ServiceProxy(const sptr<IRemoteObject> &impl);
-
-    virtual ~ServiceProxy();
+    explicit ServiceProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IDistributedFileService>(impl) {}
+    virtual ~ServiceProxy() = default;
 
     int32_t SendFile(const std::string &cid,
                      const std::vector<std::string> &sourceFileList,

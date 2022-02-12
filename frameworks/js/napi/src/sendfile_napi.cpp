@@ -15,8 +15,11 @@
 
 #include "sendfile_napi.h"
 
+#include <mutex>
+
 #include "filemgmt_libn.h"
 #include "sendfile.h"
+#include "trans_event.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -26,7 +29,8 @@ using namespace FileManagement::LibN;
 namespace {
     constexpr int32_t MAX_SEND_FILE_HAP_NUMBER = 50;
     constexpr int32_t SENDFILE_NAPI_BUF_LENGTH = 256;
-    const std::string DfsAppUid{"SendFileTestUid"};
+    const std::string DfsAppUid { "SendFileTestUid" };
+    static std::mutex g_uidMutex;
 }
 
 napi_value SendFile(napi_env env, napi_callback_info info)
@@ -71,7 +75,6 @@ napi_value SendFile(napi_env env, napi_callback_info info)
     std::string deviceIdString(deviceId.get());
     auto cbExec = [deviceIdString, sourPath, destPath, fileCount, resultCode]() -> NError {
         *resultCode = ExecSendFile(deviceIdString.c_str(), sourPath, destPath, fileCount);
-        LOGI("cbExec resultCode : %{public}d", *resultCode);
         return NError(*resultCode);
     };
 
@@ -79,11 +82,9 @@ napi_value SendFile(napi_env env, napi_callback_info info)
         if (err) {
             return { env, err.GetNapiErr(env) };
         }
-        LOGI("cbComplete resultCode : %{public}d", *resultCode);
         return { NVal::CreateInt64(env, *resultCode) };
     };
 
-    LOGI("JS SendFile created thread params count %{public}d", funcArg.GetArgc());
     std::string procedureName = "SendFile";
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == DFS_ARG_CNT::FOUR) {

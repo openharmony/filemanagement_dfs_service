@@ -19,80 +19,23 @@
 #include <unistd.h>
 #include <tuple>
 
-#include "system_ability_definition.h"
-#include "i_distributedfile_service.h"
-#include "service_proxy.h"
-#include "utils_log.h"
+#include "dfs_filetransfer_callback.h"
 #include "event_agent.h"
 #include "filetransfer_callback_proxy.h"
-#include "dfs_filetransfer_callback.h"
+#include "i_distributedfile_service.h"
+#include "iservice_registry.h"
+#include "service_proxy.h"
+#include "system_ability_definition.h"
+#include "system_ability_manager.h"
+#include "trans_event.h"
 #include "utils_directory.h"
-
-#include <iservice_registry.h>
-#include <system_ability_manager.h>
+#include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-const std::string DfsAppUid{"SendFileTestUid"};
+const std::string DfsAppUid { "SendFileTestUid" };
 constexpr int32_t FILE_BLOCK_SIZE = 1024;
-
-napi_value TransEvent::ToJsObject(napi_env env)
-{
-    napi_value te;
-    napi_status status = napi_create_object(env, &te);
-    if (napi_ok == status) {
-        napi_value err;
-        status = napi_create_int32(env, errorCode_, &err);
-        if (napi_ok == status) {
-            status = napi_set_named_property(env, te, "errorCode", err);
-            if (napi_ok != status) {
-                LOGE("ToJsObject: package error code failed.\n");
-                return nullptr;
-            }
-        }
-        else {
-            LOGE("ToJsObject: create error code failed.\n");
-            return nullptr;
-        }
-
-        napi_value fname;
-        status = napi_create_string_utf8(env, fileName_.c_str(), fileName_.size()+1, &fname);
-        if (napi_ok == status) {
-            status = napi_set_named_property(env, te, "fileName", fname);
-            if (napi_ok != status) {
-                LOGE("ToJsObject: package filename failed.\n");
-                return nullptr;
-            }
-        }
-        else {
-            LOGE("ToJsObject: create filename failed.\n");
-            return nullptr;
-        }
-
-        napi_value fcount;
-        status = napi_create_int32(env, fileCount_, &fcount);
-        if (napi_ok == status) {
-            status = napi_set_named_property(env, te, "fileCount", fcount);
-            if (napi_ok != status) {
-                LOGE("ToJsObject: package file counts failed.\n");
-                return nullptr;
-            }
-        }
-        else {
-            LOGE("ToJsObject: create file counts failed.\n");
-            return nullptr;
-        }
-    }
-    else {
-        LOGE("ToJsObject: create object failed.\n");
-        return nullptr;
-    }
-
-    LOGI("ToJsObject: create parameter object success.\n"); 
-    return te;
-}
-
 
 napi_value RegisterSendFileNotifyCallback()
 {
@@ -158,8 +101,7 @@ int32_t NapiSendFinished(const std::string &cid, const std::string &fileName)
         if (agent->FindDevice(cid)) {
             LOGI("DEBUG_SENDFILE:OnSendFinished, event agent for device[%{public}s] was found.", cid.c_str());
             break;
-        }
-        else {
+        } else {
             sptr<ISystemAbilityManager> systemAbilityMgr =
             SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
             if (systemAbilityMgr == nullptr) {
@@ -186,8 +128,7 @@ int32_t NapiSendFinished(const std::string &cid, const std::string &fileName)
         agent->Emit("sendFinished", reinterpret_cast<Event*>(&event));
         LOGI("DEBUG_SENDFILE:OnSendFinished, [%{public}s] event was done.", cid.c_str());
         return 0;
-    }
-    else {
+    } else {
         LOGI("DEBUG_SENDFILE:OnSendFinished, [%{public}s] no event processor.", cid.c_str());
         return -1;
     }
@@ -202,8 +143,7 @@ int32_t NapiSendError(const std::string &cid)
         if (agent->FindDevice(cid)) {
             LOGI("DEBUG_SENDFILE:OnSendError, event agent for device[%{public}s] was found.", cid.c_str());
             break;
-        }
-        else {
+        } else {
             sptr<ISystemAbilityManager> systemAbilityMgr =
             SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
             if (systemAbilityMgr == nullptr) {
@@ -230,8 +170,7 @@ int32_t NapiSendError(const std::string &cid)
         agent->Emit("sendFinished", reinterpret_cast<Event*>(&event));
         LOGI("DEBUG_SENDFILE:OnSendError, [%{public}s] event was done.", cid.c_str());
         return 0;
-    }
-    else {
+    } else {
         LOGI("DEBUG_SENDFILE:OnSendError, [%{public}s] no event processor.", cid.c_str());
         return -1;
     }
@@ -246,8 +185,7 @@ int32_t NapiReceiveFinished(const std::string &cid, const std::string &fileName,
         if (agent->FindDevice(cid)) {
             LOGI("DEBUG_SENDFILE:OnReceiveFinished, event agent for device[%{public}s] was found.", cid.c_str());
             break;
-        }
-        else {
+        } else {
             sptr<ISystemAbilityManager> systemAbilityMgr =
             SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
             if (systemAbilityMgr == nullptr) {
@@ -274,8 +212,7 @@ int32_t NapiReceiveFinished(const std::string &cid, const std::string &fileName,
         agent->Emit("receiveFinished", reinterpret_cast<Event*>(&event));
         LOGI("DEBUG_SENDFILE:OnReceiveFinished, [%{public}s] event was done.", cid.c_str());
         return 0;
-    }
-    else {
+    } else {
         LOGI("DEBUG_SENDFILE:OnReceiveFinished, [%{public}s] no event processor.", cid.c_str());
         return -1;
     }
@@ -290,8 +227,7 @@ int32_t NapiReceiveError(const std::string &cid)
         if (agent->FindDevice(cid)) {
             LOGI("OnReceiveError : event agent for device[%{public}s] was found.", cid.c_str());
             break;
-        }
-        else {
+        } else {
             sptr<ISystemAbilityManager> systemAbilityMgr =
             SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
             if (systemAbilityMgr == nullptr) {
@@ -318,8 +254,7 @@ int32_t NapiReceiveError(const std::string &cid)
         agent->Emit("receiveFinished", reinterpret_cast<Event*>(&event));
         LOGI("OnReceiveError : [%{public}s] event was done.", cid.c_str());
         return 0;
-    }
-    else {
+    } else {
         LOGI("OnReceiveError : [%{public}s] no event processor.", cid.c_str());
         return -1;
     }
@@ -373,7 +308,7 @@ int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>
 {
     if (deviceId.empty()) {
         LOGE("DeviceId can't be emptey.\n");
-        return -2;
+        return -1;
     }
     sptr<ISystemAbilityManager> systemAbilityMgr =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();

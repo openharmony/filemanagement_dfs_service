@@ -23,8 +23,8 @@ namespace Storage {
 namespace DistributedFile {
 class FileTransferCallbackProxy : public IRemoteProxy<IFileTransferCallback> {
 public:
-    explicit FileTransferCallbackProxy(const sptr<IRemoteObject> &impl);
-    virtual ~FileTransferCallbackProxy();
+    explicit FileTransferCallbackProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IFileTransferCallback>(impl) {}
+    virtual ~FileTransferCallbackProxy() {}
 
 public:
     int32_t DeviceOnline(const std::string &cid) override;

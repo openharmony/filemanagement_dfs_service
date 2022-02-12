@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,31 +13,33 @@
  * limitations under the License.
  */
 
-#ifndef MOUNT_MANAGER_H
-#define MOUNT_MANAGER_H
+#ifndef TRANS_EVENT_H
+#define TRANS_EVENT_H
 
-#include <memory>
-#include <mutex>
-#include <vector>
-
-#include "mount_point.h"
-#include "utils_singleton.h"
+#include "event_agent.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class MountManager final : public Utils::Singleton<MountManager> {
+class TransEvent : public Event {
 public:
-    void Mount(std::unique_ptr<MountPoint> mp);
-    void Umount(std::weak_ptr<MountPoint> wmp);
-    void Umount(const std::string &groupId);
-    DECLARE_SINGLETON(MountManager);
+    enum {
+        TRANS_SUCCESS = 0,
+        TRANS_FAILURE = 1
+    };
+public:
+    TransEvent(int32_t err, std::string fname, int32_t num) : errorCode_(err), fileName_(fname), fileCount_(num) {}
+    TransEvent(int32_t err, std::string fname) : errorCode_(err), fileName_(fname) {}
+    TransEvent(int32_t err) : errorCode_(err) {}
+    virtual ~TransEvent() {}
+    napi_value ToJsObject(napi_env env);
 
 private:
-    void StartInstance() override {}
-    void StopInstance() override {}
+    int32_t errorCode_ = TRANS_SUCCESS;
+    std::string fileName_ = "";
+    int32_t fileCount_ = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // MOUNT_MANAGER_H
+#endif // TRANS_EVENT_H

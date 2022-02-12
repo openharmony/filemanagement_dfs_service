@@ -12,18 +12,18 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_shared_library("sendfile") {
   include_dirs = [
     "//third_party/libuv/include",
     "//third_party/node/src",
     "//foundation/ace/napi/interfaces/kits",
-    "//foundation/filemanagement/dfs_service/interfaces/innerkits/native",
-    "//foundation/filemanagement/dfs_service/frameworks/native/include",
-    "//foundation/filemanagement/dfs_service/frameworks/js/napi/include",
-    "//foundation/filemanagement/dfs_service/utils/log/include",
-    "//foundation/filemanagement/dfs_service/services/distributedfileservice/include/ipc",
-    "//foundation/filemanagement/dfs_service/services/distributedfileservice/include",
+    "${distributedfile_path}/interfaces/innerkits/native",
+    "${distributedfile_path}/frameworks/native/include",
+    "${distributedfile_path}/frameworks/js/napi/include",
+    "${distributedfile_path}/utils/log/include",
+    "${services_path}/distributedfileservice/include/ipc",
     "//foundation/communication/ipc/interfaces/innerkits/libdbinder/include",
     "//foundation/distributedschedule/samgr/services/samgr/native/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
@@ -32,33 +32,32 @@ ohos_shared_library("sendfile") {
   ]
 
   sources = [
-    "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/sendfile_napi.cpp",
-    "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/sendfile.cpp",
-    "//foundation/filemanagement/dfs_service/frameworks/js/napi/src/event_agent.cpp",
-    "//foundation/filemanagement/dfs_service/frameworks/native/src/dfs_filetransfer_callback.cpp",
-    "//foundation/filemanagement/dfs_service/frameworks/native/src/filetransfer_callback_proxy.cpp",
-    "//foundation/filemanagement/dfs_service/frameworks/native/src/filetransfer_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/js/napi/src/event_agent.cpp",
+    "${distributedfile_path}/frameworks/js/napi/src/sendfile.cpp",
+    "${distributedfile_path}/frameworks/js/napi/src/sendfile_napi.cpp",
+    "${distributedfile_path}/frameworks/js/napi/src/trans_event.cpp",
+    "${distributedfile_path}/frameworks/native/src/dfs_filetransfer_callback.cpp",
+    "${distributedfile_path}/frameworks/native/src/filetransfer_callback_proxy.cpp",
+    "${distributedfile_path}/frameworks/native/src/filetransfer_callback_stub.cpp",
   ]
 
   deps = [
-    "//foundation/filemanagement/dfs_service/utils:libdistributedfileutils",
-    "//foundation/filemanagement/dfs_service/interfaces/innerkits/native:libdistributedfile_innerkits",
+    "${distributedfile_path}/interfaces/innerkits/native:libdistributedfile_innerkits",
+    "${utils_path}:libdistributedfileutils",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/ace/napi:ace_napi",
-    "//utils/native/base:utilsecurec",
     "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn:filemgmt_libn",
+    "//utils/native/base:utilsecurec",
   ]
 
   external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr_standard:samgr_common",
     "samgr_standard:samgr_proxy",
-    "hiviewdfx_hilog_native:libhilog",
   ]
 
-  cflags_cc = [
-    "-Wno-unused-function"
-  ]
+  cflags_cc = [ "-Wno-unused-function" ]
 
   relative_install_dir = "module"
   subsystem_name = "filemanagement"
@@ -66,7 +65,5 @@ ohos_shared_library("sendfile") {
 }
 
 group("build_kits_js") {
-  deps = [
-    ":sendfile",
-  ]
+  deps = [ ":sendfile" ]
 }

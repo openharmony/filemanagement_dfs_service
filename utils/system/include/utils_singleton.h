@@ -25,7 +25,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace Utils {
-#define DECLARE_UTILS_SINGLETON(MyClass)          \
+#define DECLARE_SINGLETON(MyClass)                \
 public:                                           \
     ~MyClass();                                   \
     MyClass(const MyClass&) = delete;             \

@@ -19,16 +19,11 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-ServiceProxy::ServiceProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IDistributedFileService>(impl) {}
-
-ServiceProxy::~ServiceProxy() {}
-
 int32_t ServiceProxy::SendFile(const std::string &cid,
                                const std::vector<std::string> &sourceFileList,
                                const std::vector<std::string> &destinationFileList,
                                const uint32_t fileCount)
 {
-    LOGI("xhl sendFile enter");
     MessageParcel data;
     if (!data.WriteInterfaceToken(ServiceProxy::GetDescriptor())) {
         return DFS_WRITE_DESCRIPTOR_TOKEN_FAIL;
@@ -47,7 +42,7 @@ int32_t ServiceProxy::SendFile(const std::string &cid,
     data.WriteUint32(fileCount);
 
     if (Remote() == nullptr) {
-        LOGE("xhl unregister sendfile remote object address is null");
+        LOGE("unregister sendfile remote object address is null");
         return DFS_REMOTE_ADDRESS_IS_NULL;
     }
 
@@ -55,18 +50,15 @@ int32_t ServiceProxy::SendFile(const std::string &cid,
     MessageOption option;
     int32_t result = Remote()->SendRequest(SEND_FILE_DISTRIBUTED, data, reply, option);
     if (result != DFS_SENDFILE_SUCCESS) {
-        LOGE("xhl sendfile error code : %{public}d", result);
+        LOGE("sendfile error code : %{public}d", result);
         return result;
     }
-    LOGE("xhl sendfile sendRequest done %{public}d", result);
 
     return reply.ReadInt32();
 }
 
 int32_t ServiceProxy::OpenFile(int32_t fd, const std::string &fileName, int32_t mode)
 {
-    LOGI("xhl OpenFile enter");
-    LOGI("xhl OpenFile fd %{public}d", fd);
     MessageParcel data;
     if (!data.WriteInterfaceToken(ServiceProxy::GetDescriptor())) {
         return DFS_WRITE_DESCRIPTOR_TOKEN_FAIL;
@@ -77,70 +69,67 @@ int32_t ServiceProxy::OpenFile(int32_t fd, const std::string &fileName, int32_t 
     data.WriteInt32(mode);
 
     if (Remote() == nullptr) {
-        LOGE("xhl openfile remote object address is null");
+        LOGE("openfile remote object address is null");
         return DFS_REMOTE_ADDRESS_IS_NULL;
     }
 
     MessageParcel reply;
     MessageOption option;
     Remote()->SendRequest(OPEN_FILE_FD, data, reply, option);
-    LOGI("xhl RegisterNotifyCallback end");
+
     return reply.ReadInt32();
 }
 
 int32_t ServiceProxy::RegisterNotifyCallback(sptr<IFileTransferCallback> &callback)
 {
-    LOGI("xhl OpenFile enter");
     MessageParcel data;
     if (!data.WriteInterfaceToken(ServiceProxy::GetDescriptor())) {
         return DFS_WRITE_DESCRIPTOR_TOKEN_FAIL;
     }
 
     if (callback == nullptr) {
-        LOGE("xhl The parameter of callback is nullptr");
+        LOGE("The parameter of callback is nullptr");
         return DFS_CALLBACK_PARAM_ERROR;
     }
 
     if (!data.WriteRemoteObject(callback->AsObject().GetRefPtr())) {
-        LOGE("xhl write remote object failed");
+        LOGE("write remote object failed");
         return DFS_WRITE_REMOTE_OBJECT_FAIL;
     }
 
     if (Remote() == nullptr) {
-        LOGE("xhl register filetransfer callback remote object address is null");
+        LOGE("register filetransfer callback remote object address is null");
         return DFS_REMOTE_ADDRESS_IS_NULL;
     }
 
     MessageParcel reply;
     MessageOption option;
     Remote()->SendRequest(REGISTER_NOTIFY_CALLBACK, data, reply, option);
-    LOGI("xhl RegisterNotifyCallback end");
+
     return reply.ReadInt32();
 }
 
 int32_t ServiceProxy::UnRegisterNotifyCallback()
 {
-    LOGI("xhl UnRegisterNotifyCallback enter");
     MessageParcel data;
     if (!data.WriteInterfaceToken(ServiceProxy::GetDescriptor())) {
         return DFS_WRITE_DESCRIPTOR_TOKEN_FAIL;
     }
 
     if (Remote() == nullptr) {
-        LOGE("xhl unregister filetransfer callback remote object address is null");
+        LOGE("unregister filetransfer callback remote object address is null");
         return DFS_REMOTE_ADDRESS_IS_NULL;
     }
 
     MessageParcel reply;
     MessageOption option;
     Remote()->SendRequest(UN_REGISTER_NOTIFY_CALLBACK, data, reply, option);
-    LOGI("xhl UnRegisterNotifyCallback end");
+
     return reply.ReadInt32();
 }
 
 int32_t ServiceProxy::IsDeviceOnline(const std::string &cid)
 {
-    LOGE("xhl IsDeviceOnline enter");
     MessageParcel data;
     if (!data.WriteInterfaceToken(ServiceProxy::GetDescriptor())) {
         return DFS_WRITE_DESCRIPTOR_TOKEN_FAIL;
@@ -159,7 +148,6 @@ int32_t ServiceProxy::IsDeviceOnline(const std::string &cid)
         LOGE("Function RemoveBundleDistributedDirs! errCode:%{public}d", result);
         return DFS_NO_DEVICE_ONLINE;
     }
-    LOGE("xhl IsDeviceOnline done %{public}d", result);
 
     return reply.ReadInt32();
 }

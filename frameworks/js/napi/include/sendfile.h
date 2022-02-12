@@ -18,32 +18,12 @@
 
 #include "event_agent.h"
 
-#include <mutex>
 #include <unordered_map>
 #include <vector>
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class TransEvent : public Event {
-public:
-    enum {
-        TRANS_SUCCESS = 0,
-        TRANS_FAILURE = 1
-    };
-public:
-    TransEvent(int32_t err, std::string fname, int32_t num) : errorCode_(err), fileName_(fname), fileCount_(num) {}
-    TransEvent(int32_t err, std::string fname) : errorCode_(err), fileName_(fname) {}
-    TransEvent(int32_t err) : errorCode_(err) {}
-    virtual ~TransEvent() {}
-    napi_value ToJsObject(napi_env env);
-
-private:
-    int32_t errorCode_ = TRANS_SUCCESS;
-    std::string fileName_ = "";
-    int32_t fileCount_ = 0;
-};
-
 int32_t NapiDeviceOnline(const std::string &cid);
 int32_t NapiDeviceOffline(const std::string &cid);
 int32_t NapiSendFinished(const std::string &cid, const std::string &fileName);
@@ -54,7 +34,6 @@ int32_t NapiWriteFile(int32_t fd, const std::string &fileName);
 
 napi_value RegisterSendFileNotifyCallback();
 
-static std::mutex g_uidMutex;
 static std::unordered_map<std::string, EventAgent*> g_mapUidToEventAgent;
 
 int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,
