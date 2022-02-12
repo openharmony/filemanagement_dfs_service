@@ -24,9 +24,9 @@ ohos_shared_library("libdistributedfileservice") {
   ]
 
   sources = [
+    "src/device/device_manager_agent.cpp",
     "src/ipc/distributedfile_service.cpp",
     "src/ipc/distributedfile_service_stub.cpp",
-    "src/device/device_manager_agent.cpp",
     "src/network/softbus_agent.cpp",
     "src/network/softbus_dispatcher.cpp",
   ]
