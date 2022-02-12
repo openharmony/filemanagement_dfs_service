@@ -42,11 +42,11 @@ ohos_shared_library("sendfile") {
   ]
 
   deps = [
+    "${distributedfile_path}/interfaces/innerkits/native:libdistributedfile_innerkits",
+    "${utils_path}:libdistributedfileutils",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
     "//foundation/ace/napi:ace_napi",
     "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn:filemgmt_libn",
-    "${distributedfile_path}/interfaces/innerkits/native:libdistributedfile_innerkits",
-    "${utils_path}:libdistributedfileutils",
     "//utils/native/base:utilsecurec",
   ]
 
