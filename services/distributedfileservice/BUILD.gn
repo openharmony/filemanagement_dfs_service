@@ -42,7 +42,6 @@ ohos_shared_library("libdistributedfileservice") {
 
   external_deps = [
     "ability_base:want",
-    "ability_runtime:app_manager",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "ipc:ipc_core",

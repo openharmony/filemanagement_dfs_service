@@ -23,7 +23,6 @@ ohos_shared_library("sendfile") {
     "//foundation/filemanagement/dfs_service/frameworks/js/napi/include",
     "//foundation/filemanagement/dfs_service/utils/log/include",
     "//foundation/filemanagement/dfs_service/services/distributedfileservice/include/ipc",
-    "//foundation/filemanagement/dfs_service/services/distributedfileservice/include",
     "//foundation/communication/ipc/interfaces/innerkits/libdbinder/include",
     "//foundation/distributedschedule/samgr/services/samgr/native/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",

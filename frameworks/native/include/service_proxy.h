@@ -31,7 +31,6 @@ public:
      * @param impl
      */
     explicit ServiceProxy(const sptr<IRemoteObject> &impl);
-
     virtual ~ServiceProxy();
 
     int32_t SendFile(const std::string &cid,

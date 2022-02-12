@@ -40,10 +40,6 @@ namespace {
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DistributedFileService, STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID, false);
 
-DistributedFileService::DistributedFileService() : SystemAbility(STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID, false) {}
-
-DistributedFileService::~DistributedFileService() {}
-
 void DistributedFileService::OnDump()
 {
     LOGI("OnDump");
@@ -62,7 +58,7 @@ void DistributedFileService::OnStop()
 
 void DistributedFileService::PublishSA()
 {
-    bool ret = SystemAbility::Publish(DelayedSingleton<DistributedFileService>::GetInstance().get());
+    bool ret = SystemAbility::Publish(this);
     if (!ret) {
         LOGE("Leave, publishing DistributedFileService failed!");
         return;

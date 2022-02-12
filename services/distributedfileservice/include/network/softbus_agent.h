@@ -27,7 +27,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 class SoftbusAgent : public std::enable_shared_from_this<SoftbusAgent>, public Utils::Singleton<SoftbusAgent> {
-    DECLARE_UTILS_SINGLETON(SoftbusAgent);
+    DECLARE_SINGLETON(SoftbusAgent);
 
 public:
     void RegisterSessionListener();
