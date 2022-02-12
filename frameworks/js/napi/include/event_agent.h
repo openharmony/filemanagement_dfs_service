@@ -16,9 +16,10 @@
 #ifndef NATIVE_MODULE_SEND_FILE_EVENT_AGENT_H
 #define NATIVE_MODULE_SEND_FILE_EVENT_AGENT_H
 
-#include "napi/native_api.h"
 #include <set>
 #include <mutex>
+
+#include "napi/native_api.h"
 
 namespace OHOS {
 namespace Storage {

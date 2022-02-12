@@ -26,7 +26,6 @@ FileTransferCallbackProxy::~FileTransferCallbackProxy() {}
 
 int32_t FileTransferCallbackProxy::DeviceOnline(const std::string &cid)
 {
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(FileTransferCallbackProxy::GetDescriptor())) {
         LOGE("xhl [---FileTransferCallbackProxy---] WriteInterfaceToken failed");

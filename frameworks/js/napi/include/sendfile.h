@@ -18,7 +18,6 @@
 
 #include "event_agent.h"
 
-#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -54,7 +53,6 @@ int32_t NapiWriteFile(int32_t fd, const std::string &fileName);
 
 napi_value RegisterSendFileNotifyCallback();
 
-static std::mutex g_uidMutex;
 static std::unordered_map<std::string, EventAgent*> g_mapUidToEventAgent;
 
 int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,

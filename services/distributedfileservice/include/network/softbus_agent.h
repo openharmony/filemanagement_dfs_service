@@ -16,11 +16,11 @@
 #ifndef DFS_SOFTBUS_AGENT_H
 #define DFS_SOFTBUS_AGENT_H
 
-#include "utils_singleton.h"
-#include "i_filetransfer_callback.h"
 #include <condition_variable>
 #include <list>
 #include <unordered_map>
+
+#include "i_filetransfer_callback.h"
 #include "utils_singleton.h"
 
 namespace OHOS {

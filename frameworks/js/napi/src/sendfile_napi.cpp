@@ -15,6 +15,8 @@
 
 #include "sendfile_napi.h"
 
+#include <mutex>
+
 #include "filemgmt_libn.h"
 #include "sendfile.h"
 #include "utils_log.h"
@@ -26,7 +28,8 @@ using namespace FileManagement::LibN;
 namespace {
     constexpr int32_t MAX_SEND_FILE_HAP_NUMBER = 50;
     constexpr int32_t SENDFILE_NAPI_BUF_LENGTH = 256;
-    const std::string DfsAppUid{"SendFileTestUid"};
+    const std::string DfsAppUid{ "SendFileTestUid" };
+    static std::mutex g_uidMutex;
 }
 
 napi_value SendFile(napi_env env, napi_callback_info info)

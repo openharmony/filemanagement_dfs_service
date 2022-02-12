@@ -15,7 +15,6 @@
 
 #include "dfs_filetransfer_callback.h"
 
-#include <iostream>
 #include "sendfile.h"
 #include "utils_log.h"
 

@@ -17,20 +17,18 @@
 #include <exception>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <system_ability_definition.h>
 
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "device_manager_agent.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "message_parcel.h"
 #include "parcel.h"
+#include "softbus_agent.h"
+#include "system_ability_definition.h"
 #include "utils_directory.h"
 #include "utils_log.h"
-
-#include "softbus_agent.h"
-#include "device_manager_agent.h"
 
 namespace OHOS {
 namespace Storage {
@@ -81,7 +79,7 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
                                          const std::vector<std::string> &destinationFileList,
                                          const uint32_t fileCount)
 {
-    char **sFileList = new char*[fileCount];
+    char **sFileList = new char* [fileCount];
     for (int index = 0; index < sourceFileList.size(); ++index) {
         LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}d",
             index, sourceFileList.at(index).c_str(), sourceFileList.at(index).length());
@@ -101,7 +99,7 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
         }
     }
 
-    char **dFileList = new char*[fileCount];
+    char **dFileList = new char* [fileCount];
     for (int index = 0; index < destinationFileList.size(); ++index) {
         LOGI("DistributedFileService::SendFile Destination File List %{public}d, %{public}s",
             index, destinationFileList.at(index).c_str());
