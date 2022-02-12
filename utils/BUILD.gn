@@ -36,7 +36,6 @@ config("compiler_configs") {
   ]
 
   defines = [
-    "LOG_TAG=\"distributedfile\"",
     "LOG_DOMAIN=0xD001600",
     "LOG_LEVEL=INFO",
   ]

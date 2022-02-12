@@ -31,6 +31,8 @@ ohos_shared_library("libdistributedfileservice") {
 
   configs = [ "${utils_path}:compiler_configs" ]
 
+  defines = [ "LOG_TAG=\"distributedfile_service\"" ]
+
   external_deps = [
     "dsoftbus_standard:softbus_client",
     "ipc:ipc_core",
