@@ -40,6 +40,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
     "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
+    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
     "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
     "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
@@ -67,6 +68,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
   ]
 
   external_deps = [
+    "dataclassification:data_transit_mgr",
     "dsoftbus_standard:softbus_client",
     "ipc:ipc_core",
     "os_account_standard:os_account_innerkits",

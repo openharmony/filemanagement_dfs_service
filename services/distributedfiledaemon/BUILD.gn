@@ -29,6 +29,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/mountpoint/mount_manager.cpp",
     "src/mountpoint/mount_point.cpp",
     "src/multiuser/os_account_observer.cpp",
+    "src/network/devsl_dispatcher.cpp",
     "src/network/kernel_talker.cpp",
     "src/network/network_agent_template.cpp",
     "src/network/session_pool.cpp",
@@ -43,6 +44,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk",
   ]
   external_deps = [
+    "dataclassification:data_transit_mgr",
     "dsoftbus_standard:softbus_client",
     "ipc:ipc_core",
     "os_account_standard:os_account_innerkits",

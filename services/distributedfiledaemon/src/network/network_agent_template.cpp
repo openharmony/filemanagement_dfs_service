@@ -30,7 +30,7 @@ constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 void NetworkAgentTemplate::Start()
 {
     JoinDomain();
-    kernerlTalker_.CreatePollThread();
+    kernerlTalker_->CreatePollThread();
     ConnectOnlineDevices();
 }
 
@@ -38,7 +38,7 @@ void NetworkAgentTemplate::Stop()
 {
     StopTopHalf();
     StopBottomHalf();
-    kernerlTalker_.WaitForPollThreadExited();
+    kernerlTalker_->WaitForPollThreadExited();
 }
 
 void NetworkAgentTemplate::ConnectDeviceAsync(const DeviceInfo info)

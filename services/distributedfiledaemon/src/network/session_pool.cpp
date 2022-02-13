@@ -23,7 +23,7 @@ using namespace std;
 void SessionPool::HoldSession(shared_ptr<BaseSession> session)
 {
     lock_guard lock(sessionPoolLock_);
-    talker_.SinkSessionTokernel(session);
+    talker_->SinkSessionTokernel(session);
     AddSessionToPool(session);
 }
 
@@ -42,7 +42,7 @@ void SessionPool::ReleaseSession(const int32_t fd)
 
 void SessionPool::ReleaseSession(const string &cid)
 {
-    talker_.SinkOfflineCmdToKernel(cid);
+    talker_->SinkOfflineCmdToKernel(cid);
     lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
         if ((*iter)->GetCid() == cid) {
@@ -58,7 +58,7 @@ void SessionPool::ReleaseAllSession()
 {
     lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
-        talker_.SinkOfflineCmdToKernel((*iter)->GetCid());
+        talker_->SinkOfflineCmdToKernel((*iter)->GetCid());
         /* device offline, session release by softbus*/
         iter = usrSpaceSessionPool_.erase(iter);
     }

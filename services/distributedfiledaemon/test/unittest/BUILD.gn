@@ -46,6 +46,7 @@ ohos_unittest("DeviceManagerAgentTest") {
   ]
 
   external_deps = [
+    "dataclassification:data_transit_mgr",
     "dsoftbus_standard:softbus_client",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
