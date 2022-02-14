@@ -21,7 +21,7 @@
       "ram": "",
       "deps": {
         "components": [
-          "ability_runtime",
+          "ability_base",
           "bundle_framework",
           "dataclassification",
           "dsoftbus",
