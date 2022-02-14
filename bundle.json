@@ -23,6 +23,7 @@
         "components": [
           "ability_runtime",
           "bundle_framework",
+          "dataclassification",
           "dsoftbus",
           "ipc",
           "hilog",

@@ -43,7 +43,7 @@ struct NotifyParam {
     char remoteCid[CID_MAX_LEN];
 } __attribute__((packed));
 
-class KernelTalker final : protected NoCopyable {
+class KernelTalker final : protected NoCopyable, public std::enable_shared_from_this<KernelTalker> {
 public:
     explicit KernelTalker(std::weak_ptr<MountPoint> mountPoint,
                           std::function<void(NotifyParam &)> getSessionCallback,
@@ -55,6 +55,7 @@ public:
     ~KernelTalker() = default;
 
     void SinkSessionTokernel(std::shared_ptr<BaseSession> session);
+    void SinkDevslTokernel(const std::string &cid, uint32_t devsl);
     void SinkOfflineCmdToKernel(std::string cid);
 
     void CreatePollThread();

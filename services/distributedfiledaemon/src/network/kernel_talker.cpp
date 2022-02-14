@@ -15,6 +15,7 @@
 
 #include "network/kernel_talker.h"
 #include "device/device_manager_agent.h"
+#include "network/devsl_dispatcher.h"
 #include "securec.h"
 #include "utils_log.h"
 
@@ -32,18 +33,26 @@ constexpr int TIME_OUT_EVENT = 0;
 struct UpdateSocketParam {
     int32_t cmd;
     int32_t newfd;
+    uint32_t devsl;
     uint8_t status;
     uint8_t masterKey[KEY_MAX_LEN];
-    char cid[CID_MAX_LEN];
+    uint8_t cid[CID_MAX_LEN];
+} __attribute__((packed));
+
+struct UpdateDevslParam {
+    int32_t cmd;
+    uint32_t devsl;
+    uint8_t cid[CID_MAX_LEN];
 } __attribute__((packed));
 
 struct OfflineParam {
     int32_t cmd;
-    char remoteCid[CID_MAX_LEN];
+    uint8_t remoteCid[CID_MAX_LEN];
 } __attribute__((packed));
 
 enum {
     CMD_UPDATE_SOCKET = 0,
+    CMD_UPDATE_DEVSL,
     CMD_OFF_LINE,
     CMD_OFF_LINE_ALL,
     CMD_CNT,
@@ -74,11 +83,26 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session)
     UpdateSocketParam cmd = {
         .cmd = CMD_UPDATE_SOCKET,
         .newfd = socketFd,
+        .devsl = 3,
         .status = status,
     };
     if (memcpy_s(cmd.masterKey, KEY_MAX_LEN, masterkey.data(), KEY_MAX_LEN) != EOK) {
         return;
     }
+
+    if (memcpy_s(cmd.cid, CID_MAX_LEN, cid.c_str(), CID_MAX_LEN)) {
+        return;
+    }
+    SetCmd(cmd);
+}
+
+void KernelTalker::SinkDevslTokernel(const std::string &cid, uint32_t devsl)
+{
+    LOGD("sink dsl to kernel success, cid:%{public}s, devsl:%{public}d", cid.c_str(), devsl);
+    UpdateDevslParam cmd = {
+        .cmd = CMD_UPDATE_DEVSL,
+        .devsl = devsl,
+    };
 
     if (memcpy_s(cmd.cid, CID_MAX_LEN, cid.c_str(), CID_MAX_LEN)) {
         return;

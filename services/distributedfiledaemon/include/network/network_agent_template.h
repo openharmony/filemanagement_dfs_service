@@ -37,10 +37,10 @@ public:
     explicit NetworkAgentTemplate(std::weak_ptr<MountPoint> mountPoint)
         : Actor<NetworkAgentTemplate>(this),
           mountPoint_(mountPoint),
-          kernerlTalker_(
+          kernerlTalker_(std::make_shared<KernelTalker>(
               mountPoint,
               [&](NotifyParam &param) { GetSessionProcess(param); },
-              [&](const std::string &cid) { CloseSessionForOneDevice(cid); }),
+              [&](const std::string &cid) { CloseSessionForOneDevice(cid); })),
           sessionPool_(kernerlTalker_)
     {
     }
@@ -77,7 +77,7 @@ private:
 
     std::mutex taskMut_;
     std::list<Utils::DfsThread> tasks_;
-    KernelTalker kernerlTalker_;
+    std::shared_ptr<KernelTalker> kernerlTalker_;
     SessionPool sessionPool_;
 };
 } // namespace DistributedFile

@@ -22,6 +22,7 @@
 #include "device_auth.h"
 #include "ipc/i_daemon.h"
 #include "mountpoint/mount_manager.h"
+#include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_agent.h"
 #include "softbus_bus_center.h"
 #include "utils_exception.h"
@@ -58,6 +59,7 @@ void DeviceManagerAgent::StopInstance()
 
 void DeviceManagerAgent::Start()
 {
+    DevslDispatcher::Start();
     RegisterToExternalDm();
     InitLocalNodeInfo();
 }
@@ -65,6 +67,7 @@ void DeviceManagerAgent::Start()
 void DeviceManagerAgent::Stop()
 {
     UnregisterFromExternalDm();
+    DevslDispatcher::Stop();
 }
 
 void DeviceManagerAgent::JoinGroup(weak_ptr<MountPoint> mp)

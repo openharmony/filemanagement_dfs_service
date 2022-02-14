@@ -29,7 +29,7 @@ namespace Storage {
 namespace DistributedFile {
 class SessionPool final : protected NoCopyable {
 public:
-    explicit SessionPool(KernelTalker &talker) : talker_(talker) {}
+    explicit SessionPool(std::shared_ptr<KernelTalker> &talker) : talker_(talker) {}
     ~SessionPool() = default;
     void HoldSession(std::shared_ptr<BaseSession> session);
     void ReleaseSession(const int32_t fd);
@@ -39,7 +39,7 @@ public:
 private:
     std::recursive_mutex sessionPoolLock_;
     std::list<std::shared_ptr<BaseSession>> usrSpaceSessionPool_;
-    KernelTalker &talker_;
+    std::shared_ptr<KernelTalker> &talker_;
 
     void AddSessionToPool(std::shared_ptr<BaseSession> session);
 };
