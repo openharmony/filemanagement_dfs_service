@@ -41,6 +41,12 @@ ohos_shared_library("sendfile") {
     "${distributedfile_path}/frameworks/native/src/filetransfer_callback_stub.cpp",
   ]
 
+  defines = [
+    "LOG_TAG=\"distributedfile_napi\"",
+    "LOG_DOMAIN=0xD001600",
+    "LOG_LEVEL=INFO",
+  ]
+
   deps = [
     "${distributedfile_path}/interfaces/innerkits/native:libdistributedfile_innerkits",
     "${utils_path}:libdistributedfileutils",
