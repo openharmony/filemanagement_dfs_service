@@ -75,7 +75,7 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
                                          const std::vector<std::string> &destinationFileList,
                                          const uint32_t fileCount)
 {
-    if (fileCount < 0) {
+    if (fileCount <= 0) {
         return -1;
     }
     char **sFileList = new char* [fileCount];
@@ -145,7 +145,7 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
         }
     }
 
-    int32_t writeFd = open(tmpFile, O_WRONLY | O_CREAT, (S_IREAD & S_IWRITE) | S_IRGRP | S_IROTH);
+    int32_t writeFd = open(tmpFile, O_WRONLY | O_CREAT, (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     if (writeFd <= 0) {
         close(fd);
         LOGE("DFS SA open temp file failed %{public}d, %{public}s, %{public}d", writeFd, strerror(errno), errno);

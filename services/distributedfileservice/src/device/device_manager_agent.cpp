@@ -22,7 +22,6 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-using namespace std;
 DeviceManagerAgent::DeviceManagerAgent() {}
 
 DeviceManagerAgent::~DeviceManagerAgent()
@@ -43,7 +42,7 @@ void DeviceManagerAgent::StopInstance()
 
 void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    std::unique_lock<mutex> lock(devsRecordMutex_);
+    std::unique_lock<std::mutex> lock(devsRecordMutex_);
     std::string cid = std::string(deviceInfo.deviceId);
     alreadyOnlineDev_.insert(cid);
     SoftbusAgent::GetInstance()->OnDeviceOnline(cid);
@@ -51,7 +50,7 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
 
 void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    std::unique_lock<mutex> lock(devsRecordMutex_);
+    std::unique_lock<std::mutex> lock(devsRecordMutex_);
     std::string cid = std::string(deviceInfo.deviceId);
     auto softBusAgent = SoftbusAgent::GetInstance();
     softBusAgent->OnDeviceOffline(cid);
@@ -74,7 +73,7 @@ void DeviceManagerAgent::RegisterToExternalDm()
     if (errCode != 0) {
         ThrowException(errCode, "Failed to InitDeviceManager");
     }
-    string extra = "";
+    std::string extra = "";
     errCode = deviceManager.RegisterDevStateCallback(DistributedFileService::pkgName_, extra, shared_from_this());
     if (errCode != 0) {
         ThrowException(errCode, "Failed to RegisterDevStateCallback");
