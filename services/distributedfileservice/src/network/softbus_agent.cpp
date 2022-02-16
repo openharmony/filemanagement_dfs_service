@@ -194,7 +194,7 @@ void SoftbusAgent::OnReceiveFileFinished(const int sessionId, const std::string 
         }
     }
 
-    std::string desFileName = std::string("/data/system_ce/") + files;
+    std::string desFileName = DEFAULT_ROOT_PATH + files;
     int32_t fd = open(desFileName.c_str(), O_RDONLY);
     if (fd <= 0) {
         LOGE("NapiWriteFile open recive distributedfile %{public}d, %{public}s, %{public}d",
