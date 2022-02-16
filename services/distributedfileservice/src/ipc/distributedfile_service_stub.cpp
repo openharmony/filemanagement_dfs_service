@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+#include "filetransfer_callback_proxy.h"
 #include "ipc_skeleton.h"
 #include "utils_log.h"
 
@@ -117,13 +118,13 @@ int32_t DistributedFileServiceStub::OpenFileStub(MessageParcel &data, MessagePar
 
 int32_t DistributedFileServiceStub::CmdRegisterNotifyCallback(MessageParcel &data, MessageParcel &reply)
 {
-    OHOS::sptr<IRemoteObject> remote = data.ReadRemoteObject();
+    sptr<IRemoteObject> remote = data.ReadRemoteObject();
     if (remote == nullptr) {
         LOGE("Callback ptr is nullptr.");
         return 0;
     }
 
-    OHOS::sptr<IFileTransferCallback> callback = iface_cast<IFileTransferCallback>(remote);
+    sptr<IFileTransferCallback> callback = iface_cast<IFileTransferCallback>(remote);
     int32_t result = RegisterNotifyCallback(callback);
     reply.WriteInt32(result);
     return result;

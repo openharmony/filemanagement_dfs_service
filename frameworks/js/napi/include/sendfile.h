@@ -31,7 +31,7 @@ int32_t NapiSendError(const std::string &cid);
 int32_t NapiReceiveFinished(const std::string &cid, const std::string &fileName, uint32_t num);
 int32_t NapiReceiveError(const std::string &cid);
 int32_t NapiWriteFile(int32_t fd, const std::string &fileName);
-
+void SetEventAgentMap(const std::unordered_map<std::string, EventAgent*> &map);
 napi_value RegisterSendFileNotifyCallback();
 
 static std::unordered_map<std::string, EventAgent*> g_mapUidToEventAgent;
