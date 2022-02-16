@@ -37,7 +37,7 @@ namespace DistributedFile {
 namespace {
 const std::string DfsAppUid { "SendFileTestUid" };
 constexpr int32_t FILE_BLOCK_SIZE = 1024;
-const std::string APP_PATH { "/data/accounts/account_0/appdata/com.example.filetestkits/cache/" };
+const std::string APP_PATH { "/data/accounts/account_0/appdata/" };
 }
 
 napi_value RegisterSendFileNotifyCallback()
@@ -72,7 +72,7 @@ int32_t NapiDeviceOnline(const std::string &cid)
     for (std::unordered_map<std::string, EventAgent*>::iterator iter = g_mapUidToEventAgent.begin();
         iter != g_mapUidToEventAgent.end(); ++iter) {
         EventAgent* agent = iter->second;
-        if (agent != nullptr && agent->FindDevice(DfsAppUid)) {
+        if (agent != nullptr && agent->FindDevice(cid)) {
             LOGI("NapiDeviceOnline, event agent for device[%{public}s] was found.", cid.c_str());
             agent->InsertDevice(cid);
             break;
@@ -86,7 +86,7 @@ int32_t NapiDeviceOffline(const std::string &cid)
     for (std::unordered_map<std::string, EventAgent*>::iterator iter = g_mapUidToEventAgent.begin();
         iter != g_mapUidToEventAgent.end(); ++iter) {
         EventAgent* agent = iter->second;
-        if (agent != nullptr && agent->FindDevice(DfsAppUid)) {
+        if (agent != nullptr && agent->FindDevice(cid)) {
             LOGI("NapiDeviceOffline, event agent for device[%{public}s] was found.", cid.c_str());
             agent->RemoveDevice(cid);
             break;
@@ -101,7 +101,7 @@ int32_t NapiSendFinished(const std::string &cid, const std::string &fileName)
     std::unordered_map<std::string, EventAgent*>::iterator iter;
     for (iter = g_mapUidToEventAgent.begin(); iter != g_mapUidToEventAgent.end(); ++iter) {
         agent = iter->second;
-        if (agent->FindDevice(cid)) {
+        if (agent != nullptr && agent->FindDevice(cid)) {
             LOGI("DEBUG_SENDFILE:OnSendFinished, event agent for device[%{public}s] was found.", cid.c_str());
             break;
         } else {
@@ -143,7 +143,7 @@ int32_t NapiSendError(const std::string &cid)
     std::unordered_map<std::string, EventAgent*>::iterator iter;
     for (iter = g_mapUidToEventAgent.begin(); iter != g_mapUidToEventAgent.end(); ++iter) {
         agent = iter->second;
-        if (agent->FindDevice(cid)) {
+        if (agent != nullptr && agent->FindDevice(cid)) {
             LOGI("DEBUG_SENDFILE:OnSendError, event agent for device[%{public}s] was found.", cid.c_str());
             break;
         } else {
@@ -185,7 +185,7 @@ int32_t NapiReceiveFinished(const std::string &cid, const std::string &fileName,
     std::unordered_map<std::string, EventAgent*>::iterator iter;
     for (auto iter = g_mapUidToEventAgent.begin(); iter != g_mapUidToEventAgent.end(); ++iter) {
         agent = iter->second;
-        if (agent->FindDevice(cid)) {
+        if (agent != nullptr && agent->FindDevice(cid)) {
             LOGI("DEBUG_SENDFILE:OnReceiveFinished, event agent for device[%{public}s] was found.", cid.c_str());
             break;
         } else {
@@ -227,7 +227,7 @@ int32_t NapiReceiveError(const std::string &cid)
     std::unordered_map<std::string, EventAgent*>::iterator iter;
     for (auto iter = g_mapUidToEventAgent.begin(); iter != g_mapUidToEventAgent.end(); ++iter) {
         agent = iter->second;
-        if (agent->FindDevice(cid)) {
+        if (agent != nullptr && agent->FindDevice(cid)) {
             LOGI("OnReceiveError : event agent for device[%{public}s] was found.", cid.c_str());
             break;
         } else {
@@ -304,6 +304,11 @@ int32_t NapiWriteFile(int32_t fd, const std::string &fileName)
     close(writeFd);
 
     return 0;
+}
+
+void SetEventAgentMap(const std::unordered_map<std::string, EventAgent*> &map)
+{
+    g_mapUidToEventAgent = map;
 }
 
 int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,

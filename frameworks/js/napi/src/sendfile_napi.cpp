@@ -177,7 +177,7 @@ napi_value JS_Constructor(napi_env env, napi_callback_info cbinfo)
     char bundleName[SENDFILE_NAPI_BUF_LENGTH] = { 0 };
     size_t typeLen = 0;
     napi_get_value_string_utf8(env, argv[0], bundleName, sizeof(bundleName), &typeLen);
-    LOGI("DEBUG_SENDFILE:JS_Constructor. %{public}s", bundleName);
+    LOGI("DEBUG_SENDFILE:JS_Constructor. [%{public}s]", bundleName);
 
     EventAgent* agent = new EventAgent(env, thisVar);
     {
@@ -193,6 +193,7 @@ napi_value JS_Constructor(napi_env env, napi_callback_info cbinfo)
                 return nullptr;
             } else {
                 LOGI("map size %{public}d", g_mapUidToEventAgent.size());
+                SetEventAgentMap(g_mapUidToEventAgent);
             }
         }
     }
