@@ -275,7 +275,7 @@ int32_t NapiWriteFile(int32_t fd, const std::string &fileName)
         flags |= O_CREAT;
     }
 
-    int32_t writeFd = open(filePath.c_str(), flags, (S_IREAD & S_IWRITE) | S_IRGRP | S_IROTH);
+    int32_t writeFd = open(filePath.c_str(), flags, (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     if (writeFd <= 0) {
         close(fd);
         LOGE("NapiWriteFile open file failed %{public}d, %{public}s, %{public}d", writeFd, strerror(errno), errno);
@@ -333,7 +333,7 @@ int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>
     }
 
     int32_t fd = open(srcList.at(0).c_str(), O_RDONLY);
-    int32_t result = distributedFileService->OpenFile(fd, srcList.at(0), (S_IREAD & S_IWRITE) | S_IRGRP | S_IROTH);
+    int32_t result = distributedFileService->OpenFile(fd, srcList.at(0), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     result = distributedFileService->SendFile(deviceId, srcList, dstList, num);
     LOGI(" ------------ DistributedFileService SendFile result %{public}d", result);
     return result;

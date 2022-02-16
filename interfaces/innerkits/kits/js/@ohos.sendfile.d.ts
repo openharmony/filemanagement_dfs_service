@@ -18,7 +18,7 @@ import {AsyncCallback, Callback} from "./basic";
  * Provides Environment APIs.
  *
  * @since 8
- * @sysCap SystemCapability.FileManagement.File.DistributeFile
+ * @syscap SystemCapability.FileManagement.File.DistributeFile
  */
 declare namespace SendFile {
   /**
