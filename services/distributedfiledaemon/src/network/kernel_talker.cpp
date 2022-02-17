@@ -83,7 +83,7 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session)
     UpdateSocketParam cmd = {
         .cmd = CMD_UPDATE_SOCKET,
         .newfd = socketFd,
-        .devsl = 3,
+        .devsl = 0,
         .status = status,
     };
     if (memcpy_s(cmd.masterKey, KEY_MAX_LEN, masterkey.data(), KEY_MAX_LEN) != EOK) {
@@ -94,6 +94,8 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session)
         return;
     }
     SetCmd(cmd);
+
+    DevslDispatcher::DevslGetRegister(cid, shared_from_this());
 }
 
 void KernelTalker::SinkDevslTokernel(const std::string &cid, uint32_t devsl)
