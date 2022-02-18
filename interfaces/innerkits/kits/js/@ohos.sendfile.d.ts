@@ -17,14 +17,14 @@ import {AsyncCallback, Callback} from "./basic";
 /**
  * Provides Environment APIs.
  *
- * @since 8
+ * @since 9
  * @syscap SystemCapability.FileManagement.File.DistributeFile
  */
 declare namespace SendFile {
   /**
    * send file.
    *
-   * @since 8
+   * @since 9
    */
   function sendFile(deviceId: string, sourPath: Array<string>, destPath: Array<string>, fileCount: number, callback: AsyncCallback<number>);
   function sendFile(deviceId: string, sourPath: Array<string>, destPath: Array<string>, fileCount: number): Promise<number>;
@@ -46,13 +46,13 @@ declare namespace SendFile {
   /**
    * event listen on.
    *
-   * @since 8
+   * @since 9
    */
   function on(type: 'sendFinished' | 'receiveFinished', callback: AsyncCallback<TransResult>): void;
   /**
    * event listen off.
    *
-   * @since 8
+   * @since 9
    */
   function off(type: 'sendFinished' | 'receiveFinished'): void;
 }
