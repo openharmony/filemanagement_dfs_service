@@ -65,8 +65,8 @@ public:
 protected:
     ThreadSafeQueue<VirtualCmd<Ctx>> pendingCmds_;
 
-    Ctx *ctx_{nullptr};
-    uint32_t retryTimes_{1};
+    Ctx *ctx_ { nullptr };
+    uint32_t retryTimes_ { 1 };
     std::thread loop_;
 
     std::list<std::future<void>> retryTasks;
@@ -89,7 +89,7 @@ private:
     void StartCtx()
     {
         auto startCmd = std::make_unique<Cmd<Ctx>>(&Ctx::Start);
-        startCmd->UpdateOption({
+        startCmd->UpdateOption( {
             .importance_ = CmdImportance::SUBVITAL,
             .tryTimes_ = retryTimes_,
         });
@@ -99,7 +99,7 @@ private:
     void StopCtx()
     {
         auto cmd = std::make_unique<Cmd<Ctx>>(&Ctx::Stop);
-        cmd->UpdateOption({
+        cmd->UpdateOption( {
             .importance_ = CmdImportance::VITAL,
             .tryTimes_ = 1,
         });

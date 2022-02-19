@@ -15,12 +15,12 @@
 #ifndef UTILS_DFS_THREAD_H
 #define UTILS_DFS_THREAD_H
 
-#include "utils_log.h"
 #include <atomic>
 #include <condition_variable>
 #include <functional>
 #include <mutex>
 #include <thread>
+#include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
@@ -126,11 +126,11 @@ public:
     }
 
 private:
-    std::atomic_bool running_{false};
-    std::mutex threadMutex_{};
-    std::unique_ptr<std::thread> thread_{nullptr};
-    std::mutex sleepMutex_{};
-    std::condition_variable sleepCv_{};
+    std::atomic_bool running_ { false };
+    std::mutex threadMutex_ {};
+    std::unique_ptr<std::thread> thread_ { nullptr };
+    std::mutex sleepMutex_ {};
+    std::condition_variable sleepCv_ {};
 };
 } // namespace Utils
 } // namespace DistributedFile

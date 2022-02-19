@@ -16,10 +16,10 @@
 #ifndef UTILS_SINGLETON_H
 #define UTILS_SINGLETON_H
 
-#include "nocopyable.h"
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace Storage {

@@ -50,7 +50,7 @@ private:
     void Mount() const;
     void Umount() const;
     static std::atomic<uint32_t> idGen_;
-    uint32_t id_{0};
+    uint32_t id_ { 0 };
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -37,8 +37,8 @@ enum class CmdImportance {
 };
 
 struct CmdOptions {
-    CmdImportance importance_{CmdImportance::TRIVIAL};
-    uint32_t tryTimes_{1};
+    CmdImportance importance_ { CmdImportance::TRIVIAL };
+    uint32_t tryTimes_ { 1 };
 };
 
 template<typename T>

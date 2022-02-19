@@ -129,7 +129,7 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
     unique_lock<mutex> lock(mpToNetworksMutex_);
     for (auto [ignore, net] : cidNetTypeRecord_) {
         auto cmd = make_unique<Cmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::ConnectOnlineDevices);
-        cmd->UpdateOption({
+        cmd->UpdateOption( {
             .tryTimes_ = MAX_RETRY_COUNT,
         });
         net->Recv(move(cmd));
@@ -165,7 +165,7 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
     }
     auto cmd =
         make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
-    cmd->UpdateOption({
+    cmd->UpdateOption( {
         .tryTimes_ = MAX_RETRY_COUNT,
     });
     networkAgent->Recv(move(cmd));

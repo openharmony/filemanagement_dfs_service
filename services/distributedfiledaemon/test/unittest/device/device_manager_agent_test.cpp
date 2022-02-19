@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "device/device_manager_agent.h"
 #include <gtest/gtest.h>
+#include "device/device_manager_agent.h"
 
 namespace OHOS {
 namespace Storage {

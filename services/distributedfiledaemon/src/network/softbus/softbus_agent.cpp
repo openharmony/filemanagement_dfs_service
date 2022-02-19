@@ -118,7 +118,7 @@ bool SoftbusAgent::IsContinueRetry(const string &cid)
             return false;
         }
     } else {
-        OpenSessionRetriedTimesMap_.insert({cid, 0});
+        OpenSessionRetriedTimesMap_.insert( { cid, 0 } );
     }
     OpenSessionRetriedTimesMap_[cid]++;
     return true;
@@ -138,7 +138,7 @@ int SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
             if (IsContinueRetry(cid)) {
                 auto cmd = make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(
                     &NetworkAgentTemplate::ConnectDeviceAsync, info);
-                cmd->UpdateOption({
+                cmd->UpdateOption( {
                     .tryTimes_ = 1,
                 });
                 Recv(move(cmd));

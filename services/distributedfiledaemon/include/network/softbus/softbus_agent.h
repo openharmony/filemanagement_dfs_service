@@ -16,8 +16,8 @@
 #ifndef SOFTBUS_AGENT_H
 #define SOFTBUS_AGENT_H
 
-#include "network/network_agent_template.h"
 #include <map>
+#include "network/network_agent_template.h"
 
 namespace OHOS {
 namespace Storage {

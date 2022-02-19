@@ -32,7 +32,7 @@ class Daemon final : public SystemAbility, public DaemonStub, protected NoCopyab
     DECLARE_SYSTEM_ABILITY(Daemon);
 
 public:
-    explicit Daemon(int32_t saID, bool runOnCreate = true) : SystemAbility(saID, runOnCreate){};
+    explicit Daemon(int32_t saID, bool runOnCreate = true) : SystemAbility(saID, runOnCreate) {};
     virtual ~Daemon() = default;
 
     void OnStart() override;
@@ -46,10 +46,10 @@ public:
 
 private:
     Daemon();
-    ServiceRunningState state_{ServiceRunningState::STATE_NOT_START};
+    ServiceRunningState state_ { ServiceRunningState::STATE_NOT_START };
     static sptr<Daemon> instance_;
     static std::mutex instanceLock_;
-    bool registerToService_{false};
+    bool registerToService_ { false };
 
     void PublishSA();
     void RegisterOsAccount();

@@ -36,7 +36,7 @@ public:
 private:
     int sessionId_;
     std::string cid_;
-    int32_t socketFd_{INVALID_SOCKET_FD};
+    int32_t socketFd_ { INVALID_SOCKET_FD };
     std::array<char, KEY_SIZE_MAX> key_;
     bool IsServerSide_;
 };
