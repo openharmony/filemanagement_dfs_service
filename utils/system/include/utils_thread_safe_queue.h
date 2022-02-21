@@ -92,7 +92,7 @@ private:
     std::mutex mutex_;
     std::condition_variable cv_;
 
-    bool halted { false };
+    bool halted {false};
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -126,9 +126,9 @@ public:
     }
 
 private:
-    std::atomic_bool running_ { false };
+    std::atomic_bool running_ {false};
     std::mutex threadMutex_ {};
-    std::unique_ptr<std::thread> thread_ { nullptr };
+    std::unique_ptr<std::thread> thread_ {nullptr};
     std::mutex sleepMutex_ {};
     std::condition_variable sleepCv_ {};
 };

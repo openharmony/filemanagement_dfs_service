@@ -65,8 +65,8 @@ public:
 protected:
     ThreadSafeQueue<VirtualCmd<Ctx>> pendingCmds_;
 
-    Ctx *ctx_ { nullptr };
-    uint32_t retryTimes_ { 1 };
+    Ctx *ctx_ {nullptr};
+    uint32_t retryTimes_ {1};
     std::thread loop_;
 
     std::list<std::future<void>> retryTasks;

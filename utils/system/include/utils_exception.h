@@ -49,7 +49,7 @@ public:
     }
 
 private:
-    int code_ { ERR_DEFAULT };
+    int code_ {ERR_DEFAULT};
     std::string msg_;
 };
 
