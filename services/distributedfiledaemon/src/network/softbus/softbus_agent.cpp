@@ -138,9 +138,7 @@ int SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
             if (IsContinueRetry(cid)) {
                 auto cmd = make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(
                     &NetworkAgentTemplate::ConnectDeviceAsync, info);
-                cmd->UpdateOption( {
-                    .tryTimes_ = 1,
-                });
+                cmd->UpdateOption({ .tryTimes_ = 1 });
                 Recv(move(cmd));
             } else {
                 LOGE("Exceeded the maximum number of retries, not retry");

@@ -100,9 +100,7 @@ void NetworkAgentTemplate::GetSessionProcess(NotifyParam &param)
 {
     auto cmd =
         make_unique<Cmd<NetworkAgentTemplate, NotifyParam>>(&NetworkAgentTemplate::GetSessionProcessInner, param);
-    cmd->UpdateOption( {
-        .tryTimes_ = 1,
-    });
+    cmd->UpdateOption({.tryTimes_ = 1});
     Recv(move(cmd));
 }
 

@@ -89,20 +89,14 @@ private:
     void StartCtx()
     {
         auto startCmd = std::make_unique<Cmd<Ctx>>(&Ctx::Start);
-        startCmd->UpdateOption( {
-            .importance_ = CmdImportance::SUBVITAL,
-            .tryTimes_ = retryTimes_,
-        });
+        startCmd->UpdateOption({.importance_ = CmdImportance::SUBVITAL, .tryTimes_ = retryTimes_});
         pendingCmds_.Push(std::move(startCmd));
     }
 
     void StopCtx()
     {
         auto cmd = std::make_unique<Cmd<Ctx>>(&Ctx::Stop);
-        cmd->UpdateOption({
-            .importance_ = CmdImportance::VITAL,
-            .tryTimes_ = 1,
-        });
+        cmd->UpdateOption({.importance_ = CmdImportance::VITAL, .tryTimes_ = 1});
         pendingCmds_.Push(std::move(cmd));
     }
 
