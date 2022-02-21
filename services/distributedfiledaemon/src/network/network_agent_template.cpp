@@ -58,7 +58,7 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
             make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
         cmd->UpdateOption( {
             .tryTimes_ = MAX_RETRY_COUNT,
-        } );
+        });
         Recv(move(cmd));
     }
 }
@@ -83,9 +83,9 @@ void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session)
 {
     auto cmd = make_unique<Cmd<NetworkAgentTemplate, shared_ptr<BaseSession>>>(
         &NetworkAgentTemplate::AcceptSessionInner, session);
-    cmd->UpdateOption( {
+    cmd->UpdateOption({
         .tryTimes_ = 1,
-    } );
+    });
     Recv(move(cmd));
 }
 
@@ -102,7 +102,7 @@ void NetworkAgentTemplate::GetSessionProcess(NotifyParam &param)
         make_unique<Cmd<NetworkAgentTemplate, NotifyParam>>(&NetworkAgentTemplate::GetSessionProcessInner, param);
     cmd->UpdateOption( {
         .tryTimes_ = 1,
-    } );
+    });
     Recv(move(cmd));
 }
 

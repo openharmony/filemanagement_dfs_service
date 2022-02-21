@@ -50,7 +50,7 @@ struct OfflineParam {
     uint8_t remoteCid[CID_MAX_LEN];
 } __attribute__((packed));
 
-enum CmdCode {
+enum class CmdCode : int32_t {
     CMD_UPDATE_SOCKET = 0,
     CMD_UPDATE_DEVSL,
     CMD_OFF_LINE,
@@ -58,12 +58,12 @@ enum CmdCode {
     CMD_CNT,
 };
 
-enum SocketStat {
+enum class SocketStat : uint8_t {
     SOCKET_STAT_ACCEPT = 0,
     SOCKET_STAT_OPEN,
 };
 
-enum Notify {
+enum class Notify : int32_t {
     NOTIFY_GET_SESSION = 0,
     NOTIFY_OFFLINE,
     NOTIFY_NONE,
@@ -78,13 +78,13 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session)
     LOGD("sink session to kernel success, cid:%{public}s, socketFd:%{public}d, key[0]:%{public}x", cid.c_str(),
          socketFd, *(uint32_t *)masterkey.data());
 
-    uint8_t status = (session->IsFromServer() ? SOCKET_STAT_ACCEPT : SOCKET_STAT_OPEN);
+    SocketStat status = (session->IsFromServer() ? SocketStat::SOCKET_STAT_ACCEPT : SocketStat::SOCKET_STAT_OPEN);
 
     UpdateSocketParam cmd = {
-        .cmd = CMD_UPDATE_SOCKET,
+        .cmd = static_cast<int32_t>(CmdCode::CMD_UPDATE_SOCKET),
         .newfd = socketFd,
         .devsl = 3,
-        .status = status,
+        .status = static_cast<uint8_t>(status),
     };
     if (memcpy_s(cmd.masterKey, KEY_MAX_LEN, masterkey.data(), KEY_MAX_LEN) != EOK) {
         return;
@@ -100,7 +100,7 @@ void KernelTalker::SinkDevslTokernel(const std::string &cid, uint32_t devsl)
 {
     LOGD("sink dsl to kernel success, cid:%{public}s, devsl:%{public}d", cid.c_str(), devsl);
     UpdateDevslParam cmd = {
-        .cmd = CMD_UPDATE_DEVSL,
+        .cmd = static_cast<int32_t>(CmdCode::CMD_UPDATE_DEVSL),
         .devsl = devsl,
     };
 
@@ -113,7 +113,7 @@ void KernelTalker::SinkDevslTokernel(const std::string &cid, uint32_t devsl)
 void KernelTalker::SinkOfflineCmdToKernel(string cid)
 {
     OfflineParam cmd = {
-        .cmd = CMD_OFF_LINE,
+        .cmd = static_cast<int32_t>(CmdCode::CMD_OFF_LINE),
     };
 
     if (cid.length() < CID_MAX_LEN) {
@@ -204,9 +204,9 @@ void KernelTalker::HandleAllNotify(int fd)
 
     while (isRunning_) {
         lseek(fd, 0, SEEK_SET);
-        param.notify = NOTIFY_NONE;
+        param.notify = static_cast<int32_t>(Notify::NOTIFY_NONE);
         int readSize = read(fd, &param, sizeof(NotifyParam));
-        if ((readSize < (int)sizeof(NotifyParam)) || (param.notify == NOTIFY_NONE)) {
+        if ((readSize < (int)sizeof(NotifyParam)) || (param.notify == static_cast<int32_t>(Notify::NOTIFY_NONE))) {
             return;
         }
         NotifyHandler(param);
@@ -218,10 +218,10 @@ void KernelTalker::NotifyHandler(NotifyParam &param)
     int cmd = param.notify;
     string cidStr(param.remoteCid, CID_MAX_LEN);
     switch (cmd) {
-        case NOTIFY_GET_SESSION:
+        case static_cast<int32_t>(Notify::NOTIFY_GET_SESSION):
             GetSessionCallback_(param);
             break;
-        case NOTIFY_OFFLINE:
+        case static_cast<int32_t>(Notify::NOTIFY_OFFLINE):
             LOGI("NOTIFY_OFFLINE, remote cid %{public}s", cidStr.c_str());
             CloseSessionCallback_(cidStr);
             break;

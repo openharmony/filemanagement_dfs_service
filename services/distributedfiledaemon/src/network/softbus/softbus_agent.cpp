@@ -118,7 +118,7 @@ bool SoftbusAgent::IsContinueRetry(const string &cid)
             return false;
         }
     } else {
-        OpenSessionRetriedTimesMap_.insert( {cid, 0} );
+        OpenSessionRetriedTimesMap_.insert({cid, 0});
     }
     OpenSessionRetriedTimesMap_[cid]++;
     return true;
@@ -140,7 +140,7 @@ int SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
                     &NetworkAgentTemplate::ConnectDeviceAsync, info);
                 cmd->UpdateOption( {
                     .tryTimes_ = 1,
-                } );
+                });
                 Recv(move(cmd));
             } else {
                 LOGE("Exceeded the maximum number of retries, not retry");
