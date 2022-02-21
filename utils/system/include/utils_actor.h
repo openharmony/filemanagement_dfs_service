@@ -92,7 +92,7 @@ private:
         startCmd->UpdateOption( {
             .importance_ = CmdImportance::SUBVITAL,
             .tryTimes_ = retryTimes_,
-        });
+        } );
         pendingCmds_.Push(std::move(startCmd));
     }
 
@@ -102,7 +102,7 @@ private:
         cmd->UpdateOption( {
             .importance_ = CmdImportance::VITAL,
             .tryTimes_ = 1,
-        });
+        } );
         pendingCmds_.Push(std::move(cmd));
     }
 
@@ -113,7 +113,7 @@ private:
             if (item->option_.importance_ == CmdImportance::VITAL) {
                 result = true;
             }
-        });
+        } );
         return result;
     }
 

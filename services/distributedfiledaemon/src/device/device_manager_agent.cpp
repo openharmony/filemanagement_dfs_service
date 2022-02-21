@@ -131,7 +131,7 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
         auto cmd = make_unique<Cmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::ConnectOnlineDevices);
         cmd->UpdateOption( {
             .tryTimes_ = MAX_RETRY_COUNT,
-        });
+        } );
         net->Recv(move(cmd));
     }
 }
