@@ -92,10 +92,10 @@ private:
 
     std::weak_ptr<MountPoint> mountPoint_;
     std::mutex cmdMutex_;
-    std::atomic<bool> isRunning_{true};
-    std::unique_ptr<std::thread> pollThread_{nullptr};
-    std::function<void(NotifyParam &)> GetSessionCallback_{nullptr};
-    std::function<void(const std::string &)> CloseSessionCallback_{nullptr};
+    std::atomic<bool> isRunning_ {true};
+    std::unique_ptr<std::thread> pollThread_ {nullptr};
+    std::function<void(NotifyParam &)> GetSessionCallback_ {nullptr};
+    std::function<void(const std::string &)> CloseSessionCallback_ {nullptr};
 };
 } // namespace DistributedFile
 } // namespace Storage

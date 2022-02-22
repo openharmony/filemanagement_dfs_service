@@ -28,7 +28,7 @@ public:
     };
     virtual int32_t EchoServerDemo(const std::string &echoStr) = 0;
 
-    static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
+    static inline const std::string SERVICE_NAME { "ohos.storage.distributedfile.daemon" };
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.daemon")
 };
 } // namespace DistributedFile

@@ -27,7 +27,6 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-
 /**
  * @brief  A Thread-safe Queue.
  *
@@ -40,7 +39,6 @@ namespace DistributedFile {
  * @tparam T Any type. Aggregate data type is prefered
  *
  */
-
 template<typename T>
 class ThreadSafeQueue {
 public:
@@ -94,7 +92,7 @@ private:
     std::mutex mutex_;
     std::condition_variable cv_;
 
-    bool halted{false};
+    bool halted {false};
 };
 } // namespace DistributedFile
 } // namespace Storage

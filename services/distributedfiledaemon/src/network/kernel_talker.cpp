@@ -50,7 +50,7 @@ struct OfflineParam {
     uint8_t remoteCid[CID_MAX_LEN];
 } __attribute__((packed));
 
-enum {
+enum CmdCode {
     CMD_UPDATE_SOCKET = 0,
     CMD_UPDATE_DEVSL,
     CMD_OFF_LINE,
@@ -58,7 +58,7 @@ enum {
     CMD_CNT,
 };
 
-enum {
+enum SocketStat {
     SOCKET_STAT_ACCEPT = 0,
     SOCKET_STAT_OPEN,
 };

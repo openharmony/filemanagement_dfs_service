@@ -675,7 +675,6 @@ HWTEST_F(DistributedFileDaemonServiceTest, distributedFileDaemon_service_test_01
         strcpy_s(param.remoteCid, CID_MAX_LEN, str.data());
         kt.NotifyHandler(param);
     }
-
     EXPECT_EQ(0, 0);
 }
 

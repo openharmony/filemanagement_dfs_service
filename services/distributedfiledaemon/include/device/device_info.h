@@ -39,7 +39,7 @@ public:
 
 private:
     friend class DeviceManagerAgent;
-    std::atomic<bool> initCidFlag_{false};
+    std::atomic<bool> initCidFlag_ { false };
     std::string cid_;
     std::string udid_;
 };

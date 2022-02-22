@@ -36,7 +36,7 @@ enum {
 
 class Exception : public std::exception {
 public:
-    Exception(int code, const std::string &msg) : code_(code), msg_(msg){};
+    Exception(int code, const std::string &msg) : code_(code), msg_(msg) {};
 
     uint32_t code() const noexcept
     {
@@ -49,7 +49,7 @@ public:
     }
 
 private:
-    int code_{ERR_DEFAULT};
+    int code_ {ERR_DEFAULT};
     std::string msg_;
 };
 

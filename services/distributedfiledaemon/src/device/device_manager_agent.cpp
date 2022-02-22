@@ -165,9 +165,7 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
     }
     auto cmd =
         make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
-    cmd->UpdateOption({
-        .tryTimes_ = MAX_RETRY_COUNT,
-    });
+    cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
     networkAgent->Recv(move(cmd));
 
     LOGI("OnDeviceOnline end");
