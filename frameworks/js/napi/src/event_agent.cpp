@@ -50,6 +50,7 @@ void EventAgent::On(const char* type, napi_value handler)
 {
     auto tmp = new EventListener();
 
+    LOGD("EventAgent::On: JS callback register.\n");
     if (strncpy_s(tmp->type, LISTENER_TYPTE_MAX_LENGTH, type, strlen(type)) == -1) {
         delete tmp;
         tmp = nullptr;
@@ -70,6 +71,7 @@ void EventAgent::On(const char* type, napi_value handler)
 void EventAgent::Off(const char* type)
 {
     EventListener* temp = nullptr;
+    LOGD("EventAgent::Off: JS callback unregister.\n");
     for (EventListener* eventListener = first_; eventListener != nullptr; eventListener = temp) {
         temp = eventListener->next;
         if (strcmp(eventListener->type, type) == 0) {
@@ -113,6 +115,7 @@ void EventAgent::Emit(const char* type, Event* event)
         }
     }
 
+    LOGD("EventAgent::Emit: [%{public}s]\n", type);
     napi_close_handle_scope(env_, scope);
 }
 

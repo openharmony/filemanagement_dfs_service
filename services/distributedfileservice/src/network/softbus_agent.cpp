@@ -68,12 +68,6 @@ void SoftbusAgent::StopInstance()
 
 void SoftbusAgent::OnDeviceOnline(const std::string &cid)
 {
-    if (notifyCallback_ == nullptr) {
-        LOGE("OnDeviceOnline Nofify pointer is empty");
-        return;
-    }
-
-    notifyCallback_->DeviceOnline(cid);
 }
 
 int SoftbusAgent::SendFile(const std::string &cid, const char *sFileList[], const char *dFileList[], uint32_t fileCnt)
@@ -108,8 +102,11 @@ int SoftbusAgent::SendFile(const std::string &cid, const char *sFileList[], cons
     }
 
     int ret = ::SendFile(sessionId, sFileList, dFileList, fileCnt);
-    LOGD("sendfile is processing, sessionId:%{public}d, ret %{public}d", sessionId, ret);
-    return ret;
+    if (0 != ret) {
+        LOGD("sendfile is processing, sessionId:%{public}d, ret %{public}d", sessionId, ret);
+        return -1;
+    }
+    return 0;
 }
 
 void SoftbusAgent::OpenSession(const std::string &cid)
@@ -142,7 +139,7 @@ void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
     {
         std::unique_lock<std::mutex> lock(sessionMapMux_);
         if (::GetSessionSide(sessionId) == IS_CLIENT) {
-            cidToSessionID_[cid].push_front(sessionId);
+            // cidToSessionID_[cid].push_front(sessionId);
         } else {
             cidToSessionID_[cid].push_back(sessionId);
         }
@@ -150,24 +147,29 @@ void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
 
     getSessionCV_.notify_one();
     LOGD("get session SUCCESS, sessionId:%{public}d", sessionId);
+
+    if (notifyCallback_ == nullptr) {
+        LOGE("OnSessionOpened Nofify pointer is empty");
+        return;
+    }
+    notifyCallback_->SessionOpened(cid);
 }
 
-int SoftbusAgent::OnSendFileFinished(const int sessionId, const std::string firstFile)
+void SoftbusAgent::OnSendFileFinished(const int sessionId, const std::string firstFile)
 {
     if (notifyCallback_ == nullptr) {
         LOGE("OnSendFileFinished Nofify pointer is empty");
-        return -1;
+        return;
     }
     std::string cid = GetPeerDevId(sessionId);
     notifyCallback_->SendFinished(cid, firstFile);
-    return 0;
 }
 
-int SoftbusAgent::OnFileTransError(const int sessionId)
+void SoftbusAgent::OnFileTransError(const int sessionId)
 {
     if (notifyCallback_ == nullptr) {
         LOGE("OnFileTransError Nofify pointer is empty");
-        return -1;
+        return;
     }
     std::string cid = GetPeerDevId(sessionId);
     if (::GetSessionSide(sessionId) == IS_CLIENT) {
@@ -175,7 +177,6 @@ int SoftbusAgent::OnFileTransError(const int sessionId)
     } else {
         notifyCallback_->ReceiveError(cid);
     }
-    return 0;
 }
 
 void SoftbusAgent::OnReceiveFileFinished(const int sessionId, const std::string files, int fileCnt)
@@ -199,6 +200,7 @@ void SoftbusAgent::OnReceiveFileFinished(const int sessionId, const std::string 
     if (fd <= 0) {
         LOGE("NapiWriteFile open recive distributedfile %{public}d, %{public}s, %{public}d",
             fd, strerror(errno), errno);
+        return;
     }
     notifyCallback_->WriteFile(fd, files);
     notifyCallback_->ReceiveFinished(cid, files, fileCnt);
@@ -217,6 +219,12 @@ void SoftbusAgent::OnSessionClosed(int sessionId)
             cidToSessionID_[cid].remove(sessionId);
         }
     }
+
+    if (notifyCallback_ == nullptr) {
+        LOGE("OnSessionClosed Nofify pointer is empty");
+        return;
+    }
+    notifyCallback_->SessionClosed(cid);
 }
 
 std::string SoftbusAgent::GetPeerDevId(const int sessionId)
@@ -234,36 +242,25 @@ std::string SoftbusAgent::GetPeerDevId(const int sessionId)
     return cid;
 }
 
-int SoftbusAgent::CloseSession(const std::string &cid)
+void SoftbusAgent::CloseSession(const std::string &cid)
 {
     if (cidToSessionID_.find(cid) == cidToSessionID_.end()) {
         LOGE("not find this dev-cid:%{public}s", cid.c_str());
-        return -1;
+        return;
     }
     for (auto sessionId : cidToSessionID_[cid]) {
         ::CloseSession(sessionId);
     }
     LOGD("Close Session done, cid:%{public}s", cid.c_str());
-    return 0;
 }
 
 void SoftbusAgent::OnDeviceOffline(const std::string &cid)
 {
-    if (CloseSession(cid) == -1) {
-        return;
-    }
-
+    CloseSession(cid);
     {
         std::unique_lock<std::mutex> lock(sessionMapMux_);
         cidToSessionID_.erase(cid);
     }
-
-    if (notifyCallback_ == nullptr) {
-        LOGE("OnDeviceOffline Nofify pointer is empty");
-        return;
-    }
-
-    notifyCallback_->DeviceOffline(cid);
 }
 
 void SoftbusAgent::RegisterSessionListener()

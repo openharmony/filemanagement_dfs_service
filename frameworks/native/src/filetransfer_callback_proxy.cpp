@@ -19,7 +19,7 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-int32_t FileTransferCallbackProxy::DeviceOnline(const std::string &cid)
+int32_t FileTransferCallbackProxy::SessionOpened(const std::string &cid)
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(FileTransferCallbackProxy::GetDescriptor())) {
@@ -36,19 +36,19 @@ int32_t FileTransferCallbackProxy::DeviceOnline(const std::string &cid)
     data.WriteString(cid);
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = remote->SendRequest(ON_DEVICE_ONLINE, data, reply, option);
+    int32_t ret = remote->SendRequest(ON_SESSION_OPENED, data, reply, option);
     if (ret != ERR_NONE) {
         LOGE("[---FileTransferCallbackProxy---] Proxy SendRequest failed, ret code:[%{public}d]", ret);
     }
     return ret;
 }
 
-int32_t FileTransferCallbackProxy::DeviceOffline(const std::string &cid)
+int32_t FileTransferCallbackProxy::SessionClosed(const std::string &cid)
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(FileTransferCallbackProxy::GetDescriptor())) {
         LOGE("[---FileTransferCallbackProxy---] WriteInterfaceToken failed");
-        return 0;
+        return ERR_INVALID_DATA;
     }
 
     sptr<IRemoteObject> remote = Remote();
@@ -60,7 +60,7 @@ int32_t FileTransferCallbackProxy::DeviceOffline(const std::string &cid)
     data.WriteString(cid);
     MessageParcel reply;
     MessageOption option;
-    int32_t ret = remote->SendRequest(ON_DEVICE_OFFLINE, data, reply, option);
+    int32_t ret = remote->SendRequest(ON_SESSION_CLOSED, data, reply, option);
     if (ret != ERR_NONE) {
         LOGE("[---FileTransferCallbackProxy---] Proxy SendRequest failed, ret code:[%{public}d]", ret);
     }
@@ -73,7 +73,7 @@ int32_t FileTransferCallbackProxy::SendFinished(const std::string &cid, std::str
     MessageParcel data;
     if (!data.WriteInterfaceToken(FileTransferCallbackProxy::GetDescriptor())) {
         LOGE("[---FileTransferCallbackProxy---] WriteInterfaceToken failed");
-        return 0;
+        return ERR_INVALID_DATA;
     }
 
     sptr<IRemoteObject> remote = Remote();
@@ -99,7 +99,7 @@ int32_t FileTransferCallbackProxy::SendError(const std::string &cid)
     MessageParcel data;
     if (!data.WriteInterfaceToken(FileTransferCallbackProxy::GetDescriptor())) {
         LOGE("[---FileTransferCallbackProxy---] WriteInterfaceToken failed");
-        return 0;
+        return ERR_INVALID_DATA;
     }
 
     sptr<IRemoteObject> remote = Remote();
@@ -124,7 +124,7 @@ int32_t FileTransferCallbackProxy::ReceiveFinished(const std::string &cid, const
     MessageParcel data;
     if (!data.WriteInterfaceToken(FileTransferCallbackProxy::GetDescriptor())) {
         LOGE("[---FileTransferCallbackProxy---] WriteInterfaceToken failed");
-        return 0;
+        return ERR_INVALID_DATA;
     }
 
     sptr<IRemoteObject> remote = Remote();
@@ -151,7 +151,7 @@ int32_t FileTransferCallbackProxy::ReceiveError(const std::string &cid)
     MessageParcel data;
     if (!data.WriteInterfaceToken(FileTransferCallbackProxy::GetDescriptor())) {
         LOGE("WriteInterfaceToken failed");
-        return 0;
+        return ERR_INVALID_DATA;
     }
 
     sptr<IRemoteObject> remote = Remote();
@@ -174,7 +174,7 @@ int32_t FileTransferCallbackProxy::WriteFile(int32_t fd, const std::string &file
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(FileTransferCallbackProxy::GetDescriptor())) {
-        return DFS_CALLBACK_WRITE_DESCRIPTOR_TOKEN_FAIL;
+        return ERR_INVALID_DATA;
     }
 
     data.WriteFileDescriptor(fd);
@@ -182,7 +182,7 @@ int32_t FileTransferCallbackProxy::WriteFile(int32_t fd, const std::string &file
 
     if (Remote() == nullptr) {
         LOGE("WriteFile remote object address is null");
-        return DFS_CALLBACK_REMOTE_ADDRESS_IS_NULL;
+        return ERR_NULL_OBJECT;
     }
 
     MessageParcel reply;

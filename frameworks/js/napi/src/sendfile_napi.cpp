@@ -15,8 +15,6 @@
 
 #include "sendfile_napi.h"
 
-#include <mutex>
-
 #include "filemgmt_libn.h"
 #include "sendfile.h"
 #include "trans_event.h"
@@ -26,14 +24,8 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace FileManagement::LibN;
-namespace {
-    constexpr int32_t MAX_SEND_FILE_HAP_NUMBER = 50;
-    constexpr int32_t SENDFILE_NAPI_BUF_LENGTH = 256;
-    const std::string DfsAppUid { "SendFileTestUid" };
-    static std::mutex g_uidMutex;
-}
 
-napi_value SendFile(napi_env env, napi_callback_info info)
+napi_value JsSendFile(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(DFS_ARG_CNT::FOUR, DFS_ARG_CNT::FIVE)) {
@@ -74,7 +66,7 @@ napi_value SendFile(napi_env env, napi_callback_info info)
 
     std::string deviceIdString(deviceId.get());
     auto cbExec = [deviceIdString, sourPath, destPath, fileCount, resultCode]() -> NError {
-        *resultCode = ExecSendFile(deviceIdString.c_str(), sourPath, destPath, fileCount);
+        *resultCode = SendFile::ExecSendFile(deviceIdString.c_str(), sourPath, destPath, fileCount);
         return NError(*resultCode);
     };
 
@@ -98,7 +90,7 @@ napi_value SendFile(napi_env env, napi_callback_info info)
 }
 
 
-napi_value JS_On(napi_env env, napi_callback_info cbinfo)
+napi_value JsOn(napi_env env, napi_callback_info cbinfo)
 {
     size_t requireArgc = 2;
     size_t argc = 2;
@@ -132,7 +124,7 @@ napi_value JS_On(napi_env env, napi_callback_info cbinfo)
     return result;
 }
 
-napi_value JS_Off(napi_env env, napi_callback_info cbinfo)
+napi_value JsOff(napi_env env, napi_callback_info cbinfo)
 {
     size_t requireArgc = 1;
     size_t argc = 1;
@@ -167,46 +159,45 @@ napi_value JS_Off(napi_env env, napi_callback_info cbinfo)
     return result;
 }
 
-napi_value JS_Constructor(napi_env env, napi_callback_info cbinfo)
+napi_value JsConstructor(napi_env env, napi_callback_info cbinfo)
 {
     size_t argc = 2;
     napi_value argv[2] = { nullptr };
     napi_value thisVar = nullptr;
     napi_get_cb_info(env, cbinfo, &argc, argv, &thisVar, nullptr);
 
-    char bundleName[SENDFILE_NAPI_BUF_LENGTH] = { 0 };
+    char bundleName[SendFile::SENDFILE_NAPI_BUF_LENGTH] = { 0 };
     size_t typeLen = 0;
     napi_get_value_string_utf8(env, argv[0], bundleName, sizeof(bundleName), &typeLen);
-    LOGI("DEBUG_SENDFILE:JS_Constructor. [%{public}s]", bundleName);
+    LOGI("JsConstructor. [%{public}s]", bundleName);
 
     EventAgent* agent = new EventAgent(env, thisVar);
     {
-        std::unique_lock<std::mutex> lock(g_uidMutex);
-        if (g_mapUidToEventAgent.end() != g_mapUidToEventAgent.find(DfsAppUid)) {
-            delete g_mapUidToEventAgent[DfsAppUid];
-            g_mapUidToEventAgent.erase(DfsAppUid);
+        std::unique_lock<std::mutex> lock(SendFile::g_uidMutex);
+        if (SendFile::mapUidToEventAgent_.end() != SendFile::mapUidToEventAgent_.find(SendFile::BUNDLE_ID_)) {
+            delete SendFile::mapUidToEventAgent_[SendFile::BUNDLE_ID_];
+            SendFile::mapUidToEventAgent_.erase(SendFile::BUNDLE_ID_);
         }
-        if (g_mapUidToEventAgent.size() <= MAX_SEND_FILE_HAP_NUMBER) {
-            auto [ignored, inserted] = g_mapUidToEventAgent.insert(make_pair(DfsAppUid, agent));
+        if (SendFile::mapUidToEventAgent_.size() <= SendFile::MAX_SEND_FILE_HAP_NUMBER) {
+            auto [ignored, inserted] = SendFile::mapUidToEventAgent_.insert(make_pair(SendFile::BUNDLE_ID_, agent));
             if (!inserted) {
                 LOGE("map env to event agent error.");
                 return nullptr;
             } else {
-                LOGI("map size %{public}d", g_mapUidToEventAgent.size());
-                SetEventAgentMap(g_mapUidToEventAgent);
+                LOGI("map size %{public}d", SendFile::mapUidToEventAgent_.size());
             }
         }
     }
 
     napi_wrap(env, thisVar, agent,
         [](napi_env env, void* data, void* hint) {
-            auto iter = g_mapUidToEventAgent.find(DfsAppUid);
-            if (g_mapUidToEventAgent.end() != iter) {
+            auto iter = SendFile::mapUidToEventAgent_.find(SendFile::BUNDLE_ID_);
+            if (SendFile::mapUidToEventAgent_.end() != iter) {
                 auto agent = (EventAgent*)data;
                 if (agent != nullptr) {
-                    std::unique_lock<std::mutex> lock(g_uidMutex);
+                    std::unique_lock<std::mutex> lock(SendFile::g_uidMutex);
                     agent->ClearDevice();
-                    g_mapUidToEventAgent.erase(DfsAppUid);
+                    SendFile::mapUidToEventAgent_.erase(SendFile::BUNDLE_ID_);
                     delete agent;
                 }
             }
@@ -223,18 +214,18 @@ napi_value SendFileExport(napi_env env, napi_value exports)
 {
     const char className[] = "SendFile";
     static napi_property_descriptor desc[] = {
-        DECLARE_NAPI_FUNCTION("sendFile", SendFile),
-        DECLARE_NAPI_FUNCTION("on", JS_On),
-        DECLARE_NAPI_FUNCTION("off", JS_Off),
+        DECLARE_NAPI_FUNCTION("sendFile", JsSendFile),
+        DECLARE_NAPI_FUNCTION("on", JsOn),
+        DECLARE_NAPI_FUNCTION("off", JsOff),
     };
     napi_value sendFileClass = nullptr;
 
-    napi_define_class(env, className, sizeof(className), JS_Constructor, nullptr,
+    napi_define_class(env, className, sizeof(className), JsConstructor, nullptr,
         sizeof(desc) / sizeof(desc[0]), desc, &sendFileClass);
 
     napi_set_named_property(env, exports, "SendFile", sendFileClass);
 
-    RegisterSendFileNotifyCallback();
+    SendFile::RegisterCallback();
     return exports;
 }
 

@@ -76,8 +76,9 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
                                          const uint32_t fileCount)
 {
     if (fileCount <= 0) {
-        return -1;
+        return DFS_PARAM_FILE_COUNT_ERROR;
     }
+
     char **sFileList = new char* [fileCount];
     for (int index = 0; index < sourceFileList.size(); ++index) {
         LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}d",
@@ -87,50 +88,54 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
             int32_t length = tmpString.length();
             sFileList[index] = new char[length + 1];
             if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
-                return -1;
+                return DFS_MEM_ERROR;
             }
             if (memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length) != EOK) {
-                return -1;
+                return DFS_MEM_ERROR;
             }
             sFileList[index][length] = '\0';
         } else {
             int32_t length = sourceFileList.at(index).length();
             sFileList[index] = new char[length + 1];
             if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
-                return -1;
+                return DFS_MEM_ERROR;
             }
             if (memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length) != EOK) {
-                return -1;
+                return DFS_MEM_ERROR;
             }
             sFileList[index][length] = '\0';
         }
     }
 
-    char **dFileList = new char* [fileCount];
-    for (int index = 0; index < destinationFileList.size(); ++index) {
-        LOGI("DistributedFileService::SendFile Destination File List %{public}d, %{public}s",
-            index, destinationFileList.at(index).c_str());
-        int32_t length = destinationFileList.at(index).length();
-        dFileList[index] = new char[length + 1];
-        if (memset_s(dFileList[index], length + 1, '\0', length + 1) != EOK) {
-            return -1;
+    char **dFileList = nullptr;
+    if (destinationFileList.empty()) {
+        dFileList = new char* [fileCount];
+        for (int index = 0; index < destinationFileList.size(); ++index) {
+            LOGI("DistributedFileService::SendFile Destination File List %{public}d, %{public}s",
+                index, destinationFileList.at(index).c_str());
+            int32_t length = destinationFileList.at(index).length();
+            dFileList[index] = new char[length + 1];
+            if (memset_s(dFileList[index], length + 1, '\0', length + 1) != EOK) {
+                return DFS_MEM_ERROR;
+            }
+            if (memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
+                return DFS_MEM_ERROR;
+            }
+            dFileList[index][length] = '\0';
         }
-        if (memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
-            LOGE("memory copy failed");
-            return -1;
-        }
-        dFileList[index][length] = '\0';
     }
 
     auto softBusAgent = SoftbusAgent::GetInstance();
-    int32_t result = softBusAgent->SendFile(cid, (const char **)sFileList, (const char **)dFileList, fileCount);
-    return result;
+    if (DFS_SUCCESS != softBusAgent->SendFile(cid, (const char **)sFileList, (const char **)dFileList, fileCount)) {
+        return DFS_SOFTBUS_SEND_ERROR;
+    }
+    return DFS_SUCCESS;
 }
 
 int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName, int32_t mode)
 {
     if (fd <= 0) {
-        return -1;
+        return DFS_FILE_OP_ERROR;
     }
 
     const char *tmpFile = TEMP_FILE_NAME;
@@ -141,7 +146,7 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
         if (result != 0) {
             close(fd);
             LOGE("DFS SA remove temp file result %{public}d, %{public}s, %{public}d", result, strerror(errno), errno);
-            return -1;
+            return DFS_FILE_OP_ERROR;
         }
     }
 
@@ -149,7 +154,7 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
     if (writeFd <= 0) {
         close(fd);
         LOGE("DFS SA open temp file failed %{public}d, %{public}s, %{public}d", writeFd, strerror(errno), errno);
-        return -1;
+        return DFS_FILE_OP_ERROR;
     }
     auto buffer = std::make_unique<char[]>(FILE_BLOCK_SIZE);
     ssize_t actLen = 0;
@@ -165,7 +170,7 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
             } else {
                 close(fd);
                 close(writeFd);
-                return -1;
+                return DFS_FILE_OP_ERROR;
             }
         }
     } while (actLen > 0);
@@ -173,28 +178,29 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
     close(fd);
     close(writeFd);
 
-    return 0;
+    return DFS_SUCCESS;
 }
 
 int32_t DistributedFileService::RegisterNotifyCallback(sptr<IFileTransferCallback> &callback)
 {
     SoftbusAgent::GetInstance()->SetTransCallback(callback);
-    return 0;
+    LOGD("DistributedFileService::RegisterNotifyCallback: cb[%{public}p]", callback->AsObject().GetRefPtr());
+    return DFS_SUCCESS;
 }
 
 int32_t DistributedFileService::UnRegisterNotifyCallback()
 {
     SoftbusAgent::GetInstance()->RemoveTransCallbak();
-    return 0;
+    return DFS_SUCCESS;
 }
 
 int32_t DistributedFileService::IsDeviceOnline(const std::string &cid)
 {
     std::set<std::string> onlineDevice = DeviceManagerAgent::GetInstance()->getOnlineDevs();
     if (onlineDevice.find(cid) != onlineDevice.end()) {
-        return 1;
+        return DEVICE_ONLINE;
     }
-    return 0;
+    return DEVICE_NOT_ONLINE;
 }
 } // namespace DistributedFile
 } // namespace Storage

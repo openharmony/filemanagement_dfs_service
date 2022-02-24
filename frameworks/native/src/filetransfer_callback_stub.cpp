@@ -26,8 +26,8 @@ FileTransferCallbackStub::FileTransferCallbackStub()
     memberFuncMap_[ON_SEND_ERROR] = &FileTransferCallbackStub::CmdOnSendError;
     memberFuncMap_[ON_RECEIVE_FINISHED] = &FileTransferCallbackStub::CmdOnReceiveFinished;
     memberFuncMap_[ON_RECEIVE_ERROR] = &FileTransferCallbackStub::CmdOnReceiveError;
-    memberFuncMap_[ON_DEVICE_ONLINE] = &FileTransferCallbackStub::CmdOnDeviceOnline;
-    memberFuncMap_[ON_DEVICE_OFFLINE] = &FileTransferCallbackStub::CmdOnDeviceOffline;
+    memberFuncMap_[ON_SESSION_OPENED] = &FileTransferCallbackStub::CmdOnSessionOpened;
+    memberFuncMap_[ON_SESSION_CLOSED] = &FileTransferCallbackStub::CmdOnSessionClosed;
     memberFuncMap_[ON_WRITE_FILE] = &FileTransferCallbackStub::CmdWriteFile;
 }
 
@@ -54,10 +54,10 @@ int32_t FileTransferCallbackStub::OnRemoteRequest(
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
-int32_t FileTransferCallbackStub::CmdOnDeviceOnline(MessageParcel &data, MessageParcel &reply)
+int32_t FileTransferCallbackStub::CmdOnSessionOpened(MessageParcel &data, MessageParcel &reply)
 {
     std::string cid = data.ReadString();
-    int32_t result = DeviceOnline(cid);
+    int32_t result = SessionOpened(cid);
     if (!reply.WriteInt32(result)) {
         LOGE("Write parcel failed");
         return result;
@@ -66,10 +66,10 @@ int32_t FileTransferCallbackStub::CmdOnDeviceOnline(MessageParcel &data, Message
     return ERR_NONE;
 }
 
-int32_t FileTransferCallbackStub::CmdOnDeviceOffline(MessageParcel &data, MessageParcel &reply)
+int32_t FileTransferCallbackStub::CmdOnSessionClosed(MessageParcel &data, MessageParcel &reply)
 {
     std::string cid = data.ReadString();
-    int32_t result = DeviceOffline(cid);
+    int32_t result = SessionClosed(cid);
     if (!reply.WriteInt32(result)) {
         LOGE("Write parcel failed");
         return result;

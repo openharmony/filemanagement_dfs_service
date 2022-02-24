@@ -16,28 +16,49 @@
 #ifndef SENDFILE_H
 #define SENDFILE_H
 
-#include "event_agent.h"
-
+#include <mutex>
 #include <unordered_map>
 #include <vector>
+#include "event_agent.h"
+#include "trans_event.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-int32_t NapiDeviceOnline(const std::string &cid);
-int32_t NapiDeviceOffline(const std::string &cid);
-int32_t NapiSendFinished(const std::string &cid, const std::string &fileName);
-int32_t NapiSendError(const std::string &cid);
-int32_t NapiReceiveFinished(const std::string &cid, const std::string &fileName, uint32_t num);
-int32_t NapiReceiveError(const std::string &cid);
-int32_t NapiWriteFile(int32_t fd, const std::string &fileName);
-void SetEventAgentMap(const std::unordered_map<std::string, EventAgent*> &map);
-napi_value RegisterSendFileNotifyCallback();
 
-static std::unordered_map<std::string, EventAgent*> g_mapUidToEventAgent;
+class SendFile {
+public:
+    enum {
+        NAPI_SENDFILE_NO_ERROR = 0,
+        NAPI_SENDFILE_SA_ERROR = -1,
+        NAPI_SENDFILE_IPC_ERROR = -2,
+        NAPI_SENDFILE_DEVICE_ID_ERROR = -3,
+        NAPI_SENDFILE_GET_AGENT_ERROR = -4,
+        NAPI_SENDFILE_APP_AGENT_ERROR = -5,
+        NAPI_SENDFILE_PARA_ERROR = -6,
+        NAPI_SENDFILE_AGENT_ERROR = -7,
+        NAPI_SENDFILE_SEND_ERROR = -8,
+        NAPI_SENDFILE_UNKNOWN_ERROR = -99,
+    };
 
-int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,
-    const std::vector<std::string>& dstList, uint32_t num);
+    SendFile() {}
+    virtual ~SendFile() {}
+    static int32_t JoinCidToAppId(const std::string &cid, const std::string &AppId = BUNDLE_ID_);
+    static int32_t DisjoinCidToAppId(const std::string &cid, const std::string &AppId = BUNDLE_ID_);
+    static int32_t EmitTransEvent(TransEvent &event, const std::string &cid, const std::string &AppId = BUNDLE_ID_);
+    static int32_t WriteFile(int32_t fd, const std::string &fileName);
+    static int32_t RegisterCallback();
+    static int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,
+        const std::vector<std::string>& dstList, uint32_t num);
+
+    static std::mutex g_uidMutex;
+    static std::unordered_map<std::string, EventAgent*> mapUidToEventAgent_;
+    static inline const std::string BUNDLE_ID_ {"SendFileHapUid"};
+    static inline const std::string APP_PATH {"/data/accounts/account_0/appdata/"};
+    static inline const int32_t FILE_BLOCK_SIZE {1024};
+    static inline const int32_t MAX_SEND_FILE_HAP_NUMBER {50};
+    static inline const int32_t SENDFILE_NAPI_BUF_LENGTH {64};
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

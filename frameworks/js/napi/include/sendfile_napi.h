@@ -38,10 +38,10 @@ namespace DistributedFile {
         FIFTH = 4,
         SIXTH = 5
     };
-    napi_value JS_Constructor(napi_env env, napi_callback_info cbinfo);
-    napi_value SendFile(napi_env env, napi_callback_info info);
-    napi_value JS_On(napi_env env, napi_callback_info cbinfo);
-    napi_value JS_Off(napi_env env, napi_callback_info cbinfo);
+    napi_value JsConstructor(napi_env env, napi_callback_info cbinfo);
+    napi_value JsSendFile(napi_env env, napi_callback_info info);
+    napi_value JsOn(napi_env env, napi_callback_info cbinfo);
+    napi_value JsOff(napi_env env, napi_callback_info cbinfo);
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

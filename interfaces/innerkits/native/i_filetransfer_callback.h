@@ -32,8 +32,8 @@ public:
         ON_SEND_ERROR,
         ON_RECEIVE_FINISHED,
         ON_RECEIVE_ERROR,
-        ON_DEVICE_ONLINE,
-        ON_DEVICE_OFFLINE,
+        ON_SESSION_OPENED,
+        ON_SESSION_CLOSED,
         ON_WRITE_FILE
     };
     // define the error code
@@ -51,8 +51,8 @@ public:
     virtual int32_t SendError(const std::string &cid) = 0;
     virtual int32_t ReceiveFinished(const std::string &cid, const std::string &fileName, uint32_t num) = 0;
     virtual int32_t ReceiveError(const std::string &cid) = 0;
-    virtual int32_t DeviceOnline(const std::string &cid) = 0;
-    virtual int32_t DeviceOffline(const std::string &cid) = 0;
+    virtual int32_t SessionOpened(const std::string &cid) = 0;
+    virtual int32_t SessionClosed(const std::string &cid) = 0;
     virtual int32_t WriteFile(int32_t fd, const std::string &fileName) = 0;
 };
 } // namespace DistributedFile

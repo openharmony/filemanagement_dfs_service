@@ -27,8 +27,8 @@ public:
     virtual ~FileTransferCallbackProxy() {}
 
 public:
-    int32_t DeviceOnline(const std::string &cid) override;
-    int32_t DeviceOffline(const std::string &cid) override;
+    int32_t SessionOpened(const std::string &cid) override;
+    int32_t SessionClosed(const std::string &cid) override;
     int32_t SendFinished(const std::string &cid, std::string fileName) override;
     int32_t SendError(const std::string &cid) override;
     int32_t ReceiveFinished(const std::string &cid, const std::string &fileName, uint32_t num) override;

@@ -35,8 +35,8 @@ private:
     using NotifyCallbackFunc = int32_t (FileTransferCallbackStub::*)(MessageParcel &, MessageParcel &);
 
 private:
-    int32_t CmdOnDeviceOnline(MessageParcel &data, MessageParcel &reply);
-    int32_t CmdOnDeviceOffline(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdOnSessionOpened(MessageParcel &data, MessageParcel &reply);
+    int32_t CmdOnSessionClosed(MessageParcel &data, MessageParcel &reply);
     int32_t CmdOnSendFinished(MessageParcel &data, MessageParcel &reply);
     int32_t CmdOnSendError(MessageParcel &data, MessageParcel &reply);
     int32_t CmdOnReceiveFinished(MessageParcel &data, MessageParcel &reply);

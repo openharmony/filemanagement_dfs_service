@@ -27,243 +27,116 @@
 #include "service_proxy.h"
 #include "system_ability_definition.h"
 #include "system_ability_manager.h"
-#include "trans_event.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-namespace {
-const std::string DfsAppUid { "SendFileTestUid" };
-constexpr int32_t FILE_BLOCK_SIZE = 1024;
-const std::string APP_PATH { "/data/accounts/account_0/appdata/" };
-}
+std::mutex SendFile::g_uidMutex;
+std::unordered_map<std::string, EventAgent*> SendFile::mapUidToEventAgent_;
 
-napi_value RegisterSendFileNotifyCallback()
+int32_t SendFile::RegisterCallback()
 {
     sptr<ISystemAbilityManager> systemAbilityMgr =
     SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityMgr == nullptr) {
-        LOGE("SendFile napi Regist callback Get ISystemAbilityManager failed ... \n");
-        return nullptr;
+        LOGE("SendFile::RegisterCallback: Get ISystemAbilityManager failed\n");
+        return NAPI_SENDFILE_SA_ERROR;
     }
 
     sptr<IRemoteObject> remote = systemAbilityMgr->GetSystemAbility(STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
     if (remote == nullptr) {
-        LOGE("SendFile napi Regist callback Get SaId = %{public}d fail ... \n", STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
-        return nullptr;
+        LOGE("SendFile::RegisterCallback: SaId = %{public}d fail\n", STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
+        return NAPI_SENDFILE_SA_ERROR;
     }
 
     sptr<IDistributedFileService> distributedFileService = iface_cast<IDistributedFileService>(remote);
     if (distributedFileService == nullptr) {
-        LOGE("SendFile napi Regist callback == nullptr\n");
-        return nullptr;
+        LOGE("SendFile::RegisterCallback: nullptr\n");
+        return NAPI_SENDFILE_IPC_ERROR;
     }
 
     sptr<IFileTransferCallback> callback = (std::make_unique<DfsFileTransferCallback>()).release();
-    LOGI("INotifyCallback == callback %{public}p", callback->AsObject().GetRefPtr());
-    distributedFileService->RegisterNotifyCallback(callback);
-    return nullptr;
+    LOGD("SendFile::RegisterCallback: cb[%{public}p]", callback->AsObject().GetRefPtr());
+    if (IDistributedFileService::DFS_NO_ERROR != distributedFileService->RegisterNotifyCallback(callback)) {
+        LOGD("SendFile::RegisterCallback: remote call failed.\n");
+        return NAPI_SENDFILE_IPC_ERROR;
+    }
+    return NAPI_SENDFILE_NO_ERROR;
 }
 
-int32_t NapiDeviceOnline(const std::string &cid)
+int32_t SendFile::JoinCidToAppId(const std::string &cid, const std::string &AppId)
 {
-    for (std::unordered_map<std::string, EventAgent*>::iterator iter = g_mapUidToEventAgent.begin();
-        iter != g_mapUidToEventAgent.end(); ++iter) {
-        EventAgent* agent = iter->second;
-        if (agent != nullptr && agent->FindDevice(cid)) {
-            LOGI("NapiDeviceOnline, event agent for device[%{public}s] was found.", cid.c_str());
-            agent->InsertDevice(cid);
-            break;
-        }
+    if (cid.empty() | AppId.empty()) {
+        LOGE("SendFile::JoinCidToAppId: input para error.\n");
+        return NAPI_SENDFILE_PARA_ERROR;
     }
-    return 0;
+
+    auto iter = mapUidToEventAgent_.find(AppId);
+    if (mapUidToEventAgent_.end() == iter) {
+        LOGE("SendFile::JoinCidToAppId: can't find app agent.\n");
+        return NAPI_SENDFILE_APP_AGENT_ERROR;
+    }
+
+    EventAgent* agent = iter->second;
+    if (agent != nullptr && !agent->FindDevice(cid)) {
+        LOGI("SendFile::JoinCidToAppId: device[%{public}s] insert into list.", cid.c_str());
+        agent->InsertDevice(cid);
+    }
+    return NAPI_SENDFILE_NO_ERROR;
 }
 
-int32_t NapiDeviceOffline(const std::string &cid)
+int32_t SendFile::DisjoinCidToAppId(const std::string &cid, const std::string &AppId)
 {
-    for (std::unordered_map<std::string, EventAgent*>::iterator iter = g_mapUidToEventAgent.begin();
-        iter != g_mapUidToEventAgent.end(); ++iter) {
-        EventAgent* agent = iter->second;
-        if (agent != nullptr && agent->FindDevice(cid)) {
-            LOGI("NapiDeviceOffline, event agent for device[%{public}s] was found.", cid.c_str());
-            agent->RemoveDevice(cid);
-            break;
-        }
+    if (cid.empty() | AppId.empty()) {
+        LOGE("SendFile::DisJoinCidToAppId: input para error.\n");
+        return NAPI_SENDFILE_PARA_ERROR;
     }
-    return 0;
+
+    auto iter = mapUidToEventAgent_.find(AppId);
+    if (mapUidToEventAgent_.end() == iter) {
+        LOGE("SendFile::DisJoinCidToAppId: can't find app agent.\n");
+        return NAPI_SENDFILE_APP_AGENT_ERROR;
+    }
+
+    EventAgent* agent = iter->second;
+    if (agent != nullptr && agent->FindDevice(cid)) {
+        LOGI("SendFile::DisJoinCidToAppId: device[%{public}s] remove from list.", cid.c_str());
+        agent->RemoveDevice(cid);
+    }
+    return NAPI_SENDFILE_NO_ERROR;
 }
 
-int32_t NapiSendFinished(const std::string &cid, const std::string &fileName)
+int32_t SendFile::EmitTransEvent(TransEvent &event, const std::string &cid, const std::string &AppId)
 {
-    EventAgent* agent = nullptr;
-    std::unordered_map<std::string, EventAgent*>::iterator iter;
-    for (iter = g_mapUidToEventAgent.begin(); iter != g_mapUidToEventAgent.end(); ++iter) {
-        agent = iter->second;
-        if (agent != nullptr && agent->FindDevice(cid)) {
-            LOGI("DEBUG_SENDFILE:OnSendFinished, event agent for device[%{public}s] was found.", cid.c_str());
-            break;
-        } else {
-            sptr<ISystemAbilityManager> systemAbilityMgr =
-            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-            if (systemAbilityMgr == nullptr) {
-                return -1;
-            }
-            sptr<IRemoteObject> remote = systemAbilityMgr->GetSystemAbility(STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
-            if (remote == nullptr) {
-                return -1;
-            }
-            sptr<IDistributedFileService> distributedFileService = iface_cast<IDistributedFileService>(remote);
-            if (distributedFileService == nullptr) {
-                return -1;
-            }
-            if (distributedFileService->IsDeviceOnline(cid) == 1) {
-                agent->InsertDevice(cid);
-            }
-            LOGI("DEBUG_SENDFILE:OnSendFinished, ------ no event agent for device[%{public}s].", cid.c_str());
-        }
+    if (cid.empty() | AppId.empty()) {
+        LOGE("SendFile::EmitTransEvent: input para error.\n");
+        return NAPI_SENDFILE_PARA_ERROR;
     }
 
-    iter = g_mapUidToEventAgent.find(DfsAppUid);
-    if (g_mapUidToEventAgent.end() != iter) {
-        TransEvent event(TransEvent::TRANS_SUCCESS, fileName);
-        agent->Emit("sendFinished", reinterpret_cast<Event*>(&event));
-        LOGI("DEBUG_SENDFILE:OnSendFinished, [%{public}s] event was done.", cid.c_str());
-        return 0;
-    } else {
-        LOGI("DEBUG_SENDFILE:OnSendFinished, [%{public}s] no event processor.", cid.c_str());
-        return -1;
+    auto iter = mapUidToEventAgent_.find(AppId);
+    if (mapUidToEventAgent_.end() == iter) {
+        LOGE("SendFile::EmitTransEvent: can't find app agent.\n");
+        return NAPI_SENDFILE_APP_AGENT_ERROR;
     }
+
+    EventAgent* agent = iter->second;
+    if (nullptr == agent) {
+        LOGE("SendFile::EmitTransEvent: app agent null.\n");
+        return NAPI_SENDFILE_APP_AGENT_ERROR;
+    }
+
+    if (agent->FindDevice(cid)) {
+        LOGI("SendFile::EmitTransEvent: [%{public}s, %{public}s]", cid.c_str(), event.GetName().c_str());
+        agent->Emit(event.GetName().c_str(), reinterpret_cast<Event*>(&event));
+        return NAPI_SENDFILE_NO_ERROR;
+    }
+
+    return NAPI_SENDFILE_UNKNOWN_ERROR;
 }
 
-int32_t NapiSendError(const std::string &cid)
-{
-    EventAgent* agent = nullptr;
-    std::unordered_map<std::string, EventAgent*>::iterator iter;
-    for (iter = g_mapUidToEventAgent.begin(); iter != g_mapUidToEventAgent.end(); ++iter) {
-        agent = iter->second;
-        if (agent != nullptr && agent->FindDevice(cid)) {
-            LOGI("DEBUG_SENDFILE:OnSendError, event agent for device[%{public}s] was found.", cid.c_str());
-            break;
-        } else {
-            sptr<ISystemAbilityManager> systemAbilityMgr =
-            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-            if (systemAbilityMgr == nullptr) {
-                return -1;
-            }
-            sptr<IRemoteObject> remote = systemAbilityMgr->GetSystemAbility(STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
-            if (remote == nullptr) {
-                return -1;
-            }
-            sptr<IDistributedFileService> distributedFileService = iface_cast<IDistributedFileService>(remote);
-            if (distributedFileService == nullptr) {
-                return -1;
-            }
-            if (distributedFileService->IsDeviceOnline(cid) == 1) {
-                agent->InsertDevice(cid);
-            }
-            LOGI("DEBUG_SENDFILE:OnSendError, no event agent for device[%{public}s].", cid.c_str());
-        }
-    }
-
-    iter = g_mapUidToEventAgent.find(DfsAppUid);
-    if (g_mapUidToEventAgent.end() != iter) {
-        TransEvent event(TransEvent::TRANS_FAILURE);
-        agent->Emit("sendFinished", reinterpret_cast<Event*>(&event));
-        LOGI("DEBUG_SENDFILE:OnSendError, [%{public}s] event was done.", cid.c_str());
-        return 0;
-    } else {
-        LOGI("DEBUG_SENDFILE:OnSendError, [%{public}s] no event processor.", cid.c_str());
-        return -1;
-    }
-}
-
-int32_t NapiReceiveFinished(const std::string &cid, const std::string &fileName, uint32_t num)
-{
-    EventAgent* agent = nullptr;
-    std::unordered_map<std::string, EventAgent*>::iterator iter;
-    for (auto iter = g_mapUidToEventAgent.begin(); iter != g_mapUidToEventAgent.end(); ++iter) {
-        agent = iter->second;
-        if (agent != nullptr && agent->FindDevice(cid)) {
-            LOGI("DEBUG_SENDFILE:OnReceiveFinished, event agent for device[%{public}s] was found.", cid.c_str());
-            break;
-        } else {
-            sptr<ISystemAbilityManager> systemAbilityMgr =
-            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-            if (systemAbilityMgr == nullptr) {
-                return -1;
-            }
-            sptr<IRemoteObject> remote = systemAbilityMgr->GetSystemAbility(STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
-            if (remote == nullptr) {
-                return -1;
-            }
-            sptr<IDistributedFileService> distributedFileService = iface_cast<IDistributedFileService>(remote);
-            if (distributedFileService == nullptr) {
-                return -1;
-            }
-            if (distributedFileService->IsDeviceOnline(cid) == 1) {
-                agent->InsertDevice(cid);
-            }
-            LOGI("DEBUG_SENDFILE:OnReceiveFinished, no event agent for device[%{public}s].", cid.c_str());
-        }
-    }
-
-    iter = g_mapUidToEventAgent.find(DfsAppUid);
-    if (g_mapUidToEventAgent.end() != iter) {
-        TransEvent event(TransEvent::TRANS_SUCCESS, fileName, num);
-        agent->Emit("receiveFinished", reinterpret_cast<Event*>(&event));
-        LOGI("DEBUG_SENDFILE:OnReceiveFinished, [%{public}s] event was done.", cid.c_str());
-        return 0;
-    } else {
-        LOGI("DEBUG_SENDFILE:OnReceiveFinished, [%{public}s] no event processor.", cid.c_str());
-        return -1;
-    }
-}
-
-int32_t NapiReceiveError(const std::string &cid)
-{
-    EventAgent* agent = nullptr;
-    std::unordered_map<std::string, EventAgent*>::iterator iter;
-    for (auto iter = g_mapUidToEventAgent.begin(); iter != g_mapUidToEventAgent.end(); ++iter) {
-        agent = iter->second;
-        if (agent != nullptr && agent->FindDevice(cid)) {
-            LOGI("OnReceiveError : event agent for device[%{public}s] was found.", cid.c_str());
-            break;
-        } else {
-            sptr<ISystemAbilityManager> systemAbilityMgr =
-            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-            if (systemAbilityMgr == nullptr) {
-                return -1;
-            }
-            sptr<IRemoteObject> remote = systemAbilityMgr->GetSystemAbility(STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
-            if (remote == nullptr) {
-                return -1;
-            }
-            sptr<IDistributedFileService> distributedFileService = iface_cast<IDistributedFileService>(remote);
-            if (distributedFileService == nullptr) {
-                return -1;
-            }
-            if (distributedFileService->IsDeviceOnline(cid) == 1) {
-                agent->InsertDevice(cid);
-            }
-            LOGI("OnReceiveError : no event agent for device[%{public}s].", cid.c_str());
-        }
-    }
-
-    iter = g_mapUidToEventAgent.find(DfsAppUid);
-    if (g_mapUidToEventAgent.end() != iter) {
-        TransEvent event(TransEvent::TRANS_FAILURE);
-        agent->Emit("receiveFinished", reinterpret_cast<Event*>(&event));
-        LOGI("OnReceiveError : [%{public}s] event was done.", cid.c_str());
-        return 0;
-    } else {
-        LOGI("OnReceiveError : [%{public}s] no event processor.", cid.c_str());
-        return -1;
-    }
-}
-
-int32_t NapiWriteFile(int32_t fd, const std::string &fileName)
+int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
 {
     if (fd <= 0) {
         return -1;
@@ -306,42 +179,43 @@ int32_t NapiWriteFile(int32_t fd, const std::string &fileName)
     return 0;
 }
 
-void SetEventAgentMap(const std::unordered_map<std::string, EventAgent*> &map)
-{
-    g_mapUidToEventAgent = map;
-}
-
-int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,
+int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,
     const std::vector<std::string>& dstList, uint32_t num)
 {
     if (deviceId.empty()) {
-        LOGE("DeviceId can't be emptey.\n");
-        return -1;
+        LOGE("SendFile::ExecSendFile: para error.\n");
+        return NAPI_SENDFILE_PARA_ERROR;
     }
+
     sptr<ISystemAbilityManager> systemAbilityMgr =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityMgr == nullptr) {
-        LOGE("BundleService Get ISystemAbilityManager failed ... \n");
-        return -1;
+        LOGE("SendFile::ExecSendFile: Get ISystemAbilityManager failed.\n");
+        return NAPI_SENDFILE_SA_ERROR;
     }
+
     sptr<IRemoteObject> remote = systemAbilityMgr->CheckSystemAbility(STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
     if (remote == nullptr) {
-        LOGE("DistributedFileService Get STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID = %{public}d fail ... \n",
-            STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
-        return -1;
+        LOGE("SendFile::ExecSendFile: SaId = %{public}d fail.\n", STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
+        return NAPI_SENDFILE_SA_ERROR;
     }
 
     sptr<IDistributedFileService> distributedFileService = iface_cast<IDistributedFileService>(remote);
     if (distributedFileService == nullptr) {
-        LOGE("DistributedFileService == nullptr\n");
-        return -1;
+        LOGE("SendFile::ExecSendFile: get remote service proxy failed.\n");
+        return NAPI_SENDFILE_IPC_ERROR;
     }
 
     int32_t fd = open(srcList.at(0).c_str(), O_RDONLY);
     int32_t result = distributedFileService->OpenFile(fd, srcList.at(0), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
-    result = distributedFileService->SendFile(deviceId, srcList, dstList, num);
-    LOGI(" ------------ DistributedFileService SendFile result %{public}d", result);
-    return result;
+    if (IDistributedFileService::DFS_SENDFILE_SUCCESS != 
+        distributedFileService->SendFile(deviceId, srcList, dstList, num)) {
+            LOGE("SendFile::ExecSendFile: error code %{public}d", result);
+            return NAPI_SENDFILE_SEND_ERROR;
+        }
+
+    LOGD("SendFile::ExecSendFile: napi sendfile success.");
+    return NAPI_SENDFILE_NO_ERROR;
 }
 } // namespace DistributedFile
 } // namespace Storage
