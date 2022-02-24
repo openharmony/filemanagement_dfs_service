@@ -13,5 +13,5 @@
 
 
 const.distributed_file_property.enabled=true
-const.distributed_file_only_for_same_account_test=false
+const.distributed_file_only_for_same_account_test=true
 
