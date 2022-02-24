@@ -15,7 +15,7 @@
 
 #include "dfs_filetransfer_callback.h"
 
-#include "sendfile.h"
+#include "send_file.h"
 #include "utils_log.h"
 
 namespace OHOS {

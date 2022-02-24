@@ -25,7 +25,6 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-
 class SendFile {
 public:
     enum {

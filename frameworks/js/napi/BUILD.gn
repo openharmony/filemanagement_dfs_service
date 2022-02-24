@@ -33,7 +33,7 @@ ohos_shared_library("sendfile") {
 
   sources = [
     "${distributedfile_path}/frameworks/js/napi/src/event_agent.cpp",
-    "${distributedfile_path}/frameworks/js/napi/src/sendfile.cpp",
+    "${distributedfile_path}/frameworks/js/napi/src/send_file.cpp",
     "${distributedfile_path}/frameworks/js/napi/src/sendfile_napi.cpp",
     "${distributedfile_path}/frameworks/js/napi/src/trans_event.cpp",
     "${distributedfile_path}/frameworks/native/src/dfs_filetransfer_callback.cpp",

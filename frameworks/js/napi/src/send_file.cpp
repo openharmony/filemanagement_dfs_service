@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "sendfile.h"
+#include "send_file.h"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -122,7 +122,7 @@ int32_t SendFile::EmitTransEvent(TransEvent &event, const std::string &cid, cons
     }
 
     EventAgent* agent = iter->second;
-    if (nullptr == agent) {
+    if (agent == nullptr) {
         LOGE("SendFile::EmitTransEvent: app agent null.\n");
         return NAPI_SENDFILE_APP_AGENT_ERROR;
     }
@@ -208,7 +208,7 @@ int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<st
 
     int32_t fd = open(srcList.at(0).c_str(), O_RDONLY);
     int32_t result = distributedFileService->OpenFile(fd, srcList.at(0), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
-    if (IDistributedFileService::DFS_SENDFILE_SUCCESS != 
+    if (IDistributedFileService::DFS_SENDFILE_SUCCESS !=
         distributedFileService->SendFile(deviceId, srcList, dstList, num)) {
             LOGE("SendFile::ExecSendFile: error code %{public}d", result);
             return NAPI_SENDFILE_SEND_ERROR;

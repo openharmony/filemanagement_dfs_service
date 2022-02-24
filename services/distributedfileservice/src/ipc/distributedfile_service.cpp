@@ -111,8 +111,6 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
     if (destinationFileList.empty()) {
         dFileList = new char* [fileCount];
         for (int index = 0; index < destinationFileList.size(); ++index) {
-            LOGI("DistributedFileService::SendFile Destination File List %{public}d, %{public}s",
-                index, destinationFileList.at(index).c_str());
             int32_t length = destinationFileList.at(index).length();
             dFileList[index] = new char[length + 1];
             if (memset_s(dFileList[index], length + 1, '\0', length + 1) != EOK) {

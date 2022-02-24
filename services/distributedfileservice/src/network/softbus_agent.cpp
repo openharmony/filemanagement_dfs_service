@@ -102,7 +102,7 @@ int SoftbusAgent::SendFile(const std::string &cid, const char *sFileList[], cons
     }
 
     int ret = ::SendFile(sessionId, sFileList, dFileList, fileCnt);
-    if (0 != ret) {
+    if (ret != 0) {
         LOGD("sendfile is processing, sessionId:%{public}d, ret %{public}d", sessionId, ret);
         return -1;
     }
@@ -138,9 +138,7 @@ void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
     // client session priority use, so insert list head
     {
         std::unique_lock<std::mutex> lock(sessionMapMux_);
-        if (::GetSessionSide(sessionId) == IS_CLIENT) {
-            // cidToSessionID_[cid].push_front(sessionId);
-        } else {
+        if (::GetSessionSide(sessionId) != IS_CLIENT) {
             cidToSessionID_[cid].push_back(sessionId);
         }
     }
