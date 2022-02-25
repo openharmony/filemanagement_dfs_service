@@ -36,7 +36,8 @@ namespace DistributedFile {
 namespace {
     constexpr int32_t SOFTBUS_OK = 0;
     constexpr int32_t DEVICE_ID_SIZE_MAX = 65;
-    constexpr int32_t IS_CLIENT = 0;
+    constexpr int32_t IS_SERVER = 0;
+    constexpr int32_t IS_CLIENT = 1;
     const std::string DEFAULT_ROOT_PATH = "/data/service/el2/100/hmdfs/non_account/data/";
 }
 
@@ -103,7 +104,7 @@ int SoftbusAgent::SendFile(const std::string &cid, const char *sFileList[], cons
 
     int ret = ::SendFile(sessionId, sFileList, dFileList, fileCnt);
     if (ret != 0) {
-        LOGD("sendfile is processing, sessionId:%{public}d, ret %{public}d", sessionId, ret);
+        LOGD("softbus sendfile fail, sessionId:%{public}d, ret %{public}d", sessionId, ret);
         return -1;
     }
     return 0;
@@ -138,7 +139,7 @@ void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
     // client session priority use, so insert list head
     {
         std::unique_lock<std::mutex> lock(sessionMapMux_);
-        if (::GetSessionSide(sessionId) != IS_CLIENT) {
+        if (::GetSessionSide(sessionId) == IS_CLIENT) {
             cidToSessionID_[cid].push_back(sessionId);
         }
     }
@@ -310,6 +311,7 @@ void SoftbusAgent::RegisterFileListener()
     LOGD("Succeed to SetFileReceiveListener, pkgName %{public}s, sbusName:%{public}s", pkgName.c_str(),
          sessionName_.c_str());
 }
+
 void SoftbusAgent::UnRegisterSessionListener()
 {
     int ret = ::RemoveSessionServer(DistributedFileService::pkgName_.c_str(), sessionName_.c_str());
@@ -321,6 +323,7 @@ void SoftbusAgent::UnRegisterSessionListener()
     }
     LOGD("RemoveSessionServer success!");
 }
+
 void SoftbusAgent::SetTransCallback(sptr<IFileTransferCallback> &callback)
 {
     notifyCallback_ = callback;
