@@ -37,6 +37,7 @@ public:
         NAPI_SENDFILE_PARA_ERROR = -6,
         NAPI_SENDFILE_AGENT_ERROR = -7,
         NAPI_SENDFILE_SEND_ERROR = -8,
+        NAPI_SENDFILE_FD_ERROR = -9,
         NAPI_SENDFILE_UNKNOWN_ERROR = -99,
     };
 

@@ -139,7 +139,7 @@ int32_t SendFile::EmitTransEvent(TransEvent &event, const std::string &cid, cons
 int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
 {
     if (fd <= 0) {
-        return -1;
+        return NAPI_SENDFILE_FD_ERROR;
     }
     std::string filePath = APP_PATH + fileName;
     int32_t flags = O_WRONLY;
@@ -152,7 +152,7 @@ int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
     if (writeFd <= 0) {
         close(fd);
         LOGE("NapiWriteFile open file failed %{public}d, %{public}s, %{public}d", writeFd, strerror(errno), errno);
-        return -1;
+        return NAPI_SENDFILE_FD_ERROR;
     }
     auto buffer = std::make_unique<char[]>(FILE_BLOCK_SIZE);
     ssize_t actLen = 0;
@@ -168,7 +168,7 @@ int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
             } else {
                 close(fd);
                 close(writeFd);
-                return -1;
+                return NAPI_SENDFILE_FD_ERROR;
             }
         }
     } while (actLen > 0);
@@ -176,7 +176,7 @@ int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
     close(fd);
     close(writeFd);
 
-    return 0;
+    return NAPI_SENDFILE_NO_ERROR;
 }
 
 int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,
