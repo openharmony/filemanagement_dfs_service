@@ -36,7 +36,6 @@ namespace DistributedFile {
 namespace {
     constexpr int32_t SOFTBUS_OK = 0;
     constexpr int32_t DEVICE_ID_SIZE_MAX = 65;
-    constexpr int32_t IS_SERVER = 0;
     constexpr int32_t IS_CLIENT = 1;
     const std::string DEFAULT_ROOT_PATH = "/data/service/el2/100/hmdfs/non_account/data/";
 }
