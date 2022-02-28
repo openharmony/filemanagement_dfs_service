@@ -95,9 +95,9 @@ int32_t DistributedFileServiceStub::OpenFileStub(MessageParcel &data, MessagePar
     int32_t fileData = data.ReadFileDescriptor();
     int32_t fd = fcntl(fileData, F_GETFD, 0);
     if (fd < 0) {
-        reply.WriteInt32(DFS_SET_FD_FAIL);
+        reply.WriteInt32(DFS_FILE_OP_ERROR);
         LOGE("DistributedFileServiceStub : Failed to get app device id, error: invalid device id");
-        return DFS_SET_FD_FAIL;
+        return DFS_FILE_OP_ERROR;
     }
 
     std::string fileName = data.ReadString();
@@ -121,10 +121,11 @@ int32_t DistributedFileServiceStub::CmdRegisterNotifyCallback(MessageParcel &dat
     sptr<IRemoteObject> remote = data.ReadRemoteObject();
     if (remote == nullptr) {
         LOGE("Callback ptr is nullptr.");
-        return 0;
+        return DFS_REMOTE_ADDRESS_IS_NULL;
     }
 
     sptr<IFileTransferCallback> callback = iface_cast<IFileTransferCallback>(remote);
+    LOGD("DistributedFileServiceStub::RegisterNotifyCallback: cb[%{public}p]", callback->AsObject().GetRefPtr());
     int32_t result = RegisterNotifyCallback(callback);
     reply.WriteInt32(result);
     return result;

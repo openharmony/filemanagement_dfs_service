@@ -40,8 +40,7 @@ public:
         DFS_SUCCESS = 0,
         DFS_NO_ERROR = 0,
         DFS_SENDFILE_SUCCESS = 0,
-        GET_DISTRIBUTEDFILE_DISTRIBUTED_DIR_FAIL = 1,
-        DFS_REMOTE_ADDRESS_IS_NULL,
+        DFS_REMOTE_ADDRESS_IS_NULL = -100,
         DFS_DESCRIPTOR_IS_EMPTY,
         DFS_SESSION_ID_IS_EMPTY,
         DFS_WRITE_REPLY_FAIL,
@@ -50,7 +49,16 @@ public:
         DFS_CALLBACK_PARAM_ERROR,
         DFS_NO_SUCH_FILE,
         DFS_NO_DEVICE_ONLINE,
-        DFS_SET_FD_FAIL
+        DFS_PARAM_FILE_COUNT_ERROR,
+        DFS_PARAM_DEVICE_ID_ERROR,
+        DFS_MEM_ERROR,
+        DFS_SOFTBUS_SEND_ERROR,
+        DFS_FILE_OP_ERROR,
+        DFS_NOTIFY_CALLBACK_EMPTY,
+    };
+    enum {
+        DEVICE_NOT_ONLINE,
+        DEVICE_ONLINE,
     };
     virtual int32_t SendFile(const std::string &cid,
                              const std::vector<std::string> &sourceFileList,

@@ -92,6 +92,7 @@ int32_t ServiceProxy::RegisterNotifyCallback(sptr<IFileTransferCallback> &callba
         return DFS_CALLBACK_PARAM_ERROR;
     }
 
+    LOGD("ServiceProxy::RegisterNotifyCallback: cb[%{public}p]", callback->AsObject().GetRefPtr());
     if (!data.WriteRemoteObject(callback->AsObject().GetRefPtr())) {
         LOGE("write remote object failed");
         return DFS_WRITE_REMOTE_OBJECT_FAIL;

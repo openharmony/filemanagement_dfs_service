@@ -15,56 +15,71 @@
 
 #include "dfs_filetransfer_callback.h"
 
-#include "sendfile.h"
+#include "send_file.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 DfsFileTransferCallback::DfsFileTransferCallback() {}
-
 DfsFileTransferCallback::~DfsFileTransferCallback() {}
 
-int32_t DfsFileTransferCallback::DeviceOnline(const std::string &cid)
+int32_t DfsFileTransferCallback::SessionOpened(const std::string &cid)
 {
-    NapiDeviceOnline(cid);
-    return 0;
+    SendFile::JoinCidToAppId(cid);
+    return DFS_FILE_TRANS_NO_ERROR;
 }
 
-int32_t DfsFileTransferCallback::DeviceOffline(const std::string &cid)
+int32_t DfsFileTransferCallback::SessionClosed(const std::string &cid)
 {
-    NapiDeviceOffline(cid);
-    return 0;
+    SendFile::DisjoinCidToAppId(cid);
+    return DFS_FILE_TRANS_NO_ERROR;
 }
 
 int32_t DfsFileTransferCallback::SendFinished(const std::string &cid, std::string fileName)
 {
-    NapiSendFinished(cid, fileName);
-    return 0;
+    TransEvent event(TransEvent::TRANS_SUCCESS, fileName);
+    std::string eventName("sendFinished");
+    event.SetName(eventName);
+    SendFile::EmitTransEvent(event, cid);
+    LOGI("DfsFileTransferCallback::SendFinished: [%{public}s].", cid.c_str());
+    return DFS_FILE_TRANS_NO_ERROR;
 }
 
 int32_t DfsFileTransferCallback::SendError(const std::string &cid)
 {
-    NapiSendError(cid);
-    return 0;
+    TransEvent event(TransEvent::TRANS_FAILURE);
+    std::string eventName("sendFinished");
+    event.SetName(eventName);
+    SendFile::EmitTransEvent(event, cid);
+    LOGI("DfsFileTransferCallback::SendError: [%{public}s].", cid.c_str());
+    return DFS_FILE_TRANS_NO_ERROR;
 }
 
 int32_t DfsFileTransferCallback::ReceiveFinished(const std::string &cid, const std::string &fileName, uint32_t num)
 {
-    NapiReceiveFinished(cid, fileName, num);
-    return 0;
+    TransEvent event(TransEvent::TRANS_SUCCESS, fileName, num);
+    std::string eventName("ReceiveFinished");
+    event.SetName(eventName);
+    SendFile::EmitTransEvent(event, cid);
+    LOGI("DfsFileTransferCallback::ReceiveFinished: [%{public}s].", cid.c_str());
+    return DFS_FILE_TRANS_NO_ERROR;
 }
 
 int32_t DfsFileTransferCallback::ReceiveError(const std::string &cid)
 {
-    NapiReceiveError(cid);
-    return 0;
+    TransEvent event(TransEvent::TRANS_FAILURE);
+    std::string eventName("ReceiveFinished");
+    event.SetName(eventName);
+    SendFile::EmitTransEvent(event, cid);
+    LOGI("DfsFileTransferCallback::ReceiveError: [%{public}s].", cid.c_str());
+    return DFS_FILE_TRANS_NO_ERROR;
 }
 
 int32_t DfsFileTransferCallback::WriteFile(int32_t fd, const std::string &fileName)
 {
-    NapiWriteFile(fd, fileName);
-    return 0;
+    SendFile::WriteFile(fd, fileName);
+    return DFS_FILE_TRANS_NO_ERROR;
 }
 } // namespace DistributedFile
 } // namespace Storage

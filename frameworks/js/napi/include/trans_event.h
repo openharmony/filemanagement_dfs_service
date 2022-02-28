@@ -33,8 +33,17 @@ public:
     TransEvent(int32_t err) : errorCode_(err) {}
     virtual ~TransEvent() {}
     napi_value ToJsObject(napi_env env);
+    void SetName(std::string &name)
+    {
+        eventName_ = name;
+    }
+    std::string GetName()
+    {
+        return eventName_;
+    }
 
 private:
+    std::string eventName_ = "";
     int32_t errorCode_ = TRANS_SUCCESS;
     std::string fileName_ = "";
     int32_t fileCount_ = 0;

@@ -39,8 +39,8 @@ public:
     void OnSessionOpened(const int sessionId, const int result);
     void OnSessionClosed(int sessionId);
     int SendFile(const std::string &cid, const char *sFileList[], const char *dFileList[], uint32_t fileCnt);
-    int OnSendFileFinished(const int sessionId, const std::string firstFile);
-    int OnFileTransError(const int sessionId);
+    void OnSendFileFinished(const int sessionId, const std::string firstFile);
+    void OnFileTransError(const int sessionId);
     void OnReceiveFileFinished(const int sessionId, const std::string files, int fileCnt);
     void SetTransCallback(sptr<IFileTransferCallback> &callback);
     void RemoveTransCallbak();
@@ -49,7 +49,7 @@ protected:
     void StartInstance() override;
     void StopInstance() override;
     void OpenSession(const std::string &cid);
-    int CloseSession(const std::string &cid);
+    void CloseSession(const std::string &cid);
     std::string GetPeerDevId(const int sessionId);
 
 private:
