@@ -20,13 +20,13 @@
 #include <unistd.h>
 
 #include "device_manager_agent.h"
+#include "dfsu_exception.h"
 #include "distributedfile_service.h"
 #include "i_distributedfile_service.h"
 #include "iservice_registry.h"
 #include "session.h"
 #include "softbus_dispatcher.h"
 #include "system_ability_definition.h"
-#include "utils_exception.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 

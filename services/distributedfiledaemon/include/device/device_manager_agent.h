@@ -24,12 +24,12 @@
 #include "device_auth.h"
 #include "device_info.h"
 #include "device_manager.h"
+#include "dfsu_actor.h"
+#include "dfsu_singleton.h"
+#include "dfsu_startable.h"
 #include "mountpoint/mount_point.h"
 #include "network/network_agent_template.h"
 #include "nlohmann/json.hpp"
-#include "utils_actor.h"
-#include "utils_singleton.h"
-#include "utils_startable.h"
 
 namespace OHOS {
 namespace Storage {
@@ -51,9 +51,9 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo);
 class DeviceManagerAgent final : public DistributedHardware::DmInitCallback,
                                  public DistributedHardware::DeviceStateCallback,
                                  public std::enable_shared_from_this<DeviceManagerAgent>,
-                                 public Startable,
-                                 public Actor<DeviceManagerAgent>,
-                                 public Utils::Singleton<DeviceManagerAgent> {
+                                 public DfsuStartable,
+                                 public DfsuActor<DeviceManagerAgent>,
+                                 public Utils::DfsuSingleton<DeviceManagerAgent> {
     DECLARE_SINGLETON(DeviceManagerAgent);
 
 public:

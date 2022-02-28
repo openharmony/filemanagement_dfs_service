@@ -15,7 +15,7 @@
 
 #include "network/network_agent_template.h"
 #include "device/device_manager_agent.h"
-#include "utils_exception.h"
+#include "dfsu_exception.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -54,8 +54,8 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
     auto infos = dma->GetRemoteDevicesInfo();
     LOGI("Have %{public}d devices Online", infos.size());
     for (const auto &info : infos) {
-        auto cmd =
-            make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
+        auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
+            &NetworkAgentTemplate::ConnectDeviceAsync, info);
         cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
         Recv(move(cmd));
     }
@@ -79,7 +79,7 @@ void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 
 void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session)
 {
-    auto cmd = make_unique<Cmd<NetworkAgentTemplate, shared_ptr<BaseSession>>>(
+    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, shared_ptr<BaseSession>>>(
         &NetworkAgentTemplate::AcceptSessionInner, session);
     cmd->UpdateOption({.tryTimes_ = 1});
     Recv(move(cmd));
@@ -94,8 +94,8 @@ void NetworkAgentTemplate::AcceptSessionInner(shared_ptr<BaseSession> session)
 
 void NetworkAgentTemplate::GetSessionProcess(NotifyParam &param)
 {
-    auto cmd =
-        make_unique<Cmd<NetworkAgentTemplate, NotifyParam>>(&NetworkAgentTemplate::GetSessionProcessInner, param);
+    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, NotifyParam>>(
+        &NetworkAgentTemplate::GetSessionProcessInner, param);
     cmd->UpdateOption({.tryTimes_ = 1});
     Recv(move(cmd));
 }
@@ -115,7 +115,7 @@ void NetworkAgentTemplate::GetSession(const string &cid)
     deviceInfo.SetCid(cid);
     try {
         OpenSession(deviceInfo);
-    } catch (const Exception &e) {
+    } catch (const DfsuException &e) {
         LOGE("reget session failed, code: %{public}d", e.code());
     }
 }

@@ -52,8 +52,8 @@ config("utils_public_config") {
 ohos_shared_library("libdistributedfileutils") {
   sources = [
     "log/src/utils_log.cpp",
+    "system/src/dfsu_mount_argument_descriptors.cpp",
     "system/src/utils_directory.cpp",
-    "system/src/utils_mount_argument.cpp",
   ]
 
   configs = [ "//build/config/compiler:exceptions" ]

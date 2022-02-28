@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_THREAD_SAFE_QUEUE_H
-#define UTILS_THREAD_SAFE_QUEUE_H
+#ifndef DFSU_THREAD_SAFE_QUEUE_H
+#define DFSU_THREAD_SAFE_QUEUE_H
 
 #include <algorithm>
 #include <atomic>
@@ -22,7 +22,7 @@
 #include <deque>
 #include <memory>
 
-#include "utils_exception.h"
+#include "dfsu_exception.h"
 
 namespace OHOS {
 namespace Storage {
@@ -40,7 +40,7 @@ namespace DistributedFile {
  *
  */
 template<typename T>
-class ThreadSafeQueue {
+class DfsuThreadSafeQueue {
 public:
     void Push(std::unique_ptr<T> pt)
     {
@@ -97,4 +97,4 @@ private:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // UTILS_THREAD_SAFE_QUEUE_H
+#endif // DFSU_THREAD_SAFE_QUEUE_H

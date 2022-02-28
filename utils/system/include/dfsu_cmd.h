@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_CMD_H
-#define UTILS_CMD_H
+#ifndef DFSU_CMD_H
+#define DFSU_CMD_H
 
 #include <functional>
 #include <tuple>
 
-#include "utils_exception.h"
+#include "dfsu_exception.h"
 
 namespace OHOS {
 namespace Storage {
@@ -42,11 +42,11 @@ struct CmdOptions {
 };
 
 template<typename T>
-class Actor;
+class DfsuActor;
 
 template<typename Ctx>
 class VirtualCmd {
-    friend class Actor<Ctx>;
+    friend class DfsuActor<Ctx>;
 
 public:
     VirtualCmd() = default;
@@ -63,12 +63,12 @@ protected:
 };
 
 template<typename Ctx, typename... Args>
-class Cmd : public VirtualCmd<Ctx> {
-    friend class Actor<Ctx>;
+class DfsuCmd : public VirtualCmd<Ctx> {
+    friend class DfsuActor<Ctx>;
 
 public:
-    Cmd(void (Ctx::*f)(Args...), Args... args) : f_(f), args_(args...) {}
-    ~Cmd() override = default;
+    DfsuCmd(void (Ctx::*f)(Args...), Args... args) : f_(f), args_(args...) {}
+    ~DfsuCmd() override = default;
 
 private:
     void (Ctx::*f_)(Args...);
@@ -87,4 +87,4 @@ private:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // UTILS_CMD_H
+#endif // DFSU_CMD_H

@@ -17,7 +17,6 @@
 #include "ipc/i_daemon.h"
 #include "utils_log.h"
 
-
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {

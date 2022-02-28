@@ -16,12 +16,12 @@
 
 #include <sstream>
 
+#include "dfsu_exception.h"
 #include "ipc/i_daemon.h"
 #include "network/softbus/softbus_session.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_name.h"
 #include "session.h"
-#include "utils_exception.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -136,7 +136,7 @@ int SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
              (session->IsFromServer() == true) ? "Server" : "Client", result);
         if (!session->IsFromServer()) { // client retry
             if (IsContinueRetry(cid)) {
-                auto cmd = make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(
+                auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
                     &NetworkAgentTemplate::ConnectDeviceAsync, info);
                 cmd->UpdateOption({.tryTimes_ = 1});
                 Recv(move(cmd));

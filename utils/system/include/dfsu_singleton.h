@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_SINGLETON_H
-#define UTILS_SINGLETON_H
+#ifndef DFSU_SINGLETON_H
+#define DFSU_SINGLETON_H
 
 #include <memory>
 #include <mutex>
@@ -32,11 +32,11 @@ public:                                           \
     MyClass& operator=(const MyClass&) = delete;  \
                                                   \
 private:                                          \
-    friend Singleton<MyClass>;                    \
+    friend DfsuSingleton<MyClass>;                \
     MyClass();
 
 template<typename T>
-class Singleton : public NoCopyable {
+class DfsuSingleton : public NoCopyable {
 public:
     static std::shared_ptr<T> GetInstance();
 
@@ -62,7 +62,7 @@ protected:
  * @note Memory leaking of T is exactly what we want. Now T will be available along the program's life-time
  */
 template<typename T>
-std::shared_ptr<T> Singleton<T>::GetInstance()
+std::shared_ptr<T> DfsuSingleton<T>::GetInstance()
 {
     static std::shared_ptr<T> *dummy = nullptr;
     static std::once_flag once;
@@ -76,4 +76,4 @@ std::shared_ptr<T> Singleton<T>::GetInstance()
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // UTILS_SINGLETON_H
+#endif // DFSU_SINGLETON_H

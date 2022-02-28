@@ -677,7 +677,6 @@ HWTEST_F(DistributedFileDaemonServiceTest, distributedFileDaemon_service_test_01
     }
     EXPECT_EQ(0, 0);
 }
-
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage
