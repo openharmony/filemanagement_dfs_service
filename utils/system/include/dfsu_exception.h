@@ -53,12 +53,12 @@ private:
     std::string msg_;
 };
 
-#define ThrowException(code, msg)                       \
-    do {                                                \
-        std::stringstream __ss;                         \
-        __ss << '[' << code << ']' << msg << std::endl; \
-        LOGE("%{public}s", __ss.str().c_str());         \
-        throw DfsuException(code, __ss.str());              \
+#define ThrowException(code, msg)                           \
+    do {                                                    \
+        std::stringstream __ss;                             \
+        __ss << '[' << (code) << ']' << (msg) << std::endl; \
+        LOGE("%{public}s", __ss.str().c_str());             \
+        throw DfsuException((code), __ss.str());            \
     } while (0)
 } // namespace DistributedFile
 } // namespace Storage

@@ -17,7 +17,6 @@
 #define DFSU_CMD_H
 
 #include <functional>
-#include <tuple>
 
 #include "dfsu_exception.h"
 

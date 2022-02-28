@@ -17,10 +17,7 @@
 #define DFSU_THREAD_SAFE_QUEUE_H
 
 #include <algorithm>
-#include <atomic>
-#include <condition_variable>
 #include <deque>
-#include <memory>
 
 #include "dfsu_exception.h"
 

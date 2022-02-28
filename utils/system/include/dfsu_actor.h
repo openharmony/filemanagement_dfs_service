@@ -20,8 +20,6 @@
 #include <future>
 #include <list>
 #include <stdexcept>
-#include <thread>
-#include <tuple>
 
 #include "dfsu_cmd.h"
 #include "dfsu_thread_safe_queue.h"

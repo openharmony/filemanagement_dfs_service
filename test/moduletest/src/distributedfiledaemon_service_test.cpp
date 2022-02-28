@@ -97,7 +97,7 @@ void DistributedFileDaemonServiceTest::TearDown(void)
 HWTEST_F(DistributedFileDaemonServiceTest, mount_umount_test_001, TestSize.Level1)
 {
     auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(
-        OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(100, SAME_ACCOUNT));
+        Utils::DfsuMountArgumentDescriptors::Alpha(100, SAME_ACCOUNT));
 
     shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp = move(mp);
 
@@ -122,7 +122,7 @@ HWTEST_F(DistributedFileDaemonServiceTest, distributedFileDaemon_service_test_00
 {
     const int userId = 101;
 
-    auto mountArgument = OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
+    auto mountArgument = Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
     auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument);
 
     shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp = move(mp);
@@ -194,7 +194,7 @@ HWTEST_F(DistributedFileDaemonServiceTest, distributedFileDaemon_service_test_00
 
     const int len = sizeof(userId) / sizeof(userId[0]);
     for (int i = 0; i < len; i++) {
-        mountArgument[i] = Utils::MountArgumentDescriptors::Alpha(userId[i], SAME_ACCOUNT);
+        mountArgument[i] = Utils::DfsuMountArgumentDescriptors::Alpha(userId[i], SAME_ACCOUNT);
         auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument[i]);
         smpArr[i] = move(mp);
     }
@@ -266,7 +266,7 @@ HWTEST_F(DistributedFileDaemonServiceTest, distributedFileDaemon_service_test_00
 {
     const int userId = 3337;
 
-    auto mountArgument = OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
+    auto mountArgument = Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
     auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument);
 
     shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp = move(mp);
@@ -331,7 +331,7 @@ HWTEST_F(DistributedFileDaemonServiceTest, distributedFileDaemon_service_test_00
 {
     const int userId = 3338;
 
-    auto mountArgument = OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
+    auto mountArgument = Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
     auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument);
 
     shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp = move(mp);
@@ -400,7 +400,7 @@ HWTEST_F(DistributedFileDaemonServiceTest, distributedFileDaemon_service_test_00
 {
     const int userId = 3339;
 
-    auto mountArgument = OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
+    auto mountArgument = Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
     auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument);
 
     shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp = move(mp);
@@ -502,7 +502,7 @@ HWTEST_F(DistributedFileDaemonServiceTest,
          TestSize.Level1)
 {
     const int userId = 4200;
-    auto mountArgument = OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
+    auto mountArgument = Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
     auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument);
     shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp = move(mp);
 
@@ -533,7 +533,7 @@ HWTEST_F(DistributedFileDaemonServiceTest,
          TestSize.Level1)
 {
     const int userId = 4201;
-    auto mountArgument = OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
+    auto mountArgument = Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
     auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument);
     shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp = move(mp);
 
@@ -576,8 +576,8 @@ HWTEST_F(DistributedFileDaemonServiceTest,
 {
     const int userId1 = 4202;
     const int userId2 = 4203;
-    auto mountArgument1 = OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(userId1, SAME_ACCOUNT);
-    auto mountArgument2 = OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(userId2, SAME_ACCOUNT);
+    auto mountArgument1 = Utils::DfsuMountArgumentDescriptors::Alpha(userId1, SAME_ACCOUNT);
+    auto mountArgument2 = Utils::DfsuMountArgumentDescriptors::Alpha(userId2, SAME_ACCOUNT);
     auto mp1 = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument1);
     auto mp2 = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument2);
     shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp1 = move(mp1);
@@ -614,7 +614,7 @@ HWTEST_F(DistributedFileDaemonServiceTest,
          TestSize.Level1)
 {
     const int userId = 4204;
-    auto mountArgument = OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
+    auto mountArgument = Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
     auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument);
     shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp = move(mp);
 
@@ -655,7 +655,7 @@ HWTEST_F(DistributedFileDaemonServiceTest,
 HWTEST_F(DistributedFileDaemonServiceTest, distributedFileDaemon_service_test_015_kernel_notify_deal, TestSize.Level1)
 {
     const int userId = 4500;
-    auto mountArgument = OHOS::Storage::DistributedFile::Utils::MountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
+    auto mountArgument = Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT);
     auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(mountArgument);
     shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp = move(mp);
 
