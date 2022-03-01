@@ -16,8 +16,8 @@
 #include "multiuser/os_account_observer.h"
 
 #include "device/device_manager_agent.h"
+#include "dfsu_mount_argument_descriptors.h"
 #include "utils_log.h"
-#include "utils_mount_argument.h"
 
 namespace OHOS {
 namespace Storage {
@@ -46,9 +46,9 @@ OsAccountObserver::~OsAccountObserver()
 
 void OsAccountObserver::AddMPInfo(const int id, const std::string &relativePath)
 {
-    auto smp = make_shared<MountPoint>(Utils::MountArgumentDescriptors::Alpha(id, relativePath));
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(id, relativePath));
     auto dm = DeviceManagerAgent::GetInstance();
-    dm->Recv(make_unique<Cmd<DeviceManagerAgent, weak_ptr<MountPoint>>>(&DeviceManagerAgent::JoinGroup, smp));
+    dm->Recv(make_unique<DfsuCmd<DeviceManagerAgent, weak_ptr<MountPoint>>>(&DeviceManagerAgent::JoinGroup, smp));
     mountPoints_[id].emplace_back(smp);
 }
 
@@ -77,8 +77,8 @@ void OsAccountObserver::RemoveMPInfo(const int id)
     }
 
     auto dm = DeviceManagerAgent::GetInstance();
-    for (auto smp : iter->second) {  
-        dm->Recv(make_unique<Cmd<DeviceManagerAgent, weak_ptr<MountPoint>>>(&DeviceManagerAgent::QuitGroup, smp));
+    for (auto smp : iter->second) {
+        dm->Recv(make_unique<DfsuCmd<DeviceManagerAgent, weak_ptr<MountPoint>>>(&DeviceManagerAgent::QuitGroup, smp));
     }
     mountPoints_.erase(iter);
     

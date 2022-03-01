@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_MOUNT_ARGUMENT_H
-#define UTILS_MOUNT_ARGUMENT_H
+#ifndef DFSU_MOUNT_ARGUMENT_DESCRIPTORS_H
+#define DFSU_MOUNT_ARGUMENT_DESCRIPTORS_H
 
 #include <string>
 
@@ -42,7 +42,7 @@ struct MountArgument final {
     unsigned long GetFlags() const;
 };
 
-class MountArgumentDescriptors final {
+class DfsuMountArgumentDescriptors final {
 public:
     static MountArgument Alpha(int userId, std::string relativePath);
 };
@@ -50,4 +50,4 @@ public:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // UTILS_MOUNT_ARGUMENT_H
+#endif // DFSU_MOUNT_ARGUMENT_DESCRIPTORS_H

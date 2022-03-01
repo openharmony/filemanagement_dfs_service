@@ -20,12 +20,12 @@
 #include <string>
 
 #include "device_auth.h"
+#include "dfsu_exception.h"
 #include "ipc/i_daemon.h"
 #include "mountpoint/mount_manager.h"
 #include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_agent.h"
 #include "softbus_bus_center.h"
-#include "utils_exception.h"
 #include "utils_log.h"
 #include "parameters.h"
 
@@ -40,7 +40,7 @@ const std::string SAME_ACCOUNT_MARK = "const.distributed_file_only_for_same_acco
 } // namespace
 using namespace std;
 
-DeviceManagerAgent::DeviceManagerAgent() : Actor<DeviceManagerAgent>(this, std::numeric_limits<uint32_t>::max()) {}
+DeviceManagerAgent::DeviceManagerAgent() : DfsuActor<DeviceManagerAgent>(this, std::numeric_limits<uint32_t>::max()) {}
 
 DeviceManagerAgent::~DeviceManagerAgent()
 {
@@ -119,7 +119,7 @@ void DeviceManagerAgent::OfflineAllDevice()
 {
     unique_lock<mutex> lock(mpToNetworksMutex_);
     for (auto [ignore, net] : cidNetTypeRecord_) {
-        auto cmd = make_unique<Cmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::DisconnectAllDevices);
+        auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::DisconnectAllDevices);
         net->Recv(move(cmd));
     }
 }
@@ -128,7 +128,7 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
 {
     unique_lock<mutex> lock(mpToNetworksMutex_);
     for (auto [ignore, net] : cidNetTypeRecord_) {
-        auto cmd = make_unique<Cmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::ConnectOnlineDevices);
+        auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::ConnectOnlineDevices);
         cmd->UpdateOption({
             .tryTimes_ = MAX_RETRY_COUNT,
         });
@@ -164,7 +164,7 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
         return;
     }
     auto cmd =
-        make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
+        make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
     cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
     networkAgent->Recv(move(cmd));
 
@@ -183,7 +183,8 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
         return;
     }
 
-    auto cmd = make_unique<Cmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
+    auto cmd =
+        make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
     networkAgent->Recv(move(cmd));
     cidNetTypeRecord_.erase(info.cid_);
     LOGI("OnDeviceOffline end");

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_EXCEPTION_H
-#define UTILS_EXCEPTION_H
+#ifndef DFSU_EXCEPTION_H
+#define DFSU_EXCEPTION_H
 
 #include <exception>
 #include <sstream>
@@ -34,9 +34,9 @@ enum {
     ERR_DEVICE_CID_UN_INIT,
 };
 
-class Exception : public std::exception {
+class DfsuException : public std::exception {
 public:
-    Exception(int code, const std::string &msg) : code_(code), msg_(msg) {};
+    DfsuException(int code, const std::string &msg) : code_(code), msg_(msg) {};
 
     uint32_t code() const noexcept
     {
@@ -53,15 +53,14 @@ private:
     std::string msg_;
 };
 
-#define ThrowException(code, msg)                       \
-    do {                                                \
-        std::stringstream __ss;                         \
-        __ss << '[' << code << ']' << msg << std::endl; \
-        LOGE("%{public}s", __ss.str().c_str());         \
-        throw Exception(code, __ss.str());              \
+#define ThrowException(code, msg)                           \
+    do {                                                    \
+        std::stringstream __ss;                             \
+        __ss << '[' << (code) << ']' << (msg) << std::endl; \
+        LOGE("%{public}s", __ss.str().c_str());             \
+        throw DfsuException((code), __ss.str());            \
     } while (0)
-
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // UTILS_EXCEPTION_H
+#endif // DFSU_EXCEPTION_H

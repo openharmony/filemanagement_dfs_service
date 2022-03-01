@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_STARTABLE_H
-#define UTILS_STARTABLE_H
+#ifndef DFSU_STARTABLE_H
+#define DFSU_STARTABLE_H
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class Startable {
+class DfsuStartable {
 public:
     virtual void Start() = 0;
     virtual void Stop() = 0;
@@ -27,4 +27,4 @@ public:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // UTILS_STARTABLE_H
+#endif // DFSU_STARTABLE_H

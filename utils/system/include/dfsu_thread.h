@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef UTILS_DFS_THREAD_H
-#define UTILS_DFS_THREAD_H
+#ifndef DFSU_THREAD_H
+#define DFSU_THREAD_H
 
 #include <atomic>
 #include <condition_variable>
@@ -26,13 +26,13 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace Utils {
-class DfsThread {
+class DfsuThread {
 public:
-    DfsThread() = default;
-    DfsThread(const DfsThread &) = delete;
-    DfsThread &operator=(const DfsThread &) = delete;
+    DfsuThread() = default;
+    DfsuThread(const DfsuThread &) = delete;
+    DfsuThread &operator=(const DfsuThread &) = delete;
 
-    ~DfsThread()
+    ~DfsuThread()
     {
         Stop();
     }
@@ -136,4 +136,4 @@ private:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // UTILS_DFS_THREAD_H
+#endif // DFSU_THREAD_H

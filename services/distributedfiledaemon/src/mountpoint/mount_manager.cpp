@@ -19,8 +19,8 @@
 #include <sstream>
 
 #include "device/device_manager_agent.h"
+#include "dfsu_mount_argument_descriptors.h"
 #include "utils_log.h"
-#include "utils_mount_argument.h"
 
 namespace OHOS {
 namespace Storage {

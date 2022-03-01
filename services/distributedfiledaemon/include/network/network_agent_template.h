@@ -22,20 +22,20 @@
 #include <vector>
 
 #include "device/device_info.h"
+#include "dfsu_actor.h"
+#include "dfsu_startable.h"
+#include "dfsu_thread.h"
 #include "mountpoint/mount_point.h"
 #include "network/kernel_talker.h"
 #include "network/session_pool.h"
-#include "utils_actor.h"
-#include "utils_dfs_thread.h"
-#include "utils_startable.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class NetworkAgentTemplate : public Startable, public Actor<NetworkAgentTemplate> {
+class NetworkAgentTemplate : public DfsuStartable, public DfsuActor<NetworkAgentTemplate> {
 public:
     explicit NetworkAgentTemplate(std::weak_ptr<MountPoint> mountPoint)
-        : Actor<NetworkAgentTemplate>(this),
+        : DfsuActor<NetworkAgentTemplate>(this),
           mountPoint_(mountPoint),
           kernerlTalker_(std::make_shared<KernelTalker>(
               mountPoint,
@@ -76,7 +76,7 @@ private:
     void GetSessionProcessInner(NotifyParam param);
 
     std::mutex taskMut_;
-    std::list<Utils::DfsThread> tasks_;
+    std::list<Utils::DfsuThread> tasks_;
     std::shared_ptr<KernelTalker> kernerlTalker_;
     SessionPool sessionPool_;
 };
