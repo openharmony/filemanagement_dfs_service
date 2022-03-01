@@ -109,6 +109,41 @@ private:
         return result;
     }
 
+    bool ExceptionHandler(const DfsuException &e, std::unique_ptr<VirtualCmd<Ctx>> &currentCmd)
+    {
+        if (e.code() == ERR_UTILS_ACTOR_QUEUE_STOP) {
+            return false;
+        }
+
+        const CmdOptions &op = currentCmd->option_;
+
+        if (IsExistStopTask() && (op.tryTimes_ > 0)) {
+            return false; // exist stop Task, stop retry
+        }
+
+        if (op.importance_ == CmdImportance::TRIVIAL) {
+            if (op.tryTimes_) {
+                retryTasks.emplace_back(
+                    std::async(std::launch::async, &DfsuActor<Ctx>::DelayRetry, this, std::move(currentCmd)));
+                return true;
+            }
+        } else {
+            if (op.tryTimes_) {
+                Retry(std::move(currentCmd));
+                return true;
+            }
+            if (op.importance_ == CmdImportance::VITAL) {
+                return false;
+            }
+            if (op.importance_ == CmdImportance::NORMAL) {
+                StopCtx();
+                StartCtx();
+                return true;
+            }
+        }
+        return true;
+    }
+
     void Main()
     {
         while (true) {
@@ -120,35 +155,10 @@ private:
                     currentCmd.release();
                 }
             } catch (const DfsuException &e) {
-                if (e.code() == ERR_UTILS_ACTOR_QUEUE_STOP) {
-                    break;
-                }
-
-                const CmdOptions &op = currentCmd->option_;
-
-                if (IsExistStopTask() && (op.tryTimes_ > 0)) {
-                    break; // exist stop Task, stop retry
-                }
-
-                if (op.importance_ == CmdImportance::TRIVIAL) {
-                    if (op.tryTimes_) {
-                        retryTasks.emplace_back(
-                            std::async(std::launch::async, &DfsuActor<Ctx>::DelayRetry, this, std::move(currentCmd)));
-                        continue;
-                    }
+                if (ExceptionHandler(e, currentCmd)) {
+                    continue;
                 } else {
-                    if (op.tryTimes_) {
-                        Retry(std::move(currentCmd));
-                        continue;
-                    }
-                    if (op.importance_ == CmdImportance::VITAL) {
-                        break;
-                    }
-                    if (op.importance_ == CmdImportance::NORMAL) {
-                        StopCtx();
-                        StartCtx();
-                        continue;
-                    }
+                    break;
                 }
             } catch (const std::exception &e) {
                 LOGE("Unexpected Low Level exception");
