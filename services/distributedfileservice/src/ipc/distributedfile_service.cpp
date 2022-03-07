@@ -35,7 +35,7 @@ namespace Storage {
 namespace DistributedFile {
 namespace {
     constexpr int32_t FILE_BLOCK_SIZE = 1024;
-    constexpr char TEMP_FILE_NAME[] = "/data/system_ce/tmp";
+    const std::string TEMP_PATH = "/data/system_ce/";
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(DistributedFileService, STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID, false);
@@ -75,68 +75,27 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
                                          const std::vector<std::string> &destinationFileList,
                                          const uint32_t fileCount)
 {
-    if (fileCount <= 0) {
+    if (cid.empty() || fileCount <= 0 || sourceFileList.empty() || sourceFileList.size() != fileCount) {
+        LOGE("SendFile params failed");
         return DFS_PARAM_FILE_COUNT_ERROR;
     }
-
-    char **sFileList = new char* [fileCount];
-    for (int index = 0; index < sourceFileList.size(); ++index) {
-        LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}d",
-            index, sourceFileList.at(index).c_str(), sourceFileList.at(index).length());
-        if (index == 0) {
-            std::string tmpString("/data/system_ce/tmp");
-            int32_t length = tmpString.length();
-            sFileList[index] = new char[length + 1];
-            if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
-                return DFS_MEM_ERROR;
-            }
-            if (memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length) != EOK) {
-                return DFS_MEM_ERROR;
-            }
-            sFileList[index][length] = '\0';
-        } else {
-            int32_t length = sourceFileList.at(index).length();
-            sFileList[index] = new char[length + 1];
-            if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
-                return DFS_MEM_ERROR;
-            }
-            if (memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length) != EOK) {
-                return DFS_MEM_ERROR;
-            }
-            sFileList[index][length] = '\0';
-        }
-    }
-
-    char **dFileList = nullptr;
-    if (destinationFileList.empty()) {
-        dFileList = new char* [fileCount];
-        for (int index = 0; index < destinationFileList.size(); ++index) {
-            int32_t length = destinationFileList.at(index).length();
-            dFileList[index] = new char[length + 1];
-            if (memset_s(dFileList[index], length + 1, '\0', length + 1) != EOK) {
-                return DFS_MEM_ERROR;
-            }
-            if (memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
-                return DFS_MEM_ERROR;
-            }
-            dFileList[index][length] = '\0';
-        }
-    }
-
+    LOGI("DistributedFileService::SendFile cid %{public}s, fileCount %{public}d", cid.c_str(), fileCount);
     auto softBusAgent = SoftbusAgent::GetInstance();
-    if (DFS_SUCCESS != softBusAgent->SendFile(cid, (const char **)sFileList, (const char **)dFileList, fileCount)) {
+    if (softBusAgent->SendFile(cid, sourceFileList, destinationFileList, fileCount) != DFS_SUCCESS) {
         return DFS_SOFTBUS_SEND_ERROR;
     }
+
     return DFS_SUCCESS;
 }
 
 int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName, int32_t mode)
 {
-    if (fd <= 0) {
+    if (fd <= 0 || fileName.empty()) {
         return DFS_FILE_OP_ERROR;
     }
 
-    const char *tmpFile = TEMP_FILE_NAME;
+    std::string fullPath = TEMP_PATH + fileName;
+    const char *tmpFile = fullPath.c_str();
     struct stat fileStat;
     bool fileExist = (stat(tmpFile, &fileStat) == 0);
     if (fileExist) {
