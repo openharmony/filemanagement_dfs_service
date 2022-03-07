@@ -71,15 +71,12 @@ void SoftbusAgent::OnDeviceOnline(const std::string &cid)
 {
 }
 
-int SoftbusAgent::SendFile(const std::string &cid, const std::vector<std::string> &sourceFileList,
-    const std::vector<std::string> &destinationFileList, uint32_t fileCount)
+int32_t SoftbusAgent::CreateSourceResources(const std::vector<std::string> &sourceFileList, uint32_t fileCount)
 {
-    if (cid.empty() || fileCount <= 0 || sourceFileList.empty() || sourceFileList.size() != fileCount) {
-        LOGE("SendFile params failed");
+    if (sourceFileList.empty() || sourceFileList.size() != fileCount) {
         return IDistributedFileService::DFS_PARAM_FILE_COUNT_ERROR;
     }
 
-    ClearResources(sFileList_, sFileCount_);
     sFileCount_ = sourceFileList.size();
     if (sFileCount_ <= 0) {
         return IDistributedFileService::DFS_MEM_ERROR;
@@ -106,28 +103,54 @@ int SoftbusAgent::SendFile(const std::string &cid, const std::vector<std::string
         }
         sFileList_[index][length] = '\0';
     }
+    return IDistributedFileService::DFS_SUCCESS;
+}
+
+int32_t SoftbusAgent::CreateDestResources(const std::vector<std::string> &destinationFileList)
+{
+    if (destinationFileList.empty()) {
+        return IDistributedFileService::DFS_PARAM_FILE_COUNT_ERROR;
+    }
+    dFileCount_ = destinationFileList.size();
+    if (dFileCount_ <= 0) {
+        return IDistributedFileService::DFS_MEM_ERROR;
+    }
+    dFileList_ = new char* [dFileCount_];
+    for (int index = 0; index < dFileCount_; ++index) {
+        int32_t length = destinationFileList.at(index).length();
+        if (length <= 0) {
+            LOGE("Destination file path error");
+            return IDistributedFileService::DFS_MEM_ERROR;
+        }
+        dFileList_[index] = new char[length + 1];
+        if (memset_s(dFileList_[index], length + 1, '\0', length + 1) != EOK) {
+            return IDistributedFileService::DFS_MEM_ERROR;
+        }
+        if (memcpy_s(dFileList_[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
+            return IDistributedFileService::DFS_MEM_ERROR;
+        }
+        dFileList_[index][length] = '\0';
+    }
+    return IDistributedFileService::DFS_SUCCESS;
+}
+
+int SoftbusAgent::SendFile(const std::string &cid, const std::vector<std::string> &sourceFileList,
+    const std::vector<std::string> &destinationFileList, uint32_t fileCount)
+{
+    if (cid.empty() || fileCount <= 0 || sourceFileList.empty() || sourceFileList.size() != fileCount) {
+        LOGE("SendFile params failed");
+        return IDistributedFileService::DFS_PARAM_FILE_COUNT_ERROR;
+    }
+
+    ClearResources(sFileList_, sFileCount_);
+    if (CreateSourceResources(sourceFileList, fileCount) != IDistributedFileService::DFS_SUCCESS) {
+        return IDistributedFileService::DFS_MEM_ERROR;
+    }
 
     ClearResources(dFileList_, dFileCount_);
     if (!destinationFileList.empty()) {
-        dFileCount_ = destinationFileList.size();
-        if (dFileCount_ <= 0) {
+        if (CreateDestResources(destinationFileList) != IDistributedFileService::DFS_SUCCESS) {
             return IDistributedFileService::DFS_MEM_ERROR;
-        }
-        dFileList_ = new char* [dFileCount_];
-        for (int index = 0; index < dFileCount_; ++index) {
-            int32_t length = destinationFileList.at(index).length();
-            if (length <= 0) {
-                LOGE("Destination file path error");
-                return IDistributedFileService::DFS_MEM_ERROR;
-            }
-            dFileList_[index] = new char[length + 1];
-            if (memset_s(dFileList_[index], length + 1, '\0', length + 1) != EOK) {
-                return IDistributedFileService::DFS_MEM_ERROR;
-            }
-            if (memcpy_s(dFileList_[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
-                return IDistributedFileService::DFS_MEM_ERROR;
-            }
-            dFileList_[index][length] = '\0';
         }
     }
     return SendFile(cid, (const char **)sFileList_, (const char **)dFileList_, fileCount);

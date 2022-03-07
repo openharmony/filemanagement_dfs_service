@@ -54,6 +54,8 @@ protected:
     void CloseSession(const std::string &cid);
     std::string GetPeerDevId(const int sessionId);
 private:
+    int32_t CreateSourceResources(const std::vector<std::string> &sourceFileList, uint32_t fileCount);
+    int32_t CreateDestResources(const std::vector<std::string> &destinationFileList);
     void ClearResources(char **fileList, int32_t &fileCount);
 private:
     std::string sessionName_ { "DistributedFileService" };
