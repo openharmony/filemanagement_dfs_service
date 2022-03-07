@@ -81,7 +81,7 @@ int SoftbusAgent::SendFile(const std::string &cid, const std::vector<std::string
 
     ClearResources(sFileList_, sFileCount_);
     sFileCount_ = sourceFileList.size();
-    if (sFileCount_ <= 0) {
+    if (dFileCount_ <= 0) {
         return IDistributedFileService::DFS_MEM_ERROR;
     }
     sFileList_ = new char* [sFileCount_];
