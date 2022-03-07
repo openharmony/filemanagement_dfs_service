@@ -21,6 +21,7 @@
 #include "daemon_stub.h"
 #include "i_daemon.h"
 #include "iremote_stub.h"
+#include "multiuser/os_account_observer.h"
 #include "system_ability.h"
 
 namespace OHOS {
@@ -50,7 +51,7 @@ private:
     static sptr<Daemon> instance_;
     static std::mutex instanceLock_;
     bool registerToService_ { false };
-
+    std::shared_ptr<OsAccountObserver> subScriber_;
     void PublishSA();
     void RegisterOsAccount();
 };
