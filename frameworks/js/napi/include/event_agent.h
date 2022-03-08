@@ -55,7 +55,7 @@ public:
     bool FindDevice(const std::string&);
     void ClearDevice();
     bool IsEventListEmpty()
-    { 
+    {
         return eventList_.empty();
     }
 
