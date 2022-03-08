@@ -16,7 +16,6 @@
 #include "ipc/daemon.h"
 
 #include "mountpoint/mount_manager.h"
-#include "multiuser/os_account_observer.h"
 #include "os_account_manager.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
@@ -47,10 +46,11 @@ void Daemon::RegisterOsAccount()
     osAccountSubscribeInfo.SetOsAccountSubscribeType(OHOS::AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED);
     osAccountSubscribeInfo.SetName("distributed_file_service");
 
-    auto subScriber = std::make_shared<OsAccountObserver>(osAccountSubscribeInfo);
-    int ret = OHOS::AccountSA::OsAccountManager::SubscribeOsAccount(subScriber);
+    subScriber_ = std::make_shared<OsAccountObserver>(osAccountSubscribeInfo);
+    int ret = OHOS::AccountSA::OsAccountManager::SubscribeOsAccount(subScriber_);
     if (ret != 0) {
         LOGE("register os account fail ret %{public}d", ret);
+        return;
     }
     LOGI("register os account success, ret %{public}d", ret);
 }
@@ -79,6 +79,11 @@ void Daemon::OnStop()
     LOGI("Begin to stop");
     state_ = ServiceRunningState::STATE_NOT_START;
     registerToService_ = false;
+    int32_t ret = OHOS::AccountSA::OsAccountManager::UnsubscribeOsAccount(subScriber_);
+    if (ret != 0) {
+        LOGI("UnsubscribeOsAccount failed, ret %{public}d", ret);
+    }
+    subScriber_ = nullptr;
     LOGI("Stop finished successfully");
 }
 
