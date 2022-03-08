@@ -212,7 +212,7 @@ int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<st
     int32_t fd = open(srcList.at(0).c_str(), O_RDONLY);
     int32_t result = distributedFileService->OpenFile(fd, fileName, (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     if (result != IDistributedFileService::DFS_SUCCESS) {
-        LOGE("SendFile::ExecOendFile: error code %{public}d", result);
+        LOGE("SendFile::ExecSendFile: error code %{public}d", result);
         return NAPI_SENDFILE_SEND_ERROR;
     }
 
