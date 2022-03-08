@@ -37,6 +37,10 @@ bool IsArrayForNapiValue(napi_env env, napi_value param, uint32_t &arraySize)
     if (napi_get_array_length(env, param, &arraySize) != napi_ok) {
         return false;
     }
+
+    if (arraySize != 1) {
+        return false;
+    }
     return true;
 }
 
@@ -44,18 +48,18 @@ void GetJsPath(napi_env env, napi_value param, std::vector<std::string> &jsPath)
 {
     uint32_t arraySize = 0;
     jsPath.clear();
-    if (IsArrayForNapiValue(env, param, arraySize)) {
-        for (uint32_t i = 0; i < arraySize; ++i) {
-            napi_value result = nullptr;
-            napi_status status = napi_get_element(env, param, i, &result);
-            if (status == napi_ok && result != nullptr) {
-                bool succ = false;
-                std::unique_ptr<char []> path;
-                std::tie(succ, path, std::ignore) = NVal(env, result).ToUTF8String();
-                if (succ) {
-                    jsPath.push_back(path.get());
-                }
-            }
+    if (!IsArrayForNapiValue(env, param, arraySize)) {
+        return;
+    }
+
+    napi_value result = nullptr;
+    napi_status status = napi_get_element(env, param, 0, &result);
+    if (status == napi_ok && result != nullptr) {
+        bool succ = false;
+        std::unique_ptr<char []> path;
+        std::tie(succ, path, std::ignore) = NVal(env, result).ToUTF8String();
+        if (succ) {
+            jsPath.push_back(path.get());
         }
     }
 }

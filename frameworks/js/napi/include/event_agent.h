@@ -49,12 +49,15 @@ public:
     void Off(const char* type, napi_value handler);
     void Off(const char* type);
     void InsertEvent(TransEvent*);
-    bool IsEventListEmpty() { return eventList_.empty(); }
     void WaitEvent();
     void InsertDevice(const std::string&);
     void RemoveDevice(const std::string&);
     bool FindDevice(const std::string&);
     void ClearDevice();
+    bool IsEventListEmpty()
+    { 
+        return eventList_.empty();
+    }
 
 protected:
     static void* ThreadProc(void* arg);

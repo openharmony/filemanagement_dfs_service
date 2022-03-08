@@ -158,11 +158,9 @@ void EventAgent::ClearDevice()
 
 void* EventAgent::ThreadProc(void* arg)
 {
-    // auto thisVar = reinterpret_cast<EventAgent*>(arg);
     auto thisVar = (EventAgent*)(arg);
     LOGD("ThreadProc thisVar %{public}p.", thisVar);
     do {
-        uv_sleep(1000);
         thisVar->WaitEvent();
         LOGD("SendFile event daemon thread loop.");
         uv_work_t* work = new uv_work_t();
