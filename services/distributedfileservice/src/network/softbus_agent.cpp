@@ -137,7 +137,7 @@ int32_t SoftbusAgent::CreateDestResources(const std::vector<std::string> &destin
 int SoftbusAgent::SendFile(const std::string &cid, const std::vector<std::string> &sourceFileList,
     const std::vector<std::string> &destinationFileList, uint32_t fileCount)
 {
-    if (cid.empty() || fileCount <= 0 || sourceFileList.empty() || sourceFileList.size() != fileCount) {
+    if (cid.empty() || fileCount != 1 || sourceFileList.empty() || sourceFileList.size() != fileCount) {
         LOGE("SendFile params failed");
         return IDistributedFileService::DFS_PARAM_FILE_COUNT_ERROR;
     }
