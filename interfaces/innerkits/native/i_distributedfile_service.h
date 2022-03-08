@@ -36,7 +36,6 @@ public:
     };
     // define the error code
     enum {
-        DISTRIBUTEDFILE_SUCCESS = 0,
         DFS_SUCCESS = 0,
         DFS_NO_ERROR = 0,
         DFS_SENDFILE_SUCCESS = 0,

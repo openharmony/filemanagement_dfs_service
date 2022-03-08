@@ -59,7 +59,7 @@ int32_t SendFile::RegisterCallback()
 
     sptr<IFileTransferCallback> callback = (std::make_unique<DfsFileTransferCallback>()).release();
     LOGD("SendFile::RegisterCallback: cb[%{public}p]", callback->AsObject().GetRefPtr());
-    if (IDistributedFileService::DFS_NO_ERROR != distributedFileService->RegisterNotifyCallback(callback)) {
+    if (distributedFileService->RegisterNotifyCallback(callback) != IDistributedFileService::DFS_NO_ERROR) {
         LOGD("SendFile::RegisterCallback: remote call failed.\n");
         return NAPI_SENDFILE_IPC_ERROR;
     }
@@ -68,7 +68,7 @@ int32_t SendFile::RegisterCallback()
 
 int32_t SendFile::JoinCidToAppId(const std::string &cid, const std::string &AppId)
 {
-    if (cid.empty() | AppId.empty()) {
+    if (cid.empty() || AppId.empty()) {
         LOGE("SendFile::JoinCidToAppId: input para error.\n");
         return NAPI_SENDFILE_PARA_ERROR;
     }
@@ -89,7 +89,7 @@ int32_t SendFile::JoinCidToAppId(const std::string &cid, const std::string &AppI
 
 int32_t SendFile::DisjoinCidToAppId(const std::string &cid, const std::string &AppId)
 {
-    if (cid.empty() | AppId.empty()) {
+    if (cid.empty() || AppId.empty()) {
         LOGE("SendFile::DisJoinCidToAppId: input para error.\n");
         return NAPI_SENDFILE_PARA_ERROR;
     }
@@ -108,28 +108,27 @@ int32_t SendFile::DisjoinCidToAppId(const std::string &cid, const std::string &A
     return NAPI_SENDFILE_NO_ERROR;
 }
 
-int32_t SendFile::EmitTransEvent(TransEvent &event, const std::string &cid, const std::string &AppId)
+int32_t SendFile::QueTransEvent(TransEvent* event, const std::string &cid, const std::string &AppId)
 {
-    if (cid.empty() | AppId.empty()) {
-        LOGE("SendFile::EmitTransEvent: input para error.\n");
+    if (cid.empty() || AppId.empty()) {
+        LOGE("SendFile::QueTransEvent: input para error.\n");
         return NAPI_SENDFILE_PARA_ERROR;
     }
 
     auto iter = mapUidToEventAgent_.find(AppId);
     if (mapUidToEventAgent_.end() == iter) {
-        LOGE("SendFile::EmitTransEvent: can't find app agent.\n");
+        LOGE("SendFile::QueTransEvent: can't find app agent.\n");
         return NAPI_SENDFILE_APP_AGENT_ERROR;
     }
 
     EventAgent* agent = iter->second;
     if (agent == nullptr) {
-        LOGE("SendFile::EmitTransEvent: app agent null.\n");
+        LOGE("SendFile::QueTransEvent: app agent null.\n");
         return NAPI_SENDFILE_APP_AGENT_ERROR;
     }
 
     if (agent->FindDevice(cid)) {
-        LOGI("SendFile::EmitTransEvent: [%{public}s, %{public}s]", cid.c_str(), event.GetName().c_str());
-        agent->Emit(event.GetName().c_str(), reinterpret_cast<Event*>(&event));
+        agent->InsertEvent(event);
         return NAPI_SENDFILE_NO_ERROR;
     }
 
@@ -182,8 +181,8 @@ int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
 int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,
     const std::vector<std::string>& dstList, uint32_t num)
 {
-    if (deviceId.empty()) {
-        LOGE("SendFile::ExecSendFile: para error.\n");
+    if (deviceId.empty() || srcList.empty()) {
+        LOGE("SendFile::ExecSendFile error: \"Device ID is empty\".\n");
         return NAPI_SENDFILE_PARA_ERROR;
     }
 
@@ -206,13 +205,21 @@ int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<st
         return NAPI_SENDFILE_IPC_ERROR;
     }
 
+    std::string fileName = srcList.at(0);
+    std::size_t found = fileName.find_last_of("/");
+    fileName = fileName.substr(found + 1);
     int32_t fd = open(srcList.at(0).c_str(), O_RDONLY);
-    int32_t result = distributedFileService->OpenFile(fd, srcList.at(0), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
-    if (IDistributedFileService::DFS_SENDFILE_SUCCESS !=
-        distributedFileService->SendFile(deviceId, srcList, dstList, num)) {
-            LOGE("SendFile::ExecSendFile: error code %{public}d", result);
-            return NAPI_SENDFILE_SEND_ERROR;
-        }
+    int32_t result = distributedFileService->OpenFile(fd, fileName, (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
+    if (result != IDistributedFileService::DFS_SUCCESS) {
+        LOGE("SendFile::ExecOendFile: error code %{public}d", result);
+        return NAPI_SENDFILE_SEND_ERROR;
+    }
+
+    result = distributedFileService->SendFile(deviceId, srcList, dstList, num);
+    if (result != IDistributedFileService::DFS_SENDFILE_SUCCESS) {
+        LOGE("SendFile::ExecSendFile: error code %{public}d", result);
+        return NAPI_SENDFILE_SEND_ERROR;
+    }
 
     LOGD("SendFile::ExecSendFile: napi sendfile success.");
     return NAPI_SENDFILE_NO_ERROR;

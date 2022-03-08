@@ -14,7 +14,6 @@
  */
 
 #include "trans_event.h"
-
 #include "utils_log.h"
 
 namespace OHOS {

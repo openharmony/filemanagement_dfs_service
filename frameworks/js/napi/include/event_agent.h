@@ -16,10 +16,14 @@
 #ifndef NATIVE_MODULE_SEND_FILE_EVENT_AGENT_H
 #define NATIVE_MODULE_SEND_FILE_EVENT_AGENT_H
 
-#include <set>
+#include <condition_variable>
+#include <list>
 #include <mutex>
+#include <pthread.h>
+#include <set>
 
-#include "napi/native_api.h"
+#include "trans_event.h"
+#include "uv.h"
 
 namespace OHOS {
 namespace Storage {
@@ -36,11 +40,6 @@ struct EventListener {
     EventListener* next = nullptr;
 };
 
-class Event {
-public:
-    virtual napi_value ToJsObject(napi_env env) = 0;
-};
-
 class EventAgent {
 public:
     EventAgent(napi_env env, napi_value thisVar);
@@ -49,19 +48,31 @@ public:
     void On(const char* type, napi_value handler);
     void Off(const char* type, napi_value handler);
     void Off(const char* type);
-    void Emit(const char* type, Event* event);
+    void InsertEvent(TransEvent*);
+    bool IsEventListEmpty() { return eventList_.empty(); }
+    void WaitEvent();
     void InsertDevice(const std::string&);
     void RemoveDevice(const std::string&);
     bool FindDevice(const std::string&);
     void ClearDevice();
 
 protected:
+    static void* ThreadProc(void* arg);
+    static void Callback(uv_work_t *work);
+    static void AfterCallback(uv_work_t *work, int status);
     std::mutex deviceListMut_;
     std::set<std::string> deviceList_;
+    std::mutex eventListMut_;
+    std::list<TransEvent*> eventList_;
     napi_env env_;
     napi_ref thisVarRef_;
     EventListener* first_;
     EventListener* last_;
+    std::mutex getEventCVMut_;
+    std::condition_variable getEventCV_;
+    pthread_t threadId_ {0};
+    uv_loop_t *loop_ {nullptr};
+    bool isExit_ {false};
 };
 } // namespace DistributedFile
 } // namespace Storage
