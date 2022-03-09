@@ -70,6 +70,65 @@ void DistributedFileService::StartManagers()
     DeviceManagerAgent::GetInstance();
 }
 
+int32_t DistributedFileService::CreateSourceResources(const std::vector<std::string> &sourceFileList,
+    uint32_t fileCount, char **sFileList)
+{
+    if (fileCount != 1 || sourceFileList.size() != fileCount || sFileList == nullptr) {
+        return DFS_MEM_ERROR;
+    }
+    for (int index = 0; index < sourceFileList.size(); ++index) {
+        LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}d",
+            index, sourceFileList.at(index).c_str(), sourceFileList.at(index).length());
+        if (index == 0) {
+            std::string tmpString("/data/system_ce/tmp");
+            int32_t length = tmpString.length();
+            if (length <= 0) {
+                return DFS_MEM_ERROR;
+            }
+            sFileList[index] = new char[length + 1];
+            if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
+                return DFS_MEM_ERROR;
+            }
+            if (memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length) != EOK) {
+                return DFS_MEM_ERROR;
+            }
+            sFileList[index][length] = '\0';
+        } else {
+            int32_t length = sourceFileList.at(index).length();
+            sFileList[index] = new char[length + 1];
+            if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
+                return DFS_MEM_ERROR;
+            }
+            if (memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length) != EOK) {
+                return DFS_MEM_ERROR;
+            }
+            sFileList[index][length] = '\0';
+        }
+    }
+    return DFS_NO_ERROR;
+}
+
+int32_t DistributedFileService::CreateDestResources(const std::vector<std::string> &destinationFileList,
+    uint32_t fileCount, char **dFileList)
+{
+    if (fileCount != 1 || destinationFileList.size() != fileCount || dFileList == nullptr) {
+        return DFS_MEM_ERROR;
+    }
+
+    for (int index = 0; index < destinationFileList.size(); ++index) {
+        int32_t length = destinationFileList.at(index).length();
+        dFileList[index] = new char[length + 1];
+        if (memset_s(dFileList[index], length + 1, '\0', length + 1) != EOK) {
+            return DFS_MEM_ERROR;
+        }
+        if (memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
+            return DFS_MEM_ERROR;
+        }
+        dFileList[index][length] = '\0';
+    }
+    return DFS_NO_ERROR;
+}
+
 int32_t DistributedFileService::SendFile(const std::string &cid,
                                          const std::vector<std::string> &sourceFileList,
                                          const std::vector<std::string> &destinationFileList,
@@ -84,56 +143,11 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
     char **sFileList = new char* [fileCount];
     char **dFileList = nullptr;
     do {
-        for (int index = 0; index < sourceFileList.size(); ++index) {
-            LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}d",
-                index, sourceFileList.at(index).c_str(), sourceFileList.at(index).length());
-            if (index == 0) {
-                std::string tmpString("/data/system_ce/tmp");
-                int32_t length = tmpString.length();
-                if (length <= 0) {
-                    result = DFS_MEM_ERROR;
-                    break;
-                }
-                sFileList[index] = new char[length + 1];
-                if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
-                    result = DFS_MEM_ERROR;
-                    break;
-                }
-                if (memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length) != EOK) {
-                    result = DFS_MEM_ERROR;
-                    break;
-                }
-                sFileList[index][length] = '\0';
-            } else {
-                int32_t length = sourceFileList.at(index).length();
-                sFileList[index] = new char[length + 1];
-                if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
-                    result = DFS_MEM_ERROR;
-                    break;
-                }
-                if (memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length) != EOK) {
-                    result = DFS_MEM_ERROR;
-                    break;
-                }
-                sFileList[index][length] = '\0';
-            }
-        }
+        result = CreateSourceResources(sourceFileList, fileCount, sFileList);
 
         if (destinationFileList.empty()) {
             dFileList = new char* [fileCount];
-            for (int index = 0; index < destinationFileList.size(); ++index) {
-                int32_t length = destinationFileList.at(index).length();
-                dFileList[index] = new char[length + 1];
-                if (memset_s(dFileList[index], length + 1, '\0', length + 1) != EOK) {
-                    result = DFS_MEM_ERROR;
-                    break;
-                }
-                if (memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
-                    result = DFS_MEM_ERROR;
-                    break;
-                }
-                dFileList[index][length] = '\0';
-            }
+            result = CreateDestResources(destinationFileList, fileCount, dFileList);
         }
     } while (false);
 
