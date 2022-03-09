@@ -75,10 +75,21 @@ napi_value JsSendFile(napi_env env, napi_callback_info info)
     bool succ = false;
     std::unique_ptr<char []> deviceId;
     std::tie(succ, deviceId, std::ignore) = NVal(env, funcArg[DFS_ARG_POS::FIRST]).ToUTF8String();
-    std::string deviceIdString = "";
-    if (succ) {
-        deviceIdString =  std::string(deviceId.get());
+    napi_get_value_uint32(env, funcArg[DFS_ARG_POS::FOURTH], &fileCount);
+    if (fileCount != 1) {
+        return nullptr;
     }
+
+    napi_value result;
+    napi_status status;
+    for (uint32_t i = 0; i < fileCount; ++i) {
+        status = napi_get_element(env, funcArg[DFS_ARG_POS::SECOND], i, &result);
+        if (napi_ok != status) {
+            return nullptr;
+        }
+        std::unique_ptr<char []> path;
+        std::tie(succ, path, std::ignore) = NVal(env, result).ToUTF8String();
+        sourPath.push_back(path.get());
 
     uint32_t fileCount = 0;
     napi_status status = napi_get_value_uint32(env, funcArg[DFS_ARG_POS::FOURTH], &fileCount);

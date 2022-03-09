@@ -70,22 +70,21 @@ void DistributedFileService::StartManagers()
     DeviceManagerAgent::GetInstance();
 }
 
-int32_t DistributedFileService::SendFile(const std::string &cid,
-                                         const std::vector<std::string> &sourceFileList,
-                                         const std::vector<std::string> &destinationFileList,
-                                         const uint32_t fileCount)
+int32_t DistributedFileService::CreateSourceResources(const std::vector<std::string> &sourceFileList,
+    uint32_t fileCount, char **sFileList)
 {
-    if (fileCount <= 0) {
-        return DFS_PARAM_FILE_COUNT_ERROR;
+    if (fileCount != 1 || sourceFileList.size() != fileCount || sFileList == nullptr) {
+        return DFS_MEM_ERROR;
     }
-
-    char **sFileList = new char* [fileCount];
     for (int index = 0; index < sourceFileList.size(); ++index) {
         LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}d",
             index, sourceFileList.at(index).c_str(), sourceFileList.at(index).length());
         if (index == 0) {
             std::string tmpString("/data/system_ce/tmp");
             int32_t length = tmpString.length();
+            if (length <= 0) {
+                return DFS_MEM_ERROR;
+            }
             sFileList[index] = new char[length + 1];
             if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
                 return DFS_MEM_ERROR;
@@ -106,33 +105,63 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
             sFileList[index][length] = '\0';
         }
     }
+    return DFS_NO_ERROR;
+}
 
-    char **dFileList = nullptr;
-    if (destinationFileList.empty()) {
-        dFileList = new char* [fileCount];
-        for (int index = 0; index < destinationFileList.size(); ++index) {
-            int32_t length = destinationFileList.at(index).length();
-            dFileList[index] = new char[length + 1];
-            if (memset_s(dFileList[index], length + 1, '\0', length + 1) != EOK) {
-                return DFS_MEM_ERROR;
-            }
-            if (memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
-                return DFS_MEM_ERROR;
-            }
-            dFileList[index][length] = '\0';
+int32_t DistributedFileService::CreateDestResources(const std::vector<std::string> &destinationFileList,
+    uint32_t fileCount, char **dFileList)
+{
+    if (fileCount != 1 || destinationFileList.size() != fileCount || dFileList == nullptr) {
+        return DFS_MEM_ERROR;
+    }
+
+    for (int index = 0; index < destinationFileList.size(); ++index) {
+        int32_t length = destinationFileList.at(index).length();
+        dFileList[index] = new char[length + 1];
+        if (memset_s(dFileList[index], length + 1, '\0', length + 1) != EOK) {
+            return DFS_MEM_ERROR;
         }
+        if (memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
+            return DFS_MEM_ERROR;
+        }
+        dFileList[index][length] = '\0';
+    }
+    return DFS_NO_ERROR;
+}
+
+int32_t DistributedFileService::SendFile(const std::string &cid,
+                                         const std::vector<std::string> &sourceFileList,
+                                         const std::vector<std::string> &destinationFileList,
+                                         const uint32_t fileCount)
+{
+    int32_t result = DFS_NO_ERROR;
+    if (cid.empty() || fileCount != 1 || sourceFileList.empty() || sourceFileList.size() != fileCount) {
+        LOGE("SendFile params failed");
+        return DFS_PARAM_FILE_COUNT_ERROR;
     }
 
-    auto softBusAgent = SoftbusAgent::GetInstance();
-    if (DFS_SUCCESS != softBusAgent->SendFile(cid, (const char **)sFileList, (const char **)dFileList, fileCount)) {
-        return DFS_SOFTBUS_SEND_ERROR;
+    char **sFileList = new char* [fileCount];
+    char **dFileList = nullptr;
+    do {
+        result = CreateSourceResources(sourceFileList, fileCount, sFileList);
+
+        if (destinationFileList.empty()) {
+            dFileList = new char* [fileCount];
+            result = CreateDestResources(destinationFileList, fileCount, dFileList);
+        }
+    } while (false);
+
+    if (result != DFS_MEM_ERROR) {
+        auto softBusAgent = SoftbusAgent::GetInstance();
+        result = softBusAgent->SendFile(cid, (const char **)sFileList, (const char **)dFileList, fileCount);
     }
-    return DFS_SUCCESS;
+
+    return result;
 }
 
 int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName, int32_t mode)
 {
-    if (fd <= 0) {
+    if (fd <= 0 || fileName.empty()) {
         return DFS_FILE_OP_ERROR;
     }
 

@@ -111,7 +111,7 @@ int32_t SendFile::DisjoinCidToAppId(const std::string &cid, const std::string &A
 int32_t SendFile::QueTransEvent(TransEvent* event, const std::string &cid, const std::string &AppId)
 {
     if (cid.empty() || AppId.empty()) {
-        LOGE("SendFile::QueTransEvent: input para error.\n");
+        LOGE("SendFile::EmitTransEvent: input para error.\n");
         return NAPI_SENDFILE_PARA_ERROR;
     }
 
@@ -182,7 +182,7 @@ int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<st
     const std::vector<std::string>& dstList, uint32_t num)
 {
     if (deviceId.empty() || srcList.empty()) {
-        LOGE("SendFile::ExecSendFile error: \"Device ID is empty\".\n");
+        LOGE("SendFile::ExecSendFile: para error.\n");
         return NAPI_SENDFILE_PARA_ERROR;
     }
 
@@ -209,9 +209,9 @@ int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<st
     std::size_t found = fileName.find_last_of("/");
     fileName = fileName.substr(found + 1);
     int32_t fd = open(srcList.at(0).c_str(), O_RDONLY);
-    int32_t result = distributedFileService->OpenFile(fd, fileName, (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
+    int32_t result = distributedFileService->OpenFile(fd, srcList.at(0), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     if (result != IDistributedFileService::DFS_SUCCESS) {
-        LOGE("SendFile::ExecOendFile: error code %{public}d", result);
+        LOGE("SendFile::ExecSendFile: error code %{public}d", result);
         return NAPI_SENDFILE_SEND_ERROR;
     }
 
