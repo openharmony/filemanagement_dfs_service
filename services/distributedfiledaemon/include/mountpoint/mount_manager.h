@@ -20,13 +20,13 @@
 #include <mutex>
 #include <vector>
 
+#include "dfsu_singleton.h"
 #include "mount_point.h"
-#include "utils_singleton.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class MountManager final : public Utils::Singleton<MountManager> {
+class MountManager final : public Utils::DfsuSingleton<MountManager> {
 public:
     void Mount(std::unique_ptr<MountPoint> mp);
     void Umount(std::weak_ptr<MountPoint> wmp);

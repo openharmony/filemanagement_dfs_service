@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "utils_mount_argument.h"
+#include "dfsu_mount_argument_descriptors.h"
 
 #include <sstream>
 #include <sys/mount.h>
@@ -101,7 +101,7 @@ unsigned long MountArgument::GetFlags() const
     return MS_NODEV;
 }
 
-MountArgument MountArgumentDescriptors::Alpha(int userId, string relativePath)
+MountArgument DfsuMountArgumentDescriptors::Alpha(int userId, string relativePath)
 {
     MountArgument mountArgument = {
         .userId_ = userId,
