@@ -206,9 +206,6 @@ int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<st
         return NAPI_SENDFILE_IPC_ERROR;
     }
 
-    std::string fileName = srcList.at(0);
-    std::size_t found = fileName.find_last_of("/");
-    fileName = fileName.substr(found + 1);
     int32_t fd = open(srcList.at(0).c_str(), O_RDONLY);
     int32_t result = distributedFileService->OpenFile(fd, srcList.at(0), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     if (result != IDistributedFileService::DFS_SUCCESS) {

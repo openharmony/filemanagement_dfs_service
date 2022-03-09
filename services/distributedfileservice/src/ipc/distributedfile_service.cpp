@@ -156,23 +156,6 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
         result = softBusAgent->SendFile(cid, (const char **)sFileList, (const char **)dFileList, fileCount);
     }
 
-    if (sFileList != nullptr) {
-        for (int index = 0; index < fileCount; ++index) {
-            if (sFileList[index] != nullptr) {
-                delete[] sFileList[index];
-            }
-        }
-        delete[] sFileList;
-    }
-    if (dFileList != nullptr) {
-        for (int index = 0; index < fileCount; ++index) {
-            if (dFileList[index] != nullptr) {
-                delete[] dFileList[index];
-            }
-        }
-        delete[] dFileList;
-    }
-
     return result;
 }
 
