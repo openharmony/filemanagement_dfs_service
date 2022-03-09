@@ -38,7 +38,6 @@ namespace {
     constexpr int32_t DEVICE_ID_SIZE_MAX = 65;
     constexpr int32_t IS_CLIENT = 1;
     const std::string DEFAULT_ROOT_PATH = "/data/service/el2/100/hmdfs/non_account/data/";
-    const std::string TEMP_PATH = "/data/system_ce/";
 }
 
 SoftbusAgent::SoftbusAgent() {}
@@ -69,91 +68,6 @@ void SoftbusAgent::StopInstance()
 
 void SoftbusAgent::OnDeviceOnline(const std::string &cid)
 {
-}
-
-int32_t SoftbusAgent::CreateSourceResources(const std::vector<std::string> &sourceFileList, uint32_t fileCount)
-{
-    if (sourceFileList.empty() || sourceFileList.size() != fileCount) {
-        return IDistributedFileService::DFS_PARAM_FILE_COUNT_ERROR;
-    }
-
-    sFileCount_ = sourceFileList.size();
-    if (sFileCount_ <= 0) {
-        return IDistributedFileService::DFS_MEM_ERROR;
-    }
-    sFileList_ = new char* [sFileCount_];
-    for (int index = 0; index < sFileCount_; ++index) {
-        LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}d",
-            index, sourceFileList.at(index).c_str(), sourceFileList.at(index).length());
-        std::string fileName = sourceFileList.at(index);
-        std::size_t found = fileName.find_last_of("/");
-        fileName = fileName.substr(found + 1);
-        std::string tmpString = TEMP_PATH + fileName;
-        int32_t length = tmpString.length();
-        if (length <= 0) {
-            LOGE("Source file path error");
-            return IDistributedFileService::DFS_MEM_ERROR;
-        }
-        sFileList_[index] = new char[length + 1];
-        if (memset_s(sFileList_[index], length + 1, '\0', length + 1) != EOK) {
-            return IDistributedFileService::DFS_MEM_ERROR;
-        }
-        if (memcpy_s(sFileList_[index], length + 1, tmpString.c_str(), length) != EOK) {
-            return IDistributedFileService::DFS_MEM_ERROR;
-        }
-        sFileList_[index][length] = '\0';
-    }
-    return IDistributedFileService::DFS_SUCCESS;
-}
-
-int32_t SoftbusAgent::CreateDestResources(const std::vector<std::string> &destinationFileList)
-{
-    if (destinationFileList.empty()) {
-        return IDistributedFileService::DFS_PARAM_FILE_COUNT_ERROR;
-    }
-    dFileCount_ = destinationFileList.size();
-    if (dFileCount_ <= 0) {
-        return IDistributedFileService::DFS_MEM_ERROR;
-    }
-    dFileList_ = new char* [dFileCount_];
-    for (int index = 0; index < dFileCount_; ++index) {
-        int32_t length = destinationFileList.at(index).length();
-        if (length <= 0) {
-            LOGE("Destination file path error");
-            return IDistributedFileService::DFS_MEM_ERROR;
-        }
-        dFileList_[index] = new char[length + 1];
-        if (memset_s(dFileList_[index], length + 1, '\0', length + 1) != EOK) {
-            return IDistributedFileService::DFS_MEM_ERROR;
-        }
-        if (memcpy_s(dFileList_[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
-            return IDistributedFileService::DFS_MEM_ERROR;
-        }
-        dFileList_[index][length] = '\0';
-    }
-    return IDistributedFileService::DFS_SUCCESS;
-}
-
-int SoftbusAgent::SendFile(const std::string &cid, const std::vector<std::string> &sourceFileList,
-    const std::vector<std::string> &destinationFileList, uint32_t fileCount)
-{
-    if (cid.empty() || fileCount != 1 || sourceFileList.empty() || sourceFileList.size() != fileCount) {
-        LOGE("SendFile params failed");
-        return IDistributedFileService::DFS_PARAM_FILE_COUNT_ERROR;
-    }
-
-    ClearResources(sFileList_, sFileCount_);
-    if (CreateSourceResources(sourceFileList, fileCount) != IDistributedFileService::DFS_SUCCESS) {
-        return IDistributedFileService::DFS_MEM_ERROR;
-    }
-
-    ClearResources(dFileList_, dFileCount_);
-    if (!destinationFileList.empty()) {
-        if (CreateDestResources(destinationFileList) != IDistributedFileService::DFS_SUCCESS) {
-            return IDistributedFileService::DFS_MEM_ERROR;
-        }
-    }
-    return SendFile(cid, (const char **)sFileList_, (const char **)dFileList_, fileCount);
 }
 
 int SoftbusAgent::SendFile(const std::string &cid, const char *sFileList[], const char *dFileList[], uint32_t fileCnt)
@@ -241,8 +155,6 @@ void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
 
 void SoftbusAgent::OnSendFileFinished(const int sessionId, const std::string firstFile)
 {
-    ClearResources(sFileList_, sFileCount_);
-    ClearResources(dFileList_, dFileCount_);
     if (notifyCallback_ == nullptr) {
         LOGE("OnSendFileFinished Nofify pointer is empty");
         return;
@@ -253,8 +165,6 @@ void SoftbusAgent::OnSendFileFinished(const int sessionId, const std::string fir
 
 void SoftbusAgent::OnFileTransError(const int sessionId)
 {
-    ClearResources(sFileList_, sFileCount_);
-    ClearResources(dFileList_, dFileCount_);
     if (notifyCallback_ == nullptr) {
         LOGE("OnFileTransError Nofify pointer is empty");
         return;
@@ -275,8 +185,12 @@ void SoftbusAgent::OnReceiveFileFinished(const int sessionId, const std::string 
     }
     std::string cid = GetPeerDevId(sessionId);
     if (cid.empty()) {
-        LOGE("OnReceiveFileFinished get peer device id failed");
-        return;
+        auto alreadyOnliceDev = DeviceManagerAgent::GetInstance()->getOnlineDevs();
+        LOGI("IsDeviceOnline size, %{public}d", alreadyOnliceDev.size());
+        for (std::string item : alreadyOnliceDev) {
+            LOGI("IsDeviceOnline item, %{public}s", item.c_str());
+            cid = item;
+        }
     }
 
     std::string desFileName = DEFAULT_ROOT_PATH + files;
@@ -417,23 +331,6 @@ void SoftbusAgent::SetTransCallback(sptr<IFileTransferCallback> &callback)
 void SoftbusAgent::RemoveTransCallbak()
 {
     notifyCallback_ = nullptr;
-}
-
-void SoftbusAgent::ClearResources(char **fileList, int32_t &fileCount)
-{
-    if (fileList != nullptr) {
-        for (int index = 0; index < fileCount; ++index) {
-            if (fileList[index] != nullptr) {
-                delete [] fileList[index];
-                fileList[index] = nullptr;
-                LOGI("first recycle memory");
-            }
-        }
-        delete [] fileList;
-        fileList = nullptr;
-        fileCount = 0;
-        LOGI("second recycle memory");
-    }
 }
 } // namespace DistributedFile
 } // namespace Storage

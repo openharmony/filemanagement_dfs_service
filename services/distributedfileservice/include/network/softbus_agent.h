@@ -38,8 +38,6 @@ public:
     void AllDevicesOffline();
     void OnSessionOpened(const int sessionId, const int result);
     void OnSessionClosed(int sessionId);
-    int SendFile(const std::string &cid, const std::vector<std::string> &sourceFileList,
-        const std::vector<std::string> &destinationFileList, uint32_t fileCount);
     int SendFile(const std::string &cid, const char *sFileList[], const char *dFileList[], uint32_t fileCnt);
     void OnSendFileFinished(const int sessionId, const std::string firstFile);
     void OnFileTransError(const int sessionId);
@@ -53,10 +51,7 @@ protected:
     void OpenSession(const std::string &cid);
     void CloseSession(const std::string &cid);
     std::string GetPeerDevId(const int sessionId);
-private:
-    int32_t CreateSourceResources(const std::vector<std::string> &sourceFileList, uint32_t fileCount);
-    int32_t CreateDestResources(const std::vector<std::string> &destinationFileList);
-    void ClearResources(char **fileList, int32_t &fileCount);
+
 private:
     std::string sessionName_ { "DistributedFileService" };
     std::mutex sessionMapMux_;
@@ -65,10 +60,6 @@ private:
     std::mutex getSessionCVMut_;
     std::condition_variable getSessionCV_;
     sptr<IFileTransferCallback> notifyCallback_ = nullptr;
-    char **sFileList_ = nullptr;
-    char **dFileList_ = nullptr;
-    int32_t sFileCount_ = 0;
-    int32_t dFileCount_ = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage
