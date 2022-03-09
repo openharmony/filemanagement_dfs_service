@@ -44,6 +44,9 @@ napi_value JsSendFile(napi_env env, napi_callback_info info)
 
     std::tie(succ, deviceId, std::ignore) = NVal(env, funcArg[DFS_ARG_POS::FIRST]).ToUTF8String();
     napi_get_value_uint32(env, funcArg[DFS_ARG_POS::FOURTH], &fileCount);
+    if (fileCount != 1) {
+        return nullptr;
+    }
 
     napi_value result;
     napi_status status;
@@ -88,7 +91,6 @@ napi_value JsSendFile(napi_env env, napi_callback_info info)
 
     return NVal::CreateUndefined(env).val_;
 }
-
 
 napi_value JsOn(napi_env env, napi_callback_info cbinfo)
 {
