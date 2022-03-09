@@ -38,7 +38,7 @@ void GetJsPath(napi_env env, napi_value param, std::vector<std::string> &jsPath)
     }
 
     jsPath.clear();
-    for (uint32_t i=0; i<arraySize; ++i) {
+    for (uint32_t i = 0; i < arraySize; ++i) {
         napi_value result = nullptr;
         napi_status status = napi_get_element(env, param, i, &result);
         if (status == napi_ok && result != nullptr) {
