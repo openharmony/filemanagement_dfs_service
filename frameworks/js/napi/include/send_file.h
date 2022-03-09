@@ -45,7 +45,7 @@ public:
     virtual ~SendFile() {}
     static int32_t JoinCidToAppId(const std::string &cid, const std::string &AppId = BUNDLE_ID_);
     static int32_t DisjoinCidToAppId(const std::string &cid, const std::string &AppId = BUNDLE_ID_);
-    static int32_t QueTransEvent(TransEvent* event, const std::string &cid, const std::string &AppId = BUNDLE_ID_);
+    static int32_t EmitTransEvent(TransEvent &event, const std::string &cid, const std::string &AppId = BUNDLE_ID_);
     static int32_t WriteFile(int32_t fd, const std::string &fileName);
     static int32_t RegisterCallback();
     static int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,

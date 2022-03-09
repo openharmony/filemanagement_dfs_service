@@ -108,7 +108,7 @@ int32_t SendFile::DisjoinCidToAppId(const std::string &cid, const std::string &A
     return NAPI_SENDFILE_NO_ERROR;
 }
 
-int32_t SendFile::QueTransEvent(TransEvent* event, const std::string &cid, const std::string &AppId)
+int32_t SendFile::EmitTransEvent(TransEvent &event, const std::string &cid, const std::string &AppId)
 {
     if (cid.empty() || AppId.empty()) {
         LOGE("SendFile::EmitTransEvent: input para error.\n");
@@ -117,18 +117,19 @@ int32_t SendFile::QueTransEvent(TransEvent* event, const std::string &cid, const
 
     auto iter = mapUidToEventAgent_.find(AppId);
     if (mapUidToEventAgent_.end() == iter) {
-        LOGE("SendFile::QueTransEvent: can't find app agent.\n");
+        LOGE("SendFile::EmitTransEvent: can't find app agent.\n");
         return NAPI_SENDFILE_APP_AGENT_ERROR;
     }
 
     EventAgent* agent = iter->second;
     if (agent == nullptr) {
-        LOGE("SendFile::QueTransEvent: app agent null.\n");
+        LOGE("SendFile::EmitTransEvent: app agent null.\n");
         return NAPI_SENDFILE_APP_AGENT_ERROR;
     }
 
     if (agent->FindDevice(cid)) {
-        agent->InsertEvent(event);
+        LOGI("SendFile::EmitTransEvent: [%{public}s, %{public}s]", cid.c_str(), event.GetName().c_str());
+        agent->Emit(event.GetName().c_str(), reinterpret_cast<Event*>(&event));
         return NAPI_SENDFILE_NO_ERROR;
     }
 
@@ -205,9 +206,6 @@ int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<st
         return NAPI_SENDFILE_IPC_ERROR;
     }
 
-    std::string fileName = srcList.at(0);
-    std::size_t found = fileName.find_last_of("/");
-    fileName = fileName.substr(found + 1);
     int32_t fd = open(srcList.at(0).c_str(), O_RDONLY);
     int32_t result = distributedFileService->OpenFile(fd, srcList.at(0), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     if (result != IDistributedFileService::DFS_SUCCESS) {

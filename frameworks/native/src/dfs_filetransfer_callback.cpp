@@ -38,20 +38,20 @@ int32_t DfsFileTransferCallback::SessionClosed(const std::string &cid)
 
 int32_t DfsFileTransferCallback::SendFinished(const std::string &cid, std::string fileName)
 {
-    TransEvent* event = new TransEvent(TransEvent::TRANS_SUCCESS, fileName);
+    TransEvent event(TransEvent::TRANS_SUCCESS, fileName);
     std::string eventName("sendFinished");
-    event->SetName(eventName);
-    SendFile::QueTransEvent(event, cid);
+    event.SetName(eventName);
+    SendFile::EmitTransEvent(event, cid);
     LOGI("DfsFileTransferCallback::SendFinished: [%{public}s].", cid.c_str());
     return DFS_FILE_TRANS_NO_ERROR;
 }
 
 int32_t DfsFileTransferCallback::SendError(const std::string &cid)
 {
-    TransEvent* event = new TransEvent(TransEvent::TRANS_FAILURE);
+    TransEvent event(TransEvent::TRANS_FAILURE);
     std::string eventName("sendFinished");
-    event->SetName(eventName);
-    SendFile::QueTransEvent(event, cid);
+    event.SetName(eventName);
+    SendFile::EmitTransEvent(event, cid);
     LOGI("DfsFileTransferCallback::SendError: [%{public}s].", cid.c_str());
     return DFS_FILE_TRANS_NO_ERROR;
 }

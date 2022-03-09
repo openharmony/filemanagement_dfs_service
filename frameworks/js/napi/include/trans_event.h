@@ -15,17 +15,12 @@
 
 #ifndef TRANS_EVENT_H
 #define TRANS_EVENT_H
-#include <string>
-#include "napi/native_api.h"
+
+#include "event_agent.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class Event {
-public:
-    virtual napi_value ToJsObject(napi_env env) = 0;
-};
-
 class TransEvent : public Event {
 public:
     enum {

@@ -25,41 +25,29 @@ namespace Storage {
 namespace DistributedFile {
 using namespace FileManagement::LibN;
 
-bool IsArrayForNapiValue(napi_env env, napi_value param, uint32_t &arraySize)
-{
-    bool isArray = false;
-    arraySize = 0;
-
-    if (napi_is_array(env, param, &isArray) != napi_ok || isArray == false) {
-        return false;
-    }
-
-    if (napi_get_array_length(env, param, &arraySize) != napi_ok) {
-        return false;
-    }
-
-    if (arraySize != 1) {
-        return false;
-    }
-    return true;
-}
-
 void GetJsPath(napi_env env, napi_value param, std::vector<std::string> &jsPath)
 {
-    uint32_t arraySize = 0;
-    jsPath.clear();
-    if (!IsArrayForNapiValue(env, param, arraySize)) {
+    bool isArray = false;
+    if (napi_is_array(env, param, &isArray) != napi_ok || isArray == false) {
         return;
     }
 
-    napi_value result = nullptr;
-    napi_status status = napi_get_element(env, param, 0, &result);
-    if (status == napi_ok && result != nullptr) {
-        bool succ = false;
-        std::unique_ptr<char []> path;
-        std::tie(succ, path, std::ignore) = NVal(env, result).ToUTF8String();
-        if (succ) {
-            jsPath.push_back(path.get());
+    uint32_t arraySize = 0;
+    if (napi_get_array_length(env, param, &arraySize) != napi_ok) {
+        return;
+    }
+
+    jsPath.clear();
+    for (uint32_t i=0; i<arraySize; ++i) {
+        napi_value result = nullptr;
+        napi_status status = napi_get_element(env, param, i, &result);
+        if (status == napi_ok && result != nullptr) {
+            bool succ = false;
+            std::unique_ptr<char []> path;
+            std::tie(succ, path, std::ignore) = NVal(env, result).ToUTF8String();
+            if (succ) {
+                jsPath.push_back(path.get());
+            }
         }
     }
 }
@@ -75,21 +63,10 @@ napi_value JsSendFile(napi_env env, napi_callback_info info)
     bool succ = false;
     std::unique_ptr<char []> deviceId;
     std::tie(succ, deviceId, std::ignore) = NVal(env, funcArg[DFS_ARG_POS::FIRST]).ToUTF8String();
-    napi_get_value_uint32(env, funcArg[DFS_ARG_POS::FOURTH], &fileCount);
-    if (fileCount != 1) {
-        return nullptr;
+    std::string deviceIdString = "";
+    if (succ) {
+        deviceIdString =  std::string(deviceId.get());
     }
-
-    napi_value result;
-    napi_status status;
-    for (uint32_t i = 0; i < fileCount; ++i) {
-        status = napi_get_element(env, funcArg[DFS_ARG_POS::SECOND], i, &result);
-        if (napi_ok != status) {
-            return nullptr;
-        }
-        std::unique_ptr<char []> path;
-        std::tie(succ, path, std::ignore) = NVal(env, result).ToUTF8String();
-        sourPath.push_back(path.get());
 
     uint32_t fileCount = 0;
     napi_status status = napi_get_value_uint32(env, funcArg[DFS_ARG_POS::FOURTH], &fileCount);
@@ -207,46 +184,37 @@ napi_value JsConstructor(napi_env env, napi_callback_info cbinfo)
     char bundleName[SendFile::SENDFILE_NAPI_BUF_LENGTH] = { 0 };
     size_t typeLen = 0;
     napi_get_value_string_utf8(env, argv[0], bundleName, sizeof(bundleName), &typeLen);
-    LOGI("JsConstructor. [%{public}s], %{public}d", bundleName, argc);
+    LOGI("JsConstructor. [%{public}s]", bundleName);
 
+    EventAgent* agent = new EventAgent(env, thisVar);
     {
         std::unique_lock<std::mutex> lock(SendFile::g_uidMutex);
         if (SendFile::mapUidToEventAgent_.end() != SendFile::mapUidToEventAgent_.find(SendFile::BUNDLE_ID_)) {
-            LOGI("delete old Event agent");
-            auto tmpAgent = SendFile::mapUidToEventAgent_[SendFile::BUNDLE_ID_];
+            delete SendFile::mapUidToEventAgent_[SendFile::BUNDLE_ID_];
             SendFile::mapUidToEventAgent_.erase(SendFile::BUNDLE_ID_);
-            delete tmpAgent;
-            LOGI("delete old Event agent %{public}d", SendFile::mapUidToEventAgent_.size());
         }
-    }
-
-    std::unique_lock<std::mutex> lock(SendFile::g_uidMutex);
-    EventAgent* agent = new EventAgent(env, thisVar);
-    {
-        LOGI("insert Event agent to map");
         if (SendFile::mapUidToEventAgent_.size() <= SendFile::MAX_SEND_FILE_HAP_NUMBER) {
             auto [ignored, inserted] = SendFile::mapUidToEventAgent_.insert(make_pair(SendFile::BUNDLE_ID_, agent));
             if (!inserted) {
                 LOGE("map env to event agent error.");
                 return nullptr;
             } else {
-                LOGI("map size %{public}d, %{public}d, %{public}p", SendFile::mapUidToEventAgent_.size(),
-                    agent->IsEventListEmpty(), agent);
+                LOGI("map size %{public}d", SendFile::mapUidToEventAgent_.size());
             }
         }
     }
 
     napi_wrap(env, thisVar, agent,
         [](napi_env env, void* data, void* hint) {
-            LOGI("JsConstructor delete Event agent");
-            auto agent = (EventAgent*)data;
-            if (agent != nullptr) {
-                delete agent;
-            }
-            std::unique_lock<std::mutex> lock(SendFile::g_uidMutex);
             auto iter = SendFile::mapUidToEventAgent_.find(SendFile::BUNDLE_ID_);
-            if (iter != SendFile::mapUidToEventAgent_.end()) {
-                SendFile::mapUidToEventAgent_.erase(SendFile::BUNDLE_ID_);
+            if (SendFile::mapUidToEventAgent_.end() != iter) {
+                auto agent = (EventAgent*)data;
+                if (agent != nullptr) {
+                    std::unique_lock<std::mutex> lock(SendFile::g_uidMutex);
+                    agent->ClearDevice();
+                    SendFile::mapUidToEventAgent_.erase(SendFile::BUNDLE_ID_);
+                    delete agent;
+                }
             }
         },
         nullptr, nullptr);
