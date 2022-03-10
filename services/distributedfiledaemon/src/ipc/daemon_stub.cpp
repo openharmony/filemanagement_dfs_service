@@ -26,6 +26,9 @@ DaemonStub::DaemonStub()
 
 int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
+    if (data.ReadInterfaceToken() != GetDescriptor()) {
+        return DFS_DAEMON_DESCRIPTOR_IS_EMPTY;
+    }
     auto interfaceIndex = opToInterfaceMap_.find(code);
     if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {
         LOGE("Cannot response request %d: unknown tranction", code);
