@@ -59,7 +59,7 @@ int32_t DfsFileTransferCallback::SendError(const std::string &cid)
 int32_t DfsFileTransferCallback::ReceiveFinished(const std::string &cid, const std::string &fileName, uint32_t num)
 {
     TransEvent event(TransEvent::TRANS_SUCCESS, fileName, num);
-    std::string eventName("ReceiveFinished");
+    std::string eventName("receiveFinished");
     event.SetName(eventName);
     SendFile::EmitTransEvent(event, cid);
     LOGI("DfsFileTransferCallback::ReceiveFinished: [%{public}s].", cid.c_str());
@@ -69,7 +69,7 @@ int32_t DfsFileTransferCallback::ReceiveFinished(const std::string &cid, const s
 int32_t DfsFileTransferCallback::ReceiveError(const std::string &cid)
 {
     TransEvent event(TransEvent::TRANS_FAILURE);
-    std::string eventName("ReceiveFinished");
+    std::string eventName("receiveFinished");
     event.SetName(eventName);
     SendFile::EmitTransEvent(event, cid);
     LOGI("DfsFileTransferCallback::ReceiveError: [%{public}s].", cid.c_str());
