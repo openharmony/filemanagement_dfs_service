@@ -32,12 +32,24 @@ void DeviceManagerAgent::StartInstance()
 {
     // the time sequence can ensure there is no resource competition
     alreadyOnlineDev_.clear();
-    RegisterToExternalDm();
+    try {
+        RegisterToExternalDm();
+    } catch (const DfsuException &e) {
+        LOGE("Register devicemagager callback failed.");
+    } catch (const std::exception &e) {
+        LOGE("Unexpected Low Level exception");
+    }
 }
 
 void DeviceManagerAgent::StopInstance()
 {
-    UnregisterFromExternalDm();
+    try {
+        UnregisterFromExternalDm();
+    } catch (const DfsuException &e) {
+        LOGE("Unregister devicemagager callback failed.");
+    } catch (const std::exception &e) {
+        LOGE("Unexpected Low Level exception");
+    }
 }
 
 void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -62,8 +74,14 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 void DeviceManagerAgent::OnRemoteDied()
 {
     LOGI("device manager service died");
-    UnregisterFromExternalDm();
-    RegisterToExternalDm();
+    try {
+        UnregisterFromExternalDm();
+        RegisterToExternalDm();
+    } catch (const DfsuException &e) {
+        LOGE("Reregister devicemagager callback failed.");
+    } catch (const std::exception &e) {
+        LOGE("Unexpected Low Level exception");
+    }
 }
 
 void DeviceManagerAgent::RegisterToExternalDm()
