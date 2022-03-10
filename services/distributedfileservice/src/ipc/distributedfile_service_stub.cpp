@@ -70,16 +70,27 @@ int32_t DistributedFileServiceStub::SendFileStub(MessageParcel &data, MessagePar
     }
 
     int32_t sourceListNumber = data.ReadInt32();
+    if (sourceListNumber != 1) {
+        return DFS_PARAM_FILE_COUNT_ERROR;
+    }
     std::vector<std::string> srcList;
     for (int32_t index = 0; index < sourceListNumber; ++index) {
         srcList.push_back(data.ReadString());
     }
-    std::vector<std::string> dstList;
+
     int32_t destinationListNumber = data.ReadInt32();
+    if (destinationListNumber > 1) {
+        return DFS_PARAM_FILE_COUNT_ERROR;
+    }
+    std::vector<std::string> dstList;
     for (int32_t index = 0; index < destinationListNumber; ++index) {
         dstList.push_back(data.ReadString());
     }
+
     uint32_t fileCount = data.ReadUint32();
+    if (fileCount != 1) {
+        return DFS_PARAM_FILE_COUNT_ERROR;
+    }
 
     int32_t result = SendFile(cid, srcList, dstList, fileCount);
     if (!reply.WriteInt32(result)) {
