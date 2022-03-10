@@ -20,13 +20,13 @@
 #include <list>
 #include <unordered_map>
 
+#include "dfsu_singleton.h"
 #include "i_filetransfer_callback.h"
-#include "utils_singleton.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class SoftbusAgent : public std::enable_shared_from_this<SoftbusAgent>, public Utils::Singleton<SoftbusAgent> {
+class SoftbusAgent : public std::enable_shared_from_this<SoftbusAgent>, public Utils::DfsuSingleton<SoftbusAgent> {
     DECLARE_SINGLETON(SoftbusAgent);
 
 public:

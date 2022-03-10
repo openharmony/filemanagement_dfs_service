@@ -14,9 +14,9 @@
  */
 
 #include "device_manager_agent.h"
+#include "dfsu_exception.h"
 #include "distributedfile_service.h"
 #include "softbus_agent.h"
-#include "utils_exception.h"
 #include "utils_log.h"
 
 namespace OHOS {

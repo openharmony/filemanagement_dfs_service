@@ -110,7 +110,6 @@ napi_value JsSendFile(napi_env env, napi_callback_info info)
     return NVal::CreateUndefined(env).val_;
 }
 
-
 napi_value JsOn(napi_env env, napi_callback_info cbinfo)
 {
     size_t requireArgc = 2;

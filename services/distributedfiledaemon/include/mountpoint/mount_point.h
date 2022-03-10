@@ -19,8 +19,8 @@
 #include <atomic>
 #include <functional>
 
+#include "dfsu_mount_argument_descriptors.h"
 #include "nocopyable.h"
-#include "utils_mount_argument.h"
 
 namespace OHOS {
 namespace Storage {

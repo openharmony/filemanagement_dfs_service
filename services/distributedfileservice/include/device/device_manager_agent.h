@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "device_manager.h"
-#include "utils_singleton.h"
+#include "dfsu_singleton.h"
 
 namespace OHOS {
 namespace Storage {
@@ -32,7 +32,7 @@ namespace DistributedFile {
 class DeviceManagerAgent : public DistributedHardware::DmInitCallback,
                            public DistributedHardware::DeviceStateCallback,
                            public std::enable_shared_from_this<DeviceManagerAgent>,
-                           public Utils::Singleton<DeviceManagerAgent> {
+                           public Utils::DfsuSingleton<DeviceManagerAgent> {
     DECLARE_SINGLETON(DeviceManagerAgent);
 
 public:

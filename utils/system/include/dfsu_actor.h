@@ -13,18 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_ACTOR_H
-#define UTILS_ACTOR_H
+#ifndef DFSU_ACTOR_H
+#define DFSU_ACTOR_H
 
 #include <algorithm>
 #include <future>
 #include <list>
 #include <stdexcept>
-#include <thread>
-#include <tuple>
 
-#include "utils_cmd.h"
-#include "utils_thread_safe_queue.h"
+#include "dfsu_cmd.h"
+#include "dfsu_thread_safe_queue.h"
 
 namespace OHOS {
 namespace Storage {
@@ -36,16 +34,16 @@ constexpr int RETRY_SLEEP_TIME = 1500;
  * @tparam Ctx Context for Commands
  */
 template<typename Ctx>
-class Actor {
+class DfsuActor {
 public:
-    explicit Actor(Ctx *ctx, int startCmdTryTimes = 1) : ctx_(ctx), retryTimes_(startCmdTryTimes) {}
-    virtual ~Actor() {}
+    explicit DfsuActor(Ctx *ctx, int startCmdTryTimes = 1) : ctx_(ctx), retryTimes_(startCmdTryTimes) {}
+    virtual ~DfsuActor() {}
 
     void StartActor()
     {
         // Always insert cmds b4 starting an actor
         StartCtx();
-        loop_ = std::thread(&Actor<Ctx>::Main, this);
+        loop_ = std::thread(&DfsuActor<Ctx>::Main, this);
     }
 
     void StopActor()
@@ -63,7 +61,7 @@ public:
     }
 
 protected:
-    ThreadSafeQueue<VirtualCmd<Ctx>> pendingCmds_;
+    DfsuThreadSafeQueue<VirtualCmd<Ctx>> pendingCmds_;
 
     Ctx *ctx_ {nullptr};
     uint32_t retryTimes_ {1};
@@ -88,14 +86,14 @@ private:
 
     void StartCtx()
     {
-        auto startCmd = std::make_unique<Cmd<Ctx>>(&Ctx::Start);
+        auto startCmd = std::make_unique<DfsuCmd<Ctx>>(&Ctx::Start);
         startCmd->UpdateOption({.importance_ = CmdImportance::SUBVITAL, .tryTimes_ = retryTimes_});
         pendingCmds_.Push(std::move(startCmd));
     }
 
     void StopCtx()
     {
-        auto cmd = std::make_unique<Cmd<Ctx>>(&Ctx::Stop);
+        auto cmd = std::make_unique<DfsuCmd<Ctx>>(&Ctx::Stop);
         cmd->UpdateOption({.importance_ = CmdImportance::VITAL, .tryTimes_ = 1});
         pendingCmds_.Push(std::move(cmd));
     }
@@ -111,6 +109,41 @@ private:
         return result;
     }
 
+    bool ExceptionHandler(const DfsuException &e, std::unique_ptr<VirtualCmd<Ctx>> &currentCmd)
+    {
+        if (e.code() == ERR_UTILS_ACTOR_QUEUE_STOP) {
+            return false;
+        }
+
+        const CmdOptions &op = currentCmd->option_;
+
+        if (IsExistStopTask() && (op.tryTimes_ > 0)) {
+            return false; // exist stop Task, stop retry
+        }
+
+        if (op.importance_ == CmdImportance::TRIVIAL) {
+            if (op.tryTimes_) {
+                retryTasks.emplace_back(
+                    std::async(std::launch::async, &DfsuActor<Ctx>::DelayRetry, this, std::move(currentCmd)));
+                return true;
+            }
+        } else {
+            if (op.tryTimes_) {
+                Retry(std::move(currentCmd));
+                return true;
+            }
+            if (op.importance_ == CmdImportance::VITAL) {
+                return false;
+            }
+            if (op.importance_ == CmdImportance::NORMAL) {
+                StopCtx();
+                StartCtx();
+                return true;
+            }
+        }
+        return true;
+    }
+
     void Main()
     {
         while (true) {
@@ -121,36 +154,11 @@ private:
                     (*currentCmd)(ctx_);
                     currentCmd.release();
                 }
-            } catch (const Exception &e) {
-                if (e.code() == ERR_UTILS_ACTOR_QUEUE_STOP) {
-                    break;
-                }
-
-                const CmdOptions &op = currentCmd->option_;
-
-                if (IsExistStopTask() && (op.tryTimes_ > 0)) {
-                    break; // exist stop Task, stop retry
-                }
-
-                if (op.importance_ == CmdImportance::TRIVIAL) {
-                    if (op.tryTimes_) {
-                        retryTasks.emplace_back(
-                            std::async(std::launch::async, &Actor<Ctx>::DelayRetry, this, std::move(currentCmd)));
-                        continue;
-                    }
+            } catch (const DfsuException &e) {
+                if (ExceptionHandler(e, currentCmd)) {
+                    continue;
                 } else {
-                    if (op.tryTimes_) {
-                        Retry(std::move(currentCmd));
-                        continue;
-                    }
-                    if (op.importance_ == CmdImportance::VITAL) {
-                        break;
-                    }
-                    if (op.importance_ == CmdImportance::NORMAL) {
-                        StopCtx();
-                        StartCtx();
-                        continue;
-                    }
+                    break;
                 }
             } catch (const std::exception &e) {
                 LOGE("Unexpected Low Level exception");
@@ -161,4 +169,4 @@ private:
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // UTILS_ACTOR_H
+#endif // DFSU_ACTOR_H
