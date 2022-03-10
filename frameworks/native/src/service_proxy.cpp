@@ -30,14 +30,25 @@ int32_t ServiceProxy::SendFile(const std::string &cid,
     }
     data.WriteString(cid);
     int32_t sourceListNumber = sourceFileList.size();
+    if (sourceListNumber != 1) {
+        return DFS_PARAM_FILE_COUNT_ERROR;
+    }
     data.WriteInt32(sourceListNumber);
     for (int32_t index = 0; index < sourceListNumber; ++index) {
         data.WriteString(sourceFileList.at(index));
     }
+
     int32_t destinationListNumber = destinationFileList.size();
+    if (destinationListNumber > 1) {
+        return DFS_PARAM_FILE_COUNT_ERROR;
+    }
     data.WriteInt32(destinationListNumber);
     for (int32_t index = 0; index < destinationListNumber; ++index) {
         data.WriteString(destinationFileList.at(index));
+    }
+
+    if (fileCount != 1) {
+        return DFS_PARAM_FILE_COUNT_ERROR;
     }
     data.WriteUint32(fileCount);
 
