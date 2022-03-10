@@ -25,19 +25,23 @@ namespace Storage {
 namespace DistributedFile {
 using namespace FileManagement::LibN;
 
-void GetJsPath(napi_env env, napi_value param, std::vector<std::string> &jsPath)
+std::vector<std::string> GetJsPath(napi_env env, napi_value param)
 {
+    std::vector<std::string> jsPath;
+    jsPath.clear();
+
     bool isArray = false;
     if (napi_is_array(env, param, &isArray) != napi_ok || isArray == false) {
-        return;
+        LOGE("JS sendFile filename must be a string array.");
+        return jsPath;
     }
 
     uint32_t arraySize = 0;
     if (napi_get_array_length(env, param, &arraySize) != napi_ok) {
-        return;
+        LOGE("JS sendFile get filename array size failed.");
+        return jsPath;
     }
 
-    jsPath.clear();
     for (uint32_t i = 0; i < arraySize; ++i) {
         napi_value result = nullptr;
         napi_status status = napi_get_element(env, param, i, &result);
@@ -47,9 +51,12 @@ void GetJsPath(napi_env env, napi_value param, std::vector<std::string> &jsPath)
             std::tie(succ, path, std::ignore) = NVal(env, result).ToUTF8String();
             if (succ) {
                 jsPath.push_back(path.get());
+            } else {
+                LOGE("JS sendFile: only string array were accepted as filename para.");
             }
         }
     }
+    return jsPath;
 }
 
 napi_value JsSendFile(napi_env env, napi_callback_info info)
@@ -71,14 +78,12 @@ napi_value JsSendFile(napi_env env, napi_callback_info info)
     uint32_t fileCount = 0;
     napi_status status = napi_get_value_uint32(env, funcArg[DFS_ARG_POS::FOURTH], &fileCount);
     if (status != napi_ok && fileCount != 1) {
-        LOGE("JS sendFile param fileCount error");
+        LOGE("JS sendFile: param fileCounts only accecpt 1.");
         return nullptr;
     }
 
-    std::vector<std::string> sourPath;
-    GetJsPath(env, funcArg[DFS_ARG_POS::SECOND], sourPath);
-    std::vector<std::string> destPath;
-    GetJsPath(env, funcArg[DFS_ARG_POS::THIRD], destPath);
+    std::vector<std::string> sourPath = GetJsPath(env, funcArg[DFS_ARG_POS::SECOND]);
+    std::vector<std::string> destPath = GetJsPath(env, funcArg[DFS_ARG_POS::THIRD]);
 
     auto resultCode = std::make_shared<int32_t>();
     auto cbExec = [deviceIdString, sourPath, destPath, fileCount, resultCode]() -> NError {
