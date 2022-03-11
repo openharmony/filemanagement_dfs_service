@@ -38,7 +38,7 @@ namespace {
     constexpr char TEMP_FILE_NAME[] = "/data/system_ce/tmp";
 }
 
-REGISTER_SYSTEM_ABILITY_BY_ID(DistributedFileService, STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID, false);
+REGISTER_SYSTEM_ABILITY_BY_ID(DistributedFileService, FILEMANAGEMENT_DISTRIBUTED_FILE_SERVICE_SA_ID, false);
 
 void DistributedFileService::OnDump()
 {
