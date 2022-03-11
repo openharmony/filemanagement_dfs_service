@@ -16,8 +16,8 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_sa_profile("distributedfile_sa_profile") {
   sources = [
-    "4901.xml",
-    "4902.xml",
+    "5201.xml",
+    "5202.xml",
   ]
   part_name = "dfs_service"
 }
