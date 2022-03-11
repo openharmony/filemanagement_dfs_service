@@ -45,9 +45,9 @@ int32_t SendFile::RegisterCallback()
         return NAPI_SENDFILE_SA_ERROR;
     }
 
-    sptr<IRemoteObject> remote = systemAbilityMgr->GetSystemAbility(STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
+    sptr<IRemoteObject> remote = systemAbilityMgr->GetSystemAbility(FILEMANAGEMENT_DISTRIBUTED_FILE_SERVICE_SA_ID);
     if (remote == nullptr) {
-        LOGE("SendFile::RegisterCallback: SaId = %{public}d fail\n", STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
+        LOGE("SendFile::RegisterCallback: SaId = %{public}d fail\n", FILEMANAGEMENT_DISTRIBUTED_FILE_SERVICE_SA_ID);
         return NAPI_SENDFILE_SA_ERROR;
     }
 
@@ -194,9 +194,9 @@ int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<st
         return NAPI_SENDFILE_SA_ERROR;
     }
 
-    sptr<IRemoteObject> remote = systemAbilityMgr->CheckSystemAbility(STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
+    sptr<IRemoteObject> remote = systemAbilityMgr->CheckSystemAbility(FILEMANAGEMENT_DISTRIBUTED_FILE_SERVICE_SA_ID);
     if (remote == nullptr) {
-        LOGE("SendFile::ExecSendFile: SaId = %{public}d fail.\n", STORAGE_DISTRIBUTED_FILE_SERVICE_SA_ID);
+        LOGE("SendFile::ExecSendFile: SaId = %{public}d fail.\n", FILEMANAGEMENT_DISTRIBUTED_FILE_SERVICE_SA_ID);
         return NAPI_SENDFILE_SA_ERROR;
     }
 
