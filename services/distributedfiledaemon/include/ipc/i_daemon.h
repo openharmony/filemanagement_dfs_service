@@ -26,6 +26,10 @@ public:
     enum {
         DFS_DAEMON_CMD_ECHO = 0,
     };
+    enum {
+        DFS_DAEMON_SUCCESS = 0,
+        DFS_DAEMON_DESCRIPTOR_IS_EMPTY,
+    };
     virtual int32_t EchoServerDemo(const std::string &echoStr) = 0;
 
     static inline const std::string SERVICE_NAME { "ohos.storage.distributedfile.daemon" };
