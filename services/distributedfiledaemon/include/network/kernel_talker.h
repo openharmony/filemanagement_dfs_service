@@ -73,7 +73,14 @@ private:
         std::string ctrlPath = spt->GetMountArgument().GetCtrlPath();
         LOGI("cmd path:%{public}s", ctrlPath.c_str());
         std::lock_guard<std::mutex> lock(cmdMutex_);
-        int file = open(ctrlPath.c_str(), O_RDWR);
+
+        char *realPath = realpath(ctrlPath.c_str(), nullptr);
+        if (realPath == nullptr) {
+            return;
+        }
+
+        int file = open(realPath, O_RDWR);
+        free(realPath);
         if (file < 0) {
             LOGE("Open node file error. %{public}d", file);
             return;
