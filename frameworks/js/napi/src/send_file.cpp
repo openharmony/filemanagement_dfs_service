@@ -127,13 +127,9 @@ int32_t SendFile::EmitTransEvent(TransEvent &event, const std::string &cid, cons
         return NAPI_SENDFILE_APP_AGENT_ERROR;
     }
 
-    if (agent->FindDevice(cid)) {
-        LOGI("SendFile::EmitTransEvent: [%{public}s, %{public}s]", cid.c_str(), event.GetName().c_str());
-        agent->Emit(event.GetName().c_str(), reinterpret_cast<Event*>(&event));
-        return NAPI_SENDFILE_NO_ERROR;
-    }
-
-    return NAPI_SENDFILE_UNKNOWN_ERROR;
+    LOGI("SendFile::EmitTransEvent: [%{public}s, %{public}s]", cid.c_str(), event.GetName().c_str());
+    agent->Emit(event.GetName().c_str(), reinterpret_cast<Event*>(&event));
+    return NAPI_SENDFILE_NO_ERROR;
 }
 
 int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
@@ -151,7 +147,7 @@ int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
     int32_t writeFd = open(filePath.c_str(), flags, (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     if (writeFd <= 0) {
         close(fd);
-        LOGE("NapiWriteFile open file failed %{public}d, %{public}s, %{public}d", writeFd, strerror(errno), errno);
+        LOGE("NapiWriteFile open file failed %{public}d, %{public}s, %{public}d", writeFd, filePath.c_str(), errno);
         return NAPI_SENDFILE_FD_ERROR;
     }
     auto buffer = std::make_unique<char[]>(FILE_BLOCK_SIZE);
