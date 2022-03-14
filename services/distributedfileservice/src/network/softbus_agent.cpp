@@ -197,7 +197,7 @@ void SoftbusAgent::OnReceiveFileFinished(const int sessionId, const std::string 
     int32_t fd = open(desFileName.c_str(), O_RDONLY);
     if (fd <= 0) {
         LOGE("NapiWriteFile open recive distributedfile %{public}d, %{public}s, %{public}d",
-            fd, strerror(errno), errno);
+            fd, desFileName.c_str(), errno);
         return;
     }
     notifyCallback_->WriteFile(fd, files);
