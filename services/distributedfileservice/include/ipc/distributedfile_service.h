@@ -49,10 +49,9 @@ public:
 private:
     void PublishSA();
     void StartManagers();
-    int32_t CreateSourceResources(const std::vector<std::string> &sourceFileList,
-        uint32_t fileCount, char **sFileList);
-    int32_t CreateDestResources(const std::vector<std::string> &destinationFileList,
-        uint32_t fileCount, char **dFileList);
+    int32_t CreateSourceResources(const std::vector<std::string> &sourceFileList, std::vector<char *> &sFileList);
+    int32_t CreateDestResources(const std::vector<std::string> &destinationFileList, std::vector<char *> &dFileList);
+    void DestroyFileList(std::vector<char *> &fileList);
 };
 } // namespace DistributedFile
 } // namespace Storage
