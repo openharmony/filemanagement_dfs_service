@@ -172,7 +172,7 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
         int32_t result = remove(tmpFile);
         if (result != 0) {
             close(fd);
-            LOGE("DFS SA remove temp file result %{public}d, %{public}s, %{public}d", result, strerror(errno), errno);
+            LOGE("DFS SA remove temp file result %{public}d, %{public}d", result, errno);
             return DFS_FILE_OP_ERROR;
         }
     }
@@ -180,7 +180,7 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
     int32_t writeFd = open(tmpFile, O_WRONLY | O_CREAT, (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     if (writeFd <= 0) {
         close(fd);
-        LOGE("DFS SA open temp file failed %{public}d, %{public}s, %{public}d", writeFd, strerror(errno), errno);
+        LOGE("DFS SA open temp file failed %{public}d, %{public}d", writeFd, errno);
         return DFS_FILE_OP_ERROR;
     }
     auto buffer = std::make_unique<char[]>(FILE_BLOCK_SIZE);
