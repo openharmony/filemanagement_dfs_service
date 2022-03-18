@@ -71,9 +71,9 @@ void DistributedFileService::StartManagers()
 }
 
 int32_t DistributedFileService::CreateSourceResources(const std::vector<std::string> &sourceFileList,
-    uint32_t fileCount, char **sFileList)
+    std::vector<char *> &sFileList)
 {
-    if (fileCount != 1 || sourceFileList.size() != fileCount || sFileList == nullptr) {
+    if (sourceFileList.size() != 1) {
         return DFS_MEM_ERROR;
     }
     for (int index = 0; index < sourceFileList.size(); ++index) {
@@ -85,48 +85,83 @@ int32_t DistributedFileService::CreateSourceResources(const std::vector<std::str
             if (length <= 0) {
                 return DFS_MEM_ERROR;
             }
-            sFileList[index] = new char[length + 1];
-            if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
+            char *sTemp = new char[length + 1];
+            if (sTemp == nullptr) {
                 return DFS_MEM_ERROR;
             }
-            if (memcpy_s(sFileList[index], length + 1, tmpString.c_str(), length) != EOK) {
+            sFileList.push_back(sTemp);
+            if (memset_s(sTemp, length + 1, '\0', length + 1) != EOK) {
                 return DFS_MEM_ERROR;
             }
-            sFileList[index][length] = '\0';
+            if (memcpy_s(sTemp, length + 1, tmpString.c_str(), length) != EOK) {
+                return DFS_MEM_ERROR;
+            }
+            sTemp[length] = '\0';
         } else {
             int32_t length = sourceFileList.at(index).length();
-            sFileList[index] = new char[length + 1];
-            if (memset_s(sFileList[index], length + 1, '\0', length + 1) != EOK) {
+            if (length <= 0) {
                 return DFS_MEM_ERROR;
             }
-            if (memcpy_s(sFileList[index], length + 1, sourceFileList.at(index).c_str(), length) != EOK) {
+            char *sTemp = new char[length + 1];
+            if (sTemp == nullptr) {
                 return DFS_MEM_ERROR;
             }
-            sFileList[index][length] = '\0';
+            sFileList.push_back(sTemp);
+            if (memset_s(sTemp, length + 1, '\0', length + 1) != EOK) {
+                return DFS_MEM_ERROR;
+            }
+            if (memcpy_s(sTemp, length + 1, sourceFileList.at(index).c_str(), length) != EOK) {
+                return DFS_MEM_ERROR;
+            }
+            sTemp[length] = '\0';
         }
     }
     return DFS_NO_ERROR;
 }
 
 int32_t DistributedFileService::CreateDestResources(const std::vector<std::string> &destinationFileList,
-    uint32_t fileCount, char **dFileList)
+    std::vector<char *> &dFileList)
 {
-    if (fileCount != 1 || destinationFileList.size() != fileCount || dFileList == nullptr) {
+    if (destinationFileList.size() > 1) {
         return DFS_MEM_ERROR;
     }
 
     for (int index = 0; index < destinationFileList.size(); ++index) {
         int32_t length = destinationFileList.at(index).length();
-        dFileList[index] = new char[length + 1];
-        if (memset_s(dFileList[index], length + 1, '\0', length + 1) != EOK) {
+        if (length <= 0) {
             return DFS_MEM_ERROR;
         }
-        if (memcpy_s(dFileList[index], length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
+        char *sTemp = new char[length + 1];
+        if (sTemp == nullptr) {
             return DFS_MEM_ERROR;
         }
-        dFileList[index][length] = '\0';
+        dFileList.push_back(sTemp);
+        if (memset_s(sTemp, length + 1, '\0', length + 1) != EOK) {
+            return DFS_MEM_ERROR;
+        }
+        if (memcpy_s(sTemp, length + 1, destinationFileList.at(index).c_str(), length) != EOK) {
+            return DFS_MEM_ERROR;
+        }
+        sTemp[length] = '\0';
     }
     return DFS_NO_ERROR;
+}
+
+void DistributedFileService::DestroyFileList(std::vector<char *> &fileList)
+{
+    if (fileList.empty()) {
+        LOGE("Send file list is empty");
+        return;
+    }
+
+    for (size_t index = 0; index < fileList.size(); ++index) {
+        char *temp = fileList.at(index);
+        if (temp != nullptr) {
+            LOGI("destroy list index [%{public}d] memory", index);
+            delete[] temp;
+        }
+    }
+    fileList.clear();
 }
 
 int32_t DistributedFileService::SendFile(const std::string &cid,
@@ -135,27 +170,29 @@ int32_t DistributedFileService::SendFile(const std::string &cid,
                                          const uint32_t fileCount)
 {
     int32_t result = DFS_NO_ERROR;
-    if (cid.empty() || fileCount != 1 || sourceFileList.empty() || sourceFileList.size() != fileCount) {
+    if (cid.empty() || fileCount != 1 || sourceFileList.empty() || sourceFileList.size() != fileCount ||
+        destinationFileList.size() > 1) {
         LOGE("SendFile params failed");
         return DFS_PARAM_FILE_COUNT_ERROR;
     }
 
-    char **sFileList = new char* [fileCount];
-    char **dFileList = nullptr;
-    do {
-        result = CreateSourceResources(sourceFileList, fileCount, sFileList);
+    std::vector<char *> sFileList;
+    std::vector<char *> dFileList;
 
-        if (destinationFileList.empty()) {
-            dFileList = new char* [fileCount];
-            result = CreateDestResources(destinationFileList, fileCount, dFileList);
-        }
-    } while (false);
+    result = CreateSourceResources(sourceFileList, sFileList);
+
+    if (!destinationFileList.empty()) {
+        result = CreateDestResources(destinationFileList, dFileList);
+    }
 
     if (result != DFS_MEM_ERROR) {
         auto softBusAgent = SoftbusAgent::GetInstance();
-        result = softBusAgent->SendFile(cid, (const char **)sFileList, (const char **)dFileList, fileCount);
+        result = softBusAgent->SendFile(cid, (const char **)sFileList.data(),
+            (const char **)dFileList.data(), fileCount);
     }
 
+    DestroyFileList(sFileList);
+    DestroyFileList(dFileList);
     return result;
 }
 
@@ -172,7 +209,7 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
         int32_t result = remove(tmpFile);
         if (result != 0) {
             close(fd);
-            LOGE("DFS SA remove temp file result %{public}d, %{public}s, %{public}d", result, strerror(errno), errno);
+            LOGE("DFS SA remove temp file result %{public}d, %{public}d", result, errno);
             return DFS_FILE_OP_ERROR;
         }
     }
@@ -180,7 +217,7 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
     int32_t writeFd = open(tmpFile, O_WRONLY | O_CREAT, (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     if (writeFd <= 0) {
         close(fd);
-        LOGE("DFS SA open temp file failed %{public}d, %{public}s, %{public}d", writeFd, strerror(errno), errno);
+        LOGE("DFS SA open temp file failed %{public}d, %{public}d", writeFd, errno);
         return DFS_FILE_OP_ERROR;
     }
     auto buffer = std::make_unique<char[]>(FILE_BLOCK_SIZE);

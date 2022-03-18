@@ -41,7 +41,9 @@ std::vector<std::string> GetJsPath(napi_env env, napi_value param)
         LOGE("JS sendFile get filename array size failed.");
         return jsPath;
     }
-
+    if (arraySize > 1) {
+        return jsPath;
+    }
     for (uint32_t i = 0; i < arraySize; ++i) {
         napi_value result = nullptr;
         napi_status status = napi_get_element(env, param, i, &result);

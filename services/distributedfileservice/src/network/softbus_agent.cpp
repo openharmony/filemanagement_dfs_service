@@ -103,7 +103,6 @@ int SoftbusAgent::SendFile(const std::string &cid, const char *sFileList[], cons
 
     int ret = ::SendFile(sessionId, sFileList, dFileList, fileCnt);
     if (ret != 0) {
-        LOGD("softbus sendfile fail, sessionId:%{public}d, ret %{public}d", sessionId, ret);
         return -1;
     }
     return 0;
@@ -113,20 +112,16 @@ void SoftbusAgent::OpenSession(const std::string &cid)
 {
     SessionAttribute attr;
     attr.dataType = TYPE_FILE; // files use UDP, CHANNEL_TYPE_UDP
-
-    LOGD("Start to Open Session, cid:%{public}s", cid.c_str());
     int sessionId = ::OpenSession(sessionName_.c_str(), sessionName_.c_str(), cid.c_str(), "DFS_wifiGroup", &attr);
     if (sessionId < 0) {
-        LOGE("Failed to open session, cid:%{public}s, sessionId:%{public}d", cid.c_str(), sessionId);
         return;
     }
-    LOGD("Open Session SUCCESS, cid:%{public}s, sessionId %{public}d", cid.c_str(), sessionId);
 }
 
 void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
 {
     if (result != 0) {
-        LOGE("open failed, result:%{public}d, sessionId:%{public}d", result, sessionId);
+        LOGE("open failed, result:%{public}d", result);
         return;
     }
     std::string cid = GetPeerDevId(sessionId);
@@ -144,7 +139,6 @@ void SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
     }
 
     getSessionCV_.notify_one();
-    LOGD("get session SUCCESS, sessionId:%{public}d", sessionId);
 
     if (notifyCallback_ == nullptr) {
         LOGE("OnSessionOpened Nofify pointer is empty");
@@ -197,7 +191,7 @@ void SoftbusAgent::OnReceiveFileFinished(const int sessionId, const std::string 
     int32_t fd = open(desFileName.c_str(), O_RDONLY);
     if (fd <= 0) {
         LOGE("NapiWriteFile open recive distributedfile %{public}d, %{public}s, %{public}d",
-            fd, strerror(errno), errno);
+            fd, desFileName.c_str(), errno);
         return;
     }
     notifyCallback_->WriteFile(fd, files);
