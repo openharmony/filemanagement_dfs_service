@@ -22,33 +22,28 @@ namespace Storage {
 namespace DistributedFile {
 int SoftbusDispatcher::OnSessionOpened(int sessionId, int result)
 {
-    LOGD("get session res:%{public}d, sessionId:%{public}d", result, sessionId);
     SoftbusAgent::GetInstance()->OnSessionOpened(sessionId, result);
     return 0;
 }
 
 void SoftbusDispatcher::OnSessionClosed(int sessionId)
 {
-    LOGD("sessionId:%{public}d", sessionId);
     SoftbusAgent::GetInstance()->OnSessionClosed(sessionId);
 }
 
 int SoftbusDispatcher::OnSendFileFinished(int sessionId, const char *firstFile)
 {
-    LOGD("sessionId:%{public}d", sessionId);
     SoftbusAgent::GetInstance()->OnSendFileFinished(sessionId, std::string(firstFile));
     return 0;
 }
 
 void SoftbusDispatcher::OnFileTransError(int sessionId)
 {
-    LOGD("sessionId:%{public}d", sessionId);
     SoftbusAgent::GetInstance()->OnFileTransError(sessionId);
 }
 
 void SoftbusDispatcher::OnReceiveFileFinished(int sessionId, const char *files, int fileCnt)
 {
-    LOGD("sessionId:%{public}d", sessionId);
     SoftbusAgent::GetInstance()->OnReceiveFileFinished(sessionId, std::string(files), fileCnt);
 }
 } // namespace DistributedFile
