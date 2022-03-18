@@ -90,7 +90,7 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session)
         return;
     }
 
-    if (memcpy_s(cmd.cid, CID_MAX_LEN, cid.c_str(), CID_MAX_LEN)) {
+    if (memcpy_s(cmd.cid, CID_MAX_LEN, cid.c_str(), cid.size())) {
         return;
     }
     SetCmd(cmd);
@@ -169,7 +169,12 @@ void KernelTalker::PollRun()
     }
     string ctrlPath = spt->GetMountArgument().GetCtrlPath();
     LOGI("Open node file ctrl path %{public}s", ctrlPath.c_str());
-    cmdFd = open(ctrlPath.c_str(), O_RDWR);
+    char *realPath = realpath(ctrlPath.c_str(), nullptr);
+    if (realPath == nullptr) {
+        return;
+    }
+    cmdFd = open(realPath, O_RDWR);
+    free(realPath);
     if (cmdFd < 0) {
         LOGE("Open node file error %{public}d, ctrl path %{public}s", errno, ctrlPath.c_str());
         return;
