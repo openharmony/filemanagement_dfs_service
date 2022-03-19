@@ -29,7 +29,7 @@ int32_t ServiceProxy::SendFile(const std::string &cid,
         return DFS_WRITE_DESCRIPTOR_TOKEN_FAIL;
     }
     data.WriteString(cid);
-    int32_t sourceListNumber = sourceFileList.size();
+    int32_t sourceListNumber = static_cast<int32_t>(sourceFileList.size());
     if (sourceListNumber != 1) {
         return DFS_PARAM_FILE_COUNT_ERROR;
     }

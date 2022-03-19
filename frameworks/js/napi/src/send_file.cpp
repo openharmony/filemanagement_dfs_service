@@ -138,13 +138,19 @@ int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
         return NAPI_SENDFILE_FD_ERROR;
     }
     std::string filePath = APP_PATH + fileName;
-    int32_t flags = O_WRONLY;
+    unsigned int flags = O_WRONLY;
 
     if (!Utils::IsFileExist(filePath)) {
         flags |= O_CREAT;
     }
 
-    int32_t writeFd = open(filePath.c_str(), flags, (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
+    char *realPath = realpath(filePath.c_str(), nullptr);
+    if (realPath == nullptr) {
+        return NAPI_SENDFILE_FD_ERROR;
+    }
+
+    int32_t writeFd = open(realPath, static_cast<int>(flags), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
+    free(realPath);
     if (writeFd <= 0) {
         close(fd);
         LOGE("NapiWriteFile open file failed %{public}d, %{public}s, %{public}d", writeFd, filePath.c_str(), errno);
@@ -202,7 +208,13 @@ int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<st
         return NAPI_SENDFILE_IPC_ERROR;
     }
 
-    int32_t fd = open(srcList.at(0).c_str(), O_RDONLY);
+    char *realPath = realpath(srcList.at(0).c_str(), nullptr);
+    if (realPath == nullptr) {
+        return NAPI_SENDFILE_FD_ERROR;
+    }
+
+    int32_t fd = open(realPath, O_RDONLY);
+    free(realPath);
     int32_t result = distributedFileService->OpenFile(fd, srcList.at(0), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     if (result != IDistributedFileService::DFS_SUCCESS) {
         LOGE("SendFile::ExecSendFile: error code %{public}d", result);

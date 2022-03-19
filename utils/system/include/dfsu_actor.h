@@ -36,7 +36,7 @@ constexpr int RETRY_SLEEP_TIME = 1500;
 template<typename Ctx>
 class DfsuActor {
 public:
-    explicit DfsuActor(Ctx *ctx, int startCmdTryTimes = 1) : ctx_(ctx), retryTimes_(startCmdTryTimes) {}
+    explicit DfsuActor(Ctx *ctx, uint32_t startCmdTryTimes = 1) : ctx_(ctx), retryTimes_(startCmdTryTimes) {}
     virtual ~DfsuActor() {}
 
     void StartActor()
