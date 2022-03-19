@@ -38,7 +38,7 @@ int32_t ServiceProxy::SendFile(const std::string &cid,
         data.WriteString(sourceFileList.at(index));
     }
 
-    int32_t destinationListNumber = destinationFileList.size();
+    int32_t destinationListNumber = static_cast<int32_t>(destinationFileList.size());
     if (destinationListNumber > 1) {
         return DFS_PARAM_FILE_COUNT_ERROR;
     }
