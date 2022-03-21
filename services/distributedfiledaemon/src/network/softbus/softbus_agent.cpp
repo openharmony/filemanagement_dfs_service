@@ -118,7 +118,7 @@ bool SoftbusAgent::IsContinueRetry(const string &cid)
             return false;
         }
     } else {
-        OpenSessionRetriedTimesMap_.insert({cid, 0});
+        OpenSessionRetriedTimesMap_[cid] = 0;
     }
     OpenSessionRetriedTimesMap_[cid]++;
     return true;

@@ -42,7 +42,7 @@ void DevslDispatcher::Stop()
 DEVSLQueryParams DevslDispatcher::MakeDevslQueryParams(const std::string &udid)
 {
     DEVSLQueryParams queryParams;
-    if (memcpy_s(queryParams.udid, udid.size(), udid.c_str(), udid.size())) {
+    if (memcpy_s(queryParams.udid, MAX_UDID_LENGTH, udid.c_str(), udid.size())) {
         LOGE("devsl dispatcher memcpy error");
     }
     queryParams.udidLen = udid.size();
