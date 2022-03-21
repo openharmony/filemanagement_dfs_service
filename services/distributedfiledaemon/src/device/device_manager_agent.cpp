@@ -44,7 +44,13 @@ DeviceManagerAgent::DeviceManagerAgent() : DfsuActor<DeviceManagerAgent>(this, s
 
 DeviceManagerAgent::~DeviceManagerAgent()
 {
-    StopInstance();
+    try {
+        StopInstance();
+    } catch (const DfsuException &e) {
+        LOGE("Device manager agent stop instance failed.");
+    } catch (const std::exception &e) {
+        LOGE("Device manager agent Unexpected Low Level exception");
+    }
 }
 
 void DeviceManagerAgent::StartInstance()
