@@ -35,7 +35,9 @@ void DeviceManagerAgent::StartInstance()
     try {
         RegisterToExternalDm();
     } catch (const DfsuException &e) {
+        // do not throw exception
     } catch (const std::exception &e) {
+        // do not throw exception
     }
 }
 
