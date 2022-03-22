@@ -35,9 +35,9 @@ void DeviceManagerAgent::StartInstance()
     try {
         RegisterToExternalDm();
     } catch (const DfsuException &e) {
-        LOGE("Register devicemagager callback failed.");
+        // do not throw exception
     } catch (const std::exception &e) {
-        LOGE("Unexpected Low Level exception");
+        // do not throw exception
     }
 }
 
