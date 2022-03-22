@@ -21,102 +21,93 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-EventAgent::EventAgent(napi_env env, napi_value thisVar)
-    : env_(env), thisVarRef_(nullptr), first_(nullptr), last_(nullptr)
+EventAgent::EventAgent(napi_env env, napi_value thisVar) : env_(env)
 {
     napi_create_reference(env, thisVar, 1, &thisVarRef_);
+    napi_get_uv_event_loop(env, &loop_);
+    pthread_create(&threadId_, nullptr, ThreadProc, this);
 }
 
 EventAgent::~EventAgent()
 {
-    EventListener* temp = nullptr;
-    for (EventListener* iter = first_; iter != nullptr; iter = temp) {
-        temp = iter->next;
-        if (iter == first_) {
-            first_ = first_->next;
-        } else if (iter == last_) {
-            last_ = last_->back;
-        } else {
-            iter->next->back = iter->back;
-            iter->back->next = iter->next;
+    ClearDevice();
+    eventList_.clear();
+    LOGD("~EventAgent: Deconstruction ---- 1.");
+
+    {
+        std::unique_lock<std::mutex> lock(listenerMapMut_);
+        for (auto it = listenerMap_.begin(); it != listenerMap_.end();) {
+            napi_delete_reference(env_, it->second);
+            it = listenerMap_.erase(it);
         }
-        napi_delete_reference(env_, iter->handlerRef);
-        delete iter;
     }
     napi_delete_reference(env_, thisVarRef_);
+
+    isExit_ = true;
+    {
+        std::unique_lock<std::mutex> lock(getEventCVMut_);
+        getEventCV_.notify_one();
+    }
+    void* threadResult = nullptr;
+    LOGD("~EventAgent: Deconstruction ---- 2. eventList_ count %{public}d, %{public}d", eventList_.size(), deviceList_.size());
+    pthread_join(threadId_, &threadResult);
+    // if (loop_ != nullptr) {
+    //     uv_stop(loop_);
+    // }
+    LOGD("~EventAgent: Deconstruction ---- 3.");
 }
 
 void EventAgent::On(const char* type, napi_value handler)
 {
-    auto tmp = new EventListener();
-
-    LOGD("EventAgent::On: JS callback register.\n");
-    if (strncpy_s(tmp->type, LISTENER_TYPTE_MAX_LENGTH, type, strlen(type)) == -1) {
-        delete tmp;
-        tmp = nullptr;
+    LOGD("SendFile EventAgent::On thread tid = %{public}lu\n", (unsigned long)pthread_self());
+    if (type == nullptr || LISTENER_TYPTE_MAX_LENGTH == strnlen(type, LISTENER_TYPTE_MAX_LENGTH)) {
+        LOGE("SendFile EventAgent::On: event type exceed 64 byte or empty.");
         return;
     }
 
-    if (first_ == nullptr) {
-        first_ = last_ = tmp;
-    } else {
-        last_->next = tmp;
-        last_->next->back = last_;
-        last_ = last_->next;
+    std::string eventName(type);
+    napi_ref handlerRef;
+    napi_create_reference(env_, handler, 1, &handlerRef);
+    LOGD("SendFile EventAgent::On: handlerRef[1] = %{public}p.", handlerRef);
+    {
+        std::unique_lock<std::mutex> lock(listenerMapMut_);
+        listenerMap_.insert(make_pair(eventName, handlerRef));
+        LOGD("SendFile EventAgent::On: handlerRef[2] = %{public}p.", listenerMap_[eventName]);
     }
-    last_->isOnce = false;
-    napi_create_reference(env_, handler, 1, &last_->handlerRef);
 }
 
 void EventAgent::Off(const char* type)
 {
-    EventListener* temp = nullptr;
-    LOGD("EventAgent::Off: JS callback unregister.\n");
-    for (EventListener* eventListener = first_; eventListener != nullptr; eventListener = temp) {
-        temp = eventListener->next;
-        if (strcmp(eventListener->type, type) == 0) {
-            if (eventListener == first_) {
-                first_ = first_->next;
-            } else if (eventListener == last_) {
-                last_ = last_->back;
-            } else {
-                eventListener->next->back = eventListener->back;
-                eventListener->back->next = eventListener->next;
-            }
-            napi_delete_reference(env_, eventListener->handlerRef);
-            delete eventListener;
-            eventListener = nullptr;
-        }
+    LOGD("SendFile EventAgent::Off: JS callback unregister.\n");
+    if (type == nullptr || LISTENER_TYPTE_MAX_LENGTH == strnlen(type, LISTENER_TYPTE_MAX_LENGTH)) {
+        LOGE("SendFile EventAgent::Off: event type exceed 64 byte or empty.");
+        return;
+    }
+
+    std::string eventName(type);
+    napi_delete_reference(env_, listenerMap_[eventName]);
+    {
+        std::unique_lock<std::mutex> lock(listenerMapMut_);
+        listenerMap_.erase(eventName);
     }
 }
 
-void EventAgent::Emit(const char* type, Event* event)
+void EventAgent::InsertEvent(std::shared_ptr<TransEvent> event)
 {
-    napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env_, &scope);
-
-    napi_value thisVar = nullptr;
-    napi_get_reference_value(env_, thisVarRef_, &thisVar);
-    for (EventListener* eventListener = first_; eventListener != nullptr; eventListener = eventListener->next) {
-        if (strcmp(eventListener->type, type) == 0) {
-            napi_value jsEvent = event ? event->ToJsObject(env_) : nullptr;
-            napi_value handler = nullptr;
-            napi_value callbackResult = nullptr;
-            napi_value result = nullptr;
-            napi_get_undefined(env_, &result);
-            napi_value callbackValues[2] = {0};
-            callbackValues[0] = result;
-            callbackValues[1] = jsEvent;
-            napi_get_reference_value(env_, eventListener->handlerRef, &handler);
-            napi_call_function(env_, thisVar, handler, std::size(callbackValues), callbackValues, &callbackResult);
-            if (eventListener->isOnce) {
-                Off(type);
-            }
-        }
+    LOGD("SendFile: EventAgent::InsertEvent.");
+    {
+        std::unique_lock<std::mutex> lock(eventListMut_);
+        eventList_.push_back(event);
     }
 
-    LOGD("EventAgent::Emit: [%{public}s]\n", type);
-    napi_close_handle_scope(env_, scope);
+    std::unique_lock<std::mutex> lock(getEventCVMut_);
+    getEventCV_.notify_one();
+}
+
+void EventAgent::WaitEvent()
+{
+    std::unique_lock<std::mutex> lock(getEventCVMut_);
+    getEventCV_.wait(lock, [this]() { return (!this->IsEventListEmpty() || this->isExit_); });
 }
 
 void EventAgent::InsertDevice(const std::string& deviceId)
@@ -143,6 +134,86 @@ bool EventAgent::FindDevice(const std::string& deviceId)
 void EventAgent::ClearDevice()
 {
     deviceList_.clear();
+}
+
+void* EventAgent::ThreadProc(void* arg)
+{
+    // auto thisVar = reinterpret_cast<EventAgent*>(arg);
+    auto thisVar = (EventAgent*)(arg);
+    LOGD("ThreadProc thisVar %{public}p.", thisVar);
+    do {
+        thisVar->WaitEvent();
+        LOGD("SendFile event daemon thread loop.");
+        uv_work_t* work = new uv_work_t();
+        LOGD("daemon ThreadProc thisVar %{public}p.", thisVar);
+        work->data = thisVar;
+        uv_queue_work(thisVar->loop_, work, Callback, AfterCallback);
+    } while (!thisVar->isExit_);
+    LOGD("SendFile event daemon thread exit.");
+    return nullptr;
+}
+
+void EventAgent::Callback(uv_work_t *work)
+{
+    //auto agent = reinterpret_cast<EventAgent*>(work->data);
+    //agent->WaitEvent();
+    LOGD("SendFile EventAgent::Callback event daemon thread receive an event.");
+    //LOGD("SendFile EventAgent::Callback thread lwpid = %{public}u\n", syscall(SYS_gettid));
+    LOGD("SendFile EventAgent::Callback thread tid = %{public}lu\n", (unsigned long)pthread_self());
+}
+
+void EventAgent::AfterCallback(uv_work_t *work, int status)
+{
+    LOGD("SendFile EventAgent::AfterCallback: entered.");
+    auto agent = (EventAgent*)(work->data);
+    if (agent == nullptr) {
+        LOGE("SendFile return #1].");
+        return;
+    }
+
+    LOGD("SendFile EventAgent::AfterCallback: event num %{public}d", agent->eventList_.size());
+    if (agent->eventList_.empty()) {
+        LOGE("SendFile return #2].");
+        return;
+    }
+
+    auto event = agent->eventList_.front();
+    if (event.get() == nullptr) {
+        LOGE("AfterCallback event pointer is empty.");
+        return;
+    }
+
+    napi_ref handlerRef;
+    if (agent->listenerMap_[event.get()->GetName()] == nullptr) {
+        return ;
+    } else {
+        handlerRef = agent->listenerMap_[event.get()->GetName()];
+    }
+
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(agent->env_, &scope);
+
+    napi_value thisVar = nullptr;
+    napi_get_reference_value(agent->env_, agent->thisVarRef_, &thisVar);
+
+    napi_value jsEvent = event.get()->ToJsObject(agent->env_);
+    napi_value handler = nullptr;
+    napi_value callbackResult = nullptr;
+    napi_value result = nullptr;
+    napi_get_undefined(agent->env_, &result);
+    napi_value callbackValues[2] = {0};
+    callbackValues[0] = result;
+    callbackValues[1] = jsEvent;
+
+    napi_get_reference_value(agent->env_, handlerRef, &handler);
+    napi_call_function(agent->env_, thisVar, handler, std::size(callbackValues),
+        callbackValues, &callbackResult);
+    LOGD("SendFile EventAgent::AfterCallback: listener type[%{public}s].", event.get()->GetName().c_str());
+    LOGD("SendFile EventAgent::AfterCallback thread tid = %{public}lu\n", (unsigned long)pthread_self());
+
+    napi_close_handle_scope(agent->env_, scope);
+    agent->eventList_.pop_front();
+    delete work;
 }
 } // namespace DistributedFile
 } // namespace Storage

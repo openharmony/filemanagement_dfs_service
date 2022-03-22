@@ -45,14 +45,15 @@ public:
     virtual ~SendFile() {}
     static int32_t JoinCidToAppId(const std::string &cid, const std::string &AppId = BUNDLE_ID_);
     static int32_t DisjoinCidToAppId(const std::string &cid, const std::string &AppId = BUNDLE_ID_);
-    static int32_t EmitTransEvent(TransEvent &event, const std::string &cid, const std::string &AppId = BUNDLE_ID_);
+    static int32_t QueTransEvent(std::shared_ptr<TransEvent> event, const std::string &cid,
+                                const std::string &AppId = BUNDLE_ID_);
     static int32_t WriteFile(int32_t fd, const std::string &fileName);
     static int32_t RegisterCallback();
     static int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,
         const std::vector<std::string>& dstList, uint32_t num);
 
     static std::mutex g_uidMutex;
-    static std::unordered_map<std::string, EventAgent*> mapUidToEventAgent_;
+    static std::unordered_map<std::string, std::shared_ptr<EventAgent>> mapUidToEventAgent_;
     static inline const std::string BUNDLE_ID_ {"SendFileHapUid"};
     static inline const std::string APP_PATH {"/data/accounts/account_0/appdata/"};
     static inline const int32_t FILE_BLOCK_SIZE {1024};

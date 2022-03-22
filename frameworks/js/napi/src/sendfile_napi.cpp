@@ -193,17 +193,17 @@ napi_value JsConstructor(napi_env env, napi_callback_info cbinfo)
     napi_get_value_string_utf8(env, argv[0], bundleName, sizeof(bundleName), &typeLen);
     LOGI("JsConstructor. [%{public}s]", bundleName);
 
-    EventAgent* agent = new EventAgent(env, thisVar);
+    std::shared_ptr<EventAgent> agent;
     {
         std::unique_lock<std::mutex> lock(SendFile::g_uidMutex);
         if (SendFile::mapUidToEventAgent_.end() != SendFile::mapUidToEventAgent_.find(SendFile::BUNDLE_ID_)) {
-            delete SendFile::mapUidToEventAgent_[SendFile::BUNDLE_ID_];
-            SendFile::mapUidToEventAgent_.erase(SendFile::BUNDLE_ID_);
-        }
-        if (SendFile::mapUidToEventAgent_.size() <= SendFile::MAX_SEND_FILE_HAP_NUMBER) {
+            agent = SendFile::mapUidToEventAgent_[SendFile::BUNDLE_ID_];
+            LOGI("JsConstructor: event agent for [%{public}s] is existed.", bundleName);
+        } else if (SendFile::mapUidToEventAgent_.size() <= SendFile::MAX_SEND_FILE_HAP_NUMBER) {
+            agent = std::make_shared<EventAgent>(env, thisVar);
             auto [ignored, inserted] = SendFile::mapUidToEventAgent_.insert(make_pair(SendFile::BUNDLE_ID_, agent));
             if (!inserted) {
-                LOGE("map env to event agent error.");
+                LOGE("map bundle to event agent error.");
                 return nullptr;
             } else {
                 LOGI("map size %{public}d", SendFile::mapUidToEventAgent_.size());
@@ -211,7 +211,7 @@ napi_value JsConstructor(napi_env env, napi_callback_info cbinfo)
         }
     }
 
-    napi_wrap(env, thisVar, agent,
+    napi_wrap(env, thisVar, agent.get(),
         [](napi_env env, void* data, void* hint) {
             auto iter = SendFile::mapUidToEventAgent_.find(SendFile::BUNDLE_ID_);
             if (SendFile::mapUidToEventAgent_.end() != iter) {
@@ -220,7 +220,6 @@ napi_value JsConstructor(napi_env env, napi_callback_info cbinfo)
                     std::unique_lock<std::mutex> lock(SendFile::g_uidMutex);
                     agent->ClearDevice();
                     SendFile::mapUidToEventAgent_.erase(SendFile::BUNDLE_ID_);
-                    delete agent;
                 }
             }
         },
