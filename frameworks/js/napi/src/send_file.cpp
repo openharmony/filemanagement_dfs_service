@@ -108,33 +108,34 @@ int32_t SendFile::DisjoinCidToAppId(const std::string &cid, const std::string &A
     return NAPI_SENDFILE_NO_ERROR;
 }
 
-int32_t SendFile::QueTransEvent(std::shared_ptr<TransEvent> event, const std::string &cid, const std::string &AppId)
+int32_t SendFile::EmitTransEvent(std::shared_ptr<TransEvent> event, const std::string &cid, const std::string &AppId)
 {
     if (cid.empty() || AppId.empty()) {
-        LOGE("SendFile::QueTransEvent: input para error.\n");
+        LOGE("SendFile::EmitTransEvent: input para error.\n");
         return NAPI_SENDFILE_PARA_ERROR;
     }
 
     auto iter = mapUidToEventAgent_.find(AppId);
     if (mapUidToEventAgent_.end() == iter) {
-        LOGE("SendFile::QueTransEvent: can't find app agent.\n");
+        LOGE("SendFile::EmitTransEvent: can't find app agent.\n");
         return NAPI_SENDFILE_APP_AGENT_ERROR;
     }
 
     auto agent = iter->second.get();
     if (agent == nullptr) {
-        LOGE("SendFile::QueTransEvent: app agent null.\n");
+        LOGE("SendFile::EmitTransEvent: app agent null.\n");
         return NAPI_SENDFILE_APP_AGENT_ERROR;
     }
 
-    LOGI("SendFile::QueTransEvent: [%{public}s, %{public}s]", cid.c_str(), event.get()->GetName().c_str());
-    agent->InsertEvent(event);
+    LOGI("SendFile::EmitTransEvent: %{public}s]", event.get()->GetName().c_str());
+    agent->Emit(event);
     return NAPI_SENDFILE_NO_ERROR;
 }
 
 int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
 {
     if (fd <= 0) {
+        LOGE("NapiWriteFile: file fd error.");
         return NAPI_SENDFILE_FD_ERROR;
     }
     std::string filePath = APP_PATH + fileName;
@@ -144,8 +145,10 @@ int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
         flags |= O_CREAT;
     }
 
+    LOGD("NapiWriteFile: path = [%{public}s]", filePath.c_str());
     char *realPath = realpath(filePath.c_str(), nullptr);
     if (realPath == nullptr) {
+        LOGE("NapiWriteFile: null path");
         return NAPI_SENDFILE_FD_ERROR;
     }
     int32_t writeFd = open(realPath, static_cast<int>(flags), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);

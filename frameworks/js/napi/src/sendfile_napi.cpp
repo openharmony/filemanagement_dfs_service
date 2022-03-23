@@ -90,13 +90,16 @@ napi_value JsSendFile(napi_env env, napi_callback_info info)
     auto resultCode = std::make_shared<int32_t>();
     auto cbExec = [deviceIdString, sourPath, destPath, fileCount, resultCode]() -> NError {
         *resultCode = SendFile::ExecSendFile(deviceIdString.c_str(), sourPath, destPath, fileCount);
+        LOGD("JsSendFile: resultCode1 [%{public}d]", *resultCode);
         return NError(*resultCode);
     };
 
     auto cbComplete = [resultCode](napi_env env, NError err) -> NVal {
+        LOGD("cbComplete: resultCode1 [%{public}d]", *resultCode);
         if (err) {
             return { env, err.GetNapiErr(env) };
         }
+        LOGD("JsSendFile: resultCode2 [%{public}d]", *resultCode);
         return { NVal::CreateInt64(env, *resultCode) };
     };
 
@@ -213,10 +216,12 @@ napi_value JsConstructor(napi_env env, napi_callback_info cbinfo)
 
     napi_wrap(env, thisVar, agent.get(),
         [](napi_env env, void* data, void* hint) {
+            LOGI("SendFile Js Desconstructor1.");
             auto iter = SendFile::mapUidToEventAgent_.find(SendFile::BUNDLE_ID_);
             if (SendFile::mapUidToEventAgent_.end() != iter) {
                 auto agent = (EventAgent*)data;
                 if (agent != nullptr) {
+                    LOGI("SendFile Js Desconstructor2.");
                     std::unique_lock<std::mutex> lock(SendFile::g_uidMutex);
                     agent->ClearDevice();
                     SendFile::mapUidToEventAgent_.erase(SendFile::BUNDLE_ID_);

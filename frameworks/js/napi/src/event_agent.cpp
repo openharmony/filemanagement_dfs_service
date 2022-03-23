@@ -25,14 +25,12 @@ EventAgent::EventAgent(napi_env env, napi_value thisVar) : env_(env)
 {
     napi_create_reference(env, thisVar, 1, &thisVarRef_);
     napi_get_uv_event_loop(env, &loop_);
-    pthread_create(&threadId_, nullptr, ThreadProc, this);
 }
 
 EventAgent::~EventAgent()
 {
     ClearDevice();
-    eventList_.clear();
-    LOGD("~EventAgent: Deconstruction ---- 1.");
+    LOGD("SendFile EventAgent::~EventAgent().");
 
     {
         std::unique_lock<std::mutex> lock(listenerMapMut_);
@@ -43,18 +41,9 @@ EventAgent::~EventAgent()
     }
     napi_delete_reference(env_, thisVarRef_);
 
-    isExit_ = true;
-    {
-        std::unique_lock<std::mutex> lock(getEventCVMut_);
-        getEventCV_.notify_one();
-    }
-    void* threadResult = nullptr;
-    LOGD("~EventAgent: Deconstruction ---- 2. eventList_ count %{public}d, %{public}d", eventList_.size(), deviceList_.size());
-    pthread_join(threadId_, &threadResult);
     // if (loop_ != nullptr) {
     //     uv_stop(loop_);
     // }
-    LOGD("~EventAgent: Deconstruction ---- 3.");
 }
 
 void EventAgent::On(const char* type, napi_value handler)
@@ -92,24 +81,6 @@ void EventAgent::Off(const char* type)
     }
 }
 
-void EventAgent::InsertEvent(std::shared_ptr<TransEvent> event)
-{
-    LOGD("SendFile: EventAgent::InsertEvent.");
-    {
-        std::unique_lock<std::mutex> lock(eventListMut_);
-        eventList_.push_back(event);
-    }
-
-    std::unique_lock<std::mutex> lock(getEventCVMut_);
-    getEventCV_.notify_one();
-}
-
-void EventAgent::WaitEvent()
-{
-    std::unique_lock<std::mutex> lock(getEventCVMut_);
-    getEventCV_.wait(lock, [this]() { return (!this->IsEventListEmpty() || this->isExit_); });
-}
-
 void EventAgent::InsertDevice(const std::string& deviceId)
 {
     if (deviceList_.find(deviceId) == deviceList_.end()) {
@@ -136,58 +107,42 @@ void EventAgent::ClearDevice()
     deviceList_.clear();
 }
 
-void* EventAgent::ThreadProc(void* arg)
+void EventAgent::Emit(std::shared_ptr<TransEvent> event)
 {
-    // auto thisVar = reinterpret_cast<EventAgent*>(arg);
-    auto thisVar = (EventAgent*)(arg);
-    LOGD("ThreadProc thisVar %{public}p.", thisVar);
-    do {
-        thisVar->WaitEvent();
-        LOGD("SendFile event daemon thread loop.");
-        uv_work_t* work = new uv_work_t();
-        LOGD("daemon ThreadProc thisVar %{public}p.", thisVar);
-        work->data = thisVar;
-        uv_queue_work(thisVar->loop_, work, Callback, AfterCallback);
-    } while (!thisVar->isExit_);
-    LOGD("SendFile event daemon thread exit.");
-    return nullptr;
+    uv_work_t* work = new uv_work_t();
+    auto context = new CallbackContext();
+    context->thisVar = this;
+    context->event = event;
+    work->data = context;
+    uv_queue_work(loop_, work, Callback, AfterCallback);
 }
 
 void EventAgent::Callback(uv_work_t *work)
 {
-    //auto agent = reinterpret_cast<EventAgent*>(work->data);
-    //agent->WaitEvent();
-    LOGD("SendFile EventAgent::Callback event daemon thread receive an event.");
-    //LOGD("SendFile EventAgent::Callback thread lwpid = %{public}u\n", syscall(SYS_gettid));
     LOGD("SendFile EventAgent::Callback thread tid = %{public}lu\n", (unsigned long)pthread_self());
 }
 
 void EventAgent::AfterCallback(uv_work_t *work, int status)
 {
     LOGD("SendFile EventAgent::AfterCallback: entered.");
-    auto agent = (EventAgent*)(work->data);
+    auto context = static_cast<CallbackContext*>(work->data);
+    auto agent = context->thisVar;
     if (agent == nullptr) {
-        LOGE("SendFile return #1].");
+        LOGE("SendFile EventAgent::AfterCallback: nullptr of eventagent.");
         return;
     }
 
-    LOGD("SendFile EventAgent::AfterCallback: event num %{public}d", agent->eventList_.size());
-    if (agent->eventList_.empty()) {
-        LOGE("SendFile return #2].");
-        return;
-    }
-
-    auto event = agent->eventList_.front();
-    if (event.get() == nullptr) {
-        LOGE("AfterCallback event pointer is empty.");
+    TransEvent *event = context->event.get();
+    if (event == nullptr) {
+        LOGE("SendFile EventAgent::AfterCallback: emit null event.");
         return;
     }
 
     napi_ref handlerRef;
-    if (agent->listenerMap_[event.get()->GetName()] == nullptr) {
+    if (agent->listenerMap_[event->GetName()] == nullptr) {
         return ;
     } else {
-        handlerRef = agent->listenerMap_[event.get()->GetName()];
+        handlerRef = agent->listenerMap_[event->GetName()];
     }
 
     napi_handle_scope scope = nullptr;
@@ -196,7 +151,7 @@ void EventAgent::AfterCallback(uv_work_t *work, int status)
     napi_value thisVar = nullptr;
     napi_get_reference_value(agent->env_, agent->thisVarRef_, &thisVar);
 
-    napi_value jsEvent = event.get()->ToJsObject(agent->env_);
+    napi_value jsEvent = event->ToJsObject(agent->env_);
     napi_value handler = nullptr;
     napi_value callbackResult = nullptr;
     napi_value result = nullptr;
@@ -208,11 +163,11 @@ void EventAgent::AfterCallback(uv_work_t *work, int status)
     napi_get_reference_value(agent->env_, handlerRef, &handler);
     napi_call_function(agent->env_, thisVar, handler, std::size(callbackValues),
         callbackValues, &callbackResult);
-    LOGD("SendFile EventAgent::AfterCallback: listener type[%{public}s].", event.get()->GetName().c_str());
+    LOGD("SendFile EventAgent::AfterCallback: listener type[%{public}s].", event->GetName().c_str());
     LOGD("SendFile EventAgent::AfterCallback thread tid = %{public}lu\n", (unsigned long)pthread_self());
 
     napi_close_handle_scope(agent->env_, scope);
-    agent->eventList_.pop_front();
+    delete context;
     delete work;
 }
 } // namespace DistributedFile
