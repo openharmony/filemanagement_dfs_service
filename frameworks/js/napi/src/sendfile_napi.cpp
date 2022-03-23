@@ -196,36 +196,21 @@ napi_value JsConstructor(napi_env env, napi_callback_info cbinfo)
     napi_get_value_string_utf8(env, argv[0], bundleName, sizeof(bundleName), &typeLen);
     LOGI("JsConstructor. [%{public}s]", bundleName);
 
-    std::shared_ptr<EventAgent> agent;
-    {
-        std::unique_lock<std::mutex> lock(SendFile::g_uidMutex);
-        if (SendFile::mapUidToEventAgent_.end() != SendFile::mapUidToEventAgent_.find(SendFile::BUNDLE_ID_)) {
-            agent = SendFile::mapUidToEventAgent_[SendFile::BUNDLE_ID_];
-            LOGI("JsConstructor: event agent for [%{public}s] is existed.", bundleName);
-        } else if (SendFile::mapUidToEventAgent_.size() <= SendFile::MAX_SEND_FILE_HAP_NUMBER) {
-            agent = std::make_shared<EventAgent>(env, thisVar);
-            auto [ignored, inserted] = SendFile::mapUidToEventAgent_.insert(make_pair(SendFile::BUNDLE_ID_, agent));
-            if (!inserted) {
-                LOGE("map bundle to event agent error.");
-                return nullptr;
-            } else {
-                LOGI("map size %{public}d", SendFile::mapUidToEventAgent_.size());
-            }
-        }
+    auto agent = new EventAgent(env, thisVar);
+    if (SendFile::eventAgent_ != nullptr) {
+        delete SendFile::eventAgent_;
+        SendFile::eventAgent_ = nullptr;
     }
+    SendFile::eventAgent_ = agent;
 
-    napi_wrap(env, thisVar, agent.get(),
+    napi_wrap(env, thisVar, agent,
         [](napi_env env, void* data, void* hint) {
             LOGI("SendFile Js Desconstructor1.");
-            auto iter = SendFile::mapUidToEventAgent_.find(SendFile::BUNDLE_ID_);
-            if (SendFile::mapUidToEventAgent_.end() != iter) {
-                auto agent = (EventAgent*)data;
-                if (agent != nullptr) {
-                    LOGI("SendFile Js Desconstructor2.");
-                    std::unique_lock<std::mutex> lock(SendFile::g_uidMutex);
-                    agent->ClearDevice();
-                    SendFile::mapUidToEventAgent_.erase(SendFile::BUNDLE_ID_);
-                }
+            auto agent = (EventAgent*)data;
+            if (agent != nullptr) {
+                LOGI("SendFile Js Desconstructor2.");
+                agent->ClearDevice();
+                delete agent;
             }
         },
         nullptr, nullptr);

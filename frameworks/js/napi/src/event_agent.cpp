@@ -29,18 +29,11 @@ EventAgent::EventAgent(napi_env env, napi_value thisVar) : env_(env)
 
 EventAgent::~EventAgent()
 {
-    ClearDevice();
     LOGD("SendFile EventAgent::~EventAgent().");
-
-    {
-        std::unique_lock<std::mutex> lock(listenerMapMut_);
-        for (auto it = listenerMap_.begin(); it != listenerMap_.end();) {
-            napi_delete_reference(env_, it->second);
-            it = listenerMap_.erase(it);
-        }
-    }
+    ClearDevice();
+    napi_delete_reference(env_, sendListenerRef_);
+    napi_delete_reference(env_, recvListenerRef_);
     napi_delete_reference(env_, thisVarRef_);
-
     // if (loop_ != nullptr) {
     //     uv_stop(loop_);
     // }
@@ -55,13 +48,10 @@ void EventAgent::On(const char* type, napi_value handler)
     }
 
     std::string eventName(type);
-    napi_ref handlerRef;
-    napi_create_reference(env_, handler, 1, &handlerRef);
-    LOGD("SendFile EventAgent::On: handlerRef[1] = %{public}p.", handlerRef);
-    {
-        std::unique_lock<std::mutex> lock(listenerMapMut_);
-        listenerMap_.insert(make_pair(eventName, handlerRef));
-        LOGD("SendFile EventAgent::On: handlerRef[2] = %{public}p.", listenerMap_[eventName]);
+    if (eventName == "sendFinished") {
+        napi_create_reference(env_, handler, 1, &sendListenerRef_);
+    } else if (eventName == "receiveFinished") {
+        napi_create_reference(env_, handler, 1, &recvListenerRef_);
     }
 }
 
@@ -74,10 +64,10 @@ void EventAgent::Off(const char* type)
     }
 
     std::string eventName(type);
-    napi_delete_reference(env_, listenerMap_[eventName]);
-    {
-        std::unique_lock<std::mutex> lock(listenerMapMut_);
-        listenerMap_.erase(eventName);
+    if (eventName == "sendFinished") {
+        napi_delete_reference(env_, sendListenerRef_);
+    } else if (eventName == "receiveFinished") {
+        napi_delete_reference(env_, recvListenerRef_);
     }
 }
 
@@ -107,12 +97,20 @@ void EventAgent::ClearDevice()
     deviceList_.clear();
 }
 
-void EventAgent::Emit(std::shared_ptr<TransEvent> event)
+void EventAgent::Emit(std::unique_ptr<TransEvent> event)
 {
     uv_work_t* work = new uv_work_t();
     auto context = new CallbackContext();
-    context->thisVar = this;
-    context->event = event;
+    napi_value handler = nullptr;
+    if (event.get()->GetName() == "sendFinished") {
+        napi_get_reference_value(env_, sendListenerRef_, &handler);
+    } else if (event.get()->GetName() == "receiveFinished") {
+        napi_get_reference_value(env_, recvListenerRef_, &handler);
+    }
+    context->handler = handler;
+    context->env = env_;
+    context->thisVarRef = thisVarRef_;
+    context->event = std::move(event);
     work->data = context;
     uv_queue_work(loop_, work, Callback, AfterCallback);
 }
@@ -126,9 +124,9 @@ void EventAgent::AfterCallback(uv_work_t *work, int status)
 {
     LOGD("SendFile EventAgent::AfterCallback: entered.");
     auto context = static_cast<CallbackContext*>(work->data);
-    auto agent = context->thisVar;
-    if (agent == nullptr) {
-        LOGE("SendFile EventAgent::AfterCallback: nullptr of eventagent.");
+    napi_value handler = context->handler;
+    if (handler == nullptr) {
+        LOGE("SendFile EventAgent::AfterCallback: null handler.");
         return;
     }
 
@@ -138,35 +136,28 @@ void EventAgent::AfterCallback(uv_work_t *work, int status)
         return;
     }
 
-    napi_ref handlerRef;
-    if (agent->listenerMap_[event->GetName()] == nullptr) {
-        return ;
-    } else {
-        handlerRef = agent->listenerMap_[event->GetName()];
-    }
-
+    napi_env env = context->env;
     napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(agent->env_, &scope);
+    napi_open_handle_scope(env, &scope);
 
     napi_value thisVar = nullptr;
-    napi_get_reference_value(agent->env_, agent->thisVarRef_, &thisVar);
+    napi_ref thisVarRef = context->thisVarRef;
+    napi_get_reference_value(env, thisVarRef, &thisVar);
 
-    napi_value jsEvent = event->ToJsObject(agent->env_);
-    napi_value handler = nullptr;
+    napi_value jsEvent = event->ToJsObject(env);
     napi_value callbackResult = nullptr;
     napi_value result = nullptr;
-    napi_get_undefined(agent->env_, &result);
+    napi_get_undefined(env, &result);
     napi_value callbackValues[2] = {0};
     callbackValues[0] = result;
     callbackValues[1] = jsEvent;
 
-    napi_get_reference_value(agent->env_, handlerRef, &handler);
-    napi_call_function(agent->env_, thisVar, handler, std::size(callbackValues),
+    napi_call_function(env, thisVar, handler, std::size(callbackValues),
         callbackValues, &callbackResult);
-    LOGD("SendFile EventAgent::AfterCallback: listener type[%{public}s].", event->GetName().c_str());
+    LOGD("SendFile EventAgent::AfterCallback: event type[%{public}s].", event->GetName().c_str());
     LOGD("SendFile EventAgent::AfterCallback thread tid = %{public}lu\n", (unsigned long)pthread_self());
 
-    napi_close_handle_scope(agent->env_, scope);
+    napi_close_handle_scope(env, scope);
     delete context;
     delete work;
 }

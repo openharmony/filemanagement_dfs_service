@@ -41,7 +41,7 @@ public:
     void On(const char* type, napi_value handler);
     void Off(const char* type, napi_value handler);
     void Off(const char* type);
-    void Emit(std::shared_ptr<TransEvent> event);
+    void Emit(std::unique_ptr<TransEvent> event);
     void InsertDevice(const std::string&);
     void RemoveDevice(const std::string&);
     bool FindDevice(const std::string&);
@@ -53,20 +53,18 @@ protected:
 
     std::mutex deviceListMut_;
     std::set<std::string> deviceList_;
-    std::mutex listenerMapMut_;
-    std::map<std::string, napi_ref> listenerMap_;
     napi_env env_;
     napi_ref thisVarRef_;
-    std::mutex getEventCVMut_;
-    std::condition_variable getEventCV_;
-    pthread_t threadId_ {0};
+    napi_ref sendListenerRef_;
+    napi_ref recvListenerRef_;
     uv_loop_t *loop_ {nullptr};
-    bool isExit_ {false};
 
 private:
     struct CallbackContext {
-        EventAgent *thisVar;
-        std::shared_ptr<TransEvent> event;
+        napi_value handler;
+        napi_ref thisVarRef;
+        napi_env env;
+        std::unique_ptr<TransEvent> event;
     };
 };
 } // namespace DistributedFile

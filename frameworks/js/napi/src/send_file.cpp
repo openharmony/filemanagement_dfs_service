@@ -33,8 +33,7 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-std::mutex SendFile::g_uidMutex;
-std::unordered_map<std::string, std::shared_ptr<EventAgent>> SendFile::mapUidToEventAgent_;
+EventAgent *SendFile::eventAgent_ = nullptr;
 
 int32_t SendFile::RegisterCallback()
 {
@@ -66,69 +65,20 @@ int32_t SendFile::RegisterCallback()
     return NAPI_SENDFILE_NO_ERROR;
 }
 
-int32_t SendFile::JoinCidToAppId(const std::string &cid, const std::string &AppId)
+int32_t SendFile::EmitTransEvent(std::unique_ptr<TransEvent> event, const std::string &cid)
 {
-    if (cid.empty() || AppId.empty()) {
-        LOGE("SendFile::JoinCidToAppId: input para error.\n");
+    if (cid.empty()) {
+        LOGE("SendFile::EmitTransEvent: deviceId is null.\n");
         return NAPI_SENDFILE_PARA_ERROR;
     }
 
-    auto iter = mapUidToEventAgent_.find(AppId);
-    if (mapUidToEventAgent_.end() == iter) {
-        LOGE("SendFile::JoinCidToAppId: can't find app agent.\n");
-        return NAPI_SENDFILE_APP_AGENT_ERROR;
-    }
-
-    auto agent = iter->second;
-    if (agent.get() != nullptr && !agent.get()->FindDevice(cid)) {
-        LOGI("SendFile::JoinCidToAppId: device[%{public}s] insert into list.", cid.c_str());
-        agent.get()->InsertDevice(cid);
-    }
-    return NAPI_SENDFILE_NO_ERROR;
-}
-
-int32_t SendFile::DisjoinCidToAppId(const std::string &cid, const std::string &AppId)
-{
-    if (cid.empty() || AppId.empty()) {
-        LOGE("SendFile::DisJoinCidToAppId: input para error.\n");
-        return NAPI_SENDFILE_PARA_ERROR;
-    }
-
-    auto iter = mapUidToEventAgent_.find(AppId);
-    if (mapUidToEventAgent_.end() == iter) {
-        LOGE("SendFile::DisJoinCidToAppId: can't find app agent.\n");
-        return NAPI_SENDFILE_APP_AGENT_ERROR;
-    }
-
-    auto agent = iter->second;
-    if (agent.get() != nullptr && agent.get()->FindDevice(cid)) {
-        LOGI("SendFile::DisJoinCidToAppId: device[%{public}s] remove from list.", cid.c_str());
-        agent.get()->RemoveDevice(cid);
-    }
-    return NAPI_SENDFILE_NO_ERROR;
-}
-
-int32_t SendFile::EmitTransEvent(std::shared_ptr<TransEvent> event, const std::string &cid, const std::string &AppId)
-{
-    if (cid.empty() || AppId.empty()) {
-        LOGE("SendFile::EmitTransEvent: input para error.\n");
-        return NAPI_SENDFILE_PARA_ERROR;
-    }
-
-    auto iter = mapUidToEventAgent_.find(AppId);
-    if (mapUidToEventAgent_.end() == iter) {
-        LOGE("SendFile::EmitTransEvent: can't find app agent.\n");
-        return NAPI_SENDFILE_APP_AGENT_ERROR;
-    }
-
-    auto agent = iter->second.get();
-    if (agent == nullptr) {
-        LOGE("SendFile::EmitTransEvent: app agent null.\n");
+    if (eventAgent_ == nullptr) {
+        LOGE("SendFile::EmitTransEvent: event agent null.\n");
         return NAPI_SENDFILE_APP_AGENT_ERROR;
     }
 
     LOGI("SendFile::EmitTransEvent: %{public}s]", event.get()->GetName().c_str());
-    agent->Emit(event);
+    eventAgent_->Emit(std::move(event));
     return NAPI_SENDFILE_NO_ERROR;
 }
 

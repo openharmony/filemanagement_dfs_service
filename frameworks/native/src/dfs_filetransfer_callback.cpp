@@ -26,52 +26,50 @@ DfsFileTransferCallback::~DfsFileTransferCallback() {}
 
 int32_t DfsFileTransferCallback::SessionOpened(const std::string &cid)
 {
-    SendFile::JoinCidToAppId(cid);
     return DFS_FILE_TRANS_NO_ERROR;
 }
 
 int32_t DfsFileTransferCallback::SessionClosed(const std::string &cid)
 {
-    SendFile::DisjoinCidToAppId(cid);
     return DFS_FILE_TRANS_NO_ERROR;
 }
 
 int32_t DfsFileTransferCallback::SendFinished(const std::string &cid, std::string fileName)
 {
-    auto event = std::make_shared<TransEvent>(TransEvent::TRANS_SUCCESS, fileName);
+    auto event = std::make_unique<TransEvent>(TransEvent::TRANS_SUCCESS, fileName);
     std::string eventName("sendFinished");
     event.get()->SetName(eventName);
-    SendFile::EmitTransEvent(event, cid);
+    SendFile::EmitTransEvent(std::move(event), cid);
     LOGI("DfsFileTransferCallback::SendFinished: [%{public}s].", cid.c_str());
     return DFS_FILE_TRANS_NO_ERROR;
 }
 
 int32_t DfsFileTransferCallback::SendError(const std::string &cid)
 {
-    auto event = std::make_shared<TransEvent>(TransEvent::TRANS_FAILURE);
+    auto event = std::make_unique<TransEvent>(TransEvent::TRANS_FAILURE);
     std::string eventName("sendFinished");
     event.get()->SetName(eventName);
-    SendFile::EmitTransEvent(event, cid);
+    SendFile::EmitTransEvent(std::move(event), cid);
     LOGI("DfsFileTransferCallback::SendError: [%{public}s].", cid.c_str());
     return DFS_FILE_TRANS_NO_ERROR;
 }
 
 int32_t DfsFileTransferCallback::ReceiveFinished(const std::string &cid, const std::string &fileName, uint32_t num)
 {
-    auto event = std::make_shared<TransEvent>(TransEvent::TRANS_SUCCESS, fileName, num);
+    auto event = std::make_unique<TransEvent>(TransEvent::TRANS_SUCCESS, fileName, num);
     std::string eventName("receiveFinished");
     event.get()->SetName(eventName);
-    SendFile::EmitTransEvent(event, cid);
+    SendFile::EmitTransEvent(std::move(event), cid);
     LOGI("DfsFileTransferCallback::ReceiveFinished: [%{public}s].", cid.c_str());
     return DFS_FILE_TRANS_NO_ERROR;
 }
 
 int32_t DfsFileTransferCallback::ReceiveError(const std::string &cid)
 {
-    auto event = std::make_shared<TransEvent>(TransEvent::TRANS_FAILURE);
+    auto event = std::make_unique<TransEvent>(TransEvent::TRANS_FAILURE);
     std::string eventName("receiveFinished");
     event.get()->SetName(eventName);
-    SendFile::EmitTransEvent(event, cid);
+    SendFile::EmitTransEvent(std::move(event), cid);
     LOGI("DfsFileTransferCallback::ReceiveError: [%{public}s].", cid.c_str());
     return DFS_FILE_TRANS_NO_ERROR;
 }
