@@ -39,7 +39,7 @@ EventAgent::~EventAgent()
 void EventAgent::On(const char* type, napi_value handler)
 {
     LOGD("SendFile EventAgent::On thread tid = %{public}lu\n", (unsigned long)pthread_self());
-    if (type == nullptr || strnlen(type, LISTENER_TYPTE_MAX_LENGTH == LISTENER_TYPTE_MAX_LENGTH)) {
+    if (type == nullptr || strnlen(type, LISTENER_TYPTE_MAX_LENGTH) == LISTENER_TYPTE_MAX_LENGTH) {
         LOGE("SendFile EventAgent::On: event type exceed 64 byte or empty.");
         return;
     }
@@ -55,7 +55,7 @@ void EventAgent::On(const char* type, napi_value handler)
 void EventAgent::Off(const char* type)
 {
     LOGD("SendFile EventAgent::Off: JS callback unregister.\n");
-    if (type == nullptr || strnlen(type, LISTENER_TYPTE_MAX_LENGTH == LISTENER_TYPTE_MAX_LENGTH)) {
+    if (type == nullptr || strnlen(type, LISTENER_TYPTE_MAX_LENGTH) == LISTENER_TYPTE_MAX_LENGTH) {
         LOGE("SendFile EventAgent::Off: event type exceed 64 byte or empty.");
         return;
     }
