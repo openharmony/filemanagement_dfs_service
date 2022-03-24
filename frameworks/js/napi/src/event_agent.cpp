@@ -34,9 +34,6 @@ EventAgent::~EventAgent()
     napi_delete_reference(env_, sendListenerRef_);
     napi_delete_reference(env_, recvListenerRef_);
     napi_delete_reference(env_, thisVarRef_);
-    // if (loop_ != nullptr) {
-    //     uv_stop(loop_);
-    // }
 }
 
 void EventAgent::On(const char* type, napi_value handler)
