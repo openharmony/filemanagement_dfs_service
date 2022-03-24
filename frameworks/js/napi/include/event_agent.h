@@ -61,7 +61,7 @@ protected:
 
 private:
     struct CallbackContext {
-        napi_value handler;
+        napi_ref handlerRef;
         napi_ref thisVarRef;
         napi_env env;
         std::unique_ptr<TransEvent> event;

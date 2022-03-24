@@ -25,6 +25,7 @@ EventAgent::EventAgent(napi_env env, napi_value thisVar) : env_(env)
 {
     napi_create_reference(env, thisVar, 1, &thisVarRef_);
     napi_get_uv_event_loop(env, &loop_);
+    LOGD("SendFile EventAgent::thisVarRef_============[%{public}p].", thisVarRef_);
 }
 
 EventAgent::~EventAgent()
@@ -39,7 +40,7 @@ EventAgent::~EventAgent()
 void EventAgent::On(const char* type, napi_value handler)
 {
     LOGD("SendFile EventAgent::On thread tid = %{public}lu\n", (unsigned long)pthread_self());
-    if (type == nullptr || strnlen(type, LISTENER_TYPTE_MAX_LENGTH == LISTENER_TYPTE_MAX_LENGTH)) {
+    if (type == nullptr || strnlen(type, LISTENER_TYPTE_MAX_LENGTH) == LISTENER_TYPTE_MAX_LENGTH) {
         LOGE("SendFile EventAgent::On: event type exceed 64 byte or empty.");
         return;
     }
@@ -55,7 +56,7 @@ void EventAgent::On(const char* type, napi_value handler)
 void EventAgent::Off(const char* type)
 {
     LOGD("SendFile EventAgent::Off: JS callback unregister.\n");
-    if (type == nullptr || strnlen(type, LISTENER_TYPTE_MAX_LENGTH == LISTENER_TYPTE_MAX_LENGTH)) {
+    if (type == nullptr || strnlen(type, LISTENER_TYPTE_MAX_LENGTH) == LISTENER_TYPTE_MAX_LENGTH) {
         LOGE("SendFile EventAgent::Off: event type exceed 64 byte or empty.");
         return;
     }
@@ -98,13 +99,11 @@ void EventAgent::Emit(std::unique_ptr<TransEvent> event)
 {
     uv_work_t* work = new uv_work_t();
     auto context = new CallbackContext();
-    napi_value handler = nullptr;
     if (event.get()->GetName() == "sendFinished") {
-        napi_get_reference_value(env_, sendListenerRef_, &handler);
+        context->handlerRef = sendListenerRef_;
     } else if (event.get()->GetName() == "receiveFinished") {
-        napi_get_reference_value(env_, recvListenerRef_, &handler);
+        context->handlerRef = recvListenerRef_;
     }
-    context->handler = handler;
     context->env = env_;
     context->thisVarRef = thisVarRef_;
     context->event = std::move(event);
@@ -120,8 +119,11 @@ void EventAgent::Callback(uv_work_t *work)
 void EventAgent::AfterCallback(uv_work_t *work, int status)
 {
     LOGD("SendFile EventAgent::AfterCallback: entered.");
-    auto context = static_cast<CallbackContext*>(work->data);
-    napi_value handler = context->handler;
+    auto context = reinterpret_cast<CallbackContext*>(work->data);
+    napi_env env = context->env;
+
+    napi_value handler;
+    napi_get_reference_value(env, context->handlerRef, &handler);
     if (handler == nullptr) {
         LOGE("SendFile EventAgent::AfterCallback: null handler.");
         return;
@@ -132,8 +134,8 @@ void EventAgent::AfterCallback(uv_work_t *work, int status)
         LOGE("SendFile EventAgent::AfterCallback: emit null event.");
         return;
     }
+    napi_value jsEvent = event->ToJsObject(env);
 
-    napi_env env = context->env;
     napi_handle_scope scope = nullptr;
     napi_open_handle_scope(env, &scope);
 
@@ -141,7 +143,6 @@ void EventAgent::AfterCallback(uv_work_t *work, int status)
     napi_ref thisVarRef = context->thisVarRef;
     napi_get_reference_value(env, thisVarRef, &thisVar);
 
-    napi_value jsEvent = event->ToJsObject(env);
     napi_value callbackResult = nullptr;
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -149,8 +150,7 @@ void EventAgent::AfterCallback(uv_work_t *work, int status)
     callbackValues[0] = result;
     callbackValues[1] = jsEvent;
 
-    napi_call_function(env, thisVar, handler, std::size(callbackValues),
-        callbackValues, &callbackResult);
+    napi_call_function(env, thisVar, handler, std::size(callbackValues), callbackValues, &callbackResult);
     LOGD("SendFile EventAgent::AfterCallback: event type[%{public}s].", event->GetName().c_str());
     LOGD("SendFile EventAgent::AfterCallback thread tid = %{public}lu\n", (unsigned long)pthread_self());
 
