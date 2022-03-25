@@ -22,18 +22,35 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-DeviceManagerAgent::DeviceManagerAgent() {}
+// constexpr int MAX_RETRY_COUNT = 7;
+DeviceManagerAgent::DeviceManagerAgent() : DfsuActor<DeviceManagerAgent>(this, std::numeric_limits<uint32_t>::max()) {}
 
 DeviceManagerAgent::~DeviceManagerAgent()
 {
     StopInstance();
 }
+
 void DeviceManagerAgent::StartInstance()
+{
+    StartActor();
+}
+
+void DeviceManagerAgent::StopInstance()
+{
+    StopActor();
+}
+
+void DeviceManagerAgent::Start()
 {
     // the time sequence can ensure there is no resource competition
     alreadyOnlineDev_.clear();
     try {
         RegisterToExternalDm();
+        auto infos = GetRemoteDevicesInfo();
+        LOGI("Have %{public}d devices Online", infos.size());
+        for (const auto &info : infos) {
+            OnDeviceOnline(info);
+        }
     } catch (const DfsuException &e) {
         // do not throw exception
     } catch (const std::exception &e) {
@@ -41,7 +58,7 @@ void DeviceManagerAgent::StartInstance()
     }
 }
 
-void DeviceManagerAgent::StopInstance()
+void DeviceManagerAgent::Stop()
 {
     try {
         UnregisterFromExternalDm();
@@ -50,6 +67,19 @@ void DeviceManagerAgent::StopInstance()
     } catch (const std::exception &e) {
         LOGE("Unexpected Low Level exception");
     }
+}
+
+std::vector<DistributedHardware::DmDeviceInfo> DeviceManagerAgent::GetRemoteDevicesInfo()
+{
+    std::string extra = "";
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+
+    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
+    int errCode = deviceManager.GetTrustedDeviceList(DistributedFileService::pkgName_, extra, deviceList);
+    if (errCode) {
+        ThrowException(errCode, "Failed to get info of remote devices");
+    }
+    return deviceList;
 }
 
 void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)

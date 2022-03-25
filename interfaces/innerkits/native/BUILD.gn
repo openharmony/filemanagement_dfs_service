@@ -29,6 +29,12 @@ ohos_shared_library("libdistributedfile_innerkits") {
     "${distributedfile_path}/frameworks/native/src/service_proxy.cpp",
   ]
 
+  defines = [
+    "LOG_TAG=\"distributedfile_innerkits\"",
+    "LOG_DOMAIN=0xD001600",
+    "LOG_LEVEL=INFO",
+  ]
+
   configs = [ ":private_config" ]
 
   public_configs = [ ":public_config" ]
