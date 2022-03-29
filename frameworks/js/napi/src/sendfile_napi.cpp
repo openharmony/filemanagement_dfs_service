@@ -24,7 +24,9 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace FileManagement::LibN;
-
+namespace {
+    constexpr int TYPE_LEN = 64;
+}
 std::vector<std::string> GetJsPath(napi_env env, napi_value param)
 {
     std::vector<std::string> jsPath;
@@ -137,7 +139,7 @@ napi_value JsOn(napi_env env, napi_callback_info cbinfo)
     napi_typeof(env, argv[1], &eventHandleType);
     NAPI_ASSERT(env, eventHandleType == napi_function, "type mismatch for parameter 2");
 
-    char type[64] = { 0 };
+    char type[TYPE_LEN] = { 0 };
     size_t typeLen = 0;
 
     napi_get_value_string_utf8(env, argv[0], type, sizeof(type), &typeLen);

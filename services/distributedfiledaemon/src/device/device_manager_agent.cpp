@@ -44,7 +44,13 @@ DeviceManagerAgent::DeviceManagerAgent() : DfsuActor<DeviceManagerAgent>(this, s
 
 DeviceManagerAgent::~DeviceManagerAgent()
 {
-    StopInstance();
+    try {
+        StopInstance();
+    } catch (const DfsuException &e) {
+        LOGE("Device manager agent stop instance failed.");
+    } catch (const std::exception &e) {
+        LOGE("Device manager agent Unexpected Low Level exception");
+    }
 }
 
 void DeviceManagerAgent::StartInstance()
@@ -234,7 +240,7 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     }
 
     if (groupNum == 0) {
-        LOGE("failed to get related groups, groupNum is %{public}d", groupNum);
+        LOGE("failed to get related groups, groupNum is %{public}u", groupNum);
         return;
     }
 
@@ -283,6 +289,7 @@ bool DeviceManagerAgent::CheckIsAccountless(const GroupInfo &group)
 
 void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
+    (void)deviceInfo;
     LOGI("OnDeviceInfoChanged");
 }
 

@@ -248,7 +248,6 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
 int32_t DistributedFileService::RegisterNotifyCallback(sptr<IFileTransferCallback> &callback)
 {
     SoftbusAgent::GetInstance()->SetTransCallback(callback);
-    LOGD("DistributedFileService::RegisterNotifyCallback: cb[%{public}p]", callback->AsObject().GetRefPtr());
     return DFS_SUCCESS;
 }
 

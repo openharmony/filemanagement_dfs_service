@@ -57,7 +57,7 @@ void SoftbusAgent::JoinDomain()
 
     SoftbusSessionDispatcher::RegisterSessionListener(sessionName_, shared_from_this());
     int ret = ::CreateSessionServer(IDaemon::SERVICE_NAME.c_str(), sessionName_.c_str(), &sessionListener);
-    if (ret != 0) { // ! 错误码
+    if (ret != 0) {
         stringstream ss;
         ss << "Failed to CreateSessionServer, errno:" << ret;
         LOGE("%{public}s, sessionName:%{public}s", ss.str().c_str(), sessionName_.c_str());
@@ -69,7 +69,7 @@ void SoftbusAgent::JoinDomain()
 void SoftbusAgent::QuitDomain()
 {
     int ret = ::RemoveSessionServer(IDaemon::SERVICE_NAME.c_str(), sessionName_.c_str());
-    if (ret != 0) { // ! 错误码
+    if (ret != 0) {
         stringstream ss;
         ss << "Failed to RemoveSessionServer, errno:" << ret;
         LOGE("%{public}s", ss.str().c_str());
@@ -118,7 +118,7 @@ bool SoftbusAgent::IsContinueRetry(const string &cid)
             return false;
         }
     } else {
-        OpenSessionRetriedTimesMap_.insert({cid, 0});
+        OpenSessionRetriedTimesMap_[cid] = 0;
     }
     OpenSessionRetriedTimesMap_[cid]++;
     return true;

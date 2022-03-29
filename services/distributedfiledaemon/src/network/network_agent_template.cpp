@@ -74,6 +74,7 @@ void NetworkAgentTemplate::DisconnectDevice(const DeviceInfo info)
 
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 {
+    (void)cid;
     LOGI("session closed!");
 }
 

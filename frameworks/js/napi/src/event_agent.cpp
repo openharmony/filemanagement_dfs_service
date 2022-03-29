@@ -25,7 +25,6 @@ EventAgent::EventAgent(napi_env env, napi_value thisVar) : env_(env)
 {
     napi_create_reference(env, thisVar, 1, &thisVarRef_);
     napi_get_uv_event_loop(env, &loop_);
-    LOGD("SendFile EventAgent::thisVarRef_============[%{public}p].", thisVarRef_);
 }
 
 EventAgent::~EventAgent()
