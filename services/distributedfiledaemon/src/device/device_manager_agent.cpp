@@ -240,7 +240,7 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     }
 
     if (groupNum == 0) {
-        LOGE("failed to get related groups, groupNum is %{public}d", groupNum);
+        LOGE("failed to get related groups, groupNum is %{public}u", groupNum);
         return;
     }
 
@@ -289,6 +289,7 @@ bool DeviceManagerAgent::CheckIsAccountless(const GroupInfo &group)
 
 void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
+    (void)deviceInfo;
     LOGI("OnDeviceInfoChanged");
 }
 

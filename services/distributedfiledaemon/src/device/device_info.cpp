@@ -49,7 +49,7 @@ void DeviceInfo::SetCid(const string &cid)
         cid_ = cid;
         initCidFlag_ = true;
     } else {
-        LOGI("Cid is already initializing");
+        LOGI("Cid is already initialized");
     }
 }
 
