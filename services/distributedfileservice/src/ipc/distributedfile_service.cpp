@@ -21,6 +21,7 @@
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "device_manager_agent.h"
+#include "dfsu_fd_guard.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "message_parcel.h"
@@ -201,6 +202,7 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
     if (fd <= 0 || fileName.empty()) {
         return DFS_FILE_OP_ERROR;
     }
+    DfsuFDGuard readFd(fd);
 
     const char *tmpFile = TEMP_FILE_NAME;
     struct stat fileStat;
@@ -208,39 +210,32 @@ int32_t DistributedFileService::OpenFile(int32_t fd, const std::string &fileName
     if (fileExist) {
         int32_t result = remove(tmpFile);
         if (result != 0) {
-            close(fd);
             LOGE("DFS SA remove temp file result %{public}d, %{public}d", result, errno);
             return DFS_FILE_OP_ERROR;
         }
     }
 
-    int32_t writeFd = open(tmpFile, O_WRONLY | O_CREAT, (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
-    if (writeFd <= 0) {
-        close(fd);
-        LOGE("DFS SA open temp file failed %{public}d, %{public}d", writeFd, errno);
+    DfsuFDGuard writeFd(open(tmpFile, O_WRONLY | O_CREAT, (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH));
+    if (!writeFd) {
+        LOGE("DFS SA open temp file failed %{public}d", errno);
         return DFS_FILE_OP_ERROR;
     }
     auto buffer = std::make_unique<char[]>(FILE_BLOCK_SIZE);
     ssize_t actLen = 0;
     do {
-        actLen = read(fd, buffer.get(), FILE_BLOCK_SIZE);
+        actLen = read(readFd.GetFD(), buffer.get(), FILE_BLOCK_SIZE);
         if (actLen > 0) {
-            write(writeFd, buffer.get(), actLen);
+            write(writeFd.GetFD(), buffer.get(), actLen);
         } else if (actLen == 0) {
             break;
         } else {
             if (errno == EINTR) {
                 actLen = FILE_BLOCK_SIZE;
             } else {
-                close(fd);
-                close(writeFd);
                 return DFS_FILE_OP_ERROR;
             }
         }
     } while (actLen > 0);
-
-    close(fd);
-    close(writeFd);
 
     return DFS_SUCCESS;
 }
