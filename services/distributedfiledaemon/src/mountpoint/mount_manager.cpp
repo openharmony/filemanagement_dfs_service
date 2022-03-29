@@ -37,14 +37,17 @@ MountManager::~MountManager()
 
 void MountManager::Mount(unique_ptr<MountPoint> mp)
 {
+    (void)mp;
 }
 
 void MountManager::Umount(weak_ptr<MountPoint> wmp)
 {
+    (void)wmp;
 }
 
 void MountManager::Umount(const std::string &groupId)
 {
+    (void)groupId;
 }
 } // namespace DistributedFile
 } // namespace Storage

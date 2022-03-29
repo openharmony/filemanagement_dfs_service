@@ -51,7 +51,7 @@ void EventAgent::On(const char* type, napi_value handler)
     auto tmp = new EventListener();
 
     LOGD("EventAgent::On: JS callback register.\n");
-    if (strncpy_s(tmp->type, LISTENER_TYPTE_MAX_LENGTH, type, strlen(type)) == -1) {
+    if (strncpy_s(tmp->type, LISTENER_TYPTE_MAX_LENGTH, type, strlen(type)) != EOK) {
         delete tmp;
         tmp = nullptr;
         return;
