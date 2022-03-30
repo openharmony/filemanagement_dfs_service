@@ -89,6 +89,7 @@ void Daemon::OnStop()
 
 int32_t Daemon::EchoServerDemo(const string &echoStr)
 {
+    (void)echoStr;
     return 0;
 }
 } // namespace DistributedFile
