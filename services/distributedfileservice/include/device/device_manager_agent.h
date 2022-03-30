@@ -24,7 +24,9 @@
 #include <vector>
 
 #include "device_manager.h"
+#include "dfsu_actor.h"
 #include "dfsu_singleton.h"
+#include "dfsu_startable.h"
 
 namespace OHOS {
 namespace Storage {
@@ -32,10 +34,14 @@ namespace DistributedFile {
 class DeviceManagerAgent : public DistributedHardware::DmInitCallback,
                            public DistributedHardware::DeviceStateCallback,
                            public std::enable_shared_from_this<DeviceManagerAgent>,
+                           public DfsuStartable,
+                           public DfsuActor<DeviceManagerAgent>,
                            public Utils::DfsuSingleton<DeviceManagerAgent> {
     DECLARE_SINGLETON(DeviceManagerAgent);
 
 public:
+    void Start() override;
+    void Stop() override;
     void OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo) override {}
@@ -46,7 +52,7 @@ public:
     {
         return alreadyOnlineDev_;
     }
-    std::vector<std::string> GetRemoteDevicesInfo();
+    std::vector<DistributedHardware::DmDeviceInfo> GetRemoteDevicesInfo();
 
 private:
     void StartInstance() override;

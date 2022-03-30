@@ -22,34 +22,46 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-DeviceManagerAgent::DeviceManagerAgent() {}
+DeviceManagerAgent::DeviceManagerAgent() : DfsuActor<DeviceManagerAgent>(this, std::numeric_limits<uint32_t>::max()) {}
 
 DeviceManagerAgent::~DeviceManagerAgent()
 {
     StopInstance();
 }
+
 void DeviceManagerAgent::StartInstance()
 {
-    // the time sequence can ensure there is no resource competition
-    alreadyOnlineDev_.clear();
-    try {
-        RegisterToExternalDm();
-    } catch (const DfsuException &e) {
-        // do not throw exception
-    } catch (const std::exception &e) {
-        // do not throw exception
-    }
+    StartActor();
 }
 
 void DeviceManagerAgent::StopInstance()
 {
-    try {
-        UnregisterFromExternalDm();
-    } catch (const DfsuException &e) {
-        LOGE("Unregister devicemagager callback failed.");
-    } catch (const std::exception &e) {
-        LOGE("Unexpected Low Level exception");
+    StopActor();
+}
+
+void DeviceManagerAgent::Start()
+{
+    // the time sequence can ensure there is no resource competition
+    alreadyOnlineDev_.clear();
+    RegisterToExternalDm();
+}
+
+void DeviceManagerAgent::Stop()
+{
+    UnregisterFromExternalDm();
+}
+
+std::vector<DistributedHardware::DmDeviceInfo> DeviceManagerAgent::GetRemoteDevicesInfo()
+{
+    std::string extra = "";
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+
+    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
+    int errCode = deviceManager.GetTrustedDeviceList(DistributedFileService::pkgName_, extra, deviceList);
+    if (errCode) {
+        ThrowException(errCode, "Failed to get info of remote devices");
     }
+    return deviceList;
 }
 
 void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -74,14 +86,8 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 void DeviceManagerAgent::OnRemoteDied()
 {
     LOGI("device manager service died");
-    try {
-        UnregisterFromExternalDm();
-        RegisterToExternalDm();
-    } catch (const DfsuException &e) {
-        LOGE("Reregister devicemagager callback failed.");
-    } catch (const std::exception &e) {
-        LOGE("Unexpected Low Level exception");
-    }
+    UnregisterFromExternalDm();
+    RegisterToExternalDm();
 }
 
 void DeviceManagerAgent::RegisterToExternalDm()
