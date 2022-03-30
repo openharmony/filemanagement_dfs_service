@@ -21,6 +21,7 @@
 
 #include "device_manager_agent.h"
 #include "dfsu_exception.h"
+#include "dfsu_fd_guard.h"
 #include "distributedfile_service.h"
 #include "i_distributedfile_service.h"
 #include "iservice_registry.h"
@@ -188,13 +189,13 @@ void SoftbusAgent::OnReceiveFileFinished(const int sessionId, const std::string 
     }
 
     std::string desFileName = DEFAULT_ROOT_PATH + files;
-    int32_t fd = open(desFileName.c_str(), O_RDONLY);
-    if (fd <= 0) {
-        LOGE("NapiWriteFile open recive distributedfile %{public}d, %{public}s, %{public}d",
-            fd, desFileName.c_str(), errno);
+    DfsuFDGuard readFd(open(desFileName.c_str(), O_RDONLY));
+    if (!readFd) {
+        LOGE("NapiWriteFile open recive distributedfile %{public}s, %{public}d", desFileName.c_str(), errno);
         return;
     }
-    notifyCallback_->WriteFile(fd, files);
+    notifyCallback_->WriteFile(readFd.GetFD(), files);
+
     notifyCallback_->ReceiveFinished(cid, files, fileCnt);
 }
 

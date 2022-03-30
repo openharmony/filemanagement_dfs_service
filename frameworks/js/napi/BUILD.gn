@@ -23,6 +23,7 @@ ohos_shared_library("sendfile") {
     "${distributedfile_path}/frameworks/native/include",
     "${distributedfile_path}/frameworks/js/napi/include",
     "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/system/include",
     "${services_path}/distributedfileservice/include/ipc",
     "//foundation/communication/ipc/interfaces/innerkits/libdbinder/include",
     "//foundation/distributedschedule/samgr/services/samgr/native/include",
@@ -62,8 +63,6 @@ ohos_shared_library("sendfile") {
     "samgr_standard:samgr_common",
     "samgr_standard:samgr_proxy",
   ]
-
-  cflags_cc = [ "-Wno-unused-function" ]
 
   relative_install_dir = "module"
   subsystem_name = "filemanagement"

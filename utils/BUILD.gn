@@ -52,12 +52,15 @@ config("utils_public_config") {
 ohos_shared_library("libdistributedfileutils") {
   sources = [
     "log/src/utils_log.cpp",
+    "system/src/dfsu_fd_guard.cpp",
     "system/src/dfsu_mount_argument_descriptors.cpp",
     "system/src/utils_directory.cpp",
   ]
 
   configs = [ "//build/config/compiler:exceptions" ]
   public_configs = [ ":utils_public_config" ]
+
+  defines = [ "LOG_TAG=\"distributedfile_utils\"" ]
 
   public_deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",

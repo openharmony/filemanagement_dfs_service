@@ -20,6 +20,7 @@
 #include <tuple>
 
 #include "dfs_filetransfer_callback.h"
+#include "dfsu_fd_guard.h"
 #include "event_agent.h"
 #include "filetransfer_callback_proxy.h"
 #include "i_distributedfile_service.h"
@@ -88,6 +89,7 @@ int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
         LOGE("NapiWriteFile: file fd error.");
         return NAPI_SENDFILE_FD_ERROR;
     }
+    DfsuFDGuard readFd(fd);
     std::string filePath = APP_PATH + fileName;
     unsigned int flags = O_WRONLY;
 
@@ -101,34 +103,28 @@ int32_t SendFile::WriteFile(int32_t fd, const std::string &fileName)
         LOGE("NapiWriteFile: null path");
         return NAPI_SENDFILE_FD_ERROR;
     }
-    int32_t writeFd = open(realPath, static_cast<int>(flags), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
+    DfsuFDGuard writeFd(open(realPath, static_cast<int>(flags), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH));
     free(realPath);
-    if (writeFd <= 0) {
-        close(fd);
-        LOGE("NapiWriteFile open file failed %{public}d, %{public}s, %{public}d", writeFd, filePath.c_str(), errno);
+    if (!writeFd) {
+        LOGE("NapiWriteFile open file failed %{public}s, %{public}d", filePath.c_str(), errno);
         return NAPI_SENDFILE_FD_ERROR;
     }
     auto buffer = std::make_unique<char[]>(FILE_BLOCK_SIZE);
     ssize_t actLen = 0;
     do {
-        actLen = read(fd, buffer.get(), FILE_BLOCK_SIZE);
+        actLen = read(readFd.GetFD(), buffer.get(), FILE_BLOCK_SIZE);
         if (actLen > 0) {
-            write(writeFd, buffer.get(), actLen);
+            write(writeFd.GetFD(), buffer.get(), actLen);
         } else if (actLen == 0) {
             break;
         } else {
             if (errno == EINTR) {
                 actLen = FILE_BLOCK_SIZE;
             } else {
-                close(fd);
-                close(writeFd);
                 return NAPI_SENDFILE_FD_ERROR;
             }
         }
     } while (actLen > 0);
-
-    close(fd);
-    close(writeFd);
 
     return NAPI_SENDFILE_NO_ERROR;
 }
@@ -164,17 +160,21 @@ int32_t SendFile::ExecSendFile(const std::string &deviceId, const std::vector<st
     if (realPath == nullptr) {
         return NAPI_SENDFILE_FD_ERROR;
     }
-    int32_t fd = open(realPath, O_RDONLY);
+    DfsuFDGuard fd(open(realPath, O_RDONLY));
     free(realPath);
-    int32_t result = distributedFileService->OpenFile(fd, srcList.at(0), (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
+    if (!fd) {
+        return NAPI_SENDFILE_SEND_ERROR;
+    }
+    int32_t result = distributedFileService->OpenFile(fd.GetFD(), srcList.at(0),
+        (S_IREAD | S_IWRITE) | S_IRGRP | S_IROTH);
     if (result != IDistributedFileService::DFS_SUCCESS) {
-        LOGE("SendFile::ExecSendFile: error code %{public}d", result);
+        LOGE("SendFile::ExecSendFile: write temp file error code %{public}d", result);
         return NAPI_SENDFILE_SEND_ERROR;
     }
 
     result = distributedFileService->SendFile(deviceId, srcList, dstList, num);
     if (result != IDistributedFileService::DFS_SENDFILE_SUCCESS) {
-        LOGE("SendFile::ExecSendFile: error code %{public}d", result);
+        LOGE("SendFile::ExecSendFile: send file error code %{public}d", result);
         return NAPI_SENDFILE_SEND_ERROR;
     }
 
