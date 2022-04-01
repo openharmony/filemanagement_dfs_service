@@ -17,7 +17,6 @@
 #define SENDFILE_H
 
 #include <mutex>
-#include <unordered_map>
 #include <vector>
 #include "event_agent.h"
 #include "trans_event.h"
@@ -43,20 +42,15 @@ public:
 
     SendFile() {}
     virtual ~SendFile() {}
-    static int32_t JoinCidToAppId(const std::string &cid, const std::string &AppId = BUNDLE_ID_);
-    static int32_t DisjoinCidToAppId(const std::string &cid, const std::string &AppId = BUNDLE_ID_);
-    static int32_t EmitTransEvent(TransEvent &event, const std::string &cid, const std::string &AppId = BUNDLE_ID_);
+    static int32_t EmitTransEvent(std::unique_ptr<TransEvent> event, const std::string &cid);
     static int32_t WriteFile(int32_t fd, const std::string &fileName);
     static int32_t RegisterCallback();
     static int32_t ExecSendFile(const std::string &deviceId, const std::vector<std::string>& srcList,
         const std::vector<std::string>& dstList, uint32_t num);
 
-    static std::mutex g_uidMutex;
-    static std::unordered_map<std::string, EventAgent*> mapUidToEventAgent_;
-    static inline const std::string BUNDLE_ID_ {"SendFileHapUid"};
-    static inline const std::string APP_PATH {"/data/accounts/account_0/appdata/"};
+    static EventAgent *eventAgent_;
+    static inline const std::string APP_PATH {"/data/storage/el2/base/files"};
     static inline const int32_t FILE_BLOCK_SIZE {1024};
-    static inline const int32_t MAX_SEND_FILE_HAP_NUMBER {50};
     static inline const int32_t SENDFILE_NAPI_BUF_LENGTH {64};
 };
 } // namespace DistributedFile
