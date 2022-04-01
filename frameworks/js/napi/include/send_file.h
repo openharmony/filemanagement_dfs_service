@@ -17,7 +17,6 @@
 #define SENDFILE_H
 
 #include <mutex>
-#include <unordered_map>
 #include <vector>
 #include "event_agent.h"
 #include "trans_event.h"
@@ -50,7 +49,7 @@ public:
         const std::vector<std::string>& dstList, uint32_t num);
 
     static EventAgent *eventAgent_;
-    static inline const std::string APP_PATH {"/data/accounts/account_0/appdata/"};
+    static inline const std::string APP_PATH {"/data/storage/el2/base/files"};
     static inline const int32_t FILE_BLOCK_SIZE {1024};
     static inline const int32_t SENDFILE_NAPI_BUF_LENGTH {64};
 };

@@ -16,9 +16,6 @@
 #ifndef NATIVE_MODULE_SEND_FILE_EVENT_AGENT_H
 #define NATIVE_MODULE_SEND_FILE_EVENT_AGENT_H
 
-#include <condition_variable>
-#include <list>
-#include <map>
 #include <mutex>
 #include <pthread.h>
 #include <set>
