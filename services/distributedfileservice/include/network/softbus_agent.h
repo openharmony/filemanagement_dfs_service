@@ -20,16 +20,23 @@
 #include <list>
 #include <unordered_map>
 
+#include "dfsu_actor.h"
 #include "dfsu_singleton.h"
+#include "dfsu_startable.h"
 #include "i_filetransfer_callback.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class SoftbusAgent : public std::enable_shared_from_this<SoftbusAgent>, public Utils::DfsuSingleton<SoftbusAgent> {
+class SoftbusAgent : public std::enable_shared_from_this<SoftbusAgent>,
+                     public Utils::DfsuSingleton<SoftbusAgent>,
+                     public DfsuStartable,
+                     public DfsuActor<SoftbusAgent> {
     DECLARE_SINGLETON(SoftbusAgent);
 
 public:
+    void Start() override;
+    void Stop() override;
     void RegisterSessionListener();
     void RegisterFileListener();
     void UnRegisterSessionListener();
@@ -39,6 +46,7 @@ public:
     void OnSessionOpened(const int sessionId, const int result);
     void OnSessionClosed(int sessionId);
     int SendFile(const std::string &cid, const char *sFileList[], const char *dFileList[], uint32_t fileCnt);
+    void CallFileSend(const int sessionId, const char *sFileList[], const char *dFileList[], uint32_t fileCnt);
     void OnSendFileFinished(const int sessionId, const std::string firstFile);
     void OnFileTransError(const int sessionId);
     void OnReceiveFileFinished(const int sessionId, const std::string files, int fileCnt);
@@ -48,7 +56,7 @@ public:
 protected:
     void StartInstance() override;
     void StopInstance() override;
-    void OpenSession(const std::string &cid);
+    void OpenSession(const std::string cid);
     void CloseSession(const std::string &cid);
     std::string GetPeerDevId(const int sessionId);
 
