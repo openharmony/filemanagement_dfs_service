@@ -119,7 +119,7 @@ void KernelTalker::SinkOfflineCmdToKernel(string cid)
     };
 
     if (cid.length() < CID_MAX_LEN) {
-        LOGE("cid lengh err, cid:%{public}s, length:%{public}d", cid.c_str(), cid.length());
+        LOGE("cid lengh err, cid:%{public}s, length:%{public}zu", cid.c_str(), cid.length());
         return;
     }
 

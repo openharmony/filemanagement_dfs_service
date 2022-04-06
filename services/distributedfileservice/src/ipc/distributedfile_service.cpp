@@ -78,7 +78,7 @@ int32_t DistributedFileService::CreateSourceResources(const std::vector<std::str
         return DFS_MEM_ERROR;
     }
     for (int index = 0; index < sourceFileList.size(); ++index) {
-        LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}d",
+        LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}zu",
             index, sourceFileList.at(index).c_str(), sourceFileList.at(index).length());
         if (index == 0) {
             std::string tmpString("/data/system_ce/tmp");
@@ -158,7 +158,7 @@ void DistributedFileService::DestroyFileList(std::vector<char *> &fileList)
     for (size_t index = 0; index < fileList.size(); ++index) {
         char *temp = fileList.at(index);
         if (temp != nullptr) {
-            LOGI("destroy list index [%{public}d] memory", index);
+            LOGI("destroy list index [%{public}zu] memory", index);
             delete[] temp;
         }
     }
