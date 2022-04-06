@@ -80,7 +80,7 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     softBusAgent->OnDeviceOffline(cid);
 
     alreadyOnlineDev_.erase(cid);
-    LOGI("cid %{public}s offline, left online devices num %{public}d", cid.c_str(), alreadyOnlineDev_.size());
+    LOGI("cid %{public}s offline, left online devices num %{public}zu", cid.c_str(), alreadyOnlineDev_.size());
 }
 
 void DeviceManagerAgent::OnRemoteDied()
