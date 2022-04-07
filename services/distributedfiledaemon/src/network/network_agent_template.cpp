@@ -52,7 +52,7 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
 {
     auto dma = DeviceManagerAgent::GetInstance();
     auto infos = dma->GetRemoteDevicesInfo();
-    LOGI("Have %{public}d devices Online", infos.size());
+    LOGI("Have %{public}zu devices Online", infos.size());
     for (const auto &info : infos) {
         auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
             &NetworkAgentTemplate::ConnectDeviceAsync, info);
