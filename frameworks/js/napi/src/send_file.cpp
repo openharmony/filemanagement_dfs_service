@@ -27,7 +27,6 @@
 #include "iservice_registry.h"
 #include "service_proxy.h"
 #include "system_ability_definition.h"
-#include "system_ability_manager.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 

@@ -26,8 +26,6 @@ ohos_shared_library("sendfile") {
     "${distributedfile_path}/utils/system/include",
     "${services_path}/distributedfileservice/include/ipc",
     "//foundation/communication/ipc/interfaces/innerkits/libdbinder/include",
-    "//foundation/distributedschedule/samgr/services/samgr/native/include",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
     "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn/include",
   ]
@@ -60,7 +58,6 @@ ohos_shared_library("sendfile") {
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "samgr_standard:samgr_common",
     "samgr_standard:samgr_proxy",
   ]
 
