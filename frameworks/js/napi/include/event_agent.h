@@ -52,8 +52,8 @@ protected:
     std::set<std::string> deviceList_;
     napi_env env_;
     napi_ref thisVarRef_;
-    napi_ref sendListenerRef_;
-    napi_ref recvListenerRef_;
+    napi_ref sendListenerRef_ {nullptr};
+    napi_ref recvListenerRef_ {nullptr};
     uv_loop_t *loop_ {nullptr};
 
 private:
