@@ -47,9 +47,9 @@ DeviceManagerAgent::~DeviceManagerAgent()
     try {
         StopInstance();
     } catch (const DfsuException &e) {
-        LOGE("Device manager agent stop instance failed.");
+        // do not throw exception
     } catch (const std::exception &e) {
-        LOGE("Device manager agent Unexpected Low Level exception");
+        // do not throw exception
     }
 }
 

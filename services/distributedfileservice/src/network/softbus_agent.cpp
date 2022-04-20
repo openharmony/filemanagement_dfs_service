@@ -39,6 +39,7 @@ namespace {
     constexpr int32_t DEVICE_ID_SIZE_MAX = 65;
     constexpr int MAX_RETRY_COUNT = 7;
     constexpr int32_t IS_CLIENT = 1;
+    constexpr size_t ID_PRINT_LEN = 8;
     const std::string DEFAULT_ROOT_PATH = "/data/service/el2/100/hmdfs/non_account/data/";
 }
 
@@ -88,7 +89,8 @@ int SoftbusAgent::SendFile(const std::string &cid, const char *sFileList[], cons
     // first check whether the sessionId available
     auto alreadyOnliceDev = DeviceManagerAgent::GetInstance()->getOnlineDevs();
     if (alreadyOnliceDev.find(cid) == alreadyOnliceDev.end()) {
-        LOGE("cid:%{public}s has not been online yet, sendfile maybe will fail, try", cid.c_str());
+        LOGE("cid:%{public}s has not been online yet, sendfile maybe will fail, try",
+            cid.substr(0, ID_PRINT_LEN).c_str());
     }
     int sessionId = -1;
     {
@@ -113,7 +115,7 @@ int SoftbusAgent::SendFile(const std::string &cid, const char *sFileList[], cons
     getSessionCV_.wait(lock, [&cidToSessionID, cid]() { return !cidToSessionID[cid].empty(); });
 
     if (cidToSessionID_[cid].empty()) {
-        LOGE("there is no sessionId of cid:%{public}s", cid.c_str());
+        LOGE("there is no sessionId of cid:%{public}s", cid.substr(0, ID_PRINT_LEN).c_str());
         return -1;
     }
     sessionId = cidToSessionID_[cid].front();
@@ -141,12 +143,12 @@ void SoftbusAgent::CallFileSend(const int sessionId, const char *sFileList[], co
 
 void SoftbusAgent::OpenSession(const std::string cid)
 {
-    LOGD("SoftbusAgent::OpenSession, deviceId %{public}s", cid.c_str());
+    LOGD("SoftbusAgent::OpenSession, cid %{public}s", cid.substr(0, ID_PRINT_LEN).c_str());
     SessionAttribute attr;
     attr.dataType = TYPE_FILE; // files use UDP, CHANNEL_TYPE_UDP
     int sessionId = ::OpenSession(sessionName_.c_str(), sessionName_.c_str(), cid.c_str(), "DFS_wifiGroup", &attr);
     if (sessionId < 0) {
-        LOGE("Failed to open session, cid:%{public}s", cid.c_str());
+        LOGE("Failed to open session, cid:%{public}s", cid.substr(0, ID_PRINT_LEN).c_str());
         ThrowException(ERR_SOFTBUS_AGENT_ON_SESSION_OPENED_FAIL, "Open Session failed");
     }
 }
@@ -255,7 +257,7 @@ std::string SoftbusAgent::GetPeerDevId(const int sessionId)
     char peerDevId[DEVICE_ID_SIZE_MAX] = { '\0' };
     int ret = ::GetPeerDeviceId(sessionId, peerDevId, sizeof(peerDevId));
     if (ret != SOFTBUS_OK) {
-        LOGE("get my peer device id failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId);
+        LOGE("get my peer device id failed, errno:%{public}d", ret);
         cid = "";
     } else {
         cid = std::string(peerDevId);
@@ -267,13 +269,13 @@ std::string SoftbusAgent::GetPeerDevId(const int sessionId)
 void SoftbusAgent::CloseSession(const std::string &cid)
 {
     if (cidToSessionID_.find(cid) == cidToSessionID_.end()) {
-        LOGE("not find this dev-cid:%{public}s", cid.c_str());
+        LOGE("not find this dev-cid:%{public}s", cid.substr(0, ID_PRINT_LEN).c_str());
         return;
     }
     for (auto sessionId : cidToSessionID_[cid]) {
         ::CloseSession(sessionId);
     }
-    LOGD("Close Session done, cid:%{public}s", cid.c_str());
+    LOGD("Close Session done, cid:%{public}s", cid.substr(0, ID_PRINT_LEN).c_str());
 }
 
 void SoftbusAgent::OnDeviceOffline(const std::string &cid)
