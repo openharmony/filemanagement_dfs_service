@@ -18,7 +18,7 @@ ohos_shared_library("sendfile") {
   include_dirs = [
     "//third_party/libuv/include",
     "//third_party/node/src",
-    "//foundation/ace/napi/interfaces/kits",
+    "//foundation/arkui/napi/interfaces/kits",
     "${distributedfile_path}/interfaces/innerkits/native",
     "${distributedfile_path}/frameworks/native/include",
     "${distributedfile_path}/frameworks/js/napi/include",
@@ -50,7 +50,7 @@ ohos_shared_library("sendfile") {
     "${distributedfile_path}/interfaces/innerkits/native:libdistributedfile_innerkits",
     "${utils_path}:libdistributedfileutils",
     "//foundation/aafwk/standard/frameworks/kits/ability/native:abilitykit_native",
-    "//foundation/ace/napi:ace_napi",
+    "//foundation/arkui/napi:ace_napi",
     "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn:filemgmt_libn",
     "//utils/native/base:utilsecurec",
   ]
