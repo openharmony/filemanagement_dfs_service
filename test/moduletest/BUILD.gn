@@ -71,7 +71,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "dataclassification:data_transit_mgr",
     "dsoftbus_standard:softbus_client",
     "ipc:ipc_core",
-    "os_account_standard:os_account_innerkits",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
     "startup_l2:syspara",
