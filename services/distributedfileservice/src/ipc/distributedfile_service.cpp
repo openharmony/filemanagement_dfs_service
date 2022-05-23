@@ -82,7 +82,7 @@ int32_t DistributedFileService::CreateSourceResources(const std::vector<std::str
             index, sourceFileList.at(index).c_str(), sourceFileList.at(index).length());
         if (index == 0) {
             std::string tmpString("/data/system_ce/tmp");
-            int32_t length = tmpString.length();
+            size_t length = tmpString.length();
             if (length <= 0) {
                 return DFS_MEM_ERROR;
             }
@@ -99,7 +99,7 @@ int32_t DistributedFileService::CreateSourceResources(const std::vector<std::str
             }
             sTemp[length] = '\0';
         } else {
-            int32_t length = sourceFileList.at(index).length();
+            size_t length = sourceFileList.at(index).length();
             if (length <= 0) {
                 return DFS_MEM_ERROR;
             }
@@ -128,7 +128,7 @@ int32_t DistributedFileService::CreateDestResources(const std::vector<std::strin
     }
 
     for (int index = 0; index < destinationFileList.size(); ++index) {
-        int32_t length = destinationFileList.at(index).length();
+        size_t length = destinationFileList.at(index).length();
         if (length <= 0) {
             return DFS_MEM_ERROR;
         }
