@@ -28,6 +28,7 @@ ohos_shared_library("sendfile") {
     "//foundation/communication/ipc/interfaces/innerkits/libdbinder/include",
     "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
     "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn/include",
+    "//third_party/bounds_checking_function/include",
   ]
 
   sources = [
@@ -52,7 +53,7 @@ ohos_shared_library("sendfile") {
     "${utils_path}:libdistributedfileutils",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn:filemgmt_libn",
-    "//utils/native/base:utilsecurec",
+    "//third_party/bounds_checking_function:libsec_static",
   ]
 
   external_deps = [
