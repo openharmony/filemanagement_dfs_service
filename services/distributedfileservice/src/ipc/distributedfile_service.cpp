@@ -16,6 +16,7 @@
 
 #include <exception>
 #include <fcntl.h>
+#include <string_view>
 #include <unistd.h>
 
 #include "bundle_mgr_interface.h"
@@ -81,9 +82,9 @@ int32_t DistributedFileService::CreateSourceResources(const std::vector<std::str
         LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}zu",
             index, sourceFileList.at(index).c_str(), sourceFileList.at(index).length());
         if (index == 0) {
-            std::string tmpString("/data/system_ce/tmp");
-            size_t length = tmpString.length();
-            if (length <= 0 || length > SIZE_MAX - 1) {
+            constexpr std::string_view tmpString("/data/system_ce/tmp");
+            constexpr size_t length = tmpString.length();
+            if (length <= 0) {
                 return DFS_MEM_ERROR;
             }
             char *sTemp = new char[length + 1];
