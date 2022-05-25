@@ -84,7 +84,7 @@ int32_t DistributedFileService::CreateSourceResources(const std::vector<std::str
         if (index == 0) {
             constexpr std::string_view tmpString("/data/system_ce/tmp");
             constexpr size_t length = tmpString.length();
-            if (length <= 0) {
+            if (length <= 0 || length > SIZE_MAX - 1) {
                 return DFS_MEM_ERROR;
             }
             char *sTemp = new char[length + 1];
@@ -95,7 +95,7 @@ int32_t DistributedFileService::CreateSourceResources(const std::vector<std::str
             if (memset_s(sTemp, length + 1, '\0', length + 1) != EOK) {
                 return DFS_MEM_ERROR;
             }
-            if (memcpy_s(sTemp, length + 1, tmpString.c_str(), length) != EOK) {
+            if (memcpy_s(sTemp, length + 1, tmpString.data(), length) != EOK) {
                 return DFS_MEM_ERROR;
             }
             sTemp[length] = '\0';
