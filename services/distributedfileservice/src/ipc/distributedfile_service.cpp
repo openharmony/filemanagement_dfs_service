@@ -16,6 +16,7 @@
 
 #include <exception>
 #include <fcntl.h>
+#include <string_view>
 #include <unistd.h>
 
 #include "bundle_mgr_interface.h"
@@ -81,9 +82,9 @@ int32_t DistributedFileService::CreateSourceResources(const std::vector<std::str
         LOGI("DistributedFileService::SendFile Source File List %{public}d, %{public}s, %{public}zu",
             index, sourceFileList.at(index).c_str(), sourceFileList.at(index).length());
         if (index == 0) {
-            std::string tmpString("/data/system_ce/tmp");
-            int32_t length = tmpString.length();
-            if (length <= 0) {
+            constexpr std::string_view tmpString("/data/system_ce/tmp");
+            constexpr size_t length = tmpString.length();
+            if (length <= 0 || length > SIZE_MAX - 1) {
                 return DFS_MEM_ERROR;
             }
             char *sTemp = new char[length + 1];
@@ -94,13 +95,13 @@ int32_t DistributedFileService::CreateSourceResources(const std::vector<std::str
             if (memset_s(sTemp, length + 1, '\0', length + 1) != EOK) {
                 return DFS_MEM_ERROR;
             }
-            if (memcpy_s(sTemp, length + 1, tmpString.c_str(), length) != EOK) {
+            if (memcpy_s(sTemp, length + 1, tmpString.data(), length) != EOK) {
                 return DFS_MEM_ERROR;
             }
             sTemp[length] = '\0';
         } else {
-            int32_t length = sourceFileList.at(index).length();
-            if (length <= 0) {
+            size_t length = sourceFileList.at(index).length();
+            if (length <= 0 || length > SIZE_MAX - 1) {
                 return DFS_MEM_ERROR;
             }
             char *sTemp = new char[length + 1];
@@ -128,8 +129,8 @@ int32_t DistributedFileService::CreateDestResources(const std::vector<std::strin
     }
 
     for (int index = 0; index < destinationFileList.size(); ++index) {
-        int32_t length = destinationFileList.at(index).length();
-        if (length <= 0) {
+        size_t length = destinationFileList.at(index).length();
+        if (length <= 0 || length > SIZE_MAX - 1) {
             return DFS_MEM_ERROR;
         }
         char *sTemp = new char[length + 1];
