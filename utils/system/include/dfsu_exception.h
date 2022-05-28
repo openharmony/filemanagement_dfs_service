@@ -36,7 +36,7 @@ enum {
 
 class DfsuException : public std::exception {
 public:
-    DfsuException(int code, const std::string &msg) : code_(code), msg_(msg) {};
+    DfsuException(int code, const std::string &msg) : code_(code) {};
 
     uint32_t code() const noexcept
     {
@@ -45,12 +45,11 @@ public:
 
     virtual const char *what() const noexcept
     {
-        return msg_.c_str();
+        return "";
     }
 
 private:
     int code_ {ERR_DEFAULT};
-    std::string msg_;
 };
 
 #define ThrowException(code, msg)                           \

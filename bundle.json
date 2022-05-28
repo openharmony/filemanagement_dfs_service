@@ -38,7 +38,8 @@
       "build": {
         "sub_component": [
           "//foundation/filemanagement/dfs_service:services_target",
-          "//foundation/filemanagement/dfs_service:napi_target"
+          "//foundation/filemanagement/dfs_service:napi_target",
+          "//foundation/filemanagement/dfs_service/tools:exceptool"
         ],
         "inner_kits": [
           {

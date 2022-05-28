@@ -1,0 +1,10 @@
+import("//build/ohos.gni")
+
+ohos_executable("exceptool") {
+  sources = [ "main.cpp" ]
+
+  use_exceptions = true
+  install_enable = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
