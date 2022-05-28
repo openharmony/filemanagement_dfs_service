@@ -48,7 +48,7 @@ ohos_shared_library("sendfile") {
   ]
 
   deps = [
-    "${aakits_path}/ability/native:abilitykit_native",
+    "${aafwk_kits_path}/ability/native:abilitykit_native",
     "${distributedfile_path}/interfaces/innerkits/native:libdistributedfile_innerkits",
     "${utils_path}:libdistributedfileutils",
     "//foundation/arkui/napi:ace_napi",
