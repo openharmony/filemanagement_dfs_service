@@ -86,14 +86,6 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 void DeviceManagerAgent::OnRemoteDied()
 {
     LOGI("device manager service died");
-    try {
-        UnregisterFromExternalDm();
-        RegisterToExternalDm();
-    } catch (const DfsuException &e) {
-        LOGE("Reregister devicemagager callback failed.");
-    } catch (const std::exception &e) {
-        LOGE("Unexpected Low Level exception");
-    }
 }
 
 void DeviceManagerAgent::RegisterToExternalDm()
