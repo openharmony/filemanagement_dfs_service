@@ -306,11 +306,8 @@ void DeviceManagerAgent::InitLocalNodeInfo()
 void DeviceManagerAgent::OnRemoteDied()
 {
     LOGI("device manager service died");
-    StopInstance();
-    OfflineAllDevice(); // cannot commit a cmd to queue
-    StartInstance();
-    ReconnectOnlineDevices();
 }
+
 DeviceInfo &DeviceManagerAgent::GetLocalDeviceInfo()
 {
     return localDeviceInfo_;
