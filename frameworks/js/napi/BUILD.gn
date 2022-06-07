@@ -53,7 +53,7 @@ ohos_shared_library("sendfile") {
     "${utils_path}:libdistributedfileutils",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn:filemgmt_libn",
-    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 
   external_deps = [
