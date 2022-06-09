@@ -20,7 +20,7 @@ config("module_private_config") {
 
   include_dirs = [
     "${services_path}/distributedfiledaemon/include",
-    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
+    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp/include",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     "//foundation/communication/dsoftbus/interfaces/kits/bus_center",
     "//foundation/communication/dsoftbus/interfaces/kits/common",
@@ -61,7 +61,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
   deps = [
     "${utils_path}:libdistributedfileutils",
     "//base/security/deviceauth/services:deviceauth_sdk",
-    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk",
+    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//foundation/filemanagement/dfs_service/services/distributedfiledaemon:libdistributedfiledaemon",
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest_main",
