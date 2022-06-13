@@ -26,7 +26,7 @@ ohos_shared_library("sendfile") {
     "${distributedfile_path}/utils/system/include",
     "${services_path}/distributedfileservice/include/ipc",
     "//foundation/communication/ipc/interfaces/innerkits/libdbinder/include",
-    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
+    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp/include",
     "//foundation/distributeddatamgr/distributedfile/utils/filemgmt_libn/include",
     "//third_party/bounds_checking_function/include",
   ]

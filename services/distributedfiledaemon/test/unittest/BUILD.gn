@@ -20,7 +20,7 @@ config("module_private_config") {
 
   include_dirs = [
     "${services_path}/distributedfiledaemon/include",
-    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp/include",
+    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp/include",
     "//base/security/deviceauth/interfaces/innerkits",
     "//third_party/json/include",
   ]
@@ -41,7 +41,7 @@ ohos_unittest("DeviceManagerAgentTest") {
   deps = [
     "${utils_path}:libdistributedfileutils",
     "//base/security/deviceauth/services:deviceauth_sdk",
-    "//foundation/distributedhardware/devicemanager/interfaces/inner_kits/native_cpp:devicemanagersdk",
+    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//third_party/googletest:gtest_main",
   ]
 
