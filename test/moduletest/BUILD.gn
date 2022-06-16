@@ -24,7 +24,7 @@ config("module_private_config") {
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     "//foundation/communication/dsoftbus/interfaces/kits/bus_center",
     "//foundation/communication/dsoftbus/interfaces/kits/common",
-    "//base/security/deviceauth/interfaces/innerkits",
+    "//base/security/device_auth/interfaces/innerkits",
     "//third_party/json/include",
   ]
 }
@@ -60,7 +60,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//base/security/deviceauth/services:deviceauth_sdk",
+    "//base/security/device_auth/services:deviceauth_sdk",
     "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//foundation/filemanagement/dfs_service/services/distributedfiledaemon:libdistributedfiledaemon",
     "//third_party/googletest:gmock",
