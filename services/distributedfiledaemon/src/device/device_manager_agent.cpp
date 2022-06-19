@@ -25,9 +25,9 @@
 #include "mountpoint/mount_manager.h"
 #include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_agent.h"
+#include "parameters.h"
 #include "softbus_bus_center.h"
 #include "utils_log.h"
-#include "parameters.h"
 
 namespace OHOS {
 namespace Storage {
