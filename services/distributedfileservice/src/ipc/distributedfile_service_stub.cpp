@@ -16,8 +16,8 @@
 #include "distributedfile_service_stub.h"
 
 #include <fcntl.h>
-#include <unistd.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "filetransfer_callback_proxy.h"
 #include "ipc_skeleton.h"
