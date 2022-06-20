@@ -45,7 +45,7 @@ ohos_shared_library("libdistributedfiledaemon") {
   ]
   external_deps = [
     "dataclassification:data_transit_mgr",
-    "dsoftbus:softbus_client",
+    "dsoftbus_standard:softbus_client",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
