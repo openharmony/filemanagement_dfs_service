@@ -14,22 +14,13 @@
 import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-group("libdistributedfile_innerkits") {
-  deps = [ "${innerkits_native_path}:libdistributedfile_innerkits" ]
-}
-
 group("services_target") {
   deps = [
     "${services_path}:distributed_file.para",
     "${services_path}:distributedfile_etc",
     "${services_path}:distributedfile_sa_profile",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
-    "${services_path}/distributedfileservice:libdistributedfileservice",
   ]
-}
-
-group("napi_target") {
-  deps = [ "${distributedfile_path}/frameworks/js/napi:build_kits_js" ]
 }
 
 group("dfs_test_moudule") {
