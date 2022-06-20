@@ -37,20 +37,7 @@
       },
       "build": {
         "sub_component": [
-          "//foundation/filemanagement/dfs_service:services_target",
-          "//foundation/filemanagement/dfs_service:napi_target"
-        ],
-        "inner_kits": [
-          {
-            "name": "//foundation/filemanagement/dfs_service:libdistributedfile_innerkits",
-            "header": {
-              "header_files": [
-                "i_distributedfile_service.h",
-                "i_filetransfer_callback.h"
-              ],
-              "header_base": "//foundation/filemanagement/dfs_service/interfaces/innerkits/native"
-            }
-          }
+          "//foundation/filemanagement/dfs_service:services_target"
         ],
         "test": [ 
           "//foundation/filemanagement/dfs_service:dfs_test_moudule"
