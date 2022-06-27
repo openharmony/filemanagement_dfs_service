@@ -56,7 +56,6 @@ uint32_t DevslDispatcher::DevslGetRegister(const std::string &cid, std::weak_ptr
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, cid, udid);
 
-    LOGI("dsl dispatcher cid : %{public}s udid : %{public}s %{public}zu", cid.c_str(), udid.c_str(), udid.size());
     std::lock_guard<std::mutex> lock(mutex);
     DEVSLQueryParams queryParams = MakeDevslQueryParams(udid);
     int status = DATASL_GetHighestSecLevelAsync(&queryParams, &DevslDispatcher::DevslGottonCallback);
