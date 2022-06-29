@@ -81,7 +81,7 @@ void OsAccountObserver::RemoveMPInfo(const int id)
         dm->Recv(make_unique<DfsuCmd<DeviceManagerAgent, weak_ptr<MountPoint>>>(&DeviceManagerAgent::QuitGroup, smp));
     }
     mountPoints_.erase(iter);
-    
+
     LOGE("remove mount info of user id %{public}d", id);
 }
 } // namespace DistributedFile
