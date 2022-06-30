@@ -24,9 +24,9 @@ namespace DistributedFile {
 namespace Utils {
 using namespace std;
 namespace {
-static const std::string DATA_POINT = "/data/service/el2/";
-static const std::string BASE_MOUNT_POINT = "/mnt/hmdfs/";
-static const std::string SYSFS_HMDFS_PATH = "sys/fs/hmdfs/";
+    static const std::string DATA_POINT = "/data/service/el2/";
+    static const std::string BASE_MOUNT_POINT = "/mnt/hmdfs/";
+    static const std::string SYSFS_HMDFS_PATH = "/sys/fs/hmdfs/";
 } // namespace
 
 string MountArgument::GetFullSrc() const

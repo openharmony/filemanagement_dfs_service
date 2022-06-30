@@ -82,15 +82,14 @@ private:
         int file = open(realPath, O_RDWR);
         free(realPath);
         if (file < 0) {
-            LOGE("Open node file error. %{public}d", file);
+            LOGE("Open node file error. %{public}d", errno);
             return;
         }
         int err = write(file, &cmd, sizeof(T));
         if (err < 0) {
-            LOGE("write return err. %{public}d", err);
+            LOGE("write return err. %{public}d", errno);
         }
         close(file);
-        return;
     }
 
     void PollRun();
