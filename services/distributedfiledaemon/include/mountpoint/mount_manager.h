@@ -17,8 +17,7 @@
 #define MOUNT_MANAGER_H
 
 #include <memory>
-#include <mutex>
-#include <vector>
+#include <string>
 
 #include "dfsu_singleton.h"
 #include "mount_point.h"

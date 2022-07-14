@@ -15,12 +15,9 @@
 
 #include "mountpoint/mount_manager.h"
 
-#include <algorithm>
-#include <sstream>
+#include <memory>
 
-#include "device/device_manager_agent.h"
-#include "dfsu_mount_argument_descriptors.h"
-#include "utils_log.h"
+#include "mountpoint/mount_point.h"
 
 namespace OHOS {
 namespace Storage {

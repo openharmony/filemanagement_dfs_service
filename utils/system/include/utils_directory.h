@@ -16,12 +16,8 @@
 #ifndef UTILS_DIRECTORY_H
 #define UTILS_DIRECTORY_H
 
-#include <functional>
-#include <string>
-#include <sys/stat.h>
 #include <sys/types.h>
-
-#include "nocopyable.h"
+#include <string>
 
 namespace OHOS {
 namespace Storage {
@@ -38,9 +34,6 @@ void ForceCreateDirectory(const std::string &path, mode_t mode);
 void ForceCreateDirectory(const std::string &path, mode_t mode, uid_t uid, gid_t gid);
 
 void ForceRemoveDirectory(const std::string &path);
-
-bool IsFileExist(const std::string &fileName);
-int32_t RemoveFile(const std::string &fileName);
 } // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage

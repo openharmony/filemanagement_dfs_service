@@ -19,6 +19,9 @@
 
 #include "i_daemon.h"
 #include "iremote_stub.h"
+#include "message_option.h"
+#include "message_parcel.h"
+#include "refbase.h"
 
 namespace OHOS {
 namespace Storage {

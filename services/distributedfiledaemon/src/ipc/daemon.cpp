@@ -15,8 +15,13 @@
 
 #include "ipc/daemon.h"
 
+#include <exception>
+#include <stdexcept>
+
+#include "iremote_object.h"
 #include "mountpoint/mount_manager.h"
 #include "os_account_manager.h"
+#include "os_account_subscribe_info.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 

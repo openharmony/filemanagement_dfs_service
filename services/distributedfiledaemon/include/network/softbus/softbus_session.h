@@ -16,6 +16,10 @@
 #ifndef SOFTBUS_SESSION_H
 #define SOFTBUS_SESSION_H
 
+#include <array>
+#include <cstdint>
+#include <string>
+
 #include "network/base_session.h"
 
 namespace OHOS {

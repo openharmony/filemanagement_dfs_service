@@ -15,10 +15,9 @@
 
 #include "utils_directory.h"
 
-#include <sys/stat.h>
 #include <sys/types.h>
-#include <system_error>
 #include <unistd.h>
+#include <system_error>
 
 #include "directory_ex.h"
 
@@ -77,17 +76,6 @@ void ForceRemoveDirectory(const string &path)
     if (!OHOS::ForceRemoveDirectory(path)) {
         throw system_error(errno, system_category());
     }
-}
-
-bool IsFileExist(const std::string &fileName)
-{
-    struct stat fileStat;
-    return (stat(fileName.c_str(), &fileStat) == 0);
-}
-
-int32_t RemoveFile(const std::string &fileName)
-{
-    return remove(fileName.c_str());
 }
 } // namespace Utils
 } // namespace DistributedFile
