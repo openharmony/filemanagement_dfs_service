@@ -16,12 +16,16 @@
 #ifndef DAEMON_H
 #define DAEMON_H
 
+#include <memory>
 #include <mutex>
+#include <string>
 
 #include "daemon_stub.h"
 #include "i_daemon.h"
 #include "iremote_stub.h"
 #include "multiuser/os_account_observer.h"
+#include "nocopyable.h"
+#include "refbase.h"
 #include "system_ability.h"
 
 namespace OHOS {

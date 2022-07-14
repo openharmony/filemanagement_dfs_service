@@ -14,7 +14,10 @@
  */
 
 #include "network/devsl_dispatcher.h"
+
+#include "device_manager.h"
 #include "ipc/i_daemon.h"
+#include "securec.h"
 #include "utils_log.h"
 
 namespace OHOS {
