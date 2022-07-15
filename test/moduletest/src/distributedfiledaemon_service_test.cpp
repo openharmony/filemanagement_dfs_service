@@ -89,6 +89,29 @@ void DistributedFileDaemonServiceTest::TearDown(void)
 }
 
 
+/**
+ * @tc.name: mount_test_001
+ * @tc.desc: Verify the mount/umount function.
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+HWTEST_F(DistributedFileDaemonServiceTest, mount_umount_test_001, TestSize.Level1)
+{
+    auto mp = make_unique<OHOS::Storage::DistributedFile::MountPoint>(
+        Utils::DfsuMountArgumentDescriptors::Alpha(100, SAME_ACCOUNT));
+
+    shared_ptr<OHOS::Storage::DistributedFile::MountPoint> smp = move(mp);
+
+    try {
+        smp->Mount();
+        smp->Umount();
+        LOGE("testcase run OK");
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
+        EXPECT_EQ(0, 1);
+    }
+    EXPECT_EQ(0, 0);
+}
 
 /**
  * @tc.name: distributedFileDaemon_service_test_006_repeats_init_register
