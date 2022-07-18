@@ -68,11 +68,12 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
   ]
 
   external_deps = [
+    "ability_base:want",
+    "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
   ]

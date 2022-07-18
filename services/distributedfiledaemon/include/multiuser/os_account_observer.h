@@ -20,20 +20,21 @@
 #include <mutex>
 #include <vector>
 
+#include "common_event_subscribe_info.h"
+#include "common_event_subscriber.h"
 #include "mountpoint/mount_point.h"
-#include "os_account_manager.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 static constexpr int MOUNT_POINT_NUM = 2;
-class OsAccountObserver final : public AccountSA::OsAccountSubscriber {
+class OsAccountObserver final : public EventFwk::CommonEventSubscriber {
 public:
     OsAccountObserver() = default;
     ~OsAccountObserver();
-    explicit OsAccountObserver(const AccountSA::OsAccountSubscribeInfo &subscribeInfo);
+    explicit OsAccountObserver(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
 
-    void OnAccountsChanged(const int &id) override;
+    virtual void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override;
 private:
     void RemoveMPInfo(const int id);
     void AddMPInfo(const int id, const std::string &relativePath);
