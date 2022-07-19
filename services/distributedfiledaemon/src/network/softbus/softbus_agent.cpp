@@ -12,12 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "network/softbus/softbus_agent.h"
 
 #include <sstream>
 
 #include "dfsu_exception.h"
 #include "ipc/i_daemon.h"
+#include "ipc_skeleton.h"
 #include "network/softbus/softbus_session.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_name.h"
@@ -28,7 +30,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace {
-constexpr int MAX_RETRY_COUNT = 7;
+    constexpr int MAX_RETRY_COUNT = 7;
 }
 using namespace std;
 SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTemplate(mountPoint)
@@ -79,11 +81,14 @@ void SoftbusAgent::QuitDomain()
     SoftbusSessionDispatcher::UnregisterSessionListener(sessionName_.c_str());
     LOGD("Succeed to QuitDomain, busName:%{public}s", sessionName_.c_str());
 }
+
 void SoftbusAgent::StopTopHalf()
 {
     QuitDomain();
 }
+
 void SoftbusAgent::StopBottomHalf() {}
+
 void SoftbusAgent::OpenSession(const DeviceInfo &info)
 {
     SessionAttribute attr;
@@ -98,7 +103,6 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info)
         ThrowException(ERR_SOFTBUS_AGENT_ON_SESSION_OPENED_FAIL, "Open Session failed");
     }
     LOGD("Open Session SUCCESS, cid:%{public}s", info.GetCid().c_str());
-    return;
 }
 
 void SoftbusAgent::CloseSession(shared_ptr<BaseSession> session)
