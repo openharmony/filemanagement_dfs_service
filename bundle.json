@@ -36,9 +36,13 @@
         ]
       },
       "build": {
-        "sub_component": [
-          "//foundation/filemanagement/dfs_service:services_target"
-        ],
+        "group_type": {
+          "base_group": [],
+          "fwk_group": [],
+          "service_group": [
+            "//foundation/filemanagement/dfs_service:services_target"
+          ]
+        },
         "test": [ 
           "//foundation/filemanagement/dfs_service:dfs_test_moudule"
         ]
