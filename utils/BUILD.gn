@@ -45,7 +45,7 @@ config("utils_public_config") {
   include_dirs = [
     "log/include",
     "system/include",
-    "//utils/native/base/include",
+    "//commonlibrary/c_utils/base/include",
   ]
 }
 
@@ -64,7 +64,7 @@ ohos_shared_library("libdistributedfileutils") {
 
   public_deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//utils/native/base:utils",
+    "//commonlibrary/c_utils/base:utils",
   ]
 
   part_name = "dfs_service"
