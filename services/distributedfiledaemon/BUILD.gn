@@ -44,11 +44,12 @@ ohos_shared_library("libdistributedfiledaemon") {
     "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
   ]
   external_deps = [
+    "ability_base:want",
+    "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
   ]

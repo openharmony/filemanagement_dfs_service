@@ -15,6 +15,8 @@
 
 #include "multiuser/os_account_observer.h"
 
+#include "common_event_manager.h"
+#include "common_event_support.h"
 #include "device/device_manager_agent.h"
 #include "dfsu_mount_argument_descriptors.h"
 #include "utils_log.h"
@@ -29,8 +31,8 @@ static const std::string ACCOUNT_LESS = "non_account";
 static constexpr int DEFAULT_ACCOUNT = 100;
 } // namespace
 
-OsAccountObserver::OsAccountObserver(const AccountSA::OsAccountSubscribeInfo &subscribeInfo)
-    : OsAccountSubscriber(subscribeInfo)
+OsAccountObserver::OsAccountObserver(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
+    : EventFwk::CommonEventSubscriber(subscribeInfo)
 {
     LOGI("init first to create network of default user");
     lock_guard<mutex> lock(serializer_);
@@ -52,20 +54,26 @@ void OsAccountObserver::AddMPInfo(const int id, const std::string &relativePath)
     mountPoints_[id].emplace_back(smp);
 }
 
-void OsAccountObserver::OnAccountsChanged(const int &id)
+void OsAccountObserver::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
 {
-    LOGI("user id changed to %{public}d", id);
-    lock_guard<mutex> lock(serializer_);
-    if (curUsrId != -1) {
-        // first stop curUsrId network
-        RemoveMPInfo(curUsrId);
-    }
+    const AAFwk::Want& want = eventData.GetWant();
+    std::string action = want.GetAction();
+    LOGI("AccountSubscriber: OnReceiveEvent action:%{public}s.", action.c_str());
+    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
+        int32_t id = eventData.GetCode();
+        LOGI("user id changed to %{public}d", id);
+        lock_guard<mutex> lock(serializer_);
+        if (curUsrId != -1 && curUsrId != id) {
+            // first stop curUsrId network
+            RemoveMPInfo(curUsrId);
+        }
 
-    // then start new network
-    curUsrId = id;
-    AddMPInfo(id, SAME_ACCOUNT);
-    AddMPInfo(id, ACCOUNT_LESS);
-    LOGI("user id %{public}d, add network done", curUsrId);
+        // then start new network
+        curUsrId = id;
+        AddMPInfo(id, SAME_ACCOUNT);
+        AddMPInfo(id, ACCOUNT_LESS);
+        LOGI("user id %{public}d, add network done", curUsrId);
+    }
 }
 
 void OsAccountObserver::RemoveMPInfo(const int id)

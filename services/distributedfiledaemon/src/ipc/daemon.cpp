@@ -18,10 +18,10 @@
 #include <exception>
 #include <stdexcept>
 
+#include "common_event_manager.h"
+#include "common_event_support.h"
 #include "iremote_object.h"
 #include "mountpoint/mount_manager.h"
-#include "os_account_manager.h"
-#include "os_account_subscribe_info.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -47,17 +47,14 @@ void Daemon::PublishSA()
 
 void Daemon::RegisterOsAccount()
 {
-    OHOS::AccountSA::OsAccountSubscribeInfo osAccountSubscribeInfo;
-    osAccountSubscribeInfo.SetOsAccountSubscribeType(OHOS::AccountSA::OS_ACCOUNT_SUBSCRIBE_TYPE::ACTIVED);
-    osAccountSubscribeInfo.SetName("distributed_file_service");
-
-    subScriber_ = std::make_shared<OsAccountObserver>(osAccountSubscribeInfo);
-    int ret = OHOS::AccountSA::OsAccountManager::SubscribeOsAccount(subScriber_);
-    if (ret != 0) {
-        LOGE("register os account fail ret %{public}d", ret);
-        return;
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    subScriber_ = std::make_shared<OsAccountObserver>(subscribeInfo);
+    bool subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(subScriber_);
+    if (!subRet) {
+        LOGE("Subscribe common event failed");
     }
-    LOGI("register os account success, ret %{public}d", ret);
 }
 
 void Daemon::OnStart()
@@ -84,9 +81,9 @@ void Daemon::OnStop()
     LOGI("Begin to stop");
     state_ = ServiceRunningState::STATE_NOT_START;
     registerToService_ = false;
-    int32_t ret = OHOS::AccountSA::OsAccountManager::UnsubscribeOsAccount(subScriber_);
-    if (ret != 0) {
-        LOGI("UnsubscribeOsAccount failed, ret %{public}d", ret);
+    bool subRet = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subScriber_);
+    if (!subRet) {
+        LOGE("UnSubscribe common event failed");
     }
     subScriber_ = nullptr;
     LOGI("Stop finished successfully");
