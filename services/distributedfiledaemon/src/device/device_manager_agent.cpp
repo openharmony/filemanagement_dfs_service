@@ -146,8 +146,11 @@ std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRe
 {
     LOGI("enter: isAccountless %{public}d", isAccountless);
     for (auto [ignore, net] : mpToNetworks_) {
-        if (net->GetMountPoint()->isAccountLess() == isAccountless) {
-            return net;
+        if (net != nullptr) {
+            auto smp = net->GetMountPoint();
+            if (smp != nullptr && smp->isAccountLess() == isAccountless) {
+                return net;
+            }
         }
     }
     LOGE("not find this net in mpToNetworks, isAccountless %{public}d", isAccountless);
