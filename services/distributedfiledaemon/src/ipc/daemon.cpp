@@ -67,7 +67,7 @@ void Daemon::OnStart()
 
     try {
         PublishSA();
-        RegisterOsAccount();
+        AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
@@ -87,6 +87,31 @@ void Daemon::OnStop()
     }
     subScriber_ = nullptr;
     LOGI("Stop finished successfully");
+}
+
+void Daemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
+{
+    (void)systemAbilityId;
+    (void)deviceId;
+    RegisterOsAccount();
+}
+
+void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
+{
+    (void)deviceId;
+    if (systemAbilityId != COMMON_EVENT_SERVICE_ID) {
+        LOGE("systemAbilityId is not COMMON_EVENT_SERVICE_ID");
+        return;
+    }
+
+    if (subScriber_ == nullptr) {
+        LOGE("Daemon::OnRemoveSystemAbility subscriberPtr is nullptr");
+        return;
+    }
+
+    bool subscribeResult = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subScriber_);
+    LOGI("Daemon::OnRemoveSystemAbility subscribeResult = %{public}d", subscribeResult);
+    subScriber_ = nullptr;
 }
 
 int32_t Daemon::EchoServerDemo(const string &echoStr)
