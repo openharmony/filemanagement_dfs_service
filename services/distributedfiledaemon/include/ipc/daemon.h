@@ -42,6 +42,8 @@ public:
 
     void OnStart() override;
     void OnStop() override;
+    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+    void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     ServiceRunningState QueryServiceState() const
     {
         return state_;
