@@ -102,6 +102,8 @@ void DeviceManagerAgent::JoinGroup(weak_ptr<MountPoint> mp)
 
 void DeviceManagerAgent::QuitGroup(weak_ptr<MountPoint> mp)
 {
+    OfflineAllDevice();
+
     auto smp = mp.lock();
     if (!smp) {
         stringstream ss("Failed to quit group: Received empty mountpoint");
