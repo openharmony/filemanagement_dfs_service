@@ -28,46 +28,27 @@ using namespace testing::ext;
 using namespace std;
 
 constexpr int E_OK = 0;
+constexpr int USER_ID = 100;
 static const string SAME_ACCOUNT = "account";
 
 class SoftbusAgentTest : public testing::Test {
 public:
-    static void SetUpTestCase(void);
-    static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
+    static void SetUpTestCase(void) {};
+    static void TearDownTestCase(void) {};
+    void SetUp() {};
+    void TearDown() {};
 };
 
-void SoftbusAgentTest::SetUpTestCase(void)
-{
-    // input testsuit setup step，setup invoked before all testcases
-}
-
-void SoftbusAgentTest::TearDownTestCase(void)
-{
-    // input testsuit teardown step，teardown invoked after all testcases
-}
-
-void SoftbusAgentTest::SetUp(void)
-{
-    // input testcase setup step，setup invoked before each testcases
-}
-
-void SoftbusAgentTest::TearDown(void)
-{
-    // input testcase teardown step，teardown invoked after each testcases
-}
-
 /**
- * @tc.name: SoftbusAgentTest_OnSessionOpened_010
+ * @tc.name: SoftbusAgentTest_OnSessionOpened_0100
  * @tc.desc: Verify the OnSessionOpened function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_010, TestSize.Level1)
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_010 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, SAME_ACCOUNT));
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
     shared_ptr<MountPoint> smp = move(mp);
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
@@ -82,19 +63,19 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_010, TestSize.Level1
     std::thread execThread(execFun, agent);
     sleep(1);
     execThread.join();
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_010 end";
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0100 end";
 }
 
 /**
- * @tc.name: SoftbusAgentTest_OnSessionOpened_020
+ * @tc.name: SoftbusAgentTest_OnSessionOpened_0200
  * @tc.desc: Verify the OnSessionOpened function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_020, TestSize.Level1)
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_0200, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_010 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, SAME_ACCOUNT));
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0200 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
     shared_ptr<MountPoint> smp = move(mp);
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
@@ -109,19 +90,19 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_020, TestSize.Level1
     std::thread execThread(execFun, agent);
     sleep(1);
     execThread.join();
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_010 end";
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0200 end";
 }
 
 /**
- * @tc.name: SoftbusAgentTest_OnSessionClosed_010
+ * @tc.name: SoftbusAgentTest_OnSessionClosed_0100
  * @tc.desc: Verify the OnSessionClosed function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionClosed_010, TestSize.Level1)
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionClosed_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionClosed_010 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, SAME_ACCOUNT));
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionClosed_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
     shared_ptr<MountPoint> smp = move(mp);
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
@@ -134,7 +115,7 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionClosed_010, TestSize.Level1
         LOGE("%{public}s", e.what());
     }
     EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionClosed_010 end";
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionClosed_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile

@@ -42,16 +42,17 @@ public:
 };
 
 /**
- * @tc.name: SoftbusSessionDispatcherTest_RegisterSessionListener_010
+ * @tc.name: SoftbusSessionDispatcherTest_RegisterSessionListener_0100
  * @tc.desc: Verify the RegisterSessionListener/UnregisterSessionListener function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_RegisterSessionListener_010, TestSize.Level1)
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_RegisterSessionListener_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_RegisterSessionListener_010 start";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_RegisterSessionListener_0100 start";
+    constexpr int USER_ID = 100;
     auto mp = make_unique<MountPoint>(
-            OHOS::Storage::DistributedFile::Utils::DfsuMountArgumentDescriptors::Alpha(100, SAME_ACCOUNT));
+            OHOS::Storage::DistributedFile::Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
     shared_ptr<MountPoint> smp = move(mp);
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
@@ -68,18 +69,18 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_RegisterSess
     }
 
     EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_RegisterSessionListener_010 end";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_RegisterSessionListener_0100 end";
 }
 
 /**
- * @tc.name: SoftbusSessionDispatcherTest_UnregisterSessionListener_010
+ * @tc.name: SoftbusSessionDispatcherTest_UnregisterSessionListener_0100
  * @tc.desc: Verify the UnregisterSessionListener function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_UnregisterSessionListener_010, TestSize.Level1)
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_UnregisterSessionListener_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_UnregisterSessionListener_010 start";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_UnregisterSessionListener_0100 start";
     const string busName = "testBus";
     bool res = true;
 
@@ -91,36 +92,36 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_UnregisterSe
     }
 
     EXPECT_TRUE(res == false);
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_UnregisterSessionListener_010 end";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_UnregisterSessionListener_0100 end";
 }
 
 /**
- * @tc.name: SoftbusSessionDispatcherTest_GetAgent_010
+ * @tc.name: SoftbusSessionDispatcherTest_GetAgent_0100
  * @tc.desc: Verify the GetAgent function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_GetAgent_010, TestSize.Level1)
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_GetAgent_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_GetAgent_010 start";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_GetAgent_0100 start";
     try {
         weak_ptr<SoftbusAgent> wp = SoftbusSessionDispatcher::GetAgent(TEST_SESSION_ID);
         EXPECT_TRUE(wp.expired() == true);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_GetAgent_010 end";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_GetAgent_0100 end";
 }
 
 /**
- * @tc.name: SoftbusSessionDispatcherTest_OnSessionOpened_010
+ * @tc.name: SoftbusSessionDispatcherTest_OnSessionOpened_0100
  * @tc.desc: Verify the OnSessionOpened function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpened_010, TestSize.Level1)
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpened_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_010 start";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0100 start";
     bool res = true;
 
     try {
@@ -131,18 +132,18 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpe
     }
 
     EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_010 end";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0100 end";
 }
 
 /**
- * @tc.name: SoftbusSessionDispatcherTest_OnSessionOpened_020
+ * @tc.name: SoftbusSessionDispatcherTest_OnSessionOpened_0200
  * @tc.desc: Verify the OnSessionOpened function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpened_020, TestSize.Level1)
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpened_0200, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_020 start";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0200 start";
     bool res = true;
 
     try {
@@ -153,18 +154,18 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpe
     }
 
     EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_020 end";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0200 end";
 }
 
 /**
- * @tc.name: SoftbusSessionDispatcherTest_OnSessionClosed_010
+ * @tc.name: SoftbusSessionDispatcherTest_OnSessionClosed_0100
  * @tc.desc: Verify the OnSessionClosed function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionClosed_010, TestSize.Level1)
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionClosed_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionClosed_010 start";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionClosed_0100 start";
     bool res = true;
 
     try {
@@ -175,7 +176,7 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionClo
     }
 
     EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionClosed_010 end";
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionClosed_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile

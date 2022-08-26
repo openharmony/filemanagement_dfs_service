@@ -31,9 +31,7 @@ ohos_unittest("DeviceManagerAgentTest") {
 
   sources = []
 
-  sources += [
-    "device/device_manager_agent_test.cpp",
-  ]
+  sources += [ "device/device_manager_agent_test.cpp" ]
 
   configs = [
     ":module_private_config",
@@ -79,6 +77,9 @@ ohos_unittest("NetworkTest") {
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "network/devsl_disppatcher_test.cpp",
+    "network/kernel_talker_test.cpp",
+    "network/session_pool_test.cpp",
     "network/softbus_agent_test.cpp",
     "network/softbus_session_dispatcher_test.cpp",
     "network/softbus_session_test.cpp",

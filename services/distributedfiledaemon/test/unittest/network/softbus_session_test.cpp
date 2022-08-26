@@ -51,93 +51,113 @@ void SoftbusSessionTest::TearDownTestCase(void)
 }
 
 /**
- * @tc.name: SoftbusSessionTest_IsFromServer_010
+ * @tc.name: SoftbusSessionTest_IsFromServer_0100
  * @tc.desc: Verify the IsFromServer function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_IsFromServer_010, TestSize.Level1)
+HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_IsFromServer_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusSessionTest_IsFromServer_010 start";
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_IsFromServer_0100 start";
     try {
         bool res = g_session->IsFromServer();
         EXPECT_TRUE(res == false);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
-    GTEST_LOG_(INFO) << "SoftbusSessionTest_IsFromServer_010 end";
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_IsFromServer_0100 end";
 }
 
 /**
- * @tc.name: SoftbusSessionTest_GetCid_010
+ * @tc.name: SoftbusSessionTest_GetCid_0100
  * @tc.desc: Verify the GetCid function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_GetCid_010, TestSize.Level1)
+HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_GetCid_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusSessionTest_GetCid_010 start";
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_GetCid_0100 start";
     try {
         string cid = g_session->GetCid();
         EXPECT_TRUE(cid == "");
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
-    GTEST_LOG_(INFO) << "SoftbusSessionTest_GetCid_010 end";
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_GetCid_0100 end";
 }
 
 /**
- * @tc.name: SoftbusSessionTest_GetHandle_010
+ * @tc.name: SoftbusSessionTest_GetHandle_0100
  * @tc.desc: Verify the GetHandle function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_GetHandle_010, TestSize.Level1)
+HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_GetHandle_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusSessionTest_GetHandle_010 start";
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_GetHandle_0100 start";
     try {
         int32_t socket = g_session->GetHandle();
         EXPECT_TRUE(socket == INVALID_SOCKET_FD);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
-    GTEST_LOG_(INFO) << "SoftbusSessionTest_GetHandle_010 end";
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_GetHandle_0100 end";
 }
 
 /**
- * @tc.name: SoftbusSessionTest_Release
+ * @tc.name: SoftbusSessionTest_GetKey_0100
+ * @tc.desc: Verify the GetKey function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_GetKey_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_GetKey_0100 start";
+    bool res = true;
+    try {
+        (void)g_session->GetKey();
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_GetKey_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusSessionTest_Release_0100
  * @tc.desc: Verify the Release function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_Release, TestSize.Level1)
+HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_Release_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusSessionTest_Release start";
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_Release_0100 start";
     try {
         g_session->Release();
         EXPECT_TRUE(true);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
-    GTEST_LOG_(INFO) << "SoftbusSessionTest_Release end";
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_Release_0100 end";
 }
 
 /**
- * @tc.name: SoftbusSessionTest_DisableSessionListener
+ * @tc.name: SoftbusSessionTest_DisableSessionListener_0100
  * @tc.desc: Verify the DisableSessionListener function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_DisableSessionListener, TestSize.Level1)
+HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_DisableSessionListener_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusSessionTest_DisableSessionListener start";
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_DisableSessionListener_0100 start";
     try {
         g_session->DisableSessionListener();
         EXPECT_TRUE(true);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
-    GTEST_LOG_(INFO) << "SoftbusSessionTest_DisableSessionListener end";
+    GTEST_LOG_(INFO) << "SoftbusSessionTest_DisableSessionListener_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile
