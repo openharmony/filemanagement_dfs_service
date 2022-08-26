@@ -27,6 +27,7 @@ group("dfs_test_moudule") {
   testonly = true
   deps = [
     "${services_path}/distributedfiledaemon/test/unittest:DeviceManagerAgentTest",
+    "${services_path}/distributedfiledaemon/test/unittest:NetworkTest",
     "test/moduletest:DistributedFileDaemonServiceTest",
   ]
 }
