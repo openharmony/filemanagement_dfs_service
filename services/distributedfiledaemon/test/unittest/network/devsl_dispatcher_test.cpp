@@ -28,14 +28,6 @@ namespace Test {
 using namespace testing::ext;
 using namespace std;
 
-void GetSessionProcess(NotifyParam &param)
-{
-};
-
-void CloseSessionForOneDevice(const std::string &cid)
-{
-};
-
 class DevslDispatcherTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
@@ -53,7 +45,7 @@ public:
 HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_Start_Stop_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DevslDispatcherTest_Start_Stop_0100 start";
-    int res = true;
+    bool res = true;
     try {
         DevslDispatcher::Start();
         DevslDispatcher::Stop();
@@ -74,10 +66,10 @@ HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_Start_Stop_0100, TestSize.Leve
 HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_DevslGottonCallback_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DevslDispatcherTest_DevslGottonCallback_0100 start";
-    int res = true;
+    bool res = true;
     uint32_t level = 0;
     DEVSLQueryParams queryParam = {
-        .udid = {1,2,3,4,5,6,7,8,9,0},
+        .udid = {1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
         .udidLen = 10
     };
 
@@ -102,12 +94,12 @@ HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_DevslGottonCallback_0100, Test
 HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_DevslGetRegister_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DevslDispatcherTest_DevslGetRegister_0100 start";
-    int res = true;
+    bool res = true;
     const string cid = "scid";
     constexpr int USER_ID = 100;
-    shared_ptr<MountPoint> smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    shared_ptr<KernelTalker> kernelTalker = std::make_shared<KernelTalker>(wmp, GetSessionProcess, CloseSessionForOneDevice);
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
 
     try {
         DevslDispatcher::DevslGetRegister(cid, kernelTalker);

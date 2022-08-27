@@ -32,14 +32,6 @@ using namespace std;
 constexpr int USER_ID = 100;
 constexpr int TEST_SESSION_ID = 10;
 
-static void GetSessionProcess(NotifyParam &param)
-{
-};
-
-static void CloseSessionForOneDevice(const std::string &cid)
-{
-};
-
 class SessionPoolTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
@@ -58,12 +50,12 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SessionPoolTest_HoldSession_0100 start";
     auto session = make_shared<SoftbusSession>(TEST_SESSION_ID);
-    shared_ptr<MountPoint> smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    shared_ptr<KernelTalker> kernelTalker = make_shared<KernelTalker>(wmp, GetSessionProcess, CloseSessionForOneDevice);
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
-    int res = true;
+    bool res = true;
     try {
         pool->HoldSession(session);
     } catch (const exception &e) {
@@ -84,12 +76,12 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0100, TestSize.Level1)
 HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Fd_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Fd_0100 start";
-    shared_ptr<MountPoint> smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    shared_ptr<KernelTalker> kernelTalker = make_shared<KernelTalker>(wmp, GetSessionProcess, CloseSessionForOneDevice);
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
-    int res = true;
+    bool res = true;
     try {
         pool->ReleaseSession(1);
     } catch (const exception &e) {
@@ -110,12 +102,12 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Fd_0100, TestSize.Level
 HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Cid_0100 start";
-    shared_ptr<MountPoint> smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    shared_ptr<KernelTalker> kernelTalker = make_shared<KernelTalker>(wmp, GetSessionProcess, CloseSessionForOneDevice);
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
-    int res = true;
+    bool res = true;
     try {
         pool->ReleaseSession("testSession");
     } catch (const exception &e) {
@@ -136,12 +128,12 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0100, TestSize.Leve
 HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseAllSession_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseAllSession_0100 start";
-    shared_ptr<MountPoint> smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    shared_ptr<KernelTalker> kernelTalker = make_shared<KernelTalker>(wmp, GetSessionProcess, CloseSessionForOneDevice);
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
-    int res = true;
+    bool res = true;
     try {
         pool->ReleaseAllSession();
     } catch (const exception &e) {

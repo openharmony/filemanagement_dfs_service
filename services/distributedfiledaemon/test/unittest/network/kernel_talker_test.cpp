@@ -29,19 +29,12 @@ using namespace testing::ext;
 using namespace std;
 
 constexpr int TEST_SESSION_ID = 10;
+constexpr int USER_ID = 100;
 static const string SESSION_CID = "testSession";
 static const string SAME_ACCOUNT = "account";
 shared_ptr<MountPoint> g_smp;
 weak_ptr<MountPoint> g_wmp;
 shared_ptr<KernelTalker> g_talker;
-
-static void GetSessionProcess(NotifyParam &param)
-{
-};
-
-static void CloseSessionForOneDevice(const std::string &cid)
-{
-};
 
 class KernelTalkerTest : public testing::Test {
 public:
@@ -53,9 +46,9 @@ public:
 
 void KernelTalkerTest::SetUpTestCase(void)
 {
-    g_smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, SAME_ACCOUNT));
+    g_smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
     g_wmp = g_smp;
-    g_talker = std::make_shared<KernelTalker>(g_wmp, GetSessionProcess, CloseSessionForOneDevice);
+    g_talker = std::make_shared<KernelTalker>(g_wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
 };
 
 void KernelTalkerTest::TearDownTestCase(void)
@@ -73,7 +66,7 @@ void KernelTalkerTest::TearDownTestCase(void)
 HWTEST_F(KernelTalkerTest, KernelTalkerTest_SinkSessionTokernel_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "KernelTalkerTest_SinkSessionTokernel_0100 start";
-    int res = true;
+    bool res = true;
     std::shared_ptr<SoftbusSession> session = make_shared<SoftbusSession>(TEST_SESSION_ID);
     try {
         g_talker->SinkSessionTokernel(session);
@@ -94,7 +87,7 @@ HWTEST_F(KernelTalkerTest, KernelTalkerTest_SinkSessionTokernel_0100, TestSize.L
 HWTEST_F(KernelTalkerTest, KernelTalkerTest_SinkDevslTokernel_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "KernelTalkerTest_SinkDevslTokernel_0100 start";
-    int res = true;
+    bool res = true;
     try {
         g_talker->SinkDevslTokernel(SESSION_CID, 1);
     } catch (const exception &e) {
@@ -114,7 +107,7 @@ HWTEST_F(KernelTalkerTest, KernelTalkerTest_SinkDevslTokernel_0100, TestSize.Lev
 HWTEST_F(KernelTalkerTest, KernelTalkerTest_SinkOfflineCmdToKernel_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "KernelTalkerTest_SinkOfflineCmdToKernel_0100 start";
-    int res = true;
+    bool res = true;
     try {
         g_talker->SinkOfflineCmdToKernel("testSession");
     } catch (const exception &e) {
@@ -134,7 +127,7 @@ HWTEST_F(KernelTalkerTest, KernelTalkerTest_SinkOfflineCmdToKernel_0100, TestSiz
 HWTEST_F(KernelTalkerTest, KernelTalkerTest_CreatePollThread_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "KernelTalkerTest_CreatePollThread_0100 start";
-    int res = true;
+    bool res = true;
     try {
         g_talker->CreatePollThread();
     } catch (const exception &e) {
