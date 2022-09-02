@@ -26,8 +26,12 @@ group("services_target") {
 group("dfs_test_moudule") {
   testonly = true
   deps = [
+    "${services_path}/distributedfiledaemon/test/unittest:daemon_stub_test",
+    "${services_path}/distributedfiledaemon/test/unittest:daemon_test",
+    "${services_path}/distributedfiledaemon/test/unittest:device_manager_agent_test",
     "${services_path}/distributedfiledaemon/test/unittest:devsl_dispatcher_test",
     "${services_path}/distributedfiledaemon/test/unittest:kernel_talker_test",
+    "${services_path}/distributedfiledaemon/test/unittest:os_account_observer_test",
     "${services_path}/distributedfiledaemon/test/unittest:session_pool_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_agent_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_dispatcher_test",
