@@ -51,7 +51,6 @@ ohos_shared_library("libdistributedfiledaemon") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
   ]
   configs = [ "${utils_path}:compiler_configs" ]
 
