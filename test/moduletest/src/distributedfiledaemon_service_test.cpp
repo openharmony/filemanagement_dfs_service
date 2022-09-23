@@ -39,9 +39,9 @@ namespace Test {
 using namespace testing::ext;
 using namespace std;
 
-static const string srcHead = "/data/service/el2/";
-static const string dstHead = "/mnt/hmdfs/";
-static const string cacheHead = "/data/service/el2/";
+static const string SRC_HEAD = "/data/service/el2/";
+static const string DST_HEAD = "/mnt/hmdfs/";
+static const string CACHE_HEAD = "/data/service/el2/";
 static const string SAME_ACCOUNT = "account";
 std::mutex cmdMutex_;
 
