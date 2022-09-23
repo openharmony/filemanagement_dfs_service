@@ -290,8 +290,8 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_AcceptSession_0100, TestSize.Level1)
     shared_ptr<MountPoint> smp = move(mp);
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-    const int TEST_SESSION_ID = 99;
-    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID);
+    const int testSessionId = 99;
+    auto session = make_shared<SoftbusSession>(testSessionId);
     bool res = true;
     try {
         agent->AcceptSession(session);
