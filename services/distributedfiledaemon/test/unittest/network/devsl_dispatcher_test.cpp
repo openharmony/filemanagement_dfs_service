@@ -96,8 +96,8 @@ HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_DevslGetRegister_0100, TestSiz
     GTEST_LOG_(INFO) << "DevslDispatcherTest_DevslGetRegister_0100 start";
     bool res = true;
     const string cid = "scid";
-    constexpr int USER_ID = 100;
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    constexpr int userId = 100;
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(userId, "account"));
     weak_ptr<MountPoint> wmp = smp;
     auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
 
