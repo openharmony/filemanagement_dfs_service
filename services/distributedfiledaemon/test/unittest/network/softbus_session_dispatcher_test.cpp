@@ -50,9 +50,9 @@ public:
 HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_RegisterSessionListener_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_RegisterSessionListener_0100 start";
-    constexpr int USER_ID = 100;
+    constexpr int userId = 100;
     auto mp = make_unique<MountPoint>(
-            OHOS::Storage::DistributedFile::Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+            OHOS::Storage::DistributedFile::Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT));
     shared_ptr<MountPoint> smp = move(mp);
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
