@@ -217,7 +217,6 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
 
 void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::string &networkId)
 {
-    LOGI("use udid %{public}s query hichain related groups", udid.c_str());
     int ret = InitDeviceAuthService();
     if (ret != 0) {
         LOGE("InitDeviceAuthService failed, ret %{public}d", ret);
