@@ -78,7 +78,7 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_RegisterSess
  * @tc.type: FUNC
  * @tc.require: SR000H0387
  */
-HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_UnregisterSessionListener_0100, TestSize.Level1)
+/* HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_UnregisterSessionListener_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_UnregisterSessionListener_0100 start";
     const string busName = "testBus";
@@ -93,7 +93,7 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_UnregisterSe
 
     EXPECT_TRUE(res == false);
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_UnregisterSessionListener_0100 end";
-}
+} */
 
 /**
  * @tc.name: SoftbusSessionDispatcherTest_GetAgent_0100
