@@ -63,57 +63,6 @@ void DeviceManagerAgentTest::TearDown(void)
 }
 
 /**
- * @tc.name: DeviceManagerAgentTest_Start_Stop_0100
- * @tc.desc: Verify the Start/Stop function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-/* HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_Start_Stop_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_Start_Stop_0100 start";
-    auto sdm = DeviceManagerAgent::GetInstance();
-    bool res = true;
-
-    try {
-        sdm->Start();
-        sdm->Stop();
-    } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
-        res = false;
-    }
-
-    EXPECT_TRUE(res == false);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_Start_Stop_0100 end";
-} */
-
-/**
- * @tc.name: DeviceManagerAgentTest_JoinGroup_QuitGroup_0100
- * @tc.desc: Verify the JoinGroup/QuitGroup function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-/* HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_JoinGroup_QuitGroup_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_QuitGroup_0100 start";
-    const int userId = 5202;
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(userId, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto sdm = DeviceManagerAgent::GetInstance();
-    bool res = true;
-
-    try {
-        sdm->JoinGroup(wmp);
-        sdm->QuitGroup(wmp);
-    } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
-        res = false;
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_QuitGroup_0100 end";
-} */
-
-/**
  * @tc.name: DeviceManagerAgentTest_OnDeviceOnline_0100
  * @tc.desc: Verify the OnDeviceOnline function.
  * @tc.type: FUNC
