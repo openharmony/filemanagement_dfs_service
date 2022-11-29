@@ -506,6 +506,7 @@ group("unittest") {
   deps = [
     ":daemon_stub_test",
     ":daemon_test",
+    ":device_manager_agent_test",
     ":devsl_dispatcher_test",
     ":kernel_talker_test",
     ":os_account_observer_test",

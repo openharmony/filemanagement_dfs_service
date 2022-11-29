@@ -28,6 +28,12 @@ namespace Test {
 using namespace testing::ext;
 using namespace std;
 
+DistributedHardware::DmDeviceInfo deviceInfo = {
+    .deviceId = "testdevid",
+    .deviceName = "testdevname",
+    .deviceTypeId = 1,
+};
+
 class DeviceManagerAgentTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -57,57 +63,6 @@ void DeviceManagerAgentTest::TearDown(void)
 }
 
 /**
- * @tc.name: DeviceManagerAgentTest_Start_Stop_0100
- * @tc.desc: Verify the Start/Stop function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_Start_Stop_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_Start_Stop_0100 start";
-    auto sdm = DeviceManagerAgent::GetInstance();
-    bool res = true;
-
-    try {
-        sdm->Start();
-        sdm->Stop();
-    } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
-        res = false;
-    }
-
-    EXPECT_TRUE(res == false);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_Start_Stop_0100 end";
-}
-
-/**
- * @tc.name: DeviceManagerAgentTest_JoinGroup_QuitGroup_0100
- * @tc.desc: Verify the JoinGroup/QuitGroup function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_JoinGroup_QuitGroup_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_QuitGroup_0100 start";
-    const int userId = 5202;
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(userId, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto sdm = DeviceManagerAgent::GetInstance();
-    bool res = true;
-
-    try {
-        sdm->JoinGroup(wmp);
-        sdm->QuitGroup(wmp);
-    } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
-        res = false;
-    }
-
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_QuitGroup_0100 end";
-}
-
-/**
  * @tc.name: DeviceManagerAgentTest_OnDeviceOnline_0100
  * @tc.desc: Verify the OnDeviceOnline function.
  * @tc.type: FUNC
@@ -116,12 +71,10 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_JoinGroup_QuitGroup_0100
 HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOnline_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOnline_0100 start";
-    auto sdm = DeviceManagerAgent::GetInstance();
-    DistributedHardware::DmDeviceInfo deviceInfo;
     bool res = true;
 
     try {
-        sdm->OnDeviceOnline(deviceInfo);
+        DeviceManagerAgent::GetInstance()->OnDeviceOnline(deviceInfo);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
         res = false;
@@ -140,12 +93,10 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOnline_0100, Tes
 HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOffline_0100 start";
-    auto sdm = DeviceManagerAgent::GetInstance();
-    DistributedHardware::DmDeviceInfo deviceInfo;
     bool res = true;
 
     try {
-        sdm->OnDeviceOffline(deviceInfo);
+        DeviceManagerAgent::GetInstance()->OnDeviceOffline(deviceInfo);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
         res = false;
@@ -164,13 +115,11 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0100, Te
 HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOffline_0200 start";
-    auto sdm = DeviceManagerAgent::GetInstance();
-    DistributedHardware::DmDeviceInfo deviceInfo;
     bool res = true;
 
     try {
-        sdm->OnDeviceOnline(deviceInfo);
-        sdm->OnDeviceOffline(deviceInfo);
+        DeviceManagerAgent::GetInstance()->OnDeviceOnline(deviceInfo);
+        DeviceManagerAgent::GetInstance()->OnDeviceOffline(deviceInfo);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
         res = false;
@@ -189,12 +138,10 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0200, Te
 HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceChanged_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceChanged_0100 start";
-    auto sdm = DeviceManagerAgent::GetInstance();
-    DistributedHardware::DmDeviceInfo deviceInfo;
     bool res = true;
 
     try {
-        sdm->OnDeviceChanged(deviceInfo);
+        DeviceManagerAgent::GetInstance()->OnDeviceChanged(deviceInfo);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
         res = false;
@@ -213,12 +160,10 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceChanged_0100, Te
 HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceReady_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceReady_0100 start";
-    auto sdm = DeviceManagerAgent::GetInstance();
-    DistributedHardware::DmDeviceInfo deviceInfo;
     bool res = true;
 
     try {
-        sdm->OnDeviceReady(deviceInfo);
+        DeviceManagerAgent::GetInstance()->OnDeviceReady(deviceInfo);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
         res = false;
