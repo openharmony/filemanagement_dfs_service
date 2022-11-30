@@ -73,29 +73,6 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_RegisterSess
 }
 
 /**
- * @tc.name: SoftbusSessionDispatcherTest_UnregisterSessionListener_0100
- * @tc.desc: Verify the UnregisterSessionListener function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-/* HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_UnregisterSessionListener_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_UnregisterSessionListener_0100 start";
-    const string busName = "testBus";
-    bool res = true;
-
-    try {
-        SoftbusSessionDispatcher::UnregisterSessionListener(busName);
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-
-    EXPECT_TRUE(res == false);
-    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_UnregisterSessionListener_0100 end";
-} */
-
-/**
  * @tc.name: SoftbusSessionDispatcherTest_GetAgent_0100
  * @tc.desc: Verify the GetAgent function.
  * @tc.type: FUNC
