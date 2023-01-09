@@ -74,103 +74,6 @@ ohos_unittest("device_manager_agent_test") {
   defines = [ "private=public" ]
 }
 
-ohos_unittest("daemon_stub_test") {
-  module_out_path = module_output_path
-
-  sources = [
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-  ]
-
-  sources += [ "ipc/daemon_stub_test.cpp" ]
-
-  configs = [
-    ":module_private_config",
-    "${utils_path}:compiler_configs",
-  ]
-
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//base/security/device_auth/services:deviceauth_sdk",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
-
-  external_deps = [
-    "ability_base:want",
-    "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
-    "dsoftbus:softbus_client",
-    "init:libbegetutil",
-    "ipc:ipc_core",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-  ]
-
-  defines = [ "private=public" ]
-}
-
-ohos_unittest("daemon_test") {
-  module_out_path = module_output_path
-
-  sources = [
-    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
-    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
-    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
-    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
-    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
-    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
-    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
-    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
-    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
-  ]
-
-  sources += [ "ipc/daemon_test.cpp" ]
-
-  configs = [
-    ":module_private_config",
-    "${utils_path}:compiler_configs",
-  ]
-
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//base/security/device_auth/services:deviceauth_sdk",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
-    "//third_party/googletest:gtest_main",
-  ]
-
-  external_deps = [
-    "ability_base:want",
-    "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
-    "dsoftbus:softbus_client",
-    "init:libbegetutil",
-    "ipc:ipc_core",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-  ]
-
-  defines = [ "private=public" ]
-}
-
 ohos_unittest("os_account_observer_test") {
   module_out_path = module_output_path
 
@@ -504,8 +407,6 @@ ohos_unittest("softbus_session_test") {
 group("unittest") {
   testonly = true
   deps = [
-    ":daemon_stub_test",
-    ":daemon_test",
     ":device_manager_agent_test",
     ":devsl_dispatcher_test",
     ":kernel_talker_test",
