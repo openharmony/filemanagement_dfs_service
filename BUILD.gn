@@ -20,6 +20,13 @@ group("services_target") {
     "${services_path}:distributedfile_etc",
     "${services_path}:distributedfile_sa_profile",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${services_path}/cloudsyncservice:cloudsync_sa",
+  ]
+}
+
+group("cloudsync_kit_inner_target") {
+  deps = [
+    "interfaces/inner_api/native/cloudsync_kit_inner:cloudsync_kit_inner",
   ]
 }
 

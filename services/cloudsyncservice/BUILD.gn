@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Copyright (C) 2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -10,27 +10,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import("//build/ohos.gni")
-import("//build/ohos/sa_profile/sa_profile.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-ohos_sa_profile("distributedfile_sa_profile") {
+ohos_shared_library("cloudsync_sa") {
   sources = [
-    "5201.xml",
-    "5204.xml"
+    "src/ipc/cloud_sync_service_stub.cpp",
+    "src/ipc/cloud_sync_service.cpp",
+    "src/ipc/cloud_sync_callback_proxy.cpp",
   ]
-  part_name = "dfs_service"
-}
 
-ohos_prebuilt_etc("distributedfile_etc") {
-  source = "distributedfile.cfg"
-  relative_install_dir = "init"
+  defines = [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"cloudSyncSA\"",
+  ]
+
+  include_dirs = [
+    "include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "dfs_service:cloudsync_kit_inner",
+    "samgr:samgr_proxy",
+  ]
+
+  use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
-}
-
-ohos_prebuilt_etc("distributed_file.para") {
-  source = "distributed_file.para"
-  part_name = "dfs_service"
-  module_install_dir = "etc/param"
 }

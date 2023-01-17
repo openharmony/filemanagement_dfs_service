@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-#include "utils_log.h"
+#include "cloud_sync_callback_client.h"
 
-namespace OHOS {
-std::string GetFileNameFromFullPath(const char *str)
-{
-    std::string fullPath(str);
-    size_t pos = fullPath.find_last_of("/");
-    return (pos == std::string::npos) ? std::string() : fullPath.substr(pos + 1);
-}
-} // namespace OHOS
+namespace OHOS::FileManagement::CloudSync {
+using namespace std;
+
+void CloudSyncCallbackClient::OnStartSyncFinished(const std::string &appPackageName, int32_t errCode) {}
+void CloudSyncCallbackClient::OnStopSyncFinished(const std::string &appPackageName, int32_t errCode) {}
+} // namespace OHOS::FileManagement::CloudSync
