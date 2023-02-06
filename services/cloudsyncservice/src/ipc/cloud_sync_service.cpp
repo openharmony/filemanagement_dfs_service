@@ -60,6 +60,13 @@ int32_t CloudSyncService::RegisterCallbackInner(const string &appPackageName, co
 
 int32_t CloudSyncService::StartSyncInner(const std::string &appPackageName, int type, bool forceFlag)
 {
+    auto callbackProxy_ = callbackManager_.GetCallbackProxy(appPackageName);
+    if (!callbackProxy_) {
+        LOGE("not found object, appPackageName = %{private}s", appPackageName.c_str());
+        return E_INVAL_ARG;
+    }
+    int32_t errCode = E_OK;
+    callbackProxy_->OnStartSyncFinished(appPackageName, errCode);
     return E_OK;
 }
 
