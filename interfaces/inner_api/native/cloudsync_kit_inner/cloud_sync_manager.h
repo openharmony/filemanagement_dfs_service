@@ -24,13 +24,8 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudSyncManager {
 public:
     static CloudSyncManager &GetInstance();
-
-    virtual int32_t RegisterServiceDeathCallback(const DeathCallback &callback) = 0;
-    virtual int32_t UnRegisterServiceDeathCallback() = 0;
-
-    virtual int32_t StartSync() = 0;
+    virtual int32_t StartSync(int type, bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) = 0;
     virtual int32_t StopSync() = 0;
-    virtual int32_t RegisterCloudSyncCallback(const std::shared_ptr<CloudSyncCallback> callback) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

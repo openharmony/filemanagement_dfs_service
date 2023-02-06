@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "ipc/cloud_sync_service_stub.h"
+#include "dfs_error.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -21,6 +22,8 @@ using namespace std;
 CloudSyncServiceStub::CloudSyncServiceStub()
 {
     opToInterfaceMap_[SERVICE_CMD_REGISTER_CALLBACK] = &CloudSyncServiceStub::HandleRegisterCallbackInner;
+    opToInterfaceMap_[SERVICE_CMD_START_SYNC] = &CloudSyncServiceStub::HandleStartSyncInner;
+    opToInterfaceMap_[SERVICE_CMD_STOP_SYNC] = &CloudSyncServiceStub::HandleStopSyncInner;
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -40,6 +43,23 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
 }
 
 int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("start");
+    auto remoteObj = data.ReadRemoteObject();
+    std::string appPackageName = data.ReadString();
+    int32_t res = RegisterCallbackInner(appPackageName, remoteObj);
+    reply.WriteInt32(res);
+    LOGI("end");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("hello, world");
+    return ERR_NONE;
+}
+
+int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("hello, world");
     return ERR_NONE;

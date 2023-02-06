@@ -18,6 +18,7 @@
 
 #include <map>
 
+#include "cloud_sync_callback_manager.h"
 #include "cloud_sync_service_stub.h"
 #include "i_cloud_sync_callback.h"
 #include "nocopyable.h"
@@ -31,13 +32,15 @@ public:
     explicit CloudSyncService(int32_t saID, bool runOnCreate = true) : SystemAbility(saID, runOnCreate) {}
     virtual ~CloudSyncService() = default;
 
-    int32_t RegisterCallbackInner(const std::string &appPackageName, const sptr<IRemoteObject> &callback) override;
+    int32_t RegisterCallbackInner(const std::string &appPackageName, const sptr<IRemoteObject> &remoteObject) override;
+    int32_t StartSyncInner(const std::string &appPackageName, int type, bool forceFlag) override;
+    int32_t StopSyncInner(const std::string &appPackageName) override;
 
 private:
     void OnStart() override;
     void OnStop() override;
 
-    std::map<std::string, sptr<ICloudSyncCallback>> callbacks_;
+    CloudSyncCallbackManager callbackManager_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

@@ -23,6 +23,8 @@ class ICloudSyncService : public IRemoteBroker {
 public:
     enum {
         SERVICE_CMD_REGISTER_CALLBACK = 0,
+        SERVICE_CMD_START_SYNC,
+        SERVICE_CMD_STOP_SYNC,
     };
 
     enum {
@@ -32,8 +34,10 @@ public:
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudSyncService")
 
-protected:
-    virtual int32_t RegisterCallbackInner(const std::string &appPackageName, const sptr<IRemoteObject> &callback) = 0;
+    virtual int32_t RegisterCallbackInner(const std::string &appPackageName,
+                                          const sptr<IRemoteObject> &remoteObject) = 0;
+    virtual int32_t StartSyncInner(const std::string &appPackageName, int type, bool forceFlag) = 0;
+    virtual int32_t StopSyncInner(const std::string &appPackageName) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

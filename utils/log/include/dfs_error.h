@@ -13,15 +13,29 @@
  * limitations under the License.
  */
 
-#include "cloud_sync_callback_client.h"
+#ifndef OHOS_FILEMGMT_DFS_ERROR_H
+#define OHOS_FILEMGMT_DFS_ERROR_H
 
-namespace OHOS::FileManagement::CloudSync {
-using namespace std;
+#include "errors.h"
 
-void CloudSyncCallbackClient::OnStartSyncFinished(const std::string &appPackageName, int32_t errCode)
-{
-    callback_->OnStartSyncFinished(appPackageName, errCode);
-}
+namespace OHOS {
 
-void CloudSyncCallbackClient::OnStopSyncFinished(const std::string &appPackageName, int32_t errCode) {}
-} // namespace OHOS::FileManagement::CloudSync
+enum {
+    /**
+     * Module type : Cloud sync service
+     */
+    CLOUD_SYNC_SERVICE_MODULE = 0x100
+};
+
+constexpr ErrCode CSS_ERR_OFFSET = ErrCodeOffset(SUBSYS_FILEMANAGEMENT, CLOUD_SYNC_SERVICE_MODULE);
+
+enum CloudSyncServiceErrCode : ErrCode {
+    E_OK = ERR_OK,
+    E_SEVICE_DIED = CSS_ERR_OFFSET,
+    E_INVAL_ARG,
+    E_BROKEN_IPC,
+    E_SA_LOAD_FAILED,
+};
+} // namespace OHOS
+
+#endif // OHOS_FILEMGMT_DFS_ERROR_H

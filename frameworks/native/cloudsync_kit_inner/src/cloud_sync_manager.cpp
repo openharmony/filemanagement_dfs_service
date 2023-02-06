@@ -13,15 +13,12 @@
  * limitations under the License.
  */
 
-#include "cloud_sync_callback_client.h"
+#include "cloud_sync_manager_impl.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
-
-void CloudSyncCallbackClient::OnStartSyncFinished(const std::string &appPackageName, int32_t errCode)
+CloudSyncManager &CloudSyncManager::GetInstance()
 {
-    callback_->OnStartSyncFinished(appPackageName, errCode);
+    return CloudSyncManagerImpl::GetInstance();
 }
-
-void CloudSyncCallbackClient::OnStopSyncFinished(const std::string &appPackageName, int32_t errCode) {}
 } // namespace OHOS::FileManagement::CloudSync

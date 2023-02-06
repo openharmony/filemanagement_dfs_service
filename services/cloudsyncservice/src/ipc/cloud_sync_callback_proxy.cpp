@@ -15,10 +15,44 @@
 
 #include "ipc/cloud_sync_callback_proxy.h"
 
+#include <sstream>
+
+#include "dfs_error.h"
+#include "utils_log.h"
+
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void CloudSyncCallbackProxy::OnStartSyncFinished(const std::string &appPackageName, int32_t errCode) {}
+void CloudSyncCallbackProxy::OnStartSyncFinished(const std::string &appPackageName, int32_t errCode)
+{
+    LOGI("Start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+
+    if (!data.WriteString(appPackageName)) {
+        LOGE("Failed to send the appPackageName");
+        return;
+    }
+
+    if (!data.WriteInt32(errCode)) {
+        LOGE("Failed to send the appPackageName");
+        return;
+    }
+
+    int32_t ret = Remote()->SendRequest(ICloudSyncCallback::SERVICE_CMD_ON_START_SYNC_FINISHED, data, reply, option);
+    if (ret != E_OK) {
+        stringstream ss;
+        ss << "Failed to send out the requeset, errno:" << ret;
+        LOGE("%{public}s, appPackageName:%{public}s", ss.str().c_str(), appPackageName.c_str());
+        return;
+    }
+    LOGI("End");
+    return;
+}
+
 void CloudSyncCallbackProxy::OnStopSyncFinished(const std::string &appPackageName, int32_t errCode) {}
 
 } // namespace OHOS::FileManagement::CloudSync

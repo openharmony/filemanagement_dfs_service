@@ -13,26 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_SVC_DEATH_RECIPIENT_H
-#define OHOS_FILEMGMT_SVC_DEATH_RECIPIENT_H
+#ifndef OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_IMPL_H
+#define OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_IMPL_H
 
-#include <functional>
+#include <atomic>
 
-#include "iremote_object.h"
+#include "cloud_sync_manager.h"
+#include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class SvcDeathRecipient : public IRemoteObject::DeathRecipient {
+class CloudSyncManagerImpl : public CloudSyncManager {
 public:
-    explicit SvcDeathRecipient(std::function<void(const wptr<IRemoteObject> &)> functor) : functor_(functor){};
-    void OnRemoteDied(const wptr<IRemoteObject> &object) override
-    {
-        object->RemoveDeathRecipient(this);
-        functor_(object);
-    }
+    static CloudSyncManagerImpl &GetInstance();
+
+    int32_t StartSync(int type, bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) override;
+    int32_t StopSync() override;
 
 private:
-    std::function<void(const wptr<IRemoteObject> &)> functor_;
+    void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
+
+    std::atomic<bool> isFirstCall{false};
+    sptr<SvcDeathRecipient> deathRecipient_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
-#endif // OHOS_FILEMGMT_SVC_DEATH_RECIPIENT_H
+#endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_IMPL_H

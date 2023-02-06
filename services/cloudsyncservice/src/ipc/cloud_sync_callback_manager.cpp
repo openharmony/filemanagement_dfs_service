@@ -1,0 +1,58 @@
+/*
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "ipc/cloud_sync_callback_manager.h"
+#include "utils_log.h"
+
+namespace OHOS::FileManagement::CloudSync {
+using namespace std;
+
+void CloudSyncCallbackManager::AddCallback(const std::string &appPackageName, const sptr<ICloudSyncCallback> &callback)
+{
+    CallbackInfo callbackInfo;
+    callbackInfo.callbackProxy_ = callback;
+    SetDeathRecipient(appPackageName, callbackInfo);
+    /*Delete and then insert when the key exists, ensuring that the final value is inserted.*/
+    callbackListMap_.EnsureInsert(appPackageName, callbackInfo);
+}
+
+void CloudSyncCallbackManager::SetDeathRecipient(const std::string &appPackageName, CallbackInfo &cbInfo)
+{
+    auto remoteObject = cbInfo.callbackProxy_->AsObject();
+    if (!remoteObject) {
+        LOGE("Remote object can't be nullptr");
+        return; // throw
+    }
+
+    auto deathCb = [&](const wptr<IRemoteObject> &obj) {
+        LOGI("client died, Died remote obj = %{private}p", obj.GetRefPtr());
+        callbackListMap_.Erase(appPackageName);
+    };
+    cbInfo.deathRecipient_ = sptr(new SvcDeathRecipient(deathCb));
+    remoteObject->AddDeathRecipient(cbInfo.deathRecipient_);
+}
+
+sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::string &appPackageName)
+{
+    CallbackInfo cbInfo;
+    if (callbackListMap_.Find(appPackageName, cbInfo)) {
+        return cbInfo.callbackProxy_;
+    }
+
+    LOGE("not found callback, appPackageName: %{public}s", appPackageName.c_str());
+    return nullptr;
+}
+
+} // namespace OHOS::FileManagement::CloudSync

@@ -14,12 +14,56 @@
  */
 #include "cloud_sync_service_proxy.h"
 
+#include <sstream>
+
+#include "dfs_error.h"
+#include "utils_log.h"
+
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-int32_t CloudSyncServiceProxy::RegisterCallbackInner(const string &appPackageName, const sptr<IRemoteObject> &callback)
+int32_t CloudSyncServiceProxy::RegisterCallbackInner(const string &appPackageName,
+                                                     const sptr<IRemoteObject> &remoteObject)
 {
-    return 0;
+    LOGI("Start RegisterCallbackInner");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!remoteObject) {
+        LOGI("Empty callback stub");
+        return E_INVAL_ARG;
+    }
+    data.WriteInterfaceToken(GetDescriptor());
+
+    if (!data.WriteRemoteObject(remoteObject)) {
+        LOGE("Failed to send the callback stub");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(appPackageName)) {
+        LOGE("Failed to send the appPackageName");
+        return E_INVAL_ARG;
+    }
+
+    int32_t ret = Remote()->SendRequest(ICloudSyncService::SERVICE_CMD_REGISTER_CALLBACK, data, reply, option);
+    if (ret != E_OK) {
+        stringstream ss;
+        ss << "Failed to send out the requeset, errno:" << ret;
+        LOGE("%{public}s, appPackageName:%{public}s", ss.str().c_str(), appPackageName.c_str());
+        return E_BROKEN_IPC;
+    }
+    LOGI("RegisterCallbackInner Success");
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::StartSyncInner(const std::string &appPackageName, int type, bool forceFlag)
+{
+    return E_OK;
+}
+int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &appPackageName)
+{
+    return E_OK;
 }
 
 sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()

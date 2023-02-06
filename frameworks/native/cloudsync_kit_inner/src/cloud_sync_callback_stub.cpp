@@ -15,6 +15,7 @@
 
 #include "cloud_sync_callback_stub.h"
 #include "utils_log.h"
+#include "dfs_error.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -43,8 +44,12 @@ int32_t CloudSyncCallbackStub::OnRemoteRequest(uint32_t code,
 
 int32_t CloudSyncCallbackStub::HandleOnStartSyncFinished(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("hello, world");
-    return ERR_NONE;
+    LOGI("start");
+    std::string appPackageName = data.ReadString();
+    int32_t errorCode = data.ReadInt32();
+    OnStartSyncFinished(appPackageName, errorCode);
+    LOGI("end");
+    return E_OK;
 }
 
 int32_t CloudSyncCallbackStub::HandleOnStopSyncFinished(MessageParcel &data, MessageParcel &reply)

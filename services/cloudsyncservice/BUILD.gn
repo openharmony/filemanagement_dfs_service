@@ -19,6 +19,10 @@ ohos_shared_library("cloudsync_sa") {
     "src/ipc/cloud_sync_service_stub.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/cloud_sync_callback_proxy.cpp",
+    "src/ipc/cloud_sync_callback_manager.cpp",
+    #"src/datasync/gallery/gallery_data_syncer.cpp",
+    #"src/datasync/data_sync_manager.cpp",
+    #"src/datasync/data_syncer.cpp"
   ]
 
   defines = [

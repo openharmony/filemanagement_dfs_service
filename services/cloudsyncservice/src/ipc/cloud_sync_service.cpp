@@ -15,6 +15,7 @@
 #include "ipc/cloud_sync_service.h"
 
 // #include "iremote_object.h"
+#include "dfs_error.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -35,10 +36,35 @@ void CloudSyncService::OnStop()
     LOGI("Stop finished successfully");
 }
 
-int32_t CloudSyncService::RegisterCallbackInner(const string &appPackageName, const sptr<IRemoteObject> &callback)
+int32_t CloudSyncService::RegisterCallbackInner(const string &appPackageName, const sptr<IRemoteObject> &remoteObject)
 {
-    (void)appPackageName;
-    (void)callback;
-    return 0;
+    if (remoteObject == nullptr) {
+        LOGE("callback is nullptr");
+        return E_INVAL_ARG;
+    }
+
+    if (appPackageName.empty()) {
+        LOGE("appPackageName is invalid");
+        return E_INVAL_ARG;
+    }
+
+    auto callback = iface_cast<ICloudSyncCallback>(remoteObject);
+    if (!remoteObject) {
+        LOGE("remoteObject is nullptr");
+        return E_INVAL_ARG;
+    }
+
+    callbackManager_.AddCallback(appPackageName, callback);
+    return E_OK;
+}
+
+int32_t CloudSyncService::StartSyncInner(const std::string &appPackageName, int type, bool forceFlag)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncService::StopSyncInner(const std::string &appPackageName)
+{
+    return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync

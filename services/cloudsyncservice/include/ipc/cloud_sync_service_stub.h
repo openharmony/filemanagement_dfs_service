@@ -33,6 +33,8 @@ private:
     std::map<uint32_t, ServiceInterface> opToInterfaceMap_;
 
     int32_t HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleStartSyncInner(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleStopSyncInner(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::FileManagement::CloudSync
 
