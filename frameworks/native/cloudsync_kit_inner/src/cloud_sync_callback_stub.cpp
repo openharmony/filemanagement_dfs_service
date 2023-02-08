@@ -14,16 +14,15 @@
  */
 
 #include "cloud_sync_callback_stub.h"
-#include "utils_log.h"
 #include "dfs_error.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
 CloudSyncCallbackStub::CloudSyncCallbackStub()
 {
-    opToInterfaceMap_[SERVICE_CMD_ON_START_SYNC_FINISHED] = &CloudSyncCallbackStub::HandleOnStartSyncFinished;
-    opToInterfaceMap_[SERVICE_CMD_ON_STOP_SYNC_FINISHED] = &CloudSyncCallbackStub::HandleOnStopSyncFinished;
+    opToInterfaceMap_[SERVICE_CMD_ON_SYNC_STATE_CHANGED] = &CloudSyncCallbackStub::HandleOnSyncStateChanged;
 }
 
 int32_t CloudSyncCallbackStub::OnRemoteRequest(uint32_t code,
@@ -42,19 +41,13 @@ int32_t CloudSyncCallbackStub::OnRemoteRequest(uint32_t code,
     return (this->*(interfaceIndex->second))(data, reply);
 }
 
-int32_t CloudSyncCallbackStub::HandleOnStartSyncFinished(MessageParcel &data, MessageParcel &reply)
+int32_t CloudSyncCallbackStub::HandleOnSyncStateChanged(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("start");
-    std::string appPackageName = data.ReadString();
-    int32_t errorCode = data.ReadInt32();
-    OnStartSyncFinished(appPackageName, errorCode);
+    SyncType type = SyncType(data.ReadInt32());
+    SyncPromptState state = SyncPromptState(data.ReadInt32());
+    OnSyncStateChanged(type, state);
     LOGI("end");
     return E_OK;
-}
-
-int32_t CloudSyncCallbackStub::HandleOnStopSyncFinished(MessageParcel &data, MessageParcel &reply)
-{
-    LOGI("hello, world");
-    return ERR_NONE;
 }
 } // namespace OHOS::FileManagement::CloudSync

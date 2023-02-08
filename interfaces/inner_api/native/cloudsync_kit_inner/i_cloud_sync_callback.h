@@ -23,8 +23,7 @@ namespace OHOS::FileManagement::CloudSync {
 class ICloudSyncCallback : public CloudSyncCallback, public IRemoteBroker {
 public:
     enum {
-        SERVICE_CMD_ON_START_SYNC_FINISHED = 0,
-        SERVICE_CMD_ON_STOP_SYNC_FINISHED = 0,
+        SERVICE_CMD_ON_SYNC_STATE_CHANGED = 0,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudSyncCallback")

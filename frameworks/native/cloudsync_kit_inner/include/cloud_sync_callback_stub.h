@@ -32,8 +32,7 @@ private:
     using ServiceInterface = int32_t (CloudSyncCallbackStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, ServiceInterface> opToInterfaceMap_;
 
-    int32_t HandleOnStartSyncFinished(MessageParcel &data, MessageParcel &reply);
-    int32_t HandleOnStopSyncFinished(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleOnSyncStateChanged(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

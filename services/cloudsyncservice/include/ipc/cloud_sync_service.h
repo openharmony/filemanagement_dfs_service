@@ -33,7 +33,7 @@ public:
     virtual ~CloudSyncService() = default;
 
     int32_t RegisterCallbackInner(const std::string &appPackageName, const sptr<IRemoteObject> &remoteObject) override;
-    int32_t StartSyncInner(const std::string &appPackageName, int type, bool forceFlag) override;
+    int32_t StartSyncInner(const std::string &appPackageName, SyncType type, bool forceFlag) override;
     int32_t StopSyncInner(const std::string &appPackageName) override;
 
 private:

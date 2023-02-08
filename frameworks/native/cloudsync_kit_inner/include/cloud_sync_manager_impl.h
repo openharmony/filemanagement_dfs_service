@@ -26,7 +26,7 @@ class CloudSyncManagerImpl : public CloudSyncManager {
 public:
     static CloudSyncManagerImpl &GetInstance();
 
-    int32_t StartSync(int type, bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) override;
+    int32_t StartSync(SyncType type, bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) override;
     int32_t StopSync() override;
 
 private:

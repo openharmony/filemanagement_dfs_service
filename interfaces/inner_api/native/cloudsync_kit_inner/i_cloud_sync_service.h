@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_I_CLOUD_SYNC_SERVICE_H
 
 #include "iremote_broker.h"
+#include "cloud_sync_constants.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class ICloudSyncService : public IRemoteBroker {
@@ -36,7 +37,7 @@ public:
 
     virtual int32_t RegisterCallbackInner(const std::string &appPackageName,
                                           const sptr<IRemoteObject> &remoteObject) = 0;
-    virtual int32_t StartSyncInner(const std::string &appPackageName, int type, bool forceFlag) = 0;
+    virtual int32_t StartSyncInner(const std::string &appPackageName, SyncType type, bool forceFlag) = 0;
     virtual int32_t StopSyncInner(const std::string &appPackageName) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync

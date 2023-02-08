@@ -57,7 +57,7 @@ int32_t CloudSyncServiceProxy::RegisterCallbackInner(const string &appPackageNam
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::StartSyncInner(const std::string &appPackageName, int type, bool forceFlag)
+int32_t CloudSyncServiceProxy::StartSyncInner(const std::string &appPackageName, SyncType type, bool forceFlag)
 {
     return E_OK;
 }

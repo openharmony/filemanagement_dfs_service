@@ -18,10 +18,9 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void CloudSyncCallbackClient::OnStartSyncFinished(const std::string &appPackageName, int32_t errCode)
+void CloudSyncCallbackClient::OnSyncStateChanged(SyncType type, SyncPromptState state)
 {
-    callback_->OnStartSyncFinished(appPackageName, errCode);
+    callback_->OnSyncStateChanged(type, state);
 }
 
-void CloudSyncCallbackClient::OnStopSyncFinished(const std::string &appPackageName, int32_t errCode) {}
 } // namespace OHOS::FileManagement::CloudSync

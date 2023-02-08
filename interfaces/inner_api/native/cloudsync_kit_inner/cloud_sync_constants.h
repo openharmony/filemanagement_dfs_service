@@ -13,21 +13,27 @@
  * limitations under the License.
  */
 
-#include "cloud_sync_callback_stub.h"
-
-#ifndef OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_CLIENT_H
-#define OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_CLIENT_H
+#ifndef OHOS_FILEMGMT_CLOUD_SYNC_CONSTANTS_H
+#define OHOS_FILEMGMT_CLOUD_SYNC_CONSTANTS_H
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudSyncCallbackClient : public CloudSyncCallbackStub {
-public:
-    explicit CloudSyncCallbackClient(const std::shared_ptr<CloudSyncCallback> &callback) : callback_(callback) {}
-
-    void OnSyncStateChanged(SyncType type, SyncPromptState state) override;
-
-private:
-    std::shared_ptr<CloudSyncCallback> callback_;
+enum class SyncType : int32_t {
+    UPLOAD = 0,
+    DOWNLOAD,
+    ALL,
 };
+
+enum class SyncPromptState : int32_t {
+    SYNC_STATE_DEFAULT = 0,
+    SYNC_STATE_SYNCING,
+    SYNC_STATE_FAILED,
+    SYNC_STATE_PAUSED_NO_NETWORK,
+    SYNC_STATE_PAUSED_FOR_WIFI,
+    SYNC_STATE_PAUSED_FOR_BATTERY,
+    SYNC_STATE_BATTERY_TOO_LOW,
+    SYNC_STATE_PAUSED_FOR_SPACE_TOO_LOW,
+};
+
 } // namespace OHOS::FileManagement::CloudSync
 
-#endif // OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_CLIENT_H
+#endif // OHOS_FILEMGMT_CLOUD_SYNC_CONSTANTS_H

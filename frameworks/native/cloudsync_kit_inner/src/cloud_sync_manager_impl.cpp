@@ -27,7 +27,7 @@ CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
     return instance;
 }
 
-int32_t CloudSyncManagerImpl::StartSync(int type, bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)
+int32_t CloudSyncManagerImpl::StartSync(SyncType type, bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)
 {
     std::string appPackageName = "com.ohos.photos";
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();

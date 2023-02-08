@@ -58,15 +58,15 @@ int32_t CloudSyncService::RegisterCallbackInner(const string &appPackageName, co
     return E_OK;
 }
 
-int32_t CloudSyncService::StartSyncInner(const std::string &appPackageName, int type, bool forceFlag)
+int32_t CloudSyncService::StartSyncInner(const std::string &appPackageName, SyncType type, bool forceFlag)
 {
     auto callbackProxy_ = callbackManager_.GetCallbackProxy(appPackageName);
     if (!callbackProxy_) {
         LOGE("not found object, appPackageName = %{private}s", appPackageName.c_str());
         return E_INVAL_ARG;
     }
-    int32_t errCode = E_OK;
-    callbackProxy_->OnStartSyncFinished(appPackageName, errCode);
+    SyncPromptState state = SyncPromptState::SYNC_STATE_DEFAULT;
+    callbackProxy_->OnSyncStateChanged(SyncType::ALL, state);
     return E_OK;
 }
 
