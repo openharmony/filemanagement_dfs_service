@@ -16,6 +16,8 @@
 
 #include <sstream>
 
+#include "system_ability_definition.h"
+#include "iservice_registry.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 
@@ -68,6 +70,36 @@ int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &appPackageName)
 
 sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 {
+    LOGE("getinstance");
+    unique_lock<mutex> lock(proxyMutex_);
+    if (serviceProxy_ != nullptr) {
+        return serviceProxy_;    
+    }
+
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        LOGE("Samgr is nullptr");
+        return nullptr;
+    }
+    sptr<ServiceProxyLoadCallback> cloudSyncLoadCallback = new ServiceProxyLoadCallback();
+    if (cloudSyncLoadCallback == nullptr) {
+        LOGE("cloudSyncLoadCallback is nullptr");
+        return nullptr;
+    }
+    int32_t ret = samgr->LoadSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, cloudSyncLoadCallback);
+    if (ret != ERR_OK) { // ERR_OK ? 
+        LOGE("Failed to Load systemAbility, systemAbilityId:%{pulbic}d, ret code:%{pulbic}d", FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, ret);
+        return nullptr;
+    }
+
+    auto waitStatus = cloudSyncLoadCallback->proxyConVar_.wait_for(
+            lock, std::chrono::milliseconds(400000), // 超时常数
+            [cloudSyncLoadCallback]() {return cloudSyncLoadCallback->isLoadSuccess_.load();} );
+
+    if (!waitStatus) {
+        LOGE("Load CloudSynd SA timeout");
+        return nullptr;
+    }
     return serviceProxy_;
 }
 
@@ -75,8 +107,21 @@ void CloudSyncServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess
     int32_t systemAbilityId,
     const sptr<IRemoteObject> &remoteObject)
 {
+    LOGI("Load CloudSync SA success,systemAbilityId:%{public}d, remoteObj result:%{public}s", 
+            systemAbilityId, (remoteObject == nullptr ? "false" : "true"));
+    unique_lock<mutex> lock(proxyMutex_);
+    serviceProxy_ = iface_cast<ICloudSyncService>(remoteObject);
+    isLoadSuccess_.store(true);
+    proxyConVar_.notify_one();
 }
 
-void CloudSyncServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId) {}
+void CloudSyncServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
+{
+    LOGI("Load CloudSync SA failed,systemAbilityId:%{public}d", systemAbilityId);
+    unique_lock<mutex> lock(proxyMutex_);
+    serviceProxy_ = nullptr;
+    isLoadSuccess_.store(false);
+    proxyConVar_.notify_one();
+}
 
 } // namespace OHOS::FileManagement::CloudSync

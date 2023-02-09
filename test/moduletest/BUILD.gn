@@ -78,3 +78,56 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "samgr:samgr_proxy",
   ]
 }
+
+ohos_moduletest("CloudSyncServiceTest") {
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "//foundation/filemanagement/dfs_service/frameworks/native/cloudsync_kit_inner/include",
+    "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner",
+    "//foundation/filemanagement/dfs_service/services/cloudsyncservice/include/ipc",
+    "//foundation/filemanagement/dfs_service/services/cloudsyncservice/include/",
+    "//foundation/filemanagement/dfs_service/utils/log/include"
+  ]
+  sources = [
+    "//foundation/filemanagement/dfs_service/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_client.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_stub.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager.cpp",
+    "//foundation/filemanagement/dfs_service/frameworks/native/cloudsync_kit_inner/src/cloud_sync_service_proxy.cpp",
+    
+    "//foundation/filemanagement/dfs_service/services/cloudsyncservice/src/ipc/cloud_sync_callback_manager.cpp",
+    "//foundation/filemanagement/dfs_service/services/cloudsyncservice/src/ipc/cloud_sync_callback_proxy.cpp",
+    "//foundation/filemanagement/dfs_service/services/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
+    "//foundation/filemanagement/dfs_service/services/cloudsyncservice/src/ipc/cloud_sync_service.cpp",
+  ]
+
+  sources += [ "src/cloudsync_service_test.cpp" ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  defines = [ "private=public" ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//base/security/device_auth/services:deviceauth_sdk",
+    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
+    # "//foundation/filemanagement/dfs_service/services/cloudsyncservice:cloudsync_kit_inner",
+    "//third_party/googletest:gmock",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "common_event_service:cesfwk_innerkits",
+    "dataclassification:data_transit_mgr",
+    "dsoftbus:softbus_client",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+}

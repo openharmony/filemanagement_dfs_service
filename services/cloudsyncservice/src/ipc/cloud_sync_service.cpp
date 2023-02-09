@@ -25,10 +25,29 @@ using namespace OHOS;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
+void CloudSyncService::PublishSA()
+{
+    LOGI("Begin to init");
+    bool ret = SystemAbility::Publish(this);
+    if (!ret) {
+        throw runtime_error(" Failed to publish the daemon");
+    }
+    LOGI("Init finished successfully");
+}
+
 void CloudSyncService::OnStart()
 {
-    (void)SystemAbility::Publish(this); // TODO
-    LOGI("Start service successfully");
+    // @d00698870
+    LOGI("%{public}s called", __func__);
+    bool ret = SystemAbility::Publish(this);
+    (void)ret;
+    try {
+        PublishSA();
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
+    }
+    // @d00698870
+    LOGI("start service successfully");
 }
 
 void CloudSyncService::OnStop()
