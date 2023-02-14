@@ -38,7 +38,7 @@ ohos_shared_library("cloudsync_kit_inner") {
 
   defines = [
     "LOG_DOMAIN=0xD004306",
-    "LOG_TAG=\"cloudSyncAPI\"",
+    "LOG_TAG=\"CLOUDSYNC_API\"",
   ]
 
   configs = [ ":private_config" ]

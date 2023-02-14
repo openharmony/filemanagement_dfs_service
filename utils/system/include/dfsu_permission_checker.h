@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,30 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_DFS_ERROR_H
-#define OHOS_FILEMGMT_DFS_ERROR_H
+#ifndef OHOS_FILEMGMT_DFSU_PERMISSION_CHECKER_H
+#define OHOS_FILEMGMT_DFSU_PERMISSION_CHECKER_H
 
-#include "errors.h"
+#include <string>
 
 namespace OHOS::FileManagement {
-enum {
-    /**
-     * Module type : Cloud sync service
-     */
-    CLOUD_SYNC_SERVICE_MODULE = 0x100
-};
-
-constexpr ErrCode CSS_ERR_OFFSET = ErrCodeOffset(SUBSYS_FILEMANAGEMENT, CLOUD_SYNC_SERVICE_MODULE);
-
-enum CloudSyncServiceErrCode : ErrCode {
-    E_OK = ERR_OK,
-    E_SEVICE_DIED = CSS_ERR_OFFSET,
-    E_INVAL_ARG,
-    E_BROKEN_IPC,
-    E_SA_LOAD_FAILED,
-    E_SERVICE_DESCRIPTOR_IS_EMPTY,
-    E_PERMISSION_DENIED,
+inline const std::string PERM_CLOUD_SYNC = "ohos.permission.cloud_sync";
+class DfsuPermissionChecker final {
+public:
+    static bool CheckCallerPermission(const std::string &permissionName);
+    static bool CheckPermission(const std::string &permissionName);
 };
 } // namespace OHOS::FileManagement
 
-#endif // OHOS_FILEMGMT_DFS_ERROR_H
+#endif // OHOS_FILEMGMT_DFSU_PERMISSION_CHECKER_H

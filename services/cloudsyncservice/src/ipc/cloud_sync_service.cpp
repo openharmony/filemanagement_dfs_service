@@ -37,17 +37,13 @@ void CloudSyncService::PublishSA()
 
 void CloudSyncService::OnStart()
 {
-    // @d00698870
-    LOGI("%{public}s called", __func__);
-    bool ret = SystemAbility::Publish(this);
-    (void)ret;
+    LOGI("Begin to start service");
     try {
         PublishSA();
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
-    // @d00698870
-    LOGI("start service successfully");
+    LOGI("Start service successfully");
 }
 
 void CloudSyncService::OnStop()
@@ -91,6 +87,13 @@ int32_t CloudSyncService::StartSyncInner(const std::string &appPackageName, Sync
 
 int32_t CloudSyncService::StopSyncInner(const std::string &appPackageName)
 {
+    auto callbackProxy_ = callbackManager_.GetCallbackProxy(appPackageName);
+    if (!callbackProxy_) {
+        LOGE("not found object, appPackageName = %{private}s", appPackageName.c_str());
+        return E_INVAL_ARG;
+    }
+    SyncPromptState state = SyncPromptState::SYNC_STATE_DEFAULT;
+    callbackProxy_->OnSyncStateChanged(SyncType::ALL, state);
     return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync

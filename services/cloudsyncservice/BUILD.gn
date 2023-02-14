@@ -27,7 +27,7 @@ ohos_shared_library("cloudsync_sa") {
 
   defines = [
     "LOG_DOMAIN=0xD004307",
-    "LOG_TAG=\"cloudSyncSA\"",
+    "LOG_TAG=\"CLOUDSYNC_SA\"",
   ]
 
   include_dirs = [

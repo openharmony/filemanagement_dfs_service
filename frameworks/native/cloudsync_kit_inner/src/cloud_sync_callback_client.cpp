@@ -14,12 +14,17 @@
  */
 
 #include "cloud_sync_callback_client.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
 void CloudSyncCallbackClient::OnSyncStateChanged(SyncType type, SyncPromptState state)
 {
+    if (!callback_) {
+        LOGE("callback_ is null, maybe not registered");
+        return;
+    }
     callback_->OnSyncStateChanged(type, state);
 }
 

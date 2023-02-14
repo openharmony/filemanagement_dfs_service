@@ -21,8 +21,6 @@
 #include "cloud_sync_constants.h"
 
 namespace OHOS::FileManagement::CloudSync {
-using DeathCallback = std::function<void()>;
-
 class CloudSyncCallback {
 public:
     virtual ~CloudSyncCallback() = default;

@@ -29,12 +29,16 @@ CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 
 int32_t CloudSyncManagerImpl::StartSync(SyncType type, bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)
 {
-    std::string appPackageName = "com.ohos.photos";
+    if (!callback) {
+        LOGE("callback is null");
+        return E_INVAL_ARG;
+    }
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+    std::string appPackageName = "com.ohos.photos";
     if (!isFirstCall) {
         LOGI("Register callback");
         auto ret =
@@ -52,13 +56,19 @@ int32_t CloudSyncManagerImpl::StartSync(SyncType type, bool forceFlag, const std
 
 int32_t CloudSyncManagerImpl::StopSync()
 {
-    return E_OK;
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    std::string appPackageName = "com.ohos.photos";
+    return CloudSyncServiceProxy->StopSyncInner(appPackageName);
 }
 
 void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     auto deathCallback = [&](const wptr<IRemoteObject> &obj) {
-        LOGI("service died. Died remote obj = %{public}p", obj.GetRefPtr());
+        LOGI("service died. Died remote obj = %{private}p", obj.GetRefPtr());
         isFirstCall = false;
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));

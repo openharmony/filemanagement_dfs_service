@@ -31,7 +31,7 @@ int32_t CloudSyncCallbackStub::OnRemoteRequest(uint32_t code,
                                                MessageOption &option)
 {
     if (data.ReadInterfaceToken() != GetDescriptor()) {
-        return 1; // TODO
+        return E_SERVICE_DESCRIPTOR_IS_EMPTY;
     }
     auto interfaceIndex = opToInterfaceMap_.find(code);
     if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {

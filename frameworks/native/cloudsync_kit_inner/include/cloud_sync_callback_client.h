@@ -19,7 +19,7 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_CLIENT_H
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudSyncCallbackClient : public CloudSyncCallbackStub {
+class CloudSyncCallbackClient final : public CloudSyncCallbackStub {
 public:
     explicit CloudSyncCallbackClient(const std::shared_ptr<CloudSyncCallback> &callback) : callback_(callback) {}
 

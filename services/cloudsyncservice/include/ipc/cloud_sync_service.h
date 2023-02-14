@@ -40,7 +40,7 @@ private:
     void OnStart() override;
     void OnStop() override;
     void PublishSA();
-    
+
     CloudSyncCallbackManager callbackManager_;
 };
 } // namespace OHOS::FileManagement::CloudSync

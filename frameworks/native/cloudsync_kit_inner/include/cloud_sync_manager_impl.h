@@ -22,7 +22,7 @@
 #include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudSyncManagerImpl : public CloudSyncManager {
+class CloudSyncManagerImpl final : public CloudSyncManager {
 public:
     static CloudSyncManagerImpl &GetInstance();
 
