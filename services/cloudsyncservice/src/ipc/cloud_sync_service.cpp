@@ -14,7 +14,6 @@
  */
 #include "ipc/cloud_sync_service.h"
 
-// #include "iremote_object.h"
 #include "dfs_error.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"

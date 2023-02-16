@@ -36,6 +36,7 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_SA_LOAD_FAILED,
     E_SERVICE_DESCRIPTOR_IS_EMPTY,
     E_PERMISSION_DENIED,
+    E_GET_TOKEN_INFO_ERROR,
 };
 } // namespace OHOS::FileManagement
 

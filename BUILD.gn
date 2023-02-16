@@ -43,5 +43,6 @@ group("dfs_test_moudule") {
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_dispatcher_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_test",
     "test/moduletest:DistributedFileDaemonServiceTest",
+    "test/moduletest:CloudSyncServiceTest",
   ]
 }

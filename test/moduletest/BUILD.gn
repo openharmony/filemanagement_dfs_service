@@ -102,8 +102,6 @@ ohos_moduletest("CloudSyncServiceTest") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//base/security/device_auth/services:deviceauth_sdk",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest_main",
   ]
@@ -118,5 +116,7 @@ ohos_moduletest("CloudSyncServiceTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "dfs_service:cloudsync_kit_inner",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtoken_setproc",
   ]
 }

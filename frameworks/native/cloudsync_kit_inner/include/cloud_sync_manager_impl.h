@@ -32,8 +32,9 @@ public:
 private:
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
 
-    std::atomic<bool> isFirstCall{false};
+    std::atomic<bool> isFirstCall_{false};
     sptr<SvcDeathRecipient> deathRecipient_;
+    std::string appPackageName_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

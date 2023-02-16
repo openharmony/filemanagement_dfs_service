@@ -13,18 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_DFSU_PERMISSION_CHECKER_H
-#define OHOS_FILEMGMT_DFSU_PERMISSION_CHECKER_H
+#ifndef OHOS_FILEMGMT_DFSU_ACCESS_TOKEN_HELPER_H
+#define OHOS_FILEMGMT_DFSU_ACCESS_TOKEN_HELPER_H
 
 #include <string>
 
 namespace OHOS::FileManagement {
 inline const std::string PERM_CLOUD_SYNC = "ohos.permission.cloud_sync";
-class DfsuPermissionChecker final {
+class DfsuAccessTokenHelper final {
 public:
     static bool CheckCallerPermission(const std::string &permissionName);
-    static bool CheckPermission(const std::string &permissionName);
+    static bool CheckPermission(uint32_t tokenId, const std::string &permissionName);
+    static int32_t GetPackageNameByToken(uint32_t tokenId, std::string &packageName);
+    static bool IsSystemApp();
 };
 } // namespace OHOS::FileManagement
 
-#endif // OHOS_FILEMGMT_DFSU_PERMISSION_CHECKER_H
+#endif // OHOS_FILEMGMT_DFSU_ACCESS_TOKEN_HELPER_H

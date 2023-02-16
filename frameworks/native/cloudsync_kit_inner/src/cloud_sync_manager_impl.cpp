@@ -17,9 +17,12 @@
 #include "cloud_sync_callback_client.h"
 #include "cloud_sync_service_proxy.h"
 #include "dfs_error.h"
+#include "dfsu_access_token_helper.h"
+#include "ipc_skeleton.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
+constexpr uint64_t TOKEN_ID_LOWMASK = 0xffffffff;
 using namespace std;
 CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 {
@@ -27,7 +30,8 @@ CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
     return instance;
 }
 
-int32_t CloudSyncManagerImpl::StartSync(SyncType type, bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)
+int32_t CloudSyncManagerImpl::StartSync(SyncType type, bool forceFlag,
+                                        const std::shared_ptr<CloudSyncCallback> callback)
 {
     if (!callback) {
         LOGE("callback is null");
@@ -38,20 +42,27 @@ int32_t CloudSyncManagerImpl::StartSync(SyncType type, bool forceFlag, const std
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    std::string appPackageName = "com.ohos.photos";
-    if (!isFirstCall) {
+
+    if (!isFirstCall_) {
         LOGI("Register callback");
-        auto ret =
-            CloudSyncServiceProxy->RegisterCallbackInner(appPackageName, sptr(new (std::nothrow)CloudSyncCallbackClient(callback)));
+        uint32_t tokenId = IPCSkeleton::GetSelfTokenID() & TOKEN_ID_LOWMASK;
+        int32_t ret = DfsuAccessTokenHelper::GetPackageNameByToken(tokenId, appPackageName_);
+        if (ret) {
+            LOGE("get package name failed");
+            return ret;
+        }
+
+        ret = CloudSyncServiceProxy->RegisterCallbackInner(appPackageName_,
+                                                           sptr(new (std::nothrow) CloudSyncCallbackClient(callback)));
         if (ret) {
             LOGE("Register callback failed");
             return ret;
         }
         SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-        isFirstCall = true;
+        isFirstCall_ = true;
     }
 
-    return CloudSyncServiceProxy->StartSyncInner(appPackageName, type, forceFlag);
+    return CloudSyncServiceProxy->StartSyncInner(appPackageName_, type, forceFlag);
 }
 
 int32_t CloudSyncManagerImpl::StopSync()
@@ -61,15 +72,20 @@ int32_t CloudSyncManagerImpl::StopSync()
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    std::string appPackageName = "com.ohos.photos";
-    return CloudSyncServiceProxy->StopSyncInner(appPackageName);
+
+    if (appPackageName_.empty()) {
+        LOGE("appPackageName is empty");
+        return E_INVAL_ARG;
+    }
+
+    return CloudSyncServiceProxy->StopSyncInner(appPackageName_);
 }
 
 void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     auto deathCallback = [&](const wptr<IRemoteObject> &obj) {
         LOGI("service died. Died remote obj = %{private}p", obj.GetRefPtr());
-        isFirstCall = false;
+        isFirstCall_ = false;
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));
     remoteObject->AddDeathRecipient(deathRecipient_);

@@ -14,7 +14,7 @@
  */
 #include "ipc/cloud_sync_service_stub.h"
 #include "dfs_error.h"
-#include "dfsu_permission_checker.h"
+#include "dfsu_access_token_helper.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -40,7 +40,7 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
         LOGE("Cannot response request %d: unknown tranction", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    if (!DfsuPermissionChecker::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
@@ -49,34 +49,34 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
 
 int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply)
 {
-    LOGD("Begin RegisterCallbackInner");
+    LOGI("Begin RegisterCallbackInner");
     auto remoteObj = data.ReadRemoteObject();
     std::string appPackageName = data.ReadString();
     int32_t res = RegisterCallbackInner(appPackageName, remoteObj);
     reply.WriteInt32(res);
-    LOGD("End RegisterCallbackInner");
+    LOGI("End RegisterCallbackInner");
     return res;
 }
 
 int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageParcel &reply)
 {
-    LOGD("Begin StartSyncInner");
+    LOGI("Begin StartSyncInner");
     auto appPackageName = data.ReadString();
     SyncType type = SyncType(data.ReadInt32());
     auto forceFlag = data.ReadBool();
     int32_t res = StartSyncInner(appPackageName, type, forceFlag);
     reply.WriteInt32(res);
-    LOGD("End StartSyncInner");
+    LOGI("End StartSyncInner");
     return res;
 }
 
 int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessageParcel &reply)
 {
-    LOGD("Begin StopSyncInner");
+    LOGI("Begin StopSyncInner");
     auto appPackageName = data.ReadString();
     int32_t res = StopSyncInner(appPackageName);
     reply.WriteInt32(res);
-    LOGD("End StopSyncInner");
+    LOGI("End StopSyncInner");
     return res;
 }
 } // namespace OHOS::FileManagement::CloudSync
