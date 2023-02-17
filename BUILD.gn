@@ -19,15 +19,14 @@ group("services_target") {
     "${services_path}:distributed_file.para",
     "${services_path}:distributedfile_etc",
     "${services_path}:distributedfile_sa_profile",
-    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
   ]
 }
 
 group("cloudsync_kit_inner_target") {
-  deps = [
-    "interfaces/inner_api/native/cloudsync_kit_inner:cloudsync_kit_inner",
-  ]
+  deps =
+      [ "interfaces/inner_api/native/cloudsync_kit_inner:cloudsync_kit_inner" ]
 }
 
 group("dfs_test_moudule") {
@@ -42,7 +41,7 @@ group("dfs_test_moudule") {
     "${services_path}/distributedfiledaemon/test/unittest:session_pool_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_dispatcher_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_test",
-    "test/moduletest:DistributedFileDaemonServiceTest",
     "test/moduletest:CloudSyncServiceTest",
+    "test/moduletest:DistributedFileDaemonServiceTest",
   ]
 }

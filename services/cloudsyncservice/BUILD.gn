@@ -16,10 +16,11 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_shared_library("cloudsync_sa") {
   sources = [
-    "src/ipc/cloud_sync_service_stub.cpp",
-    "src/ipc/cloud_sync_service.cpp",
-    "src/ipc/cloud_sync_callback_proxy.cpp",
     "src/ipc/cloud_sync_callback_manager.cpp",
+    "src/ipc/cloud_sync_callback_proxy.cpp",
+    "src/ipc/cloud_sync_service.cpp",
+    "src/ipc/cloud_sync_service_stub.cpp",
+
     #"src/datasync/gallery/gallery_data_syncer.cpp",
     #"src/datasync/data_sync_manager.cpp",
     #"src/datasync/data_syncer.cpp"
@@ -30,18 +31,14 @@ ohos_shared_library("cloudsync_sa") {
     "LOG_TAG=\"CLOUDSYNC_SA\"",
   ]
 
-  include_dirs = [
-    "include",
-  ]
+  include_dirs = [ "include" ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
+    "dfs_service:cloudsync_kit_inner",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
-    "dfs_service:cloudsync_kit_inner",
     "samgr:samgr_proxy",
   ]
 

@@ -15,9 +15,7 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 config("public_config") {
-  include_dirs = [
-  ".",
-  ]
+  include_dirs = [ "." ]
 }
 
 config("private_config") {
@@ -31,9 +29,9 @@ ohos_shared_library("cloudsync_kit_inner") {
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_client.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_stub.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_service_proxy.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_service_proxy.cpp",
   ]
 
   defines = [
@@ -50,9 +48,7 @@ ohos_shared_library("cloudsync_kit_inner") {
     "samgr:samgr_proxy",
   ]
 
-  public_deps = [
-    "${utils_path}:libdistributedfileutils",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   use_exceptions = true
   part_name = "dfs_service"
