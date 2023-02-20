@@ -23,6 +23,7 @@ inline const std::string PERM_CLOUD_SYNC = "ohos.permission.cloud_sync";
 class DfsuAccessTokenHelper final {
 public:
     static bool CheckCallerPermission(const std::string &permissionName);
+    static int32_t GetCallerPackageName(std::string &packageName);
     static bool CheckPermission(uint32_t tokenId, const std::string &permissionName);
     static int32_t GetPackageNameByToken(uint32_t tokenId, std::string &packageName);
     static bool IsSystemApp();

@@ -31,7 +31,6 @@ public:
 private:
     using ServiceInterface = int32_t (CloudSyncServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, ServiceInterface> opToInterfaceMap_;
-
     int32_t HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStartSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStopSyncInner(MessageParcel &data, MessageParcel &reply);

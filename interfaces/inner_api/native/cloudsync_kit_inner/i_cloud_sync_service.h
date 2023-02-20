@@ -17,28 +17,21 @@
 #define OHOS_FILEMGMT_I_CLOUD_SYNC_SERVICE_H
 
 #include "iremote_broker.h"
-#include "cloud_sync_constants.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class ICloudSyncService : public IRemoteBroker {
 public:
     enum {
-        SERVICE_CMD_REGISTER_CALLBACK = 0,
+        SERVICE_CMD_REGISTER_CALLBACK,
         SERVICE_CMD_START_SYNC,
         SERVICE_CMD_STOP_SYNC,
     };
 
-    enum {
-        CLOUD_SYNC_SERVICE_SUCCESS = 0,
-        CLOUD_SYNC_SERVICE_DESCRIPTOR_IS_EMPTY,
-    };
-
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudSyncService")
 
-    virtual int32_t RegisterCallbackInner(const std::string &appPackageName,
-                                          const sptr<IRemoteObject> &remoteObject) = 0;
-    virtual int32_t StartSyncInner(const std::string &appPackageName, SyncType type, bool forceFlag) = 0;
-    virtual int32_t StopSyncInner(const std::string &appPackageName) = 0;
+    virtual int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) = 0;
+    virtual int32_t StartSyncInner(bool forceFlag) = 0;
+    virtual int32_t StopSyncInner() = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

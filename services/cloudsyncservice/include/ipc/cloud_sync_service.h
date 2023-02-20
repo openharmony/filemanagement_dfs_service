@@ -32,9 +32,9 @@ public:
     explicit CloudSyncService(int32_t saID, bool runOnCreate = true) : SystemAbility(saID, runOnCreate) {}
     virtual ~CloudSyncService() = default;
 
-    int32_t RegisterCallbackInner(const std::string &appPackageName, const sptr<IRemoteObject> &remoteObject) override;
-    int32_t StartSyncInner(const std::string &appPackageName, SyncType type, bool forceFlag) override;
-    int32_t StopSyncInner(const std::string &appPackageName) override;
+    int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) override;
+    int32_t StartSyncInner(bool forceFlag) override;
+    int32_t StopSyncInner() override;
 
 private:
     void OnStart() override;

@@ -27,10 +27,11 @@ public:
     ~CloudSyncServiceProxy() override {}
 
     static sptr<ICloudSyncService> GetInstance();
+    static void InvaildInstance();
 
-    int32_t RegisterCallbackInner(const std::string &appPackageName, const sptr<IRemoteObject> &remoteObject) override;
-    int32_t StartSyncInner(const std::string &appPackageName, SyncType type, bool forceFlag) override;
-    int32_t StopSyncInner(const std::string &appPackageName) override;
+    int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) override;
+    int32_t StartSyncInner(bool forceFlag) override;
+    int32_t StopSyncInner() override;
 
     class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
     public:

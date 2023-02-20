@@ -23,9 +23,11 @@
 namespace OHOS::FileManagement {
 using namespace std;
 using namespace Security::AccessToken;
+constexpr int32_t ROOT_UID = 0;
 bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionName)
 {
     auto tokenId = IPCSkeleton::GetCallingTokenID();
+    auto uid = IPCSkeleton::GetCallingUid();
     auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
     if (((tokenType == TOKEN_HAP) && IsSystemApp()) || (tokenType == TOKEN_NATIVE)) {
         bool isGranted = CheckPermission(tokenId, permissionName);
@@ -33,7 +35,7 @@ bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionN
             LOGE("Token Type is %{public}d", tokenType);
         }
         return isGranted;
-    } else if (tokenType == TOKEN_SHELL) {
+    } else if ((tokenType == TOKEN_SHELL) && (uid == ROOT_UID)) {
         LOGI("Token type is shell");
         return true;
     } else {
@@ -44,14 +46,18 @@ bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionN
 
 bool DfsuAccessTokenHelper::CheckPermission(uint32_t tokenId, const std::string &permissionName)
 {
-#ifdef SUPPORT_PERMISSION_CHECK
     int32_t ret = AccessTokenKit::VerifyAccessToken(tokenId, permissionName);
     if (ret == PermissionState::PERMISSION_DENIED) {
         LOGE("permission %{private}s: PERMISSION_DENIED", permissionName.c_str());
         return false;
     }
-#endif
     return true;
+}
+
+int32_t DfsuAccessTokenHelper::GetCallerPackageName(std::string &packageName)
+{
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    return GetPackageNameByToken(tokenId, packageName);
 }
 
 int32_t DfsuAccessTokenHelper::GetPackageNameByToken(uint32_t tokenId, std::string &packageName)
@@ -68,6 +74,7 @@ int32_t DfsuAccessTokenHelper::GetPackageNameByToken(uint32_t tokenId, std::stri
             break;
         }
         case TOKEN_NATIVE:
+        // fall-through
         case TOKEN_SHELL: {
             NativeTokenInfo tokenInfo;
             if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) != 0) {

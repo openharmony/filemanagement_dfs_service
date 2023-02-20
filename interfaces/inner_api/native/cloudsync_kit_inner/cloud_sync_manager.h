@@ -27,12 +27,11 @@ public:
     /**
      * @brief 启动同步
      *
-     * @param type upload:仅上行 download:仅下行  all:先下行，再上行
      * @param forceFlag 是否强制继续同步，当前仅支持低电量下暂停后继续上传
      * @param callback 注册同步回调
      * @return int32_t 同步返回执行结果
      */
-    virtual int32_t StartSync(SyncType type, bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) = 0;
+    virtual int32_t StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) = 0;
     /**
      * @brief 停止同步
      *

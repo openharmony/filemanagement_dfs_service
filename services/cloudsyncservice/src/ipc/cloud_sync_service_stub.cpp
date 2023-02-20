@@ -32,6 +32,10 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
                                               MessageParcel &reply,
                                               MessageOption &option)
 {
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return E_SERVICE_DESCRIPTOR_IS_EMPTY;
     }
@@ -40,10 +44,6 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
         LOGE("Cannot response request %d: unknown tranction", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        return E_PERMISSION_DENIED;
-    }
     return (this->*(interfaceIndex->second))(data, reply);
 }
 
@@ -51,8 +51,7 @@ int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, M
 {
     LOGI("Begin RegisterCallbackInner");
     auto remoteObj = data.ReadRemoteObject();
-    std::string appPackageName = data.ReadString();
-    int32_t res = RegisterCallbackInner(appPackageName, remoteObj);
+    int32_t res = RegisterCallbackInner(remoteObj);
     reply.WriteInt32(res);
     LOGI("End RegisterCallbackInner");
     return res;
@@ -61,10 +60,8 @@ int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, M
 int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin StartSyncInner");
-    auto appPackageName = data.ReadString();
-    SyncType type = SyncType(data.ReadInt32());
     auto forceFlag = data.ReadBool();
-    int32_t res = StartSyncInner(appPackageName, type, forceFlag);
+    int32_t res = StartSyncInner(forceFlag);
     reply.WriteInt32(res);
     LOGI("End StartSyncInner");
     return res;
@@ -73,8 +70,7 @@ int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageP
 int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin StopSyncInner");
-    auto appPackageName = data.ReadString();
-    int32_t res = StopSyncInner(appPackageName);
+    int32_t res = StopSyncInner();
     reply.WriteInt32(res);
     LOGI("End StopSyncInner");
     return res;

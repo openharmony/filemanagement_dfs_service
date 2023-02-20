@@ -47,7 +47,7 @@ static HapInfoParams g_info = {.userID = 100,
 
 static HapPolicyParams g_policy = {.apl = APL_NORMAL,
                                    .domain = "test.domain",
-                                   .permList = {{.permissionName = "ohos.permission.MANAGE_MEDIA_RESOURCES",
+                                   .permList = {{.permissionName = "ohos.permission.cloud_sync",
                                                  .bundleName = "hdcd",
                                                  .grantMode = 1,
                                                  .availableLevel = APL_NORMAL,
@@ -55,7 +55,7 @@ static HapPolicyParams g_policy = {.apl = APL_NORMAL,
                                                  .labelId = 1,
                                                  .description = "test",
                                                  .descriptionId = 1}},
-                                   .permStateList = {{.permissionName = "ohos.permission.MANAGE_MEDIA_RESOURCES",
+                                   .permStateList = {{.permissionName = "ohos.permission.cloud_sync",
                                                       .isGeneral = true,
                                                       .resDeviceID = {"local"},
                                                       .grantStatus = {PermissionState::PERMISSION_GRANTED},
@@ -110,9 +110,8 @@ HWTEST_F(CloudSyncServiceTest, StartSync_001, TestSize.Level1)
 {
     LOGE("testcase run OK");
     shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncDerived>();
-    SyncType type = SyncType(0);
     bool forceFlag = true;
-    int ret = CloudSyncManager::GetInstance().StartSync(type, forceFlag, callback);
+    int ret = CloudSyncManager::GetInstance().StartSync(forceFlag, callback);
     EXPECT_EQ(ret, E_OK);
 }
 
@@ -140,9 +139,8 @@ HWTEST_F(CloudSyncServiceTest, StartSync_002, TestSize.Level1)
     SetSelfTokenID(tokenID.tokenIDEx);
 
     shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncDerived>();
-    SyncType type = SyncType(0);
     bool forceFlag = true;
-    int ret = CloudSyncManager::GetInstance().StartSync(type, forceFlag, callback);
+    int ret = CloudSyncManager::GetInstance().StartSync(forceFlag, callback);
     EXPECT_EQ(ret, E_OK);
 
     SetSelfTokenID(selfTokenId);
@@ -167,9 +165,8 @@ HWTEST_F(CloudSyncServiceTest, StopSync_001, TestSize.Level1)
 {
     LOGE("testcase run OK");
     shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncDerived>();
-    SyncType type = SyncType(0);
     bool forceFlag = true;
-    int ret = CloudSyncManager::GetInstance().StartSync(type, forceFlag, callback);
+    int ret = CloudSyncManager::GetInstance().StartSync(forceFlag, callback);
     EXPECT_EQ(ret, E_OK);
 
     ret = CloudSyncManager::GetInstance().StopSync();

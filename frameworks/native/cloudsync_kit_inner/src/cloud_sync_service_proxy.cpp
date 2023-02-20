@@ -24,10 +24,9 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-constexpr int LOADSA_TIMEOUT_MS = 4000;
+constexpr int LOAD_SA_TIMEOUT_MS = 4000;
 
-int32_t CloudSyncServiceProxy::RegisterCallbackInner(const string &appPackageName,
-                                                     const sptr<IRemoteObject> &remoteObject)
+int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject)
 {
     LOGI("Start RegisterCallbackInner");
     MessageParcel data;
@@ -45,23 +44,18 @@ int32_t CloudSyncServiceProxy::RegisterCallbackInner(const string &appPackageNam
         return E_INVAL_ARG;
     }
 
-    if (!data.WriteString(appPackageName)) {
-        LOGE("Failed to send the appPackageName");
-        return E_INVAL_ARG;
-    }
-
     int32_t ret = Remote()->SendRequest(ICloudSyncService::SERVICE_CMD_REGISTER_CALLBACK, data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s, appPackageName:%{private}s", ss.str().c_str(), appPackageName.c_str());
+        LOGE("%{public}s", ss.str().c_str());
         return E_BROKEN_IPC;
     }
     LOGI("RegisterCallbackInner Success");
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::StartSyncInner(const std::string &appPackageName, SyncType type, bool forceFlag)
+int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag)
 {
     LOGI("Start Sync");
     MessageParcel data;
@@ -69,16 +63,6 @@ int32_t CloudSyncServiceProxy::StartSyncInner(const std::string &appPackageName,
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
-
-    if (!data.WriteString(appPackageName)) {
-        LOGE("Failed to send the appPackageName");
-        return E_INVAL_ARG;
-    }
-
-    if (!data.WriteInt32(static_cast<int32_t>(type))) {
-        LOGE("Failed to send the sync type");
-        return E_INVAL_ARG;
-    }
 
     if (!data.WriteBool(forceFlag)) {
         LOGE("Failed to send the force flag");
@@ -89,14 +73,14 @@ int32_t CloudSyncServiceProxy::StartSyncInner(const std::string &appPackageName,
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("appPackageName:%{private}s", appPackageName.c_str());
+        LOGE("%{public}s", ss.str().c_str());
         return E_BROKEN_IPC;
     }
     LOGI("StartSyncInner Success");
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &appPackageName)
+int32_t CloudSyncServiceProxy::StopSyncInner()
 {
     LOGI("StopSync");
     MessageParcel data;
@@ -105,16 +89,10 @@ int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &appPackageName)
 
     data.WriteInterfaceToken(GetDescriptor());
 
-    if (!data.WriteString(appPackageName)) {
-        LOGE("Failed to send the appPackageName");
-        return E_INVAL_ARG;
-    }
-
     int32_t ret = Remote()->SendRequest(ICloudSyncService::SERVICE_CMD_STOP_SYNC, data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("appPackageName:%{private}s", appPackageName.c_str());
         return E_BROKEN_IPC;
     }
     LOGI("StopSyncInner Success");
@@ -123,7 +101,7 @@ int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &appPackageName)
 
 sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 {
-    LOGE("getinstance");
+    LOGI("getinstance");
     unique_lock<mutex> lock(proxyMutex_);
     if (serviceProxy_ != nullptr) {
         return serviceProxy_;
@@ -147,7 +125,7 @@ sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
     }
 
     auto waitStatus = cloudSyncLoadCallback->proxyConVar_.wait_for(
-        lock, std::chrono::milliseconds(LOADSA_TIMEOUT_MS),
+        lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
         [cloudSyncLoadCallback]() { return cloudSyncLoadCallback->isLoadSuccess_.load(); });
 
     if (!waitStatus) {
@@ -155,6 +133,13 @@ sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
         return nullptr;
     }
     return serviceProxy_;
+}
+
+void CloudSyncServiceProxy::InvaildInstance()
+{
+    LOGI("invalid instance");
+    unique_lock<mutex> lock(proxyMutex_);
+    serviceProxy_ = nullptr;
 }
 
 void CloudSyncServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(

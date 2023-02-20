@@ -20,21 +20,22 @@
 
 #include "cloud_sync_manager.h"
 #include "svc_death_recipient.h"
+#include "cloud_sync_callback_client.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncManagerImpl final : public CloudSyncManager {
 public:
     static CloudSyncManagerImpl &GetInstance();
 
-    int32_t StartSync(SyncType type, bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) override;
+    int32_t StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) override;
     int32_t StopSync() override;
 
 private:
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
 
-    std::atomic<bool> isFirstCall_{false};
+    std::atomic_flag isFirstCall_{false};
     sptr<SvcDeathRecipient> deathRecipient_;
-    std::string appPackageName_;
+    std::shared_ptr<CloudSyncCallback> callback_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

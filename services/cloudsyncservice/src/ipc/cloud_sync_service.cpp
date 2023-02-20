@@ -15,6 +15,7 @@
 #include "ipc/cloud_sync_service.h"
 
 #include "dfs_error.h"
+#include "dfsu_access_token_helper.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -50,15 +51,15 @@ void CloudSyncService::OnStop()
     LOGI("Stop finished successfully");
 }
 
-int32_t CloudSyncService::RegisterCallbackInner(const string &appPackageName, const sptr<IRemoteObject> &remoteObject)
+int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject)
 {
     if (remoteObject == nullptr) {
         LOGE("callback is nullptr");
         return E_INVAL_ARG;
     }
 
-    if (appPackageName.empty()) {
-        LOGE("appPackageName is invalid");
+    string appPackageName;
+    if (DfsuAccessTokenHelper::GetCallerPackageName(appPackageName)) {
         return E_INVAL_ARG;
     }
 
@@ -72,8 +73,12 @@ int32_t CloudSyncService::RegisterCallbackInner(const string &appPackageName, co
     return E_OK;
 }
 
-int32_t CloudSyncService::StartSyncInner(const std::string &appPackageName, SyncType type, bool forceFlag)
+int32_t CloudSyncService::StartSyncInner(bool forceFlag)
 {
+    string appPackageName;
+    if (DfsuAccessTokenHelper::GetCallerPackageName(appPackageName)) {
+        return E_INVAL_ARG;
+    }
     auto callbackProxy_ = callbackManager_.GetCallbackProxy(appPackageName);
     if (!callbackProxy_) {
         LOGE("not found object, appPackageName = %{private}s", appPackageName.c_str());
@@ -84,8 +89,12 @@ int32_t CloudSyncService::StartSyncInner(const std::string &appPackageName, Sync
     return E_OK;
 }
 
-int32_t CloudSyncService::StopSyncInner(const std::string &appPackageName)
+int32_t CloudSyncService::StopSyncInner()
 {
+    string appPackageName;
+    if (DfsuAccessTokenHelper::GetCallerPackageName(appPackageName)) {
+        return E_INVAL_ARG;
+    }
     auto callbackProxy_ = callbackManager_.GetCallbackProxy(appPackageName);
     if (!callbackProxy_) {
         LOGE("not found object, appPackageName = %{private}s", appPackageName.c_str());

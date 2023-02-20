@@ -33,12 +33,12 @@ void CloudSyncCallbackManager::SetDeathRecipient(const std::string &appPackageNa
     auto remoteObject = cbInfo.callbackProxy_->AsObject();
     if (!remoteObject) {
         LOGE("Remote object can't be nullptr");
-        return; // throw
+        return;
     }
 
     auto deathCb = [this, packageName{appPackageName}](const wptr<IRemoteObject> &obj) {
         callbackListMap_.Erase(packageName);
-        LOGI("client died, Died remote obj:%{private}p, map size:%{public}d, packageName:%{private}s", obj.GetRefPtr(),
+        LOGE("client died, Died remote obj:%{private}p, map size:%{public}d, packageName:%{private}s", obj.GetRefPtr(),
              callbackListMap_.Size(), packageName.c_str());
     };
     cbInfo.deathRecipient_ = sptr(new SvcDeathRecipient(deathCb));
