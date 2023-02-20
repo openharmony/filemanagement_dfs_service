@@ -22,8 +22,6 @@
 #include "hilog/log_cpp.h"
 
 namespace OHOS {
-namespace Storage {
-namespace DistributedFile {
 #ifndef LOG_DOMAIN
 #define LOG_DOMAIN 0xD001600
 #endif
@@ -44,7 +42,5 @@ std::string GetFileNameFromFullPath(const char *str);
 #define LOGW(fmt, ...) PRINT_LOG(Warn, fmt, ##__VA_ARGS__)
 #define LOGE(fmt, ...) PRINT_LOG(Error, fmt, ##__VA_ARGS__)
 #define LOGF(fmt, ...) PRINT_LOG(Fatal, fmt, ##__VA_ARGS__)
-} // namespace DistributedFile
-} // namespace Storage
 } // namespace OHOS
 #endif // UTILS_LOG_H

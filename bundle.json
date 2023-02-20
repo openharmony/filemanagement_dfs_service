@@ -31,7 +31,7 @@
           "samgr",
           "utils"
         ],
-        "third_party": [ 
+        "third_party": [
           "json_modern_c++"
         ]
       },
@@ -40,10 +40,27 @@
           "base_group": [],
           "fwk_group": [],
           "service_group": [
-            "//foundation/filemanagement/dfs_service:services_target"
+            "//foundation/filemanagement/dfs_service:services_target",
+            "//foundation/filemanagement/dfs_service:cloudsync_kit_inner_target"
           ]
         },
-        "test": [ 
+        "inner_kits": [
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner:cloudsync_kit_inner",
+            "header": {
+              "header_files": [
+                "cloud_sync_callback.h",
+                "cloud_sync_manager.h",
+                "i_cloud_sync_callback.h",
+                "i_cloud_sync_service.h",
+                "svc_death_recipient.h",
+                "cloud_sync_constants.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner"
+            }
+          }
+        ],
+        "test": [
           "//foundation/filemanagement/dfs_service:dfs_test_moudule"
         ]
       }

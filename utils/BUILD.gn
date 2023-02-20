@@ -52,6 +52,7 @@ config("utils_public_config") {
 ohos_shared_library("libdistributedfileutils") {
   sources = [
     "log/src/utils_log.cpp",
+    "system/src/dfsu_access_token_helper.cpp",
     "system/src/dfsu_fd_guard.cpp",
     "system/src/dfsu_mount_argument_descriptors.cpp",
     "system/src/utils_directory.cpp",
@@ -60,11 +61,20 @@ ohos_shared_library("libdistributedfileutils") {
   configs = [ "//build/config/compiler:exceptions" ]
   public_configs = [ ":utils_public_config" ]
 
-  defines = [ "LOG_TAG=\"distributedfile_utils\"" ]
+  defines = [
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"distributedfile_utils\"",
+  ]
 
   public_deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//commonlibrary/c_utils/base:utils",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "ipc:ipc_core",
   ]
 
   part_name = "dfs_service"

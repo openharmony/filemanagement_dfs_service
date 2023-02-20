@@ -13,7 +13,7 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-module_output_path = "storage_distributed_file_manager/distributedfiledaemon"
+module_output_path = "filemanagement/dfs_service/"
 
 config("module_private_config") {
   visibility = [ ":*" ]
@@ -56,7 +56,10 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "${utils_path}:compiler_configs",
   ]
 
-  defines = [ "private=public" ]
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfileTest\"",
+  ]
 
   deps = [
     "${utils_path}:libdistributedfileutils",
@@ -71,6 +74,45 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "ability_base:want",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
+    "dsoftbus:softbus_client",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+}
+
+ohos_moduletest("CloudSyncServiceTest") {
+  module_out_path = module_output_path
+
+  include_dirs = []
+  sources = []
+
+  sources += [ "src/cloudsync_service_test.cpp" ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtoken_setproc",
+    "common_event_service:cesfwk_innerkits",
+    "dataclassification:data_transit_mgr",
+    "dfs_service:cloudsync_kit_inner",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
