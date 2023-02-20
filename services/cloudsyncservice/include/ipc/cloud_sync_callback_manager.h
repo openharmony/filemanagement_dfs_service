@@ -26,11 +26,11 @@ public:
     struct CallbackInfo {
         sptr<ICloudSyncCallback> callbackProxy_;
         sptr<SvcDeathRecipient> deathRecipient_;
-        uint32_t token_;
+        uint32_t callerUserId_;
     };
 
-    void AddCallback(const std::string &appPackageName, const sptr<ICloudSyncCallback> &callback);
-    sptr<ICloudSyncCallback> GetCallbackProxy(const std::string &appPackageName);
+    void AddCallback(const std::string &appPackageName, const int32_t userId, const sptr<ICloudSyncCallback> &callback);
+    sptr<ICloudSyncCallback> GetCallbackProxy(const std::string &appPackageName, const int32_t userId);
 
 private:
     void SetDeathRecipient(const std::string &appPackageName, CallbackInfo &cbInfo);

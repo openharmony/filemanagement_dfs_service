@@ -27,6 +27,7 @@ public:
     static bool CheckPermission(uint32_t tokenId, const std::string &permissionName);
     static int32_t GetPackageNameByToken(uint32_t tokenId, std::string &packageName);
     static bool IsSystemApp();
+    static int32_t GetUserId();
 };
 } // namespace OHOS::FileManagement
 

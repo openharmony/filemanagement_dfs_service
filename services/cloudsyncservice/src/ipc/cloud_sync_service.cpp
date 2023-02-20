@@ -68,8 +68,8 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
         LOGE("remoteObject is nullptr");
         return E_INVAL_ARG;
     }
-
-    callbackManager_.AddCallback(appPackageName, callback);
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    callbackManager_.AddCallback(appPackageName, callerUserId, callback);
     return E_OK;
 }
 
@@ -79,7 +79,8 @@ int32_t CloudSyncService::StartSyncInner(bool forceFlag)
     if (DfsuAccessTokenHelper::GetCallerPackageName(appPackageName)) {
         return E_INVAL_ARG;
     }
-    auto callbackProxy_ = callbackManager_.GetCallbackProxy(appPackageName);
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    auto callbackProxy_ = callbackManager_.GetCallbackProxy(appPackageName, callerUserId);
     if (!callbackProxy_) {
         LOGE("not found object, appPackageName = %{private}s", appPackageName.c_str());
         return E_INVAL_ARG;
@@ -95,7 +96,8 @@ int32_t CloudSyncService::StopSyncInner()
     if (DfsuAccessTokenHelper::GetCallerPackageName(appPackageName)) {
         return E_INVAL_ARG;
     }
-    auto callbackProxy_ = callbackManager_.GetCallbackProxy(appPackageName);
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    auto callbackProxy_ = callbackManager_.GetCallbackProxy(appPackageName, callerUserId);
     if (!callbackProxy_) {
         LOGE("not found object, appPackageName = %{private}s", appPackageName.c_str());
         return E_INVAL_ARG;

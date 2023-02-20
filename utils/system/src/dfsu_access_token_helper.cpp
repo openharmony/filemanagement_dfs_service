@@ -24,6 +24,7 @@ namespace OHOS::FileManagement {
 using namespace std;
 using namespace Security::AccessToken;
 constexpr int32_t ROOT_UID = 0;
+constexpr int32_t BASE_USER_RANGE = 200000;
 bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionName)
 {
     auto tokenId = IPCSkeleton::GetCallingTokenID();
@@ -99,5 +100,11 @@ bool DfsuAccessTokenHelper::IsSystemApp()
 {
     uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
     return TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
+}
+
+int32_t DfsuAccessTokenHelper::GetUserId()
+{
+    auto uid = IPCSkeleton::GetCallingUid();
+    return uid / BASE_USER_RANGE;
 }
 } // namespace OHOS::FileManagement

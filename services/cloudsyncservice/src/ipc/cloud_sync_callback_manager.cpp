@@ -19,10 +19,13 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void CloudSyncCallbackManager::AddCallback(const std::string &appPackageName, const sptr<ICloudSyncCallback> &callback)
+void CloudSyncCallbackManager::AddCallback(const std::string &appPackageName,
+                                           const int32_t userId,
+                                           const sptr<ICloudSyncCallback> &callback)
 {
     CallbackInfo callbackInfo;
     callbackInfo.callbackProxy_ = callback;
+    callbackInfo.callerUserId_ = userId;
     SetDeathRecipient(appPackageName, callbackInfo);
     /*Delete and then insert when the key exists, ensuring that the final value is inserted.*/
     callbackListMap_.EnsureInsert(appPackageName, callbackInfo);
@@ -45,15 +48,19 @@ void CloudSyncCallbackManager::SetDeathRecipient(const std::string &appPackageNa
     remoteObject->AddDeathRecipient(cbInfo.deathRecipient_);
 }
 
-sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::string &appPackageName)
+sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::string &appPackageName,
+                                                                    const int32_t userId)
 {
     CallbackInfo cbInfo;
-    if (callbackListMap_.Find(appPackageName, cbInfo)) {
-        return cbInfo.callbackProxy_;
+    if (!callbackListMap_.Find(appPackageName, cbInfo)) {
+        LOGE("not found callback, appPackageName: %{public}s", appPackageName.c_str());
+        return nullptr;
     }
 
-    LOGE("not found callback, appPackageName: %{public}s", appPackageName.c_str());
-    return nullptr;
+    if (userId != cbInfo.callerUserId_) {
+        LOGE("oldUserId %{public}d, currentUserId %{public}d", cbInfo.callerUserId_, userId);
+        return nullptr;
+    }
+    return cbInfo.callbackProxy_;
 }
-
 } // namespace OHOS::FileManagement::CloudSync
