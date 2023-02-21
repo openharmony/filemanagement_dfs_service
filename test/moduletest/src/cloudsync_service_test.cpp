@@ -133,7 +133,6 @@ HWTEST_F(CloudSyncServiceTest, StartSync_002, TestSize.Level1)
     LOGE("testcase run OK");
 
     uint64_t selfTokenId = GetSelfTokenID();
-    LOGE("selfTokenId = %{public}llu", selfTokenId);
     AccessTokenKit::AllocHapToken(g_info, g_policy);
     AccessTokenIDEx tokenID = AccessTokenKit::GetHapTokenIDEx(g_info.userID, g_info.bundleName, g_info.instIndex);
     SetSelfTokenID(tokenID.tokenIDEx);
