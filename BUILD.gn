@@ -39,7 +39,14 @@ group("dfs_test_moudule") {
     "${services_path}/distributedfiledaemon/test/unittest:session_pool_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_dispatcher_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_test",
-    "test/moduletest:CloudSyncServiceTest",
     "test/moduletest:DistributedFileDaemonServiceTest",
+  ]
+}
+
+group("cloudsync_test_module") {
+  testonly = true
+  deps = [
+    "test/moduletest:CloudSyncServiceTest",
+    "test/unittests:cloudsyncunittests",
   ]
 }

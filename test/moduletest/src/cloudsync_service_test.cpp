@@ -95,17 +95,10 @@ void CloudSyncServiceTest::TearDown(void)
 
 /**
  * @tc.name: StartSync_001
- * @tc.desc:  function.
+ * @tc.desc: function.
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: I6H5MH
  */
-/*
-   E_OK = ERR_OK,
-   E_SEVICE_DIED = CSS_ERR_OFFSET,
-   E_INVAL_ARG,
-   E_BROKEN_IPC,
-   E_SA_LOAD_FAILED,
-*/
 HWTEST_F(CloudSyncServiceTest, StartSync_001, TestSize.Level1)
 {
     LOGE("testcase run OK");
@@ -117,17 +110,10 @@ HWTEST_F(CloudSyncServiceTest, StartSync_001, TestSize.Level1)
 
 /**
  * @tc.name: StartSync_002
- * @tc.desc:  function.
+ * @tc.desc: function.
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: I6H5MH
  */
-/*
-   E_OK = ERR_OK,
-   E_SEVICE_DIED = CSS_ERR_OFFSET,
-   E_INVAL_ARG,
-   E_BROKEN_IPC,
-   E_SA_LOAD_FAILED,
-*/
 HWTEST_F(CloudSyncServiceTest, StartSync_002, TestSize.Level1)
 {
     LOGE("testcase run OK");
@@ -149,17 +135,10 @@ HWTEST_F(CloudSyncServiceTest, StartSync_002, TestSize.Level1)
 
 /**
  * @tc.name: StopSync_001
- * @tc.desc:  function.
+ * @tc.desc: function.
  * @tc.type: FUNC
- * @tc.require: Issue Number
+ * @tc.require: I6H5MH
  */
-/*
-   E_OK = ERR_OK,
-   E_SEVICE_DIED = CSS_ERR_OFFSET,
-   E_INVAL_ARG,
-   E_BROKEN_IPC,
-   E_SA_LOAD_FAILED,
-*/
 HWTEST_F(CloudSyncServiceTest, StopSync_001, TestSize.Level1)
 {
     LOGE("testcase run OK");
