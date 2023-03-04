@@ -17,12 +17,11 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_SERVICE_H
 
 #include <map>
-
-#include "cloud_sync_callback_manager.h"
 #include "cloud_sync_service_stub.h"
 #include "i_cloud_sync_callback.h"
 #include "nocopyable.h"
 #include "system_ability.h"
+#include "data_sync/data_sync_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncService final : public SystemAbility, public CloudSyncServiceStub, protected NoCopyable {
@@ -41,7 +40,7 @@ private:
     void OnStop() override;
     void PublishSA();
 
-    CloudSyncCallbackManager callbackManager_;
+    DataSyncManager dataSyncManager_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

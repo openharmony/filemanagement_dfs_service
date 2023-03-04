@@ -14,6 +14,9 @@
  */
 #include "ipc/cloud_sync_service.h"
 
+#include <thread>
+
+#include "ipc/cloud_sync_callback_manager.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "system_ability_definition.h"
@@ -28,8 +31,7 @@ REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVIC
 void CloudSyncService::PublishSA()
 {
     LOGI("Begin to init");
-    bool ret = SystemAbility::Publish(this);
-    if (!ret) {
+    if (!SystemAbility::Publish(this)) {
         throw runtime_error(" Failed to publish the daemon");
     }
     LOGI("Init finished successfully");
@@ -54,7 +56,7 @@ void CloudSyncService::OnStop()
 int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject)
 {
     if (remoteObject == nullptr) {
-        LOGE("callback is nullptr");
+        LOGE("remoteObject is nullptr");
         return E_INVAL_ARG;
     }
 
@@ -64,12 +66,8 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
     }
 
     auto callback = iface_cast<ICloudSyncCallback>(remoteObject);
-    if (!remoteObject) {
-        LOGE("remoteObject is nullptr");
-        return E_INVAL_ARG;
-    }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    callbackManager_.AddCallback(appPackageName, callerUserId, callback);
+    CloudSyncCallbackManager::GetInstance().AddCallback(appPackageName, callerUserId, callback);
     return E_OK;
 }
 
@@ -80,13 +78,23 @@ int32_t CloudSyncService::StartSyncInner(bool forceFlag)
         return E_INVAL_ARG;
     }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    auto callbackProxy_ = callbackManager_.GetCallbackProxy(appPackageName, callerUserId);
-    if (!callbackProxy_) {
-        LOGE("not found object, appPackageName = %{private}s", appPackageName.c_str());
-        return E_INVAL_ARG;
+    auto ret = dataSyncManager_.Init(callerUserId);
+    if (ret != E_OK) {
+        return ret;
     }
-    SyncPromptState state = SyncPromptState::SYNC_STATE_DEFAULT;
-    callbackProxy_->OnSyncStateChanged(SyncType::ALL, state);
+    ret = dataSyncManager_.IsBlockCloudSync(appPackageName, callerUserId);
+    if (ret != E_OK) {
+        return ret;
+    }
+    auto dataSyncer = dataSyncManager_.GetDataSyncer(appPackageName);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, appPackageName: %{private}s", appPackageName.c_str());
+        return E_SYNCER_NUM_OUT_OF_RANGE;
+    }
+    std::thread([dataSyncerSptr{dataSyncer}, callerUserId, forceFlag]() {
+        dataSyncerSptr->StartSync(callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
+    }).detach();
+
     return E_OK;
 }
 
@@ -97,13 +105,14 @@ int32_t CloudSyncService::StopSyncInner()
         return E_INVAL_ARG;
     }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    auto callbackProxy_ = callbackManager_.GetCallbackProxy(appPackageName, callerUserId);
-    if (!callbackProxy_) {
-        LOGE("not found object, appPackageName = %{private}s", appPackageName.c_str());
-        return E_INVAL_ARG;
+    auto dataSyncer = dataSyncManager_.GetDataSyncer(appPackageName);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, appPackageName: %{private}s", appPackageName.c_str());
+        return E_SYNCER_NUM_OUT_OF_RANGE;
     }
-    SyncPromptState state = SyncPromptState::SYNC_STATE_DEFAULT;
-    callbackProxy_->OnSyncStateChanged(SyncType::ALL, state);
+    std::thread([dataSyncerSptr{dataSyncer}, callerUserId]() {
+        dataSyncerSptr->StopSync(callerUserId, SyncTriggerType::APP_TRIGGER);
+    }).detach();
     return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync

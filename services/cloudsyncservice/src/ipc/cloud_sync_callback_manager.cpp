@@ -15,9 +15,16 @@
 
 #include "ipc/cloud_sync_callback_manager.h"
 #include "utils_log.h"
+#include "dfs_error.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
+
+CloudSyncCallbackManager &CloudSyncCallbackManager::GetInstance()
+{
+    static CloudSyncCallbackManager instance;
+    return instance;
+}
 
 void CloudSyncCallbackManager::AddCallback(const std::string &appPackageName,
                                            const int32_t userId,
@@ -53,7 +60,7 @@ sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::s
 {
     CallbackInfo cbInfo;
     if (!callbackListMap_.Find(appPackageName, cbInfo)) {
-        LOGE("not found callback, appPackageName: %{public}s", appPackageName.c_str());
+        LOGE("not found callback, appPackageName: %{private}s", appPackageName.c_str());
         return nullptr;
     }
 
@@ -62,5 +69,18 @@ sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::s
         return nullptr;
     }
     return cbInfo.callbackProxy_;
+}
+
+void CloudSyncCallbackManager::NotifySyncStateChanged(const std::string &appPackageName,
+                                                      const int32_t userId,
+                                                      const SyncType type,
+                                                      const SyncPromptState state)
+{
+    auto callbackProxy_ = GetCallbackProxy(appPackageName, userId);
+    if (!callbackProxy_) {
+        LOGE("not found object, appPackageName = %{private}s", appPackageName.c_str());
+        return;
+    }
+    callbackProxy_->OnSyncStateChanged(type, state);
 }
 } // namespace OHOS::FileManagement::CloudSync

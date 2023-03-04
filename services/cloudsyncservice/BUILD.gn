@@ -16,14 +16,16 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_shared_library("cloudsync_sa") {
   sources = [
+    "src/data_sync/data_sync_manager.cpp",
+    "src/data_sync/data_syncer.cpp",
+    "src/data_sync/gallery/gallery_data_syncer.cpp",
+    "src/data_sync/sync_state_manager.cpp",
     "src/ipc/cloud_sync_callback_manager.cpp",
     "src/ipc/cloud_sync_callback_proxy.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/cloud_sync_service_stub.cpp",
-
-    #"src/datasync/gallery/gallery_data_syncer.cpp",
-    #"src/datasync/data_sync_manager.cpp",
-    #"src/datasync/data_syncer.cpp"
+    "src/sync_rule/battery_status.cpp",
+    "src/sync_rule/cloud_status.cpp",
   ]
 
   defines = [
@@ -36,6 +38,7 @@ ohos_shared_library("cloudsync_sa") {
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
+    "battery_manager:batterysrv_client",
     "dfs_service:cloudsync_kit_inner",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",

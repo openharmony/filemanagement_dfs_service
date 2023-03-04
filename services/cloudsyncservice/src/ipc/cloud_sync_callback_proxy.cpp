@@ -30,7 +30,10 @@ void CloudSyncCallbackProxy::OnSyncStateChanged(SyncType type, SyncPromptState s
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return;
+    }
 
     if (!data.WriteInt32(static_cast<int32_t>(type))) {
         LOGE("Failed to send the type");
@@ -42,7 +45,12 @@ void CloudSyncCallbackProxy::OnSyncStateChanged(SyncType type, SyncPromptState s
         return;
     }
 
-    int32_t ret = Remote()->SendRequest(ICloudSyncCallback::SERVICE_CMD_ON_SYNC_STATE_CHANGED, data, reply, option);
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncCallback::SERVICE_CMD_ON_SYNC_STATE_CHANGED, data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
