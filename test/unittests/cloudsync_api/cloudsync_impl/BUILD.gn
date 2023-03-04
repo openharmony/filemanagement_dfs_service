@@ -1,0 +1,138 @@
+# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+ohos_unittest("cloud_sync_callback_client_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "cloud_sync_callback_client_test.cpp" ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "dfs_service:cloudsync_kit_inner",
+    "ipc:ipc_core",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_sync_callback_stub_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "cloud_sync_callback_stub_test.cpp" ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "dfs_service:cloudsync_kit_inner",
+    "ipc:ipc_core",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_sync_manager_impl_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/test/mock/ipc/cloud_sync_service_proxy_mock.cpp",
+    "cloud_sync_manager_impl_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/test/mock/ipc",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+  ]
+
+  deps = [
+    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "dfs_service:cloudsync_kit_inner",
+    "ipc:ipc_core",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_sync_service_proxy_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "cloud_sync_service_proxy_test.cpp" ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "dfs_service:cloudsync_kit_inner",
+    "ipc:ipc_core",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+group("cloudsync_impl_test") {
+  testonly = true
+
+  deps = [
+    ":cloud_sync_callback_client_test",
+    ":cloud_sync_callback_stub_test",
+    ":cloud_sync_manager_impl_test",
+    ":cloud_sync_service_proxy_test",
+  ]
+}
