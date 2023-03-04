@@ -21,9 +21,12 @@ ohos_shared_library("cloudsync_sa") {
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/cloud_sync_service_stub.cpp",
 
-    #"src/datasync/gallery/gallery_data_syncer.cpp",
-    #"src/datasync/data_sync_manager.cpp",
-    #"src/datasync/data_syncer.cpp"
+    "src/data_sync/gallery/gallery_data_syncer.cpp",
+    "src/data_sync/data_sync_manager.cpp",
+    "src/data_sync/data_syncer.cpp",
+    "src/data_sync/sync_state_manager.cpp",
+    "src/sync_rule/battery_status.cpp",
+    "src/sync_rule/cloud_status.cpp",
   ]
 
   defines = [
@@ -40,6 +43,7 @@ ohos_shared_library("cloudsync_sa") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "battery_manager:batterysrv_client",
   ]
 
   use_exceptions = true

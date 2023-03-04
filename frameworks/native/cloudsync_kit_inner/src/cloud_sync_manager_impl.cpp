@@ -41,7 +41,6 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
 
     if (!isFirstCall_.test_and_set()) {
         LOGI("Register callback");
-        callback_ = callback;
         auto ret =
             CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback)));
         if (ret) {
@@ -49,6 +48,7 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
             isFirstCall_.clear();
             return ret;
         }
+        callback_ = callback;
         SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     }
 

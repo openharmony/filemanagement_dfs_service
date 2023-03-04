@@ -51,6 +51,7 @@ ohos_unittest("cloud_sync_service_test") {
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include/ipc",
+    "${services_path}/cloudsyncservice/include",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
   ]
 

@@ -23,17 +23,22 @@
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncCallbackManager : public RefBase {
 public:
+    static CloudSyncCallbackManager &GetInstance();
     struct CallbackInfo {
         sptr<ICloudSyncCallback> callbackProxy_;
         sptr<SvcDeathRecipient> deathRecipient_;
-        uint32_t callerUserId_;
+        int32_t callerUserId_;
     };
 
     void AddCallback(const std::string &appPackageName, const int32_t userId, const sptr<ICloudSyncCallback> &callback);
-    sptr<ICloudSyncCallback> GetCallbackProxy(const std::string &appPackageName, const int32_t userId);
+    void NotifySyncStateChanged(const std::string &appPackageName,
+                                const int32_t userId,
+                                const SyncType type,
+                                const SyncPromptState state);
 
 private:
     void SetDeathRecipient(const std::string &appPackageName, CallbackInfo &cbInfo);
+    sptr<ICloudSyncCallback> GetCallbackProxy(const std::string &appPackageName, const int32_t userId);
 
     SafeMap<const std::string, CallbackInfo> callbackListMap_;
 };

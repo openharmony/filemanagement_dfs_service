@@ -43,11 +43,10 @@ int32_t CloudSyncCallbackStub::OnRemoteRequest(uint32_t code,
 
 int32_t CloudSyncCallbackStub::HandleOnSyncStateChanged(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("start");
     SyncType type = SyncType(data.ReadInt32());
     SyncPromptState state = SyncPromptState(data.ReadInt32());
     OnSyncStateChanged(type, state);
-    LOGI("end");
+    LOGI("OnSyncStateChanged, type = %{public}d, state = %{public}d", type, state);
     return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync

@@ -37,14 +37,23 @@ int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &
         LOGI("Empty callback stub");
         return E_INVAL_ARG;
     }
-    data.WriteInterfaceToken(GetDescriptor());
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
 
     if (!data.WriteRemoteObject(remoteObject)) {
         LOGE("Failed to send the callback stub");
         return E_INVAL_ARG;
     }
 
-    int32_t ret = Remote()->SendRequest(ICloudSyncService::SERVICE_CMD_REGISTER_CALLBACK, data, reply, option);
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_REGISTER_CALLBACK, data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
@@ -62,14 +71,22 @@ int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag)
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
 
     if (!data.WriteBool(forceFlag)) {
         LOGE("Failed to send the force flag");
         return E_INVAL_ARG;
     }
 
-    int32_t ret = Remote()->SendRequest(ICloudSyncService::SERVICE_CMD_START_SYNC, data, reply, option);
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_START_SYNC, data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
@@ -87,9 +104,17 @@ int32_t CloudSyncServiceProxy::StopSyncInner()
     MessageParcel reply;
     MessageOption option;
 
-    data.WriteInterfaceToken(GetDescriptor());
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
 
-    int32_t ret = Remote()->SendRequest(ICloudSyncService::SERVICE_CMD_STOP_SYNC, data, reply, option);
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_STOP_SYNC, data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;

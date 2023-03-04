@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,21 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_CLIENT_H
-#define OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_CLIENT_H
+#ifndef OHOS_FILEMGMT_CLOUD_STATUS_H
+#define OHOS_FILEMGMT_CLOUD_STATUS_H
 
-#include "cloud_sync_callback_stub.h"
+#include <string>
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudSyncCallbackClient final : public CloudSyncCallbackStub {
+class CloudStatus {
 public:
-    explicit CloudSyncCallbackClient(const std::shared_ptr<CloudSyncCallback> &callback) : callback_(callback) {}
-
-    void OnSyncStateChanged(SyncType type, SyncPromptState state) override;
-
+    static bool IsCloudStatusOkay(const std::string appPackageName);
 private:
-    std::shared_ptr<CloudSyncCallback> callback_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
-#endif // OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_CLIENT_H
+#endif // OHOS_FILEMGMT_CLOUD_STATUS_H

@@ -26,6 +26,9 @@ public:
     explicit SvcDeathRecipient(std::function<void(const wptr<IRemoteObject> &)> functor) : functor_(functor){};
     void OnRemoteDied(const wptr<IRemoteObject> &object) override
     {
+        if (object == nullptr) {
+            return;
+        }
         object->RemoveDeathRecipient(this);
         functor_(object);
     }
