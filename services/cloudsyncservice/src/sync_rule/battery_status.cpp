@@ -40,14 +40,14 @@ bool BatteryStatus::IsAllowUpload(bool forceFlag)
 
     auto capacity = GetCapacity();
     if (capacity < STOP_CAPACITY_LIMIT) {
-        LOGE("stop upload");
+        LOGE("power saving, stop upload");
         level_ = BatteryStatus::LEVEL_TOO_LOW;
         return false;
     } else if (capacity < PAUSE_CAPACITY_LIMIT) {
         if (forceFlag) {
             return true;
         } else {
-            LOGE("pause upload");
+            LOGE("power saving, pause upload");
             level_ = BatteryStatus::LEVEL_LOW;
             return false;
         }

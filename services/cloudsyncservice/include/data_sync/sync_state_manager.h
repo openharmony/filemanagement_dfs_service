@@ -21,26 +21,30 @@
 
 namespace OHOS::FileManagement::CloudSync {
 enum class SyncState : int32_t {
-    NOT_SYNC = 0,
+    INIT = 0,
     SYNCING,
     SYNC_FAILED,
     SYNC_SUCCEED,
 };
 
+enum class Action : int32_t {
+    STOP = 0,
+    START,
+    FORCE_START,
+};
+
 class SyncStateManager {
 public:
-    void GetSyncFlagAndUpdateSyncState(bool &stopFlag, bool &pendingFlag, bool &forceFlag, SyncState newState);
-    bool IsPendingSync();
+    Action UpdateSyncState(SyncState newState);
+    bool IsPendingSync(bool forceFlag);
     bool GetStopSyncFlag();
-    bool SetStopSyncFlag();
-    void SetForceSyncFlag(bool flag);
+    void SetStopSyncFlag();
 
 private:
     mutable std::shared_mutex syncMutex_;
-    SyncState state_{SyncState::NOT_SYNC};
-    std::atomic_bool isPendingSyncFlag_{false};
+    SyncState state_{SyncState::INIT};
+    Action nextAction_{Action::STOP};
     std::atomic_bool stopSyncFlag_{false};
-    std::atomic_bool forceFlag_{false};
 };
 
 } // namespace OHOS::FileManagement::CloudSync

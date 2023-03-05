@@ -22,39 +22,35 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void GalleryDataSyncer::StartSync(int32_t userId, bool forceFlag, SyncTriggerType triggerType)
+void GalleryDataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
 {
     LOGI("start sync, isforceSync:%{public}d, triggerType:%{public}d", forceFlag, triggerType);
-    auto syncStateManager = GetSyncStateManager(userId);
-    if (syncStateManager->IsPendingSync()) {
-        syncStateManager->SetForceSyncFlag(forceFlag);
+    auto syncStateManager = GetSyncStateManager();
+    if (syncStateManager->IsPendingSync(forceFlag)) {
         LOGI("syncing, pending sync");
         return;
     }
 
-    SyncStateChangedNotify(userId, SyncType::ALL, SyncPromptState::SYNC_STATE_SYNCING);
-    int32_t ret = UploadFile(userId, forceFlag);
-    OnSyncComplete(ret, userId, SyncType::UPLOAD);
+    SyncStateChangedNotify(SyncType::ALL, SyncPromptState::SYNC_STATE_SYNCING);
+    int32_t ret = UploadFile(forceFlag);
+    OnSyncComplete(ret, SyncType::UPLOAD);
 }
 
-void GalleryDataSyncer::StopSync(int32_t userId, SyncTriggerType triggerType)
+void GalleryDataSyncer::StopSync(SyncTriggerType triggerType)
 {
     LOGI("trigger stop sync, triggerType:%{public}d", triggerType);
-    auto syncStateManager = GetSyncStateManager(userId);
-    if (!syncStateManager->SetStopSyncFlag()) {
-        LOGI("not syncing, do nothing");
-    }
+    auto syncStateManager = GetSyncStateManager();
+    syncStateManager->SetStopSyncFlag();
 }
 
-int32_t GalleryDataSyncer::UploadFile(int32_t userId, bool forceFlag)
+int32_t GalleryDataSyncer::UploadFile(bool forceFlag)
 {
-    auto syncStateManager = GetSyncStateManager(userId);
+    auto syncStateManager = GetSyncStateManager();
     if (syncStateManager->GetStopSyncFlag()) {
         LOGI("trigger stop sync");
         return E_OK;
     }
     if (!BatteryStatus::IsAllowUpload(forceFlag)) {
-        LOGI("power saving, no upload");
         return E_SYNC_FAILED_BATTERY_LOW;
     }
     return E_OK;

@@ -16,10 +16,9 @@
 #ifndef OHOS_FILEMGMT_DATA_SYNC_MANAGER_H
 #define OHOS_FILEMGMT_DATA_SYNC_MANAGER_H
 
-#include <map>
 #include <memory>
 #include <mutex>
-#include <atomic>
+#include <vector>
 
 #include "data_sync/data_syncer.h"
 
@@ -30,11 +29,11 @@ public:
     ~DataSyncManager() = default;
 
     int32_t Init(const int32_t userId);
-    std::shared_ptr<DataSyncer> GetDataSyncer(const std::string appPackageName);
-    int32_t IsBlockCloudSync(const std::string appPackageName, const int32_t userId) const;
+    std::shared_ptr<DataSyncer> GetDataSyncer(const std::string appPackageName, const int32_t userId);
+    int32_t IsSkipSync(const std::string appPackageName, const int32_t userId) const;
 
 private:
-    std::map<std::string, std::shared_ptr<DataSyncer>> dataSyncers_;
+    std::vector<std::shared_ptr<DataSyncer>> dataSyncers_;
     std::mutex dataSyncMutex_;
 };
 } // namespace OHOS::FileManagement::CloudSync
