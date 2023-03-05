@@ -21,13 +21,13 @@
 namespace OHOS::FileManagement::CloudSync {
 class GalleryDataSyncer final : public DataSyncer {
 public:
-    explicit GalleryDataSyncer(std::string appPackageName) : DataSyncer(appPackageName) {}
+    GalleryDataSyncer(const std::string appPackageName, const int32_t userId) : DataSyncer(appPackageName, userId) {}
     ~GalleryDataSyncer() = default;
 
-    void StartSync(int32_t userId, bool forceFlag, SyncTriggerType triggerType) override;
-    void StopSync(int32_t userId, SyncTriggerType triggerType) override;
+    void StartSync(bool forceFlag, SyncTriggerType triggerType) override;
+    void StopSync(SyncTriggerType triggerType) override;
 
-    int32_t UploadFile(int32_t userId, bool forceFlag);
+    int32_t UploadFile(bool forceFlag);
 
 private:
 };

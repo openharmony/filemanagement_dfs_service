@@ -20,34 +20,32 @@
 #include "data_sync/gallery/gallery_data_syncer.h"
 #include "dfs_error.h"
 #include "ipc/cloud_sync_callback_manager.h"
-#include "sync_rule/cloud_status.h"
 #include "sync_rule/battery_status.h"
+#include "sync_rule/cloud_status.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
-constexpr int  SUPPORT_MAX_SYNCER_NUM = 2;
 
 int32_t DataSyncManager::Init(const int32_t userId)
 {
     return E_OK;
 }
 
-std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string appPackageName)
+std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string appPackageName, const int32_t userId)
 {
     std::lock_guard<std::mutex> lck(dataSyncMutex_);
-    auto it = dataSyncers_.find(appPackageName);
-    if (it != dataSyncers_.end()) {
-        return it->second;
+    for (auto dataSyncer : dataSyncers_) {
+        if ((dataSyncer->GetAppPackageName() == appPackageName) && (dataSyncer->GetUserId() == userId)) {
+            return dataSyncer;
+        }
     }
-    if (dataSyncers_.size() >= SUPPORT_MAX_SYNCER_NUM) {
-        return nullptr;
-    }
-    std::shared_ptr<DataSyncer> dataSyncer_ = std::make_shared<GalleryDataSyncer>(appPackageName);
-    dataSyncers_[appPackageName] = dataSyncer_;
+
+    std::shared_ptr<DataSyncer> dataSyncer_ = std::make_shared<GalleryDataSyncer>(appPackageName, userId);
+    dataSyncers_.push_back(dataSyncer_);
     return dataSyncer_;
 }
 
-int32_t DataSyncManager::IsBlockCloudSync(const std::string appPackageName, const int32_t userId) const
+int32_t DataSyncManager::IsSkipSync(const std::string appPackageName, const int32_t userId) const
 {
     if (!CloudStatus::IsCloudStatusOkay(appPackageName)) {
         LOGE("cloud status is not OK");

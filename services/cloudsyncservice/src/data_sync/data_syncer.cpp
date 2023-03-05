@@ -15,6 +15,7 @@
 #include "data_sync/data_syncer.h"
 
 #include <thread>
+
 #include "dfs_error.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "sync_rule/battery_status.h"
@@ -22,22 +23,23 @@
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
-DataSyncer::DataSyncer(std::string appPackageName) : appPackageName_(appPackageName)
+DataSyncer::DataSyncer(const std::string appPackageName, const int32_t userId)
+    : appPackageName_(appPackageName), userId_(userId)
 {
+    syncStateManager_ = std::make_shared<SyncStateManager>();
 }
 
-std::shared_ptr<SyncStateManager> DataSyncer::GetSyncStateManager(const int32_t userId)
+std::string DataSyncer::GetAppPackageName() const
 {
-    auto it = SyncStateManagers_.find(userId);
-    if (it != SyncStateManagers_.end()) {
-        return it->second;
-    }
-    std::shared_ptr<SyncStateManager> syncStateManager_ = std::make_shared<SyncStateManager>();
-    SyncStateManagers_[userId] = syncStateManager_;
-    return syncStateManager_;
+    return appPackageName_;
 }
 
-void DataSyncer::OnSyncComplete(const int32_t code, int32_t userId, SyncType type)
+int32_t DataSyncer::GetUserId() const
+{
+    return userId_;
+}
+
+void DataSyncer::OnSyncComplete(const int32_t code, SyncType type)
 {
     SyncState syncState;
     if (code == E_OK) {
@@ -45,33 +47,33 @@ void DataSyncer::OnSyncComplete(const int32_t code, int32_t userId, SyncType typ
     } else {
         syncState = SyncState::SYNC_FAILED;
     }
-    bool stopFlag;
-    bool isExistPendingSyncFlag;
-    bool forceSyncFlag;
-    auto syncStateManager = GetSyncStateManager(userId);
-    syncStateManager->GetSyncFlagAndUpdateSyncState(stopFlag, isExistPendingSyncFlag, forceSyncFlag, syncState);
-    if (stopFlag) {
-        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(appPackageName_, userId, SyncType::ALL,
-                                                                       SyncPromptState::SYNC_STATE_DEFAULT);
+
+    auto nextAction = syncStateManager_->UpdateSyncState(syncState);
+    if (nextAction == Action::START) {
+        StartSync(false, SyncTriggerType::PENDING_TRIGGER);
         return;
     }
-
-    if (isExistPendingSyncFlag) {
-        StartSync(userId, forceSyncFlag, SyncTriggerType::PENDING_TRIGGER);
+    if (nextAction == Action::FORCE_START) {
+        StartSync(true, SyncTriggerType::PENDING_TRIGGER);
         return;
     }
 
     auto state = GetSyncPromptState(code);
     if (code == E_OK) {
-        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(appPackageName_, userId, SyncType::ALL, state);
+        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(appPackageName_, userId_, SyncType::ALL, state);
     } else {
-        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(appPackageName_, userId, type, state);
+        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(appPackageName_, userId_, type, state);
     }
 }
 
-void DataSyncer::SyncStateChangedNotify(const int32_t userId, const SyncType type, const SyncPromptState state)
+std::shared_ptr<SyncStateManager> DataSyncer::GetSyncStateManager()
 {
-    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(appPackageName_, userId, SyncType::ALL, state);
+    return syncStateManager_;
+}
+
+void DataSyncer::SyncStateChangedNotify(const SyncType type, const SyncPromptState state)
+{
+    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(appPackageName_, userId_, SyncType::ALL, state);
 }
 
 SyncPromptState DataSyncer::GetSyncPromptState(const int32_t code)
@@ -90,6 +92,3 @@ SyncPromptState DataSyncer::GetSyncPromptState(const int32_t code)
     return state;
 }
 } // namespace OHOS::FileManagement::CloudSync
-
-
-

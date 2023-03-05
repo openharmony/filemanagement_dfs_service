@@ -28,22 +28,25 @@ enum class SyncTriggerType : int32_t {
 };
 class DataSyncer {
 public:
-    explicit DataSyncer(std::string appPackageName);
+    DataSyncer(const std::string appPackageName, const int32_t userId);
     virtual ~DataSyncer(){};
 
-    virtual void StartSync(int32_t userId, bool forceFlag, SyncTriggerType triggerType) = 0;
-    virtual void StopSync(int32_t userId, SyncTriggerType triggerType) = 0;
+    virtual void StartSync(bool forceFlag, SyncTriggerType triggerType) = 0;
+    virtual void StopSync(SyncTriggerType triggerType) = 0;
+    std::string GetAppPackageName() const;
+    int32_t GetUserId() const;
 
 protected:
-    void OnSyncComplete(const int32_t code, const int32_t userId, const SyncType type);
-    void SyncStateChangedNotify(const int32_t userId, const SyncType type, const SyncPromptState state);
-    std::shared_ptr<SyncStateManager> GetSyncStateManager(const int32_t userId);
+    void OnSyncComplete(const int32_t code, const SyncType type);
+    std::shared_ptr<SyncStateManager> GetSyncStateManager();
+    void SyncStateChangedNotify(const SyncType type, const SyncPromptState state);
 
 private:
     SyncPromptState GetSyncPromptState(const int32_t code);
 
-    std::string appPackageName_;
-    std::map<const int32_t, std::shared_ptr<SyncStateManager>> SyncStateManagers_;
+    const std::string appPackageName_;
+    const int32_t userId_;
+    std::shared_ptr<SyncStateManager> syncStateManager_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

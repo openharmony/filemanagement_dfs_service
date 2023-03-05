@@ -20,38 +20,28 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void SyncStateManager::GetSyncFlagAndUpdateSyncState(bool &stopFlag,
-                                                   bool &pendingFlag,
-                                                   bool &forceFlag,
-                                                   SyncState newState)
+Action SyncStateManager::UpdateSyncState(SyncState newState)
 {
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
-
-    stopFlag = stopSyncFlag_;
-
-    if (stopSyncFlag_) {
-        pendingFlag = false;
-        forceFlag = false;
-    } else {
-        pendingFlag = isPendingSyncFlag_;
-        forceFlag = forceFlag_;
-    }
-
     state_ = newState;
-    isPendingSyncFlag_ = false;
-    forceFlag_ = false;
     stopSyncFlag_ = false;
+    return nextAction_;
 }
 
-bool SyncStateManager::IsPendingSync()
+bool SyncStateManager::IsPendingSync(bool forceFlag)
 {
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
     if (state_ != SyncState::SYNCING) {
         state_ = SyncState::SYNCING;
+        nextAction_ = Action::STOP;
         return false;
     }
 
-    isPendingSyncFlag_ = true;
+    if (forceFlag) {
+        nextAction_ = Action::FORCE_START;
+    } else {
+        nextAction_ = Action::START;
+    }
     return true;
 }
 
@@ -60,20 +50,10 @@ bool SyncStateManager::GetStopSyncFlag()
     return stopSyncFlag_;
 }
 
-bool SyncStateManager::SetStopSyncFlag()
+void SyncStateManager::SetStopSyncFlag()
 {
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
-    if (state_ == SyncState::SYNCING) {
-        stopSyncFlag_ = true;
-        return true;
-    }
-    return false;
-}
-
-void SyncStateManager::SetForceSyncFlag(bool flag)
-{
-    if (isPendingSyncFlag_ && flag) {
-        forceFlag_ = true;
-    }
+    nextAction_ = Action::STOP;
+    stopSyncFlag_ = true;
 }
 } // namespace OHOS::FileManagement::CloudSync
