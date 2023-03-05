@@ -17,7 +17,6 @@ ohos_shared_library("libdistributedfiledaemon") {
   include_dirs = [
     "include",
     "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp/include",
-    "//base/security/device_auth/interfaces/innerkits",
     "//third_party/json/include",
   ]
 
@@ -40,13 +39,13 @@ ohos_shared_library("libdistributedfiledaemon") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//base/security/device_auth/services:deviceauth_sdk",
     "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
   ]
   external_deps = [
     "ability_base:want",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
+    "device_auth:deviceauth_sdk",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
