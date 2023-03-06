@@ -18,18 +18,27 @@
 namespace OHOS::FileManagement::CloudSync {
 constexpr int32_t PAUSE_CAPACITY_LIMIT = 15;
 constexpr int32_t STOP_CAPACITY_LIMIT = 10;
+constexpr int32_t DEFAULT_BATTERY_CAPCITY = 100;
 
 bool BatteryStatus::IsCharingStatus()
 {
+    bool ret = true;
+#ifdef SUPPORT_POWER
     auto &batterySrvClient = PowerMgr::BatterySrvClient::GetInstance();
     auto chargingStatus = batterySrvClient.GetChargingStatus();
-    return chargingStatus == PowerMgr::BatteryChargeState::CHARGE_STATE_ENABLE;
+    ret = (chargingStatus == PowerMgr::BatteryChargeState::CHARGE_STATE_ENABLE);
+#endif
+    return ret;
 }
 
 int32_t BatteryStatus::GetCapacity()
 {
+    int32_t capacity = DEFAULT_BATTERY_CAPCITY;
+#ifdef SUPPORT_POWER
     auto &batterySrvClient = PowerMgr::BatterySrvClient::GetInstance();
-    return batterySrvClient.GetCapacity();
+    capacity = batterySrvClient.GetCapacity();
+#endif
+    return capacity;
 }
 
 bool BatteryStatus::IsAllowUpload(bool forceFlag)

@@ -38,12 +38,17 @@ ohos_shared_library("cloudsync_sa") {
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
-    "battery_manager:batterysrv_client",
     "dfs_service:cloudsync_kit_inner",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  if (cloudsync_service_power) {
+    external_deps += [ "battery_manager:batterysrv_client" ]
+
+    defines += [ "SUPPORT_POWER" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"

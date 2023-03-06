@@ -16,8 +16,12 @@
 #ifndef OHOS_FILEMGMT_BATTERY_STATUS_H
 #define OHOS_FILEMGMT_BATTERY_STATUS_H
 
+#include <cstdint>
+
+#ifdef SUPPORT_POWER
 #include "battery_info.h"
 #include "battery_srv_client.h"
+#endif
 
 namespace OHOS::FileManagement::CloudSync {
 class BatteryStatus {
