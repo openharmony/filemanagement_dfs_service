@@ -22,9 +22,9 @@ innerkits_native_path = "${distributedfile_path}/interfaces/innerkits/native"
 
 declare_args() {
   if (defined(global_parts_info) &&
-      defined(global_parts_info.battery_manager_native_batterysrv_client)) {
-      cloudsync_service_power = true
+      defined(global_parts_info.powermgr_battery_manager)) {
+    cloudsync_service_power = true
   } else {
-      cloudsync_service_power = false
+    cloudsync_service_power = false
   }
 }
