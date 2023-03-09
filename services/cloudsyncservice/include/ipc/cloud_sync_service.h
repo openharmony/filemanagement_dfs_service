@@ -39,6 +39,7 @@ private:
     void OnStart() override;
     void OnStop() override;
     void PublishSA();
+    void Init();
 
     DataSyncManager dataSyncManager_;
 };
