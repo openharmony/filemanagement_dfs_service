@@ -20,6 +20,7 @@ group("services_target") {
     "${services_path}:distributedfile_etc",
     "${services_path}:distributedfile_sa_profile",
     "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudfiledaemon:clouddaemon_sa",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
   ]
 }
