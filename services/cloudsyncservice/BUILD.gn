@@ -44,6 +44,14 @@ ohos_shared_library("cloudsync_sa") {
     "samgr:samgr_proxy",
   ]
 
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
+
   if (cloudsync_service_power) {
     external_deps += [ "battery_manager:batterysrv_client" ]
 
