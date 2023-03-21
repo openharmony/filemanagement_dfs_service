@@ -15,5 +15,8 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 group("cloudsync_sa_test") {
   testonly = true
-  deps = [ "ipc:cloudsync_sa_ipc_test" ]
+  deps = [
+    "data_sync:cloudsync_sa_data_sync_test",
+    "ipc:cloudsync_sa_ipc_test",
+  ]
 }

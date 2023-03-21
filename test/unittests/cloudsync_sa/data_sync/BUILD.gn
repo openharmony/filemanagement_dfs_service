@@ -1,0 +1,50 @@
+# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+ohos_unittest("data_sync_manager_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_sync_callback_manager_mock.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
+    "data_sync_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
+group("cloudsync_sa_data_sync_test") {
+  testonly = true
+  deps = [ ":data_sync_manager_test" ]
+}
