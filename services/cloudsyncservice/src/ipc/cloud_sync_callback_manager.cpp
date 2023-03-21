@@ -14,8 +14,8 @@
  */
 
 #include "ipc/cloud_sync_callback_manager.h"
-#include "utils_log.h"
 #include "dfs_error.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -48,8 +48,7 @@ void CloudSyncCallbackManager::SetDeathRecipient(const std::string &appPackageNa
 
     auto deathCb = [this, packageName{appPackageName}](const wptr<IRemoteObject> &obj) {
         callbackListMap_.Erase(packageName);
-        LOGE("client died, Died remote obj:%{private}p, map size:%{public}d, packageName:%{private}s", obj.GetRefPtr(),
-             callbackListMap_.Size(), packageName.c_str());
+        LOGE("client died, map size:%{public}d, packageName:%{private}s", callbackListMap_.Size(), packageName.c_str());
     };
     cbInfo.deathRecipient_ = sptr(new SvcDeathRecipient(deathCb));
     remoteObject->AddDeathRecipient(cbInfo.deathRecipient_);

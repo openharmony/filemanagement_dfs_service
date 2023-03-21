@@ -68,7 +68,7 @@ int32_t CloudSyncManagerImpl::StopSync()
 void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
-        LOGE("service died. Died remote obj = %{private}p", obj.GetRefPtr());
+        LOGE("service died.");
         CloudSyncServiceProxy::InvaildInstance();
         if (callback_) {
             callback_->OnSyncStateChanged(SyncType::ALL, SyncPromptState::SYNC_STATE_DEFAULT);
