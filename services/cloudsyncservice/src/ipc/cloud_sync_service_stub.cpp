@@ -25,6 +25,7 @@ CloudSyncServiceStub::CloudSyncServiceStub()
     opToInterfaceMap_[SERVICE_CMD_REGISTER_CALLBACK] = &CloudSyncServiceStub::HandleRegisterCallbackInner;
     opToInterfaceMap_[SERVICE_CMD_START_SYNC] = &CloudSyncServiceStub::HandleStartSyncInner;
     opToInterfaceMap_[SERVICE_CMD_STOP_SYNC] = &CloudSyncServiceStub::HandleStopSyncInner;
+    opToInterfaceMap_[SERVICE_CMD_CHANGE_APP_SWITCH] = &CloudSyncServiceStub::HandleChangeAppSwitch;
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -81,6 +82,22 @@ int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessagePa
     int32_t res = StopSyncInner();
     reply.WriteInt32(res);
     LOGI("End StopSyncInner");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleChangeAppSwitch(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin ChangeAppSwitch");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    string accountId = data.ReadString();
+    string bundleName = data.ReadString();
+    bool status = data.ReadBool();
+    int32_t res = ChangeAppSwitch(accountId, bundleName, status);
+    reply.WriteInt32(res);
+    LOGI("End ChangeAppSwitch");
     return res;
 }
 } // namespace OHOS::FileManagement::CloudSync

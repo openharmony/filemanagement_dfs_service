@@ -24,6 +24,7 @@
 namespace OHOS::FileManagement::CloudSync {
 enum class SyncTriggerType : int32_t {
     APP_TRIGGER,
+    CLOUD_TRIGGER,
     PENDING_TRIGGER,
 };
 class DataSyncer {

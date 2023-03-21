@@ -18,7 +18,7 @@ distributedfile_path = "//foundation/filemanagement/dfs_service"
 
 utils_path = "${distributedfile_path}/utils"
 services_path = "${distributedfile_path}/services"
-innerkits_native_path = "${distributedfile_path}/interfaces/innerkits/native"
+innerkits_native_path = "${distributedfile_path}/interfaces/inner_api/native"
 
 declare_args() {
   if (defined(global_parts_info) &&

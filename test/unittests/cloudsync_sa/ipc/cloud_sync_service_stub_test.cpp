@@ -32,6 +32,7 @@ public:
     MOCK_METHOD1(RegisterCallbackInner, int32_t(const sptr<IRemoteObject> &remoteObject));
     MOCK_METHOD1(StartSyncInner, int32_t(bool forceFlag));
     MOCK_METHOD0(StopSyncInner, int32_t());
+    MOCK_METHOD3(ChangeAppSwitch, int32_t(const std::string &accoutId, const std::string &bundleName, bool status));
 };
 
 class CloudSyncServiceStubTest : public testing::Test {
