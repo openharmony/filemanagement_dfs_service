@@ -14,14 +14,17 @@
 import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-ohos_shared_library("clouddaemon_sa") {
+ohos_shared_library("cloudfiledaemon") {
   sources = [
+    "src/fuse_manager/fuse_manager.cpp",
     "src/ipc/cloud_daemon.cpp",
     "src/ipc/cloud_daemon_stub.cpp",
   ]
 
+  configs = [ "${utils_path}:compiler_configs" ]
+
   defines = [
-    "LOG_TAG=\"CLOUDDAEMON_SA\"",
+    "LOG_TAG=\"CloudFileDaemon\"",
   ]
 
   include_dirs = [
