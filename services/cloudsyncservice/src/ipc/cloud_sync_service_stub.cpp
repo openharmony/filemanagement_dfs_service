@@ -32,10 +32,6 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
                                               MessageParcel &reply,
                                               MessageOption &option)
 {
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        return E_PERMISSION_DENIED;
-    }
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return E_SERVICE_DESCRIPTOR_IS_EMPTY;
     }
@@ -50,6 +46,10 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
 int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin RegisterCallbackInner");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
     auto remoteObj = data.ReadRemoteObject();
     int32_t res = RegisterCallbackInner(remoteObj);
     reply.WriteInt32(res);
@@ -60,6 +60,10 @@ int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, M
 int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin StartSyncInner");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
     auto forceFlag = data.ReadBool();
     int32_t res = StartSyncInner(forceFlag);
     reply.WriteInt32(res);
@@ -70,6 +74,10 @@ int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageP
 int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin StopSyncInner");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
     int32_t res = StopSyncInner();
     reply.WriteInt32(res);
     LOGI("End StopSyncInner");
