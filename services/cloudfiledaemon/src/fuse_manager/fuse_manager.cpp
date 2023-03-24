@@ -84,7 +84,6 @@ static struct fake_node* find_node(struct stat *st)
 		return &root_node;
 	else
 		return fake_cache[gloabel_inode(st->st_dev, st->st_ino)];
-
 }
 
 FuseManager::FuseManager()
@@ -111,7 +110,7 @@ static int fake_do_lookup(fuse_req_t req, fuse_ino_t parent, const char *name,
 	if (res == -1)
 		goto out_err;
 
-	gid = gloabel_inode(e->attr.st_dev, e->attr.st_ino); 
+	gid = gloabel_inode(e->attr.st_dev, e->attr.st_ino);
 	child = find_node(&e->attr);
 	if(child) {
 		close(child_fd);
@@ -121,10 +120,9 @@ static int fake_do_lookup(fuse_req_t req, fuse_ino_t parent, const char *name,
 		child->fd = child_fd;
 		child->ino = e->attr.st_ino;
 		child->dev = e->attr.st_dev;
-	        child->path = fake_path(parent) + tmp_name; 
+	        child->path = fake_path(parent) + tmp_name;
 		fake_cache[gid] = child;
 	}
-	
 	e->ino = (uintptr_t) child;
 	return 0;
 out_err:
@@ -172,8 +170,33 @@ static void cfs_getattr(fuse_req_t req, fuse_ino_t ino,
 static void cfs_open(fuse_req_t req, fuse_ino_t ino,
                      struct fuse_file_info *fi)
 {
+	int fd;
+	char buf[64];
+
 	LOGI("open %s", fake_path(ino).c_str());
-	fuse_reply_err(req, ENOENT);
+	sprintf(buf, "/proc/self/fd/%i", fake_fd(ino));
+	fd = open(buf, fi->flags & ~O_NOFOLLOW);
+	if (fd == -1)
+		return (void) fuse_reply_err(req, errno);
+	fi->fh = fd;
+	fuse_reply_open(req, fi);
+}
+
+static void cfs_flush(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
+{
+	int res;
+
+	LOGI("close %s", fake_path(ino).c_str());
+	res = close(dup(fi->fh));
+	fuse_reply_err(req, res == -1 ? errno : 0);
+}
+
+static void cfs_release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
+{
+	LOGI("release %s", fake_path(ino).c_str());
+
+	close(fi->fh);
+	fuse_reply_err(req, 0);
 }
 
 static void cfs_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
@@ -188,6 +211,8 @@ static const struct fuse_lowlevel_ops cfs_oper = {
     .forget     = cfs_forget,
     .getattr	= cfs_getattr,
     .open	= cfs_open,
+    .flush	= cfs_flush,
+    .release	= cfs_release,
     .readdir	= cfs_readdir,
 };
 
