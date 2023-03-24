@@ -70,12 +70,12 @@ static struct fake_node* __fake_node(fuse_ino_t ino)
 
 static int fake_fd(fuse_ino_t ino)
 {
-    return __fake_node(ino)->fd;
+	return __fake_node(ino)->fd;
 }
 
 static string fake_path(fuse_ino_t ino)
 {
-    return __fake_node(ino)->path;
+	return __fake_node(ino)->path;
 }
 
 static struct fake_node* find_node(struct stat *st)
@@ -207,68 +207,68 @@ static void cfs_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
 }
 
 static const struct fuse_lowlevel_ops cfs_oper = {
-    .lookup	= cfs_lookup,
-    .forget     = cfs_forget,
-    .getattr	= cfs_getattr,
-    .open	= cfs_open,
-    .flush	= cfs_flush,
-    .release	= cfs_release,
-    .readdir	= cfs_readdir,
+	.lookup	= cfs_lookup,
+	.forget     = cfs_forget,
+	.getattr	= cfs_getattr,
+	.open	= cfs_open,
+	.flush	= cfs_flush,
+	.release	= cfs_release,
+	.readdir	= cfs_readdir,
 };
 
 
 void FuseManager::Start(const string &mnt)
 {
-    struct fuse_session *se;
-    struct fuse_cmdline_opts opts;
-    struct fuse_loop_config config;
-    struct fuse_args args = FUSE_ARGS_INIT(0, nullptr);
-    int ret;
-    struct stat stat;
+	struct fuse_session *se;
+	struct fuse_cmdline_opts opts;
+	struct fuse_loop_config config;
+	struct fuse_args args = FUSE_ARGS_INIT(0, nullptr);
+	int ret;
+	struct stat stat;
 
-    if(fuse_opt_add_arg(&args, mnt.c_str())) {
-    	LOGE("Mount path invalid");
-	return;
-    }
-    root_node.fd = -1;
-    root_node.path = FAKE_ROOT;
-    ret = lstat(FAKE_ROOT, &stat);
-    if (ret == -1) {
-	    LOGE("root is empty");
-    } else {
-          root_node.dev = stat.st_dev;
-	  root_node.ino = stat.st_ino;
-    }
-    root_node.fd = open(FAKE_ROOT, O_PATH);
-    if (root_node.fd < 0) {
-	    LOGE("root is empty");
-    }
+	if(fuse_opt_add_arg(&args, mnt.c_str())) {
+		LOGE("Mount path invalid");
+		return;
+	}
+	root_node.fd = -1;
+	root_node.path = FAKE_ROOT;
+	ret = lstat(FAKE_ROOT, &stat);
+	if (ret == -1) {
+		LOGE("root is empty");
+	} else {
+		root_node.dev = stat.st_dev;
+		root_node.ino = stat.st_ino;
+	}
+	root_node.fd = open(FAKE_ROOT, O_PATH);
+	if (root_node.fd < 0) {
+		LOGE("root is empty");
+	}
 
-    se = fuse_session_new(&args, &cfs_oper,
-                          sizeof(cfs_oper), NULL);
-    if (se == NULL)
-        goto err_out1;
+	se = fuse_session_new(&args, &cfs_oper,
+	                      sizeof(cfs_oper), NULL);
+	if (se == NULL)
+		goto err_out1;
 
-    if (fuse_set_signal_handlers(se) != 0)
-        goto err_out2;
+	if (fuse_set_signal_handlers(se) != 0)
+		goto err_out2;
 
-    if (fuse_session_mount(se, mnt.c_str()) != 0)
-        goto err_out3;
+	if (fuse_session_mount(se, mnt.c_str()) != 0)
+		goto err_out3;
 
-    fuse_daemonize(false);
-    config.max_idle_threads = 2;
-    ret = fuse_session_loop_mt(se, &config);
+	fuse_daemonize(false);
+	config.max_idle_threads = 2;
+	ret = fuse_session_loop_mt(se, &config);
 
-    fuse_session_unmount(se);
-    if (root_node.fd > 0) {
-	    close(root_node.fd);
-    }
+	fuse_session_unmount(se);
+	if (root_node.fd > 0) {
+		close(root_node.fd);
+	}
 err_out3:
-    fuse_remove_signal_handlers(se);
+	fuse_remove_signal_handlers(se);
 err_out2:
-    fuse_session_destroy(se);
+	fuse_session_destroy(se);
 err_out1:
-    free(opts.mountpoint);
+	free(opts.mountpoint);
 }
 
 void FuseManager::Stop()
