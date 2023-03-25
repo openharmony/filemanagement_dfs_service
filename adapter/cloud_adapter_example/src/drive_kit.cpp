@@ -14,30 +14,54 @@
  */
 
 #include "drive_kit.h"
+#include "dk_container.h"
 
 namespace DriveKit {
 std::mutex DriveKit::drivekitMutex_;
 std::map<int, std::shared_ptr<DriveKit>> DriveKit::driveKits_;
 std::shared_ptr<DKContainer> DriveKit::GetDefaultContainer(DKAppBundleName bundleName)
 {
+    DKContainerName containerName;
+    {
+        std::lock_guard<std::mutex> lck(appInfoMutex_);
+        auto itor = appInfos_.find(bundleName);
+        if (itor != appInfos_.end()) {
+            containerName = itor->second.defaultContainer.containerName;
+        }
+    }
+    if (containerName.empty()) {
+        std::map<DKAppBundleName, DKAppInfo> appInfo;
+        if (GetCloudAppInfo({bundleName}, appInfo).HasError()) {
+            return nullptr;
+        }
+        auto itor = appInfo.find(bundleName);
+        if (itor == appInfo.end()) {
+            return nullptr;
+        }
+        containerName = itor->second.defaultContainer.containerName;
+    }
+    std::string key = bundleName + containerName;
     std::lock_guard<std::mutex> lck(containMutex_);
-    auto it = containers_.find(bundleName);
+    auto it = containers_.find(key);
     if (it != containers_.end()) {
         return it->second;
     }
-    std::shared_ptr<DKContainer> container = std::make_shared<DKContainer>(bundleName);
-    containers_[bundleName] = container;
+    std::shared_ptr<DKContainer> container =
+        std::make_shared<DKContainer>(bundleName, containerName, shared_from_this());
+    containers_[key] = container;
     return container;
 }
 
 std::shared_ptr<DKContainer> DriveKit::GetContainer(DKAppBundleName bundleName, DKContainerName containerName)
 {
-    auto it = containers_.find(bundleName);
+    std::string key = bundleName + containerName;
+    auto it = containers_.find(key);
     if (it != containers_.end()) {
         return it->second;
     }
-    std::shared_ptr<DKContainer> container = std::make_shared<DKContainer>(bundleName);
-    containers_[bundleName] = container;
+    std::shared_ptr<DKContainer> container =
+        std::make_shared<DKContainer>(bundleName, containerName, shared_from_this());
+    containers_[key] = container;
     return container;
 }
 
@@ -49,6 +73,11 @@ DKError DriveKit::GetCloudUserInfo(DKUserInfo &userInfo)
 DKError DriveKit::GetCloudAppInfo(const std::vector<DKAppBundleName> &bundleNames,
                                   std::map<DKAppBundleName, DKAppInfo> &appInfos)
 {
+    DKAppInfo appInfo;
+    appInfo.defaultContainer.containerName = "defaultContainer";
+    for (auto &name : bundleNames) {
+        appInfos[name] = appInfo;
+    }
     return DKError();
 }
 
@@ -63,16 +92,6 @@ DKError DriveKit::GetServerTime(time_t &time)
     return DKError();
 }
 
-DKError DriveKit::GetSchemaRawData(const DKAppBundleName &bundleNames, std::string &schemaData)
-{
-    return DKError();
-}
-
-DKError DriveKit::GetSchemaRecordTypes(const DKAppBundleName &bundleNames, std::vector<DKRecordType> recordType)
-{
-    return DKError();
-}
-
 std::shared_ptr<DriveKit> DriveKit::getInstance(int userId)
 {
     std::lock_guard<std::mutex> lck(drivekitMutex_);
@@ -80,7 +99,10 @@ std::shared_ptr<DriveKit> DriveKit::getInstance(int userId)
     if (it != driveKits_.end()) {
         return it->second;
     }
-    std::shared_ptr<DriveKit> driveKit(new DriveKit(userId));
+    struct EnableMakeShared : public DriveKit {
+        explicit EnableMakeShared(int userId) : DriveKit(userId) {}
+    };
+    std::shared_ptr<DriveKit> driveKit = std::make_shared<EnableMakeShared>(userId);
     driveKits_[userId] = driveKit;
     return driveKit;
 }

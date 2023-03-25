@@ -75,5 +75,5 @@ public:
 private:
     std::shared_ptr<DKDatabase> database_;
 };
-}; // namespace DriveKit
+} // namespace DriveKit
 #endif

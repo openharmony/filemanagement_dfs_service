@@ -40,5 +40,5 @@ private:
     DKError error_;
 };
 
-}; // namespace DriveKit
+} // namespace DriveKit
 #endif

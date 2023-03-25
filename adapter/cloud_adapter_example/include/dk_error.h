@@ -87,10 +87,6 @@ public:
     std::string reason;
     std::vector<DKErrorDetail> errorDetails;
     int retryAfter;
-    //std::string uuid;
-    //std::string redirectUrl;
-    //std::string recordName;
-    //std::string subscriptionID;
 };
-}; // namespace DriveKit
+} // namespace DriveKit
 #endif

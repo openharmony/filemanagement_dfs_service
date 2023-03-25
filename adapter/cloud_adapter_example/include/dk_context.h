@@ -31,6 +31,6 @@ public:
 private:
     void *data_;
 };
-}; // namespace DriveKit
+} // namespace DriveKit
 
 #endif

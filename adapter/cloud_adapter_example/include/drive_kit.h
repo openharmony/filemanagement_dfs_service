@@ -26,25 +26,47 @@
 #include <vector>
 
 namespace DriveKit {
+using DKAppId = std::string;
+using DKDatabaseName = std::string;
+using DKSchemaRawData = std::string;
 struct DKSchemaField {
     DKFieldKey name;
     DKRecordFieldType type;
+    bool primary;
+    bool nullable;
+    bool sortable;
+    bool searchable;
+    bool queryable;
+    DKRecordFieldType listType;
+    DKRecordType refRecordType;
 };
 struct DKSchemaNode {
     DKRecordType recordType;
+    std::string tableName;
     std::map<DKFieldKey, DKSchemaField> fields;
+    std::vector<DKFieldKey> dupCheckFields;
+};
+struct DKOrderTable {
+    DKRecordType recordType;
+    std::string tableName;
 };
 struct DKSchema {
-    std::map<DKRecordType, DKSchemaNode> schemaNodes;
+    int version;
+    std::map<DKRecordType, DKSchemaNode> recordTypes;
+    DKSchemaRawData schemaData;
+    std::vector<DKOrderTable> orderTables;
 };
 struct DKContainerInfo {
-    DKAppBundleName bundleName;
+    DKAppBundleName appBundleName;
     DKContainerName containerName;
-    int schemaVersion;
+    DKDatabaseName databaseName;
     DKSchema schema;
 };
 struct DKAppInfo {
-    DKAppBundleName bundleName;
+    DKAppBundleName appBundleName;
+    DKAppId appId;
+    std::string appFinger;
+    int schemaGroupVersion;
     int enableCloud;
     DKAppSwitchStatus switchStatus;
     DKContainerInfo defaultContainer;
@@ -55,33 +77,15 @@ enum class DKSpaceStatus {
     DK_SPACE_STATUS_ALREADY_FULL,
 };
 struct DKUserInfo {
-    std::string cloudUserId;
+    std::string accountId;
     DKCloudStatus cloudStatus;
     DKSpaceStatus spaceStatus;
     uint64_t totalSpace;
     uint64_t remainSpace;
 };
-class DriveKit {
-public:
-    std::shared_ptr<DKContainer> GetDefaultContainer(DKAppBundleName bundleName);
-    std::shared_ptr<DKContainer> GetContainer(DKAppBundleName bundleName, DKContainerName containerName);
-    DKError GetCloudUserInfo(DKUserInfo &userInfo);
-    DKError GetCloudAppInfo(const std::vector<DKAppBundleName> &bundleNames,
-                            std::map<DKAppBundleName, DKAppInfo> &appinfos);
-    DKError GetCloudAppSwitches(const std::vector<DKAppBundleName> &bundleNames,
-                               std::map<DKAppBundleName, DKAppSwitchStatus> &appSwitchs);
-    DKError GetServerTime(time_t &time);
-    DKError GetSchemaRawData(const DKAppBundleName &bundleNames, std::string &schemaData);
-    DKError GetSchemaRecordTypes(const DKAppBundleName &bundleNames, std::vector<DKRecordType> recordType);
-
-private:
-    std::mutex containMutex_;
-    std::map<std::string, std::shared_ptr<DKContainer>> containers_;
-    std::map<DKAppBundleName, DKAppInfo> appInfos_;
-    static std::mutex drivekitMutex_;
-    static std::map<int, std::shared_ptr<DriveKit>> driveKits_;
-    DKUserInfo userInfo_;
-    int userId_;
+class DriveKit : public std::enable_shared_from_this<DriveKit> {
+    friend class DKContainer;
+    friend class DKDatabase;
 
 public:
     DriveKit(const DriveKit &) = delete;
@@ -91,8 +95,26 @@ public:
     static std::shared_ptr<DriveKit> getInstance(int userId);
     virtual ~DriveKit();
 
+    std::shared_ptr<DKContainer> GetDefaultContainer(DKAppBundleName bundleName);
+    std::shared_ptr<DKContainer> GetContainer(DKAppBundleName bundleName, DKContainerName containerName);
+    DKError GetCloudUserInfo(DKUserInfo &userInfo);
+    DKError GetCloudAppInfo(const std::vector<DKAppBundleName> &bundleNames,
+                            std::map<DKAppBundleName, DKAppInfo> &appInfos);
+    DKError GetCloudAppSwitches(const std::vector<DKAppBundleName> &bundleNames,
+                                std::map<DKAppBundleName, DKAppSwitchStatus> &appSwitchs);
+    DKError GetServerTime(time_t &time);
+
 private:
     DriveKit(int userId);
+
+    std::mutex containMutex_;
+    std::map<std::string, std::shared_ptr<DKContainer>> containers_;
+    std::mutex appInfoMutex_;
+    std::map<DKAppBundleName, DKAppInfo> appInfos_;
+    static std::mutex drivekitMutex_;
+    static std::map<int, std::shared_ptr<DriveKit>> driveKits_;
+    DKUserInfo userInfo_;
+    int userId_;
 };
-}; // namespace DriveKit
+} // namespace DriveKit
 #endif

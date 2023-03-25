@@ -23,8 +23,9 @@
 
 namespace DriveKit {
 struct DKRecordsResponse {
-    int64_t createTime;
-    int64_t modityTime;
+    int64_t time;
+    std::string deviceName;
+    std::string appId;
 };
 using DKFieldKey = std::string;
 using DKRecordDatas = std::map<DKFieldKey, DKRecordField>;
@@ -102,5 +103,5 @@ private:
     unsigned long version_;
     bool isNewCreate_ = false;
 };
-}; // namespace DriveKit
+} // namespace DriveKit
 #endif

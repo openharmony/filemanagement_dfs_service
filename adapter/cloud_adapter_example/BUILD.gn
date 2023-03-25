@@ -26,6 +26,7 @@ ohos_shared_library("cloud_adapter") {
     "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
     "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
     "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
     "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
   ]
 

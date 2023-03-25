@@ -54,10 +54,10 @@ DKLocalErrorCode DKContainer::SaveSubscription(
     return DKLocalErrorCode::NO_ERROR;
 }
 
-DKLocalErrorCode
-    DKContainer::DeleteSubscription(std::shared_ptr<DKContext> context,
-                                    DKSubscriptionId id,
-                                    std::function<void(std::shared_ptr<DKContext>, const DKError &)> callback)
+DKLocalErrorCode DKContainer::DeleteSubscription(
+    std::shared_ptr<DKContext> context,
+    DKSubscriptionId id,
+    std::function<void(std::shared_ptr<DKContext>, const DKError &)> callback)
 {
     return DKLocalErrorCode::NO_ERROR;
 }

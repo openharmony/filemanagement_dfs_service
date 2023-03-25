@@ -23,4 +23,4 @@ int64_t DKAssetReadSession::Read(int64_t size, char *buffer, DKError &error)
     return int64_t();
 }
 void DKAssetReadSession::Close() {}
-}; // namespace DriveKit
+} // namespace DriveKit

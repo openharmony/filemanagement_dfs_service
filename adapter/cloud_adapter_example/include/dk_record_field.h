@@ -52,183 +52,36 @@ public:
                                       DKRecordFieldMap,
                                       DKAsset,
                                       DKReference>;
-    DKRecordField() : type_(DKRecordFieldType::FIELD_TYPE_NULL){};
-    ~DKRecordField(){};
-    DKRecordField(DKFieldValue fieldValue) noexcept : value_(std::move(fieldValue))
-    {
-        type_ = DKRecordFieldType(value_.index());
-    }
-    DKRecordField(DKRecordField &&recordField) noexcept
-    {
-        if (this == &recordField) {
-            return;
-        }
-        type_ = recordField.type_;
-        value_ = std::move(recordField.value_);
-        recordField.type_ = DKRecordFieldType::FIELD_TYPE_NULL;
-    };
-    DKRecordField(const DKRecordField &recordField)
-    {
-        if (this == &recordField) {
-            return;
-        }
-        type_ = recordField.type_;
-        value_ = recordField.value_;
-    }
+    DKRecordField();
+    ~DKRecordField();
+    DKRecordField(DKFieldValue fieldValue) noexcept;
+    DKRecordField(DKRecordField &&recordField) noexcept;
+    DKRecordField(const DKRecordField &recordField);
 
-    explicit DKRecordField(int val) : type_(DKRecordFieldType::FIELD_TYPE_INT)
-    {
-        value_ = static_cast<int64_t>(val);
-    }
-    explicit DKRecordField(int64_t val) : type_(DKRecordFieldType::FIELD_TYPE_INT)
-    {
-        value_ = val;
-    }
-    explicit DKRecordField(double val) : type_(DKRecordFieldType::FIELD_TYPE_DOUBLE)
-    {
-        value_ = val;
-    }
-    explicit DKRecordField(bool val) : type_(DKRecordFieldType::FIELD_TYPE_BOOL)
-    {
-        value_ = val;
-    }
-    explicit DKRecordField(const char *val) : type_(DKRecordFieldType::FIELD_TYPE_STRING)
-    {
-        value_ = std::string(val);
-    }
-    explicit DKRecordField(const std::string &val) : type_(DKRecordFieldType::FIELD_TYPE_STRING)
-    {
-        value_ = val;
-    }
-    explicit DKRecordField(const std::vector<uint8_t> &val) : type_(DKRecordFieldType::FIELD_TYPE_BLOB)
-    {
-        std::vector<uint8_t> blob = val;
-        value_ = blob;
-    }
-    explicit DKRecordField(DKRecordFieldMap &val) : type_(DKRecordFieldType::FIELD_TYPE_MAP)
-    {
-        value_ = val;
-    }
-    explicit DKRecordField(DKRecordFieldList &val) : type_(DKRecordFieldType::FIELD_TYPE_LIST)
-    {
-        value_ = val;
-    }
-    explicit DKRecordField(DKAsset &val) : type_(DKRecordFieldType::FIELD_TYPE_ASSET)
-    {
-        value_ = val;
-    }
-    explicit DKRecordField(DKReference &val) : type_(DKRecordFieldType::FIELD_TYPE_REFERENCE)
-    {
-        value_ = val;
-    }
-    DKRecordField &operetor(DKRecordField &&recordField) noexcept
-    {
-        if (this == &recordField) {
-            return *this;
-        }
-        type_ = recordField.type_;
-            value_ = std::move(recordField.value_);
-            recordField.type_ = DKRecordFieldType::FIELD_TYPE_NULL;
-            return *this;
-    }
-    DKRecordField &operator=(const DKRecordField &recordField)
-    {
-        if (this == &recordField) {
-            return *this;
-        }
-        type_ = recordField.type_;
-        value_ = recordField.value_;
-        return *this;
-    }
-    DKRecordFieldType Gettype() const
-    {
-        return type_;
-    }
-    DKLocalErrorCode Getint(int &val) const
-    {
-        if (type_ != DKRecordFieldType::FIELD_TYPE_INT) {
-            return DKLocalErrorCode::DATA_TYPE_ERROR;
-        }
-
-        int64_t v = std::get<int64_t>(value_);
-        val = static_cast<int>(v);
-        return DKLocalErrorCode::NO_ERROR;
-    }
-    DKLocalErrorCode GetLong(int64_t &val) const
-    {
-        if (type_ != DKRecordFieldType::FIELD_TYPE_INT) {
-            return DKLocalErrorCode::DATA_TYPE_ERROR;
-        }
-
-        val = std::get<int64_t>(value_);
-        return DKLocalErrorCode::NO_ERROR;
-    }
-    DKLocalErrorCode GetDouble(double &val) const
-    {
-        if (type_ != DKRecordFieldType::FIELD_TYPE_DOUBLE) {
-            return DKLocalErrorCode::DATA_TYPE_ERROR;
-        }
-
-        val = std::get<double>(value_);
-        return DKLocalErrorCode::NO_ERROR;
-    }
-    DKLocalErrorCode GetBool(bool &val) const
-    {
-        if (type_ != DKRecordFieldType::FIELD_TYPE_BOOL) {
-            return DKLocalErrorCode::DATA_TYPE_ERROR;
-        }
-
-        val = std::get<bool>(value_);
-        return DKLocalErrorCode::NO_ERROR;
-    }
-    DKLocalErrorCode GetString(std::string &val) const
-    {
-        if (type_ != DKRecordFieldType::FIELD_TYPE_STRING) {
-            return DKLocalErrorCode::DATA_TYPE_ERROR;
-        }
-        val = std::get<std::string>(value_);
-        return DKLocalErrorCode::NO_ERROR;
-    }
-    DKLocalErrorCode GetBlob(std::vector<uint8_t> &val) const
-    {
-        if (type_ != DKRecordFieldType::FIELD_TYPE_BLOB) {
-            return DKLocalErrorCode::DATA_TYPE_ERROR;
-        }
-        val = std::get<std::vector<uint8_t>>(value_);
-        return DKLocalErrorCode::NO_ERROR;
-    }
-    DKLocalErrorCode GetRecordList(DKRecordFieldList &val) const
-    {
-        if (type_ != DKRecordFieldType::FIELD_TYPE_LIST) {
-            return DKLocalErrorCode::DATA_TYPE_ERROR;
-        }
-        val = std::get<DKRecordFieldList>(value_);
-        return DKLocalErrorCode::NO_ERROR;
-    }
-    DKLocalErrorCode GetRecordMap(DKRecordFieldMap &val) const
-    {
-        if (type_ != DKRecordFieldType::FIELD_TYPE_MAP) {
-            return DKLocalErrorCode::DATA_TYPE_ERROR;
-        }
-        val = std::get<DKRecordFieldMap>(value_);
-        return DKLocalErrorCode::NO_ERROR;
-    }
-    DKLocalErrorCode GetAsset(DKAsset &val) const
-    {
-        if (type_ != DKRecordFieldType::FIELD_TYPE_ASSET) {
-            return DKLocalErrorCode::DATA_TYPE_ERROR;
-        }
-        val = std::get<DKAsset>(value_);
-        return DKLocalErrorCode::NO_ERROR;
-    }
-    DKLocalErrorCode GetReference(DKReference &val) const
-    {
-        if (type_ != DKRecordFieldType::FIELD_TYPE_REFERENCE) {
-            return DKLocalErrorCode::DATA_TYPE_ERROR;
-        }
-        val = std::get<DKReference>(value_);
-        return DKLocalErrorCode::NO_ERROR;
-    }
+    explicit DKRecordField(int val);
+    explicit DKRecordField(int64_t val);
+    explicit DKRecordField(double val);
+    explicit DKRecordField(bool val);
+    explicit DKRecordField(const char *val);
+    explicit DKRecordField(const std::string &val);
+    explicit DKRecordField(const std::vector<uint8_t> &val);
+    explicit DKRecordField(DKRecordFieldMap &val);
+    explicit DKRecordField(DKRecordFieldList &val);
+    explicit DKRecordField(DKAsset &val);
+    explicit DKRecordField(DKReference &val);
+    DKRecordField &operator=(DKRecordField &&recordField) noexcept;
+    DKRecordField &operator=(const DKRecordField &recordField);
+    DKRecordFieldType GetType() const;
+    DKLocalErrorCode GetInt(int &val) const;
+    DKLocalErrorCode GetLong(int64_t &val) const;
+    DKLocalErrorCode GetDouble(double &val) const;
+    DKLocalErrorCode GetBool(bool &val) const;
+    DKLocalErrorCode GetString(std::string &val) const;
+    DKLocalErrorCode GetBlob(std::vector<uint8_t> &val) const;
+    DKLocalErrorCode GetRecordList(DKRecordFieldList &val) const;
+    DKLocalErrorCode GetRecordMap(DKRecordFieldMap &val) const;
+    DKLocalErrorCode GetAsset(DKAsset &val) const;
+    DKLocalErrorCode GetReference(DKReference &val) const;
 
     operator int() const
     {
@@ -279,5 +132,5 @@ private:
     DKRecordFieldType type_;
     DKFieldValue value_;
 };
-}; // namespace DriveKit
+} // namespace DriveKit
 #endif

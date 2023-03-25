@@ -48,5 +48,5 @@ enum class DKRecordsChangeType {
 
 using DKAppBundleName = std::string;
 using DKContainerName = std::string;
-}; // namespace DriveKit
+} // namespace DriveKit
 #endif

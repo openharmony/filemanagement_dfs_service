@@ -59,10 +59,21 @@ private:
     DKSubscription subscription_;
     DKSubscriptionId id_;
 };
+class DriveKit;
 class DKContainer : public std::enable_shared_from_this<DKContainer> {
-    friend class DriveKit;
-
 public:
+    DKContainer(DKAppBundleName bundleName, DKContainerName containerName, std::shared_ptr<DriveKit> driveKit)
+    {
+        bundleName_ = bundleName;
+        containerName_ = containerName;
+        driveKit_ = driveKit;
+        if (driveKit_) {
+            publicDatabase_ = std::make_shared<DKDatabase>(shared_from_this());
+            privateDatabase_ = std::make_shared<DKDatabase>(shared_from_this());
+            sharedDatabase_ = std::make_shared<DKDatabase>(shared_from_this());
+        }
+    }
+    ~DKContainer() = default;
     std::shared_ptr<DKDatabase> GetPrivateDatabase();
     std::shared_ptr<DKDatabase> GetDatabaseWithdatabaseScope(DKDatabaseScope databaseScope);
     DKLocalErrorCode SaveSubscription(std::shared_ptr<DKContext> contex,
@@ -75,20 +86,26 @@ public:
                                         DKSubscriptionId id,
                                         std::function<void(std::shared_ptr<DKContext>, const DKError &)> callback);
 
-public:
-    DKContainer(DKAppBundleName BundleName)
+    DKAppBundleName GetAppBundleName()
     {
-        BundleName_ = BundleName;
-        publicDatabase_ = std::make_shared<DKDatabase>();
-        privateDatabase_ = std::make_shared<DKDatabase>();
-        sharedDatabase_ = std::make_shared<DKDatabase>();
-    };
+        return bundleName_;
+    }
+    DKContainerName GetContainerName()
+    {
+        return containerName_;
+    }
+    std::shared_ptr<DriveKit> GetDriveKit()
+    {
+        return driveKit_;
+    }
 
 private:
-    std::shared_ptr<DKDatabase> publicDatabase_ = nullptr;
-    std::shared_ptr<DKDatabase> privateDatabase_ = nullptr;
-    std::shared_ptr<DKDatabase> sharedDatabase_ = nullptr;
-    DKAppBundleName BundleName_;
+    std::shared_ptr<DriveKit> driveKit_;
+    std::shared_ptr<DKDatabase> publicDatabase_;
+    std::shared_ptr<DKDatabase> privateDatabase_;
+    std::shared_ptr<DKDatabase> sharedDatabase_;
+    DKAppBundleName bundleName_;
+    DKContainerName containerName_;
 };
-}; // namespace DriveKit
+} // namespace DriveKit
 #endif

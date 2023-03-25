@@ -25,6 +25,6 @@ struct DKReference {
     DKRecordId recordId;
     DKRecordType recordType;
 };
-}; // namespace DriveKit
+} // namespace DriveKit
 
 #endif

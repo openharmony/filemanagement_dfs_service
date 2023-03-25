@@ -23,6 +23,6 @@ struct DKAsset {
     std::string uri;
     std::string fileName;
 };
-}; // namespace DriveKit
+} // namespace DriveKit
 
 #endif

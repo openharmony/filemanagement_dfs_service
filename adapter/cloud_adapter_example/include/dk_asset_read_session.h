@@ -27,12 +27,10 @@ enum class DKSeekFromWhere {
 
 class DKAssetReadSession {
 public:
-    DKAssetReadSession(){};
-    virtual ~DKAssetReadSession(){};
-    virtual void GetAssetInfo();
-    virtual void Seek(int64_t offset, DKSeekFromWhere fromWhere);
-    virtual int64_t Read(int64_t size, char *buffer, DKError &error);
-    virtual void Close();
+    void GetAssetInfo();
+    void Seek(int64_t offset, DKSeekFromWhere fromWhere);
+    int64_t Read(int64_t size, char *buffer, DKError &error);
+    void Close();
 };
-}; // namespace DriveKit
+} // namespace DriveKit
 #endif
