@@ -24,13 +24,13 @@ namespace CloudFile {
 class ICloudDaemon : public IRemoteBroker {
 public:
     enum {
-        CLOUD_DAEMON_CMD_ECHO = 0,
+        CLOUD_DAEMON_CMD_START_FUSE = 0,
     };
     enum {
         CLOUD_DAEMON_SUCCESS = 0,
         CLOUD_DAEMON_DESCRIPTOR_IS_EMPTY,
     };
-    virtual int32_t EchoServerDemo(const std::string &echoStr) = 0;
+    virtual int32_t StartFuse(int32_t deviceFd, const std::string &path) = 0;
 
     static inline const std::string SERVICE_NAME { "ohos.storage.distributedfile.clouddaemon" };
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.clouddaemon")

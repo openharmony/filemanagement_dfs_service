@@ -21,7 +21,7 @@ namespace Storage {
 namespace CloudFile {
 CloudDaemonStub::CloudDaemonStub()
 {
-    opToInterfaceMap_[CLOUD_DAEMON_CMD_ECHO] = &CloudDaemonStub::EchoServerDemoInner;
+    opToInterfaceMap_[CLOUD_DAEMON_CMD_START_FUSE] = &CloudDaemonStub::HandleStartFuseInner;
 }
 
 int32_t CloudDaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -37,10 +37,15 @@ int32_t CloudDaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     return (this->*(interfaceIndex->second))(data, reply);
 }
 
-int32_t CloudDaemonStub::EchoServerDemoInner(MessageParcel &data, MessageParcel &reply)
+int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("hello, world");
-    return ERR_NONE;
+    LOGI("Begin StartFuseInner");
+    auto fd = data.ReadFileDescriptor();
+    auto path = data.ReadString();
+    int32_t res = StartFuse(int32_t(fd), path);
+    reply.WriteInt32(res);
+    LOGI("End StartFuseInner");
+    return res;
 }
 } // namespace CloudFile
 } // namespace Storage

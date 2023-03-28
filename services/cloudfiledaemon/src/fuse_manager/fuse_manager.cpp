@@ -17,6 +17,7 @@
 
 #include "fuse_manager/fuse_manager.h"
 
+#include <fuse_i.h>
 #include <fuse.h>
 #include <fuse_lowlevel.h>  /* for fuse_cmdline_opts */
 
@@ -269,6 +270,62 @@ err_out2:
 	fuse_session_destroy(se);
 err_out1:
 	free(opts.mountpoint);
+}
+
+int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
+{
+	struct fuse_session *se;
+	struct fuse_cmdline_opts opts;
+	struct fuse_loop_config config;
+	struct fuse_args args = FUSE_ARGS_INIT(0, nullptr);
+	int ret;
+	struct stat stat;
+
+	if(fuse_opt_add_arg(&args, path.c_str())) {
+		LOGE("Mount path invalid");
+		return EINVAL;
+	}
+	root_node.fd = -1;
+	root_node.path = FAKE_ROOT;
+	ret = lstat(FAKE_ROOT, &stat);
+	if (ret == -1) {
+		LOGE("root is empty");
+	} else {
+		root_node.dev = stat.st_dev;
+		root_node.ino = stat.st_ino;
+	}
+	root_node.fd = open(FAKE_ROOT, O_PATH);
+	if (root_node.fd < 0) {
+		LOGE("root is empty");
+	}
+
+	se = fuse_session_new(&args, &cfs_oper,
+	                      sizeof(cfs_oper), NULL);
+	if (se == NULL)
+		goto err_out1;
+
+	if (fuse_set_signal_handlers(se) != 0)
+		goto err_out2;
+	se->fd = devFd;
+	se->mountpoint = strdup(path.c_str());
+
+
+	fuse_daemonize(false);
+	config.max_idle_threads = 2;
+	ret = fuse_session_loop_mt(se, &config);
+
+	fuse_session_unmount(se);
+	if (root_node.fd > 0) {
+		close(root_node.fd);
+	}
+
+	fuse_remove_signal_handlers(se);
+err_out2:
+	fuse_session_destroy(se);
+err_out1:
+	free(opts.mountpoint);
+	return 0;
+
 }
 
 void FuseManager::Stop()

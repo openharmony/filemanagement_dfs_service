@@ -36,7 +36,7 @@ private:
     using CloudDaemonInterface = int32_t (CloudDaemonStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, CloudDaemonInterface> opToInterfaceMap_;
 
-    int32_t EchoServerDemoInner(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleStartFuseInner(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace CloudFile
 } // namespace Storage

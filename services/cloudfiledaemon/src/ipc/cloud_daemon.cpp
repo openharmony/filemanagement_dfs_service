@@ -17,16 +17,19 @@
 
 #include <exception>
 #include <stdexcept>
+#include <thread>
 
 #include "iremote_object.h"
 #include "system_ability_definition.h"
 #include "fuse_manager/fuse_manager.h"
+#include "dfs_error.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace CloudFile {
 using namespace std;
+using namespace OHOS::FileManagement;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudDaemon, FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, true);
 
@@ -88,10 +91,16 @@ void CloudDaemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::stri
 
 }
 
-int32_t CloudDaemon::EchoServerDemo(const string &echoStr)
+int32_t CloudDaemon::StartFuse(int32_t devFd, const string &path)
 {
-    (void)echoStr;
-    return 0;
+    auto fuseMgr = make_shared<FuseManager>();
+
+    std::thread([fusePtr{fuseMgr}, dev{devFd}, mnt{path}]() {
+        int32_t ret = fusePtr->StartFuse(dev, mnt);
+        LOGI("start fuse result %d", ret);
+    }).detach();
+    return E_OK;
+
 }
 } // namespace CloudFile
 } // namespace Storage

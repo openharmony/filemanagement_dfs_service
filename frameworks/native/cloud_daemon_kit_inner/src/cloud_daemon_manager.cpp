@@ -13,24 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef FUSE_MANAGER_H
-#define FUSE_MANAGER_H
+#include "cloud_daemon_manager_impl.h"
 
-#include <string>
-
-namespace OHOS {
-namespace Storage {
-namespace CloudFile {
+namespace OHOS::Storage::CloudFile {
 using namespace std;
-class FuseManager final {
-public:
-    FuseManager();
-    ~FuseManager() = default;
-    void Start(const string &mnt);
-    int32_t StartFuse(int32_t devFd, const string &path);
-    void Stop();
-};
-} // namespace CloudFile
-} // namespace Storage
-} // namespace OHOS
-#endif // FUSE_MANAGER_H
+CloudDaemonManager &CloudDaemonManager::GetInstance()
+{
+    return CloudDaemonManagerImpl::GetInstance();
+}
+} // namespace OHOS::Storage::CloudFile
