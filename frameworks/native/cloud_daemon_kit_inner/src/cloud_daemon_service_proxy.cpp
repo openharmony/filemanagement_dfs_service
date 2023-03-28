@@ -34,6 +34,10 @@ int32_t CloudDaemonServiceProxy::StartFuse(int32_t devFd, const string &path)
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
 
     if (!data.WriteFileDescriptor(devFd)) {
         LOGE("Failed to send the device file fd");

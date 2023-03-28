@@ -33,6 +33,7 @@ ohos_shared_library("cloud_daemon_kit_inner") {
   ]
 
   defines = [
+    "LOG_DOMAIN=0xD004308",
     "LOG_TAG=\"CLOUD_DAEMON_API\"",
   ]
 

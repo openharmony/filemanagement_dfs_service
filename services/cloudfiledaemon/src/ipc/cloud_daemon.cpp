@@ -60,8 +60,8 @@ void CloudDaemon::OnStart()
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
-    FuseManager fuseMgr;
-    fuseMgr.Start("/data/cloud");
+    //FuseManager fuseMgr;
+    //fuseMgr.Start("/data/cloud");
 
     state_ = ServiceRunningState::STATE_RUNNING;
     LOGI("Start service successfully");
@@ -94,6 +94,7 @@ void CloudDaemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::stri
 int32_t CloudDaemon::StartFuse(int32_t devFd, const string &path)
 {
     auto fuseMgr = make_shared<FuseManager>();
+    LOGI("Start Fuse");
 
     std::thread([fusePtr{fuseMgr}, dev{devFd}, mnt{path}]() {
         int32_t ret = fusePtr->StartFuse(dev, mnt);
