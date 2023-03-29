@@ -65,6 +65,16 @@ int32_t CloudSyncManagerImpl::StopSync()
     return CloudSyncServiceProxy->StopSyncInner();
 }
 
+int32_t CloudSyncManagerImpl::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    return CloudSyncServiceProxy->ChangeAppSwitch(accoutId, bundleName, status);
+}
+
 void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     auto deathCallback = [this](const wptr<IRemoteObject> &obj) {

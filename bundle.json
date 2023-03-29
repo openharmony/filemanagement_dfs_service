@@ -41,7 +41,8 @@
           "fwk_group": [],
           "service_group": [
             "//foundation/filemanagement/dfs_service:services_target",
-            "//foundation/filemanagement/dfs_service:cloudsync_kit_inner_target"
+            "//foundation/filemanagement/dfs_service:cloudsync_kit_inner_target",
+            "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudsyncmanager:cloudsyncmanager"
           ]
         },
         "inner_kits": [

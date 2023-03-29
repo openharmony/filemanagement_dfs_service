@@ -25,6 +25,7 @@ public:
         SERVICE_CMD_REGISTER_CALLBACK,
         SERVICE_CMD_START_SYNC,
         SERVICE_CMD_STOP_SYNC,
+        SERVICE_CMD_CHANGE_APP_SWITCH,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudSyncService")
@@ -32,6 +33,7 @@ public:
     virtual int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) = 0;
     virtual int32_t StartSyncInner(bool forceFlag) = 0;
     virtual int32_t StopSyncInner() = 0;
+    virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

@@ -32,6 +32,7 @@ public:
     int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) override;
     int32_t StartSyncInner(bool forceFlag) override;
     int32_t StopSyncInner() override;
+    int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
 
     class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
     public:
