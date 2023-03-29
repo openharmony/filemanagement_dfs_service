@@ -38,6 +38,15 @@ public:
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t StopSync() = 0;
+    /**
+     * @brief 切换应用云同步开关
+     *
+     * @param accoutId 账号ID
+     * @param bundleName 应用包名
+     * @param status 应用开关状态
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

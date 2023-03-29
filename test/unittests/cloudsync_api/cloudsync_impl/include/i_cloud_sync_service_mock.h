@@ -55,6 +55,11 @@ public:
     {
         return E_OK;
     }
+
+    int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override
+    {
+        return E_OK;
+    }
 };
 
 } // namespace OHOS::FileManagement::CloudSync

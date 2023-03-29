@@ -124,6 +124,47 @@ int32_t CloudSyncServiceProxy::StopSyncInner()
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
+{
+    LOGI("ChangeAppSwitch");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(accoutId)) {
+        LOGE("Failed to send the account id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteBool(status)) {
+        LOGE("Failed to send the switch status");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_CHANGE_APP_SWITCH, data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("ChangeAppSwitch Success");
+    return reply.ReadInt32();
+}
+
 sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 {
     LOGI("getinstance");

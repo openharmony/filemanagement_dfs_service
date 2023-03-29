@@ -77,25 +77,7 @@ int32_t CloudSyncService::StartSyncInner(bool forceFlag)
     if (DfsuAccessTokenHelper::GetCallerPackageName(appPackageName)) {
         return E_INVAL_ARG;
     }
-    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    auto ret = dataSyncManager_.Init(callerUserId);
-    if (ret != E_OK) {
-        return ret;
-    }
-    ret = dataSyncManager_.IsSkipSync(appPackageName, callerUserId);
-    if (ret != E_OK) {
-        return ret;
-    }
-    auto dataSyncer = dataSyncManager_.GetDataSyncer(appPackageName, callerUserId);
-    if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, appPackageName: %{private}s", appPackageName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
-    }
-    std::thread([dataSyncerSptr{dataSyncer}, forceFlag]() {
-        dataSyncerSptr->StartSync(forceFlag, SyncTriggerType::APP_TRIGGER);
-    }).detach();
-
-    return E_OK;
+    return StartSync(appPackageName, forceFlag, SyncTriggerType::APP_TRIGGER);
 }
 
 int32_t CloudSyncService::StopSyncInner()
@@ -104,14 +86,49 @@ int32_t CloudSyncService::StopSyncInner()
     if (DfsuAccessTokenHelper::GetCallerPackageName(appPackageName)) {
         return E_INVAL_ARG;
     }
+    return StopSync(appPackageName, SyncTriggerType::APP_TRIGGER);
+}
+
+int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
+{
+    if (status) {
+        return StartSync(bundleName, false, SyncTriggerType::CLOUD_TRIGGER);
+    }
+    return StopSync(bundleName, SyncTriggerType::CLOUD_TRIGGER);
+}
+
+int32_t CloudSyncService::StartSync(const std::string &bundleName, bool forceFlag, SyncTriggerType triggerType)
+{
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    auto dataSyncer = dataSyncManager_.GetDataSyncer(appPackageName, callerUserId);
+    auto ret = dataSyncManager_.Init(callerUserId);
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = dataSyncManager_.IsSkipSync(bundleName, callerUserId);
+    if (ret != E_OK) {
+        return ret;
+    }
+    auto dataSyncer = dataSyncManager_.GetDataSyncer(bundleName, callerUserId);
     if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, appPackageName: %{private}s", appPackageName.c_str());
+        LOGE("Get dataSyncer failed, appPackageName: %{private}s", bundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
-    std::thread([dataSyncerSptr{dataSyncer}]() {
-        dataSyncerSptr->StopSync(SyncTriggerType::APP_TRIGGER);
+    std::thread([dataSyncerSptr{dataSyncer}, forceFlag, triggerType]() {
+        dataSyncerSptr->StartSync(forceFlag, triggerType);
+    }).detach();
+    return E_OK;
+}
+
+int32_t CloudSyncService::StopSync(const std::string &bundleName, SyncTriggerType triggerType)
+{
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    auto dataSyncer = dataSyncManager_.GetDataSyncer(bundleName, callerUserId);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, appPackageName: %{private}s", bundleName.c_str());
+        return E_SYNCER_NUM_OUT_OF_RANGE;
+    }
+    std::thread([dataSyncerSptr{dataSyncer}, triggerType]() {
+        dataSyncerSptr->StopSync(triggerType);
     }).detach();
     return E_OK;
 }

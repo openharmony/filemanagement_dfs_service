@@ -34,11 +34,14 @@ public:
     int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) override;
     int32_t StartSyncInner(bool forceFlag) override;
     int32_t StopSyncInner() override;
+    int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
 
 private:
     void OnStart() override;
     void OnStop() override;
     void PublishSA();
+    int32_t StartSync(const std::string &bundleName, bool forceFlag, SyncTriggerType triggerType);
+    int32_t StopSync(const std::string &bundleName, SyncTriggerType triggerType);
 
     DataSyncManager dataSyncManager_;
 };
