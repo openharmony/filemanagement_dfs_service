@@ -27,4 +27,5 @@ declare_args() {
   } else {
     cloudsync_service_power = false
   }
+  dfs_service_feature_enable_cloud_adapter = false
 }

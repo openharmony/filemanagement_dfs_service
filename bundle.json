@@ -15,7 +15,9 @@
       "name": "dfs_service",
       "subsystem": "filemanagement",
       "syscap": [],
-      "features": [],
+      "features": [
+        "dfs_service_feature_enable_cloud_adapter"
+      ],
       "adapted_system_type": [],
       "rom": "",
       "ram": "",
