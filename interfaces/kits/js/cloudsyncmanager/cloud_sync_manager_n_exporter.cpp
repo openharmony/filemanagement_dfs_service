@@ -22,7 +22,7 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
 
-napi_value ChangeAppSwitch(napi_env env, napi_callback_info info)
+napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::THREE), static_cast<size_t>(NARG_CNT::FOUR))) {
@@ -70,7 +70,7 @@ napi_value ChangeAppSwitch(napi_env env, napi_callback_info info)
         return { NVal::CreateUndefined(env) };
     };
 
-    std::string procedureName = "ChangeAppSwitch";
+    std::string procedureName = "ChangeAppCloudSwitch";
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == (uint)NARG_CNT::THREE) {
         return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;

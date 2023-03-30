@@ -23,7 +23,7 @@ namespace OHOS::FileManagement::CloudSync {
 napi_value CloudSyncManagerExport(napi_env env, napi_value exports)
 {
     static napi_property_descriptor desc[] = {
-        DECLARE_NAPI_FUNCTION("changeAppSwitch", ChangeAppSwitch),
+        DECLARE_NAPI_FUNCTION("changeAppCloudSwitch", ChangeAppCloudSwitch),
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;

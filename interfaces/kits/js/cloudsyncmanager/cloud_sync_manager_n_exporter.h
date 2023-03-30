@@ -19,6 +19,6 @@
 #include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
-napi_value ChangeAppSwitch(napi_env env, napi_callback_info info);
+napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info);
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_NAPI_H
