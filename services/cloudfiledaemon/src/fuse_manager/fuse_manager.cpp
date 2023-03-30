@@ -35,6 +35,8 @@
 #include <string.h>
 #include <string>
 #include <map>
+#include <mutex>
+#include <atomic>
 
 #include "utils_log.h"
 namespace OHOS {
@@ -45,14 +47,16 @@ using namespace std;
 #define FAKE_ROOT "/data/service/el2/100/hmdfs/non_account/fake_cloud/"
 
 struct FakeNode {
-        string path;
-        int fd;
-        ino_t ino;
-        dev_t dev;
+    string path;
+    int fd;
+    ino_t ino;
+    dev_t dev;
+    atomic_int64_t refCount;
 };
 
 FakeNode rootNode;
 
+mutex cacheLock;
 map<unsigned long long, FakeNode *> fakeCache;
 
 unsigned long long GlobalNode(ino_t ino, dev_t dev)
@@ -119,6 +123,7 @@ static int FakeDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     child = FindNode(&e->attr);
     if (child) {
         close(childFd);
+	child->refCount++;
         childFd = -1;
     } else {
         child = new FakeNode();
@@ -126,7 +131,10 @@ static int FakeDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         child->ino = e->attr.st_ino;
         child->dev = e->attr.st_dev;
         child->path = FakePath(parent) + tmpName;
+	child->refCount = 1;
+	cacheLock.lock();
         fakeCache[gid] = child;
+	cacheLock.unlock();
     }
     e->ino = (uintptr_t) child;
     return 0;
@@ -147,10 +155,27 @@ static void FakeLookup(fuse_req_t req, fuse_ino_t parent,
     }
 }
 
+static void PutNode(struct FakeNode *node, uint64_t num)
+{
+    node->refCount -= num;
+    if (node->refCount == 0) {
+	cacheLock.lock();
+	fakeCache.erase(GlobalNode(node->dev, node->ino));
+	close(node->fd);
+	delete node;
+	node = nullptr;
+	cacheLock.unlock();
+    }
+}
+
 static void FakeForget(fuse_req_t req, fuse_ino_t ino,
                        uint64_t nlookup)
 {
     LOGI("forget");
+    FakeNode *node = GetFakeNode(ino);
+    if (node) {
+        PutNode(node, nlookup);
+    }
     fuse_reply_none(req);
 }
 
@@ -209,14 +234,25 @@ static void FakeReadDir(fuse_req_t req, fuse_ino_t ino, size_t size,
     fuse_reply_err(req, ENOENT);
 }
 
+static void FakeForgetMulti(fuse_req_t req, size_t count,
+				struct fuse_forget_data *forgets)
+{
+    for (int i = 0; i < count; i++) {
+         FakeNode *node = GetFakeNode(forgets[i].ino);
+         PutNode(node, forgets[i].nlookup);
+    }
+    fuse_reply_none(req);
+}
+
 static const struct fuse_lowlevel_ops cfs_oper = {
-    .lookup 	= FakeLookup,
-    .forget     = FakeForget,
-    .getattr    = FakeGetAttr,
-    .open   	= FakeOpen,
-    .flush  	= FakeFlush,
-    .release    = FakeRelease,
-    .readdir    = FakeReadDir,
+    .lookup 		= FakeLookup,
+    .forget     	= FakeForget,
+    .getattr   		= FakeGetAttr,
+    .open   		= FakeOpen,
+    .flush  		= FakeFlush,
+    .release    	= FakeRelease,
+    .readdir    	= FakeReadDir,
+    .forget_multi 	= FakeForgetMulti,
 };
 
 int32_t FuseManager::StartFuse(int32_t devFd, const string &path)

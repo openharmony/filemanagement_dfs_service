@@ -60,8 +60,6 @@ void CloudDaemon::OnStart()
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
-    //FuseManager fuseMgr;
-    //fuseMgr.Start("/data/cloud");
 
     state_ = ServiceRunningState::STATE_RUNNING;
     LOGI("Start service successfully");
