@@ -25,6 +25,7 @@ ohos_unittest("data_sync_manager_test") {
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery/gallery_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/network_status.cpp",
     "data_sync_manager_test.cpp",
   ]
 
@@ -37,6 +38,11 @@ ohos_unittest("data_sync_manager_test") {
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "init:libbegetutil",
+    "netmanager_base:net_conn_manager_if",
   ]
 
   defines = [ "private=public" ]

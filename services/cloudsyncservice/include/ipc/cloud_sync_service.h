@@ -40,6 +40,7 @@ private:
     void OnStart() override;
     void OnStop() override;
     void PublishSA();
+    void Init();
     int32_t StartSync(const std::string &bundleName, bool forceFlag, SyncTriggerType triggerType);
     int32_t StopSync(const std::string &bundleName, SyncTriggerType triggerType);
 

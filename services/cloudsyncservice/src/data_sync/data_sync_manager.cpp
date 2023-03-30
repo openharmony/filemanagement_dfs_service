@@ -22,6 +22,7 @@
 #include "ipc/cloud_sync_callback_manager.h"
 #include "sync_rule/battery_status.h"
 #include "sync_rule/cloud_status.h"
+#include "sync_rule/network_status.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -50,6 +51,10 @@ int32_t DataSyncManager::IsSkipSync(const std::string appPackageName, const int3
     if (!CloudStatus::IsCloudStatusOkay(appPackageName)) {
         LOGE("cloud status is not OK");
         return E_SYNC_FAILED_CLOUD_NOT_READY;
+    }
+    if (NetworkStatus::GetNetConnStatus() == NetworkStatus::NetConnStatus::NO_NETWORK) {
+        LOGE("network is not available");
+        return E_SYNC_FAILED_NETWORK_NOT_AVAILABLE;
     }
     if (!BatteryStatus::IsBatteryCapcityOkay()) {
         return E_SYNC_FAILED_BATTERY_TOO_LOW;

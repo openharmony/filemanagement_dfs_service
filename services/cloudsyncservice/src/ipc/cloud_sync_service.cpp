@@ -21,6 +21,8 @@
 #include "dfsu_access_token_helper.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
+#include "sync_rule/net_conn_callback_observer.h"
+#include "sync_rule/network_status.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -37,8 +39,14 @@ void CloudSyncService::PublishSA()
     LOGI("Init finished successfully");
 }
 
+void CloudSyncService::Init()
+{
+    NetworkStatus::InitNetwork();
+}
+
 void CloudSyncService::OnStart()
 {
+    Init();
     LOGI("Begin to start service");
     try {
         PublishSA();
