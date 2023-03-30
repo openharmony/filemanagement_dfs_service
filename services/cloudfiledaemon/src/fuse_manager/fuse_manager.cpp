@@ -42,7 +42,7 @@ namespace Storage {
 namespace CloudFile {
 using namespace std;
 
-#define FAKE_ROOT "/data/fake_cloud/"
+#define FAKE_ROOT "/data/service/el2/100/hmdfs/non_account/fake_cloud/"
 
 struct fake_node {
 	string path;
