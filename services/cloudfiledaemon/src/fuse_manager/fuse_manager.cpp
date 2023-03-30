@@ -44,288 +44,234 @@ using namespace std;
 
 #define FAKE_ROOT "/data/service/el2/100/hmdfs/non_account/fake_cloud/"
 
-struct fake_node {
-	string path;
-	int fd;
-	ino_t ino;
-	dev_t dev;
+struct FakeNode {
+        string path;
+        int fd;
+        ino_t ino;
+        dev_t dev;
 };
 
-fake_node root_node;
+FakeNode rootNode;
 
-map<unsigned long long, fake_node *> fake_cache;
+map<unsigned long long, FakeNode *> fakeCache;
 
-unsigned long long gloabel_inode(ino_t ino, dev_t dev)
+unsigned long long GlobalNode(ino_t ino, dev_t dev)
 {
-	unsigned long long gid = ino + ((unsigned long long)dev << 32);
-	return gid;
+    unsigned long long gid = ino + ((unsigned long long)dev << 32);
+    return gid;
 }
 
-static struct fake_node* __fake_node(fuse_ino_t ino)
+static struct FakeNode* GetFakeNode(fuse_ino_t ino)
 {
-	if (ino == FUSE_ROOT_ID)
-		return &root_node;
-	else
-		return (struct fake_node *) (uintptr_t) ino;
+   if (ino == FUSE_ROOT_ID) {
+       return &rootNode;
+   } else {
+       return (struct FakeNode *) (uintptr_t) ino;
+   }
 }
 
-static int fake_fd(fuse_ino_t ino)
+static int FakeFd(fuse_ino_t ino)
 {
-	return __fake_node(ino)->fd;
+    return GetFakeNode(ino)->fd;
 }
 
-static string fake_path(fuse_ino_t ino)
+static string FakePath(fuse_ino_t ino)
 {
-	return __fake_node(ino)->path;
+    return GetFakeNode(ino)->path;
 }
 
-static struct fake_node* find_node(struct stat *st)
+static struct FakeNode* FindNode(struct stat *st)
 {
-	if(st->st_dev == root_node.dev && st->st_ino == root_node.ino)
-		return &root_node;
-	else
-		return fake_cache[gloabel_inode(st->st_dev, st->st_ino)];
+    if (st->st_dev == rootNode.dev && st->st_ino == rootNode.ino) {
+         return &rootNode;
+    } else {
+         return fakeCache[GlobalNode(st->st_dev, st->st_ino)];
+    }
 }
 
 FuseManager::FuseManager()
 {
 }
 
-static int fake_do_lookup(fuse_req_t req, fuse_ino_t parent, const char *name,
-			 struct fuse_entry_param *e)
+static int FakeDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
+                         struct fuse_entry_param *e)
 {
-	int child_fd;
-	int res;
-	struct fake_node *child;
-	unsigned long long gid;
-	string tmp_name = name;
+    int childFd;
+    int res;
+    struct FakeNode *child;
+    unsigned long long gid;
+    string tmpName = name;
 
+    memset(e, 0, sizeof(*e));
 
-	memset(e, 0, sizeof(*e));
-
-	child_fd = openat(fake_fd(parent), name, O_PATH | O_NOFOLLOW);
-	if(child_fd < 0)
-		goto out_err;
-
-	res = fstatat(child_fd, "", &e->attr, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
-	if (res == -1)
-		goto out_err;
-
-	gid = gloabel_inode(e->attr.st_dev, e->attr.st_ino);
-	child = find_node(&e->attr);
-	if(child) {
-		close(child_fd);
-		child_fd = -1;
-	} else {
-		child = new fake_node();
-		child->fd = child_fd;
-		child->ino = e->attr.st_ino;
-		child->dev = e->attr.st_dev;
-	        child->path = fake_path(parent) + tmp_name;
-		fake_cache[gid] = child;
-	}
-	e->ino = (uintptr_t) child;
-	return 0;
-out_err:
-	if(child_fd > 0)
-		close(child_fd);
+    childFd = openat(FakeFd(parent), name, O_PATH | O_NOFOLLOW);
+    if (childFd < 0) {
 	return errno;
+    }
+
+    res = fstatat(childFd, "", &e->attr, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
+    if (res == -1) {
+        close(childFd);
+	return errno;
+    }
+
+    gid = GlobalNode(e->attr.st_dev, e->attr.st_ino);
+    child = FindNode(&e->attr);
+    if (child) {
+        close(childFd);
+        childFd = -1;
+    } else {
+        child = new FakeNode();
+        child->fd = childFd;
+        child->ino = e->attr.st_ino;
+        child->dev = e->attr.st_dev;
+        child->path = FakePath(parent) + tmpName;
+        fakeCache[gid] = child;
+    }
+    e->ino = (uintptr_t) child;
+    return 0;
 }
 
-static void cfs_lookup(fuse_req_t req, fuse_ino_t parent,
-		       const char *name)
+static void FakeLookup(fuse_req_t req, fuse_ino_t parent,
+                       const char *name)
 {
-	LOGI("lookup");
-	struct fuse_entry_param e;
-	int err;
+    LOGI("lookup");
+    struct fuse_entry_param e;
+    int err;
 
-	err = fake_do_lookup(req, parent, name, &e);
-	if (err)
-		fuse_reply_err(req, err);
-	else
-		fuse_reply_entry(req, &e);
+    err = FakeDoLookup(req, parent, name, &e);
+    if (err) {
+        fuse_reply_err(req, err);
+    } else {
+        fuse_reply_entry(req, &e);
+    }
 }
 
-static void cfs_forget(fuse_req_t req, fuse_ino_t ino,
-		       uint64_t nlookup)
+static void FakeForget(fuse_req_t req, fuse_ino_t ino,
+                       uint64_t nlookup)
 {
-	LOGI("forget");
-	fuse_reply_none(req);
+    LOGI("forget");
+    fuse_reply_none(req);
 }
 
-static void cfs_getattr(fuse_req_t req, fuse_ino_t ino,
-			struct fuse_file_info *fi)
+static void FakeGetAttr(fuse_req_t req, fuse_ino_t ino,
+                        struct fuse_file_info *fi)
 {
-	int res;
-	struct stat buf;
-	(void) fi;
-	LOGI("get attr %llu", ino);
+    int res;
+    struct stat buf;
+    (void) fi;
+    LOGI("get attr %llu", ino);
 
-	res = fstatat(fake_fd(ino), "", &buf, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
-	if (res == -1)
-		return (void) fuse_reply_err(req, errno);
+    res = fstatat(FakeFd(ino), "", &buf, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
+    if (res == -1) {
+        return (void) fuse_reply_err(req, errno);
+    }
 
-	fuse_reply_attr(req, &buf, 0);
+    fuse_reply_attr(req, &buf, 0);
 }
 
-static void cfs_open(fuse_req_t req, fuse_ino_t ino,
+static void FakeOpen(fuse_req_t req, fuse_ino_t ino,
                      struct fuse_file_info *fi)
 {
-	int fd;
-	char buf[64];
+    int fd;
+    char buf[64];
 
-	LOGI("open %s", fake_path(ino).c_str());
-	sprintf(buf, "/proc/self/fd/%i", fake_fd(ino));
-	fd = open(buf, fi->flags & ~O_NOFOLLOW);
-	if (fd == -1)
-		return (void) fuse_reply_err(req, errno);
-	fi->fh = fd;
-	fuse_reply_open(req, fi);
+    LOGI("open %s", FakePath(ino).c_str());
+    sprintf(buf, "/proc/self/fd/%i", FakeFd(ino));
+    fd = open(buf, fi->flags & ~O_NOFOLLOW);
+    if (fd == -1)
+            return (void) fuse_reply_err(req, errno);
+    fi->fh = fd;
+    fuse_reply_open(req, fi);
 }
 
-static void cfs_flush(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
+static void FakeFlush(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
-	int res;
+    int res;
 
-	LOGI("close %s", fake_path(ino).c_str());
-	res = close(dup(fi->fh));
-	fuse_reply_err(req, res == -1 ? errno : 0);
+    LOGI("flush %s", FakePath(ino).c_str());
+    res = close(dup(fi->fh));
+    fuse_reply_err(req, res == -1 ? errno : 0);
 }
 
-static void cfs_release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
+static void FakeRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
-	LOGI("release %s", fake_path(ino).c_str());
+    LOGI("release %s", FakePath(ino).c_str());
 
-	close(fi->fh);
-	fuse_reply_err(req, 0);
+    close(fi->fh);
+    fuse_reply_err(req, 0);
 }
 
-static void cfs_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
+static void FakeReadDir(fuse_req_t req, fuse_ino_t ino, size_t size,
                         off_t off, struct fuse_file_info *fi)
 {
-	LOGI("readdir");
-	fuse_reply_err(req, ENOENT);
+    LOGI("readdir");
+    fuse_reply_err(req, ENOENT);
 }
 
 static const struct fuse_lowlevel_ops cfs_oper = {
-	.lookup	= cfs_lookup,
-	.forget     = cfs_forget,
-	.getattr	= cfs_getattr,
-	.open	= cfs_open,
-	.flush	= cfs_flush,
-	.release	= cfs_release,
-	.readdir	= cfs_readdir,
+    .lookup 	= FakeLookup,
+    .forget     = FakeForget,
+    .getattr    = FakeGetAttr,
+    .open   	= FakeOpen,
+    .flush  	= FakeFlush,
+    .release    = FakeRelease,
+    .readdir    = FakeReadDir,
 };
-
-
-void FuseManager::Start(const string &mnt)
-{
-	struct fuse_session *se;
-	struct fuse_cmdline_opts opts;
-	struct fuse_loop_config config;
-	struct fuse_args args = FUSE_ARGS_INIT(0, nullptr);
-	int ret;
-	struct stat stat;
-
-	if(fuse_opt_add_arg(&args, mnt.c_str())) {
-		LOGE("Mount path invalid");
-		return;
-	}
-	root_node.fd = -1;
-	root_node.path = FAKE_ROOT;
-	ret = lstat(FAKE_ROOT, &stat);
-	if (ret == -1) {
-		LOGE("root is empty");
-	} else {
-		root_node.dev = stat.st_dev;
-		root_node.ino = stat.st_ino;
-	}
-	root_node.fd = open(FAKE_ROOT, O_PATH);
-	if (root_node.fd < 0) {
-		LOGE("root is empty");
-	}
-
-	se = fuse_session_new(&args, &cfs_oper,
-	                      sizeof(cfs_oper), NULL);
-	if (se == NULL)
-		goto err_out1;
-
-	if (fuse_set_signal_handlers(se) != 0)
-		goto err_out2;
-
-	if (fuse_session_mount(se, mnt.c_str()) != 0)
-		goto err_out3;
-
-	fuse_daemonize(false);
-	config.max_idle_threads = 2;
-	ret = fuse_session_loop_mt(se, &config);
-
-	fuse_session_unmount(se);
-	if (root_node.fd > 0) {
-		close(root_node.fd);
-	}
-err_out3:
-	fuse_remove_signal_handlers(se);
-err_out2:
-	fuse_session_destroy(se);
-err_out1:
-	free(opts.mountpoint);
-}
 
 int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
 {
-	struct fuse_session *se;
-	struct fuse_cmdline_opts opts;
-	struct fuse_loop_config config;
-	struct fuse_args args = FUSE_ARGS_INIT(0, nullptr);
-	int ret;
-	struct stat stat;
+    struct fuse_session *se;
+    struct fuse_cmdline_opts opts;
+    struct fuse_loop_config config;
+    struct fuse_args args = FUSE_ARGS_INIT(0, nullptr);
+    int ret;
+    struct stat stat;
 
-	if(fuse_opt_add_arg(&args, path.c_str())) {
-		LOGE("Mount path invalid");
-		return EINVAL;
-	}
-	root_node.fd = -1;
-	root_node.path = FAKE_ROOT;
-	ret = lstat(FAKE_ROOT, &stat);
-	if (ret == -1) {
-		LOGE("root is empty");
-	} else {
-		root_node.dev = stat.st_dev;
-		root_node.ino = stat.st_ino;
-	}
-	root_node.fd = open(FAKE_ROOT, O_PATH);
-	if (root_node.fd < 0) {
-		LOGE("root is empty");
-	}
+    if(fuse_opt_add_arg(&args, path.c_str())) {
+            LOGE("Mount path invalid");
+            return EINVAL;
+    }
+    rootNode.fd = -1;
+    rootNode.path = FAKE_ROOT;
+    ret = lstat(FAKE_ROOT, &stat);
+    if (ret == -1) {
+            LOGE("root is empty");
+    } else {
+            rootNode.dev = stat.st_dev;
+            rootNode.ino = stat.st_ino;
+    }
+    rootNode.fd = open(FAKE_ROOT, O_PATH);
+    if (rootNode.fd < 0) {
+            LOGE("root is empty");
+    }
 
-	se = fuse_session_new(&args, &cfs_oper,
-	                      sizeof(cfs_oper), NULL);
-	if (se == NULL)
-		goto err_out1;
+    se = fuse_session_new(&args, &cfs_oper,
+                          sizeof(cfs_oper), NULL);
+    if (se == NULL)
+            goto err_out1;
 
-	if (fuse_set_signal_handlers(se) != 0)
-		goto err_out2;
-	se->fd = devFd;
-	se->mountpoint = strdup(path.c_str());
+    if (fuse_set_signal_handlers(se) != 0)
+            goto err_out2;
+    se->fd = devFd;
+    se->mountpoint = strdup(path.c_str());
 
 
-	fuse_daemonize(false);
-	config.max_idle_threads = 2;
-	ret = fuse_session_loop_mt(se, &config);
+    fuse_daemonize(false);
+    config.max_idle_threads = 2;
+    ret = fuse_session_loop_mt(se, &config);
 
-	fuse_session_unmount(se);
-	if (root_node.fd > 0) {
-		close(root_node.fd);
-	}
+    fuse_session_unmount(se);
+    if (rootNode.fd > 0) {
+            close(rootNode.fd);
+    }
 
-	fuse_remove_signal_handlers(se);
+    fuse_remove_signal_handlers(se);
 err_out2:
-	fuse_session_destroy(se);
+    fuse_session_destroy(se);
 err_out1:
-	free(opts.mountpoint);
-	return 0;
-
+    free(opts.mountpoint);
+    return 0;
 }
 
 void FuseManager::Stop()
