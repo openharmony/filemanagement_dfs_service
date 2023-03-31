@@ -14,7 +14,9 @@
     "component": {
       "name": "dfs_service",
       "subsystem": "filemanagement",
-      "syscap": [],
+      "syscap": [
+        "SystemCapability.FileManagement.DistributedFileService.CloudSyncManager"
+      ],
       "features": [
         "dfs_service_feature_enable_cloud_adapter"
       ],
