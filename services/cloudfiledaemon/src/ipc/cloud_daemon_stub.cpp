@@ -17,7 +17,7 @@
 #include "utils_log.h"
 
 namespace OHOS {
-namespace Storage {
+namespace FileManagement {
 namespace CloudFile {
 CloudDaemonStub::CloudDaemonStub()
 {
@@ -48,5 +48,5 @@ int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel
     return res;
 }
 } // namespace CloudFile
-} // namespace Storage
+} // namespace FileManagement
 } // namespace OHOS

@@ -20,7 +20,7 @@
 
 #include "iremote_object.h"
 
-namespace OHOS::Storage::CloudFile {
+namespace OHOS::FileManagement::CloudFile {
 class SvcDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
     explicit SvcDeathRecipient(std::function<void(const wptr<IRemoteObject> &)> functor) : functor_(functor){};
@@ -36,6 +36,6 @@ public:
 private:
     std::function<void(const wptr<IRemoteObject> &)> functor_;
 };
-} // namespace OHOS::Storage::CloudFile
+} // namespace OHOS::FileManagement::CloudFile
 
 #endif // OHOS_STORAGE_SVC_DEATH_RECIPIENT_H

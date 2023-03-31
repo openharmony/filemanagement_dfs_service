@@ -40,7 +40,7 @@
 
 #include "utils_log.h"
 namespace OHOS {
-namespace Storage {
+namespace FileManagement {
 namespace CloudFile {
 using namespace std;
 
@@ -214,7 +214,7 @@ static void FakeFlush(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     int res;
 
-    LOGI("flush %s", FakePath(ino).c_str());
+    LOGI("Close %s", FakePath(ino).c_str());
     res = close(dup(fi->fh));
     fuse_reply_err(req, res == -1 ? errno : 0);
 }
@@ -244,7 +244,7 @@ static void FakeForgetMulti(fuse_req_t req, size_t count,
     fuse_reply_none(req);
 }
 
-static const struct fuse_lowlevel_ops cfs_oper = {
+static const struct fuse_lowlevel_ops fakeOps = {
     .lookup 		= FakeLookup,
     .forget     	= FakeForget,
     .getattr   		= FakeGetAttr,
@@ -258,55 +258,57 @@ static const struct fuse_lowlevel_ops cfs_oper = {
 int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
 {
     struct fuse_session *se;
-    struct fuse_cmdline_opts opts;
     struct fuse_loop_config config;
     struct fuse_args args = FUSE_ARGS_INIT(0, nullptr);
     int ret;
     struct stat stat;
 
-    if(fuse_opt_add_arg(&args, path.c_str())) {
-            LOGE("Mount path invalid");
-            return EINVAL;
+    if (fuse_opt_add_arg(&args, path.c_str())) {
+        LOGE("Mount path invalid");
+        return -EINVAL;
     }
     rootNode.fd = -1;
     rootNode.path = FAKE_ROOT;
     ret = lstat(FAKE_ROOT, &stat);
     if (ret == -1) {
-            LOGE("root is empty");
+        LOGE("root is empty");
     } else {
-            rootNode.dev = stat.st_dev;
-            rootNode.ino = stat.st_ino;
+        rootNode.dev = stat.st_dev;
+        rootNode.ino = stat.st_ino;
     }
     rootNode.fd = open(FAKE_ROOT, O_PATH);
     if (rootNode.fd < 0) {
-            LOGE("root is empty");
+        LOGE("root is empty");
     }
 
-    se = fuse_session_new(&args, &cfs_oper,
-                          sizeof(cfs_oper), NULL);
-    if (se == NULL)
-            goto err_out1;
+    se = fuse_session_new(&args, &fakeOps,
+                          sizeof(fakeOps), NULL);
+    if (se == NULL) {
+	return -EINVAL;
+    }
 
-    if (fuse_set_signal_handlers(se) != 0)
-            goto err_out2;
+    if (fuse_set_signal_handlers(se) != 0) {
+        fuse_session_destroy(se);
+        return -EINVAL;
+    }
     se->fd = devFd;
     se->mountpoint = strdup(path.c_str());
 
-
     fuse_daemonize(false);
-    config.max_idle_threads = 2;
+    config.max_idle_threads = 1;
     ret = fuse_session_loop_mt(se, &config);
 
     fuse_session_unmount(se);
     if (rootNode.fd > 0) {
-            close(rootNode.fd);
+        close(rootNode.fd);
+    }
+    if (se->mountpoint) {
+        free(se->mountpoint);
+	se->mountpoint = nullptr;
     }
 
     fuse_remove_signal_handlers(se);
-err_out2:
     fuse_session_destroy(se);
-err_out1:
-    free(opts.mountpoint);
     return 0;
 }
 
@@ -316,5 +318,5 @@ void FuseManager::Stop()
 }
 
 } // namespace CloudFile
-} // namespace Storage
+} // namespace FileManagement
 } // namespace OHOS

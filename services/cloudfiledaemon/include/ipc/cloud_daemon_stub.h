@@ -24,7 +24,7 @@
 #include "refbase.h"
 
 namespace OHOS {
-namespace Storage {
+namespace FileManagement {
 namespace CloudFile {
 class CloudDaemonStub : public IRemoteStub<ICloudDaemon> {
 public:
@@ -39,6 +39,6 @@ private:
     int32_t HandleStartFuseInner(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace CloudFile
-} // namespace Storage
+} // namespace FileManagement
 } // namespace OHOS
 #endif // CLOUD_DAEMON_STUB_H

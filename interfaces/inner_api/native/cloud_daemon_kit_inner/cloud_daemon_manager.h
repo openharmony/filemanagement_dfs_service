@@ -18,8 +18,7 @@
 
 #include <memory>
 
-
-namespace OHOS::Storage::CloudFile {
+namespace OHOS::FileManagement::CloudFile {
 using namespace std;
 class CloudDaemonManager {
 public:
@@ -27,6 +26,6 @@ public:
 
     virtual int32_t StartFuse(int32_t devFd, const string &path) = 0;
 };
-} // namespace OHOS::Storage::CloudFile
+} // namespace OHOS::FileManagement::CloudFile
 
 #endif // OHOS_STORAGE_CLOUD_DAEMON_MANAGER_H

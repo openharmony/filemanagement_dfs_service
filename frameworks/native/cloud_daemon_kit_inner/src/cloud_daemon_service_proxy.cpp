@@ -21,7 +21,7 @@
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
-namespace OHOS::Storage::CloudFile {
+namespace OHOS::FileManagement::CloudFile {
 using namespace std;
 using namespace OHOS::FileManagement;
 
@@ -45,7 +45,7 @@ int32_t CloudDaemonServiceProxy::StartFuse(int32_t devFd, const string &path)
     }
 
     if (!data.WriteString(path)) {
-        LOGE("Failed to send the device file fd");
+        LOGE("Failed to send the device file path");
         return E_INVAL_ARG;
     }
 
@@ -86,7 +86,7 @@ sptr<ICloudDaemon> CloudDaemonServiceProxy::GetInstance()
     int32_t ret = samgr->LoadSystemAbility(FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, cloudDaemonLoadCallback);
     if (ret != E_OK) {
         LOGE("Failed to Load systemAbility, systemAbilityId:%{pulbic}d, ret code:%{pulbic}d",
-             FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, ret);
+             FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, ret);
         return nullptr;
     }
 
@@ -129,4 +129,4 @@ void CloudDaemonServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(
     proxyConVar_.notify_one();
 }
 
-} // namespace OHOS::Storage::CloudFile
+} // namespace OHOS::FileManagement::CloudFile

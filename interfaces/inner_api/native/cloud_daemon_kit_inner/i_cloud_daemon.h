@@ -19,7 +19,7 @@
 #include "iremote_broker.h"
 
 namespace OHOS {
-namespace Storage {
+namespace FileManagement {
 namespace CloudFile {
 class ICloudDaemon : public IRemoteBroker {
 public:
@@ -32,10 +32,10 @@ public:
     };
     virtual int32_t StartFuse(int32_t deviceFd, const std::string &path) = 0;
 
-    static inline const std::string SERVICE_NAME { "ohos.storage.distributedfile.clouddaemon" };
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.clouddaemon")
+    static inline const std::string SERVICE_NAME { "ohos.filemanagement.distributedfile.clouddaemon" };
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.filemanagement.distributedfile.clouddaemon")
 };
 } // namespace CloudFile
-} // namespace Storage
+} // namespace FileManagement
 } // namespace OHOS
 #endif // I_CLOUD_DAEMON_H

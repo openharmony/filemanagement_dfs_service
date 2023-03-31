@@ -21,7 +21,7 @@
 #include "cloud_daemon_manager.h"
 #include "svc_death_recipient.h"
 
-namespace OHOS::Storage::CloudFile {
+namespace OHOS::FileManagement::CloudFile {
 class CloudDaemonManagerImpl final : public CloudDaemonManager {
 public:
     static CloudDaemonManagerImpl &GetInstance();
@@ -34,6 +34,6 @@ private:
     std::atomic_flag isFirstCall_{false};
     sptr<SvcDeathRecipient> deathRecipient_;
 };
-} // namespace OHOS::Storage::CloudFile
+} // namespace OHOS::FileManagement::CloudFile
 
 #endif // OHOS_STORAGE_CLOUD_DAEMON_MANAGER_IMPL_H

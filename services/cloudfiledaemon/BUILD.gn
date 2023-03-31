@@ -23,9 +23,7 @@ ohos_shared_library("cloudfiledaemon") {
 
   configs = [ "${utils_path}:compiler_configs" ]
 
-  defines = [
-    "LOG_TAG=\"CloudFileDaemon\"",
-  ]
+  defines = [ "LOG_TAG=\"CloudFileDaemon\"" ]
 
   include_dirs = [
     "include",
@@ -35,15 +33,12 @@ ohos_shared_library("cloudfiledaemon") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//third_party/libfuse:libfuse"
+    "//third_party/libfuse:libfuse",
   ]
 
   external_deps = [
     "dfs_service:cloud_daemon_kit_inner",
-    "ability_base:want",
-    "common_event_service:cesfwk_innerkits",
-    "dataclassification:data_transit_mgr",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

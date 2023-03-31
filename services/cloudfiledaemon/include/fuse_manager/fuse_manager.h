@@ -19,7 +19,7 @@
 #include <string>
 
 namespace OHOS {
-namespace Storage {
+namespace FileManagement {
 namespace CloudFile {
 using namespace std;
 class FuseManager final {
@@ -31,6 +31,6 @@ public:
     void Stop();
 };
 } // namespace CloudFile
-} // namespace Storage
+} // namespace FileManagement
 } // namespace OHOS
 #endif // FUSE_MANAGER_H

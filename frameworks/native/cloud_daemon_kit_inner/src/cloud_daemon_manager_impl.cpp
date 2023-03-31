@@ -18,7 +18,7 @@
 #include "dfs_error.h"
 #include "utils_log.h"
 
-namespace OHOS::Storage::CloudFile {
+namespace OHOS::FileManagement::CloudFile {
 using namespace std;
 using namespace OHOS::FileManagement;
 CloudDaemonManagerImpl &CloudDaemonManagerImpl::GetInstance()
@@ -46,11 +46,11 @@ int32_t CloudDaemonManagerImpl::StartFuse(int32_t devFd, const string &path)
 void CloudDaemonManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
-        LOGE("service died. Died remote obj = %{private}p", obj.GetRefPtr());
+        LOGE("service died. Died remote obj");
         CloudDaemonServiceProxy::InvaildInstance();
         isFirstCall_.clear();
     };
     deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));
     remoteObject->AddDeathRecipient(deathRecipient_);
 }
-} // namespace OHOS::Storage::CloudFile
+} // namespace OHOS::FileManagement::CloudFile

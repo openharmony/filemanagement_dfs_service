@@ -26,10 +26,9 @@
 #include "utils_log.h"
 
 namespace OHOS {
-namespace Storage {
+namespace FileManagement {
 namespace CloudFile {
 using namespace std;
-using namespace OHOS::FileManagement;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudDaemon, FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, true);
 
@@ -50,7 +49,7 @@ void CloudDaemon::OnStart()
 {
     LOGI("Begin to start service");
     if (state_ == ServiceRunningState::STATE_RUNNING) {
-        LOGD("Daemon has already started");
+        LOGI("Daemon has already started");
         return;
     }
 
@@ -102,5 +101,5 @@ int32_t CloudDaemon::StartFuse(int32_t devFd, const string &path)
 
 }
 } // namespace CloudFile
-} // namespace Storage
+} // namespace FileManagement
 } // namespace OHOS

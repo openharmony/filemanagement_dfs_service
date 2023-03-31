@@ -28,7 +28,7 @@
 #include "system_ability.h"
 
 namespace OHOS {
-namespace Storage {
+namespace FileManagement {
 namespace CloudFile {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 
@@ -59,6 +59,6 @@ private:
     void PublishSA();
 };
 } // namespace CloudFile
-} // namespace Storage
+} // namespace FileManagement
 } // namespace OHOS
 #endif // CLOUD_DAEMON_H

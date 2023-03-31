@@ -15,10 +15,10 @@
 
 #include "cloud_daemon_manager_impl.h"
 
-namespace OHOS::Storage::CloudFile {
+namespace OHOS::FileManagement::CloudFile {
 using namespace std;
 CloudDaemonManager &CloudDaemonManager::GetInstance()
 {
     return CloudDaemonManagerImpl::GetInstance();
 }
-} // namespace OHOS::Storage::CloudFile
+} // namespace OHOS::FileManagement::CloudFile
