@@ -21,18 +21,19 @@
 #include <fuse.h>
 #include <fuse_lowlevel.h>  /* for fuse_cmdline_opts */
 
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
-#include <assert.h>
-#include <stddef.h>
+#include <cassert>
+#include <cstddef>
 #include <unistd.h>
 #include <pthread.h>
 #include <stdexcept>
 
 #include <exception>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 #include <map>
 #include <mutex>
@@ -54,24 +55,24 @@ struct FakeNode {
     atomic_int64_t refCount;
 };
 
-FakeNode rootNode;
+FakeNode g_rootNode;
 
-mutex cacheLock;
+mutex g_cacheLock;
 map<unsigned long long, FakeNode *> fakeCache;
 
 unsigned long long GlobalNode(ino_t ino, dev_t dev)
 {
-    unsigned long long gid = ino + ((unsigned long long)dev << 32);
+    unsigned long long gid = ino + (static_cast<unsigned long long>(dev) << 32);
     return gid;
 }
 
 static struct FakeNode* GetFakeNode(fuse_ino_t ino)
 {
-   if (ino == FUSE_ROOT_ID) {
-       return &rootNode;
-   } else {
-       return (struct FakeNode *) (uintptr_t) ino;
-   }
+    if (ino == FUSE_ROOT_ID) {
+        return &g_rootNode;
+    } else {
+        return (struct FakeNode *) (uintptr_t) ino;
+    }
 }
 
 static int FakeFd(fuse_ino_t ino)
@@ -86,10 +87,10 @@ static string FakePath(fuse_ino_t ino)
 
 static struct FakeNode* FindNode(struct stat *st)
 {
-    if (st->st_dev == rootNode.dev && st->st_ino == rootNode.ino) {
-         return &rootNode;
+    if (st->st_dev == g_rootNode.dev && st->st_ino == g_rootNode.ino) {
+        return &g_rootNode;
     } else {
-         return fakeCache[GlobalNode(st->st_dev, st->st_ino)];
+        return fakeCache[GlobalNode(st->st_dev, st->st_ino)];
     }
 }
 
@@ -98,7 +99,7 @@ FuseManager::FuseManager()
 }
 
 static int FakeDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
-                         struct fuse_entry_param *e)
+                        struct fuse_entry_param *e)
 {
     int childFd;
     int res;
@@ -106,24 +107,23 @@ static int FakeDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     unsigned long long gid;
     string tmpName = name;
 
-    memset(e, 0, sizeof(*e));
-
+    *e = {0};
     childFd = openat(FakeFd(parent), name, O_PATH | O_NOFOLLOW);
     if (childFd < 0) {
-	return errno;
+        return errno;
     }
 
     res = fstatat(childFd, "", &e->attr, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
     if (res == -1) {
         close(childFd);
-	return errno;
+        return errno;
     }
 
     gid = GlobalNode(e->attr.st_dev, e->attr.st_ino);
     child = FindNode(&e->attr);
     if (child) {
         close(childFd);
-	child->refCount++;
+        child->refCount++;
         childFd = -1;
     } else {
         child = new FakeNode();
@@ -131,12 +131,12 @@ static int FakeDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         child->ino = e->attr.st_ino;
         child->dev = e->attr.st_dev;
         child->path = FakePath(parent) + tmpName;
-	child->refCount = 1;
-	cacheLock.lock();
+        child->refCount = 1;
+        g_cacheLock.lock();
         fakeCache[gid] = child;
-	cacheLock.unlock();
+        g_cacheLock.unlock();
     }
-    e->ino = (uintptr_t) child;
+    e->ino = reinterpret_cast<fuse_ino_t>(child);
     return 0;
 }
 
@@ -159,12 +159,12 @@ static void PutNode(struct FakeNode *node, uint64_t num)
 {
     node->refCount -= num;
     if (node->refCount == 0) {
-	cacheLock.lock();
-	fakeCache.erase(GlobalNode(node->dev, node->ino));
-	close(node->fd);
-	delete node;
-	node = nullptr;
-	cacheLock.unlock();
+        g_cacheLock.lock();
+        fakeCache.erase(GlobalNode(node->dev, node->ino));
+        close(node->fd);
+        delete node;
+        node = nullptr;
+        g_cacheLock.unlock();
     }
 }
 
@@ -185,7 +185,6 @@ static void FakeGetAttr(fuse_req_t req, fuse_ino_t ino,
     int res;
     struct stat buf;
     (void) fi;
-    LOGI("get attr %llu", ino);
 
     res = fstatat(FakeFd(ino), "", &buf, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
     if (res == -1) {
@@ -199,11 +198,11 @@ static void FakeOpen(fuse_req_t req, fuse_ino_t ino,
                      struct fuse_file_info *fi)
 {
     int fd;
-    char buf[64];
+    string path;
 
     LOGI("open %s", FakePath(ino).c_str());
-    sprintf(buf, "/proc/self/fd/%i", FakeFd(ino));
-    fd = open(buf, fi->flags & ~O_NOFOLLOW);
+    path = "/proc/self/fd/" + std::to_string(FakeFd(ino));
+    fd = open(path.c_str(), fi->flags & ~O_NOFOLLOW);
     if (fd == -1)
             return (void) fuse_reply_err(req, errno);
     fi->fh = fd;
@@ -238,8 +237,8 @@ static void FakeForgetMulti(fuse_req_t req, size_t count,
 				struct fuse_forget_data *forgets)
 {
     for (int i = 0; i < count; i++) {
-         FakeNode *node = GetFakeNode(forgets[i].ino);
-         PutNode(node, forgets[i].nlookup);
+        FakeNode *node = GetFakeNode(forgets[i].ino);
+        PutNode(node, forgets[i].nlookup);
     }
     fuse_reply_none(req);
 }
@@ -267,24 +266,24 @@ int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
         LOGE("Mount path invalid");
         return -EINVAL;
     }
-    rootNode.fd = -1;
-    rootNode.path = FAKE_ROOT;
+    g_rootNode.fd = -1;
+    g_rootNode.path = FAKE_ROOT;
     ret = lstat(FAKE_ROOT, &stat);
     if (ret == -1) {
         LOGE("root is empty");
     } else {
-        rootNode.dev = stat.st_dev;
-        rootNode.ino = stat.st_ino;
+        g_rootNode.dev = stat.st_dev;
+        g_rootNode.ino = stat.st_ino;
     }
-    rootNode.fd = open(FAKE_ROOT, O_PATH);
-    if (rootNode.fd < 0) {
+    g_rootNode.fd = open(FAKE_ROOT, O_PATH);
+    if (g_rootNode.fd < 0) {
         LOGE("root is empty");
     }
 
     se = fuse_session_new(&args, &fakeOps,
                           sizeof(fakeOps), NULL);
     if (se == NULL) {
-	return -EINVAL;
+        return -EINVAL;
     }
 
     if (fuse_set_signal_handlers(se) != 0) {
@@ -299,12 +298,12 @@ int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
     ret = fuse_session_loop_mt(se, &config);
 
     fuse_session_unmount(se);
-    if (rootNode.fd > 0) {
-        close(rootNode.fd);
+    if (g_rootNode.fd > 0) {
+        close(g_rootNode.fd);
     }
     if (se->mountpoint) {
         free(se->mountpoint);
-	se->mountpoint = nullptr;
+        se->mountpoint = nullptr;
     }
 
     fuse_remove_signal_handlers(se);

@@ -93,7 +93,6 @@ sptr<ICloudDaemon> CloudDaemonServiceProxy::GetInstance()
     auto waitStatus = cloudDaemonLoadCallback->proxyConVar_.wait_for(
         lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
         [cloudDaemonLoadCallback]() { return cloudDaemonLoadCallback->isLoadSuccess_.load(); });
-
     if (!waitStatus) {
         LOGE("Load CloudDaemon SA timeout");
         return nullptr;

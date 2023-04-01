@@ -24,7 +24,8 @@ CloudDaemonStub::CloudDaemonStub()
     opToInterfaceMap_[CLOUD_DAEMON_CMD_START_FUSE] = &CloudDaemonStub::HandleStartFuseInner;
 }
 
-int32_t CloudDaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+int32_t CloudDaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
+                                         MessageParcel &reply, MessageOption &option)
 {
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return CLOUD_DAEMON_DESCRIPTOR_IS_EMPTY;

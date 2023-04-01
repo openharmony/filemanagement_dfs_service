@@ -85,7 +85,6 @@ void CloudDaemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::stri
         LOGE("systemAbilityId is not COMMON_EVENT_SERVICE_ID");
         return;
     }
-
 }
 
 int32_t CloudDaemon::StartFuse(int32_t devFd, const string &path)
@@ -96,9 +95,8 @@ int32_t CloudDaemon::StartFuse(int32_t devFd, const string &path)
     std::thread([fusePtr{fuseMgr}, dev{devFd}, mnt{path}]() {
         int32_t ret = fusePtr->StartFuse(dev, mnt);
         LOGI("start fuse result %d", ret);
-    }).detach();
+        }).detach();
     return E_OK;
-
 }
 } // namespace CloudFile
 } // namespace FileManagement

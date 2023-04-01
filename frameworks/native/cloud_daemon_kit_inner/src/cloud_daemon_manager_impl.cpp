@@ -29,7 +29,6 @@ CloudDaemonManagerImpl &CloudDaemonManagerImpl::GetInstance()
 
 int32_t CloudDaemonManagerImpl::StartFuse(int32_t devFd, const string &path)
 {
-
     auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
     if (!CloudDaemonServiceProxy) {
         LOGE("proxy is null");
