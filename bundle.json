@@ -46,6 +46,7 @@
           "service_group": [
             "//foundation/filemanagement/dfs_service:services_target",
             "//foundation/filemanagement/dfs_service:cloudsync_kit_inner_target",
+            "//foundation/filemanagement/dfs_service:cloud_daemon_kit_inner_target",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudsyncmanager:cloudsyncmanager"
           ]
         },
@@ -62,6 +63,17 @@
                 "cloud_sync_constants.h"
               ],
               "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
+            "header": {
+              "header_files": [
+                "cloud_daemon_manager.h",
+                "i_cloud_daemon.h",
+                "svc_death_recipient.h"
+		],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloud_daemon_kit_inner"
             }
           }
         ],

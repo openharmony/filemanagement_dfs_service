@@ -18,6 +18,7 @@ ohos_sa_profile("distributedfile_sa_profile") {
   sources = [
     "5201.xml",
     "5204.xml",
+    "5205.xml",
   ]
   part_name = "dfs_service"
 }
