@@ -24,6 +24,7 @@ napi_value CloudSyncManagerExport(napi_env env, napi_value exports)
 {
     static napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("changeAppCloudSwitch", ChangeAppCloudSwitch),
+	DECLARE_NAPI_FUNCTION("notifyDataChange", NotifyDataChange),
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;

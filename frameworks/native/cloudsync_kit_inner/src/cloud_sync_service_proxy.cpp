@@ -165,6 +165,42 @@ int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId, cons
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
+{
+    LOGI("NotifyDataChange");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(accoutId)) {
+        LOGE("Failed to send the account id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_NOTIFY_DATA_CHANGE, data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("NotifyDataChange Success");
+    return reply.ReadInt32();
+}
+
 sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 {
     LOGI("getinstance");

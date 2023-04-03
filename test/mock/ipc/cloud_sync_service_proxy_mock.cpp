@@ -45,6 +45,11 @@ int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId, cons
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
+{
+    return E_OK;
+}
+
 sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 {
     serviceProxy_ = iface_cast<ICloudSyncService>(sptr(new CloudSyncServiceMock()));

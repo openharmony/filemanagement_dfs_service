@@ -35,6 +35,7 @@ private:
     int32_t HandleStartSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStopSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleChangeAppSwitch(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleNotifyDataChange(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

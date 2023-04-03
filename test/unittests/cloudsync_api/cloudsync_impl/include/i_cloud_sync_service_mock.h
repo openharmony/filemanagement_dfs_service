@@ -60,6 +60,10 @@ public:
     {
         return E_OK;
     }
+    int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override
+    {
+        return E_OK;
+    }
 };
 
 } // namespace OHOS::FileManagement::CloudSync

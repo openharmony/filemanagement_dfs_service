@@ -47,6 +47,14 @@ public:
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
+    /**
+     * @brief 云数据变化触发同步
+     *
+     * @param accoutId 账号ID
+     * @param bundleName 应用包名
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
