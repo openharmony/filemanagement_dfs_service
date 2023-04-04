@@ -37,7 +37,7 @@ DKLocalErrorCode DKDatabase::SaveRecords(std::shared_ptr<DKContext> context,
     }
 
     DKError err;
-    std::thread ([=](){callback(context, this->shared_from_this(), result, err);}).detach();
+    std::thread ([=]() { callback(context, this->shared_from_this(), result, err); }).detach();
 
     return DKLocalErrorCode::NO_ERROR;
 }

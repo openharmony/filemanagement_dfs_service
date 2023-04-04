@@ -15,11 +15,15 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_shared_library("cloudsync_sa") {
-  sources = [
+  data_sync = [
     "src/data_sync/data_sync_manager.cpp",
     "src/data_sync/data_syncer.cpp",
     "src/data_sync/gallery/gallery_data_syncer.cpp",
     "src/data_sync/sync_state_manager.cpp",
+    "src/data_sync/sdk_helper.cpp",
+  ]
+
+  sources = [
     "src/ipc/cloud_sync_callback_manager.cpp",
     "src/ipc/cloud_sync_callback_proxy.cpp",
     "src/ipc/cloud_sync_service.cpp",
@@ -29,13 +33,18 @@ ohos_shared_library("cloudsync_sa") {
     "src/sync_rule/net_conn_callback_observer.cpp",
     "src/sync_rule/network_status.cpp",
   ]
+  sources += data_sync
 
   defines = [
     "LOG_DOMAIN=0xD004307",
     "LOG_TAG=\"CLOUDSYNC_SA\"",
   ]
 
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "include/data_sync",
+    "../../adapter/cloud_adapter_example/include",
+  ]
 
   deps = [ "${utils_path}:libdistributedfileutils" ]
 

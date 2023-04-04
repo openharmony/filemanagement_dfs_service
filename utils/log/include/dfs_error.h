@@ -43,6 +43,16 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_SYNC_FAILED_BATTERY_TOO_LOW,
     E_SYNC_FAILED_NETWORK_NOT_AVAILABLE,
     E_GET_NETWORK_MANAGER_FAILED,
+
+    /* data syncer */
+    E_CLOUD_SDK,
+    E_RDB,
+    E_CONTEXT,
+    E_MEMORY,
+    E_STOP,
+    E_PENDING,
+    E_SCHEDULE,
+    E_ASYNC_RUN,
 };
 } // namespace OHOS::FileManagement
 
