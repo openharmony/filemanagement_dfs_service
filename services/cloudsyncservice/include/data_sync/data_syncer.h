@@ -13,42 +13,119 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_DATA_SYNCER_H
-#define OHOS_FILEMGMT_DATA_SYNCER_H
+#ifndef OHOS_CLOUD_SYNC_SERVICE_DATA_SYNCER_H
+#define OHOS_CLOUD_SYNC_SERVICE_DATA_SYNCER_H
 
-#include <map>
+#include <string>
+#include <vector>
+#include <list>
+#include <memory>
 
+#include "sdk_helper.h"
+#include "data_handler.h"
+#include "task.h"
 #include "cloud_sync_constants.h"
 #include "data_sync/sync_state_manager.h"
 
-namespace OHOS::FileManagement::CloudSync {
+namespace OHOS {
+namespace FileManagement {
+namespace CloudSync {
 enum class SyncTriggerType : int32_t {
     APP_TRIGGER,
     CLOUD_TRIGGER,
     PENDING_TRIGGER,
 };
+
 class DataSyncer {
 public:
     DataSyncer(const std::string appPackageName, const int32_t userId);
-    virtual ~DataSyncer(){};
+    virtual ~DataSyncer() = default;
 
-    virtual void StartSync(bool forceFlag, SyncTriggerType triggerType) = 0;
-    virtual void StopSync(SyncTriggerType triggerType) = 0;
+    /* sync */
+    virtual int32_t StartSync(bool forceFlag, SyncTriggerType triggerType);
+    virtual int32_t StopSync(SyncTriggerType triggerType);
+
+    /* properties */
     std::string GetAppPackageName() const;
     int32_t GetUserId() const;
 
 protected:
-    void OnSyncComplete(const int32_t code, const SyncType type);
-    std::shared_ptr<SyncStateManager> GetSyncStateManager();
+    /* download */
+    int32_t Pull(std::shared_ptr<DataHandler> handler);
+
+    /* upload */
+    int32_t Push(std::shared_ptr<DataHandler> handler);
+
+    /* schedule */
+    virtual void Schedule() = 0;
+    void Abort();
+
+    /* notify */
+    void CompletePull();
+    void CompletePush();
+    void CompleteAll(const int32_t code, const SyncType type);
+
     void SyncStateChangedNotify(const SyncType type, const SyncPromptState state);
 
 private:
+    /* download */
+    void PullRecords(std::shared_ptr<TaskContext> context);
+
+    /* dowload callback */
+    void OnFetchRecords(const std::shared_ptr<DriveKit::DKContext> context,
+        const std::shared_ptr<std::vector<DriveKit::DKRecord>> records);
+
+    /* upload */
+    void CreateRecords(std::shared_ptr<TaskContext> context);
+    void DeleteRecords(std::shared_ptr<TaskContext> context);
+    void ModifyRecords(std::shared_ptr<TaskContext> context);
+
+    /* upload callback */
+    void OnCreateRecords(std::shared_ptr<DriveKit::DKContext>,
+        std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
+        const DriveKit::DKError &);
+    void OnDeleteRecords(std::shared_ptr<DriveKit::DKContext>,
+        std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
+        const DriveKit::DKError &);
+    void OnModifyRecords(std::shared_ptr<DriveKit::DKContext>,
+        std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
+        const DriveKit::DKError &);
+
+    /* task */
+    int32_t CommitTask(std::shared_ptr<Task> t);
+    int32_t AddTask(std::shared_ptr<Task> t);
+    int32_t StartTask(std::shared_ptr<Task> t, TaskAction action);
+    void CompleteTask(std::shared_ptr<Task> t);
+
+    void BeginTransaction();
+    void EndTransaction();
+
+    /* async task wrapper */
+    int32_t AsyncRun(std::shared_ptr<TaskContext> context,
+        void(DataSyncer::*f)(std::shared_ptr<TaskContext>));
+    template<typename T, typename RET, typename... ARGS>
+    std::function<RET(ARGS...)> AsyncCallback(RET(T::*f)(ARGS...));
+
+    /* prompt state */
     SyncPromptState GetSyncPromptState(const int32_t code);
 
+    /* identifier */
     const std::string appPackageName_;
     const int32_t userId_;
-    std::shared_ptr<SyncStateManager> syncStateManager_;
-};
-} // namespace OHOS::FileManagement::CloudSync
 
-#endif // OHOS_FILEMGMT_DATA_SYNCER_H
+    /* state management */
+    SyncStateManager syncStateManager_;
+
+    /* task management */
+    std::shared_ptr<TaskManager> taskManager_;
+
+    /* sdk */
+    SdkHelper sdkHelper_;
+};
+} // namespace CloudSync
+} // namespace FileManagement
+} // namespace OHOS
+#endif // OHOS_CLOUD_SYNC_SERVICE_DATA_SYNCER_H

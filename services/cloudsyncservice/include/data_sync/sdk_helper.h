@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_SDK_HELPER_H
-#define OHOS_FILEMGMT_SDK_HELPER_H
+#ifndef OHOS_CLOUD_SYNC_SERVICE_SDK_HELPER_H
+#define OHOS_CLOUD_SYNC_SERVICE_SDK_HELPER_H
 
 #include <vector>
 #include <functional>
@@ -75,4 +75,4 @@ private:
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
-#endif // OHOS_FILEMGMT_SDK_HELPER_H
+#endif // OHOS_CLOUD_SYNC_SERVICE_SDK_HELPER_H
