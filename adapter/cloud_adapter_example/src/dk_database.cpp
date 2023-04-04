@@ -15,6 +15,7 @@
 
 #include <functional>
 #include <iostream>
+#include <thread>
 
 #include "dk_context.h"
 #include "dk_database.h"
@@ -25,6 +26,19 @@ DKLocalErrorCode DKDatabase::SaveRecords(std::shared_ptr<DKContext> context,
                                          DKSavePolicy policy,
                                          SaveRecordsCallback callback)
 {
+    /* mock */
+    auto result = std::make_shared<std::map<DKRecordId, DKRecordOperResult>>();
+    srand(time(nullptr));
+    for (auto &record : records) {
+        DKRecordId recordId = std::to_string(rand() + 1);
+        DKRecordOperResult operResult;
+        operResult.SetDKRecord(record);
+        (*result)[recordId] = operResult;
+    }
+
+    DKError err;
+    std::thread ([=](){callback(context, this->shared_from_this(), result, err);}).detach();
+
     return DKLocalErrorCode::NO_ERROR;
 }
 DKLocalErrorCode DKDatabase::SaveRecord(std::shared_ptr<DKContext> context,

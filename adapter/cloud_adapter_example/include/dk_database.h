@@ -85,8 +85,8 @@ using DKQueryCursor = std::string;
 class DKContainer;
 class DKDatabase : public std::enable_shared_from_this<DKDatabase> {
 public:
-    DKDatabase(std::shared_ptr<DKContainer> container) : container_(container) {}
-    ~DKDatabase() {}
+    DKDatabase() = default;
+    ~DKDatabase() = default;
 
     using SaveRecordsCallback = std::function<void(std::shared_ptr<DKContext>,
                                                    std::shared_ptr<const DKDatabase>,
@@ -182,7 +182,6 @@ public:
         NewAssetReadSession(DKRecordType recordType, DKRecordId recordId, DKFieldKey assetKey, DKAssetPath assetPath);
 
 private:
-    std::shared_ptr<DKContainer> container_;
     DKContainerName containerName_;
 };
 } // namespace DriveKit
