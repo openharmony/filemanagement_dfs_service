@@ -23,6 +23,7 @@ ohos_shared_library("cloudsync_sa") {
     "src/data_sync/sdk_helper.cpp",
     "src/data_sync/data_handler.cpp",
     "src/data_sync/rdb_data_handler.cpp",
+    "src/data_sync/task.cpp",
   ]
 
   sources = [
