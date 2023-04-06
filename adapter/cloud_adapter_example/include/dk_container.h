@@ -68,9 +68,9 @@ public:
         containerName_ = containerName;
         driveKit_ = driveKit;
         if (driveKit_) {
-            publicDatabase_ = std::make_shared<DKDatabase>(shared_from_this());
-            privateDatabase_ = std::make_shared<DKDatabase>(shared_from_this());
-            sharedDatabase_ = std::make_shared<DKDatabase>(shared_from_this());
+            publicDatabase_ = std::make_shared<DKDatabase>();
+            privateDatabase_ = std::make_shared<DKDatabase>();
+            sharedDatabase_ = std::make_shared<DKDatabase>();
         }
     }
     ~DKContainer() = default;
