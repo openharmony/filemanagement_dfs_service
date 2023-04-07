@@ -33,6 +33,7 @@ public:
     MOCK_METHOD1(StartSyncInner, int32_t(bool forceFlag));
     MOCK_METHOD0(StopSyncInner, int32_t());
     MOCK_METHOD3(ChangeAppSwitch, int32_t(const std::string &accoutId, const std::string &bundleName, bool status));
+    MOCK_METHOD2(NotifyDataChange, int32_t(const std::string &accoutId, const std::string &bundleName));
 };
 
 class CloudSyncServiceStubTest : public testing::Test {

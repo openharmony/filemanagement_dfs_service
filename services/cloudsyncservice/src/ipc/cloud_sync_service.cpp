@@ -105,6 +105,11 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
     return StopSync(bundleName, SyncTriggerType::CLOUD_TRIGGER);
 }
 
+int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
+{
+    return StartSync(bundleName, false, SyncTriggerType::CLOUD_TRIGGER);
+}
+
 int32_t CloudSyncService::StartSync(const std::string &bundleName, bool forceFlag, SyncTriggerType triggerType)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
