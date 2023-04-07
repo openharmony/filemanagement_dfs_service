@@ -1,0 +1,12 @@
+{
+	"process": "cloudfiledaemon",
+	"systemability": [
+        {
+            "name": 5205,
+            "libpath": "libcloudfiledaemon.z.so",
+            "run-on-create": true,
+            "distributed": false,
+            "dump-level": 1
+	    }
+    ]
+}
