@@ -1,4 +1,4 @@
-# Copyright (C) 2022 Huawei Device Co., Ltd.
+# Copyright (C) 2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -21,6 +21,9 @@ ohos_shared_library("cloudsync_sa") {
     "src/data_sync/gallery/gallery_data_syncer.cpp",
     "src/data_sync/sync_state_manager.cpp",
     "src/data_sync/sdk_helper.cpp",
+    "src/data_sync/data_handler.cpp",
+    "src/data_sync/rdb_data_handler.cpp",
+    "src/data_sync/task.cpp",
   ]
 
   sources = [
@@ -53,6 +56,7 @@ ohos_shared_library("cloudsync_sa") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
+    "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
