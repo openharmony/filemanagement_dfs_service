@@ -98,7 +98,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
         userId_, appPackageName_.c_str(), forceFlag, triggerType);
 
     /* only one specific data sycner running at a time */
-    if (syncStateManager_.IsPendingSync(forceFlag)) {
+    if (syncStateManager_.CheckAndSetPending(forceFlag)) {
         LOGI("syncing, pending sync");
         return E_PENDING;
     }

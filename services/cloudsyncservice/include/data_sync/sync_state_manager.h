@@ -36,7 +36,7 @@ enum class Action : int32_t {
 class SyncStateManager {
 public:
     Action UpdateSyncState(SyncState newState);
-    bool IsPendingSync(bool forceFlag);
+    bool CheckAndSetPending(bool forceFlag);
     bool GetStopSyncFlag();
     void SetStopSyncFlag();
 

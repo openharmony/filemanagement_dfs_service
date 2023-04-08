@@ -23,17 +23,17 @@ ohos_shared_library("cloudsync_sa") {
   ]
 
   data_sync = [
-    "src/data_sync/data_sync_manager.cpp",
     "src/data_sync/data_syncer.cpp",
-    "src/data_sync/gallery/gallery_data_syncer.cpp",
-    "src/data_sync/sync_state_manager.cpp",
     "src/data_sync/sdk_helper.cpp",
     "src/data_sync/data_handler.cpp",
     "src/data_sync/rdb_data_handler.cpp",
     "src/data_sync/task.cpp",
+    "src/data_sync/data_sync_manager.cpp",
+    "src/data_sync/sync_state_manager.cpp",
   ]
 
   gallery_data_sync = [
+    "src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
     "src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "src/data_sync/gallery_data_sync/data_convertor.cpp",
