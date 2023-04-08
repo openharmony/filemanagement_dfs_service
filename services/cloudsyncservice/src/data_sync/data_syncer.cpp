@@ -360,7 +360,7 @@ void DataSyncer::OnCreateRecords(shared_ptr<DKContext> context,
     shared_ptr<const DKDatabase> database,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> map, const DKError &err)
 {
-    LOGI("%{private}d %{private}s on create records %{public}d", userId_,
+    LOGI("%{private}d %{private}s on create records %{public}zu", userId_,
         appPackageName_.c_str(), map->size());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
@@ -385,7 +385,7 @@ void DataSyncer::OnDeleteRecords(shared_ptr<DKContext> context,
     shared_ptr<const DKDatabase> database,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> map, const DKError &err)
 {
-    LOGI("%{private}d %{private}s on create records %{public}d", userId_,
+    LOGI("%{private}d %{private}s on create records %{public}zu", userId_,
         appPackageName_.c_str(), map->size());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
@@ -410,7 +410,7 @@ void DataSyncer::OnModifyRecords(shared_ptr<DKContext> context,
     shared_ptr<const DKDatabase> database,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> map, const DKError &err)
 {
-    LOGI("%{private}d %{private}s on create records %{public}d", userId_,
+    LOGI("%{private}d %{private}s on create records %{public}zu", userId_,
         appPackageName_.c_str(), map->size());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
