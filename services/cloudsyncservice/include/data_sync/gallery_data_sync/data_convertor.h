@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "distributed_kv_data_manager.h"
 #include "values_bucket.h"
 #include "result_set.h"
 
@@ -33,7 +34,9 @@ enum DataType : int32_t {
     DOUBLE,
     BOOL,
     BLOB,
-    ASSET
+    ASSET,
+    THUMBNAILKEY,
+    LCDKEY
 };
 
 class DataConvertor {
@@ -79,6 +82,10 @@ private:
         int32_t index, NativeRdb::ResultSet &resultSet);
     void HandleAsset(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
         int32_t index, NativeRdb::ResultSet &resultSet);
+    /* convert thumbnail or lcd  to asset */
+    virtual void ConvertToAsset(const std::string &filename, const OHOS::DistributedKv::Blob &value) const {};
+    virtual void HandleThumbnailOrLcd(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
+        int32_t index, NativeRdb::ResultSet &resultSet) {};
 
     /* handler map */
     using ConvertorHandler = void (DataConvertor::*)(DriveKit::DKRecordDatas &data,
@@ -89,6 +96,25 @@ private:
     const std::vector<std::string> cloudColumns_;
     const std::vector<DataType> types_;
     const int32_t size_;
+};
+
+class DataAssetConvertor : public DataConvertor {
+public:
+    DataAssetConvertor(const std::vector<std::string> localColumns,
+        const std::vector<std::string> cloudColumns,
+        const std::vector<DataType> types,
+        int32_t size,
+        std::shared_ptr<OHOS::DistributedKv::SingleKvStore> kvStorePtr,
+        const std::string path);
+    ~DataAssetConvertor() = default;
+
+private:
+    /* convert thumbnail or lcd  to asset */
+    void ConvertToAsset(const std::string &filename, const OHOS::DistributedKv::Blob &value) const;
+    void HandleThumbnailOrLcd(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
+        int32_t index, NativeRdb::ResultSet &resultSet);
+    std::shared_ptr<DistributedKv::SingleKvStore> kvStorePtr_;
+    const std::string path_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

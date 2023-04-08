@@ -18,13 +18,16 @@
 
 #include "rdb_data_handler.h"
 #include "data_convertor.h"
+#include "single_kvstore.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 class FileDataHandler : public RdbDataHandler {
 public:
-    FileDataHandler(std::shared_ptr<NativeRdb::RdbStore> rdb);
+    FileDataHandler(std::shared_ptr<NativeRdb::RdbStore> rdb,
+        std::shared_ptr<OHOS::DistributedKv::SingleKvStore> kvStorePtr,
+        const std::string &path);
     virtual ~FileDataHandler() = default;
 
     /* download */
@@ -57,49 +60,69 @@ private:
         "fileType", "hashId", "sha256", "id", "properties", "size", "source", "recycledTime", "recycled",
         "pictureMetadata", "videoMetadata", "cipher", "description" };
 
+    /* kvdb*/
+    std::shared_ptr<DistributedKv::SingleKvStore> kvStorePtr_;
+    const std::string THUMBNAIL_LCD_TMP_DIR;
+
+    /* delete thumbnail or lcd */
+    void DeleteThumbnailOrLCD(const std::string &name);
+
     /* create */
     int32_t createOffset_ = 0;
-    DataConvertor createConvertor_ = {
-        { "file_id", "data", "size", "data" },
-        { "file_id", "data", "size", "asset" },
-        { INT, STRING, INT, ASSET },
-        4
+
+    DataAssetConvertor createConvertor_ = {
+        { "file_id", "data", "size", "data", "thumbnail", "lcd" },
+        { "file_id", "data", "size", "asset", "thumbnail", "lcd" },
+        { INT, STRING, INT, ASSET, THUMBNAILKEY, LCDKEY },
+        6,
+        kvStorePtr_,
+        THUMBNAIL_LCD_TMP_DIR
     };
-    DataConvertor onCreateConvertor_ = {
+    DataAssetConvertor onCreateConvertor_ = {
         { "file_id", "data", "size" },
         { "file_id", "data", "size" },
         { INT, STRING, INT },
-        3
+        3,
+        kvStorePtr_,
+        THUMBNAIL_LCD_TMP_DIR
     };
 
     /* delete */
     int32_t deleteOffset_ = 0;
-    DataConvertor deleteConvertor_ = {
+    DataAssetConvertor deleteConvertor_ = {
         { "file_id", "data", "size" },
         { "id", "path", "size" },
         { INT, STRING, INT },
-        3
+        3,
+        kvStorePtr_,
+        THUMBNAIL_LCD_TMP_DIR
     };
-    DataConvertor onDeleteConvertor_ = {
+    DataAssetConvertor onDeleteConvertor_ = {
         { "file_id", "data", "size" },
         { "id", "path", "size" },
         { INT, STRING, INT },
-        3
+        3,
+        kvStorePtr_,
+        THUMBNAIL_LCD_TMP_DIR
     };
 
     /* update */
     int32_t updateOffset_ = 0;
-    DataConvertor updateConvertor_ = {
+    DataAssetConvertor updateConvertor_ = {
         { "file_id", "data", "size" },
         { "id", "path", "size" },
         { INT, STRING, INT },
-        3
+        3,
+        kvStorePtr_,
+        THUMBNAIL_LCD_TMP_DIR
     };
-    DataConvertor onUpdateConvertor_ = {
+    DataAssetConvertor onUpdateConvertor_ = {
         { "file_id", "data", "size" },
         { "id", "path", "size" },
         { INT, STRING, INT },
-        3
+        3,
+        kvStorePtr_,
+        THUMBNAIL_LCD_TMP_DIR
     };
 
     /* fetch */
