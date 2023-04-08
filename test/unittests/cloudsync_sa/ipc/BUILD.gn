@@ -66,9 +66,18 @@ ohos_unittest("cloud_sync_service_test") {
     "ability_base:want",
     "dfs_service:cloudsync_kit_inner",
     "ipc:ipc_core",
+    "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
 
   defines = [ "private=public" ]
   use_exceptions = true
