@@ -15,6 +15,13 @@ import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_shared_library("cloudsync_sa") {
+  include_dirs = [
+    "include",
+    "include/data_sync",
+    "include/data_sync/gallery_data_sync",
+    "../../adapter/cloud_adapter_example/include",
+  ]
+
   data_sync = [
     "src/data_sync/data_sync_manager.cpp",
     "src/data_sync/data_syncer.cpp",
@@ -24,6 +31,11 @@ ohos_shared_library("cloudsync_sa") {
     "src/data_sync/data_handler.cpp",
     "src/data_sync/rdb_data_handler.cpp",
     "src/data_sync/task.cpp",
+  ]
+
+  gallery_data_sync = [
+    "src/data_sync/gallery_data_sync/file_data_handler.cpp",
+    "src/data_sync/gallery_data_sync/album_data_handler.cpp",
   ]
 
   sources = [
@@ -37,16 +49,11 @@ ohos_shared_library("cloudsync_sa") {
     "src/sync_rule/network_status.cpp",
   ]
   sources += data_sync
+  sources += gallery_data_sync
 
   defines = [
     "LOG_DOMAIN=0xD004307",
     "LOG_TAG=\"CLOUDSYNC_SA\"",
-  ]
-
-  include_dirs = [
-    "include",
-    "include/data_sync",
-    "../../adapter/cloud_adapter_example/include",
   ]
 
   deps = [ "${utils_path}:libdistributedfileutils" ]
@@ -55,6 +62,7 @@ ohos_shared_library("cloudsync_sa") {
     "dfs_service:cloudsync_kit_inner",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "media_library:cloud_sync_header",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",

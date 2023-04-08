@@ -27,6 +27,8 @@ ohos_unittest("data_sync_manager_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery/gallery_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync//gallery_data_sync/album_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync//gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/network_status.cpp",
@@ -36,6 +38,7 @@ ohos_unittest("data_sync_manager_test") {
   include_dirs = [
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
   ]
 
@@ -47,6 +50,7 @@ ohos_unittest("data_sync_manager_test") {
 
   external_deps = [
     "init:libbegetutil",
+    "media_library:cloud_sync_header",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
   ]
