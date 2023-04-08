@@ -50,7 +50,6 @@ int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context,
 {
     auto ret = make_shared<vector<DriveKit::DKRecord>>();
     thread ([=]() { callback(context, ret); }).detach();
-
     return E_OK;
 }
 

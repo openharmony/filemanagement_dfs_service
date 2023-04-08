@@ -17,7 +17,7 @@
 
 #include <vector>
 
-#include "data_sync/gallery/gallery_data_syncer.h"
+#include "gallery_data_syncer.h"
 #include "dfs_error.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "sync_rule/battery_status.h"

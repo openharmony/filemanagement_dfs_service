@@ -28,7 +28,7 @@ Action SyncStateManager::UpdateSyncState(SyncState newState)
     return nextAction_;
 }
 
-bool SyncStateManager::IsPendingSync(bool forceFlag)
+bool SyncStateManager::CheckAndSetPending(bool forceFlag)
 {
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
     if (state_ != SyncState::SYNCING) {
