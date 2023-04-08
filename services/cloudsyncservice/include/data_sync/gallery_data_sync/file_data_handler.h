@@ -57,7 +57,7 @@ private:
         { "file_id", "data", "size", "data" },
         { "file_id", "data", "size", "asset" },
         { INT, STRING, INT, ASSET },
-        3
+        4
     };
     DataConvertor onCreateConvertor_ = {
         { "file_id", "data", "size" },

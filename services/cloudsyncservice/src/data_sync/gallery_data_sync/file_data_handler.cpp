@@ -143,7 +143,7 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
         int32_t ret = onCreateConvertor_.RecordToValueBucket(record, valuesBucket);
         if (ret != E_OK) {
             LOGE("record to value bucket err %{public}d", ret);
-            return ret;
+            continue;
         }
         valuesBucket.PutString(Media::MEDIA_DATA_DB_CLOUD_ID, entry.first);
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
@@ -151,14 +151,20 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
 
         DKRecordDatas data;
         record.GetRecordDatas(data);
-        int32_t id = data[Media::MEDIA_DATA_DB_ID];
+        auto iter = data.find(Media::MEDIA_DATA_DB_ID);
+        if (iter == data.end()) {
+            LOGE("no id in record data");
+            continue;
+        }
+        int32_t id = iter->second;
+
         /* update local */
         int32_t changedRows;
         string whereClause = Media::MEDIA_DATA_DB_ID + " = ?";
         ret = Update(changedRows, valuesBucket, whereClause, { to_string(id) });
         if (ret != 0) {
-            LOGE("on create records update err %{public}d", ret);
-            return E_RDB;
+            LOGE("on create records update err %{public}d, id %{public}d", ret, id);
+            continue;
         }
     }
 
@@ -172,14 +178,21 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
 
         DKRecordDatas data;
         record.GetRecordDatas(data);
-        string cloudId = data[Media::MEDIA_DATA_DB_CLOUD_ID];
+        auto iter = data.find(Media::MEDIA_DATA_DB_CLOUD_ID);
+        if (iter == data.end()) {
+            LOGE("no id in record data");
+            continue;
+        }
+        string cloudId = iter->second;
+
         /* delete local */
         int32_t deletedRows;
         string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
         int32_t ret = Delete(deletedRows, whereClause, { cloudId });
         if (ret != 0) {
-            LOGE("on create records update err %{public}d", ret);
-            return E_RDB;
+            LOGE("on delete records update err %{public}d, cloudId %{private}s",
+                ret, cloudId.c_str());
+            continue;
         }
     }
 
@@ -196,21 +209,28 @@ int32_t FileDataHandler::OnModifyRecords(const map<DKRecordId, DKRecordOperResul
         int32_t ret = updateConvertor_.RecordToValueBucket(record, valuesBucket);
         if (ret != E_OK) {
             LOGE("record to value bucket err %{public}d", ret);
-            return ret;
+            continue;
         }
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
             static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
 
         DKRecordDatas data;
         record.GetRecordDatas(data);
-        string cloudId = data[Media::MEDIA_DATA_DB_CLOUD_ID];
+        auto iter = data.find(Media::MEDIA_DATA_DB_CLOUD_ID);
+        if (iter == data.end()) {
+            LOGE("no id in record data");
+            continue;
+        }
+        string cloudId = iter->second;
+
         /* update local */
         int32_t changedRows;
         string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
         ret = Update(changedRows, valuesBucket, whereClause, { cloudId });
         if (ret != 0) {
-            LOGE("on create records update err %{public}d", ret);
-            return E_RDB;
+            LOGE("on modify records update err %{public}d, cloudId %{private}s",
+                ret, cloudId.c_str());
+            continue;
         }
     }
 

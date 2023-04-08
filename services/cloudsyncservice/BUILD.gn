@@ -36,6 +36,7 @@ ohos_shared_library("cloudsync_sa") {
   gallery_data_sync = [
     "src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "src/data_sync/gallery_data_sync/album_data_handler.cpp",
+    "src/data_sync/gallery_data_sync/data_convertor.cpp",
   ]
 
   sources = [
