@@ -30,7 +30,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 
-REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
+REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, false);
 
 void Daemon::PublishSA()
 {

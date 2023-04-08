@@ -1,0 +1,12 @@
+{
+	"process": "cloudfiledaemon",
+	"systemability": [
+        {
+            "name": 5204,
+            "libpath": "libcloudsync_sa.z.so",
+            "run-on-create": false,
+            "distributed": false,
+            "dump-level": 1
+        }
+    ]
+}
