@@ -52,6 +52,10 @@ int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, M
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
     auto remoteObj = data.ReadRemoteObject();
     int32_t res = RegisterCallbackInner(remoteObj);
     reply.WriteInt32(res);
@@ -65,6 +69,10 @@ int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageP
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
     }
     auto forceFlag = data.ReadBool();
     int32_t res = StartSyncInner(forceFlag);
@@ -80,6 +88,10 @@ int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessagePa
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
     int32_t res = StopSyncInner();
     reply.WriteInt32(res);
     LOGI("End StopSyncInner");
@@ -92,6 +104,10 @@ int32_t CloudSyncServiceStub::HandleChangeAppSwitch(MessageParcel &data, Message
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
     }
     string accountId = data.ReadString();
     string bundleName = data.ReadString();
@@ -108,6 +124,10 @@ int32_t CloudSyncServiceStub::HandleNotifyDataChange(MessageParcel &data, Messag
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
     }
     string accountId = data.ReadString();
     string bundleName = data.ReadString();

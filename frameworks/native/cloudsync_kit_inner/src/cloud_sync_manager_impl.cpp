@@ -72,7 +72,9 @@ int32_t CloudSyncManagerImpl::ChangeAppSwitch(const std::string &accoutId, const
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    return CloudSyncServiceProxy->ChangeAppSwitch(accoutId, bundleName, status);
+    int32_t ret = CloudSyncServiceProxy->ChangeAppSwitch(accoutId, bundleName, status);
+    LOGI("ChangeAppSwitch ret %{public}d", ret);
+    return ret;
 }
 
 int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
@@ -82,7 +84,9 @@ int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, cons
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    return CloudSyncServiceProxy->NotifyDataChange(accoutId, bundleName);
+    int32_t ret = CloudSyncServiceProxy->NotifyDataChange(accoutId, bundleName);
+    LOGI("NotifyDataChange ret %{public}d", ret);
+    return ret;
 }
 
 void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)

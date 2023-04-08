@@ -30,7 +30,7 @@ bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionN
     auto tokenId = IPCSkeleton::GetCallingTokenID();
     auto uid = IPCSkeleton::GetCallingUid();
     auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if (((tokenType == TOKEN_HAP) && IsSystemApp()) || (tokenType == TOKEN_NATIVE)) {
+    if (tokenType == TOKEN_HAP || tokenType == TOKEN_NATIVE) {
         bool isGranted = CheckPermission(tokenId, permissionName);
         if (!isGranted) {
             LOGE("Token Type is %{public}d", tokenType);
@@ -98,8 +98,13 @@ int32_t DfsuAccessTokenHelper::GetPackageNameByToken(uint32_t tokenId, std::stri
 }
 bool DfsuAccessTokenHelper::IsSystemApp()
 {
-    uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-    return TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType == TOKEN_HAP) {
+        uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+        return TokenIdKit::IsSystemAppByFullTokenID(fullTokenId);
+    }
+    return true;
 }
 
 int32_t DfsuAccessTokenHelper::GetUserId()

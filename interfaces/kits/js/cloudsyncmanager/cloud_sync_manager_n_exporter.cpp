@@ -18,6 +18,8 @@
 #include <sys/types.h>
 
 #include "cloud_sync_manager.h"
+#include "dfs_error.h"
+
 namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
@@ -58,8 +60,8 @@ napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
 
     auto cbExec = [accoutIdStr, bundleNameStr, status]() -> NError {
         int32_t result = CloudSyncManager::GetInstance().ChangeAppSwitch(accoutIdStr, bundleNameStr, status);
-        if (result != 0) {
-            return NError(result);
+        if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
+            return result == E_PERMISSION_DENIED? NError(E_PERMISSION) : NError(E_PERMISSION_SYS);
         }
         return NError(ERRNO_NOERR);
     };
@@ -109,8 +111,8 @@ napi_value NotifyDataChange(napi_env env, napi_callback_info info)
 
     auto cbExec = [accoutIdStr, bundleNameStr]() -> NError {
         int32_t result = CloudSyncManager::GetInstance().NotifyDataChange(accoutIdStr, bundleNameStr);
-        if (result != 0) {
-            return NError(result);
+        if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
+            return result == E_PERMISSION_DENIED? NError(E_PERMISSION) : NError(E_PERMISSION_SYS);
         }
         return NError(ERRNO_NOERR);
     };

@@ -19,7 +19,10 @@ ohos_shared_library("cloudsyncmanager") {
     "cloud_sync_manager_n_exporter.cpp",
     "cloud_sync_manager_napi.cpp",
   ]
-  deps = [ "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner" ]
+  deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [ "file_api:filemgmt_libn" ]
 
