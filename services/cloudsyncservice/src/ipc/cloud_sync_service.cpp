@@ -51,7 +51,6 @@ void CloudSyncService::Init()
     NetworkStatus::InitNetwork();
     /* Get Init Charging status */
     BatteryStatus::GetInitChargingStatus();
-    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
 }
 
 void CloudSyncService::OnStart()
@@ -60,6 +59,7 @@ void CloudSyncService::OnStart()
     LOGI("Begin to start service");
     try {
         PublishSA();
+        AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
