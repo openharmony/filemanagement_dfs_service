@@ -17,7 +17,7 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
-bool CloudStatus::IsCloudStatusOkay(const std::string appPackageName)
+bool CloudStatus::IsCloudStatusOkay(const std::string bundleName)
 {
     return true;
 }

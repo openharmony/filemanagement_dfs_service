@@ -25,7 +25,7 @@ namespace FileManagement {
 namespace CloudSync {
 using namespace std;
 
-SdkHelper::SdkHelper(int32_t userId, string appPackageName)
+SdkHelper::SdkHelper(const int32_t userId, const std::string bundleName)
 {
     auto driveKit = DriveKit::DriveKit::getInstance(userId);
     if (driveKit == nullptr) {
@@ -33,7 +33,7 @@ SdkHelper::SdkHelper(int32_t userId, string appPackageName)
         return;
     }
 
-    auto container = driveKit->GetDefaultContainer(appPackageName);
+    auto container = driveKit->GetDefaultContainer(bundleName);
     if (container == nullptr) {
         LOGE("sdk helper get drive kit container fail");
         return;

@@ -28,7 +28,7 @@ namespace CloudSync {
 
 class SdkHelper {
 public:
-    SdkHelper(int32_t userId, std::string appPackageName);
+    SdkHelper(const int32_t userId, const std::string bundleName);
     ~SdkHelper() = default;
 
     /* record download */

@@ -21,7 +21,7 @@
 namespace OHOS::FileManagement::CloudSync {
 class CloudStatus {
 public:
-    static bool IsCloudStatusOkay(const std::string appPackageName);
+    static bool IsCloudStatusOkay(const std::string bundleName);
 private:
 };
 } // namespace OHOS::FileManagement::CloudSync
