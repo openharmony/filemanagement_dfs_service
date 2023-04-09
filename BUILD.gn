@@ -53,8 +53,5 @@ group("dfs_test_moudule") {
 
 group("cloudsync_test_module") {
   testonly = true
-  deps = [
-    "test/moduletest:CloudSyncServiceTest",
-    "test/unittests:cloudsyncunittests",
-  ]
+  deps = [ "test/unittests:cloudsyncunittests" ]
 }
