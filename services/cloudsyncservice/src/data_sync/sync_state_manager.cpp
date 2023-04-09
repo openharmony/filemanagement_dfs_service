@@ -60,7 +60,6 @@ void SyncStateManager::SetStopSyncFlag()
 
 SyncState SyncStateManager::GetSyncState() const
 {
-    std::unique_lock<std::shared_mutex> lck(syncMutex_);
     return state_;
 }
 
