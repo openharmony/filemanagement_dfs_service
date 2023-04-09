@@ -26,21 +26,21 @@ CloudSyncCallbackManager &CloudSyncCallbackManager::GetInstance()
     return instance;
 }
 
-void CloudSyncCallbackManager::AddCallback(const std::string &appPackageName,
+void CloudSyncCallbackManager::AddCallback(const std::string &bundleName,
                                            const int32_t userId,
                                            const sptr<ICloudSyncCallback> &callback)
 {
 }
 
-void CloudSyncCallbackManager::SetDeathRecipient(const std::string &appPackageName, CallbackInfo &cbInfo) {}
+void CloudSyncCallbackManager::SetDeathRecipient(const std::string &bundleName, CallbackInfo &cbInfo) {}
 
-sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::string &appPackageName,
+sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::string &bundleName,
                                                                     const int32_t userId)
 {
     return nullptr;
 }
 
-void CloudSyncCallbackManager::NotifySyncStateChanged(const std::string &appPackageName,
+void CloudSyncCallbackManager::NotifySyncStateChanged(const std::string &bundleName,
                                                       const int32_t userId,
                                                       const SyncType type,
                                                       const SyncPromptState state)

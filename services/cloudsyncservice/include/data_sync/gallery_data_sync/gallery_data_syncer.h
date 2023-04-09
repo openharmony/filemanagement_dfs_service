@@ -27,7 +27,7 @@ namespace FileManagement {
 namespace CloudSync {
 class GalleryDataSyncer : public DataSyncer, std::enable_shared_from_this<GalleryDataSyncer> {
 public:
-    GalleryDataSyncer(const std::string appPackageName, const int32_t userId);
+    GalleryDataSyncer(const std::string bundleName, const int32_t userId);
     virtual ~GalleryDataSyncer() = default;
 
     virtual void Schedule() override;

@@ -30,15 +30,15 @@ public:
         int32_t callerUserId_;
     };
 
-    void AddCallback(const std::string &appPackageName, const int32_t userId, const sptr<ICloudSyncCallback> &callback);
-    void NotifySyncStateChanged(const std::string &appPackageName,
+    void AddCallback(const std::string &bundleName, const int32_t userId, const sptr<ICloudSyncCallback> &callback);
+    void NotifySyncStateChanged(const std::string &bundleName,
                                 const int32_t userId,
                                 const SyncType type,
                                 const SyncPromptState state);
 
 private:
-    void SetDeathRecipient(const std::string &appPackageName, CallbackInfo &cbInfo);
-    sptr<ICloudSyncCallback> GetCallbackProxy(const std::string &appPackageName, const int32_t userId);
+    void SetDeathRecipient(const std::string &bundleName, CallbackInfo &cbInfo);
+    sptr<ICloudSyncCallback> GetCallbackProxy(const std::string &bundleName, const int32_t userId);
 
     SafeMap<const std::string, CallbackInfo> callbackListMap_;
 };

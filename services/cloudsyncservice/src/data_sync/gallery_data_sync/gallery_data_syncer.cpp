@@ -23,8 +23,8 @@ namespace FileManagement {
 namespace CloudSync {
 using namespace std;
 
-GalleryDataSyncer::GalleryDataSyncer(const std::string appPackageName, const int32_t userId)
-    : DataSyncer(appPackageName, userId)
+GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t userId)
+    : DataSyncer(bundleName, userId)
 {
     /* rdb config */
     NativeRdb::RdbStoreConfig config(DATABASE_NAME);
