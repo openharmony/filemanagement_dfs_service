@@ -34,7 +34,7 @@ REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVIC
 CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
 {
     dataSyncManager_ = make_shared<DataSyncManager>();
-    batteryStatusListener_ = make_unique<BatteryStatusListener>(dataSyncManager_);
+    batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
 }
 
 void CloudSyncService::PublishSA()
