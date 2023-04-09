@@ -45,7 +45,7 @@ private:
     void Init();
 
     std::shared_ptr<DataSyncManager> dataSyncManager_;
-    std::unique_ptr<BatteryStatusListener> batteryStatusListener_;
+    std::shared_ptr<BatteryStatusListener> batteryStatusListener_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
