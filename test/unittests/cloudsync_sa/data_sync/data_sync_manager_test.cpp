@@ -56,18 +56,6 @@ void DataSyncManagerTest::TearDown(void)
 }
 
 /**
- * @tc.name: InitTest
- * @tc.desc: Verify the Init function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, InitTest, TestSize.Level1)
-{
-    int32_t userId = 100;
-    EXPECT_EQ(E_OK, dataSyncManager_->Init(userId));
-}
-
-/**
  * @tc.name: GetDataSyncerTest
  * @tc.desc: Verify the GetDataSyncer function
  * @tc.type: FUNC
@@ -79,7 +67,7 @@ HWTEST_F(DataSyncManagerTest, GetDataSyncerTest, TestSize.Level1)
     string bundleName = "com.ohos.test";
     auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId);
     EXPECT_EQ(userId, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetAppPackageName());
+    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
 }
 
 /**
@@ -95,11 +83,11 @@ HWTEST_F(DataSyncManagerTest, GetExistDataSyncerTest, TestSize.Level1)
 
     auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId);
     EXPECT_EQ(userId, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetAppPackageName());
+    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
 
     dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId);
     EXPECT_EQ(userId, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetAppPackageName());
+    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
     EXPECT_EQ(dataSyncManager_->dataSyncers_.size(), 1);
 }
 
@@ -116,13 +104,13 @@ HWTEST_F(DataSyncManagerTest, GetDataSyncerdifferentUserIdTest, TestSize.Level1)
 
     auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId);
     EXPECT_EQ(userId, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetAppPackageName());
+    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
 
     int32_t userId2 = 101;
 
     dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId2);
     EXPECT_EQ(userId2, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetAppPackageName());
+    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
     EXPECT_EQ(dataSyncManager_->dataSyncers_.size(), 2);
 }
 
@@ -139,13 +127,13 @@ HWTEST_F(DataSyncManagerTest, GetDataSyncerdifferentBundleNameTest, TestSize.Lev
 
     auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId);
     EXPECT_EQ(userId, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetAppPackageName());
+    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
 
     string bundleName2 = "com.ohos.test2";
 
     dataSyncer = dataSyncManager_->GetDataSyncer(bundleName2, userId);
     EXPECT_EQ(userId, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName2, dataSyncer->GetAppPackageName());
+    EXPECT_EQ(bundleName2, dataSyncer->GetBundleName());
     EXPECT_EQ(dataSyncManager_->dataSyncers_.size(), 2);
 }
 

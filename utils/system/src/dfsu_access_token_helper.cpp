@@ -55,13 +55,13 @@ bool DfsuAccessTokenHelper::CheckPermission(uint32_t tokenId, const std::string 
     return true;
 }
 
-int32_t DfsuAccessTokenHelper::GetCallerPackageName(std::string &packageName)
+int32_t DfsuAccessTokenHelper::GetCallerBundleName(std::string &bundleName)
 {
     auto tokenId = IPCSkeleton::GetCallingTokenID();
-    return GetPackageNameByToken(tokenId, packageName);
+    return GetBundleNameByToken(tokenId, bundleName);
 }
 
-int32_t DfsuAccessTokenHelper::GetPackageNameByToken(uint32_t tokenId, std::string &packageName)
+int32_t DfsuAccessTokenHelper::GetBundleNameByToken(uint32_t tokenId, std::string &bundleName)
 {
     int32_t tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
     switch (tokenType) {
@@ -71,7 +71,7 @@ int32_t DfsuAccessTokenHelper::GetPackageNameByToken(uint32_t tokenId, std::stri
                 LOGE("get hap token info fail");
                 return E_GET_TOKEN_INFO_ERROR;
             }
-            packageName = hapInfo.bundleName;
+            bundleName = hapInfo.bundleName;
             break;
         }
         case TOKEN_NATIVE:
@@ -82,7 +82,7 @@ int32_t DfsuAccessTokenHelper::GetPackageNameByToken(uint32_t tokenId, std::stri
                 LOGE("get native token info fail");
                 return E_GET_TOKEN_INFO_ERROR;
             }
-            packageName = tokenInfo.processName;
+            bundleName = tokenInfo.processName;
             break;
         }
         default: {
@@ -90,7 +90,7 @@ int32_t DfsuAccessTokenHelper::GetPackageNameByToken(uint32_t tokenId, std::stri
             return E_GET_TOKEN_INFO_ERROR;
         }
     }
-    if (packageName.empty()) {
+    if (bundleName.empty()) {
         LOGE("package name is empty");
         return E_INVAL_ARG;
     }

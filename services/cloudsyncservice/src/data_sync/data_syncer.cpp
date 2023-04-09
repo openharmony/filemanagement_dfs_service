@@ -30,8 +30,8 @@ using namespace std;
 using namespace placeholders;
 using namespace DriveKit;
 
-DataSyncer::DataSyncer(const std::string appPackageName, const int32_t userId)
-    : appPackageName_(appPackageName), userId_(userId), sdkHelper_(userId, appPackageName)
+DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
+    : bundleName_(bundleName), userId_(userId), sdkHelper_(userId, bundleName)
 {
     taskManager_ = make_shared<TaskManager>(bind(&DataSyncer::Schedule, this));
     if (taskManager_ == nullptr) {
@@ -95,7 +95,7 @@ function<RET(ARGS...)> DataSyncer::AsyncCallback(RET(T::*f)(ARGS...))
 int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
 {
     LOGI("%{private}d %{public}s starts sync, isforceSync %{public}d, triggerType %{public}d",
-        userId_, appPackageName_.c_str(), forceFlag, triggerType);
+        userId_, bundleName_.c_str(), forceFlag, triggerType);
 
     /* only one specific data sycner running at a time */
     if (syncStateManager_.CheckAndSetPending(forceFlag)) {
@@ -115,7 +115,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
 int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 {
     LOGI("%{private}d %{public}s stops sync, trigger stop sync, type:%{public}d",
-        userId_, appPackageName_.c_str(), triggerType);
+        userId_, bundleName_.c_str(), triggerType);
 
     syncStateManager_.SetStopSyncFlag();
     Abort();
@@ -125,7 +125,7 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 
 void DataSyncer::Abort()
 {
-    LOGI("%{private}d %{private}s aborts", userId_, appPackageName_.c_str());
+    LOGI("%{private}d %{private}s aborts", userId_, bundleName_.c_str());
 
     /* stop all the tasks and wait for tasks' termination */
     if (!taskManager_->StopAndWaitFor()) {
@@ -137,7 +137,7 @@ void DataSyncer::Abort()
 
 int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
 {
-    LOGI("%{private}d %{private}s pull", userId_, appPackageName_.c_str());
+    LOGI("%{private}d %{private}s pull", userId_, bundleName_.c_str());
 
     shared_ptr<TaskContext> context = make_shared<TaskContext>(handler);
     if (context == nullptr) {
@@ -161,7 +161,7 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
  */
 void DataSyncer::PullRecords(shared_ptr<TaskContext> context)
 {
-    LOGI("%{private}d %{private}s pull records", userId_, appPackageName_.c_str());
+    LOGI("%{private}d %{private}s pull records", userId_, bundleName_.c_str());
 
     /* get query condition here */
     auto callback = AsyncCallback(&DataSyncer::OnFetchRecords);
@@ -178,7 +178,7 @@ void DataSyncer::PullRecords(shared_ptr<TaskContext> context)
 void DataSyncer::OnFetchRecords(const shared_ptr<DKContext> context,
     const shared_ptr<vector<DKRecord>> records)
 {
-    LOGI("%{private}d %{private}s on fetch records", userId_, appPackageName_.c_str());
+    LOGI("%{private}d %{private}s on fetch records", userId_, bundleName_.c_str());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
 
@@ -252,7 +252,7 @@ int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)
 
 void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
 {
-    LOGI("%{private}d %{private}s creates records", userId_, appPackageName_.c_str());
+    LOGI("%{private}d %{private}s creates records", userId_, bundleName_.c_str());
 
     auto handler = context->GetHandler();
     if (handler == nullptr) {
@@ -273,6 +273,12 @@ void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
         return;
     }
 
+    if (!BatteryStatus::IsAllowUpload(syncStateManager_.GetForceFlag())) {
+        LOGE("battery status abnormal, abort upload");
+        errorCode_ = E_SYNC_FAILED_BATTERY_LOW;
+        return;
+    }
+
     /* upload */
     auto callback = AsyncCallback(&DataSyncer::OnCreateRecords);
     if (callback == nullptr) {
@@ -288,7 +294,7 @@ void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
 
 void DataSyncer::DeleteRecords(shared_ptr<TaskContext> context)
 {
-    LOGI("%{private}d %{private}s deletes records", userId_, appPackageName_.c_str());
+    LOGI("%{private}d %{private}s deletes records", userId_, bundleName_.c_str());
 
     auto handler = context->GetHandler();
     if (handler == nullptr) {
@@ -323,7 +329,7 @@ void DataSyncer::DeleteRecords(shared_ptr<TaskContext> context)
 
 void DataSyncer::ModifyRecords(shared_ptr<TaskContext> context)
 {
-    LOGI("%{private}d %{private}s modifies records", userId_, appPackageName_.c_str());
+    LOGI("%{private}d %{private}s modifies records", userId_, bundleName_.c_str());
 
     auto handler = context->GetHandler();
     if (handler == nullptr) {
@@ -361,7 +367,7 @@ void DataSyncer::OnCreateRecords(shared_ptr<DKContext> context,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> map, const DKError &err)
 {
     LOGI("%{private}d %{private}s on create records %{public}zu", userId_,
-        appPackageName_.c_str(), map->size());
+        bundleName_.c_str(), map->size());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
 
@@ -386,7 +392,7 @@ void DataSyncer::OnDeleteRecords(shared_ptr<DKContext> context,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> map, const DKError &err)
 {
     LOGI("%{private}d %{private}s on create records %{public}zu", userId_,
-        appPackageName_.c_str(), map->size());
+        bundleName_.c_str(), map->size());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
 
@@ -411,7 +417,7 @@ void DataSyncer::OnModifyRecords(shared_ptr<DKContext> context,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> map, const DKError &err)
 {
     LOGI("%{private}d %{private}s on create records %{public}zu", userId_,
-        appPackageName_.c_str(), map->size());
+        bundleName_.c_str(), map->size());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
 
@@ -461,9 +467,9 @@ void DataSyncer::EndTransaction()
     taskManager_->CompleteDummyTask();
 }
 
-std::string DataSyncer::GetAppPackageName() const
+std::string DataSyncer::GetBundleName() const
 {
-    return appPackageName_;
+    return bundleName_;
 }
 
 int32_t DataSyncer::GetUserId() const
@@ -471,21 +477,30 @@ int32_t DataSyncer::GetUserId() const
     return userId_;
 }
 
+SyncState DataSyncer::GetSyncState() const
+{
+    return syncStateManager_.GetSyncState();
+}
+
 void DataSyncer::CompletePull()
 {
-    LOGI("%{private}d %{private}s completes pull", userId_, appPackageName_.c_str());
+    LOGI("%{private}d %{private}s completes pull", userId_, bundleName_.c_str());
     /* call syncer manager callback */
 }
 
 void DataSyncer::CompletePush()
 {
-    LOGI("%{private}d %{public}s completes push", userId_, appPackageName_.c_str());
+    LOGI("%{private}d %{public}s completes push", userId_, bundleName_.c_str());
     /* call syncer manager callback */
 }
 
-void DataSyncer::CompleteAll(const int32_t code, const SyncType type)
+void DataSyncer::CompleteAll(int32_t code, const SyncType type)
 {
-    LOGI("%{private}d %{private}s completes all", userId_, appPackageName_.c_str());
+    LOGI("%{private}d %{private}s completes all", userId_, bundleName_.c_str());
+
+    if (errorCode_ == E_SYNC_FAILED_BATTERY_LOW) {
+        code = errorCode_;
+    }
 
     SyncState syncState;
     if (code == E_OK) {
@@ -507,16 +522,16 @@ void DataSyncer::CompleteAll(const int32_t code, const SyncType type)
     auto state = GetSyncPromptState(code);
     if (code == E_OK) {
         CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(
-            appPackageName_, userId_, SyncType::ALL, state);
+            bundleName_, userId_, SyncType::ALL, state);
     } else {
         CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(
-            appPackageName_, userId_, type, state);
+            bundleName_, userId_, type, state);
     }
 }
 
 void DataSyncer::SyncStateChangedNotify(const SyncType type, const SyncPromptState state)
 {
-    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(appPackageName_,
+    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(bundleName_,
         userId_, SyncType::ALL, state);
 }
 

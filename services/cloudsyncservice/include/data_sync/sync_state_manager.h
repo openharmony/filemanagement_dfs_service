@@ -39,11 +39,14 @@ public:
     bool CheckAndSetPending(bool forceFlag);
     bool GetStopSyncFlag();
     void SetStopSyncFlag();
+    SyncState GetSyncState() const;
+    bool GetForceFlag() const;
 
 private:
     mutable std::shared_mutex syncMutex_;
     SyncState state_{SyncState::INIT};
     Action nextAction_{Action::STOP};
+    std::atomic_bool isForceSync_{false};
     std::atomic_bool stopSyncFlag_{false};
 };
 

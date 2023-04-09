@@ -20,15 +20,19 @@ constexpr int32_t PAUSE_CAPACITY_LIMIT = 15;
 constexpr int32_t STOP_CAPACITY_LIMIT = 10;
 constexpr int32_t DEFAULT_BATTERY_CAPCITY = 100;
 
-bool BatteryStatus::IsCharingStatus()
+
+void BatteryStatus::SetChargingStatus(bool status)
 {
-    bool ret = true;
+    isCharging_ = status;
+}
+
+void BatteryStatus::GetInitChargingStatus()
+{
 #ifdef SUPPORT_POWER
     auto &batterySrvClient = PowerMgr::BatterySrvClient::GetInstance();
     auto chargingStatus = batterySrvClient.GetChargingStatus();
-    ret = (chargingStatus == PowerMgr::BatteryChargeState::CHARGE_STATE_ENABLE);
+    isCharging_ = (chargingStatus == PowerMgr::BatteryChargeState::CHARGE_STATE_ENABLE);
 #endif
-    return ret;
 }
 
 int32_t BatteryStatus::GetCapacity()
@@ -43,7 +47,7 @@ int32_t BatteryStatus::GetCapacity()
 
 bool BatteryStatus::IsAllowUpload(bool forceFlag)
 {
-    if (IsCharingStatus()) {
+    if (isCharging_) {
         return true;
     }
 
@@ -68,7 +72,7 @@ bool BatteryStatus::IsAllowUpload(bool forceFlag)
 
 bool BatteryStatus::IsBatteryCapcityOkay()
 {
-    if (IsCharingStatus()) {
+    if (isCharging_) {
         return true;
     }
 
