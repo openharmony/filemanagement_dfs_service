@@ -15,6 +15,7 @@
 
 #include "data_sync/data_sync_manager.h"
 
+#include <thread>
 #include <vector>
 
 #include "gallery_data_syncer.h"
@@ -27,28 +28,90 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
-int32_t DataSyncManager::Init(const int32_t userId)
+int32_t DataSyncManager::TriggerStartSync(const std::string bundleName,
+                                          const int32_t userId,
+                                          bool forceFlag,
+                                          SyncTriggerType triggerType)
 {
+    LOGI("trigger sync, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
+    auto ret = IsSkipSync(bundleName, userId);
+    if (ret != E_OK) {
+        return ret;
+    }
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+        return E_SYNCER_NUM_OUT_OF_RANGE;
+    }
+    std::thread([dataSyncer, forceFlag, triggerType]() { dataSyncer->StartSync(forceFlag, triggerType); }).detach();
     return E_OK;
 }
 
-std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string appPackageName, const int32_t userId)
+int32_t DataSyncManager::TriggerStopSync(const std::string bundleName,
+                                         const int32_t userId,
+                                         SyncTriggerType triggerType)
+{
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+        return E_SYNCER_NUM_OUT_OF_RANGE;
+    }
+    std::thread([dataSyncer, triggerType]() { dataSyncer->StopSync(triggerType); }).detach();
+    return E_OK;
+}
+
+int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
+{
+    std::vector<std::string> needSyncApps;
+    {
+        std::lock_guard<std::mutex> lck(dataSyncMutex_);
+        if (currentUserId_ == INVALID_USER_ID) {
+            LOGE("useId is invalid");
+            return E_INVAL_ARG;
+        }
+
+        for (auto dataSyncer : dataSyncers_) {
+            if ((dataSyncer->GetUserId() == currentUserId_) &&
+                (dataSyncer->GetSyncState() == SyncState::SYNC_FAILED)) {
+                auto bundleName = dataSyncer->GetBundleName();
+                needSyncApps.push_back(bundleName);
+            }
+        }
+    }
+
+    if (needSyncApps.size() == 0) {
+        LOGI("not need to trigger sync");
+        return E_OK;
+    }
+
+    int32_t ret = E_OK;
+    for (auto app : needSyncApps) {
+        ret = TriggerStartSync(app, currentUserId_, false, triggerType);
+        if (ret) {
+            LOGE("trigger sync failed, ret = %{public}d, bundleName = %{public}s", ret, app.c_str());
+        }
+    }
+    return E_OK;
+}
+
+std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string bundleName, const int32_t userId)
 {
     std::lock_guard<std::mutex> lck(dataSyncMutex_);
+    currentUserId_ = userId;
     for (auto dataSyncer : dataSyncers_) {
-        if ((dataSyncer->GetAppPackageName() == appPackageName) && (dataSyncer->GetUserId() == userId)) {
+        if ((dataSyncer->GetBundleName() == bundleName) && (dataSyncer->GetUserId() == userId)) {
             return dataSyncer;
         }
     }
 
-    std::shared_ptr<DataSyncer> dataSyncer_ = std::make_shared<GalleryDataSyncer>(appPackageName, userId);
+    std::shared_ptr<DataSyncer> dataSyncer_ = std::make_shared<GalleryDataSyncer>(bundleName, userId);
     dataSyncers_.push_back(dataSyncer_);
     return dataSyncer_;
 }
 
-int32_t DataSyncManager::IsSkipSync(const std::string appPackageName, const int32_t userId) const
+int32_t DataSyncManager::IsSkipSync(const std::string bundleName, const int32_t userId) const
 {
-    if (!CloudStatus::IsCloudStatusOkay(appPackageName)) {
+    if (!CloudStatus::IsCloudStatusOkay(bundleName)) {
         LOGE("cloud status is not OK");
         return E_SYNC_FAILED_CLOUD_NOT_READY;
     }

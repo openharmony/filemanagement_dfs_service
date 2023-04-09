@@ -34,6 +34,7 @@ bool SyncStateManager::CheckAndSetPending(bool forceFlag)
     if (state_ != SyncState::SYNCING) {
         state_ = SyncState::SYNCING;
         nextAction_ = Action::STOP;
+        isForceSync_ = forceFlag;
         return false;
     }
 
@@ -55,5 +56,15 @@ void SyncStateManager::SetStopSyncFlag()
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
     nextAction_ = Action::STOP;
     stopSyncFlag_ = true;
+}
+
+SyncState SyncStateManager::GetSyncState() const
+{
+    return state_;
+}
+
+bool SyncStateManager::GetForceFlag() const
+{
+    return isForceSync_;
 }
 } // namespace OHOS::FileManagement::CloudSync

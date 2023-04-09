@@ -21,14 +21,14 @@
 #include "i_cloud_sync_callback.h"
 #include "nocopyable.h"
 #include "system_ability.h"
-#include "data_sync/data_sync_manager.h"
+#include "sync_rule/battery_status_listener.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncService final : public SystemAbility, public CloudSyncServiceStub, protected NoCopyable {
     DECLARE_SYSTEM_ABILITY(CloudSyncService);
 
 public:
-    explicit CloudSyncService(int32_t saID, bool runOnCreate = true) : SystemAbility(saID, runOnCreate) {}
+    explicit CloudSyncService(int32_t saID, bool runOnCreate = true);
     virtual ~CloudSyncService() = default;
 
     int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) override;
@@ -41,11 +41,11 @@ private:
     void OnStart() override;
     void OnStop() override;
     void PublishSA();
+    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     void Init();
-    int32_t StartSync(const std::string &bundleName, bool forceFlag, SyncTriggerType triggerType);
-    int32_t StopSync(const std::string &bundleName, SyncTriggerType triggerType);
 
-    DataSyncManager dataSyncManager_;
+    std::shared_ptr<DataSyncManager> dataSyncManager_;
+    std::unique_ptr<BatteryStatusListener> batteryStatusListener_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

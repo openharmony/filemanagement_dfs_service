@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_BATTERY_STATUS_H
 
 #include <cstdint>
+#include <atomic>
 
 #ifdef SUPPORT_POWER
 #include "battery_info.h"
@@ -34,11 +35,13 @@ public:
     static bool IsAllowUpload(bool forceFlag);
     static bool IsBatteryCapcityOkay();
     static CapacityLevel GetCapacityLevel();
+    static void GetInitChargingStatus();
+    static void SetChargingStatus(bool status);
 
 private:
-    static bool IsCharingStatus();
     static int32_t GetCapacity();
     static inline CapacityLevel level_{LEVEL_NORMAL};
+    static inline std::atomic_bool isCharging_{false};
 };
 } // namespace OHOS::FileManagement::CloudSync
 

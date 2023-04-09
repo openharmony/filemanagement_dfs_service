@@ -14,21 +14,28 @@
  */
 #include "ipc/cloud_sync_service.h"
 
-#include <thread>
+#include <memory>
 
-#include "ipc/cloud_sync_callback_manager.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
-#include "system_ability_definition.h"
-#include "utils_log.h"
+#include "ipc/cloud_sync_callback_manager.h"
+#include "sync_rule/battery_status.h"
 #include "sync_rule/net_conn_callback_observer.h"
 #include "sync_rule/network_status.h"
+#include "system_ability_definition.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 using namespace OHOS;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
+
+CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
+{
+    dataSyncManager_ = make_shared<DataSyncManager>();
+    batteryStatusListener_ = make_unique<BatteryStatusListener>(dataSyncManager_);
+}
 
 void CloudSyncService::PublishSA()
 {
@@ -42,6 +49,9 @@ void CloudSyncService::PublishSA()
 void CloudSyncService::Init()
 {
     NetworkStatus::InitNetwork();
+    /* Get Init Charging status */
+    BatteryStatus::GetInitChargingStatus();
+    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
 }
 
 void CloudSyncService::OnStart()
@@ -61,6 +71,12 @@ void CloudSyncService::OnStop()
     LOGI("Stop finished successfully");
 }
 
+void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
+{
+    LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
+    batteryStatusListener_->Start();
+}
+
 int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject)
 {
     if (remoteObject == nullptr) {
@@ -68,81 +84,49 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
         return E_INVAL_ARG;
     }
 
-    string appPackageName;
-    if (DfsuAccessTokenHelper::GetCallerPackageName(appPackageName)) {
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
         return E_INVAL_ARG;
     }
 
     auto callback = iface_cast<ICloudSyncCallback>(remoteObject);
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    CloudSyncCallbackManager::GetInstance().AddCallback(appPackageName, callerUserId, callback);
+    CloudSyncCallbackManager::GetInstance().AddCallback(bundleName, callerUserId, callback);
     return E_OK;
 }
 
 int32_t CloudSyncService::StartSyncInner(bool forceFlag)
 {
-    string appPackageName;
-    if (DfsuAccessTokenHelper::GetCallerPackageName(appPackageName)) {
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
         return E_INVAL_ARG;
     }
-    return StartSync(appPackageName, forceFlag, SyncTriggerType::APP_TRIGGER);
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
 }
 
 int32_t CloudSyncService::StopSyncInner()
 {
-    string appPackageName;
-    if (DfsuAccessTokenHelper::GetCallerPackageName(appPackageName)) {
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
         return E_INVAL_ARG;
     }
-    return StopSync(appPackageName, SyncTriggerType::APP_TRIGGER);
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::APP_TRIGGER);
 }
 
 int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
 {
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     if (status) {
-        return StartSync(bundleName, false, SyncTriggerType::CLOUD_TRIGGER);
+        return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     }
-    return StopSync(bundleName, SyncTriggerType::CLOUD_TRIGGER);
+    return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
 }
 
 int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
 {
-    return StartSync(bundleName, false, SyncTriggerType::CLOUD_TRIGGER);
-}
-
-int32_t CloudSyncService::StartSync(const std::string &bundleName, bool forceFlag, SyncTriggerType triggerType)
-{
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    auto ret = dataSyncManager_.Init(callerUserId);
-    if (ret != E_OK) {
-        return ret;
-    }
-    ret = dataSyncManager_.IsSkipSync(bundleName, callerUserId);
-    if (ret != E_OK) {
-        return ret;
-    }
-    auto dataSyncer = dataSyncManager_.GetDataSyncer(bundleName, callerUserId);
-    if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, appPackageName: %{private}s", bundleName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
-    }
-    std::thread([dataSyncerSptr{dataSyncer}, forceFlag, triggerType]() {
-        dataSyncerSptr->StartSync(forceFlag, triggerType);
-    }).detach();
-    return E_OK;
-}
-
-int32_t CloudSyncService::StopSync(const std::string &bundleName, SyncTriggerType triggerType)
-{
-    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    auto dataSyncer = dataSyncManager_.GetDataSyncer(bundleName, callerUserId);
-    if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, appPackageName: %{private}s", bundleName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
-    }
-    std::thread([dataSyncerSptr{dataSyncer}, triggerType]() {
-        dataSyncerSptr->StopSync(triggerType);
-    }).detach();
-    return E_OK;
+    return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
 }
 } // namespace OHOS::FileManagement::CloudSync

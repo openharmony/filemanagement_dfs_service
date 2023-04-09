@@ -17,9 +17,12 @@
 namespace OHOS::FileManagement::CloudSync {
 constexpr int32_t DEFAULT_BATTERY_CAPCITY = 100;
 
-bool BatteryStatus::IsCharingStatus()
+void BatteryStatus::SetChargingStatus(bool status)
 {
-    return true;
+}
+
+void BatteryStatus::GetInitChargingStatus()
+{
 }
 
 int32_t BatteryStatus::GetCapacity()

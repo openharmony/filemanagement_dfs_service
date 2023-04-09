@@ -34,11 +34,12 @@ enum class SyncTriggerType : int32_t {
     APP_TRIGGER,
     CLOUD_TRIGGER,
     PENDING_TRIGGER,
+    BATTERY_OK_TRIGGER,
 };
 
 class DataSyncer {
 public:
-    DataSyncer(const std::string appPackageName, const int32_t userId);
+    DataSyncer(const std::string bundleName, const int32_t userId);
     virtual ~DataSyncer() = default;
 
     /* sync */
@@ -46,8 +47,9 @@ public:
     virtual int32_t StopSync(SyncTriggerType triggerType);
 
     /* properties */
-    std::string GetAppPackageName() const;
+    std::string GetBundleName() const;
     int32_t GetUserId() const;
+    SyncState GetSyncState() const;
 
 protected:
     /* download */
@@ -63,7 +65,7 @@ protected:
     /* notify */
     void CompletePull();
     void CompletePush();
-    void CompleteAll(const int32_t code, const SyncType type);
+    void CompleteAll(int32_t code, const SyncType type);
 
     void SyncStateChangedNotify(const SyncType type, const SyncPromptState state);
 
@@ -113,7 +115,7 @@ private:
     SyncPromptState GetSyncPromptState(const int32_t code);
 
     /* identifier */
-    const std::string appPackageName_;
+    const std::string bundleName_;
     const int32_t userId_;
 
     /* state management */
@@ -124,6 +126,8 @@ private:
 
     /* sdk */
     SdkHelper sdkHelper_;
+
+    int32_t errorCode_{0};
 };
 } // namespace CloudSync
 } // namespace FileManagement
