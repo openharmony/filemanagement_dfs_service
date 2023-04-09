@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include "cloud_sync_service_stub.h"
-#include "service_callback_mock.h"
 #include "i_cloud_sync_service.h"
+#include "service_callback_mock.h"
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -80,13 +80,13 @@ HWTEST_F(CloudSyncServiceStubTest, HandleRegisterCallbackInnerTest, TestSize.Lev
         MessageParcel reply;
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
-        
+
         sptr<CloudSyncCallbackMock> remote = sptr(new CloudSyncCallbackMock());
         EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_REGISTER_CALLBACK, data, reply, option));
         remote = nullptr;
-    } catch(...) {
+    } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleRegisterCallbackInner ERROR";
     }
@@ -109,12 +109,12 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartSyncInnerTest, TestSize.Level1)
         MessageParcel reply;
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
-        
+
         bool forceFlag = true;
         EXPECT_TRUE(data.WriteBool(forceFlag));
-        
+
         EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_START_SYNC, data, reply, option));
-    } catch(...) {
+    } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleStartSyncInner ERROR";
     }
@@ -139,7 +139,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopSyncInnerTest, TestSize.Level1)
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_STOP_SYNC, data, reply, option));
-    } catch(...) {
+    } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleStopSyncInner ERROR";
     }
@@ -147,5 +147,5 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopSyncInnerTest, TestSize.Level1)
 }
 
 } // namespace Test
-} // namespace FileManagement::CloudSync {
+} // namespace FileManagement::CloudSync
 } // namespace OHOS

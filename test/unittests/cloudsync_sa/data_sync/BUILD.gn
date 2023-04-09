@@ -21,6 +21,7 @@ ohos_unittest("data_sync_manager_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_sync_callback_manager_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
@@ -32,7 +33,6 @@ ohos_unittest("data_sync_manager_test") {
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
-    "${services_path}/cloudsyncservice/src/sync_rule/network_status.cpp",
     "data_sync_manager_test.cpp",
   ]
 

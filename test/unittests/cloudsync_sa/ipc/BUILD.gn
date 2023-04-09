@@ -47,16 +47,39 @@ ohos_unittest("cloud_sync_service_stub_test") {
 ohos_unittest("cloud_sync_service_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "cloud_sync_service_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_callback_manager.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_callback_proxy.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/net_conn_callback_observer.cpp",
+    "cloud_sync_service_test.cpp",
+  ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -66,7 +89,10 @@ ohos_unittest("cloud_sync_service_test") {
     "ability_base:want",
     "common_event_service:cesfwk_innerkits",
     "dfs_service:cloudsync_kit_inner",
+    "init:libbegetutil",
     "ipc:ipc_core",
+    "media_library:cloud_sync_header",
+    "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -80,7 +106,12 @@ ohos_unittest("cloud_sync_service_test") {
     external_deps += [ "drivekit_native:drivekit" ]
   }
 
-  defines = [ "private=public" ]
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+  ]
+
   use_exceptions = true
 }
 

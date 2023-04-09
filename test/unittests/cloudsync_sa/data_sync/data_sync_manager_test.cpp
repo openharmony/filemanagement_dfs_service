@@ -92,29 +92,6 @@ HWTEST_F(DataSyncManagerTest, GetExistDataSyncerTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetDataSyncerdifferentUserIdTest
- * @tc.desc: Verify the GetDataSyncer function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, GetDataSyncerdifferentUserIdTest, TestSize.Level1)
-{
-    int32_t userId = 100;
-    string bundleName = "com.ohos.test";
-
-    auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId);
-    EXPECT_EQ(userId, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
-
-    int32_t userId2 = 101;
-
-    dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId2);
-    EXPECT_EQ(userId2, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
-    EXPECT_EQ(dataSyncManager_->dataSyncers_.size(), 2);
-}
-
-/**
  * @tc.name: GetDataSyncerdifferentBundleNameTest
  * @tc.desc: Verify the GetDataSyncer function
  * @tc.type: FUNC

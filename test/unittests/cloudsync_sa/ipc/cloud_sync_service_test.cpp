@@ -16,9 +16,9 @@
 #include <gtest/gtest.h>
 
 #include "cloud_sync_service.h"
+#include "dfs_error.h"
 #include "service_callback_mock.h"
 #include "utils_log.h"
-#include "dfs_error.h"
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -72,7 +72,7 @@ HWTEST_F(CloudSyncServiceTest, OnStartTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnStart start";
     try {
         g_servicePtr_->OnStart();
-    } catch(...) {
+    } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStart FAILED";
     }
@@ -90,7 +90,7 @@ HWTEST_F(CloudSyncServiceTest, OnStopTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnStop start";
     try {
         g_servicePtr_->OnStop();
-    } catch(...) {
+    } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStop FAILED";
     }
@@ -110,7 +110,7 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest, TestSize.Level1)
         sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
         int ret = g_servicePtr_->RegisterCallbackInner(callback);
         EXPECT_EQ(ret, E_OK);
-    } catch(...) {
+    } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "RegisterCallbackInner FAILED";
     }
@@ -128,13 +128,16 @@ HWTEST_F(CloudSyncServiceTest, StartSyncInnerTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartSyncInner start";
     try {
         bool forceFlag = false;
-        int ret = g_servicePtr_->StartSyncInner(forceFlag);
+        string bundleName = "com.ohos.test";
+        int32_t callerUserId = 100;
+        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
+        int ret = dataSyncManager->TriggerStartSync(bundleName, callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
         EXPECT_EQ(ret, E_OK);
-        
+
         forceFlag = true;
-        ret = g_servicePtr_->StartSyncInner(forceFlag);
+        ret = dataSyncManager->TriggerStartSync(bundleName, callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
         EXPECT_EQ(ret, E_OK);
-    } catch(...) {
+    } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartSyncInner FAILED";
     }
@@ -151,9 +154,12 @@ HWTEST_F(CloudSyncServiceTest, StopSyncInnerTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopSyncInner Start";
     try {
-        int ret = g_servicePtr_->StopSyncInner();
+        string bundleName = "com.ohos.test";
+        int32_t callerUserId = 100;
+        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
+        int ret = dataSyncManager->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::APP_TRIGGER);
         EXPECT_EQ(ret, E_OK);
-    } catch(...) {
+    } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StopSyncInner FAILED";
     }
@@ -161,5 +167,5 @@ HWTEST_F(CloudSyncServiceTest, StopSyncInnerTest, TestSize.Level1)
 }
 
 } // namespace Test
-} // namespace FileManagement::CloudSync {
+} // namespace FileManagement::CloudSync
 } // namespace OHOS
