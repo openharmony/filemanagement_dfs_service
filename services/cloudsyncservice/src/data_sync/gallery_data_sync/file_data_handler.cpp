@@ -41,7 +41,7 @@ int32_t FileDataHandler::GetFetchCondition()
     return 0;
 }
 
-int32_t FileDataHandler::OnFetchRecords(const vector<DKRecord> &records)
+int32_t FileDataHandler::OnFetchRecords(const shared_ptr<const map<DKRecordId, DKRecord>> &map)
 {
     return 0;
 }

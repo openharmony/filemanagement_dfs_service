@@ -120,10 +120,6 @@ private:
     /* prompt state */
     SyncPromptState GetSyncPromptState(const int32_t code);
 
-    /* convert map to vector*/
-    template<typename K, typename V>
-    void ConvertMapToVector(std::shared_ptr<const std::map<K, V>> map, std::vector<V> &vec);
-
     /* identifier */
     const std::string bundleName_;
     const int32_t userId_;

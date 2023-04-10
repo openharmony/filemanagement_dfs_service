@@ -219,9 +219,8 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
         LOGE("context get handler err");
         return;
     }
-    std::vector<DKRecord> records;
-    ConvertMapToVector<DKRecordId, DKRecord>(map, records);
-    int32_t ret = handler->OnFetchRecords(records);
+
+    int32_t ret = handler->OnFetchRecords(map);
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
         return;
@@ -258,9 +257,8 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
         LOGE("context get handler err");
         return;
     }
-    std::vector<DKRecord> records;
-    ConvertMapToVector<DKRecordId, DKRecord>(map, records);
-    int32_t ret = handler->OnFetchRecords(records);
+
+    int32_t ret = handler->OnFetchRecords(map);
     if (ret != E_OK) {
         LOGE("handler on fetch database changes err %{public}d", ret);
         return;
@@ -280,15 +278,6 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
     if (ret != E_OK) {
         LOGE("asyn run pull database changes err %{public}d", ret);
     }
-}
-
-template<typename K, typename V>
-void DataSyncer::ConvertMapToVector(std::shared_ptr<const std::map<K, V>> map, std::vector<V> &vec)
-{
-    for (auto it = map->begin(); it != map->end(); it++) {
-        vec.push_back(it->second);
-    }
-    return;
 }
 
 int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)

@@ -28,7 +28,8 @@ public:
     virtual ~AlbumDataHandler() = default;
 
     /* download */
-    virtual int32_t OnFetchRecords(const std::vector<DriveKit::DKRecord> &records) override;
+    virtual int32_t OnFetchRecords(const std::shared_ptr<const std::map<DriveKit::DKRecordId,
+        DriveKit::DKRecord>> &map) override;
     virtual int32_t GetFetchCondition() override;
 
     /* upload */
