@@ -79,6 +79,8 @@ void GalleryDataSyncer::Schedule()
             break;
         }
         case END: {
+            /* reset stage in case one restarts a sync */
+            stage_ = BEGIN;
             ret = Complete();
             break;
         }
@@ -87,16 +89,6 @@ void GalleryDataSyncer::Schedule()
             LOGE("schedule fail %{public}d", ret);
             break;
         }
-    }
-
-    /* reset stage in case one restarts a sync */
-    if (stage_ == END) {
-        stage_ = BEGIN;
-    }
-
-    if (ret != E_OK) {
-        stage_ = BEGIN;
-        Abort();
     }
 }
 
