@@ -145,7 +145,13 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
         return E_MEMORY;
     }
 
-    int32_t ret = AsyncRun(context, &DataSyncer::PullRecords);
+    /* Full synchronization and incremental synchronization */
+    int32_t ret = E_OK;
+    if (startCursor_.empty()) {
+        ret = AsyncRun(context, &DataSyncer::PullRecords);
+    } else {
+        ret = AsyncRun(context, &DataSyncer::PullDatabaseChanges);
+    }
     if (ret != E_OK) {
         LOGE("asyn run pull records err %{public}d", ret);
         return ret;
@@ -169,23 +175,43 @@ void DataSyncer::PullRecords(shared_ptr<TaskContext> context)
         LOGE("wrap on fetch records fail");
         return;
     }
-    int32_t ret = sdkHelper_.FetchRecords(context, callback);
+
+    std::string tempStartCursor;
+    sdkHelper_.GetStartCursor(context, tempStartCursor);
+    // store the temp start cursor
+
+    int32_t ret = sdkHelper_.FetchRecords(context, nextCursor_, callback);
     if (ret != E_OK) {
         LOGE("sdk fetch records err %{public}d", ret);
     }
 }
 
-void DataSyncer::OnFetchRecords(const shared_ptr<DKContext> context,
-    const shared_ptr<vector<DKRecord>> records)
+void DataSyncer::PullDatabaseChanges(shared_ptr<TaskContext> context)
+{
+    LOGI("%{private}d %{private}s pull database changes", userId_, bundleName_.c_str());
+
+    auto callback = AsyncCallback(&DataSyncer::OnFetchDatabaseChanges);
+    if (callback == nullptr) {
+        LOGE("wrap on fetch records fail");
+        return;
+    }
+
+    /* If nextCursor is empty, it is the first batch of incremental synchronization. Begin with the startCursor_ */
+    if (nextCursor_.empty()) {
+        nextCursor_ = startCursor_;
+    }
+    int32_t ret = sdkHelper_.FetchDatabaseChanges(context, nextCursor_, callback);
+    if (ret != E_OK) {
+        LOGE("sdk fetch records err %{public}d", ret);
+    }
+}
+
+void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::shared_ptr<const DKDatabase> database,
+    std::shared_ptr<const std::map<DKRecordId, DKRecord>> map, DKQueryCursor nextCursor, const DKError &err)
 {
     LOGI("%{private}d %{private}s on fetch records", userId_, bundleName_.c_str());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
-
-    /* no more records */
-    if (records->size() == 0) {
-        return;
-    }
 
     /* update local */
     auto handler = ctx->GetHandler();
@@ -193,18 +219,76 @@ void DataSyncer::OnFetchRecords(const shared_ptr<DKContext> context,
         LOGE("context get handler err");
         return;
     }
-    int32_t ret = handler->OnFetchRecords(*records);
+    std::vector<DKRecord> records;
+    ConvertMapToVector<DKRecordId, DKRecord>(map, records);
+    int32_t ret = handler->OnFetchRecords(records);
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
         return;
     }
 
     /* pull more */
+    if (nextCursor.empty()) {
+        LOGI("no more records");
+        nextCursor_.clear();
+        // store nextCursor_ and replace the startCursor_ with the tempStartCursor and store.
+        // delete tempStartCursor in preference.
+        return;
+    }
+    nextCursor_ = nextCursor;
+    // store nextCursor_ in preference.
     ret = AsyncRun(ctx, &DataSyncer::PullRecords);
     if (ret != E_OK) {
         LOGE("asyn run pull records err %{public}d", ret);
+    }
+}
+
+void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context,
+    std::shared_ptr<const DKDatabase> database,
+    std::shared_ptr<const std::map<DKRecordId, DKRecord>> map, DKQueryCursor nextCursor,
+    bool hasMore, const DKError &err)
+{
+    LOGI("%{private}d %{private}s on fetch database changes", userId_, bundleName_.c_str());
+
+    auto ctx = static_pointer_cast<TaskContext>(context);
+
+    /* update local */
+    auto handler = ctx->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
         return;
     }
+    std::vector<DKRecord> records;
+    ConvertMapToVector<DKRecordId, DKRecord>(map, records);
+    int32_t ret = handler->OnFetchRecords(records);
+    if (ret != E_OK) {
+        LOGE("handler on fetch database changes err %{public}d", ret);
+        return;
+    }
+
+    /* pull more */
+    if (!hasMore) {
+        LOGI("no more records");
+        startCursor_ = nextCursor;
+        nextCursor_.clear();
+        // store nextCursor_ and startCursor_.
+        return;
+    }
+    nextCursor_ = nextCursor;
+    // store nextCursor_ in preference.
+    ret = AsyncRun(ctx, &DataSyncer::PullDatabaseChanges);
+    if (ret != E_OK) {
+        LOGE("asyn run pull database changes err %{public}d", ret);
+    }
+}
+
+template<typename K, typename V>
+void DataSyncer::ConvertMapToVector(std::shared_ptr<const std::map<K, V>> map, std::vector<V> &vec)
+{
+    for (auto it = map->begin(); it != map->end(); it++) {
+        vec.push_back(it->second);
+    }
+    return;
 }
 
 int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)

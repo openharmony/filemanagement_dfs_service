@@ -45,11 +45,18 @@ SdkHelper::SdkHelper(const int32_t userId, const std::string bundleName)
     }
 }
 
-int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context,
-    function<void(shared_ptr<DriveKit::DKContext> context, shared_ptr<vector<DriveKit::DKRecord>>)> callback)
+int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor,
+    function<void(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+        const DriveKit::DKError &)> callback)
 {
-    auto ret = make_shared<vector<DriveKit::DKRecord>>();
-    thread ([=]() { callback(context, ret); }).detach();
+    return E_OK;
+}
+int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor,
+    std::function<void(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+        bool, const DriveKit::DKError &)> callback)
+{
     return E_OK;
 }
 
@@ -103,6 +110,11 @@ int32_t SdkHelper::DownloadAssets(shared_ptr<DriveKit::DKContext> context,
 }
 
 int32_t SdkHelper::CancelDownloadAssets(int32_t id)
+{
+    return E_OK;
+}
+
+int32_t SdkHelper::GetStartCursor(shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor &cursor)
 {
     return E_OK;
 }

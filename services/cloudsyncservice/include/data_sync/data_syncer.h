@@ -72,10 +72,16 @@ protected:
 private:
     /* download */
     void PullRecords(std::shared_ptr<TaskContext> context);
-
+    void PullDatabaseChanges(std::shared_ptr<TaskContext> context);
     /* dowload callback */
-    void OnFetchRecords(const std::shared_ptr<DriveKit::DKContext> context,
-        const std::shared_ptr<std::vector<DriveKit::DKRecord>> records);
+    void OnFetchRecords(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+        const DriveKit::DKError &);
+
+    void OnFetchDatabaseChanges(const std::shared_ptr<DriveKit::DKContext>,
+        std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+        bool, const DriveKit::DKError &);
 
     /* upload */
     void CreateRecords(std::shared_ptr<TaskContext> context);
@@ -114,6 +120,10 @@ private:
     /* prompt state */
     SyncPromptState GetSyncPromptState(const int32_t code);
 
+    /* convert map to vector*/
+    template<typename K, typename V>
+    void ConvertMapToVector(std::shared_ptr<const std::map<K, V>> map, std::vector<V> &vec);
+
     /* identifier */
     const std::string bundleName_;
     const int32_t userId_;
@@ -128,6 +138,10 @@ private:
     SdkHelper sdkHelper_;
 
     int32_t errorCode_{0};
+
+    /* cursor*/
+    DriveKit::DKQueryCursor startCursor_;
+    DriveKit::DKQueryCursor nextCursor_;
 };
 } // namespace CloudSync
 } // namespace FileManagement
