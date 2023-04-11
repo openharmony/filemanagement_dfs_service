@@ -18,7 +18,6 @@
 
 #include "i_cloud_daemon.h"
 #include "iremote_proxy.h"
-#include "system_ability_load_callback_stub.h"
 
 namespace OHOS::FileManagement::CloudFile {
 using namespace std;
@@ -31,15 +30,6 @@ public:
     static void InvaildInstance();
 
     int32_t StartFuse(int32_t devFd, const string &path) override;
-
-    class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
-    public:
-        void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
-        void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
-
-        std::condition_variable proxyConVar_;
-        std::atomic<bool> isLoadSuccess_{false};
-    };
 
 private:
     static inline std::mutex proxyMutex_;

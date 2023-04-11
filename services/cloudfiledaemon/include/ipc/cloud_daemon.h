@@ -41,13 +41,10 @@ public:
 
     void OnStart() override;
     void OnStop() override;
-    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
-    void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     ServiceRunningState QueryServiceState() const
     {
         return state_;
     }
-
     int32_t StartFuse(int32_t deviceFd, const std::string &path) override;
 
 private:

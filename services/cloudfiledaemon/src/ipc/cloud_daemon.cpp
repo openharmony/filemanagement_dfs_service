@@ -72,21 +72,6 @@ void CloudDaemon::OnStop()
     LOGI("Stop finished successfully");
 }
 
-void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
-{
-    (void)systemAbilityId;
-    (void)deviceId;
-}
-
-void CloudDaemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
-{
-    (void)deviceId;
-    if (systemAbilityId != COMMON_EVENT_SERVICE_ID) {
-        LOGE("systemAbilityId is not COMMON_EVENT_SERVICE_ID");
-        return;
-    }
-}
-
 int32_t CloudDaemon::StartFuse(int32_t devFd, const string &path)
 {
     auto fuseMgr = make_shared<FuseManager>();
