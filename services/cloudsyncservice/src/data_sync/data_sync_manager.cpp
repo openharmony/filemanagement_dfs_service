@@ -85,13 +85,13 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
     }
 
     int32_t ret = E_OK;
-    for (auto app : needSyncApps) {
+    for (const auto &app : needSyncApps) {
         ret = TriggerStartSync(app, currentUserId_, false, triggerType);
         if (ret) {
             LOGE("trigger sync failed, ret = %{public}d, bundleName = %{public}s", ret, app.c_str());
         }
     }
-    return E_OK;
+    return ret;
 }
 
 std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string bundleName, const int32_t userId)
