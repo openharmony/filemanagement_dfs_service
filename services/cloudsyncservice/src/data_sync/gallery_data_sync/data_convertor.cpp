@@ -116,7 +116,6 @@ void DataConvertor::HandleAsset(DriveKit::DKRecordDatas &data, const DriveKit::D
     if (err != 0) {
         LOGE("result set get string err %{public}d", err);
     }
-    struct DriveKit::DKAsset asset = { "", val };
     data[key] = DriveKit::DKRecordField(val);
 }
 

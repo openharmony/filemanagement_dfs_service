@@ -75,7 +75,7 @@ DKError DriveKit::GetCloudAppInfo(const std::vector<DKAppBundleName> &bundleName
 {
     DKAppInfo appInfo;
     appInfo.defaultContainer.containerName = "defaultContainer";
-    for (auto &name : bundleNames) {
+    for (const auto &name : bundleNames) {
         appInfos[name] = appInfo;
     }
     return DKError();

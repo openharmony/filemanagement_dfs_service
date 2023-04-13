@@ -47,10 +47,6 @@ int32_t DataSyncer::AsyncRun(std::shared_ptr<TaskContext> context,
             (this->*f)(ctx);
         }
     );
-    if (task == nullptr) {
-        LOGE("async run alloc task fail");
-        return E_MEMORY;
-    }
 
     int32_t ret = CommitTask(task);
     if (ret != E_OK) {
@@ -71,10 +67,6 @@ template<typename T, typename RET, typename... ARGS>
 function<RET(ARGS...)> DataSyncer::AsyncCallback(RET(T::*f)(ARGS...))
 {
     shared_ptr<Task> task = make_shared<Task>(nullptr, nullptr);
-    if (task == nullptr) {
-        LOGE("async callback alloc task err");
-        return nullptr;
-    }
 
     int32_t ret = AddTask(task);
     if (ret != E_OK) {
@@ -140,10 +132,6 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
     LOGI("%{private}d %{private}s pull", userId_, bundleName_.c_str());
 
     shared_ptr<TaskContext> context = make_shared<TaskContext>(handler);
-    if (context == nullptr) {
-        LOGE("pull alloc context fail");
-        return E_MEMORY;
-    }
 
     int32_t ret = AsyncRun(context, &DataSyncer::PullRecords);
     if (ret != E_OK) {
@@ -218,10 +206,6 @@ int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)
      * dummy task in the end.
      */
     shared_ptr<TaskContext> context = make_shared<TaskContext>(handler);
-    if (context == nullptr) {
-        LOGE("alloc context fail");
-        return E_MEMORY;
-    }
 
     /* commit a dummy task */
     BeginTransaction();

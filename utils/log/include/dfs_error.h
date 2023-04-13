@@ -49,7 +49,6 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_CLOUD_SDK,
     E_RDB,
     E_CONTEXT,
-    E_MEMORY,
     E_STOP,
     E_PENDING,
     E_SCHEDULE,
