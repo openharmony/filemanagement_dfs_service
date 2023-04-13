@@ -285,15 +285,10 @@ int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
     if (se == NULL) {
         return -EINVAL;
     }
-
-    if (fuse_set_signal_handlers(se) != 0) {
-        fuse_session_destroy(se);
-        return -EINVAL;
-    }
     se->fd = devFd;
     se->mountpoint = strdup(path.c_str());
 
-    fuse_daemonize(false);
+    fuse_daemonize(true);
     config.max_idle_threads = 1;
     ret = fuse_session_loop_mt(se, &config);
 
@@ -306,8 +301,8 @@ int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
         se->mountpoint = nullptr;
     }
 
-    fuse_remove_signal_handlers(se);
     fuse_session_destroy(se);
+    close(devFd);
     return 0;
 }
 

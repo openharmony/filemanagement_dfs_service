@@ -25,8 +25,6 @@ namespace OHOS::FileManagement::CloudFile {
 using namespace std;
 using namespace OHOS::FileManagement;
 
-constexpr int LOAD_SA_TIMEOUT_MS = 4000;
-
 int32_t CloudDaemonServiceProxy::StartFuse(int32_t devFd, const string &path)
 {
     LOGI("Start fuse");
@@ -78,23 +76,16 @@ sptr<ICloudDaemon> CloudDaemonServiceProxy::GetInstance()
         LOGE("Samgr is nullptr");
         return nullptr;
     }
-    sptr<ServiceProxyLoadCallback> cloudDaemonLoadCallback = new ServiceProxyLoadCallback();
-    if (cloudDaemonLoadCallback == nullptr) {
-        LOGE("cloudDaemonLoadCallback is nullptr");
-        return nullptr;
-    }
-    int32_t ret = samgr->LoadSystemAbility(FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, cloudDaemonLoadCallback);
-    if (ret != E_OK) {
-        LOGE("Failed to Load systemAbility, systemAbilityId:%{pulbic}d, ret code:%{pulbic}d",
-             FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, ret);
+
+    auto object = samgr->CheckSystemAbility(FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID);
+    if (object == nullptr) {
+        LOGE("CloudDaemon::Connect object == nullptr");
         return nullptr;
     }
 
-    auto waitStatus = cloudDaemonLoadCallback->proxyConVar_.wait_for(
-        lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
-        [cloudDaemonLoadCallback]() { return cloudDaemonLoadCallback->isLoadSuccess_.load(); });
-    if (!waitStatus) {
-        LOGE("Load CloudDaemon SA timeout");
+    serviceProxy_ = iface_cast<ICloudDaemon>(object);
+    if (serviceProxy_ == nullptr) {
+        LOGE("CloudDaemon::Connect service == nullptr");
         return nullptr;
     }
     return serviceProxy_;
@@ -106,26 +97,4 @@ void CloudDaemonServiceProxy::InvaildInstance()
     unique_lock<mutex> lock(proxyMutex_);
     serviceProxy_ = nullptr;
 }
-
-void CloudDaemonServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
-    int32_t systemAbilityId,
-    const sptr<IRemoteObject> &remoteObject)
-{
-    LOGI("Load CloudDaemon SA success,systemAbilityId:%{public}d, remoteObj result:%{private}s", systemAbilityId,
-         (remoteObject == nullptr ? "false" : "true"));
-    unique_lock<mutex> lock(proxyMutex_);
-    serviceProxy_ = iface_cast<ICloudDaemon>(remoteObject);
-    isLoadSuccess_.store(true);
-    proxyConVar_.notify_one();
-}
-
-void CloudDaemonServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
-{
-    LOGI("Load CloudDaemon SA failed,systemAbilityId:%{public}d", systemAbilityId);
-    unique_lock<mutex> lock(proxyMutex_);
-    serviceProxy_ = nullptr;
-    isLoadSuccess_.store(false);
-    proxyConVar_.notify_one();
-}
-
 } // namespace OHOS::FileManagement::CloudFile
