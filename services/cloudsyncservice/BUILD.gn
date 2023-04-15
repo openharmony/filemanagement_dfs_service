@@ -57,7 +57,10 @@ ohos_shared_library("cloudsync_sa") {
     "LOG_TAG=\"CLOUDSYNC_SA\"",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "ability_base:want",

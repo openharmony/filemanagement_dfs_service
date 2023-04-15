@@ -87,3 +87,32 @@ ohos_shared_library("libdistributedfileutils") {
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
+
+config("dentry_public_config") {
+  include_dirs = [ "dentry/include" ]
+}
+
+ohos_static_library("libdistributedfiledentry") {
+  include_dirs = [
+    "dentry/include",
+    "log/include",
+  ]
+  sources = [
+    "dentry/src/file_utils.cpp",
+    "dentry/src/meta_file.cpp",
+  ]
+
+  public_configs = [ ":dentry_public_config" ]
+
+  deps = [ "${utils_path}:libdistributedfileutils" ]
+
+  external_deps = [ "c_utils:utils" ]
+
+  defines = [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_SA\"",
+  ]
+
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
