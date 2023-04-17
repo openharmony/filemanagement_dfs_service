@@ -32,9 +32,15 @@ public:
     ~SdkHelper() = default;
 
     /* record download */
-    int32_t FetchRecords(std::shared_ptr<DriveKit::DKContext> context,
-        std::function<void(std::shared_ptr<DriveKit::DKContext> context,
-            std::shared_ptr<std::vector<DriveKit::DKRecord>>)> callback);
+    int32_t FetchRecords(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor,
+        std::function<void(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
+            std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+            const DriveKit::DKError &)> callback);
+
+    int32_t FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor,
+        std::function<void(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
+            std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+            bool, const DriveKit::DKError &)> callback);
 
     /* record upload */
     int32_t CreateRecords(std::shared_ptr<DriveKit::DKContext> context,
@@ -68,6 +74,8 @@ public:
             std::shared_ptr<std::vector<DriveKit::DKDownloadAsset>>)> resultCallback);
 
     int32_t CancelDownloadAssets(int32_t id);
+
+    int32_t GetStartCursor(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor &cursor);
 
 private:
     std::shared_ptr<DriveKit::DKDatabase> database_;

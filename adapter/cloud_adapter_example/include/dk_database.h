@@ -109,7 +109,7 @@ public:
 
     using FetchRecordsCallback = std::function<void(std::shared_ptr<DKContext>,
                                                     std::shared_ptr<const DKDatabase>,
-                                                    std::shared_ptr<const std::vector<DKRecord>>,
+                                                    std::shared_ptr<const std::map<DKRecordId, DKRecord>>,
                                                     DKQueryCursor nextcursor,
                                                     const DKError &)>;
     DKLocalErrorCode FetchRecords(std::shared_ptr<DKContext> context,
