@@ -18,6 +18,7 @@
 #include <thread>
 
 #include "dfs_error.h"
+#include "task.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -45,18 +46,49 @@ SdkHelper::SdkHelper(const int32_t userId, const std::string bundleName)
     }
 }
 
-int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor,
+int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor cursor,
     function<void(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
         const DriveKit::DKError &)> callback)
 {
+    auto ctx = static_pointer_cast<TaskContext>(context);
+    auto handler = ctx->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return E_INVAL_ARG;
+    }
+    int32_t limitRes = 0;
+    DriveKit::DKRecordType recordType;
+    DriveKit::DKFieldKeyArray desiredKeys;
+    handler->GetFetchCondition(limitRes, recordType, desiredKeys);
+    auto err = database_->FetchRecords(context, recordType, desiredKeys, limitRes, cursor, callback);
+    if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("drivekit fetch records err %{public}d", err);
+        return E_CLOUD_SDK;
+    }
     return E_OK;
 }
-int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor,
+
+int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor cursor,
     std::function<void(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
         bool, const DriveKit::DKError &)> callback)
 {
+    auto ctx = static_pointer_cast<TaskContext>(context);
+    auto handler = ctx->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return E_INVAL_ARG;
+    }
+    int32_t limitRes = 0;
+    DriveKit::DKRecordType recordType;
+    DriveKit::DKFieldKeyArray desiredKeys;
+    handler->GetFetchCondition(limitRes, recordType, desiredKeys);
+    auto err = database_->FetchDatabaseChanges(context, recordType, desiredKeys, limitRes, cursor, callback);
+    if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("drivekit fetch records err %{public}d", err);
+        return E_CLOUD_SDK;
+    }
     return E_OK;
 }
 

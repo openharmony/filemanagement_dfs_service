@@ -29,13 +29,15 @@ using namespace NativeRdb;
 using namespace DriveKit;
 
 AlbumDataHandler::AlbumDataHandler(std::shared_ptr<RdbStore> rdb)
-    : RdbDataHandler(const_cast<string &>(tableName_), rdb)
+    : RdbDataHandler(TABLE_NAME, rdb)
 {
 }
 
-int32_t AlbumDataHandler::GetFetchCondition()
+void AlbumDataHandler::GetFetchCondition(int32_t &limitRes, DKRecordType &recordType, DKFieldKeyArray &desiredKeys)
 {
-    return E_OK;
+    limitRes = LIMIT_SIZE;
+    recordType = recordType_;
+    desiredKeys = desiredKeys_;
 }
 
 int32_t AlbumDataHandler::OnFetchRecords(const shared_ptr<const map<DKRecordId, DKRecord>> &map)

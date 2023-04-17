@@ -30,7 +30,7 @@ using namespace std;
 TaskManager::TaskManager(function<void()> callback) : callback_(callback)
 {
     pool_.SetMaxTaskNum(MAX_THREAD_NUM);
-    pool_.Start(0);
+    pool_.Start(MAX_THREAD_NUM);
 }
 
 TaskManager::~TaskManager()

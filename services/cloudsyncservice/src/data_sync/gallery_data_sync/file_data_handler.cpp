@@ -28,17 +28,16 @@ using namespace std;
 using namespace NativeRdb;
 using namespace DriveKit;
 
-const string FileDataHandler::TABLE_NAME = "Files";
-const int32_t FileDataHandler::LIMIT_SIZE = 50;
-
 FileDataHandler::FileDataHandler(std::shared_ptr<RdbStore> rdb)
     : RdbDataHandler(TABLE_NAME, rdb)
 {
 }
 
-int32_t FileDataHandler::GetFetchCondition()
+void FileDataHandler::GetFetchCondition(int32_t &limitRes, DKRecordType &recordType, DKFieldKeyArray &desiredKeys)
 {
-    return 0;
+    limitRes = LIMIT_SIZE;
+    recordType = recordType_;
+    desiredKeys = desiredKeys_;
 }
 
 int32_t FileDataHandler::OnFetchRecords(const shared_ptr<const map<DKRecordId, DKRecord>> &map)
