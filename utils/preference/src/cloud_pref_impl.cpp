@@ -19,7 +19,24 @@
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
-CloudPrefImpl::CloudPrefImpl(std::string fileName)
+CloudPrefImpl::CloudPrefImpl(const int32_t userId, const std::string& bundleName)
+{
+    /* the file name varies from different userId and bundle name */
+    std::string fileDir = CLOUDFILE_DIR + std::to_string(userId);
+    if (access(fileDir.c_str(), F_OK) != 0) {
+        if (mkdir(fileDir.c_str(), S_IRWXU | S_IRWXG | S_IXOTH) != 0) {
+            LOGE("CloudPrefImpl: mkdir failed");
+        }
+    }
+    fileName_ = fileDir + "/" + bundleName;
+    int32_t errCode = 0;
+    pref_ = NativePreferences::PreferencesHelper::GetPreferences(fileName_, errCode);
+    if (!pref_) {
+        LOGE("CloudPrefImpl: Preference get null, errcode: %{public}d", errCode);
+    }
+}
+
+CloudPrefImpl::CloudPrefImpl(const std::string& fileName)
 {
     int32_t errCode = 0;
     fileName_ = fileName;

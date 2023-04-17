@@ -26,6 +26,7 @@
 #include "task.h"
 #include "cloud_sync_constants.h"
 #include "data_sync/sync_state_manager.h"
+#include "cloud_pref_impl.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -138,6 +139,9 @@ private:
     /* cursor*/
     DriveKit::DKQueryCursor startCursor_;
     DriveKit::DKQueryCursor nextCursor_;
+
+    /* cloud preference impl */
+    CloudPrefImpl cloudPrefImpl_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

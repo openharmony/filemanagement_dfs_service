@@ -25,7 +25,7 @@ class DataHandler {
 public:
     /* download */
     virtual int32_t GetFetchCondition() = 0;
-    virtual int32_t OnFetchRecords(const std::shared_ptr<const std::map<DriveKit::DKRecordId, 
+    virtual int32_t OnFetchRecords(const std::shared_ptr<const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecord>> &map) = 0;
 
     /* upload */
