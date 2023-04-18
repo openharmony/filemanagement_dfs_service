@@ -37,15 +37,15 @@ public:
         Stop();
     }
 
-    template<class _Fn, class... _Args>
-    bool Run(_Fn &&_Fx, _Args &&..._Ax)
+    template<class Fn, class... Args>
+    bool Run(Fn &&Fx, Args &&...Ax)
     {
         std::unique_lock<std::mutex> lock(threadMutex_);
         if (thread_ != nullptr) {
             return false;
         }
         running_ = true;
-        thread_ = std::make_unique<std::thread>(std::forward<_Fn>(_Fx), std::forward<_Args>(_Ax)...);
+        thread_ = std::make_unique<std::thread>(std::forward<Fn>(Fx), std::forward<Args>(Ax)...);
         return true;
     }
 
