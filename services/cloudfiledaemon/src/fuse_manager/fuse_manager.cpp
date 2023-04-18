@@ -124,7 +124,6 @@ static int FakeDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     if (child) {
         close(childFd);
         child->refCount++;
-        childFd = -1;
     } else {
         child = new FakeNode();
         child->fd = childFd;
@@ -163,7 +162,6 @@ static void PutNode(struct FakeNode *node, uint64_t num)
         fakeCache.erase(GlobalNode(node->dev, node->ino));
         close(node->fd);
         delete node;
-        node = nullptr;
         g_cacheLock.unlock();
     }
 }
@@ -303,7 +301,7 @@ int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
 
     fuse_session_destroy(se);
     close(devFd);
-    return 0;
+    return ret;
 }
 
 void FuseManager::Stop()
