@@ -38,7 +38,7 @@ int32_t AlbumDataHandler::GetFetchCondition()
     return E_OK;
 }
 
-int32_t AlbumDataHandler::OnFetchRecords(const vector<DKRecord> &records)
+int32_t AlbumDataHandler::OnFetchRecords(const shared_ptr<const map<DKRecordId, DKRecord>> &map)
 {
     return E_OK;
 }

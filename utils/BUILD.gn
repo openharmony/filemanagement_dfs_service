@@ -44,6 +44,7 @@ config("compiler_configs") {
 config("utils_public_config") {
   include_dirs = [
     "log/include",
+    "preference/include",
     "system/include",
     "//commonlibrary/c_utils/base/include",
   ]
@@ -52,6 +53,7 @@ config("utils_public_config") {
 ohos_shared_library("libdistributedfileutils") {
   sources = [
     "log/src/utils_log.cpp",
+    "preference/src/cloud_pref_impl.cpp",
     "system/src/dfsu_access_token_helper.cpp",
     "system/src/dfsu_fd_guard.cpp",
     "system/src/dfsu_mount_argument_descriptors.cpp",
@@ -75,6 +77,7 @@ ohos_shared_library("libdistributedfileutils") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
     "ipc:ipc_core",
+    "preferences:native_preferences",
   ]
 
   part_name = "dfs_service"

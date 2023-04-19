@@ -32,15 +32,21 @@ public:
     ~SdkHelper() = default;
 
     /* record download */
+    using FetchRecordsCallback = std::function<void(const std::shared_ptr<DriveKit::DKContext>,
+        std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+        const DriveKit::DKError &)>;
+
+    using FetchDatabaseChangesCallback = std::function<void(const std::shared_ptr<DriveKit::DKContext>,
+        std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+        bool, const DriveKit::DKError &)>;
+
     int32_t FetchRecords(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor,
-        std::function<void(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-            std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
-            const DriveKit::DKError &)> callback);
+        FetchRecordsCallback callback);
 
     int32_t FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor,
-        std::function<void(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-            std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
-            bool, const DriveKit::DKError &)> callback);
+        FetchDatabaseChangesCallback callback);
 
     /* record upload */
     int32_t CreateRecords(std::shared_ptr<DriveKit::DKContext> context,

@@ -26,6 +26,7 @@
 #include "task.h"
 #include "cloud_sync_constants.h"
 #include "data_sync/sync_state_manager.h"
+#include "cloud_pref_impl.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -120,10 +121,6 @@ private:
     /* prompt state */
     SyncPromptState GetSyncPromptState(const int32_t code);
 
-    /* convert map to vector*/
-    template<typename K, typename V>
-    void ConvertMapToVector(std::shared_ptr<const std::map<K, V>> map, std::vector<V> &vec);
-
     /* identifier */
     const std::string bundleName_;
     const int32_t userId_;
@@ -142,6 +139,9 @@ private:
     /* cursor*/
     DriveKit::DKQueryCursor startCursor_;
     DriveKit::DKQueryCursor nextCursor_;
+
+    /* cloud preference impl */
+    CloudPrefImpl cloudPrefImpl_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

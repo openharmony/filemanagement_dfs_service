@@ -29,7 +29,8 @@ public:
 
     /* download */
     int32_t GetFetchCondition() override;
-    int32_t OnFetchRecords(const std::vector<DriveKit::DKRecord> &records) override;
+    int32_t OnFetchRecords(const std::shared_ptr<const std::map<DriveKit::DKRecordId,
+        DriveKit::DKRecord>> &map) override;
 
     /* upload */
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;

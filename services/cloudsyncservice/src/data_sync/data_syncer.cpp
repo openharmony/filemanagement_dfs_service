@@ -31,7 +31,7 @@ using namespace placeholders;
 using namespace DriveKit;
 
 DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
-    : bundleName_(bundleName), userId_(userId), sdkHelper_(userId, bundleName)
+    : bundleName_(bundleName), userId_(userId), sdkHelper_(userId, bundleName), cloudPrefImpl_(userId, bundleName)
 {
     taskManager_ = make_shared<TaskManager>(bind(&DataSyncer::Schedule, this));
     if (taskManager_ == nullptr) {
@@ -166,7 +166,7 @@ void DataSyncer::PullRecords(shared_ptr<TaskContext> context)
 
     std::string tempStartCursor;
     sdkHelper_.GetStartCursor(context, tempStartCursor);
-    // store the temp start cursor
+    cloudPrefImpl_.SetString(TEMP_START_CURSOR, tempStartCursor);
 
     int32_t ret = sdkHelper_.FetchRecords(context, nextCursor_, callback);
     if (ret != E_OK) {
@@ -207,9 +207,8 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
         LOGE("context get handler err");
         return;
     }
-    std::vector<DKRecord> records;
-    ConvertMapToVector<DKRecordId, DKRecord>(map, records);
-    int32_t ret = handler->OnFetchRecords(records);
+
+    int32_t ret = handler->OnFetchRecords(map);
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
         return;
@@ -219,12 +218,14 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
     if (nextCursor.empty()) {
         LOGI("no more records");
         nextCursor_.clear();
-        // store nextCursor_ and replace the startCursor_ with the tempStartCursor and store.
-        // delete tempStartCursor in preference.
+        cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+        cloudPrefImpl_.GetString(TEMP_START_CURSOR, startCursor_);
+        cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
+        cloudPrefImpl_.Delete(TEMP_START_CURSOR);
         return;
     }
     nextCursor_ = nextCursor;
-    // store nextCursor_ in preference.
+    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
     ret = AsyncRun(ctx, &DataSyncer::PullRecords);
     if (ret != E_OK) {
         LOGE("asyn run pull records err %{public}d", ret);
@@ -246,9 +247,8 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
         LOGE("context get handler err");
         return;
     }
-    std::vector<DKRecord> records;
-    ConvertMapToVector<DKRecordId, DKRecord>(map, records);
-    int32_t ret = handler->OnFetchRecords(records);
+
+    int32_t ret = handler->OnFetchRecords(map);
     if (ret != E_OK) {
         LOGE("handler on fetch database changes err %{public}d", ret);
         return;
@@ -259,24 +259,16 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
         LOGI("no more records");
         startCursor_ = nextCursor;
         nextCursor_.clear();
-        // store nextCursor_ and startCursor_.
+        cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+        cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
         return;
     }
     nextCursor_ = nextCursor;
-    // store nextCursor_ in preference.
+    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
     ret = AsyncRun(ctx, &DataSyncer::PullDatabaseChanges);
     if (ret != E_OK) {
         LOGE("asyn run pull database changes err %{public}d", ret);
     }
-}
-
-template<typename K, typename V>
-void DataSyncer::ConvertMapToVector(std::shared_ptr<const std::map<K, V>> map, std::vector<V> &vec)
-{
-    for (auto it = map->begin(); it != map->end(); it++) {
-        vec.push_back(it->second);
-    }
-    return;
 }
 
 int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)
