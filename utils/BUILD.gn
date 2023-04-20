@@ -16,6 +16,10 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 config("compiler_configs") {
   visibility = [ ":*" ]
+  visibility += [
+    "//foundation/filemanagement/dfs_service/services/*",
+    "//foundation/filemanagement/dfs_service/test/moduletest/*",
+  ]
 
   cflags = [
     "-Wall",
