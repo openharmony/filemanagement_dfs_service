@@ -19,7 +19,6 @@ ohos_shared_library("cloudsync_sa") {
     "include",
     "include/data_sync",
     "include/data_sync/gallery_data_sync",
-    "../../adapter/cloud_adapter_example/include",
   ]
 
   data_sync = [
