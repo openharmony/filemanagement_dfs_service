@@ -40,10 +40,7 @@ sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::s
     return nullptr;
 }
 
-void CloudSyncCallbackManager::NotifySyncStateChanged(const std::string &bundleName,
-                                                      const int32_t userId,
-                                                      const SyncType type,
-                                                      const SyncPromptState state)
+void CloudSyncCallbackManager::NotifySyncStateChanged(const SyncType type, const SyncPromptState state)
 {
 }
 } // namespace OHOS::FileManagement::CloudSync

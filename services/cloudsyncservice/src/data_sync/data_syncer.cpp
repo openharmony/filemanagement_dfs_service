@@ -521,18 +521,15 @@ void DataSyncer::CompleteAll(int32_t code, const SyncType type)
 
     auto state = GetSyncPromptState(code);
     if (code == E_OK) {
-        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(
-            bundleName_, userId_, SyncType::ALL, state);
+        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(SyncType::ALL, state);
     } else {
-        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(
-            bundleName_, userId_, type, state);
+        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(type, state);
     }
 }
 
 void DataSyncer::SyncStateChangedNotify(const SyncType type, const SyncPromptState state)
 {
-    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(bundleName_,
-        userId_, SyncType::ALL, state);
+    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(SyncType::ALL, state);
 }
 
 SyncPromptState DataSyncer::GetSyncPromptState(const int32_t code)

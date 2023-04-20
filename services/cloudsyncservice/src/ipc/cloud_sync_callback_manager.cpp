@@ -19,6 +19,7 @@
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
+using namespace placeholders;
 
 CloudSyncCallbackManager &CloudSyncCallbackManager::GetInstance()
 {
@@ -54,8 +55,7 @@ void CloudSyncCallbackManager::SetDeathRecipient(const std::string &bundleName, 
     remoteObject->AddDeathRecipient(cbInfo.deathRecipient_);
 }
 
-sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::string &bundleName,
-                                                                    const int32_t userId)
+sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::string &bundleName, const int32_t userId)
 {
     CallbackInfo cbInfo;
     if (!callbackListMap_.Find(bundleName, cbInfo)) {
@@ -70,16 +70,22 @@ sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::s
     return cbInfo.callbackProxy_;
 }
 
-void CloudSyncCallbackManager::NotifySyncStateChanged(const std::string &bundleName,
-                                                      const int32_t userId,
-                                                      const SyncType type,
-                                                      const SyncPromptState state)
+void CloudSyncCallbackManager::Notify(const std::string bundleName,
+                                      CallbackInfo &callbackInfo,
+                                      const SyncType type,
+                                      const SyncPromptState state)
 {
-    auto callbackProxy_ = GetCallbackProxy(bundleName, userId);
-    if (!callbackProxy_) {
+    auto callbackProxy = callbackInfo.callbackProxy_;
+    if (!callbackProxy) {
         LOGE("not found object, bundleName = %{private}s", bundleName.c_str());
         return;
     }
-    callbackProxy_->OnSyncStateChanged(type, state);
+    callbackProxy->OnSyncStateChanged(type, state);
+}
+
+void CloudSyncCallbackManager::NotifySyncStateChanged(const SyncType type, const SyncPromptState state)
+{
+    auto callback = bind(&CloudSyncCallbackManager::Notify, this, _1, _2, type, state);
+    callbackListMap_.Iterate(callback);
 }
 } // namespace OHOS::FileManagement::CloudSync
