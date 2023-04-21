@@ -42,7 +42,83 @@ void FileDataHandler::GetFetchCondition(int32_t &limitRes, DKRecordType &recordT
 
 int32_t FileDataHandler::OnFetchRecords(const shared_ptr<const map<DKRecordId, DKRecord>> &map)
 {
-    return 0;
+    int32_t ret = E_OK;
+    for (const auto &it : *map) {
+        const auto &record = it.second;
+        /* check for local same recordid */
+        NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+        predicates.SetWhereClause(Media::MEDIA_DATA_DB_CLOUD_ID + " = ?");
+        predicates.SetWhereArgs({record.GetRecordId()});
+        predicates.Limit(LIMIT_SIZE);
+        auto resultSet = Query(predicates, localConvertor_.GetLocalColumns());
+        if (resultSet == nullptr) {
+            LOGE("get nullptr created result");
+            ret = E_RDB;
+            break;
+        }
+        int32_t rowCount = 0;
+        ret = resultSet->GetRowCount(rowCount);
+        if (ret != 0) {
+            LOGE("result set get row count err %{public}d", ret);
+            ret = E_RDB;
+            break;
+        }
+
+        /* specific pull operation */
+        if ((rowCount == 0) && !record.GetIsDelete()) {
+            ret = PullRecordInsert(record);
+        } else if (rowCount == 1) {
+            vector<DKRecord> local;
+            ret = localConvertor_.ResultSetToRecords(move(resultSet), local);
+            if ((ret != E_OK) || (local.size() != 1)) {
+                LOGE("result set to records err %{public}d, size %{public}zu", ret, local.size());
+                break;
+            }
+
+            if (record.GetIsDelete()) {
+                ret = PullRecordDelete(record, local[0]);
+            } else {
+                ret = PullRecordUpdate(record, local[0]);
+            }
+        } else {
+            LOGE("recordId %s has multiple file in db!", record.GetRecordId().c_str());
+        }
+
+        if (ret == E_RDB) {
+            break;
+        }
+    }
+    return ret;
+}
+
+int32_t FileDataHandler::PullRecordInsert(const DKRecord &record)
+{
+    /* insert hmdfs dentry file here */
+
+    int64_t rowId;
+    ValuesBucket values;
+    createConvertor_.RecordToValueBucket(record, values);
+
+    int ret = Insert(rowId, values);
+    if (ret != E_OK) {
+        LOGE("Insert pull record failed");
+        return E_RDB;
+    }
+
+    LOGI("Insert recordId %s success", record.GetRecordId().c_str());
+
+    /* check and trigger lcd download */
+    return E_OK;
+}
+
+int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record, const DKRecord &local)
+{
+    return E_OK;
+}
+
+int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, const DKRecord &local)
+{
+    return E_OK;
 }
 
 int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)

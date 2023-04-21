@@ -103,6 +103,19 @@ private:
     };
 
     /* fetch */
+
+    /* pull operations */
+    int32_t PullRecordInsert(const DriveKit::DKRecord &record);
+    int32_t PullRecordUpdate(const DriveKit::DKRecord &record, const DriveKit::DKRecord &local);
+    int32_t PullRecordDelete(const DriveKit::DKRecord &record, const DriveKit::DKRecord &local);
+
+    /* db result to record */
+    DataConvertor localConvertor_ = {
+        { "file_id", "data", "size" },
+        { "id", "path", "size" },
+        { INT, STRING, INT },
+        3
+    };
 };
 } // namespace CloudSync
 } // namespace FileManagement
