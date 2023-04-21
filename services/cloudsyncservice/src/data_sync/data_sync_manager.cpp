@@ -18,8 +18,8 @@
 #include <thread>
 #include <vector>
 
-#include "gallery_data_syncer.h"
 #include "dfs_error.h"
+#include "gallery_data_syncer.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "sync_rule/battery_status.h"
 #include "sync_rule/cloud_status.h"
@@ -28,19 +28,30 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
+DataSyncManager::DataSyncManager()
+{
+    bundleNameConversionMap_["com.ohos.medialibrary.medialibrarydata"] = "com.ohos.photos";
+    bundleNameConversionMap_["com.ohos.photos"] = "com.ohos.photos";
+}
+
 int32_t DataSyncManager::TriggerStartSync(const std::string bundleName,
                                           const int32_t userId,
                                           bool forceFlag,
                                           SyncTriggerType triggerType)
 {
-    LOGI("trigger sync, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
-    auto ret = IsSkipSync(bundleName, userId);
+    auto it = bundleNameConversionMap_.find(bundleName);
+    if (it == bundleNameConversionMap_.end()) {
+        LOGE("trigger start sync failed, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
+        return E_INVAL_ARG;
+    }
+    std::string appBundleName(it->second);
+    auto ret = IsSkipSync(appBundleName, userId);
     if (ret != E_OK) {
         return ret;
     }
-    auto dataSyncer = GetDataSyncer(bundleName, userId);
+    auto dataSyncer = GetDataSyncer(appBundleName, userId);
     if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
     std::thread([dataSyncer, forceFlag, triggerType]() { dataSyncer->StartSync(forceFlag, triggerType); }).detach();
@@ -51,9 +62,15 @@ int32_t DataSyncManager::TriggerStopSync(const std::string bundleName,
                                          const int32_t userId,
                                          SyncTriggerType triggerType)
 {
-    auto dataSyncer = GetDataSyncer(bundleName, userId);
+    auto it = bundleNameConversionMap_.find(bundleName);
+    if (it == bundleNameConversionMap_.end()) {
+        LOGE("trigger stop sync failed, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
+        return E_INVAL_ARG;
+    }
+    std::string appBundleName(it->second);
+    auto dataSyncer = GetDataSyncer(appBundleName, userId);
     if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
     std::thread([dataSyncer, triggerType]() { dataSyncer->StopSync(triggerType); }).detach();

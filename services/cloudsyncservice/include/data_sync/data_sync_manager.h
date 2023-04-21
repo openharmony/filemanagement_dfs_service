@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_DATA_SYNC_MANAGER_H
 #define OHOS_FILEMGMT_DATA_SYNC_MANAGER_H
 
+#include <map>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -26,7 +27,7 @@ namespace OHOS::FileManagement::CloudSync {
 constexpr int32_t INVALID_USER_ID = -1;
 class DataSyncManager {
 public:
-    DataSyncManager() = default;
+    DataSyncManager();
     ~DataSyncManager() = default;
 
     int32_t TriggerStartSync(const std::string bundleName,
@@ -43,6 +44,7 @@ private:
     std::vector<std::shared_ptr<DataSyncer>> dataSyncers_;
     std::mutex dataSyncMutex_;
     int32_t currentUserId_{INVALID_USER_ID};
+    std::map<std::string, std::string> bundleNameConversionMap_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
