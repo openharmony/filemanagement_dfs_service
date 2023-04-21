@@ -28,7 +28,8 @@ public:
     virtual ~FileDataHandler() = default;
 
     /* download */
-    int32_t GetFetchCondition() override;
+    void GetFetchCondition(int32_t &limitRes, DriveKit::DKRecordType &recordType,
+        DriveKit::DKFieldKeyArray &desiredKeys) override;
     int32_t OnFetchRecords(const std::shared_ptr<const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecord>> &map) override;
 
@@ -49,8 +50,12 @@ public:
     void Reset();
 
 private:
-    static const std::string TABLE_NAME;
-    static const int32_t LIMIT_SIZE;
+    static inline const std::string TABLE_NAME = "Files";
+    static inline const int32_t LIMIT_SIZE = 50;
+    DriveKit::DKRecordType recordType_ = "media";
+    DriveKit::DKFieldKeyArray desiredKeys_ = { "albumId", "createdTime", "editedTime", "favorite", "fileName",
+        "fileType", "hashId", "sha256", "id", "properties", "size", "source", "recycledTime", "recycled",
+        "pictureMetadata", "videoMetadata", "cipher", "description" };
 
     /* create */
     int32_t createOffset_ = 0;

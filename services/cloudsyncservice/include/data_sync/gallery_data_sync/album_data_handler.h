@@ -28,9 +28,10 @@ public:
     virtual ~AlbumDataHandler() = default;
 
     /* download */
+    virtual void GetFetchCondition(int32_t &limitRes, DriveKit::DKRecordType &recordType,
+        DriveKit::DKFieldKeyArray &desiredKeys) override;
     virtual int32_t OnFetchRecords(const std::shared_ptr<const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecord>> &map) override;
-    virtual int32_t GetFetchCondition() override;
 
     /* upload */
     virtual int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;
@@ -45,7 +46,11 @@ public:
         DriveKit::DKRecordOperResult> &map) override;
 
 private:
-    const std::string tableName_ = "albums";
+    static inline const std::string TABLE_NAME = "albums";
+    static inline const int32_t LIMIT_SIZE = 50;
+    DriveKit::DKRecordType recordType_ = "album";
+    DriveKit::DKFieldKeyArray desiredKeys_ = { "id", "albumName", "type", "localPath", "properties",
+        "createdTime", "source" };
 };
 } // namespace CloudSync
 } // namespace FileManagement
