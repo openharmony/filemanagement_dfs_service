@@ -26,8 +26,6 @@ public:
     FileUtils() = delete;
     ~FileUtils() = delete;
 
-    static int32_t Stat(int fd, struct stat &s);
-    static int32_t TruncateFile(int fd, size_t size);
     static int64_t ReadFile(int fd, off_t offset, size_t size, void *data);
     static int64_t WriteFile(int fd, const void *data, off_t offset, size_t size);
 };

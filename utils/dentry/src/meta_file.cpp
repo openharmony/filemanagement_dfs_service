@@ -103,11 +103,11 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
 {
     cacheFile_ = GetDentryfileByPath(userId, path);
     fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT)};
-    LOGI("fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
+    LOGD("fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
 
     struct stat statBuf {};
     int ret = fstat(fd_, &statBuf);
-    LOGI("fd=%{public}d, size=%{public}u, cacheFile_=%s", fd_.Get(), (uint32_t)statBuf.st_size, cacheFile_.c_str());
+    LOGD("fd=%{public}d, size=%{public}u, cacheFile_=%s", fd_.Get(), (uint32_t)statBuf.st_size, cacheFile_.c_str());
 
     ret = fsetxattr(fd_, "user.hmdfs_cache", path.c_str(), path.size(), 0);
     if (ret != 0) {
