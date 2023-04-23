@@ -356,8 +356,8 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
             static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
 
-        DKRecordDatas data;
-        record.GetRecordDatas(data);
+        DKRecordData data;
+        record.GetRecordData(data);
         auto iter = data.find(Media::MEDIA_DATA_DB_CLOUD_ID);
         if (iter == data.end()) {
             LOGE("no id in record data");
