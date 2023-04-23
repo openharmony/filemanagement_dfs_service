@@ -61,6 +61,47 @@ struct MetaBase {
     int refcnt{0};
     std::mutex refMtx;
 };
+
+struct BitOps {
+    static const int BIT_PER_BYTE = 8;
+    static int TestBit(int nr, const uint8_t addr[])
+    {
+        return 1 & (addr[nr / BIT_PER_BYTE] >> (nr & (BIT_PER_BYTE - 1)));
+    }
+
+    static void ClearBit(int nr, uint8_t addr[])
+    {
+        addr[nr / BIT_PER_BYTE] &= ~(1UL << ((nr) % BIT_PER_BYTE));
+    }
+
+    static void SetBit(int nr, uint8_t addr[])
+    {
+        addr[nr / BIT_PER_BYTE] |= (1UL << ((nr) % BIT_PER_BYTE));
+    }
+
+    static int FindNextBit(const uint8_t addr[], int maxSlots, int start)
+    {
+        while (start < maxSlots) {
+            if (BitOps::TestBit(start, addr)) {
+                return start;
+            }
+            start++;
+        }
+        return maxSlots;
+    }
+
+    static int FindNextZeroBit(const uint8_t addr[], int maxSlots, int start)
+    {
+        while (start < maxSlots) {
+            if (!BitOps::TestBit(start, addr)) {
+                return start;
+            }
+            start++;
+        }
+        return maxSlots;
+    }
+};
+
 } // namespace FileManagement
 } // namespace OHOS
 
