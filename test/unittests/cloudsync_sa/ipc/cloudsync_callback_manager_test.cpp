@@ -82,39 +82,12 @@ HWTEST_F(CloudSyncCallbackManagerTest, AddCallbackTest, TestSize.Level1)
         CloudSyncCallbackManager::CallbackInfo cbInfo;
         int res = g_managePtr_->callbackListMap_.Find(bundleName, cbInfo);
         EXPECT_EQ(res, true);
-        EXPECT_NE(cbInfo.callbackProxy_, nullptr);
+        EXPECT_NE(cbInfo.callbackProxy, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " AddCallbackTest FAILED";
     }
     GTEST_LOG_(INFO) << "AddCallbackTest End";
-}
-
-/*
- * @tc.name: GetCallbackProxyTest
- * @tc.desc: Verify the GetCallbackProxy function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncCallbackManagerTest, GetCallbackProxyTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetCallbackProxy Start";
-    try {
-        const string bundleName = "com.ohos.photos";
-        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
-        const int userId = 0;
-        auto callbackProxy_ = g_managePtr_->GetCallbackProxy(bundleName, userId);
-        EXPECT_EQ(callbackProxy_, nullptr);
-        g_managePtr_->AddCallback(bundleName, userId, callback);
-        CloudSyncCallbackManager::CallbackInfo cbInfo;
-        int res = g_managePtr_->callbackListMap_.Find(bundleName, cbInfo);
-        EXPECT_EQ(res, true);
-        EXPECT_NE(cbInfo.callbackProxy_, nullptr);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetCallbackProxy ERROR";
-    }
-    GTEST_LOG_(INFO) << "GetCallbackProxy End";
 }
 
 /*
@@ -135,7 +108,7 @@ HWTEST_F(CloudSyncCallbackManagerTest, SetDeathRecipientTest, TestSize.Level1)
         int res = g_managePtr_->callbackListMap_.Find(bundleName, cbInfo);
         EXPECT_TRUE(res);
         g_managePtr_->SetDeathRecipient(bundleName, cbInfo);
-        cbInfo.callbackProxy_ = nullptr;
+        cbInfo.callbackProxy = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " SetDeathRecipient ERROR";

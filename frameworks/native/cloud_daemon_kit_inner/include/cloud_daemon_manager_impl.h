@@ -19,16 +19,18 @@
 #include <atomic>
 
 #include "cloud_daemon_manager.h"
+#include "nocopyable.h"
 #include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::CloudFile {
-class CloudDaemonManagerImpl final : public CloudDaemonManager {
+class CloudDaemonManagerImpl final : public CloudDaemonManager, public NoCopyable {
 public:
     static CloudDaemonManagerImpl &GetInstance();
 
     int32_t StartFuse(int32_t devFd, const string &path) override;
 
 private:
+    CloudDaemonManagerImpl() = default;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
 
     std::atomic_flag isFirstCall_{false};

@@ -18,12 +18,13 @@
 
 #include <atomic>
 
-#include "cloud_sync_manager.h"
-#include "svc_death_recipient.h"
 #include "cloud_sync_callback_client.h"
+#include "cloud_sync_manager.h"
+#include "nocopyable.h"
+#include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudSyncManagerImpl final : public CloudSyncManager {
+class CloudSyncManagerImpl final : public CloudSyncManager, public NoCopyable {
 public:
     static CloudSyncManagerImpl &GetInstance();
 
@@ -33,6 +34,7 @@ public:
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
 
 private:
+    CloudSyncManagerImpl() = default;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
 
     std::atomic_flag isFirstCall_{false};

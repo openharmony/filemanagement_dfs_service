@@ -16,11 +16,11 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "iservice_registry.h"
 #include "cloud_sync_manager_impl.h"
-#include "i_cloud_sync_service_mock.h"
-#include "service_callback_mock.h"
 #include "dfs_error.h"
+#include "i_cloud_sync_service_mock.h"
+#include "iservice_registry.h"
+#include "service_callback_mock.h"
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -39,7 +39,7 @@ public:
     void TearDown();
 };
 
-class CloudSyncCallbackDerived : public CloudSyncCallback  {
+class CloudSyncCallbackDerived : public CloudSyncCallback {
 public:
     void OnSyncStateChanged(SyncType type, SyncPromptState state)
     {
@@ -80,7 +80,7 @@ void CloudSyncManagerTest::TearDown(void)
  */
 HWTEST_F(CloudSyncManagerTest, StartSyncTest, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "AddCallbackTest Start";
+    GTEST_LOG_(INFO) << "StartSyncTest Start";
     try {
         bool forceFlag = false;
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
@@ -95,14 +95,14 @@ HWTEST_F(CloudSyncManagerTest, StartSyncTest, TestSize.Level1)
         forceFlag = false;
         res = g_managePtr_->StartSync(forceFlag, nullptr);
         EXPECT_NE(res, E_OK);
-    } catch(...) {
+    } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " AddCallbackTest FAILED";
+        GTEST_LOG_(INFO) << " StartSyncTest FAILED";
     }
-    GTEST_LOG_(INFO) << "AddCallbackTest End";
+    GTEST_LOG_(INFO) << "StartSyncTest End";
 }
- 
- /*
+
+/*
  * @tc.name: StopSyncTest
  * @tc.desc: Verify the StopSync function.
  * @tc.type: FUNC
@@ -110,17 +110,17 @@ HWTEST_F(CloudSyncManagerTest, StartSyncTest, TestSize.Level1)
  */
 HWTEST_F(CloudSyncManagerTest, StopSyncTest, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetCallbackProxy Start";
+    GTEST_LOG_(INFO) << "StopSyncTest Start";
     try {
         int res = g_managePtr_->StopSync();
         EXPECT_EQ(res, E_OK);
-    } catch(...) {
+    } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetCallbackProxy FAILED";
+        GTEST_LOG_(INFO) << " StopSyncTest FAILED";
     }
-    GTEST_LOG_(INFO) << "GetCallbackProxy End";
+    GTEST_LOG_(INFO) << "StopSyncTest End";
 }
 
 } // namespace Test
-} // namespace FileManagement::CloudSync {
+} // namespace FileManagement::CloudSync
 } // namespace OHOS
