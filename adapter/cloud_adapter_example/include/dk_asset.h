@@ -19,9 +19,16 @@
 #include <string>
 
 namespace DriveKit {
+enum class DKAssetOperType {
+    DK_ASSET_ADD = 0,
+    DK_ASSET_UPDATE,
+    DK_ASSET_DELETE,
+    DK_ASSET_MAX,
+};
 struct DKAsset {
     std::string uri;
-    std::string fileName;
+    std::string assetName;
+    DKAssetOperType operationType; 
 };
 } // namespace DriveKit
 

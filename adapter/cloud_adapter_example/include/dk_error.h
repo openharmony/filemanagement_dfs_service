@@ -22,6 +22,8 @@
 namespace DriveKit {
 enum class DKLocalErrorCode {
     NO_ERROR = 0,
+    IPC_CONNECT_FAILED,
+    IPC_SEND_FAILED,
     DATA_TYPE_ERROR,
     ACCESS_DENIED,
     ATOMIC_ERROR,
@@ -46,6 +48,7 @@ enum class DKLocalErrorCode {
     UNEXPECTED_SERVER_RESPONSE,
     CONFIGURATION_ERROR,
     SHARE_UI_TIMEOUT,
+    BAD_ALLOC_MEMORY,
 };
 
 enum class DKServerErrorCode {

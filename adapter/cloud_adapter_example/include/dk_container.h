@@ -25,12 +25,6 @@
 #include <string>
 
 namespace DriveKit {
-
-enum class DKDatabaseScope {
-    DK_PUBLIC_DATABASE = 0,
-    DK_PRIVATE_DATABASE,
-    DK_SHARED_DATABASE,
-};
 using DKSubscriptionId = std::string;
 struct DKSubscription {
     int64_t expirationTime;
@@ -59,33 +53,34 @@ private:
     DKSubscription subscription_;
     DKSubscriptionId id_;
 };
-class DriveKit;
+using SaveSubscriptionCallback = std::function<void(std::shared_ptr<DKContext>,
+    std::shared_ptr<const DKContainer>, DKSubscriptionResult &, const DKError &)>;
+using DelSubscriptionCallback = std::function<void(std::shared_ptr<DKContext>, const DKError &)>;
+
+class DriveKitNative;
 class DKContainer : public std::enable_shared_from_this<DKContainer> {
+    friend class DriveKitNative;
 public:
-    DKContainer(DKAppBundleName bundleName, DKContainerName containerName, std::shared_ptr<DriveKit> driveKit)
-    {
-        bundleName_ = bundleName;
-        containerName_ = containerName;
-        driveKit_ = driveKit;
-        if (driveKit_) {
-            publicDatabase_ = std::make_shared<DKDatabase>();
-            privateDatabase_ = std::make_shared<DKDatabase>();
-            sharedDatabase_ = std::make_shared<DKDatabase>();
-        }
-    }
-    ~DKContainer() = default;
     std::shared_ptr<DKDatabase> GetPrivateDatabase();
     std::shared_ptr<DKDatabase> GetDatabaseWithdatabaseScope(DKDatabaseScope databaseScope);
     DKLocalErrorCode SaveSubscription(std::shared_ptr<DKContext> contex,
                                       DKSubscription &subscription,
-                                      std::function<void(std::shared_ptr<DKContext>,
-                                                         std::shared_ptr<const DKContainer>,
-                                                         DKSubscriptionResult &,
-                                                         const DKError &)> callback);
+                                      SaveSubscriptionCallback callback);
     DKLocalErrorCode DeleteSubscription(std::shared_ptr<DKContext> context,
                                         DKSubscriptionId id,
-                                        std::function<void(std::shared_ptr<DKContext>, const DKError &)> callback);
+                                        DelSubscriptionCallback callback);
 
+public:
+    DKContainer(DKAppBundleName bundleName, DKContainerName containerName, std::shared_ptr<DriveKitNative> driveKit)
+    {
+        bundleName_ = bundleName;
+        containerName_ = containerName;
+        driveKit_ = driveKit;
+    }
+protected:
+    void Init();
+
+public:
     DKAppBundleName GetAppBundleName()
     {
         return bundleName_;
@@ -94,16 +89,16 @@ public:
     {
         return containerName_;
     }
-    std::shared_ptr<DriveKit> GetDriveKit()
+    std::shared_ptr<DriveKitNative> GetDriveKitNative()
     {
         return driveKit_;
     }
 
 private:
-    std::shared_ptr<DriveKit> driveKit_;
-    std::shared_ptr<DKDatabase> publicDatabase_;
-    std::shared_ptr<DKDatabase> privateDatabase_;
-    std::shared_ptr<DKDatabase> sharedDatabase_;
+    std::shared_ptr<DriveKitNative> driveKit_;
+    std::shared_ptr<DKDatabase> publicDatabase_ = nullptr;
+    std::shared_ptr<DKDatabase> privateDatabase_ = nullptr;
+    std::shared_ptr<DKDatabase> sharedDatabase_ = nullptr;
     DKAppBundleName bundleName_;
     DKContainerName containerName_;
 };

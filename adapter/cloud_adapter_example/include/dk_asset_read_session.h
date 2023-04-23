@@ -30,6 +30,7 @@ public:
     void GetAssetInfo();
     void Seek(int64_t offset, DKSeekFromWhere fromWhere);
     int64_t Read(int64_t size, char *buffer, DKError &error);
+    int64_t PRead(int64_t offset, int64_t size, char *buffer, DKError &error);
     void Close();
 };
 } // namespace DriveKit

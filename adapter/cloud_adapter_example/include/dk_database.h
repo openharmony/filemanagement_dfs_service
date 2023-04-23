@@ -35,6 +35,41 @@ enum class DKSavePolicy {
     DK_CURRENT_WRITER_WINS,
 };
 
+enum class DKDatabaseScope {
+    DK_PUBLIC_DATABASE = 0,
+    DK_PRIVATE_DATABASE,
+    DK_SHARED_DATABASE,
+};
+
+using DKSchemaRawData = std::string;
+struct DKSchemaField {
+    DKFieldKey name;
+    DKRecordFieldType type;
+    bool primary;
+    bool nullable;
+    bool sortable;
+    bool searchable;
+    bool queryable;
+    DKRecordFieldType listType;
+    DKRecordType refRecordType;
+};
+struct DKSchemaNode {
+    DKRecordType recordType;
+    std::string tableName;
+    std::map<DKFieldKey, DKSchemaField> fields;
+    std::vector<DKFieldKey> dupCheckFields;
+};
+struct DKOrderTable {
+    DKRecordType recordType;
+    std::string tableName;
+};
+struct DKSchema {
+    int version;
+    std::map<DKRecordType, DKSchemaNode> recordTypes;
+    DKSchemaRawData schemaData;
+    std::vector<DKOrderTable> orderTables;
+};
+
 struct DKPredicate {
     std::string predicateFormat;
 };
@@ -49,25 +84,19 @@ struct DKQuery {
     DKSortDescriptors sortDescriptors;
 };
 
-struct UploadObject {
-    std::string id;
-    int64_t start;
-    int64_t length;
-    int64_t number;
-};
-
-struct UploadResource {
-    std::string resourceId;
-    std::vector<UploadObject> uploadObject;
-};
-
 class DKRecordOperResult : public DKResult {
+public:
+    DKRecordOperResult() {}
+    DKRecordOperResult(DKLocalErrorCode code)
+    {
+        error_.SetLocalError(code);
+    }
 public:
     void SetDKRecord(DKRecord record)
     {
         record_ = record;
     }
-    DKRecord GetDKRecord()
+    DKRecord GetDKRecord() const
     {
         return record_;
     }
@@ -84,9 +113,10 @@ using DKFieldKeyArray = std::vector<DKFieldKey>;
 using DKQueryCursor = std::string;
 class DKContainer;
 class DKDatabase : public std::enable_shared_from_this<DKDatabase> {
+    friend class DKContainer;
 public:
-    DKDatabase() = default;
-    ~DKDatabase() = default;
+    DKDatabase(std::shared_ptr<DKContainer> container, DKDatabaseScope scope);
+    ~DKDatabase() {}
 
     using SaveRecordsCallback = std::function<void(std::shared_ptr<DKContext>,
                                                    std::shared_ptr<const DKDatabase>,
@@ -110,7 +140,7 @@ public:
     using FetchRecordsCallback = std::function<void(std::shared_ptr<DKContext>,
                                                     std::shared_ptr<const DKDatabase>,
                                                     std::shared_ptr<const std::map<DKRecordId, DKRecord>>,
-                                                    DKQueryCursor nextcursor,
+                                                    DKQueryCursor nextCursor,
                                                     const DKError &)>;
     DKLocalErrorCode FetchRecords(std::shared_ptr<DKContext> context,
                                   DKRecordType recordType,
@@ -162,7 +192,7 @@ public:
     using FetchDatabaseCallback = std::function<void(std::shared_ptr<DKContext>,
                                                      std::shared_ptr<const DKDatabase>,
                                                      std::shared_ptr<const std::map<DKRecordId, DKRecord>>,
-                                                     DKQueryCursor nextcursor,
+                                                     DKQueryCursor nextCursor,
                                                      bool hasMore,
                                                      const DKError &)>;
     DKLocalErrorCode FetchDatabaseChanges(std::shared_ptr<DKContext> context,
@@ -181,6 +211,8 @@ public:
     std::shared_ptr<DKAssetReadSession>
         NewAssetReadSession(DKRecordType recordType, DKRecordId recordId, DKFieldKey assetKey, DKAssetPath assetPath);
 
+protected:
+ void Init();
 private:
     DKContainerName containerName_;
 };

@@ -28,34 +28,6 @@
 namespace DriveKit {
 using DKAppId = std::string;
 using DKDatabaseName = std::string;
-using DKSchemaRawData = std::string;
-struct DKSchemaField {
-    DKFieldKey name;
-    DKRecordFieldType type;
-    bool primary;
-    bool nullable;
-    bool sortable;
-    bool searchable;
-    bool queryable;
-    DKRecordFieldType listType;
-    DKRecordType refRecordType;
-};
-struct DKSchemaNode {
-    DKRecordType recordType;
-    std::string tableName;
-    std::map<DKFieldKey, DKSchemaField> fields;
-    std::vector<DKFieldKey> dupCheckFields;
-};
-struct DKOrderTable {
-    DKRecordType recordType;
-    std::string tableName;
-};
-struct DKSchema {
-    int version;
-    std::map<DKRecordType, DKSchemaNode> recordTypes;
-    DKSchemaRawData schemaData;
-    std::vector<DKOrderTable> orderTables;
-};
 struct DKContainerInfo {
     DKAppBundleName appBundleName;
     DKContainerName containerName;
@@ -83,17 +55,17 @@ struct DKUserInfo {
     uint64_t totalSpace;
     uint64_t remainSpace;
 };
-class DriveKit : public std::enable_shared_from_this<DriveKit> {
+class DriveKitNative : public std::enable_shared_from_this<DriveKitNative> {
     friend class DKContainer;
     friend class DKDatabase;
 
 public:
-    DriveKit(const DriveKit &) = delete;
-    DriveKit(DriveKit &&) = delete;
-    DriveKit &operator=(const DriveKit &) = delete;
-    DriveKit &operator=(DriveKit &&) = delete;
-    static std::shared_ptr<DriveKit> getInstance(int userId);
-    virtual ~DriveKit();
+    DriveKitNative(const DriveKitNative &) = delete;
+    DriveKitNative(DriveKitNative &&) = delete;
+    DriveKitNative &operator=(const DriveKitNative &) = delete;
+    DriveKitNative &operator=(DriveKitNative &&) = delete;
+    static std::shared_ptr<DriveKitNative> GetInstance(int userId);
+    virtual ~DriveKitNative();
 
     std::shared_ptr<DKContainer> GetDefaultContainer(DKAppBundleName bundleName);
     std::shared_ptr<DKContainer> GetContainer(DKAppBundleName bundleName, DKContainerName containerName);
@@ -105,14 +77,14 @@ public:
     DKError GetServerTime(time_t &time);
 
 private:
-    DriveKit(int userId);
+    DriveKitNative(int userId);
 
     std::mutex containMutex_;
     std::map<std::string, std::shared_ptr<DKContainer>> containers_;
     std::mutex appInfoMutex_;
     std::map<DKAppBundleName, DKAppInfo> appInfos_;
     static std::mutex drivekitMutex_;
-    static std::map<int, std::shared_ptr<DriveKit>> driveKits_;
+    static std::map<int, std::shared_ptr<DriveKitNative>> driveKits_;
     DKUserInfo userInfo_;
     int userId_;
 };

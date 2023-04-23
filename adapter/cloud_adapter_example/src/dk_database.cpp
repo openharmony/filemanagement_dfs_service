@@ -132,4 +132,10 @@ std::shared_ptr<DKAssetReadSession> DKDatabase::NewAssetReadSession(DKRecordType
 {
     return std::make_shared<DKAssetReadSession>();
 }
+DKDatabase::DKDatabase(std::shared_ptr<DKContainer> container, DKDatabaseScope scope)
+{
+}
+void DKDatabase::Init()
+{
+}
 } // namespace DriveKit
