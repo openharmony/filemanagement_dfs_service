@@ -51,6 +51,7 @@ ohos_unittest("data_sync_manager_test") {
 
   external_deps = [
     "init:libbegetutil",
+    "kv_store:distributeddata_inner",
     "media_library:cloud_sync_header",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",

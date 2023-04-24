@@ -15,8 +15,16 @@
 
 #include "gallery_data_syncer.h"
 
+#include <filesystem>
+
 #include "dfs_error.h"
 #include "utils_log.h"
+
+#include "distributed_kv_data_manager.h"
+#include "single_kvstore.h"
+
+const OHOS::DistributedKv::AppId KVSTORE_APPID_TMP = {"com.ohos.medialibrary.medialibrarydata"};
+const OHOS::DistributedKv::StoreId KVSTORE_STOREID_TMP = {"medialibrary_thumbnail"};
 
 namespace OHOS {
 namespace FileManagement {
@@ -44,8 +52,35 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
         exit(0);
     }
 
+    /* init kvdb */
+    string kvDir = DATA_APP_EL2 + to_string(userId) + KV_DATABASE_DIR;
+    std::shared_ptr<DistributedKv::SingleKvStore> kvStorePtr;
+    DistributedKv::DistributedKvDataManager dataManager;
+    DistributedKv::Options options = {
+        .createIfMissing = true,
+        .encrypt = false,
+        .backup = false,
+        .autoSync = false,
+        .area = DistributedKv::Area::EL2,
+        .kvStoreType = DistributedKv::KvStoreType::SINGLE_VERSION,
+        .baseDir = kvDir,
+    };
+
+    DistributedKv::Status status = dataManager.GetSingleKvStore(options, KVSTORE_APPID_TMP, KVSTORE_STOREID_TMP,
+        kvStorePtr);
+    if (status != DistributedKv::Status::SUCCESS || kvStorePtr == nullptr) {
+        LOGE("gallyer data syncer init kvdb fail");
+        exit(0);
+    }
+
+    /* init thumbnail and lcd tmp file path */
+    auto path = THUMBNAIL_LCD_TMP_BASE_DIR + to_string(userId) + "/" + BUNDLE_NAME;
+    if (!std::filesystem::create_directories(path)) {
+        LOGE("Failed to create directory");
+    }
+
     /* init handler */
-    fileHandler_ = make_shared<FileDataHandler>(rdb_);
+    fileHandler_ = make_shared<FileDataHandler>(rdb_, kvStorePtr, path);
 }
 
 void GalleryDataSyncer::Schedule()

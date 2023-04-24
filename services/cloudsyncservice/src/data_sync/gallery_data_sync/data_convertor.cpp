@@ -15,9 +15,15 @@
 
 #include "data_convertor.h"
 
+#include <fstream>
+
 #include "dfs_error.h"
 #include "utils_log.h"
 #include "sdk_helper.h"
+
+#include "distributed_kv_data_manager.h"
+
+using Value = OHOS::DistributedKv::Blob;
 
 namespace OHOS {
 namespace FileManagement {
@@ -25,18 +31,18 @@ namespace CloudSync {
 using namespace std;
 using namespace NativeRdb;
 
-DataConvertor::DataConvertor(const vector<std::string> localColumns,
-    const vector<std::string> cloudColumns,
-    const vector<DataType> types, int32_t size)
-    : localColumns_(localColumns),
-      cloudColumns_(cloudColumns),
-      types_(types),
-      size_(size)
+DataConvertor::DataConvertor(const std::vector<std::string> localColumns,
+    const std::vector<std::string> cloudColumns,
+    const std::vector<DataType> types,
+    int32_t size)
+    : localColumns_(localColumns), cloudColumns_(cloudColumns), types_(types), size_(size)
 {
     opToHandlerMap_[INT] = &DataConvertor::HandleInt;
     opToHandlerMap_[LONG] = &DataConvertor::HandleLong;
     opToHandlerMap_[STRING] = &DataConvertor::HandleString;
     opToHandlerMap_[ASSET] = &DataConvertor::HandleAsset;
+    opToHandlerMap_[THUMBNAILKEY] = &DataConvertor::HandleThumbnailOrLcd;
+    opToHandlerMap_[LCDKEY] = &DataConvertor::HandleThumbnailOrLcd;
 }
 
 int32_t DataConvertor::ResultSetToRecords(const unique_ptr<NativeRdb::ResultSet> resultSet,
@@ -153,6 +159,47 @@ int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record,
 
     return E_OK;
 }
+
+DataAssetConvertor::DataAssetConvertor(const std::vector<std::string> localColumns,
+    const std::vector<std::string> cloudColumns,
+    const std::vector<DataType> types, int32_t size,
+    std::shared_ptr<OHOS::DistributedKv::SingleKvStore> kvStorePtr,
+    const std::string path): DataConvertor(localColumns, cloudColumns, types, size),
+    kvStorePtr_(kvStorePtr),
+    path_(path)
+{
+}
+
+void DataAssetConvertor::HandleThumbnailOrLcd(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
+    int32_t index, NativeRdb::ResultSet &resultSet)
+{
+    string thuOrLcdKey;
+    int32_t err = resultSet.GetString(index, thuOrLcdKey);
+    if (err != 0) {
+        LOGE("result set get string err %{public}d", err);
+        return;
+    }
+    Value value;
+    DistributedKv::Status status = kvStorePtr_->Get(thuOrLcdKey, value);
+    if (status != DistributedKv::Status::SUCCESS) {
+        LOGE("kvStore get thumbnail or lcd err status:0x%{public}x", status);
+        return;
+    }
+    string filename = path_ + "/" + thuOrLcdKey + ".jpg";
+    ConvertToAsset(filename, value);
+    data[key] = DriveKit::DKRecordField(filename);
+}
+
+void DataAssetConvertor::ConvertToAsset(const std::string &filename, const OHOS::DistributedKv::Blob &value) const
+{
+    if (!std::filesystem::exists(filename)) {
+        std::ofstream thuOrLcdFile(filename, std::ios::binary);
+        std::string blobStr = value.ToString();
+        thuOrLcdFile.write(blobStr.c_str(), blobStr.size());
+        thuOrLcdFile.close();
+    }
+}
+
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
