@@ -474,16 +474,18 @@ void DataSyncer::OnDeleteRecords(shared_ptr<DKContext> context,
 
 void DataSyncer::OnModifyRecords(shared_ptr<DKContext> context,
     shared_ptr<const DKDatabase> database,
-    shared_ptr<const map<DKRecordId, DKRecordOperResult>> map, const DKError &err)
+    shared_ptr<const map<DKRecordId, DKRecordOperResult>> saveMap,
+    shared_ptr<const map<DKRecordId, DKRecordOperResult>> deleteMap,
+    const DKError &err)
 {
     LOGI("%{private}d %{private}s on create records %{public}zu", userId_,
-        bundleName_.c_str(), map->size());
+        bundleName_.c_str(), saveMap->size());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
 
     /* update local */
     auto handler = ctx->GetHandler();
-    int32_t ret = handler->OnModifyRecords(*map);
+    int32_t ret = handler->OnModifyRecords(*saveMap);
     if (ret != E_OK) {
         LOGE("handler on modify records err %{public}d", ret);
         return;

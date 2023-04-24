@@ -101,6 +101,7 @@ private:
     void OnModifyRecords(std::shared_ptr<DriveKit::DKContext>,
         std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
         const DriveKit::DKError &);
 
     /* task */
