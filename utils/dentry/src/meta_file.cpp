@@ -200,9 +200,9 @@ static uint32_t DentryHash(const std::string &name)
         return 0;
     }
 
-    constexpr int inLen = 8;
-    constexpr int bufLen = 4;
-    constexpr int hashWidth = 16;
+    constexpr int inLen = 8;      /* hash input buf size 8 */
+    constexpr int bufLen = 4;     /* hash output buf size 4 */
+    constexpr int hashWidth = 16; /* hash operation width 4 */
     uint32_t in[inLen], buf[bufLen];
     int len = name.length();
     const char *p = name.c_str();
@@ -347,7 +347,9 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
     HmdfsDentryGroup dentryBlk = {0};
 
     namehash = DentryHash(base.name);
-    while (1) {
+
+    bool found = false;
+    while (!found) {
         if (level == MAX_BUCKET_LEVEL) {
             return ENOSPC;
         }
@@ -372,13 +374,13 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
             }
             bitPos = RoomForFilename(dentryBlk.bitmap, GetDentrySlots(base.name.length()), DENTRY_PER_GROUP);
             if (bitPos < DENTRY_PER_GROUP) {
-                goto ADD;
+                found = true;
+                break;
             }
         }
         ++level;
     }
 
-ADD:
     pos = GetDentryGroupPos(bidx);
     UpdateDentry(dentryBlk, base, namehash, bitPos);
     int size = FileUtils::WriteFile(fd_, &dentryBlk, pos, DENTRYGROUP_SIZE);
