@@ -35,7 +35,6 @@ ohos_unittest("cloud_sync_service_stub_test") {
     "ability_base:want",
     "dfs_service:cloudsync_kit_inner",
     "ipc:ipc_core",
-    "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -92,7 +91,6 @@ ohos_unittest("cloud_sync_service_test") {
     "dfs_service:cloudsync_kit_inner",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "kv_store:distributeddata_inner",
     "media_library:cloud_sync_header",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",

@@ -65,10 +65,6 @@ private:
 
     /* handler */
     std::shared_ptr<FileDataHandler> fileHandler_;
-
-    /* kvdb dir and thumbnail lcd tmp dir */
-    const std::string THUMBNAIL_LCD_TMP_BASE_DIR = "/data/service/el1/public/cloudfile/";
-    const std::string KV_DATABASE_DIR = "/database/com.ohos.medialibrary.medialibrarydata/";
 };
 
 class RdbCallback : public NativeRdb::RdbOpenCallback {
