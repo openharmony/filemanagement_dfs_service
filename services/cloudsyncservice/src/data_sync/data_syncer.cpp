@@ -298,9 +298,15 @@ int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)
         return ret;
     }
 
-    ret = AsyncRun(context, &DataSyncer::ModifyRecords);
+    ret = AsyncRun(context, &DataSyncer::ModifyMdirtyRecords);
     if (ret != E_OK) {
-        LOGE("async run modify records err %{public}d", ret);
+        LOGE("async run modify mdirty records err %{public}d", ret);
+        return ret;
+    }
+
+    ret = AsyncRun(context, &DataSyncer::ModifyFdirtyRecords);
+    if (ret != E_OK) {
+        LOGE("async run modify fdirty records err %{public}d", ret);
         return ret;
     }
 
@@ -387,7 +393,7 @@ void DataSyncer::DeleteRecords(shared_ptr<TaskContext> context)
     }
 }
 
-void DataSyncer::ModifyRecords(shared_ptr<TaskContext> context)
+void DataSyncer::ModifyMdirtyRecords(shared_ptr<TaskContext> context)
 {
     LOGI("%{private}d %{private}s modifies records", userId_, bundleName_.c_str());
 
@@ -399,7 +405,7 @@ void DataSyncer::ModifyRecords(shared_ptr<TaskContext> context)
 
     /* query local */
     vector<DKRecord> records;
-    int32_t ret = handler->GetModifiedRecords(records);
+    int32_t ret = handler->GetMetaModifiedRecords(records);
     if (ret != E_OK) {
         LOGE("handler get modified records err %{public}d", ret);
         return;
@@ -411,7 +417,42 @@ void DataSyncer::ModifyRecords(shared_ptr<TaskContext> context)
     }
 
     /* upload */
-    auto callback = AsyncCallback(&DataSyncer::OnModifyRecords);
+    auto callback = AsyncCallback(&DataSyncer::OnModifyMdirtyRecords);
+    if (callback == nullptr) {
+        LOGE("wrap on modify records fail");
+        return;
+    }
+    ret = sdkHelper_.ModifyRecords(context, records, callback);
+    if (ret != E_OK) {
+        LOGE("sdk modify records err %{public}d", ret);
+    }
+}
+
+void DataSyncer::ModifyFdirtyRecords(shared_ptr<TaskContext> context)
+{
+    LOGI("%{private}d %{private}s modifies records", userId_, bundleName_.c_str());
+
+    auto handler = context->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return;
+    }
+
+    /* query local */
+    vector<DKRecord> records;
+    int32_t ret = handler->GetFileModifiedRecords(records);
+    if (ret != E_OK) {
+        LOGE("handler get modified records err %{public}d", ret);
+        return;
+    }
+
+    /* no need upload */
+    if (records.size() == 0) {
+        return;
+    }
+
+    /* upload */
+    auto callback = AsyncCallback(&DataSyncer::OnModifyFdirtyRecords);
     if (callback == nullptr) {
         LOGE("wrap on modify records fail");
         return;
@@ -472,7 +513,7 @@ void DataSyncer::OnDeleteRecords(shared_ptr<DKContext> context,
     }
 }
 
-void DataSyncer::OnModifyRecords(shared_ptr<DKContext> context,
+void DataSyncer::OnModifyMdirtyRecords(shared_ptr<DKContext> context,
     shared_ptr<const DKDatabase> database,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> saveMap,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> deleteMap,
@@ -485,14 +526,41 @@ void DataSyncer::OnModifyRecords(shared_ptr<DKContext> context,
 
     /* update local */
     auto handler = ctx->GetHandler();
-    int32_t ret = handler->OnModifyRecords(*saveMap);
+    int32_t ret = handler->OnModifyMdirtyRecords(*saveMap);
     if (ret != E_OK) {
         LOGE("handler on modify records err %{public}d", ret);
         return;
     }
 
     /* push more */
-    ret = AsyncRun(ctx, &DataSyncer::ModifyRecords);
+    ret = AsyncRun(ctx, &DataSyncer::ModifyMdirtyRecords);
+    if (ret != E_OK) {
+        LOGE("async run modify records err %{public}d", ret);
+        return;
+    }
+}
+
+void DataSyncer::OnModifyFdirtyRecords(shared_ptr<DKContext> context,
+    shared_ptr<const DKDatabase> database,
+    shared_ptr<const map<DKRecordId, DKRecordOperResult>> saveMap,
+    shared_ptr<const map<DKRecordId, DKRecordOperResult>> deleteMap,
+    const DKError &err)
+{
+    LOGI("%{private}d %{private}s on create records %{public}zu", userId_,
+        bundleName_.c_str(), saveMap->size());
+
+    auto ctx = static_pointer_cast<TaskContext>(context);
+
+    /* update local */
+    auto handler = ctx->GetHandler();
+    int32_t ret = handler->OnModifyFdirtyRecords(*saveMap);
+    if (ret != E_OK) {
+        LOGE("handler on modify records err %{public}d", ret);
+        return;
+    }
+
+    /* push more */
+    ret = AsyncRun(ctx, &DataSyncer::ModifyFdirtyRecords);
     if (ret != E_OK) {
         LOGE("async run modify records err %{public}d", ret);
         return;

@@ -31,15 +31,18 @@ public:
     /* upload */
     virtual int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) = 0;
     virtual int32_t GetDeletedRecords(std::vector<DriveKit::DKRecord> &records) = 0;
-    virtual int32_t GetModifiedRecords(std::vector<DriveKit::DKRecord> &records) = 0;
+    virtual int32_t GetMetaModifiedRecords(std::vector<DriveKit::DKRecord> &records) = 0;
+    virtual int32_t GetFileModifiedRecords(std::vector<DriveKit::DKRecord> &records);
 
     /* upload callback */
     virtual int32_t OnCreateRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) = 0;
     virtual int32_t OnDeleteRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) = 0;
-    virtual int32_t OnModifyRecords(const std::map<DriveKit::DKRecordId,
+    virtual int32_t OnModifyMdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) = 0;
+    virtual int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
+        DriveKit::DKRecordOperResult> &map);
 
     /* cursor */
     virtual int32_t SetCursor();

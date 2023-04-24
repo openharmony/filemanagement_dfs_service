@@ -55,7 +55,7 @@ int32_t AlbumDataHandler::GetDeletedRecords(vector<DKRecord> &records)
     return E_OK;
 }
 
-int32_t AlbumDataHandler::GetModifiedRecords(vector<DKRecord> &records)
+int32_t AlbumDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
 {
     return E_OK;
 }
@@ -70,7 +70,7 @@ int32_t AlbumDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResu
     return E_OK;
 }
 
-int32_t AlbumDataHandler::OnModifyRecords(const map<DKRecordId, DKRecordOperResult> &map)
+int32_t AlbumDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     return E_OK;
 }
