@@ -48,7 +48,7 @@ SdkHelper::SdkHelper(const int32_t userId, const std::string bundleName)
 
 int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor cursor,
     function<void(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+        std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
         const DriveKit::DKError &)> callback)
 {
     auto ctx = static_pointer_cast<TaskContext>(context);
@@ -71,7 +71,7 @@ int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context, DriveKi
 
 int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor cursor,
     std::function<void(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+        std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
         bool, const DriveKit::DKError &)> callback)
 {
     auto ctx = static_pointer_cast<TaskContext>(context);
@@ -98,7 +98,7 @@ int32_t SdkHelper::CreateRecords(shared_ptr<DriveKit::DKContext> context,
         std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
         const DriveKit::DKError &)> callback)
 {
-    auto err = database_->SaveRecords(context, records, DriveKit::DKSavePolicy::DK_SAVE_IF_UNCHANGED, callback);
+    auto err = database_->SaveRecords(context, std::move(records), DriveKit::DKSavePolicy::DK_SAVE_IF_UNCHANGED, callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("drivekit save records err %{public}d", err);
         return E_CLOUD_SDK;

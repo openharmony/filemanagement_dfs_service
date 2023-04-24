@@ -40,11 +40,11 @@ void FileDataHandler::GetFetchCondition(int32_t &limitRes, DKRecordType &recordT
     desiredKeys = desiredKeys_;
 }
 
-int32_t FileDataHandler::OnFetchRecords(const shared_ptr<const map<DKRecordId, DKRecord>> &map)
+int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records)
 {
     int32_t ret = E_OK;
-    for (const auto &it : *map) {
-        const auto &record = it.second;
+    for (const auto &it : *records) {
+        const auto &record = it;
         /* check for local same recordid */
         NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
         predicates.SetWhereClause(Media::MEDIA_DATA_DB_CLOUD_ID + " = ?");
@@ -224,8 +224,8 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
             static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
 
-        DKRecordDatas data;
-        record.GetRecordDatas(data);
+        DKRecordData data;
+        record.GetRecordData(data);
         auto iter = data.find(Media::MEDIA_DATA_DB_ID);
         if (iter == data.end()) {
             LOGE("no id in record data");
@@ -251,8 +251,8 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
     for (auto &entry : map) {
         auto record = const_cast<DKRecordOperResult &>(entry.second).GetDKRecord();
 
-        DKRecordDatas data;
-        record.GetRecordDatas(data);
+        DKRecordData data;
+        record.GetRecordData(data);
         auto iter = data.find(Media::MEDIA_DATA_DB_CLOUD_ID);
         if (iter == data.end()) {
             LOGE("no id in record data");
@@ -289,8 +289,8 @@ int32_t FileDataHandler::OnModifyRecords(const map<DKRecordId, DKRecordOperResul
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
             static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
 
-        DKRecordDatas data;
-        record.GetRecordDatas(data);
+        DKRecordData data;
+        record.GetRecordData(data);
         auto iter = data.find(Media::MEDIA_DATA_DB_CLOUD_ID);
         if (iter == data.end()) {
             LOGE("no id in record data");

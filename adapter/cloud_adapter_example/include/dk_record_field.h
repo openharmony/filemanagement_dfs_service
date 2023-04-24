@@ -39,19 +39,18 @@ enum class DKRecordFieldType {
 class DKRecordField;
 using DKRecordFieldList = std::vector<DKRecordField>;
 using DKRecordFieldMap = std::map<std::string, DKRecordField>;
-
+using DKFieldValue = std::variant<std::monostate,
+                                  int64_t,
+                                  double,
+                                  std::string,
+                                  bool,
+                                  std::vector<uint8_t>,
+                                  DKRecordFieldList,
+                                  DKRecordFieldMap,
+                                  DKAsset,
+                                  DKReference>;
 class DKRecordField {
 public:
-    using DKFieldValue = std::variant<std::monostate,
-                                      int64_t,
-                                      double,
-                                      std::string,
-                                      bool,
-                                      std::vector<uint8_t>,
-                                      DKRecordFieldList,
-                                      DKRecordFieldMap,
-                                      DKAsset,
-                                      DKReference>;
     DKRecordField();
     ~DKRecordField();
     DKRecordField(DKFieldValue fieldValue) noexcept;
@@ -72,6 +71,7 @@ public:
     DKRecordField &operator=(DKRecordField &&recordField) noexcept;
     DKRecordField &operator=(const DKRecordField &recordField);
     DKRecordFieldType GetType() const;
+    DKFieldValue GetFieldValue() const;
     DKLocalErrorCode GetInt(int &val) const;
     DKLocalErrorCode GetLong(int64_t &val) const;
     DKLocalErrorCode GetDouble(double &val) const;

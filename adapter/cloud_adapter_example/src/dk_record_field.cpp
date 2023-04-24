@@ -20,7 +20,7 @@ DKRecordField::DKRecordField() : type_(DKRecordFieldType::FIELD_TYPE_NULL) {}
 
 DKRecordField::~DKRecordField() {}
 
-DKRecordField::DKRecordField(DKRecordField::DKFieldValue fieldValue) noexcept : value_(std::move(fieldValue))
+DKRecordField::DKRecordField(DKFieldValue fieldValue) noexcept : value_(std::move(fieldValue))
 {
     type_ = DKRecordFieldType(value_.index());
 }
@@ -111,6 +111,10 @@ DKRecordField &DKRecordField::operator=(const DKRecordField &recordField)
 DKRecordFieldType DKRecordField::GetType() const
 {
     return type_;
+}
+DKFieldValue DKRecordField::GetFieldValue() const
+{
+    return value_;
 }
 DKLocalErrorCode DKRecordField::GetInt(int &val) const
 {

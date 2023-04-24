@@ -92,13 +92,22 @@ public:
         error_.SetLocalError(code);
     }
 public:
-    void SetDKRecord(DKRecord record)
+    void SetDKRecord(const DKRecord &record)
     {
         record_ = record;
+    }
+    void SetDKRecord(DKRecord &&record)
+    {
+        record_ = std::move(record);
     }
     DKRecord GetDKRecord() const
     {
         return record_;
+    }
+    void StealDKRecord(DKRecord &record)
+    {
+        record = std::move(record_);
+        return;
     }
 
 private:
@@ -120,10 +129,10 @@ public:
 
     using SaveRecordsCallback = std::function<void(std::shared_ptr<DKContext>,
                                                    std::shared_ptr<const DKDatabase>,
-                                                   std::shared_ptr<const std::map<DKRecordId, DKRecordOperResult>>,
+                                                   std::shared_ptr<std::map<DKRecordId, DKRecordOperResult>>,
                                                    const DKError &)>;
     DKLocalErrorCode SaveRecords(std::shared_ptr<DKContext> context,
-                                 std::vector<DKRecord> &records,
+                                 std::vector<DKRecord> &&records,
                                  DKSavePolicy policy,
                                  SaveRecordsCallback callback);
 
@@ -133,13 +142,13 @@ public:
                                                   DKRecordOperResult,
                                                   const DKError &)>;
     DKLocalErrorCode SaveRecord(std::shared_ptr<DKContext> context,
-                                DKRecord &record,
+                                DKRecord &&record,
                                 DKSavePolicy policy,
                                 SaveRecordCallback callback);
 
     using FetchRecordsCallback = std::function<void(std::shared_ptr<DKContext>,
                                                     std::shared_ptr<const DKDatabase>,
-                                                    std::shared_ptr<const std::map<DKRecordId, DKRecord>>,
+                                                    std::shared_ptr<std::vector<DKRecord>>,
                                                     DKQueryCursor nextCursor,
                                                     const DKError &)>;
     DKLocalErrorCode FetchRecords(std::shared_ptr<DKContext> context,
@@ -152,7 +161,7 @@ public:
     using FetchRecordCallback = std::function<void(std::shared_ptr<DKContext>,
                                                    std::shared_ptr<const DKDatabase>,
                                                    DKRecordId,
-                                                   const DKRecord &,
+                                                   DKRecord &,
                                                    const DKError &)>;
     DKLocalErrorCode FetchRecordWithId(std::shared_ptr<DKContext> context,
                                        DKRecordType recordType,
@@ -162,22 +171,22 @@ public:
 
     using DeleteRecordsCallback = std::function<void(std::shared_ptr<DKContext>,
                                                      std::shared_ptr<const DKDatabase>,
-                                                     std::shared_ptr<const std::map<DKRecordId, DKRecordOperResult>>,
+                                                     std::shared_ptr<std::map<DKRecordId, DKRecordOperResult>>,
                                                      const DKError &)>;
     DKLocalErrorCode DeleteRecords(std::shared_ptr<DKContext> context,
-                                   std::vector<DKRecord> &records,
+                                   std::vector<DKRecord> &&records,
                                    DKSavePolicy policy,
                                    DeleteRecordsCallback callback);
 
     using ModifyRecordsCallback =
         std::function<void(std::shared_ptr<DKContext>,
                            std::shared_ptr<const DKDatabase>,
-                           std::shared_ptr<const std::map<DKRecordId, DKRecordOperResult>> saveResult,
-                           std::shared_ptr<const std::map<DKRecordId, DKRecordOperResult>> delResult,
+                           std::shared_ptr<std::map<DKRecordId, DKRecordOperResult>> saveResult,
+                           std::shared_ptr<std::map<DKRecordId, DKRecordOperResult>> delResult,
                            const DKError &)>;
     DKLocalErrorCode ModifyRecords(std::shared_ptr<DKContext> context,
-                                   std::vector<DKRecord> &recordsToSave,
-                                   std::vector<DKRecord> &recordsToDelete,
+                                   std::vector<DKRecord> &&recordsToSave,
+                                   std::vector<DKRecord> &&recordsToDelete,
                                    DKSavePolicy policy,
                                    bool atomically,
                                    ModifyRecordsCallback callback);
@@ -191,7 +200,7 @@ public:
 
     using FetchDatabaseCallback = std::function<void(std::shared_ptr<DKContext>,
                                                      std::shared_ptr<const DKDatabase>,
-                                                     std::shared_ptr<const std::map<DKRecordId, DKRecord>>,
+                                                     std::shared_ptr<std::vector<DKRecord>>,
                                                      DKQueryCursor nextCursor,
                                                      bool hasMore,
                                                      const DKError &)>;

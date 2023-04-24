@@ -22,7 +22,7 @@
 
 namespace DriveKit {
 DKLocalErrorCode DKDatabase::SaveRecords(std::shared_ptr<DKContext> context,
-                                         std::vector<DKRecord> &records,
+                                         std::vector<DKRecord> &&records,
                                          DKSavePolicy policy,
                                          SaveRecordsCallback callback)
 {
@@ -32,7 +32,7 @@ DKLocalErrorCode DKDatabase::SaveRecords(std::shared_ptr<DKContext> context,
     for (auto &record : records) {
         DKRecordId recordId = std::to_string(rand() + 1);
         DKRecordOperResult operResult;
-        operResult.SetDKRecord(record);
+        operResult.SetDKRecord(std::move(record));
         (*result)[recordId] = operResult;
     }
 
@@ -42,7 +42,7 @@ DKLocalErrorCode DKDatabase::SaveRecords(std::shared_ptr<DKContext> context,
     return DKLocalErrorCode::NO_ERROR;
 }
 DKLocalErrorCode DKDatabase::SaveRecord(std::shared_ptr<DKContext> context,
-                                        DKRecord &record,
+                                        DKRecord &&record,
                                         DKSavePolicy policy,
                                         SaveRecordCallback callback)
 {
@@ -55,6 +55,11 @@ DKLocalErrorCode DKDatabase::FetchRecords(std::shared_ptr<DKContext> context,
                                           DKQueryCursor cursor,
                                           FetchRecordsCallback callback)
 {
+    auto result = std::make_shared<std::vector<DKRecord>>();
+    DKQueryCursor newCursor;
+
+    DKError err;
+    std::thread ([=]() { callback(context, this->shared_from_this(), result, newCursor, err); }).detach();
     return DKLocalErrorCode::NO_ERROR;
 }
 
@@ -68,7 +73,7 @@ DKLocalErrorCode DKDatabase::FetchRecordWithId(std::shared_ptr<DKContext> contex
 }
 
 DKLocalErrorCode DKDatabase::DeleteRecords(std::shared_ptr<DKContext> context,
-                                           std::vector<DKRecord> &records,
+                                           std::vector<DKRecord> &&records,
                                            DKSavePolicy policy,
                                            DeleteRecordsCallback callback)
 {
@@ -76,8 +81,8 @@ DKLocalErrorCode DKDatabase::DeleteRecords(std::shared_ptr<DKContext> context,
 }
 
 DKLocalErrorCode DKDatabase::ModifyRecords(std::shared_ptr<DKContext> context,
-                                           std::vector<DKRecord> &recordsToSave,
-                                           std::vector<DKRecord> &recordsToDelete,
+                                           std::vector<DKRecord> &&recordsToSave,
+                                           std::vector<DKRecord> &&recordsToDelete,
                                            DKSavePolicy policy,
                                            bool atomically,
                                            ModifyRecordsCallback callback)
@@ -102,6 +107,12 @@ DKLocalErrorCode DKDatabase::FetchDatabaseChanges(std::shared_ptr<DKContext> con
                                                   DKQueryCursor cursor,
                                                   FetchDatabaseCallback callback)
 {
+    auto result = std::make_shared<std::vector<DKRecord>>();
+    bool hasMore = false;
+    DKQueryCursor newCursor;
+
+    DKError err;
+    std::thread ([=]() { callback(context, this->shared_from_this(), result, newCursor, hasMore, err); }).detach();
     return DKLocalErrorCode::NO_ERROR;
 }
 

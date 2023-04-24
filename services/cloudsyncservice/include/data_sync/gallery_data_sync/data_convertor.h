@@ -71,17 +71,17 @@ public:
     }
 
 private:
-    void HandleInt(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
+    void HandleInt(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
         int32_t index, NativeRdb::ResultSet &resultSet);
-    void HandleLong(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
+    void HandleLong(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
         int32_t index, NativeRdb::ResultSet &resultSet);
-    void HandleString(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
+    void HandleString(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
         int32_t index, NativeRdb::ResultSet &resultSet);
-    void HandleAsset(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
+    void HandleAsset(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
         int32_t index, NativeRdb::ResultSet &resultSet);
 
     /* handler map */
-    using ConvertorHandler = void (DataConvertor::*)(DriveKit::DKRecordDatas &data,
+    using ConvertorHandler = void (DataConvertor::*)(DriveKit::DKRecordData &data,
         const DriveKit::DKFieldKey &key, int32_t index, NativeRdb::ResultSet &resultSet);
     std::map<int32_t, ConvertorHandler> opToHandlerMap_;
 

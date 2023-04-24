@@ -34,12 +34,12 @@ public:
     /* record download */
     using FetchRecordsCallback = std::function<void(const std::shared_ptr<DriveKit::DKContext>,
         std::shared_ptr<const DriveKit::DKDatabase>,
-        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+        std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
         const DriveKit::DKError &)>;
 
     using FetchDatabaseChangesCallback = std::function<void(const std::shared_ptr<DriveKit::DKContext>,
         std::shared_ptr<const DriveKit::DKDatabase>,
-        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+        std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
         bool, const DriveKit::DKError &)>;
 
     int32_t FetchRecords(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor,

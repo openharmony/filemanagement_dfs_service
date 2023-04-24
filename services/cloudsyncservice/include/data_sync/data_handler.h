@@ -26,8 +26,7 @@ public:
     /* download */
     virtual void GetFetchCondition(int32_t &limitRes, DriveKit::DKRecordType &recordType,
         DriveKit::DKFieldKeyArray &desiredKeys) = 0;
-    virtual int32_t OnFetchRecords(const std::shared_ptr<const std::map<DriveKit::DKRecordId,
-        DriveKit::DKRecord>> &map) = 0;
+    virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records) = 0;
 
     /* upload */
     virtual int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) = 0;

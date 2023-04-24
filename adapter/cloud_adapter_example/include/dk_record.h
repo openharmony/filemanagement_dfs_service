@@ -28,7 +28,7 @@ struct DKRecordsResponse {
     std::string appId;
 };
 using DKFieldKey = std::string;
-using DKRecordDatas = std::map<DKFieldKey, DKRecordField>;
+using DKRecordData = std::map<DKFieldKey, DKRecordField>;
 class DKRecord {
 public:
     DKRecordId GetRecordId() const
@@ -47,9 +47,13 @@ public:
     {
         return modifiedInfo_;
     };
-    void GetRecordDatas(DKRecordDatas &fields) const
+    void GetRecordData(DKRecordData &fields) const
     {
         fields = this->fields_;
+    };
+    void StealRecordData(DKRecordData &fields)
+    {
+        fields = std::move(fields_);
     };
     bool GetIsDelete() const
     {
@@ -70,15 +74,19 @@ public:
     };
     void SetCreateInfo(DKRecordsResponse create)
     {
-        createInfo_ = create;
+        createInfo_ = std::move(create);
     };
     void SetModifiedInfo(DKRecordsResponse modified)
     {
-        modifiedInfo_ = modified;
+        modifiedInfo_ = std::move(modified);
     };
-    void SetRecordDatas(DKRecordDatas &fields)
+    void SetRecordData(const DKRecordData &fields)
     {
-        this->fields_ = fields;
+        this->fields_ = std::move(fields);
+    };
+    void SetRecordData(DKRecordData &&fields)
+    {
+        this->fields_ = std::move(fields);
     };
     void SetDelete(bool isDelete)
     {
@@ -98,7 +106,7 @@ private:
     DKRecordType type_;
     DKRecordsResponse createInfo_;
     DKRecordsResponse modifiedInfo_;
-    DKRecordDatas fields_;
+    DKRecordData fields_;
     bool isDelete_;
     unsigned long version_;
     bool isNewCreate_ = false;

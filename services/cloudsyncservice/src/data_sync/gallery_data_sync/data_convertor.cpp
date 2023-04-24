@@ -58,7 +58,7 @@ int32_t DataConvertor::ResultSetToRecords(const unique_ptr<NativeRdb::ResultSet>
     /* iterate all rows */
     while (resultSet->GoToNextRow() == 0) {
         DriveKit::DKRecord record;
-        DriveKit::DKRecordDatas data;
+        DriveKit::DKRecordData data;
         for (int i = 0; i < size; i++) {
             DataType type = types[i];
             auto entry = opToHandlerMap_.find(type);
@@ -68,14 +68,14 @@ int32_t DataConvertor::ResultSetToRecords(const unique_ptr<NativeRdb::ResultSet>
             }
             (this->*(entry->second))(data, cloudColumns[i], i, *resultSet);
         }
-        record.SetRecordDatas(data);
+        record.SetRecordData(data);
         records.emplace_back(move(record));
     }
 
     return E_OK;
 }
 
-void DataConvertor::HandleInt(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
+void DataConvertor::HandleInt(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
     int32_t index, NativeRdb::ResultSet &resultSet)
 {
     int32_t val;
@@ -86,7 +86,7 @@ void DataConvertor::HandleInt(DriveKit::DKRecordDatas &data, const DriveKit::DKF
     data[key] = DriveKit::DKRecordField(val);
 }
 
-void DataConvertor::HandleLong(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
+void DataConvertor::HandleLong(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
     int32_t index, NativeRdb::ResultSet &resultSet)
 {
     int64_t val;
@@ -97,7 +97,7 @@ void DataConvertor::HandleLong(DriveKit::DKRecordDatas &data, const DriveKit::DK
     data[key] = DriveKit::DKRecordField(val);
 }
 
-void DataConvertor::HandleString(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
+void DataConvertor::HandleString(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
     int32_t index, NativeRdb::ResultSet &resultSet)
 {
     string val;
@@ -108,7 +108,7 @@ void DataConvertor::HandleString(DriveKit::DKRecordDatas &data, const DriveKit::
     data[key] = DriveKit::DKRecordField(val);
 }
 
-void DataConvertor::HandleAsset(DriveKit::DKRecordDatas &data, const DriveKit::DKFieldKey &key,
+void DataConvertor::HandleAsset(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
     int32_t index, NativeRdb::ResultSet &resultSet)
 {
     string val;
@@ -127,8 +127,8 @@ int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record,
     auto &localColumns = this->GetLocalColumns();
     auto &cloudColumns = this->GetCloudColumns();
 
-    DriveKit::DKRecordDatas data;
-    record.GetRecordDatas(data);
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
     for (int32_t j = 0; j < size; j++) {
         DataType type = types[j];
         switch (type) {
