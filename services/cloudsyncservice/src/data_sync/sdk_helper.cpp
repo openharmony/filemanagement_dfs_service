@@ -28,7 +28,7 @@ using namespace std;
 
 SdkHelper::SdkHelper(const int32_t userId, const std::string bundleName)
 {
-    auto driveKit = DriveKit::DriveKit::getInstance(userId);
+    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
     if (driveKit == nullptr) {
         LOGE("sdk helper get drive kit instance fail");
         return;
