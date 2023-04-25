@@ -99,9 +99,9 @@ static std::string GetDentryfileName(const std::string &path, bool caseSense)
     constexpr uint32_t fileNameLen = 32;
     char buf[fileNameLen + 1] = {0};
     uint64_t fileHash = PathHash(path, caseSense);
-    int ret = snprintf_s(buf, fileNameLen, fileNameLen, "cloud_%016llx", fileHash);
-    if (ret) {
-        LOGE("filename failer ret :%{public}d", ret);
+    int ret = snprintf_s(buf, fileNameLen + 1, fileNameLen, "cloud_%016llx", fileHash);
+    if (ret < 0) {
+        LOGE("filename failer fileHash %{public}llx, ret :%{public}d", fileHash, ret);
     }
     return buf;
 }
@@ -130,6 +130,14 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
     if (ret != 0) {
         LOGE("setxattr failed, errno %{public}d, cacheFile_ %s", errno, cacheFile_.c_str());
     }
+
+    HmdfsDcacheHeader header{};
+    (void)FileUtils::ReadFile(fd_, 0, sizeof(header), &header);
+    dentryCount_ = header.dentryCount;
+
+    // GetParentMetaFile
+    // if parentMetaFile_->DoLookup()
+    // parentMetaFile_->DoCreate()
 }
 
 MetaFile::~MetaFile()
@@ -139,6 +147,9 @@ MetaFile::~MetaFile()
         // parentMetaFile_->DoRemove()
         return;
     }
+
+    HmdfsDcacheHeader header{.dentryCount = dentryCount_};
+    (void)FileUtils::WriteFile(fd_, &header, 0, sizeof(header));
 }
 
 static bool IsDotDotdot(const std::string &name)
@@ -231,7 +242,7 @@ static inline int GetDentrySlots(size_t nameLen)
 
 static inline off_t GetDentryGroupPos(size_t bidx)
 {
-    return static_cast<off_t>(bidx) * DENTRYGROUP_SIZE + DENTRYGROUP_HEADER;
+    return bidx * DENTRYGROUP_SIZE + DENTRYGROUP_HEADER;
 }
 
 static inline uint64_t GetDentryGroupCnt(uint64_t size)
@@ -258,14 +269,11 @@ static size_t GetDcacheFileSize(uint32_t level)
 static uint32_t GetBucketaddr(uint32_t level, uint32_t buckoffset)
 {
     if (level >= MAX_BUCKET_LEVEL) {
-        LOGI("level = %{public}d overflow", level);
         return 0;
     }
 
     uint32_t curLevelMaxBucks = (1U << level);
     if (buckoffset >= curLevelMaxBucks) {
-        LOGI("buckoffset %{public}d overflow, level %{public}d has %{public}d buckets max", buckoffset, level,
-             curLevelMaxBucks);
         return 0;
     }
 
@@ -346,6 +354,7 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
     unsigned long bidx, endBlock;
     HmdfsDentryGroup dentryBlk = {0};
 
+    std::unique_lock<std::mutex> lock(mtx_);
     namehash = DentryHash(base.name);
 
     bool found = false;
@@ -393,14 +402,101 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
     return E_OK;
 }
 
-int32_t MetaFile::DoLookup(MetaBase &base)
+struct DcacheLookupCtx {
+    int fd{-1};
+    std::string name{};
+    uint32_t hash{0};
+    uint32_t bidx{0};
+    std::unique_ptr<HmdfsDentryGroup> page{nullptr};
+};
+
+static void InitDcacheLookupCtx(DcacheLookupCtx *ctx, const MetaBase &base, int fd)
 {
-    if (fd_ < 0) {
-        LOGE("bad metafile fd");
-        return EINVAL;
+    ctx->fd = fd;
+    ctx->name = base.name;
+    ctx->bidx = 0;
+    ctx->page = nullptr;
+    ctx->hash = DentryHash(ctx->name);
+}
+
+static std::unique_ptr<HmdfsDentryGroup> FindDentryPage(uint64_t index, DcacheLookupCtx *ctx)
+{
+    auto dentryBlk = std::make_unique<HmdfsDentryGroup>();
+
+    off_t pos = GetDentryGroupPos(index);
+    ssize_t size = FileUtils::ReadFile(ctx->fd, pos, DENTRYGROUP_SIZE, dentryBlk.get());
+    if (size != DENTRYGROUP_SIZE) {
+        return nullptr;
+    }
+    return dentryBlk;
+}
+
+static HmdfsDentry *FindInBlock(HmdfsDentryGroup &dentryBlk, uint32_t namehash, const std::string name)
+{
+    int maxLen = 0;
+    uint32_t bitPos = 0;
+    HmdfsDentry *de = nullptr;
+
+    while (bitPos < DENTRY_PER_GROUP) {
+        if (!BitOps::TestBit(bitPos, dentryBlk.bitmap)) {
+            bitPos++;
+            maxLen++;
+            continue;
+        }
+        de = &dentryBlk.nsl[bitPos];
+        if (!de->namelen) {
+            bitPos++;
+            continue;
+        }
+
+        if (de->hash == namehash && de->namelen == name.length() &&
+            !memcmp(name.c_str(), dentryBlk.fileName[bitPos], de->namelen)) {
+            return de;
+        }
+        maxLen = 0;
+        bitPos += GetDentrySlots(de->namelen);
     }
 
-    return E_OK;
+    return nullptr;
+}
+
+static HmdfsDentry *InLevel(uint32_t level, DcacheLookupCtx *ctx)
+{
+    HmdfsDentry *de = nullptr;
+
+    uint32_t nbucket = GetBucketByLevel(level);
+    if (!nbucket) {
+        return de;
+    }
+
+    uint32_t bidx = GetBucketaddr(level, ctx->hash % nbucket) * BUCKET_BLOCKS;
+    uint32_t endBlock = bidx + BUCKET_BLOCKS;
+
+    for (; bidx < endBlock; bidx++) {
+        auto dentryBlk = FindDentryPage(bidx, ctx);
+        if (dentryBlk == nullptr) {
+            break;
+        }
+
+        de = FindInBlock(*dentryBlk, ctx->hash, ctx->name);
+        if (de != nullptr) {
+            ctx->page = std::move(dentryBlk);
+            break;
+        }
+    }
+    ctx->bidx = bidx;
+    return de;
+}
+
+static HmdfsDentry *FindDentry(DcacheLookupCtx *ctx)
+{
+    for (uint32_t level = 0; level < MAX_BUCKET_LEVEL; level++) {
+        HmdfsDentry *de = InLevel(level, ctx);
+        if (de != nullptr) {
+            return de;
+        }
+    }
+    return nullptr;
 }
 
 int32_t MetaFile::DoRemove(const MetaBase &base)
@@ -409,6 +505,53 @@ int32_t MetaFile::DoRemove(const MetaBase &base)
         LOGE("bad metafile fd");
         return EINVAL;
     }
+
+    std::unique_lock<std::mutex> lock(mtx_);
+    DcacheLookupCtx ctx;
+    InitDcacheLookupCtx(&ctx, base, fd_);
+    HmdfsDentry *de = FindDentry(&ctx);
+    if (de == nullptr) {
+        LOGE("find dentry failed");
+        return ENOENT;
+    }
+
+    int bitPos = (de - ctx.page->nsl);
+    int slots = GetDentrySlots(de->namelen);
+    for (int i = 0; i < slots; i++) {
+        BitOps::ClearBit(bitPos + i, ctx.page->bitmap);
+    }
+
+    off_t ipos = GetDentryGroupPos(ctx.bidx);
+    ssize_t size = FileUtils::WriteFile(fd_, ctx.page.get(), ipos, sizeof(HmdfsDentryGroup));
+    if (size != sizeof(HmdfsDentryGroup)) {
+        LOGE("WriteFile failed!, ret = %{public}zd", size);
+        return EIO;
+    }
+
+    --dentryCount_;
+    return E_OK;
+}
+
+int32_t MetaFile::DoLookup(MetaBase &base)
+{
+    if (fd_ < 0) {
+        LOGE("bad metafile fd");
+        return EINVAL;
+    }
+
+    std::unique_lock<std::mutex> lock(mtx_);
+    struct DcacheLookupCtx ctx;
+    InitDcacheLookupCtx(&ctx, base, fd_);
+    struct HmdfsDentry *de = FindDentry(&ctx);
+    if (de == nullptr) {
+        LOGI("find dentry failed");
+        return ENOENT;
+    }
+
+    base.size = de->size;
+    base.mtime = de->mtime;
+    base.mode = de->mode;
+    base.cloudId = std::string(reinterpret_cast<const char *>(de->recordId), CLOUD_RECORD_ID_LEN);
 
     return E_OK;
 }
@@ -420,14 +563,54 @@ int32_t MetaFile::DoUpdate(const MetaBase &base)
         return EINVAL;
     }
 
+    std::unique_lock<std::mutex> lock(mtx_);
+    struct DcacheLookupCtx ctx;
+    InitDcacheLookupCtx(&ctx, base, fd_);
+    struct HmdfsDentry *de = FindDentry(&ctx);
+    if (de == nullptr) {
+        LOGI("find dentry failed");
+        return ENOENT;
+    }
+
+    de->mtime = base.mtime;
+    de->size = base.size;
+    de->mode = base.mode;
+    if (memcpy_s(de->recordId, CLOUD_RECORD_ID_LEN, base.cloudId.c_str(), base.cloudId.length())) {
+        LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", CLOUD_RECORD_ID_LEN, base.cloudId.length());
+    }
+
+    off_t ipos = GetDentryGroupPos(ctx.bidx);
+    ssize_t size = FileUtils::WriteFile(fd_, ctx.page.get(), sizeof(struct HmdfsDentryGroup), ipos);
+    if (size != sizeof(struct HmdfsDentryGroup)) {
+        LOGI("write failed, ret = %zd", size);
+        return EIO;
+    }
     return E_OK;
 }
 
-int32_t MetaFile::DoRename(MetaBase &oldbase, MetaBase &newbase)
+int32_t MetaFile::DoRename(const MetaBase &oldBase, const std::string &newName)
 {
-    if (fd_ < 0) {
-        LOGE("bad metafile fd");
-        return EINVAL;
+    MetaBase base{oldBase.name};
+    int32_t ret = DoLookup(base);
+    if (ret) {
+        LOGE("ret = %{public}d, lookup %s failed", ret, base.name.c_str());
+        return ret;
+    }
+
+    base.name = newName;
+    ret = DoCreate(base);
+    if (ret) {
+        LOGE("ret = %{public}d, create %s failed", ret, base.name.c_str());
+        return ret;
+    }
+
+    base.name = oldBase.name;
+    ret = DoRemove(oldBase);
+    if (ret) {
+        LOGE("ret = %{public}d, remove %s failed", ret, oldBase.name.c_str());
+        base.name = newName;
+        (void)DoRemove(base);
+        return ret;
     }
 
     return E_OK;

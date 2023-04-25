@@ -17,9 +17,10 @@
 #define OHOS_FILEMGMT_DENTRY_META_FILE_H
 
 #include <memory>
-#include <shared_mutex>
+#include <mutex>
 #include <string>
 #include <vector>
+#include <sys/stat.h>
 
 #include "unique_fd.h"
 
@@ -36,11 +37,11 @@ public:
     int32_t DoCreate(const MetaBase &base);
     int32_t DoRemove(const MetaBase &base);
     int32_t DoUpdate(const MetaBase &base);
-    int32_t DoRename(MetaBase &oldbase, MetaBase &newbase);
+    int32_t DoRename(const MetaBase &oldBase, const std::string &newName);
     int32_t DoLookup(MetaBase &base);
 
 private:
-    mutable std::shared_mutex mtx_{};
+    std::mutex mtx_{};
     std::string path_{};
     std::string cacheFile_{};
     UniqueFd fd_{};
@@ -54,7 +55,7 @@ struct MetaBase {
     MetaBase() = default;
     uint64_t mtime{0};
     uint64_t size{0};
-    uint32_t mode{0};
+    uint32_t mode{S_IFREG};
     std::string name{};
     std::string cloudId{};
 
