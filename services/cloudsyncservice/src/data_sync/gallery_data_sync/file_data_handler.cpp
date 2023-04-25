@@ -15,8 +15,6 @@
 
 #include "file_data_handler.h"
 
-#include <filesystem>
-
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
 
@@ -30,10 +28,8 @@ using namespace std;
 using namespace NativeRdb;
 using namespace DriveKit;
 
-FileDataHandler::FileDataHandler(std::shared_ptr<RdbStore> rdb,
-    std::shared_ptr<OHOS::DistributedKv::SingleKvStore> kvStorePtr,
-    const std::string &path)
-    : RdbDataHandler(TABLE_NAME, rdb), kvStorePtr_(kvStorePtr), THUMBNAIL_LCD_TMP_DIR(path)
+FileDataHandler::FileDataHandler(std::shared_ptr<RdbStore> rdb)
+    : RdbDataHandler(TABLE_NAME, rdb)
 {
 }
 
@@ -245,14 +241,6 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
             LOGE("on create records update err %{public}d, id %{public}d", ret, id);
             continue;
         }
-
-        /* delete synced thumbnail & lcd */
-        if (const_cast<DKRecordOperResult &>(entry.second).IsSuccess()) {
-            string lcd = data[Media::MEDIA_DATA_DB_LCD];
-            DeleteThumbnailOrLCD(lcd);
-            string thumbnail = data[Media::MEDIA_DATA_DB_THUMBNAIL];
-            DeleteThumbnailOrLCD(thumbnail);
-        }
     }
 
     return E_OK;
@@ -329,11 +317,6 @@ void FileDataHandler::Reset()
     createOffset_ = 0;
     deleteOffset_ = 0;
     updateOffset_ = 0;
-}
-
-void FileDataHandler::DeleteThumbnailOrLCD(const std::string &name)
-{
-    std::filesystem::remove(name);
 }
 } // namespace CloudSync
 } // namespace FileManagement
