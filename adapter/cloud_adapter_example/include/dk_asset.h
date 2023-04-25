@@ -20,7 +20,8 @@
 
 namespace DriveKit {
 enum class DKAssetOperType {
-    DK_ASSET_ADD = 0,
+    DK_ASSET_NONE = 0,
+    DK_ASSET_ADD,
     DK_ASSET_UPDATE,
     DK_ASSET_DELETE,
     DK_ASSET_MAX,
@@ -28,7 +29,8 @@ enum class DKAssetOperType {
 struct DKAsset {
     std::string uri;
     std::string assetName;
-    DKAssetOperType operationType; 
+    DKAssetOperType operationType;
+    std::string hash;
 };
 } // namespace DriveKit
 
