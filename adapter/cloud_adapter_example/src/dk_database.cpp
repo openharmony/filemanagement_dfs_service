@@ -79,9 +79,8 @@ DKLocalErrorCode DKDatabase::DeleteRecords(std::shared_ptr<DKContext> context,
 {
     /* mock */
     auto result = std::make_shared<std::map<DKRecordId, DKRecordOperResult>>();
-    srand(time(nullptr));
     for (auto &record : records) {
-        DKRecordId recordId = std::to_string(rand() + 1);
+        DKRecordId recordId = record.GetRecordId();
         DKRecordOperResult operResult;
         operResult.SetDKRecord(std::move(record));
         (*result)[recordId] = operResult;
@@ -101,9 +100,8 @@ DKLocalErrorCode DKDatabase::ModifyRecords(std::shared_ptr<DKContext> context,
 {
     /* mock */
     auto result = std::make_shared<std::map<DKRecordId, DKRecordOperResult>>();
-    srand(time(nullptr));
     for (auto &record : recordsToSave) {
-        DKRecordId recordId = std::to_string(rand() + 1);
+        DKRecordId recordId = record.GetRecordId();
         DKRecordOperResult operResult;
         operResult.SetDKRecord(std::move(record));
         (*result)[recordId] = operResult;

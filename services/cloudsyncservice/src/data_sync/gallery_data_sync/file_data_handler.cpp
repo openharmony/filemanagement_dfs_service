@@ -154,10 +154,9 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates deletePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    deletePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
-        Media::MEDIA_DATA_DB_IS_TRASH + " = ?");
-    deletePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)), "0"});
-    deletePredicates.Offset(createOffset_);
+    deletePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ?");
+    deletePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED))});
+    deletePredicates.Offset(deleteOffset_);
     deletePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -186,7 +185,7 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
     updatePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
         Media::MEDIA_DATA_DB_IS_TRASH + " = ?");
     updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)), "0"});
-    updatePredicates.Offset(createOffset_);
+    updatePredicates.Offset(metaUpdateOffset_);
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -196,7 +195,7 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
         return E_RDB;
     }
     /* update offset */
-    updateOffset_ += LIMIT_SIZE;
+    metaUpdateOffset_ += LIMIT_SIZE;
 
     /* results to records */
     int ret = updateConvertor_.ResultSetToRecords(move(results), records);
@@ -215,7 +214,7 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
     updatePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
         Media::MEDIA_DATA_DB_IS_TRASH + " = ?");
     updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)), "0"});
-    updatePredicates.Offset(createOffset_);
+    updatePredicates.Offset(fileUpdateOffset_);
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -225,7 +224,7 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
         return E_RDB;
     }
     /* update offset */
-    updateOffset_ += LIMIT_SIZE;
+    fileUpdateOffset_ += LIMIT_SIZE;
 
     /* results to records */
     int ret = updateConvertor_.ResultSetToRecords(move(results), records);
@@ -383,7 +382,8 @@ void FileDataHandler::Reset()
 {
     createOffset_ = 0;
     deleteOffset_ = 0;
-    updateOffset_ = 0;
+    metaUpdateOffset_ = 0;
+    fileUpdateOffset_ = 0;
 }
 } // namespace CloudSync
 } // namespace FileManagement
