@@ -195,7 +195,7 @@ void DataSyncer::PullDatabaseChanges(shared_ptr<TaskContext> context)
 }
 
 void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::shared_ptr<const DKDatabase> database,
-    std::shared_ptr<const std::map<DKRecordId, DKRecord>> map, DKQueryCursor nextCursor, const DKError &err)
+    std::shared_ptr<std::vector<DKRecord>> records, DKQueryCursor nextCursor, const DKError &err)
 {
     LOGI("%{private}d %{private}s on fetch records", userId_, bundleName_.c_str());
 
@@ -208,7 +208,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
         return;
     }
 
-    int32_t ret = handler->OnFetchRecords(map);
+    int32_t ret = handler->OnFetchRecords(records);
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
         return;
@@ -234,7 +234,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
 
 void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context,
     std::shared_ptr<const DKDatabase> database,
-    std::shared_ptr<const std::map<DKRecordId, DKRecord>> map, DKQueryCursor nextCursor,
+    std::shared_ptr<std::vector<DriveKit::DKRecord>> records, DKQueryCursor nextCursor,
     bool hasMore, const DKError &err)
 {
     LOGI("%{private}d %{private}s on fetch database changes", userId_, bundleName_.c_str());
@@ -248,7 +248,7 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
         return;
     }
 
-    int32_t ret = handler->OnFetchRecords(map);
+    int32_t ret = handler->OnFetchRecords(records);
     if (ret != E_OK) {
         LOGE("handler on fetch database changes err %{public}d", ret);
         return;

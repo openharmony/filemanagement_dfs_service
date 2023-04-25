@@ -44,20 +44,36 @@ std::shared_ptr<DKDatabase> DKContainer::GetDatabaseWithdatabaseScope(DKDatabase
     return database;
 }
 
+void DKContainer::Init()
+{
+    if (driveKit_) {
+        publicDatabase_ = std::make_shared<DKDatabase>(shared_from_this(), DKDatabaseScope::DK_PUBLIC_DATABASE);
+        if (publicDatabase_) {
+            publicDatabase_->Init();
+        }
+        privateDatabase_ = std::make_shared<DKDatabase>(shared_from_this(), DKDatabaseScope::DK_PRIVATE_DATABASE);
+        if (privateDatabase_) {
+            privateDatabase_->Init();
+        }
+        sharedDatabase_ = std::make_shared<DKDatabase>(shared_from_this(), DKDatabaseScope::DK_SHARED_DATABASE);
+        if (sharedDatabase_) {
+            sharedDatabase_->Init();
+        }
+    }
+}
+
 DKLocalErrorCode DKContainer::SaveSubscription(
     std::shared_ptr<DKContext> contex,
     DKSubscription &subscription,
-    std::function<
-        void(std::shared_ptr<DKContext>, std::shared_ptr<const DKContainer>, DKSubscriptionResult &, const DKError &)>
-        callback)
+    SaveSubscriptionCallback callback)
 {
     return DKLocalErrorCode::NO_ERROR;
 }
 
 DKLocalErrorCode DKContainer::DeleteSubscription(
-    std::shared_ptr<DKContext> context,
+    std::shared_ptr<DKContext> contex,
     DKSubscriptionId id,
-    std::function<void(std::shared_ptr<DKContext>, const DKError &)> callback)
+    DelSubscriptionCallback callback)
 {
     return DKLocalErrorCode::NO_ERROR;
 }

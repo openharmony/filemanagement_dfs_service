@@ -40,7 +40,7 @@ void AlbumDataHandler::GetFetchCondition(int32_t &limitRes, DKRecordType &record
     desiredKeys = desiredKeys_;
 }
 
-int32_t AlbumDataHandler::OnFetchRecords(const shared_ptr<const map<DKRecordId, DKRecord>> &map)
+int32_t AlbumDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records)
 {
     return E_OK;
 }

@@ -31,12 +31,12 @@ public:
     {
         error_ = error;
     }
-    DKError GetDKError()
+    DKError GetDKError() const
     {
         return error_;
     }
 
-private:
+protected:
     DKError error_;
 };
 

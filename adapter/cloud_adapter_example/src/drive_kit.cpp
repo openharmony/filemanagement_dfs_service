@@ -17,9 +17,9 @@
 #include "dk_container.h"
 
 namespace DriveKit {
-std::mutex DriveKit::drivekitMutex_;
-std::map<int, std::shared_ptr<DriveKit>> DriveKit::driveKits_;
-std::shared_ptr<DKContainer> DriveKit::GetDefaultContainer(DKAppBundleName bundleName)
+std::mutex DriveKitNative::drivekitMutex_;
+std::map<int, std::shared_ptr<DriveKitNative>> DriveKitNative::driveKits_;
+std::shared_ptr<DKContainer> DriveKitNative::GetDefaultContainer(DKAppBundleName bundleName)
 {
     DKContainerName containerName;
     {
@@ -48,11 +48,14 @@ std::shared_ptr<DKContainer> DriveKit::GetDefaultContainer(DKAppBundleName bundl
     }
     std::shared_ptr<DKContainer> container =
         std::make_shared<DKContainer>(bundleName, containerName, shared_from_this());
-    containers_[key] = container;
+    if (container) {
+        container->Init();
+    }
+    containers_[key.c_str()] = container;
     return container;
 }
 
-std::shared_ptr<DKContainer> DriveKit::GetContainer(DKAppBundleName bundleName, DKContainerName containerName)
+std::shared_ptr<DKContainer> DriveKitNative::GetContainer(DKAppBundleName bundleName, DKContainerName containerName)
 {
     std::string key = bundleName + containerName;
     auto it = containers_.find(key);
@@ -61,16 +64,19 @@ std::shared_ptr<DKContainer> DriveKit::GetContainer(DKAppBundleName bundleName, 
     }
     std::shared_ptr<DKContainer> container =
         std::make_shared<DKContainer>(bundleName, containerName, shared_from_this());
-    containers_[key] = container;
+    if (container) {
+        container->Init();
+    }
+    containers_[key.c_str()] = container;
     return container;
 }
 
-DKError DriveKit::GetCloudUserInfo(DKUserInfo &userInfo)
+DKError DriveKitNative::GetCloudUserInfo(DKUserInfo &userInfo)
 {
     return DKError();
 }
 
-DKError DriveKit::GetCloudAppInfo(const std::vector<DKAppBundleName> &bundleNames,
+DKError DriveKitNative::GetCloudAppInfo(const std::vector<DKAppBundleName> &bundleNames,
                                   std::map<DKAppBundleName, DKAppInfo> &appInfos)
 {
     DKAppInfo appInfo;
@@ -81,36 +87,36 @@ DKError DriveKit::GetCloudAppInfo(const std::vector<DKAppBundleName> &bundleName
     return DKError();
 }
 
-DKError DriveKit::GetCloudAppSwitches(const std::vector<DKAppBundleName> &bundleNames,
+DKError DriveKitNative::GetCloudAppSwitches(const std::vector<DKAppBundleName> &bundleNames,
                                       std::map<DKAppBundleName, DKAppSwitchStatus> &appSwitchs)
 {
     return DKError();
 }
 
-DKError DriveKit::GetServerTime(time_t &time)
+DKError DriveKitNative::GetServerTime(time_t &time)
 {
     return DKError();
 }
 
-std::shared_ptr<DriveKit> DriveKit::getInstance(int userId)
+std::shared_ptr<DriveKitNative> DriveKitNative::GetInstance(int userId)
 {
     std::lock_guard<std::mutex> lck(drivekitMutex_);
     auto it = driveKits_.find(userId);
     if (it != driveKits_.end()) {
         return it->second;
     }
-    struct EnableMakeShared : public DriveKit {
-        explicit EnableMakeShared(int userId) : DriveKit(userId) {}
+    struct EnableMakeShared : public DriveKitNative {
+        explicit EnableMakeShared(int userId) : DriveKitNative(userId) {}
     };
-    std::shared_ptr<DriveKit> driveKit = std::make_shared<EnableMakeShared>(userId);
+    std::shared_ptr<DriveKitNative> driveKit = std::make_shared<EnableMakeShared>(userId);
     driveKits_[userId] = driveKit;
     return driveKit;
 }
 
-DriveKit::DriveKit(int userId)
+DriveKitNative::DriveKitNative(int userId)
 {
     userId_ = userId;
 }
 
-DriveKit::~DriveKit() {}
+DriveKitNative::~DriveKitNative() {}
 } // namespace DriveKit
