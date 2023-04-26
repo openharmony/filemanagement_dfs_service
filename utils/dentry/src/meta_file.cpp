@@ -43,6 +43,7 @@ constexpr uint32_t BITS_PER_BYTE = 8;
 constexpr uint32_t HMDFS_SLOT_LEN_BITS = 3;
 constexpr uint64_t DELTA = 0x9E3779B9; /* Hashing code copied from f2fs */
 constexpr uint64_t HMDFS_HASH_COL_BIT = (0x1ULL) << 63;
+constexpr uint32_t DIR_SIZE = 4096;
 
 #pragma pack(push, 1)
 struct HmdfsDentry {
@@ -80,10 +81,9 @@ static uint64_t PathHash(const std::string &path, bool caseSense)
 {
     uint64_t res = 0;
     const char *kp = path.c_str();
-    char c;
 
     while (*kp) {
-        c = *kp;
+        char c = *kp;
         if (!caseSense) {
             c = tolower(c);
         }
@@ -116,8 +116,47 @@ static std::string GetDentryfileByPath(uint32_t userId, const std::string &path,
     return cacheDir + dentryFileName;
 }
 
+static std::string GetParentDir(const std::string &path)
+{
+    if ((path == "/") || (path == "")) {
+        return "";
+    }
+
+    auto pos = path.find_last_of('/');
+    if ((pos == std::string::npos) || (pos == 0)) {
+        return "/";
+    }
+
+    return path.substr(0, pos);
+}
+
+static std::string GetFileName(const std::string &path)
+{
+    if ((path == "/") || (path == "")) {
+        return "";
+    }
+
+    auto pos = path.find_last_of('/');
+    if (pos == std::string::npos) {
+        return "";
+    }
+
+    return path.substr(pos + 1);
+}
+
+static std::shared_ptr<MetaFile> GetParentMetaFile(uint32_t userId, const std::string &path)
+{
+    std::string parentPath = GetParentDir(path);
+    if (parentPath == "") {
+        return nullptr;
+    }
+
+    return MetaFileMgr::GetInstance().GetMetaFile(userId, parentPath);
+}
+
 MetaFile::MetaFile(uint32_t userId, const std::string &path)
 {
+    path_ = path;
     cacheFile_ = GetDentryfileByPath(userId, path);
     fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT)};
     LOGD("fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
@@ -135,16 +174,36 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
     (void)FileUtils::ReadFile(fd_, 0, sizeof(header), &header);
     dentryCount_ = header.dentryCount;
 
-    // GetParentMetaFile
-    // if parentMetaFile_->DoLookup()
-    // parentMetaFile_->DoCreate()
+    /* lookup and create in parent */
+    parentMetaFile_ = GetParentMetaFile(userId, path);
+    std::string dirName = GetFileName(path);
+    if ((parentMetaFile_ == nullptr) || (dirName == "")) {
+        return;
+    }
+    MetaBase m(dirName, std::to_string(PathHash(path, false)));
+    ret = parentMetaFile_->DoLookup(m);
+    if (ret != E_OK) {
+        m.mode = S_IFDIR;
+        m.size = DIR_SIZE;
+        ret = parentMetaFile_->DoCreate(m);
+        if (ret != E_OK) {
+            LOGE("create parent failed, ret %{public}d", ret);
+        }
+    }
 }
 
 MetaFile::~MetaFile()
 {
     if ((dentryCount_ == 0) && (path_ != "/")) {
         unlink(cacheFile_.c_str());
-        // parentMetaFile_->DoRemove()
+        if (parentMetaFile_) {
+            std::string dirName = GetFileName(path_);
+            if (dirName == "") {
+                return;
+            }
+            MetaBase m(dirName, std::to_string(PathHash(path_, false)));
+            parentMetaFile_->DoRemove(m);
+        }
         return;
     }
 
@@ -615,5 +674,71 @@ int32_t MetaFile::DoRename(const MetaBase &oldBase, const std::string &newName)
 
     return E_OK;
 }
+
+static int32_t DecodeDentrys(const HmdfsDentryGroup &dentryGroup, std::vector<MetaBase> &bases)
+{
+    for (int i = 0; i < DENTRY_PER_GROUP; i++) {
+        int len = dentryGroup.nsl[i].namelen;
+        if (!BitOps::TestBit(i, dentryGroup.bitmap) || len == 0 || len >= PATH_MAX) {
+            continue;
+        }
+
+        std::string name(reinterpret_cast<const char *>(dentryGroup.fileName[i]), len);
+
+        MetaBase base(name);
+        base.mode = dentryGroup.nsl[i].mode;
+        base.mtime = dentryGroup.nsl[i].mtime;
+        base.size = dentryGroup.nsl[i].size;
+        base.cloudId = std::string(reinterpret_cast<const char *>(dentryGroup.nsl[i].recordId), CLOUD_RECORD_ID_LEN);
+        bases.emplace_back(base);
+    }
+    return 0;
+}
+
+int32_t MetaFile::LoadChildren(std::vector<MetaBase> &bases)
+{
+    if (fd_ < 0) {
+        LOGE("bad metafile fd");
+        return EINVAL;
+    }
+
+    std::lock_guard<std::mutex> lock(mtx_);
+    struct stat fileStat;
+    int ret = fstat(fd_, &fileStat);
+    if (ret != E_OK) {
+        return EINVAL;
+    }
+
+    uint64_t fileSize = fileStat.st_size;
+    uint64_t groupCnt = GetDentryGroupCnt(fileSize);
+    HmdfsDentryGroup dentryGroup;
+
+    for (int i = 1; i < groupCnt + 1; i++) {
+        uint64_t off = i * sizeof(HmdfsDentryGroup);
+        FileUtils::ReadFile(fd_, off, sizeof(HmdfsDentryGroup), &dentryGroup);
+        DecodeDentrys(dentryGroup, bases);
+    }
+    return E_OK;
+}
+
+std::shared_ptr<MetaFile> MetaFileMgr::GetMetaFile(uint32_t userId, const std::string &path)
+{
+    std::shared_ptr<MetaFile> mFile = nullptr;
+    std::lock_guard<std::recursive_mutex> lock(mtx_);
+    
+    if (metaFiles_.find({userId, path}) != metaFiles_.end()) {
+        mFile = metaFiles_[{userId, path}];
+    } else {
+        mFile = std::make_shared<MetaFile>(userId, path);
+        metaFiles_[{userId, path}] = mFile;
+    }
+    return mFile;
+}
+
+void MetaFileMgr::ClearAll()
+{
+    metaFiles_.clear();
+}
+
 } // namespace FileManagement
 } // namespace OHOS
