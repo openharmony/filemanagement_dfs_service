@@ -32,7 +32,13 @@ public:
 
     /* download */
     void GetFetchCondition(FetchCondition &cond) override;
-    int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records) override;
+    virtual int32_t OnFetchRecords(
+        const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
+        std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
+        std::shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
+                           std::shared_ptr<const DriveKit::DKDatabase>,
+                           const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
+                           const DriveKit::DKError &)>> &downloadResultCallback) override;
 
     /* upload */
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;
@@ -77,9 +83,14 @@ private:
     FileDataConvertor updateConvertor_ = { userId_, bundleName_, false };
 
     /* pull operations */
-    int32_t PullRecordInsert(const DriveKit::DKRecord &record);
-    int32_t PullRecordUpdate(const DriveKit::DKRecord &record, const DriveKit::DKRecord &local);
-    int32_t PullRecordDelete(const DriveKit::DKRecord &record, const DriveKit::DKRecord &local);
+    int32_t PullRecordInsert(const DriveKit::DKRecord &record, bool &outPullThumbs);
+    int32_t PullRecordUpdate(const DriveKit::DKRecord &record, const DriveKit::DKRecordData &local,
+                             bool &outPullThumbs);
+    int32_t PullRecordDelete(const DriveKit::DKRecord &record, const DriveKit::DKRecordData &local);
+
+    void AppendToDownload(const DriveKit::DKRecord &record,
+                          const std::string &fieldKey,
+                          std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, false };

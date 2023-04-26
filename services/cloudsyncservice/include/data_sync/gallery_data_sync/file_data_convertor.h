@@ -29,6 +29,7 @@ public:
     ~FileDataConvertor() = default;
 
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
+    std::string GetThumbPath(const std::string &path, const std::string &key);
 
 private:
     /* record id */
@@ -71,7 +72,6 @@ private:
 
     /* path conversion */
     std::string GetLowerPath(const std::string &path);
-    std::string GetThumbPath(const std::string &path, const std::string &key);
 
     /* identifier */
     int32_t userId_;

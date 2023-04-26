@@ -148,10 +148,20 @@ int32_t SdkHelper::ModifyRecords(shared_ptr<DriveKit::DKContext> context,
 }
 
 int32_t SdkHelper::DownloadAssets(shared_ptr<DriveKit::DKContext> context,
-    vector<DriveKit::DKDownloadAsset> recordIds, int32_t id,
-    function<void(shared_ptr<DriveKit::DKContext> context, shared_ptr<vector<DriveKit::DKDownloadAsset>>)> callback)
+    std::vector<DriveKit::DKDownloadAsset> &assetsToDownload, DriveKit::DKAssetPath downLoadPath,
+    DriveKit::DKDownloadId &id,
+    std::function<void(std::shared_ptr<DriveKit::DKContext>,
+                       std::shared_ptr<const DriveKit::DKDatabase>,
+                       const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
+                       const DriveKit::DKError &)> resultCallback,
+    std::function<void(std::shared_ptr<DriveKit::DKContext>, DriveKit::DKDownloadAsset,
+                       DriveKit::TotalSize, DriveKit::DownloadSize)> progressCallback)
 {
-    thread ([=]() { callback(context, nullptr); }).detach();
+    auto downloader = database_->GetAssetsDownloader();
+    auto result = downloader->DownLoadAssets(context, assetsToDownload, {}, id, resultCallback, progressCallback);
+    if (result != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("DownLoadAssets fail");
+    }
     return E_OK;
 }
 
