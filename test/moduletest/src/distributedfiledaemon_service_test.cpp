@@ -110,7 +110,7 @@ HWTEST_F(DistributedFileDaemonServiceTest, mount_umount_test_001, TestSize.Level
         LOGE("%{public}s", e.what());
         FAIL();
     }
-    SUCCESS();
+    SUCCEED();
 }
 } // namespace Test
 } // namespace DistributedFile
