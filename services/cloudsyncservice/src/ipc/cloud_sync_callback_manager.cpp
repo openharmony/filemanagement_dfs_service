@@ -32,8 +32,8 @@ void CloudSyncCallbackManager::AddCallback(const std::string &bundleName,
                                            const sptr<ICloudSyncCallback> &callback)
 {
     CallbackInfo callbackInfo;
-    callbackInfo.callbackProxy_ = callback;
-    callbackInfo.callerUserId_ = userId;
+    callbackInfo.callbackProxy = callback;
+    callbackInfo.callerUserId = userId;
     SetDeathRecipient(bundleName, callbackInfo);
     /*Delete and then insert when the key exists, ensuring that the final value is inserted.*/
     callbackListMap_.EnsureInsert(bundleName, callbackInfo);
@@ -41,7 +41,7 @@ void CloudSyncCallbackManager::AddCallback(const std::string &bundleName,
 
 void CloudSyncCallbackManager::SetDeathRecipient(const std::string &bundleName, CallbackInfo &cbInfo)
 {
-    auto remoteObject = cbInfo.callbackProxy_->AsObject();
+    auto remoteObject = cbInfo.callbackProxy->AsObject();
     if (!remoteObject) {
         LOGE("Remote object can't be nullptr");
         return;
@@ -51,23 +51,8 @@ void CloudSyncCallbackManager::SetDeathRecipient(const std::string &bundleName, 
         callbackListMap_.Erase(bundleName);
         LOGE("client died, map size:%{public}d, bundleName:%{private}s", callbackListMap_.Size(), bundleName.c_str());
     };
-    cbInfo.deathRecipient_ = sptr(new SvcDeathRecipient(deathCb));
-    remoteObject->AddDeathRecipient(cbInfo.deathRecipient_);
-}
-
-sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::string &bundleName, const int32_t userId)
-{
-    CallbackInfo cbInfo;
-    if (!callbackListMap_.Find(bundleName, cbInfo)) {
-        LOGE("not found callback, bundleName: %{private}s", bundleName.c_str());
-        return nullptr;
-    }
-
-    if (userId != cbInfo.callerUserId_) {
-        LOGE("oldUserId %{public}d, currentUserId %{public}d", cbInfo.callerUserId_, userId);
-        return nullptr;
-    }
-    return cbInfo.callbackProxy_;
+    cbInfo.deathRecipient = sptr(new SvcDeathRecipient(deathCb));
+    remoteObject->AddDeathRecipient(cbInfo.deathRecipient);
 }
 
 void CloudSyncCallbackManager::Notify(const std::string bundleName,
@@ -75,7 +60,7 @@ void CloudSyncCallbackManager::Notify(const std::string bundleName,
                                       const SyncType type,
                                       const SyncPromptState state)
 {
-    auto callbackProxy = callbackInfo.callbackProxy_;
+    auto callbackProxy = callbackInfo.callbackProxy;
     if (!callbackProxy) {
         LOGE("not found object, bundleName = %{private}s", bundleName.c_str());
         return;

@@ -34,12 +34,6 @@ void CloudSyncCallbackManager::AddCallback(const std::string &bundleName,
 
 void CloudSyncCallbackManager::SetDeathRecipient(const std::string &bundleName, CallbackInfo &cbInfo) {}
 
-sptr<ICloudSyncCallback> CloudSyncCallbackManager::GetCallbackProxy(const std::string &bundleName,
-                                                                    const int32_t userId)
-{
-    return nullptr;
-}
-
 void CloudSyncCallbackManager::NotifySyncStateChanged(const SyncType type, const SyncPromptState state)
 {
 }

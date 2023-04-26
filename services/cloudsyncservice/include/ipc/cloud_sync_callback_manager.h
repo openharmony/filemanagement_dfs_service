@@ -17,25 +17,26 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_MANAGER_H
 
 #include "i_cloud_sync_callback.h"
+#include "nocopyable.h"
 #include "safe_map.h"
 #include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudSyncCallbackManager : public RefBase {
+class CloudSyncCallbackManager final : public RefBase, public NoCopyable {
 public:
     static CloudSyncCallbackManager &GetInstance();
     struct CallbackInfo {
-        sptr<ICloudSyncCallback> callbackProxy_;
-        sptr<SvcDeathRecipient> deathRecipient_;
-        int32_t callerUserId_;
+        sptr<ICloudSyncCallback> callbackProxy;
+        sptr<SvcDeathRecipient> deathRecipient;
+        int32_t callerUserId;
     };
 
     void AddCallback(const std::string &bundleName, const int32_t userId, const sptr<ICloudSyncCallback> &callback);
     void NotifySyncStateChanged(const SyncType type, const SyncPromptState state);
 
 private:
+    CloudSyncCallbackManager() = default;
     void SetDeathRecipient(const std::string &bundleName, CallbackInfo &cbInfo);
-    sptr<ICloudSyncCallback> GetCallbackProxy(const std::string &bundleName, const int32_t userId);
     void Notify(const std::string bundleName,
                 CallbackInfo &callbackInfo,
                 const SyncType type,
