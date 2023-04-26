@@ -66,11 +66,7 @@ public:
     );
 
     int32_t ModifyRecords(std::shared_ptr<DriveKit::DKContext> context,
-        std::vector<DriveKit::DKRecord> &records,
-        std::function<void(std::shared_ptr<DriveKit::DKContext>,
-            std::shared_ptr<const DriveKit::DKDatabase>,
-            std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
-            const DriveKit::DKError &)> callback
+        std::vector<DriveKit::DKRecord> &records, DriveKit::DKDatabase::ModifyRecordsCallback callback
     );
 
     /* asset download */

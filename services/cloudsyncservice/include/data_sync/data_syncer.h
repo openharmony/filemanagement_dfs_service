@@ -87,7 +87,8 @@ private:
     /* upload */
     void CreateRecords(std::shared_ptr<TaskContext> context);
     void DeleteRecords(std::shared_ptr<TaskContext> context);
-    void ModifyRecords(std::shared_ptr<TaskContext> context);
+    void ModifyMdirtyRecords(std::shared_ptr<TaskContext> context);
+    void ModifyFdirtyRecords(std::shared_ptr<TaskContext> context);
 
     /* upload callback */
     void OnCreateRecords(std::shared_ptr<DriveKit::DKContext>,
@@ -98,8 +99,14 @@ private:
         std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
         const DriveKit::DKError &);
-    void OnModifyRecords(std::shared_ptr<DriveKit::DKContext>,
+    void OnModifyMdirtyRecords(std::shared_ptr<DriveKit::DKContext>,
         std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
+        const DriveKit::DKError &);
+    void OnModifyFdirtyRecords(std::shared_ptr<DriveKit::DKContext>,
+        std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
         std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
         const DriveKit::DKError &);
 

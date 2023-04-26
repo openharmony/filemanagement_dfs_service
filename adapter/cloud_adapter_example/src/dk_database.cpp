@@ -77,6 +77,17 @@ DKLocalErrorCode DKDatabase::DeleteRecords(std::shared_ptr<DKContext> context,
                                            DKSavePolicy policy,
                                            DeleteRecordsCallback callback)
 {
+    /* mock */
+    auto result = std::make_shared<std::map<DKRecordId, DKRecordOperResult>>();
+    for (auto &record : records) {
+        DKRecordId recordId = record.GetRecordId();
+        DKRecordOperResult operResult;
+        operResult.SetDKRecord(std::move(record));
+        (*result)[recordId] = operResult;
+    }
+
+    DKError err;
+    std::thread ([=]() { callback(context, this->shared_from_this(), result, err); }).detach();
     return DKLocalErrorCode::NO_ERROR;
 }
 
@@ -87,6 +98,17 @@ DKLocalErrorCode DKDatabase::ModifyRecords(std::shared_ptr<DKContext> context,
                                            bool atomically,
                                            ModifyRecordsCallback callback)
 {
+    /* mock */
+    auto result = std::make_shared<std::map<DKRecordId, DKRecordOperResult>>();
+    for (auto &record : recordsToSave) {
+        DKRecordId recordId = record.GetRecordId();
+        DKRecordOperResult operResult;
+        operResult.SetDKRecord(std::move(record));
+        (*result)[recordId] = operResult;
+    }
+
+    DKError err;
+    std::thread ([=]() { callback(context, this->shared_from_this(), result, nullptr, err); }).detach();
     return DKLocalErrorCode::NO_ERROR;
 }
 

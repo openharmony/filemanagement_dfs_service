@@ -98,12 +98,12 @@ int32_t SdkHelper::CreateRecords(shared_ptr<DriveKit::DKContext> context,
         std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
         const DriveKit::DKError &)> callback)
 {
-    auto err = database_->SaveRecords(context, std::move(records), DriveKit::DKSavePolicy::DK_SAVE_IF_UNCHANGED, callback);
+    auto err = database_->SaveRecords(context, move(records),
+        DriveKit::DKSavePolicy::DK_SAVE_IF_UNCHANGED, callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
-        LOGE("drivekit save records err %{public}d", err);
+        LOGE("drivekit saves records err %{public}d", err);
         return E_CLOUD_SDK;
     }
-
     return E_OK;
 }
 
@@ -113,23 +113,25 @@ int32_t SdkHelper::DeleteRecords(shared_ptr<DriveKit::DKContext> context,
         std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
         const DriveKit::DKError &)> callback)
 {
-    auto result = std::make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
-    DriveKit::DKError err;
-    std::thread ([=]() { callback(context, nullptr, result, err); }).detach();
-
+    auto err = database_->DeleteRecords(context, move(records),
+        DriveKit::DKSavePolicy::DK_SAVE_IF_UNCHANGED, callback);
+    if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("drivekit deletes records err %{public}d", err);
+        return E_CLOUD_SDK;
+    }
     return E_OK;
 }
 
 int32_t SdkHelper::ModifyRecords(shared_ptr<DriveKit::DKContext> context,
-    vector<DriveKit::DKRecord> &records,
-    std::function<void(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-        std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
-        const DriveKit::DKError &)> callback)
+    vector<DriveKit::DKRecord> &records, DriveKit::DKDatabase::ModifyRecordsCallback callback)
 {
-    auto result = std::make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
-    DriveKit::DKError err;
-    std::thread ([=]() { callback(context, nullptr, result, err); }).detach();
-
+    vector<DriveKit::DKRecord> null;
+    auto err = database_->ModifyRecords(context, move(records), move(null),
+        DriveKit::DKSavePolicy::DK_SAVE_IF_UNCHANGED, true, callback);
+    if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("drivekit modifies records err %{public}d", err);
+        return E_CLOUD_SDK;
+    }
     return E_OK;
 }
 

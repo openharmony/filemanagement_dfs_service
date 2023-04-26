@@ -15,17 +15,32 @@
 
 #include "data_handler.h"
 
+#include "dfs_error.h"
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+using namespace std;
+
 int32_t DataHandler::SetCursor()
 {
-    return 0;
+    return E_OK;
 }
 
 int32_t DataHandler::GetCursor()
 {
-    return 0;
+    return E_OK;
+}
+
+int32_t DataHandler::GetFileModifiedRecords(vector<DriveKit::DKRecord> &records)
+{
+    return E_OK;
+}
+
+int32_t DataHandler::OnModifyFdirtyRecords(const map<DriveKit::DKRecordId,
+    DriveKit::DKRecordOperResult> &map)
+{
+    return E_OK;
 }
 } // namespace CloudSync
 } // namespace FileManagement

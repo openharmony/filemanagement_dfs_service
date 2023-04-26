@@ -154,10 +154,9 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates deletePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    deletePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
-        Media::MEDIA_DATA_DB_IS_TRASH + " = ?");
-    deletePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)), "0"});
-    deletePredicates.Offset(createOffset_);
+    deletePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ?");
+    deletePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED))});
+    deletePredicates.Offset(deleteOffset_);
     deletePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -179,14 +178,14 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
     return E_OK;
 }
 
-int32_t FileDataHandler::GetModifiedRecords(vector<DKRecord> &records)
+int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     updatePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
         Media::MEDIA_DATA_DB_IS_TRASH + " = ?");
-    updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)), "0"});
-    updatePredicates.Offset(createOffset_);
+    updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)), "0"});
+    updatePredicates.Offset(metaUpdateOffset_);
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -196,7 +195,36 @@ int32_t FileDataHandler::GetModifiedRecords(vector<DKRecord> &records)
         return E_RDB;
     }
     /* update offset */
-    updateOffset_ += LIMIT_SIZE;
+    metaUpdateOffset_ += LIMIT_SIZE;
+
+    /* results to records */
+    int ret = updateConvertor_.ResultSetToRecords(move(results), records);
+    if (ret != 0) {
+        LOGE("result set to records err %{public}d", ret);
+        return ret;
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
+{
+    /* build predicates */
+    NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    updatePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
+        Media::MEDIA_DATA_DB_IS_TRASH + " = ?");
+    updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)), "0"});
+    updatePredicates.Offset(fileUpdateOffset_);
+    updatePredicates.Limit(LIMIT_SIZE);
+
+    /* query */
+    auto results = Query(updatePredicates, updateConvertor_.GetLocalColumns());
+    if (results == nullptr) {
+        LOGE("get nullptr modified result");
+        return E_RDB;
+    }
+    /* update offset */
+    fileUpdateOffset_ += LIMIT_SIZE;
 
     /* results to records */
     int ret = updateConvertor_.ResultSetToRecords(move(results), records);
@@ -274,7 +302,7 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
     return E_OK;
 }
 
-int32_t FileDataHandler::OnModifyRecords(const map<DKRecordId, DKRecordOperResult> &map)
+int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     for (auto &entry : map) {
         auto record = const_cast<DKRecordOperResult &>(entry.second).GetDKRecord();
@@ -303,7 +331,45 @@ int32_t FileDataHandler::OnModifyRecords(const map<DKRecordId, DKRecordOperResul
         string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
         ret = Update(changedRows, valuesBucket, whereClause, { cloudId });
         if (ret != 0) {
-            LOGE("on modify records update err %{public}d, cloudId %{private}s",
+            LOGE("on modify mdirty records update err %{public}d, cloudId %{private}s",
+                ret, cloudId.c_str());
+            continue;
+        }
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
+{
+    for (auto &entry : map) {
+        auto record = const_cast<DKRecordOperResult &>(entry.second).GetDKRecord();
+
+        /* record to value bucket */
+        ValuesBucket valuesBucket;
+        int32_t ret = updateConvertor_.RecordToValueBucket(record, valuesBucket);
+        if (ret != E_OK) {
+            LOGE("record to value bucket err %{public}d", ret);
+            continue;
+        }
+        valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
+            static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
+
+        DKRecordData data;
+        record.GetRecordData(data);
+        auto iter = data.find(Media::MEDIA_DATA_DB_CLOUD_ID);
+        if (iter == data.end()) {
+            LOGE("no id in record data");
+            continue;
+        }
+        string cloudId = iter->second;
+
+        /* update local */
+        int32_t changedRows;
+        string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
+        ret = Update(changedRows, valuesBucket, whereClause, { cloudId });
+        if (ret != 0) {
+            LOGE("on modify fdirty records update err %{public}d, cloudId %{private}s",
                 ret, cloudId.c_str());
             continue;
         }
@@ -316,7 +382,8 @@ void FileDataHandler::Reset()
 {
     createOffset_ = 0;
     deleteOffset_ = 0;
-    updateOffset_ = 0;
+    metaUpdateOffset_ = 0;
+    fileUpdateOffset_ = 0;
 }
 } // namespace CloudSync
 } // namespace FileManagement

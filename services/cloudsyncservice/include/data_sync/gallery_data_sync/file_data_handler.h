@@ -35,14 +35,17 @@ public:
     /* upload */
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;
     int32_t GetDeletedRecords(std::vector<DriveKit::DKRecord> &records) override;
-    int32_t GetModifiedRecords(std::vector<DriveKit::DKRecord> &records) override;
+    int32_t GetMetaModifiedRecords(std::vector<DriveKit::DKRecord> &records) override;
+    int32_t GetFileModifiedRecords(std::vector<DriveKit::DKRecord> &records) override;
 
     /* callback */
     int32_t OnCreateRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
     int32_t OnDeleteRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
-    int32_t OnModifyRecords(const std::map<DriveKit::DKRecordId,
+    int32_t OnModifyMdirtyRecords(const std::map<DriveKit::DKRecordId,
+        DriveKit::DKRecordOperResult> &map) override;
+    int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
 
     /* reset */
@@ -86,8 +89,9 @@ private:
         3
     };
 
-    /* update */
-    int32_t updateOffset_ = 0;
+    /* meta update */
+    int32_t metaUpdateOffset_ = 0;
+    int32_t fileUpdateOffset_ = 0;
     DataConvertor updateConvertor_ = {
         { "file_id", "data", "size" },
         { "id", "path", "size" },
