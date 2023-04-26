@@ -47,11 +47,11 @@ FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::
 {
 }
 
-void FileDataHandler::GetFetchCondition(int32_t &limitRes, DKRecordType &recordType, DKFieldKeyArray &desiredKeys)
+void FileDataHandler::GetFetchCondition(FetchCondition &cond)
 {
-    limitRes = LIMIT_SIZE;
-    recordType = recordType_;
-    desiredKeys = desiredKeys_;
+    cond.limitRes = LIMIT_SIZE;
+    cond.recordType = recordType_;
+    cond.desiredKeys = desiredKeys_;
 }
 
 int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records)

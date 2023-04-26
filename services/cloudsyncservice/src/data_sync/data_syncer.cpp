@@ -33,6 +33,8 @@ using namespace DriveKit;
 DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
     : bundleName_(bundleName), userId_(userId), sdkHelper_(userId, bundleName), cloudPrefImpl_(userId, bundleName)
 {
+    cloudPrefImpl_.GetString(START_CURSOR, startCursor_);
+    cloudPrefImpl_.GetString(NEXT_CURSOR, nextCursor_);
     taskManager_ = make_shared<TaskManager>(bind(&DataSyncer::Schedule, this));
     if (taskManager_ == nullptr) {
         LOGE("init task manager err");

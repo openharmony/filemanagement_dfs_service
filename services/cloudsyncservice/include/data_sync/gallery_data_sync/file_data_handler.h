@@ -31,8 +31,7 @@ public:
     virtual ~FileDataHandler() = default;
 
     /* download */
-    void GetFetchCondition(int32_t &limitRes, DriveKit::DKRecordType &recordType,
-        DriveKit::DKFieldKeyArray &desiredKeys) override;
+    void GetFetchCondition(FetchCondition &cond) override;
     int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records) override;
 
     /* upload */
@@ -56,11 +55,9 @@ public:
 
 private:
     static inline const std::string TABLE_NAME = "Files";
-    static inline const int32_t LIMIT_SIZE = 50;
+    static inline const int32_t LIMIT_SIZE = 5;
     DriveKit::DKRecordType recordType_ = "media";
-    DriveKit::DKFieldKeyArray desiredKeys_ = { "albumId", "createdTime", "editedTime", "favorite", "fileName",
-        "fileType", "hashId", "sha256", "id", "properties", "size", "source", "recycledTime", "recycled",
-        "pictureMetadata", "videoMetadata", "cipher", "description" };
+    DriveKit::DKFieldKeyArray desiredKeys_;
     static const std::vector<std::string> GALLERY_FILE_COLUMNS;
 
     /* identifier */

@@ -33,11 +33,11 @@ AlbumDataHandler::AlbumDataHandler(std::shared_ptr<RdbStore> rdb)
 {
 }
 
-void AlbumDataHandler::GetFetchCondition(int32_t &limitRes, DKRecordType &recordType, DKFieldKeyArray &desiredKeys)
+void AlbumDataHandler::GetFetchCondition(FetchCondition &cond)
 {
-    limitRes = LIMIT_SIZE;
-    recordType = recordType_;
-    desiredKeys = desiredKeys_;
+    cond.limitRes = LIMIT_SIZE;
+    cond.recordType = recordType_;
+    cond.desiredKeys = desiredKeys_;
 }
 
 int32_t AlbumDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records)
