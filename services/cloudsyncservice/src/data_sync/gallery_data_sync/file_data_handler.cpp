@@ -17,6 +17,7 @@
 
 #include "dfs_error.h"
 #include "dk_assets_downloader.h"
+#include "dk_error.h"
 #include "utils_log.h"
 #include "gallery_file_const.h"
 #include "meta_file.h"
@@ -406,132 +407,68 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
 
 int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
+    std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+    GetLocalTimeMap(map, localMap, Media::MEDIA_DATA_DB_FILE_PATH);
+    int32_t err;
     for (auto &entry : map) {
-        DKRecordOperResult &result = const_cast<DKRecordOperResult &>(entry.second);
-        if (!result.IsSuccess()) {
-            LOGE("on create record err %{public}d", result.GetDKError().dkErrorCode);
-            continue;
-        }
-
-        auto record = result.GetDKRecord();
-        /* record to value bucket */
-        ValuesBucket valuesBucket;
-        valuesBucket.PutString(Media::MEDIA_DATA_DB_CLOUD_ID, entry.first);
-        valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
-            static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
-
-        DKRecordData data;
-        record.GetRecordData(data);
-        auto iter = data.find(FILE_FILE_NAME);
-        if (iter == data.end()) {
-            LOGE("no id in record data");
-            continue;
-        }
-        string fileName = iter->second;
-
-        /* update local */
-        int32_t changedRows;
-        string whereClause = Media::MEDIA_DATA_DB_NAME + " = ?";
-        int32_t ret = Update(changedRows, valuesBucket, whereClause, { fileName });
-        if (ret != 0) {
-            LOGE("on create records update err %{public}d, file name %{private}s",
-                ret, fileName.c_str());
-            continue;
+        const DKRecordOperResult &result = entry.second;
+        if (result.IsSuccess()) {
+            OnCreateRecordSuccess(entry, localMap);
+        } else {
+            err = OnRecordFailed(entry);
+            err = (err == E_OK) ? E_OK : err;
         }
     }
-
-    return E_OK;
+    return err;
 }
 
 int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
+    int32_t err;
     for (auto &entry : map) {
-        DKRecordOperResult &result = const_cast<DKRecordOperResult &>(entry.second);
-        string cloudId = entry.first;
-        if (!result.IsSuccess()) {
-            LOGE("on delete record %{private}s err %{public}d", cloudId.c_str(),
-                result.GetDKError().dkErrorCode);
-            continue;
-        }
-
-        /* delete local */
-        int32_t deletedRows;
-        string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
-        int32_t ret = Delete(deletedRows, whereClause, { cloudId });
-        if (ret != 0) {
-            LOGE("on delete records update err %{public}d, cloudId %{private}s",
-                ret, cloudId.c_str());
-            continue;
+        const DKRecordOperResult &result = entry.second;
+        if (result.IsSuccess()) {
+            OnDeleteRecordSuccess(entry);
+        } else {
+            err = OnRecordFailed(entry);
+            err = (err == E_OK) ? E_OK : err;
         }
     }
-
-    return E_OK;
+    return err;
 }
 
 int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
+    std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+    GetLocalTimeMap(map, localMap, Media::MEDIA_DATA_DB_CLOUD_ID);
+    int32_t err;
     for (auto &entry : map) {
-        DKRecordOperResult &result = const_cast<DKRecordOperResult &>(entry.second);
-        string cloudId = entry.first;
-        if (!result.IsSuccess()) {
-            LOGE("on modify mdirty record %{private}s err %{public}d", cloudId.c_str(),
-                result.GetDKError().dkErrorCode);
-            continue;
-        }
-
-        /* record to value bucket */
-        ValuesBucket valuesBucket;
-        valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
-            static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
-
-        /* update local */
-        int32_t changedRows;
-        string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
-        int32_t ret = Update(changedRows, valuesBucket, whereClause, { cloudId });
-        if (ret != 0) {
-            LOGE("on modify mdirty records update err %{public}d, cloudId %{private}s",
-                ret, cloudId.c_str());
-            continue;
+        const DKRecordOperResult &result = entry.second;
+        if (result.IsSuccess()) {
+            OnModifyRecordSuccess(entry, localMap);
+        } else {
+            err = OnRecordFailed(entry);
+            err = (err == E_OK) ? E_OK : err;
         }
     }
-
-    return E_OK;
+    return err;
 }
 
 int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
+    std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+    GetLocalTimeMap(map, localMap, Media::MEDIA_DATA_DB_CLOUD_ID);
+    int32_t err;
     for (auto &entry : map) {
-        DKRecordOperResult &result = const_cast<DKRecordOperResult &>(entry.second);
-        string cloudId = entry.first;
-        if (!result.IsSuccess()) {
-            LOGE("on modify fdirty record %{private}s err %{public}d", cloudId.c_str(),
-                result.GetDKError().dkErrorCode);
-            continue;
-        }
-
-        DKRecord record = result.GetDKRecord();
-        /* record to value bucket */
-        ValuesBucket valuesBucket;
-        int32_t ret = fdirtyConvertor_.RecordToValueBucket(record, valuesBucket);
-        if (ret != E_OK) {
-            LOGE("record to value bucket err %{public}d", ret);
-            continue;
-        }
-        valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
-            static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
-
-        /* update local */
-        int32_t changedRows;
-        string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
-        ret = Update(changedRows, valuesBucket, whereClause, { cloudId });
-        if (ret != 0) {
-            LOGE("on modify fdirty records update err %{public}d, cloudId %{private}s",
-                ret, cloudId.c_str());
-            continue;
+        const DKRecordOperResult &result = entry.second;
+        if (result.IsSuccess()) {
+            OnModifyRecordSuccess(entry, localMap);
+        } else {
+            err = OnRecordFailed(entry);
+            err = (err == E_OK) ? E_OK : err;
         }
     }
-
-    return E_OK;
+    return err;
 }
 
 void FileDataHandler::Reset()
@@ -540,6 +477,300 @@ void FileDataHandler::Reset()
     deleteOffset_ = 0;
     mdirtyOffset_ = 0;
     fdirtyOffset_ = 0;
+}
+
+void FileDataHandler::OnCreateRecordSuccess(
+    const std::pair<DKRecordId, DKRecordOperResult> &entry,
+    const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap)
+{
+    auto record = entry.second.GetDKRecord();
+
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data cannot find properties");
+        return;
+    }
+    DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
+    if (prop.find(MEDIA_DATA_DB_FILE_PATH) == prop.end()) {
+        LOGE("record data cannot find file path");
+        return;
+    }
+
+    string path;
+    if (prop[MEDIA_DATA_DB_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad file_path in props");
+        return;
+    }
+    /* compare mtime */
+    if (OnCreateIsTimeChanged(data, localMap, path, Media::MEDIA_DATA_DB_DATE_MODIFIED)) {
+        return;
+    }
+    /* record to value bucket */
+    ValuesBucket valuesBucket;
+    valuesBucket.PutString(Media::MEDIA_DATA_DB_CLOUD_ID, entry.first);
+    valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
+
+    int32_t changedRows;
+    string whereClause = Media::MEDIA_DATA_DB_FILE_PATH + " = ?";
+    vector<string> whereArgs = {path};
+    int32_t ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
+    if (ret != 0) {
+        LOGE("on create records update synced err %{public}d", ret);
+        return;
+    }
+
+    /* compare metatime */
+    if (OnCreateIsTimeChanged(data, localMap, path, Media::MEDIA_DATA_DB_META_DATE_MODIFIED)) {
+        valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
+        ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
+        if (ret != 0) {
+            LOGE("on create records update mdirty err %{public}d", ret);
+            return;
+        }
+    }
+}
+
+void FileDataHandler::OnDeleteRecordSuccess(const std::pair<DKRecordId, DKRecordOperResult> &entry)
+{
+    string cloudId = entry.first;
+    /* delete local */
+    int32_t deletedRows;
+    string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
+    int32_t ret = Delete(deletedRows, whereClause, {cloudId});
+    if (ret != 0) {
+        LOGE("on delete records update err %{public}d", ret);
+        return;
+    }
+}
+
+void FileDataHandler::OnModifyRecordSuccess(
+    const std::pair<DKRecordId, DKRecordOperResult> &entry,
+    const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap)
+{
+    auto record = entry.second.GetDKRecord();
+    DKRecordData data;
+    record.GetRecordData(data);
+    string cloudId = entry.first;
+
+    /* compare mtime */
+    if (OnModifyIsTimeChanged(data, localMap, cloudId, Media::MEDIA_DATA_DB_DATE_MODIFIED)) {
+        return;
+    }
+    /* record to value bucket */
+    ValuesBucket valuesBucket;
+    valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
+
+    int32_t changedRows;
+    string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
+    int32_t ret = Update(changedRows, valuesBucket, whereClause, {cloudId});
+    if (ret != 0) {
+        LOGE("on modify records update synced err %{public}d", ret);
+        return;
+    }
+
+    /* compare metatime */
+    if (OnModifyIsTimeChanged(data, localMap, cloudId, Media::MEDIA_DATA_DB_META_DATE_MODIFIED)) {
+        valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
+        ret = Update(changedRows, valuesBucket, whereClause, {cloudId});
+        if (ret != 0) {
+            LOGE("on modify records update mdirty err %{public}d", ret);
+            return;
+        }
+    }
+}
+
+bool FileDataHandler::OnCreateIsTimeChanged(
+    const DKRecordData &data,
+    const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
+    const std::string &path,
+    const std::string &type)
+{
+    int64_t cloudtime;
+    int64_t localtime;
+
+    /* any error will return true，do not update to synced */
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data cannot find properties");
+        return true;
+    }
+    DKRecordFieldMap prop = const_cast<DKRecordData&>(data)[FILE_PROPERTIES];
+    if (prop.find(type) == prop.end()) {
+        LOGE("record data cannot find some properties");
+        return true;
+    }
+
+    if (prop[type].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad file_path in props");
+        return true;
+    }
+    auto it = localMap.find(path);
+    if (it == localMap.end()) {
+        return true;
+    }
+    /* get mtime or metatime */
+    if (type == Media::MEDIA_DATA_DB_DATE_MODIFIED) {
+        localtime = it->second.first;
+    } else {
+        localtime = it->second.second;
+    }
+
+    /* compare mtime metatime */
+    if (localtime == cloudtime) {
+        return false;
+    }
+    return true;
+}
+
+bool FileDataHandler::OnModifyIsTimeChanged(
+    const DKRecordData &data,
+    const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
+    const std::string &cloudId,
+    const std::string &type)
+{
+    int64_t cloudtime;
+    int64_t localtime;
+
+    /* any error will return true，do not update to synced */
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data cannot find properties");
+        return true;
+    }
+    DKRecordFieldMap prop = const_cast<DKRecordData&>(data)[FILE_PROPERTIES];
+    if (prop.find(type) == prop.end()) {
+        LOGE("record data cannot find some properties");
+        return true;
+    }
+
+    if (prop[type].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad file_path in props");
+        return true;
+    }
+    auto it = localMap.find(cloudId);
+    if (it == localMap.end()) {
+        return true;
+    }
+    /* get mtime or metatime */
+    if (type == Media::MEDIA_DATA_DB_DATE_MODIFIED) {
+        localtime = it->second.first;
+    } else {
+        localtime = it->second.second;
+    }
+
+    /* compare mtime or metatime */
+    if (localtime == cloudtime) {
+        return false;
+    }
+    return true;
+}
+
+void FileDataHandler::GetLocalTimeMap(const std::map<DKRecordId, DKRecordOperResult> &map,
+                                      std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
+                                      const std::string &type)
+{
+    std::vector<std::string> path;
+    for (auto &entry : map) {
+        if (type == Media::MEDIA_DATA_DB_CLOUD_ID) {
+            path.push_back(entry.first);
+        } else {
+            auto record = entry.second.GetDKRecord();
+            DKRecordData data;
+            record.GetRecordData(data);
+            if (data.find(FILE_PROPERTIES) == data.end()) {
+                LOGE("record data cannot find properties");
+                return;
+            }
+            DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
+            if (prop.find(MEDIA_DATA_DB_FILE_PATH) == prop.end()) {
+                LOGE("record data cannot find some properties");
+                return;
+            }
+            string curPath;
+            if (prop[MEDIA_DATA_DB_FILE_PATH].GetString(curPath) != DKLocalErrorCode::NO_ERROR) {
+                LOGE("bad file_path in props");
+                return;
+            }
+            path.push_back(curPath);
+        }
+    }
+    NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    createPredicates.EqualTo(Media::MEDIA_DATA_DB_IS_TRASH, "0");
+    createPredicates.And()->In(type, path);
+    auto resultSet = Query(createPredicates, GALLERY_FILE_COLUMNS);
+    if (resultSet == nullptr) {
+        return;
+    }
+
+    OnResultSetConvertToMap(move(resultSet), cloudMap, type);
+}
+
+void FileDataHandler::OnResultSetConvertToMap(const unique_ptr<NativeRdb::ResultSet> resultSet,
+                                              std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
+                                              const std::string &type)
+{
+    int32_t idIndex = -1;
+    int32_t mtimeIndex = -1;
+    int32_t metatimeIndex = -1;
+    resultSet->GetColumnIndex(type, idIndex);
+    resultSet->GetColumnIndex(Media::MEDIA_DATA_DB_DATE_MODIFIED, mtimeIndex);
+    resultSet->GetColumnIndex(Media::MEDIA_DATA_DB_META_DATE_MODIFIED, metatimeIndex);
+
+    /* iterate all rows compare mtime metatime */
+    while (resultSet->GoToNextRow() == 0) {
+        string idValue;
+        int64_t mtime;
+        int64_t metatime;
+        if (resultSet->GetString(idIndex, idValue) == 0 && resultSet->GetLong(mtimeIndex, mtime) == 0 &&
+            resultSet->GetLong(metatimeIndex, metatime) == 0) {
+            cloudMap.insert(std::make_pair(idValue, std::make_pair(mtime, metatime)));
+        }
+    }
+}
+
+int32_t FileDataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOperResult> &entry)
+{
+    const DKRecordOperResult &result = entry.second;
+    int serverErrorCode = result.GetDKError().serverErrorCode;
+    string errorDetailcode = result.GetDKError().errorDetails[0].errorCode;
+    if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::ACCESS_DENIED &&
+        errorDetailcode == SPACE_NOT_ENOUGH) {
+        return HandleCloudSpaceNotEnough();
+    } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::AUTHENTICATION_FAILED &&
+               errorDetailcode == AT_FAILED) {
+        return HandleATFailed();
+    } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::ACCESS_DENIED &&
+               errorDetailcode == NAME_CONFLICT) {
+        HandleNameConflict();
+    } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::ATOMIC_ERROR &&
+               errorDetailcode == INVALID_FILE) {
+        HandleNameInvalid();
+    } else {
+        LOGE(" unknown error code record failed, serverErrorCode = %{public}d, errorDetailcode = %{public}s",
+             serverErrorCode, errorDetailcode.c_str());
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::HandleCloudSpaceNotEnough()
+{
+    LOGE("Cloud Space Not Enough");
+    /* Stop sync */
+    return E_STOP;
+}
+
+int32_t FileDataHandler::HandleATFailed()
+{
+    return E_OK;
+}
+
+void FileDataHandler::HandleNameConflict()
+{
+    LOGE("Name Conflict");
+}
+
+void FileDataHandler::HandleNameInvalid()
+{
+    LOGE("Name Invalid");
 }
 } // namespace CloudSync
 } // namespace FileManagement

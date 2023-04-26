@@ -60,6 +60,30 @@ public:
     void Reset();
 
 private:
+    void OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
+                               const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap);
+    void OnDeleteRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+    void OnModifyRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
+                               const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap);
+    bool OnCreateIsTimeChanged(const DriveKit::DKRecordData &data,
+                             const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
+                             const std::string &path,
+                             const std::string &type);
+    bool OnModifyIsTimeChanged(const DriveKit::DKRecordData &data,
+                             const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
+                             const std::string &cloudId,
+                             const std::string &type);
+    void GetLocalTimeMap(const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &map,
+                         std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
+                         const std::string &type);
+    void OnResultSetConvertToMap(const std::unique_ptr<NativeRdb::ResultSet> resultSet,
+                                 std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
+                                 const std::string &type);
+    int32_t OnRecordFailed(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+    int32_t HandleCloudSpaceNotEnough();
+    int32_t HandleATFailed();
+    void HandleNameConflict();
+    void HandleNameInvalid();
     static inline const std::string TABLE_NAME = "Files";
     static inline const int32_t LIMIT_SIZE = 5;
     DriveKit::DKRecordType recordType_ = "media";

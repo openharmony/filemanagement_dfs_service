@@ -16,6 +16,8 @@
 #ifndef OHOS_FILEMGMT_DFS_ERROR_H
 #define OHOS_FILEMGMT_DFS_ERROR_H
 
+#include <string_view>
+
 #include "errors.h"
 
 namespace OHOS::FileManagement {
@@ -25,6 +27,11 @@ enum {
      */
     CLOUD_SYNC_SERVICE_MODULE = 0x100
 };
+
+constexpr std::string_view SPACE_NOT_ENOUGH = "30184039";
+constexpr std::string_view AT_FAILED = "31000401";
+constexpr std::string_view NAME_CONFLICT = "31004002";
+constexpr std::string_view INVALID_FILE = "31084932";
 
 constexpr ErrCode CSS_ERR_OFFSET = ErrCodeOffset(SUBSYS_FILEMANAGEMENT, CLOUD_SYNC_SERVICE_MODULE);
 
