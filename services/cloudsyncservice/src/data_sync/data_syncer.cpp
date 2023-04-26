@@ -98,6 +98,12 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     /* notify sync state */
     SyncStateChangedNotify(SyncType::ALL, SyncPromptState::SYNC_STATE_SYNCING);
 
+    /* lock: device-reentrant */
+    int32_t ret = sdkHelper_.GetLock(lock_);
+    if (ret != E_OK) {
+        return ret;
+    }
+
     /* start data sync */
     Schedule();
 
@@ -627,6 +633,9 @@ void DataSyncer::CompletePush()
 void DataSyncer::CompleteAll(int32_t code, const SyncType type)
 {
     LOGI("%{private}d %{private}s completes all", userId_, bundleName_.c_str());
+
+    /* unlock */
+    sdkHelper_.DeleteLock(lock_);
 
     if (errorCode_ == E_SYNC_FAILED_BATTERY_LOW) {
         code = errorCode_;

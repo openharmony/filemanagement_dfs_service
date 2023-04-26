@@ -26,69 +26,21 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-enum DataType : int32_t {
-    INT,
-    LONG,
-    STRING,
-    DOUBLE,
-    BOOL,
-    BLOB,
-    ASSET
-};
-
 class DataConvertor {
 public:
-    DataConvertor(const std::vector<std::string> localColumns,
-        const std::vector<std::string> cloudColumns,
-        const std::vector<DataType> types, int32_t size);
+    DataConvertor() = default;
     virtual ~DataConvertor() = default;
+
+    virtual int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet) = 0;
 
     int32_t ResultSetToRecords(const std::unique_ptr<NativeRdb::ResultSet> resultSet,
         std::vector<DriveKit::DKRecord> &records);
-    int32_t RecordToValueBucket(const DriveKit::DKRecord &record,
-        NativeRdb::ValuesBucket &valueBucket);
-    int32_t RecordsToValueBuckets(const std::vector<DriveKit::DKRecord> &records,
-        std::vector<NativeRdb::ValuesBucket> &valueBuckets);
+    int32_t RecordToValueBucket(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
 
-    const std::vector<std::string> &GetLocalColumns() const
-    {
-        return localColumns_;
-    }
-
-    const std::vector<std::string> &GetCloudColumns() const
-    {
-        return cloudColumns_;
-    }
-
-    const std::vector<DataType> &GetTypes() const
-    {
-        return types_;
-    }
-
-    int32_t GetSize() const
-    {
-        return size_;
-    }
-
-private:
-    void HandleInt(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
-        int32_t index, NativeRdb::ResultSet &resultSet);
-    void HandleLong(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
-        int32_t index, NativeRdb::ResultSet &resultSet);
-    void HandleString(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
-        int32_t index, NativeRdb::ResultSet &resultSet);
-    void HandleAsset(DriveKit::DKRecordData &data, const DriveKit::DKFieldKey &key,
-        int32_t index, NativeRdb::ResultSet &resultSet);
-
-    /* handler map */
-    using ConvertorHandler = void (DataConvertor::*)(DriveKit::DKRecordData &data,
-        const DriveKit::DKFieldKey &key, int32_t index, NativeRdb::ResultSet &resultSet);
-    std::map<int32_t, ConvertorHandler> opToHandlerMap_;
-
-    const std::vector<std::string> localColumns_;
-    const std::vector<std::string> cloudColumns_;
-    const std::vector<DataType> types_;
-    const int32_t size_;
+protected:
+    int32_t GetInt(const std::string &key, int32_t &val, NativeRdb::ResultSet &resultSet);
+    int32_t GetLong(const std::string &key, int64_t &val, NativeRdb::ResultSet &resultSet);
+    int32_t GetString(const std::string &key, std::string &val, NativeRdb::ResultSet &resultSet);
 };
 } // namespace CloudSync
 } // namespace FileManagement

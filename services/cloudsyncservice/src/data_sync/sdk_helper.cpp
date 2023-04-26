@@ -46,6 +46,21 @@ SdkHelper::SdkHelper(const int32_t userId, const std::string bundleName)
     }
 }
 
+int32_t SdkHelper::GetLock(DriveKit::DKLock &lock)
+{
+    auto err = database_->GetLock(lock);
+    if (err.HasError()) {
+        LOGE("get sdk lock err");
+        return E_CLOUD_SDK;
+    }
+    return E_OK;
+}
+
+void SdkHelper::DeleteLock(DriveKit::DKLock &lock)
+{
+    database_->DeleteLock(lock);
+}
+
 int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor cursor,
     function<void(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
@@ -98,10 +113,10 @@ int32_t SdkHelper::CreateRecords(shared_ptr<DriveKit::DKContext> context,
         std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
         const DriveKit::DKError &)> callback)
 {
-    auto err = database_->SaveRecords(context, move(records),
+    auto errCode = database_->SaveRecords(context, move(records),
         DriveKit::DKSavePolicy::DK_SAVE_IF_UNCHANGED, callback);
-    if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
-        LOGE("drivekit saves records err %{public}d", err);
+    if (errCode != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("drivekit save records err %{public}d", errCode);
         return E_CLOUD_SDK;
     }
     return E_OK;

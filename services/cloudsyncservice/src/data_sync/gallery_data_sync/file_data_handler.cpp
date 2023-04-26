@@ -15,11 +15,9 @@
 
 #include "file_data_handler.h"
 
-#include "medialibrary_db_const.h"
-#include "medialibrary_type_const.h"
-
 #include "dfs_error.h"
 #include "utils_log.h"
+#include "gallery_file_const.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -27,9 +25,25 @@ namespace CloudSync {
 using namespace std;
 using namespace NativeRdb;
 using namespace DriveKit;
+using namespace Media;
 
-FileDataHandler::FileDataHandler(std::shared_ptr<RdbStore> rdb)
-    : RdbDataHandler(TABLE_NAME, rdb)
+const vector<string> FileDataHandler::GALLERY_FILE_COLUMNS = {
+    MEDIA_DATA_DB_NAME,
+    MEDIA_DATA_DB_MEDIA_TYPE,
+    MEDIA_DATA_DB_DATE_ADDED,
+    MEDIA_DATA_DB_IS_FAV,
+    MEDIA_DATA_DB_HEIGHT,
+    MEDIA_DATA_DB_WIDTH,
+    MEDIA_DATA_DB_DATE_MODIFIED,
+    MEDIA_DATA_DB_BUCKET_ID,
+    MEDIA_DATA_DB_FILE_PATH,
+    MEDIA_DATA_DB_THUMBNAIL,
+    MEDIA_DATA_DB_LCD,
+    MEDIA_DATA_DB_ORIENTATION
+};
+
+FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
+    : RdbDataHandler(TABLE_NAME, rdb), userId_(userId), bundleName_(bundleName)
 {
 }
 
@@ -50,7 +64,7 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
         predicates.SetWhereClause(Media::MEDIA_DATA_DB_CLOUD_ID + " = ?");
         predicates.SetWhereArgs({record.GetRecordId()});
         predicates.Limit(LIMIT_SIZE);
-        auto resultSet = Query(predicates, localConvertor_.GetLocalColumns());
+        auto resultSet = Query(predicates, GALLERY_FILE_COLUMNS);
         if (resultSet == nullptr) {
             LOGE("get nullptr created result");
             ret = E_RDB;
@@ -132,7 +146,7 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
     createPredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(createPredicates, createConvertor_.GetLocalColumns());
+    auto results = Query(createPredicates, GALLERY_FILE_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr created result");
         return E_RDB;
@@ -160,7 +174,7 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
     deletePredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(deletePredicates, deleteConvertor_.GetLocalColumns());
+    auto results = Query(deletePredicates, GALLERY_FILE_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr deleted result");
         return E_RDB;
@@ -189,7 +203,7 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(updatePredicates, updateConvertor_.GetLocalColumns());
+    auto results = Query(updatePredicates, GALLERY_FILE_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr modified result");
         return E_RDB;
@@ -218,7 +232,7 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(updatePredicates, updateConvertor_.GetLocalColumns());
+    auto results = Query(updatePredicates, GALLERY_FILE_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr modified result");
         return E_RDB;
@@ -243,30 +257,25 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
 
         /* record to value bucket */
         ValuesBucket valuesBucket;
-        int32_t ret = onCreateConvertor_.RecordToValueBucket(record, valuesBucket);
-        if (ret != E_OK) {
-            LOGE("record to value bucket err %{public}d", ret);
-            continue;
-        }
         valuesBucket.PutString(Media::MEDIA_DATA_DB_CLOUD_ID, entry.first);
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
             static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
 
         DKRecordData data;
         record.GetRecordData(data);
-        auto iter = data.find(Media::MEDIA_DATA_DB_ID);
+        auto iter = data.find(FILE_FILE_NAME);
         if (iter == data.end()) {
             LOGE("no id in record data");
             continue;
         }
-        int32_t id = iter->second;
+        string fileName = iter->second;
 
         /* update local */
         int32_t changedRows;
-        string whereClause = Media::MEDIA_DATA_DB_ID + " = ?";
-        ret = Update(changedRows, valuesBucket, whereClause, { to_string(id) });
+        string whereClause = Media::MEDIA_DATA_DB_NAME + " = ?";
+        int32_t ret = Update(changedRows, valuesBucket, whereClause, { fileName });
         if (ret != 0) {
-            LOGE("on create records update err %{public}d, id %{public}d", ret, id);
+            LOGE("on create records update err %{public}d, file name %{private}s", ret, fileName.c_str());
             continue;
         }
     }
@@ -309,11 +318,6 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
 
         /* record to value bucket */
         ValuesBucket valuesBucket;
-        int32_t ret = updateConvertor_.RecordToValueBucket(record, valuesBucket);
-        if (ret != E_OK) {
-            LOGE("record to value bucket err %{public}d", ret);
-            continue;
-        }
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
             static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
 
@@ -329,7 +333,7 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
         /* update local */
         int32_t changedRows;
         string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
-        ret = Update(changedRows, valuesBucket, whereClause, { cloudId });
+        int32_t ret = Update(changedRows, valuesBucket, whereClause, { cloudId });
         if (ret != 0) {
             LOGE("on modify mdirty records update err %{public}d, cloudId %{private}s",
                 ret, cloudId.c_str());
