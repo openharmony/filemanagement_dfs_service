@@ -10,14 +10,33 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-group("cloudsync_sa_test") {
-  testonly = true
+ohos_unittest("dentry_meta_file_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "dentry_meta_file_test.cpp" ]
+
+  include_dirs = [ "${utils_path}/dentry/include" ]
+
   deps = [
-    "data_sync:cloudsync_sa_data_sync_test",
-    "dentry:cloudsync_sa_dentry_test",
-    "ipc:cloudsync_sa_ipc_test",
+    "${utils_path}:libdistributedfiledentry",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
   ]
+
+  external_deps = [ "c_utils:utils" ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_SA\"",
+  ]
+}
+
+group("cloudsync_sa_dentry_test") {
+  testonly = true
+  deps = [ ":dentry_meta_file_test" ]
 }
