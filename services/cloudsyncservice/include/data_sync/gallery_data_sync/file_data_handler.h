@@ -16,15 +16,18 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_FILE_DATA_HANDLER_H
 #define OHOS_CLOUD_SYNC_SERVICE_FILE_DATA_HANDLER_H
 
+#include "medialibrary_db_const.h"
+#include "medialibrary_type_const.h"
+
 #include "rdb_data_handler.h"
-#include "data_convertor.h"
+#include "file_data_convertor.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 class FileDataHandler : public RdbDataHandler {
 public:
-    FileDataHandler(std::shared_ptr<NativeRdb::RdbStore> rdb);
+    FileDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<NativeRdb::RdbStore> rdb);
     virtual ~FileDataHandler() = default;
 
     /* download */
@@ -58,54 +61,24 @@ private:
     DriveKit::DKFieldKeyArray desiredKeys_ = { "albumId", "createdTime", "editedTime", "favorite", "fileName",
         "fileType", "hashId", "sha256", "id", "properties", "size", "source", "recycledTime", "recycled",
         "pictureMetadata", "videoMetadata", "cipher", "description" };
+    static const std::vector<std::string> GALLERY_FILE_COLUMNS;
+
+    /* identifier */
+    int32_t userId_;
+    std::string bundleName_;
 
     /* create */
     int32_t createOffset_ = 0;
-    DataConvertor createConvertor_ = {
-        { "file_id", "data", "size", "data" },
-        { "file_id", "data", "size", "asset" },
-        { INT, STRING, INT, ASSET },
-        4
-    };
-    DataConvertor onCreateConvertor_ = {
-        { "file_id", "data", "size" },
-        { "file_id", "data", "size" },
-        { INT, STRING, INT },
-        3
-    };
+    FileDataConvertor createConvertor_ = { userId_, bundleName_, true };
 
     /* delete */
     int32_t deleteOffset_ = 0;
-    DataConvertor deleteConvertor_ = {
-        { "file_id", "data", "size" },
-        { "id", "path", "size" },
-        { INT, STRING, INT },
-        3
-    };
-    DataConvertor onDeleteConvertor_ = {
-        { "file_id", "data", "size" },
-        { "id", "path", "size" },
-        { INT, STRING, INT },
-        3
-    };
+    FileDataConvertor deleteConvertor_ = { userId_, bundleName_, false };
 
-    /* meta update */
+    /* update */
     int32_t metaUpdateOffset_ = 0;
     int32_t fileUpdateOffset_ = 0;
-    DataConvertor updateConvertor_ = {
-        { "file_id", "data", "size" },
-        { "id", "path", "size" },
-        { INT, STRING, INT },
-        3
-    };
-    DataConvertor onUpdateConvertor_ = {
-        { "file_id", "data", "size" },
-        { "id", "path", "size" },
-        { INT, STRING, INT },
-        3
-    };
-
-    /* fetch */
+    FileDataConvertor updateConvertor_ = { userId_, bundleName_, false };
 
     /* pull operations */
     int32_t PullRecordInsert(const DriveKit::DKRecord &record);
@@ -113,12 +86,7 @@ private:
     int32_t PullRecordDelete(const DriveKit::DKRecord &record, const DriveKit::DKRecord &local);
 
     /* db result to record */
-    DataConvertor localConvertor_ = {
-        { "file_id", "data", "size" },
-        { "id", "path", "size" },
-        { INT, STRING, INT },
-        3
-    };
+    FileDataConvertor localConvertor_ = { userId_, bundleName_, false };
 };
 } // namespace CloudSync
 } // namespace FileManagement

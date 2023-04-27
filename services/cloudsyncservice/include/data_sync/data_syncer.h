@@ -140,7 +140,7 @@ private:
 
     /* sdk */
     SdkHelper sdkHelper_;
-
+    DriveKit::DKLock lock_;
     int32_t errorCode_{0};
 
     /* cursor*/

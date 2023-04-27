@@ -45,7 +45,7 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
     }
 
     /* init handler */
-    fileHandler_ = make_shared<FileDataHandler>(rdb_);
+    fileHandler_ = make_shared<FileDataHandler>(userId, bundleName, rdb_);
 }
 
 void GalleryDataSyncer::Schedule()

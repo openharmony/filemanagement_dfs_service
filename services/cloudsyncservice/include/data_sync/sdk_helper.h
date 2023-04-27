@@ -31,6 +31,10 @@ public:
     SdkHelper(const int32_t userId, const std::string bundleName);
     ~SdkHelper() = default;
 
+    /* lock */
+    int32_t GetLock(DriveKit::DKLock &lock);
+    void DeleteLock(DriveKit::DKLock &lock);
+
     /* record download */
     using FetchRecordsCallback = std::function<void(const std::shared_ptr<DriveKit::DKContext>,
         std::shared_ptr<const DriveKit::DKDatabase>,

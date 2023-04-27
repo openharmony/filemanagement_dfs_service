@@ -27,6 +27,7 @@ ohos_unittest("data_sync_manager_test") {
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",

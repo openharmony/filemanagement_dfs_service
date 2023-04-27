@@ -53,6 +53,7 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_PENDING,
     E_SCHEDULE,
     E_ASYNC_RUN,
+    E_PATH
 };
 } // namespace OHOS::FileManagement
 
