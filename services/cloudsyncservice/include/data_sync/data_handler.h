@@ -21,11 +21,15 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+struct FetchCondition {
+    int32_t limitRes;
+    DriveKit::DKRecordType recordType;
+    DriveKit::DKFieldKeyArray desiredKeys;
+};
 class DataHandler {
 public:
     /* download */
-    virtual void GetFetchCondition(int32_t &limitRes, DriveKit::DKRecordType &recordType,
-        DriveKit::DKFieldKeyArray &desiredKeys) = 0;
+    virtual void GetFetchCondition(FetchCondition &cond) = 0;
     virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records) = 0;
 
     /* upload */

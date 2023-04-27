@@ -72,11 +72,9 @@ int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context, DriveKi
         LOGE("context get handler err");
         return E_INVAL_ARG;
     }
-    int32_t limitRes = 0;
-    DriveKit::DKRecordType recordType;
-    DriveKit::DKFieldKeyArray desiredKeys;
-    handler->GetFetchCondition(limitRes, recordType, desiredKeys);
-    auto err = database_->FetchRecords(context, recordType, desiredKeys, limitRes, cursor, callback);
+    FetchCondition cond;
+    handler->GetFetchCondition(cond);
+    auto err = database_->FetchRecords(context, cond.recordType, cond.desiredKeys, cond.limitRes, cursor, callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("drivekit fetch records err %{public}d", err);
         return E_CLOUD_SDK;
@@ -95,11 +93,10 @@ int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> con
         LOGE("context get handler err");
         return E_INVAL_ARG;
     }
-    int32_t limitRes = 0;
-    DriveKit::DKRecordType recordType;
-    DriveKit::DKFieldKeyArray desiredKeys;
-    handler->GetFetchCondition(limitRes, recordType, desiredKeys);
-    auto err = database_->FetchDatabaseChanges(context, recordType, desiredKeys, limitRes, cursor, callback);
+    FetchCondition cond;
+    handler->GetFetchCondition(cond);
+    auto err = database_->FetchDatabaseChanges(context, cond.recordType, cond.desiredKeys, cond.limitRes, cursor,
+        callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("drivekit fetch records err %{public}d", err);
         return E_CLOUD_SDK;
@@ -165,6 +162,20 @@ int32_t SdkHelper::CancelDownloadAssets(int32_t id)
 
 int32_t SdkHelper::GetStartCursor(shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor &cursor)
 {
+    auto ctx = static_pointer_cast<TaskContext>(context);
+    auto handler = ctx->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return E_INVAL_ARG;
+    }
+    FetchCondition cond;
+    handler->GetFetchCondition(cond);
+    auto err = database_->GetStartCursor(cond.recordType, cursor);
+    if (err.HasError()) {
+        LOGE("drivekit get start cursor server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
+            err.dkErrorCode);
+        return E_CLOUD_SDK;
+    }
     return E_OK;
 }
 } // namespace CloudSync
