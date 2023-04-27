@@ -21,8 +21,9 @@
 
 #include "iremote_object.h"
 #include "system_ability_definition.h"
-#include "fuse_manager/fuse_manager.h"
+
 #include "dfs_error.h"
+#include "fuse_manager/fuse_manager.h"
 #include "utils_log.h"
 
 namespace OHOS {

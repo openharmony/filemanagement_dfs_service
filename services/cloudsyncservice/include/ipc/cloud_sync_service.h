@@ -17,10 +17,12 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_SERVICE_H
 
 #include <map>
-#include "cloud_sync_service_stub.h"
-#include "i_cloud_sync_callback.h"
+
 #include "nocopyable.h"
 #include "system_ability.h"
+
+#include "cloud_sync_service_stub.h"
+#include "i_cloud_sync_callback.h"
 #include "sync_rule/battery_status_listener.h"
 
 namespace OHOS::FileManagement::CloudSync {

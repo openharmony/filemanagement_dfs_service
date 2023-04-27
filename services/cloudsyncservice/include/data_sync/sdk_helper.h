@@ -16,11 +16,11 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_SDK_HELPER_H
 #define OHOS_CLOUD_SYNC_SERVICE_SDK_HELPER_H
 
-#include <vector>
 #include <functional>
+#include <vector>
 
-#include "drive_kit.h"
 #include "dk_database.h"
+#include "drive_kit.h"
 
 namespace OHOS {
 namespace FileManagement {

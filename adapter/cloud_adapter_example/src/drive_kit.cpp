@@ -77,7 +77,7 @@ DKError DriveKitNative::GetCloudUserInfo(DKUserInfo &userInfo)
 }
 
 DKError DriveKitNative::GetCloudAppInfo(const std::vector<DKAppBundleName> &bundleNames,
-                                  std::map<DKAppBundleName, DKAppInfo> &appInfos)
+                                        std::map<DKAppBundleName, DKAppInfo> &appInfos)
 {
     DKAppInfo appInfo;
     appInfo.defaultContainer.containerName = "defaultContainer";
@@ -88,7 +88,7 @@ DKError DriveKitNative::GetCloudAppInfo(const std::vector<DKAppBundleName> &bund
 }
 
 DKError DriveKitNative::GetCloudAppSwitches(const std::vector<DKAppBundleName> &bundleNames,
-                                      std::map<DKAppBundleName, DKAppSwitchStatus> &appSwitchs)
+                                            std::map<DKAppBundleName, DKAppSwitchStatus> &appSwitchs)
 {
     return DKError();
 }

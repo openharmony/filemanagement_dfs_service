@@ -16,13 +16,14 @@
 #ifndef DRIVE_KIT_CONTAINER_H
 #define DRIVE_KIT_CONTAINER_H
 
+#include <map>
+#include <string>
+
 #include "dk_cloud_callback.h"
 #include "dk_context.h"
 #include "dk_database.h"
 #include "dk_error.h"
 #include "dk_result.h"
-#include <map>
-#include <string>
 
 namespace DriveKit {
 using DKSubscriptionId = std::string;

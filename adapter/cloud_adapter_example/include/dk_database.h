@@ -221,7 +221,7 @@ public:
         NewAssetReadSession(DKRecordType recordType, DKRecordId recordId, DKFieldKey assetKey, DKAssetPath assetPath);
 
 protected:
- void Init();
+    void Init();
 private:
     DKContainerName containerName_;
 };

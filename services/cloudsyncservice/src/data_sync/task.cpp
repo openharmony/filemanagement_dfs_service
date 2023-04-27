@@ -15,12 +15,12 @@
 
 #include "task.h"
 
-#include <functional>
 #include <chrono>
+#include <functional>
 
 #include "dfs_error.h"
-#include "utils_log.h"
 #include "sdk_helper.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {

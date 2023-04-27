@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
+#include "dk_container.h"
+
 #include <functional>
 #include <iostream>
-
-#include "dk_container.h"
 
 namespace DriveKit {
 

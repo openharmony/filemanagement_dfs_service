@@ -16,8 +16,8 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_ALBUM_DATA_HANDLER_H
 #define OHOS_CLOUD_SYNC_SERVICE_ALBUM_DATA_HANDLER_H
 
-#include "rdb_data_handler.h"
 #include "data_convertor.h"
+#include "rdb_data_handler.h"
 
 namespace OHOS {
 namespace FileManagement {

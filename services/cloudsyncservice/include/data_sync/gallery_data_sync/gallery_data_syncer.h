@@ -16,10 +16,9 @@
 #ifndef GALLERY_DATA_SYNCER_H
 #define GALLERY_DATA_SYNCER_H
 
-#include "data_syncer.h"
-
 #include "functional"
 
+#include "data_syncer.h"
 #include "file_data_handler.h"
 
 namespace OHOS {

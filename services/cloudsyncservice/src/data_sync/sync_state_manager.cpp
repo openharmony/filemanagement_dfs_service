@@ -14,8 +14,10 @@
  */
 
 #include "data_sync/sync_state_manager.h"
-#include "utils_log.h"
+
 #include <type_traits>
+
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;

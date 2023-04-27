@@ -15,15 +15,16 @@
 
 #ifndef DRIVE_KIT_H
 #define DRIVE_KIT_H
-#include "dk_cloud_callback.h"
-#include "dk_container.h"
-#include "dk_error.h"
-#include "dk_record.h"
 #include <map>
 #include <mutex>
 #include <string>
 #include <time.h>
 #include <vector>
+
+#include "dk_cloud_callback.h"
+#include "dk_container.h"
+#include "dk_error.h"
+#include "dk_record.h"
 
 namespace DriveKit {
 using DKAppId = std::string;

@@ -16,17 +16,17 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_DATA_SYNCER_H
 #define OHOS_CLOUD_SYNC_SERVICE_DATA_SYNCER_H
 
-#include <string>
-#include <vector>
 #include <list>
 #include <memory>
+#include <string>
+#include <vector>
 
-#include "sdk_helper.h"
-#include "data_handler.h"
-#include "task.h"
-#include "cloud_sync_constants.h"
-#include "data_sync/sync_state_manager.h"
 #include "cloud_pref_impl.h"
+#include "cloud_sync_constants.h"
+#include "data_handler.h"
+#include "data_sync/sync_state_manager.h"
+#include "sdk_helper.h"
+#include "task.h"
 
 namespace OHOS {
 namespace FileManagement {

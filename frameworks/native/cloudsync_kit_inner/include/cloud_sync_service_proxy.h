@@ -16,9 +16,10 @@
 #ifndef OHOS_FILEMGMT_CLOUD_SYNC_SERVICE_PROXY_H
 #define OHOS_FILEMGMT_CLOUD_SYNC_SERVICE_PROXY_H
 
-#include "i_cloud_sync_service.h"
 #include "iremote_proxy.h"
 #include "system_ability_load_callback_stub.h"
+
+#include "i_cloud_sync_service.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncServiceProxy : public IRemoteProxy<ICloudSyncService> {

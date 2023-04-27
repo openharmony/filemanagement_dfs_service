@@ -20,12 +20,13 @@
 #include <mutex>
 #include <string>
 
-#include "cloud_daemon_stub.h"
-#include "i_cloud_daemon.h"
 #include "iremote_stub.h"
 #include "nocopyable.h"
 #include "refbase.h"
 #include "system_ability.h"
+
+#include "cloud_daemon_stub.h"
+#include "i_cloud_daemon.h"
 
 namespace OHOS {
 namespace FileManagement {

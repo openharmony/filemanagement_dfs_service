@@ -18,8 +18,8 @@
 
 #include "abs_rdb_predicates.h"
 #include "rdb_helper.h"
-#include "values_bucket.h"
 #include "result_set.h"
+#include "values_bucket.h"
 
 #include "data_handler.h"
 
@@ -41,8 +41,8 @@ protected:
         const std::vector<std::string> &whereArgs = std::vector<std::string>());
     virtual int32_t Delete(int &deletedRows, const std::string &whereClause = "",
         const std::vector<std::string> &whereArgs = std::vector<std::string>());
-    virtual std::unique_ptr<NativeRdb::ResultSet> Query(
-        const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> &columns);
+    virtual std::unique_ptr<NativeRdb::ResultSet> Query(const NativeRdb::AbsRdbPredicates &predicates,
+                                                        const std::vector<std::string> &columns);
 
 private:
     std::shared_ptr<NativeRdb::RdbStore> rdb_;

@@ -16,24 +16,23 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_TASK_H
 #define OHOS_CLOUD_SYNC_SERVICE_TASK_H
 
-#include <vector>
+#include <condition_variable>
 #include <list>
 #include <memory>
 #include <mutex>
-#include <condition_variable>
+#include <vector>
 
 #include "thread_pool.h"
 
-#include "sdk_helper.h"
 #include "data_handler.h"
+#include "sdk_helper.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 class TaskContext : public DriveKit::DKContext {
 public:
-    TaskContext(std::shared_ptr<DataHandler> handler) : handler_(handler)
-    {}
+    TaskContext(std::shared_ptr<DataHandler> handler) : handler_(handler) {}
 
     std::shared_ptr<DataHandler> GetHandler()
     {
