@@ -101,7 +101,7 @@ static std::string GetDentryfileName(const std::string &path, bool caseSense)
     uint64_t fileHash = PathHash(path, caseSense);
     int ret = snprintf_s(buf, fileNameLen + 1, fileNameLen, "cloud_%016llx", fileHash);
     if (ret < 0) {
-        LOGE("filename failer fileHash %{public}llx, ret :%{public}d", fileHash, ret);
+        LOGE("filename failer fileHash ret :%{public}d", ret);
     }
     return buf;
 }
