@@ -20,9 +20,11 @@
       "features": [
         "dfs_service_feature_enable_cloud_adapter"
       ],
-      "adapted_system_type": [],
-      "rom": "",
-      "ram": "",
+      "adapted_system_type": [
+        "standard"
+      ],
+      "rom": "2048KB",
+      "ram": "4096KB",
       "deps": {
         "components": [
           "ability_base",
