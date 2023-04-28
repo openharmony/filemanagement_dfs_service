@@ -17,27 +17,26 @@
 
 #include "fuse_manager/fuse_manager.h"
 
-#include <fuse_i.h>
-#include <fuse.h>
-#include <fuse_lowlevel.h>  /* for fuse_cmdline_opts */
-
-#include <cerrno>
-#include <fcntl.h>
+#include <atomic>
 #include <cassert>
+#include <cerrno>
 #include <cstddef>
-#include <unistd.h>
-#include <pthread.h>
-#include <stdexcept>
-
-#include <exception>
-#include <iostream>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <string>
+#include <exception>
+#include <fcntl.h>
+#include <iostream>
 #include <map>
 #include <mutex>
-#include <atomic>
+#include <pthread.h>
+#include <stdexcept>
+#include <string>
+#include <unistd.h>
+
+#include <fuse.h>
+#include <fuse_i.h>
+#include <fuse_lowlevel.h> /* for fuse_cmdline_opts */
 
 #include "utils_log.h"
 namespace OHOS {

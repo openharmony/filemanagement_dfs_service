@@ -18,10 +18,10 @@
 #include <functional>
 
 #include "dfs_error.h"
-#include "utils_log.h"
-#include "sdk_helper.h"
 #include "ipc/cloud_sync_callback_manager.h"
+#include "sdk_helper.h"
 #include "sync_rule/battery_status.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {

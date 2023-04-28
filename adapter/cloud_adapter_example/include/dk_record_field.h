@@ -15,13 +15,14 @@
 
 #ifndef DRIVE_KIT_RECORD_FIELD_H
 #define DRIVE_KIT_RECORD_FIELD_H
-#include "dk_asset.h"
-#include "dk_error.h"
-#include "dk_reference.h"
 #include <map>
 #include <string>
 #include <variant>
 #include <vector>
+
+#include "dk_asset.h"
+#include "dk_error.h"
+#include "dk_reference.h"
 
 namespace DriveKit {
 enum class DKRecordFieldType {

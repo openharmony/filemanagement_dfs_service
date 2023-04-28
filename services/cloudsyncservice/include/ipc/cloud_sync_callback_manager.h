@@ -16,9 +16,11 @@
 #ifndef OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_MANAGER_H
 #define OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_MANAGER_H
 
-#include "i_cloud_sync_callback.h"
-#include "nocopyable.h"
 #include "safe_map.h"
+
+#include "nocopyable.h"
+
+#include "i_cloud_sync_callback.h"
 #include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::CloudSync {

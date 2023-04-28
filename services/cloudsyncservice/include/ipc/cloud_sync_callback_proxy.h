@@ -16,9 +16,9 @@
 #ifndef OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_PROXY_H
 #define OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_PROXY_H
 
-#include "i_cloud_sync_callback.h"
-
 #include "iremote_proxy.h"
+
+#include "i_cloud_sync_callback.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncCallbackProxy : public IRemoteProxy<ICloudSyncCallback> {

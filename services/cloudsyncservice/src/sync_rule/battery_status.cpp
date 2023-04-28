@@ -20,7 +20,6 @@ constexpr int32_t PAUSE_CAPACITY_LIMIT = 15;
 constexpr int32_t STOP_CAPACITY_LIMIT = 10;
 constexpr int32_t DEFAULT_BATTERY_CAPCITY = 100;
 
-
 void BatteryStatus::SetChargingStatus(bool status)
 {
     isCharging_ = status;

@@ -16,13 +16,14 @@
 
 #include <memory>
 
+#include "system_ability_definition.h"
+
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "sync_rule/battery_status.h"
 #include "sync_rule/net_conn_callback_observer.h"
 #include "sync_rule/network_status.h"
-#include "system_ability_definition.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {

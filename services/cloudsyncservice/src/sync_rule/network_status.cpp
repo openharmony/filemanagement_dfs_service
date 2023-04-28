@@ -14,11 +14,14 @@
  */
 
 #include "sync_rule/network_status.h"
+
 #include <cstdint>
 #include <unistd.h>
-#include "dfs_error.h"
+
 #include "net_conn_client.h"
 #include "parameter.h"
+
+#include "dfs_error.h"
 #include "sync_rule/net_conn_callback_observer.h"
 #include "utils_log.h"
 

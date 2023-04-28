@@ -17,9 +17,8 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_SERVICE_STUB_H
 
 #include <map>
-
-#include "i_cloud_sync_service.h"
 #include "iremote_stub.h"
+#include "i_cloud_sync_service.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncServiceStub : public IRemoteStub<ICloudSyncService> {

@@ -18,9 +18,10 @@
 
 #include <atomic>
 
+#include "nocopyable.h"
+
 #include "cloud_sync_callback_client.h"
 #include "cloud_sync_manager.h"
-#include "nocopyable.h"
 #include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::CloudSync {
