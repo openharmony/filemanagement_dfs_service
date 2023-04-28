@@ -146,4 +146,19 @@ HWTEST_F(DentryMetaFileTest, MetaFileRemove, TestSize.Level1)
     ret = mFile.DoLookup(mBase2);
     EXPECT_EQ(ret, ENOENT);
 }
+
+/**
+ * @tc.name: MetaFileMgr
+ * @tc.desc: Verify the MetaFileMgr
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKJB
+ */
+HWTEST_F(DentryMetaFileTest, MetaFileMgr, TestSize.Level1)
+{
+    auto m = MetaFileMgr::GetInstance().GetMetaFile(TEST_USER_ID, "/o/p/q/r/s/t");
+    MetaBase mBase1("file1", "file1");
+    EXPECT_EQ(m->DoCreate(mBase1), 0);
+    m = nullptr;
+    MetaFileMgr::GetInstance().ClearAll();
+}
 } // namespace OHOS::FileManagement::CloudSync::Test

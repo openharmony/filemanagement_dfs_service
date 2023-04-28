@@ -16,8 +16,10 @@
 #ifndef OHOS_FILEMGMT_DENTRY_META_FILE_H
 #define OHOS_FILEMGMT_DENTRY_META_FILE_H
 
+#include <atomic>
 #include <memory>
 #include <mutex>
+#include <map>
 #include <string>
 #include <vector>
 #include <sys/stat.h>
@@ -39,6 +41,7 @@ public:
     int32_t DoUpdate(const MetaBase &base);
     int32_t DoRename(const MetaBase &oldBase, const std::string &newName);
     int32_t DoLookup(MetaBase &base);
+    int32_t LoadChildren(std::vector<MetaBase> &bases);
 
 private:
     std::mutex mtx_{};
@@ -47,6 +50,24 @@ private:
     UniqueFd fd_{};
     uint64_t dentryCount_{0};
     std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
+};
+
+class MetaFileMgr {
+public:
+    static MetaFileMgr& GetInstance() {
+        static MetaFileMgr instance_;
+        return instance_;
+    }
+    std::shared_ptr<MetaFile> GetMetaFile(uint32_t userId, const std::string &path);
+    void ClearAll();
+private:
+    MetaFileMgr() = default;
+    ~MetaFileMgr() = default;
+    MetaFileMgr(const MetaFileMgr &m) = delete;
+    const MetaFileMgr &operator=(const MetaFileMgr &m) = delete;
+
+    std::recursive_mutex mtx_{};
+    std::map<std::tuple<uint32_t, std::string>, std::shared_ptr<MetaFile>> metaFiles_;
 };
 
 struct MetaBase {
@@ -58,9 +79,12 @@ struct MetaBase {
     uint32_t mode{S_IFREG};
     std::string name{};
     std::string cloudId{};
+};
 
-    int refcnt{0};
-    std::mutex refMtx;
+struct MetaInode {
+    MetaBase mBase;
+    std::atomic<int> refcnt{0};
+    std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
 };
 
 struct BitOps {
