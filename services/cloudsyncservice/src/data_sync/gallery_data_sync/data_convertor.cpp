@@ -89,6 +89,24 @@ int32_t DataConvertor::GetLong(const string &key, int64_t &val, NativeRdb::Resul
     return E_OK;
 }
 
+int32_t DataConvertor::GetDouble(const string &key, double &val, NativeRdb::ResultSet &resultSet)
+{
+    int32_t index;
+    int32_t err = resultSet.GetColumnIndex(key, index);
+    if (err != NativeRdb::E_OK) {
+        LOGE("result set get column index err %{public}d", err);
+        return E_RDB;
+    }
+
+    err = resultSet.GetDouble(index, val);
+    if (err != 0) {
+        LOGE("result set get double err %{public}d", err);
+        return E_RDB;
+    }
+
+    return E_OK;
+}
+
 int32_t DataConvertor::GetString(const string &key, string &val, NativeRdb::ResultSet &resultSet)
 {
     int32_t index;
@@ -103,6 +121,26 @@ int32_t DataConvertor::GetString(const string &key, string &val, NativeRdb::Resu
         LOGE("result set get string err %{public}d", err);
         return E_RDB;
     }
+
+    return E_OK;
+}
+
+int32_t DataConvertor::GetBool(const string &key, bool &val, NativeRdb::ResultSet &resultSet)
+{
+    int32_t index;
+    int32_t err = resultSet.GetColumnIndex(key, index);
+    if (err != NativeRdb::E_OK) {
+        LOGE("result set get column index err %{public}d", err);
+        return E_RDB;
+    }
+
+    int32_t tmpValue;
+    err = resultSet.GetInt(index, tmpValue);
+    if (err != 0) {
+        LOGE("result set get bool err %{public}d", err);
+        return E_RDB;
+    }
+    val = !!tmpValue;
 
     return E_OK;
 }

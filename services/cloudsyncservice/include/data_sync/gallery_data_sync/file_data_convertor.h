@@ -59,6 +59,8 @@ private:
     int32_t HandleSourceFileName(std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleSourcePath(std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleTimeZone(std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    /* properties - general */
+    int32_t HandleGeneral(std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
 
     /* attachments */
     int32_t HandleAttachments(std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);

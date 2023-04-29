@@ -18,6 +18,8 @@
 
 #include <string>
 
+#include "data_convertor.h"
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
@@ -44,11 +46,51 @@ const std::string FILE_RELATIVE_BUCKET_ID = "relative_bucket_id";
 const std::string FILE_SOURCE_FILE_NAME = "sourceFileName";
 const std::string FILE_SOURCE_PATH = "sourcePath";
 const std::string FILE_TIME_ZONE = "time_zone";
+/* properties - general */
+const std::string FILE_GENERAL = "general";
 /* attachments */
 const std::string FILE_ATTACHMENTS = "attachments";
 const std::string FILE_CONTENT = "content";
 const std::string FILE_THUMBNAIL = "thumbnail";
 const std::string FILE_LCD = "lcdThumbnail";
+
+const std::vector<std::string> GALLERY_FILE_COLUMNS = {
+    Media::MEDIA_DATA_DB_FILE_PATH,
+    Media::MEDIA_DATA_DB_SIZE,
+    Media::MEDIA_DATA_DB_DATE_MODIFIED,
+    Media::MEDIA_DATA_DB_DATE_ADDED,
+    Media::MEDIA_DATA_DB_MIME_TYPE,
+    Media::MEDIA_DATA_DB_TITLE,
+    Media::MEDIA_DATA_DB_NAME,
+    Media::MEDIA_DATA_DB_ORIENTATION,
+    Media::MEDIA_DATA_DB_THUMBNAIL,
+    Media::MEDIA_DATA_DB_CLOUD_ID,
+    Media::MEDIA_DATA_DB_LCD,
+    Media::MEDIA_DATA_DB_MEDIA_TYPE,
+    Media::MEDIA_DATA_DB_IS_FAV,
+    Media::MEDIA_DATA_DB_RELATIVE_PATH,
+    Media::MEDIA_DATA_DB_HEIGHT,
+    Media::MEDIA_DATA_DB_WIDTH,
+};
+
+const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
+    DataType::STRING,       /* data */
+    DataType::LONG,         /* size */
+    DataType::LONG,         /* date_modified */
+    DataType::LONG,         /* date_added */
+    DataType::STRING,       /* mime_type */
+    DataType::STRING,       /* title */
+    DataType::STRING,       /* display_name */
+    DataType::INT,          /* orientation */
+    DataType::STRING,       /* thumbnail */
+    DataType::STRING,       /* cloud_id */
+    DataType::STRING,       /* lcd */
+    DataType::INT,          /* media_type */
+    DataType::BOOL,         /* is_favorite */
+    DataType::STRING,       /* relative_path */
+    DataType::INT,          /* height */
+    DataType::INT           /* width */
+};
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

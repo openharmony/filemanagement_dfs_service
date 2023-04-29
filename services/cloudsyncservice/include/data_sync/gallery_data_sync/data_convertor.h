@@ -26,6 +26,14 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+enum class DataType : int32_t {
+    INT,
+    LONG,
+    DOUBLE,
+    STRING,
+    BOOL
+};
+
 class DataConvertor {
 public:
     DataConvertor() = default;
@@ -40,8 +48,60 @@ public:
 protected:
     int32_t GetInt(const std::string &key, int32_t &val, NativeRdb::ResultSet &resultSet);
     int32_t GetLong(const std::string &key, int64_t &val, NativeRdb::ResultSet &resultSet);
+    int32_t GetDouble(const std::string &key, double &val, NativeRdb::ResultSet &resultSet);
     int32_t GetString(const std::string &key, std::string &val, NativeRdb::ResultSet &resultSet);
+    int32_t GetBool(const std::string &key, bool &val, NativeRdb::ResultSet &resultSet);
 };
+
+#define SET_RECORD_INT(key, resultSet, record)    \
+    do {    \
+        int32_t val;    \
+        int32_t ret = GetInt(key, val, resultSet);    \
+        if (ret != E_OK) {    \
+            return ret;    \
+        }    \
+        map[key] = DriveKit::DKRecordField(val);    \
+    } while (0)
+
+#define SET_RECORD_LONG(key, resultSet, record)    \
+    do {    \
+        int64_t val;    \
+        int32_t ret = GetLong(key, val, resultSet);    \
+        if (ret != E_OK) {    \
+            return ret;    \
+        }    \
+        map[key] = DriveKit::DKRecordField(val);    \
+    } while (0)
+
+#define SET_RECORD_DOUBLE(key, resultSet, record)    \
+    do {    \
+        double val;    \
+        int32_t ret = GetDouble(key, val, resultSet);    \
+        if (ret != E_OK) {    \
+            return ret;    \
+        }    \
+        map[key] = DriveKit::DKRecordField(val);    \
+    } while (0)
+
+#define SET_RECORD_STRING(key, resultSet, record)    \
+    do {    \
+        string val;    \
+        int32_t ret = GetString(key, val, resultSet);    \
+        if (ret != E_OK) {    \
+            return ret;    \
+        }    \
+        map[key] = DriveKit::DKRecordField(val);    \
+    } while (0)
+
+#define SET_RECORD_BOOL(key, resultSet, record)    \
+    do {    \
+        bool val;    \
+        int32_t ret = GetBool(key, val, resultSet);    \
+        if (ret != E_OK) {    \
+            return ret;    \
+        }    \
+        map[key] = DriveKit::DKRecordField(val);    \
+    } while (0)
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
