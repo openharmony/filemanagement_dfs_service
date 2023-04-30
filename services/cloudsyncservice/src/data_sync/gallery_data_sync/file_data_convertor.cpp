@@ -138,6 +138,10 @@ int32_t FileDataConvertor::HandleProperties(string &key, DriveKit::DKRecordData 
 int32_t FileDataConvertor::HandleAttachments(std::string &key, DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    if (!isNew_) {
+        return E_OK;
+    }
+
     DriveKit::DKRecordFieldList attachments;
     for (auto it = aMap_.begin(); it != aMap_.end(); it++) {
         int32_t ret = (this->*(it->second))(attachments, resultSet);
@@ -219,11 +223,11 @@ int32_t FileDataConvertor::HandleFavorite(string &key, DriveKit::DKRecordData &d
     NativeRdb::ResultSet &resultSet)
 {
     int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_NAME, val, resultSet);
+    int32_t ret = GetInt(MEDIA_DATA_DB_IS_FAV, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
-    data[key] = DriveKit::DKRecordField(!!val);
+    data[key] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 

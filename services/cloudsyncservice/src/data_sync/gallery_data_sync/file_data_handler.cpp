@@ -127,6 +127,8 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
     createPredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
         Media::MEDIA_DATA_DB_IS_TRASH + " = ?");
     createPredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)), "0"});
+    /* small-size first */
+    createPredicates.OrderByAsc(Media::MEDIA_DATA_DB_SIZE);
     createPredicates.Offset(createOffset_);
     createPredicates.Limit(LIMIT_SIZE);
 

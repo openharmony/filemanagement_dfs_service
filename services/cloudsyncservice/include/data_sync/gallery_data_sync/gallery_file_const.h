@@ -71,6 +71,7 @@ const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::MEDIA_DATA_DB_RELATIVE_PATH,
     Media::MEDIA_DATA_DB_HEIGHT,
     Media::MEDIA_DATA_DB_WIDTH,
+    Media::MEDIA_DATA_DB_CLOUD_ID
 };
 
 const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
@@ -89,7 +90,8 @@ const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
     DataType::BOOL,         /* is_favorite */
     DataType::STRING,       /* relative_path */
     DataType::INT,          /* height */
-    DataType::INT           /* width */
+    DataType::INT,          /* width */
+    DataType::STRING        /* cloud_id */
 };
 } // namespace CloudSync
 } // namespace FileManagement
