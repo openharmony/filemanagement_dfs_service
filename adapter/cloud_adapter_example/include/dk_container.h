@@ -55,7 +55,7 @@ private:
     DKSubscriptionId id_;
 };
 using SaveSubscriptionCallback = std::function<void(std::shared_ptr<DKContext>,
-    std::shared_ptr<const DKContainer>, DKSubscriptionResult &, const DKError &)>;
+    std::shared_ptr<DKContainer>, DKSubscriptionResult &, const DKError &)>;
 using DelSubscriptionCallback = std::function<void(std::shared_ptr<DKContext>, const DKError &)>;
 
 class DriveKitNative;
@@ -82,15 +82,15 @@ protected:
     void Init();
 
 public:
-    DKAppBundleName GetAppBundleName()
+    DKAppBundleName GetAppBundleName() const
     {
         return bundleName_;
     }
-    DKContainerName GetContainerName()
+    DKContainerName GetContainerName() const
     {
         return containerName_;
     }
-    std::shared_ptr<DriveKitNative> GetDriveKitNative()
+    std::shared_ptr<DriveKitNative> GetDriveKitNative() const
     {
         return driveKit_;
     }

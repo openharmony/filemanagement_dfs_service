@@ -128,7 +128,7 @@ public:
     ~DKDatabase() {}
 
     using SaveRecordsCallback = std::function<void(std::shared_ptr<DKContext>,
-                                                   std::shared_ptr<const DKDatabase>,
+                                                   std::shared_ptr<DKDatabase>,
                                                    std::shared_ptr<std::map<DKRecordId, DKRecordOperResult>>,
                                                    const DKError &)>;
     DKLocalErrorCode SaveRecords(std::shared_ptr<DKContext> context,
@@ -137,7 +137,7 @@ public:
                                  SaveRecordsCallback callback);
 
     using SaveRecordCallback = std::function<void(std::shared_ptr<DKContext>,
-                                                  std::shared_ptr<const DKDatabase>,
+                                                  std::shared_ptr<DKDatabase>,
                                                   DKRecordId,
                                                   DKRecordOperResult,
                                                   const DKError &)>;
@@ -147,7 +147,7 @@ public:
                                 SaveRecordCallback callback);
 
     using FetchRecordsCallback = std::function<void(std::shared_ptr<DKContext>,
-                                                    std::shared_ptr<const DKDatabase>,
+                                                    std::shared_ptr<DKDatabase>,
                                                     std::shared_ptr<std::vector<DKRecord>>,
                                                     DKQueryCursor nextCursor,
                                                     const DKError &)>;
@@ -159,7 +159,7 @@ public:
                                   FetchRecordsCallback callback);
 
     using FetchRecordCallback = std::function<void(std::shared_ptr<DKContext>,
-                                                   std::shared_ptr<const DKDatabase>,
+                                                   std::shared_ptr<DKDatabase>,
                                                    DKRecordId,
                                                    DKRecord &,
                                                    const DKError &)>;
@@ -170,7 +170,7 @@ public:
                                        FetchRecordCallback callback);
 
     using DeleteRecordsCallback = std::function<void(std::shared_ptr<DKContext>,
-                                                     std::shared_ptr<const DKDatabase>,
+                                                     std::shared_ptr<DKDatabase>,
                                                      std::shared_ptr<std::map<DKRecordId, DKRecordOperResult>>,
                                                      const DKError &)>;
     DKLocalErrorCode DeleteRecords(std::shared_ptr<DKContext> context,
@@ -180,7 +180,7 @@ public:
 
     using ModifyRecordsCallback =
         std::function<void(std::shared_ptr<DKContext>,
-                           std::shared_ptr<const DKDatabase>,
+                           std::shared_ptr<DKDatabase>,
                            std::shared_ptr<std::map<DKRecordId, DKRecordOperResult>> saveResult,
                            std::shared_ptr<std::map<DKRecordId, DKRecordOperResult>> delResult,
                            const DKError &)>;
@@ -199,7 +199,7 @@ public:
                                            FetchRecordsCallback callback);
 
     using FetchDatabaseCallback = std::function<void(std::shared_ptr<DKContext>,
-                                                     std::shared_ptr<const DKDatabase>,
+                                                     std::shared_ptr<DKDatabase>,
                                                      std::shared_ptr<std::vector<DKRecord>>,
                                                      DKQueryCursor nextCursor,
                                                      bool hasMore,
