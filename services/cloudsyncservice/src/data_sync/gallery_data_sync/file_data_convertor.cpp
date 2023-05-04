@@ -74,14 +74,6 @@ unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRe
     { FILE_GENERAL, &FileDataConvertor::HandleGeneral }
 };
 
-/* attachments map */
-unordered_map<string, int32_t (FileDataConvertor::*)(DriveKit::DKRecordFieldList &list,
-    NativeRdb::ResultSet &resultSet)> FileDataConvertor::aMap_ = {
-    { FILE_CONTENT, &FileDataConvertor::HandleContent },
-    { FILE_THUMBNAIL, &FileDataConvertor::HandleThumbnail },
-    { FILE_LCD, &FileDataConvertor::HandleLcd },
-};
-
 FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, bool isNew) : userId_(userId),
     bundleName_(bundleName), isNew_(isNew)
 {
@@ -142,14 +134,33 @@ int32_t FileDataConvertor::HandleAttachments(std::string &key, DriveKit::DKRecor
         return E_OK;
     }
 
-    DriveKit::DKRecordFieldList attachments;
-    for (auto it = aMap_.begin(); it != aMap_.end(); it++) {
-        int32_t ret = (this->*(it->second))(attachments, resultSet);
-        if (ret != E_OK) {
-            LOGE("%{private}s convert err %{public}d", key.c_str(), ret);
-            return ret;
-        }
+    /* path */
+    string path;
+    int32_t ret = GetString(MEDIA_DATA_DB_FILE_PATH, path, resultSet);
+    if (ret != E_OK) {
+        return ret;
     }
+
+    DriveKit::DKRecordFieldList attachments;
+    /* content */
+    ret = HandleContent(attachments, path);
+    if (ret != E_OK) {
+        LOGE("handle thumbnail err %{public}d", ret);
+        return ret;
+    }
+    /* thumb */
+    ret = HandleThumbnail(attachments, path, resultSet);
+    if (ret != E_OK) {
+        LOGE("handle thumbnail err %{public}d", ret);
+        return ret;
+    }
+    /* lcd */
+    ret = HandleLcd(attachments, path, resultSet);
+    if (ret != E_OK) {
+        LOGE("handle lcd err %{public}d", ret);
+        return ret;
+    }
+
     data[key] = DriveKit::DKRecordField(attachments);
     return E_OK;
 }
@@ -394,81 +405,77 @@ int32_t FileDataConvertor::HandleGeneral(std::string &key, DriveKit::DKRecordFie
 
 /* attachments */
 int32_t FileDataConvertor::HandleContent(DriveKit::DKRecordFieldList &list,
-    NativeRdb::ResultSet &resultSet)
+    string &path)
 {
-    /* path */
-    string val;
-    int32_t ret = GetString(MEDIA_DATA_DB_FILE_PATH, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    size_t pos = val.find_first_of(sandboxPrefix_);
-    if (pos == string::npos) {
-        LOGE("invalid path %{private}s", val.c_str());
-        return E_PATH;
-    }
-    string path = realPrefix_ + to_string(userId_) + suffix_ + val.substr(pos + sandboxPrefix_.size());
-
     /* asset */
     DriveKit::DKAsset content;
-    content.uri = path;
+    content.uri = GetLowerPath(path);
     content.assetName = FILE_CONTENT;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
     list.push_back(DriveKit::DKRecordField(content));
-
     return E_OK;
 }
 
 int32_t FileDataConvertor::HandleThumbnail(DriveKit::DKRecordFieldList &list,
-    NativeRdb::ResultSet &resultSet)
+    string &path, NativeRdb::ResultSet &resultSet)
 {
-    /* tmp */
-    string val;
-    int32_t ret = GetString(MEDIA_DATA_DB_FILE_PATH, val, resultSet);
+    /* key */
+    string key;
+    int32_t ret = GetString(MEDIA_DATA_DB_THUMBNAIL, key, resultSet);
     if (ret != E_OK) {
         return ret;
     }
-    size_t pos = val.find_first_of(sandboxPrefix_);
-    if (pos == string::npos) {
-        LOGE("invalid path %{private}s", val.c_str());
-        return E_PATH;
-    }
-    string path = realPrefix_ + to_string(userId_) + suffix_ + val.substr(pos + sandboxPrefix_.size());
 
     /* asset */
     DriveKit::DKAsset content;
-    content.uri = path;
+    content.uri = GetThumbPath(path, key);
     content.assetName = FILE_THUMBNAIL;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
     list.push_back(DriveKit::DKRecordField(content));
-
     return E_OK;
 }
 
 int32_t FileDataConvertor::HandleLcd(DriveKit::DKRecordFieldList &list,
-    NativeRdb::ResultSet &resultSet)
+    string &path, NativeRdb::ResultSet &resultSet)
 {
-    /* tmp */
-    string val;
-    int32_t ret = GetString(MEDIA_DATA_DB_FILE_PATH, val, resultSet);
+    /* key */
+    string key;
+    int32_t ret = GetString(MEDIA_DATA_DB_LCD, key, resultSet);
     if (ret != E_OK) {
         return ret;
     }
-    size_t pos = val.find_first_of(sandboxPrefix_);
-    if (pos == string::npos) {
-        LOGE("invalid path %{private}s", val.c_str());
-        return E_PATH;
-    }
-    string path = realPrefix_ + to_string(userId_) + suffix_ + val.substr(pos + sandboxPrefix_.size());
 
     /* asset */
     DriveKit::DKAsset content;
-    content.uri = path;
+    content.uri = GetThumbPath(path, key);
     content.assetName = FILE_LCD;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
     list.push_back(DriveKit::DKRecordField(content));
-
     return E_OK;
+}
+
+string FileDataConvertor::GetLowerPath(const std::string &path)
+{
+    size_t pos = path.find_first_of(sandboxPrefix_);
+    if (pos == string::npos) {
+        LOGE("invalid path %{private}s", path.c_str());
+        return "";
+    }
+    return realPrefix_ + to_string(userId_) + suffix_ + path.substr(pos + sandboxPrefix_.size());
+}
+
+
+string FileDataConvertor::GetThumbPath(const std::string &path, const std::string &key)
+{
+    if (path.length() < ROOT_MEDIA_DIR.length()) {
+        return "";
+    }
+    auto lastIndex = path.find_last_of('.');
+    if (lastIndex == string::npos) {
+        lastIndex = ROOT_MEDIA_DIR.length() - 1;
+    }
+    lastIndex = lastIndex - ROOT_MEDIA_DIR.length();
+    return ROOT_MEDIA_DIR + ".thumbs/" + path.substr(ROOT_MEDIA_DIR.length(), lastIndex) + "-" + key + ".jpg";
 }
 } // namespace CloudSync
 } // namespace FileManagement

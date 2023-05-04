@@ -65,9 +65,13 @@ private:
     /* attachments */
     int32_t HandleAttachments(std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
 
-    int32_t HandleContent(DriveKit::DKRecordFieldList &list, NativeRdb::ResultSet &resultSet);
-    int32_t HandleThumbnail(DriveKit::DKRecordFieldList &list, NativeRdb::ResultSet &resultSet);
-    int32_t HandleLcd(DriveKit::DKRecordFieldList &list, NativeRdb::ResultSet &resultSet);
+    int32_t HandleContent(DriveKit::DKRecordFieldList &list, std::string &path);
+    int32_t HandleThumbnail(DriveKit::DKRecordFieldList &list, std::string &path, NativeRdb::ResultSet &resultSet);
+    int32_t HandleLcd(DriveKit::DKRecordFieldList &list, std::string &path, NativeRdb::ResultSet &resultSet);
+
+    /* path conversion */
+    std::string GetLowerPath(const std::string &path);
+    std::string GetThumbPath(const std::string &path, const std::string &key);
 
     /* identifier */
     int32_t userId_;
@@ -85,8 +89,6 @@ private:
         DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet)> map_;
     static std::unordered_map<std::string, int32_t (FileDataConvertor::*)(std::string &key,
         DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet)> pMap_;
-    static std::unordered_map<std::string, int32_t (FileDataConvertor::*)(DriveKit::DKRecordFieldList &list,
-        NativeRdb::ResultSet &resultSet)> aMap_;
 };
 } // namespace CloudSync
 } // namespace FileManagement
