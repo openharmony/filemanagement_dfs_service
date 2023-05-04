@@ -73,6 +73,7 @@ public:
     DKRecordField &operator=(const DKRecordField &recordField);
     DKRecordFieldType GetType() const;
     DKFieldValue GetFieldValue() const;
+    void StealDKFiledValue(DKFieldValue &value);
     DKLocalErrorCode GetInt(int &val) const;
     DKLocalErrorCode GetLong(int64_t &val) const;
     DKLocalErrorCode GetDouble(double &val) const;

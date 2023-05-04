@@ -116,6 +116,12 @@ DKFieldValue DKRecordField::GetFieldValue() const
 {
     return value_;
 }
+void DKRecordField::StealDKFiledValue(DKFieldValue &value)
+{
+    value = std::move(value_);
+    type_ = DKRecordFieldType::FIELD_TYPE_NULL;
+    return;
+}
 DKLocalErrorCode DKRecordField::GetInt(int &val) const
 {
     if (type_ != DKRecordFieldType::FIELD_TYPE_INT) {
