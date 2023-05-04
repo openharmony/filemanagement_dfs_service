@@ -108,9 +108,9 @@ HWTEST_F(DistributedFileDaemonServiceTest, mount_umount_test_001, TestSize.Level
         LOGE("testcase run OK");
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
-        EXPECT_EQ(0, 1);
+        FAIL();
     }
-    EXPECT_EQ(0, 0);
+    SUCCEED();
 }
 } // namespace Test
 } // namespace DistributedFile
