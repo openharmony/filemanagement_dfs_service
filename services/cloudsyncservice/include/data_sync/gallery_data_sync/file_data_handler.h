@@ -58,7 +58,6 @@ private:
     static inline const int32_t LIMIT_SIZE = 5;
     DriveKit::DKRecordType recordType_ = "media";
     DriveKit::DKFieldKeyArray desiredKeys_;
-    static const std::vector<std::string> GALLERY_FILE_COLUMNS;
 
     /* identifier */
     int32_t userId_;

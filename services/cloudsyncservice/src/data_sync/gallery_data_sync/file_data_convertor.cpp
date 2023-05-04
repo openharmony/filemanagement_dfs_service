@@ -58,7 +58,6 @@ unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRe
 /* properties map */
 unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRecordFieldMap &map,
         NativeRdb::ResultSet &resultSet)> FileDataConvertor::pMap_ = {
-    /* HO */
     { FILE_HEIGHT, &FileDataConvertor::HandleHeight },
     { FILE_ROTATION, &FileDataConvertor::HandleRotation },
     { FILE_WIDTH, &FileDataConvertor::HandleWidth },
@@ -71,7 +70,8 @@ unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRe
     { FILE_SOURCE_FILE_NAME, &FileDataConvertor::HandleSourceFileName },
     { FILE_SOURCE_PATH, &FileDataConvertor::HandleSourcePath },
     { FILE_TIME_ZONE, &FileDataConvertor::HandleTimeZone },
-    /* OH */
+    /* general */
+    { FILE_GENERAL, &FileDataConvertor::HandleGeneral }
 };
 
 /* attachments map */
@@ -138,6 +138,10 @@ int32_t FileDataConvertor::HandleProperties(string &key, DriveKit::DKRecordData 
 int32_t FileDataConvertor::HandleAttachments(std::string &key, DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    if (!isNew_) {
+        return E_OK;
+    }
+
     DriveKit::DKRecordFieldList attachments;
     for (auto it = aMap_.begin(); it != aMap_.end(); it++) {
         int32_t ret = (this->*(it->second))(attachments, resultSet);
@@ -219,11 +223,11 @@ int32_t FileDataConvertor::HandleFavorite(string &key, DriveKit::DKRecordData &d
     NativeRdb::ResultSet &resultSet)
 {
     int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_NAME, val, resultSet);
+    int32_t ret = GetInt(MEDIA_DATA_DB_IS_FAV, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
-    data[key] = DriveKit::DKRecordField(!!val);
+    data[key] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 
@@ -319,12 +323,7 @@ int32_t FileDataConvertor::HandleFirstUpdateTime(string &key, DriveKit::DKRecord
 int32_t FileDataConvertor::HandleRelativeBucketId(string &key, DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
-    int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_BUCKET_ID, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    map[key] = DriveKit::DKRecordField(to_string(val));
+    map[key] = DriveKit::DKRecordField("1");
     return E_OK;
 }
 
@@ -356,6 +355,40 @@ int32_t FileDataConvertor::HandleTimeZone(string &key, DriveKit::DKRecordFieldMa
     NativeRdb::ResultSet &resultSet)
 {
     map[key] = DriveKit::DKRecordField("");
+    return E_OK;
+}
+
+/* properties - general */
+int32_t FileDataConvertor::HandleGeneral(std::string &key, DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    int32_t size = GALLERY_FILE_COLUMNS.size();
+    for (int32_t i = 0; i < size; i++) {
+        const string &key = GALLERY_FILE_COLUMNS[i];
+        DataType type = GALLERY_FILE_COLUMN_TYPES[i];
+        switch (type) {
+            case DataType::INT: {
+                SET_RECORD_INT(key, resultSet, map);
+                break;
+            }
+            case DataType::LONG: {
+                SET_RECORD_LONG(key, resultSet, map);
+                break;
+            }
+            case DataType::DOUBLE: {
+                SET_RECORD_DOUBLE(key, resultSet, map);
+                break;
+            }
+            case DataType::STRING: {
+                SET_RECORD_STRING(key, resultSet, map);
+                break;
+            }
+            case DataType::BOOL: {
+                SET_RECORD_BOOL(key, resultSet, map);
+                break;
+            }
+        }
+    }
     return E_OK;
 }
 

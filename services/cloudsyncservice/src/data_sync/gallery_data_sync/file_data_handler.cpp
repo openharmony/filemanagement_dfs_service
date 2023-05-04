@@ -27,21 +27,6 @@ using namespace NativeRdb;
 using namespace DriveKit;
 using namespace Media;
 
-const vector<string> FileDataHandler::GALLERY_FILE_COLUMNS = {
-    MEDIA_DATA_DB_NAME,
-    MEDIA_DATA_DB_MEDIA_TYPE,
-    MEDIA_DATA_DB_DATE_ADDED,
-    MEDIA_DATA_DB_IS_FAV,
-    MEDIA_DATA_DB_HEIGHT,
-    MEDIA_DATA_DB_WIDTH,
-    MEDIA_DATA_DB_DATE_MODIFIED,
-    MEDIA_DATA_DB_BUCKET_ID,
-    MEDIA_DATA_DB_FILE_PATH,
-    MEDIA_DATA_DB_THUMBNAIL,
-    MEDIA_DATA_DB_LCD,
-    MEDIA_DATA_DB_ORIENTATION
-};
-
 FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
     : RdbDataHandler(TABLE_NAME, rdb), userId_(userId), bundleName_(bundleName)
 {
@@ -142,6 +127,8 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
     createPredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
         Media::MEDIA_DATA_DB_IS_TRASH + " = ?");
     createPredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)), "0"});
+    /* small-size first */
+    createPredicates.OrderByAsc(Media::MEDIA_DATA_DB_SIZE);
     createPredicates.Offset(createOffset_);
     createPredicates.Limit(LIMIT_SIZE);
 
@@ -288,15 +275,7 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
     for (auto &entry : map) {
         auto record = const_cast<DKRecordOperResult &>(entry.second).GetDKRecord();
 
-        DKRecordData data;
-        record.GetRecordData(data);
-        auto iter = data.find(Media::MEDIA_DATA_DB_CLOUD_ID);
-        if (iter == data.end()) {
-            LOGE("no id in record data");
-            continue;
-        }
-        string cloudId = iter->second;
-
+        string cloudId = entry.first;
         /* delete local */
         int32_t deletedRows;
         string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
@@ -321,15 +300,7 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
             static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
 
-        DKRecordData data;
-        record.GetRecordData(data);
-        auto iter = data.find(Media::MEDIA_DATA_DB_CLOUD_ID);
-        if (iter == data.end()) {
-            LOGE("no id in record data");
-            continue;
-        }
-        string cloudId = iter->second;
-
+        string cloudId = entry.first;
         /* update local */
         int32_t changedRows;
         string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
@@ -359,15 +330,7 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
             static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
 
-        DKRecordData data;
-        record.GetRecordData(data);
-        auto iter = data.find(Media::MEDIA_DATA_DB_CLOUD_ID);
-        if (iter == data.end()) {
-            LOGE("no id in record data");
-            continue;
-        }
-        string cloudId = iter->second;
-
+        string cloudId = entry.first;
         /* update local */
         int32_t changedRows;
         string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";

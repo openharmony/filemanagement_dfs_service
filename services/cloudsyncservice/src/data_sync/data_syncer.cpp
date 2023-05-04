@@ -527,7 +527,7 @@ void DataSyncer::OnModifyMdirtyRecords(shared_ptr<DKContext> context,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> deleteMap,
     const DKError &err)
 {
-    LOGI("%{private}d %{private}s on create records %{public}zu", userId_,
+    LOGI("%{private}d %{private}s on modify mdirty records %{public}zu", userId_,
         bundleName_.c_str(), saveMap->size());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
@@ -554,7 +554,7 @@ void DataSyncer::OnModifyFdirtyRecords(shared_ptr<DKContext> context,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> deleteMap,
     const DKError &err)
 {
-    LOGI("%{private}d %{private}s on create records %{public}zu", userId_,
+    LOGI("%{private}d %{private}s on modify fdirty records %{public}zu", userId_,
         bundleName_.c_str(), saveMap->size());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
