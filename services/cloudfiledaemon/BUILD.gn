@@ -29,9 +29,12 @@ ohos_shared_library("cloudfiledaemon") {
     "include",
     "//third_party/libfuse/include",
     "//third_party/libfuse/lib",
+    "${services_path}/cloudsyncservice/include/data_sync/",
   ]
 
   deps = [
+    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/libfuse:libfuse",
   ]
@@ -42,6 +45,14 @@ ohos_shared_library("cloudfiledaemon") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"

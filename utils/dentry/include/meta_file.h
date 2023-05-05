@@ -84,12 +84,6 @@ struct MetaBase {
     std::string cloudId{};
 };
 
-struct MetaInode {
-    MetaBase mBase;
-    std::atomic<int> refcnt{0};
-    std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
-};
-
 struct BitOps {
     static const int BIT_PER_BYTE = 8;
     static int TestBit(int nr, const uint8_t addr[])

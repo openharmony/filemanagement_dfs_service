@@ -38,114 +38,138 @@
 #include <fuse_i.h>
 #include <fuse_lowlevel.h> /* for fuse_cmdline_opts */
 
+#include "dfs_error.h"
+#include "directory_ex.h"
+#include "dk_database.h"
+#include "dk_asset_read_session.h"
+#include "drive_kit.h"
+#include "meta_file.h"
+#include "sdk_helper.h"
 #include "utils_log.h"
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudFile {
 using namespace std;
 
-#define FAKE_ROOT "/data/service/el2/100/hmdfs/non_account/fake_cloud/"
+const int SINGLE_ACCOUNT_USERID = 100;
+const string PHOTOS_BUNDLE_NAME = "com.ohos.photos";
+const unsigned int STAT_NLINK_REG = 1;
+const unsigned int STAT_NLINK_DIR = 2;
 
-struct FakeNode {
+struct MetaInode {
+    shared_ptr<MetaBase> mBase{nullptr};
+    shared_ptr<MetaFile> mFile{nullptr};
     string path;
-    int fd;
-    ino_t ino;
-    dev_t dev;
-    atomic_int64_t refCount;
+    atomic<int> refCount{0};
+    shared_ptr<DriveKit::DKAssetReadSession> readSession{nullptr};
+    atomic<int> sessionRefCount{0};
 };
 
-FakeNode g_rootNode;
+static struct MetaInode *g_rootNode = nullptr;
+static mutex g_cacheLock;
+static map<string, struct MetaInode *> g_inodeCache;
+static shared_ptr<CloudSync::SdkHelper> g_sdkHelper = nullptr;
 
-mutex g_cacheLock;
-map<unsigned long long, FakeNode *> fakeCache;
-
-unsigned long long GlobalNode(ino_t ino, dev_t dev)
+static shared_ptr<CloudSync::SdkHelper> GetSdkHelper(void)
 {
-    unsigned long long gid = ino + (static_cast<unsigned long long>(dev) << 32);
-    return gid;
+    if (!g_sdkHelper) {
+        g_sdkHelper = make_shared<CloudSync::SdkHelper>();
+        if (g_sdkHelper->Init(SINGLE_ACCOUNT_USERID, PHOTOS_BUNDLE_NAME) != E_OK)
+            g_sdkHelper = nullptr;
+    }
+    return g_sdkHelper;
 }
 
-static struct FakeNode* GetFakeNode(fuse_ino_t ino)
+static struct MetaInode *GetMetaInode(fuse_ino_t ino)
 {
     if (ino == FUSE_ROOT_ID) {
-        return &g_rootNode;
+        if (!g_rootNode) {
+            g_rootNode = new MetaInode();
+            g_rootNode->mFile = MetaFileMgr::GetInstance().GetMetaFile(SINGLE_ACCOUNT_USERID, "/");
+            g_rootNode->path = "/";
+            g_rootNode->mBase = make_shared<MetaBase>();
+            g_rootNode->mBase->mode = S_IFDIR;
+            g_rootNode->refCount = 1;
+        }
+        return g_rootNode;
     } else {
-        return (struct FakeNode *) (uintptr_t) ino;
+        return (struct MetaInode *) (uintptr_t)ino;
     }
 }
 
-static int FakeFd(fuse_ino_t ino)
+static string CloudPath(fuse_ino_t ino)
 {
-    return GetFakeNode(ino)->fd;
+    return GetMetaInode(ino)->path;
 }
 
-static string FakePath(fuse_ino_t ino)
+static struct MetaInode *FindNode(string path)
 {
-    return GetFakeNode(ino)->path;
-}
-
-static struct FakeNode* FindNode(struct stat *st)
-{
-    if (st->st_dev == g_rootNode.dev && st->st_ino == g_rootNode.ino) {
-        return &g_rootNode;
-    } else {
-        return fakeCache[GlobalNode(st->st_dev, st->st_ino)];
-    }
+    return g_inodeCache[path];
 }
 
 FuseManager::FuseManager()
 {
 }
 
-static int FakeDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
-                        struct fuse_entry_param *e)
+static void GetMetaAttr(struct MetaInode *ino, struct stat *stbuf)
 {
-    int childFd;
-    int res;
-    struct FakeNode *child;
-    unsigned long long gid;
-    string tmpName = name;
-
-    *e = {0};
-    childFd = openat(FakeFd(parent), name, O_PATH | O_NOFOLLOW);
-    if (childFd < 0) {
-        return errno;
-    }
-
-    res = fstatat(childFd, "", &e->attr, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
-    if (res == -1) {
-        close(childFd);
-        return errno;
-    }
-
-    gid = GlobalNode(e->attr.st_dev, e->attr.st_ino);
-    child = FindNode(&e->attr);
-    if (child) {
-        close(childFd);
-        child->refCount++;
+    stbuf->st_ino = reinterpret_cast<fuse_ino_t>(ino);
+    if (ino->mBase->mode & S_IFDIR) {
+        stbuf->st_mode = S_IFDIR;
+        stbuf->st_nlink = STAT_NLINK_DIR;
     } else {
-        child = new FakeNode();
-        child->fd = childFd;
-        child->ino = e->attr.st_ino;
-        child->dev = e->attr.st_dev;
-        child->path = FakePath(parent) + tmpName;
+        stbuf->st_mode = S_IFREG;
+        stbuf->st_nlink = STAT_NLINK_REG;
+        stbuf->st_size = ino->mBase->size;
+    }
+}
+
+static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
+                         struct fuse_entry_param *e)
+{
+    int err;
+    struct MetaInode *child;
+    string childName = (parent == FUSE_ROOT_ID) ? CloudPath(parent) + name :
+                                                  CloudPath(parent) + "/" + name;
+    LOGD("parent: %lld, name: %s", static_cast<long long>(parent), name);
+
+    child = FindNode(childName);
+    if (child) {
+        child->refCount++;
+        LOGD("child exist, refCount: %lld", static_cast<long long>(child->refCount));
+    } else {
+        child = new MetaInode();
+        child->mBase = make_shared<MetaBase>(name);
+        err = GetMetaInode(parent)->mFile->DoLookup(*(child->mBase));
+        if (err) {
+            delete child;
+            LOGE("lookup error, %{public}d", err);
+            return err;
+        }
+        if (child->mBase->mode & S_IFDIR)
+            child->mFile = MetaFileMgr::GetInstance().GetMetaFile(SINGLE_ACCOUNT_USERID,
+                                                                  childName);
+        child->path = childName;
         child->refCount = 1;
         g_cacheLock.lock();
-        fakeCache[gid] = child;
+        g_inodeCache[childName] = child;
         g_cacheLock.unlock();
+        LOGD("lookup success, child: %p", child);
     }
+    GetMetaAttr(child, &e->attr);
     e->ino = reinterpret_cast<fuse_ino_t>(child);
     return 0;
 }
 
-static void FakeLookup(fuse_req_t req, fuse_ino_t parent,
-                       const char *name)
+static void CloudLookup(fuse_req_t req, fuse_ino_t parent,
+                        const char *name)
 {
-    LOGI("lookup");
+    LOGD("lookup");
     struct fuse_entry_param e;
     int err;
 
-    err = FakeDoLookup(req, parent, name, &e);
+    err = CloudDoLookup(req, parent, name, &e);
     if (err) {
         fuse_reply_err(req, err);
     } else {
@@ -153,102 +177,162 @@ static void FakeLookup(fuse_req_t req, fuse_ino_t parent,
     }
 }
 
-static void PutNode(struct FakeNode *node, uint64_t num)
+static void PutNode(struct MetaInode *node, uint64_t num)
 {
     node->refCount -= num;
     if (node->refCount == 0) {
         g_cacheLock.lock();
-        fakeCache.erase(GlobalNode(node->dev, node->ino));
-        close(node->fd);
+        g_inodeCache.erase(node->path);
         delete node;
         g_cacheLock.unlock();
     }
 }
 
-static void FakeForget(fuse_req_t req, fuse_ino_t ino,
-                       uint64_t nlookup)
+static void CloudForget(fuse_req_t req, fuse_ino_t ino,
+                        uint64_t nlookup)
 {
-    LOGI("forget");
-    FakeNode *node = GetFakeNode(ino);
+    LOGD("forget");
+    MetaInode *node = GetMetaInode(ino);
     if (node) {
         PutNode(node, nlookup);
     }
     fuse_reply_none(req);
 }
 
-static void FakeGetAttr(fuse_req_t req, fuse_ino_t ino,
-                        struct fuse_file_info *fi)
+static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
+                         struct fuse_file_info *fi)
 {
-    int res;
     struct stat buf;
     (void) fi;
 
-    res = fstatat(FakeFd(ino), "", &buf, AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW);
-    if (res == -1) {
-        return (void) fuse_reply_err(req, errno);
-    }
+    LOGD("getattr, ino:%lld", static_cast<long long>(ino));
+    GetMetaAttr(GetMetaInode(ino), &buf);
 
     fuse_reply_attr(req, &buf, 0);
 }
 
-static void FakeOpen(fuse_req_t req, fuse_ino_t ino,
-                     struct fuse_file_info *fi)
+static string GetParentDir(const string &path)
 {
-    int fd;
+    if ((path == "/") || (path == "")) {
+        return "";
+    }
+
+    auto pos = path.find_last_of('/');
+    if ((pos == string::npos) || (pos == 0)) {
+        return "/";
+    }
+
+    return path.substr(0, pos);
+}
+
+static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
+                      struct fuse_file_info *fi)
+{
     string path;
+    MetaInode *mInode = GetMetaInode(ino);
+    string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(mInode->mBase->cloudId);
+    shared_ptr <CloudSync::SdkHelper> sdkHelper = GetSdkHelper();
 
-    LOGI("open %s", FakePath(ino).c_str());
-    path = "/proc/self/fd/" + std::to_string(FakeFd(ino));
-    fd = open(path.c_str(), fi->flags & ~O_NOFOLLOW);
-    if (fd == -1)
-            return (void) fuse_reply_err(req, errno);
-    fi->fh = fd;
-    fuse_reply_open(req, fi);
+    LOGD("open %s", CloudPath(ino).c_str());
+    if (!sdkHelper) {
+        fuse_reply_err(req, EPERM);
+        return;
+    }
+    /*
+     * recordType is "fileType" now for debug
+     */
+    if (!mInode->readSession) {
+        path = "/data/service/el2/" + to_string(SINGLE_ACCOUNT_USERID) +
+               "/hmdfs/fuse" + GetParentDir(mInode->path);
+        ForceCreateDirectory(path);
+        LOGD("recordId: %s, create dir: %s, filename: %s",
+             recordId.c_str(), path.c_str(), mInode->mBase->name.c_str());
+        mInode->readSession = sdkHelper->GetAssetReadSession("fileType",
+                                                             recordId,
+                                                             mInode->path,
+                                                             path + "/" + mInode->mBase->name);
+    }
+
+    if (!mInode->readSession) {
+        fuse_reply_err(req, EPERM);
+    } else {
+        mInode->sessionRefCount++;
+        fuse_reply_open(req, fi);
+    }
 }
 
-static void FakeFlush(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
+static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
-    int res;
+    LOGD("release %s", CloudPath(ino).c_str());
+    MetaInode *mInode = GetMetaInode(ino);
 
-    LOGI("Close %s", FakePath(ino).c_str());
-    res = close(dup(fi->fh));
-    fuse_reply_err(req, res == -1 ? errno : 0);
-}
+    mInode->sessionRefCount--;
+    if (mInode->sessionRefCount == 0) {
+        mInode->readSession = nullptr;
+    }
 
-static void FakeRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
-{
-    LOGI("release %s", FakePath(ino).c_str());
-
-    close(fi->fh);
     fuse_reply_err(req, 0);
 }
 
-static void FakeReadDir(fuse_req_t req, fuse_ino_t ino, size_t size,
-                        off_t off, struct fuse_file_info *fi)
+static void CloudReadDir(fuse_req_t req, fuse_ino_t ino, size_t size,
+                         off_t off, struct fuse_file_info *fi)
 {
-    LOGI("readdir");
+    LOGD("readdir");
     fuse_reply_err(req, ENOENT);
 }
 
-static void FakeForgetMulti(fuse_req_t req, size_t count,
+static void CloudForgetMulti(fuse_req_t req, size_t count,
 				struct fuse_forget_data *forgets)
 {
-    for (int i = 0; i < count; i++) {
-        FakeNode *node = GetFakeNode(forgets[i].ino);
+    LOGD("forget_multi");
+    for (size_t i = 0; i < count; i++) {
+        MetaInode *node = GetMetaInode(forgets[i].ino);
         PutNode(node, forgets[i].nlookup);
     }
     fuse_reply_none(req);
 }
 
-static const struct fuse_lowlevel_ops fakeOps = {
-    .lookup 		= FakeLookup,
-    .forget     	= FakeForget,
-    .getattr   		= FakeGetAttr,
-    .open   		= FakeOpen,
-    .flush  		= FakeFlush,
-    .release    	= FakeRelease,
-    .readdir    	= FakeReadDir,
-    .forget_multi 	= FakeForgetMulti,
+static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
+                      struct fuse_file_info *fi)
+{
+    int64_t readSize;
+    DriveKit::DKError dkError;
+    shared_ptr<char> buf = nullptr;
+
+    LOGD("read(ino=%lu, size=%zd, off=%lu",
+         (unsigned long)ino, size, (unsigned long)off);
+
+    buf.reset(new char[size], [](char* ptr) {
+        delete[] ptr;
+    });
+    if (!buf) {
+        fuse_reply_err(req, ENOMEM);
+        return;
+    }
+
+    if (!GetMetaInode(ino)->readSession) {
+        fuse_reply_err(req, EPERM);
+        return;
+    }
+
+    readSize = GetMetaInode(ino)->readSession->PRead(off, size, buf.get(), dkError);
+    if (dkError.HasError()) {
+        fuse_reply_err(req, EIO);
+        return;
+    }
+
+    fuse_reply_buf(req, buf.get(), readSize);
+}
+
+static const struct fuse_lowlevel_ops cloudFuseOps = {
+    .lookup             = CloudLookup,
+    .forget             = CloudForget,
+    .getattr            = CloudGetAttr,
+    .open               = CloudOpen,
+    .read               = CloudRead,
+    .release            = CloudRelease,
+    .readdir            = CloudReadDir,
+    .forget_multi       = CloudForgetMulti,
 };
 
 int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
@@ -257,29 +341,15 @@ int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
     struct fuse_loop_config config;
     struct fuse_args args = FUSE_ARGS_INIT(0, nullptr);
     int ret;
-    struct stat stat;
 
     if (fuse_opt_add_arg(&args, path.c_str())) {
         LOGE("Mount path invalid");
         return -EINVAL;
     }
-    g_rootNode.fd = -1;
-    g_rootNode.path = FAKE_ROOT;
-    ret = lstat(FAKE_ROOT, &stat);
-    if (ret == -1) {
-        LOGE("root is empty");
-    } else {
-        g_rootNode.dev = stat.st_dev;
-        g_rootNode.ino = stat.st_ino;
-    }
-    g_rootNode.fd = open(FAKE_ROOT, O_PATH);
-    if (g_rootNode.fd < 0) {
-        LOGE("root is empty");
-    }
 
-    se = fuse_session_new(&args, &fakeOps,
-                          sizeof(fakeOps), NULL);
-    if (se == NULL) {
+    se = fuse_session_new(&args, &cloudFuseOps,
+                          sizeof(cloudFuseOps), nullptr);
+    if (se == nullptr) {
         return -EINVAL;
     }
     se->fd = devFd;
@@ -290,9 +360,6 @@ int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
     ret = fuse_session_loop_mt(se, &config);
 
     fuse_session_unmount(se);
-    if (g_rootNode.fd > 0) {
-        close(g_rootNode.fd);
-    }
     if (se->mountpoint) {
         free(se->mountpoint);
         se->mountpoint = nullptr;
@@ -305,7 +372,7 @@ int32_t FuseManager::StartFuse(int32_t devFd, const string &path)
 
 void FuseManager::Stop()
 {
-    LOGI("Stop finished successfully");
+    LOGD("Stop finished successfully");
 }
 
 } // namespace CloudFile

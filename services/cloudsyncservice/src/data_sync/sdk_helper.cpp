@@ -211,6 +211,16 @@ int32_t SdkHelper::GetStartCursor(shared_ptr<DriveKit::DKContext> context, Drive
     }
     return E_OK;
 }
+
+std::shared_ptr<DriveKit::DKAssetReadSession> SdkHelper::GetAssetReadSession(DriveKit::DKRecordType recordType,
+                                                                             DriveKit::DKRecordId recordId,
+                                                                             DriveKit::DKFieldKey assetKey,
+                                                                             DriveKit::DKAssetPath assetPath)
+{
+    if (!database_)
+        return nullptr;
+    return database_->NewAssetReadSession(recordType, recordId, assetKey, assetPath);
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

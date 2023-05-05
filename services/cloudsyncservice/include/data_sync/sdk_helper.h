@@ -96,6 +96,11 @@ public:
 
     int32_t GetStartCursor(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor &cursor);
 
+    std::shared_ptr<DriveKit::DKAssetReadSession> GetAssetReadSession(DriveKit::DKRecordType recordType,
+                                                                      DriveKit::DKRecordId recordId,
+                                                                      DriveKit::DKFieldKey assetKey,
+                                                                      DriveKit::DKAssetPath assetPath);
+
 private:
     std::shared_ptr<DriveKit::DKDatabase> database_;
 };
