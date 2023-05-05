@@ -31,6 +31,7 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
     config.SetPath(DATA_APP_EL2 + to_string(userId) + DATABASE_DIR + DATABASE_NAME);
     config.SetBundleName(BUNDLE_NAME);
     config.SetReadConSize(CONNECT_SIZE);
+    config.SetSecurityLevel(NativeRdb::SecurityLevel::S3);
 
     /*
      * Just pass in any value but zero for parameter @version in GetRdbStore,
