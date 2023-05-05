@@ -125,8 +125,10 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
     /* build predicates */
     NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     createPredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
-        Media::MEDIA_DATA_DB_IS_TRASH + " = ?");
-    createPredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)), "0"});
+        Media::MEDIA_DATA_DB_IS_TRASH + " = ? AND (" + Media::MEDIA_DATA_DB_MEDIA_TYPE +
+        " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
+    createPredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)),
+        "0", to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
     /* small-size first */
     createPredicates.OrderByAsc(Media::MEDIA_DATA_DB_SIZE);
     createPredicates.Offset(createOffset_);
@@ -155,8 +157,10 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates deletePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    deletePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ?");
-    deletePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED))});
+    deletePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND (" +
+        Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
+    deletePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)),
+        to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
     deletePredicates.Offset(deleteOffset_);
     deletePredicates.Limit(LIMIT_SIZE);
 
@@ -184,8 +188,10 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
     /* build predicates */
     NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     updatePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
-        Media::MEDIA_DATA_DB_IS_TRASH + " = ?");
-    updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)), "0"});
+        Media::MEDIA_DATA_DB_IS_TRASH + " = ? AND (" + Media::MEDIA_DATA_DB_MEDIA_TYPE +
+        " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
+    updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)),
+        "0", to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
     updatePredicates.Offset(metaUpdateOffset_);
     updatePredicates.Limit(LIMIT_SIZE);
 
@@ -213,8 +219,10 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
     /* build predicates */
     NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     updatePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
-        Media::MEDIA_DATA_DB_IS_TRASH + " = ?");
-    updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)), "0"});
+        Media::MEDIA_DATA_DB_IS_TRASH + " = ? AND (" + Media::MEDIA_DATA_DB_MEDIA_TYPE +
+        " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
+    updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)),
+        "0", to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
     updatePredicates.Offset(fileUpdateOffset_);
     updatePredicates.Limit(LIMIT_SIZE);
 
@@ -240,8 +248,13 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
 int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     for (auto &entry : map) {
-        auto record = const_cast<DKRecordOperResult &>(entry.second).GetDKRecord();
+        DKRecordOperResult &result = const_cast<DKRecordOperResult &>(entry.second);
+        if (!result.IsSuccess()) {
+            LOGE("on create record err %{public}d", result.GetDKError().dkErrorCode);
+            continue;
+        }
 
+        auto record = result.GetDKRecord();
         /* record to value bucket */
         ValuesBucket valuesBucket;
         valuesBucket.PutString(Media::MEDIA_DATA_DB_CLOUD_ID, entry.first);
@@ -262,7 +275,8 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
         string whereClause = Media::MEDIA_DATA_DB_NAME + " = ?";
         int32_t ret = Update(changedRows, valuesBucket, whereClause, { fileName });
         if (ret != 0) {
-            LOGE("on create records update err %{public}d, file name %{private}s", ret, fileName.c_str());
+            LOGE("on create records update err %{public}d, file name %{private}s",
+                ret, fileName.c_str());
             continue;
         }
     }
@@ -273,9 +287,14 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
 int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     for (auto &entry : map) {
-        auto record = const_cast<DKRecordOperResult &>(entry.second).GetDKRecord();
-
+        DKRecordOperResult &result = const_cast<DKRecordOperResult &>(entry.second);
         string cloudId = entry.first;
+        if (!result.IsSuccess()) {
+            LOGE("on delete record %{private}s err %{public}d", cloudId.c_str(),
+                result.GetDKError().dkErrorCode);
+            continue;
+        }
+
         /* delete local */
         int32_t deletedRows;
         string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
@@ -293,14 +312,19 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
 int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     for (auto &entry : map) {
-        auto record = const_cast<DKRecordOperResult &>(entry.second).GetDKRecord();
+        DKRecordOperResult &result = const_cast<DKRecordOperResult &>(entry.second);
+        string cloudId = entry.first;
+        if (!result.IsSuccess()) {
+            LOGE("on modify mdirty record %{private}s err %{public}d", cloudId.c_str(),
+                result.GetDKError().dkErrorCode);
+            continue;
+        }
 
         /* record to value bucket */
         ValuesBucket valuesBucket;
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
             static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
 
-        string cloudId = entry.first;
         /* update local */
         int32_t changedRows;
         string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
@@ -318,8 +342,15 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
 int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     for (auto &entry : map) {
-        auto record = const_cast<DKRecordOperResult &>(entry.second).GetDKRecord();
+        DKRecordOperResult &result = const_cast<DKRecordOperResult &>(entry.second);
+        string cloudId = entry.first;
+        if (!result.IsSuccess()) {
+            LOGE("on modify fdirty record %{private}s err %{public}d", cloudId.c_str(),
+                result.GetDKError().dkErrorCode);
+            continue;
+        }
 
+        DKRecord record = result.GetDKRecord();
         /* record to value bucket */
         ValuesBucket valuesBucket;
         int32_t ret = updateConvertor_.RecordToValueBucket(record, valuesBucket);
@@ -330,7 +361,6 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY,
             static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
 
-        string cloudId = entry.first;
         /* update local */
         int32_t changedRows;
         string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";

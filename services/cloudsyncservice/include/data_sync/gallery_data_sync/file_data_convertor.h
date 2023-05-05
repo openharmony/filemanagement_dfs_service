@@ -80,7 +80,7 @@ private:
     bool isNew_;
 
     /* path */
-    static std::string realPrefix_;
+    static std::string prefix_;
     static std::string suffix_;
     static std::string sandboxPrefix_;
 

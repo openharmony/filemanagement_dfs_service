@@ -33,7 +33,7 @@ using namespace Media;
 string FileDataConvertor::recordType_ = "media";
 
 /* path */
-string FileDataConvertor::realPrefix_ = "/data/service/el2/";
+string FileDataConvertor::prefix_ = "/data/service/el2/";
 string FileDataConvertor::suffix_ = "/hmdfs/account/files";
 string FileDataConvertor::sandboxPrefix_ = "/storage/media/local/files";
 
@@ -95,7 +95,6 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
 
     /* control info */
     record.SetRecordType(recordType_);
-
     if (isNew_) {
         record.SetNewCreate(true);
     } else {
@@ -166,7 +165,8 @@ int32_t FileDataConvertor::HandleAttachments(std::string &key, DriveKit::DKRecor
 }
 
 /* record id */
-int32_t FileDataConvertor::FillRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet)
+int32_t FileDataConvertor::FillRecordId(DriveKit::DKRecord &record,
+    NativeRdb::ResultSet &resultSet)
 {
     string val;
     int32_t ret = GetString(MEDIA_DATA_DB_CLOUD_ID, val, resultSet);
@@ -461,7 +461,8 @@ string FileDataConvertor::GetLowerPath(const std::string &path)
         LOGE("invalid path %{private}s", path.c_str());
         return "";
     }
-    return realPrefix_ + to_string(userId_) + suffix_ + path.substr(pos + sandboxPrefix_.size());
+    return prefix_ + to_string(userId_) + suffix_ +
+        path.substr(pos + sandboxPrefix_.size());
 }
 
 
@@ -470,12 +471,15 @@ string FileDataConvertor::GetThumbPath(const std::string &path, const std::strin
     if (path.length() < ROOT_MEDIA_DIR.length()) {
         return "";
     }
+
     auto lastIndex = path.find_last_of('.');
     if (lastIndex == string::npos) {
         lastIndex = ROOT_MEDIA_DIR.length() - 1;
     }
     lastIndex = lastIndex - ROOT_MEDIA_DIR.length();
-    return ROOT_MEDIA_DIR + ".thumbs/" + path.substr(ROOT_MEDIA_DIR.length(), lastIndex) + "-" + key + ".jpg";
+
+    return prefix_ + to_string(userId_) + suffix_ + "/.thumbs/" +
+        path.substr(ROOT_MEDIA_DIR.length(), lastIndex) + "-" + key + ".jpg";
 }
 } // namespace CloudSync
 } // namespace FileManagement
