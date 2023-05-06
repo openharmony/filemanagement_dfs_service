@@ -110,7 +110,7 @@ static std::string GetDentryfileName(const std::string &path, bool caseSense)
 static std::string GetDentryfileByPath(uint32_t userId, const std::string &path, bool caseSense = false)
 {
     std::string cacheDir =
-        "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+        "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache/dentry_cache/cloud/";
     ForceCreateDirectory(cacheDir);
     std::string dentryFileName = GetDentryfileName(path, caseSense);
 
@@ -159,7 +159,7 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
 {
     path_ = path;
     cacheFile_ = GetDentryfileByPath(userId, path);
-    fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT)};
+    fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)};
     LOGD("fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
 
     struct stat statBuf {};

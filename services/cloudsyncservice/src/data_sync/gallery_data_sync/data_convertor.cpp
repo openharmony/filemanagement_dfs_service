@@ -151,6 +151,11 @@ int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record,
 {
     DriveKit::DKRecordData data;
     record.GetRecordData(data);
+
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data donnot have properties set");
+        return E_INVAL_ARG;
+    }
     DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
 
     auto size = GALLERY_FILE_COLUMNS.size();
@@ -159,7 +164,7 @@ int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record,
         auto type = GALLERY_FILE_COLUMN_TYPES[i];
         if (properties.find(field) == properties.end()) {
             LOGE("filed %{public}s not found in record.properties", field.c_str());
-            continue;
+            return E_INVAL_ARG;
         }
         switch (type) {
             case DataType::INT: {
