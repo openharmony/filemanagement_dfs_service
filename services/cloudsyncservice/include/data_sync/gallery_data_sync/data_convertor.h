@@ -45,6 +45,7 @@ public:
         std::vector<DriveKit::DKRecord> &records);
     int32_t RecordToValueBucket(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
 
+    static int32_t GetLongComp(const DriveKit::DKRecordField &field, int64_t &val);
 protected:
     int32_t GetInt(const std::string &key, int32_t &val, NativeRdb::ResultSet &resultSet);
     int32_t GetLong(const std::string &key, int64_t &val, NativeRdb::ResultSet &resultSet);

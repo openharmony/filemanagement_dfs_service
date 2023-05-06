@@ -109,7 +109,11 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
     }
 
     const string sandboxPrefix = "/storage/media/local";
-    string fullPath = prop[MEDIA_DATA_DB_FILE_PATH];
+    string fullPath;
+    if (prop[MEDIA_DATA_DB_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad file_path in props");
+        return E_INVAL_ARG;
+    }
     size_t pos = fullPath.find_first_of(sandboxPrefix);
     size_t lpos = fullPath.find_last_of("/");
     if (pos != 0 || pos == string::npos || lpos == string::npos) {
@@ -120,11 +124,18 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
     relativePath = (relativePath == "") ? "/" : relativePath;
     string fileName = fullPath.substr(lpos + 1);
 
+    int64_t isize, mtime;
+    if (DataConvertor::GetLongComp(prop[MEDIA_DATA_DB_SIZE], isize) != E_OK) {
+        LOGE("bad size in props");
+        return E_INVAL_ARG;
+    }
+    if (DataConvertor::GetLongComp(prop[MEDIA_DATA_DB_DATE_MODIFIED], mtime) != E_OK) {
+        LOGE("bad mtime in props");
+        return E_INVAL_ARG;
+    }
+
     string rawRecordId = record.GetRecordId();
     string cloudId = MetaFileMgr::RecordIdToCloudId(rawRecordId);
-    int64_t isize = prop[MEDIA_DATA_DB_SIZE];
-    int64_t mtime = prop[MEDIA_DATA_DB_DATE_MODIFIED];
-
     auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId, relativePath);
     MetaBase mBaseLookup(fileName);
     MetaBase mBase(fileName, cloudId);
@@ -150,13 +161,15 @@ int32_t FileDataHandler::PullRecordInsert(const DKRecord &record)
     ValuesBucket values;
     ret = createConvertor_.RecordToValueBucket(record, values);
     if (ret != E_OK) {
-        LOGE("record to valuebucket failed");
-        return E_INVAL_ARG;
+        LOGE("record to valuebucket failed, ret=%{public}d", ret);
+        return ret;
     }
+    values.PutInt(Media::MEDIA_DATA_DB_POSITION, POSITION_CLOUD);
+    values.PutString(Media::MEDIA_DATA_DB_CLOUD_ID, record.GetRecordId());
 
     ret = Insert(rowId, values);
     if (ret != E_OK) {
-        LOGE("Insert pull record failed");
+        LOGE("Insert pull record failed, rdb ret=%{public}d", ret);
         return E_RDB;
     }
 

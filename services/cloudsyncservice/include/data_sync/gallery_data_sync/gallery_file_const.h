@@ -18,9 +18,10 @@
 
 #include <string>
 
-#include "data_convertor.h"
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
+
+#include "data_convertor.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -55,6 +56,10 @@ const std::string FILE_ATTACHMENTS = "attachments";
 const std::string FILE_CONTENT = "content";
 const std::string FILE_THUMBNAIL = "thumbnail";
 const std::string FILE_LCD = "lcdThumbnail";
+
+const int32_t POSITION_LOCAL = 1;
+const int32_t POSITION_CLOUD = 2;
+const int32_t POSITION_BOTH = 3;
 
 const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::MEDIA_DATA_DB_FILE_PATH,

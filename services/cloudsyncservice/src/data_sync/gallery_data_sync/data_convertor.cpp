@@ -146,6 +146,64 @@ int32_t DataConvertor::GetBool(const string &key, bool &val, NativeRdb::ResultSe
     return E_OK;
 }
 
+static int32_t GetIntComp(const DriveKit::DKRecordField &field, int &val)
+{
+    if (field.GetInt(val) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        string str;
+        if (field.GetString(str) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+            LOGE("record filed bad type %{public}d", static_cast<int>(field.GetType()));
+            return E_INVAL_ARG;
+        }
+        try {
+            val = std::stoi(str);
+        } catch (const std::out_of_range &e) {
+            LOGE("record filed convert to int failed");
+            return E_INVAL_ARG;
+        }
+        return E_OK;
+    }
+    return E_OK;
+}
+
+int32_t DataConvertor::GetLongComp(const DriveKit::DKRecordField &field, int64_t &val)
+{
+    if (field.GetLong(val) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        string str;
+        if (field.GetString(str) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+            LOGE("record filed bad type %{public}d", static_cast<int>(field.GetType()));
+            return E_INVAL_ARG;
+        }
+        try {
+            val = std::stoll(str);
+        } catch (const std::out_of_range &e) {
+            LOGE("record filed convert to int64 failed");
+            return E_INVAL_ARG;
+        }
+        return E_OK;
+    }
+    return E_OK;
+}
+
+static int32_t GetBoolComp(const DriveKit::DKRecordField &field, bool &val)
+{
+    if (field.GetBool(val) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        string str;
+        if (field.GetString(str) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+            LOGE("record filed bad type %{public}d", static_cast<int>(field.GetType()));
+            return E_INVAL_ARG;
+        }
+        if (str == "true") {
+            val = true;
+        } else if (str == "false") {
+            val = false;
+        } else {
+            return E_INVAL_ARG;
+        }
+        return E_OK;
+    }
+    return E_OK;
+}
+
 int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
@@ -168,28 +226,35 @@ int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record,
         }
         switch (type) {
             case DataType::INT: {
-                int value = properties[field];
+                int value;
+                if (GetIntComp(properties[field], value) != E_OK) {
+                    return E_INVAL_ARG;
+                }
                 valueBucket.PutInt(field, value);
                 break;
             }
             case DataType::LONG: {
-                int64_t value = properties[field];
+                int64_t value;
+                if (GetLongComp(properties[field], value) != E_OK) {
+                    return E_INVAL_ARG;
+                }
                 valueBucket.PutInt(field, value);
                 break;
             }
             case DataType::STRING: {
-                string value = properties[field];
+                string value;
+                if (properties[field].GetString(value) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+                    return E_INVAL_ARG;
+                }
                 valueBucket.PutString(field, value);
                 break;
             }
             case DataType::BOOL: {
-                bool value = properties[field];
+                bool value;
+                if (GetBoolComp(properties[field], value) != E_OK) {
+                    return E_INVAL_ARG;
+                }
                 valueBucket.PutInt(field, value);
-                break;
-            }
-            case DataType::DOUBLE: {
-                double value = properties[field];
-                valueBucket.PutDouble(field, value);
                 break;
             }
             default: {
