@@ -18,6 +18,7 @@
 #include "rdb_errno.h"
 
 #include "dfs_error.h"
+#include "gallery_file_const.h"
 #include "utils_log.h"
 #include "sdk_helper.h"
 
@@ -148,6 +149,50 @@ int32_t DataConvertor::GetBool(const string &key, bool &val, NativeRdb::ResultSe
 int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+    DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
+
+    auto size = GALLERY_FILE_COLUMNS.size();
+    for (int i = 0 ; i < size; i++) {
+        auto field = GALLERY_FILE_COLUMNS[i];
+        auto type = GALLERY_FILE_COLUMN_TYPES[i];
+        if (properties.find(field) == properties.end()) {
+            LOGE("filed %{public}s not found in record.properties", field.c_str());
+            continue;
+        }
+        switch (type) {
+            case DataType::INT: {
+                int value = properties[field];
+                valueBucket.PutInt(field, value);
+                break;
+            }
+            case DataType::LONG: {
+                int64_t value = properties[field];
+                valueBucket.PutInt(field, value);
+                break;
+            }
+            case DataType::STRING: {
+                string value = properties[field];
+                valueBucket.PutString(field, value);
+                break;
+            }
+            case DataType::BOOL: {
+                bool value = properties[field];
+                valueBucket.PutInt(field, value);
+                break;
+            }
+            case DataType::DOUBLE: {
+                double value = properties[field];
+                valueBucket.PutDouble(field, value);
+                break;
+            }
+            default: {
+                LOGE("invalid data type %{public}d", static_cast<int>(type));
+                break;
+            }
+        }
+    }
     return E_OK;
 }
 } // namespace CloudSync

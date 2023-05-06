@@ -18,6 +18,7 @@
 #include "dfs_error.h"
 #include "utils_log.h"
 #include "gallery_file_const.h"
+#include "meta_file.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -41,6 +42,7 @@ void FileDataHandler::GetFetchCondition(FetchCondition &cond)
 
 int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records)
 {
+    LOGI("on fetch %{public}zu records", records->size());
     int32_t ret = E_OK;
     for (const auto &it : *records) {
         const auto &record = it;
@@ -87,18 +89,72 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
             break;
         }
     }
+    MetaFileMgr::GetInstance().ClearAll();
     return ret;
+}
+
+static int32_t DentryInsert(int userId, const DKRecord &record)
+{
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data cannot find properties");
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
+    if (prop.find(MEDIA_DATA_DB_FILE_PATH) == prop.end() || prop.find(MEDIA_DATA_DB_SIZE) == prop.end() ||
+        prop.find(MEDIA_DATA_DB_DATE_MODIFIED) == prop.end()) {
+        LOGE("record data cannot find some properties");
+        return E_INVAL_ARG;
+    }
+
+    const string sandboxPrefix = "/storage/media/local";
+    string fullPath = prop[MEDIA_DATA_DB_FILE_PATH];
+    size_t pos = fullPath.find_first_of(sandboxPrefix);
+    size_t lpos = fullPath.find_last_of("/");
+    if (pos != 0 || pos == string::npos || lpos == string::npos) {
+        LOGE("invalid path %{private}s", fullPath.c_str());
+        return E_INVAL_ARG;
+    }
+    string relativePath = fullPath.substr(sandboxPrefix.length(), lpos - sandboxPrefix.length());
+    relativePath = (relativePath == "") ? "/" : relativePath;
+    string fileName = fullPath.substr(lpos + 1);
+
+    string rawRecordId = record.GetRecordId();
+    string cloudId = MetaFileMgr::RecordIdToCloudId(rawRecordId);
+    int64_t isize = prop[MEDIA_DATA_DB_SIZE];
+    int64_t mtime = prop[MEDIA_DATA_DB_DATE_MODIFIED];
+
+    auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId, relativePath);
+    MetaBase mBaseLookup(fileName);
+    MetaBase mBase(fileName, cloudId);
+    mBase.size = isize;
+    mBase.mtime = mtime;
+    if (mFile->DoLookup(mBaseLookup) == E_OK) {
+        LOGE("dentry exist when insert, do update instead");
+        return mFile->DoUpdate(mBase);
+    }
+    return mFile->DoCreate(mBase);
 }
 
 int32_t FileDataHandler::PullRecordInsert(const DKRecord &record)
 {
-    /* insert hmdfs dentry file here */
+    /* check local file conflict */
+    int ret = DentryInsert(userId_, record);
+    if (ret != E_OK) {
+        LOGE("MetaFile Create failed %{public}d", ret);
+        return ret;
+    }
 
     int64_t rowId;
     ValuesBucket values;
-    createConvertor_.RecordToValueBucket(record, values);
+    ret = createConvertor_.RecordToValueBucket(record, values);
+    if (ret != E_OK) {
+        LOGE("record to valuebucket failed");
+        return E_INVAL_ARG;
+    }
 
-    int ret = Insert(rowId, values);
+    ret = Insert(rowId, values);
     if (ret != E_OK) {
         LOGE("Insert pull record failed");
         return E_RDB;

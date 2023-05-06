@@ -58,6 +58,9 @@ public:
         static MetaFileMgr instance_;
         return instance_;
     }
+    /* recordId is hex string of 256 bits, convert to u8 cloudId[32] to kernel */
+    static std::string RecordIdToCloudId(const std::string hexStr);
+    static std::string CloudIdToRecordId(const std::string cloudId);
     std::shared_ptr<MetaFile> GetMetaFile(uint32_t userId, const std::string &path);
     void ClearAll();
 private:

@@ -19,6 +19,8 @@
 #include <string>
 
 #include "data_convertor.h"
+#include "medialibrary_db_const.h"
+#include "medialibrary_type_const.h"
 
 namespace OHOS {
 namespace FileManagement {
