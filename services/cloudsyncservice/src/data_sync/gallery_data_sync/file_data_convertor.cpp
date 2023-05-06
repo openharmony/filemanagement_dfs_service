@@ -76,8 +76,8 @@ unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRe
     { FILE_GENERAL, &FileDataConvertor::HandleGeneral }
 };
 
-FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, bool isNew) : userId_(userId),
-    bundleName_(bundleName), isNew_(isNew)
+FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type) : userId_(userId),
+    bundleName_(bundleName), type_(type)
 {
 }
 
@@ -97,7 +97,7 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
 
     /* control info */
     record.SetRecordType(recordType_);
-    if (isNew_) {
+    if (type_ == FILE_CREATE) {
         record.SetNewCreate(true);
     } else {
         int32_t ret = FillRecordId(record, resultSet);
@@ -131,7 +131,7 @@ int32_t FileDataConvertor::HandleProperties(string &key, DriveKit::DKRecordData 
 int32_t FileDataConvertor::HandleAttachments(std::string &key, DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-    if (!isNew_) {
+    if (type_ != FILE_CREATE && type_ != FILE_DATA_MODIFY) {
         return E_OK;
     }
 
@@ -463,8 +463,8 @@ string FileDataConvertor::GetLowerPath(const std::string &path)
         LOGE("invalid path %{private}s", path.c_str());
         return "";
     }
-    return prefix_ + to_string(userId_) + suffix_ +
-        path.substr(pos + sandboxPrefix_.size());
+    return prefix_ + to_string(userId_) + suffix_ + path.substr(pos +
+        sandboxPrefix_.size());
 }
 
 

@@ -25,7 +25,17 @@ namespace FileManagement {
 namespace CloudSync {
 class FileDataConvertor : public DataConvertor {
 public:
-    FileDataConvertor(int32_t userId, std::string &bundleName, bool isNew);
+    enum OperationType {
+        /* upload */
+        FILE_CREATE,
+        FILE_DELETE,
+        FILE_METADATA_MODIFY,
+        FILE_DATA_MODIFY,
+        /* download */
+        FILE_DOWNLOAD
+    };
+
+    FileDataConvertor(int32_t userId, std::string &bundleName, OperationType type);
     ~FileDataConvertor() = default;
 
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
@@ -78,7 +88,7 @@ private:
     int32_t userId_;
     std::string bundleName_;
     static std::string recordType_;
-    bool isNew_;
+    OperationType type_;
 
     /* path */
     static std::string prefix_;
