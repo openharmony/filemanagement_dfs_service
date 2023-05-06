@@ -119,4 +119,9 @@ DriveKitNative::DriveKitNative(int userId)
 }
 
 DriveKitNative::~DriveKitNative() {}
-} // namespace DriveKit
+
+int32_t DriveKitNative::OnUploadAsset(const std::string &request, const std::string &result)
+{
+    return 0;
+}
+}// namespace DriveKit
