@@ -81,6 +81,7 @@ ohos_unittest("cloud_sync_service_test") {
   ]
 
   deps = [
+    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",

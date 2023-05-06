@@ -16,6 +16,7 @@
 #include "meta_file.h"
 
 #include <fcntl.h>
+#include <iomanip>
 #include <sstream>
 #include <sys/stat.h>
 
@@ -109,7 +110,7 @@ static std::string GetDentryfileName(const std::string &path, bool caseSense)
 static std::string GetDentryfileByPath(uint32_t userId, const std::string &path, bool caseSense = false)
 {
     std::string cacheDir =
-        "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+        "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache/dentry_cache/cloud/";
     ForceCreateDirectory(cacheDir);
     std::string dentryFileName = GetDentryfileName(path, caseSense);
 
@@ -158,7 +159,7 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
 {
     path_ = path;
     cacheFile_ = GetDentryfileByPath(userId, path);
-    fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT)};
+    fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)};
     LOGD("fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
 
     struct stat statBuf {};
@@ -738,6 +739,39 @@ std::shared_ptr<MetaFile> MetaFileMgr::GetMetaFile(uint32_t userId, const std::s
 void MetaFileMgr::ClearAll()
 {
     metaFiles_.clear();
+}
+
+std::string MetaFileMgr::RecordIdToCloudId(const std::string hexStr)
+{
+    std::string result;
+
+    for (std::size_t i = 0; i < hexStr.length(); i += 2) {
+        std::string hexByte = hexStr.substr(i, 2);
+        char *endPtr;
+        unsigned long hexValue = std::strtoul(hexByte.c_str(), &endPtr, 16);
+
+        if (endPtr != hexByte.c_str() + hexByte.length()) {
+            LOGE("Invalid hexadecimal string: %{public}s", hexStr.c_str());
+            return "";
+        }
+        result += static_cast<char>(hexValue);
+    }
+    if (result.size() > CLOUD_RECORD_ID_LEN) {
+        LOGE("Invalid result length %{public}zu", result.size());
+        return "";
+    }
+
+    return result;
+}
+
+std::string MetaFileMgr::CloudIdToRecordId(const std::string cloudId)
+{
+    std::stringstream result;
+    for (std::size_t i = 0; i < cloudId.length(); i++) {
+        uint8_t u8Byte = cloudId[i];
+        result << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(u8Byte);
+    }
+    return result.str();
 }
 
 } // namespace FileManagement
