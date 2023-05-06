@@ -124,4 +124,4 @@ int32_t DriveKitNative::OnUploadAsset(const std::string &request, const std::str
 {
     return 0;
 }
-}// namespace DriveKit
+} // namespace DriveKit
