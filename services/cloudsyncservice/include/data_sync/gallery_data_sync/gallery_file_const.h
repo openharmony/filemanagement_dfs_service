@@ -71,13 +71,13 @@ const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::MEDIA_DATA_DB_NAME,
     Media::MEDIA_DATA_DB_ORIENTATION,
     Media::MEDIA_DATA_DB_THUMBNAIL,
-    Media::MEDIA_DATA_DB_CLOUD_ID,
     Media::MEDIA_DATA_DB_LCD,
     Media::MEDIA_DATA_DB_MEDIA_TYPE,
     Media::MEDIA_DATA_DB_IS_FAV,
     Media::MEDIA_DATA_DB_RELATIVE_PATH,
     Media::MEDIA_DATA_DB_HEIGHT,
     Media::MEDIA_DATA_DB_WIDTH,
+    /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
     Media::MEDIA_DATA_DB_CLOUD_ID
 };
 
@@ -91,7 +91,6 @@ const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
     DataType::STRING,       /* display_name */
     DataType::INT,          /* orientation */
     DataType::STRING,       /* thumbnail */
-    DataType::STRING,       /* cloud_id */
     DataType::STRING,       /* lcd */
     DataType::INT,          /* media_type */
     DataType::BOOL,         /* is_favorite */

@@ -374,7 +374,7 @@ int32_t FileDataConvertor::HandleGeneral(std::string &key, DriveKit::DKRecordFie
     NativeRdb::ResultSet &resultSet)
 {
     int32_t size = GALLERY_FILE_COLUMNS.size();
-    for (int32_t i = 0; i < size; i++) {
+    for (int32_t i = 0; i < size - 1; i++) {
         const string &key = GALLERY_FILE_COLUMNS[i];
         DataType type = GALLERY_FILE_COLUMN_TYPES[i];
         switch (type) {
