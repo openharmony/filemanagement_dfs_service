@@ -17,8 +17,8 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 config("compiler_configs") {
   visibility = [ ":*" ]
   visibility += [
-    "//foundation/filemanagement/dfs_service/services/*",
-    "//foundation/filemanagement/dfs_service/test/moduletest/*",
+    "${distributedfile_path}/services/*",
+    "${distributedfile_path}/test/moduletest/*",
   ]
 
   cflags = [
@@ -50,7 +50,6 @@ config("utils_public_config") {
     "log/include",
     "preference/include",
     "system/include",
-    "//commonlibrary/c_utils/base/include",
   ]
 }
 
@@ -72,14 +71,14 @@ ohos_shared_library("libdistributedfileutils") {
     "LOG_TAG=\"distributedfile_utils\"",
   ]
 
-  public_deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//commonlibrary/c_utils/base:utils",
-  ]
+  public_deps =
+      [ "${bas_hiviewdfx_hilog_path}/interfaces/native/innerkits:libhilog" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "c_utils:utilsbase",
     "ipc:ipc_core",
     "preferences:native_preferences",
   ]

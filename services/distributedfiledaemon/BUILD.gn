@@ -16,7 +16,6 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_shared_library("libdistributedfiledaemon") {
   include_dirs = [
     "include",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp/include",
     "//third_party/json/include",
   ]
 
@@ -37,15 +36,13 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/network/softbus/softbus_session_dispatcher.cpp",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
   external_deps = [
     "ability_base:want",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",

@@ -34,4 +34,6 @@ ohos_prebuilt_etc("distributed_file.para") {
   source = "distributed_file.para"
   part_name = "dfs_service"
   module_install_dir = "etc/param"
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
 }

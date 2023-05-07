@@ -20,7 +20,6 @@ config("module_private_config") {
 
   include_dirs = [
     "${services_path}/distributedfiledaemon/include",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp/include",
     "//third_party/json/include",
   ]
 }
@@ -54,7 +53,6 @@ ohos_unittest("device_manager_agent_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -63,6 +61,7 @@ ohos_unittest("device_manager_agent_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
@@ -102,7 +101,6 @@ ohos_unittest("os_account_observer_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -111,6 +109,7 @@ ohos_unittest("os_account_observer_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
@@ -149,7 +148,6 @@ ohos_unittest("devsl_dispatcher_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -158,6 +156,7 @@ ohos_unittest("devsl_dispatcher_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
@@ -196,7 +195,6 @@ ohos_unittest("kernel_talker_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -205,6 +203,7 @@ ohos_unittest("kernel_talker_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
@@ -243,7 +242,6 @@ ohos_unittest("session_pool_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -252,6 +250,7 @@ ohos_unittest("session_pool_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
@@ -290,7 +289,6 @@ ohos_unittest("softbus_agent_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -299,6 +297,7 @@ ohos_unittest("softbus_agent_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
@@ -337,7 +336,6 @@ ohos_unittest("softbus_session_dispatcher_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -346,6 +344,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
@@ -384,7 +383,6 @@ ohos_unittest("softbus_session_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
-    "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp:devicemanagersdk",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -393,6 +391,7 @@ ohos_unittest("softbus_session_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "init:libbegetutil",
     "ipc:ipc_core",
