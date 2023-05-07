@@ -43,7 +43,7 @@ int32_t DataConvertor::ResultSetToRecords(const unique_ptr<NativeRdb::ResultSet>
     /* iterate all rows */
     while (resultSet->GoToNextRow() == 0) {
         DriveKit::DKRecord record;
-        int32_t ret = Convert(record, *resultSet);
+        ret = Convert(record, *resultSet);
         if (ret != E_OK) {
             LOGE("covert result to record err %{public}d", ret);
             continue;
