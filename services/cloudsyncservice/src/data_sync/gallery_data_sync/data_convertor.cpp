@@ -217,7 +217,7 @@ int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record,
     DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
 
     auto size = GALLERY_FILE_COLUMNS.size();
-    for (int i = 0 ; i < size; i++) {
+    for (int i = 0 ; i < size - 1; i++) {
         auto field = GALLERY_FILE_COLUMNS[i];
         auto type = GALLERY_FILE_COLUMN_TYPES[i];
         if (properties.find(field) == properties.end()) {
