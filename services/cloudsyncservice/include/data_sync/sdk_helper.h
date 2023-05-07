@@ -75,9 +75,14 @@ public:
 
     /* asset download */
     int32_t DownloadAssets(std::shared_ptr<DriveKit::DKContext> context,
-        std::vector<DriveKit::DKDownloadAsset> recordIds, int32_t id,
-        std::function<void(std::shared_ptr<DriveKit::DKContext> context,
-            std::shared_ptr<std::vector<DriveKit::DKDownloadAsset>>)> resultCallback);
+        std::vector<DriveKit::DKDownloadAsset> &assetsToDownload, DriveKit::DKAssetPath downLoadPath,
+        DriveKit::DKDownloadId &id,
+        std::function<void(std::shared_ptr<DriveKit::DKContext>,
+                       std::shared_ptr<const DriveKit::DKDatabase>,
+                       const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
+                       const DriveKit::DKError &)> resultCallback,
+        std::function<void(std::shared_ptr<DriveKit::DKContext>, DriveKit::DKDownloadAsset, DriveKit::TotalSize,
+                           DriveKit::DownloadSize)> progressCallback);
 
     int32_t CancelDownloadAssets(int32_t id);
 

@@ -16,6 +16,7 @@
 #include "file_data_handler.h"
 
 #include "dfs_error.h"
+#include "dk_assets_downloader.h"
 #include "utils_log.h"
 #include "gallery_file_const.h"
 #include "meta_file.h"
@@ -40,13 +41,29 @@ void FileDataHandler::GetFetchCondition(FetchCondition &cond)
     cond.desiredKeys = desiredKeys_;
 }
 
-int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records)
+static void ThumbDownloadCallback(std::shared_ptr<DKContext> context,
+                                  std::shared_ptr<const DKDatabase> database,
+                                  const std::map<DKDownloadAsset, DKDownloadResult> &resultMap,
+                                  const DKError &err)
+{
+    if (err.isLocalError || err.isServerError) {
+        //retry flag
+        LOGE("DKAssetsDownloader err");
+    } else {
+        LOGI("DKAssetsDownloader ok");
+    }
+}
+
+int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records,
+                                        vector<DKDownloadAsset> &outAssetsToDownload,
+                                        shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
+                                        std::shared_ptr<const DriveKit::DKDatabase>,
+                                        const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
+                                        const DriveKit::DKError &)>> &downloadResultCallback)
 {
     LOGI("on fetch %{public}zu records", records->size());
     int32_t ret = E_OK;
-    for (const auto &it : *records) {
-        const auto &record = it;
-        /* check for local same recordid */
+    for (const auto &record : *records) {
         NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
         predicates.SetWhereClause(Media::MEDIA_DATA_DB_CLOUD_ID + " = ?");
         predicates.SetWhereArgs({record.GetRecordId()});
@@ -65,9 +82,9 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
             break;
         }
 
-        /* specific pull operation */
+        bool needPullThumbs = false;
         if ((rowCount == 0) && !record.GetIsDelete()) {
-            ret = PullRecordInsert(record);
+            ret = PullRecordInsert(record, needPullThumbs);
         } else if (rowCount == 1) {
             vector<DKRecord> local;
             ret = localConvertor_.ResultSetToRecords(move(resultSet), local);
@@ -75,11 +92,12 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
                 LOGE("result set to records err %{public}d, size %{public}zu", ret, local.size());
                 break;
             }
-
+            DKRecordData localData;
+            local[0].GetRecordData(localData);
             if (record.GetIsDelete()) {
-                ret = PullRecordDelete(record, local[0]);
+                ret = PullRecordDelete(record, localData);
             } else {
-                ret = PullRecordUpdate(record, local[0]);
+                ret = PullRecordUpdate(record, localData, needPullThumbs);
             }
         } else {
             LOGE("recordId %s has multiple file in db!", record.GetRecordId().c_str());
@@ -88,7 +106,15 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
         if (ret == E_RDB) {
             break;
         }
+        if (needPullThumbs) {
+            AppendToDownload(record, "lcd", outAssetsToDownload);
+            AppendToDownload(record, "thumbnail", outAssetsToDownload);
+        }
     }
+        downloadResultCallback = make_shared<std::function<void(std::shared_ptr<DriveKit::DKContext>,
+                           std::shared_ptr<const DriveKit::DKDatabase>,
+                           const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
+                           const DriveKit::DKError &)>>(ThumbDownloadCallback);
     MetaFileMgr::GetInstance().ClearAll();
     return ret;
 }
@@ -148,7 +174,7 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
     return mFile->DoCreate(mBase);
 }
 
-int32_t FileDataHandler::PullRecordInsert(const DKRecord &record)
+int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, bool &outPullThumbs)
 {
     /* check local file conflict */
     int ret = DentryInsert(userId_, record);
@@ -166,7 +192,6 @@ int32_t FileDataHandler::PullRecordInsert(const DKRecord &record)
     }
     values.PutInt(Media::MEDIA_DATA_DB_POSITION, POSITION_CLOUD);
     values.PutString(Media::MEDIA_DATA_DB_CLOUD_ID, record.GetRecordId());
-
     ret = Insert(rowId, values);
     if (ret != E_OK) {
         LOGE("Insert pull record failed, rdb ret=%{public}d", ret);
@@ -175,18 +200,37 @@ int32_t FileDataHandler::PullRecordInsert(const DKRecord &record)
 
     LOGI("Insert recordId %s success", record.GetRecordId().c_str());
 
-    /* check and trigger lcd download */
+    outPullThumbs = true;
     return E_OK;
 }
 
-int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record, const DKRecord &local)
+int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record,
+                                          const DKRecordData &local,
+                                          bool &outPullThumbs)
 {
     return E_OK;
 }
 
-int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, const DKRecord &local)
+int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, const DKRecordData &local)
 {
     return E_OK;
+}
+
+void FileDataHandler::AppendToDownload(const DKRecord &record,
+                                       const std::string &fieldKey,
+                                       std::vector<DKDownloadAsset> &assetsToDownload)
+{
+    DKDownloadAsset downloadAsset;
+    downloadAsset.recordType = record.GetRecordType();
+    downloadAsset.recordId = record.GetRecordId();
+    downloadAsset.fieldKey = (fieldKey == "lcd" ? FILE_LCD : FILE_THUMBNAIL);
+    DKRecordData data;
+    record.GetRecordData(data);
+    DKRecordFieldMap prop = data[FILE_PROPERTIES];
+    string path = prop[MEDIA_DATA_DB_FILE_PATH];
+    string key = prop[fieldKey];
+    downloadAsset.downLoadPath = createConvertor_.GetThumbPath(path, key);
+    assetsToDownload.push_back(downloadAsset);
 }
 
 int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)

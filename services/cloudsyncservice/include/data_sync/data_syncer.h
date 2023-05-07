@@ -74,6 +74,7 @@ private:
     /* download */
     void PullRecords(std::shared_ptr<TaskContext> context);
     void PullDatabaseChanges(std::shared_ptr<TaskContext> context);
+    void DownloadAssets(std::shared_ptr<TaskContext> context);
     /* dowload callback */
     void OnFetchRecords(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
