@@ -52,6 +52,9 @@ public:
     int32_t GetUserId() const;
     SyncState GetSyncState() const;
 
+    /* sdk */
+    void SetSdkHelper(std::shared_ptr<SdkHelper> sdkHelper);
+
 protected:
     /* download */
     int32_t Pull(std::shared_ptr<DataHandler> handler);
@@ -140,7 +143,7 @@ private:
     std::shared_ptr<TaskManager> taskManager_;
 
     /* sdk */
-    SdkHelper sdkHelper_;
+    std::shared_ptr<SdkHelper> sdkHelper_;
     DriveKit::DKLock lock_;
     int32_t errorCode_{0};
 

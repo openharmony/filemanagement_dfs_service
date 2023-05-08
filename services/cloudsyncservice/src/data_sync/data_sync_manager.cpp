@@ -21,6 +21,7 @@
 #include "dfs_error.h"
 #include "gallery_data_syncer.h"
 #include "ipc/cloud_sync_callback_manager.h"
+#include "sdk_helper.h"
 #include "sync_rule/battery_status.h"
 #include "sync_rule/cloud_status.h"
 #include "sync_rule/network_status.h"
@@ -44,17 +45,29 @@ int32_t DataSyncManager::TriggerStartSync(const std::string bundleName,
         LOGE("trigger start sync failed, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
         return E_INVAL_ARG;
     }
+
+    /* get sdk helper */
+    auto sdkHelper = std::make_shared<SdkHelper>();
+    auto ret = sdkHelper->Init(userId, bundleName);
+    if (ret != E_OK) {
+        LOGE("get sdk helper err %{public}d", ret);
+        return ret;
+    }
+
     std::string appBundleName(it->second);
-    auto ret = IsSkipSync(appBundleName, userId);
+    ret = IsSkipSync(appBundleName, userId);
     if (ret != E_OK) {
         return ret;
     }
+
     auto dataSyncer = GetDataSyncer(appBundleName, userId);
     if (!dataSyncer) {
         LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
+    dataSyncer->SetSdkHelper(sdkHelper);
     std::thread([dataSyncer, forceFlag, triggerType]() { dataSyncer->StartSync(forceFlag, triggerType); }).detach();
+
     return E_OK;
 }
 
