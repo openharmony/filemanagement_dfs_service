@@ -30,6 +30,7 @@ public:
 
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
     std::string GetThumbPath(const std::string &path, const std::string &key);
+    std::string GetThumbPathDownloadLCD(const std::string &path, const std::string &key);
 
 private:
     /* record id */
@@ -84,6 +85,8 @@ private:
     static std::string suffix_;
     static std::string sandboxPrefix_;
 
+    static std::string prefixLCD_;
+    static std::string suffixLCD_;
     /* map */
     static std::unordered_map<std::string, int32_t (FileDataConvertor::*)(std::string &key,
         DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet)> map_;

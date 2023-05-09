@@ -36,6 +36,8 @@ string FileDataConvertor::recordType_ = "media";
 string FileDataConvertor::prefix_ = "/data/service/el2/";
 string FileDataConvertor::suffix_ = "/hmdfs/account/files";
 string FileDataConvertor::sandboxPrefix_ = "/storage/media/local/files";
+string FileDataConvertor::prefixLCD_ = "/mnt/hmdfs/";
+string FileDataConvertor::suffixLCD_ = "/account/device_view/local/files";
 
 /* basic map */
 unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRecordData &data,
@@ -479,6 +481,22 @@ string FileDataConvertor::GetThumbPath(const std::string &path, const std::strin
     lastIndex = lastIndex - ROOT_MEDIA_DIR.length();
 
     return prefix_ + to_string(userId_) + suffix_ + "/.thumbs/" +
+        path.substr(ROOT_MEDIA_DIR.length(), lastIndex) + "-" + key + ".jpg";
+}
+
+string FileDataConvertor::GetThumbPathDownloadLCD(const std::string &path, const std::string &key)
+{
+    if (path.length() < ROOT_MEDIA_DIR.length()) {
+        return "";
+    }
+
+    auto lastIndex = path.find_last_of('.');
+    if (lastIndex == string::npos) {
+        lastIndex = ROOT_MEDIA_DIR.length() - 1;
+    }
+    lastIndex = lastIndex - ROOT_MEDIA_DIR.length();
+
+    return prefixLCD_ + to_string(userId_) + suffixLCD_ + "/.thumbs/" +
         path.substr(ROOT_MEDIA_DIR.length(), lastIndex) + "-" + key + ".jpg";
 }
 } // namespace CloudSync

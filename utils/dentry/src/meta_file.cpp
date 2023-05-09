@@ -162,11 +162,7 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
     fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)};
     LOGD("fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
 
-    struct stat statBuf {};
-    int ret = fstat(fd_, &statBuf);
-    LOGD("fd=%{public}d, size=%{public}u, cacheFile_=%s", fd_.Get(), (uint32_t)statBuf.st_size, cacheFile_.c_str());
-
-    ret = fsetxattr(fd_, "user.hmdfs_cache", path.c_str(), path.size(), 0);
+    int ret = fsetxattr(fd_, "user.hmdfs_cache", path.c_str(), path.size(), 0);
     if (ret != 0) {
         LOGE("setxattr failed, errno %{public}d, cacheFile_ %s", errno, cacheFile_.c_str());
     }
@@ -316,8 +312,8 @@ static uint32_t GetOverallBucket(uint32_t level)
         LOGI("level = %{public}d overflow", level);
         return 0;
     }
-    uint32_t buckets = (1U << (level + 1)) - 1;
-    return buckets;
+    uint64_t buckets = (1U << (level + 1)) - 1;
+    return static_cast<uint32_t>(buckets);
 }
 
 static size_t GetDcacheFileSize(uint32_t level)
@@ -332,12 +328,12 @@ static uint32_t GetBucketaddr(uint32_t level, uint32_t buckoffset)
         return 0;
     }
 
-    uint32_t curLevelMaxBucks = (1U << level);
+    uint64_t curLevelMaxBucks = (1U << level);
     if (buckoffset >= curLevelMaxBucks) {
         return 0;
     }
 
-    return curLevelMaxBucks + buckoffset - 1;
+    return static_cast<uint32_t>(curLevelMaxBucks) + buckoffset - 1;
 }
 
 static uint32_t GetBucketByLevel(uint32_t level)
@@ -347,8 +343,8 @@ static uint32_t GetBucketByLevel(uint32_t level)
         return 0;
     }
 
-    uint32_t buckets = (1U << level);
-    return buckets;
+    uint64_t buckets = (1U << level);
+    return static_cast<uint32_t>(buckets);
 }
 
 static int RoomForFilename(const uint8_t bitmap[], int slots, int maxSlots)
@@ -491,7 +487,7 @@ static std::unique_ptr<HmdfsDentryGroup> FindDentryPage(uint64_t index, DcacheLo
     return dentryBlk;
 }
 
-static HmdfsDentry *FindInBlock(HmdfsDentryGroup &dentryBlk, uint32_t namehash, const std::string name)
+static HmdfsDentry *FindInBlock(HmdfsDentryGroup &dentryBlk, uint32_t namehash, const std::string &name)
 {
     int maxLen = 0;
     uint32_t bitPos = 0;

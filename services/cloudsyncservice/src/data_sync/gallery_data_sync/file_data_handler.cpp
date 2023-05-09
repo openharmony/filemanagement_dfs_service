@@ -127,7 +127,8 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
         LOGE("record data cannot find properties");
         return E_INVAL_ARG;
     }
-    DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
+    DriveKit::DKRecordFieldMap prop;
+    data[FILE_PROPERTIES].GetRecordMap(prop);
     if (prop.find(MEDIA_DATA_DB_FILE_PATH) == prop.end() || prop.find(MEDIA_DATA_DB_SIZE) == prop.end() ||
         prop.find(MEDIA_DATA_DB_DATE_MODIFIED) == prop.end()) {
         LOGE("record data cannot find some properties");
@@ -216,6 +217,34 @@ int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, const DKRecord
     return E_OK;
 }
 
+static std::string GetParentDir(const std::string &path)
+{
+    if ((path == "/") || (path == "")) {
+        return "";
+    }
+
+    auto pos = path.find_last_of('/');
+    if ((pos == std::string::npos) || (pos == 0)) {
+        return "/";
+    }
+
+    return path.substr(0, pos);
+}
+
+static std::string GetFileName(const std::string &path)
+{
+    if ((path == "/") || (path == "")) {
+        return "";
+    }
+
+    auto pos = path.find_last_of('/');
+    if (pos == std::string::npos) {
+        return "";
+    }
+
+    return path.substr(pos + 1);
+}
+
 void FileDataHandler::AppendToDownload(const DKRecord &record,
                                        const std::string &fieldKey,
                                        std::vector<DKDownloadAsset> &assetsToDownload)
@@ -223,13 +252,30 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     DKDownloadAsset downloadAsset;
     downloadAsset.recordType = record.GetRecordType();
     downloadAsset.recordId = record.GetRecordId();
-    downloadAsset.fieldKey = (fieldKey == "lcd" ? FILE_LCD : FILE_THUMBNAIL);
+    downloadAsset.fieldKey = fieldKey;
     DKRecordData data;
     record.GetRecordData(data);
-    DKRecordFieldMap prop = data[FILE_PROPERTIES];
-    string path = prop[MEDIA_DATA_DB_FILE_PATH];
-    string key = prop[fieldKey];
-    downloadAsset.downLoadPath = createConvertor_.GetThumbPath(path, key);
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data cannot find properties");
+        return;
+    }
+    DKRecordFieldMap prop;
+    data[FILE_PROPERTIES].GetRecordMap(prop);
+    if (prop.find(MEDIA_DATA_DB_FILE_PATH) == prop.end()) {
+        LOGE("record prop cannot find file path");
+        return;
+    }
+    string path;
+    prop[MEDIA_DATA_DB_FILE_PATH].GetString(path);
+    if (prop.find(fieldKey) == prop.end()) {
+        LOGE("record prop cannot find fieldKey");
+        return;
+    }
+    string key;
+    prop[fieldKey].GetString(key);
+    downloadAsset.downLoadPath = createConvertor_.GetThumbPathDownloadLCD(path, key);
+    downloadAsset.asset.assetName = GetFileName(downloadAsset.downLoadPath);
+    downloadAsset.downLoadPath = GetParentDir(downloadAsset.downLoadPath);
     assetsToDownload.push_back(downloadAsset);
 }
 
