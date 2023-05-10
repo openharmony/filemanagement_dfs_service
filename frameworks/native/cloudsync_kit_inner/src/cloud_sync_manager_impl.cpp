@@ -112,9 +112,8 @@ int32_t CloudSyncManagerImpl::EnableCloud(const std::string &accoutId,
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    int32_t ret = CloudSyncServiceProxy->EnableCloud(accoutId, switchData);
-    LOGI("EnableCloud ret %{public}d", ret);
-    return ret;
+
+    return CloudSyncServiceProxy->EnableCloud(accoutId, switchData);
 }
 
 int32_t CloudSyncManagerImpl::DisableCloud(const std::string &accoutId)
@@ -124,8 +123,7 @@ int32_t CloudSyncManagerImpl::DisableCloud(const std::string &accoutId)
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    int32_t ret = CloudSyncServiceProxy->DisableCloud(accoutId);
-    LOGI("DisableCloud ret %{public}d", ret);
-    return ret;
+
+    return CloudSyncServiceProxy->DisableCloud(accoutId);
 }
 } // namespace OHOS::FileManagement::CloudSync
