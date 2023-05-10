@@ -34,6 +34,7 @@ private:
     int32_t HandleStartSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStopSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleChangeAppSwitch(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleClean(MessageParcel &data, MessageParcel &reply);
     int32_t HandleNotifyDataChange(MessageParcel &data, MessageParcel &reply);
     int32_t HandleEnableCloud(MessageParcel &data, MessageParcel &reply);
     int32_t HandleDisableCloud(MessageParcel &data, MessageParcel &reply);

@@ -58,6 +58,14 @@ public:
     virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
     virtual int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) = 0;
     virtual int32_t DisableCloud(const std::string &accoutId) = 0;
+    /**
+     * @brief 云账号退出选择保留或清除云数据
+     *
+     * @param accoutId 账号ID
+     * @param cleanOptions 说明云文件如何处理的方式
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

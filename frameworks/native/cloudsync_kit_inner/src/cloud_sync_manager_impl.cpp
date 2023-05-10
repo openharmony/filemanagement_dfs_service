@@ -126,4 +126,14 @@ int32_t CloudSyncManagerImpl::DisableCloud(const std::string &accoutId)
 
     return CloudSyncServiceProxy->DisableCloud(accoutId);
 }
+
+int32_t CloudSyncManagerImpl::Clean(const std::string &accountId, const CleanOptions &cleanOptions)
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    return CloudSyncServiceProxy->Clean(accountId, cleanOptions);
+}
 } // namespace OHOS::FileManagement::CloudSync

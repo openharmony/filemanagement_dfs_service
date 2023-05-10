@@ -60,6 +60,12 @@ public:
     {
         return E_OK;
     }
+
+    int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override
+    {
+        return E_OK;
+    }
+
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override
     {
         return E_OK;

@@ -26,6 +26,7 @@ CloudSyncServiceStub::CloudSyncServiceStub()
     opToInterfaceMap_[SERVICE_CMD_START_SYNC] = &CloudSyncServiceStub::HandleStartSyncInner;
     opToInterfaceMap_[SERVICE_CMD_STOP_SYNC] = &CloudSyncServiceStub::HandleStopSyncInner;
     opToInterfaceMap_[SERVICE_CMD_CHANGE_APP_SWITCH] = &CloudSyncServiceStub::HandleChangeAppSwitch;
+    opToInterfaceMap_[SERVICE_CMD_CLEAN] = &CloudSyncServiceStub::HandleClean;
     opToInterfaceMap_[SERVICE_CMD_NOTIFY_DATA_CHANGE] = &CloudSyncServiceStub::HandleNotifyDataChange;
     opToInterfaceMap_[SERVICE_CMD_ENABLE_CLOUD] = &CloudSyncServiceStub::HandleEnableCloud;
     opToInterfaceMap_[SERVICE_CMD_DISABLE_CLOUD] = &CloudSyncServiceStub::HandleDisableCloud;
@@ -117,6 +118,29 @@ int32_t CloudSyncServiceStub::HandleChangeAppSwitch(MessageParcel &data, Message
     int32_t res = ChangeAppSwitch(accountId, bundleName, status);
     reply.WriteInt32(res);
     LOGI("End ChangeAppSwitch");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleClean(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin Clean");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    string accountId = data.ReadString();
+    sptr<CleanOptions> options = data.ReadParcelable<CleanOptions>();
+    if (!options) {
+        LOGE("object of CleanOptions is nullptr");
+        return E_INVAL_ARG;
+    }
+    int32_t res = Clean(accountId, *options);
+    reply.WriteInt32(res);
+    LOGI("End Clean");
     return res;
 }
 

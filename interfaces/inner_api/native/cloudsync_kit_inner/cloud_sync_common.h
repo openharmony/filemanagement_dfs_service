@@ -27,5 +27,12 @@ struct SwitchDataObj : public Parcelable {
     bool Marshalling(Parcel &parcel) const override;
     static SwitchDataObj *Unmarshalling(Parcel &parcel);
 };
+
+struct CleanOptions : public Parcelable {
+    std::map<std::string, int32_t> appActionsData;
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static CleanOptions *Unmarshalling(Parcel &parcel);
+};
 }
 #endif

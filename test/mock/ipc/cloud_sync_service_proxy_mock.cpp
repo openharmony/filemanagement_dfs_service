@@ -46,6 +46,11 @@ int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId, cons
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::Clean(const std::string &accountId, const CleanOptions &cleanOptions)
+{
+    return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
 {
     return E_OK;

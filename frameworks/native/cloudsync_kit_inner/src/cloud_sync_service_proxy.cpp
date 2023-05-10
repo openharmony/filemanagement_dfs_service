@@ -165,6 +165,42 @@ int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId, cons
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::Clean(const std::string &accountId, const CleanOptions &cleanOptions)
+{
+    LOGI("Clean");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(accountId)) {
+        LOGE("Failed to send the account id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteParcelable(&cleanOptions)) {
+        LOGE("failed to write cleanOptions");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_CLEAN, data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the request, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("Clean Success");
+    return reply.ReadInt32();
+}
+
 int32_t CloudSyncServiceProxy::EnableCloud(const std::string &accoutId,
                                            const SwitchDataObj &switchData)
 {

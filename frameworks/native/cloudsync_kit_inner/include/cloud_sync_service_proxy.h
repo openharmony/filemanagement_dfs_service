@@ -34,6 +34,7 @@ public:
     int32_t StartSyncInner(bool forceFlag) override;
     int32_t StopSyncInner() override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
+    int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     int32_t DisableCloud(const std::string &accoutId) override;

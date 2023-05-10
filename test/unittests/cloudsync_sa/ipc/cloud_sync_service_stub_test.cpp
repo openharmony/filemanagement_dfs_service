@@ -33,6 +33,7 @@ public:
     MOCK_METHOD1(StartSyncInner, int32_t(bool forceFlag));
     MOCK_METHOD0(StopSyncInner, int32_t());
     MOCK_METHOD3(ChangeAppSwitch, int32_t(const std::string &accoutId, const std::string &bundleName, bool status));
+    MOCK_METHOD2(Clean, int32_t(const std::string &accountId, const CleanOptions &cleanOptions));
     MOCK_METHOD2(NotifyDataChange, int32_t(const std::string &accoutId, const std::string &bundleName));
     MOCK_METHOD2(EnableCloud, int32_t(const std::string &accoutId, const SwitchDataObj &switchData));
     MOCK_METHOD1(DisableCloud, int32_t(const std::string &accoutId));

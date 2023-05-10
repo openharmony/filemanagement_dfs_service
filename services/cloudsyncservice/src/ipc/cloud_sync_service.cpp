@@ -140,4 +140,9 @@ int32_t CloudSyncService::EnableCloud(const std::string &accoutId, const SwitchD
 {
     return E_OK;
 }
+
+int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions &cleanOptions)
+{
+    return E_OK;
+}
 } // namespace OHOS::FileManagement::CloudSync
