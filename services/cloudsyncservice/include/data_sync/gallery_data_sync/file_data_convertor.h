@@ -78,8 +78,8 @@ private:
     int32_t HandleAttachments(std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
 
     int32_t HandleContent(DriveKit::DKRecordFieldList &list, std::string &path);
-    int32_t HandleThumbnail(DriveKit::DKRecordFieldList &list, std::string &path, NativeRdb::ResultSet &resultSet);
-    int32_t HandleLcd(DriveKit::DKRecordFieldList &list, std::string &path, NativeRdb::ResultSet &resultSet);
+    int32_t HandleThumbnail(DriveKit::DKRecordFieldList &list, std::string &path);
+    int32_t HandleLcd(DriveKit::DKRecordFieldList &list, std::string &path);
 
     /* path conversion */
     std::string GetLowerPath(const std::string &path);
@@ -94,9 +94,13 @@ private:
     static std::string prefix_;
     static std::string suffix_;
     static std::string sandboxPrefix_;
-
     static std::string prefixLCD_;
     static std::string suffixLCD_;
+
+    /* thumb */
+    static std::string thumb_suffix_;
+    static std::string lcd_suffix_;
+
     /* map */
     static std::unordered_map<std::string, int32_t (FileDataConvertor::*)(std::string &key,
         DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet)> map_;
