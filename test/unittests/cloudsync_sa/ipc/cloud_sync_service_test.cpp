@@ -128,7 +128,7 @@ HWTEST_F(CloudSyncServiceTest, StartSyncInnerTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartSyncInner start";
     try {
         bool forceFlag = false;
-        string bundleName = "com.ohos.test";
+        string bundleName = "com.ohos.photos";
         int32_t callerUserId = 100;
         auto dataSyncManager = g_servicePtr_->dataSyncManager_;
         int ret = dataSyncManager->TriggerStartSync(bundleName, callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
@@ -154,7 +154,7 @@ HWTEST_F(CloudSyncServiceTest, StopSyncInnerTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopSyncInner Start";
     try {
-        string bundleName = "com.ohos.test";
+        string bundleName = "com.ohos.photos";
         int32_t callerUserId = 100;
         auto dataSyncManager = g_servicePtr_->dataSyncManager_;
         int ret = dataSyncManager->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::APP_TRIGGER);
