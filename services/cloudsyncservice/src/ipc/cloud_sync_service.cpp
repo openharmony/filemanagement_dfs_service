@@ -130,4 +130,14 @@ int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const st
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
 }
+
+int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncService::EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData)
+{
+    return E_OK;
+}
 } // namespace OHOS::FileManagement::CloudSync

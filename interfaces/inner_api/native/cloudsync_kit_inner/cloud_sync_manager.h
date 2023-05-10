@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "cloud_sync_callback.h"
+#include "cloud_sync_common.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncManager {
@@ -55,6 +56,8 @@ public:
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
+    virtual int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) = 0;
+    virtual int32_t DisableCloud(const std::string &accoutId) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

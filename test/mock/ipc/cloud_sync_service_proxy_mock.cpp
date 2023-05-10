@@ -16,6 +16,7 @@
 
 #include <sstream>
 
+#include "cloud_sync_common.h"
 #include "dfs_error.h"
 #include "iservice_registry.h"
 #include "i_cloud_sync_service_mock.h"
@@ -46,6 +47,16 @@ int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId, cons
 }
 
 int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::DisableCloud(const std::string &accoutId)
 {
     return E_OK;
 }

@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,15 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_N_EXPORTER_H
-#define OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_N_EXPORTER_H
+#ifndef OHOS_FILEMGMT_CLOUD_SYNC_COMMON_H
+#define OHOS_FILEMGMT_CLOUD_SYNC_COMMON_H
 
-#include "filemgmt_libn.h"
+#include <map>
+
+#include "parcel.h"
 
 namespace OHOS::FileManagement::CloudSync {
-napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info);
-napi_value NotifyDataChange(napi_env env, napi_callback_info info);
-napi_value EnableCloud(napi_env env, napi_callback_info info);
-napi_value DisableCloud(napi_env env, napi_callback_info info);
-} // namespace OHOS::FileManagement::CloudSync
-#endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_NAPI_H
+struct SwitchDataObj : public Parcelable {
+    std::map<std::string, bool> switchData;
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static SwitchDataObj *Unmarshalling(Parcel &parcel);
+};
+}
+#endif

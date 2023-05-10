@@ -21,6 +21,7 @@
 #include "nocopyable.h"
 
 #include "cloud_sync_callback_client.h"
+#include "cloud_sync_common.h"
 #include "cloud_sync_manager.h"
 #include "svc_death_recipient.h"
 
@@ -33,7 +34,8 @@ public:
     int32_t StopSync() override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
-
+    int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
+    int32_t DisableCloud(const std::string &accoutId) override;
 private:
     CloudSyncManagerImpl() = default;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);

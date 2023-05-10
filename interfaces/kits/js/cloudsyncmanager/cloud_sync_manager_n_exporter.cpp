@@ -15,10 +15,14 @@
 
 #include "cloud_sync_manager_n_exporter.h"
 
+#include <map>
+
 #include <sys/types.h>
 
+#include "cloud_sync_common.h"
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
@@ -124,6 +128,136 @@ napi_value NotifyDataChange(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "NotifyDataChange";
+    NVal thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == (uint)NARG_CNT::TWO) {
+        return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
+    } else {
+        NVal cb(env, funcArg[(int)NARG_POS::THIRD]);
+        return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
+    }
+}
+
+napi_value DisableCloud(napi_env env, napi_callback_info info)
+{
+    LOGI("DisableCloud");
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::ONE), static_cast<size_t>(NARG_CNT::TWO))) {
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        return nullptr;
+    }
+
+    bool succ = false;
+    std::unique_ptr<char []> accoutId;
+
+    tie(succ, accoutId, std::ignore) = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+    if (!succ) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    string accoutIdStr(accoutId.get());
+
+    auto cbExec = [accoutIdStr]() -> NError {
+        int32_t result = CloudSyncManager::GetInstance().DisableCloud(accoutIdStr);
+        if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
+            return result == E_PERMISSION_DENIED? NError(E_PERMISSION) : NError(E_PERMISSION_SYS);
+        }
+        return NError(ERRNO_NOERR);
+    };
+    auto cbComplete = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return { env, err.GetNapiErr(env) };
+        }
+        return { NVal::CreateUndefined(env) };
+    };
+
+    std::string procedureName = "DisableCloud";
+    NVal thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == (uint)NARG_CNT::ONE) {
+        return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
+    } else {
+        NVal cb(env, funcArg[(int)NARG_POS::SECOND]);
+        return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
+    }
+}
+
+
+bool ParseSwitches(napi_env env, napi_value object, SwitchDataObj &data)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, object, &valueType);
+    if (valueType != napi_object) {
+        LOGE("ParseSwitches failed, not napi object");
+        return false;
+    }
+    napi_value bundleNameArr = nullptr;
+    napi_get_property_names(env, object, &bundleNameArr);
+    uint32_t bundleNameNum = 0;
+    napi_get_array_length(env, bundleNameArr, &bundleNameNum);
+    for (uint32_t i = 0; i < bundleNameNum; ++i) {
+        napi_value item = nullptr;
+        napi_get_element(env, bundleNameArr, i, &item);
+        std::unique_ptr<char []> bundleId;
+        bool succ = false;
+        tie(succ, bundleId, std::ignore) = NVal(env, item).ToUTF8String();
+        if (!succ) {
+            LOGE("fail to get string");
+            return false;
+        }
+
+        napi_value val = nullptr;
+        napi_get_named_property(env, object, bundleId.get(), &val);
+        bool switchVal = false;
+        tie(succ, switchVal) = NVal(env, val).ToBool();
+        if (!succ) {
+            LOGE("fail to get switchVal");
+            return false;
+        }
+        data.switchData.emplace(bundleId.get(), switchVal);
+    }
+    return true;
+}
+
+napi_value EnableCloud(napi_env env, napi_callback_info info)
+{
+    LOGI("EnableCloud");
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::TWO), static_cast<size_t>(NARG_CNT::THREE))) {
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        return nullptr;
+    }
+
+    bool succ = false;
+    std::unique_ptr<char []> accoutId;
+
+    tie(succ, accoutId, std::ignore) = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+    if (!succ) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    SwitchDataObj switchData;
+    if (!ParseSwitches(env, funcArg[(int)NARG_POS::SECOND], switchData)) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    string accoutIdStr(accoutId.get());
+
+    auto cbExec = [accoutIdStr, switchData]() -> NError {
+        int32_t result = CloudSyncManager::GetInstance().EnableCloud(accoutIdStr, switchData);
+        if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
+            return result == E_PERMISSION_DENIED? NError(E_PERMISSION) : NError(E_PERMISSION_SYS);
+        }
+        return NError(ERRNO_NOERR);
+    };
+    auto cbComplete = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return { env, err.GetNapiErr(env) };
+        }
+        return { NVal::CreateUndefined(env) };
+    };
+
+    std::string procedureName = "EnableCloud";
     NVal thisVar(env, funcArg.GetThisVar());
     if (funcArg.GetArgc() == (uint)NARG_CNT::TWO) {
         return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;

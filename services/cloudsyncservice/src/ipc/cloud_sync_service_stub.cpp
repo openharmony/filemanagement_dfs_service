@@ -27,6 +27,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
     opToInterfaceMap_[SERVICE_CMD_STOP_SYNC] = &CloudSyncServiceStub::HandleStopSyncInner;
     opToInterfaceMap_[SERVICE_CMD_CHANGE_APP_SWITCH] = &CloudSyncServiceStub::HandleChangeAppSwitch;
     opToInterfaceMap_[SERVICE_CMD_NOTIFY_DATA_CHANGE] = &CloudSyncServiceStub::HandleNotifyDataChange;
+    opToInterfaceMap_[SERVICE_CMD_ENABLE_CLOUD] = &CloudSyncServiceStub::HandleEnableCloud;
+    opToInterfaceMap_[SERVICE_CMD_DISABLE_CLOUD] = &CloudSyncServiceStub::HandleDisableCloud;
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -134,6 +136,41 @@ int32_t CloudSyncServiceStub::HandleNotifyDataChange(MessageParcel &data, Messag
     int32_t res = NotifyDataChange(accountId, bundleName);
     reply.WriteInt32(res);
     LOGI("End NotifyDataChange");
+    return res;
+}
+int32_t CloudSyncServiceStub::HandleDisableCloud(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin DisableCloud");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    string accountId = data.ReadString();
+    int32_t res = DisableCloud(accountId);
+    reply.WriteInt32(res);
+    LOGI("End DisableCloud");
+    return res;
+}
+int32_t CloudSyncServiceStub::HandleEnableCloud(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin EnableCloud");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    string accountId = data.ReadString();
+    sptr<SwitchDataObj> switchObj = data.ReadParcelable<SwitchDataObj>();
+    int32_t res = EnableCloud(accountId, *switchObj);
+    reply.WriteInt32(res);
+    LOGI("End EnableCloud");
     return res;
 }
 } // namespace OHOS::FileManagement::CloudSync
