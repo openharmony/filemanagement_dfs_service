@@ -29,6 +29,7 @@ ohos_shared_library("cloudsync_kit_inner") {
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_client.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_service_proxy.cpp",

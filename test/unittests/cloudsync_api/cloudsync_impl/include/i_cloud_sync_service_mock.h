@@ -64,6 +64,14 @@ public:
     {
         return E_OK;
     }
+    int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override
+    {
+        return E_OK;
+    }
+    int32_t DisableCloud(const std::string &accoutId) override
+    {
+        return E_OK;
+    }
 };
 
 } // namespace OHOS::FileManagement::CloudSync

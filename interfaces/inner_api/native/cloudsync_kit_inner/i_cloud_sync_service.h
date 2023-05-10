@@ -16,7 +16,11 @@
 #ifndef OHOS_FILEMGMT_I_CLOUD_SYNC_SERVICE_H
 #define OHOS_FILEMGMT_I_CLOUD_SYNC_SERVICE_H
 
+#include <map>
+
 #include "iremote_broker.h"
+
+#include "cloud_sync_common.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class ICloudSyncService : public IRemoteBroker {
@@ -26,7 +30,9 @@ public:
         SERVICE_CMD_START_SYNC,
         SERVICE_CMD_STOP_SYNC,
         SERVICE_CMD_CHANGE_APP_SWITCH,
-	SERVICE_CMD_NOTIFY_DATA_CHANGE,
+        SERVICE_CMD_NOTIFY_DATA_CHANGE,
+        SERVICE_CMD_ENABLE_CLOUD,
+        SERVICE_CMD_DISABLE_CLOUD,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudSyncService")
@@ -36,6 +42,8 @@ public:
     virtual int32_t StopSyncInner() = 0;
     virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
     virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
+    virtual int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) = 0;
+    virtual int32_t DisableCloud(const std::string &accoutId) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

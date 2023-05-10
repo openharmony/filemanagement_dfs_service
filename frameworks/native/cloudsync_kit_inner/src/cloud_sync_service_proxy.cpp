@@ -165,6 +165,74 @@ int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId, cons
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::EnableCloud(const std::string &accoutId,
+                                           const SwitchDataObj &switchData)
+{
+    LOGI("EnableCloud");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(accoutId)) {
+        LOGE("Failed to send the account id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteParcelable(&switchData)) {
+        LOGE("Failed to send the bundle switch");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_ENABLE_CLOUD, data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("EnableCloud Success");
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::DisableCloud(const std::string &accoutId)
+{
+    LOGI("DisableCloud");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(accoutId)) {
+        LOGE("Failed to send the account id");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_DISABLE_CLOUD, data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("DisableCloud Success");
+    return reply.ReadInt32();
+}
+
 int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
 {
     LOGI("NotifyDataChange");

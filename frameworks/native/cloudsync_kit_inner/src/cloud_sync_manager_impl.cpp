@@ -103,4 +103,29 @@ void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteOb
     deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));
     remoteObject->AddDeathRecipient(deathRecipient_);
 }
+
+int32_t CloudSyncManagerImpl::EnableCloud(const std::string &accoutId,
+                                          const SwitchDataObj &switchData)
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    int32_t ret = CloudSyncServiceProxy->EnableCloud(accoutId, switchData);
+    LOGI("EnableCloud ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::DisableCloud(const std::string &accoutId)
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    int32_t ret = CloudSyncServiceProxy->DisableCloud(accoutId);
+    LOGI("DisableCloud ret %{public}d", ret);
+    return ret;
+}
 } // namespace OHOS::FileManagement::CloudSync
