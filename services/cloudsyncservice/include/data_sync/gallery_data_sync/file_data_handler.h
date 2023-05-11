@@ -84,9 +84,11 @@ private:
 
     /* pull operations */
     int32_t PullRecordInsert(const DriveKit::DKRecord &record, bool &outPullThumbs);
-    int32_t PullRecordUpdate(const DriveKit::DKRecord &record, const DriveKit::DKRecordData &local,
+    int32_t PullRecordUpdate(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
                              bool &outPullThumbs);
-    int32_t PullRecordDelete(const DriveKit::DKRecord &record, const DriveKit::DKRecordData &local);
+    int32_t PullRecordDelete(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
+    int32_t SetRetry(const std::string &recordId);
+    int32_t RecycleFile(const std::string &recordId);
 
     void AppendToDownload(const DriveKit::DKRecord &record,
                           const std::string &fieldKey,
