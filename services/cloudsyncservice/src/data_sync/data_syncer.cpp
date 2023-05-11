@@ -31,14 +31,11 @@ using namespace placeholders;
 using namespace DriveKit;
 
 DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
-    : bundleName_(bundleName), userId_(userId), sdkHelper_(userId, bundleName), cloudPrefImpl_(userId, bundleName)
+    : bundleName_(bundleName), userId_(userId), cloudPrefImpl_(userId, bundleName)
 {
     cloudPrefImpl_.GetString(START_CURSOR, startCursor_);
     cloudPrefImpl_.GetString(NEXT_CURSOR, nextCursor_);
     taskManager_ = make_shared<TaskManager>(bind(&DataSyncer::Schedule, this));
-    if (taskManager_ == nullptr) {
-        LOGE("init task manager err");
-    }
 }
 
 int32_t DataSyncer::AsyncRun(std::shared_ptr<TaskContext> context,
@@ -101,7 +98,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     SyncStateChangedNotify(SyncType::ALL, SyncPromptState::SYNC_STATE_SYNCING);
 
     /* lock: device-reentrant */
-    int32_t ret = sdkHelper_.GetLock(lock_);
+    int32_t ret = sdkHelper_->GetLock(lock_);
     if (ret != E_OK) {
         return ret;
     }
@@ -133,6 +130,11 @@ void DataSyncer::Abort()
     }
 
     /* call the syncer manager's callback for notification */
+}
+
+void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> sdkHelper)
+{
+    sdkHelper_ = sdkHelper;
 }
 
 int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
@@ -173,10 +175,10 @@ void DataSyncer::PullRecords(shared_ptr<TaskContext> context)
     }
 
     std::string tempStartCursor;
-    sdkHelper_.GetStartCursor(context, tempStartCursor);
+    sdkHelper_->GetStartCursor(context, tempStartCursor);
     cloudPrefImpl_.SetString(TEMP_START_CURSOR, tempStartCursor);
 
-    int32_t ret = sdkHelper_.FetchRecords(context, nextCursor_, callback);
+    int32_t ret = sdkHelper_->FetchRecords(context, nextCursor_, callback);
     if (ret != E_OK) {
         LOGE("sdk fetch records err %{public}d", ret);
     }
@@ -196,7 +198,7 @@ void DataSyncer::PullDatabaseChanges(shared_ptr<TaskContext> context)
     if (nextCursor_.empty()) {
         nextCursor_ = startCursor_;
     }
-    int32_t ret = sdkHelper_.FetchDatabaseChanges(context, nextCursor_, callback);
+    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, nextCursor_, callback);
     if (ret != E_OK) {
         LOGE("sdk fetch records err %{public}d", ret);
     }
@@ -242,7 +244,8 @@ void DataSyncer::DownloadAssets(std::shared_ptr<TaskContext> context)
         LOGE("progressCallback nullptr");
         return;
     }
-    sdkHelper_.DownloadAssets(ctx->context, ctx->assets, {}, ctx->id, *(ctx->resultCallback), *(ctx->progressCallback));
+    sdkHelper_->DownloadAssets(ctx->context, ctx->assets, {}, ctx->id,
+        *(ctx->resultCallback), *(ctx->progressCallback));
 }
 
 void EmptyDownLoadAssetsprogress(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)
@@ -437,7 +440,7 @@ void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
         LOGE("wrap on create records fail");
         return;
     }
-    ret = sdkHelper_.CreateRecords(context, records, callback);
+    ret = sdkHelper_->CreateRecords(context, records, callback);
     if (ret != E_OK) {
         LOGE("sdk create records err %{public}d", ret);
         return;
@@ -473,7 +476,7 @@ void DataSyncer::DeleteRecords(shared_ptr<TaskContext> context)
         LOGE("wrap on delete records fail");
         return;
     }
-    ret = sdkHelper_.DeleteRecords(context, records, callback);
+    ret = sdkHelper_->DeleteRecords(context, records, callback);
     if (ret != E_OK) {
         LOGE("sdk delete records err %{public}d", ret);
     }
@@ -508,7 +511,7 @@ void DataSyncer::ModifyMdirtyRecords(shared_ptr<TaskContext> context)
         LOGE("wrap on modify records fail");
         return;
     }
-    ret = sdkHelper_.ModifyRecords(context, records, callback);
+    ret = sdkHelper_->ModifyRecords(context, records, callback);
     if (ret != E_OK) {
         LOGE("sdk modify records err %{public}d", ret);
     }
@@ -543,7 +546,7 @@ void DataSyncer::ModifyFdirtyRecords(shared_ptr<TaskContext> context)
         LOGE("wrap on modify records fail");
         return;
     }
-    ret = sdkHelper_.ModifyRecords(context, records, callback);
+    ret = sdkHelper_->ModifyRecords(context, records, callback);
     if (ret != E_OK) {
         LOGE("sdk modify records err %{public}d", ret);
     }
@@ -715,7 +718,7 @@ void DataSyncer::CompleteAll(int32_t code, const SyncType type)
     LOGI("%{private}d %{private}s completes all", userId_, bundleName_.c_str());
 
     /* unlock */
-    sdkHelper_.DeleteLock(lock_);
+    sdkHelper_->DeleteLock(lock_);
 
     if (errorCode_ == E_SYNC_FAILED_BATTERY_LOW) {
         code = errorCode_;

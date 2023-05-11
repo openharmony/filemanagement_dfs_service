@@ -26,24 +26,27 @@ namespace FileManagement {
 namespace CloudSync {
 using namespace std;
 
-SdkHelper::SdkHelper(const int32_t userId, const std::string bundleName)
+int32_t SdkHelper::Init(const int32_t userId, const std::string &bundleName)
 {
     auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
     if (driveKit == nullptr) {
         LOGE("sdk helper get drive kit instance fail");
-        return;
+        return E_CLOUD_SDK;
     }
 
     auto container = driveKit->GetDefaultContainer(bundleName);
     if (container == nullptr) {
         LOGE("sdk helper get drive kit container fail");
-        return;
+        return E_CLOUD_SDK;
     }
 
     database_ = container->GetPrivateDatabase();
     if (database_ == nullptr) {
         LOGE("sdk helper get drive kit database fail");
+        return E_CLOUD_SDK;
     }
+
+    return E_OK;
 }
 
 int32_t SdkHelper::GetLock(DriveKit::DKLock &lock)

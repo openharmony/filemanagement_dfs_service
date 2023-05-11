@@ -28,8 +28,11 @@ namespace CloudSync {
 
 class SdkHelper {
 public:
-    SdkHelper(const int32_t userId, const std::string bundleName);
+    SdkHelper() = default;
     ~SdkHelper() = default;
+
+    /* init */
+    int32_t Init(const int32_t userId, const std::string &bundleName);
 
     /* lock */
     int32_t GetLock(DriveKit::DKLock &lock);
