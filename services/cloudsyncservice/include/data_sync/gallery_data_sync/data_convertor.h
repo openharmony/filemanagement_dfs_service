@@ -46,12 +46,11 @@ public:
     int32_t RecordToValueBucket(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
 
     static int32_t GetLongComp(const DriveKit::DKRecordField &field, int64_t &val);
-protected:
-    int32_t GetInt(const std::string &key, int32_t &val, NativeRdb::ResultSet &resultSet);
-    int32_t GetLong(const std::string &key, int64_t &val, NativeRdb::ResultSet &resultSet);
-    int32_t GetDouble(const std::string &key, double &val, NativeRdb::ResultSet &resultSet);
-    int32_t GetString(const std::string &key, std::string &val, NativeRdb::ResultSet &resultSet);
-    int32_t GetBool(const std::string &key, bool &val, NativeRdb::ResultSet &resultSet);
+    static int32_t GetInt(const std::string &key, int32_t &val, NativeRdb::ResultSet &resultSet);
+    static int32_t GetLong(const std::string &key, int64_t &val, NativeRdb::ResultSet &resultSet);
+    static int32_t GetDouble(const std::string &key, double &val, NativeRdb::ResultSet &resultSet);
+    static int32_t GetString(const std::string &key, std::string &val, NativeRdb::ResultSet &resultSet);
+    static int32_t GetBool(const std::string &key, bool &val, NativeRdb::ResultSet &resultSet);
 };
 
 #define SET_RECORD_INT(key, resultSet, record)    \

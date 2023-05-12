@@ -15,6 +15,10 @@
 
 #include "file_data_handler.h"
 
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "dfs_error.h"
 #include "dk_assets_downloader.h"
 #include "utils_log.h"
@@ -54,6 +58,15 @@ static void ThumbDownloadCallback(std::shared_ptr<DKContext> context,
     }
 }
 
+const std::vector<std::string> PULL_QUERY_COLUMNS = {
+    MEDIA_DATA_DB_FILE_PATH,
+    MEDIA_DATA_DB_SIZE,
+    MEDIA_DATA_DB_DATE_MODIFIED,
+    MEDIA_DATA_DB_DIRTY,
+    MEDIA_DATA_DB_IS_TRASH,
+    MEDIA_DATA_DB_POSITION,
+};
+
 int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records,
                                         vector<DKDownloadAsset> &outAssetsToDownload,
                                         shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
@@ -65,10 +78,10 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
     int32_t ret = E_OK;
     for (const auto &record : *records) {
         NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-        predicates.SetWhereClause(Media::MEDIA_DATA_DB_CLOUD_ID + " = ?");
+        predicates.SetWhereClause(MEDIA_DATA_DB_CLOUD_ID + " = ?");
         predicates.SetWhereArgs({record.GetRecordId()});
         predicates.Limit(LIMIT_SIZE);
-        auto resultSet = Query(predicates, GALLERY_FILE_COLUMNS);
+        auto resultSet = Query(predicates, PULL_QUERY_COLUMNS);
         if (resultSet == nullptr) {
             LOGE("get nullptr created result");
             ret = E_RDB;
@@ -86,23 +99,15 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
         if ((rowCount == 0) && !record.GetIsDelete()) {
             ret = PullRecordInsert(record, needPullThumbs);
         } else if (rowCount == 1) {
-            vector<DKRecord> local;
-            ret = localConvertor_.ResultSetToRecords(move(resultSet), local);
-            if ((ret != E_OK) || (local.size() != 1)) {
-                LOGE("result set to records err %{public}d, size %{public}zu", ret, local.size());
-                break;
-            }
-            DKRecordData localData;
-            local[0].GetRecordData(localData);
+            resultSet->GoToNextRow();
             if (record.GetIsDelete()) {
-                ret = PullRecordDelete(record, localData);
+                ret = PullRecordDelete(record, *resultSet);
             } else {
-                ret = PullRecordUpdate(record, localData, needPullThumbs);
+                ret = PullRecordUpdate(record, *resultSet, needPullThumbs);
             }
         } else {
             LOGE("recordId %s has multiple file in db!", record.GetRecordId().c_str());
         }
-
         if (ret == E_RDB) {
             break;
         }
@@ -117,6 +122,22 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
                            const DriveKit::DKError &)>>(ThumbDownloadCallback);
     MetaFileMgr::GetInstance().ClearAll();
     return ret;
+}
+
+static int GetDentryPathName(const string &fullPath, string &outPath, string &outFilename)
+{
+    const string sandboxPrefix = "/storage/media/local";
+    size_t pos = fullPath.find_first_of(sandboxPrefix);
+    size_t lpos = fullPath.find_last_of("/");
+    if (pos != 0 || pos == string::npos || lpos == string::npos) {
+        LOGE("invalid path %{private}s", fullPath.c_str());
+        return E_INVAL_ARG;
+    }
+
+    outPath = fullPath.substr(sandboxPrefix.length(), lpos - sandboxPrefix.length());
+    outPath = (outPath == "") ? "/" : outPath;
+    outFilename = fullPath.substr(lpos + 1);
+    return E_OK;
 }
 
 static int32_t DentryInsert(int userId, const DKRecord &record)
@@ -135,21 +156,15 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
         return E_INVAL_ARG;
     }
 
-    const string sandboxPrefix = "/storage/media/local";
-    string fullPath;
+    string fullPath, relativePath, fileName;
     if (prop[MEDIA_DATA_DB_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
         return E_INVAL_ARG;
     }
-    size_t pos = fullPath.find_first_of(sandboxPrefix);
-    size_t lpos = fullPath.find_last_of("/");
-    if (pos != 0 || pos == string::npos || lpos == string::npos) {
-        LOGE("invalid path %{private}s", fullPath.c_str());
+    if (GetDentryPathName(fullPath, relativePath, fileName) != E_OK) {
+        LOGE("split to dentry path failed, path:%s", fullPath.c_str());
         return E_INVAL_ARG;
     }
-    string relativePath = fullPath.substr(sandboxPrefix.length(), lpos - sandboxPrefix.length());
-    relativePath = (relativePath == "") ? "/" : relativePath;
-    string fileName = fullPath.substr(lpos + 1);
 
     int64_t isize, mtime;
     if (DataConvertor::GetLongComp(prop[MEDIA_DATA_DB_SIZE], isize) != E_OK) {
@@ -177,6 +192,8 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
 
 int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, bool &outPullThumbs)
 {
+    LOGI("insert of record %s", record.GetRecordId().c_str());
+
     /* check local file conflict */
     int ret = DentryInsert(userId_, record);
     if (ret != E_OK) {
@@ -205,16 +222,252 @@ int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, bool &outPullT
     return E_OK;
 }
 
-int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record,
-                                          const DKRecordData &local,
-                                          bool &outPullThumbs)
+static bool IsLocalDirty(NativeRdb::ResultSet &local)
 {
+    int dirty, trash;
+    int ret = DataConvertor::GetInt(MEDIA_DATA_DB_DIRTY, dirty, local);
+    if (ret != E_OK) {
+        LOGE("Get dirty int failed");
+        return false;
+    }
+    ret = DataConvertor::GetInt(MEDIA_DATA_DB_IS_TRASH, trash, local);
+    if (ret != E_OK) {
+        LOGE("Get dirty int failed");
+        return false;
+    }
+    return (dirty == static_cast<int32_t>(DirtyType::TYPE_MDIRTY)) ||
+           (dirty == static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) ||
+           (dirty == static_cast<int32_t>(DirtyType::TYPE_DELETED)) || (trash != 0);
+}
+
+constexpr unsigned HMDFS_IOC = 0xf2;
+constexpr unsigned WRITEOPEN_CMD = 0x02;
+#define HMDFS_IOC_GET_WRITEOPEN_CNT _IOR(HMDFS_IOC, WRITEOPEN_CMD, uint32_t)
+
+static string GetFilePath(NativeRdb::ResultSet &local)
+{
+    string filePath;
+    int ret = DataConvertor::GetString(MEDIA_DATA_DB_FILE_PATH, filePath, local);
+    if (ret != E_OK) {
+        LOGE("Get file path failed");
+        return "";
+    }
+    return filePath;
+}
+
+static string GetLocalPath(int userId, const string &filePath)
+{
+    const string sandboxPrefix = "/storage/media/local";
+    const string dfsPrefix = "/mnt/hmdfs/";
+    const string dfsSuffix = "/account/cloud_merge_view";
+    size_t pos = filePath.find_first_of(sandboxPrefix);
+    if (pos != 0 || pos == string::npos) {
+        LOGE("invalid path %{private}s", filePath.c_str());
+        return "";
+    }
+
+    string dfsPath = dfsPrefix + to_string(userId) + dfsSuffix + filePath.substr(sandboxPrefix.length());
+    return dfsPath;
+}
+
+static bool LocalWriteOpen(const string &dfsPath)
+{
+    int fd = open(dfsPath.c_str(), O_RDONLY);
+    if (fd < 0) {
+        LOGE("open failed, errno:%{public}d", errno);
+        return false;
+    }
+    uint32_t writeOpenCnt = 0;
+    int ret = ioctl(fd, HMDFS_IOC_GET_WRITEOPEN_CNT, &writeOpenCnt);
+    if (ret < 0) {
+        LOGE("ioctl failed, errno:%{public}d", errno);
+        return false;
+    }
+
+    close(fd);
+    return writeOpenCnt != 0;
+}
+
+int FileDataHandler::SetRetry(const string &recordId)
+{
+    LOGI("set retry of record %s", recordId.c_str());
+    int updateRows;
+    ValuesBucket values;
+    values.PutInt(MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(DirtyType::TYPE_RETRY));
+
+    string whereClause = MEDIA_DATA_DB_CLOUD_ID + " = ?";
+    int32_t ret = Update(updateRows, values, whereClause, {recordId});
+    if (ret != E_OK) {
+        LOGE("update retry flag failed, ret=%{public}d", ret);
+        return E_RDB;
+    }
     return E_OK;
 }
 
-int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, const DKRecordData &local)
+static bool FileIsLocal(NativeRdb::ResultSet &local)
 {
+    int position = 0;
+    int ret = DataConvertor::GetInt(MEDIA_DATA_DB_POSITION, position, local);
+    if (ret != E_OK) {
+        LOGE("Get local position failed");
+        return E_INVAL_ARG;
+    }
+
+    return !!(position & 1);
+}
+
+static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, bool &changed)
+{
+    // get local mtime
+    int64_t localMtime = 0;
+    int ret = DataConvertor::GetLong(MEDIA_DATA_DB_DATE_MODIFIED, localMtime, local);
+    if (ret != E_OK) {
+        LOGE("Get local mtime failed");
+        return E_INVAL_ARG;
+    }
+
+    // get record mtime
+    int64_t cloudMtime = 0;
+    DKRecordData datas;
+    record.GetRecordData(datas);
+    if (datas.find(FILE_PROPERTIES) == datas.end()) {
+        LOGE("record data cannot find properties");
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap prop;
+    datas[FILE_PROPERTIES].GetRecordMap(prop);
+    if (prop.find(MEDIA_DATA_DB_DATE_MODIFIED) == prop.end() ||
+        DataConvertor::GetLongComp(prop[MEDIA_DATA_DB_DATE_MODIFIED], cloudMtime) != E_OK) {
+        LOGE("bad mtime in record");
+        return E_INVAL_ARG;
+    }
+
+    LOGI("cloudMtime %{public}llu, localMtime %{public}llu", (unsigned long long)cloudMtime, (unsigned long long)localMtime);
+    changed = !(cloudMtime == localMtime);
     return E_OK;
+}
+
+int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record, NativeRdb::ResultSet &local, bool &outPullThumbs)
+{
+    LOGI("update of record %s", record.GetRecordId().c_str());
+    if (IsLocalDirty(local)) {
+        LOGI("local record dirty, ignore cloud update");
+        return E_OK;
+    }
+
+    int ret = E_OK;
+    if (FileIsLocal(local)) {
+        string filePath = GetFilePath(local);
+        string localPath = GetLocalPath(userId_, filePath);
+        if (LocalWriteOpen(localPath)) {
+            return SetRetry(record.GetRecordId());
+        }
+
+        bool mtimeChanged = false;
+        if (IsMtimeChanged(record, local, mtimeChanged) != E_OK) {
+            return E_INVAL_ARG;
+        }
+        if (mtimeChanged) {
+            LOGI("cloud file DATA changed, %s", record.GetRecordId().c_str());
+            ret = unlink(localPath.c_str());
+            if (ret != 0) {
+                LOGE("unlink of %s failed ,errno %{public}d", localPath.c_str(), errno);
+            }
+            DentryInsert(userId_, record);
+
+            // delete thumbnail
+            outPullThumbs = true;
+        } else {
+            LOGI("cloud file META changed, %s", record.GetRecordId().c_str());
+        }
+    }
+
+    /* update rdb */
+    ValuesBucket values;
+    createConvertor_.RecordToValueBucket(record, values);
+    int32_t changedRows;
+    string whereClause = MEDIA_DATA_DB_CLOUD_ID + " = ?";
+    ret = Update(changedRows, values, whereClause, {record.GetRecordId()});
+    if (ret != E_OK) {
+        LOGE("rdb update failed, err=%{public}d", ret);
+        return E_RDB;
+    }
+
+    LOGI("update of record success");
+    return E_OK;
+}
+
+
+int FileDataHandler::RecycleFile(const string &recordId)
+{
+    LOGI("recycle of record %s", recordId.c_str());
+    ValuesBucket values;
+    values.PutInt(MEDIA_DATA_DB_IS_TRASH, 1);
+    int32_t changedRows;
+    string whereClause = MEDIA_DATA_DB_CLOUD_ID + " = ?";
+    int ret = Update(changedRows, values, whereClause, {recordId});
+    if (ret != E_OK) {
+        LOGE("rdb update failed, err=%{public}d", ret);
+        return E_RDB;
+    }
+
+    // do force delete instead, before medialibrary API10
+    int32_t deletedRows;
+    ret = Delete(deletedRows, whereClause, {recordId});
+    if (ret != 0) {
+        LOGE("delete in rdb failed, ret:%{public}d", ret);
+        return E_RDB;
+    }
+    LOGI("force delete instead");
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::ResultSet &local)
+{
+    LOGI("delete of record %s", record.GetRecordId().c_str());
+
+    if (IsLocalDirty(local)) {
+        LOGI("local record dirty, ignore cloud delete");
+        return E_OK;
+    }
+    string filePath = GetFilePath(local);
+    string localPath = GetLocalPath(userId_, filePath);
+
+    int ret = E_OK;
+    if (FileIsLocal(local)) {
+        if (LocalWriteOpen(localPath)) {
+            return SetRetry(record.GetRecordId());
+        }
+
+        ret = RecycleFile(record.GetRecordId());
+    } else {
+        // delete dentry
+        string relativePath, fileName;
+        if (GetDentryPathName(filePath, relativePath, fileName) != E_OK) {
+            LOGE("split to dentry path failed, path:%s", filePath.c_str());
+            return E_INVAL_ARG;
+        }
+        auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
+        MetaBase mBase(fileName);
+        ret = mFile->DoRemove(mBase);
+        if (ret != E_OK) {
+            LOGE("remove dentry failed, ret:%{public}d", ret);
+        }
+
+        // delete rdb
+        int32_t deletedRows;
+        string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
+        ret = Delete(deletedRows, whereClause, {record.GetRecordId()});
+        if (ret != 0) {
+            LOGE("delete in rdb failed, ret:%{public}d", ret);
+        }
+
+        // delete thumbnail
+        LOGI("force delete success");
+    }
+
+    return ret;
 }
 
 static std::string GetParentDir(const std::string &path)
