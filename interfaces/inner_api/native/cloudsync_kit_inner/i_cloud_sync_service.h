@@ -33,6 +33,7 @@ public:
         SERVICE_CMD_NOTIFY_DATA_CHANGE,
         SERVICE_CMD_ENABLE_CLOUD,
         SERVICE_CMD_DISABLE_CLOUD,
+        SERVICE_CMD_CLEAN,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudSyncService")
@@ -41,6 +42,7 @@ public:
     virtual int32_t StartSyncInner(bool forceFlag) = 0;
     virtual int32_t StopSyncInner() = 0;
     virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
+    virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;
     virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
     virtual int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) = 0;
     virtual int32_t DisableCloud(const std::string &accoutId) = 0;

@@ -40,9 +40,39 @@ bool SwitchDataObj::Marshalling(Parcel &parcel) const
     return true;
 }
 
+bool CleanOptions::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteUint32(appActionsData.size())) {
+        LOGE("failed to write appActions data size");
+        return false;
+    }
+    for (const auto& it : appActionsData) {
+        if (!parcel.WriteString(it.first)) {
+            LOGE("failed to write key");
+            return false;
+        }
+        if (!parcel.WriteInt32(it.second)) {
+            LOGE("failed to write value");
+            return false;
+        }
+    }
+    return true;
+}
+
 SwitchDataObj *SwitchDataObj::Unmarshalling(Parcel &parcel)
 {
     SwitchDataObj *info = new (std::nothrow) SwitchDataObj();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+CleanOptions *CleanOptions::Unmarshalling(Parcel &parcel)
+{
+    CleanOptions *info = new (std::nothrow) CleanOptions();
     if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
         LOGW("read from parcel failed");
         delete info;
@@ -75,6 +105,34 @@ bool SwitchDataObj::ReadFromParcel(Parcel &parcel)
             return false;
         }
         switchData.emplace(key, value);
+    }
+    return true;
+}
+
+bool CleanOptions::ReadFromParcel(Parcel &parcel)
+{
+    appActionsData.clear();
+    uint32_t size = 0;
+    if (!parcel.ReadUint32(size)) {
+        LOGE("fail to read appActions data size");
+        return false;
+    }
+    if (size > MAX_MAP_SIZE) {
+        LOGE("appActions data is oversize, the limit is %{public}d", MAX_MAP_SIZE);
+        return false;
+    }
+    for (uint32_t i = 0; i < size; ++i) {
+        std::string key;
+        if (!parcel.ReadString(key)) {
+            LOGE("fail to read appActions data key");
+            return false;
+        }
+        int value = 0;
+        if (!parcel.ReadInt32(value)) {
+            LOGE("fail to read appActions data value");
+            return false;
+        }
+        appActionsData.emplace(key, value);
     }
     return true;
 }

@@ -19,5 +19,7 @@
 #include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
+void CloudSyncManagerExport(napi_env env, napi_value exports);
+void InitENumACtions(napi_env env, napi_value exports);
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_MANAGER_NAPI_H

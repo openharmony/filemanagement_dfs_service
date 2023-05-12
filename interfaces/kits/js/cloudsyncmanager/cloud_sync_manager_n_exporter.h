@@ -20,6 +20,7 @@
 
 namespace OHOS::FileManagement::CloudSync {
 napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info);
+napi_value Clean(napi_env env, napi_callback_info info);
 napi_value NotifyDataChange(napi_env env, napi_callback_info info);
 napi_value EnableCloud(napi_env env, napi_callback_info info);
 napi_value DisableCloud(napi_env env, napi_callback_info info);
