@@ -45,6 +45,30 @@ void FileDataHandler::GetFetchCondition(FetchCondition &cond)
     cond.desiredKeys = desiredKeys_;
 }
 
+int32_t FileDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &records)
+{
+    NativeRdb::AbsRdbPredicates retryPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    retryPredicates.SetWhereClause(MEDIA_DATA_DB_DIRTY + " = ? AND " + MEDIA_DATA_DB_IS_TRASH + " = ?");
+    retryPredicates.SetWhereArgs({to_string(static_cast<int32_t>(DirtyType::TYPE_RETRY)), "0"});
+    retryPredicates.Limit(LIMIT_SIZE);
+
+    auto results = Query(retryPredicates, {MEDIA_DATA_DB_CLOUD_ID});
+    if (results == nullptr) {
+        LOGE("get nullptr modified result");
+        return E_RDB;
+    }
+
+    while (results->GoToNextRow() == 0) {
+        string record;
+        int ret = DataConvertor::GetString(MEDIA_DATA_DB_CLOUD_ID, record, *results);
+        if (ret == E_OK) {
+            records.emplace_back(record);
+        }
+    }
+
+    return E_OK;
+}
+
 static void ThumbDownloadCallback(std::shared_ptr<DKContext> context,
                                   std::shared_ptr<const DKDatabase> database,
                                   const std::map<DKDownloadAsset, DKDownloadResult> &resultMap,
