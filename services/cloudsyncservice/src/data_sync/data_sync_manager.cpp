@@ -46,20 +46,19 @@ int32_t DataSyncManager::TriggerStartSync(const std::string bundleName,
         return E_INVAL_ARG;
     }
 
+    std::string appBundleName(it->second);
     /* get sdk helper */
     auto sdkHelper = std::make_shared<SdkHelper>();
-    auto ret = sdkHelper->Init(userId, bundleName);
+    auto ret = sdkHelper->Init(userId, appBundleName);
     if (ret != E_OK) {
         LOGE("get sdk helper err %{public}d", ret);
         return ret;
     }
 
-    std::string appBundleName(it->second);
     ret = IsSkipSync(appBundleName, userId);
     if (ret != E_OK) {
         return ret;
     }
-
     auto dataSyncer = GetDataSyncer(appBundleName, userId);
     if (!dataSyncer) {
         LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
