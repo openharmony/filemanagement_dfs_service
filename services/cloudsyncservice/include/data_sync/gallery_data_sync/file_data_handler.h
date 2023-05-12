@@ -71,16 +71,17 @@ private:
 
     /* create */
     int32_t createOffset_ = 0;
-    FileDataConvertor createConvertor_ = { userId_, bundleName_, true };
+    FileDataConvertor createConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_CREATE };
 
     /* delete */
     int32_t deleteOffset_ = 0;
-    FileDataConvertor deleteConvertor_ = { userId_, bundleName_, false };
+    FileDataConvertor deleteConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DELETE };
 
     /* update */
-    int32_t metaUpdateOffset_ = 0;
-    int32_t fileUpdateOffset_ = 0;
-    FileDataConvertor updateConvertor_ = { userId_, bundleName_, false };
+    int32_t mdirtyOffset_ = 0;
+    int32_t fdirtyOffset_ = 0;
+    FileDataConvertor mdirtyConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_METADATA_MODIFY };
+    FileDataConvertor fdirtyConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DATA_MODIFY };
 
     /* pull operations */
     int32_t PullRecordInsert(const DriveKit::DKRecord &record, bool &outPullThumbs);
@@ -93,7 +94,7 @@ private:
                           std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
 
     /* db result to record */
-    FileDataConvertor localConvertor_ = { userId_, bundleName_, false };
+    FileDataConvertor localConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DOWNLOAD };
 };
 } // namespace CloudSync
 } // namespace FileManagement

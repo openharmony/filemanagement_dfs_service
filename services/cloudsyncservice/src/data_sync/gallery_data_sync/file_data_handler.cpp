@@ -351,7 +351,7 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
         " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
     updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)),
         "0", to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
-    updatePredicates.Offset(metaUpdateOffset_);
+    updatePredicates.Offset(mdirtyOffset_);
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -361,10 +361,10 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
         return E_RDB;
     }
     /* update offset */
-    metaUpdateOffset_ += LIMIT_SIZE;
+    mdirtyOffset_ += LIMIT_SIZE;
 
     /* results to records */
-    int ret = updateConvertor_.ResultSetToRecords(move(results), records);
+    int ret = mdirtyConvertor_.ResultSetToRecords(move(results), records);
     if (ret != 0) {
         LOGE("result set to records err %{public}d", ret);
         return ret;
@@ -382,7 +382,7 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
         " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
     updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)),
         "0", to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
-    updatePredicates.Offset(fileUpdateOffset_);
+    updatePredicates.Offset(fdirtyOffset_);
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -392,10 +392,10 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
         return E_RDB;
     }
     /* update offset */
-    fileUpdateOffset_ += LIMIT_SIZE;
+    fdirtyOffset_ += LIMIT_SIZE;
 
     /* results to records */
-    int ret = updateConvertor_.ResultSetToRecords(move(results), records);
+    int ret = fdirtyConvertor_.ResultSetToRecords(move(results), records);
     if (ret != 0) {
         LOGE("result set to records err %{public}d", ret);
         return ret;
@@ -512,7 +512,7 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
         DKRecord record = result.GetDKRecord();
         /* record to value bucket */
         ValuesBucket valuesBucket;
-        int32_t ret = updateConvertor_.RecordToValueBucket(record, valuesBucket);
+        int32_t ret = fdirtyConvertor_.RecordToValueBucket(record, valuesBucket);
         if (ret != E_OK) {
             LOGE("record to value bucket err %{public}d", ret);
             continue;
@@ -538,8 +538,8 @@ void FileDataHandler::Reset()
 {
     createOffset_ = 0;
     deleteOffset_ = 0;
-    metaUpdateOffset_ = 0;
-    fileUpdateOffset_ = 0;
+    mdirtyOffset_ = 0;
+    fdirtyOffset_ = 0;
 }
 } // namespace CloudSync
 } // namespace FileManagement

@@ -39,6 +39,10 @@ string FileDataConvertor::sandboxPrefix_ = "/storage/media/local/files";
 string FileDataConvertor::prefixLCD_ = "/mnt/hmdfs/";
 string FileDataConvertor::suffixLCD_ = "/account/device_view/local/files";
 
+/* thumb */
+string FileDataConvertor::thumb_suffix_ = "THMB";
+string FileDataConvertor::lcd_suffix_ = "LCD";
+
 /* basic map */
 unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRecordData &data,
         NativeRdb::ResultSet &resultSet)> FileDataConvertor::map_ = {
@@ -76,8 +80,8 @@ unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRe
     { FILE_GENERAL, &FileDataConvertor::HandleGeneral }
 };
 
-FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, bool isNew) : userId_(userId),
-    bundleName_(bundleName), isNew_(isNew)
+FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type) : userId_(userId),
+    bundleName_(bundleName), type_(type)
 {
 }
 
@@ -97,7 +101,7 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
 
     /* control info */
     record.SetRecordType(recordType_);
-    if (isNew_) {
+    if (type_ == FILE_CREATE) {
         record.SetNewCreate(true);
     } else {
         int32_t ret = FillRecordId(record, resultSet);
@@ -131,7 +135,7 @@ int32_t FileDataConvertor::HandleProperties(string &key, DriveKit::DKRecordData 
 int32_t FileDataConvertor::HandleAttachments(std::string &key, DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-    if (!isNew_) {
+    if (type_ != FILE_CREATE && type_ != FILE_DATA_MODIFY) {
         return E_OK;
     }
 
@@ -150,13 +154,13 @@ int32_t FileDataConvertor::HandleAttachments(std::string &key, DriveKit::DKRecor
         return ret;
     }
     /* thumb */
-    ret = HandleThumbnail(attachments, path, resultSet);
+    ret = HandleThumbnail(attachments, path);
     if (ret != E_OK) {
         LOGE("handle thumbnail err %{public}d", ret);
         return ret;
     }
     /* lcd */
-    ret = HandleLcd(attachments, path, resultSet);
+    ret = HandleLcd(attachments, path);
     if (ret != E_OK) {
         LOGE("handle lcd err %{public}d", ret);
         return ret;
@@ -419,18 +423,11 @@ int32_t FileDataConvertor::HandleContent(DriveKit::DKRecordFieldList &list,
 }
 
 int32_t FileDataConvertor::HandleThumbnail(DriveKit::DKRecordFieldList &list,
-    string &path, NativeRdb::ResultSet &resultSet)
+    string &path)
 {
-    /* key */
-    string key;
-    int32_t ret = GetString(MEDIA_DATA_DB_THUMBNAIL, key, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-
     /* asset */
     DriveKit::DKAsset content;
-    content.uri = GetThumbPath(path, key);
+    content.uri = GetThumbPath(path, thumb_suffix_);
     content.assetName = FILE_THUMBNAIL;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
     list.push_back(DriveKit::DKRecordField(content));
@@ -438,18 +435,11 @@ int32_t FileDataConvertor::HandleThumbnail(DriveKit::DKRecordFieldList &list,
 }
 
 int32_t FileDataConvertor::HandleLcd(DriveKit::DKRecordFieldList &list,
-    string &path, NativeRdb::ResultSet &resultSet)
+    string &path)
 {
-    /* key */
-    string key;
-    int32_t ret = GetString(MEDIA_DATA_DB_LCD, key, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-
     /* asset */
     DriveKit::DKAsset content;
-    content.uri = GetThumbPath(path, key);
+    content.uri = GetThumbPath(path, lcd_suffix_);
     content.assetName = FILE_LCD;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
     list.push_back(DriveKit::DKRecordField(content));
@@ -463,8 +453,8 @@ string FileDataConvertor::GetLowerPath(const std::string &path)
         LOGE("invalid path %{private}s", path.c_str());
         return "";
     }
-    return prefix_ + to_string(userId_) + suffix_ +
-        path.substr(pos + sandboxPrefix_.size());
+    return prefix_ + to_string(userId_) + suffix_ + path.substr(pos +
+        sandboxPrefix_.size());
 }
 
 
