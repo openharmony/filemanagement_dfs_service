@@ -65,6 +65,7 @@ const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::MEDIA_DATA_DB_FILE_PATH,
     Media::MEDIA_DATA_DB_SIZE,
     Media::MEDIA_DATA_DB_DATE_MODIFIED,
+    Media::MEDIA_DATA_DB_META_DATE_MODIFIED,
     Media::MEDIA_DATA_DB_DATE_ADDED,
     Media::MEDIA_DATA_DB_MIME_TYPE,
     Media::MEDIA_DATA_DB_TITLE,
@@ -85,6 +86,7 @@ const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
     DataType::STRING,       /* data */
     DataType::LONG,         /* size */
     DataType::LONG,         /* date_modified */
+    DataType::LONG,         /* meta_date_modified */
     DataType::LONG,         /* date_added */
     DataType::STRING,       /* mime_type */
     DataType::STRING,       /* title */

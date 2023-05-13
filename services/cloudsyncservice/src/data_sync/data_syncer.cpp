@@ -581,7 +581,7 @@ void DataSyncer::OnDeleteRecords(shared_ptr<DKContext> context,
     shared_ptr<const DKDatabase> database,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> map, const DKError &err)
 {
-    LOGI("%{private}d %{private}s on create records %{public}zu", userId_,
+    LOGI("%{private}d %{private}s on delete records %{public}zu", userId_,
         bundleName_.c_str(), map->size());
 
     auto ctx = static_pointer_cast<TaskContext>(context);
