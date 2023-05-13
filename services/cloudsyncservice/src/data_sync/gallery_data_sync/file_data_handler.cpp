@@ -208,6 +208,7 @@ int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, bool &outPullT
         LOGE("record to valuebucket failed, ret=%{public}d", ret);
         return ret;
     }
+    values.PutInt(Media::MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
     values.PutInt(Media::MEDIA_DATA_DB_POSITION, POSITION_CLOUD);
     values.PutString(Media::MEDIA_DATA_DB_CLOUD_ID, record.GetRecordId());
     ret = Insert(rowId, values);
