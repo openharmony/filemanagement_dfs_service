@@ -23,6 +23,11 @@ namespace FileManagement {
 namespace CloudSync {
 using namespace std;
 
+const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
+{
+    return "";
+}
+
 GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t userId)
     : DataSyncer(bundleName, userId)
 {
@@ -32,6 +37,7 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
     config.SetBundleName(BUNDLE_NAME);
     config.SetReadConSize(CONNECT_SIZE);
     config.SetSecurityLevel(NativeRdb::SecurityLevel::S3);
+    config.SetScalarFunction("cloud_sync_func", 0, CloudSyncTriggerFunc);
 
     /*
      * Just pass in any value but zero for parameter @version in GetRdbStore,

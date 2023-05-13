@@ -111,6 +111,7 @@ void TaskManager::CompleteTask(int32_t id)
     if (taskList_.empty()) {
         if (stopFlag_) {
             /* if it has been stopped, notify the blocking caller */
+            stopFlag_ = false;
             cv_.notify_all();
         } else {
             lock.unlock();
@@ -125,8 +126,11 @@ bool TaskManager::StopAndWaitFor()
 {
     unique_lock<mutex> lock(mutex_);
     LOGI("task manager stop");
-    stopFlag_ = true;
+    if (taskList_.empty()) {
+        return true;
+    }
 
+    stopFlag_ = true;
     return cv_.wait_for(lock, chrono::seconds(WAIT_FOR_SECOND), [this] {
         return taskList_.empty();
     });
