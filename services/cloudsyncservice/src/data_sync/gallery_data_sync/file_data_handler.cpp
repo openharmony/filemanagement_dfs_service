@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include "dfs_error.h"
+#include "directory_ex.h"
 #include "dk_assets_downloader.h"
 #include "utils_log.h"
 #include "gallery_file_const.h"
@@ -538,21 +539,18 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     }
     DKRecordFieldMap prop;
     data[FILE_PROPERTIES].GetRecordMap(prop);
+
     if (prop.find(MEDIA_DATA_DB_FILE_PATH) == prop.end()) {
         LOGE("record prop cannot find file path");
         return;
     }
     string path;
     prop[MEDIA_DATA_DB_FILE_PATH].GetString(path);
-    if (prop.find(fieldKey) == prop.end()) {
-        LOGE("record prop cannot find fieldKey");
-        return;
-    }
-    string key;
-    prop[fieldKey].GetString(key);
-    downloadAsset.downLoadPath = createConvertor_.GetThumbPathDownloadLCD(path, key);
+    const string &suffix = fieldKey == "lcd" ? LCD_SUFFIX : THUMB_SUFFIX;
+    downloadAsset.downLoadPath = createConvertor_.GetThumbPath(path, suffix);
     downloadAsset.asset.assetName = GetFileName(downloadAsset.downLoadPath);
     downloadAsset.downLoadPath = GetParentDir(downloadAsset.downLoadPath);
+    ForceCreateDirectory(downloadAsset.downLoadPath);
     assetsToDownload.push_back(downloadAsset);
 }
 

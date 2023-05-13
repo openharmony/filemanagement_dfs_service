@@ -23,6 +23,11 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+
+/* thumb */
+const std::string THUMB_SUFFIX = "THMB";
+const std::string LCD_SUFFIX = "LCD";
+
 class FileDataConvertor : public DataConvertor {
 public:
     enum OperationType {
@@ -40,7 +45,6 @@ public:
 
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
     std::string GetThumbPath(const std::string &path, const std::string &key);
-    std::string GetThumbPathDownloadLCD(const std::string &path, const std::string &key);
 
 private:
     /* record id */

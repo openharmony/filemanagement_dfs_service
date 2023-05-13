@@ -143,7 +143,7 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
 
     shared_ptr<TaskContext> context = make_shared<TaskContext>(handler);
 
-    AsyncRun(context, &DataSyncer::PullRetryRecords);
+    DataSyncer::PullRetryRecords(context);
 
     /* Full synchronization and incremental synchronization */
     int32_t ret = E_OK;
@@ -258,6 +258,11 @@ void EmptyDownLoadAssetsprogress(std::shared_ptr<DKContext>, DKDownloadAsset, To
 int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
     std::shared_ptr<const DKDatabase> database, std::shared_ptr<std::vector<DKRecord>> records)
 {
+    if (records->size() == 0) {
+        LOGI("no records to handle");
+        return E_OK;
+    }
+
     DKDownloadId id;
     vector<DKDownloadAsset> assetsToDownload;
     shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
@@ -363,12 +368,12 @@ void DataSyncer::PullRetryRecords(shared_ptr<TaskContext> context)
     }
 
     LOGI("retry records count: %{public}u", static_cast<uint32_t>(records.size()));
-    auto callback = AsyncCallback(&DataSyncer::OnFetchRetryRecord);
-    if (callback == nullptr) {
-        LOGE("wrap on fetch records fail");
-        return;
-    }
     for (auto it : records) {
+        auto callback = AsyncCallback(&DataSyncer::OnFetchRetryRecord);
+        if (callback == nullptr) {
+            LOGE("wrap on fetch records fail");
+            continue;
+        }
         int32_t ret = sdkHelper_->FetchRecordWithId(context, it, callback);
         if (ret != E_OK) {
             LOGE("sdk fetch records err %{public}d", ret);
