@@ -607,7 +607,7 @@ int32_t MetaFile::DoLookup(MetaBase &base)
     base.size = de->size;
     base.mtime = de->mtime;
     base.mode = de->mode;
-    base.cloudId = std::string(reinterpret_cast<const char *>(de->recordId), CLOUD_RECORD_ID_LEN);
+    base.cloudId = std::string(reinterpret_cast<const char *>(de->recordId), CLOUD_RECORD_ID_LEN - 1);
 
     return E_OK;
 }
