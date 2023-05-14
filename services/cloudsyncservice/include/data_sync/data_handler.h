@@ -36,6 +36,7 @@ public:
                                    std::shared_ptr<const DriveKit::DKDatabase>,
                                    const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
                                    const DriveKit::DKError &)>> &resultCallback) = 0;
+    virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) = 0;
 
     /* upload */
     virtual int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) = 0;

@@ -143,6 +143,8 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
 
     shared_ptr<TaskContext> context = make_shared<TaskContext>(handler);
 
+    DataSyncer::PullRetryRecords(context);
+
     /* Full synchronization and incremental synchronization */
     int32_t ret = E_OK;
     if (startCursor_.empty()) {
@@ -253,20 +255,15 @@ void EmptyDownLoadAssetsprogress(std::shared_ptr<DKContext>, DKDownloadAsset, To
     return;
 }
 
-void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::shared_ptr<const DKDatabase> database,
-    std::shared_ptr<std::vector<DKRecord>> records, DKQueryCursor nextCursor, const DKError &err)
+int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
+    std::shared_ptr<const DKDatabase> database, std::shared_ptr<std::vector<DKRecord>> records)
 {
-    LOGI("%{private}d %{private}s on fetch records", userId_, bundleName_.c_str());
-    DKDownloadId id;
-    auto ctx = static_pointer_cast<TaskContext>(context);
-
-    /* update local */
-    auto handler = ctx->GetHandler();
-    if (handler == nullptr) {
-        LOGE("context get handler err");
-        return;
+    if (records->size() == 0) {
+        LOGI("no records to handle");
+        return E_OK;
     }
 
+    DKDownloadId id;
     vector<DKDownloadAsset> assetsToDownload;
     shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
                            std::shared_ptr<const DriveKit::DKDatabase>,
@@ -275,17 +272,36 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
     auto downloadProcessCallback = 
         std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(
             EmptyDownLoadAssetsprogress);
+
+    auto ctx = static_pointer_cast<TaskContext>(context);
+    auto handler = ctx->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return E_CONTEXT;
+    }
     int32_t ret = handler->OnFetchRecords(records, assetsToDownload, downloadResultCallback);
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
-        return;
+        return ret;
     }
 
     auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id,
                                              downloadResultCallback, context, database, downloadProcessCallback);
     ret = AsyncRun(static_pointer_cast<TaskContext>(dctx), &DataSyncer::DownloadAssets);
     if (ret != E_OK) {
-        LOGE("asyn run DownloadAssets err %{public}d", ret);
+        LOGE("async run DownloadAssets err %{public}d", ret);
+    }
+    return E_OK;
+}
+
+void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::shared_ptr<const DKDatabase> database,
+    std::shared_ptr<std::vector<DKRecord>> records, DKQueryCursor nextCursor, const DKError &err)
+{
+    LOGI("%{private}d %{private}s on fetch records", userId_, bundleName_.c_str());
+    auto ctx = static_pointer_cast<TaskContext>(context);
+    if (HandleOnFetchRecords(context, database, records) != E_OK) {
+        LOGE("HandleOnFetchRecords failed");
+        return;
     }
 
     /* pull more */
@@ -300,7 +316,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
     }
     nextCursor_ = nextCursor;
     cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
-    ret = AsyncRun(ctx, &DataSyncer::PullRecords);
+    int ret = AsyncRun(ctx, &DataSyncer::PullRecords);
     if (ret != E_OK) {
         LOGE("asyn run pull records err %{public}d", ret);
     }
@@ -312,35 +328,10 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
     bool hasMore, const DKError &err)
 {
     LOGI("%{private}d %{private}s on fetch database changes", userId_, bundleName_.c_str());
-    DKDownloadId id;
     auto ctx = static_pointer_cast<TaskContext>(context);
-
-    /* update local */
-    auto handler = ctx->GetHandler();
-    if (handler == nullptr) {
-        LOGE("context get handler err");
+    if (HandleOnFetchRecords(context, database, records) != E_OK) {
+        LOGE("HandleOnFetchRecords failed");
         return;
-    }
-    
-    vector<DKDownloadAsset> assetsToDownload;
-    shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                           std::shared_ptr<const DriveKit::DKDatabase>,
-                           const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                           const DriveKit::DKError &)>> downloadResultCallback = nullptr;
-    auto downloadProcessCallback = 
-        std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(
-            EmptyDownLoadAssetsprogress);
-    int32_t ret = handler->OnFetchRecords(records, assetsToDownload, downloadResultCallback);
-    if (ret != E_OK) {
-        LOGE("handler on fetch database changes err %{public}d", ret);
-        return;
-    }
-
-    auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id,
-                                             downloadResultCallback, context, database, downloadProcessCallback);
-    ret = AsyncRun(static_pointer_cast<TaskContext>(dctx), &DataSyncer::DownloadAssets);
-    if (ret != E_OK) {
-        LOGE("asyn run DownloadAssets err %{public}d", ret);
     }
 
     /* pull more */
@@ -354,10 +345,54 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
     }
     nextCursor_ = nextCursor;
     cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
-    ret = AsyncRun(ctx, &DataSyncer::PullDatabaseChanges);
+    int ret = AsyncRun(ctx, &DataSyncer::PullDatabaseChanges);
     if (ret != E_OK) {
         LOGE("asyn run pull database changes err %{public}d", ret);
     }
+}
+
+void DataSyncer::PullRetryRecords(shared_ptr<TaskContext> context)
+{
+    auto ctx = static_pointer_cast<TaskContext>(context);
+    auto handler = ctx->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return;
+    }
+
+    vector<DKRecordId> records;
+    int32_t ret = handler->GetRetryRecords(records);
+    if (ret != E_OK) {
+        LOGE("get retry records err %{public}d", ret);
+        return;
+    }
+
+    LOGI("retry records count: %{public}u", static_cast<uint32_t>(records.size()));
+    for (auto it : records) {
+        auto callback = AsyncCallback(&DataSyncer::OnFetchRetryRecord);
+        if (callback == nullptr) {
+            LOGE("wrap on fetch records fail");
+            continue;
+        }
+        int32_t ret = sdkHelper_->FetchRecordWithId(context, it, callback);
+        if (ret != E_OK) {
+            LOGE("sdk fetch records err %{public}d", ret);
+        }
+    }
+}
+
+void DataSyncer::OnFetchRetryRecord(shared_ptr<DKContext> context, shared_ptr<DKDatabase> database,
+    DKRecordId recordId, const DKRecord &record, const DKError &error)
+{
+    if (error.HasError()) {
+        LOGE("get record error");
+        return;
+    }
+    auto records = make_shared<std::vector<DKRecord>>();
+    records->push_back(record);
+
+    LOGI("handle retry record : %s", record.GetRecordId().c_str());
+    HandleOnFetchRecords(context, database, records);
 }
 
 int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)

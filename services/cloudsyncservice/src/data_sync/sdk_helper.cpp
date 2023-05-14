@@ -85,6 +85,26 @@ int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context, DriveKi
     return E_OK;
 }
 
+int32_t SdkHelper::FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKRecordId recordId,
+    FetchRecordCallback callback)
+{
+    auto ctx = static_pointer_cast<TaskContext>(context);
+    auto handler = ctx->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return E_INVAL_ARG;
+    }
+    FetchCondition cond;
+    handler->GetFetchCondition(cond);
+    auto err =
+        database_->FetchRecordWithId(context, cond.recordType, recordId, cond.desiredKeys, callback);
+    if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("drivekit fetch records err %{public}d", err);
+        return E_CLOUD_SDK;
+    }
+    return E_OK;
+}
+
 int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor cursor,
     std::function<void(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,

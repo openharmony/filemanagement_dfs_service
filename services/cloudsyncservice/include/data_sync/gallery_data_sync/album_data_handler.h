@@ -36,6 +36,7 @@ public:
                            std::shared_ptr<const DriveKit::DKDatabase>,
                            const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
                            const DriveKit::DKError &)>> &downloadResultCallback) override;
+    virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
 
     /* upload */
     virtual int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;

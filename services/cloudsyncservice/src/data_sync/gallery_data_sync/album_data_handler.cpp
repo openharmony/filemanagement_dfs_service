@@ -50,6 +50,11 @@ int32_t AlbumDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &rec
     return E_OK;
 }
 
+int32_t AlbumDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &records)
+{
+    return E_OK;
+}
+
 int32_t AlbumDataHandler::GetCreatedRecords(vector<DKRecord> &records)
 {
     return E_OK;

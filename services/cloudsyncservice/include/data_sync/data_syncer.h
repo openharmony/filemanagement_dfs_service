@@ -77,12 +77,17 @@ private:
     /* download */
     void PullRecords(std::shared_ptr<TaskContext> context);
     void PullDatabaseChanges(std::shared_ptr<TaskContext> context);
+    void PullRetryRecords(std::shared_ptr<TaskContext> context);
     void DownloadAssets(std::shared_ptr<TaskContext> context);
     /* dowload callback */
     void OnFetchRecords(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
         const DriveKit::DKError &);
-
+    void OnFetchRetryRecord(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<DriveKit::DKDatabase>,
+        DriveKit::DKRecordId, const DriveKit::DKRecord &, const DriveKit::DKError &);
+    int HandleOnFetchRecords(const std::shared_ptr<DriveKit::DKContext> context,
+        std::shared_ptr<const DriveKit::DKDatabase> database,
+        std::shared_ptr<std::vector<DriveKit::DKRecord>> records);
     void OnFetchDatabaseChanges(const std::shared_ptr<DriveKit::DKContext>,
         std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
