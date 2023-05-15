@@ -695,7 +695,7 @@ int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::
         return ret;
     }
     for (const auto &record : records) {
-         AppendToDownload(record, "content", outAssetsToDownload);
+        AppendToDownload(record, "content", outAssetsToDownload);
     }
 
     return E_OK;

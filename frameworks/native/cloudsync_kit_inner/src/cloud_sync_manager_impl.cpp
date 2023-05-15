@@ -91,8 +91,9 @@ int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, cons
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::DownloadFile(const std::string &url, const std::shared_ptr<CloudProcessCallback> processCallback,
-                                 const std::shared_ptr<CloudDownloadedCallback> downloadedCallback)
+int32_t CloudSyncManagerImpl::DownloadFile(const std::string &url,
+    const std::shared_ptr<CloudProcessCallback> processCallback,
+    const std::shared_ptr<CloudDownloadedCallback> downloadedCallback)
 {
     LOGI("Download File start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();

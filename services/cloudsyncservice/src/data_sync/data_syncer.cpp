@@ -343,27 +343,29 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
         return ret;
     }
 
-    auto downloadResultCallback = [downloadedCallback](std::shared_ptr<DriveKit::DKContext> context,
-         std::shared_ptr<const DriveKit::DKDatabase> database,
-         const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &results,
-         const DriveKit::DKError &err) {
-	     LOGI("download result %{public}d", err.serverErrorCode);
-	     if (downloadedCallback != nullptr) {
-                 downloadedCallback->OnDownloadedResult(err.serverErrorCode);
-	     }
-	 };
-    auto downloadResultPtr = std::make_shared<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-         std::shared_ptr<const DriveKit::DKDatabase>,
-         const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-         const DriveKit::DKError &)>>(downloadResultCallback);
-    auto downloadProcessCallback = [processCallback](std::shared_ptr<DKContext> context,
-	 DKDownloadAsset asset, TotalSize totalSize,
-         DownloadSize downloadSize) {
-             if (processCallback != nullptr) {
-                 processCallback->OnDownloadProcess(downloadSize, totalSize);
-             }
-         };
-    auto downloadProcessPtr = std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(downloadProcessCallback);
+    auto downloadResultCallback =
+        [downloadedCallback](std::shared_ptr<DriveKit::DKContext> context,
+                             std::shared_ptr<const DriveKit::DKDatabase> database,
+                             const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &results,
+                             const DriveKit::DKError &err) {
+            LOGI("download result %{public}d", err.serverErrorCode);
+            if (downloadedCallback != nullptr) {
+                downloadedCallback->OnDownloadedResult(err.serverErrorCode);
+            }
+        };
+    auto downloadResultPtr = std::make_shared<std::function<void(
+        std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
+        const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &, const DriveKit::DKError &)>>(
+        downloadResultCallback);
+    auto downloadProcessCallback = [processCallback](std::shared_ptr<DKContext> context, DKDownloadAsset asset,
+                                                     TotalSize totalSize, DownloadSize downloadSize) {
+        if (processCallback != nullptr) {
+            processCallback->OnDownloadProcess(downloadSize, totalSize);
+        }
+    };
+    auto downloadProcessPtr =
+        std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(
+            downloadProcessCallback);
 
     auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id,
                                              downloadResultPtr, ctx, nullptr, downloadProcessPtr);

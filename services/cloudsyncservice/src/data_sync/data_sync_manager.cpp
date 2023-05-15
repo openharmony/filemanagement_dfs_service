@@ -108,8 +108,8 @@ int32_t DataSyncManager::DownloadSourceFile(const std::string bundleName,
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
     std::thread([dataSyncer, url, processCallback, downloadedCallback]() {
-	        dataSyncer->DownloadSourceFile(url, processCallback, downloadedCallback);
-		}).detach();
+    dataSyncer->DownloadSourceFile(url, processCallback, downloadedCallback);
+    }).detach();
     return E_OK;
 }
 

@@ -42,7 +42,7 @@ public:
     std::shared_ptr<DataSyncer> GetDataSyncer(const std::string bundleName, const int32_t userId);
     int32_t IsSkipSync(const std::string bundleName, const int32_t userId) const;
     int32_t DownloadSourceFile(const std::string bundleName,
-		         const int32_t userId, 
+		         const int32_t userId,
 		         const std::string url,
 		         const sptr<ICloudProcessCallback> processCallback,
 		         const sptr<ICloudDownloadedCallback> downloadedCallback);

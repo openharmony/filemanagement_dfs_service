@@ -78,6 +78,12 @@ public:
     {
         return E_OK;
     }
+    int32_t DownloadFile(const std::string &url,
+                                 const sptr<IRemoteObject> &processCallback,
+                                 const sptr<IRemoteObject> &downloadedCallback)
+    {
+        return E_OK;
+    }
 };
 
 } // namespace OHOS::FileManagement::CloudSync

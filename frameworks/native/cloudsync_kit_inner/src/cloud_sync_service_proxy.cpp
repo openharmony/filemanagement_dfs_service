@@ -306,7 +306,7 @@ int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, con
 }
 
 int32_t CloudSyncServiceProxy::DownloadFile(const std::string &url, const sptr<IRemoteObject> &processCallback,
-                                 const sptr<IRemoteObject> &downloadedCallback)
+    const sptr<IRemoteObject> &downloadedCallback)
 {
     LOGI("Start DownloadFile");
     MessageParcel data;
