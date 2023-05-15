@@ -30,8 +30,8 @@ enum {
 
 constexpr std::string_view SPACE_NOT_ENOUGH = "30184039";
 constexpr std::string_view AT_FAILED = "31000401";
-constexpr std::string_view NAME_CONFLICT = "31004002";
-constexpr std::string_view INVALID_FILE = "31084932";
+constexpr std::string_view NAME_CONFLICT = "31084932";
+constexpr std::string_view INVALID_FILE = "31004002";
 
 constexpr ErrCode CSS_ERR_OFFSET = ErrCodeOffset(SUBSYS_FILEMANAGEMENT, CLOUD_SYNC_SERVICE_MODULE);
 

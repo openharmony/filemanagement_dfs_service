@@ -730,8 +730,14 @@ void FileDataHandler::OnResultSetConvertToMap(const unique_ptr<NativeRdb::Result
 int32_t FileDataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOperResult> &entry)
 {
     const DKRecordOperResult &result = entry.second;
-    int serverErrorCode = result.GetDKError().serverErrorCode;
-    string errorDetailcode = result.GetDKError().errorDetails[0].errorCode;
+    int32_t serverErrorCode = INT32_MAX;
+    serverErrorCode = result.GetDKError().serverErrorCode;
+    if (result.GetDKError().errorDetails.size() == 0) {
+        LOGE("errorDetails is empty");
+        return E_INVAL_ARG;
+    }
+    string errorDetailcode = "";
+    errorDetailcode = result.GetDKError().errorDetails[0].errorCode;
     if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::ACCESS_DENIED &&
         errorDetailcode == SPACE_NOT_ENOUGH) {
         return HandleCloudSpaceNotEnough();
@@ -760,6 +766,7 @@ int32_t FileDataHandler::HandleCloudSpaceNotEnough()
 
 int32_t FileDataHandler::HandleATFailed()
 {
+    LOGE("AT Failed");
     return E_OK;
 }
 
