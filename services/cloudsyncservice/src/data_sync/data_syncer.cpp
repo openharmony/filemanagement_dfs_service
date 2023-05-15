@@ -209,7 +209,7 @@ void DataSyncer::PullDatabaseChanges(shared_ptr<TaskContext> context)
 class DownloadContext : public TaskContext {
 public:
     DownloadContext(std::shared_ptr<DataHandler> handler,
-                    vector<DKDownloadAsset> assets,
+                    const vector<DKDownloadAsset> &assets,
                     DriveKit::DKDownloadId &id,
                     shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
                            std::shared_ptr<const DriveKit::DKDatabase>,
