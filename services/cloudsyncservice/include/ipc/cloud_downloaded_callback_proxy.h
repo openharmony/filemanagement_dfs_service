@@ -23,7 +23,8 @@
 namespace OHOS::FileManagement::CloudSync {
 class CloudDownloadedCallbackProxy : public IRemoteProxy<ICloudDownloadedCallback> {
 public:
-    explicit CloudDownloadedCallbackProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<ICloudDownloadedCallback>(impl) {}
+    explicit CloudDownloadedCallbackProxy(const sptr<IRemoteObject> &impl)
+        : IRemoteProxy<ICloudDownloadedCallback>(impl) {}
     ~CloudDownloadedCallbackProxy() override {}
 
     void OnDownloadedResult(int32_t result) override;

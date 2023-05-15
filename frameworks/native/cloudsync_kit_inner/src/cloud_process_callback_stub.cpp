@@ -26,9 +26,9 @@ CloudProcessCallbackStub::CloudProcessCallbackStub()
 }
 
 int32_t CloudProcessCallbackStub::OnRemoteRequest(uint32_t code,
-                                               MessageParcel &data,
-                                               MessageParcel &reply,
-                                               MessageOption &option)
+                                                  MessageParcel &data,
+                                                  MessageParcel &reply,
+                                                  MessageOption &option)
 {
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return E_SERVICE_DESCRIPTOR_IS_EMPTY;
