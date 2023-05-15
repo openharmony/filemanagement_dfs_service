@@ -48,9 +48,7 @@ std::shared_ptr<DKContainer> DriveKitNative::GetDefaultContainer(DKAppBundleName
     }
     std::shared_ptr<DKContainer> container =
         std::make_shared<DKContainer>(bundleName, containerName, shared_from_this());
-    if (container) {
-        container->Init();
-    }
+    container->Init();
     containers_[key.c_str()] = container;
     return container;
 }
@@ -64,9 +62,7 @@ std::shared_ptr<DKContainer> DriveKitNative::GetContainer(DKAppBundleName bundle
     }
     std::shared_ptr<DKContainer> container =
         std::make_shared<DKContainer>(bundleName, containerName, shared_from_this());
-    if (container) {
-        container->Init();
-    }
+    container->Init();
     containers_[key.c_str()] = container;
     return container;
 }
