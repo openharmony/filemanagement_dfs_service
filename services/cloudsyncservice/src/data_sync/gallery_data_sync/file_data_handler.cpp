@@ -381,6 +381,10 @@ int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record, NativeRdb::Res
         LOGI("local record dirty, ignore cloud update");
         return E_OK;
     }
+    bool mtimeChanged = false;
+    if (IsMtimeChanged(record, local, mtimeChanged) != E_OK) {
+        return E_INVAL_ARG;
+    }
 
     int ret = E_OK;
     if (FileIsLocal(local)) {
@@ -390,25 +394,20 @@ int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record, NativeRdb::Res
             return SetRetry(record.GetRecordId());
         }
 
-        bool mtimeChanged = false;
-        if (IsMtimeChanged(record, local, mtimeChanged) != E_OK) {
-            return E_INVAL_ARG;
-        }
         if (mtimeChanged) {
             LOGI("cloud file DATA changed, %s", record.GetRecordId().c_str());
             ret = unlink(localPath.c_str());
             if (ret != 0) {
-                LOGE("unlink of %s failed ,errno %{public}d", localPath.c_str(), errno);
+                LOGE("unlink local failed, errno %{public}d", errno);
             }
             DentryInsert(userId_, record);
 
             // delete thumbnail
             outPullThumbs = true;
-        } else {
-            LOGI("cloud file META changed, %s", record.GetRecordId().c_str());
         }
     }
 
+    LOGI("cloud file META changed, %s", record.GetRecordId().c_str());
     /* update rdb */
     ValuesBucket values;
     createConvertor_.RecordToValueBucket(record, values);
@@ -419,13 +418,16 @@ int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record, NativeRdb::Res
         LOGE("rdb update failed, err=%{public}d", ret);
         return E_RDB;
     }
+    if (mtimeChanged) {
+        outPullThumbs = true;
+    }
 
     LOGI("update of record success");
     return E_OK;
 }
 
 
-int FileDataHandler::RecycleFile(const string &recordId)
+int FileDataHandler::RecycleFile(const string &localPath, const string &recordId)
 {
     LOGI("recycle of record %s", recordId.c_str());
     ValuesBucket values;
@@ -445,6 +447,10 @@ int FileDataHandler::RecycleFile(const string &recordId)
         LOGE("delete in rdb failed, ret:%{public}d", ret);
         return E_RDB;
     }
+    ret = unlink(localPath.c_str());
+    if (ret != 0) {
+        LOGE("unlink local failed, errno %{public}d", errno);
+    }
     LOGI("force delete instead");
 
     return E_OK;
@@ -453,21 +459,31 @@ int FileDataHandler::RecycleFile(const string &recordId)
 int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::ResultSet &local)
 {
     LOGI("delete of record %s", record.GetRecordId().c_str());
-
-    if (IsLocalDirty(local)) {
-        LOGI("local record dirty, ignore cloud delete");
-        return E_OK;
-    }
     string filePath = GetFilePath(local);
     string localPath = GetLocalPath(userId_, filePath);
 
     int ret = E_OK;
+    if (IsLocalDirty(local) && FileIsLocal(local)) {
+        LOGI("local record dirty, ignore cloud delete");
+        ValuesBucket values;
+        values.PutString(MEDIA_DATA_DB_CLOUD_ID, {});
+        values.PutInt(MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(DirtyType::TYPE_NEW));
+        values.PutInt(MEDIA_DATA_DB_POSITION, POSITION_LOCAL);
+        int32_t updateRows;
+        string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
+        ret = Update(updateRows, values, whereClause, {record.GetRecordId()});
+        if (ret != 0) {
+            LOGE("Update in rdb failed, ret:%{public}d", ret);
+        }
+        return ret;
+    }
+
     if (FileIsLocal(local)) {
         if (LocalWriteOpen(localPath)) {
             return SetRetry(record.GetRecordId());
         }
 
-        ret = RecycleFile(record.GetRecordId());
+        ret = RecycleFile(localPath, record.GetRecordId());
     } else {
         // delete dentry
         string relativePath, fileName;

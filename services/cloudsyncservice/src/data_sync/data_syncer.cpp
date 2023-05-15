@@ -384,14 +384,20 @@ void DataSyncer::PullRetryRecords(shared_ptr<TaskContext> context)
 void DataSyncer::OnFetchRetryRecord(shared_ptr<DKContext> context, shared_ptr<DKDatabase> database,
     DKRecordId recordId, const DKRecord &record, const DKError &error)
 {
-    if (error.HasError()) {
-        LOGE("get record error");
-        return;
-    }
     auto records = make_shared<std::vector<DKRecord>>();
-    records->push_back(record);
+    if (error.HasError()) {
+        LOGE("has error, recordId:%s, dkErrorCode :%{public}d, serverErrorCode:%{public}d", recordId.c_str(),
+             error.dkErrorCode, error.serverErrorCode);
+        LOGI("convert to delete record");
+        DKRecord deleteRecord;
+        deleteRecord.SetRecordId(recordId);
+        deleteRecord.SetDelete(true);
+        records->push_back(deleteRecord);
+    } else {
+        LOGI("handle retry record : %s", record.GetRecordId().c_str());
+        records->push_back(record);
+    }
 
-    LOGI("handle retry record : %s", record.GetRecordId().c_str());
     HandleOnFetchRecords(context, database, records);
 }
 
