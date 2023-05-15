@@ -330,9 +330,9 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
 }
 
 int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
-	                          const std::string url,
+                                  const std::string url,
                                   const sptr<ICloudProcessCallback> processCallback,
-	                          const sptr<ICloudDownloadedCallback> downloadedCallback)
+                                  const sptr<ICloudDownloadedCallback> downloadedCallback)
 {
     DKDownloadId id;
     auto ctx = std::make_shared<TaskContext>(handler);
@@ -343,32 +343,34 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
         return ret;
     }
 
-    auto downloadResultCallback = [downloadedCallback, assetsToDownload](std::shared_ptr<DriveKit::DKContext> context,
-         std::shared_ptr<const DriveKit::DKDatabase> database,
-         const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &results,
-         const DriveKit::DKError &err) {
-	     LOGI("download result %{public}d", err.serverErrorCode);
-	     if (downloadedCallback != nullptr) {
-                 downloadedCallback->OnDownloadedResult(err.serverErrorCode);
-                 if (assetsToDownload.size() == 1) {
-                     ret = handler->OnDownloadSuccess(assetsToDownload[0]);
-                 }
-	     }
-	 };
-    auto downloadResultPtr = std::make_shared<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-         std::shared_ptr<const DriveKit::DKDatabase>,
-         const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-         const DriveKit::DKError &)>>(downloadResultCallback);
-    auto downloadProcessCallback = [processCallback](std::shared_ptr<DKContext> context,
-	 DKDownloadAsset asset, TotalSize totalSize,
-         DownloadSize downloadSize) {
-             if (processCallback != nullptr) {
-                 processCallback->OnDownloadProcess(downloadSize, totalSize);
-             }
-         };
-    auto downloadProcessPtr = std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(downloadProcessCallback);
-    auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id,
-                                             downloadResultPtr, ctx, nullptr, downloadProcessPtr);
+    auto downloadResultCallback = [downloadedCallback, assetsToDownload, handler](
+                                      std::shared_ptr<DriveKit::DKContext> context,
+                                      std::shared_ptr<const DriveKit::DKDatabase> database,
+                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &results,
+                                      const DriveKit::DKError &err) {
+        LOGI("download result %{public}d", err.serverErrorCode);
+        if (downloadedCallback != nullptr) {
+            downloadedCallback->OnDownloadedResult(err.serverErrorCode);
+            if (assetsToDownload.size() == 1) {
+                (void)handler->OnDownloadSuccess(assetsToDownload[0]);
+            }
+        }
+    };
+    auto downloadResultPtr = std::make_shared<std::function<void(
+        std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
+        const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &, const DriveKit::DKError &)>>(
+        downloadResultCallback);
+    auto downloadProcessCallback = [processCallback](std::shared_ptr<DKContext> context, DKDownloadAsset asset,
+                                                     TotalSize totalSize, DownloadSize downloadSize) {
+        if (processCallback != nullptr) {
+            processCallback->OnDownloadProcess(downloadSize, totalSize);
+        }
+    };
+    auto downloadProcessPtr =
+        std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(
+            downloadProcessCallback);
+    auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id, downloadResultPtr, ctx, nullptr,
+                                             downloadProcessPtr);
     DownloadAssets(static_pointer_cast<TaskContext>(dctx));
     return E_OK;
 }

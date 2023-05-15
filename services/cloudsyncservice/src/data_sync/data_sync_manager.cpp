@@ -91,10 +91,10 @@ int32_t DataSyncManager::TriggerStopSync(const std::string bundleName,
 }
 
 int32_t DataSyncManager::DownloadSourceFile(const std::string bundleName,
-                                      const int32_t userId,
-				      const std::string url,
-		                      const sptr<ICloudProcessCallback> processCallback,
-		                      const sptr<ICloudDownloadedCallback> downloadedCallback)
+                                            const int32_t userId,
+                                            const std::string url,
+                                            const sptr<ICloudProcessCallback> processCallback,
+                                            const sptr<ICloudDownloadedCallback> downloadedCallback)
 {
     auto it = bundleNameConversionMap_.find(bundleName);
     if (it == bundleNameConversionMap_.end()) {

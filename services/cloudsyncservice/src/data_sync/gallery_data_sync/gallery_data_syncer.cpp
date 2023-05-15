@@ -56,8 +56,8 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
 }
 
 int32_t GalleryDataSyncer::DownloadSourceFile(const std::string url,
-                                       const sptr<ICloudProcessCallback> processCallback,
-                                       const sptr<ICloudDownloadedCallback> downloadedCallback)
+                                              const sptr<ICloudProcessCallback> processCallback,
+                                              const sptr<ICloudDownloadedCallback> downloadedCallback)
 {
     return DownloadInner(fileHandler_, url, processCallback, downloadedCallback);
 }
