@@ -55,6 +55,7 @@ public:
         DriveKit::DKRecordOperResult> &map) = 0;
     virtual int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map);
+    virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) = 0;
 
     /* cursor */
     virtual int32_t SetCursor();

@@ -58,6 +58,7 @@ public:
         DriveKit::DKRecordOperResult> &map) override;
     int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
+    int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
 
     /* reset */
     void Reset();

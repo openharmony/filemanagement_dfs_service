@@ -461,7 +461,18 @@ string FileDataConvertor::GetLowerTmpPath(const std::string &path)
         return "";
     }
     return prefix_ + to_string(userId_) + suffix_ + path.substr(pos +
-        sandboxPrefix_.size()) + ".tmp";
+        sandboxPrefix_.size());
+}
+
+string FileDataConvertor::GetSandboxPath(const std::string &path)
+{
+    string localPrefix =  prefix_ + to_string(userId_) + suffix_;
+    size_t pos = path.find_first_of(localPrefix);
+    if (pos == string::npos) {
+        LOGE("invalid path %{private}s", path.c_str());
+        return "";
+    }
+    return sandboxPrefix_ + path.substr(pos + localPrefix.size());
 }
 
 string FileDataConvertor::GetThumbPath(const std::string &path, const std::string &key)

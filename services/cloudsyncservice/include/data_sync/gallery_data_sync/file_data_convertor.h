@@ -48,6 +48,7 @@ public:
     /* path conversion */
     std::string GetLowerPath(const std::string &path);
     std::string GetLowerTmpPath(const std::string &path);
+    std::string GetSandboxPath(const std::string &path);
 
 private:
     /* record id */
