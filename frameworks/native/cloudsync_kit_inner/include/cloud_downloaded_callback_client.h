@@ -21,7 +21,8 @@
 namespace OHOS::FileManagement::CloudSync {
 class CloudDownloadedCallbackClient final : public CloudDownloadedCallbackStub {
 public:
-    explicit CloudDownloadedCallbackClient(const std::shared_ptr<CloudDownloadedCallback> &callback) : callback_(callback) {}
+    explicit CloudDownloadedCallbackClient(const std::shared_ptr<CloudDownloadedCallback> &callback)
+        : callback_(callback) {}
 
     void OnDownloadedResult(int32_t result) override;
 
