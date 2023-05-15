@@ -30,6 +30,7 @@ CloudSyncServiceStub::CloudSyncServiceStub()
     opToInterfaceMap_[SERVICE_CMD_NOTIFY_DATA_CHANGE] = &CloudSyncServiceStub::HandleNotifyDataChange;
     opToInterfaceMap_[SERVICE_CMD_ENABLE_CLOUD] = &CloudSyncServiceStub::HandleEnableCloud;
     opToInterfaceMap_[SERVICE_CMD_DISABLE_CLOUD] = &CloudSyncServiceStub::HandleDisableCloud;
+    opToInterfaceMap_[SERVICE_CMD_DOWNLOAD_FILE] = &CloudSyncServiceStub::HandleDownloadFile;
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -195,6 +196,27 @@ int32_t CloudSyncServiceStub::HandleEnableCloud(MessageParcel &data, MessageParc
     int32_t res = EnableCloud(accountId, *switchObj);
     reply.WriteInt32(res);
     LOGI("End EnableCloud");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin DownloadFile");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    string url = data.ReadString();
+    auto processCallback = data.ReadRemoteObject();
+    auto downloadedCallback = data.ReadRemoteObject();
+
+    int32_t res = DownloadFile(url, processCallback, downloadedCallback);
+    reply.WriteInt32(res);
+    LOGI("End DownloadFile");
     return res;
 }
 } // namespace OHOS::FileManagement::CloudSync

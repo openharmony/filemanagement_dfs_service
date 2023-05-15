@@ -120,6 +120,13 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
     return E_OK;
 }
 
+int32_t DataSyncer::DownloadSourceFile(const std::string url,
+                                       const sptr<ICloudProcessCallback> processCallback,
+                                       const sptr<ICloudDownloadedCallback> downloadedCallback)
+{
+    return E_OK;
+}
+
 void DataSyncer::Abort()
 {
     LOGI("%{private}d %{private}s aborts", userId_, bundleName_.c_str());
@@ -320,6 +327,48 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
     if (ret != E_OK) {
         LOGE("asyn run pull records err %{public}d", ret);
     }
+}
+
+int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
+	                          const std::string url,
+                                  const sptr<ICloudProcessCallback> processCallback,
+	                          const sptr<ICloudDownloadedCallback> downloadedCallback)
+{
+    DKDownloadId id;
+    auto ctx = std::make_shared<TaskContext>(handler);
+    std::vector<DKDownloadAsset> assetsToDownload;
+    int32_t ret = handler->GetDownloadAsset(url, assetsToDownload);
+    if (ret != E_OK) {
+        LOGE("handler on fetch records err %{public}d", ret);
+        return ret;
+    }
+
+    auto downloadResultCallback = [downloadedCallback](std::shared_ptr<DriveKit::DKContext> context,
+         std::shared_ptr<const DriveKit::DKDatabase> database,
+         const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &results,
+         const DriveKit::DKError &err) {
+	     LOGI("download result %{public}d", err.serverErrorCode);
+	     if (downloadedCallback != nullptr) {
+                 downloadedCallback->OnDownloadedResult(err.serverErrorCode);
+	     }
+	 };
+    auto downloadResultPtr = std::make_shared<std::function<void(std::shared_ptr<DriveKit::DKContext>,
+         std::shared_ptr<const DriveKit::DKDatabase>,
+         const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
+         const DriveKit::DKError &)>>(downloadResultCallback);
+    auto downloadProcessCallback = [processCallback](std::shared_ptr<DKContext> context,
+	 DKDownloadAsset asset, TotalSize totalSize,
+         DownloadSize downloadSize) {
+             if (processCallback != nullptr) {
+                 processCallback->OnDownloadProcess(downloadSize, totalSize);
+             }
+         };
+    auto downloadProcessPtr = std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(downloadProcessCallback);
+
+    auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id,
+                                             downloadResultPtr, ctx, nullptr, downloadProcessPtr);
+    DownloadAssets(static_pointer_cast<TaskContext>(dctx));
+    return E_OK;
 }
 
 void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context,

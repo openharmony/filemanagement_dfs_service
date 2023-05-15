@@ -38,6 +38,8 @@ public:
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     int32_t DisableCloud(const std::string &accoutId) override;
+    int32_t DownloadFile(const std::string &url, const sptr<IRemoteObject> &processCallback,
+                         const sptr<IRemoteObject> &downloadedCallback) override;
 
     class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
     public:

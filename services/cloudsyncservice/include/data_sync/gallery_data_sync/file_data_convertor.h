@@ -45,6 +45,9 @@ public:
 
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
     std::string GetThumbPath(const std::string &path, const std::string &key);
+    /* path conversion */
+    std::string GetLowerPath(const std::string &path);
+    std::string GetLowerTmpPath(const std::string &path);
 
 private:
     /* record id */
@@ -84,9 +87,6 @@ private:
     int32_t HandleContent(DriveKit::DKRecordFieldList &list, std::string &path);
     int32_t HandleThumbnail(DriveKit::DKRecordFieldList &list, std::string &path);
     int32_t HandleLcd(DriveKit::DKRecordFieldList &list, std::string &path);
-
-    /* path conversion */
-    std::string GetLowerPath(const std::string &path);
 
     /* identifier */
     int32_t userId_;

@@ -453,6 +453,16 @@ string FileDataConvertor::GetLowerPath(const std::string &path)
         sandboxPrefix_.size());
 }
 
+string FileDataConvertor::GetLowerTmpPath(const std::string &path)
+{
+    size_t pos = path.find_first_of(sandboxPrefix_);
+    if (pos == string::npos) {
+        LOGE("invalid path %{private}s", path.c_str());
+        return "";
+    }
+    return prefix_ + to_string(userId_) + suffix_ + path.substr(pos +
+        sandboxPrefix_.size()) + ".tmp";
+}
 
 string FileDataConvertor::GetThumbPath(const std::string &path, const std::string &key)
 {

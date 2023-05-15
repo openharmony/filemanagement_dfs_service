@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "cloud_downloaded_callback_client.h"
+#include "cloud_process_callback_client.h"
 #include "cloud_sync_manager_impl.h"
 #include "cloud_sync_callback_client.h"
 #include "cloud_sync_service_proxy.h"
@@ -89,6 +91,21 @@ int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, cons
     return ret;
 }
 
+int32_t CloudSyncManagerImpl::DownloadFile(const std::string &url, const std::shared_ptr<CloudProcessCallback> processCallback,
+                                 const std::shared_ptr<CloudDownloadedCallback> downloadedCallback)
+{
+    LOGI("Download File start");
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    int32_t ret = CloudSyncServiceProxy->DownloadFile(url,
+		  sptr(new (std::nothrow) CloudProcessCallbackClient(processCallback)),
+		  sptr(new (std::nothrow) CloudDownloadedCallbackClient(downloadedCallback)));
+    LOGI("Download file ret %{public}d", ret);
+    return ret;
+}
 void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     auto deathCallback = [this](const wptr<IRemoteObject> &obj) {

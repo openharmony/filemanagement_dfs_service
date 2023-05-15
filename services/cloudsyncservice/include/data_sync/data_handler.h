@@ -38,6 +38,8 @@ public:
                                    const DriveKit::DKError &)>> &resultCallback) = 0;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) = 0;
 
+    virtual int32_t GetDownloadAsset(std::string cloudId,
+                                       std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) = 0;
     /* upload */
     virtual int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) = 0;
     virtual int32_t GetDeletedRecords(std::vector<DriveKit::DKRecord> &records) = 0;

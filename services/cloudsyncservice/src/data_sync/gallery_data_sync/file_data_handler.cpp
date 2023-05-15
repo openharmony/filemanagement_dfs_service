@@ -564,8 +564,12 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     }
     string path;
     prop[MEDIA_DATA_DB_FILE_PATH].GetString(path);
-    const string &suffix = fieldKey == "lcd" ? LCD_SUFFIX : THUMB_SUFFIX;
-    downloadAsset.downLoadPath = createConvertor_.GetThumbPath(path, suffix);
+    if (fieldKey != "content") {
+        const string &suffix = fieldKey == "lcd" ? LCD_SUFFIX : THUMB_SUFFIX;
+        downloadAsset.downLoadPath = createConvertor_.GetThumbPath(path, suffix);
+    } else {
+        downloadAsset.downLoadPath = createConvertor_.GetLowerTmpPath(path);
+    }
     downloadAsset.asset.assetName = GetFileName(downloadAsset.downLoadPath);
     downloadAsset.downLoadPath = GetParentDir(downloadAsset.downLoadPath);
     ForceCreateDirectory(downloadAsset.downLoadPath);
@@ -665,6 +669,38 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
 
     return E_OK;
 }
+
+int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
+{
+    vector<DKRecord> records;
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    predicates.SetWhereClause(Media::MEDIA_DATA_DB_CLOUD_ID + " = ?");
+    predicates.SetWhereArgs({cloudId});
+    predicates.Limit(LIMIT_SIZE);
+    auto resultSet = Query(predicates, GALLERY_FILE_COLUMNS);
+    if (resultSet == nullptr) {
+        LOGE("get nullptr created result");
+        return E_RDB;
+    }
+    int32_t rowCount = 0;
+    int32_t ret = resultSet->GetRowCount(rowCount);
+    if (ret != 0) {
+        LOGE("result set get row count err %{public}d", ret);
+        return E_RDB;
+    }
+
+    ret = localConvertor_.ResultSetToRecords(move(resultSet), records);
+    if (ret != 0) {
+        LOGE("result set to records err %{public}d", ret);
+        return ret;
+    }
+    for (const auto &record : records) {
+         AppendToDownload(record, "content", outAssetsToDownload);
+    }
+
+    return E_OK;
+}
+
 
 int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
 {

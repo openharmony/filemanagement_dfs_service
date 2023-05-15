@@ -25,6 +25,8 @@
 #include "cloud_sync_constants.h"
 #include "data_handler.h"
 #include "data_sync/sync_state_manager.h"
+#include "i_cloud_downloaded_callback.h"
+#include "i_cloud_process_callback.h"
 #include "sdk_helper.h"
 #include "task.h"
 
@@ -46,6 +48,9 @@ public:
     /* sync */
     virtual int32_t StartSync(bool forceFlag, SyncTriggerType triggerType);
     virtual int32_t StopSync(SyncTriggerType triggerType);
+    virtual int32_t DownloadSourceFile(const std::string url,
+		     const sptr<ICloudProcessCallback> processCallback,
+		     const sptr<ICloudDownloadedCallback> downloadedCallback);
 
     /* properties */
     std::string GetBundleName() const;
@@ -66,6 +71,11 @@ protected:
     virtual void Schedule() = 0;
     void Abort();
 
+    /* download source file */
+    int32_t DownloadInner(std::shared_ptr<DataHandler> handler,
+		          const std::string url,
+                          const sptr<ICloudProcessCallback> processCallback,
+		          const sptr<ICloudDownloadedCallback> downloadedCallback);
     /* notify */
     void CompletePull();
     void CompletePush();
