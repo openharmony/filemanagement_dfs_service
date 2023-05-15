@@ -49,8 +49,8 @@ using TaskAction = std::function<void(std::shared_ptr<TaskContext>)>;
 
 class Task {
 public:
-    Task(std::shared_ptr<TaskContext> context, TaskAction action) : context_(context),
-        action_(action),  id_(INVALID_ID) {}
+    Task(std::shared_ptr<TaskContext> context, TaskAction action) : id_(INVALID_ID),
+        context_(context), action_(action) {}
     virtual ~Task() = default;
 
     virtual void Run()
