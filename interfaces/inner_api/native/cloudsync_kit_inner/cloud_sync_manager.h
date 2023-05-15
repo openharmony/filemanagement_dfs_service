@@ -18,6 +18,8 @@
 
 #include <memory>
 
+#include "cloud_downloaded_callback.h"
+#include "cloud_process_callback.h"
 #include "cloud_sync_callback.h"
 #include "cloud_sync_common.h"
 
