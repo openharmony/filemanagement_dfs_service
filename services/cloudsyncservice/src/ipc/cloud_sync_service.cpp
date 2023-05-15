@@ -145,4 +145,23 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
 {
     return E_OK;
 }
+
+constexpr int TEST_MAIN_USR_ID = 100;
+int32_t CloudSyncService::DownloadFile(const std::string &url,
+                                       const sptr<IRemoteObject> &processCallback,
+                                       const sptr<IRemoteObject> &downloadedCallback)
+{
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    auto processCb = iface_cast<ICloudProcessCallback>(processCallback);
+    auto downloadedCb = iface_cast<ICloudDownloadedCallback>(downloadedCallback);
+    string bundleName;
+    LOGI("download file start");
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
+    if (callerUserId == 0) {
+        callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
+    }
+    return dataSyncManager_->DownloadSourceFile(bundleName, callerUserId, url, processCb, downloadedCb);
+}
 } // namespace OHOS::FileManagement::CloudSync

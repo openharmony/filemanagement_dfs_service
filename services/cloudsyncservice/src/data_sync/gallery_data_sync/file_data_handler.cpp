@@ -513,6 +513,40 @@ int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::Res
     return ret;
 }
 
+int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
+{
+    string filePath = localConvertor_.GetSandboxPath(asset.downLoadPath + "/" + asset.asset.assetName);
+    string localPath = GetLocalPath(userId_, filePath);
+
+    int ret = E_OK;
+
+    // delete dentry
+    string relativePath, fileName;
+    if (GetDentryPathName(filePath, relativePath, fileName) != E_OK) {
+        LOGE("split to dentry path failed, path:%s", filePath.c_str());
+        return E_INVAL_ARG;
+    }
+    auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
+    MetaBase mBase(fileName);
+    ret = mFile->DoRemove(mBase);
+    if (ret != E_OK) {
+        LOGE("remove dentry failed, ret:%{public}d", ret);
+    }
+
+    // update rdb
+    ValuesBucket valuesBucket;
+    valuesBucket.PutInt(Media::MEDIA_DATA_DB_POSITION, POSITION_BOTH);
+
+    int32_t changedRows;
+    string whereClause = Media::MEDIA_DATA_DB_FILE_PATH + " = ?";
+    vector<string> whereArgs = {filePath};
+    ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
+    if (ret != 0) {
+        LOGE("on download file from cloud err %{public}d", ret);
+    }
+    return ret;
+}
+
 static std::string GetParentDir(const std::string &path)
 {
     if ((path == "/") || (path == "")) {
@@ -564,8 +598,12 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     }
     string path;
     prop[MEDIA_DATA_DB_FILE_PATH].GetString(path);
-    const string &suffix = fieldKey == "lcd" ? LCD_SUFFIX : THUMB_SUFFIX;
-    downloadAsset.downLoadPath = createConvertor_.GetThumbPath(path, suffix);
+    if (fieldKey != "content") {
+        const string &suffix = fieldKey == "lcd" ? LCD_SUFFIX : THUMB_SUFFIX;
+        downloadAsset.downLoadPath = createConvertor_.GetThumbPath(path, suffix);
+    } else {
+        downloadAsset.downLoadPath = createConvertor_.GetLowerTmpPath(path);
+    }
     downloadAsset.asset.assetName = GetFileName(downloadAsset.downLoadPath);
     downloadAsset.downLoadPath = GetParentDir(downloadAsset.downLoadPath);
     ForceCreateDirectory(downloadAsset.downLoadPath);
@@ -665,6 +703,38 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
 
     return E_OK;
 }
+
+int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
+{
+    vector<DKRecord> records;
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    predicates.SetWhereClause(Media::MEDIA_DATA_DB_CLOUD_ID + " = ?");
+    predicates.SetWhereArgs({cloudId});
+    predicates.Limit(LIMIT_SIZE);
+    auto resultSet = Query(predicates, GALLERY_FILE_COLUMNS);
+    if (resultSet == nullptr) {
+        LOGE("get nullptr created result");
+        return E_RDB;
+    }
+    int32_t rowCount = 0;
+    int32_t ret = resultSet->GetRowCount(rowCount);
+    if (ret != 0) {
+        LOGE("result set get row count err %{public}d", ret);
+        return E_RDB;
+    }
+
+    ret = localConvertor_.ResultSetToRecords(move(resultSet), records);
+    if (ret != 0) {
+        LOGE("result set to records err %{public}d", ret);
+        return ret;
+    }
+    for (const auto &record : records) {
+        AppendToDownload(record, "content", outAssetsToDownload);
+    }
+
+    return E_OK;
+}
+
 
 int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
 {

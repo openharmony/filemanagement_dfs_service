@@ -33,6 +33,7 @@ DataSyncManager::DataSyncManager()
 {
     bundleNameConversionMap_["com.ohos.medialibrary.medialibrarydata"] = "com.ohos.photos";
     bundleNameConversionMap_["com.ohos.photos"] = "com.ohos.photos";
+    bundleNameConversionMap_["hdcd"] = "com.ohos.photos";
 }
 
 int32_t DataSyncManager::TriggerStartSync(const std::string bundleName,
@@ -86,6 +87,29 @@ int32_t DataSyncManager::TriggerStopSync(const std::string bundleName,
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
     std::thread([dataSyncer, triggerType]() { dataSyncer->StopSync(triggerType); }).detach();
+    return E_OK;
+}
+
+int32_t DataSyncManager::DownloadSourceFile(const std::string bundleName,
+                                            const int32_t userId,
+                                            const std::string url,
+                                            const sptr<ICloudProcessCallback> processCallback,
+                                            const sptr<ICloudDownloadedCallback> downloadedCallback)
+{
+    auto it = bundleNameConversionMap_.find(bundleName);
+    if (it == bundleNameConversionMap_.end()) {
+        LOGE("trigger stop sync failed, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
+        return E_INVAL_ARG;
+    }
+    std::string appBundleName(it->second);
+    auto dataSyncer = GetDataSyncer(appBundleName, userId);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
+        return E_SYNCER_NUM_OUT_OF_RANGE;
+    }
+    std::thread([dataSyncer, url, processCallback, downloadedCallback]() {
+    dataSyncer->DownloadSourceFile(url, processCallback, downloadedCallback);
+    }).detach();
     return E_OK;
 }
 

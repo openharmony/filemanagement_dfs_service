@@ -41,6 +41,8 @@ public:
                            const DriveKit::DKError &)>> &downloadResultCallback) override;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
 
+    int32_t GetDownloadAsset(std::string cloudId,
+                             std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
     /* upload */
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;
     int32_t GetDeletedRecords(std::vector<DriveKit::DKRecord> &records) override;
@@ -56,6 +58,7 @@ public:
         DriveKit::DKRecordOperResult> &map) override;
     int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
+    int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
 
     /* reset */
     void Reset();

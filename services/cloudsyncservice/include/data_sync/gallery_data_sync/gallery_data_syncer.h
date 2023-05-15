@@ -30,6 +30,9 @@ public:
     virtual ~GalleryDataSyncer() = default;
 
     virtual void Schedule() override;
+    int32_t DownloadSourceFile(const std::string url,
+		               const sptr<ICloudProcessCallback> processCallback,
+		               const sptr<ICloudDownloadedCallback> downloadedCallback) override;
 
 private:
     enum {

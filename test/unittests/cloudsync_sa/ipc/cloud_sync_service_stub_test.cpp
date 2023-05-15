@@ -37,6 +37,10 @@ public:
     MOCK_METHOD2(NotifyDataChange, int32_t(const std::string &accoutId, const std::string &bundleName));
     MOCK_METHOD2(EnableCloud, int32_t(const std::string &accoutId, const SwitchDataObj &switchData));
     MOCK_METHOD1(DisableCloud, int32_t(const std::string &accoutId));
+    MOCK_METHOD3(DownloadFile,
+                 int32_t(const std::string &url,
+                         const sptr<IRemoteObject> &processCallback,
+                         const sptr<IRemoteObject> &downloadedCallback));
 };
 
 class CloudSyncServiceStubTest : public testing::Test {
