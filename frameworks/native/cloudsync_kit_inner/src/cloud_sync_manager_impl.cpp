@@ -51,13 +51,12 @@ int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCa
 
 int32_t CloudSyncManagerImpl::StartSync()
 {
-    bool forceFlag = false;
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    return CloudSyncServiceProxy->StartSyncInner(forceFlag);
+    return CloudSyncServiceProxy->StartSyncInner(false);
 }
 
 int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)
