@@ -38,7 +38,7 @@ void CloudSyncManagerExport(napi_env env, napi_value exports)
 {
     static napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("changeAppCloudSwitch", ChangeAppCloudSwitch),
-        DECLARE_NAPI_FUNCTION("clean",Clean),
+        DECLARE_NAPI_FUNCTION("clean", Clean),
         DECLARE_NAPI_FUNCTION("notifyDataChange", NotifyDataChange),
         DECLARE_NAPI_FUNCTION("enableCloud", EnableCloud),
         DECLARE_NAPI_FUNCTION("disableCloud", DisableCloud),
@@ -57,7 +57,6 @@ void InitENumACtions(napi_env env, napi_value exports)
     };
     napi_define_properties(env, actionObj, sizeof(desc) / sizeof(desc[0]), desc);
     napi_set_named_property(env, exports, propertyName, actionObj);
-
 }
 
 static napi_module _module = {

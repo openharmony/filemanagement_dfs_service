@@ -25,7 +25,7 @@ namespace FileManagement {
 namespace CloudSync {
 
 /* thumb */
-const std::string THUMB_SUFFIX = "THMB";
+const std::string THUMB_SUFFIX = "THM";
 const std::string LCD_SUFFIX = "LCD";
 
 class FileDataConvertor : public DataConvertor {
