@@ -33,6 +33,7 @@ DataSyncManager::DataSyncManager()
 {
     bundleNameConversionMap_["com.ohos.medialibrary.medialibrarydata"] = "com.ohos.photos";
     bundleNameConversionMap_["com.ohos.photos"] = "com.ohos.photos";
+    bundleNameConversionMap_["com.ohos.cloudfilesync"] = "com.ohos.photos";
     bundleNameConversionMap_["hdcd"] = "com.ohos.photos";
 }
 

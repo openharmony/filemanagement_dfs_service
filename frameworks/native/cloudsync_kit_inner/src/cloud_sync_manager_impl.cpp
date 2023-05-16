@@ -29,6 +29,37 @@ CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
     return instance;
 }
 
+int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback)
+{
+    if (!callback) {
+        LOGE("callback is null");
+        return E_INVAL_ARG;
+    }
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    auto ret =
+        CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback)));
+    callback_ = callback;
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    LOGI("RegisterCallback ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::StartSync()
+{
+    bool forceFlag = false;
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    return CloudSyncServiceProxy->StartSyncInner(forceFlag);
+}
+
 int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)
 {
     if (!callback) {

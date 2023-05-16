@@ -34,6 +34,24 @@ enum class SyncPromptState : int32_t {
     SYNC_STATE_PAUSED_FOR_SPACE_TOO_LOW,
 };
 
+enum CloudSyncState {
+    UPLOADING = 0,
+    UPLOAD_FAILED,
+    DOWNLOADING,
+    DOWNLOAD_FAILED,
+    COMPLETED,
+    STOPPED,
+};
+
+enum ErrorType {
+    NETWORK_UNAVAILABLE = 0,
+    WIFI_UNAVAILABLE,
+    BATTERY_LEVEL_LOW,
+    BATTERY_LEVEL_WARNING,
+    CLOUD_STORAGE_FULL,
+    LOCAL_STORAGE_FULL,
+};
+
 } // namespace OHOS::FileManagement::CloudSync
 
 #endif // OHOS_FILEMGMT_CLOUD_SYNC_CONSTANTS_H
