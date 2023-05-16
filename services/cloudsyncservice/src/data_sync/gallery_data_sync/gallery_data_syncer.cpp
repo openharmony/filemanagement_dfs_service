@@ -28,6 +28,11 @@ const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
     return "";
 }
 
+const std::string IsCallerSelfFunc(const std::vector<std::string> &args)
+{
+    return "false";
+}
+
 GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t userId)
     : DataSyncer(bundleName, userId)
 {
@@ -38,6 +43,7 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
     config.SetReadConSize(CONNECT_SIZE);
     config.SetSecurityLevel(NativeRdb::SecurityLevel::S3);
     config.SetScalarFunction("cloud_sync_func", 0, CloudSyncTriggerFunc);
+    config.SetScalarFunction("is_caller_self_func", 0, IsCallerSelfFunc);
 
     /*
      * Just pass in any value but zero for parameter @version in GetRdbStore,
