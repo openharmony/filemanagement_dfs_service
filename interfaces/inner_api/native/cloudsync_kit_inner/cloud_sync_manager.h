@@ -28,6 +28,19 @@ class CloudSyncManager {
 public:
     static CloudSyncManager &GetInstance();
     /**
+     * @brief 注册
+     *
+     * @param callback 注册同步回调
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback) = 0;
+    /**
+     * @brief 启动同步
+     *
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t StartSync() = 0;
+    /**
      * @brief 启动同步
      *
      * @param forceFlag 是否强制继续同步，当前仅支持低电量下暂停后继续上传

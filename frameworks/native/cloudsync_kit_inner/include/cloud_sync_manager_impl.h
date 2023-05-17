@@ -30,6 +30,8 @@ class CloudSyncManagerImpl final : public CloudSyncManager, public NoCopyable {
 public:
     static CloudSyncManagerImpl &GetInstance();
 
+    int32_t RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback) override;
+    int32_t StartSync() override;
     int32_t StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) override;
     int32_t StopSync() override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
