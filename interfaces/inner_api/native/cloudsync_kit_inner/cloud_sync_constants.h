@@ -44,7 +44,8 @@ enum CloudSyncState {
 };
 
 enum ErrorType {
-    NETWORK_UNAVAILABLE = 0,
+    NO_ERROR = 0,
+    NETWORK_UNAVAILABLE,
     WIFI_UNAVAILABLE,
     BATTERY_LEVEL_LOW,
     BATTERY_LEVEL_WARNING,
