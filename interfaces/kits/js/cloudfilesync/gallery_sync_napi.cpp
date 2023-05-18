@@ -142,6 +142,73 @@ napi_value GallerySyncNapi::OffCallback(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value GallerySyncNapi::Start(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
+        NError(E_PARAMS).ThrowErr(env);
+    }
+
+    auto cbExec = []() -> NError {
+        int32_t result = CloudSyncManager::GetInstance().StartSync();
+        if (result != E_OK) {
+            LOGE("Start Sync error, result: %{public}d", result);
+            return NError(result);
+        }
+        return NError(ERRNO_NOERR);
+    };
+
+    auto cbComplete = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return { env, err.GetNapiErr(env) };
+        }
+        return NVal::CreateUndefined(env);
+    };
+
+    std::string PROCEDURE_NAME = "Start";
+    NVal thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == NARG_CNT::ZERO) {
+        return NAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
+    } else {
+        NVal cb(env, funcArg[NARG_POS::FIRST]);
+        return NAsyncWorkCallback(env, thisVar, cb).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
+    }
+}
+
+napi_value GallerySyncNapi::Stop(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto cbExec = []() -> NError {
+        int32_t result = CloudSyncManager::GetInstance().StopSync();
+        if (result != E_OK) {
+            LOGE("Stop Sync error, result: %{public}d", result);
+            return NError(result);
+        }
+        return NError(ERRNO_NOERR);
+    };
+
+    auto cbComplete = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return { env, err.GetNapiErr(env) };
+        }
+        return NVal::CreateUndefined(env);
+    };
+
+    std::string PROCEDURE_NAME = "Stop";
+    NVal thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == NARG_CNT::ZERO) {
+        return NAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
+    } else {
+        NVal cb(env, funcArg[NARG_POS::FIRST]);
+        return NAsyncWorkCallback(env, thisVar, cb).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
+    }
+}
+
 std::string GallerySyncNapi::GetClassName()
 {
     return GallerySyncNapi::className_;
@@ -152,6 +219,8 @@ bool GallerySyncNapi::Export()
     std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("on", OnCallback),
         NVal::DeclareNapiFunction("off", OffCallback),
+        NVal::DeclareNapiFunction("start", Start),
+        NVal::DeclareNapiFunction("stop", Stop),
     };
 
     std::string className = GetClassName();

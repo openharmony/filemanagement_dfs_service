@@ -33,6 +33,8 @@ public:
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
 
+    static napi_value Start(napi_env env, napi_callback_info info);
+    static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value OnCallback(napi_env env, napi_callback_info info);
     static napi_value OffCallback(napi_env env, napi_callback_info info);
 
@@ -50,7 +52,7 @@ public:
     class UvChangeMsg {
     public:
         UvChangeMsg(napi_env env, napi_ref ref, CloudSyncState state, ErrorType type)
-                    : env_(env), ref_(ref), state_(state), type_(type) {}
+            : env_(env), ref_(ref), state_(state), type_(type) {}
         ~UvChangeMsg() {}
         napi_env env_;
         napi_ref ref_;

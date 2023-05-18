@@ -24,6 +24,9 @@ using namespace std;
  ***********************************************/
 napi_value CloudSyncExport(napi_env env, napi_value exports)
 {
+    InitCloudSyncState(env, exports);
+    InitErrorType(env, exports);
+
     std::vector<std::unique_ptr<NExporter>> products;
     products.emplace_back(std::make_unique<GallerySyncNapi>(env, exports));
     for (auto &&product : products) {
@@ -32,6 +35,41 @@ napi_value CloudSyncExport(napi_env env, napi_value exports)
         }
     }
     return exports;
+}
+
+void InitCloudSyncState(napi_env env, napi_value exports)
+{
+    char propertyName[] = "SyncState";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("UPLOADING", NVal::CreateInt32(env, UPLOADING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("UPLOAD_FAILED", NVal::CreateInt32(env, UPLOAD_FAILED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("DOWNLOADING", NVal::CreateInt32(env, DOWNLOADING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("DOWNLOAD_FAILED", NVal::CreateInt32(env, DOWNLOAD_FAILED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("COMPLETED", NVal::CreateInt32(env, COMPLETED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("STOPPED", NVal::CreateInt32(env, STOPPED).val_),
+    };
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
+
+void InitErrorType(napi_env env, napi_value exports)
+{
+    char propertyName[] = "ErrorType";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("NO_ERROR", NVal::CreateInt32(env, NO_ERROR).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("NETWORK_UNAVAILABLE", NVal::CreateInt32(env, NETWORK_UNAVAILABLE).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("WIFI_UNAVAILABLE", NVal::CreateInt32(env, WIFI_UNAVAILABLE).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("BATTERY_LEVEL_LOW", NVal::CreateInt32(env, BATTERY_LEVEL_LOW).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("BATTERY_LEVEL_WARNING", NVal::CreateInt32(env, BATTERY_LEVEL_WARNING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("CLOUD_STORAGE_FULL", NVal::CreateInt32(env, CLOUD_STORAGE_FULL).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("LOCAL_STORAGE_FULL", NVal::CreateInt32(env, LOCAL_STORAGE_FULL).val_),
+    };
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
 }
 
 static napi_module _module = {
