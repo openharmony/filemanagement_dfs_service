@@ -128,7 +128,6 @@ static void GetMetaAttr(struct MetaInode *ino, struct stat *stbuf)
 static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
                          struct fuse_entry_param *e)
 {
-    int err;
     struct MetaInode *child;
     string childName = (parent == FUSE_ROOT_ID) ? CloudPath(parent) + name :
                                                   CloudPath(parent) + "/" + name;
@@ -141,6 +140,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     } else {
         child = new MetaInode();
         child->mBase = make_shared<MetaBase>(name);
+        int err;
         err = GetMetaInode(parent)->mFile->DoLookup(*(child->mBase));
         if (err) {
             delete child;
@@ -228,7 +228,6 @@ static string GetParentDir(const string &path)
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                       struct fuse_file_info *fi)
 {
-    string path;
     MetaInode *mInode = GetMetaInode(ino);
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(mInode->mBase->cloudId);
     shared_ptr <CloudSync::SdkHelper> sdkHelper = GetSdkHelper();
@@ -242,6 +241,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
      * recordType is "fileType" now for debug
      */
     if (!mInode->readSession) {
+        string path;
         path = "/data/service/el2/" + to_string(SINGLE_ACCOUNT_USERID) +
                "/hmdfs/fuse" + GetParentDir(mInode->path);
         ForceCreateDirectory(path);

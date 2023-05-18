@@ -312,7 +312,7 @@ static uint32_t GetOverallBucket(uint32_t level)
         LOGI("level = %{public}d overflow", level);
         return 0;
     }
-    uint64_t buckets = (1U << (level + 1)) - 1;
+    uint64_t buckets = (1ULL << (level + 1)) - 1;
     return static_cast<uint32_t>(buckets);
 }
 
@@ -328,7 +328,7 @@ static uint32_t GetBucketaddr(uint32_t level, uint32_t buckoffset)
         return 0;
     }
 
-    uint64_t curLevelMaxBucks = (1U << level);
+    uint64_t curLevelMaxBucks = (1ULL << level);
     if (buckoffset >= curLevelMaxBucks) {
         return 0;
     }
@@ -343,7 +343,7 @@ static uint32_t GetBucketByLevel(uint32_t level)
         return 0;
     }
 
-    uint64_t buckets = (1U << level);
+    uint64_t buckets = (1ULL << level);
     return static_cast<uint32_t>(buckets);
 }
 

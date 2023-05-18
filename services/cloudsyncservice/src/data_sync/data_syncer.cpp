@@ -427,7 +427,7 @@ void DataSyncer::PullRetryRecords(shared_ptr<TaskContext> context)
             LOGE("wrap on fetch records fail");
             continue;
         }
-        int32_t ret = sdkHelper_->FetchRecordWithId(context, it, callback);
+        ret = sdkHelper_->FetchRecordWithId(context, it, callback);
         if (ret != E_OK) {
             LOGE("sdk fetch records err %{public}d", ret);
         }
