@@ -27,19 +27,27 @@
       "ram": "4096KB",
       "deps": {
         "components": [
-          "ability_base",
-          "bundle_framework",
-          "dataclassification",
-          "dsoftbus",
+          "device_auth",
+          "c_utils",
           "ipc",
-          "hilog",
+          "dataclassification",
+          "preferences",
+          "media_library",
+          "ability_base",
+          "dsoftbus",
+          "battery_manager",
+          "access_token",
+          "common_event_service",
+          "device_manager",
           "safwk",
-          "samgr",
-          "utils"
+          "netmanager_base",
+          "relational_store",
+          "file_api",
+          "init",
+          "libfuse",
+          "samgr"
         ],
-        "third_party": [
-          "json_modern_c++"
-        ]
+        "third_party": []
       },
       "build": {
         "group_type": {
