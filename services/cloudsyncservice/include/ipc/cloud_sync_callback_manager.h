@@ -33,6 +33,7 @@ public:
         int32_t callerUserId;
     };
 
+    void RemoveCallback(const std::string &bundleName);
     void AddCallback(const std::string &bundleName, const int32_t userId, const sptr<ICloudSyncCallback> &callback);
     void NotifySyncStateChanged(const SyncType type, const SyncPromptState state);
 

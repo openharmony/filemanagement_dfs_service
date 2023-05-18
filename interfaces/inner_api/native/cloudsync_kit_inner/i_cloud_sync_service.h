@@ -26,6 +26,7 @@ namespace OHOS::FileManagement::CloudSync {
 class ICloudSyncService : public IRemoteBroker {
 public:
     enum {
+        SERVICE_CMD_UNREGISTER_CALLBACK,
         SERVICE_CMD_REGISTER_CALLBACK,
         SERVICE_CMD_START_SYNC,
         SERVICE_CMD_STOP_SYNC,
@@ -39,6 +40,7 @@ public:
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudSyncService")
 
+    virtual int32_t UnRegisterCallbackInner() = 0;
     virtual int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) = 0;
     virtual int32_t StartSyncInner(bool forceFlag) = 0;
     virtual int32_t StopSyncInner() = 0;

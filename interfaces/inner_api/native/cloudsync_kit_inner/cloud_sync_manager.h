@@ -34,6 +34,13 @@ public:
      */
     virtual int32_t RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback) = 0;
     /**
+     * @brief 注册
+     *
+     * @param callback 卸载同步回调
+     * @return int32_t 返回执行结果
+     */
+    virtual int32_t UnRegisterCallback() = 0;
+    /**
      * @brief 启动同步
      *
      * @return int32_t 同步返回执行结果

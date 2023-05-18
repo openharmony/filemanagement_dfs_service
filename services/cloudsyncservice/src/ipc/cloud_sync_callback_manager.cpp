@@ -27,6 +27,19 @@ CloudSyncCallbackManager &CloudSyncCallbackManager::GetInstance()
     return instance;
 }
 
+void CloudSyncCallbackManager::RemoveCallback(const std::string &bundleName)
+{
+    CallbackInfo cbInfo;
+    callbackListMap_.Find(bundleName, cbInfo);
+    auto remoteObject = cbInfo.callbackProxy->AsObject();
+    if (!remoteObject) {
+        LOGE("Remote object can't be nullptr");
+        return;
+    }
+    remoteObject->RemoveDeathRecipient(cbInfo.deathRecipient);
+    callbackListMap_.Erase(bundleName);
+}
+
 void CloudSyncCallbackManager::AddCallback(const std::string &bundleName,
                                            const int32_t userId,
                                            const sptr<ICloudSyncCallback> &callback)

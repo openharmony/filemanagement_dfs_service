@@ -55,6 +55,7 @@ config("utils_public_config") {
 
 ohos_shared_library("libdistributedfileutils") {
   sources = [
+    "log/src/dfs_error.cpp",
     "log/src/utils_log.cpp",
     "preference/src/cloud_pref_impl.cpp",
     "system/src/dfsu_access_token_helper.cpp",
