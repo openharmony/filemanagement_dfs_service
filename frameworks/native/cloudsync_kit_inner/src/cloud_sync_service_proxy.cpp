@@ -305,15 +305,14 @@ int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, con
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::DownloadFile(const std::string &url, const sptr<IRemoteObject> &processCallback,
-    const sptr<IRemoteObject> &downloadedCallback)
+int32_t CloudSyncServiceProxy::DownloadFile(const std::string &url, const sptr<IRemoteObject> &downloadCallback)
 {
     LOGI("Start DownloadFile");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
 
-    if (!processCallback || !downloadedCallback) {
+    if (!downloadCallback) {
         LOGI("Empty callback stub");
         return E_INVAL_ARG;
     }
@@ -328,12 +327,7 @@ int32_t CloudSyncServiceProxy::DownloadFile(const std::string &url, const sptr<I
         return E_INVAL_ARG;
     }
 
-    if (!data.WriteRemoteObject(processCallback)) {
-        LOGE("Failed to send the callback stub");
-        return E_INVAL_ARG;
-    }
-
-    if (!data.WriteRemoteObject(downloadedCallback)) {
+    if (!data.WriteRemoteObject(downloadCallback)) {
         LOGE("Failed to send the callback stub");
         return E_INVAL_ARG;
     }

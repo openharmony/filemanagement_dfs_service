@@ -31,8 +31,7 @@ public:
 
     virtual void Schedule() override;
     int32_t DownloadSourceFile(const std::string url,
-		               const sptr<ICloudProcessCallback> processCallback,
-		               const sptr<ICloudDownloadedCallback> downloadedCallback) override;
+		                           const sptr<ICloudDownloadCallback> downloadCallback) override;
 
 private:
     enum {

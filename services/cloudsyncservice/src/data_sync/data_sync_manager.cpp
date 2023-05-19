@@ -94,8 +94,7 @@ int32_t DataSyncManager::TriggerStopSync(const std::string bundleName,
 int32_t DataSyncManager::DownloadSourceFile(const std::string bundleName,
                                             const int32_t userId,
                                             const std::string url,
-                                            const sptr<ICloudProcessCallback> processCallback,
-                                            const sptr<ICloudDownloadedCallback> downloadedCallback)
+                                            const sptr<ICloudDownloadCallback> downloadCallback)
 {
     auto it = bundleNameConversionMap_.find(bundleName);
     if (it == bundleNameConversionMap_.end()) {
@@ -108,8 +107,8 @@ int32_t DataSyncManager::DownloadSourceFile(const std::string bundleName,
         LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
-    std::thread([dataSyncer, url, processCallback, downloadedCallback]() {
-    dataSyncer->DownloadSourceFile(url, processCallback, downloadedCallback);
+    std::thread([dataSyncer, url, downloadCallback]() {
+        dataSyncer->DownloadSourceFile(url, downloadCallback);
     }).detach();
     return E_OK;
 }

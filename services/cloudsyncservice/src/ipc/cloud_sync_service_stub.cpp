@@ -211,10 +211,9 @@ int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessagePar
         return E_PERMISSION_SYSTEM;
     }
     string url = data.ReadString();
-    auto processCallback = data.ReadRemoteObject();
-    auto downloadedCallback = data.ReadRemoteObject();
+    auto downloadCallback = data.ReadRemoteObject();
 
-    int32_t res = DownloadFile(url, processCallback, downloadedCallback);
+    int32_t res = DownloadFile(url, downloadCallback);
     reply.WriteInt32(res);
     LOGI("End DownloadFile");
     return res;

@@ -21,8 +21,7 @@
 #include <mutex>
 #include <vector>
 
-#include "i_cloud_process_callback.h"
-#include "i_cloud_downloaded_callback.h"
+#include "i_cloud_download_callback.h"
 #include "data_sync/data_syncer.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -42,10 +41,9 @@ public:
     std::shared_ptr<DataSyncer> GetDataSyncer(const std::string bundleName, const int32_t userId);
     int32_t IsSkipSync(const std::string bundleName, const int32_t userId) const;
     int32_t DownloadSourceFile(const std::string bundleName,
-		         const int32_t userId,
-		         const std::string url,
-		         const sptr<ICloudProcessCallback> processCallback,
-		         const sptr<ICloudDownloadedCallback> downloadedCallback);
+                               const int32_t userId,
+                               const std::string url,
+                               const sptr<ICloudDownloadCallback> downloadCallback);
 
 private:
     std::vector<std::shared_ptr<DataSyncer>> dataSyncers_;

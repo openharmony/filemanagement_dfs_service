@@ -39,8 +39,8 @@ public:
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     int32_t DisableCloud(const std::string &accoutId) override;
-    int32_t DownloadFile(const std::string &url, const std::shared_ptr<CloudProcessCallback> processCallback,
-                         const std::shared_ptr<CloudDownloadedCallback> downloadedCallback) override ;
+    int32_t DownloadFile(const std::string &url,
+                         const std::shared_ptr<CloudDownloadCallback> downloadCallback) override ;
 private:
     CloudSyncManagerImpl() = default;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);

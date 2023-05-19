@@ -27,10 +27,8 @@ config("private_config") {
 
 ohos_shared_library("cloudsync_kit_inner") {
   sources = [
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_downloaded_callback_client.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_downloaded_callback_stub.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_process_callback_client.cpp",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_process_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_client.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
