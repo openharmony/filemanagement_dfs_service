@@ -864,32 +864,27 @@ void FileDataHandler::OnCreateRecordSuccess(
         LOGE("bad file_path in props");
         return;
     }
-    /* compare mtime */
-    if (OnCreateIsTimeChanged(data, localMap, path, Media::MEDIA_DATA_DB_DATE_MODIFIED)) {
-        return;
-    }
-    /* record to value bucket */
+
     ValuesBucket valuesBucket;
     valuesBucket.PutString(Media::MEDIA_DATA_DB_CLOUD_ID, entry.first);
-    valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
-
+    valuesBucket.PutInt(Media::MEDIA_DATA_DB_POSITION, POSITION_BOTH);
     int32_t changedRows;
     string whereClause = Media::MEDIA_DATA_DB_FILE_PATH + " = ?";
     vector<string> whereArgs = {path};
+
+    /* compare mtime and metatime */
+    if (OnCreateIsTimeChanged(data, localMap, path, Media::MEDIA_DATA_DB_DATE_MODIFIED)) {
+        valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY));
+    } else if (OnCreateIsTimeChanged(data, localMap, path, Media::MEDIA_DATA_DB_META_DATE_MODIFIED)) {
+        valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
+    } else {
+        valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
+    }
+
     int32_t ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
     if (ret != 0) {
         LOGE("on create records update synced err %{public}d", ret);
         return;
-    }
-
-    /* compare metatime */
-    if (OnCreateIsTimeChanged(data, localMap, path, Media::MEDIA_DATA_DB_META_DATE_MODIFIED)) {
-        valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
-        ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
-        if (ret != 0) {
-            LOGE("on create records update mdirty err %{public}d", ret);
-            return;
-        }
     }
 }
 
