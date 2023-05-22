@@ -100,13 +100,8 @@ ohos_unittest("cloud_sync_service_test") {
     "samgr:samgr_proxy",
   ]
 
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
+  deps +=
+      [ "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter" ]
 
   defines = [
     "private=public",
