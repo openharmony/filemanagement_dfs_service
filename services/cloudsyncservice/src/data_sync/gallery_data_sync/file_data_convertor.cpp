@@ -16,6 +16,7 @@
 #include "file_data_convertor.h"
 
 #include "medialibrary_db_const.h"
+#include "thumbnail_const.h"
 
 #include "dfs_error.h"
 #include "utils_log.h"
@@ -480,15 +481,9 @@ string FileDataConvertor::GetThumbPath(const std::string &path, const std::strin
     if (path.length() < ROOT_MEDIA_DIR.length()) {
         return "";
     }
-
-    auto lastIndex = path.find_last_of('.');
-    if (lastIndex == string::npos) {
-        lastIndex = ROOT_MEDIA_DIR.length() - 1;
-    }
-    lastIndex = lastIndex - ROOT_MEDIA_DIR.length();
-
-    return prefixLCD_ + to_string(userId_) + suffixLCD_ + "/.thumbs/" +
-        path.substr(ROOT_MEDIA_DIR.length(), lastIndex) + "-" + key + ".jpg";
+    /* transform sandbox path */
+    return prefixLCD_ + to_string(userId_) + suffixLCD_ + "/" + Media::GetThumbnailPath(path,
+        key).substr(ROOT_MEDIA_DIR.length());
 }
 } // namespace CloudSync
 } // namespace FileManagement
