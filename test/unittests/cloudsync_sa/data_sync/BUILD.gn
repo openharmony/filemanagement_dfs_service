@@ -42,6 +42,8 @@ ohos_unittest("data_sync_manager_test") {
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/utils/include",
   ]
 
   deps = [
@@ -53,7 +55,6 @@ ohos_unittest("data_sync_manager_test") {
 
   external_deps = [
     "init:libbegetutil",
-    "media_library:cloud_sync_header",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
   ]
