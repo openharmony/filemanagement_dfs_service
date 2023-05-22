@@ -22,6 +22,7 @@ config("private_config") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
   ]
 }
 
@@ -32,6 +33,7 @@ ohos_shared_library("cloudsync_kit_inner") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_service_proxy.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
   ]
 
   defines = [
@@ -43,12 +45,12 @@ ohos_shared_library("cloudsync_kit_inner") {
   public_configs = [ ":public_config" ]
 
   external_deps = [
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-
-  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   use_exceptions = true
   part_name = "dfs_service"
