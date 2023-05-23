@@ -132,7 +132,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     struct MetaInode *child;
     string childName = (parent == FUSE_ROOT_ID) ? CloudPath(parent) + name :
                                                   CloudPath(parent) + "/" + name;
-    LOGD("parent: %lld, name: %s", static_cast<long long>(parent), name);
+    LOGD("parent: %{private}s, name: %s", CloudPath(parent).c_str(), name);
 
     child = FindNode(childName);
     if (child) {
@@ -155,7 +155,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         g_cacheLock.lock();
         g_inodeCache[childName] = child;
         g_cacheLock.unlock();
-        LOGD("lookup success, child: %p", child);
+        LOGD("lookup success, child: %{private}s", child->path.c_str());
     }
     GetMetaAttr(child, &e->attr);
     e->ino = reinterpret_cast<fuse_ino_t>(child);

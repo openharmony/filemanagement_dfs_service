@@ -110,6 +110,7 @@ void GalleryDataSyncer::Schedule()
             break;
         }
     }
+    LOGE("schedule stage %{public}d finish, ret = %{public}d", stage_, ret);
 }
 
 int32_t GalleryDataSyncer::Prepare()
