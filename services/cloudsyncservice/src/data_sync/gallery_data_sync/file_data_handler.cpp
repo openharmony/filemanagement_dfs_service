@@ -622,7 +622,6 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
         "0", to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
     /* small-size first */
     createPredicates.OrderByAsc(Media::MEDIA_DATA_DB_SIZE);
-    createPredicates.Offset(createOffset_);
     createPredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -631,8 +630,6 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
         LOGE("get nullptr created result");
         return E_RDB;
     }
-    /* update offset */
-    createOffset_ += LIMIT_SIZE;
 
     /* results to records */
     int ret = createConvertor_.ResultSetToRecords(move(results), records);
@@ -652,7 +649,6 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
         Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
     deletePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)),
         to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
-    deletePredicates.Offset(deleteOffset_);
     deletePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -661,8 +657,6 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
         LOGE("get nullptr deleted result");
         return E_RDB;
     }
-    /* update offset */
-    deleteOffset_ += LIMIT_SIZE;
 
     /* results to records */
     int ret = deleteConvertor_.ResultSetToRecords(move(results), records);
@@ -683,7 +677,6 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
         " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
     updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)),
         "0", to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
-    updatePredicates.Offset(mdirtyOffset_);
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -692,8 +685,6 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
         LOGE("get nullptr modified result");
         return E_RDB;
     }
-    /* update offset */
-    mdirtyOffset_ += LIMIT_SIZE;
 
     /* results to records */
     int ret = mdirtyConvertor_.ResultSetToRecords(move(results), records);
@@ -746,7 +737,6 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
         " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
     updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)),
         "0", to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
-    updatePredicates.Offset(fdirtyOffset_);
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -755,8 +745,6 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
         LOGE("get nullptr modified result");
         return E_RDB;
     }
-    /* update offset */
-    fdirtyOffset_ += LIMIT_SIZE;
 
     /* results to records */
     int ret = fdirtyConvertor_.ResultSetToRecords(move(results), records);
@@ -836,10 +824,6 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
 
 void FileDataHandler::Reset()
 {
-    createOffset_ = 0;
-    deleteOffset_ = 0;
-    mdirtyOffset_ = 0;
-    fdirtyOffset_ = 0;
 }
 
 void FileDataHandler::OnCreateRecordSuccess(
