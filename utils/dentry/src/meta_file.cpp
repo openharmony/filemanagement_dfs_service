@@ -269,9 +269,9 @@ static uint32_t DentryHash(const std::string &name)
 
     constexpr int inLen = 8;      /* hash input buf size 8 */
     constexpr int bufLen = 4;     /* hash output buf size 4 */
-    constexpr int hashWidth = 16; /* hash operation width 4 */
     uint32_t in[inLen], buf[bufLen];
-    int len = name.length();
+    auto len = name.length();
+    constexpr decltype(len) hashWidth = 16; /* hash operation width 4 */
     const char *p = name.c_str();
 
     buf[0] = 0x67452301; /* hash magic 1 */
@@ -279,12 +279,17 @@ static uint32_t DentryHash(const std::string &name)
     buf[2] = 0x98badcfe; /* hash magic 3 */
     buf[3] = 0x10325476; /* hash magic 4 */
 
-    do {
+    while (true) {
         Str2HashBuf(p, len, in, bufLen);
         TeaTransform(buf, in);
+
+        if (len <= hashWidth) {
+            break;
+        }
+
         p += hashWidth;
         len -= hashWidth;
-    } while (len > 0);
+    };
     uint32_t hash = buf[0];
     uint32_t hmdfsHash = hash & ~HMDFS_HASH_COL_BIT;
 
@@ -710,7 +715,7 @@ int32_t MetaFile::LoadChildren(std::vector<MetaBase> &bases)
     uint64_t groupCnt = GetDentryGroupCnt(fileSize);
     HmdfsDentryGroup dentryGroup;
 
-    for (int i = 1; i < groupCnt + 1; i++) {
+    for (uint64_t i = 1; i < groupCnt + 1; i++) {
         uint64_t off = i * sizeof(HmdfsDentryGroup);
         FileUtils::ReadFile(fd_, off, sizeof(HmdfsDentryGroup), &dentryGroup);
         DecodeDentrys(dentryGroup, bases);
@@ -740,11 +745,12 @@ void MetaFileMgr::ClearAll()
 std::string MetaFileMgr::RecordIdToCloudId(const std::string hexStr)
 {
     std::string result;
-
-    for (std::size_t i = 0; i < hexStr.length(); i += 2) {
-        std::string hexByte = hexStr.substr(i, 2);
+    constexpr std::size_t offset = 2;
+    constexpr int changeBase = 16;
+    for (std::size_t i = 0; i < hexStr.length(); i += offset) {
+        std::string hexByte = hexStr.substr(i, offset);
         char *endPtr;
-        unsigned long hexValue = std::strtoul(hexByte.c_str(), &endPtr, 16);
+        unsigned long hexValue = std::strtoul(hexByte.c_str(), &endPtr, changeBase);
 
         if (endPtr != hexByte.c_str() + hexByte.length()) {
             LOGE("Invalid hexadecimal string: %{public}s", hexStr.c_str());
@@ -763,9 +769,10 @@ std::string MetaFileMgr::RecordIdToCloudId(const std::string hexStr)
 std::string MetaFileMgr::CloudIdToRecordId(const std::string cloudId)
 {
     std::stringstream result;
+    constexpr int width = 2;
     for (std::size_t i = 0; i < cloudId.length(); i++) {
         uint8_t u8Byte = cloudId[i];
-        result << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(u8Byte);
+        result << std::setw(width) << std::setfill('0') << std::hex << static_cast<int>(u8Byte);
     }
     return result.str();
 }

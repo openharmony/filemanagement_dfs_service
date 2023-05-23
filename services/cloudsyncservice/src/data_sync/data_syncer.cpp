@@ -276,7 +276,7 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
                            std::shared_ptr<const DriveKit::DKDatabase>,
                            const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
                            const DriveKit::DKError &)>> downloadResultCallback = nullptr;
-    auto downloadProcessCallback = 
+    auto downloadProcessCallback =
         std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(
             EmptyDownLoadAssetsprogress);
 

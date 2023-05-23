@@ -369,7 +369,8 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
         return E_INVAL_ARG;
     }
 
-    LOGI("cloudMtime %{public}llu, localMtime %{public}llu", (unsigned long long)cloudMtime, (unsigned long long)localMtime);
+    LOGI("cloudMtime %{public}llu, localMtime %{public}llu",
+         (unsigned long long)cloudMtime, (unsigned long long)localMtime);
     changed = !(cloudMtime == localMtime);
     return E_OK;
 }

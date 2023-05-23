@@ -375,8 +375,8 @@ int32_t FileDataConvertor::HandleTimeZone(string &key, DriveKit::DKRecordFieldMa
 int32_t FileDataConvertor::HandleGeneral(std::string &key, DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
-    int32_t size = GALLERY_FILE_COLUMNS.size();
-    for (int32_t i = 0; i < size - 1; i++) {
+    auto size = GALLERY_FILE_COLUMNS.size();
+    for (decltype(size) i = 0; i < size - 1; i++) {
         const string &key = GALLERY_FILE_COLUMNS[i];
         DataType type = GALLERY_FILE_COLUMN_TYPES[i];
         switch (type) {

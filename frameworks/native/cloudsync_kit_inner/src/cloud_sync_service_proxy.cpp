@@ -417,5 +417,4 @@ void CloudSyncServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(in
     isLoadSuccess_.store(false);
     proxyConVar_.notify_one();
 }
-
 } // namespace OHOS::FileManagement::CloudSync
