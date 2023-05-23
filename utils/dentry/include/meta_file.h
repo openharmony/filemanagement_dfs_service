@@ -85,23 +85,23 @@ struct MetaBase {
 };
 
 struct BitOps {
-    static const int BIT_PER_BYTE = 8;
-    static int TestBit(int nr, const uint8_t addr[])
+    static const uint8_t BIT_PER_BYTE = 8;
+    static int TestBit(uint32_t nr, const uint8_t addr[])
     {
         return 1 & (addr[nr / BIT_PER_BYTE] >> (nr & (BIT_PER_BYTE - 1)));
     }
 
-    static void ClearBit(int nr, uint8_t addr[])
+    static void ClearBit(uint32_t nr, uint8_t addr[])
     {
         addr[nr / BIT_PER_BYTE] &= ~(1UL << ((nr) % BIT_PER_BYTE));
     }
 
-    static void SetBit(int nr, uint8_t addr[])
+    static void SetBit(uint32_t nr, uint8_t addr[])
     {
         addr[nr / BIT_PER_BYTE] |= (1UL << ((nr) % BIT_PER_BYTE));
     }
 
-    static int FindNextBit(const uint8_t addr[], int maxSlots, int start)
+    static uint32_t FindNextBit(const uint8_t addr[], uint32_t maxSlots, uint32_t start)
     {
         while (start < maxSlots) {
             if (BitOps::TestBit(start, addr)) {
@@ -112,7 +112,7 @@ struct BitOps {
         return maxSlots;
     }
 
-    static int FindNextZeroBit(const uint8_t addr[], int maxSlots, int start)
+    static uint32_t FindNextZeroBit(const uint8_t addr[], uint32_t maxSlots, uint32_t start)
     {
         while (start < maxSlots) {
             if (!BitOps::TestBit(start, addr)) {

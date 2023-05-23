@@ -207,8 +207,8 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
     auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId, relativePath);
     MetaBase mBaseLookup(fileName);
     MetaBase mBase(fileName, cloudId);
-    mBase.size = isize;
-    mBase.mtime = mtime;
+    mBase.size = static_cast<uint64_t>(isize);
+    mBase.mtime = static_cast<uint64_t>(mtime);
     if (mFile->DoLookup(mBaseLookup) == E_OK) {
         LOGE("dentry exist when insert, do update instead");
         return mFile->DoUpdate(mBase);
@@ -299,7 +299,12 @@ static string GetLocalPath(int userId, const string &filePath)
 
 static bool LocalWriteOpen(const string &dfsPath)
 {
-    int fd = open(dfsPath.c_str(), O_RDONLY);
+    unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);
+    if (realpath(dfsPath.c_str(), absPath.get()) == nullptr) {
+        return false;
+    }
+    string realPath = absPath.get();
+    int fd = open(realPath.c_str(), O_RDONLY);
     if (fd < 0) {
         LOGE("open failed, errno:%{public}d", errno);
         return false;
@@ -340,7 +345,7 @@ static bool FileIsLocal(NativeRdb::ResultSet &local)
         return E_INVAL_ARG;
     }
 
-    return !!(position & 1);
+    return !!(static_cast<uint32_t>(position) & 1);
 }
 
 static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, bool &changed)
