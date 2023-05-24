@@ -224,7 +224,7 @@ static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
         if ((i % sizeof(int)) == 0) {
             val = pad;
         }
-        uint8_t c = tolower(msg[i]);
+        uint8_t c = static_cast<uint8_t>(tolower(msg[i]));
         val = c + (val << 8); /* hash shift size 8 */
         if ((i % 4) == 3) {   /* msg size 4, shift when 3 */
             *buf++ = val;
@@ -296,9 +296,9 @@ static uint32_t DentryHash(const std::string &name)
     return hmdfsHash;
 }
 
-static inline int GetDentrySlots(size_t nameLen)
+static inline uint32_t GetDentrySlots(size_t nameLen)
 {
-    return (nameLen + BITS_PER_BYTE - 1) >> HMDFS_SLOT_LEN_BITS;
+    return static_cast<uint32_t>((nameLen + BITS_PER_BYTE - 1) >> HMDFS_SLOT_LEN_BITS);
 }
 
 static inline off_t GetDentryGroupPos(size_t bidx)
@@ -352,17 +352,17 @@ static uint32_t GetBucketByLevel(uint32_t level)
     return static_cast<uint32_t>(buckets);
 }
 
-static int RoomForFilename(const uint8_t bitmap[], int slots, int maxSlots)
+static uint32_t RoomForFilename(const uint8_t bitmap[], size_t slots, uint32_t maxSlots)
 {
-    int bitStart = 0;
+    uint32_t bitStart = 0;
 
     while (1) {
-        int zeroStart = BitOps::FindNextZeroBit(bitmap, maxSlots, bitStart);
+        uint32_t zeroStart = BitOps::FindNextZeroBit(bitmap, maxSlots, bitStart);
         if (zeroStart >= maxSlots) {
             return maxSlots;
         }
 
-        int zeroEnd = BitOps::FindNextBit(bitmap, maxSlots, zeroStart);
+        uint32_t zeroEnd = BitOps::FindNextBit(bitmap, maxSlots, zeroStart);
         if (zeroEnd - zeroStart >= slots) {
             return zeroStart;
         }
@@ -379,7 +379,7 @@ static void UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
 {
     HmdfsDentry *de;
     const std::string name = base.name;
-    int slots = GetDentrySlots(name.length());
+    uint32_t slots = GetDentrySlots(name.length());
 
     de = &d.nsl[bitPos];
     de->hash = nameHash;
@@ -394,7 +394,7 @@ static void UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
         LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", CLOUD_RECORD_ID_LEN, base.cloudId.length());
     }
 
-    for (int i = 0; i < slots; i++) {
+    for (uint32_t i = 0; i < slots; i++) {
         BitOps::SetBit(bitPos + i, d.bitmap);
         if (i) {
             (de + i)->namelen = 0;
@@ -576,9 +576,9 @@ int32_t MetaFile::DoRemove(const MetaBase &base)
         return ENOENT;
     }
 
-    int bitPos = (de - ctx.page->nsl);
-    int slots = GetDentrySlots(de->namelen);
-    for (int i = 0; i < slots; i++) {
+    uint32_t bitPos = (de - ctx.page->nsl);
+    uint32_t slots = GetDentrySlots(de->namelen);
+    for (uint32_t i = 0; i < slots; i++) {
         BitOps::ClearBit(bitPos + i, ctx.page->bitmap);
     }
 
@@ -711,7 +711,7 @@ int32_t MetaFile::LoadChildren(std::vector<MetaBase> &bases)
         return EINVAL;
     }
 
-    uint64_t fileSize = fileStat.st_size;
+    uint64_t fileSize = static_cast<uint64_t>(fileStat.st_size);
     uint64_t groupCnt = GetDentryGroupCnt(fileSize);
     HmdfsDentryGroup dentryGroup;
 

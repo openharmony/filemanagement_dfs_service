@@ -121,7 +121,7 @@ static void GetMetaAttr(struct MetaInode *ino, struct stat *stbuf)
     } else {
         stbuf->st_mode = S_IFREG;
         stbuf->st_nlink = STAT_NLINK_REG;
-        stbuf->st_size = ino->mBase->size;
+        stbuf->st_size = static_cast<decltype(stbuf->st_size)>(ino->mBase->size);
     }
 }
 
