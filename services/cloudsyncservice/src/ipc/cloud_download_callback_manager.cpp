@@ -13,34 +13,44 @@
  * limitations under the License.
  */
 
-#include "ipc/cloud_download_callback_manager.h"
-#include "dfs_error.h"
 #include "utils_log.h"
+#include "ipc/cloud_download_callback_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
+CloudDownloadCallbackManager::CloudDownloadCallbackManager()
+{
+    callback_ = nullptr;
+}
+
 void CloudDownloadCallbackManager::StartDonwload(const std::string path, const int32_t userId)
 {
-    downloads_[path].state = CloudDownloadCallProgress::DownloadStatus::RUNNING;
+    downloads_[path].state = DownloadProgressObj::Status::RUNNING;
     downloads_[path].path = path;
+    LOGI("download_file : %{public}d start download %{public}s callback success.", userId, path.c_str());
 }
 
 void CloudDownloadCallbackManager::StopDonwload(const std::string path, const int32_t userId)
 {
     if (downloads_.find(path) != downloads_.end()) {
-        downloads_[path].state = CloudDownloadCallProgress::DownloadStatus::STOPPED;
+        downloads_[path].state = DownloadProgressObj::Status::STOPPED;
+        LOGI("download_file : %{public}d stop download %{public}s callback success.", userId, path.c_str());
+    } else {
+        LOGI("download_file : %{public}d stop download %{public}s callback fail, task not exist.", userId, path.c_str());
     }
 }
 
 void CloudDownloadCallbackManager::RegisterCallback(const int32_t userId,
                                                     const sptr<ICloudDownloadCallback> downloadCallback)
 {
+    LOGI("download_file : %{public}d register download callback : %{public}d", userId, downloadCallback != nullptr);
     callback_ = downloadCallback;
 }
 
 void CloudDownloadCallbackManager::UnregisterCallback(const int32_t userId)
 {
+    LOGI("download_file : %{public}d unregister download callback", userId);
     callback_ = nullptr;
 }
 
@@ -53,26 +63,25 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
     const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &results,
     const DriveKit::DKError &err)
 {
-    auto downloadedState = CloudDownloadCallProgress::DownloadStatus::FAILED;
+    auto downloadedState = DownloadProgressObj::FAILED;
     bool isDownloading = (downloads_.find(path) != downloads_.end());
+    LOGI("download_file : [callback downloaded] %{public}s is downloading : %{public}d .", path.c_str(), isDownloading);
     if (isDownloading) {
         auto &download = downloads_[path];
         if (err.HasError()) {
-            downloadedState = CloudDownloadCallProgress::DownloadStatus::FAILED;
+            downloadedState = DownloadProgressObj::FAILED;
         } else {
-            downloadedState = CloudDownloadCallProgress::DownloadStatus::COMPLETED;
+            downloadedState = DownloadProgressObj::COMPLETED;
         }
-        download.state = downloadedState;
-    }
-
-    if (callback_ != nullptr) {
-        callback_->OnDownloadedResult(path, (int32_t)downloadedState);
-        if (assetsToDownload.size() == 1) {
-            (void)handler->OnDownloadSuccess(assetsToDownload[0]);
+        LOGI("download_file : [callback downloaded] %{public}s state is %{public}s.", path.c_str(), download.to_string().c_str());
+        if (callback_ != nullptr && download.state == DownloadProgressObj::RUNNING) {
+            download.state = downloadedState;
+            callback_->OnDownloadProcess(download);
+            if (assetsToDownload.size() == 1) {
+                (void)handler->OnDownloadSuccess(assetsToDownload[0]);
+            }
         }
-    }
 
-    if (isDownloading) {
         downloads_.erase(path);
     }
 }
@@ -84,14 +93,15 @@ void CloudDownloadCallbackManager::OnDownloadProcess(const std::string path,
                                                      DriveKit::DownloadSize downloadSize)
 {
     bool isDownloading = (downloads_.find(path) != downloads_.end());
+    LOGI("download_file : [callback downloading] %{public}s is downloading : %{public}d .", path.c_str(), isDownloading);
     if (isDownloading) {
         auto &download = downloads_[path];
         download.downloadedSize = downloadSize;
         download.totalSize = totalSize;
-    }
-
-    if (callback_ != nullptr) {
-        callback_->OnDownloadProcess(path, downloadSize, totalSize);
+        LOGI("download_file : [callback downloading] %{public}s state is %{public}s.", path.c_str(), download.to_string().c_str());
+        if (callback_ != nullptr && download.state == DownloadProgressObj::RUNNING) {
+            callback_->OnDownloadProcess(download);
+        }
     }
 }
 

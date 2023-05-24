@@ -16,36 +16,21 @@
 #ifndef OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_MANAGER_H
 #define OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_MANAGER_H
 
-#include "dk_assets_downloader.h"
 #include <memory>
 #include <mutex>
 #include <unordered_map>
 #include <unordered_set>
+#include "dk_assets_downloader.h"
 
-#include "data_handler.h"
-#include "dfs_error.h"
 #include "i_cloud_download_callback.h"
+#include "data_handler.h"
 #include "sdk_helper.h"
 
 namespace OHOS::FileManagement::CloudSync {
 
-class CloudDownloadCallProgress {
-public:
-    enum DownloadStatus {
-        RUNNING = 0,
-        COMPLETED = 1,
-        FAILED = 2,
-        STOPPED = 3,
-    };
-    std::string path;
-    DownloadStatus state;
-    int64_t downloadedSize;
-    int64_t totalSize;
-};
-
 class CloudDownloadCallbackManager {
 public:
-    CloudDownloadCallbackManager() = default;
+    CloudDownloadCallbackManager();
     ~CloudDownloadCallbackManager() = default;
 
     void StartDonwload(const std::string path, const int32_t userId);
@@ -66,8 +51,8 @@ public:
                            DriveKit::DownloadSize downloadSize);
 
 private:
-    std::unordered_map<std::string, CloudDownloadCallProgress> downloads_;
-    sptr<ICloudDownloadCallback> callback_{nullptr};
+    std::unordered_map<std::string, DownloadProgressObj> downloads_;
+    sptr<ICloudDownloadCallback> callback_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

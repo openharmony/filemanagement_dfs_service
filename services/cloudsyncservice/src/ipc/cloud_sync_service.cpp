@@ -151,7 +151,7 @@ int32_t CloudSyncService::StartDownloadFile(const std::string &path)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     string bundleName;
-    LOGI("download file start");
+    LOGI("start StartDownloadFile");
     if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
         return E_INVAL_ARG;
     }
@@ -165,7 +165,7 @@ int32_t CloudSyncService::StopDownloadFile(const std::string &path)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     string bundleName;
-    LOGI("download file start");
+    LOGI("start StopDownloadFile");
     if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
         return E_INVAL_ARG;
     }
@@ -180,7 +180,7 @@ int32_t CloudSyncService::RegisterDownloadFileCallback(const sptr<IRemoteObject>
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     auto downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
     string bundleName;
-    LOGI("download file start");
+    LOGI("start RegisterDownloadFileCallback");
     if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
         return E_INVAL_ARG;
     }
@@ -194,7 +194,7 @@ int32_t CloudSyncService::UnregisterDownloadFileCallback()
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     string bundleName;
-    LOGI("download file start");
+    LOGI("start UnregisterDownloadFileCallback");
     if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
         return E_INVAL_ARG;
     }

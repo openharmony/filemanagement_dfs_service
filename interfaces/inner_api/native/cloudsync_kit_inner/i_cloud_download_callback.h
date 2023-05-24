@@ -24,8 +24,7 @@ namespace OHOS::FileManagement::CloudSync {
 class ICloudDownloadCallback : public CloudDownloadCallback, public IRemoteBroker {
 public:
     enum {
-        SERVICE_CMD_ON_DOWNLOADED = 0,
-        SERVICE_CMD_ON_PROCESS = 1,
+        SERVICE_CMD_ON_PROCESS = 0,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudDownloadCallback")

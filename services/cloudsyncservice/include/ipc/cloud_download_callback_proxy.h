@@ -27,8 +27,7 @@ public:
         : IRemoteProxy<ICloudDownloadCallback>(impl) {}
     ~CloudDownloadCallbackProxy() override {}
 
-    void OnDownloadedResult(std::string path, int32_t result) override;
-    void OnDownloadProcess(std::string path, int64_t downloadSize, int64_t totalSize) override;
+    void OnDownloadProcess(DownloadProgressObj& progress) override;
 private:
     static inline BrokerDelegator<CloudDownloadCallbackProxy> delegator_;
 };

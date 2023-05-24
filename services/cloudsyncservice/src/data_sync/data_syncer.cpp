@@ -366,7 +366,6 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
                                       std::shared_ptr<const DriveKit::DKDatabase> database,
                                       const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &results,
                                       const DriveKit::DKError &err) {
-        LOGI("download result %{public}d", err.serverErrorCode);
         this->downloadCallbackMgr_.OnDownloadedResult(path, assetsToDownload, handler, context, database, results, err);
     };
     auto downloadResultPtr = std::make_shared<std::function<void(
