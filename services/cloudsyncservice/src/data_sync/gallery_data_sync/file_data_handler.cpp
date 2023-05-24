@@ -620,11 +620,15 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    createPredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
-        Media::MEDIA_DATA_DB_IS_TRASH + " = ? AND (" + Media::MEDIA_DATA_DB_MEDIA_TYPE +
-        " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
-    createPredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)),
-        "0", to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
+    createPredicates.EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)))
+    ->And()->EqualTo(Media::MEDIA_DATA_DB_IS_TRASH, "0")
+    ->BeginWrap()
+    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
+    ->Or()
+    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
+    ->EndWrap()
+    ->And()->NotIn(Media::MEDIA_DATA_DB_CLOUD_ID, failSet_);
+
     /* small-size first */
     createPredicates.OrderByAsc(Media::MEDIA_DATA_DB_SIZE);
     createPredicates.Limit(LIMIT_SIZE);
@@ -650,10 +654,14 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates deletePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    deletePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND (" +
-        Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
-    deletePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)),
-        to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
+    deletePredicates.EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)))
+    ->And()->EqualTo(Media::MEDIA_DATA_DB_IS_TRASH, "0")
+    ->BeginWrap()
+    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
+    ->Or()
+    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
+    ->EndWrap()
+    ->And()->NotIn(Media::MEDIA_DATA_DB_CLOUD_ID, failSet_);
     deletePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -677,10 +685,13 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    updatePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND (" +
-        Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
-    updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)),
-        to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
+    updatePredicates.EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)))
+    ->BeginWrap()
+    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
+    ->Or()
+    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
+    ->EndWrap()
+    ->And()->NotIn(Media::MEDIA_DATA_DB_CLOUD_ID, failSet_);
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -736,11 +747,14 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    updatePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
-        Media::MEDIA_DATA_DB_IS_TRASH + " = ? AND (" + Media::MEDIA_DATA_DB_MEDIA_TYPE +
-        " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
-    updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)),
-        "0", to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
+    updatePredicates.EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)))
+    ->And()->EqualTo(Media::MEDIA_DATA_DB_IS_TRASH, "0")
+    ->BeginWrap()
+    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
+    ->Or()
+    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
+    ->EndWrap()
+    ->And()->NotIn(Media::MEDIA_DATA_DB_CLOUD_ID, failSet_);
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -772,6 +786,7 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
+            failSet_.push_back(entry.first);
         }
     }
     return err;
@@ -787,6 +802,7 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
+            failSet_.push_back(entry.first);
         }
     }
     return err;
@@ -804,6 +820,7 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
+            failSet_.push_back(entry.first);
         }
     }
     return err;
@@ -821,6 +838,7 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
+            failSet_.push_back(entry.first);
         }
     }
     return err;
@@ -828,6 +846,7 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
 
 void FileDataHandler::Reset()
 {
+    failSet_.clear();
 }
 
 void FileDataHandler::OnCreateRecordSuccess(

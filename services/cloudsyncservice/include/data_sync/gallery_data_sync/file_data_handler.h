@@ -92,6 +92,7 @@ private:
     static inline const int32_t LIMIT_SIZE = 5;
     DriveKit::DKRecordType recordType_ = "media";
     DriveKit::DKFieldKeyArray desiredKeys_;
+    static inline std::vector<std::string> failSet_;
 
     /* identifier */
     int32_t userId_;
