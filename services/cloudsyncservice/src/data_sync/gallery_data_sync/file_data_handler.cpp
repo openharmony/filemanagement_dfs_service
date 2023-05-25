@@ -677,11 +677,10 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    updatePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND " +
-        Media::MEDIA_DATA_DB_IS_TRASH + " = ? AND (" + Media::MEDIA_DATA_DB_MEDIA_TYPE +
-        " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
+    updatePredicates.SetWhereClause(Media::MEDIA_DATA_DB_DIRTY + " = ? AND (" +
+        Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ? OR " + Media::MEDIA_DATA_DB_MEDIA_TYPE + " = ?)");
     updatePredicates.SetWhereArgs({to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)),
-        "0", to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
+        to_string(Media::MEDIA_TYPE_IMAGE), to_string(Media::MEDIA_TYPE_VIDEO)});
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -1041,7 +1040,6 @@ void FileDataHandler::GetLocalTimeMap(const std::map<DKRecordId, DKRecordOperRes
         }
     }
     NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    createPredicates.EqualTo(Media::MEDIA_DATA_DB_IS_TRASH, "0");
     createPredicates.And()->In(type, path);
     auto resultSet = Query(createPredicates, GALLERY_FILE_COLUMNS);
     if (resultSet == nullptr) {

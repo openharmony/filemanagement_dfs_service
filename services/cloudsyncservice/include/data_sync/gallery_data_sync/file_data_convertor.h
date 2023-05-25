@@ -63,6 +63,7 @@ private:
     int32_t HandleCreatedTime(std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleFavorite(std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleDescription(std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleRecycle(std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
 
     /* properties */
     int32_t HandleProperties(std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);

@@ -45,7 +45,8 @@
           "file_api",
           "init",
           "libfuse",
-          "samgr"
+          "samgr",
+          "hiviewdfx_hilog_native"
         ],
         "third_party": []
       },

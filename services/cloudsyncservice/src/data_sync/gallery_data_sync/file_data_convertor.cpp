@@ -52,6 +52,7 @@ unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRe
     { FILE_CREATED_TIME, &FileDataConvertor::HandleCreatedTime },
     { FILE_FAVORITE, &FileDataConvertor::HandleFavorite },
     { FILE_DESCRIPTION, &FileDataConvertor::HandleDescription },
+    { FILE_RECYCLED, &FileDataConvertor::HandleRecycle },
     /* properties */
     { FILE_PROPERTIES, &FileDataConvertor::HandleProperties },
     /* attachments */
@@ -249,6 +250,18 @@ int32_t FileDataConvertor::HandleDescription(string &key, DriveKit::DKRecordData
     NativeRdb::ResultSet &resultSet)
 {
     data[key] = DriveKit::DKRecordField("");
+    return E_OK;
+}
+
+int32_t FileDataConvertor::HandleRecycle(string &key, DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    int32_t val;
+    int32_t ret = GetInt(MEDIA_DATA_DB_IS_TRASH, val, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    data[key] = DriveKit::DKRecordField(!!val);
     return E_OK;
 }
 
