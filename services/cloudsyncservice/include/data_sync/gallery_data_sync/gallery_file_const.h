@@ -35,6 +35,7 @@ const std::string FILE_FILETYPE = "fileType";
 const std::string FILE_CREATED_TIME = "createdTime";
 const std::string FILE_FAVORITE = "favorite";
 const std::string FILE_DESCRIPTION = "description";
+const std::string FILE_RECYCLED = "recycled";
 /* properties */
 const std::string FILE_PROPERTIES = "properties";
 const std::string FILE_HEIGHT = "height";
@@ -78,6 +79,7 @@ const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::MEDIA_DATA_DB_RELATIVE_PATH,
     Media::MEDIA_DATA_DB_HEIGHT,
     Media::MEDIA_DATA_DB_WIDTH,
+    Media::MEDIA_DATA_DB_IS_TRASH,
     /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
     Media::MEDIA_DATA_DB_CLOUD_ID
 };
@@ -99,6 +101,7 @@ const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
     DataType::STRING,       /* relative_path */
     DataType::INT,          /* height */
     DataType::INT,          /* width */
+    DataType::INT,          /* is_trash */
     DataType::STRING        /* cloud_id */
 };
 } // namespace CloudSync

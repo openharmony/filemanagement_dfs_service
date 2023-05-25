@@ -34,7 +34,7 @@ int32_t DataConvertor::ResultSetToRecords(const unique_ptr<NativeRdb::ResultSet>
     /* reserve to avoid repeatedly alloc and copy */
     int32_t rowCount = 0;
     int ret = resultSet->GetRowCount(rowCount);
-    if (ret != 0) {
+    if (ret != 0 || rowCount < 0) {
         LOGE("result set get row count err %{public}d", ret);
         return E_RDB;
     }
