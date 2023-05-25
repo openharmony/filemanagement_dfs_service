@@ -60,8 +60,13 @@ ohos_unittest("data_sync_manager_test") {
     "relational_store:native_rdb",
   ]
 
-  deps +=
-      [ "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter" ]
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
 
   defines = [ "private=public" ]
 
