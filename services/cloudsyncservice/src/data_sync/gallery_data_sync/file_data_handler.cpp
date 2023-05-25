@@ -621,13 +621,15 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
     /* build predicates */
     NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     createPredicates.EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)))
-    ->And()->EqualTo(Media::MEDIA_DATA_DB_IS_TRASH, "0")
-    ->BeginWrap()
-    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
-    ->Or()
-    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-    ->EndWrap()
-    ->And()->NotIn(Media::MEDIA_DATA_DB_CLOUD_ID, failSet_);
+        ->And()
+        ->EqualTo(Media::MEDIA_DATA_DB_IS_TRASH, "0")
+        ->BeginWrap()
+        ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
+        ->Or()
+        ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
+        ->EndWrap()
+        ->And()
+        ->NotIn(Media::MEDIA_DATA_DB_FILE_PATH, createFailSet_);
 
     /* small-size first */
     createPredicates.OrderByAsc(Media::MEDIA_DATA_DB_SIZE);
@@ -654,13 +656,15 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates deletePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    deletePredicates.EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)))
-    ->BeginWrap()
-    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
-    ->Or()
-    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-    ->EndWrap()
-    ->And()->NotIn(Media::MEDIA_DATA_DB_CLOUD_ID, failSet_);
+    deletePredicates
+        .EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)))
+        ->BeginWrap()
+        ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
+        ->Or()
+        ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
+        ->EndWrap()
+        ->And()
+        ->NotIn(Media::MEDIA_DATA_DB_CLOUD_ID, modifyFailSet_);
     deletePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -684,13 +688,15 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    updatePredicates.EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)))
-    ->BeginWrap()
-    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
-    ->Or()
-    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-    ->EndWrap()
-    ->And()->NotIn(Media::MEDIA_DATA_DB_CLOUD_ID, failSet_);
+    updatePredicates
+        .EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)))
+        ->BeginWrap()
+        ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
+        ->Or()
+        ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
+        ->EndWrap()
+        ->And()
+        ->NotIn(Media::MEDIA_DATA_DB_CLOUD_ID, modifyFailSet_);
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -741,19 +747,21 @@ int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::
     return E_OK;
 }
 
-
 int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    updatePredicates.EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)))
-    ->And()->EqualTo(Media::MEDIA_DATA_DB_IS_TRASH, "0")
-    ->BeginWrap()
-    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
-    ->Or()
-    ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-    ->EndWrap()
-    ->And()->NotIn(Media::MEDIA_DATA_DB_CLOUD_ID, failSet_);
+    updatePredicates
+        .EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)))
+        ->And()
+        ->EqualTo(Media::MEDIA_DATA_DB_IS_TRASH, "0")
+        ->BeginWrap()
+        ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
+        ->Or()
+        ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
+        ->EndWrap()
+        ->And()
+        ->NotIn(Media::MEDIA_DATA_DB_CLOUD_ID, modifyFailSet_);
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -786,7 +794,24 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
-            failSet_.push_back(entry.first);
+            auto record = entry.second.GetDKRecord();
+            DKRecordData data;
+            record.GetRecordData(data);
+            if (data.find(FILE_PROPERTIES) == data.end()) {
+                LOGE("record data cannot find properties");
+                return E_INVAL_ARG;
+            }
+            DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
+            if (prop.find(MEDIA_DATA_DB_FILE_PATH) == prop.end()) {
+                LOGE("record data cannot find file path");
+                return E_INVAL_ARG;
+            }
+            string path;
+            if (prop[MEDIA_DATA_DB_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
+                LOGE("bad file_path in props");
+                return E_INVAL_ARG;
+            }
+            createFailSet_.push_back(path);
             LOGE("create record failed, cloud id: %{public}s", entry.first.c_str());
         }
     }
@@ -804,7 +829,7 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
-            failSet_.push_back(entry.first);
+            modifyFailSet_.push_back(entry.first);
             LOGE("delete record failed, cloud id: %{public}s", entry.first.c_str());
         }
     }
@@ -824,7 +849,7 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
-            failSet_.push_back(entry.first);
+            modifyFailSet_.push_back(entry.first);
             LOGE("modify mdirty record failed, cloud id: %{public}s", entry.first.c_str());
         }
     }
@@ -844,7 +869,7 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
-            failSet_.push_back(entry.first);
+            modifyFailSet_.push_back(entry.first);
             LOGE("modify fdirty record failed, cloud id: %{public}s", entry.first.c_str());
         }
     }
@@ -853,7 +878,8 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
 
 void FileDataHandler::Reset()
 {
-    failSet_.clear();
+    modifyFailSet_.clear();
+    createFailSet_.clear();
 }
 
 int32_t FileDataHandler::OnCreateRecordSuccess(
