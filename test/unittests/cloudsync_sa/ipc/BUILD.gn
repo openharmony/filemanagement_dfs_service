@@ -51,6 +51,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/sdk_helper_mock.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
@@ -60,7 +61,6 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_sync_callback_manager.cpp",
@@ -102,8 +102,13 @@ ohos_unittest("cloud_sync_service_test") {
     "samgr:samgr_proxy",
   ]
 
-  deps +=
-      [ "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter" ]
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
 
   defines = [
     "private=public",
