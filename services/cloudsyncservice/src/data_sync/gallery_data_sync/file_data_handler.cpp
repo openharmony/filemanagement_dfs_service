@@ -655,7 +655,6 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
     /* build predicates */
     NativeRdb::AbsRdbPredicates deletePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     deletePredicates.EqualTo(Media::MEDIA_DATA_DB_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)))
-    ->And()->EqualTo(Media::MEDIA_DATA_DB_IS_TRASH, "0")
     ->BeginWrap()
     ->EqualTo(Media::MEDIA_DATA_DB_MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
     ->Or()
@@ -782,11 +781,13 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
     for (auto &entry : map) {
         const DKRecordOperResult &result = entry.second;
         if (result.IsSuccess()) {
-            OnCreateRecordSuccess(entry, localMap);
+            err = OnCreateRecordSuccess(entry, localMap);
+            err = (err == E_OK) ? E_OK : err;
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
             failSet_.push_back(entry.first);
+            LOGE("create record failed, cloud id: %{public}s", entry.first.c_str());
         }
     }
     return err;
@@ -798,11 +799,13 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
     for (auto &entry : map) {
         const DKRecordOperResult &result = entry.second;
         if (result.IsSuccess()) {
-            OnDeleteRecordSuccess(entry);
+            err = OnDeleteRecordSuccess(entry);
+            err = (err == E_OK) ? E_OK : err;
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
             failSet_.push_back(entry.first);
+            LOGE("delete record failed, cloud id: %{public}s", entry.first.c_str());
         }
     }
     return err;
@@ -816,11 +819,13 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
     for (auto &entry : map) {
         const DKRecordOperResult &result = entry.second;
         if (result.IsSuccess()) {
-            OnModifyRecordSuccess(entry, localMap);
+            err = OnModifyRecordSuccess(entry, localMap);
+            err = (err == E_OK) ? E_OK : err;
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
             failSet_.push_back(entry.first);
+            LOGE("modify mdirty record failed, cloud id: %{public}s", entry.first.c_str());
         }
     }
     return err;
@@ -834,11 +839,13 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
     for (auto &entry : map) {
         const DKRecordOperResult &result = entry.second;
         if (result.IsSuccess()) {
-            OnModifyRecordSuccess(entry, localMap);
+            err = OnModifyRecordSuccess(entry, localMap);
+            err = (err == E_OK) ? E_OK : err;
         } else {
             err = OnRecordFailed(entry);
             err = (err == E_OK) ? E_OK : err;
             failSet_.push_back(entry.first);
+            LOGE("modify fdirty record failed, cloud id: %{public}s", entry.first.c_str());
         }
     }
     return err;
@@ -849,7 +856,7 @@ void FileDataHandler::Reset()
     failSet_.clear();
 }
 
-void FileDataHandler::OnCreateRecordSuccess(
+int32_t FileDataHandler::OnCreateRecordSuccess(
     const std::pair<DKRecordId, DKRecordOperResult> &entry,
     const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap)
 {
@@ -859,18 +866,18 @@ void FileDataHandler::OnCreateRecordSuccess(
     record.GetRecordData(data);
     if (data.find(FILE_PROPERTIES) == data.end()) {
         LOGE("record data cannot find properties");
-        return;
+        return E_INVAL_ARG;
     }
     DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
     if (prop.find(MEDIA_DATA_DB_FILE_PATH) == prop.end()) {
         LOGE("record data cannot find file path");
-        return;
+        return E_INVAL_ARG;
     }
 
     string path;
     if (prop[MEDIA_DATA_DB_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
-        return;
+        return E_INVAL_ARG;
     }
 
     ValuesBucket valuesBucket;
@@ -892,11 +899,12 @@ void FileDataHandler::OnCreateRecordSuccess(
     int32_t ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
     if (ret != 0) {
         LOGE("on create records update synced err %{public}d", ret);
-        return;
+        return ret;
     }
+    return E_OK;
 }
 
-void FileDataHandler::OnDeleteRecordSuccess(const std::pair<DKRecordId, DKRecordOperResult> &entry)
+int32_t FileDataHandler::OnDeleteRecordSuccess(const std::pair<DKRecordId, DKRecordOperResult> &entry)
 {
     string cloudId = entry.first;
     /* delete local */
@@ -905,11 +913,12 @@ void FileDataHandler::OnDeleteRecordSuccess(const std::pair<DKRecordId, DKRecord
     int32_t ret = Delete(deletedRows, whereClause, {cloudId});
     if (ret != 0) {
         LOGE("on delete records update err %{public}d", ret);
-        return;
+        return ret;
     }
+    return E_OK;
 }
 
-void FileDataHandler::OnModifyRecordSuccess(
+int32_t FileDataHandler::OnModifyRecordSuccess(
     const std::pair<DKRecordId, DKRecordOperResult> &entry,
     const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap)
 {
@@ -920,7 +929,8 @@ void FileDataHandler::OnModifyRecordSuccess(
 
     /* compare mtime */
     if (OnModifyIsTimeChanged(data, localMap, cloudId, Media::MEDIA_DATA_DB_DATE_MODIFIED)) {
-        return;
+        LOGI("mtime changed, need to update fdirty");
+        return E_OK;
     }
     /* record to value bucket */
     ValuesBucket valuesBucket;
@@ -931,18 +941,20 @@ void FileDataHandler::OnModifyRecordSuccess(
     int32_t ret = Update(changedRows, valuesBucket, whereClause, {cloudId});
     if (ret != 0) {
         LOGE("on modify records update synced err %{public}d", ret);
-        return;
+        return ret;
     }
 
     /* compare metatime */
     if (OnModifyIsTimeChanged(data, localMap, cloudId, Media::MEDIA_DATA_DB_META_DATE_MODIFIED)) {
+        LOGI("metatime changed, need to update mdirty");
         valuesBucket.PutInt(Media::MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
         ret = Update(changedRows, valuesBucket, whereClause, {cloudId});
         if (ret != 0) {
             LOGE("on modify records update mdirty err %{public}d", ret);
-            return;
+            return ret;
         }
     }
+    return E_OK;
 }
 
 bool FileDataHandler::OnCreateIsTimeChanged(
@@ -1110,15 +1122,16 @@ int32_t FileDataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOper
         return HandleATFailed();
     } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::ACCESS_DENIED &&
                errorDetailcode == NAME_CONFLICT) {
-        HandleNameConflict();
+        return HandleNameConflict();
     } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::ATOMIC_ERROR &&
                errorDetailcode == INVALID_FILE) {
-        HandleNameInvalid();
+        return HandleNameInvalid();
     } else {
         LOGE(" unknown error code record failed, serverErrorCode = %{public}d, errorDetailcode = %{public}s",
              serverErrorCode, errorDetailcode.c_str());
+        return E_STOP;
     }
-    return E_OK;
+    return E_STOP;
 }
 
 int32_t FileDataHandler::HandleCloudSpaceNotEnough()
@@ -1131,17 +1144,19 @@ int32_t FileDataHandler::HandleCloudSpaceNotEnough()
 int32_t FileDataHandler::HandleATFailed()
 {
     LOGE("AT Failed");
-    return E_OK;
+    return E_STOP;
 }
 
-void FileDataHandler::HandleNameConflict()
+int32_t FileDataHandler::HandleNameConflict()
 {
     LOGE("Name Conflict");
+    return E_STOP;
 }
 
-void FileDataHandler::HandleNameInvalid()
+int32_t FileDataHandler::HandleNameInvalid()
 {
     LOGE("Name Invalid");
+    return E_STOP;
 }
 } // namespace CloudSync
 } // namespace FileManagement
