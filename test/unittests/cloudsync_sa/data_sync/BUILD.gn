@@ -178,14 +178,17 @@ ohos_unittest("data_convertor_test") {
   use_exceptions = true
 }
 
-ohos_unittest("data_convertor_test") {
+ohos_unittest("file_data_handler_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
+    "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
-    "data_convertor_test.cpp",
+    "file_data_handler_test.cpp",
   ]
 
   include_dirs = [
@@ -211,8 +214,13 @@ ohos_unittest("data_convertor_test") {
     "relational_store:native_rdb",
   ]
 
-  deps +=
-      [ "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter" ]
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
 
   defines = [ "private=public" ]
 
@@ -225,5 +233,6 @@ group("cloudsync_sa_data_sync_test") {
     ":data_convertor_test",
     ":data_handler_test",
     ":data_sync_manager_test",
+    ":file_data_handler_test",
   ]
 }

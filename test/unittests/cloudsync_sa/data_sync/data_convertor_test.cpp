@@ -19,6 +19,7 @@
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
 #include "sync_rule/cloud_status.h"
+#include "result_set_mock.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
@@ -31,44 +32,6 @@ using namespace NativeRdb;
 class DataConvertorMock final : public DataConvertor {
 public:
     MOCK_METHOD2(Convert, int32_t(DriveKit::DKRecord &, NativeRdb::ResultSet &));
-};
-
-class ResultSetMock : public ResultSet {
-public:
-    ~ResultSetMock() {}
-    MOCK_METHOD1(GetAllColumnNames, int(std::vector<std::string> &));
-    MOCK_METHOD1(GetColumnCount, int(int &));
-    MOCK_METHOD2(GetColumnType, int(int, ColumnType &));
-    MOCK_METHOD2(GetColumnIndex, int(const std::string &, int &));
-    MOCK_METHOD2(GetColumnName, int(int, std::string &));
-    MOCK_METHOD1(GetRowCount, int(int &));
-    MOCK_METHOD1(GoTo, int(int));
-    MOCK_METHOD1(GoToRow, int(int));
-    MOCK_METHOD0(GoToFirstRow, int());
-    MOCK_METHOD0(GoToLastRow, int());
-    MOCK_METHOD0(GoToNextRow, int());
-    MOCK_METHOD0(GoToPreviousRow, int());
-    MOCK_METHOD1(IsEnded, int(bool &));
-    MOCK_METHOD1(IsAtLastRow, int(bool &));
-    MOCK_METHOD2(GetBlob, int(int, std::vector<uint8_t> &));
-    MOCK_METHOD2(GetString, int(int, std::string &));
-    MOCK_METHOD2(GetInt, int(int, int &));
-    MOCK_METHOD2(GetLong, int(int, int64_t &));
-    MOCK_METHOD2(GetDouble, int(int, double &));
-    MOCK_METHOD2(IsColumnNull, int(int, bool &));
-    MOCK_METHOD0(Close, int());
-    MOCK_METHOD1(GetRow, int(RowEntity &));
-
-    MOCK_CONST_METHOD0(IsClosed, bool());
-    MOCK_CONST_METHOD1(GetRowIndex, int(int &));
-    MOCK_CONST_METHOD1(IsStarted, int(bool &));
-    MOCK_CONST_METHOD1(IsAtFirstRow, int(bool &));
-
-    MOCK_METHOD2(GetAsset, int(int32_t, ValueObject::Asset &));
-    MOCK_METHOD2(GetAssets, int(int32_t, ValueObject::Assets &));
-    MOCK_METHOD2(Get, int(int32_t, ValueObject &));
-    MOCK_METHOD1(GetModifyTime, int(std::string &));
-    MOCK_METHOD2(GetSize, int(int32_t, size_t &));
 };
 
 class DataConvertorTest : public testing::Test {
