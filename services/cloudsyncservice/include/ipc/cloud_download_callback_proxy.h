@@ -30,8 +30,8 @@ public:
     void OnDownloadedResult(int32_t result) override;
     void OnDownloadProcess(int64_t downloadedSize, int64_t totalSize) override;
 private:
-    static inline BrokerDelegator<ICloudDownloadCallback> delegator_;
+    static inline BrokerDelegator<CloudDownloadCallbackProxy> delegator_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
-#endif // OHOS_FILEMGMT_CLOUD_DOWNLOADED_CALLBACK_PROXY_H
+#endif // OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_PROXY_H

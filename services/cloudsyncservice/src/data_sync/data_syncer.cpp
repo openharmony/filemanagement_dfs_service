@@ -121,8 +121,7 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 }
 
 int32_t DataSyncer::DownloadSourceFile(const std::string url,
-                                       const sptr<ICloudProcessCallback> processCallback,
-                                       const sptr<ICloudDownloadedCallback> downloadedCallback)
+                                       const sptr<ICloudDownloadCallback> processCallback)
 {
     return E_OK;
 }
@@ -331,8 +330,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
 
 int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
                                   const std::string url,
-                                  const sptr<ICloudProcessCallback> processCallback,
-                                  const sptr<ICloudDownloadedCallback> downloadedCallback)
+                                  const sptr<ICloudDownloadCallback> downloadCallback)
 {
     DKDownloadId id;
     auto ctx = std::make_shared<TaskContext>(handler);
@@ -343,14 +341,14 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
         return ret;
     }
 
-    auto downloadResultCallback = [downloadedCallback, assetsToDownload, handler](
+    auto downloadResultCallback = [downloadCallback, assetsToDownload, handler](
                                       std::shared_ptr<DriveKit::DKContext> context,
                                       std::shared_ptr<const DriveKit::DKDatabase> database,
                                       const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &results,
                                       const DriveKit::DKError &err) {
         LOGI("download result %{public}d", err.serverErrorCode);
-        if (downloadedCallback != nullptr) {
-            downloadedCallback->OnDownloadedResult(err.serverErrorCode);
+        if (downloadCallback != nullptr) {
+            downloadCallback->OnDownloadedResult(err.serverErrorCode);
             if (assetsToDownload.size() == 1) {
                 (void)handler->OnDownloadSuccess(assetsToDownload[0]);
             }
@@ -360,10 +358,10 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
         std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
         const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &, const DriveKit::DKError &)>>(
         downloadResultCallback);
-    auto downloadProcessCallback = [processCallback](std::shared_ptr<DKContext> context, DKDownloadAsset asset,
+    auto downloadProcessCallback = [downloadCallback](std::shared_ptr<DKContext> context, DKDownloadAsset asset,
                                                      TotalSize totalSize, DownloadSize downloadSize) {
-        if (processCallback != nullptr) {
-            processCallback->OnDownloadProcess(downloadSize, totalSize);
+        if (downloadCallback != nullptr) {
+            downloadCallback->OnDownloadProcess(downloadSize, totalSize);
         }
     };
     auto downloadProcessPtr =

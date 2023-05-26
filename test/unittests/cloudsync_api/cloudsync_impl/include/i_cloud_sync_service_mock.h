@@ -79,8 +79,7 @@ public:
         return E_OK;
     }
     int32_t DownloadFile(const std::string &url,
-                                 const sptr<IRemoteObject> &processCallback,
-                                 const sptr<IRemoteObject> &downloadedCallback)
+                                 const sptr<IRemoteObject> &downloadCallback)
     {
         return E_OK;
     }

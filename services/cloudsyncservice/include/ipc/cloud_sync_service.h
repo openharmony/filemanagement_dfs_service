@@ -22,8 +22,7 @@
 #include "system_ability.h"
 
 #include "cloud_sync_service_stub.h"
-#include "i_cloud_downloaded_callback.h"
-#include "i_cloud_process_callback.h"
+#include "i_cloud_download_callback.h"
 #include "i_cloud_sync_callback.h"
 #include "sync_rule/battery_status_listener.h"
 
@@ -43,8 +42,7 @@ public:
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     int32_t DisableCloud(const std::string &accoutId) override;
-    int32_t DownloadFile(const std::string &url, const sptr<IRemoteObject> &processCallback,
-                         const sptr<IRemoteObject> &downloadedCallback) override;
+    int32_t DownloadFile(const std::string &url, const sptr<IRemoteObject> &downloadCallback) override;
 
 private:
     void OnStart() override;

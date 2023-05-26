@@ -43,8 +43,7 @@ ohos_shared_library("cloudsync_sa") {
   ]
 
   sources = [
-    "src/ipc/cloud_downloaded_callback_proxy.cpp",
-    "src/ipc/cloud_process_callback_proxy.cpp",
+    "src/ipc/cloud_download_callback_proxy.cpp",
     "src/ipc/cloud_sync_callback_manager.cpp",
     "src/ipc/cloud_sync_callback_proxy.cpp",
     "src/ipc/cloud_sync_service.cpp",

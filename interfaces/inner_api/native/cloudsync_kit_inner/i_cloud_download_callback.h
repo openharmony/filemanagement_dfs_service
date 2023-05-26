@@ -16,8 +16,9 @@
 #ifndef OHOS_FILEMGMT_I_CLOUD_DOWNLOAD_CALLBACK_H
 #define OHOS_FILEMGMT_I_CLOUD_DOWNLOAD_CALLBACK_H
 
-#include "cloud_download_callback.h"
 #include "iremote_broker.h"
+
+#include "cloud_download_callback.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class ICloudDownloadCallback : public CloudDownloadCallback, public IRemoteBroker {
