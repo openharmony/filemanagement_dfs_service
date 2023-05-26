@@ -64,10 +64,10 @@ public:
     void Reset();
 
 private:
-    void OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
+    int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
                                const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap);
-    void OnDeleteRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
-    void OnModifyRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
+    int32_t OnDeleteRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+    int32_t OnModifyRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
                                const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap);
     bool OnCreateIsTimeChanged(const DriveKit::DKRecordData &data,
                              const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
@@ -86,12 +86,14 @@ private:
     int32_t OnRecordFailed(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t HandleCloudSpaceNotEnough();
     int32_t HandleATFailed();
-    void HandleNameConflict();
-    void HandleNameInvalid();
+    int32_t HandleNameConflict();
+    int32_t HandleNameInvalid();
     static inline const std::string TABLE_NAME = "Files";
     static inline const int32_t LIMIT_SIZE = 5;
     DriveKit::DKRecordType recordType_ = "media";
     DriveKit::DKFieldKeyArray desiredKeys_;
+    std::vector<std::string> modifyFailSet_;
+    std::vector<std::string> createFailSet_;
 
     /* identifier */
     int32_t userId_;
