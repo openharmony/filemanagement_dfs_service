@@ -18,12 +18,14 @@
 #include <sstream>
 
 #include "dfs_error.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void CloudDownloadCallbackProxy::OnDownloadedResult(int32_t result)
+void CloudDownloadCallbackProxy::OnDownloadedResult(std::string path, int32_t result)
 {
     LOGI("Start");
     MessageParcel data;
@@ -35,8 +37,13 @@ void CloudDownloadCallbackProxy::OnDownloadedResult(int32_t result)
         return;
     }
 
+    if (!data.WriteString(path)) {
+        LOGE("Failed to write path");
+        return;
+    }
+
     if (!data.WriteInt32(result)) {
-        LOGE("Failed to send the resutl");
+        LOGE("Failed to write result");
         return;
     }
 
@@ -56,7 +63,7 @@ void CloudDownloadCallbackProxy::OnDownloadedResult(int32_t result)
     return;
 }
 
-void CloudDownloadCallbackProxy::OnDownloadProcess(int64_t downloadedSize, int64_t totalSize)
+void CloudDownloadCallbackProxy::OnDownloadProcess(std::string path, int64_t downloadSize, int64_t totalSize)
 {
     LOGI("Start");
     MessageParcel data;
@@ -68,13 +75,18 @@ void CloudDownloadCallbackProxy::OnDownloadProcess(int64_t downloadedSize, int64
         return;
     }
 
-    if (!data.WriteInt64(downloadedSize)) {
-        LOGE("Failed to send the type");
+    if (!data.WriteString(path)) {
+        LOGE("Failed to write path");
+        return;
+    }
+
+    if (!data.WriteInt64(downloadSize)) {
+        LOGE("Failed to write downloadSize");
         return;
     }
 
     if (!data.WriteInt64(totalSize)) {
-        LOGE("Failed to send the state");
+        LOGE("Failed to write totalSize");
         return;
     }
 

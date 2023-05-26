@@ -44,16 +44,24 @@ int32_t CloudDownloadCallbackStub::OnRemoteRequest(uint32_t code,
 
 int32_t CloudDownloadCallbackStub::HandleOnDownloadedResult(MessageParcel &data, MessageParcel &reply)
 {
+    string path = data.ReadString();
     int32_t result = data.ReadInt32();
-    OnDownloadedResult(result);
+
+    auto path2uri = [](string path) -> string { return path; };
+
+    OnDownloadedResult(path2uri(path), result);
     return E_OK;
 }
 
 int32_t CloudDownloadCallbackStub::HandleOnProcess(MessageParcel &data, MessageParcel &reply)
 {
-    int64_t downloadedSize = data.ReadInt64();
+    string path = data.ReadString();
+    int64_t downloadSize = data.ReadInt64();
     int64_t totalSize = data.ReadInt64();
-    OnDownloadProcess(downloadedSize, totalSize);
+
+    auto path2uri = [](string path) -> string { return path; };
+
+    OnDownloadProcess(path2uri(path), downloadSize, totalSize);
     return E_OK;
 }
 

@@ -30,7 +30,12 @@ CloudSyncServiceStub::CloudSyncServiceStub()
     opToInterfaceMap_[SERVICE_CMD_NOTIFY_DATA_CHANGE] = &CloudSyncServiceStub::HandleNotifyDataChange;
     opToInterfaceMap_[SERVICE_CMD_ENABLE_CLOUD] = &CloudSyncServiceStub::HandleEnableCloud;
     opToInterfaceMap_[SERVICE_CMD_DISABLE_CLOUD] = &CloudSyncServiceStub::HandleDisableCloud;
-    opToInterfaceMap_[SERVICE_CMD_DOWNLOAD_FILE] = &CloudSyncServiceStub::HandleDownloadFile;
+    opToInterfaceMap_[SERVICE_CMD_START_DOWNLOAD_FILE] = &CloudSyncServiceStub::HandleStartDownloadFile;
+    opToInterfaceMap_[SERVICE_CMD_STOP_DOWNLOAD_FILE] = &CloudSyncServiceStub::HandleStopDownloadFile;
+    opToInterfaceMap_[SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK] =
+        &CloudSyncServiceStub::HandleRegisterDownloadFileCallback;
+    opToInterfaceMap_[SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK] =
+        &CloudSyncServiceStub::HandleUnregisterDownloadFileCallback;
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -199,7 +204,7 @@ int32_t CloudSyncServiceStub::HandleEnableCloud(MessageParcel &data, MessageParc
     return res;
 }
 
-int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessageParcel &reply)
+int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin DownloadFile");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
@@ -210,12 +215,69 @@ int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessagePar
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
-    string url = data.ReadString();
-    auto downloadCallback = data.ReadRemoteObject();
+    string path = data.ReadString();
 
-    int32_t res = DownloadFile(url, downloadCallback);
+    int32_t res = StartDownloadFile(path);
     reply.WriteInt32(res);
     LOGI("End DownloadFile");
     return res;
 }
+
+int32_t CloudSyncServiceStub::HandleStopDownloadFile(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin Register Download File Callback");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    string path = data.ReadString();
+
+    int32_t res = StopDownloadFile(path);
+    reply.WriteInt32(res);
+    LOGI("End Register Download File Callback");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin Unregister Download File Callback");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+
+    auto downloadCallback = data.ReadRemoteObject();
+
+    int32_t res = RegisterDownloadFileCallback(downloadCallback);
+    reply.WriteInt32(res);
+    LOGI("End Unregister Download File Callback");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin Unregister Download File Callback");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+
+    int32_t res = UnregisterDownloadFileCallback();
+    reply.WriteInt32(res);
+    LOGI("End Unregister Download File Callback");
+    return res;
+}
+
 } // namespace OHOS::FileManagement::CloudSync

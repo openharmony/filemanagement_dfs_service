@@ -19,22 +19,22 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void CloudDownloadCallbackClient::OnDownloadedResult(int32_t result)
+void CloudDownloadCallbackClient::OnDownloadedResult(std::string uri, int32_t result)
 {
     if (!callback_) {
         LOGE("callback_ is null, maybe not registered");
         return;
     }
-    callback_->OnDownloadedResult(result);
+    callback_->OnDownloadedResult(uri, result);
 }
 
-void CloudDownloadCallbackClient::OnDownloadProcess(int64_t downloadedSize, int64_t totalSize)
+void CloudDownloadCallbackClient::OnDownloadProcess(std::string uri, int64_t downloadSize, int64_t totalSize)
 {
     if (!callback_) {
         LOGE("callback_ is null, maybe not registered");
         return;
     }
-    callback_->OnDownloadProcess(downloadedSize, totalSize);
+    callback_->OnDownloadProcess(uri, downloadSize, totalSize);
 }
 
 } // namespace OHOS::FileManagement::CloudSync

@@ -25,6 +25,7 @@
 #include "cloud_sync_constants.h"
 #include "data_handler.h"
 #include "data_sync/sync_state_manager.h"
+#include "ipc/cloud_download_callback_manager.h"
 #include "i_cloud_download_callback.h"
 #include "sdk_helper.h"
 #include "task.h"
@@ -47,9 +48,11 @@ public:
     /* sync */
     virtual int32_t StartSync(bool forceFlag, SyncTriggerType triggerType);
     virtual int32_t StopSync(SyncTriggerType triggerType);
-    virtual int32_t DownloadSourceFile(const std::string url,
-		     const sptr<ICloudDownloadCallback> downloadCallback);
-
+    virtual int32_t StartDownloadFile(const std::string path, const int32_t userId);
+    virtual int32_t StopDownloadFile(const std::string path, const int32_t userId);
+    int32_t RegisterDownloadFileCallback(const int32_t userId,
+                                         const sptr<ICloudDownloadCallback> downloadCallback);
+    int32_t UnregisterDownloadFileCallback(const int32_t userId);
     /* properties */
     std::string GetBundleName() const;
     int32_t GetUserId() const;
@@ -71,8 +74,9 @@ protected:
 
     /* download source file */
     int32_t DownloadInner(std::shared_ptr<DataHandler> handler,
-                          const std::string url,
-                          const sptr<ICloudDownloadCallback> downloadCallback);
+                          const std::string path,
+                          const int32_t userId);
+
     /* notify */
     void CompletePull();
     void CompletePush();
@@ -165,6 +169,9 @@ private:
 
     /* cloud preference impl */
     CloudPrefImpl cloudPrefImpl_;
+
+    /* download callback manager*/
+    CloudDownloadCallbackManager downloadCallbackMgr_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

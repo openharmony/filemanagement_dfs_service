@@ -42,7 +42,10 @@ public:
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     int32_t DisableCloud(const std::string &accoutId) override;
-    int32_t DownloadFile(const std::string &url, const sptr<IRemoteObject> &downloadCallback) override;
+    int32_t StartDownloadFile(const std::string &path) override;
+    int32_t StopDownloadFile(const std::string &path) override;
+    int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) override;
+    int32_t UnregisterDownloadFileCallback() override;
 
 private:
     void OnStart() override;

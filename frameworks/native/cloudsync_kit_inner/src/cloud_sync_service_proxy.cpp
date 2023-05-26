@@ -305,46 +305,101 @@ int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, con
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::DownloadFile(const std::string &url, const sptr<IRemoteObject> &downloadCallback)
+int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 {
-    LOGI("Start DownloadFile");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return E_BROKEN_IPC;
+    }
+    auto uri2path = [](string uri) -> string { return uri; };
+    string path = uri2path(uri);
+    if (!data.WriteString(path)) {
+        return E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (!remote) {
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_START_DOWNLOAD_FILE, data, reply, option);
+    if (ret != E_OK) {
+        stringstream ss;
+        return E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return E_BROKEN_IPC;
+    }
+    auto uri2path = [](string uri) -> string { return uri; };
+    string path = uri2path(uri);
+    if (!data.WriteString(path)) {
+        return E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (!remote) {
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_STOP_DOWNLOAD_FILE, data, reply, option);
+    if (ret != E_OK) {
+        stringstream ss;
+        return E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
+{
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
 
     if (!downloadCallback) {
-        LOGI("Empty callback stub");
         return E_INVAL_ARG;
     }
-
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOGE("Failed to write interface token");
         return E_BROKEN_IPC;
     }
-
-    if (!data.WriteString(url)) {
-        LOGE("Failed to send the cloud id");
-        return E_INVAL_ARG;
-    }
-
     if (!data.WriteRemoteObject(downloadCallback)) {
-        LOGE("Failed to send the callback stub");
         return E_INVAL_ARG;
     }
-
     auto remote = Remote();
     if (!remote) {
-        LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_DOWNLOAD_FILE, data, reply, option);
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_REGISTER_CALLBACK, data, reply, option);
     if (ret != E_OK) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s", ss.str().c_str());
         return E_BROKEN_IPC;
     }
-    LOGI("DownloadFile Success");
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return E_BROKEN_IPC;
+    }
+    auto remote = Remote();
+    if (!remote) {
+        return E_BROKEN_IPC;
+    }
+    int32_t ret =
+        remote->SendRequest(ICloudSyncService::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK, data, reply, option);
+    if (ret != E_OK) {
+        return E_BROKEN_IPC;
+    }
     return reply.ReadInt32();
 }
 
