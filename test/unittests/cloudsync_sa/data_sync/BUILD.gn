@@ -178,11 +178,74 @@ ohos_unittest("data_convertor_test") {
   use_exceptions = true
 }
 
+ohos_unittest("data_syncer_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_sync_callback_manager_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "data_syncer_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${media_library_path}/frameworks/utils/include",
+    "${media_library_path}/frameworks/services/media_thumbnail/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "init:libbegetutil",
+    "netmanager_base:net_conn_manager_if",
+    "relational_store:native_rdb",
+  ]
+
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
+
+  defines = [
+    "private=public",
+    "protected=public",
+  ]
+
+  use_exceptions = true
+}
+
 group("cloudsync_sa_data_sync_test") {
   testonly = true
   deps = [
     ":data_convertor_test",
     ":data_handler_test",
     ":data_sync_manager_test",
+    ":data_syncer_test",
   ]
 }
