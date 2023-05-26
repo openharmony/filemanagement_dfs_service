@@ -122,31 +122,55 @@ int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, cons
 
 int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri)
 {
+    LOGI("StartDownloadFile start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
     int32_t ret = CloudSyncServiceProxy->StartDownloadFile(uri);
+    LOGI("StartDownloadFile ret %{public}d", ret);
     return ret;
 }
 
 int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri)
 {
+    LOGI("StopDownloadFile start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
     int32_t ret = CloudSyncServiceProxy->StopDownloadFile(uri);
+    LOGI("StopDownloadFile ret %{public}d", ret);
     return ret;
 }
 
 int32_t CloudSyncManagerImpl::RegisterDownloadFileCallback(
     const std::shared_ptr<CloudDownloadCallback> downloadCallback)
 {
+    LOGI("RegisterDownloadFileCallback start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
     int32_t ret = CloudSyncServiceProxy->RegisterDownloadFileCallback(
 		    sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback)));
+    LOGI("RegisterDownloadFileCallback ret %{public}d", ret);
     return ret;
 }
 
 int32_t CloudSyncManagerImpl::UnregisterDownloadFileCallback()
 {
+    LOGI("UnregisterDownloadFileCallback start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
     int32_t ret = CloudSyncServiceProxy->UnregisterDownloadFileCallback();
+    LOGI("UnregisterDownloadFileCallback ret %{public}d", ret);
     return ret;
 }
 void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)

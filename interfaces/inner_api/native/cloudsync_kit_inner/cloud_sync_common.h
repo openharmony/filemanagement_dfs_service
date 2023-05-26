@@ -21,6 +21,24 @@
 #include "parcel.h"
 
 namespace OHOS::FileManagement::CloudSync {
+
+struct DownloadProgressObj : public Parcelable {
+    enum Status : int32_t {
+        STOPPED = 0,
+        COMPLETED = 1,
+        FAILED = 2,
+        RUNNING = 3,
+    };
+    std::string path;
+    Status state;
+    int64_t downloadedSize;
+    int64_t totalSize;
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static DownloadProgressObj *Unmarshalling(Parcel &parcel);
+    std::string to_string();
+};
+
 struct SwitchDataObj : public Parcelable {
     std::map<std::string, bool> switchData;
     bool ReadFromParcel(Parcel &parcel);

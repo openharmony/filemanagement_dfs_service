@@ -25,7 +25,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void CloudDownloadCallbackProxy::OnDownloadedResult(std::string path, int32_t result)
+void CloudDownloadCallbackProxy::OnDownloadProcess(DownloadProgressObj& progress)
 {
     LOGI("Start");
     MessageParcel data;
@@ -37,56 +37,8 @@ void CloudDownloadCallbackProxy::OnDownloadedResult(std::string path, int32_t re
         return;
     }
 
-    if (!data.WriteString(path)) {
-        LOGE("Failed to write path");
-        return;
-    }
-
-    if (!data.WriteInt32(result)) {
-        LOGE("Failed to write result");
-        return;
-    }
-
-    auto remote = Remote();
-    if (!remote) {
-        LOGE("remote is nullptr");
-        return;
-    }
-    int32_t ret = remote->SendRequest(ICloudDownloadCallback::SERVICE_CMD_ON_DOWNLOADED, data, reply, option);
-    if (ret != E_OK) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s", ss.str().c_str());
-        return;
-    }
-    LOGI("End");
-    return;
-}
-
-void CloudDownloadCallbackProxy::OnDownloadProcess(std::string path, int64_t downloadSize, int64_t totalSize)
-{
-    LOGI("Start");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOGE("Failed to write interface token");
-        return;
-    }
-
-    if (!data.WriteString(path)) {
-        LOGE("Failed to write path");
-        return;
-    }
-
-    if (!data.WriteInt64(downloadSize)) {
-        LOGE("Failed to write downloadSize");
-        return;
-    }
-
-    if (!data.WriteInt64(totalSize)) {
-        LOGE("Failed to write totalSize");
+    if (!data.WriteParcelable(&progress)) {
+        LOGE("Failed to write progress");
         return;
     }
 

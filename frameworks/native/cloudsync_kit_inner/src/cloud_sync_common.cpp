@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <sstream>
 #include "cloud_sync_common.h"
 
 #include "utils_log.h"
@@ -40,6 +41,27 @@ bool SwitchDataObj::Marshalling(Parcel &parcel) const
     return true;
 }
 
+bool DownloadProgressObj::Marshalling(Parcel &parcel) const
+{
+    if (!parcel.WriteString(path)) {
+        LOGE("failed to write download path");
+        return false;
+    }
+    if (!parcel.WriteInt32(state)) {
+        LOGE("failed to write download state");
+        return false;
+    }
+    if (!parcel.WriteInt64(downloadedSize)) {
+        LOGE("failed to write downloadedSize");
+        return false;
+    }
+    if (!parcel.WriteInt64(totalSize)) {
+        LOGE("failed to write totalSize");
+        return false;
+    }
+    return true;
+}
+
 bool CleanOptions::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteUint32(appActionsData.size())) {
@@ -62,6 +84,17 @@ bool CleanOptions::Marshalling(Parcel &parcel) const
 SwitchDataObj *SwitchDataObj::Unmarshalling(Parcel &parcel)
 {
     SwitchDataObj *info = new (std::nothrow) SwitchDataObj();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+DownloadProgressObj *DownloadProgressObj::Unmarshalling(Parcel &parcel)
+{
+    DownloadProgressObj *info = new (std::nothrow) DownloadProgressObj();
     if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
         LOGW("read from parcel failed");
         delete info;
@@ -135,5 +168,39 @@ bool CleanOptions::ReadFromParcel(Parcel &parcel)
         appActionsData.emplace(key, value);
     }
     return true;
+}
+
+bool DownloadProgressObj::ReadFromParcel(Parcel &parcel)
+{
+    if (!parcel.ReadString(path)) {
+        LOGE("failed to write download path");
+        return false;
+    }
+    int32_t tempState = 0;
+    if (!parcel.ReadInt32(tempState)) {
+        LOGE("failed to write download state");
+        return false;
+    }
+    state = static_cast<Status>(tempState);
+    if (!parcel.ReadInt64(downloadedSize)) {
+        LOGE("failed to write downloadedSize");
+        return false;
+    }
+    if (!parcel.ReadInt64(totalSize)) {
+        LOGE("failed to write totalSize");
+        return false;
+    }
+    return true;
+}
+
+std::string DownloadProgressObj::to_string()
+{
+    std::stringstream ss;
+    ss << "DownloadProgressObj [path: " << path;
+    ss << " state: " << state;
+    ss << " downloaded: " << downloadedSize;
+    ss << " total: " << totalSize << "]";
+
+    return ss.str();
 }
 }

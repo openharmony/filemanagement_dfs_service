@@ -22,7 +22,6 @@ using namespace std;
 
 CloudDownloadCallbackStub::CloudDownloadCallbackStub()
 {
-    opToInterfaceMap_[SERVICE_CMD_ON_DOWNLOADED] = &CloudDownloadCallbackStub::HandleOnDownloadedResult;
     opToInterfaceMap_[SERVICE_CMD_ON_PROCESS] = &CloudDownloadCallbackStub::HandleOnProcess;
 }
 
@@ -42,26 +41,13 @@ int32_t CloudDownloadCallbackStub::OnRemoteRequest(uint32_t code,
     return (this->*(interfaceIndex->second))(data, reply);
 }
 
-int32_t CloudDownloadCallbackStub::HandleOnDownloadedResult(MessageParcel &data, MessageParcel &reply)
-{
-    string path = data.ReadString();
-    int32_t result = data.ReadInt32();
-
-    auto path2uri = [](string path) -> string { return path; };
-
-    OnDownloadedResult(path2uri(path), result);
-    return E_OK;
-}
-
 int32_t CloudDownloadCallbackStub::HandleOnProcess(MessageParcel &data, MessageParcel &reply)
 {
-    string path = data.ReadString();
-    int64_t downloadSize = data.ReadInt64();
-    int64_t totalSize = data.ReadInt64();
-
+    DownloadProgressObj& progress = *data.ReadParcelable<DownloadProgressObj>();
     auto path2uri = [](string path) -> string { return path; };
+    progress.path = path2uri(progress.path);
 
-    OnDownloadProcess(path2uri(path), downloadSize, totalSize);
+    OnDownloadProcess(progress);
     return E_OK;
 }
 

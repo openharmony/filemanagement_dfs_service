@@ -206,7 +206,7 @@ int32_t CloudSyncServiceStub::HandleEnableCloud(MessageParcel &data, MessageParc
 
 int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin DownloadFile");
+    LOGI("Begin HandleStartDownloadFile");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
@@ -219,13 +219,13 @@ int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, Messa
 
     int32_t res = StartDownloadFile(path);
     reply.WriteInt32(res);
-    LOGI("End DownloadFile");
+    LOGI("End HandleStartDownloadFile");
     return res;
 }
 
 int32_t CloudSyncServiceStub::HandleStopDownloadFile(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin Register Download File Callback");
+    LOGI("Begin HandleStopDownloadFile");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
@@ -238,13 +238,13 @@ int32_t CloudSyncServiceStub::HandleStopDownloadFile(MessageParcel &data, Messag
 
     int32_t res = StopDownloadFile(path);
     reply.WriteInt32(res);
-    LOGI("End Register Download File Callback");
+    LOGI("End HandleStopDownloadFile");
     return res;
 }
 
 int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin Unregister Download File Callback");
+    LOGI("Begin HandleRegisterDownloadFileCallback");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
@@ -258,13 +258,13 @@ int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &
 
     int32_t res = RegisterDownloadFileCallback(downloadCallback);
     reply.WriteInt32(res);
-    LOGI("End Unregister Download File Callback");
+    LOGI("End HandleRegisterDownloadFileCallback");
     return res;
 }
 
 int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin Unregister Download File Callback");
+    LOGI("Begin HandleUnregisterDownloadFileCallback");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
@@ -276,7 +276,7 @@ int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel
 
     int32_t res = UnregisterDownloadFileCallback();
     reply.WriteInt32(res);
-    LOGI("End Unregister Download File Callback");
+    LOGI("End HandleUnregisterDownloadFileCallback");
     return res;
 }
 
