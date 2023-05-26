@@ -61,10 +61,14 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
     fileHandler_ = make_shared<FileDataHandler>(userId, bundleName, rdb_);
 }
 
-int32_t GalleryDataSyncer::DownloadSourceFile(const std::string url,
-                                              const sptr<ICloudDownloadCallback> downloadCallback)
+int32_t GalleryDataSyncer::StartDownloadFile(const std::string path, const int32_t userId)
 {
-    return DownloadInner(fileHandler_, url, downloadCallback);
+    return DownloadInner(fileHandler_, path, userId);
+}
+
+int32_t GalleryDataSyncer::StopDownloadFile(const std::string path, const int32_t userId)
+{
+    return DataSyncer::StopDownloadFile(path, userId);
 }
 
 void GalleryDataSyncer::Schedule()

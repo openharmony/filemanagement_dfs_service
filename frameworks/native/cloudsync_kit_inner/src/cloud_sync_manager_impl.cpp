@@ -120,18 +120,33 @@ int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, cons
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::DownloadFile(const std::string &url,
+int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri)
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    int32_t ret = CloudSyncServiceProxy->StartDownloadFile(uri);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri)
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    int32_t ret = CloudSyncServiceProxy->StopDownloadFile(uri);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::RegisterDownloadFileCallback(
     const std::shared_ptr<CloudDownloadCallback> downloadCallback)
 {
-    LOGI("Download File start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
-    if (!CloudSyncServiceProxy) {
-        LOGE("proxy is null");
-        return E_SA_LOAD_FAILED;
-    }
-    int32_t ret = CloudSyncServiceProxy->DownloadFile(url,
-		  sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback)));
-    LOGI("Download file ret %{public}d", ret);
+    int32_t ret = CloudSyncServiceProxy->RegisterDownloadFileCallback(
+		    sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback)));
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::UnregisterDownloadFileCallback()
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    int32_t ret = CloudSyncServiceProxy->UnregisterDownloadFileCallback();
     return ret;
 }
 void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)

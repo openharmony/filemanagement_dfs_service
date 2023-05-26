@@ -24,8 +24,8 @@ public:
     explicit CloudDownloadCallbackClient(const std::shared_ptr<CloudDownloadCallback> &callback)
         : callback_(callback) {}
 
-    void OnDownloadedResult(int32_t result) override;
-    void OnDownloadProcess(int64_t downloadedSize, int64_t totalSize) override;
+    void OnDownloadedResult(std::string uri, int32_t result) override;
+    void OnDownloadProcess(std::string uri, int64_t downloadSize, int64_t totalSize) override;
 
 private:
     std::shared_ptr<CloudDownloadCallback> callback_;

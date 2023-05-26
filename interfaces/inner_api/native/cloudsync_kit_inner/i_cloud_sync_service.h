@@ -34,7 +34,10 @@ public:
         SERVICE_CMD_ENABLE_CLOUD,
         SERVICE_CMD_DISABLE_CLOUD,
         SERVICE_CMD_CLEAN,
-        SERVICE_CMD_DOWNLOAD_FILE,
+        SERVICE_CMD_START_DOWNLOAD_FILE,
+        SERVICE_CMD_STOP_DOWNLOAD_FILE,
+        SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK,
+        SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudSyncService")
@@ -47,7 +50,10 @@ public:
     virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
     virtual int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) = 0;
     virtual int32_t DisableCloud(const std::string &accoutId) = 0;
-    virtual int32_t DownloadFile(const std::string &url, const sptr<IRemoteObject> &downloadCallback) = 0;
+    virtual int32_t StartDownloadFile(const std::string &path) = 0;
+    virtual int32_t StopDownloadFile(const std::string &path) = 0;
+    virtual int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) = 0;
+    virtual int32_t UnregisterDownloadFileCallback() = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

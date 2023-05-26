@@ -91,25 +91,45 @@ int32_t DataSyncManager::TriggerStopSync(const std::string bundleName,
     return E_OK;
 }
 
-int32_t DataSyncManager::DownloadSourceFile(const std::string bundleName,
-                                            const int32_t userId,
-                                            const std::string url,
-                                            const sptr<ICloudDownloadCallback> downloadCallback)
+int32_t DataSyncManager::StartDownloadFile(const std::string bundleName, const int32_t userId, const std::string path)
 {
     auto it = bundleNameConversionMap_.find(bundleName);
-    if (it == bundleNameConversionMap_.end()) {
-        LOGE("trigger stop sync failed, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
-        return E_INVAL_ARG;
-    }
     std::string appBundleName(it->second);
     auto dataSyncer = GetDataSyncer(appBundleName, userId);
-    if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
-    }
-    std::thread([dataSyncer, url, downloadCallback]() {
-        dataSyncer->DownloadSourceFile(url, downloadCallback);
+    std::thread([dataSyncer, path, userId]() { dataSyncer->StartDownloadFile(path, userId); }).detach();
+    return E_OK;
+}
+
+int32_t DataSyncManager::StopDownloadFile(const std::string bundleName, const int32_t userId, const std::string path)
+{
+    auto it = bundleNameConversionMap_.find(bundleName);
+    std::string appBundleName(it->second);
+    auto dataSyncer = GetDataSyncer(appBundleName, userId);
+    std::thread([dataSyncer, userId, path]() { dataSyncer->StopDownloadFile(path, userId); }).detach();
+    return E_OK;
+}
+
+int32_t DataSyncManager::RegisterDownloadFileCallback(const std::string bundleName,
+                                                      const int32_t userId,
+                                                      const sptr<ICloudDownloadCallback>& downloadCallback)
+{
+    auto it = bundleNameConversionMap_.find(bundleName);
+
+    std::string appBundleName(it->second);
+    auto dataSyncer = GetDataSyncer(appBundleName, userId);
+    std::thread([dataSyncer, userId, downloadCallback]() {
+        dataSyncer->RegisterDownloadFileCallback(userId, downloadCallback);
     }).detach();
+    return E_OK;
+}
+
+int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string bundleName,
+                                                        const int32_t userId)
+{
+    auto it = bundleNameConversionMap_.find(bundleName);
+    std::string appBundleName(it->second);
+    auto dataSyncer = GetDataSyncer(appBundleName, userId);
+    std::thread([dataSyncer, userId]() { dataSyncer->UnregisterDownloadFileCallback(userId); }).detach();
     return E_OK;
 }
 

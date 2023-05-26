@@ -19,11 +19,12 @@
 #include <functional>
 
 namespace OHOS::FileManagement::CloudSync {
+
 class CloudDownloadCallback {
 public:
     virtual ~CloudDownloadCallback() = default;
-    virtual void OnDownloadedResult(int32_t result) = 0;
-    virtual void OnDownloadProcess(int64_t downloadedSize, int64_t totalSize) = 0;
+    virtual void OnDownloadedResult(std::string path,  int32_t state) = 0;
+    virtual void OnDownloadProcess(std::string path, int64_t downloadSize, int64_t totalSize) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
