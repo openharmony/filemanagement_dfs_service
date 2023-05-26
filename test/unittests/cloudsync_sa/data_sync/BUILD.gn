@@ -182,6 +182,7 @@ ohos_unittest("data_convertor_test") {
   use_exceptions = true
 }
 
+<<<<<<< HEAD
 ohos_unittest("file_data_handler_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
@@ -193,14 +194,43 @@ ohos_unittest("file_data_handler_test") {
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "file_data_handler_test.cpp",
+=======
+ohos_unittest("data_syncer_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_sync_callback_manager_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "data_syncer_test.cpp",
+>>>>>>> add TDD test
   ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
+<<<<<<< HEAD
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+=======
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+>>>>>>> add TDD test
     "${media_library_path}/frameworks/utils/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
   ]
@@ -226,7 +256,14 @@ ohos_unittest("file_data_handler_test") {
     external_deps += [ "drivekit_native:drivekit" ]
   }
 
+<<<<<<< HEAD
   defines = [ "private=public" ]
+=======
+  defines = [
+    "private=public",
+    "protected=public",
+  ]
+>>>>>>> add TDD test
 
   use_exceptions = true
 }
@@ -237,6 +274,10 @@ group("cloudsync_sa_data_sync_test") {
     ":data_convertor_test",
     ":data_handler_test",
     ":data_sync_manager_test",
+<<<<<<< HEAD
     ":file_data_handler_test",
+=======
+    ":data_syncer_test",
+>>>>>>> add TDD test
   ]
 }
