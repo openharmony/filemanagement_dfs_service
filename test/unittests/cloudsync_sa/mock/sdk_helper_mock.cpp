@@ -110,7 +110,7 @@ std::shared_ptr<DriveKit::DKAssetReadSession> SdkHelper::GetAssetReadSession(Dri
                                                                              DriveKit::DKFieldKey assetKey,
                                                                              DriveKit::DKAssetPath assetPath)
 {
-    return make_shared<DriveKit::DKAssetReadSession>();
+    return nullptr;
 }
 }
 }
