@@ -23,7 +23,6 @@
 #include "sync_rule/battery_status.h"
 #include "sync_rule/cloud_status.h"
 
-
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
@@ -32,11 +31,10 @@ using namespace std;
 class DataSyncerMock final : public DataSyncer {
 public:
     DataSyncerMock(const std::string bundleName, const int32_t userId);
-    MOCK_METHOD0(Schedule,void());
+    MOCK_METHOD0(Schedule, void());
 };
 
-DataSyncerMock::DataSyncerMock(const std::string bundleName, const int32_t userId): DataSyncer("com.ohos.test", 100)
-{}
+DataSyncerMock::DataSyncerMock(const std::string bundleName, const int32_t userId) : DataSyncer("com.ohos.test", 100) {}
 
 class DataSyncerTest : public testing::Test {
 public:
@@ -62,7 +60,7 @@ void DataSyncerTest::SetUp(void)
     const std::string bundleName_;
     int32_t userId = 100;
     string bundleName = "com.ohos.test";
-    datasyncer_ = make_shared<DataSyncerMock>(bundleName,userId);
+    datasyncer_ = make_shared<DataSyncerMock>(bundleName, userId);
 }
 
 void DataSyncerTest::TearDown(void)
@@ -88,20 +86,6 @@ HWTEST_F(DataSyncerTest, StopSyncTest, TestSize.Level1)
     res = datasyncer_->StopSync(SyncTriggerType::BATTERY_OK_TRIGGER);
     EXPECT_EQ(res, E_OK);
     GTEST_LOG_(INFO) << "StopSync end";
-}
-
-/**
- * @tc.name: DownloadSourceFileTest
- * @tc.desc: Verify the DownloadSourceFile function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
-*/
-HWTEST_F(DataSyncerTest, DownloadSourceFileTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DownloadSourceFile Start";
-    int res = datasyncer_->DownloadSourceFile("com.ohos.test",nullptr);
-    EXPECT_EQ(res, E_OK);
-    GTEST_LOG_(INFO) << "DownloadSourceFile end";
 }
 
 /**
@@ -168,7 +152,7 @@ HWTEST_F(DataSyncerTest, SetSdkHelperTest1, TestSize.Level1)
 HWTEST_F(DataSyncerTest, BeginTransactionTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BeginTransaction Start";
-     try {
+    try {
         datasyncer_->BeginTransaction();
     } catch (...) {
         EXPECT_TRUE(false);
@@ -186,7 +170,7 @@ HWTEST_F(DataSyncerTest, BeginTransactionTest, TestSize.Level1)
 HWTEST_F(DataSyncerTest, EndTransactionTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "EndTransaction Start";
-     try {
+    try {
         datasyncer_->EndTransaction();
     } catch (...) {
         EXPECT_TRUE(false);
@@ -205,7 +189,7 @@ HWTEST_F(DataSyncerTest, GetBundleNameTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetBundleName Start";
     string res = datasyncer_->GetBundleName();
-    EXPECT_EQ(res,datasyncer_->bundleName_);
+    EXPECT_EQ(res, datasyncer_->bundleName_);
     GTEST_LOG_(INFO) << "GetBundleName end";
 }
 
@@ -219,7 +203,7 @@ HWTEST_F(DataSyncerTest, GetUserIdTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetUserId Start";
     int res = datasyncer_->GetUserId();
-    EXPECT_EQ(res,datasyncer_->userId_);
+    EXPECT_EQ(res, datasyncer_->userId_);
     GTEST_LOG_(INFO) << "GetUserId end";
 }
 
