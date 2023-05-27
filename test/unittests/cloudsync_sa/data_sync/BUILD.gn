@@ -231,6 +231,68 @@ ohos_unittest("file_data_handler_test") {
   use_exceptions = true
 }
 
+ohos_unittest("sdk_helper_test") {
+  module_out_path = "filemanagement/dfs_service"
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/drive_kit_mock.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_callback_manager.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/battery_status.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/cloud_status.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/network_status.cpp",
+    "sdk_helper_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/services/media_thumbnail/include",
+    "${media_library_path}/frameworks/utils/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "init:libbegetutil",
+    "netmanager_base:net_conn_manager_if",
+    "relational_store:native_rdb",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_SDK_HELPER\"",
+  ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("data_syncer_test") {
   module_out_path = "filemanagement/dfs_service"
 
@@ -304,5 +366,6 @@ group("cloudsync_sa_data_sync_test") {
     ":data_sync_manager_test",
     ":data_syncer_test",
     ":file_data_handler_test",
+    ":sdk_helper_test",
   ]
 }
