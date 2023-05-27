@@ -31,9 +31,9 @@ public:
     int code_;
     CloudSyncServiceMock() : code_(0) {}
     virtual ~CloudSyncServiceMock() {}
-    
+
     MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
-    
+
     int32_t InvokeSendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
     {
         code_ = code;
@@ -50,7 +50,7 @@ public:
     {
         return E_OK;
     }
-    
+
     int32_t StopSyncInner() override
     {
         return E_OK;
@@ -91,6 +91,10 @@ public:
         return E_OK;
     }
     int32_t UnregisterDownloadFileCallback()
+    {
+        return E_OK;
+    }
+    int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo)
     {
         return E_OK;
     }

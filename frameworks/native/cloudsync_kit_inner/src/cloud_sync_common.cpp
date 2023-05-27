@@ -203,4 +203,33 @@ std::string DownloadProgressObj::to_string()
 
     return ss.str();
 }
+
+bool AssetInfo::ReadFromParcel(Parcel &parcel)
+{
+    parcel.ReadString(uri);
+    parcel.ReadString(recordType);
+    parcel.ReadString(recordId);
+    parcel.ReadString(fieldKey);
+    return true;
 }
+
+bool AssetInfo::Marshalling(Parcel &parcel) const
+{
+    parcel.WriteString(uri);
+    parcel.WriteString(recordType);
+    parcel.WriteString(recordId);
+    parcel.WriteString(fieldKey);
+    return true;
+}
+
+AssetInfo *AssetInfo::Unmarshalling(Parcel &parcel)
+{
+    AssetInfo *info = new (std::nothrow) AssetInfo();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+} // namespace OHOS::FileManagement::CloudSync
