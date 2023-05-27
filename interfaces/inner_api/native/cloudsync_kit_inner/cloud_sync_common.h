@@ -52,5 +52,15 @@ struct CleanOptions : public Parcelable {
     bool Marshalling(Parcel &parcel) const override;
     static CleanOptions *Unmarshalling(Parcel &parcel);
 };
-}
+
+struct AssetInfo : public Parcelable {
+    std::string uri;
+    std::string recordType;
+    std::string recordId;
+    std::string fieldKey;
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static AssetInfo *Unmarshalling(Parcel &parcel);
+};
+} // namespace OHOS::FileManagement::CloudSync
 #endif

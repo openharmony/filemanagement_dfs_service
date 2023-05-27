@@ -37,7 +37,8 @@ public:
         SERVICE_CMD_START_DOWNLOAD_FILE,
         SERVICE_CMD_STOP_DOWNLOAD_FILE,
         SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK,
-        SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK
+        SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK,
+        SERVICE_CMD_DOWNLOAD_FILE
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudSyncService")
@@ -54,6 +55,7 @@ public:
     virtual int32_t StopDownloadFile(const std::string &path) = 0;
     virtual int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) = 0;
     virtual int32_t UnregisterDownloadFileCallback() = 0;
+    virtual int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

@@ -46,6 +46,7 @@ public:
     int32_t StopDownloadFile(const std::string &path) override;
     int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) override;
     int32_t UnregisterDownloadFileCallback() override;
+    int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo) override;
 
 private:
     void OnStart() override;

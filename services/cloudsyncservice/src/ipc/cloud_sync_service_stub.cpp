@@ -36,6 +36,7 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         &CloudSyncServiceStub::HandleRegisterDownloadFileCallback;
     opToInterfaceMap_[SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK] =
         &CloudSyncServiceStub::HandleUnregisterDownloadFileCallback;
+    opToInterfaceMap_[SERVICE_CMD_DOWNLOAD_FILE] = &CloudSyncServiceStub::HandleDownloadFile;
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -280,4 +281,23 @@ int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel
     return res;
 }
 
+int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin DownloadFile");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    int32_t userId = data.ReadInt32();
+    string bundleName = data.ReadString();
+    sptr<AssetInfo> assetInfo = data.ReadParcelable<AssetInfo>();
+    int32_t res = DownloadFile(userId, bundleName, *assetInfo);
+    reply.WriteInt32(res);
+    LOGI("End DownloadFile");
+    return res;
+}
 } // namespace OHOS::FileManagement::CloudSync
