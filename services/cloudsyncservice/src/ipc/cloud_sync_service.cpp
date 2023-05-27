@@ -147,21 +147,61 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
 }
 
 constexpr int TEST_MAIN_USR_ID = 100;
-int32_t CloudSyncService::DownloadFile(const std::string &url,
-                                       const sptr<IRemoteObject> &processCallback,
-                                       const sptr<IRemoteObject> &downloadedCallback)
+int32_t CloudSyncService::StartDownloadFile(const std::string &path)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    auto processCb = iface_cast<ICloudProcessCallback>(processCallback);
-    auto downloadedCb = iface_cast<ICloudDownloadedCallback>(downloadedCallback);
     string bundleName;
-    LOGI("download file start");
+    LOGI("start StartDownloadFile");
     if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
         return E_INVAL_ARG;
     }
     if (callerUserId == 0) {
         callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
     }
-    return dataSyncManager_->DownloadSourceFile(bundleName, callerUserId, url, processCb, downloadedCb);
+    return dataSyncManager_->StartDownloadFile(bundleName, callerUserId, path);
 }
+
+int32_t CloudSyncService::StopDownloadFile(const std::string &path)
+{
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    string bundleName;
+    LOGI("start StopDownloadFile");
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
+    if (callerUserId == 0) {
+        callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
+    }
+    return dataSyncManager_->StopDownloadFile(bundleName, callerUserId, path);
+}
+
+int32_t CloudSyncService::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
+{
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    auto downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
+    string bundleName;
+    LOGI("start RegisterDownloadFileCallback");
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
+    if (callerUserId == 0) {
+        callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
+    }
+    return dataSyncManager_->RegisterDownloadFileCallback(bundleName, callerUserId, downloadCb);
+}
+
+int32_t CloudSyncService::UnregisterDownloadFileCallback()
+{
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    string bundleName;
+    LOGI("start UnregisterDownloadFileCallback");
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
+    if (callerUserId == 0) {
+        callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
+    }
+    return dataSyncManager_->UnregisterDownloadFileCallback(bundleName, callerUserId);
+}
+
 } // namespace OHOS::FileManagement::CloudSync

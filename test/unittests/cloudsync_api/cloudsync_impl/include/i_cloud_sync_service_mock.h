@@ -78,9 +78,19 @@ public:
     {
         return E_OK;
     }
-    int32_t DownloadFile(const std::string &url,
-                                 const sptr<IRemoteObject> &processCallback,
-                                 const sptr<IRemoteObject> &downloadedCallback)
+    int32_t StartDownloadFile(const std::string &path)
+    {
+        return E_OK;
+    }
+    int32_t StopDownloadFile(const std::string &path)
+    {
+        return E_OK;
+    }
+    int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
+    {
+        return E_OK;
+    }
+    int32_t UnregisterDownloadFileCallback()
     {
         return E_OK;
     }

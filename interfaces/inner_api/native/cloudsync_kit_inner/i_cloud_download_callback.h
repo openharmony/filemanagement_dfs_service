@@ -13,23 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_CLOUD_PROCESS_CALLBACK_PROXY_H
-#define OHOS_FILEMGMT_CLOUD_PROCESS_CALLBACK_PROXY_H
+#ifndef OHOS_FILEMGMT_I_CLOUD_DOWNLOAD_CALLBACK_H
+#define OHOS_FILEMGMT_I_CLOUD_DOWNLOAD_CALLBACK_H
 
-#include "i_cloud_process_callback.h"
+#include "iremote_broker.h"
 
-#include "iremote_proxy.h"
+#include "cloud_download_callback.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudProcessCallbackProxy : public IRemoteProxy<ICloudProcessCallback> {
+class ICloudDownloadCallback : public CloudDownloadCallback, public IRemoteBroker {
 public:
-    explicit CloudProcessCallbackProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<ICloudProcessCallback>(impl) {}
-    ~CloudProcessCallbackProxy() override {}
+    enum {
+        SERVICE_CMD_ON_PROCESS = 0,
+    };
 
-    void OnDownloadProcess(int64_t downloadedSize, int64_t totalSize) override;
-private:
-    static inline BrokerDelegator<CloudProcessCallbackProxy> delegator_;
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudDownloadCallback")
 };
 } // namespace OHOS::FileManagement::CloudSync
 
-#endif // OHOS_FILEMGMT_CLOUD_PROCESS_CALLBACK_PROXY_H
+#endif // OHOS_FILEMGMT_I_CLOUD_DOWNLOAD_CALLBACK_H

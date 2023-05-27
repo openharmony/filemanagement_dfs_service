@@ -13,17 +13,19 @@
  * limitations under the License.
  */
 
-#include "ipc/cloud_downloaded_callback_proxy.h"
+#include "ipc/cloud_download_callback_proxy.h"
 
 #include <sstream>
 
 #include "dfs_error.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void CloudDownloadedCallbackProxy::OnDownloadedResult(int32_t result)
+void CloudDownloadCallbackProxy::OnDownloadProcess(DownloadProgressObj& progress)
 {
     LOGI("Start");
     MessageParcel data;
@@ -35,8 +37,8 @@ void CloudDownloadedCallbackProxy::OnDownloadedResult(int32_t result)
         return;
     }
 
-    if (!data.WriteInt32(result)) {
-        LOGE("Failed to send the resutl");
+    if (!data.WriteParcelable(&progress)) {
+        LOGE("Failed to write progress");
         return;
     }
 
@@ -45,7 +47,7 @@ void CloudDownloadedCallbackProxy::OnDownloadedResult(int32_t result)
         LOGE("remote is nullptr");
         return;
     }
-    int32_t ret = remote->SendRequest(ICloudDownloadedCallback::SERVICE_CMD_ON_DOWNLOADED, data, reply, option);
+    int32_t ret = remote->SendRequest(ICloudDownloadCallback::SERVICE_CMD_ON_PROCESS, data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;

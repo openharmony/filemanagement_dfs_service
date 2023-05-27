@@ -13,19 +13,20 @@
  * limitations under the License.
  */
 
-#include "cloud_process_callback_client.h"
-#include "utils_log.h"
+#ifndef OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_H
+#define OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_H
+
+#include <functional>
+
+#include "cloud_sync_common.h"
 
 namespace OHOS::FileManagement::CloudSync {
-using namespace std;
 
-void CloudProcessCallbackClient::OnDownloadProcess(int64_t downloadedSize, int64_t totalSize)
-{
-    if (!callback_) {
-        LOGE("callback_ is null, maybe not registered");
-        return;
-    }
-    callback_->OnDownloadProcess(downloadedSize, totalSize);
-}
-
+class CloudDownloadCallback {
+public:
+    virtual ~CloudDownloadCallback() = default;
+    virtual void OnDownloadProcess(DownloadProgressObj& progress) = 0;
+};
 } // namespace OHOS::FileManagement::CloudSync
+
+#endif // OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_H

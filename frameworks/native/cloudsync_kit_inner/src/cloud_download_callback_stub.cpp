@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-#include "cloud_downloaded_callback_stub.h"
+#include "cloud_download_callback_stub.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-CloudDownloadedCallbackStub::CloudDownloadedCallbackStub()
+CloudDownloadCallbackStub::CloudDownloadCallbackStub()
 {
-    opToInterfaceMap_[SERVICE_CMD_ON_DOWNLOADED] = &CloudDownloadedCallbackStub::HandleOnDownloadedResult;
+    opToInterfaceMap_[SERVICE_CMD_ON_PROCESS] = &CloudDownloadCallbackStub::HandleOnProcess;
 }
 
-int32_t CloudDownloadedCallbackStub::OnRemoteRequest(uint32_t code,
-                                                     MessageParcel &data,
-                                                     MessageParcel &reply,
-                                                     MessageOption &option)
+int32_t CloudDownloadCallbackStub::OnRemoteRequest(uint32_t code,
+                                                   MessageParcel &data,
+                                                   MessageParcel &reply,
+                                                   MessageOption &option)
 {
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return E_SERVICE_DESCRIPTOR_IS_EMPTY;
@@ -41,10 +41,14 @@ int32_t CloudDownloadedCallbackStub::OnRemoteRequest(uint32_t code,
     return (this->*(interfaceIndex->second))(data, reply);
 }
 
-int32_t CloudDownloadedCallbackStub::HandleOnDownloadedResult(MessageParcel &data, MessageParcel &reply)
+int32_t CloudDownloadCallbackStub::HandleOnProcess(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t result = data.ReadInt32();
-    OnDownloadedResult(result);
+    DownloadProgressObj& progress = *data.ReadParcelable<DownloadProgressObj>();
+    auto path2uri = [](string path) -> string { return path; };
+    progress.path = path2uri(progress.path);
+
+    OnDownloadProcess(progress);
     return E_OK;
 }
+
 } // namespace OHOS::FileManagement::CloudSync

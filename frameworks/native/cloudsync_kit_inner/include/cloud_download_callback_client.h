@@ -13,17 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_CLOUD_PROCESS_CALLBACK_H
-#define OHOS_FILEMGMT_CLOUD_PROCESS_CALLBACK_H
+#ifndef OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_CLIENT_H
+#define OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_CLIENT_H
 
-#include <functional>
+#include "cloud_download_callback_stub.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudProcessCallback {
+class CloudDownloadCallbackClient final : public CloudDownloadCallbackStub {
 public:
-    virtual ~CloudProcessCallback() = default;
-    virtual void OnDownloadProcess(int64_t downloadedSize, int64_t totalSize) = 0;
+    explicit CloudDownloadCallbackClient(const std::shared_ptr<CloudDownloadCallback> &callback)
+        : callback_(callback) {}
+
+    void OnDownloadProcess(DownloadProgressObj& progress) override;
+
+private:
+    std::shared_ptr<CloudDownloadCallback> callback_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
-#endif // OHOS_FILEMGMT_CLOUD_PROCESS_CALLBACK_H
+#endif // OHOS_FILEMGMT_CLOUD_DOWNLOAD_CALLBACK_CLIENT_H
