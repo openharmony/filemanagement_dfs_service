@@ -17,6 +17,7 @@
 #include <gmock/gmock.h>
 
 #include "cloud_sync_callback_stub.h"
+#include "cloud_sync_constants.h"
 #include "service_callback_mock.h"
 #include "i_cloud_sync_callback.h"
 #include "dfs_error.h"
@@ -30,7 +31,7 @@ using namespace std;
 
 class MockCallback final : public CloudSyncCallbackStub {
 public:
-    MOCK_METHOD2(OnSyncStateChanged, void(SyncType type, SyncPromptState state));
+    MOCK_METHOD2(OnSyncStateChanged, void(CloudSyncState state, ErrorType error));
 };
 
 class CloudSyncCallbackStubTest : public testing::Test {
@@ -78,10 +79,10 @@ HWTEST_F(CloudSyncCallbackStubTest, HandleOnSyncStateChangedTest, TestSize.Level
         MessageParcel reply;
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncCallback::GetDescriptor()));
-        
+
         const string bundleName = "com.ohos.photos";
-        EXPECT_TRUE(data.WriteInt32(static_cast<int>((SyncType)0)));
-        EXPECT_TRUE(data.WriteInt32(static_cast<int>((SyncPromptState)0)));
+        EXPECT_TRUE(data.WriteInt32(static_cast<int>((CloudSyncState)0)));
+        EXPECT_TRUE(data.WriteInt32(static_cast<int>((ErrorType)0)));
 
         EXPECT_EQ(E_OK, callback.OnRemoteRequest(
             ICloudSyncCallback::SERVICE_CMD_ON_SYNC_STATE_CHANGED, data, reply, option));

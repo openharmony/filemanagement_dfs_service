@@ -23,7 +23,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void CloudSyncCallbackProxy::OnSyncStateChanged(SyncType type, SyncPromptState state)
+void CloudSyncCallbackProxy::OnSyncStateChanged(CloudSyncState state, ErrorType error)
 {
     LOGI("Start");
     MessageParcel data;
@@ -35,12 +35,12 @@ void CloudSyncCallbackProxy::OnSyncStateChanged(SyncType type, SyncPromptState s
         return;
     }
 
-    if (!data.WriteInt32(static_cast<int32_t>(type))) {
+    if (!data.WriteInt32(static_cast<int32_t>(state))) {
         LOGE("Failed to send the type");
         return;
     }
 
-    if (!data.WriteInt32(static_cast<int32_t>(state))) {
+    if (!data.WriteInt32(static_cast<int32_t>(error))) {
         LOGE("Failed to send the state");
         return;
     }

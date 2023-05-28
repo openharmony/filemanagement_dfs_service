@@ -241,17 +241,12 @@ void DataSyncer::CompletePush()
 {
 }
 
-void DataSyncer::CompleteAll(int32_t code, const SyncType type)
+void DataSyncer::CompleteAll()
 {
 }
 
-void DataSyncer::SyncStateChangedNotify(const SyncType type, const SyncPromptState state)
+void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)
 {
-}
-
-SyncPromptState DataSyncer::GetSyncPromptState(const int32_t code)
-{
-    return SyncPromptState::SYNC_STATE_DEFAULT;
 }
 } // namespace CloudSync
 } // namespace FileManagement

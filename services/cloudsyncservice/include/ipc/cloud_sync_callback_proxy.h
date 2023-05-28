@@ -26,7 +26,7 @@ public:
     explicit CloudSyncCallbackProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<ICloudSyncCallback>(impl) {}
     ~CloudSyncCallbackProxy() override {}
 
-    void OnSyncStateChanged(SyncType type, SyncPromptState state) override;
+    void OnSyncStateChanged(CloudSyncState state, ErrorType error) override;
 private:
     static inline BrokerDelegator<CloudSyncCallbackProxy> delegator_;
 };
