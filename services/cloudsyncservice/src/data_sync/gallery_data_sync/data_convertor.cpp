@@ -204,8 +204,58 @@ static int32_t GetBoolComp(const DriveKit::DKRecordField &field, bool &val)
     return E_OK;
 }
 
-int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record,
-    NativeRdb::ValuesBucket &valueBucket)
+const std::unordered_map<DataType,
+    std::function<int(const DriveKit::DKRecordField &, NativeRdb::ValuesBucket &, const std::string &)>>
+    TYPE_HANDLERS = {
+        {DataType::INT,
+         [](const DriveKit::DKRecordField &value, NativeRdb::ValuesBucket &bucket, const std::string &field) {
+             int intValue;
+             if (GetIntComp(value, intValue) != E_OK) {
+                 return E_INVAL_ARG;
+             }
+             bucket.PutInt(field, intValue);
+             return E_OK;
+         }},
+        {DataType::LONG,
+         [](const DriveKit::DKRecordField &value, NativeRdb::ValuesBucket &bucket, const std::string &field) {
+             int64_t longValue;
+             if (DataConvertor::GetLongComp(value, longValue) != E_OK) {
+                 return E_INVAL_ARG;
+             }
+             bucket.PutLong(field, longValue);
+             return E_OK;
+         }},
+        {DataType::STRING,
+         [](const DriveKit::DKRecordField &value, NativeRdb::ValuesBucket &bucket, const std::string &field) {
+             std::string stringValue;
+             if (value.GetString(stringValue) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+                 return E_INVAL_ARG;
+             }
+             bucket.PutString(field, stringValue);
+             return E_OK;
+         }},
+        {DataType::BOOL,
+         [](const DriveKit::DKRecordField &value, NativeRdb::ValuesBucket &bucket, const std::string &field) {
+             bool boolValue;
+             if (GetBoolComp(value, boolValue) != E_OK) {
+                 return E_INVAL_ARG;
+             }
+             bucket.PutInt(field, static_cast<int>(boolValue));
+             return E_OK;
+         }}};
+
+int HandleField(const DriveKit::DKRecordField &value, NativeRdb::ValuesBucket &bucket, const std::string &field,
+    DataType type)
+{
+    auto it = TYPE_HANDLERS.find(type);
+    if (it == TYPE_HANDLERS.end()) {
+        LOGE("invalid data type %d", static_cast<int>(type));
+        return E_INVAL_ARG;
+    }
+    return it->second(value, bucket, field);
+}
+
+int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
 {
     DriveKit::DKRecordData data;
     record.GetRecordData(data);
@@ -217,50 +267,15 @@ int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record,
     DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
 
     auto size = GALLERY_FILE_COLUMNS.size();
-    for (decltype(size) i = 0 ; i < size - 1; i++) {
+    for (decltype(size) i = 0; i < size - 1; i++) {
         auto field = GALLERY_FILE_COLUMNS[i];
         auto type = GALLERY_FILE_COLUMN_TYPES[i];
         if (properties.find(field) == properties.end()) {
-            LOGE("filed %{public}s not found in record.properties", field.c_str());
-            return E_INVAL_ARG;
+            LOGE("filed %s not found in record.properties", field.c_str());
+            continue;
         }
-        switch (type) {
-            case DataType::INT: {
-                int value;
-                if (GetIntComp(properties[field], value) != E_OK) {
-                    return E_INVAL_ARG;
-                }
-                valueBucket.PutInt(field, value);
-                break;
-            }
-            case DataType::LONG: {
-                int64_t value;
-                if (GetLongComp(properties[field], value) != E_OK) {
-                    return E_INVAL_ARG;
-                }
-                valueBucket.PutInt(field, value);
-                break;
-            }
-            case DataType::STRING: {
-                string value;
-                if (properties[field].GetString(value) != DriveKit::DKLocalErrorCode::NO_ERROR) {
-                    return E_INVAL_ARG;
-                }
-                valueBucket.PutString(field, value);
-                break;
-            }
-            case DataType::BOOL: {
-                bool value;
-                if (GetBoolComp(properties[field], value) != E_OK) {
-                    return E_INVAL_ARG;
-                }
-                valueBucket.PutInt(field, value);
-                break;
-            }
-            default: {
-                LOGE("invalid data type %{public}d", static_cast<int>(type));
-                break;
-            }
+        if (HandleField(properties[field], valueBucket, field, type) != E_OK) {
+            LOGE("HandleField %s failed", field.c_str());
         }
     }
     return E_OK;
