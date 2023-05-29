@@ -137,7 +137,9 @@ HWTEST_F(SdkHelperTest, FetchRecordsOKTest, TestSize.Level1)
     shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
     auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnFetchRecords);
     ASSERT_NE(callback, nullptr);
-    int32_t ret = sdkHelper_->FetchRecords(context, dataSyncer_->nextCursor_, callback);
+    FetchCondition cond;
+    handler_->GetFetchCondition(cond);
+    int32_t ret = sdkHelper_->FetchRecords(context, cond, dataSyncer_->nextCursor_, callback);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -151,7 +153,9 @@ HWTEST_F(SdkHelperTest, GetStartCursorOKTest, TestSize.Level1)
 {
     shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
     std::string tempStartCursor;
-    int32_t ret = sdkHelper_->GetStartCursor(context, tempStartCursor);
+    FetchCondition cond;
+    handler_->GetFetchCondition(cond);
+    int32_t ret = sdkHelper_->GetStartCursor(cond.recordType, tempStartCursor);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -166,7 +170,9 @@ HWTEST_F(SdkHelperTest, FetchRecordWithIdOKTest, TestSize.Level1)
     shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
     auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnFetchRetryRecord);
     ASSERT_NE(callback, nullptr);
-    int32_t ret = sdkHelper_->FetchRecordWithId(context, "", callback);
+    FetchCondition cond;
+    handler_->GetFetchCondition(cond);
+    int32_t ret = sdkHelper_->FetchRecordWithId(context, cond, "", callback);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -181,7 +187,9 @@ HWTEST_F(SdkHelperTest, FetchDatabaseChangesOKTest, TestSize.Level1)
     shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
     auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnFetchDatabaseChanges);
     ASSERT_NE(callback, nullptr);
-    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, dataSyncer_->nextCursor_, callback);
+    FetchCondition cond;
+    handler_->GetFetchCondition(cond);
+    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, cond, dataSyncer_->nextCursor_, callback);
     EXPECT_EQ(E_OK, ret);
 }
 

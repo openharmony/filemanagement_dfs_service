@@ -18,7 +18,6 @@
 #include <thread>
 
 #include "dfs_error.h"
-#include "task.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -64,19 +63,9 @@ void SdkHelper::DeleteLock(DriveKit::DKLock &lock)
     database_->DeleteLock(lock);
 }
 
-int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor cursor,
-    function<void(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-        std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
-        const DriveKit::DKError &)> callback)
+int32_t SdkHelper::FetchRecords(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
+    DriveKit::DKQueryCursor cursor, FetchRecordsCallback callback)
 {
-    auto ctx = static_pointer_cast<TaskContext>(context);
-    auto handler = ctx->GetHandler();
-    if (handler == nullptr) {
-        LOGE("context get handler err");
-        return E_INVAL_ARG;
-    }
-    FetchCondition cond;
-    handler->GetFetchCondition(cond);
     auto err = database_->FetchRecords(context, cond.recordType, cond.desiredKeys, cond.limitRes, cursor, callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("drivekit fetch records err %{public}d", err);
@@ -85,19 +74,10 @@ int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context, DriveKi
     return E_OK;
 }
 
-int32_t SdkHelper::FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKRecordId recordId,
-    FetchRecordCallback callback)
+int32_t SdkHelper::FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
+    DriveKit::DKRecordId recordId, FetchRecordCallback callback)
 {
-    auto ctx = static_pointer_cast<TaskContext>(context);
-    auto handler = ctx->GetHandler();
-    if (handler == nullptr) {
-        LOGE("context get handler err");
-        return E_INVAL_ARG;
-    }
-    FetchCondition cond;
-    handler->GetFetchCondition(cond);
-    auto err =
-        database_->FetchRecordWithId(context, cond.recordType, recordId, cond.desiredKeys, callback);
+    auto err = database_->FetchRecordWithId(context, cond.recordType, recordId, cond.desiredKeys, callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("drivekit fetch records err %{public}d", err);
         return E_CLOUD_SDK;
@@ -105,19 +85,9 @@ int32_t SdkHelper::FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> contex
     return E_OK;
 }
 
-int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor cursor,
-    std::function<void(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-        std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
-        bool, const DriveKit::DKError &)> callback)
+int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
+    DriveKit::DKQueryCursor cursor, FetchDatabaseChangesCallback callback)
 {
-    auto ctx = static_pointer_cast<TaskContext>(context);
-    auto handler = ctx->GetHandler();
-    if (handler == nullptr) {
-        LOGE("context get handler err");
-        return E_INVAL_ARG;
-    }
-    FetchCondition cond;
-    handler->GetFetchCondition(cond);
     auto err = database_->FetchDatabaseChanges(context, cond.recordType, cond.desiredKeys, cond.limitRes, cursor,
         callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
@@ -193,17 +163,9 @@ int32_t SdkHelper::CancelDownloadAssets(int32_t id)
     return E_OK;
 }
 
-int32_t SdkHelper::GetStartCursor(shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor &cursor)
+int32_t SdkHelper::GetStartCursor(DriveKit::DKRecordType recordType, DriveKit::DKQueryCursor &cursor)
 {
-    auto ctx = static_pointer_cast<TaskContext>(context);
-    auto handler = ctx->GetHandler();
-    if (handler == nullptr) {
-        LOGE("context get handler err");
-        return E_INVAL_ARG;
-    }
-    FetchCondition cond;
-    handler->GetFetchCondition(cond);
-    auto err = database_->GetStartCursor(cond.recordType, cursor);
+    auto err = database_->GetStartCursor(recordType, cursor);
     if (err.HasError()) {
         LOGE("drivekit get start cursor server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
             err.dkErrorCode);

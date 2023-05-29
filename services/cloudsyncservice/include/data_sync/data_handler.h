@@ -21,11 +21,6 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-struct FetchCondition {
-    int32_t limitRes;
-    DriveKit::DKRecordType recordType;
-    DriveKit::DKFieldKeyArray desiredKeys;
-};
 class DataHandler {
 public:
     /* download */
