@@ -26,6 +26,9 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
+const int USER_ID = 100;
+const std::string BUND_NAME = "com.ohos.photos";
+const std::string BUND_NAME_TEST = "com.ohos.test";
 class DataSyncManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -63,11 +66,9 @@ void DataSyncManagerTest::TearDown(void)
  */
 HWTEST_F(DataSyncManagerTest, GetDataSyncerTest, TestSize.Level1)
 {
-    int32_t userId = 100;
-    string bundleName = "com.ohos.test";
-    auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId);
-    EXPECT_EQ(userId, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
+    auto dataSyncer = dataSyncManager_->GetDataSyncer(BUND_NAME_TEST, USER_ID);
+    EXPECT_EQ(USER_ID, dataSyncer->GetUserId());
+    EXPECT_EQ(BUND_NAME_TEST, dataSyncer->GetBundleName());
 }
 
 /**
@@ -78,16 +79,13 @@ HWTEST_F(DataSyncManagerTest, GetDataSyncerTest, TestSize.Level1)
  */
 HWTEST_F(DataSyncManagerTest, GetExistDataSyncerTest, TestSize.Level1)
 {
-    int32_t userId = 100;
-    string bundleName = "com.ohos.test";
+    auto dataSyncer = dataSyncManager_->GetDataSyncer(BUND_NAME_TEST, USER_ID);
+    EXPECT_EQ(USER_ID, dataSyncer->GetUserId());
+    EXPECT_EQ(BUND_NAME_TEST, dataSyncer->GetBundleName());
 
-    auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId);
-    EXPECT_EQ(userId, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
-
-    dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId);
-    EXPECT_EQ(userId, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
+    dataSyncer = dataSyncManager_->GetDataSyncer(BUND_NAME_TEST, USER_ID);
+    EXPECT_EQ(USER_ID, dataSyncer->GetUserId());
+    EXPECT_EQ(BUND_NAME_TEST, dataSyncer->GetBundleName());
     EXPECT_EQ(dataSyncManager_->dataSyncers_.size(), 1);
 }
 
@@ -99,17 +97,14 @@ HWTEST_F(DataSyncManagerTest, GetExistDataSyncerTest, TestSize.Level1)
  */
 HWTEST_F(DataSyncManagerTest, GetDataSyncerdifferentBundleNameTest, TestSize.Level1)
 {
-    int32_t userId = 100;
-    string bundleName = "com.ohos.test";
-
-    auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId);
-    EXPECT_EQ(userId, dataSyncer->GetUserId());
-    EXPECT_EQ(bundleName, dataSyncer->GetBundleName());
+    auto dataSyncer = dataSyncManager_->GetDataSyncer(BUND_NAME_TEST, USER_ID);
+    EXPECT_EQ(USER_ID, dataSyncer->GetUserId());
+    EXPECT_EQ(BUND_NAME_TEST, dataSyncer->GetBundleName());
 
     string bundleName2 = "com.ohos.test2";
 
-    dataSyncer = dataSyncManager_->GetDataSyncer(bundleName2, userId);
-    EXPECT_EQ(userId, dataSyncer->GetUserId());
+    dataSyncer = dataSyncManager_->GetDataSyncer(bundleName2, USER_ID);
+    EXPECT_EQ(USER_ID, dataSyncer->GetUserId());
     EXPECT_EQ(bundleName2, dataSyncer->GetBundleName());
     EXPECT_EQ(dataSyncManager_->dataSyncers_.size(), 2);
 }
@@ -122,26 +117,238 @@ HWTEST_F(DataSyncManagerTest, GetDataSyncerdifferentBundleNameTest, TestSize.Lev
  */
 HWTEST_F(DataSyncManagerTest, IsSkipSyncOnBatteryNoOkTest, TestSize.Level1)
 {
-    int32_t userId = 100;
-    string bundleName = "com.ohos.test";
     BatteryStatus::level_ = BatteryStatus::CapacityLevel::LEVEL_TOO_LOW;
-    auto ret = dataSyncManager_->IsSkipSync(bundleName, userId);
+    auto ret = dataSyncManager_->IsSkipSync(BUND_NAME_TEST, USER_ID);
     BatteryStatus::level_ = BatteryStatus::CapacityLevel::LEVEL_NORMAL;
     EXPECT_EQ(E_SYNC_FAILED_BATTERY_TOO_LOW, ret);
 }
 
 /**
  * @tc.name: IsSkipSyncOKTest
- * @tc.desc: Verify the GetDataSyncer function
+ * @tc.desc: Verify the IsSkipSync function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
 HWTEST_F(DataSyncManagerTest, IsSkipSyncOKTest, TestSize.Level1)
 {
-    int32_t userId = 100;
-    string bundleName = "com.ohos.test";
+    auto ret = dataSyncManager_->IsSkipSync(BUND_NAME_TEST, USER_ID);
+    EXPECT_EQ(E_OK, ret);
+}
 
-    auto ret = dataSyncManager_->IsSkipSync(bundleName, userId);
+/**
+ * @tc.name: TriggerStartSyncArgFailTest
+ * @tc.desc: Verify the TriggerStartSync function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, TriggerStartSyncArgFailTest, TestSize.Level1)
+{
+    auto ret = dataSyncManager_->TriggerStartSync(BUND_NAME_TEST, USER_ID,
+        false, SyncTriggerType::APP_TRIGGER);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+/**
+ * @tc.name: TriggerStartSyncOKTest
+ * @tc.desc: Verify the TriggerStartSync function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, TriggerStartSyncNoOKTest, TestSize.Level1)
+{
+    BatteryStatus::level_ = BatteryStatus::CapacityLevel::LEVEL_TOO_LOW;
+    auto ret = dataSyncManager_->TriggerStartSync(BUND_NAME, USER_ID,
+        false, SyncTriggerType::APP_TRIGGER);
+    BatteryStatus::level_ = BatteryStatus::CapacityLevel::LEVEL_NORMAL;
+    EXPECT_EQ(E_SYNC_FAILED_BATTERY_TOO_LOW, ret);
+}
+
+/**
+ * @tc.name: TriggerStartSyncOKTest
+ * @tc.desc: Verify the GetDataSyncer function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, TriggerStartSyncOKTest, TestSize.Level1)
+{
+    auto ret = dataSyncManager_->TriggerStartSync(BUND_NAME, USER_ID,
+        false, SyncTriggerType::APP_TRIGGER);
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: TriggerStopSyncArgFailTest
+ * @tc.desc: Verify the TriggerStopSync function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, TriggerStopSyncArgFailTest, TestSize.Level1)
+{
+    auto ret = dataSyncManager_->TriggerStopSync(BUND_NAME_TEST, USER_ID, SyncTriggerType::APP_TRIGGER);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+/**
+ * @tc.name: TriggerStartSyncOKTest
+ * @tc.desc: Verify the TriggerStopSync function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, TriggerStopSyncOKTest, TestSize.Level1)
+{
+    auto ret = dataSyncManager_->TriggerStopSync(BUND_NAME, USER_ID, SyncTriggerType::APP_TRIGGER);
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: TriggerRecoveryArgFailTest
+ * @tc.desc: Verify the TriggerRecoverySync function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, TriggerRecoveryArgFailTest, TestSize.Level1)
+{
+    auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+/**
+ * @tc.name: TriggerRecoverySizeZeroTest
+ * @tc.desc: Verify the TriggerRecoverySync function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, TriggerRecoverySizeZeroOKTest, TestSize.Level1)
+{
+    auto dataSyncer = dataSyncManager_->GetDataSyncer(BUND_NAME, USER_ID);
+    auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: TriggerRecoveryFailTest
+ * @tc.desc: Verify the TriggerRecoverySync function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, TriggerRecoveryFailTest, TestSize.Level1)
+{
+    auto dataSyncer = dataSyncManager_->GetDataSyncer(BUND_NAME_TEST, USER_ID);
+    auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+/**
+ * @tc.name: TriggerRecoveryOKTest
+ * @tc.desc: Verify the TriggerRecoverySync function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, TriggerRecoveryOKTest, TestSize.Level1)
+{
+    string bundleName = "hdcd";
+    auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, USER_ID);
+    auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: StartDownloadFileArgFailTest
+ * @tc.desc: Verify the StartDownloadFile function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, StartDownloadFileArgFailTest, TestSize.Level1)
+{
+    string path = "/test";
+    auto ret = dataSyncManager_->StartDownloadFile(BUND_NAME_TEST, USER_ID, path);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+/**
+ * @tc.name: StartDownloadFileSyncOKTest
+ * @tc.desc: Verify the StartDownloadFile function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, StartDownloadFileOKTest, TestSize.Level1)
+{
+    string path = "/test";
+    auto ret = dataSyncManager_->StartDownloadFile(BUND_NAME, USER_ID, path);
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: StopDownloadFileArgFailTest
+ * @tc.desc: Verify the StopDownloadFile function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, StopDownloadFileArgFailTest, TestSize.Level1)
+{
+    string path = "/test";
+    auto ret = dataSyncManager_->StopDownloadFile(BUND_NAME_TEST, USER_ID, path);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+/**
+ * @tc.name: StopDownloadFileOKTest
+ * @tc.desc: Verify the StopDownloadFile function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, StopDownloadFileOKTest, TestSize.Level1)
+{
+    string path = "/test";
+    auto ret = dataSyncManager_->StopDownloadFile(BUND_NAME, USER_ID, path);
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: UnregisterDownloadFileCallbackArgFailTest
+ * @tc.desc: Verify the UnregisterDownloadFileCallback function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, UnregisterDownloadFileCallbackArgFailTest, TestSize.Level1)
+{
+    auto ret = dataSyncManager_->UnregisterDownloadFileCallback(BUND_NAME_TEST, USER_ID);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+/**
+ * @tc.name: UnregisterDownloadFileCallbackOKTest
+ * @tc.desc: Verify the UnregisterDownloadFileCallback function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, UnregisterDownloadFileCallbackOKTest, TestSize.Level1)
+{
+    auto ret = dataSyncManager_->UnregisterDownloadFileCallback(BUND_NAME, USER_ID);
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: RegisterDownloadFileCallbackArgFailTest
+ * @tc.desc: Verify the RegisterDownloadFileCallback function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, RegisterDownloadFileCallbackArgFailTest, TestSize.Level1)
+{
+    auto ret = dataSyncManager_->RegisterDownloadFileCallback(BUND_NAME_TEST, USER_ID, nullptr);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+/**
+ * @tc.name: RegisterDownloadFileCallbackOKTest
+ * @tc.desc: Verify the RegisterDownloadFileCallback function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, RegisterDownloadFileCallbackOKTest, TestSize.Level1)
+{
+    auto ret = dataSyncManager_->RegisterDownloadFileCallback(BUND_NAME, USER_ID, nullptr);
     EXPECT_EQ(E_OK, ret);
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
