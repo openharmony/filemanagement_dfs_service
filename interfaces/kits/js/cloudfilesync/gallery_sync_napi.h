@@ -20,8 +20,7 @@
 #include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
-using namespace FileManagement::LibN;
-
+using namespace OHOS::FileManagement::LibN;
 const int32_t ARGS_ONE = 1;
 
 class GallerySyncNapi final : public NExporter {

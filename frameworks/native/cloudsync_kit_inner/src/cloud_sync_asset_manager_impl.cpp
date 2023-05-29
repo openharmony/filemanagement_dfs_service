@@ -37,7 +37,9 @@ int32_t CloudSyncAssetManagerImpl::UploadAsset(const int32_t userId, const std::
     return ret;
 }
 
-int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo)
+int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
+                                                const std::string &bundleName,
+                                                AssetInfo &assetInfo)
 {
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {

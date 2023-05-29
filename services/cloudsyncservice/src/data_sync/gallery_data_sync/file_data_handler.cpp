@@ -522,7 +522,6 @@ int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::Res
 int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
 {
     string filePath = localConvertor_.GetSandboxPath(asset.downLoadPath + "/" + asset.asset.assetName);
-    string localPath = GetLocalPath(userId_, filePath);
 
     int ret = E_OK;
 

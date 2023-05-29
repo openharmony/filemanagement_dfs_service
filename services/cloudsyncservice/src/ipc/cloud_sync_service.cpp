@@ -78,6 +78,17 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
     batteryStatusListener_->Start();
 }
 
+int32_t CloudSyncService::UnRegisterCallbackInner()
+{
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
+
+    CloudSyncCallbackManager::GetInstance().RemoveCallback(bundleName);
+    return E_OK;
+}
+
 int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject)
 {
     if (remoteObject == nullptr) {
@@ -206,11 +217,11 @@ int32_t CloudSyncService::UnregisterDownloadFileCallback()
 
 int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &request, std::string &result)
 {
-    return 0;
+    return E_OK;
 }
 
 int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo)
 {
-    return 0;
+    return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync

@@ -41,6 +41,11 @@ public:
         return E_OK;
     }
 
+    int32_t UnRegisterCallbackInner() override
+    {
+        return E_OK;
+    }
+
     int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) override
     {
         return E_OK;

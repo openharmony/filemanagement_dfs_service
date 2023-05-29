@@ -105,7 +105,7 @@ napi_value GallerySyncNapi::Constructor(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
         return nullptr;
     }
 
@@ -116,21 +116,22 @@ napi_value GallerySyncNapi::OnCallback(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OnCallback Number of arguments unmatched");
         return nullptr;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
-    if (!succ || (type.get() != std::string("progress"))) {
-        NError(E_PARAMS).ThrowErr(env);
+    if (!(succ && (type.get() == std::string("progress")))) {
+        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
         return nullptr;
     }
 
     auto callback = make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
-    int32_t result = CloudSyncManager::GetInstance().RegisterCallback(callback);
-    if (result != E_OK) {
-        LOGE("OnCallback Register error, result: %{public}d", result);
+    int32_t errNum = CloudSyncManager::GetInstance().RegisterCallback(callback);
+    if (errNum != E_OK) {
+        LOGE("OnCallback Register error, result: %{public}d", errNum);
+        NError(Convert2JsErrNum(E_BROKEN_IPC)).ThrowErr(env);
         return nullptr;
     }
 
@@ -139,21 +140,41 @@ napi_value GallerySyncNapi::OnCallback(napi_env env, napi_callback_info info)
 
 napi_value GallerySyncNapi::OffCallback(napi_env env, napi_callback_info info)
 {
-    return nullptr;
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        LOGE("OffCallback Number of arguments unmatched");
+        return nullptr;
+    }
+
+    auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+    if (!(succ && (type.get() == std::string("progress")))) {
+        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        return nullptr;
+    }
+
+    int32_t errNum = CloudSyncManager::GetInstance().UnRegisterCallback();
+    if (errNum != E_OK) {
+        LOGE("OffCallback UnRegister error, result: %{public}d", errNum);
+        NError(Convert2JsErrNum(E_BROKEN_IPC)).ThrowErr(env);
+        return nullptr;
+    }
+
+    return NVal::CreateUndefined(env).val_;
 }
 
 napi_value GallerySyncNapi::Start(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
-        NError(E_PARAMS).ThrowErr(env);
+        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
     }
 
     auto cbExec = []() -> NError {
         int32_t result = CloudSyncManager::GetInstance().StartSync();
         if (result != E_OK) {
             LOGE("Start Sync error, result: %{public}d", result);
-            return NError(result);
+            return NError(Convert2JsErrNum(E_BROKEN_IPC));
         }
         return NError(ERRNO_NOERR);
     };
@@ -179,7 +200,7 @@ napi_value GallerySyncNapi::Stop(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
-        NError(E_PARAMS).ThrowErr(env);
+        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
         return nullptr;
     }
 
@@ -187,7 +208,7 @@ napi_value GallerySyncNapi::Stop(napi_env env, napi_callback_info info)
         int32_t result = CloudSyncManager::GetInstance().StopSync();
         if (result != E_OK) {
             LOGE("Stop Sync error, result: %{public}d", result);
-            return NError(result);
+            return NError(Convert2JsErrNum(E_BROKEN_IPC));
         }
         return NError(ERRNO_NOERR);
     };

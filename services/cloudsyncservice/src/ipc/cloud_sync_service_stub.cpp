@@ -22,6 +22,7 @@ using namespace std;
 
 CloudSyncServiceStub::CloudSyncServiceStub()
 {
+    opToInterfaceMap_[SERVICE_CMD_UNREGISTER_CALLBACK] = &CloudSyncServiceStub::HandleUnRegisterCallbackInner;
     opToInterfaceMap_[SERVICE_CMD_REGISTER_CALLBACK] = &CloudSyncServiceStub::HandleRegisterCallbackInner;
     opToInterfaceMap_[SERVICE_CMD_START_SYNC] = &CloudSyncServiceStub::HandleStartSyncInner;
     opToInterfaceMap_[SERVICE_CMD_STOP_SYNC] = &CloudSyncServiceStub::HandleStopSyncInner;
@@ -54,6 +55,24 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     return (this->*(interfaceIndex->second))(data, reply);
+}
+
+int32_t CloudSyncServiceStub::HandleUnRegisterCallbackInner(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin UnRegisterCallbackInner");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    
+    int32_t res = UnRegisterCallbackInner();
+    reply.WriteInt32(res);
+    LOGI("End UnRegisterCallbackInner");
+    return res;
 }
 
 int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply)
@@ -295,9 +314,10 @@ int32_t CloudSyncServiceStub::HandleUploadAsset(MessageParcel &data, MessageParc
     }
     int32_t userId = data.ReadInt32();
     string request = data.ReadString();
-    string result = data.ReadString();
+    string result;
     int32_t res = UploadAsset(userId, request, result);
     reply.WriteInt32(res);
+    reply.WriteString(result);
     LOGI("End UploadAsset");
     return res;
 }
