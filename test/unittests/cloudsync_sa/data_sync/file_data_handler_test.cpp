@@ -31,6 +31,7 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 using namespace NativeRdb;
+using namespace DriveKit;
 const int USER_ID = 0;
 const std::string BUND_NAME = "com.ohos.photos";
 class FileDataHandlerTest : public testing::Test {
@@ -269,5 +270,235 @@ HWTEST_F(FileDataHandlerTest, GetDownloadAsset004, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "GetDownloadAsset004 End";
+}
+
+/**
+ * @tc.name: PullRecordInsert001
+ * @tc.desc: Verify the GetDownloadAsset function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordInsert001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordInsert001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        DKRecord record;
+        bool outPullThumbs;
+        int32_t ret = fileDataHandler->PullRecordInsert(record, outPullThumbs);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " PullRecordInsert001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "PullRecordInsert001 End";
+}
+
+/**
+ * @tc.name: PullRecordInsert002
+ * @tc.desc: Verify the GetDownloadAsset function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordInsert002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordInsert002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        DKRecord record;
+        bool outPullThumbs;
+        int32_t ret = fileDataHandler->PullRecordInsert(record, outPullThumbs);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " PullRecordInsert002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "PullRecordInsert002 End";
+}
+
+/**
+ * @tc.name: SetRetry001
+ * @tc.desc: Verify the SetRetry function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, SetRetry001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetRetry001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
+
+        std::string recordId = "recordId";
+        int32_t ret = fileDataHandler->SetRetry(recordId);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetRetry001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "SetRetry001 End";
+}
+
+/**
+ * @tc.name: SetRetry002
+ * @tc.desc: Verify the SetRetry function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, SetRetry002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetRetry002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
+
+        std::string recordId = "recordId";
+        int32_t ret = fileDataHandler->SetRetry(recordId);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetRetry002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "SetRetry002 End";
+}
+
+/**
+ * @tc.name: RecycleFile001
+ * @tc.desc: Verify the RecycleFile function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, RecycleFile001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecycleFile001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
+
+        std::string localPath;
+        std::string recordId;
+        int32_t ret = fileDataHandler->RecycleFile(localPath, recordId);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " RecycleFile001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "RecycleFile001 End";
+}
+
+/**
+ * @tc.name: RecycleFile002
+ * @tc.desc: Verify the RecycleFile function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, RecycleFile002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecycleFile002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Delete(_, _, _, _)).WillOnce(Return(1));
+
+        std::string localPath;
+        std::string recordId;
+        int32_t ret = fileDataHandler->RecycleFile(localPath, recordId);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " RecycleFile002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "RecycleFile002 End";
+}
+
+/**
+ * @tc.name: RecycleFile003
+ * @tc.desc: Verify the RecycleFile function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, RecycleFile003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecycleFile003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Delete(_, _, _, _)).WillOnce(Return(0));
+
+        std::string localPath;
+        std::string recordId;
+        int32_t ret = fileDataHandler->RecycleFile(localPath, recordId);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " RecycleFile003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "RecycleFile003 End";
+}
+
+/**
+ * @tc.name: GetFileModifiedRecords001
+ * @tc.desc: Verify the GetFileModifiedRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, GetFileModifiedRecords001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileModifiedRecords001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr)));
+        vector<DKRecord> records;
+        int32_t ret = fileDataHandler->GetFileModifiedRecords(records);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetFileModifiedRecords001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "GetFileModifiedRecords001 End";
+}
+
+/**
+ * @tc.name: GetFileModifiedRecords002
+ * @tc.desc: Verify the GetFileModifiedRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, GetFileModifiedRecords002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileModifiedRecords002 Begin";
+    try {
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        vector<DKRecord> records;
+        int32_t ret = fileDataHandler->GetFileModifiedRecords(records);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetFileModifiedRecords002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "GetFileModifiedRecords002 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
