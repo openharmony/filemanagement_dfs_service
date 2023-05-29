@@ -14,6 +14,7 @@
  */
 
 #include "cloud_download_callback_stub.h"
+#include "cloud_download_uri_manager.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 
@@ -44,8 +45,14 @@ int32_t CloudDownloadCallbackStub::OnRemoteRequest(uint32_t code,
 int32_t CloudDownloadCallbackStub::HandleOnProcess(MessageParcel &data, MessageParcel &reply)
 {
     DownloadProgressObj& progress = *data.ReadParcelable<DownloadProgressObj>();
-    auto path2uri = [](string path) -> string { return path; };
-    progress.path = path2uri(progress.path);
+
+    CloudDownloadUriManager uriMgr = CloudDownloadUriManager::GetInstance();
+    std::string path = progress.path;
+    progress.path = uriMgr.GetUri(path);
+
+    if (progress.state != DownloadProgressObj::RUNNING) {
+        uriMgr.RemoveUri(path);
+    }
 
     OnDownloadProcess(progress);
     return E_OK;

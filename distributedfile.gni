@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ability_base_kits_path = "//foundation/ability/ability_base/interfaces/kits"
 ability_runtime_kits_path =
     "//foundation/ability/ability_runtime/frameworks/kits"
 
