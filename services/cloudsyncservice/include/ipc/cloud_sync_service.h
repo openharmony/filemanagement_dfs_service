@@ -33,7 +33,7 @@ class CloudSyncService final : public SystemAbility, public CloudSyncServiceStub
 public:
     explicit CloudSyncService(int32_t saID, bool runOnCreate = true);
     virtual ~CloudSyncService() = default;
-
+    int32_t UnRegisterCallbackInner() override;
     int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) override;
     int32_t StartSyncInner(bool forceFlag) override;
     int32_t StopSyncInner() override;

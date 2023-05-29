@@ -26,6 +26,34 @@ using namespace std;
 
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
 
+int32_t CloudSyncServiceProxy::UnRegisterCallbackInner()
+{
+    LOGI("Start UnRegisterCallbackInner");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_UNREGISTER_CALLBACK, data, reply, option);
+    if (ret != E_OK) {
+        stringstream ss;
+        ss << "Failed to send out the requeset, errno:" << ret;
+        LOGE("%{public}s", ss.str().c_str());
+        return E_BROKEN_IPC;
+    }
+    LOGI("UnRegisterCallbackInner Success");
+    return reply.ReadInt32();
+}
+
 int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject)
 {
     LOGI("Start RegisterCallbackInner");

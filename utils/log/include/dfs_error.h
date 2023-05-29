@@ -17,27 +17,22 @@
 #define OHOS_FILEMGMT_DFS_ERROR_H
 
 #include <string_view>
+#include <sys/types.h>
+#include <unordered_map>
 
 #include "errors.h"
 
 namespace OHOS::FileManagement {
-enum {
-    /**
-     * Module type : Cloud sync service
-     */
-    CLOUD_SYNC_SERVICE_MODULE = 0x100
-};
-
 constexpr std::string_view SPACE_NOT_ENOUGH = "30184039";
 constexpr std::string_view AT_FAILED = "31000401";
 constexpr std::string_view NAME_CONFLICT = "31084932";
 constexpr std::string_view INVALID_FILE = "31004002";
-
-constexpr ErrCode CSS_ERR_OFFSET = ErrCodeOffset(SUBSYS_FILEMANAGEMENT, CLOUD_SYNC_SERVICE_MODULE);
+constexpr int STORAGE_SERVICE_SYS_CAP_TAG = 13600000;
+constexpr int DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG = 22400000;
 
 enum CloudSyncServiceErrCode : ErrCode {
-    E_OK = ERR_OK,
-    E_SEVICE_DIED = CSS_ERR_OFFSET,
+    E_OK = 0,
+    E_SEVICE_DIED,
     E_INVAL_ARG,
     E_BROKEN_IPC,
     E_SA_LOAD_FAILED,
@@ -62,6 +57,28 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_ASYNC_RUN,
     E_PATH
 };
+
+enum JsErrCode {
+    E_PERMISSION = 201,
+    E_PERMISSION_SYS = 202,
+    E_PARAMS = 401,
+    E_IPCSS = STORAGE_SERVICE_SYS_CAP_TAG + 1,
+    E_CLOUD_NOT_READY = DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG + 1,
+    E_NETWORK_ERR = DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG + 2,
+    E_BATTERY_WARNING = DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG + 3,
+};
+
+const std::unordered_map<int32_t, int32_t> errCodeTable {
+    { E_PERMISSION_DENIED, E_PERMISSION },
+    { E_PERMISSION_SYSTEM, E_PERMISSION_SYS },
+    { E_INVAL_ARG, E_PARAMS },
+    { E_BROKEN_IPC, E_IPCSS },
+    { E_SYNC_FAILED_CLOUD_NOT_READY, E_CLOUD_NOT_READY },
+    { E_SYNC_FAILED_NETWORK_NOT_AVAILABLE, E_NETWORK_ERR },
+    { E_SYNC_FAILED_BATTERY_LOW, E_BATTERY_WARNING },
+};
+
+int32_t Convert2JsErrNum(int32_t errNum);
 } // namespace OHOS::FileManagement
 
 #endif // OHOS_FILEMGMT_DFS_ERROR_H

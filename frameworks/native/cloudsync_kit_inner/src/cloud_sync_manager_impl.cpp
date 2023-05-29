@@ -48,6 +48,22 @@ int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCa
     return ret;
 }
 
+int32_t CloudSyncManagerImpl::UnRegisterCallback()
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    auto ret = CloudSyncServiceProxy->UnRegisterCallbackInner();
+    if (!ret) {
+        callback_ = nullptr;
+    }
+    LOGI("UnRegisterCallback ret %{public}d", ret);
+    return ret;
+}
+
 int32_t CloudSyncManagerImpl::StartSync()
 {
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();

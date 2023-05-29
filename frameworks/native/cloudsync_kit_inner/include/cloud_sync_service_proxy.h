@@ -29,7 +29,7 @@ public:
 
     static sptr<ICloudSyncService> GetInstance();
     static void InvaildInstance();
-
+    int32_t UnRegisterCallbackInner() override;
     int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) override;
     int32_t StartSyncInner(bool forceFlag) override;
     int32_t StopSyncInner() override;
