@@ -204,6 +204,11 @@ int32_t CloudSyncService::UnregisterDownloadFileCallback()
     return dataSyncManager_->UnregisterDownloadFileCallback(bundleName, callerUserId);
 }
 
+int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &request, std::string &result)
+{
+    return 0;
+}
+
 int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo)
 {
     return 0;

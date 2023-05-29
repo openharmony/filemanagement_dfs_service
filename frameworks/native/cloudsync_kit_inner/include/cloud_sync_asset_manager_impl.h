@@ -25,6 +25,7 @@ class CloudSyncAssetManagerImpl final : public CloudSyncAssetManager, public NoC
 public:
     static CloudSyncAssetManagerImpl &GetInstance();
 
+    int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) override;
     int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo) override;
 
 private:

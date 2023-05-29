@@ -25,6 +25,18 @@ CloudSyncAssetManagerImpl &CloudSyncAssetManagerImpl::GetInstance()
     return instance;
 }
 
+int32_t CloudSyncAssetManagerImpl::UploadAsset(const int32_t userId, const std::string &request, std::string &result)
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    int32_t ret = CloudSyncServiceProxy->UploadAsset(userId, request, result);
+    LOGI("UploadAsset ret %{public}d", ret);
+    return ret;
+}
+
 int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo)
 {
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
