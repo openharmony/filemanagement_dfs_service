@@ -59,6 +59,7 @@
             "//foundation/filemanagement/dfs_service:services_target",
             "//foundation/filemanagement/dfs_service:cloudsync_kit_inner_target",
             "//foundation/filemanagement/dfs_service:cloud_daemon_kit_inner_target",
+            "//foundation/filemanagement/dfs_service:cloudsync_asset_kit_inner_target",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudsyncmanager:cloudsyncmanager",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudfilesync:cloudsync"
           ]
@@ -77,6 +78,15 @@
                 "cloud_sync_common.h"
               ],
               "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_asset_kit_inner:cloudsync_asset_kit_inner",
+            "header": {
+              "header_files": [
+                "cloud_sync_asset_manager.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_asset_kit_inner"
             }
           },
           {

@@ -72,4 +72,9 @@ sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
     return serviceProxy_;
 }
 
+int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo)
+{
+    return E_OK;
+}
+
 } // namespace OHOS::FileManagement::CloudSync
