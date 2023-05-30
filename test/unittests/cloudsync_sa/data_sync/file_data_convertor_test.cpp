@@ -410,4 +410,37 @@ HWTEST_F(FileDataConvertorTest, HandleTimeZoneTest, TestSize.Level1)
     auto ret = fileDataConvertor_->HandleTimeZone(key, map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
+
+HWTEST_F(FileDataConvertorTest, HandleContentTest, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldList list;
+    string path;
+    auto ret = fileDataConvertor_->HandleContent(list, path);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, HandleThumbnailTest, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldList list;
+    string path;
+    auto ret = fileDataConvertor_->HandleThumbnail(list, path);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, HandleLcdTest, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldList list;
+    string path;
+    auto ret = fileDataConvertor_->HandleLcd(list, path);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, HandleGeneralTest, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldMap map;
+    ResultSetMock resultSet;
+    string key = "general";
+    auto ret = fileDataConvertor_->HandleGeneral(key, map, resultSet);
+    EXPECT_EQ(E_OK, ret);
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
