@@ -99,6 +99,7 @@ HWTEST_F(DataSyncerTest, AbortTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "Abort Start";
     try {
         datasyncer_->Abort();
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "Abort FAILED";
@@ -117,6 +118,7 @@ HWTEST_F(DataSyncerTest, SetSdkHelperTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "SetSdkHelper Start";
     try {
         datasyncer_->SetSdkHelper(nullptr);
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SetSdkHelper FAILED";
@@ -136,6 +138,7 @@ HWTEST_F(DataSyncerTest, SetSdkHelperTest1, TestSize.Level1)
     shared_ptr<SdkHelper> sdkHelper;
     try {
         datasyncer_->SetSdkHelper(sdkHelper);
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SetSdkHelper FAILED";
@@ -154,6 +157,7 @@ HWTEST_F(DataSyncerTest, BeginTransactionTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "BeginTransaction Start";
     try {
         datasyncer_->BeginTransaction();
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "BeginTransaction FAILED";
@@ -172,6 +176,7 @@ HWTEST_F(DataSyncerTest, EndTransactionTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "EndTransaction Start";
     try {
         datasyncer_->EndTransaction();
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "EndTransaction FAILED";
@@ -205,6 +210,153 @@ HWTEST_F(DataSyncerTest, GetUserIdTest, TestSize.Level1)
     int res = datasyncer_->GetUserId();
     EXPECT_EQ(res, datasyncer_->userId_);
     GTEST_LOG_(INFO) << "GetUserId end";
+}
+
+/**
+ * @tc.name: GetSyncStateTest
+ * @tc.desc: Verify the GetSyncState function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, GetSyncStateTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSyncState Start";
+    try {
+        datasyncer_->GetSyncState();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSyncState FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetSyncState end";
+}
+
+/**
+ * @tc.name: CompletePullTest
+ * @tc.desc: Verify the CompletePull function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, CompletePullTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompletePull Start";
+    try {
+        datasyncer_->CompletePull();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompletePull FAILED";
+    }
+    GTEST_LOG_(INFO) << "CompletePull end";
+}
+
+/**
+ * @tc.name: CompletePushTest
+ * @tc.desc: Verify the CompletePush function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, CompletePushTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompletePush Start";
+    try {
+        datasyncer_->CompletePush();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompletePush FAILED";
+    }
+    GTEST_LOG_(INFO) << "CompletePush end";
+}
+
+/**
+ * @tc.name: CompleteTaskTest
+ * @tc.desc: Verify the CompleteTask function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, CompleteTaskTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteTask Start";
+    shared_ptr<Task> task = make_shared<Task>(nullptr, nullptr);
+    try {
+        datasyncer_->CompleteTask(task);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteTask FAILED";
+    }
+    GTEST_LOG_(INFO) << "CompleteTask end";
+}
+
+/**
+ * @tc.name: StartDownloadFileTest
+ * @tc.desc: Verify the StartDownloadFileTask function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, StartDownloadFileTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartDownloadFile Start";
+    int res = datasyncer_->StartDownloadFile("/test", 100);
+    EXPECT_EQ(res, E_OK);
+    GTEST_LOG_(INFO) << "StartDownloadFile end";
+}
+
+/**
+ * @tc.name: StopDownloadFileTest
+ * @tc.desc: Verify the StopDownloadFileTask function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, StopDownloadFileTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StopDownloadFile Start";
+    int res = datasyncer_->StopDownloadFile("/test", 100);
+    EXPECT_EQ(res, E_OK);
+    GTEST_LOG_(INFO) << "StopDownloadFile end";
+}
+
+/**
+ * @tc.name: RegisterDownloadFileCallbackTest
+ * @tc.desc: Verify the RegisterDownloadFileCallback function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, RegisterDownloadFileCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback Start";
+    int res = datasyncer_->RegisterDownloadFileCallback(100, nullptr);
+    EXPECT_EQ(res, E_OK);
+    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback end";
+}
+
+/**
+ * @tc.name: UnregisterDownloadFileCallbackTest
+ * @tc.desc: Verify the UnregisterDownloadFileCallback function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, UnregisterDownloadFileCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback Start";
+    int res = datasyncer_->UnregisterDownloadFileCallback(100);
+    EXPECT_EQ(res, E_OK);
+    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback end";
+}
+
+/**
+ * @tc.name: PullTest
+ * @tc.desc: Verify the Pull function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, PullTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Pull Start";
+    int res = datasyncer_->Pull(nullptr);
+    EXPECT_EQ(res, E_OK);
+    GTEST_LOG_(INFO) << "Pull end";
 }
 
 } // namespace OHOS::FileManagement::CloudSync::Test
