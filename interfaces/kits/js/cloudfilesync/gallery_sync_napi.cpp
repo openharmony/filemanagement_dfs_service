@@ -105,7 +105,7 @@ napi_value GallerySyncNapi::Constructor(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         return nullptr;
     }
 
@@ -116,14 +116,14 @@ napi_value GallerySyncNapi::OnCallback(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OnCallback Number of arguments unmatched");
         return nullptr;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
@@ -142,14 +142,14 @@ napi_value GallerySyncNapi::OffCallback(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OffCallback Number of arguments unmatched");
         return nullptr;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
@@ -167,7 +167,7 @@ napi_value GallerySyncNapi::Start(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
     }
 
     auto cbExec = []() -> NError {
@@ -200,7 +200,7 @@ napi_value GallerySyncNapi::Stop(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
