@@ -12,13 +12,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "gallery_sync_napi.h"
 #include "cloud_sync_n_exporter.h"
+
+#include "cloud_file_download_napi.h"
+#include "cloud_sync_n_exporter.h"
+#include "gallery_sync_napi.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
+
+static void InitState(napi_env env, napi_value exports)
+{
+    char propertyName[] = "State";
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    static napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("RUNNING",
+                                     NVal::CreateInt32(env, (int32_t)State::CLOUD_FILE_DOWNLOAD_RUNNING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("COMPLETED",
+                                     NVal::CreateInt32(env, (int32_t)State::CLOUD_FILE_DOWNLOAD_COMPLETED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("FAILED",
+                                     NVal::CreateInt32(env, (int32_t)State::CLOUD_FILE_DOWNLOAD_FAILED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("STOPPED",
+                                     NVal::CreateInt32(env, (int32_t)State::CLOUD_FILE_DOWNLOAD_STOPPED).val_),
+    };
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
+
 /***********************************************
  * Module export and register
  ***********************************************/
@@ -26,12 +49,18 @@ napi_value CloudSyncExport(napi_env env, napi_value exports)
 {
     InitCloudSyncState(env, exports);
     InitErrorType(env, exports);
+    InitState(env, exports);
 
     std::vector<std::unique_ptr<NExporter>> products;
+    products.emplace_back(std::make_unique<CloudFileDownloadNapi>(env, exports));
     products.emplace_back(std::make_unique<GallerySyncNapi>(env, exports));
     for (auto &&product : products) {
         if (!product->Export()) {
+            LOGE("INNER BUG. Failed to export class %{public}s for module cloudSyncDownload ",
+                 product->GetClassName().c_str());
             return nullptr;
+        } else {
+            LOGI("Class %{public}s for module cloudSyncDownload has been exported", product->GetClassName().c_str());
         }
     }
     return exports;
