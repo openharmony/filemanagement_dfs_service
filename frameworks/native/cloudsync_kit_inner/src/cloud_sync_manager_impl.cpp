@@ -172,7 +172,7 @@ int32_t CloudSyncManagerImpl::RegisterDownloadFileCallback(
         return E_SA_LOAD_FAILED;
     }
     int32_t ret = CloudSyncServiceProxy->RegisterDownloadFileCallback(
-		    sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback)));
+        sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback)));
     LOGI("RegisterDownloadFileCallback ret %{public}d", ret);
     return ret;
 }
