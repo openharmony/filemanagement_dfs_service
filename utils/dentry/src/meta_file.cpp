@@ -679,7 +679,7 @@ int32_t MetaFile::DoRename(const MetaBase &oldBase, const std::string &newName)
 
 static int32_t DecodeDentrys(const HmdfsDentryGroup &dentryGroup, std::vector<MetaBase> &bases)
 {
-    for (int i = 0; i < DENTRY_PER_GROUP; i++) {
+    for (uint32_t i = 0; i < DENTRY_PER_GROUP; i++) {
         int len = dentryGroup.nsl[i].namelen;
         if (!BitOps::TestBit(i, dentryGroup.bitmap) || len == 0 || len >= PATH_MAX) {
             continue;
