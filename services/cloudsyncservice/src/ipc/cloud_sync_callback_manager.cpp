@@ -14,6 +14,7 @@
  */
 
 #include "ipc/cloud_sync_callback_manager.h"
+#include "cloud_sync_constants.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 
@@ -70,20 +71,20 @@ void CloudSyncCallbackManager::SetDeathRecipient(const std::string &bundleName, 
 
 void CloudSyncCallbackManager::Notify(const std::string bundleName,
                                       CallbackInfo &callbackInfo,
-                                      const SyncType type,
-                                      const SyncPromptState state)
+                                      const CloudSyncState state,
+                                      const ErrorType error)
 {
     auto callbackProxy = callbackInfo.callbackProxy;
     if (!callbackProxy) {
         LOGE("not found object, bundleName = %{private}s", bundleName.c_str());
         return;
     }
-    callbackProxy->OnSyncStateChanged(type, state);
+    callbackProxy->OnSyncStateChanged(state, error);
 }
 
-void CloudSyncCallbackManager::NotifySyncStateChanged(const SyncType type, const SyncPromptState state)
+void CloudSyncCallbackManager::NotifySyncStateChanged(const CloudSyncState state, const ErrorType error)
 {
-    auto callback = bind(&CloudSyncCallbackManager::Notify, this, _1, _2, type, state);
+    auto callback = bind(&CloudSyncCallbackManager::Notify, this, _1, _2, state, error);
     callbackListMap_.Iterate(callback);
 }
 } // namespace OHOS::FileManagement::CloudSync

@@ -39,7 +39,7 @@ public:
         return E_OK;
     }
 
-    void OnSyncStateChanged(SyncType type, SyncPromptState state) override {}
+    void OnSyncStateChanged(CloudSyncState state, ErrorType error) override {}
 };
 
 } // namespace OHOS::FileManagement::CloudSync

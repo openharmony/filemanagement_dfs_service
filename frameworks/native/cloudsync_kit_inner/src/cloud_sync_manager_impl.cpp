@@ -195,7 +195,7 @@ void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteOb
         LOGE("service died.");
         CloudSyncServiceProxy::InvaildInstance();
         if (callback_) {
-            callback_->OnSyncStateChanged(SyncType::ALL, SyncPromptState::SYNC_STATE_DEFAULT);
+            callback_->OnSyncStateChanged(CloudSyncState::COMPLETED, ErrorType::NO_ERROR);
             callback_ = nullptr;
         }
         isFirstCall_.clear();

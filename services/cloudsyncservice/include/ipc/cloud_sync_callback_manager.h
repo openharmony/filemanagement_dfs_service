@@ -35,15 +35,15 @@ public:
 
     void RemoveCallback(const std::string &bundleName);
     void AddCallback(const std::string &bundleName, const int32_t userId, const sptr<ICloudSyncCallback> &callback);
-    void NotifySyncStateChanged(const SyncType type, const SyncPromptState state);
+    void NotifySyncStateChanged(const CloudSyncState state, const ErrorType error);
 
 private:
     CloudSyncCallbackManager() = default;
     void SetDeathRecipient(const std::string &bundleName, CallbackInfo &cbInfo);
     void Notify(const std::string bundleName,
                 CallbackInfo &callbackInfo,
-                const SyncType type,
-                const SyncPromptState state);
+                const CloudSyncState state,
+                const ErrorType error);
 
     SafeMap<const std::string, CallbackInfo> callbackListMap_;
 };

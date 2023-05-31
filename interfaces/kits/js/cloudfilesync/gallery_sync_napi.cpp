@@ -37,7 +37,7 @@ CloudSyncCallbackImpl::~CloudSyncCallbackImpl()
     napi_delete_reference(env_, cbOnRef_);
 }
 
-void CloudSyncCallbackImpl::OnCloudSyncStateChanged(CloudSyncState state, ErrorType type)
+void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -50,7 +50,7 @@ void CloudSyncCallbackImpl::OnCloudSyncStateChanged(CloudSyncState state, ErrorT
         return;
     }
 
-    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(env_, cbOnRef_, state, type);
+    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(env_, cbOnRef_, state, error);
     if (msg == nullptr) {
         delete work;
         return;
@@ -81,7 +81,7 @@ void CloudSyncCallbackImpl::OnCloudSyncStateChanged(CloudSyncState state, ErrorT
                 }
                 NVal obj = NVal::CreateObject(msg->env_);
                 obj.AddProp("state", NVal::CreateInt32(msg->env_, (int32_t)msg->state_).val_);
-                obj.AddProp("error", NVal::CreateInt32(msg->env_, (int32_t)msg->type_).val_);
+                obj.AddProp("error", NVal::CreateInt32(msg->env_, (int32_t)msg->error_).val_);
                 napi_value retVal = nullptr;
                 status = napi_call_function(msg->env_, nullptr, jsCallback, ARGS_ONE, &(obj.val_), &retVal);
                 if (status != napi_ok) {

@@ -19,13 +19,13 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void CloudSyncCallbackClient::OnSyncStateChanged(SyncType type, SyncPromptState state)
+void CloudSyncCallbackClient::OnSyncStateChanged(CloudSyncState state, ErrorType error)
 {
     if (!callback_) {
         LOGE("callback_ is null, maybe not registered");
         return;
     }
-    callback_->OnSyncStateChanged(type, state);
+    callback_->OnSyncStateChanged(state, error);
 }
 
 } // namespace OHOS::FileManagement::CloudSync

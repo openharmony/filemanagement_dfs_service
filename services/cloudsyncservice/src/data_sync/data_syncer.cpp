@@ -94,9 +94,6 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
         return E_PENDING;
     }
 
-    /* notify sync state */
-    SyncStateChangedNotify(SyncType::ALL, SyncPromptState::SYNC_STATE_SYNCING);
-
     /* lock: device-reentrant */
     int32_t ret = sdkHelper_->GetLock(lock_);
     if (ret != E_OK) {
@@ -116,6 +113,8 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 
     syncStateManager_.SetStopSyncFlag();
     Abort();
+
+    SyncStateChangedNotify(CloudSyncState::STOPPED, ErrorType::NO_ERROR);
 
     return E_OK;
 }
@@ -809,27 +808,31 @@ void DataSyncer::CompletePull()
 {
     LOGI("%{private}d %{private}s completes pull", userId_, bundleName_.c_str());
     /* call syncer manager callback */
+    auto error = GetErrorType(errorCode_);
+    if (error) {
+        SyncStateChangedNotify(CloudSyncState::DOWNLOAD_FAILED, error);
+    }
 }
 
 void DataSyncer::CompletePush()
 {
     LOGI("%{private}d %{public}s completes push", userId_, bundleName_.c_str());
     /* call syncer manager callback */
+    auto error = GetErrorType(errorCode_);
+    if (error) {
+        SyncStateChangedNotify(CloudSyncState::UPLOAD_FAILED, error);
+    }
 }
 
-void DataSyncer::CompleteAll(int32_t code, const SyncType type)
+void DataSyncer::CompleteAll()
 {
     LOGI("%{private}d %{private}s completes all", userId_, bundleName_.c_str());
 
     /* unlock */
     sdkHelper_->DeleteLock(lock_);
 
-    if (errorCode_ == E_SYNC_FAILED_BATTERY_LOW) {
-        code = errorCode_;
-    }
-
     SyncState syncState;
-    if (code == E_OK) {
+    if (errorCode_ == E_OK) {
         syncState = SyncState::SYNC_SUCCEED;
     } else {
         syncState = SyncState::SYNC_FAILED;
@@ -845,33 +848,31 @@ void DataSyncer::CompleteAll(int32_t code, const SyncType type)
         return;
     }
 
-    auto state = GetSyncPromptState(code);
-    if (code == E_OK) {
-        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(SyncType::ALL, state);
-    } else {
-        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(type, state);
-    }
+    /* notify sync state */
+    auto error = GetErrorType(errorCode_);
+    SyncStateChangedNotify(CloudSyncState::COMPLETED, error);
+    errorCode_ = E_OK;
 }
 
-void DataSyncer::SyncStateChangedNotify(const SyncType type, const SyncPromptState state)
+void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)
 {
-    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(SyncType::ALL, state);
+    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(state, error);
 }
 
-SyncPromptState DataSyncer::GetSyncPromptState(const int32_t code)
+ErrorType DataSyncer::GetErrorType(const int32_t code)
 {
     if (code == E_OK) {
-        return SyncPromptState::SYNC_STATE_DEFAULT;
+        return ErrorType::NO_ERROR;
     }
-    SyncPromptState state(SyncPromptState::SYNC_STATE_DEFAULT);
+    ErrorType error(ErrorType::NO_ERROR);
     auto capacityLevel = BatteryStatus::GetCapacityLevel();
     if (capacityLevel == BatteryStatus::LEVEL_LOW) {
-        state = SyncPromptState::SYNC_STATE_PAUSED_FOR_BATTERY;
+        error = ErrorType::BATTERY_LEVEL_LOW;
     } else if (capacityLevel == BatteryStatus::LEVEL_TOO_LOW) {
-        state = SyncPromptState::SYNC_STATE_BATTERY_TOO_LOW;
+        error = ErrorType::BATTERY_LEVEL_WARNING;
     }
 
-    return state;
+    return error;
 }
 } // namespace CloudSync
 } // namespace FileManagement

@@ -38,7 +38,7 @@ public:
      * SYNC_STATE_BATTERY_TOO_LOW           电量过低
      * SYNC_STATE_PAUSED_FOR_SPACE_TOO_LOW  云空间满
      */
-    virtual void OnSyncStateChanged(SyncType type, SyncPromptState state) = 0;
+    virtual void OnSyncStateChanged(SyncType type, SyncPromptState state) {};
     /**
      * @brief 同步状态变更通知回调
      *
@@ -49,7 +49,7 @@ public:
      * DOWNLOAD_FAILED                      同步下载失败
      * COMPLETED                            同步完成
      * STOPPED                              同步停止
-     * @param type 同步错误类型
+     * @param error 同步错误类型
      * NO_ERROR                             无错误
      * NETWORK_UNAVAILABLE                  网络不可用
      * WIFI_UNAVAILABLE                     wifi不可用
@@ -58,7 +58,7 @@ public:
      * CLOUD_STORAGE_FULL                   云空间满
      * LOCAL_STORAGE_FULL                   本地空间满
      */
-    virtual void OnCloudSyncStateChanged(CloudSyncState state, ErrorType type) {};
+    virtual void OnSyncStateChanged(CloudSyncState state, ErrorType error) {};
 };
 } // namespace OHOS::FileManagement::CloudSync
 
