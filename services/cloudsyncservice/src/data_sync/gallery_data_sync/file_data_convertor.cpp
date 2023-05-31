@@ -15,6 +15,8 @@
 
 #include "file_data_convertor.h"
 
+#include <unistd.h>
+
 #include "medialibrary_db_const.h"
 #include "thumbnail_const.h"
 
@@ -423,9 +425,15 @@ int32_t FileDataConvertor::HandleGeneral(std::string &key, DriveKit::DKRecordFie
 int32_t FileDataConvertor::HandleContent(DriveKit::DKRecordFieldList &list,
     string &path)
 {
+    string lowerPath = GetLowerPath(path);
+    if (access(lowerPath.c_str(), F_OK)) {
+        LOGE("content %{private}s doesn't exist", lowerPath.c_str());
+        return E_PATH;
+    }
+
     /* asset */
     DriveKit::DKAsset content;
-    content.uri = GetLowerPath(path);
+    content.uri = move(lowerPath);
     content.assetName = FILE_CONTENT;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
     list.push_back(DriveKit::DKRecordField(content));
@@ -435,9 +443,15 @@ int32_t FileDataConvertor::HandleContent(DriveKit::DKRecordFieldList &list,
 int32_t FileDataConvertor::HandleThumbnail(DriveKit::DKRecordFieldList &list,
     string &path)
 {
+    string thumbnailPath = GetThumbPath(path, THUMB_SUFFIX);
+    if (access(thumbnailPath.c_str(), F_OK)) {
+        LOGE("thumbnail %{private}s doesn't exist", thumbnailPath.c_str());
+        return E_PATH;
+    }
+
     /* asset */
     DriveKit::DKAsset content;
-    content.uri = GetThumbPath(path, THUMB_SUFFIX);
+    content.uri = move(thumbnailPath);
     content.assetName = FILE_THUMBNAIL;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
     list.push_back(DriveKit::DKRecordField(content));
@@ -447,9 +461,15 @@ int32_t FileDataConvertor::HandleThumbnail(DriveKit::DKRecordFieldList &list,
 int32_t FileDataConvertor::HandleLcd(DriveKit::DKRecordFieldList &list,
     string &path)
 {
+    string lcdPath = GetThumbPath(path, LCD_SUFFIX);
+    if (access(lcdPath.c_str(), F_OK)) {
+        LOGE("thumbnail %{private}s doesn't exist", lcdPath.c_str());
+        return E_PATH;
+    }
+
     /* asset */
     DriveKit::DKAsset content;
-    content.uri = GetThumbPath(path, LCD_SUFFIX);
+    content.uri = move(lcdPath);
     content.assetName = FILE_LCD;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
     list.push_back(DriveKit::DKRecordField(content));
