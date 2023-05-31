@@ -24,7 +24,7 @@ using namespace std;
 
 DeviceInfo::DeviceInfo(const DistributedHardware::DmDeviceInfo &nodeInfo)
 {
-    cid_ = string(nodeInfo.deviceId);
+    cid_ = string(nodeInfo.networkId);
     initCidFlag_ = true;
     // convert networkId to udid
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
@@ -33,7 +33,7 @@ DeviceInfo::DeviceInfo(const DistributedHardware::DmDeviceInfo &nodeInfo)
 
 DeviceInfo &DeviceInfo::operator=(const DistributedHardware::DmDeviceInfo &nodeInfo)
 {
-    cid_ = string(nodeInfo.deviceId);
+    cid_ = string(nodeInfo.networkId);
     initCidFlag_ = true;
     return *this;
 }
