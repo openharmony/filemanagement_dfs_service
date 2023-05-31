@@ -25,6 +25,15 @@ class CloudSyncAssetManager {
 public:
     static CloudSyncAssetManager &GetInstance();
     /**
+     * @brief 接口触发文件上传
+     *
+     * @param userId 用户Id
+     * @param request 请求
+     * @param result 结果
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) = 0;
+    /**
      * @brief 接口触发文件下载
      *
      * @param userId 用户Id

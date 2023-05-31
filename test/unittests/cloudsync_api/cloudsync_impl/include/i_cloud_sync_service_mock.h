@@ -99,6 +99,10 @@ public:
     {
         return E_OK;
     }
+    int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result)
+    {
+        return E_OK;
+    }
     int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo)
     {
         return E_OK;

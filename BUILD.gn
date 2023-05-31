@@ -37,7 +37,9 @@ group("cloud_daemon_kit_inner_target") {
 }
 
 group("cloudsync_asset_kit_inner_target") {
-  deps = [ "interfaces/inner_api/native/cloudsync_asset_kit_inner:cloudsync_asset_kit_inner" ]
+  deps = [
+    "interfaces/inner_api/native/cloudsync_kit_inner:cloudsync_asset_kit_inner",
+  ]
 }
 
 group("dfs_test_moudule") {

@@ -37,6 +37,7 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         &CloudSyncServiceStub::HandleRegisterDownloadFileCallback;
     opToInterfaceMap_[SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK] =
         &CloudSyncServiceStub::HandleUnregisterDownloadFileCallback;
+    opToInterfaceMap_[SERVICE_CMD_UPLOAD_ASSET] = &CloudSyncServiceStub::HandleUploadAsset;
     opToInterfaceMap_[SERVICE_CMD_DOWNLOAD_FILE] = &CloudSyncServiceStub::HandleDownloadFile;
 }
 
@@ -297,6 +298,27 @@ int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel
     int32_t res = UnregisterDownloadFileCallback();
     reply.WriteInt32(res);
     LOGI("End HandleUnregisterDownloadFileCallback");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleUploadAsset(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin UploadAsset");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    int32_t userId = data.ReadInt32();
+    string request = data.ReadString();
+    string result;
+    int32_t res = UploadAsset(userId, request, result);
+    reply.WriteInt32(res);
+    reply.WriteString(result);
+    LOGI("End UploadAsset");
     return res;
 }
 

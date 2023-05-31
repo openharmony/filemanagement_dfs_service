@@ -81,12 +81,13 @@
             }
           },
           {
-            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_asset_kit_inner:cloudsync_asset_kit_inner",
+            "name": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner:cloudsync_asset_kit_inner",
             "header": {
               "header_files": [
-                "cloud_sync_asset_manager.h"
+                "cloud_sync_asset_manager.h",
+                "cloud_sync_common.h"
               ],
-              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_asset_kit_inner"
+              "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloudsync_kit_inner"
             }
           },
           {

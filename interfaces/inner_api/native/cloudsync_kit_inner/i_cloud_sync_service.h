@@ -39,6 +39,7 @@ public:
         SERVICE_CMD_STOP_DOWNLOAD_FILE,
         SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK,
         SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK,
+        SERVICE_CMD_UPLOAD_ASSET,
         SERVICE_CMD_DOWNLOAD_FILE
     };
 
@@ -57,6 +58,7 @@ public:
     virtual int32_t StopDownloadFile(const std::string &path) = 0;
     virtual int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) = 0;
     virtual int32_t UnregisterDownloadFileCallback() = 0;
+    virtual int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) = 0;
     virtual int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
