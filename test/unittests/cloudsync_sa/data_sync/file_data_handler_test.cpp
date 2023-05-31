@@ -1610,4 +1610,148 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecords001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "OnCreateRecords001 End";
 }
+
+/**
+ * @tc.name: OnFetchRecords001
+ * @tc.desc: Verify the OnFetchRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, OnFetchRecords001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnFetchRecords001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
+        vector<DKDownloadAsset> outAssetsToDownload;
+        shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
+                                      std::shared_ptr<const DriveKit::DKDatabase>,
+                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
+                                      const DriveKit::DKError &)>> downloadResultCallback = nullptr;
+        int32_t ret = fileDataHandler->OnFetchRecords(records, outAssetsToDownload, downloadResultCallback);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnFetchRecords001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "OnFetchRecords001 End";
+}
+
+/**
+ * @tc.name: OnFetchRecords002
+ * @tc.desc: Verify the OnFetchRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, OnFetchRecords002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnFetchRecords002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+
+        const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
+        vector<DKDownloadAsset> outAssetsToDownload;
+        shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
+                                      std::shared_ptr<const DriveKit::DKDatabase>,
+                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
+                                      const DriveKit::DKError &)>> downloadResultCallback = nullptr;
+        
+        int32_t ret = fileDataHandler->OnFetchRecords(records, outAssetsToDownload, downloadResultCallback);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnFetchRecords002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "OnFetchRecords002 End";
+}
+
+/**
+ * @tc.name: OnFetchRecords003
+ * @tc.desc: Verify the OnFetchRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, OnFetchRecords003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnFetchRecords003 Begin";
+    try {
+        const int rowCount = 3;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+
+        const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
+        vector<DKDownloadAsset> outAssetsToDownload;
+        shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
+                                      std::shared_ptr<const DriveKit::DKDatabase>,
+                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
+                                      const DriveKit::DKError &)>> downloadResultCallback = nullptr;
+        
+        int32_t ret = fileDataHandler->OnFetchRecords(records, outAssetsToDownload, downloadResultCallback);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnFetchRecords003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "OnFetchRecords003 End";
+}
+
+/**
+ * @tc.name: PullRecordUpdate001
+ * @tc.desc: Verify the PullRecordUpdate function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordUpdate001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordUpdate001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        DKRecord record;
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        bool outPullThumbs;
+        int32_t ret = fileDataHandler->PullRecordUpdate(record, *rset, outPullThumbs);
+        EXPECT_NE(E_RDB, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PullRecordUpdate001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "PullRecordUpdate001 End";
+}
+
+/**
+ * @tc.name: PullRecordDelete001
+ * @tc.desc: Verify the PullRecordDelete function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordDelete001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordDelete001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        DKRecord record;
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        int32_t ret = fileDataHandler->PullRecordDelete(record, *rset);
+        EXPECT_NE(E_RDB, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PullRecordDelete001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "PullRecordDelete001 End";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
