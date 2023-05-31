@@ -59,7 +59,7 @@ public:
     SyncState GetSyncState() const;
 
     /* sdk */
-    void SetSdkHelper(std::shared_ptr<SdkHelper> sdkHelper);
+    void SetSdkHelper(std::shared_ptr<SdkHelper> &sdkHelper);
 
 protected:
     /* download */

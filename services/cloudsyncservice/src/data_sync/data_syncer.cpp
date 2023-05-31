@@ -146,16 +146,17 @@ int32_t DataSyncer::UnregisterDownloadFileCallback(const int32_t userId)
 void DataSyncer::Abort()
 {
     LOGI("%{private}d %{private}s aborts", userId_, bundleName_.c_str());
-
-    /* stop all the tasks and wait for tasks' termination */
-    if (!taskManager_->StopAndWaitFor()) {
-        LOGE("wait for tasks stop fail");
-    }
-
-    /* call the syncer manager's callback for notification */
+    thread ([this]() {
+        /* stop all the tasks and wait for tasks' termination */
+        if (!taskManager_->StopAndWaitFor()) {
+            LOGE("wait for tasks stop fail");
+        }
+        /* call the syncer manager's callback for notification */
+        CompleteAll(E_STOP, SyncType::ALL);
+    }).detach();
 }
 
-void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> sdkHelper)
+void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> &sdkHelper)
 {
     sdkHelper_ = sdkHelper;
 }
