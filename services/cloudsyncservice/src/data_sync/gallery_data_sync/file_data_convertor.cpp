@@ -146,27 +146,25 @@ int32_t FileDataConvertor::HandleAttachments(std::string &key, DriveKit::DKRecor
         return ret;
     }
 
-    DriveKit::DKRecordFieldList attachments;
     /* content */
-    ret = HandleContent(attachments, path);
+    ret = HandleContent(data, path);
     if (ret != E_OK) {
         LOGE("handle thumbnail err %{public}d", ret);
         return ret;
     }
     /* thumb */
-    ret = HandleThumbnail(attachments, path);
+    ret = HandleThumbnail(data, path);
     if (ret != E_OK) {
         LOGE("handle thumbnail err %{public}d", ret);
         return ret;
     }
     /* lcd */
-    ret = HandleLcd(attachments, path);
+    ret = HandleLcd(data, path);
     if (ret != E_OK) {
         LOGE("handle lcd err %{public}d", ret);
         return ret;
     }
 
-    data[key] = DriveKit::DKRecordField(attachments);
     return E_OK;
 }
 
@@ -422,7 +420,7 @@ int32_t FileDataConvertor::HandleGeneral(std::string &key, DriveKit::DKRecordFie
 }
 
 /* attachments */
-int32_t FileDataConvertor::HandleContent(DriveKit::DKRecordFieldList &list,
+int32_t FileDataConvertor::HandleContent(DriveKit::DKRecordData &data,
     string &path)
 {
     string lowerPath = GetLowerPath(path);
@@ -436,11 +434,11 @@ int32_t FileDataConvertor::HandleContent(DriveKit::DKRecordFieldList &list,
     content.uri = move(lowerPath);
     content.assetName = FILE_CONTENT;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
-    list.push_back(DriveKit::DKRecordField(content));
+    data[FILE_CONTENT] = DriveKit::DKRecordField(content);
     return E_OK;
 }
 
-int32_t FileDataConvertor::HandleThumbnail(DriveKit::DKRecordFieldList &list,
+int32_t FileDataConvertor::HandleThumbnail(DriveKit::DKRecordData &data,
     string &path)
 {
     string thumbnailPath = GetThumbPath(path, THUMB_SUFFIX);
@@ -454,16 +452,16 @@ int32_t FileDataConvertor::HandleThumbnail(DriveKit::DKRecordFieldList &list,
     content.uri = move(thumbnailPath);
     content.assetName = FILE_THUMBNAIL;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
-    list.push_back(DriveKit::DKRecordField(content));
+    data[FILE_THUMBNAIL] = DriveKit::DKRecordField(content);
     return E_OK;
 }
 
-int32_t FileDataConvertor::HandleLcd(DriveKit::DKRecordFieldList &list,
+int32_t FileDataConvertor::HandleLcd(DriveKit::DKRecordData &data,
     string &path)
 {
     string lcdPath = GetThumbPath(path, LCD_SUFFIX);
     if (access(lcdPath.c_str(), F_OK)) {
-        LOGE("thumbnail %{private}s doesn't exist", lcdPath.c_str());
+        LOGE("lcd %{private}s doesn't exist", lcdPath.c_str());
         return E_PATH;
     }
 
@@ -472,7 +470,7 @@ int32_t FileDataConvertor::HandleLcd(DriveKit::DKRecordFieldList &list,
     content.uri = move(lcdPath);
     content.assetName = FILE_LCD;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
-    list.push_back(DriveKit::DKRecordField(content));
+    data[FILE_LCD] = DriveKit::DKRecordField(content);
     return E_OK;
 }
 

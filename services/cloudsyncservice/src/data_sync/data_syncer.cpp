@@ -152,7 +152,7 @@ void DataSyncer::Abort()
             LOGE("wait for tasks stop fail");
         }
         /* call the syncer manager's callback for notification */
-        CompleteAll(E_STOP, SyncType::ALL);
+        CompleteAll();
     }).detach();
 }
 

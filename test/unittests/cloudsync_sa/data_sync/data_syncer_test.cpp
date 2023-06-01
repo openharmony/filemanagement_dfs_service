@@ -116,25 +116,6 @@ HWTEST_F(DataSyncerTest, AbortTest, TestSize.Level1)
 HWTEST_F(DataSyncerTest, SetSdkHelperTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetSdkHelper Start";
-    try {
-        datasyncer_->SetSdkHelper(nullptr);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SetSdkHelper FAILED";
-    }
-    GTEST_LOG_(INFO) << "SetSdkHelper end";
-}
-
-/**
- * @tc.name: SetSdkHelperTest1
- * @tc.desc: Verify the SetSdkHelper function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncerTest, SetSdkHelperTest1, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetSdkHelper Start";
     shared_ptr<SdkHelper> sdkHelper;
     try {
         datasyncer_->SetSdkHelper(sdkHelper);
