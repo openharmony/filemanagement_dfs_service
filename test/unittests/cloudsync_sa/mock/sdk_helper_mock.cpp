@@ -37,24 +37,20 @@ void SdkHelper::DeleteLock(DriveKit::DKLock &lock)
     return;
 }
 
-int32_t SdkHelper::FetchRecords(shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor cursor,
-    function<void(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-        std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
-        const DriveKit::DKError &)> callback)
+int32_t SdkHelper::FetchRecords(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
+    DriveKit::DKQueryCursor, FetchRecordsCallback callback)
 {
     return E_OK;
 }
 
-int32_t SdkHelper::FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKRecordId recordId,
-    FetchRecordCallback callback)
+int32_t SdkHelper::FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
+    DriveKit::DKRecordId recordId, FetchRecordCallback callback)
 {
     return E_OK;
 }
 
-int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor cursor,
-    std::function<void(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-        std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
-        bool, const DriveKit::DKError &)> callback)
+int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
+    DriveKit::DKQueryCursor cursor, FetchDatabaseChangesCallback callback)
 {
     return E_OK;
 }
@@ -100,7 +96,7 @@ int32_t SdkHelper::CancelDownloadAssets(int32_t id)
     return E_OK;
 }
 
-int32_t SdkHelper::GetStartCursor(shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor &cursor)
+int32_t SdkHelper::GetStartCursor(DriveKit::DKRecordType recordType, DriveKit::DKQueryCursor &cursor)
 {
     return E_OK;
 }

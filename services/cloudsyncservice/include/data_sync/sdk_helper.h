@@ -25,7 +25,11 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-
+struct FetchCondition {
+    int32_t limitRes;
+    DriveKit::DKRecordType recordType;
+    DriveKit::DKFieldKeyArray desiredKeys;
+};
 class SdkHelper {
 public:
     SdkHelper() = default;
@@ -52,13 +56,12 @@ public:
         std::shared_ptr<DriveKit::DKDatabase>, DriveKit::DKRecordId, DriveKit::DKRecord &,
         const DriveKit::DKError &)>;
 
-    int32_t FetchRecords(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor,
+    int32_t FetchRecords(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond, DriveKit::DKQueryCursor,
         FetchRecordsCallback callback);
-    int32_t FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKRecordId recordId,
-        FetchRecordCallback callback);
-
-    int32_t FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor,
-        FetchDatabaseChangesCallback callback);
+    int32_t FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
+        DriveKit::DKRecordId recordId, FetchRecordCallback callback);
+    int32_t FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
+        DriveKit::DKQueryCursor cursor, FetchDatabaseChangesCallback callback);
 
     /* record upload */
     int32_t CreateRecords(std::shared_ptr<DriveKit::DKContext> context,
@@ -94,7 +97,7 @@ public:
 
     int32_t CancelDownloadAssets(int32_t id);
 
-    int32_t GetStartCursor(std::shared_ptr<DriveKit::DKContext> context, DriveKit::DKQueryCursor &cursor);
+    int32_t GetStartCursor(DriveKit::DKRecordType recordType, DriveKit::DKQueryCursor &cursor);
 
     std::shared_ptr<DriveKit::DKAssetReadSession> GetAssetReadSession(DriveKit::DKRecordType recordType,
                                                                       DriveKit::DKRecordId recordId,

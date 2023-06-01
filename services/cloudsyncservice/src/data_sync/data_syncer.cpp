@@ -199,11 +199,20 @@ void DataSyncer::PullRecords(shared_ptr<TaskContext> context)
         return;
     }
 
+    auto handler = context->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return;
+    }
+
+    FetchCondition cond;
+    handler->GetFetchCondition(cond);
+
     std::string tempStartCursor;
-    sdkHelper_->GetStartCursor(context, tempStartCursor);
+    sdkHelper_->GetStartCursor(cond.recordType, tempStartCursor);
     cloudPrefImpl_.SetString(TEMP_START_CURSOR, tempStartCursor);
 
-    int32_t ret = sdkHelper_->FetchRecords(context, nextCursor_, callback);
+    int32_t ret = sdkHelper_->FetchRecords(context, cond, nextCursor_, callback);
     if (ret != E_OK) {
         LOGE("sdk fetch records err %{public}d", ret);
     }
@@ -223,7 +232,16 @@ void DataSyncer::PullDatabaseChanges(shared_ptr<TaskContext> context)
     if (nextCursor_.empty()) {
         nextCursor_ = startCursor_;
     }
-    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, nextCursor_, callback);
+
+    auto handler = context->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return;
+    }
+
+    FetchCondition cond;
+    handler->GetFetchCondition(cond);
+    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, cond, nextCursor_, callback);
     if (ret != E_OK) {
         LOGE("sdk fetch records err %{public}d", ret);
     }
@@ -429,6 +447,8 @@ void DataSyncer::PullRetryRecords(shared_ptr<TaskContext> context)
         return;
     }
 
+    FetchCondition cond;
+    handler->GetFetchCondition(cond);
     LOGI("retry records count: %{public}u", static_cast<uint32_t>(records.size()));
     for (auto it : records) {
         auto callback = AsyncCallback(&DataSyncer::OnFetchRetryRecord);
@@ -436,7 +456,7 @@ void DataSyncer::PullRetryRecords(shared_ptr<TaskContext> context)
             LOGE("wrap on fetch records fail");
             continue;
         }
-        ret = sdkHelper_->FetchRecordWithId(context, it, callback);
+        ret = sdkHelper_->FetchRecordWithId(context, cond, it, callback);
         if (ret != E_OK) {
             LOGE("sdk fetch records err %{public}d", ret);
         }
