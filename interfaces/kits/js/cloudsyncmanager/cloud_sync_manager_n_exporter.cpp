@@ -32,7 +32,7 @@ napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::THREE), static_cast<size_t>(NARG_CNT::FOUR))) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         return nullptr;
     }
 
@@ -43,19 +43,19 @@ napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
 
     tie(succ, accoutId, std::ignore) = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!succ) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
     tie(succ, bundleName, std::ignore) = NVal(env, funcArg[(int)NARG_POS::SECOND]).ToUTF8String();
     if (!succ) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
     tie(succ, status) = NVal(env, funcArg[(int)NARG_POS::THIRD]).ToBool();
     if (!succ) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
@@ -91,7 +91,7 @@ napi_value NotifyDataChange(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::TWO), static_cast<size_t>(NARG_CNT::THREE))) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         return nullptr;
     }
 
@@ -101,13 +101,13 @@ napi_value NotifyDataChange(napi_env env, napi_callback_info info)
 
     tie(succ, accoutId, std::ignore) = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!succ) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
     tie(succ, bundleName, std::ignore) = NVal(env, funcArg[(int)NARG_POS::SECOND]).ToUTF8String();
     if (!succ) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
@@ -144,7 +144,7 @@ napi_value DisableCloud(napi_env env, napi_callback_info info)
     LOGI("DisableCloud");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::ONE), static_cast<size_t>(NARG_CNT::TWO))) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         return nullptr;
     }
 
@@ -153,7 +153,7 @@ napi_value DisableCloud(napi_env env, napi_callback_info info)
 
     tie(succ, accoutId, std::ignore) = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!succ) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
@@ -226,7 +226,7 @@ napi_value EnableCloud(napi_env env, napi_callback_info info)
     LOGI("EnableCloud");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::TWO), static_cast<size_t>(NARG_CNT::THREE))) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         return nullptr;
     }
 
@@ -235,12 +235,12 @@ napi_value EnableCloud(napi_env env, napi_callback_info info)
 
     tie(succ, accoutId, std::ignore) = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!succ) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
     SwitchDataObj switchData;
     if (!ParseSwitches(env, funcArg[(int)NARG_POS::SECOND], switchData)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
@@ -311,19 +311,19 @@ napi_value Clean(napi_env env, napi_callback_info info)
     LOGI("Clean");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::TWO), static_cast<size_t>(NARG_CNT::THREE))) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         return nullptr;
     }
     std::unique_ptr<char []> accoutId = nullptr;
     bool succ = false;
     tie(succ, accoutId, ignore) = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!succ) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
     CleanOptions cleanOptions {};
     if (!ParseAppActions(env, funcArg[(int)NARG_POS::SECOND], cleanOptions)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
