@@ -25,6 +25,8 @@ ohos_unittest("data_sync_manager_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/sdk_helper_mock.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
@@ -84,6 +86,8 @@ ohos_unittest("data_handler_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_sync_callback_manager_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
@@ -139,6 +143,8 @@ ohos_unittest("data_handler_test") {
 ohos_unittest("data_convertor_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
@@ -185,6 +191,8 @@ ohos_unittest("data_convertor_test") {
 ohos_unittest("file_data_handler_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
@@ -240,6 +248,8 @@ ohos_unittest("data_syncer_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_sync_callback_manager_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
@@ -300,6 +310,8 @@ ohos_unittest("file_data_convertor_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
@@ -366,6 +378,8 @@ ohos_unittest("sdk_helper_test") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/dk_database_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/drive_kit_mock.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
