@@ -719,7 +719,7 @@ int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::
 {
     vector<DKRecord> records;
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    predicates.SetWhereClause(Media::MEDIA_DATA_DB_CLOUD_ID + " = ?");
+    predicates.SetWhereClause(Media::MEDIA_DATA_DB_FILE_PATH + " = ?");
     predicates.SetWhereArgs({cloudId});
     predicates.Limit(LIMIT_SIZE);
     auto resultSet = Query(predicates, GALLERY_FILE_COLUMNS);
