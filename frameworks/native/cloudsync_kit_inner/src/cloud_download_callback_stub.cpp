@@ -44,11 +44,17 @@ int32_t CloudDownloadCallbackStub::OnRemoteRequest(uint32_t code,
 
 int32_t CloudDownloadCallbackStub::HandleOnProcess(MessageParcel &data, MessageParcel &reply)
 {
-    DownloadProgressObj& progress = *data.ReadParcelable<DownloadProgressObj>();
+    DownloadProgressObj &progress = *data.ReadParcelable<DownloadProgressObj>();
 
-    CloudDownloadUriManager uriMgr = CloudDownloadUriManager::GetInstance();
+    CloudDownloadUriManager& uriMgr = CloudDownloadUriManager::GetInstance();
     std::string path = progress.path;
-    progress.path = uriMgr.GetUri(path);
+    std::string uri = uriMgr.GetUri(path);
+    if (uri.empty()) {
+        LOGE("CloudDownloadCallbackStub path %{public}s trans to uri error", path.c_str());
+        return E_INVAL_ARG;
+    }
+
+    progress.path = uri;
 
     if (progress.state != DownloadProgressObj::RUNNING) {
         uriMgr.RemoveUri(path);
