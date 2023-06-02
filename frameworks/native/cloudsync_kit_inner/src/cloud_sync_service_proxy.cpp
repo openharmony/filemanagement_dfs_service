@@ -510,7 +510,9 @@ int32_t CloudSyncServiceProxy::UploadAsset(const int32_t userId, const std::stri
     return ret;
 }
 
-int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo)
+int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
+                                            const std::string &bundleName,
+                                            AssetInfoObj &assetInfoObj)
 {
     LOGI("DownloadFile");
     MessageParcel data;
@@ -532,7 +534,7 @@ int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId, const std::str
         return E_INVAL_ARG;
     }
 
-    if (!data.WriteParcelable(&assetInfo)) {
+    if (!data.WriteParcelable(&assetInfoObj)) {
         LOGE("Failed to send the bundle assetInfo");
         return E_INVAL_ARG;
     }

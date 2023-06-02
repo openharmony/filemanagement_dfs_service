@@ -47,15 +47,15 @@ public:
     int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) override;
     int32_t UnregisterDownloadFileCallback() override;
     int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) override;
-    int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo) override;
+    int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj) override;
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
     std::string GetFileName(const std::string &uri);
     bool DownloadAsset(std::shared_ptr<DriveKit::DKAssetsDownloader> download,
                        std::shared_ptr<DriveKit::DKContext> context,
-                       AssetInfo &assetInfo,
-                       DriveKit::DKAssetPath &downloadPath);
+                       AssetInfoObj &assetInfoObj,
+                       DriveKit::DKAsset &asset);
     void OnStart() override;
     void OnStop() override;
     void PublishSA();

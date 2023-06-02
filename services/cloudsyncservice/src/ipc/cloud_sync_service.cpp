@@ -85,9 +85,12 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
     }
     std::string bundleName = uri.substr(start, end - start);
 
-    std::string dir = uri.substr(FILE_DIR.length() + end);
+    std::string fileName = GetFileName(uri);
+    std::string fullDir = uri.substr(FILE_DIR.length() + end);
+    std::string dir = fullDir.substr(0, fullDir.length() - fileName.length());
     std::string path = HMDFS_DIR + std::to_string(userId) + DATA_DIR + bundleName + dir;
     ForceCreateDirectory(path);
+
     return path;
 }
 
@@ -109,14 +112,12 @@ std::string CloudSyncService::GetFileName(const std::string &uri)
 
 bool CloudSyncService::DownloadAsset(std::shared_ptr<DriveKit::DKAssetsDownloader> downloader,
                                      std::shared_ptr<DriveKit::DKContext> context,
-                                     AssetInfo &assetInfo,
-                                     DriveKit::DKAssetPath &downloadPath)
+                                     AssetInfoObj &assetInfoObj,
+                                     DriveKit::DKAsset &asset)
 {
-    DriveKit::DKAsset asset;
-    asset.assetName = GetFileName(assetInfo.uri);
     std::vector<DriveKit::DKDownloadAsset> assetsToDownload;
     assetsToDownload.emplace_back(
-        DriveKit::DKDownloadAsset{assetInfo.recordType, assetInfo.recordId, assetInfo.fieldKey, asset, downloadPath});
+        DriveKit::DKDownloadAsset{assetInfoObj.recordType, assetInfoObj.recordId, assetInfoObj.fieldKey, asset, {}});
     DriveKit::DKDownloadId id;
 
     auto resultCallback = [context](std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
@@ -314,7 +315,7 @@ int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &r
     return driveKit->OnUploadAsset(request, result);
 }
 
-int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo)
+int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj)
 {
     auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
     if (driveKit == nullptr) {
@@ -341,20 +342,18 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
     }
 
     auto context = make_shared<DriveKit::DKContext>();
-    DriveKit::DKAsset asset;
-    DriveKit::DKAssetPath downloadPath = GetHmdfsPath(assetInfo.uri, userId);
+    std::string fileName = GetFileName(assetInfoObj.uri);
+    std::string downloadPath = GetHmdfsPath(assetInfoObj.uri, userId);
     if (downloadPath.empty()) {
         LOGE("downloadPath is empty");
         return E_INVAL_ARG;
     }
 
-    asset.assetName = GetFileName(assetInfo.uri);
-    if (asset.assetName.empty()) {
-        LOGE("assetName is empty");
-        return E_INVAL_ARG;
-    }
+    DriveKit::DKAsset asset;
+    asset.assetName = assetInfoObj.assetName;
+    asset.uri = downloadPath + fileName;
 
-    if (!DownloadAsset(downloader, context, assetInfo, downloadPath)) {
+    if (!DownloadAsset(downloader, context, assetInfoObj, asset)) {
         return E_CLOUD_SDK;
     }
 

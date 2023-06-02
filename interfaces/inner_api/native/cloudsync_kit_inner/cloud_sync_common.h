@@ -19,6 +19,7 @@
 #include <map>
 
 #include "parcel.h"
+#include "cloud_sync_asset_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 
@@ -53,14 +54,25 @@ struct CleanOptions : public Parcelable {
     static CleanOptions *Unmarshalling(Parcel &parcel);
 };
 
-struct AssetInfo : public Parcelable {
+struct AssetInfoObj : public Parcelable {
     std::string uri;
     std::string recordType;
     std::string recordId;
     std::string fieldKey;
+    std::string assetName;
     bool ReadFromParcel(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;
-    static AssetInfo *Unmarshalling(Parcel &parcel);
+    static AssetInfoObj *Unmarshalling(Parcel &parcel);
+
+    AssetInfoObj() = default;
+    AssetInfoObj(const AssetInfo &assetInfo)
+        : uri(assetInfo.uri),
+          recordType(assetInfo.recordType),
+          recordId(assetInfo.recordId),
+          fieldKey(assetInfo.fieldKey),
+          assetName(assetInfo.assetName)
+    {
+    }
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif
