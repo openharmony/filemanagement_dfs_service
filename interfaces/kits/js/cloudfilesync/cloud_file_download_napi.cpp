@@ -124,8 +124,8 @@ static void DownloadCallbackComplete(uv_work_t *work, int stat)
         }
         NVal obj = NVal::CreateObject(msg->env_);
         obj.AddProp("state", NVal::CreateInt32(msg->env_, (int32_t)msg->downloadProgress_.state).val_);
-        obj.AddProp("processed", NVal::CreateInt32(msg->env_, (int32_t)msg->downloadProgress_.downloadedSize).val_);
-        obj.AddProp("size", NVal::CreateInt32(msg->env_, (int32_t)msg->downloadProgress_.totalSize).val_);
+        obj.AddProp("processed", NVal::CreateInt64(msg->env_, (int64_t)msg->downloadProgress_.downloadedSize).val_);
+        obj.AddProp("size", NVal::CreateInt64(msg->env_, (int64_t)msg->downloadProgress_.totalSize).val_);
         obj.AddProp("uri", NVal::CreateUTF8String(msg->env_, msg->downloadProgress_.path).val_);
         napi_value retVal = nullptr;
         status = napi_call_function(msg->env_, nullptr, jsCallback, 1, &(obj.val_), &retVal);
