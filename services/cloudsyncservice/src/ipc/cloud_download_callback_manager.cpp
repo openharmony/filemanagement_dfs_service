@@ -37,14 +37,16 @@ void CloudDownloadCallbackManager::StopDonwload(const std::string path, const in
         downloads_[path].state = DownloadProgressObj::Status::STOPPED;
         LOGI("download_file : %{public}d stop download %{public}s callback success.", userId, path.c_str());
     } else {
-        LOGI("download_file : %{public}d stop download %{public}s callback fail, task not exist.", userId, path.c_str());
+        LOGI("download_file : %{public}d stop download %{public}s callback fail, task not exist.",
+            userId, path.c_str());
     }
 }
 
 void CloudDownloadCallbackManager::RegisterCallback(const int32_t userId,
                                                     const sptr<ICloudDownloadCallback> downloadCallback)
 {
-    LOGI("download_file : %{public}d register download callback : %{public}d", userId, downloadCallback != nullptr);
+    LOGI("download_file : %{public}d register download callback : %{public}d", userId,
+        downloadCallback != nullptr);
     callback_ = downloadCallback;
 }
 
@@ -65,7 +67,8 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
 {
     auto downloadedState = DownloadProgressObj::FAILED;
     bool isDownloading = (downloads_.find(path) != downloads_.end());
-    LOGI("download_file : [callback downloaded] %{public}s is downloading : %{public}d .", path.c_str(), isDownloading);
+    LOGI("download_file : [callback downloaded] %{public}s is downloading : %{public}d .",
+        path.c_str(), isDownloading);
     if (isDownloading) {
         auto &download = downloads_[path];
         if (err.HasError()) {
@@ -73,7 +76,8 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
         } else {
             downloadedState = DownloadProgressObj::COMPLETED;
         }
-        LOGI("download_file : [callback downloaded] %{public}s state is %{public}s.", path.c_str(), download.to_string().c_str());
+        LOGI("download_file : [callback downloaded] %{public}s state is %{public}s.",
+            path.c_str(), download.to_string().c_str());
         if (callback_ != nullptr && download.state == DownloadProgressObj::RUNNING) {
             download.state = downloadedState;
             callback_->OnDownloadProcess(download);
@@ -93,12 +97,14 @@ void CloudDownloadCallbackManager::OnDownloadProcess(const std::string path,
                                                      DriveKit::DownloadSize downloadSize)
 {
     bool isDownloading = (downloads_.find(path) != downloads_.end());
-    LOGI("download_file : [callback downloading] %{public}s is downloading : %{public}d .", path.c_str(), isDownloading);
+    LOGI("download_file : [callback downloading] %{public}s is downloading : %{public}d .",
+        path.c_str(), isDownloading);
     if (isDownloading) {
         auto &download = downloads_[path];
         download.downloadedSize = downloadSize;
         download.totalSize = totalSize;
-        LOGI("download_file : [callback downloading] %{public}s state is %{public}s.", path.c_str(), download.to_string().c_str());
+        LOGI("download_file : [callback downloading] %{public}s state is %{public}s.",
+              path.c_str(), download.to_string().c_str());
         if (callback_ != nullptr && download.state == DownloadProgressObj::RUNNING) {
             callback_->OnDownloadProcess(download);
         }

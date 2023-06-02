@@ -140,8 +140,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     } else {
         child = new MetaInode();
         child->mBase = make_shared<MetaBase>(name);
-        int err;
-        err = GetMetaInode(parent)->mFile->DoLookup(*(child->mBase));
+        int err = GetMetaInode(parent)->mFile->DoLookup(*(child->mBase));
         if (err) {
             delete child;
             LOGE("lookup error, %{public}d", err);
@@ -241,9 +240,8 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
      * recordType is "fileType" now for debug
      */
     if (!mInode->readSession) {
-        string path;
-        path = "/data/service/el2/" + to_string(SINGLE_ACCOUNT_USERID) +
-               "/hmdfs/fuse" + GetParentDir(mInode->path);
+        string path = "/data/service/el2/" + to_string(SINGLE_ACCOUNT_USERID) +
+            "/hmdfs/fuse" + GetParentDir(mInode->path);
         ForceCreateDirectory(path);
         LOGD("recordId: %s, create dir: %s, filename: %s",
              recordId.c_str(), path.c_str(), mInode->mBase->name.c_str());
@@ -282,7 +280,7 @@ static void CloudReadDir(fuse_req_t req, fuse_ino_t ino, size_t size,
 }
 
 static void CloudForgetMulti(fuse_req_t req, size_t count,
-				struct fuse_forget_data *forgets)
+                             struct fuse_forget_data *forgets)
 {
     LOGD("forget_multi");
     for (size_t i = 0; i < count; i++) {
