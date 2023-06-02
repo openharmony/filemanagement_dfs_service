@@ -45,8 +45,10 @@ public:
             ThrowException(ERR_UTILS_ACTOR_INVALID_CMD, "Push an empty cmd");
         }
         std::unique_lock<std::mutex> lock(mutex_);
-        queue_.emplace_back(std::move(pt));
-        cv_.notify_one();
+        if (!halted) {
+            queue_.emplace_back(std::move(pt));
+            cv_.notify_one();
+        }
     }
 
     void PushFront(std::unique_ptr<T> pt)
@@ -55,8 +57,10 @@ public:
             ThrowException(ERR_UTILS_ACTOR_INVALID_CMD, "Push an empty cmd");
         }
         std::unique_lock<std::mutex> lock(mutex_);
-        queue_.emplace_front(std::move(pt));
-        cv_.notify_one();
+        if (!halted) {
+            queue_.emplace_front(std::move(pt));
+            cv_.notify_one();
+        }
     }
 
     std::unique_ptr<T> WaitAndPop()
@@ -80,6 +84,7 @@ public:
 
     void Halt()
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         halted = true;
         cv_.notify_all();
     }
