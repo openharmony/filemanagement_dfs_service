@@ -54,11 +54,7 @@ private:
 
 class MetaFileMgr {
 public:
-    static MetaFileMgr& GetInstance()
-    {
-        static MetaFileMgr instance_;
-        return instance_;
-    }
+    static MetaFileMgr& GetInstance();
     /* recordId is hex string of 256 bits, convert to u8 cloudId[32] to kernel */
     static std::string RecordIdToCloudId(const std::string hexStr);
     static std::string CloudIdToRecordId(const std::string cloudId);

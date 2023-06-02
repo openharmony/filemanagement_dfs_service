@@ -29,7 +29,7 @@ public:
     static sptr<ICloudDaemon> GetInstance();
     static void InvaildInstance();
 
-    int32_t StartFuse(int32_t devFd, const string &path) override;
+    int32_t StartFuse(int32_t userId, int32_t devFd, const string &path) override;
 
 private:
     static inline std::mutex proxyMutex_;

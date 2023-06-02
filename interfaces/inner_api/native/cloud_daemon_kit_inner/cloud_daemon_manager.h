@@ -24,7 +24,7 @@ class CloudDaemonManager {
 public:
     static CloudDaemonManager &GetInstance();
 
-    virtual int32_t StartFuse(int32_t devFd, const string &path) = 0;
+    virtual int32_t StartFuse(int32_t userId, int32_t devFd, const string &path) = 0;
 };
 } // namespace OHOS::FileManagement::CloudFile
 

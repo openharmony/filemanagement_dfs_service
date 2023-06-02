@@ -723,6 +723,12 @@ int32_t MetaFile::LoadChildren(std::vector<MetaBase> &bases)
     return E_OK;
 }
 
+MetaFileMgr& MetaFileMgr::GetInstance()
+{
+    static MetaFileMgr instance_;
+    return instance_;
+}
+
 std::shared_ptr<MetaFile> MetaFileMgr::GetMetaFile(uint32_t userId, const std::string &path)
 {
     std::shared_ptr<MetaFile> mFile = nullptr;

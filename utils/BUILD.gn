@@ -92,7 +92,7 @@ config("dentry_public_config") {
   include_dirs = [ "dentry/include" ]
 }
 
-ohos_static_library("libdistributedfiledentry") {
+ohos_shared_library("libdistributedfiledentry") {
   include_dirs = [
     "dentry/include",
     "log/include",
