@@ -104,7 +104,7 @@ void CloudDownloadCallbackManager::OnDownloadProcess(const std::string path,
         download.downloadedSize = downloadSize;
         download.totalSize = totalSize;
         LOGI("download_file : [callback downloading] %{public}s state is %{public}s.",
-              path.c_str(), download.to_string().c_str());
+            path.c_str(), download.to_string().c_str());
         if (callback_ != nullptr && download.state == DownloadProgressObj::RUNNING) {
             callback_->OnDownloadProcess(download);
         }
