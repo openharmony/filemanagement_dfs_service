@@ -25,7 +25,9 @@ CloudSyncAssetManagerImpl &CloudSyncAssetManagerImpl::GetInstance()
     return instance;
 }
 
-int32_t CloudSyncAssetManagerImpl::UploadAsset(const int32_t userId, const std::string &request, std::string &result)
+int32_t CloudSyncAssetManagerImpl::UploadAsset(const int32_t userId,
+                                               const std::string &request,
+                                               std::string &result)
 {
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {

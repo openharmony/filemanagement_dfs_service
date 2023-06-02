@@ -446,7 +446,8 @@ int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteOb
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK, data, reply, option);
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK,
+        data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
