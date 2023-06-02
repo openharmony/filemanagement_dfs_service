@@ -33,54 +33,31 @@ using namespace DriveKit;
 DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
     : bundleName_(bundleName), userId_(userId), cloudPrefImpl_(userId, bundleName)
 {
+    /* cursor */
     cloudPrefImpl_.GetString(START_CURSOR, startCursor_);
     cloudPrefImpl_.GetString(NEXT_CURSOR, nextCursor_);
-    taskManager_ = make_shared<TaskManager>(bind(&DataSyncer::Schedule, this));
+
+    /* alloc task runner */
+    taskRunner_ = DelayedSingleton<TaskManager>::GetInstance()->AllocRunner(userId,
+        bundleName, bind(&DataSyncer::Schedule, this));
+}
+
+DataSyncer::~DataSyncer()
+{
+    /* release task runner */
+    DelayedSingleton<TaskManager>::GetInstance()->ReleaseRunner(userId_, bundleName_);
 }
 
 int32_t DataSyncer::AsyncRun(std::shared_ptr<TaskContext> context,
     void(DataSyncer::*f)(std::shared_ptr<TaskContext>))
 {
-    shared_ptr<Task> task = make_shared<Task>(context,
-        [this, f](shared_ptr<TaskContext> ctx) {
-            (this->*f)(ctx);
-        }
-    );
-
-    int32_t ret = CommitTask(task);
-    if (ret != E_OK) {
-        LOGE("async run commit task err %{public}d", ret);
-        return ret;
-    }
-
-    return E_OK;
+    return taskRunner_->AsyncRun<DataSyncer>(context, f, this);
 }
 
-/*
- * About ARGS...
- * <1> async execute requires value-copy or shared_ptr like input parameters,
- *     but no reference for lifecycle consideration.
- * <2> In addition, [=] requires the wrapped function with const parameters.
- */
 template<typename T, typename RET, typename... ARGS>
 function<RET(ARGS...)> DataSyncer::AsyncCallback(RET(T::*f)(ARGS...))
 {
-    shared_ptr<Task> task = make_shared<Task>(nullptr, nullptr);
-
-    int32_t ret = AddTask(task);
-    if (ret != E_OK) {
-        LOGE("async callback add task err %{public}d", ret);
-        return nullptr;
-    }
-
-    return [this, f, task](ARGS... args) -> RET {
-        int32_t ret = StartTask(task, [this, f, args...](shared_ptr<TaskContext>) {
-            (this->*f)(args...);
-        });
-        if (ret != E_OK) {
-            LOGE("async callback start task err %{public}d", ret);
-        }
-    };
+    return taskRunner_->AsyncCallback<DataSyncer>(f, this);
 }
 
 int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
@@ -148,7 +125,7 @@ void DataSyncer::Abort()
     LOGI("%{private}d %{private}s aborts", userId_, bundleName_.c_str());
     thread ([this]() {
         /* stop all the tasks and wait for tasks' termination */
-        if (!taskManager_->StopAndWaitFor()) {
+        if (!taskRunner_->StopAndWaitFor()) {
             LOGE("wait for tasks stop fail");
         }
         /* call the syncer manager's callback for notification */
@@ -805,34 +782,14 @@ void DataSyncer::OnModifyFdirtyRecords(shared_ptr<DKContext> context,
     }
 }
 
-int32_t DataSyncer::CommitTask(shared_ptr<Task> t)
-{
-    return taskManager_->CommitTask(t);
-}
-
-int32_t DataSyncer::AddTask(shared_ptr<Task> t)
-{
-    return taskManager_->AddTask(t);
-}
-
-int32_t DataSyncer::StartTask(shared_ptr<Task> t, TaskAction action)
-{
-    return taskManager_->StartTask(t, action);
-}
-
-void DataSyncer::CompleteTask(shared_ptr<Task> t)
-{
-    taskManager_->CompleteTask(t->GetId());
-}
-
 void DataSyncer::BeginTransaction()
 {
-    taskManager_->CommitDummyTask();
+    taskRunner_->CommitDummyTask();
 }
 
 void DataSyncer::EndTransaction()
 {
-    taskManager_->CompleteDummyTask();
+    taskRunner_->CompleteDummyTask();
 }
 
 std::string DataSyncer::GetBundleName() const
