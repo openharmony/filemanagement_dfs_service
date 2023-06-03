@@ -16,10 +16,12 @@
 #ifndef OHOS_FILEMGMT_CLOUD_DOWNLOAD_URI_MANAGER_H
 #define OHOS_FILEMGMT_CLOUD_DOWNLOAD_URI_MANAGER_H
 
+#include "nocopyable.h"
+
 #include <map>
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudDownloadUriManager {
+class CloudDownloadUriManager : public NoCopyable {
 public:
     static CloudDownloadUriManager &GetInstance();
 

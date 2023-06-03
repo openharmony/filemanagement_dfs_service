@@ -352,7 +352,7 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
     string path = Muri.GetFilePath();
     LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
 
-    CloudDownloadUriManager uriMgr = CloudDownloadUriManager::GetInstance();
+    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
     uriMgr.AddPathToUri(path, uri);
 
     if (!data.WriteString(path)) {
@@ -392,7 +392,7 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
     string path = Muri.GetFilePath();
     LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
 
-    CloudDownloadUriManager uriMgr = CloudDownloadUriManager::GetInstance();
+    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
     uriMgr.RemoveUri(path);
 
     if (!data.WriteString(path)) {
@@ -438,7 +438,7 @@ int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteOb
         return E_INVAL_ARG;
     }
 
-    CloudDownloadUriManager uriMgr = CloudDownloadUriManager::GetInstance();
+    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
     uriMgr.SetRegisteredFlag();
 
     auto remote = Remote();
@@ -470,7 +470,7 @@ int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
         return E_BROKEN_IPC;
     }
 
-    CloudDownloadUriManager uriMgr = CloudDownloadUriManager::GetInstance();
+    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
     uriMgr.UnsetRegisteredFlag();
 
     auto remote = Remote();
