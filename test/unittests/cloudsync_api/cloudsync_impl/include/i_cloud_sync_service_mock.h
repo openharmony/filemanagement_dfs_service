@@ -103,7 +103,7 @@ public:
     {
         return E_OK;
     }
-    int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo)
+    int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj)
     {
         return E_OK;
     }

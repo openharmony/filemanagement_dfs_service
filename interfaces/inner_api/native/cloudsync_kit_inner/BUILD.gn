@@ -70,6 +70,7 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_uri_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_service_proxy.cpp",
   ]
 
