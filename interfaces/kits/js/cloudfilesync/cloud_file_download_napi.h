@@ -46,7 +46,7 @@ public:
     class UvChangeMsg {
     public:
         UvChangeMsg(napi_env env, napi_ref ref, DownloadProgressObj downloadProgress)
-            : ref_(ref), downloadProgress_(downloadProgress) {}
+            : env_(env), ref_(ref), downloadProgress_(downloadProgress) {}
         ~UvChangeMsg() {}
         napi_env env_;
         napi_ref ref_;
