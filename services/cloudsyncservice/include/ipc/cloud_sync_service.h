@@ -51,11 +51,6 @@ public:
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
-    std::string GetFileName(const std::string &uri);
-    bool DownloadAsset(std::shared_ptr<DriveKit::DKAssetsDownloader> download,
-                       std::shared_ptr<DriveKit::DKContext> context,
-                       AssetInfoObj &assetInfoObj,
-                       DriveKit::DKAsset &asset);
     void OnStart() override;
     void OnStop() override;
     void PublishSA();

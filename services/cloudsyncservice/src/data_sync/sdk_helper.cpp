@@ -158,6 +158,17 @@ int32_t SdkHelper::DownloadAssets(shared_ptr<DriveKit::DKContext> context,
     return E_OK;
 }
 
+int32_t SdkHelper::DownloadAssets(DriveKit::DKDownloadAsset &assetsToDownload)
+{
+    auto downloader = database_->GetAssetsDownloader();
+    auto result = downloader->DownLoadAssets(assetsToDownload);
+    if (result != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("DownLoadAssets fail ret %{public}d", static_cast<int>(result));
+        return E_CLOUD_SDK;
+    }
+    return E_OK;
+}
+
 int32_t SdkHelper::CancelDownloadAssets(int32_t id)
 {
     return E_OK;

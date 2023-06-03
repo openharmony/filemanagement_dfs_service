@@ -64,6 +64,7 @@ public:
                            const std::map<DKDownloadAsset, DKDownloadResult> &,
                            const DKError &)> resultCallback,
         std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)> &progressCallback);
+    DKLocalErrorCode DownLoadAssets(DKDownloadAsset &assetsToDownload);
 
     DKLocalErrorCode CancelDownloadAssets(DKDownloadId id);
     DKAssetsDownloader(std::shared_ptr<DKDatabase> database)

@@ -43,7 +43,8 @@ public:
     MOCK_METHOD1(RegisterDownloadFileCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
     MOCK_METHOD0(UnregisterDownloadFileCallback, int32_t());
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
-    MOCK_METHOD3(DownloadFile, int32_t(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj));
+    MOCK_METHOD3(
+        DownloadFile, int32_t(const int32_t userId,const std::string &bundleName, AssetInfoObj &assetInfoObj));
 };
 
 class CloudSyncServiceStubTest : public testing::Test {

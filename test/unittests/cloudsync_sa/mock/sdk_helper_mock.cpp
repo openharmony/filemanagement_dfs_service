@@ -91,6 +91,11 @@ int32_t SdkHelper::DownloadAssets(shared_ptr<DriveKit::DKContext> context,
     return E_OK;
 }
 
+int32_t SdkHelper::DownloadAssets(DriveKit::DKDownloadAsset &assetsToDownload)
+{
+    return E_OK;
+}
+
 int32_t SdkHelper::CancelDownloadAssets(int32_t id)
 {
     return E_OK;

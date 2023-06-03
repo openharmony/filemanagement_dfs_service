@@ -25,9 +25,8 @@
 #include "sync_rule/net_conn_callback_observer.h"
 #include "sync_rule/network_status.h"
 #include "utils_log.h"
-#include "dk_database.h"
-#include "drive_kit.h"
 #include "directory_ex.h"
+#include "sdk_helper.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -62,86 +61,36 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
     const std::string HMDFS_DIR = "/mnt/hmdfs/";
     const std::string DATA_DIR = "/account/device_view/local/data/";
     const std::string FILE_DIR = "data/storage/el2/distributedfiles/";
-    const size_t POS_INC = 3;
-
+    const std::string URI_PREFIX = "://";
     if (uri.empty()) {
         return "";
     }
 
-    size_t ssi = uri.find_first_of("://");
-    if (ssi == std::string::npos) {
+    std::string bundleName;
+    size_t uriPrefixPos = uri.find(URI_PREFIX);
+    if (uriPrefixPos == std::string::npos) {
         return "";
     }
-    size_t length = uri.length();
-    // Look for the start of the bundleName.
-    size_t start = ssi + POS_INC;
-    size_t end = start;
-    while (end < length) {
-        char ch = uri.at(end);
-        if (ch == '/') {
-            break;
-        }
-        end++;
-    }
-    std::string bundleName = uri.substr(start, end - start);
-
-    std::string fileName = GetFileName(uri);
-    std::string fullDir = uri.substr(FILE_DIR.length() + end);
-    std::string dir = fullDir.substr(0, fullDir.length() - fileName.length());
-    std::string path = HMDFS_DIR + std::to_string(userId) + DATA_DIR + bundleName + dir;
-    ForceCreateDirectory(path);
-
-    return path;
-}
-
-std::string CloudSyncService::GetFileName(const std::string &uri)
-{
-    if (uri.empty()) {
+    uriPrefixPos += URI_PREFIX.length();
+    size_t bundleNameEndPos = uri.find('/', uriPrefixPos);
+    if (bundleNameEndPos == std::string::npos) {
         return "";
     }
+    bundleName = uri.substr(uriPrefixPos, bundleNameEndPos - uriPrefixPos);
 
-    // Look for the last of the '/'.
-    size_t namePos = uri.find_last_of('/');
-    if (namePos == std::string::npos) {
+    std::string relativePath;
+    size_t fileDirPos = uri.find(FILE_DIR);
+    if (fileDirPos == std::string::npos) {
         return "";
     }
+    fileDirPos += FILE_DIR.length();
+    relativePath = uri.substr(fileDirPos);
 
-    std::string fileName = uri.substr(namePos + 1);
-    return fileName;
-}
+    std::string outputPath = HMDFS_DIR + std::to_string(userId) + DATA_DIR + bundleName + "/" + relativePath;
+    std::string dir = outputPath.substr(0, outputPath.find_last_of('/'));
 
-bool CloudSyncService::DownloadAsset(std::shared_ptr<DriveKit::DKAssetsDownloader> downloader,
-                                     std::shared_ptr<DriveKit::DKContext> context,
-                                     AssetInfoObj &assetInfoObj,
-                                     DriveKit::DKAsset &asset)
-{
-    std::vector<DriveKit::DKDownloadAsset> assetsToDownload;
-    assetsToDownload.emplace_back(
-        DriveKit::DKDownloadAsset{assetInfoObj.recordType, assetInfoObj.recordId, assetInfoObj.fieldKey, asset, {}});
-    DriveKit::DKDownloadId id;
-
-    auto resultCallback = [context](std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-                                    const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                                    const DriveKit::DKError &) {
-        LOGI("start resultCallback");
-        return E_OK;
-    };
-    std::function<void(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-                       const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                       const DriveKit::DKError &)>
-        resultCallbackWarpper = resultCallback;
-
-    auto progressCallback = [context](std::shared_ptr<DriveKit::DKContext>, DriveKit::DKDownloadAsset,
-                                      DriveKit::TotalSize, DriveKit::DownloadSize) { return E_OK; };
-    std::function<void(std::shared_ptr<DriveKit::DKContext>, DriveKit::DKDownloadAsset, DriveKit::TotalSize,
-                       DriveKit::DownloadSize)>
-        progressCallbackWarpper = progressCallback;
-
-    auto ret =
-        downloader->DownLoadAssets(context, assetsToDownload, {}, id, resultCallbackWarpper, progressCallbackWarpper);
-
-    LOGI("DownLoadAssets return %d", static_cast<int>(ret));
-    return ret == DriveKit::DKLocalErrorCode::NO_ERROR;
+    ForceCreateDirectory(dir);
+    return outputPath;
 }
 
 void CloudSyncService::OnStart()
@@ -317,46 +266,24 @@ int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &r
 
 int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj)
 {
-    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
-    if (driveKit == nullptr) {
-        LOGE("downloadFile get drive kit instance err");
-        return E_CLOUD_SDK;
-    }
-
-    auto container = driveKit->GetDefaultContainer(bundleName);
-    if (container == nullptr) {
-        LOGE("downloadFile get drive kit container err");
-        return E_CLOUD_SDK;
-    }
-
-    auto database = container->GetPrivateDatabase();
-    if (database == nullptr) {
-        LOGE("downloadFile get drive kit database err");
-        return E_CLOUD_SDK;
-    }
-
-    auto downloader = database->GetAssetsDownloader();
-    if (downloader == nullptr) {
-        LOGE("downloadFile get database assetsDownloader err");
-        return E_CLOUD_SDK;
-    }
-
-    auto context = make_shared<DriveKit::DKContext>();
-    std::string fileName = GetFileName(assetInfoObj.uri);
-    std::string downloadPath = GetHmdfsPath(assetInfoObj.uri, userId);
-    if (downloadPath.empty()) {
-        LOGE("downloadPath is empty");
-        return E_INVAL_ARG;
+    auto sdkHelper = std::make_shared<SdkHelper>();
+    auto ret = sdkHelper->Init(userId, bundleName);
+    if (ret != E_OK) {
+        LOGE("get sdk helper err %{public}d", ret);
+        return ret;
     }
 
     DriveKit::DKAsset asset;
     asset.assetName = assetInfoObj.assetName;
-    asset.uri = downloadPath + fileName;
 
-    if (!DownloadAsset(downloader, context, assetInfoObj, asset)) {
-        return E_CLOUD_SDK;
+    asset.uri = GetHmdfsPath(assetInfoObj.uri, userId);
+    if (asset.uri.empty()) {
+        LOGE("fail to get download path from %{public}s", assetInfoObj.uri.c_str());
+        return E_INVAL_ARG;
     }
 
-    return E_OK;
+    DriveKit::DKDownloadAsset assetsToDownload{
+        assetInfoObj.recordType, assetInfoObj.recordId, assetInfoObj.fieldKey, asset, {}};
+    return sdkHelper->DownloadAssets(assetsToDownload);
 }
 } // namespace OHOS::FileManagement::CloudSync
