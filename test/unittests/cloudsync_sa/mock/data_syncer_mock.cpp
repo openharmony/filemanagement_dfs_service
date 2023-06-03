@@ -78,7 +78,7 @@ void DataSyncer::Abort()
 {
 }
 
-void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> sdkHelper)
+void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> &sdkHelper)
 {
 }
 
