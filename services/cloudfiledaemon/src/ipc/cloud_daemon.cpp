@@ -73,13 +73,12 @@ void CloudDaemon::OnStop()
     LOGI("Stop finished successfully");
 }
 
-int32_t CloudDaemon::StartFuse(int32_t devFd, const string &path)
+int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
-    auto fuseMgr = make_shared<FuseManager>();
     LOGI("Start Fuse");
 
-    std::thread([fusePtr{fuseMgr}, dev{devFd}, mnt{path}]() {
-        int32_t ret = fusePtr->StartFuse(dev, mnt);
+    std::thread([=]() {
+        int32_t ret = FuseManager::GetInstance().StartFuse(userId, devFd, path);
         LOGI("start fuse result %d", ret);
         }).detach();
     return E_OK;

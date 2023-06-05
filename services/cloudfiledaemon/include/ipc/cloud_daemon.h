@@ -46,7 +46,7 @@ public:
     {
         return state_;
     }
-    int32_t StartFuse(int32_t deviceFd, const std::string &path) override;
+    int32_t StartFuse(int32_t userId, int32_t deviceFd, const std::string &path) override;
 
 private:
     CloudDaemon();

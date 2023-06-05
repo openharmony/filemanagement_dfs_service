@@ -33,7 +33,6 @@ ohos_shared_library("cloudfiledaemon") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/libfuse:libfuse",

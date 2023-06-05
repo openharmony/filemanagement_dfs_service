@@ -27,7 +27,7 @@ class CloudDaemonManagerImpl final : public CloudDaemonManager, public NoCopyabl
 public:
     static CloudDaemonManagerImpl &GetInstance();
 
-    int32_t StartFuse(int32_t devFd, const string &path) override;
+    int32_t StartFuse(int32_t userId, int32_t devFd, const string &path) override;
 
 private:
     CloudDaemonManagerImpl() = default;

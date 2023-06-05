@@ -17,18 +17,26 @@
 #define FUSE_MANAGER_H
 
 #include <string>
+#include <map>
+
+struct fuse_session;
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudFile {
 using namespace std;
+
 class FuseManager final {
 public:
-    FuseManager();
+    static FuseManager &GetInstance();
+    int32_t StartFuse(int32_t userId, int32_t devFd, const string &path);
+    FuseManager(const FuseManager&) = delete;
+    FuseManager& operator=(const FuseManager&) = delete;
+private:
+    FuseManager() = default;
     ~FuseManager() = default;
-    void Start(const string &mnt);
-    int32_t StartFuse(int32_t devFd, const string &path);
-    void Stop();
+private:
+    map<int32_t, struct fuse_session *> sessions_;
 };
 } // namespace CloudFile
 } // namespace FileManagement
