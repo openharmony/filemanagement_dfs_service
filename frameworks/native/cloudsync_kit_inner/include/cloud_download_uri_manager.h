@@ -13,23 +13,29 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_PROXY_H
-#define OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_PROXY_H
+#ifndef OHOS_FILEMGMT_CLOUD_DOWNLOAD_URI_MANAGER_H
+#define OHOS_FILEMGMT_CLOUD_DOWNLOAD_URI_MANAGER_H
 
-#include "iremote_proxy.h"
+#include "nocopyable.h"
 
-#include "i_cloud_sync_callback.h"
+#include <map>
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudSyncCallbackProxy : public IRemoteProxy<ICloudSyncCallback> {
+class CloudDownloadUriManager : public NoCopyable {
 public:
-    explicit CloudSyncCallbackProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<ICloudSyncCallback>(impl) {}
-    ~CloudSyncCallbackProxy() override {}
+    static CloudDownloadUriManager &GetInstance();
 
-    void OnSyncStateChanged(CloudSyncState state, ErrorType error) override;
+    void SetRegisteredFlag();
+    void UnsetRegisteredFlag();
+    void AddPathToUri(const std::string& path, const std::string& uri);
+    std::string GetUri(const std::string& path);
+    void RemoveUri(const std::string& path);
+
 private:
-    static inline BrokerDelegator<CloudSyncCallbackProxy> delegator_;
+    CloudDownloadUriManager() = default;
+    bool registered_{false};
+    std::map<std::string, std::string> pathMap_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
-#endif // OHOS_FILEMGMT_CLOUD_SYNC_CALLBACK_PROXY_H
+#endif // OHOS_FILEMGMT_CLOUD_DOWNLOAD_URI_MANAGER_H

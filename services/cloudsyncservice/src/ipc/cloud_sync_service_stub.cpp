@@ -335,8 +335,8 @@ int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessagePar
     }
     int32_t userId = data.ReadInt32();
     string bundleName = data.ReadString();
-    sptr<AssetInfo> assetInfo = data.ReadParcelable<AssetInfo>();
-    int32_t res = DownloadFile(userId, bundleName, *assetInfo);
+    sptr<AssetInfoObj> assetInfoObj = data.ReadParcelable<AssetInfoObj>();
+    int32_t res = DownloadFile(userId, bundleName, *assetInfoObj);
     reply.WriteInt32(res);
     LOGI("End DownloadFile");
     return res;

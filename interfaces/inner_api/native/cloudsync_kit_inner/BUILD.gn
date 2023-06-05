@@ -23,6 +23,8 @@ config("private_config") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/utils/log/include",
+    "${media_library_path}/frameworks/utils/include",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
   ]
 }
 
@@ -30,6 +32,7 @@ ohos_shared_library("cloudsync_kit_inner") {
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_client.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_uri_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_client.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
@@ -48,9 +51,11 @@ ohos_shared_library("cloudsync_kit_inner") {
   public_configs = [ ":public_config" ]
 
   external_deps = [
+    "ability_base:zuri",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "media_library:media_library",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -62,8 +67,10 @@ ohos_shared_library("cloudsync_kit_inner") {
 
 ohos_shared_library("cloudsync_asset_kit_inner") {
   sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_uri_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_service_proxy.cpp",
   ]
 
@@ -76,7 +83,9 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
   public_configs = [ ":public_config" ]
 
   external_deps = [
+    "ability_base:zuri",
     "ipc:ipc_core",
+    "media_library:media_library",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

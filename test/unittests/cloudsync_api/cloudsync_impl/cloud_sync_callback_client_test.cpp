@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "cloud_sync_constants.h"
 #include "dfs_error.h"
 #include "cloud_sync_callback_client.h"
 #include "service_callback_mock.h"
@@ -38,7 +39,7 @@ public:
 
 class CloudSyncCallbackDerived : public CloudSyncCallback {
 public:
-    void OnSyncStateChanged(SyncType type, SyncPromptState state) override
+    void OnSyncStateChanged(CloudSyncState state, ErrorType error) override
     {
         GTEST_LOG_(INFO) << "OnSyncStateChanged SUCCESS";
     }
@@ -81,7 +82,7 @@ HWTEST_F(CloudSyncCallbackTest, OnSyncStateChangedTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnSyncStateChanged start";
     try {
         InitCloudSyncCallback();
-        callbackClient_->OnSyncStateChanged(SyncType::UPLOAD, SyncPromptState::SYNC_STATE_SYNCING);
+        callbackClient_->OnSyncStateChanged(CloudSyncState::COMPLETED, ErrorType::NO_ERROR);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnSyncStateChanged FAILED";

@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "cloud_sync_callback_proxy.h"
+#include "cloud_sync_constants.h"
 #include "dfs_error.h"
 #include "service_callback_mock.h"
 
@@ -70,9 +71,9 @@ HWTEST_F(CloudSyncCallbackProxyTest, OnSyncStateChangedTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnSyncStateChanged Start";
     try {
         EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
-        SyncType syncType = SyncType::UPLOAD;
-        SyncPromptState syncPromptState = SyncPromptState::SYNC_STATE_SYNCING;
-        proxy_->OnSyncStateChanged(syncType, syncPromptState);
+        CloudSyncState state = CloudSyncState::COMPLETED;
+        ErrorType error = ErrorType::NO_ERROR;
+        proxy_->OnSyncStateChanged(state, error);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " OnSyncStateChanged ERROR";

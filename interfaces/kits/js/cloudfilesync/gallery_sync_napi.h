@@ -46,17 +46,17 @@ public:
     CloudSyncCallbackImpl(napi_env env, napi_value fun);
     ~CloudSyncCallbackImpl();
     void OnSyncStateChanged(SyncType type, SyncPromptState state) override;
-    void OnCloudSyncStateChanged(CloudSyncState state, ErrorType type) override;
+    void OnSyncStateChanged(CloudSyncState state, ErrorType error) override;
 
     class UvChangeMsg {
     public:
-        UvChangeMsg(napi_env env, napi_ref ref, CloudSyncState state, ErrorType type)
-            : env_(env), ref_(ref), state_(state), type_(type) {}
+        UvChangeMsg(napi_env env, napi_ref ref, CloudSyncState state, ErrorType error)
+            : env_(env), ref_(ref), state_(state), error_(error) {}
         ~UvChangeMsg() {}
         napi_env env_;
         napi_ref ref_;
         CloudSyncState state_;
-        ErrorType type_;
+        ErrorType error_;
     };
 private:
     napi_env env_;

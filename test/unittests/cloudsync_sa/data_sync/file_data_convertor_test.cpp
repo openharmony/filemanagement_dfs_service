@@ -53,7 +53,7 @@ void FileDataConvertorTest::SetUp(void)
     GTEST_LOG_(INFO) << "SetUp";
     int32_t userId = 100;
     string bundleName = "com.ohos.test";
-    FileDataConvertor::OperationType Type;
+    FileDataConvertor::OperationType Type = FileDataConvertor::OperationType::FILE_CREATE;
     fileDataConvertor_ = make_shared<FileDataConvertor>(userId, bundleName, Type);
 }
 
@@ -413,25 +413,25 @@ HWTEST_F(FileDataConvertorTest, HandleTimeZoneTest, TestSize.Level1)
 
 HWTEST_F(FileDataConvertorTest, HandleContentTest, TestSize.Level1)
 {
-    DriveKit::DKRecordFieldList list;
+    DriveKit::DKRecordData data;
     string path;
-    auto ret = fileDataConvertor_->HandleContent(list, path);
+    auto ret = fileDataConvertor_->HandleContent(data, path);
     EXPECT_EQ(E_OK, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleThumbnailTest, TestSize.Level1)
 {
-    DriveKit::DKRecordFieldList list;
+    DriveKit::DKRecordData data;
     string path;
-    auto ret = fileDataConvertor_->HandleThumbnail(list, path);
+    auto ret = fileDataConvertor_->HandleThumbnail(data, path);
     EXPECT_EQ(E_OK, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleLcdTest, TestSize.Level1)
 {
-    DriveKit::DKRecordFieldList list;
+    DriveKit::DKRecordData data;
     string path;
-    auto ret = fileDataConvertor_->HandleLcd(list, path);
+    auto ret = fileDataConvertor_->HandleLcd(data, path);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -442,5 +442,121 @@ HWTEST_F(FileDataConvertorTest, HandleGeneralTest, TestSize.Level1)
     string key = "general";
     auto ret = fileDataConvertor_->HandleGeneral(key, map, resultSet);
     EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, HandleAttachmentsTest, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    ResultSetMock resultSet;
+    string key = "attachments";
+    EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
+    auto ret = fileDataConvertor_->HandleAttachments(key, data, resultSet);
+    EXPECT_EQ(E_RDB, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, HandleAttachments1Test, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    ResultSetMock resultSet;
+    string key = "attachments";
+    EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(resultSet, GetString(_, _)).WillOnce(Return(0));
+    auto ret = fileDataConvertor_->HandleAttachments(key, data, resultSet);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, HandleAttachments2Test, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    ResultSetMock resultSet;
+    string key = "attachments";
+    fileDataConvertor_->type_ = FileDataConvertor::OperationType::FILE_METADATA_MODIFY;
+    auto ret = fileDataConvertor_->HandleAttachments(key, data, resultSet);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ConvertTest, TestSize.Level1)
+{
+    DriveKit::DKRecord record;
+    ResultSetMock resultSet;
+    fileDataConvertor_->type_ = FileDataConvertor::OperationType::FILE_CREATE;
+    auto ret = fileDataConvertor_->Convert(record, resultSet);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ConvertTest1, TestSize.Level1)
+{
+    DriveKit::DKRecord record;
+    ResultSetMock resultSet;
+    fileDataConvertor_->type_ = FileDataConvertor::OperationType::FILE_DELETE;
+    EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
+    auto ret = fileDataConvertor_->Convert(record, resultSet);
+    EXPECT_EQ(E_RDB, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, GetLowerPathTest, TestSize.Level1)
+{
+    string path = "";
+    auto ret = fileDataConvertor_->GetLowerPath(path);
+    string out = "";
+    EXPECT_EQ(out, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, GetLowerPathTest1, TestSize.Level1)
+{
+    string path = "/storage/media/local/files/1";
+    auto ret = fileDataConvertor_->GetLowerPath(path);
+    string out = "/data/service/el2/100/hmdfs/account/files/1";
+    EXPECT_EQ(out, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, GetLowerTmpPathTest, TestSize.Level1)
+{
+    string path = "";
+    auto ret = fileDataConvertor_->GetLowerTmpPath(path);
+    string out = "";
+    EXPECT_EQ(out, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, GetLowerTmpPathTest1, TestSize.Level1)
+{
+    string path = "/storage/media/local/files/1";
+    auto ret = fileDataConvertor_->GetLowerTmpPath(path);
+    string out = "/data/service/el2/100/hmdfs/account/files/1";
+    EXPECT_EQ(out, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, GetSandboxPathTest, TestSize.Level1)
+{
+    string path = "";
+    auto ret = fileDataConvertor_->GetSandboxPath(path);
+    string out = "";
+    EXPECT_EQ(out, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, GetSandboxPathTest1, TestSize.Level1)
+{
+    string path = "/data/service/el2/100/hmdfs/account/files/1";
+    auto ret = fileDataConvertor_->GetSandboxPath(path);
+    string out = "/storage/media/local/files/1";
+    EXPECT_EQ(out, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, GetThumbPathTest, TestSize.Level1)
+{
+    string key;
+    string path = "";
+    auto ret = fileDataConvertor_->GetThumbPath(path, key);
+    string out = "";
+    EXPECT_EQ(out, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, GetThumbPathTest1, TestSize.Level1)
+{
+    string key;
+    string path = "/storage/media/local/files/1";
+    auto ret = fileDataConvertor_->GetThumbPath(path, key);
+    string out = "/mnt/hmdfs/100/account/device_view/local/files/.thumbs/1/.jpg";
+    EXPECT_EQ(out, ret);
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

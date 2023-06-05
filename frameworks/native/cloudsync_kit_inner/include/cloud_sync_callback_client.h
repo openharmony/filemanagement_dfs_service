@@ -23,7 +23,7 @@ class CloudSyncCallbackClient final : public CloudSyncCallbackStub {
 public:
     explicit CloudSyncCallbackClient(const std::shared_ptr<CloudSyncCallback> &callback) : callback_(callback) {}
 
-    void OnSyncStateChanged(SyncType type, SyncPromptState state) override;
+    void OnSyncStateChanged(CloudSyncState state, ErrorType error) override;
 
 private:
     std::shared_ptr<CloudSyncCallback> callback_;

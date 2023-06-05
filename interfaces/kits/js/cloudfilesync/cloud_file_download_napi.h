@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H
 #define OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H
 
+#include "cloud_download_callback.h"
 #include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -34,6 +35,27 @@ public:
     static napi_value Stop(napi_env env, napi_callback_info info);
 
     inline static const std::string className = "Download";
+};
+
+class CloudDownloadCallbackImpl : public CloudDownloadCallback {
+public:
+    CloudDownloadCallbackImpl(napi_env env, napi_value fun);
+    ~CloudDownloadCallbackImpl();
+    void OnDownloadProcess(DownloadProgressObj &progress) override;
+
+    class UvChangeMsg {
+    public:
+        UvChangeMsg(napi_env env, napi_ref ref, DownloadProgressObj downloadProgress)
+            : env_(env), ref_(ref), downloadProgress_(downloadProgress) {}
+        ~UvChangeMsg() {}
+        napi_env env_;
+        napi_ref ref_;
+        DownloadProgressObj downloadProgress_;
+    };
+
+private:
+    napi_env env_;
+    napi_ref cbOnRef_ = nullptr;
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H

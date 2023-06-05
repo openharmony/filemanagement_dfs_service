@@ -14,12 +14,15 @@
  */
 #include "cloud_sync_service_proxy.h"
 
+#include "cloud_download_uri_manager.h"
+
 #include <sstream>
 
 #include "dfs_error.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
+#include "media_file_uri.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -345,8 +348,12 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
         return E_BROKEN_IPC;
     }
 
-    auto uri2path = [](string uri) -> string { return uri; };
-    string path = uri2path(uri);
+    OHOS::Media::MediaFileUri Muri(uri);
+    string path = Muri.GetFilePath();
+    LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
+
+    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
+    uriMgr.AddPathToUri(path, uri);
 
     if (!data.WriteString(path)) {
         LOGE("Failed to send the cloud id");
@@ -381,8 +388,12 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
         return E_BROKEN_IPC;
     }
 
-    auto uri2path = [](string uri) -> string { return uri; };
-    string path = uri2path(uri);
+    OHOS::Media::MediaFileUri Muri(uri);
+    string path = Muri.GetFilePath();
+    LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
+
+    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
+    uriMgr.RemoveUri(path);
 
     if (!data.WriteString(path)) {
         LOGE("Failed to send the cloud id");
@@ -427,12 +438,16 @@ int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteOb
         return E_INVAL_ARG;
     }
 
+    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
+    uriMgr.SetRegisteredFlag();
+
     auto remote = Remote();
     if (!remote) {
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK, data, reply, option);
+    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK,
+        data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
@@ -454,6 +469,9 @@ int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
         LOGE("Failed to write interface token");
         return E_BROKEN_IPC;
     }
+
+    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
+    uriMgr.UnsetRegisteredFlag();
 
     auto remote = Remote();
     if (!remote) {
@@ -510,7 +528,9 @@ int32_t CloudSyncServiceProxy::UploadAsset(const int32_t userId, const std::stri
     return ret;
 }
 
-int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo)
+int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
+                                            const std::string &bundleName,
+                                            AssetInfoObj &assetInfoObj)
 {
     LOGI("DownloadFile");
     MessageParcel data;
@@ -532,7 +552,7 @@ int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId, const std::str
         return E_INVAL_ARG;
     }
 
-    if (!data.WriteParcelable(&assetInfo)) {
+    if (!data.WriteParcelable(&assetInfoObj)) {
         LOGE("Failed to send the bundle assetInfo");
         return E_INVAL_ARG;
     }

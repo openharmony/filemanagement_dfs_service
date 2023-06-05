@@ -41,7 +41,7 @@ public:
 
 class CloudSyncCallbackDerived : public CloudSyncCallback {
 public:
-    void OnSyncStateChanged(SyncType type, SyncPromptState state)
+    void OnSyncStateChanged(CloudSyncState state, ErrorType error)
     {
         std::cout << "OnSyncStateChanged" << std::endl;
     }

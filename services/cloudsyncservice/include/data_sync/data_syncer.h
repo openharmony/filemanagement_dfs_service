@@ -59,7 +59,7 @@ public:
     SyncState GetSyncState() const;
 
     /* sdk */
-    void SetSdkHelper(std::shared_ptr<SdkHelper> sdkHelper);
+    void SetSdkHelper(std::shared_ptr<SdkHelper> &sdkHelper);
 
 protected:
     /* download */
@@ -80,9 +80,9 @@ protected:
     /* notify */
     void CompletePull();
     void CompletePush();
-    void CompleteAll(int32_t code, const SyncType type);
+    void CompleteAll();
 
-    void SyncStateChangedNotify(const SyncType type, const SyncPromptState state);
+    void SyncStateChangedNotify(const CloudSyncState state, const ErrorType error);
 
 private:
     /* download */
@@ -145,8 +145,8 @@ private:
     template<typename T, typename RET, typename... ARGS>
     std::function<RET(ARGS...)> AsyncCallback(RET(T::*f)(ARGS...));
 
-    /* prompt state */
-    SyncPromptState GetSyncPromptState(const int32_t code);
+    /* cloud sync result */
+    ErrorType GetErrorType(const int32_t code);
 
     /* identifier */
     const std::string bundleName_;

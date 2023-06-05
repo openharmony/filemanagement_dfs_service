@@ -86,9 +86,9 @@ private:
     /* attachments */
     int32_t HandleAttachments(std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
 
-    int32_t HandleContent(DriveKit::DKRecordFieldList &list, std::string &path);
-    int32_t HandleThumbnail(DriveKit::DKRecordFieldList &list, std::string &path);
-    int32_t HandleLcd(DriveKit::DKRecordFieldList &list, std::string &path);
+    int32_t HandleContent(DriveKit::DKRecordData &data, std::string &path);
+    int32_t HandleThumbnail(DriveKit::DKRecordData &data, std::string &path);
+    int32_t HandleLcd(DriveKit::DKRecordData &data, std::string &path);
 
     /* identifier */
     int32_t userId_;

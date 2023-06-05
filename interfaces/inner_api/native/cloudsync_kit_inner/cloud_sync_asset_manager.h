@@ -18,9 +18,15 @@
 
 #include <string>
 
-#include "cloud_sync_common.h"
-
 namespace OHOS::FileManagement::CloudSync {
+struct AssetInfo {
+    std::string uri;
+    std::string recordType;
+    std::string recordId;
+    std::string fieldKey;
+    std::string assetName;
+};
+
 class CloudSyncAssetManager {
 public:
     static CloudSyncAssetManager &GetInstance();

@@ -127,6 +127,7 @@ int32_t GalleryDataSyncer::Prepare()
 
 int32_t GalleryDataSyncer::DownloadAlbum()
 {
+    SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
     LOGI("gallery data sycner download album");
     Schedule();
     return E_OK;
@@ -144,6 +145,7 @@ int32_t GalleryDataSyncer::DownloadFile()
 
 int32_t GalleryDataSyncer::UploadAlbum()
 {
+    SyncStateChangedNotify(CloudSyncState::UPLOADING, ErrorType::NO_ERROR);
     LOGI("gallery data sycner upload album");
     Schedule();
     return E_OK;
@@ -170,7 +172,7 @@ int32_t GalleryDataSyncer::Wait()
 int32_t GalleryDataSyncer::Complete()
 {
     LOGI("gallery data syncer complete all");
-    CompleteAll(E_OK, SyncType::ALL);
+    CompleteAll();
     return E_OK;
 }
 } // namespace CloudSync

@@ -104,6 +104,16 @@ int32_t DataSyncManager::StartDownloadFile(const std::string bundleName, const i
         LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
+
+    /* get sdk helper */
+    auto sdkHelper = std::make_shared<SdkHelper>();
+    auto ret = sdkHelper->Init(userId, appBundleName);
+    if (ret != E_OK) {
+        LOGE("get sdk helper err %{public}d", ret);
+        return ret;
+    }
+
+    dataSyncer->SetSdkHelper(sdkHelper);
     std::thread([dataSyncer, path, userId]() { dataSyncer->StartDownloadFile(path, userId); }).detach();
     return E_OK;
 }

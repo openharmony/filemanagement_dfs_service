@@ -54,7 +54,8 @@ private:
 
 class MetaFileMgr {
 public:
-    static MetaFileMgr& GetInstance() {
+    static MetaFileMgr& GetInstance()
+    {
         static MetaFileMgr instance_;
         return instance_;
     }

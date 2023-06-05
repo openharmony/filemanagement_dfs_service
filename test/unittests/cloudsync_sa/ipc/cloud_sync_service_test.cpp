@@ -370,8 +370,8 @@ HWTEST_F(CloudSyncServiceTest, DownloadFileTest, TestSize.Level1)
     try {
         int32_t userId = 100;
         std::string bundleName = "com.ohos.photos";
-        AssetInfo assetInfo;
-        int ret = g_servicePtr_->DownloadFile(userId, bundleName, assetInfo);
+        AssetInfoObj assetInfoObj;
+        int ret = g_servicePtr_->DownloadFile(userId, bundleName, assetInfoObj);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);

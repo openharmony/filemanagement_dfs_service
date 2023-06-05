@@ -94,9 +94,6 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
         return E_PENDING;
     }
 
-    /* notify sync state */
-    SyncStateChangedNotify(SyncType::ALL, SyncPromptState::SYNC_STATE_SYNCING);
-
     /* lock: device-reentrant */
     int32_t ret = sdkHelper_->GetLock(lock_);
     if (ret != E_OK) {
@@ -116,6 +113,8 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 
     syncStateManager_.SetStopSyncFlag();
     Abort();
+
+    SyncStateChangedNotify(CloudSyncState::STOPPED, ErrorType::NO_ERROR);
 
     return E_OK;
 }
@@ -147,16 +146,17 @@ int32_t DataSyncer::UnregisterDownloadFileCallback(const int32_t userId)
 void DataSyncer::Abort()
 {
     LOGI("%{private}d %{private}s aborts", userId_, bundleName_.c_str());
-
-    /* stop all the tasks and wait for tasks' termination */
-    if (!taskManager_->StopAndWaitFor()) {
-        LOGE("wait for tasks stop fail");
-    }
-
-    /* call the syncer manager's callback for notification */
+    thread ([this]() {
+        /* stop all the tasks and wait for tasks' termination */
+        if (!taskManager_->StopAndWaitFor()) {
+            LOGE("wait for tasks stop fail");
+        }
+        /* call the syncer manager's callback for notification */
+        CompleteAll();
+    }).detach();
 }
 
-void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> sdkHelper)
+void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> &sdkHelper)
 {
     sdkHelper_ = sdkHelper;
 }
@@ -200,11 +200,20 @@ void DataSyncer::PullRecords(shared_ptr<TaskContext> context)
         return;
     }
 
+    auto handler = context->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return;
+    }
+
+    FetchCondition cond;
+    handler->GetFetchCondition(cond);
+
     std::string tempStartCursor;
-    sdkHelper_->GetStartCursor(context, tempStartCursor);
+    sdkHelper_->GetStartCursor(cond.recordType, tempStartCursor);
     cloudPrefImpl_.SetString(TEMP_START_CURSOR, tempStartCursor);
 
-    int32_t ret = sdkHelper_->FetchRecords(context, nextCursor_, callback);
+    int32_t ret = sdkHelper_->FetchRecords(context, cond, nextCursor_, callback);
     if (ret != E_OK) {
         LOGE("sdk fetch records err %{public}d", ret);
     }
@@ -224,7 +233,16 @@ void DataSyncer::PullDatabaseChanges(shared_ptr<TaskContext> context)
     if (nextCursor_.empty()) {
         nextCursor_ = startCursor_;
     }
-    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, nextCursor_, callback);
+
+    auto handler = context->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return;
+    }
+
+    FetchCondition cond;
+    handler->GetFetchCondition(cond);
+    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, cond, nextCursor_, callback);
     if (ret != E_OK) {
         LOGE("sdk fetch records err %{public}d", ret);
     }
@@ -430,6 +448,8 @@ void DataSyncer::PullRetryRecords(shared_ptr<TaskContext> context)
         return;
     }
 
+    FetchCondition cond;
+    handler->GetFetchCondition(cond);
     LOGI("retry records count: %{public}u", static_cast<uint32_t>(records.size()));
     for (auto it : records) {
         auto callback = AsyncCallback(&DataSyncer::OnFetchRetryRecord);
@@ -437,7 +457,7 @@ void DataSyncer::PullRetryRecords(shared_ptr<TaskContext> context)
             LOGE("wrap on fetch records fail");
             continue;
         }
-        ret = sdkHelper_->FetchRecordWithId(context, it, callback);
+        ret = sdkHelper_->FetchRecordWithId(context, cond, it, callback);
         if (ret != E_OK) {
             LOGE("sdk fetch records err %{public}d", ret);
         }
@@ -809,27 +829,31 @@ void DataSyncer::CompletePull()
 {
     LOGI("%{private}d %{private}s completes pull", userId_, bundleName_.c_str());
     /* call syncer manager callback */
+    auto error = GetErrorType(errorCode_);
+    if (error) {
+        SyncStateChangedNotify(CloudSyncState::DOWNLOAD_FAILED, error);
+    }
 }
 
 void DataSyncer::CompletePush()
 {
     LOGI("%{private}d %{public}s completes push", userId_, bundleName_.c_str());
     /* call syncer manager callback */
+    auto error = GetErrorType(errorCode_);
+    if (error) {
+        SyncStateChangedNotify(CloudSyncState::UPLOAD_FAILED, error);
+    }
 }
 
-void DataSyncer::CompleteAll(int32_t code, const SyncType type)
+void DataSyncer::CompleteAll()
 {
     LOGI("%{private}d %{private}s completes all", userId_, bundleName_.c_str());
 
     /* unlock */
     sdkHelper_->DeleteLock(lock_);
 
-    if (errorCode_ == E_SYNC_FAILED_BATTERY_LOW) {
-        code = errorCode_;
-    }
-
     SyncState syncState;
-    if (code == E_OK) {
+    if (errorCode_ == E_OK) {
         syncState = SyncState::SYNC_SUCCEED;
     } else {
         syncState = SyncState::SYNC_FAILED;
@@ -845,33 +869,31 @@ void DataSyncer::CompleteAll(int32_t code, const SyncType type)
         return;
     }
 
-    auto state = GetSyncPromptState(code);
-    if (code == E_OK) {
-        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(SyncType::ALL, state);
-    } else {
-        CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(type, state);
-    }
+    /* notify sync state */
+    auto error = GetErrorType(errorCode_);
+    SyncStateChangedNotify(CloudSyncState::COMPLETED, error);
+    errorCode_ = E_OK;
 }
 
-void DataSyncer::SyncStateChangedNotify(const SyncType type, const SyncPromptState state)
+void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)
 {
-    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(SyncType::ALL, state);
+    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(state, error);
 }
 
-SyncPromptState DataSyncer::GetSyncPromptState(const int32_t code)
+ErrorType DataSyncer::GetErrorType(const int32_t code)
 {
     if (code == E_OK) {
-        return SyncPromptState::SYNC_STATE_DEFAULT;
+        return ErrorType::NO_ERROR;
     }
-    SyncPromptState state(SyncPromptState::SYNC_STATE_DEFAULT);
+    ErrorType error(ErrorType::NO_ERROR);
     auto capacityLevel = BatteryStatus::GetCapacityLevel();
     if (capacityLevel == BatteryStatus::LEVEL_LOW) {
-        state = SyncPromptState::SYNC_STATE_PAUSED_FOR_BATTERY;
+        error = ErrorType::BATTERY_LEVEL_LOW;
     } else if (capacityLevel == BatteryStatus::LEVEL_TOO_LOW) {
-        state = SyncPromptState::SYNC_STATE_BATTERY_TOO_LOW;
+        error = ErrorType::BATTERY_LEVEL_WARNING;
     }
 
-    return state;
+    return error;
 }
 } // namespace CloudSync
 } // namespace FileManagement

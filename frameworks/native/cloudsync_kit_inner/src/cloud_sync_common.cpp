@@ -204,27 +204,29 @@ std::string DownloadProgressObj::to_string()
     return ss.str();
 }
 
-bool AssetInfo::ReadFromParcel(Parcel &parcel)
+bool AssetInfoObj::ReadFromParcel(Parcel &parcel)
 {
     parcel.ReadString(uri);
     parcel.ReadString(recordType);
     parcel.ReadString(recordId);
     parcel.ReadString(fieldKey);
+    parcel.ReadString(assetName);
     return true;
 }
 
-bool AssetInfo::Marshalling(Parcel &parcel) const
+bool AssetInfoObj::Marshalling(Parcel &parcel) const
 {
     parcel.WriteString(uri);
     parcel.WriteString(recordType);
     parcel.WriteString(recordId);
     parcel.WriteString(fieldKey);
+    parcel.WriteString(assetName);
     return true;
 }
 
-AssetInfo *AssetInfo::Unmarshalling(Parcel &parcel)
+AssetInfoObj *AssetInfoObj::Unmarshalling(Parcel &parcel)
 {
-    AssetInfo *info = new (std::nothrow) AssetInfo();
+    AssetInfoObj *info = new (std::nothrow) AssetInfoObj();
     if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
         LOGW("read from parcel failed");
         delete info;

@@ -37,7 +37,7 @@ CloudSyncCallbackImpl::~CloudSyncCallbackImpl()
     napi_delete_reference(env_, cbOnRef_);
 }
 
-void CloudSyncCallbackImpl::OnCloudSyncStateChanged(CloudSyncState state, ErrorType type)
+void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -50,7 +50,7 @@ void CloudSyncCallbackImpl::OnCloudSyncStateChanged(CloudSyncState state, ErrorT
         return;
     }
 
-    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(env_, cbOnRef_, state, type);
+    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(env_, cbOnRef_, state, error);
     if (msg == nullptr) {
         delete work;
         return;
@@ -81,7 +81,7 @@ void CloudSyncCallbackImpl::OnCloudSyncStateChanged(CloudSyncState state, ErrorT
                 }
                 NVal obj = NVal::CreateObject(msg->env_);
                 obj.AddProp("state", NVal::CreateInt32(msg->env_, (int32_t)msg->state_).val_);
-                obj.AddProp("error", NVal::CreateInt32(msg->env_, (int32_t)msg->type_).val_);
+                obj.AddProp("error", NVal::CreateInt32(msg->env_, (int32_t)msg->error_).val_);
                 napi_value retVal = nullptr;
                 status = napi_call_function(msg->env_, nullptr, jsCallback, ARGS_ONE, &(obj.val_), &retVal);
                 if (status != napi_ok) {
@@ -105,7 +105,7 @@ napi_value GallerySyncNapi::Constructor(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         return nullptr;
     }
 
@@ -116,14 +116,14 @@ napi_value GallerySyncNapi::OnCallback(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OnCallback Number of arguments unmatched");
         return nullptr;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
@@ -142,14 +142,14 @@ napi_value GallerySyncNapi::OffCallback(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env, "Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OffCallback Number of arguments unmatched");
         return nullptr;
     }
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
@@ -167,7 +167,7 @@ napi_value GallerySyncNapi::Start(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
     }
 
     auto cbExec = []() -> NError {
@@ -200,7 +200,7 @@ napi_value GallerySyncNapi::Stop(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
-        NError(Convert2JsErrNum(E_INVAL_ARG)).ThrowErr(env);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
