@@ -529,6 +529,31 @@ int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)
     return E_OK;
 }
 
+int32_t DataSyncer::Clean(const int action)
+{
+    return E_OK;
+}
+
+int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int action)
+{
+    LOGE("Enter function DataSyncer::CleanInner");
+    int res = handler->Clean(action);
+    if (res != E_OK) {
+        LOGE("Clean file failed res:%{public}d", res);
+        return res;
+    }
+    ClearCursor();
+    return E_OK;
+}
+
+void DataSyncer::ClearCursor()
+{
+    startCursor_.clear();
+    nextCursor_.clear();
+    cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
+    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+}
+
 void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
 {
     LOGI("%{private}d %{private}s creates records", userId_, bundleName_.c_str());

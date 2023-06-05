@@ -18,6 +18,11 @@
 
 #include "filemgmt_libn.h"
 
+enum Action {
+    RETAIN_DATA = 0,
+    CLEAR_DATA
+};
+
 namespace OHOS::FileManagement::CloudSync {
 void CloudSyncManagerExport(napi_env env, napi_value exports);
 void InitENumACtions(napi_env env, napi_value exports);

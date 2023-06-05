@@ -37,7 +37,9 @@ public:
         FILE_METADATA_MODIFY,
         FILE_DATA_MODIFY,
         /* download */
-        FILE_DOWNLOAD
+        FILE_DOWNLOAD,
+        /*clean*/
+        FILE_CLEAN
     };
 
     FileDataConvertor(int32_t userId, std::string &bundleName, OperationType type);

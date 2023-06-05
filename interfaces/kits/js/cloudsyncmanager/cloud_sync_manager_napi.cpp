@@ -21,10 +21,6 @@ using namespace FileManagement::LibN;
 /***********************************************
  * Module export and register
  ***********************************************/
-enum Action {
-    RETAIN_DATA = 0,
-    CLEAR_DATA
-};
 
 static napi_value Init(napi_env env, napi_value exports)
 {

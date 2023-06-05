@@ -27,6 +27,11 @@ namespace FileManagement {
 namespace CloudSync {
 class FileDataHandler : public RdbDataHandler {
 public:
+    enum Action {
+        RETAIN_DATA = 0,
+        CLEAR_DATA
+    };
+
     FileDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<NativeRdb::RdbStore> rdb);
     virtual ~FileDataHandler() = default;
 
@@ -43,6 +48,10 @@ public:
 
     int32_t GetDownloadAsset(std::string cloudId,
                              std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
+
+    /*clean*/
+    int32_t Clean(const int action) override;
+
     /* upload */
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;
     int32_t GetDeletedRecords(std::vector<DriveKit::DKRecord> &records) override;
@@ -98,6 +107,17 @@ private:
     /* identifier */
     int32_t userId_;
     std::string bundleName_;
+
+    /*clean*/
+    FileDataConvertor cleanConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_CLEAN };
+    int32_t DeleteDentryFile(void);
+    int32_t UpdateDBFields(const std::string &cloudId);
+    int32_t CleanCloudRecord(NativeRdb::ResultSet &local, const int action,
+                              const std::string &filePath);
+    int32_t CleanPureCloudRecord(NativeRdb::ResultSet &local, const int action,
+                                 const std::string &filePath);
+    int32_t CleanNotPureCloudRecord(NativeRdb::ResultSet &local, const int action,
+                                   const std::string &filePath);
 
     /* create */
     FileDataConvertor createConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_CREATE };
