@@ -47,6 +47,7 @@ public:
                                          const sptr<ICloudDownloadCallback> &downloadCallback);
     int32_t UnregisterDownloadFileCallback(const std::string bundleName,
                                            const int32_t userId);
+    int32_t CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action);
 
 private:
     std::vector<std::shared_ptr<DataSyncer>> dataSyncers_;

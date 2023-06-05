@@ -21,6 +21,7 @@
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "ipc/cloud_sync_callback_manager.h"
+#include "meta_file.h"
 #include "sync_rule/battery_status.h"
 #include "sync_rule/net_conn_callback_observer.h"
 #include "sync_rule/network_status.h"
@@ -244,6 +245,22 @@ int32_t CloudSyncService::EnableCloud(const std::string &accoutId, const SwitchD
 
 int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions &cleanOptions)
 {
+    LOGD("Clean accountId is: %{public}s", accountId.c_str());
+    for (auto &iter : cleanOptions.appActionsData) {
+        LOGD("Clean key is: %s, value is: %d", iter.first.c_str(), iter.second);
+    }
+
+    MetaFileMgr::GetInstance().ClearAll();
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    LOGD("Clean callerUserId is: %{public}d", callerUserId);
+    std::string appBundleName;
+    int32_t action = 0;
+    for (auto iter = cleanOptions.appActionsData.begin(); iter != cleanOptions.appActionsData.end(); ++iter) {
+        appBundleName = iter->first;
+        action = iter->second;
+        dataSyncManager_->CleanCloudFile(callerUserId, appBundleName, action);
+    }
+
     return E_OK;
 }
 

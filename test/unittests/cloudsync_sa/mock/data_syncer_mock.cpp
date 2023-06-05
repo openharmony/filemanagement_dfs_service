@@ -74,6 +74,11 @@ int32_t DataSyncer::UnregisterDownloadFileCallback(const int32_t userId)
     return E_OK;
 }
 
+int32_t DataSyncer::Clean(const int action)
+{
+    return E_OK;
+}
+
 void DataSyncer::Abort()
 {
 }
@@ -96,6 +101,15 @@ void DataSyncer::PullDatabaseChanges(shared_ptr<TaskContext> context)
 }
 
 void DataSyncer::DownloadAssets(std::shared_ptr<TaskContext> context)
+{
+}
+
+int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int action)
+{
+    return E_OK;
+}
+
+void DataSyncer::ClearCursor()
 {
 }
 

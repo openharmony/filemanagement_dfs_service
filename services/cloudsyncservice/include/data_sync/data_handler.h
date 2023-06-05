@@ -52,6 +52,9 @@ public:
         DriveKit::DKRecordOperResult> &map);
     virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) = 0;
 
+    /*clean*/
+    virtual int32_t Clean(const int action) = 0;
+
     /* cursor */
     virtual int32_t SetCursor();
     virtual int32_t GetCursor();

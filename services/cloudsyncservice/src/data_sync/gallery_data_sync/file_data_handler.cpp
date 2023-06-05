@@ -17,6 +17,7 @@
 
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <filesystem>
 #include <unistd.h>
 
 #include "dfs_error.h"
@@ -91,6 +92,14 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     MEDIA_DATA_DB_DIRTY,
     MEDIA_DATA_DB_IS_TRASH,
     MEDIA_DATA_DB_POSITION,
+};
+
+const std::vector<std::string> CLEAN_QUERY_COLUMNS = {
+    MEDIA_DATA_DB_FILE_PATH,
+    MEDIA_DATA_DB_DIRTY,
+    MEDIA_DATA_DB_IS_TRASH,
+    MEDIA_DATA_DB_POSITION,
+    MEDIA_DATA_DB_CLOUD_ID,
 };
 
 int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records,
@@ -375,7 +384,7 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
     }
 
     LOGI("cloudMtime %{public}llu, localMtime %{public}llu",
-         (unsigned long long)cloudMtime, (unsigned long long)localMtime);
+         static_cast<unsigned long long>(cloudMtime), static_cast<unsigned long long>(localMtime));
     changed = !(cloudMtime == localMtime);
     return E_OK;
 }
@@ -613,6 +622,226 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     downloadAsset.downLoadPath = GetParentDir(downloadAsset.downLoadPath);
     ForceCreateDirectory(downloadAsset.downLoadPath);
     assetsToDownload.push_back(downloadAsset);
+}
+
+static int32_t DeleteThumbFile(const std::string &lcdFile, const std::string &thmbFile)
+{
+    LOGD("Begin delete thumbFile");
+    int ret = E_OK;
+    if (access(lcdFile.c_str(), F_OK) == 0) {
+        LOGD("lcdFile is exist");
+        ret = remove(lcdFile.c_str());
+        if (ret != 0) {
+            LOGE("Clean remove lcdFile failed, errno %{public}d", errno);
+            return errno;
+        }
+    }
+    if (access(thmbFile.c_str(), F_OK) == 0) {
+        LOGD("thmbFile is exist");
+        ret = remove(thmbFile.c_str());
+        if (ret != 0) {
+            LOGE("Clean remove thmbFile failed, errno %{public}d", errno);
+            return errno;
+        }
+    }
+    return ret;
+}
+
+int32_t FileDataHandler::DeleteDentryFile(void)
+{
+    std::string cacheDir =
+        "/data/service/el2/" + std::to_string(userId_) + "/hmdfs/cache/account_cache/dentry_cache/cloud/";
+    LOGD("cacheDir: %s", cacheDir.c_str());
+    if (!filesystem::exists(filesystem::path(cacheDir)))
+        return errno;
+
+    for (const auto& entry : filesystem::directory_iterator(cacheDir)) {
+        if (filesystem::is_directory(entry.path())) {
+            OHOS::ForceRemoveDirectory(entry.path());
+        } else {
+            remove(entry.path());
+        }
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::UpdateDBFields(const string &cloudId)
+{
+    ValuesBucket values;
+    values.PutNull(MEDIA_DATA_DB_CLOUD_ID);
+    values.PutInt(MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(DirtyType::TYPE_NEW));
+    values.PutInt(MEDIA_DATA_DB_POSITION, POSITION_LOCAL);
+    int32_t updateRows = 0;
+    std::string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
+    int ret = Update(updateRows, values, whereClause, {cloudId});
+    if (ret != 0) {
+        LOGE("Clean Update in rdb failed, ret:%{public}d", ret);
+    }
+    return ret;
+}
+
+int32_t FileDataHandler::CleanPureCloudRecord(NativeRdb::ResultSet &local, const int action,
+                                              const std::string &filePath)
+{
+    int res = E_OK;
+    string lcdFile = cleanConvertor_.GetThumbPath(filePath, LCD_SUFFIX);
+    string thmbFile = cleanConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
+    LOGD("filePath: %s, lcdFile: %s, thmbFile: %s", filePath.c_str(), lcdFile.c_str(), thmbFile.c_str());
+    if (action == FileDataHandler::Action::CLEAR_DATA) {
+        res = DeleteThumbFile(lcdFile, thmbFile);
+        if (res != E_OK) {
+            LOGE("Clean unlink thmbFile failed, res %{public}d", res);
+            return res;
+        }
+    }
+    int32_t deleteRows = 0;
+    string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
+    string cloudId;
+    res = DataConvertor::GetString(MEDIA_DATA_DB_CLOUD_ID, cloudId, local);
+    if (res != E_OK) {
+        LOGE("Get cloud_id fail");
+        return res;
+    }
+    res = Delete(deleteRows, whereClause, {cloudId});
+    LOGD("RDB Delete result: %d, deleteRows is: %d", res, deleteRows);
+    if (res != 0) {
+        LOGE("Clean delete in rdb failed, res:%{public}d", res);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+static int32_t DeleteLowerPath(const string &lowerPath)
+{
+    int ret = E_OK;
+    if (access(lowerPath.c_str(), F_OK) == 0) {
+        ret = remove(lowerPath.c_str());
+        if (ret != 0) {
+            LOGE("Clean remove lowerPath failed, errno %{public}d", errno);
+            return errno;
+        }
+    }
+    return ret;
+}
+
+int32_t FileDataHandler::CleanNotPureCloudRecord(NativeRdb::ResultSet &local, const int action,
+                                                 const std::string &filePath)
+{
+    string cloudId;
+    int res = DataConvertor::GetString(MEDIA_DATA_DB_CLOUD_ID, cloudId, local);
+    if (res != E_OK) {
+        LOGE("Get cloud_id fail");
+        return res;
+    }
+    string lowerPath = cleanConvertor_.GetLowerPath(filePath);
+    string lcdFile = cleanConvertor_.GetThumbPath(filePath, LCD_SUFFIX);
+    string thmbFile = cleanConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
+    int32_t ret = E_OK;
+    if (action == FileDataHandler::Action::CLEAR_DATA) {
+        if (IsLocalDirty(local)) {
+            LOGD("data is dirty, action:clear");
+            ret = this->UpdateDBFields(cloudId);
+            if (ret != E_OK) {
+                LOGE("Clean Update in rdb failed, ret:%{public}d", ret);
+                return ret;
+            }
+        } else {
+            LOGD("data is not dirty, action:clear");
+            ret = DeleteThumbFile(lcdFile, thmbFile);
+            if (ret != E_OK) {
+                LOGE("Clean remove thmbFile failed, ret %{public}d", ret);
+                return ret;
+            }
+            ret = DeleteLowerPath(lowerPath);
+            if (ret != E_OK) {
+                LOGE("Clean remove lowerPath failed, errno %{public}d", ret);
+                return ret;
+            }
+            int32_t deleteRows = 0;
+            std::string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
+            ret = Delete(deleteRows, whereClause, {cloudId});
+            LOGD("RDB Delete result: %d, deleteRows is: %d", ret, deleteRows);
+            if (ret != 0) {
+                LOGE("Clean delete in rdb failed, ret:%{public}d", ret);
+                return ret;
+            }
+        }
+    } else {
+        LOGD("action:retain");
+        ret = this->UpdateDBFields(cloudId);
+        if (ret != E_OK) {
+            LOGE("Clean Update in rdb failed, ret:%{public}d", ret);
+            return ret;
+        }
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::CleanCloudRecord(NativeRdb::ResultSet &local, const int action,
+                                           const std::string &filePath)
+{
+    int res = E_OK;
+    if (!FileIsLocal(local)) {
+        LOGD("File is pure cloud data");
+        res = this->CleanPureCloudRecord(local, action, filePath);
+        if (res != E_OK) {
+            LOGE("Clean no pure cloud record failed, res:%{public}d", res);
+            return res;
+        }
+    } else {
+        LOGD("File is not pure cloud data");
+        res = this->CleanNotPureCloudRecord(local, action, filePath);
+        if (res != E_OK) {
+            LOGE("Clean no pure cloud record failed, res:%{public}d", res);
+            return res;
+        }
+    }
+    return res;
+}
+
+int32_t FileDataHandler::Clean(const int action)
+{
+    LOGD("Enter function FileDataHandler::Clean");
+    int res = E_OK;
+    NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    cleanPredicates.IsNotNull(Media::MEDIA_DATA_DB_CLOUD_ID);
+    cleanPredicates.Limit(LIMIT_SIZE);
+    while (1) {
+        auto resultSet = Query(cleanPredicates, CLEAN_QUERY_COLUMNS);
+        if (resultSet == nullptr) {
+            LOGE("get nullptr result");
+            return E_RDB;
+        }
+        int count = 0;
+        res = resultSet->GetRowCount(count);
+        if (res != E_OK || count == 0) {
+            LOGE("get row count error or row count is 0, res: %d", res);
+            break;
+        }
+        NativeRdb::ResultSet *resultSetPtr = resultSet.get();
+
+        while (resultSet->GoToNextRow() == 0) {
+            string filePath;
+            res = DataConvertor::GetString(MEDIA_DATA_DB_FILE_PATH, filePath, *resultSetPtr);
+            if (res != E_OK) {
+                LOGE("Get path wrong");
+                return E_INVAL_ARG;
+            }
+            res = CleanCloudRecord(*resultSetPtr, action, filePath);
+            if (res != E_OK) {
+                LOGE("Clean cloud record failed, res:%{public}d", res);
+                return res;
+            }
+        }
+    }
+    res = this->DeleteDentryFile();
+    if (res != E_OK) {
+        LOGE("Clean remove dentry failed, res:%{public}d", res);
+        return res;
+    }
+
+    return E_OK;
 }
 
 int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
