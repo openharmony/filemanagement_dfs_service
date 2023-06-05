@@ -17,6 +17,7 @@
 #include <memory>
 
 #include "cloud_sync_manager_impl.h"
+#include "cloud_sync_service_proxy.h"
 #include "dfs_error.h"
 #include "i_cloud_sync_service_mock.h"
 #include "iservice_registry.h"
@@ -29,14 +30,13 @@ using namespace testing::ext;
 using namespace testing;
 using namespace std;
 
-std::shared_ptr<CloudSyncManagerImpl> g_managePtr_;
-
 class CloudSyncManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    std::shared_ptr<CloudSyncManagerImpl> g_managePtr_;
 };
 
 class CloudSyncCallbackDerived : public CloudSyncCallback {
@@ -49,10 +49,6 @@ public:
 
 void CloudSyncManagerTest::SetUpTestCase(void)
 {
-    if (g_managePtr_ == nullptr) {
-        g_managePtr_ = make_shared<CloudSyncManagerImpl>();
-        ASSERT_TRUE(g_managePtr_ != nullptr) << "CallbackManager failed";
-    }
     std::cout << "SetUpTestCase" << std::endl;
 }
 
@@ -63,6 +59,10 @@ void CloudSyncManagerTest::TearDownTestCase(void)
 
 void CloudSyncManagerTest::SetUp(void)
 {
+    if (g_managePtr_ == nullptr) {
+        g_managePtr_ = make_shared<CloudSyncManagerImpl>();
+        ASSERT_TRUE(g_managePtr_ != nullptr) << "CallbackManager failed";
+    }
     std::cout << "SetUp" << std::endl;
 }
 
@@ -70,6 +70,29 @@ void CloudSyncManagerTest::TearDown(void)
 {
     g_managePtr_ = nullptr;
     std::cout << "TearDown" << std::endl;
+}
+
+/**
+ * @tc.name: RegisterCallbackTest
+ * @tc.desc: Verify the RegisterCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerTest, RegisterCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
+    try {
+        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
+        auto res = g_managePtr_->RegisterCallback(callback);
+        EXPECT_EQ(res, E_OK);
+        callback = nullptr;
+        res = g_managePtr_->RegisterCallback(callback);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " RegisterCallbackTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterCallbackTest End";
 }
 
 /**
@@ -84,17 +107,19 @@ HWTEST_F(CloudSyncManagerTest, StartSyncTest, TestSize.Level1)
     try {
         bool forceFlag = false;
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
-        int res = g_managePtr_->StartSync(forceFlag, callback);
+        auto res = g_managePtr_->StartSync();
+        EXPECT_EQ(res, E_OK);
+        res = g_managePtr_->StartSync(forceFlag, callback);
         EXPECT_EQ(res, E_OK);
         forceFlag = true;
         res = g_managePtr_->StartSync(forceFlag, callback);
         EXPECT_EQ(res, E_OK);
         forceFlag = true;
         res = g_managePtr_->StartSync(forceFlag, nullptr);
-        EXPECT_NE(res, E_OK);
+        EXPECT_EQ(res, E_INVAL_ARG);
         forceFlag = false;
         res = g_managePtr_->StartSync(forceFlag, nullptr);
-        EXPECT_NE(res, E_OK);
+        EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " StartSyncTest FAILED";
@@ -121,6 +146,189 @@ HWTEST_F(CloudSyncManagerTest, StopSyncTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "StopSyncTest End";
 }
 
+/*
+ * @tc.name: ChangeAppSwitchTest
+ * @tc.desc: Verify the ChangeAppSwitch function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerTest, ChangeAppSwitchTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest Start";
+    try {
+        std::string accoutId = "accoutId";
+        std::string bundleName = "bundleName";
+        bool status = true;
+        auto res = g_managePtr_->ChangeAppSwitch(accoutId, bundleName, status);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ChangeAppSwitchTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChangeAppSwitchTest End";
+}
+
+/*
+ * @tc.name: NotifyDataChangeTest
+ * @tc.desc: Verify the NotifyDataChange function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerTest, NotifyDataChangeTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string accoutId = "accoutId";
+        std::string bundleName = "bundleName";
+        auto res = g_managePtr_->NotifyDataChange(accoutId, bundleName);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " NotifyDataChangeTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest End";
+}
+
+/*
+ * @tc.name: StartDownloadFileTest
+ * @tc.desc: Verify the StartDownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerTest, StartDownloadFileTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string uri = "uri";
+        auto res = g_managePtr_->StartDownloadFile(uri);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " StartDownloadFileTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartDownloadFileTest End";
+}
+
+/*
+ * @tc.name: StopDownloadFileTest
+ * @tc.desc: Verify the StopDownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerTest, StopDownloadFileTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string uri = "uri";
+        auto res = g_managePtr_->StopDownloadFile(uri);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " StopDownloadFileTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StopDownloadFileTest End";
+}
+
+/*
+ * @tc.name: RegisterDownloadFileCallbackTest
+ * @tc.desc: Verify the UnregisterDownloadFileCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerTest, RegisterDownloadFileCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        auto res = g_managePtr_->UnregisterDownloadFileCallback();
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " RegisterDownloadFileCallbackTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterDownloadFileCallbackTest End";
+}
+
+/*
+ * @tc.name: SetDeathRecipientTest
+ * @tc.desc: Verify the SetDeathRecipient function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerTest, SetDeathRecipientTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+        g_managePtr_->SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetDeathRecipientTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest End";
+}
+
+/*
+ * @tc.name: EnableCloudTest
+ * @tc.desc: Verify the EnableCloud function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerTest, EnableCloudTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string accoutId = "accoutId";
+        SwitchDataObj switchData;
+        auto res = g_managePtr_->EnableCloud(accoutId, switchData);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " EnableCloudTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "EnableCloudTest End";
+}
+
+/*
+ * @tc.name: DisableCloudTest
+ * @tc.desc: Verify the DisableCloud function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerTest, DisableCloudTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string accoutId = "accoutId";
+        auto res = g_managePtr_->DisableCloud(accoutId);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DisableCloudTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "DisableCloudTest End";
+}
+
+/*
+ * @tc.name: CleanTest
+ * @tc.desc: Verify the Clean function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerTest, CleanTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    try {
+        std::string accoutId = "accoutId";
+        CleanOptions cleanOptions;
+        auto res = g_managePtr_->Clean(accoutId, cleanOptions);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanTest End";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
