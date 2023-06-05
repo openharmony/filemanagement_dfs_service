@@ -94,6 +94,7 @@ public:
                        const DriveKit::DKError &)> resultCallback,
         std::function<void(std::shared_ptr<DriveKit::DKContext>, DriveKit::DKDownloadAsset, DriveKit::TotalSize,
                            DriveKit::DownloadSize)> progressCallback);
+    int32_t DownloadAssets(DriveKit::DKDownloadAsset &assetsToDownload);
 
     int32_t CancelDownloadAssets(int32_t id);
 

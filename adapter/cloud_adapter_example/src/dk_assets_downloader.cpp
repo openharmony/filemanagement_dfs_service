@@ -30,6 +30,12 @@ DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(
 {
     return DKLocalErrorCode::NO_ERROR;
 }
+
+DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(DKDownloadAsset &assetsToDownload)
+{
+    return DKLocalErrorCode::NO_ERROR;
+}
+
 DKLocalErrorCode DKAssetsDownloader::CancelDownloadAssets(DKDownloadId id)
 {
     return DKLocalErrorCode::NO_ERROR;
