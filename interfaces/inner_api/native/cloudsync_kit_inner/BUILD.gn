@@ -93,6 +93,7 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
   use_exceptions = true
+  innerapi_tags = [ "platformsdk" ]
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
