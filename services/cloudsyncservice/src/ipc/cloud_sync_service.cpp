@@ -259,7 +259,7 @@ int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &r
     auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
     if (driveKit == nullptr) {
         LOGE("uploadAsset get drive kit instance err");
-        return E_INVAL_ARG;
+        return E_CLOUD_SDK;
     }
     return driveKit->OnUploadAsset(request, result);
 }
