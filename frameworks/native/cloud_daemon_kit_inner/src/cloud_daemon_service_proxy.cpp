@@ -25,7 +25,7 @@ namespace OHOS::FileManagement::CloudFile {
 using namespace std;
 using namespace OHOS::FileManagement;
 
-int32_t CloudDaemonServiceProxy::StartFuse(int32_t devFd, const string &path)
+int32_t CloudDaemonServiceProxy::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
     LOGI("Start fuse");
     MessageParcel data;
@@ -35,6 +35,11 @@ int32_t CloudDaemonServiceProxy::StartFuse(int32_t devFd, const string &path)
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOGE("Failed to write interface token");
         return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        LOGE("Failed to send user id");
+        return E_INVAL_ARG;
     }
 
     if (!data.WriteFileDescriptor(devFd)) {

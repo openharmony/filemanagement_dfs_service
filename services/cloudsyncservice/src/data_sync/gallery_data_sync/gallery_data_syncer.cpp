@@ -61,6 +61,16 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
     fileHandler_ = make_shared<FileDataHandler>(userId, bundleName, rdb_);
 }
 
+int32_t GalleryDataSyncer::Clean(const int action)
+{
+    LOGD("gallery data sycner Clean");
+    int ret = CleanInner(fileHandler_, action);
+    if (ret != E_OK) {
+        LOGE("gallery data syncer Clean err %{public}d", ret);
+    }
+    return ret;
+}
+
 int32_t GalleryDataSyncer::StartDownloadFile(const std::string path, const int32_t userId)
 {
     return DownloadInner(fileHandler_, path, userId);

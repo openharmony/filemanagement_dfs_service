@@ -104,6 +104,16 @@ int32_t DataSyncManager::StartDownloadFile(const std::string bundleName, const i
         LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
+
+    /* get sdk helper */
+    auto sdkHelper = std::make_shared<SdkHelper>();
+    auto ret = sdkHelper->Init(userId, appBundleName);
+    if (ret != E_OK) {
+        LOGE("get sdk helper err %{public}d", ret);
+        return ret;
+    }
+
+    dataSyncer->SetSdkHelper(sdkHelper);
     std::thread([dataSyncer, path, userId]() { dataSyncer->StartDownloadFile(path, userId); }).detach();
     return E_OK;
 }
@@ -227,5 +237,18 @@ int32_t DataSyncManager::IsSkipSync(const std::string bundleName, const int32_t 
         return E_SYNC_FAILED_BATTERY_TOO_LOW;
     }
     return E_OK;
+}
+
+int32_t DataSyncManager::CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action)
+{
+    LOGD("Enter function CleanCloudFile");
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
+    if (!dataSyncer) {
+        LOGE(" Clean Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+        return E_SYNCER_NUM_OUT_OF_RANGE;
+    }
+    LOGD("dataSyncer.bundleName_ is %s", dataSyncer->GetBundleName().c_str());
+    LOGD("dataSyncer.userId_ is %d", dataSyncer->GetUserId());
+    return dataSyncer->Clean(action);
 }
 } // namespace OHOS::FileManagement::CloudSync

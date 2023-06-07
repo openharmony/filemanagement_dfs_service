@@ -27,7 +27,7 @@ CloudDaemonManagerImpl &CloudDaemonManagerImpl::GetInstance()
     return instance;
 }
 
-int32_t CloudDaemonManagerImpl::StartFuse(int32_t devFd, const string &path)
+int32_t CloudDaemonManagerImpl::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
     auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
     if (!CloudDaemonServiceProxy) {
@@ -39,7 +39,7 @@ int32_t CloudDaemonManagerImpl::StartFuse(int32_t devFd, const string &path)
         SetDeathRecipient(CloudDaemonServiceProxy->AsObject());
     }
 
-    return CloudDaemonServiceProxy->StartFuse(devFd, path);
+    return CloudDaemonServiceProxy->StartFuse(userId, devFd, path);
 }
 
 void CloudDaemonManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)

@@ -413,25 +413,25 @@ HWTEST_F(FileDataConvertorTest, HandleTimeZoneTest, TestSize.Level1)
 
 HWTEST_F(FileDataConvertorTest, HandleContentTest, TestSize.Level1)
 {
-    DriveKit::DKRecordFieldList list;
+    DriveKit::DKRecordData data;
     string path;
-    auto ret = fileDataConvertor_->HandleContent(list, path);
+    auto ret = fileDataConvertor_->HandleContent(data, path);
     EXPECT_EQ(E_OK, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleThumbnailTest, TestSize.Level1)
 {
-    DriveKit::DKRecordFieldList list;
+    DriveKit::DKRecordData data;
     string path;
-    auto ret = fileDataConvertor_->HandleThumbnail(list, path);
+    auto ret = fileDataConvertor_->HandleThumbnail(data, path);
     EXPECT_EQ(E_OK, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleLcdTest, TestSize.Level1)
 {
-    DriveKit::DKRecordFieldList list;
+    DriveKit::DKRecordData data;
     string path;
-    auto ret = fileDataConvertor_->HandleLcd(list, path);
+    auto ret = fileDataConvertor_->HandleLcd(data, path);
     EXPECT_EQ(E_OK, ret);
 }
 

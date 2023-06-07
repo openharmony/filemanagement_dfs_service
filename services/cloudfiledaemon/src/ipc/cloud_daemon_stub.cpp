@@ -41,9 +41,10 @@ int32_t CloudDaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
 int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin StartFuseInner");
+    auto userId = data.ReadInt32();
     auto fd = data.ReadFileDescriptor();
     auto path = data.ReadString();
-    int32_t res = StartFuse(int32_t(fd), path);
+    int32_t res = StartFuse(userId, int32_t(fd), path);
     reply.WriteInt32(res);
     LOGI("End StartFuseInner");
     return res;

@@ -58,8 +58,11 @@ public:
     int32_t GetUserId() const;
     SyncState GetSyncState() const;
 
+    /*clean*/
+    virtual int32_t Clean(const int action);
+
     /* sdk */
-    void SetSdkHelper(std::shared_ptr<SdkHelper> sdkHelper);
+    void SetSdkHelper(std::shared_ptr<SdkHelper> &sdkHelper);
 
 protected:
     /* download */
@@ -67,6 +70,11 @@ protected:
 
     /* upload */
     int32_t Push(std::shared_ptr<DataHandler> handler);
+
+    /*clean cloud files*/
+    int32_t CleanInner(std::shared_ptr<DataHandler> handler, const int action);
+
+    void ClearCursor();
 
     /* schedule */
     virtual void Schedule() = 0;

@@ -146,16 +146,17 @@ int32_t DataSyncer::UnregisterDownloadFileCallback(const int32_t userId)
 void DataSyncer::Abort()
 {
     LOGI("%{private}d %{private}s aborts", userId_, bundleName_.c_str());
-
-    /* stop all the tasks and wait for tasks' termination */
-    if (!taskManager_->StopAndWaitFor()) {
-        LOGE("wait for tasks stop fail");
-    }
-
-    /* call the syncer manager's callback for notification */
+    thread ([this]() {
+        /* stop all the tasks and wait for tasks' termination */
+        if (!taskManager_->StopAndWaitFor()) {
+            LOGE("wait for tasks stop fail");
+        }
+        /* call the syncer manager's callback for notification */
+        CompleteAll();
+    }).detach();
 }
 
-void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> sdkHelper)
+void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> &sdkHelper)
 {
     sdkHelper_ = sdkHelper;
 }
@@ -526,6 +527,31 @@ int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)
     EndTransaction();
 
     return E_OK;
+}
+
+int32_t DataSyncer::Clean(const int action)
+{
+    return E_OK;
+}
+
+int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int action)
+{
+    LOGE("Enter function DataSyncer::CleanInner");
+    int res = handler->Clean(action);
+    if (res != E_OK) {
+        LOGE("Clean file failed res:%{public}d", res);
+        return res;
+    }
+    ClearCursor();
+    return E_OK;
+}
+
+void DataSyncer::ClearCursor()
+{
+    startCursor_.clear();
+    nextCursor_.clear();
+    cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
+    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
 }
 
 void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)

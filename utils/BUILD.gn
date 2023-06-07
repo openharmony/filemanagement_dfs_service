@@ -85,6 +85,7 @@ ohos_shared_library("libdistributedfileutils") {
   ]
 
   part_name = "dfs_service"
+  innerapi_tags = [ "platformsdk_indirect" ]
   subsystem_name = "filemanagement"
 }
 
@@ -92,7 +93,7 @@ config("dentry_public_config") {
   include_dirs = [ "dentry/include" ]
 }
 
-ohos_static_library("libdistributedfiledentry") {
+ohos_shared_library("libdistributedfiledentry") {
   include_dirs = [
     "dentry/include",
     "log/include",
