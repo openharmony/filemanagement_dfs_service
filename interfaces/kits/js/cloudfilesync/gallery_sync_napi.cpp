@@ -128,10 +128,10 @@ napi_value GallerySyncNapi::OnCallback(napi_env env, napi_callback_info info)
     }
 
     auto callback = make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
-    int32_t errNum = CloudSyncManager::GetInstance().RegisterCallback(callback);
-    if (errNum != E_OK) {
-        LOGE("OnCallback Register error, result: %{public}d", errNum);
-        NError(Convert2JsErrNum(E_BROKEN_IPC)).ThrowErr(env);
+    int32_t ret = CloudSyncManager::GetInstance().RegisterCallback(callback);
+    if (ret != E_OK) {
+        LOGE("OnCallback Register error, result: %{public}d", ret);
+        NError(Convert2JsErrNum(ret)).ThrowErr(env);
         return nullptr;
     }
 
@@ -153,10 +153,10 @@ napi_value GallerySyncNapi::OffCallback(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    int32_t errNum = CloudSyncManager::GetInstance().UnRegisterCallback();
-    if (errNum != E_OK) {
-        LOGE("OffCallback UnRegister error, result: %{public}d", errNum);
-        NError(Convert2JsErrNum(E_BROKEN_IPC)).ThrowErr(env);
+    int32_t ret = CloudSyncManager::GetInstance().UnRegisterCallback();
+    if (ret != E_OK) {
+        LOGE("OffCallback UnRegister error, result: %{public}d", ret);
+        NError(Convert2JsErrNum(ret)).ThrowErr(env);
         return nullptr;
     }
 
@@ -171,10 +171,10 @@ napi_value GallerySyncNapi::Start(napi_env env, napi_callback_info info)
     }
 
     auto cbExec = []() -> NError {
-        int32_t result = CloudSyncManager::GetInstance().StartSync();
-        if (result != E_OK) {
-            LOGE("Start Sync error, result: %{public}d", result);
-            return NError(Convert2JsErrNum(E_BROKEN_IPC));
+        int32_t ret = CloudSyncManager::GetInstance().StartSync();
+        if (ret != E_OK) {
+            LOGE("Start Sync error, result: %{public}d", ret);
+            return NError(Convert2JsErrNum(ret));
         }
         return NError(ERRNO_NOERR);
     };
@@ -205,10 +205,10 @@ napi_value GallerySyncNapi::Stop(napi_env env, napi_callback_info info)
     }
 
     auto cbExec = []() -> NError {
-        int32_t result = CloudSyncManager::GetInstance().StopSync();
-        if (result != E_OK) {
-            LOGE("Stop Sync error, result: %{public}d", result);
-            return NError(Convert2JsErrNum(E_BROKEN_IPC));
+        int32_t ret = CloudSyncManager::GetInstance().StopSync();
+        if (ret != E_OK) {
+            LOGE("Stop Sync error, result: %{public}d", ret);
+            return NError(Convert2JsErrNum(ret));
         }
         return NError(ERRNO_NOERR);
     };
