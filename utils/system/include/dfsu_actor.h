@@ -118,7 +118,7 @@ private:
         const CmdOptions &op = currentCmd->option_;
 
         if (IsExistStopTask() && (op.tryTimes_ > 0)) {
-            return false; // exist stop Task, stop retry
+            return true; // exist stop Task, stop retry
         }
 
         if (op.importance_ == CmdImportance::TRIVIAL) {
