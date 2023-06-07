@@ -44,7 +44,7 @@ public:
     MOCK_METHOD0(UnregisterDownloadFileCallback, int32_t());
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
     MOCK_METHOD3(
-        DownloadFile, int32_t(const int32_t userId,const std::string &bundleName, AssetInfoObj &assetInfoObj));
+        DownloadFile, int32_t(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj));
     MOCK_METHOD2(HandleUnRegisterCallbackInner, int32_t(MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD2(HandleRegisterCallbackInner, int32_t(MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD2(HandleStartSyncInner, int32_t(MessageParcel &data, MessageParcel &reply));
