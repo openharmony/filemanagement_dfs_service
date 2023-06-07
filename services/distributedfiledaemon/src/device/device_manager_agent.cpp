@@ -78,6 +78,7 @@ void DeviceManagerAgent::Stop()
 
 void DeviceManagerAgent::JoinGroup(weak_ptr<MountPoint> mp)
 {
+    LOGI("join group begin");
     auto smp = mp.lock();
     if (!smp) {
         stringstream ss("Failed to join group: Received empty mountpoint");
@@ -96,12 +97,13 @@ void DeviceManagerAgent::JoinGroup(weak_ptr<MountPoint> mp)
             throw runtime_error(ss.str());
         }
     }
-    LOGI("smp id %{public}d, is account_less %{pubulic}d", smp->GetID(), agent->GetMountPoint()->isAccountLess());
     agent->StartActor();
+    LOGI("join group end, id : %{public}d, account : %{public}s", smp->GetID(), smp->isAccountLess() ? "no" : "yes");
 }
 
 void DeviceManagerAgent::QuitGroup(weak_ptr<MountPoint> mp)
 {
+    LOGI("quit group begin");
     OfflineAllDevice();
 
     auto smp = mp.lock();
@@ -121,12 +123,16 @@ void DeviceManagerAgent::QuitGroup(weak_ptr<MountPoint> mp)
 
     it->second->StopActor();
     mpToNetworks_.erase(smp->GetID());
+    LOGI("quit group end, id : %{public}d, account : %{public}s", smp->GetID(), smp->isAccountLess() ? "no" : "yes");
 }
 
 void DeviceManagerAgent::OfflineAllDevice()
 {
     unique_lock<mutex> lock(mpToNetworksMutex_);
     for (auto [ignore, net] : cidNetTypeRecord_) {
+        if (net == nullptr) {
+            continue;
+        }
         auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::DisconnectAllDevices);
         net->Recv(move(cmd));
     }
@@ -136,6 +142,9 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
 {
     unique_lock<mutex> lock(mpToNetworksMutex_);
     for (auto [ignore, net] : cidNetTypeRecord_) {
+        if (net == nullptr) {
+            continue;
+        }
         auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::ConnectOnlineDevices);
         cmd->UpdateOption({
             .tryTimes_ = MAX_RETRY_COUNT,
@@ -169,15 +178,16 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
 
     // based on dev's trust info, choose corresponding network agent to obtain socket
     unique_lock<mutex> lock(mpToNetworksMutex_);
-    auto networkAgent = cidNetTypeRecord_[info.cid_];
-    if (networkAgent == nullptr) {
+
+    auto it = cidNetTypeRecord_.find(info.cid_);
+    if (it == cidNetTypeRecord_.end()) {
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
         return;
     }
     auto cmd =
         make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
     cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
-    networkAgent->Recv(move(cmd));
+    it->second->Recv(move(cmd));
 
     LOGI("OnDeviceOnline end");
 }
@@ -188,15 +198,15 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     DeviceInfo info(deviceInfo);
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
-    auto networkAgent = cidNetTypeRecord_[info.cid_];
-    if (networkAgent == nullptr) {
+    auto it = cidNetTypeRecord_.find(info.cid_);
+    if (it == cidNetTypeRecord_.end()) {
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
         return;
     }
 
     auto cmd =
         make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
-    networkAgent->Recv(move(cmd));
+    it->second->Recv(move(cmd));
     cidNetTypeRecord_.erase(info.cid_);
     LOGI("OnDeviceOffline end");
 }
@@ -264,10 +274,9 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
     for (const auto &group : groupList) {
-        if (CheckIsAccountless(group)) {
-            cidNetTypeRecord_.insert({ networkId, FindNetworkBaseTrustRelation(true) });
-        } else {
-            cidNetTypeRecord_.insert({ networkId, FindNetworkBaseTrustRelation(false) });
+        auto network = FindNetworkBaseTrustRelation(CheckIsAccountless(group));
+        if (network != nullptr) {
+            cidNetTypeRecord_.insert({ networkId, network });
         }
     }
 
