@@ -18,6 +18,9 @@
 
 #include "data_sync/data_syncer.h"
 
+#include "data_sync_manager.h"
+#include "gallery_data_syncer.h"
+
 #include "dfs_error.h"
 #include "gallery_data_syncer.h"
 #include "sync_rule/battery_status.h"
@@ -42,7 +45,10 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    std::shared_ptr<DataSyncManager> dataSyncManager_;
     std::shared_ptr<DataSyncerMock> datasyncer_;
+    std::shared_ptr<DataSyncer> datasyncer1_;
+    std::shared_ptr<FileDataHandler> handler_;
 };
 void DataSyncerTest::SetUpTestCase(void)
 {
@@ -57,14 +63,20 @@ void DataSyncerTest::TearDownTestCase(void)
 void DataSyncerTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
-    const std::string bundleName_;
     int32_t userId = 100;
     string bundleName = "com.ohos.test";
     datasyncer_ = make_shared<DataSyncerMock>(bundleName, userId);
+    dataSyncManager_ = make_shared<DataSyncManager>();
+    datasyncer1_ = dataSyncManager_->GetDataSyncer(bundleName, userId);
+    shared_ptr<GalleryDataSyncer> galleryDataSyncer_ = static_pointer_cast<GalleryDataSyncer>(datasyncer1_);
+    handler_ = galleryDataSyncer_->fileHandler_;
 }
 
 void DataSyncerTest::TearDown(void)
 {
+    datasyncer_ = nullptr;
+    datasyncer1_ = nullptr;
+    handler_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -108,12 +120,12 @@ HWTEST_F(DataSyncerTest, AbortTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: SetSdkHelperTest
+ * @tc.name: SetSdkHelperTest1
  * @tc.desc: Verify the SetSdkHelper function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(DataSyncerTest, SetSdkHelperTest, TestSize.Level1)
+HWTEST_F(DataSyncerTest, SetSdkHelperTest1, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SetSdkHelper Start";
     shared_ptr<SdkHelper> sdkHelper;
@@ -335,9 +347,295 @@ HWTEST_F(DataSyncerTest, UnregisterDownloadFileCallbackTest, TestSize.Level1)
 HWTEST_F(DataSyncerTest, PullTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Pull Start";
-    int res = datasyncer_->Pull(nullptr);
-    EXPECT_EQ(res, E_OK);
+    datasyncer_->startCursor_ = "";
+    int32_t result = datasyncer_->Pull(nullptr);
+    EXPECT_EQ(result, E_OK);
     GTEST_LOG_(INFO) << "Pull end";
+}
+
+/**
+ * @tc.name: PullTest001
+ * @tc.desc: Verify the Pull function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, PullTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Pull Start";
+    datasyncer_->startCursor_ = "pulltest";
+    int32_t result = datasyncer_->Pull(nullptr);
+    EXPECT_EQ(result, E_OK);
+    GTEST_LOG_(INFO) << "Pull end";
+}
+
+/**
+ * @tc.name: StartSyncTest
+ * @tc.desc: Verify the StartSync function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, StartSyncTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSync Start";
+    bool forceFlag = false;
+    int res = datasyncer_->StartSync(forceFlag, SyncTriggerType::PENDING_TRIGGER);
+    EXPECT_NE(res, E_OK);
+    GTEST_LOG_(INFO) << "StartSync end";
+}
+
+/**
+ * @tc.name: PullRecordsTest
+ * @tc.desc: Verify the PullRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, PullRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecords Start";
+    auto context = shared_ptr<TaskContext>(nullptr);
+    try {
+        datasyncer_->PullRecords(context);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PullRecords FAILED";
+    }
+    GTEST_LOG_(INFO) << "PullRecords end";
+}
+
+/**
+ * @tc.name: PullDatabaseChangesTest
+ * @tc.desc: Verify the PullDatabaseChanges function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, PullDatabaseChangesTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullDatabaseChanges Start";
+    auto context = shared_ptr<TaskContext>(nullptr);
+    try {
+        datasyncer_->PullDatabaseChanges(context);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PullDatabaseChanges FAILED";
+    }
+    GTEST_LOG_(INFO) << "PullDatabaseChanges end";
+}
+
+/**
+ * @tc.name: AddTaskTest
+ * @tc.desc: Verify the AddTask function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, AddTaskTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddTask Start";
+    shared_ptr<Task> task = make_shared<Task>(nullptr, nullptr);
+    int res = datasyncer_->AddTask(task);
+    EXPECT_EQ(res, E_OK);
+    GTEST_LOG_(INFO) << "AddTask end";
+}
+
+/**
+ * @tc.name: PullRetryRecordsTest
+ * @tc.desc: Verify the PullRetryRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, PullRetryRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRetryRecords Start";
+    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
+    try {
+        datasyncer_->PullRetryRecords(context);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PullRetryRecords FAILED";
+    }
+    GTEST_LOG_(INFO) << "PullRetryRecords end";
+}
+
+/**
+ * @tc.name: CreateRecordsTest
+ * @tc.desc: Verify the CreateRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, CreateRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateRecords Start";
+    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
+    try {
+        datasyncer_->CreateRecords(context);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateRecords FAILED";
+    }
+    GTEST_LOG_(INFO) << "CreateRecords end";
+}
+
+/**
+ * @tc.name: DeleteRecordsTest
+ * @tc.desc: Verify the DeleteRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, DeleteRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteRecords Start";
+    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
+    try {
+        datasyncer_->DeleteRecords(context);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteRecords FAILED";
+    }
+    GTEST_LOG_(INFO) << "DeleteRecords end";
+}
+
+/**
+ * @tc.name: ModifyMdirtyRecordsTest
+ * @tc.desc: Verify the ModifyMdirtyRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, ModifyMdirtyRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ModifyMdirtyRecords Start";
+    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
+    try {
+        datasyncer_->ModifyMdirtyRecords(context);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ModifyMdirtyRecords FAILED";
+    }
+    GTEST_LOG_(INFO) << "ModifyMdirtyRecords end";
+}
+
+/**
+ * @tc.name: ModifyFdirtyRecordsTest001
+ * @tc.desc: Verify the ModifyFdirtyRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, ModifyFdirtyRecordsTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ModifyFdirtyRecords Start";
+    shared_ptr<TaskContext> context = make_shared<TaskContext>(nullptr);
+    try {
+        datasyncer_->ModifyFdirtyRecords(context);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ModifyFdirtyRecords FAILED";
+    }
+    GTEST_LOG_(INFO) << "ModifyFdirtyRecords end";
+}
+
+/**
+ * @tc.name: ModifyFdirtyRecordsTest
+ * @tc.desc: Verify the ModifyFdirtyRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, ModifyFdirtyRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ModifyFdirtyRecords Start";
+    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
+    try {
+        datasyncer_->ModifyFdirtyRecords(context);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ModifyFdirtyRecords FAILED";
+    }
+    GTEST_LOG_(INFO) << "ModifyFdirtyRecords end";
+}
+
+/**
+ * @tc.name: PushTest
+ * @tc.desc: Verify the Push function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, PushTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Push Start";
+    int res = datasyncer_->Push(nullptr);
+    EXPECT_EQ(res, E_OK);
+    GTEST_LOG_(INFO) << "Push end";
+}
+
+/**
+ * @tc.name: SyncStateChangedNotifyTest
+ * @tc.desc: Verify the SyncStateChangedNotify function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, SyncStateChangedNotifyTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateChangedNotify Start";
+    try {
+        datasyncer_->SyncStateChangedNotify(CloudSyncState::STOPPED, ErrorType::NO_ERROR);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateChangedNotify FAILED";
+    }
+    GTEST_LOG_(INFO) << "SyncStateChangedNotify end";
+}
+
+/**
+ * @tc.name: GetErrorTypeTest
+ * @tc.desc: Verify the GetErrorType function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, GetErrorTypeTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetErrorType Start";
+    int32_t code = E_OK;
+    ErrorType result = datasyncer_->GetErrorType(code);
+    EXPECT_EQ(ErrorType::NO_ERROR, result);
+    BatteryStatus::level_ = BatteryStatus::LEVEL_LOW;
+    code = 123;
+    result = datasyncer_->GetErrorType(code);
+    EXPECT_EQ(ErrorType::BATTERY_LEVEL_LOW, result);
+    BatteryStatus::level_ = BatteryStatus::LEVEL_TOO_LOW;
+    code = 456;
+    result = datasyncer_->GetErrorType(code);
+    EXPECT_EQ(ErrorType::BATTERY_LEVEL_WARNING, result);
+    GTEST_LOG_(INFO) << "GetErrorType end";
+}
+
+/**
+ * @tc.name: OnFetchRetryRecordTest
+ * @tc.desc: Verify the OnFetchRetryRecord function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, OnFetchRetryRecordTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnFetchRetryRecord Start";
+    auto context = std::make_shared<DriveKit::DKContext>();
+    auto database = std::make_shared<DriveKit::DKDatabase>(nullptr, DriveKit::DKDatabaseScope::DK_PRIVATE_DATABASE);
+    DriveKit::DKRecordId recordId = "record1";
+    DriveKit::DKRecord record;
+    DriveKit::DKError error;
+    try {
+        datasyncer_->OnFetchRetryRecord(context, database, recordId, record, error);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnFetchRetryRecord FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnFetchRetryRecord end";
 }
 
 } // namespace OHOS::FileManagement::CloudSync::Test
