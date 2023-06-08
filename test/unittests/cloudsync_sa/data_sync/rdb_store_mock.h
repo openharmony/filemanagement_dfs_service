@@ -112,10 +112,11 @@ public:
                                             const std::vector<std::string> &columns,
                                             int &errCode));
 
-    MOCK_METHOD1(SetDistributedTables, int(const std::vector<std::string> &tables));
+    MOCK_METHOD2(SetDistributedTables, int(const std::vector<std::string> &tables, int32_t type));
     MOCK_METHOD3(ObtainDistributedTableName,
                  std::string(const std::string &device, const std::string &table, int &errCode));
-    MOCK_METHOD3(Sync, int(const SyncOption &option, const AbsRdbPredicates &predicate, const SyncCallback &callback));
+    MOCK_METHOD3(Sync, int(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief& async));
+    MOCK_METHOD3(Sync, int(const SyncOption &option, const std::vector<std::string>& tables, const AsyncDetail& async));
     MOCK_METHOD2(Subscribe, int(const SubscribeOption &option, RdbStoreObserver *observer));
     MOCK_METHOD2(UnSubscribe, int(const SubscribeOption &option, RdbStoreObserver *observer));
     MOCK_METHOD2(DropDeviceData, bool(const std::vector<std::string> &devices, const DropOption &option));
