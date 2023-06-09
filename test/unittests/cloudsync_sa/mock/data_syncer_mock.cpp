@@ -31,6 +31,10 @@ DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
 {
 }
 
+DataSyncer::~DataSyncer()
+{
+}
+
 int32_t DataSyncer::AsyncRun(std::shared_ptr<TaskContext> context,
     void(DataSyncer::*f)(std::shared_ptr<TaskContext>))
 {
@@ -198,25 +202,6 @@ void DataSyncer::OnModifyFdirtyRecords(shared_ptr<DKContext> context,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> saveMap,
     shared_ptr<const map<DKRecordId, DKRecordOperResult>> deleteMap,
     const DKError &err)
-{
-}
-
-int32_t DataSyncer::CommitTask(shared_ptr<Task> t)
-{
-    return E_OK;
-}
-
-int32_t DataSyncer::AddTask(shared_ptr<Task> t)
-{
-    return E_OK;
-}
-
-int32_t DataSyncer::StartTask(shared_ptr<Task> t, TaskAction action)
-{
-    return E_OK;
-}
-
-void DataSyncer::CompleteTask(shared_ptr<Task> t)
 {
 }
 
