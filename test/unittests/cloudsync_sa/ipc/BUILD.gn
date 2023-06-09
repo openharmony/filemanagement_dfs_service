@@ -209,23 +209,21 @@ ohos_unittest("cloud_download_callback_manager_test") {
 
   deps = [
     "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
-
-    "${utils_path}:libdistributedfiledentry",
   ]
 
   external_deps = [
     "ability_base:want",
     "dfs_service:cloudsync_kit_inner",
-    "ipc:ipc_core",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-
     "init:libbegetutil",
+    "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 
   if (!dfs_service_feature_enable_cloud_adapter) {
