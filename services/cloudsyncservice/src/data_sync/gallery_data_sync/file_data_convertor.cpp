@@ -38,7 +38,7 @@ string FileDataConvertor::recordType_ = "media";
 /* path */
 string FileDataConvertor::prefix_ = "/data/service/el2/";
 string FileDataConvertor::suffix_ = "/hmdfs/account/files";
-string FileDataConvertor::sandboxPrefix_ = "/storage/media/local/files";
+string FileDataConvertor::sandboxPrefix_ = "/storage/cloud/files";
 string FileDataConvertor::prefixLCD_ = "/mnt/hmdfs/";
 string FileDataConvertor::suffixLCD_ = "/account/device_view/local/files";
 

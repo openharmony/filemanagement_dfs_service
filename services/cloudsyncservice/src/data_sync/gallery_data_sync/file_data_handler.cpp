@@ -161,7 +161,7 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
 
 static int GetDentryPathName(const string &fullPath, string &outPath, string &outFilename)
 {
-    const string sandboxPrefix = "/storage/media/local";
+    const string sandboxPrefix = "/storage/cloud";
     size_t pos = fullPath.find_first_of(sandboxPrefix);
     size_t lpos = fullPath.find_last_of("/");
     if (pos != 0 || pos == string::npos || lpos == string::npos) {
@@ -293,7 +293,7 @@ static string GetFilePath(NativeRdb::ResultSet &local)
 
 static string GetLocalPath(int userId, const string &filePath)
 {
-    const string sandboxPrefix = "/storage/media/local";
+    const string sandboxPrefix = "/storage/cloud";
     const string dfsPrefix = "/mnt/hmdfs/";
     const string dfsSuffix = "/account/cloud_merge_view";
     size_t pos = filePath.find_first_of(sandboxPrefix);
