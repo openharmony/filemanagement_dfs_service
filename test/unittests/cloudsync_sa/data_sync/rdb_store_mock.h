@@ -112,7 +112,8 @@ public:
                                             const std::vector<std::string> &columns,
                                             int &errCode));
 
-    MOCK_METHOD2(SetDistributedTables, int(const std::vector<std::string> &tables, int32_t type));
+    MOCK_METHOD3(SetDistributedTables, int(const std::vector<std::string> &tables, int32_t type,
+                                           const DistributedRdb::DistributedConfig &distributedConfig));
     MOCK_METHOD3(ObtainDistributedTableName,
                  std::string(const std::string &device, const std::string &table, int &errCode));
     MOCK_METHOD3(Sync, int(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief& async));
