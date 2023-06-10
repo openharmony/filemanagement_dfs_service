@@ -14,6 +14,7 @@
  */
 
 #include "drive_kit.h"
+#include "dk_cloud_callback.h"
 #include "dk_container.h"
 
 namespace DriveKit {
@@ -69,6 +70,8 @@ std::shared_ptr<DKContainer> DriveKitNative::GetContainer(DKAppBundleName bundle
 
 DKError DriveKitNative::GetCloudUserInfo(DKUserInfo &userInfo)
 {
+    userInfo.cloudStatus = DKCloudStatus::DK_CLOUD_STATUS_LOGIN;
+    userInfo.spaceStatus = DKSpaceStatus::DK_SPACE_STATUS_NORMAL;
     return DKError();
 }
 
@@ -76,6 +79,8 @@ DKError DriveKitNative::GetCloudAppInfo(const std::vector<DKAppBundleName> &bund
                                         std::map<DKAppBundleName, DKAppInfo> &appInfos)
 {
     DKAppInfo appInfo;
+    appInfo.enableCloud = 1;
+    appInfo.switchStatus = DKAppSwitchStatus::DK_APP_SWITCH_STATUS_OPEN;
     appInfo.defaultContainer.containerName = "defaultContainer";
     for (const auto &name : bundleNames) {
         appInfos[name] = appInfo;
