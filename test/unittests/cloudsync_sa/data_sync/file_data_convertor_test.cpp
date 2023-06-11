@@ -416,7 +416,7 @@ HWTEST_F(FileDataConvertorTest, HandleContentTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     string path;
     auto ret = fileDataConvertor_->HandleContent(data, path);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_PATH, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleThumbnailTest, TestSize.Level1)
@@ -424,7 +424,7 @@ HWTEST_F(FileDataConvertorTest, HandleThumbnailTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     string path;
     auto ret = fileDataConvertor_->HandleThumbnail(data, path);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_PATH, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleLcdTest, TestSize.Level1)
@@ -432,7 +432,7 @@ HWTEST_F(FileDataConvertorTest, HandleLcdTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     string path;
     auto ret = fileDataConvertor_->HandleLcd(data, path);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_PATH, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleGeneralTest, TestSize.Level1)
@@ -462,7 +462,7 @@ HWTEST_F(FileDataConvertorTest, HandleAttachments1Test, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetString(_, _)).WillOnce(Return(0));
     auto ret = fileDataConvertor_->HandleAttachments(key, data, resultSet);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_PATH, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleAttachments2Test, TestSize.Level1)
@@ -481,7 +481,7 @@ HWTEST_F(FileDataConvertorTest, ConvertTest, TestSize.Level1)
     ResultSetMock resultSet;
     fileDataConvertor_->type_ = FileDataConvertor::OperationType::FILE_CREATE;
     auto ret = fileDataConvertor_->Convert(record, resultSet);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_PATH, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, ConvertTest1, TestSize.Level1)
