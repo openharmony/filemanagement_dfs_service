@@ -41,7 +41,7 @@ public:
 
     virtual int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet) = 0;
 
-    int32_t ResultSetToRecords(const std::unique_ptr<NativeRdb::ResultSet> resultSet,
+    int32_t ResultSetToRecords(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
         std::vector<DriveKit::DKRecord> &records);
     int32_t RecordToValueBucket(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
 

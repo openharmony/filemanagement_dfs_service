@@ -84,10 +84,10 @@ public:
 
     MOCK_METHOD2(Count, int(int64_t &outValue, const AbsRdbPredicates &predicates));
     MOCK_METHOD2(Query,
-                 std::unique_ptr<AbsSharedResultSet>(const AbsRdbPredicates &predicates,
+                 std::shared_ptr<AbsSharedResultSet>(const AbsRdbPredicates &predicates,
                                                      const std::vector<std::string> columns));
     MOCK_METHOD10(Query,
-                  std::unique_ptr<AbsSharedResultSet>((int &errCode,
+                  std::shared_ptr<AbsSharedResultSet>((int &errCode,
                                                        bool distinct,
                                                        const std::string &table,
                                                        const std::vector<std::string> &columns,
@@ -98,12 +98,12 @@ public:
                                                        const std::string &orderBy,
                                                        const std::string &limit)));
     MOCK_METHOD2(QuerySql,
-                 std::unique_ptr<AbsSharedResultSet>(const std::string &sql,
+                 std::shared_ptr<AbsSharedResultSet>(const std::string &sql,
                                                      const std::vector<std::string> &selectionArgs));
     MOCK_METHOD2(QueryByStep,
-                 std::unique_ptr<ResultSet>(const std::string &sql, const std::vector<std::string> &selectionArgs));
+                 std::shared_ptr<ResultSet>(const std::string &sql, const std::vector<std::string> &selectionArgs));
     MOCK_METHOD2(QueryByStep,
-                 std::unique_ptr<ResultSet>(const AbsRdbPredicates &predicates,
+                 std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates,
                                             const std::vector<std::string> columns));
 
     MOCK_METHOD4(RemoteQuery,

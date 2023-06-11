@@ -89,7 +89,7 @@ private:
     void GetLocalTimeMap(const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &map,
                          std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
                          const std::string &type);
-    void OnResultSetConvertToMap(const std::unique_ptr<NativeRdb::ResultSet> resultSet,
+    void OnResultSetConvertToMap(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
                                  std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
                                  const std::string &type);
     int32_t OnRecordFailed(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
