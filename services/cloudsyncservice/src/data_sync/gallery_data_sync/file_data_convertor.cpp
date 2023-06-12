@@ -141,7 +141,7 @@ int32_t FileDataConvertor::HandleAttachments(std::string &key, DriveKit::DKRecor
 
     /* path */
     string path;
-    int32_t ret = GetString(MEDIA_DATA_DB_FILE_PATH, path, resultSet);
+    int32_t ret = GetString(PhotoColumn::MEDIA_FILE_PATH, path, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -173,7 +173,7 @@ int32_t FileDataConvertor::FillRecordId(DriveKit::DKRecord &record,
     NativeRdb::ResultSet &resultSet)
 {
     string val;
-    int32_t ret = GetString(MEDIA_DATA_DB_CLOUD_ID, val, resultSet);
+    int32_t ret = GetString(PhotoColumn::PHOTO_CLOUD_ID, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -193,7 +193,7 @@ int32_t FileDataConvertor::HandleFileName(string &key, DriveKit::DKRecordData &d
     NativeRdb::ResultSet &resultSet)
 {
     string val;
-    int32_t ret = GetString(MEDIA_DATA_DB_NAME, val, resultSet);
+    int32_t ret = GetString(PhotoColumn::MEDIA_NAME, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -226,7 +226,7 @@ int32_t FileDataConvertor::HandleCreatedTime(string &key, DriveKit::DKRecordData
     NativeRdb::ResultSet &resultSet)
 {
     int64_t val;
-    int32_t ret = GetLong(MEDIA_DATA_DB_DATE_ADDED, val, resultSet);
+    int32_t ret = GetLong(PhotoColumn::MEDIA_DATE_ADDED, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -238,7 +238,7 @@ int32_t FileDataConvertor::HandleFavorite(string &key, DriveKit::DKRecordData &d
     NativeRdb::ResultSet &resultSet)
 {
     int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_IS_FAV, val, resultSet);
+    int32_t ret = GetInt(PhotoColumn::MEDIA_IS_FAV, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -256,8 +256,8 @@ int32_t FileDataConvertor::HandleDescription(string &key, DriveKit::DKRecordData
 int32_t FileDataConvertor::HandleRecycle(string &key, DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-    int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_IS_TRASH, val, resultSet);
+    int64_t val;
+    int32_t ret = GetLong(PhotoColumn::MEDIA_DATE_TRASHED, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -270,7 +270,7 @@ int32_t FileDataConvertor::HandleHeight(string &key, DriveKit::DKRecordFieldMap 
     NativeRdb::ResultSet &resultSet)
 {
     int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_HEIGHT, val, resultSet);
+    int32_t ret = GetInt(PhotoColumn::PHOTO_HEIGHT, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -282,7 +282,7 @@ int32_t FileDataConvertor::HandleRotation(string &key, DriveKit::DKRecordFieldMa
     NativeRdb::ResultSet &resultSet)
 {
     int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_ORIENTATION, val, resultSet);
+    int32_t ret = GetInt(PhotoColumn::PHOTO_ORIENTATION, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -294,7 +294,7 @@ int32_t FileDataConvertor::HandleWidth(string &key, DriveKit::DKRecordFieldMap &
     NativeRdb::ResultSet &resultSet)
 {
     int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_WIDTH, val, resultSet);
+    int32_t ret = GetInt(PhotoColumn::PHOTO_WIDTH, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -313,7 +313,7 @@ int32_t FileDataConvertor::HandleDataModified(string &key, DriveKit::DKRecordFie
     NativeRdb::ResultSet &resultSet)
 {
     int64_t val;
-    int32_t ret = GetLong(MEDIA_DATA_DB_WIDTH, val, resultSet);
+    int32_t ret = GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -332,7 +332,7 @@ int32_t FileDataConvertor::HandleFileCreateTime(string &key, DriveKit::DKRecordF
     NativeRdb::ResultSet &resultSet)
 {
     int64_t val;
-    int32_t ret = GetLong(MEDIA_DATA_DB_DATE_ADDED, val, resultSet);
+    int32_t ret = GetLong(PhotoColumn::MEDIA_DATE_ADDED, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -358,7 +358,7 @@ int32_t FileDataConvertor::HandleSourceFileName(string &key, DriveKit::DKRecordF
     NativeRdb::ResultSet &resultSet)
 {
     string val;
-    int32_t ret = GetString(MEDIA_DATA_DB_NAME, val, resultSet);
+    int32_t ret = GetString(PhotoColumn::MEDIA_NAME, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -370,7 +370,7 @@ int32_t FileDataConvertor::HandleSourcePath(string &key, DriveKit::DKRecordField
     NativeRdb::ResultSet &resultSet)
 {
     string val;
-    int32_t ret = GetString(MEDIA_DATA_DB_FILE_PATH, val, resultSet);
+    int32_t ret = GetString(PhotoColumn::MEDIA_FILE_PATH, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }

@@ -53,6 +53,8 @@ ohos_unittest("cloud_sync_service_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/sdk_helper_mock.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
