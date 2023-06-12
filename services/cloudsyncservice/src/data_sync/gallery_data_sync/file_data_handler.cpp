@@ -95,11 +95,11 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
 };
 
 const std::vector<std::string> CLEAN_QUERY_COLUMNS = {
-    MEDIA_DATA_DB_FILE_PATH,
-    MEDIA_DATA_DB_DIRTY,
-    MEDIA_DATA_DB_IS_TRASH,
-    MEDIA_DATA_DB_POSITION,
-    MEDIA_DATA_DB_CLOUD_ID,
+    PhotoColumn::MEDIA_FILE_PATH,
+    PhotoColumn::PHOTO_DIRTY,
+    PhotoColumn::MEDIA_DATE_TRASHED,
+    PhotoColumn::PHOTO_POSITION,
+    PhotoColumn::PHOTO_CLOUD_ID,
 };
 
 int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records,
@@ -260,20 +260,15 @@ int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, bool &outPullT
 
 static bool IsLocalDirty(NativeRdb::ResultSet &local)
 {
-    int dirty, trash;
+    int dirty;
     int ret = DataConvertor::GetInt(PhotoColumn::PHOTO_DIRTY, dirty, local);
-    if (ret != E_OK) {
-        LOGE("Get dirty int failed");
-        return false;
-    }
-    ret = DataConvertor::GetInt(PhotoColumn::MEDIA_DATE_TRASHED, trash, local);
     if (ret != E_OK) {
         LOGE("Get dirty int failed");
         return false;
     }
     return (dirty == static_cast<int32_t>(DirtyType::TYPE_MDIRTY)) ||
            (dirty == static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) ||
-           (dirty == static_cast<int32_t>(DirtyType::TYPE_DELETED)) || (trash != 0);
+           (dirty == static_cast<int32_t>(DirtyType::TYPE_DELETED));
 }
 
 constexpr unsigned HMDFS_IOC = 0xf2;
@@ -446,7 +441,8 @@ int FileDataHandler::RecycleFile(const string &localPath, const string &recordId
 {
     LOGI("recycle of record %s", recordId.c_str());
     ValuesBucket values;
-    values.PutInt(PhotoColumn::MEDIA_DATE_TRASHED, 1);
+    values.PutNull(PhotoColumn::PHOTO_CLOUD_ID);
+    values.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, UTCTimeSeconds());
     int32_t changedRows;
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     int ret = Update(changedRows, values, whereClause, {recordId});
@@ -454,20 +450,6 @@ int FileDataHandler::RecycleFile(const string &localPath, const string &recordId
         LOGE("rdb update failed, err=%{public}d", ret);
         return E_RDB;
     }
-
-    // do force delete instead, before medialibrary API10
-    int32_t deletedRows;
-    ret = Delete(deletedRows, whereClause, {recordId});
-    if (ret != 0) {
-        LOGE("delete in rdb failed, ret:%{public}d", ret);
-        return E_RDB;
-    }
-    ret = unlink(localPath.c_str());
-    if (ret != 0) {
-        LOGE("unlink local failed, errno %{public}d", errno);
-    }
-    LOGI("force delete instead");
-
     return E_OK;
 }
 
@@ -1411,6 +1393,15 @@ int32_t FileDataHandler::HandleNameInvalid()
 {
     LOGE("Name Invalid");
     return E_STOP;
+}
+
+int64_t FileDataHandler::UTCTimeSeconds()
+{
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = 0;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return static_cast<int64_t>(ts.tv_sec);
 }
 } // namespace CloudSync
 } // namespace FileManagement
