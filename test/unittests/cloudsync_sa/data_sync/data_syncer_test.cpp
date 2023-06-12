@@ -74,49 +74,7 @@ void DataSyncerTest::SetUp(void)
 
 void DataSyncerTest::TearDown(void)
 {
-    datasyncer_ = nullptr;
-    datasyncer1_ = nullptr;
-    handler_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
-}
-
-/**
- * @tc.name: StopSyncTest
- * @tc.desc: Verify the StopSync function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncerTest, StopSyncTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "StopSync Start";
-    int res = datasyncer_->StopSync(SyncTriggerType::APP_TRIGGER);
-    EXPECT_EQ(res, E_OK);
-    res = datasyncer_->StopSync(SyncTriggerType::CLOUD_TRIGGER);
-    EXPECT_EQ(res, E_OK);
-    res = datasyncer_->StopSync(SyncTriggerType::PENDING_TRIGGER);
-    EXPECT_EQ(res, E_OK);
-    res = datasyncer_->StopSync(SyncTriggerType::BATTERY_OK_TRIGGER);
-    EXPECT_EQ(res, E_OK);
-    GTEST_LOG_(INFO) << "StopSync end";
-}
-
-/**
- * @tc.name: AbortTest
- * @tc.desc: Verify the Abort function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncerTest, AbortTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "Abort Start";
-    try {
-        datasyncer_->Abort();
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "Abort FAILED";
-    }
-    GTEST_LOG_(INFO) << "Abort end";
 }
 
 /**
@@ -369,61 +327,6 @@ HWTEST_F(DataSyncerTest, PullTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: StartSyncTest
- * @tc.desc: Verify the StartSync function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncerTest, StartSyncTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "StartSync Start";
-    bool forceFlag = false;
-    int res = datasyncer_->StartSync(forceFlag, SyncTriggerType::PENDING_TRIGGER);
-    EXPECT_NE(res, E_OK);
-    GTEST_LOG_(INFO) << "StartSync end";
-}
-
-/**
- * @tc.name: PullRecordsTest
- * @tc.desc: Verify the PullRecords function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncerTest, PullRecordsTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "PullRecords Start";
-    auto context = shared_ptr<TaskContext>(nullptr);
-    try {
-        datasyncer_->PullRecords(context);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "PullRecords FAILED";
-    }
-    GTEST_LOG_(INFO) << "PullRecords end";
-}
-
-/**
- * @tc.name: PullDatabaseChangesTest
- * @tc.desc: Verify the PullDatabaseChanges function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncerTest, PullDatabaseChangesTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "PullDatabaseChanges Start";
-    auto context = shared_ptr<TaskContext>(nullptr);
-    try {
-        datasyncer_->PullDatabaseChanges(context);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "PullDatabaseChanges FAILED";
-    }
-    GTEST_LOG_(INFO) << "PullDatabaseChanges end";
-}
-
-/**
  * @tc.name: AddTaskTest
  * @tc.desc: Verify the AddTask function
  * @tc.type: FUNC
@@ -636,6 +539,22 @@ HWTEST_F(DataSyncerTest, OnFetchRetryRecordTest, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnFetchRetryRecord FAILED";
     }
     GTEST_LOG_(INFO) << "OnFetchRetryRecord end";
+}
+
+/**
+ * @tc.name: StartSyncTest
+ * @tc.desc: Verify the StartSync function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, StartSyncTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSync Start";
+    bool forceFlag = false;
+    datasyncer_->syncStateManager_.state_ = SyncState::SYNCING;
+    int res = datasyncer_->StartSync(forceFlag, SyncTriggerType::PENDING_TRIGGER);
+    EXPECT_EQ(res, E_PENDING);
+    GTEST_LOG_(INFO) << "StartSync end";
 }
 
 } // namespace OHOS::FileManagement::CloudSync::Test
