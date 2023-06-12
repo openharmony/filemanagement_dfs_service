@@ -94,12 +94,57 @@ ohos_unittest("dk_error_test") {
   defines = [ "private=public" ]
 }
 
+ohos_unittest("dk_database_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/dk_database_mock.cpp",
+    "dk_database_test.cpp",
+  ]
+
+  include_dirs =
+      [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
+
+  deps = [
+    "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    "${utils_path}:libdistributedfiledentry",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [ "c_utils:utils" ]
+
+  defines = [ "private=public" ]
+}
+
+ohos_unittest("dk_record_field_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "dk_record_field_test.cpp" ]
+
+  include_dirs =
+      [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
+
+  deps = [
+    "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    "${utils_path}:libdistributedfiledentry",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [ "c_utils:utils" ]
+
+  defines = [ "private=public" ]
+}
+
 group("cloud_adapter_test") {
   testonly = true
   deps = [
     ":dk_asset_read_session_test",
     ":dk_assets_downloader_test",
     ":dk_container_test",
+    ":dk_database_test",
     ":dk_error_test",
+    ":dk_record_field_test",
   ]
 }
