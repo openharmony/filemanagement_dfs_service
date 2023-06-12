@@ -72,6 +72,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     }
 
     /* lock: device-reentrant */
+    sdkHelper_->ResetLock(lock_);
     int32_t ret = sdkHelper_->GetLock(lock_);
     if (ret != E_OK) {
         return ret;
