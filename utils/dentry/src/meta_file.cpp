@@ -412,7 +412,7 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
     off_t pos = 0;
     uint32_t level = 0;
     uint32_t bitPos, namehash;
-    unsigned long bidx, endBlock;
+    unsigned long bidx;
     HmdfsDentryGroup dentryBlk = {0};
 
     std::unique_lock<std::mutex> lock(mtx_);
@@ -424,7 +424,7 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
             return ENOSPC;
         }
         bidx = BUCKET_BLOCKS * GetBucketaddr(level, namehash % GetBucketByLevel(level));
-        endBlock = bidx + BUCKET_BLOCKS;
+        unsigned long endBlock = bidx + BUCKET_BLOCKS;
 
         struct stat fileStat;
         int err = fstat(fd_, &fileStat);

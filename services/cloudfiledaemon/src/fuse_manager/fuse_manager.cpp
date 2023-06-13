@@ -167,7 +167,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
 {
     int err = 0;
     shared_ptr<CloudInode> child;
-    struct FuseData *data = (struct FuseData *)fuse_req_userdata(req);
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     string childName = (parent == FUSE_ROOT_ID) ? CloudPath(data, parent) + name :
                                                   CloudPath(data, parent) + "/" + name;
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
@@ -232,7 +232,7 @@ static void PutNode(struct FuseData *data, shared_ptr<CloudInode> node, uint64_t
 static void CloudForget(fuse_req_t req, fuse_ino_t ino,
                         uint64_t nlookup)
 {
-    struct FuseData *data = (struct FuseData *)fuse_req_userdata(req);
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> node = GetCloudInode(data, ino);
     LOGD("forget %s, nlookup: %lld", node->path.c_str(), (long long)nlookup);
     PutNode(data, node, nlookup);
@@ -243,7 +243,7 @@ static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
                          struct fuse_file_info *fi)
 {
     struct stat buf;
-    struct FuseData *data = (struct FuseData *)fuse_req_userdata(req);
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     (void) fi;
 
     LOGD("getattr, %s", CloudPath(data, ino).c_str());
@@ -269,7 +269,7 @@ static string GetParentDir(const string &path)
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                       struct fuse_file_info *fi)
 {
-    struct FuseData *data = (struct FuseData *)fuse_req_userdata(req);
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> mInode = GetCloudInode(data, ino);
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(mInode->mBase->cloudId);
     shared_ptr<DriveKit::DKDatabase> database = GetDatabase(data);
@@ -306,7 +306,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
 
 static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
-    struct FuseData *data = (struct FuseData *)fuse_req_userdata(req);
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> mInode = GetCloudInode(data, ino);
 
     LOGD("%s, sessionRefCount: %d", CloudPath(data, ino).c_str(), mInode->sessionRefCount.load());
@@ -322,7 +322,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
 static void CloudReadDir(fuse_req_t req, fuse_ino_t ino, size_t size,
                          off_t off, struct fuse_file_info *fi)
 {
-    struct FuseData *data = (struct FuseData *)fuse_req_userdata(req);
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     LOGE("readdir %s, not support", CloudPath(data, ino).c_str());
     fuse_reply_err(req, ENOENT);
 }
@@ -330,7 +330,7 @@ static void CloudReadDir(fuse_req_t req, fuse_ino_t ino, size_t size,
 static void CloudForgetMulti(fuse_req_t req, size_t count,
 				struct fuse_forget_data *forgets)
 {
-    struct FuseData *data = (struct FuseData *)fuse_req_userdata(req);
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     LOGD("forget_multi");
     for (size_t i = 0; i < count; i++) {
         shared_ptr<CloudInode> node = GetCloudInode(data, forgets[i].ino);
@@ -346,7 +346,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     int64_t readSize;
     DriveKit::DKError dkError;
     shared_ptr<char> buf = nullptr;
-    struct FuseData *data = (struct FuseData *)fuse_req_userdata(req);
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
 
     LOGD("%s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
 
