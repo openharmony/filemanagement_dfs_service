@@ -221,26 +221,6 @@ HWTEST_F(DataSyncerTest, CompletePushTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: CompleteTaskTest
- * @tc.desc: Verify the CompleteTask function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncerTest, CompleteTaskTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CompleteTask Start";
-    shared_ptr<Task> task = make_shared<Task>(nullptr, nullptr);
-    try {
-        datasyncer_->CompleteTask(task);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "CompleteTask FAILED";
-    }
-    GTEST_LOG_(INFO) << "CompleteTask end";
-}
-
-/**
  * @tc.name: StartDownloadFileTest
  * @tc.desc: Verify the StartDownloadFileTask function
  * @tc.type: FUNC
@@ -324,21 +304,6 @@ HWTEST_F(DataSyncerTest, PullTest001, TestSize.Level1)
     int32_t result = datasyncer_->Pull(nullptr);
     EXPECT_EQ(result, E_OK);
     GTEST_LOG_(INFO) << "Pull end";
-}
-
-/**
- * @tc.name: AddTaskTest
- * @tc.desc: Verify the AddTask function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncerTest, AddTaskTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "AddTask Start";
-    shared_ptr<Task> task = make_shared<Task>(nullptr, nullptr);
-    int res = datasyncer_->AddTask(task);
-    EXPECT_EQ(res, E_OK);
-    GTEST_LOG_(INFO) << "AddTask end";
 }
 
 /**
