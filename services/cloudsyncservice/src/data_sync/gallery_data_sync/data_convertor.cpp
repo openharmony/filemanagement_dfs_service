@@ -184,6 +184,25 @@ int32_t DataConvertor::GetLongComp(const DriveKit::DKRecordField &field, int64_t
     return E_OK;
 }
 
+static int32_t GetDoubleComp(const DriveKit::DKRecordField &field, double &val)
+{
+    if (field.GetDouble(val) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        string str;
+        if (field.GetString(str) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+            LOGE("record filed bad type %{public}d", static_cast<int>(field.GetType()));
+            return E_INVAL_ARG;
+        }
+        try {
+            val = std::stod(str);
+        } catch (const std::out_of_range &e) {
+            LOGE("record filed convert to double failed");
+            return E_INVAL_ARG;
+        }
+        return E_OK;
+    }
+    return E_OK;
+}
+
 static int32_t GetBoolComp(const DriveKit::DKRecordField &field, bool &val)
 {
     if (field.GetBool(val) != DriveKit::DKLocalErrorCode::NO_ERROR) {
@@ -232,6 +251,15 @@ const std::unordered_map<DataType,
                  return E_INVAL_ARG;
              }
              bucket.PutString(field, stringValue);
+             return E_OK;
+         }},
+        {DataType::DOUBLE,
+         [](const DriveKit::DKRecordField &value, NativeRdb::ValuesBucket &bucket, const std::string &field) {
+             double doubleValue;
+             if (GetDoubleComp(value, doubleValue) != E_OK) {
+                 return E_INVAL_ARG;
+             }
+             bucket.PutDouble(field, doubleValue);
              return E_OK;
          }},
         {DataType::BOOL,

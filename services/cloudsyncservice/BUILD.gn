@@ -43,6 +43,8 @@ ohos_shared_library("cloudsync_sa") {
   ]
 
   sources = [
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "src/ipc/cloud_download_callback_manager.cpp",
     "src/ipc/cloud_download_callback_proxy.cpp",
     "src/ipc/cloud_sync_callback_manager.cpp",

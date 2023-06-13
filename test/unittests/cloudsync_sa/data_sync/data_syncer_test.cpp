@@ -354,6 +354,21 @@ HWTEST_F(DataSyncerTest, PullTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: PullTest001
+ * @tc.desc: Verify the Pull function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, PullTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Pull Start";
+    datasyncer_->startCursor_ = "pulltest";
+    int32_t result = datasyncer_->Pull(nullptr);
+    EXPECT_EQ(result, E_OK);
+    GTEST_LOG_(INFO) << "Pull end";
+}
+
+/**
  * @tc.name: CleanTest
  * @tc.desc: Verify the CleanTest function
  * @tc.type: FUNC
@@ -384,21 +399,6 @@ HWTEST_F(DataSyncerTest, CleanInnerTest001, TestSize.Level1)
     galleryDataSyncer_ = nullptr;
     EXPECT_EQ(res, 2);
     GTEST_LOG_(INFO) << "CleanInnerTest001 end";
-}
-
-/**
- * @tc.name: PullTest001
- * @tc.desc: Verify the Pull function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncerTest, PullTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "Pull Start";
-    datasyncer_->startCursor_ = "pulltest";
-    int32_t result = datasyncer_->Pull(nullptr);
-    EXPECT_EQ(result, E_OK);
-    GTEST_LOG_(INFO) << "Pull end";
 }
 
 /**

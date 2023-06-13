@@ -97,7 +97,7 @@ private:
     int32_t HandleATFailed();
     int32_t HandleNameConflict();
     int32_t HandleNameInvalid();
-    static inline const std::string TABLE_NAME = "Files";
+    static inline const std::string TABLE_NAME = Media::PhotoColumn::PHOTOS_TABLE;
     static inline const int32_t LIMIT_SIZE = 5;
     DriveKit::DKRecordType recordType_ = "media";
     DriveKit::DKFieldKeyArray desiredKeys_;

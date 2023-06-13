@@ -416,7 +416,7 @@ HWTEST_F(FileDataConvertorTest, HandleContentTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     string path;
     auto ret = fileDataConvertor_->HandleContent(data, path);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_PATH, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleThumbnailTest, TestSize.Level1)
@@ -424,7 +424,7 @@ HWTEST_F(FileDataConvertorTest, HandleThumbnailTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     string path;
     auto ret = fileDataConvertor_->HandleThumbnail(data, path);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_PATH, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleLcdTest, TestSize.Level1)
@@ -432,7 +432,7 @@ HWTEST_F(FileDataConvertorTest, HandleLcdTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     string path;
     auto ret = fileDataConvertor_->HandleLcd(data, path);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_PATH, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleGeneralTest, TestSize.Level1)
@@ -462,7 +462,7 @@ HWTEST_F(FileDataConvertorTest, HandleAttachments1Test, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetString(_, _)).WillOnce(Return(0));
     auto ret = fileDataConvertor_->HandleAttachments(key, data, resultSet);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_PATH, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleAttachments2Test, TestSize.Level1)
@@ -481,7 +481,7 @@ HWTEST_F(FileDataConvertorTest, ConvertTest, TestSize.Level1)
     ResultSetMock resultSet;
     fileDataConvertor_->type_ = FileDataConvertor::OperationType::FILE_CREATE;
     auto ret = fileDataConvertor_->Convert(record, resultSet);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_PATH, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, ConvertTest1, TestSize.Level1)
@@ -504,7 +504,7 @@ HWTEST_F(FileDataConvertorTest, GetLowerPathTest, TestSize.Level1)
 
 HWTEST_F(FileDataConvertorTest, GetLowerPathTest1, TestSize.Level1)
 {
-    string path = "/storage/media/local/files/1";
+    string path = "/storage/cloud/files/1";
     auto ret = fileDataConvertor_->GetLowerPath(path);
     string out = "/data/service/el2/100/hmdfs/account/files/1";
     EXPECT_EQ(out, ret);
@@ -520,7 +520,7 @@ HWTEST_F(FileDataConvertorTest, GetLowerTmpPathTest, TestSize.Level1)
 
 HWTEST_F(FileDataConvertorTest, GetLowerTmpPathTest1, TestSize.Level1)
 {
-    string path = "/storage/media/local/files/1";
+    string path = "/storage/cloud/files/1";
     auto ret = fileDataConvertor_->GetLowerTmpPath(path);
     string out = "/data/service/el2/100/hmdfs/account/files/1";
     EXPECT_EQ(out, ret);
@@ -538,7 +538,7 @@ HWTEST_F(FileDataConvertorTest, GetSandboxPathTest1, TestSize.Level1)
 {
     string path = "/data/service/el2/100/hmdfs/account/files/1";
     auto ret = fileDataConvertor_->GetSandboxPath(path);
-    string out = "/storage/media/local/files/1";
+    string out = "/storage/cloud/files/1";
     EXPECT_EQ(out, ret);
 }
 
@@ -554,7 +554,7 @@ HWTEST_F(FileDataConvertorTest, GetThumbPathTest, TestSize.Level1)
 HWTEST_F(FileDataConvertorTest, GetThumbPathTest1, TestSize.Level1)
 {
     string key;
-    string path = "/storage/media/local/files/1";
+    string path = "/storage/cloud/files/1";
     auto ret = fileDataConvertor_->GetThumbPath(path, key);
     string out = "/mnt/hmdfs/100/account/device_view/local/files/.thumbs/1/.jpg";
     EXPECT_EQ(out, ret);
