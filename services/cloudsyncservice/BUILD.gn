@@ -66,6 +66,7 @@ ohos_shared_library("cloudsync_sa") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -73,7 +74,6 @@ ohos_shared_library("cloudsync_sa") {
   external_deps = [
     "ability_base:want",
     "common_event_service:cesfwk_innerkits",
-    "dfs_service:cloudsync_kit_inner",
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
