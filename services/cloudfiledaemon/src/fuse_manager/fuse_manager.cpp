@@ -275,8 +275,8 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                       struct fuse_file_info *fi)
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
-    shared_ptr<CloudInode> mInode = GetCloudInode(data, ino);
-    string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(mInode->mBase->cloudId);
+    shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+    string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId);
     shared_ptr<DriveKit::DKDatabase> database = GetDatabase(data);
 
     LOGD("open %s", CloudPath(data, ino).c_str());
@@ -284,27 +284,27 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
         fuse_reply_err(req, EPERM);
         return;
     }
-    if (!mInode->readSession) {
+    if (!cInode->readSession) {
         string path = "/data/service/el2/" + to_string(data->userId) +
-               "/hmdfs/fuse" + GetParentDir(mInode->path);
+               "/hmdfs/fuse" + GetParentDir(cInode->path);
         ForceCreateDirectory(path);
         LOGD("recordId: %s, create dir: %s, filename: %s",
-             recordId.c_str(), path.c_str(), mInode->mBase->name.c_str());
+             recordId.c_str(), path.c_str(), cInode->mBase->name.c_str());
         /*
          * 'recordType' is fixed to "fileType" now
          * 'assetKey' is one of "content"/"lcd"/"thumbnail"
          */
-        mInode->readSession = database->NewAssetReadSession("fileType",
+        cInode->readSession = database->NewAssetReadSession("fileType",
                                                             recordId,
                                                             "content",
-                                                            path + "/" + mInode->mBase->name);
+                                                            path + "/" + cInode->mBase->name);
     }
 
-    if (!mInode->readSession) {
+    if (!cInode->readSession) {
         fuse_reply_err(req, EPERM);
     } else {
-        mInode->sessionRefCount++;
-        LOGD("open success, sessionRefCount: %d", mInode->sessionRefCount.load());
+        cInode->sessionRefCount++;
+        LOGD("open success, sessionRefCount: %d", cInode->sessionRefCount.load());
         fuse_reply_open(req, fi);
     }
 }
@@ -312,13 +312,13 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
 static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
-    shared_ptr<CloudInode> mInode = GetCloudInode(data, ino);
+    shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
 
-    LOGD("%s, sessionRefCount: %d", CloudPath(data, ino).c_str(), mInode->sessionRefCount.load());
-    mInode->sessionRefCount--;
-    if (mInode->sessionRefCount == 0) {
+    LOGD("%s, sessionRefCount: %d", CloudPath(data, ino).c_str(), cInode->sessionRefCount.load());
+    cInode->sessionRefCount--;
+    if (cInode->sessionRefCount == 0) {
         LOGD("readSession released");
-        mInode->readSession = nullptr;
+        cInode->readSession = nullptr;
     }
 
     fuse_reply_err(req, 0);
@@ -352,6 +352,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     DriveKit::DKError dkError;
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
 
     LOGD("%s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
 
@@ -363,12 +364,12 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         return;
     }
 
-    if (!GetCloudInode(data, ino)->readSession) {
+    if (!cInode->readSession) {
         fuse_reply_err(req, EPERM);
         return;
     }
 
-    readSize = GetCloudInode(data, ino)->readSession->PRead(off, size, buf.get(), dkError);
+    readSize = cInode->readSession->PRead(off, size, buf.get(), dkError);
     if (dkError.HasError()) {
         LOGE("read error");
         fuse_reply_err(req, EIO);
