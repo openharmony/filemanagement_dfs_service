@@ -40,6 +40,7 @@
 #include <fuse_i.h>
 #include <fuse_lowlevel.h> /* for fuse_cmdline_opts */
 
+#include "datetime_ex.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
 #include "dk_database.h"
@@ -54,9 +55,12 @@ namespace FileManagement {
 namespace CloudFile {
 using namespace std;
 
-const string PHOTOS_BUNDLE_NAME = "com.ohos.photos";
-const unsigned int STAT_NLINK_REG = 1;
-const unsigned int STAT_NLINK_DIR = 2;
+static const string PHOTOS_BUNDLE_NAME = "com.ohos.photos";
+static const unsigned int OID_USER_DATA_RW = 1008;
+static const unsigned int STAT_NLINK_REG = 1;
+static const unsigned int STAT_NLINK_DIR = 2;
+static const unsigned int STAT_MODE_REG = 0770;
+static const unsigned int STAT_MODE_DIR = 0771;
 
 struct CloudInode {
     shared_ptr<MetaBase> mBase{nullptr};
@@ -124,6 +128,7 @@ static shared_ptr<CloudInode> GetRootInode(struct FuseData *data, fuse_ino_t ino
         data->rootNode->refCount = 1;
         data->rootNode->mBase = make_shared<MetaBase>();
         data->rootNode->mBase->mode = S_IFDIR;
+        data->rootNode->mBase->mtime = GetSecondsSince1970ToNow();
         LOGD("create rootNode");
     }
     data->rootNode->mFile = MetaFileMgr::GetInstance().GetMetaFile(data->userId, "/");
@@ -151,12 +156,15 @@ static string CloudPath(struct FuseData *data, fuse_ino_t ino)
 static void GetMetaAttr(shared_ptr<CloudInode> ino, struct stat *stbuf)
 {
     stbuf->st_ino = reinterpret_cast<fuse_ino_t>(ino.get());
+    stbuf->st_uid = OID_USER_DATA_RW;
+    stbuf->st_gid = OID_USER_DATA_RW;
+    stbuf->st_mtime = ino->mBase->mtime;
     if (ino->mBase->mode & S_IFDIR) {
-        stbuf->st_mode = S_IFDIR;
+        stbuf->st_mode = S_IFDIR | STAT_MODE_DIR;
         stbuf->st_nlink = STAT_NLINK_DIR;
         LOGD("directory, ino:%s", ino->path.c_str());
     } else {
-        stbuf->st_mode = S_IFREG;
+        stbuf->st_mode = S_IFREG | STAT_MODE_REG;
         stbuf->st_nlink = STAT_NLINK_REG;
         stbuf->st_size = static_cast<decltype(stbuf->st_size)>(ino->mBase->size);
         LOGD("regular file, ino:%s, size: %lld", ino->path.c_str(), (long long)stbuf->st_size);
