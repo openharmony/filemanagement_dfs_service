@@ -202,12 +202,8 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
     MetaFileMgr::GetInstance().ClearAll();
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     LOGD("Clean callerUserId is: %{public}d", callerUserId);
-    std::string appBundleName;
-    int32_t action = 0;
     for (auto iter = cleanOptions.appActionsData.begin(); iter != cleanOptions.appActionsData.end(); ++iter) {
-        appBundleName = iter->first;
-        action = iter->second;
-        dataSyncManager_->CleanCloudFile(callerUserId, appBundleName, action);
+        dataSyncManager_->CleanCloudFile(callerUserId, iter->first, iter->second);
     }
 
     return E_OK;
