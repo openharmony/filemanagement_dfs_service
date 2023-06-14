@@ -45,6 +45,8 @@ string FileDataConvertor::suffixLCD_ = "/account/device_view/local/files";
 /* basic map */
 unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRecordData &data,
         NativeRdb::ResultSet &resultSet)> FileDataConvertor::map_ = {
+    /* properties */
+    { FILE_PROPERTIES, &FileDataConvertor::HandleProperties },
     /* basic */
     { FILE_ALBUM_ID, &FileDataConvertor::HandleAlbumId },
     { FILE_FILE_NAME, &FileDataConvertor::HandleFileName },
@@ -55,8 +57,6 @@ unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRe
     { FILE_FAVORITE, &FileDataConvertor::HandleFavorite },
     { FILE_DESCRIPTION, &FileDataConvertor::HandleDescription },
     { FILE_RECYCLED, &FileDataConvertor::HandleRecycle },
-    /* properties */
-    { FILE_PROPERTIES, &FileDataConvertor::HandleProperties },
     /* attachments */
     { FILE_ATTACHMENTS, &FileDataConvertor::HandleAttachments },
 };
@@ -64,6 +64,9 @@ unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRe
 /* properties map */
 unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRecordFieldMap &map,
         NativeRdb::ResultSet &resultSet)> FileDataConvertor::pMap_ = {
+    /* general */
+    { FILE_GENERAL, &FileDataConvertor::HandleGeneral },
+    /* basic properties */
     { FILE_HEIGHT, &FileDataConvertor::HandleHeight },
     { FILE_ROTATION, &FileDataConvertor::HandleRotation },
     { FILE_WIDTH, &FileDataConvertor::HandleWidth },
@@ -76,8 +79,6 @@ unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRe
     { FILE_SOURCE_FILE_NAME, &FileDataConvertor::HandleSourceFileName },
     { FILE_SOURCE_PATH, &FileDataConvertor::HandleSourcePath },
     { FILE_TIME_ZONE, &FileDataConvertor::HandleTimeZone },
-    /* general */
-    { FILE_GENERAL, &FileDataConvertor::HandleGeneral }
 };
 
 FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type) : userId_(userId),
@@ -218,7 +219,20 @@ int32_t FileDataConvertor::HandleSource(string &key, DriveKit::DKRecordData &dat
 int32_t FileDataConvertor::HandleFileType(string &key, DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-    data[key] = DriveKit::DKRecordField(1);
+    DriveKit::DKRecordFieldMap properties;
+    auto err = data[FILE_PROPERTIES].GetRecordMap(properties);
+    if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("get properties err %{public}d", err);
+        data[key] = DriveKit::DKRecordField(FILE_TYPE_IMAGE);
+        return E_DATA;
+    }
+
+    int32_t mediaType = properties[MediaColumn::MEDIA_TYPE];
+    if (mediaType == MEDIA_TYPE_VIDEO) {
+        data[key] = DriveKit::DKRecordField(FILE_TYPE_VIDEO);
+    } else if (mediaType == MEDIA_TYPE_IMAGE) {
+        data[key] = DriveKit::DKRecordField(FILE_TYPE_IMAGE);
+    }
     return E_OK;
 }
 

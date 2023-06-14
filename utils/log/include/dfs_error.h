@@ -55,7 +55,8 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_PENDING,
     E_SCHEDULE,
     E_ASYNC_RUN,
-    E_PATH
+    E_PATH,
+    E_DATA,
 };
 
 enum JsErrCode {
