@@ -66,6 +66,32 @@ void CloudSyncCallbackManagerTest::TearDown(void)
 }
 
 /*
+ * @tc.name: RemoveCallbackTest
+ * @tc.desc: Verify the RemoveCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCallbackManagerTest, RemoveCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveCallbackTest Start";
+    try {
+        const string bundleName = "com.ohos.photos";
+        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
+        const int userId = 0;
+        g_managePtr_->AddCallback(bundleName, userId, callback);
+        CloudSyncCallbackManager::CallbackInfo cbInfo;
+        int res = g_managePtr_->callbackListMap_.Find(bundleName, cbInfo);
+        EXPECT_EQ(res, true);
+        EXPECT_NE(cbInfo.callbackProxy, nullptr);
+        g_managePtr_->RemoveCallback(bundleName);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " RemoveCallbackTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "RemoveCallbackTest End";
+}
+
+/*
  * @tc.name: AddCallbackTest
  * @tc.desc: Verify the AddCallback function.
  * @tc.type: FUNC
@@ -114,6 +140,36 @@ HWTEST_F(CloudSyncCallbackManagerTest, SetDeathRecipientTest, TestSize.Level1)
         GTEST_LOG_(INFO) << " SetDeathRecipient ERROR";
     }
     GTEST_LOG_(INFO) << "SetDeathRecipient End";
+}
+
+/*
+ * @tc.name: NotifyTest
+ * @tc.desc: Verify the Notify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCallbackManagerTest, NotifyTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Notify Start";
+    try {
+        const string bundleName = "com.ohos.photos";
+        CloudSyncState state = CloudSyncState::COMPLETED;
+        ErrorType error = ErrorType::NO_ERROR;
+        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
+        const int userId = 0;
+        g_managePtr_->AddCallback(bundleName, userId, callback);
+        CloudSyncCallbackManager::CallbackInfo cbInfo;
+        int res = g_managePtr_->callbackListMap_.Find(bundleName, cbInfo);
+        EXPECT_TRUE(res);
+        auto callbackProxy = cbInfo.callbackProxy;
+        EXPECT_NE(callbackProxy, nullptr);
+        callbackProxy->OnSyncStateChanged(state, error);
+        g_managePtr_->Notify(bundleName, cbInfo, state, error);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " Notify ERROR";
+    }
+    GTEST_LOG_(INFO) << "Notify End";
 }
 
 } // namespace Test

@@ -43,7 +43,7 @@ enum class SyncTriggerType : int32_t {
 class DataSyncer {
 public:
     DataSyncer(const std::string bundleName, const int32_t userId);
-    virtual ~DataSyncer() = default;
+    virtual ~DataSyncer();
 
     /* sync */
     virtual int32_t StartSync(bool forceFlag, SyncTriggerType triggerType);
@@ -138,12 +138,7 @@ private:
         std::shared_ptr<const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>,
         const DriveKit::DKError &);
 
-    /* task */
-    int32_t CommitTask(std::shared_ptr<Task> t);
-    int32_t AddTask(std::shared_ptr<Task> t);
-    int32_t StartTask(std::shared_ptr<Task> t, TaskAction action);
-    void CompleteTask(std::shared_ptr<Task> t);
-
+    /* transaction */
     void BeginTransaction();
     void EndTransaction();
 
@@ -164,7 +159,7 @@ private:
     SyncStateManager syncStateManager_;
 
     /* task management */
-    std::shared_ptr<TaskManager> taskManager_;
+    std::shared_ptr<TaskRunner> taskRunner_;
 
     /* sdk */
     std::shared_ptr<SdkHelper> sdkHelper_;
