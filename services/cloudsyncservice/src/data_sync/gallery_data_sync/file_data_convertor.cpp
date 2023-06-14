@@ -244,7 +244,8 @@ int32_t FileDataConvertor::HandleCreatedTime(string &key, DriveKit::DKRecordData
     if (ret != E_OK) {
         return ret;
     }
-    data[key] = DriveKit::DKRecordField(to_string(val));
+    /* no overflow: 64 >> 32 + 3 */
+    data[key] = DriveKit::DKRecordField(to_string(val * 1000));
     return E_OK;
 }
 
