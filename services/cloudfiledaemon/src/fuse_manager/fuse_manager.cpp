@@ -71,6 +71,7 @@ struct CloudInode {
 struct FuseData {
     int userId;
     shared_ptr<CloudInode> rootNode{nullptr};
+    /* store CloudInode by path */
     map<string, shared_ptr<CloudInode>> inodeCache;
     std::shared_mutex cacheLock;
     shared_ptr<DriveKit::DKDatabase> database;
@@ -167,6 +168,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
 {
     int err = 0;
     shared_ptr<CloudInode> child;
+    bool create = false;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     string childName = (parent == FUSE_ROOT_ID) ? CloudPath(data, parent) + name :
                                                   CloudPath(data, parent) + "/" + name;
@@ -177,6 +179,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     child = FindNode(data, childName);
     if (!child) {
         child = make_shared<CloudInode>();
+        create = true;
         LOGD("new child %s", child->path.c_str());
     }
     child->mBase = make_shared<MetaBase>(name);
@@ -192,9 +195,11 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
                                                               childName);
     }
     child->parent = parent;
-    wLock.lock();
-    data->inodeCache[child->path] = child;
-    wLock.unlock();
+    if (create) {
+        wLock.lock();
+        data->inodeCache[child->path] = child;
+        wLock.unlock();
+    }
     LOGD("lookup success, child: %{private}s, refCount: %lld", child->path.c_str(),
          static_cast<long long>(child->refCount));
     GetMetaAttr(child, &e->attr);
