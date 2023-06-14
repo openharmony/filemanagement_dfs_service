@@ -1,0 +1,60 @@
+# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+ohos_unittest("cloud_pref_impl_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "../../../../../distributeddatamgr/preferences/frameworks/native/src/preferences_value.cpp",
+    "../../../utils/preference/src/cloud_pref_impl.cpp",
+    "../../mock/preference_helper_mock.cpp",
+    "cloud_pref_impl_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/utils/dentry/include",
+    "${distributedfile_path}/utils/log/include",
+    "${distributedfile_path}/utils/preference/include",
+    "../../../../../distributeddatamgr/preferences/interfaces/inner_api/include",
+    "../../../../../distributeddatamgr/preferences/frameworks/native/include",
+  ]
+
+  public_deps =
+      [ "${bas_hiviewdfx_hilog_path}/interfaces/native/innerkits:libhilog" ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "dfs_service:cloudsync_kit_inner",
+    "ipc:ipc_core",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
+group("cloudpref_impl_test") {
+  testonly = true
+
+  deps = [ ":cloud_pref_impl_test" ]
+}
