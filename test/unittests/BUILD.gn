@@ -20,6 +20,6 @@ group("cloudsyncunittests") {
     "cloud_daemon:cloud_daemon_test",
     "cloudsync_api:cloudsync_api_test",
     "cloudsync_sa:cloudsync_sa_test",
-    "utils_preference:cloudpref_impl_test",
+    "utils:utils_test",
   ]
 }

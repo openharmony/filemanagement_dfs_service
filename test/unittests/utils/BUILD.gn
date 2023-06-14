@@ -20,7 +20,7 @@ ohos_unittest("cloud_pref_impl_test") {
     "../../../../../distributeddatamgr/preferences/frameworks/native/src/preferences_value.cpp",
     "../../../utils/preference/src/cloud_pref_impl.cpp",
     "../../mock/preference_helper_mock.cpp",
-    "cloud_pref_impl_test.cpp",
+    "./preference/cloud_pref_impl_test.cpp",
   ]
 
   include_dirs = [
@@ -53,8 +53,39 @@ ohos_unittest("cloud_pref_impl_test") {
   use_exceptions = true
 }
 
-group("cloudpref_impl_test") {
+ohos_unittest("utils_directory_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "./system/utils_directory_test.cpp" ]
+
+  include_dirs = [
+    "${utils_path}/system/include",
+    "${utils_path}/log/include",
+    "//foundation/multimedia/image_framework/mock/native/include/log/",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [ "c_utils:utils" ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_SA\"",
+  ]
+  use_exceptions = true
+}
+
+group("utils_test") {
   testonly = true
 
-  deps = [ ":cloud_pref_impl_test" ]
+  deps = [
+    ":cloud_pref_impl_test",
+    ":utils_directory_test",
+  ]
 }
