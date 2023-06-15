@@ -23,6 +23,7 @@
 #include "ipc/cloud_sync_callback_manager.h"
 #include "meta_file.h"
 #include "sync_rule/battery_status.h"
+#include "sync_rule/cloud_status.h"
 #include "sync_rule/net_conn_callback_observer.h"
 #include "sync_rule/network_status.h"
 #include "utils_log.h"
@@ -170,6 +171,13 @@ int32_t CloudSyncService::StopSyncInner()
 int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+
+    /* update app switch status */
+    auto ret = CloudStatus::ChangeAppSwitch(bundleName, callerUserId, status);
+    if (ret != E_OK) {
+        return ret;
+    }
+
     if (status) {
         return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     }
