@@ -19,5 +19,6 @@ group("cloudsync_sa_test") {
     "data_sync:cloudsync_sa_data_sync_test",
     "dentry:cloudsync_sa_dentry_test",
     "ipc:cloudsync_sa_ipc_test",
+    "log:cloudsync_sa_log_test",
   ]
 }
