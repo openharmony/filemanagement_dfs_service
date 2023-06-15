@@ -307,6 +307,40 @@ HWTEST_F(DataSyncerTest, PullTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CleanTest
+ * @tc.desc: Verify the CleanTest function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, CleanTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanTest Start";
+    int res = datasyncer_->Clean(0);
+    EXPECT_EQ(res, E_OK);
+    GTEST_LOG_(INFO) << "CleanTest end";
+}
+
+/**
+ * @tc.name: CleanInnerTest001
+ * @tc.desc: Verify the CleanInnerTest001 function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, CleanInnerTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanInnerTest001 Start";
+    int action = 0;
+    int32_t userId = 100;
+    string bundleName = "com.ohos.photos";
+    shared_ptr<GalleryDataSyncer> galleryDataSyncer_ = make_shared<GalleryDataSyncer>(bundleName, userId);
+    int res = datasyncer_->CleanInner(galleryDataSyncer_->fileHandler_, action);
+    galleryDataSyncer_ = nullptr;
+    EXPECT_EQ(res, 2);
+    GTEST_LOG_(INFO) << "CleanInnerTest001 end";
+}
+
+
+/**
  * @tc.name: PullRetryRecordsTest
  * @tc.desc: Verify the PullRetryRecords function
  * @tc.type: FUNC
