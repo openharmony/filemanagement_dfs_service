@@ -303,8 +303,8 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
         return E_INVAL_ARG;
     }
 
-    DriveKit::DKDownloadAsset assetsToDownload{
-        assetInfoObj.recordType, assetInfoObj.recordId, assetInfoObj.fieldKey, asset, {}};
+    // Not to pass the assetinfo.fieldkey
+    DriveKit::DKDownloadAsset assetsToDownload{assetInfoObj.recordType, assetInfoObj.recordId, {}, asset, {}};
     return sdkHelper->DownloadAssets(assetsToDownload);
 }
 } // namespace OHOS::FileManagement::CloudSync
