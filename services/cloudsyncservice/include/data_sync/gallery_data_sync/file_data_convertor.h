@@ -31,6 +31,9 @@ namespace CloudSync {
 const std::string THUMB_SUFFIX = "THM";
 const std::string LCD_SUFFIX = "LCD";
 
+/* s -> ms */
+const int32_t SECOND_TO_MILLISECOND = 1000;
+
 class FileDataConvertor : public DataConvertor {
 public:
     enum OperationType {
@@ -60,36 +63,36 @@ private:
     int32_t FillRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
 
     /* basic */
-    int32_t HandleAlbumId(const std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
-    int32_t HandleFileName(const std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
-    int32_t HandleHashId(const std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
-    int32_t HandleSource(const std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
-    int32_t HandleFileType(const std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
-    int32_t HandleCreatedTime(const std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
-    int32_t HandleFavorite(const std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
-    int32_t HandleDescription(const std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
-    int32_t HandleRecycle(const std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleAlbumId(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleFileName(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleHashId(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleSource(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleFileType(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleCreatedTime(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleFavorite(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleDescription(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleRecycle(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
 
     /* properties */
-    int32_t HandleProperties(const std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleProperties(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
 
-    int32_t HandleHeight(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
-    int32_t HandleRotation(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
-    int32_t HandleWidth(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
-    int32_t HandlePosition(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
-    int32_t HandleDataModified(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
-    int32_t HandleDetailTime(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
-    int32_t HandleFileCreateTime(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
-    int32_t HandleFirstUpdateTime(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
-    int32_t HandleRelativeBucketId(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
-    int32_t HandleSourceFileName(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
-    int32_t HandleSourcePath(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
-    int32_t HandleTimeZone(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleHeight(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleRotation(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleWidth(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandlePosition(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleDataModified(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleDetailTime(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleFileCreateTime(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleFirstUpdateTime(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleRelativeBucketId(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleSourceFileName(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleSourcePath(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleTimeZone(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     /* properties - general */
-    int32_t HandleGeneral(const std::string &key, DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleGeneral(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
 
     /* attachments */
-    int32_t HandleAttachments(const std::string &key, DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleAttachments(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
 
     int32_t HandleContent(DriveKit::DKRecordData &data, std::string &path);
     int32_t HandleThumbnail(DriveKit::DKRecordData &data, std::string &path);
@@ -114,14 +117,14 @@ private:
 };
 
 /* basic */
-inline int32_t FileDataConvertor::HandleAlbumId(const std::string &key, DriveKit::DKRecordData &data,
+inline int32_t FileDataConvertor::HandleAlbumId(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-    data[key] = DriveKit::DKRecordField("default-album-1");
+    data[FILE_ALBUM_ID] = DriveKit::DKRecordField("default-album-1");
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleFileName(const std::string &key, DriveKit::DKRecordData &data,
+inline int32_t FileDataConvertor::HandleFileName(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
     std::string val;
@@ -129,25 +132,25 @@ inline int32_t FileDataConvertor::HandleFileName(const std::string &key, DriveKi
     if (ret != E_OK) {
         return ret;
     }
-    data[key] = DriveKit::DKRecordField(val);
+    data[FILE_FILE_NAME] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleHashId(const std::string &key, DriveKit::DKRecordData &data,
+inline int32_t FileDataConvertor::HandleHashId(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-    data[key] = DriveKit::DKRecordField("1");
+    data[FILE_HASH_ID] = DriveKit::DKRecordField("1");
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleSource(const std::string &key, DriveKit::DKRecordData &data,
+inline int32_t FileDataConvertor::HandleSource(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-    data[key] = DriveKit::DKRecordField("");
+    data[FILE_SOURCE] = DriveKit::DKRecordField("");
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleFileType(const std::string &key, DriveKit::DKRecordData &data,
+inline int32_t FileDataConvertor::HandleFileType(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
     DriveKit::DKRecordFieldMap properties;
@@ -157,12 +160,12 @@ inline int32_t FileDataConvertor::HandleFileType(const std::string &key, DriveKi
         return E_DATA;
     }
     int32_t mediaType = properties[Media::MediaColumn::MEDIA_TYPE];
-    data[key] = DriveKit::DKRecordField(mediaType ==
+    data[FILE_FILETYPE] = DriveKit::DKRecordField(mediaType ==
         Media::MEDIA_TYPE_VIDEO ? FILE_TYPE_VIDEO : FILE_TYPE_IMAGE);
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleCreatedTime(const std::string &key, DriveKit::DKRecordData &data,
+inline int32_t FileDataConvertor::HandleCreatedTime(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
     int64_t val;
@@ -171,11 +174,11 @@ inline int32_t FileDataConvertor::HandleCreatedTime(const std::string &key, Driv
         return ret;
     }
     /* no overflow: 64 >> 32 + 3 */
-    data[key] = DriveKit::DKRecordField(std::to_string(val * 1000));
+    data[FILE_CREATED_TIME] = DriveKit::DKRecordField(std::to_string(val * SECOND_TO_MILLISECOND));
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleFavorite(const std::string &key, DriveKit::DKRecordData &data,
+inline int32_t FileDataConvertor::HandleFavorite(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
     int32_t val;
@@ -183,18 +186,18 @@ inline int32_t FileDataConvertor::HandleFavorite(const std::string &key, DriveKi
     if (ret != E_OK) {
         return ret;
     }
-    data[key] = DriveKit::DKRecordField(val);
+    data[FILE_FAVORITE] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleDescription(const std::string &key, DriveKit::DKRecordData &data,
+inline int32_t FileDataConvertor::HandleDescription(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-    data[key] = DriveKit::DKRecordField("");
+    data[FILE_DESCRIPTION] = DriveKit::DKRecordField("");
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleRecycle(const std::string &key, DriveKit::DKRecordData &data,
+inline int32_t FileDataConvertor::HandleRecycle(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
     int64_t val;
@@ -202,12 +205,12 @@ inline int32_t FileDataConvertor::HandleRecycle(const std::string &key, DriveKit
     if (ret != E_OK) {
         return ret;
     }
-    data[key] = DriveKit::DKRecordField(!!val);
+    data[FILE_RECYCLED] = DriveKit::DKRecordField(!!val);
     return E_OK;
 }
 
 /* properties */
-inline int32_t FileDataConvertor::HandleHeight(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandleHeight(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
     int32_t val;
@@ -215,11 +218,11 @@ inline int32_t FileDataConvertor::HandleHeight(const std::string &key, DriveKit:
     if (ret != E_OK) {
         return ret;
     }
-    map[key] = DriveKit::DKRecordField(val);
+    map[FILE_HEIGHT] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleRotation(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandleRotation(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
     int32_t val;
@@ -227,11 +230,11 @@ inline int32_t FileDataConvertor::HandleRotation(const std::string &key, DriveKi
     if (ret != E_OK) {
         return ret;
     }
-    map[key] = DriveKit::DKRecordField(val);
+    map[FILE_ROTATION] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleWidth(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandleWidth(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
     int32_t val;
@@ -239,18 +242,18 @@ inline int32_t FileDataConvertor::HandleWidth(const std::string &key, DriveKit::
     if (ret != E_OK) {
         return ret;
     }
-    map[key] = DriveKit::DKRecordField(val);
+    map[FILE_WIDTH] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandlePosition(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandlePosition(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
-    map[key] = DriveKit::DKRecordField("");
+    map[FILE_POSITION] = DriveKit::DKRecordField("");
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleDataModified(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandleDataModified(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
     int64_t val;
@@ -258,18 +261,18 @@ inline int32_t FileDataConvertor::HandleDataModified(const std::string &key, Dri
     if (ret != E_OK) {
         return ret;
     }
-    map[key] = DriveKit::DKRecordField(std::to_string(val));
+    map[FILE_DATA_MODIFIED] = DriveKit::DKRecordField(std::to_string(val));
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleDetailTime(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandleDetailTime(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
-    map[key] = DriveKit::DKRecordField("");
+    map[FILE_DETAIL_TIME] = DriveKit::DKRecordField("");
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleFileCreateTime(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandleFileCreateTime(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
     int64_t val;
@@ -277,25 +280,25 @@ inline int32_t FileDataConvertor::HandleFileCreateTime(const std::string &key, D
     if (ret != E_OK) {
         return ret;
     }
-    map[key] = DriveKit::DKRecordField(std::to_string(val));
+    map[FILE_FILE_CREATE_TIME] = DriveKit::DKRecordField(std::to_string(val));
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleFirstUpdateTime(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandleFirstUpdateTime(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
-    map[key] = DriveKit::DKRecordField("");
+    map[FILE_FIRST_UPDATE_TIME] = DriveKit::DKRecordField("");
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleRelativeBucketId(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandleRelativeBucketId(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
-    map[key] = DriveKit::DKRecordField("1");
+    map[FILE_RELATIVE_BUCKET_ID] = DriveKit::DKRecordField("1");
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleSourceFileName(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandleSourceFileName(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
     std::string val;
@@ -303,11 +306,11 @@ inline int32_t FileDataConvertor::HandleSourceFileName(const std::string &key, D
     if (ret != E_OK) {
         return ret;
     }
-    map[key] = DriveKit::DKRecordField(val);
+    map[FILE_SOURCE_FILE_NAME] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleSourcePath(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandleSourcePath(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
     std::string val;
@@ -315,14 +318,14 @@ inline int32_t FileDataConvertor::HandleSourcePath(const std::string &key, Drive
     if (ret != E_OK) {
         return ret;
     }
-    map[key] = DriveKit::DKRecordField(val);
+    map[FILE_SOURCE_PATH] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleTimeZone(const std::string &key, DriveKit::DKRecordFieldMap &map,
+inline int32_t FileDataConvertor::HandleTimeZone(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
-    map[key] = DriveKit::DKRecordField("");
+    map[FILE_TIME_ZONE] = DriveKit::DKRecordField("");
     return E_OK;
 }
 } // namespace CloudSync

@@ -105,7 +105,7 @@ public:
 
 #define RETURN_ON_ERR(ret)    \
     do {    \
-        if (ret != E_OK) {    \
+        if ((ret) != E_OK) {    \
             return ret;    \
         }    \
     } while (0)
