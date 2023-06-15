@@ -15,6 +15,8 @@
 
 #include "file_data_handler.h"
 
+#include <cstring>
+#include <dirent.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <filesystem>
@@ -616,27 +618,45 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     assetsToDownload.push_back(downloadAsset);
 }
 
-static int32_t DeleteThumbFile(const std::string &lcdFile, const std::string &thmbFile)
+static int32_t DeleteThumbDir(const string &thmbDir)
 {
-    LOGD("Begin delete thumbFile");
-    int ret = E_OK;
-    if (access(lcdFile.c_str(), F_OK) == 0) {
-        LOGD("lcdFile is exist");
-        ret = remove(lcdFile.c_str());
-        if (ret != 0) {
-            LOGE("Clean remove lcdFile failed, errno %{public}d", errno);
-            return errno;
+    LOGD("Begin delete thumbDir");
+    int res = E_OK;
+    if (access(thmbDir.c_str(), F_OK) != 0) {
+        LOGE("lcdFile is not exist");
+        return E_PATH;
+    }
+
+    LOGD("lcdFile exist");
+    DIR* directory = opendir(thmbDir.c_str());
+    if (directory == nullptr) {
+        LOGE("Failed to open directory");
+        return E_PATH;
+    }
+
+    struct dirent* entry;
+    while ((entry = readdir(directory)) != nullptr) {
+        string fileName = entry->d_name;
+        if (fileName != "." && fileName != "..") {
+            string filePath = thmbDir + "/" + fileName;
+            if (entry->d_type == DT_DIR) {
+                DeleteThumbDir(filePath);
+            } else {
+                int result = remove(filePath.c_str());
+                if (result != 0) {
+                    LOGE("Failed to remove file");
+                    return E_PATH;
+                }
+            }
         }
     }
-    if (access(thmbFile.c_str(), F_OK) == 0) {
-        LOGD("thmbFile is exist");
-        ret = remove(thmbFile.c_str());
-        if (ret != 0) {
-            LOGE("Clean remove thmbFile failed, errno %{public}d", errno);
-            return errno;
-        }
+    closedir(directory);
+    res = rmdir(thmbDir.c_str());
+    if (res != 0) {
+        LOGE("Failed to remove directory");
+        return res;
     }
-    return ret;
+    return res;
 }
 
 int32_t FileDataHandler::DeleteDentryFile(void)
@@ -678,15 +698,15 @@ int32_t FileDataHandler::CleanPureCloudRecord(NativeRdb::ResultSet &local, const
                                               const std::string &filePath)
 {
     int res = E_OK;
-    string lcdFile = cleanConvertor_.GetThumbPath(filePath, LCD_SUFFIX);
     string thmbFile = cleanConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
-    LOGD("filePath: %s, lcdFile: %s, thmbFile: %s", filePath.c_str(), lcdFile.c_str(), thmbFile.c_str());
-    if (action == FileDataHandler::Action::CLEAR_DATA) {
-        res = DeleteThumbFile(lcdFile, thmbFile);
-        if (res != E_OK) {
-            LOGE("Clean unlink thmbFile failed, res %{public}d", res);
-            return res;
-        }
+    filesystem::path thmbFilePath(thmbFile.c_str());
+    filesystem::path thmbFileParentPath = thmbFilePath.parent_path();
+    LOGD("filePath: %s, thmbFile: %s, thmbFileParentDir: %s", filePath.c_str(),
+         thmbFile.c_str(), thmbFileParentPath.string().c_str());
+    res = DeleteThumbDir(thmbFileParentPath.string());
+    if (res != E_OK) {
+        LOGE("Clean remove thmbFileParentPath failed");
+        return res;
     }
     int32_t deleteRows = 0;
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
@@ -705,15 +725,40 @@ int32_t FileDataHandler::CleanPureCloudRecord(NativeRdb::ResultSet &local, const
     return E_OK;
 }
 
-static int32_t DeleteLowerPath(const string &lowerPath)
+static int32_t DeleteAsset(const string &assetPath)
 {
     int ret = E_OK;
-    if (access(lowerPath.c_str(), F_OK) == 0) {
-        ret = remove(lowerPath.c_str());
+    if (access(assetPath.c_str(), F_OK) == 0) {
+        LOGD("assetPath exist");
+        ret = remove(assetPath.c_str());
         if (ret != 0) {
-            LOGE("Clean remove lowerPath failed, errno %{public}d", errno);
+            LOGE("Clean remove assetPath failed, errno %{public}d", errno);
             return errno;
         }
+    }
+    return ret;
+}
+
+int32_t FileDataHandler::CleanNotDirtyData(const string &thmbDir, const string &assetPath, const string &cloudId)
+{
+    int ret = E_OK;
+    ret = DeleteThumbDir(thmbDir);
+    if (ret != E_OK) {
+        LOGE("Clean remove thmbFileParentPath failed");
+        return ret;
+    }
+    ret = DeleteAsset(assetPath);
+    if (ret != E_OK) {
+        LOGE("Clean remove assetPath failed, errno %{public}d", ret);
+        return ret;
+    }
+    int32_t deleteRows = 0;
+    std::string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
+    ret = Delete(deleteRows, whereClause, {cloudId});
+    LOGD("RDB Delete result: %d, deleteRows is: %d", ret, deleteRows);
+    if (ret != 0) {
+        LOGE("Clean delete in rdb failed, ret:%{public}d", ret);
+        return ret;
     }
     return ret;
 }
@@ -728,8 +773,11 @@ int32_t FileDataHandler::CleanNotPureCloudRecord(NativeRdb::ResultSet &local, co
         return res;
     }
     string lowerPath = cleanConvertor_.GetLowerPath(filePath);
-    string lcdFile = cleanConvertor_.GetThumbPath(filePath, LCD_SUFFIX);
     string thmbFile = cleanConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
+    filesystem::path thmbFilePath(thmbFile.c_str());
+    filesystem::path thmbFileParentPath = thmbFilePath.parent_path();
+    LOGD("filePath: %s, thmbFile: %s, thmbFileParentPath: %s, lowerPath: %s", filePath.c_str(),
+         thmbFile.c_str(), thmbFileParentPath.string().c_str(), lowerPath.c_str());
     int32_t ret = E_OK;
     if (action == FileDataHandler::Action::CLEAR_DATA) {
         if (IsLocalDirty(local)) {
@@ -740,23 +788,10 @@ int32_t FileDataHandler::CleanNotPureCloudRecord(NativeRdb::ResultSet &local, co
                 return ret;
             }
         } else {
-            LOGD("data is not dirty, action:clear");
-            ret = DeleteThumbFile(lcdFile, thmbFile);
-            if (ret != E_OK) {
-                LOGE("Clean remove thmbFile failed, ret %{public}d", ret);
-                return ret;
-            }
-            ret = DeleteLowerPath(lowerPath);
-            if (ret != E_OK) {
-                LOGE("Clean remove lowerPath failed, errno %{public}d", ret);
-                return ret;
-            }
-            int32_t deleteRows = 0;
-            string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-            ret = Delete(deleteRows, whereClause, {cloudId});
-            LOGD("RDB Delete result: %d, deleteRows is: %d", ret, deleteRows);
+            LOGD("data is not dirty, action:clear.");
+            ret = CleanNotDirtyData(thmbFileParentPath.string(), lowerPath, cloudId);
             if (ret != 0) {
-                LOGE("Clean delete in rdb failed, ret:%{public}d", ret);
+                LOGE("Clean dirty data failed.");
                 return ret;
             }
         }
@@ -779,7 +814,7 @@ int32_t FileDataHandler::CleanCloudRecord(NativeRdb::ResultSet &local, const int
         LOGD("File is pure cloud data");
         res = CleanPureCloudRecord(local, action, filePath);
         if (res != E_OK) {
-            LOGE("Clean no pure cloud record failed, res:%{public}d", res);
+            LOGE("Clean pure cloud record failed, res:%{public}d", res);
             return res;
         }
     } else {
@@ -809,7 +844,7 @@ int32_t FileDataHandler::Clean(const int action)
         int count = 0;
         res = resultSet->GetRowCount(count);
         if (res != E_OK || count == 0) {
-            LOGE("get row count error or row count is 0, res: %d", res);
+            LOGE("get row count error or row count is 0, res: %{public}d", res);
             break;
         }
         NativeRdb::ResultSet *resultSetPtr = resultSet.get();
@@ -836,7 +871,6 @@ int32_t FileDataHandler::Clean(const int action)
 
     return E_OK;
 }
-
 int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
