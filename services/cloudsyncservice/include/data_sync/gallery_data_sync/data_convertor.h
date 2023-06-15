@@ -102,6 +102,13 @@ public:
         }    \
         map[key] = DriveKit::DKRecordField(val);    \
     } while (0)
+
+#define RETURN_ON_ERR(ret)    \
+    do {    \
+        if (ret != E_OK) {    \
+            return ret;    \
+        }    \
+    } while (0)
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
