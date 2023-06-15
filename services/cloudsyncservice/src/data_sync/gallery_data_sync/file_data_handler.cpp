@@ -1316,7 +1316,7 @@ void FileDataHandler::GetLocalTimeMap(const std::map<DKRecordId, DKRecordOperRes
     OnResultSetConvertToMap(move(resultSet), cloudMap, type);
 }
 
-void FileDataHandler::OnResultSetConvertToMap(const unique_ptr<NativeRdb::ResultSet> resultSet,
+void FileDataHandler::OnResultSetConvertToMap(const shared_ptr<NativeRdb::ResultSet> resultSet,
                                               std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
                                               const std::string &type)
 {
