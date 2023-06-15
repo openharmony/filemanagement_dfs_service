@@ -385,9 +385,8 @@ HWTEST_F(FileDataHandlerTest, RecycleFile001, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
 
-        std::string localPath;
         std::string recordId;
-        int32_t ret = fileDataHandler->RecycleFile(localPath, recordId);
+        int32_t ret = fileDataHandler->RecycleFile(recordId);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -410,11 +409,9 @@ HWTEST_F(FileDataHandlerTest, RecycleFile002, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
-        EXPECT_CALL(*rdb, Delete(_, _, _, _)).WillOnce(Return(1));
 
-        std::string localPath;
         std::string recordId;
-        int32_t ret = fileDataHandler->RecycleFile(localPath, recordId);
+        int32_t ret = fileDataHandler->RecycleFile(recordId);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -422,33 +419,6 @@ HWTEST_F(FileDataHandlerTest, RecycleFile002, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "RecycleFile002 End";
-}
-
-/**
- * @tc.name: RecycleFile003
- * @tc.desc: Verify the RecycleFile function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, RecycleFile003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RecycleFile003 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
-        EXPECT_CALL(*rdb, Delete(_, _, _, _)).WillOnce(Return(0));
-
-        std::string localPath;
-        std::string recordId;
-        int32_t ret = fileDataHandler->RecycleFile(localPath, recordId);
-        EXPECT_EQ(E_OK, ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " RecycleFile003 ERROR";
-    }
-
-    GTEST_LOG_(INFO) << "RecycleFile003 End";
 }
 
 /**

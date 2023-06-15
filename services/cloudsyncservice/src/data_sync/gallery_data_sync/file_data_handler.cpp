@@ -346,7 +346,7 @@ static bool FileIsLocal(NativeRdb::ResultSet &local)
     int ret = DataConvertor::GetInt(PhotoColumn::PHOTO_POSITION, position, local);
     if (ret != E_OK) {
         LOGE("Get local position failed");
-        return E_INVAL_ARG;
+        return false;
     }
 
     return !!(static_cast<uint32_t>(position) & 1);
@@ -436,12 +436,27 @@ int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record, NativeRdb::Res
     return E_OK;
 }
 
+static bool FileIsRecycled(NativeRdb::ResultSet &local)
+{
+    int64_t localDateTrashed = 0;
+    int ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_TRASHED, localDateTrashed, local);
+    if (ret != E_OK) {
+        LOGE("Get local recycled failed");
+        return false;
+    }
 
-int FileDataHandler::RecycleFile(const string &localPath, const string &recordId)
+    return localDateTrashed > 0;
+}
+
+// if cloud delete but local exist, we would do recycle instead of delete
+int FileDataHandler::RecycleFile(const string &recordId)
 {
     LOGI("recycle of record %s", recordId.c_str());
+
     ValuesBucket values;
     values.PutNull(PhotoColumn::PHOTO_CLOUD_ID);
+    values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_NEW));
+    values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_LOCAL);
     values.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, UTCTimeSeconds());
     int32_t changedRows;
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
@@ -459,8 +474,39 @@ int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::Res
     string filePath = GetFilePath(local);
     string localPath = GetLocalPath(userId_, filePath);
 
-    int ret = E_OK;
-    if (IsLocalDirty(local) && FileIsLocal(local)) {
+    bool isLocal = FileIsLocal(local);
+    if (FileIsRecycled(local) || !isLocal) {
+        if (isLocal) {
+            LOGI("force delete instead");
+            int ret = unlink(localPath.c_str());
+            if (ret != 0) {
+                LOGE("unlink local failed, errno %{public}d", errno);
+            }
+        } else { // delete dentry
+            string relativePath, fileName;
+            if (GetDentryPathName(filePath, relativePath, fileName) != E_OK) {
+                LOGE("split to dentry path failed, path:%s", filePath.c_str());
+                return E_INVAL_ARG;
+            }
+            auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
+            MetaBase mBase(fileName);
+            int ret = mFile->DoRemove(mBase);
+            if (ret != E_OK) {
+                LOGE("remove dentry failed, ret:%{public}d", ret);
+            }
+        }
+
+        // delete rdb
+        int32_t deletedRows;
+        int ret = Delete(deletedRows, Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?", {record.GetRecordId()});
+        if (ret != E_OK) {
+            LOGE("delete in rdb failed, ret:%{public}d", ret);
+            return E_INVAL_ARG;
+        }
+        return E_OK;
+    }
+
+    if (IsLocalDirty(local)) {
         LOGI("local record dirty, ignore cloud delete");
         ValuesBucket values;
         values.PutString(PhotoColumn::PHOTO_CLOUD_ID, {});
@@ -468,46 +514,17 @@ int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::Res
         values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_LOCAL);
         int32_t updateRows;
         string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-        ret = Update(updateRows, values, whereClause, {record.GetRecordId()});
-        if (ret != 0) {
+        int ret = Update(updateRows, values, whereClause, {record.GetRecordId()});
+        if (ret != E_OK) {
             LOGE("Update in rdb failed, ret:%{public}d", ret);
         }
         return ret;
     }
 
-    if (FileIsLocal(local)) {
-        if (LocalWriteOpen(localPath)) {
-            return SetRetry(record.GetRecordId());
-        }
-
-        ret = RecycleFile(localPath, record.GetRecordId());
-    } else {
-        // delete dentry
-        string relativePath, fileName;
-        if (GetDentryPathName(filePath, relativePath, fileName) != E_OK) {
-            LOGE("split to dentry path failed, path:%s", filePath.c_str());
-            return E_INVAL_ARG;
-        }
-        auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
-        MetaBase mBase(fileName);
-        ret = mFile->DoRemove(mBase);
-        if (ret != E_OK) {
-            LOGE("remove dentry failed, ret:%{public}d", ret);
-        }
-
-        // delete rdb
-        int32_t deletedRows;
-        string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-        ret = Delete(deletedRows, whereClause, {record.GetRecordId()});
-        if (ret != 0) {
-            LOGE("delete in rdb failed, ret:%{public}d", ret);
-        }
-
-        // delete thumbnail
-        LOGI("force delete success");
+    if (LocalWriteOpen(localPath)) {
+        return SetRetry(record.GetRecordId());
     }
-
-    return ret;
+    return RecycleFile(record.GetRecordId());
 }
 
 int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
@@ -830,7 +847,8 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
     NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    createPredicates.EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)))
+    createPredicates
+        .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)))
         ->And()
         ->EqualTo(Media::PhotoColumn::MEDIA_DATE_TRASHED, "0")
         ->BeginWrap()

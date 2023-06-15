@@ -136,7 +136,7 @@ private:
                              bool &outPullThumbs);
     int32_t PullRecordDelete(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
     int32_t SetRetry(const std::string &recordId);
-    int32_t RecycleFile(const std::string &localPath, const std::string &recordId);
+    int32_t RecycleFile(const std::string &recordId);
 
     void AppendToDownload(const DriveKit::DKRecord &record,
                           const std::string &fieldKey,
