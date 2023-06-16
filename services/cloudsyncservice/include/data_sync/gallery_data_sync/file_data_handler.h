@@ -112,7 +112,7 @@ private:
     /*clean*/
     FileDataConvertor cleanConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_CLEAN };
     int32_t DeleteDentryFile(void);
-    int32_t UpdateDBFields(const std::string &cloudId);
+    int32_t ClearCloudInfo(const std::string &cloudId);
     int32_t CleanCloudRecord(NativeRdb::ResultSet &local, const int action,
                               const std::string &filePath);
     int32_t CleanPureCloudRecord(NativeRdb::ResultSet &local, const int action,
