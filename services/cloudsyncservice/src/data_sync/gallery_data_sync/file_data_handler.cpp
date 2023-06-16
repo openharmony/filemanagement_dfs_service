@@ -245,6 +245,7 @@ int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, bool &outPullT
     }
     values.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
     values.PutInt(Media::PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
+    values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     values.PutString(Media::PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
     ret = Insert(rowId, values);
     if (ret != E_OK) {
@@ -421,6 +422,7 @@ int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record, NativeRdb::Res
     /* update rdb */
     ValuesBucket values;
     createConvertor_.RecordToValueBucket(record, values);
+    values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     int32_t changedRows;
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     ret = Update(changedRows, values, whereClause, {record.GetRecordId()});
@@ -458,6 +460,7 @@ int FileDataHandler::RecycleFile(const string &recordId)
     values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_NEW));
     values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_LOCAL);
     values.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, UTCTimeSeconds());
+    values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, 0);
     int32_t changedRows;
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     int ret = Update(changedRows, values, whereClause, {recordId});
@@ -508,17 +511,7 @@ int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::Res
 
     if (IsLocalDirty(local)) {
         LOGI("local record dirty, ignore cloud delete");
-        ValuesBucket values;
-        values.PutString(PhotoColumn::PHOTO_CLOUD_ID, {});
-        values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_NEW));
-        values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_LOCAL);
-        int32_t updateRows;
-        string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-        int ret = Update(updateRows, values, whereClause, {record.GetRecordId()});
-        if (ret != E_OK) {
-            LOGE("Update in rdb failed, ret:%{public}d", ret);
-        }
-        return ret;
+        return ClearCloudInfo(record.GetRecordId());
     }
 
     if (LocalWriteOpen(localPath)) {
@@ -665,17 +658,18 @@ int32_t FileDataHandler::DeleteDentryFile(void)
     return E_OK;
 }
 
-int32_t FileDataHandler::UpdateDBFields(const string &cloudId)
+int32_t FileDataHandler::ClearCloudInfo(const string &cloudId)
 {
     ValuesBucket values;
-    values.PutNull(MEDIA_DATA_DB_CLOUD_ID);
-    values.PutInt(MEDIA_DATA_DB_DIRTY, static_cast<int32_t>(DirtyType::TYPE_NEW));
-    values.PutInt(MEDIA_DATA_DB_POSITION, POSITION_LOCAL);
+    values.PutNull(PhotoColumn::PHOTO_CLOUD_ID);
+    values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_NEW));
+    values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_LOCAL);
+    values.PutLong(PhotoColumn::PHOTO_CLOUD_VERSION, 0);
     int32_t updateRows = 0;
-    std::string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
+    std::string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     int ret = Update(updateRows, values, whereClause, {cloudId});
-    if (ret != 0) {
-        LOGE("Clean Update in rdb failed, ret:%{public}d", ret);
+    if (ret != E_OK) {
+        LOGE("Update in rdb failed, ret:%{public}d", ret);
     }
     return ret;
 }
@@ -695,9 +689,9 @@ int32_t FileDataHandler::CleanPureCloudRecord(NativeRdb::ResultSet &local, const
         }
     }
     int32_t deleteRows = 0;
-    string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
+    string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     string cloudId;
-    res = DataConvertor::GetString(MEDIA_DATA_DB_CLOUD_ID, cloudId, local);
+    res = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, local);
     if (res != E_OK) {
         LOGE("Get cloud_id fail");
         return res;
@@ -728,7 +722,7 @@ int32_t FileDataHandler::CleanNotPureCloudRecord(NativeRdb::ResultSet &local, co
                                                  const std::string &filePath)
 {
     string cloudId;
-    int res = DataConvertor::GetString(MEDIA_DATA_DB_CLOUD_ID, cloudId, local);
+    int res = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, local);
     if (res != E_OK) {
         LOGE("Get cloud_id fail");
         return res;
@@ -740,7 +734,7 @@ int32_t FileDataHandler::CleanNotPureCloudRecord(NativeRdb::ResultSet &local, co
     if (action == FileDataHandler::Action::CLEAR_DATA) {
         if (IsLocalDirty(local)) {
             LOGD("data is dirty, action:clear");
-            ret = this->UpdateDBFields(cloudId);
+            ret = ClearCloudInfo(cloudId);
             if (ret != E_OK) {
                 LOGE("Clean Update in rdb failed, ret:%{public}d", ret);
                 return ret;
@@ -758,7 +752,7 @@ int32_t FileDataHandler::CleanNotPureCloudRecord(NativeRdb::ResultSet &local, co
                 return ret;
             }
             int32_t deleteRows = 0;
-            std::string whereClause = Media::MEDIA_DATA_DB_CLOUD_ID + " = ?";
+            string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
             ret = Delete(deleteRows, whereClause, {cloudId});
             LOGD("RDB Delete result: %d, deleteRows is: %d", ret, deleteRows);
             if (ret != 0) {
@@ -768,7 +762,7 @@ int32_t FileDataHandler::CleanNotPureCloudRecord(NativeRdb::ResultSet &local, co
         }
     } else {
         LOGD("action:retain");
-        ret = this->UpdateDBFields(cloudId);
+        ret = ClearCloudInfo(cloudId);
         if (ret != E_OK) {
             LOGE("Clean Update in rdb failed, ret:%{public}d", ret);
             return ret;
@@ -783,14 +777,14 @@ int32_t FileDataHandler::CleanCloudRecord(NativeRdb::ResultSet &local, const int
     int res = E_OK;
     if (!FileIsLocal(local)) {
         LOGD("File is pure cloud data");
-        res = this->CleanPureCloudRecord(local, action, filePath);
+        res = CleanPureCloudRecord(local, action, filePath);
         if (res != E_OK) {
             LOGE("Clean no pure cloud record failed, res:%{public}d", res);
             return res;
         }
     } else {
         LOGD("File is not pure cloud data");
-        res = this->CleanNotPureCloudRecord(local, action, filePath);
+        res = CleanNotPureCloudRecord(local, action, filePath);
         if (res != E_OK) {
             LOGE("Clean no pure cloud record failed, res:%{public}d", res);
             return res;
@@ -804,7 +798,7 @@ int32_t FileDataHandler::Clean(const int action)
     LOGD("Enter function FileDataHandler::Clean");
     int res = E_OK;
     NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    cleanPredicates.IsNotNull(Media::MEDIA_DATA_DB_CLOUD_ID);
+    cleanPredicates.IsNotNull(PhotoColumn::PHOTO_CLOUD_ID);
     cleanPredicates.Limit(LIMIT_SIZE);
     while (1) {
         auto resultSet = Query(cleanPredicates, CLEAN_QUERY_COLUMNS);
@@ -822,7 +816,7 @@ int32_t FileDataHandler::Clean(const int action)
 
         while (resultSet->GoToNextRow() == 0) {
             string filePath;
-            res = DataConvertor::GetString(MEDIA_DATA_DB_FILE_PATH, filePath, *resultSetPtr);
+            res = DataConvertor::GetString(PhotoColumn::MEDIA_FILE_PATH, filePath, *resultSetPtr);
             if (res != E_OK) {
                 LOGE("Get path wrong");
                 return E_INVAL_ARG;
@@ -834,7 +828,7 @@ int32_t FileDataHandler::Clean(const int action)
             }
         }
     }
-    res = this->DeleteDentryFile();
+    res = DeleteDentryFile();
     if (res != E_OK) {
         LOGE("Clean remove dentry failed, res:%{public}d", res);
         return res;
@@ -1137,6 +1131,7 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
     ValuesBucket valuesBucket;
     valuesBucket.PutString(Media::PhotoColumn::PHOTO_CLOUD_ID, entry.first);
     valuesBucket.PutInt(Media::PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
+    valuesBucket.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     int32_t changedRows;
     string whereClause = Media::PhotoColumn::MEDIA_FILE_PATH + " = ?";
     vector<string> whereArgs = {path};
@@ -1192,6 +1187,7 @@ int32_t FileDataHandler::OnModifyRecordSuccess(
 
     int32_t changedRows;
     string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
+    valuesBucket.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     int32_t ret = Update(changedRows, valuesBucket, whereClause, {cloudId});
     if (ret != 0) {
         LOGE("on modify records update synced err %{public}d", ret);
