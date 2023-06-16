@@ -27,7 +27,7 @@ namespace OHOS::FileManagement::CloudSync {
 template<typename T, typename RET, typename... ARGS>
 std::function<RET(ARGS...)> DataSyncer::AsyncCallback(RET(T::*f)(ARGS...))
 {
-    return nullptr;
+    return taskRunner_->AsyncCallback<DataSyncer>(f, this);
 }
 }
 
