@@ -58,6 +58,12 @@ const std::string FILE_CONTENT = "content";
 const std::string FILE_THUMBNAIL = "thumbnail";
 const std::string FILE_LCD = "lcdThumbnail";
 
+/* file type */
+enum {
+    FILE_TYPE_IMAGE = 1,
+    FILE_TYPE_VIDEO = 4,
+};
+
 const int32_t POSITION_LOCAL = 1;
 const int32_t POSITION_CLOUD = 2;
 const int32_t POSITION_BOTH = 3;

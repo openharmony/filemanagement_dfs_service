@@ -41,6 +41,7 @@ public:
     /* lock */
     int32_t GetLock(DriveKit::DKLock &lock);
     void DeleteLock(DriveKit::DKLock &lock);
+    void ResetLock(DriveKit::DKLock &lock);
 
     /* record download */
     using FetchRecordsCallback = std::function<void(const std::shared_ptr<DriveKit::DKContext>,
