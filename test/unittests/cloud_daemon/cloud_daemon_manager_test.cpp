@@ -61,6 +61,7 @@ HWTEST_F(CloudDaemonManagerTest, GetInstanceTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetInstanceTest Start";
     try {
         CloudDaemonManager::GetInstance();
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "GetInstanceTest  ERROR";

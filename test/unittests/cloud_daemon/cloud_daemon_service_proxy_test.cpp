@@ -20,6 +20,58 @@
 #include "cloud_daemon_service_proxy.h"
 #include "dfs_error.h"
 #include "utils_log.h"
+#include "iservice_registry.h"
+#include "if_system_ability_manager.h"
+#include "ipc_skeleton.h"
+
+static bool isamflag_ = true;
+static bool smcflag = true;
+
+namespace OHOS {
+class RemoteObject : public IRemoteObject {
+public:
+    virtual int32_t GetObjectRefCount() {
+        return 0;
+    }
+    virtual int SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+        return 0;
+    }
+    virtual bool AddDeathRecipient(const sptr<DeathRecipient> &recipient) {
+        return 0;
+    }
+    virtual bool RemoveDeathRecipient(const sptr<DeathRecipient> &recipient) {
+        return false;
+    }
+    virtual int Dump(int fd, const std::vector<std::u16string> &args) {
+        return 0;
+    }
+};
+
+sptr<IRemoteObject> ISystemAbilityManager::CheckSystemAbility(int32_t systemAbilityId) {
+    if (isamflag_ == true) {
+        sptr<IRemoteObject>  isamObject = sptr(new RemoteObject());
+        return isamObject;
+    } else {
+        return nullptr;
+    }
+    return nullptr;
+}
+
+SystemAbilityManagerClient& SystemAbilityManagerClient::GetInstance() {
+    static auto instance = new SystemAbilityManagerClient();
+    return *instance;
+}
+
+sptr<ISystemAbilityManager> SystemAbilityManagerClient::GetSystemAbilityManager() {
+    if (smcflag == true) {
+        sptr<IRemoteObject>  smcObject = IPCSkeleton::GetContextObject();
+        systemAbilityManager_ = iface_cast<ISystemAbilityManager>(smcObject);
+        return systemAbilityManager_;
+    } else {
+        return nullptr;
+    }
+}
+}
 
 namespace OHOS::FileManagement::CloudFile::Test {
 using namespace testing;
@@ -55,23 +107,43 @@ void CloudDaemonServiceProxyTest::TearDown(void)
 }
 
 /**
- * @tc.name: GetInstanceTest
+ * @tc.name: GetInstanceTest001
  * @tc.desc: Verify the GetInstance function
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudDaemonServiceProxyTest, GetInstanceTest, TestSize.Level1)
+HWTEST_F(CloudDaemonServiceProxyTest, GetInstanceTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetInstanceTest Start";
+    GTEST_LOG_(INFO) << "GetInstanceTest001 Start";
     try {
-        EXPECT_EQ(CloudDaemonServiceProxy::serviceProxy_, nullptr);
+        smcflag = false;
+        auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
+        EXPECT_EQ(CloudDaemonServiceProxy, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetInstanceTest001  ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetInstanceTest001 End";
+}
+
+/**
+ * @tc.name: GetInstanceTest002
+ * @tc.desc: Verify the GetInstance function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDaemonServiceProxyTest, GetInstanceTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInstanceTest002 Start";
+    try {
+        smcflag = true;
         auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
         EXPECT_NE(CloudDaemonServiceProxy, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "GetInstanceTest  ERROR";
+        GTEST_LOG_(INFO) << "GetInstanceTest002  ERROR";
     }
-    GTEST_LOG_(INFO) << "GetInstanceTest End";
+    GTEST_LOG_(INFO) << "GetInstanceTest002 End";
 }
 
 /**
@@ -84,6 +156,7 @@ HWTEST_F(CloudDaemonServiceProxyTest, InvaildInstanceTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InvaildInstanceTest Start";
     try {
+        smcflag = true;
         auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
         EXPECT_NE(CloudDaemonServiceProxy, nullptr);
         CloudDaemonServiceProxy::InvaildInstance();
@@ -105,16 +178,23 @@ HWTEST_F(CloudDaemonServiceProxyTest, StartFuseTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartFuseTest Start";
     try {
+        smcflag = true;
         auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
         EXPECT_NE(CloudDaemonServiceProxy, nullptr);
         MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudDaemon::GetDescriptor()));
         int32_t devFd = open("/dev/fuse", O_RDWR);
-        EXPECT_GE(devFd, 0);
+        EXPECT_GT(devFd, 0);
         string path = "/dev/fuse";
         int32_t userId = 100;
         int32_t ret = CloudDaemonServiceProxy->StartFuse(userId, devFd, path);
-        EXPECT_NE(ret, E_OK);
+        EXPECT_EQ(ret, E_BROKEN_IPC);
+        auto remoteObject = CloudDaemonServiceProxy->AsObject();
+        EXPECT_NE(remoteObject, nullptr);
+        ret = remoteObject->SendRequest(ICloudDaemon::CLOUD_DAEMON_CMD_START_FUSE, data, reply, option);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartFuseTest  ERROR";
