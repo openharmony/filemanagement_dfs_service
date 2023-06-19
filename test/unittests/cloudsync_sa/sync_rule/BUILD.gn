@@ -14,6 +14,33 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
+ohos_unittest("net_conn_callback_observer_test") {
+  module_out_path = "filemanagement/dfs_service"
+  sources = [ "net_conn_callback_observer_test.cpp" ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/sync_rule",
+  ]
+
+  deps = [
+    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "common_event_service:cesfwk_innerkits",
+    "netmanager_base:net_conn_manager_if",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("battery_status_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [ "battery_status_test.cpp" ]
@@ -69,5 +96,6 @@ group("cloudsync_sa_sync_rule_test") {
   deps = [
     ":battery_status_test",
     ":cloud_status_test",
+    ":net_conn_callback_observer_test",
   ]
 }
