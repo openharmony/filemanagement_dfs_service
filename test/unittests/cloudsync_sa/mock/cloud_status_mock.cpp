@@ -15,10 +15,26 @@
 
 #include "sync_rule/cloud_status.h"
 
-namespace OHOS::FileManagement::CloudSync {
+#include "dfs_error.h"
 
-bool CloudStatus::IsCloudStatusOkay(const std::string bundleName)
+namespace OHOS::FileManagement::CloudSync {
+int32_t CloudStatus::GetCurrentCloudInfo(const std::string &bundleName, const int32_t userId)
+{
+    return E_OK;
+}
+
+bool CloudStatus::IsCloudStatusOkay(const std::string &bundleName, const int32_t userId)
 {
     return true;
+}
+
+int32_t CloudStatus::ChangeAppSwitch(const std::string &bundleName, const int32_t userId, bool appSwitchStatus)
+{
+    return E_OK;
+}
+
+bool CloudStatus::IsAccountIdChanged(const std::string &accountId)
+{
+    return false;
 }
 } // namespace OHOS::FileManagement::CloudSync

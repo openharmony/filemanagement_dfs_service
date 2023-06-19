@@ -89,7 +89,7 @@ private:
     void GetLocalTimeMap(const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &map,
                          std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
                          const std::string &type);
-    void OnResultSetConvertToMap(const std::unique_ptr<NativeRdb::ResultSet> resultSet,
+    void OnResultSetConvertToMap(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
                                  std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
                                  const std::string &type);
     int32_t OnRecordFailed(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
@@ -97,7 +97,8 @@ private:
     int32_t HandleATFailed();
     int32_t HandleNameConflict();
     int32_t HandleNameInvalid();
-    static inline const std::string TABLE_NAME = "Files";
+    int64_t UTCTimeSeconds();
+    static inline const std::string TABLE_NAME = Media::PhotoColumn::PHOTOS_TABLE;
     static inline const int32_t LIMIT_SIZE = 5;
     DriveKit::DKRecordType recordType_ = "media";
     DriveKit::DKFieldKeyArray desiredKeys_;
@@ -111,7 +112,7 @@ private:
     /*clean*/
     FileDataConvertor cleanConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_CLEAN };
     int32_t DeleteDentryFile(void);
-    int32_t UpdateDBFields(const std::string &cloudId);
+    int32_t ClearCloudInfo(const std::string &cloudId);
     int32_t CleanCloudRecord(NativeRdb::ResultSet &local, const int action,
                               const std::string &filePath);
     int32_t CleanPureCloudRecord(NativeRdb::ResultSet &local, const int action,
@@ -135,7 +136,7 @@ private:
                              bool &outPullThumbs);
     int32_t PullRecordDelete(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
     int32_t SetRetry(const std::string &recordId);
-    int32_t RecycleFile(const std::string &localPath, const std::string &recordId);
+    int32_t RecycleFile(const std::string &recordId);
 
     void AppendToDownload(const DriveKit::DKRecord &record,
                           const std::string &fieldKey,

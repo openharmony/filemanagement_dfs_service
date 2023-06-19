@@ -385,9 +385,8 @@ HWTEST_F(FileDataHandlerTest, RecycleFile001, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
 
-        std::string localPath;
         std::string recordId;
-        int32_t ret = fileDataHandler->RecycleFile(localPath, recordId);
+        int32_t ret = fileDataHandler->RecycleFile(recordId);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -410,45 +409,16 @@ HWTEST_F(FileDataHandlerTest, RecycleFile002, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
-        EXPECT_CALL(*rdb, Delete(_, _, _, _)).WillOnce(Return(1));
 
-        std::string localPath;
         std::string recordId;
-        int32_t ret = fileDataHandler->RecycleFile(localPath, recordId);
-        EXPECT_NE(E_OK, ret);
+        int32_t ret = fileDataHandler->RecycleFile(recordId);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " RecycleFile002 ERROR";
     }
 
     GTEST_LOG_(INFO) << "RecycleFile002 End";
-}
-
-/**
- * @tc.name: RecycleFile003
- * @tc.desc: Verify the RecycleFile function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, RecycleFile003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RecycleFile003 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
-        EXPECT_CALL(*rdb, Delete(_, _, _, _)).WillOnce(Return(0));
-
-        std::string localPath;
-        std::string recordId;
-        int32_t ret = fileDataHandler->RecycleFile(localPath, recordId);
-        EXPECT_EQ(E_OK, ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " RecycleFile003 ERROR";
-    }
-
-    GTEST_LOG_(INFO) << "RecycleFile003 End";
 }
 
 /**
@@ -545,7 +515,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateIsTimeChangedd002, TestSize.Level1)
         std::string path = "";
         std::string type = "hh";
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_FILE_PATH, DriveKit::DKRecordField("123")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("123")));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         int32_t ret = fileDataHandler->OnCreateIsTimeChanged(data, localMap, path, type);
         EXPECT_EQ(ret, true);
@@ -571,9 +541,9 @@ HWTEST_F(FileDataHandlerTest, OnCreateIsTimeChanged003, TestSize.Level1)
         DriveKit::DKRecordData data;
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
         std::string path = "";
-        std::string type = Media::MEDIA_DATA_DB_META_DATE_MODIFIED;
+        std::string type = Media::PhotoColumn::PHOTO_META_DATE_MODIFIED;
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         int32_t ret = fileDataHandler->OnCreateIsTimeChanged(data, localMap, path, type);
         EXPECT_EQ(ret, true);
@@ -599,10 +569,10 @@ HWTEST_F(FileDataHandlerTest, OnCreateIsTimeChanged004, TestSize.Level1)
         DriveKit::DKRecordData data;
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
         std::string path = "hh";
-        std::string type = Media::MEDIA_DATA_DB_META_DATE_MODIFIED;
+        std::string type = Media::PhotoColumn::PHOTO_META_DATE_MODIFIED;
         localMap[path] = std::make_pair(1111, 1111);
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         int32_t ret = fileDataHandler->OnCreateIsTimeChanged(data, localMap, path, type);
         EXPECT_EQ(ret, false);
@@ -629,11 +599,11 @@ HWTEST_F(FileDataHandlerTest, OnCreateIsTimeChanged005, TestSize.Level1)
         DriveKit::DKRecordData data;
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
         std::string path = "hh";
-        std::string type = Media::MEDIA_DATA_DB_DATE_MODIFIED;
+        std::string type = Media::PhotoColumn::MEDIA_DATE_MODIFIED;
 
         localMap[path] = std::make_pair(11, 11);
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
 
         int32_t ret = fileDataHandler->OnCreateIsTimeChanged(data, localMap, path, type);
@@ -687,7 +657,7 @@ HWTEST_F(FileDataHandlerTest, OnModifyIsTimeChanged002, TestSize.Level1)
         std::string cloudId = "";
         std::string type = "hh";
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_FILE_PATH, DriveKit::DKRecordField("123")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("123")));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         int32_t ret = fileDataHandler->OnModifyIsTimeChanged(data, localMap, cloudId, type);
         EXPECT_EQ(ret, true);
@@ -713,9 +683,9 @@ HWTEST_F(FileDataHandlerTest, OnModifyIsTimeChanged003, TestSize.Level1)
         DriveKit::DKRecordData data;
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
         std::string cloudId = "";
-        std::string type = Media::MEDIA_DATA_DB_META_DATE_MODIFIED;
+        std::string type = Media::PhotoColumn::PHOTO_META_DATE_MODIFIED;
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         int32_t ret = fileDataHandler->OnModifyIsTimeChanged(data, localMap, cloudId, type);
         EXPECT_EQ(ret, true);
@@ -741,10 +711,10 @@ HWTEST_F(FileDataHandlerTest, OnModifyIsTimeChanged004, TestSize.Level1)
         DriveKit::DKRecordData data;
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
         std::string cloudId = "hh";
-        std::string type = Media::MEDIA_DATA_DB_META_DATE_MODIFIED;
+        std::string type = Media::PhotoColumn::PHOTO_META_DATE_MODIFIED;
         localMap[cloudId] = std::make_pair(1111, 1111);
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         int32_t ret = fileDataHandler->OnModifyIsTimeChanged(data, localMap, cloudId, type);
         EXPECT_EQ(ret, false);
@@ -770,10 +740,10 @@ HWTEST_F(FileDataHandlerTest, OnModifyIsTimeChanged005, TestSize.Level1)
         DriveKit::DKRecordData data;
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
         std::string cloudId = "hh";
-        std::string type = Media::MEDIA_DATA_DB_DATE_MODIFIED;
+        std::string type = Media::PhotoColumn::MEDIA_DATE_MODIFIED;
         localMap[cloudId] = std::make_pair(11, 11);
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         int32_t ret = fileDataHandler->OnModifyIsTimeChanged(data, localMap, cloudId, type);
         EXPECT_EQ(ret, true);
@@ -863,7 +833,7 @@ HWTEST_F(FileDataHandlerTest, GetLocalTimeMap003, TestSize.Level1)
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr)));
         DriveKit::DKRecordData data2;
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_FILE_PATH, DriveKit::DKRecordField("123")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("123")));
         data2.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
@@ -966,7 +936,7 @@ HWTEST_F(FileDataHandlerTest, OnResultSetConvertToMap001, TestSize.Level1)
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(0));
-        fileDataHandler->OnResultSetConvertToMap(move(rset), cloudMap, Media::MEDIA_DATA_DB_CLOUD_ID);
+        fileDataHandler->OnResultSetConvertToMap(move(rset), cloudMap, Media::PhotoColumn::PHOTO_CLOUD_ID);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " OnResultSetConvertToMap001 ERROR";
@@ -1248,9 +1218,9 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess003, TestSize.Level1)
         std::string path = "hh";
         DriveKit::DKRecordFieldMap prop;
         localMap[path] = std::make_pair(1111, 1111);
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_FILE_PATH, DriveKit::DKRecordField("hh")));
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("hh")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
@@ -1320,8 +1290,8 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccesss002, TestSize.Level1)
         std::string cloudId = "hh";
         localMap[cloudId] = std::make_pair(1111, 1111);
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
@@ -1358,8 +1328,8 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccesss003, TestSize.Level1)
         std::string cloudId = "hh";
         localMap[cloudId] = std::make_pair(1111, 11);
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
@@ -1394,8 +1364,8 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess004, TestSize.Level1)
         std::string cloudId = "hh";
         localMap[cloudId] = std::make_pair(1111, 11);
         DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
@@ -1592,7 +1562,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecords001, TestSize.Level1)
         EXPECT_EQ(E_OK, ret);
         myMap.clear();
         data.clear();
-        prop.insert(std::make_pair(Media::MEDIA_DATA_DB_FILE_PATH, DriveKit::DKRecordField("hh")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("hh")));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));

@@ -23,6 +23,7 @@
 #include "ipc/cloud_sync_callback_manager.h"
 #include "meta_file.h"
 #include "sync_rule/battery_status.h"
+#include "sync_rule/cloud_status.h"
 #include "sync_rule/net_conn_callback_observer.h"
 #include "sync_rule/network_status.h"
 #include "utils_log.h"
@@ -170,6 +171,13 @@ int32_t CloudSyncService::StopSyncInner()
 int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+
+    /* update app switch status */
+    auto ret = CloudStatus::ChangeAppSwitch(bundleName, callerUserId, status);
+    if (ret != E_OK) {
+        return ret;
+    }
+
     if (status) {
         return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     }
@@ -202,12 +210,8 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
     MetaFileMgr::GetInstance().ClearAll();
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     LOGD("Clean callerUserId is: %{public}d", callerUserId);
-    std::string appBundleName;
-    int32_t action = 0;
     for (auto iter = cleanOptions.appActionsData.begin(); iter != cleanOptions.appActionsData.end(); ++iter) {
-        appBundleName = iter->first;
-        action = iter->second;
-        dataSyncManager_->CleanCloudFile(callerUserId, appBundleName, action);
+        dataSyncManager_->CleanCloudFile(callerUserId, iter->first, iter->second);
     }
 
     return E_OK;
@@ -299,8 +303,8 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
         return E_INVAL_ARG;
     }
 
-    DriveKit::DKDownloadAsset assetsToDownload{
-        assetInfoObj.recordType, assetInfoObj.recordId, assetInfoObj.fieldKey, asset, {}};
+    // Not to pass the assetinfo.fieldkey
+    DriveKit::DKDownloadAsset assetsToDownload{assetInfoObj.recordType, assetInfoObj.recordId, {}, asset, {}};
     return sdkHelper->DownloadAssets(assetsToDownload);
 }
 } // namespace OHOS::FileManagement::CloudSync

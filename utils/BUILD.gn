@@ -85,7 +85,7 @@ ohos_shared_library("libdistributedfileutils") {
   ]
 
   part_name = "dfs_service"
-  innerapi_tags = [ "platformsdk_indirect" ]
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "filemanagement"
 }
 

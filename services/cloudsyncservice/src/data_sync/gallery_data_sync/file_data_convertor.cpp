@@ -20,11 +20,6 @@
 #include "medialibrary_db_const.h"
 #include "thumbnail_const.h"
 
-#include "dfs_error.h"
-#include "utils_log.h"
-#include "sdk_helper.h"
-#include "gallery_file_const.h"
-
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
@@ -42,44 +37,6 @@ string FileDataConvertor::sandboxPrefix_ = "/storage/cloud/files";
 string FileDataConvertor::prefixLCD_ = "/mnt/hmdfs/";
 string FileDataConvertor::suffixLCD_ = "/account/device_view/local/files";
 
-/* basic map */
-unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRecordData &data,
-        NativeRdb::ResultSet &resultSet)> FileDataConvertor::map_ = {
-    /* basic */
-    { FILE_ALBUM_ID, &FileDataConvertor::HandleAlbumId },
-    { FILE_FILE_NAME, &FileDataConvertor::HandleFileName },
-    { FILE_HASH_ID, &FileDataConvertor::HandleHashId },
-    { FILE_SOURCE, &FileDataConvertor::HandleSource },
-    { FILE_FILETYPE, &FileDataConvertor::HandleFileType },
-    { FILE_CREATED_TIME, &FileDataConvertor::HandleCreatedTime },
-    { FILE_FAVORITE, &FileDataConvertor::HandleFavorite },
-    { FILE_DESCRIPTION, &FileDataConvertor::HandleDescription },
-    { FILE_RECYCLED, &FileDataConvertor::HandleRecycle },
-    /* properties */
-    { FILE_PROPERTIES, &FileDataConvertor::HandleProperties },
-    /* attachments */
-    { FILE_ATTACHMENTS, &FileDataConvertor::HandleAttachments },
-};
-
-/* properties map */
-unordered_map<string, int32_t (FileDataConvertor::*)(string &key, DriveKit::DKRecordFieldMap &map,
-        NativeRdb::ResultSet &resultSet)> FileDataConvertor::pMap_ = {
-    { FILE_HEIGHT, &FileDataConvertor::HandleHeight },
-    { FILE_ROTATION, &FileDataConvertor::HandleRotation },
-    { FILE_WIDTH, &FileDataConvertor::HandleWidth },
-    { FILE_POSITION, &FileDataConvertor::HandlePosition },
-    { FILE_DATA_MODIFIED, &FileDataConvertor::HandleDataModified },
-    { FILE_DETAIL_TIME, &FileDataConvertor::HandleDetailTime },
-    { FILE_FILE_CREATE_TIME, &FileDataConvertor::HandleFileCreateTime },
-    { FILE_FIRST_UPDATE_TIME, &FileDataConvertor::HandleFirstUpdateTime },
-    { FILE_RELATIVE_BUCKET_ID, &FileDataConvertor::HandleRelativeBucketId },
-    { FILE_SOURCE_FILE_NAME, &FileDataConvertor::HandleSourceFileName },
-    { FILE_SOURCE_PATH, &FileDataConvertor::HandleSourcePath },
-    { FILE_TIME_ZONE, &FileDataConvertor::HandleTimeZone },
-    /* general */
-    { FILE_GENERAL, &FileDataConvertor::HandleGeneral }
-};
-
 FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type) : userId_(userId),
     bundleName_(bundleName), type_(type)
 {
@@ -87,18 +44,24 @@ FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, Operati
 
 int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet)
 {
-    /* data */
     DriveKit::DKRecordData data;
-    for (auto it = map_.begin(); it != map_.end(); it++) {
-        string &key = const_cast<string &>(it->first);
-        int32_t ret = (this->*(it->second))(key, data, resultSet);
-        if (ret != E_OK) {
-            LOGE("%{private}s convert err %{public}d", key.c_str(), ret);
-            return ret;
-        }
-    }
-    record.SetRecordData(data);
+    /* properties */
+    RETURN_ON_ERR(HandleProperties(data, resultSet));
+    /* basic */
+    RETURN_ON_ERR(HandleAlbumId(data, resultSet));
+    RETURN_ON_ERR(HandleFileName(data, resultSet));
+    RETURN_ON_ERR(HandleHashId(data, resultSet));
+    RETURN_ON_ERR(HandleSource(data, resultSet));
+    RETURN_ON_ERR(HandleFileType(data, resultSet));
+    RETURN_ON_ERR(HandleCreatedTime(data, resultSet));
+    RETURN_ON_ERR(HandleFavorite(data, resultSet));
+    RETURN_ON_ERR(HandleDescription(data, resultSet));
+    RETURN_ON_ERR(HandleRecycle(data, resultSet));
+    /* attachments */
+    RETURN_ON_ERR(HandleAttachments(data, resultSet));
 
+    /* set data */
+    record.SetRecordData(data);
     /* control info */
     record.SetRecordType(recordType_);
     if (type_ == FILE_CREATE) {
@@ -110,29 +73,37 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
             return ret;
         }
     }
-
     return E_OK;
 }
 
 /* properties */
-int32_t FileDataConvertor::HandleProperties(string &key, DriveKit::DKRecordData &data,
+int32_t FileDataConvertor::HandleProperties(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
     DriveKit::DKRecordFieldMap map;
-    for (auto it = pMap_.begin(); it != pMap_.end(); it++) {
-        string &key = const_cast<string &>(it->first);
-        int32_t ret = (this->*(it->second))(key, map, resultSet);
-        if (ret != E_OK) {
-            LOGE("%{private}s convert err %{public}d", key.c_str(), ret);
-            return ret;
-        }
-    }
-    data[key] = DriveKit::DKRecordField(map);
+    /* general */
+    RETURN_ON_ERR(HandleGeneral(map, resultSet));
+    /* basic properties */
+    RETURN_ON_ERR(HandleHeight(map, resultSet));
+    RETURN_ON_ERR(HandleRotation(map, resultSet));
+    RETURN_ON_ERR(HandleWidth(map, resultSet));
+    RETURN_ON_ERR(HandlePosition(map, resultSet));
+    RETURN_ON_ERR(HandleDataModified(map, resultSet));
+    RETURN_ON_ERR(HandleDetailTime(map, resultSet));
+    RETURN_ON_ERR(HandleFileCreateTime(map, resultSet));
+    RETURN_ON_ERR(HandleFirstUpdateTime(map, resultSet));
+    RETURN_ON_ERR(HandleRelativeBucketId(map, resultSet));
+    RETURN_ON_ERR(HandleSourceFileName(map, resultSet));
+    RETURN_ON_ERR(HandleSourcePath(map, resultSet));
+    RETURN_ON_ERR(HandleTimeZone(map, resultSet));
+
+    /* set map */
+    data[FILE_PROPERTIES] = DriveKit::DKRecordField(map);
     return E_OK;
 }
 
 /* attachments */
-int32_t FileDataConvertor::HandleAttachments(std::string &key, DriveKit::DKRecordData &data,
+int32_t FileDataConvertor::HandleAttachments(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
     if (type_ != FILE_CREATE && type_ != FILE_DATA_MODIFY) {
@@ -141,7 +112,7 @@ int32_t FileDataConvertor::HandleAttachments(std::string &key, DriveKit::DKRecor
 
     /* path */
     string path;
-    int32_t ret = GetString(MEDIA_DATA_DB_FILE_PATH, path, resultSet);
+    int32_t ret = GetString(PhotoColumn::MEDIA_FILE_PATH, path, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -173,7 +144,7 @@ int32_t FileDataConvertor::FillRecordId(DriveKit::DKRecord &record,
     NativeRdb::ResultSet &resultSet)
 {
     string val;
-    int32_t ret = GetString(MEDIA_DATA_DB_CLOUD_ID, val, resultSet);
+    int32_t ret = GetString(PhotoColumn::PHOTO_CLOUD_ID, val, resultSet);
     if (ret != E_OK) {
         return ret;
     }
@@ -181,212 +152,8 @@ int32_t FileDataConvertor::FillRecordId(DriveKit::DKRecord &record,
     return E_OK;
 }
 
-/* basic */
-int32_t FileDataConvertor::HandleAlbumId(string &key, DriveKit::DKRecordData &data,
-    NativeRdb::ResultSet &resultSet)
-{
-    data[key] = DriveKit::DKRecordField("default-album-1");
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleFileName(string &key, DriveKit::DKRecordData &data,
-    NativeRdb::ResultSet &resultSet)
-{
-    string val;
-    int32_t ret = GetString(MEDIA_DATA_DB_NAME, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    data[key] = DriveKit::DKRecordField(val);
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleHashId(string &key, DriveKit::DKRecordData &data,
-    NativeRdb::ResultSet &resultSet)
-{
-    data[key] = DriveKit::DKRecordField("1");
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleSource(string &key, DriveKit::DKRecordData &data,
-    NativeRdb::ResultSet &resultSet)
-{
-    data[key] = DriveKit::DKRecordField("");
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleFileType(string &key, DriveKit::DKRecordData &data,
-    NativeRdb::ResultSet &resultSet)
-{
-    data[key] = DriveKit::DKRecordField(1);
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleCreatedTime(string &key, DriveKit::DKRecordData &data,
-    NativeRdb::ResultSet &resultSet)
-{
-    int64_t val;
-    int32_t ret = GetLong(MEDIA_DATA_DB_DATE_ADDED, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    data[key] = DriveKit::DKRecordField(to_string(val));
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleFavorite(string &key, DriveKit::DKRecordData &data,
-    NativeRdb::ResultSet &resultSet)
-{
-    int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_IS_FAV, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    data[key] = DriveKit::DKRecordField(val);
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleDescription(string &key, DriveKit::DKRecordData &data,
-    NativeRdb::ResultSet &resultSet)
-{
-    data[key] = DriveKit::DKRecordField("");
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleRecycle(string &key, DriveKit::DKRecordData &data,
-    NativeRdb::ResultSet &resultSet)
-{
-    int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_IS_TRASH, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    data[key] = DriveKit::DKRecordField(!!val);
-    return E_OK;
-}
-
-/* properties */
-int32_t FileDataConvertor::HandleHeight(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_HEIGHT, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    map[key] = DriveKit::DKRecordField(val);
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleRotation(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_ORIENTATION, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    map[key] = DriveKit::DKRecordField(val);
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleWidth(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    int32_t val;
-    int32_t ret = GetInt(MEDIA_DATA_DB_WIDTH, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    map[key] = DriveKit::DKRecordField(val);
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandlePosition(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    map[key] = DriveKit::DKRecordField("");
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleDataModified(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    int64_t val;
-    int32_t ret = GetLong(MEDIA_DATA_DB_WIDTH, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    map[key] = DriveKit::DKRecordField(to_string(val));
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleDetailTime(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    map[key] = DriveKit::DKRecordField("");
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleFileCreateTime(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    int64_t val;
-    int32_t ret = GetLong(MEDIA_DATA_DB_DATE_ADDED, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    map[key] = DriveKit::DKRecordField(to_string(val));
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleFirstUpdateTime(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    map[key] = DriveKit::DKRecordField("");
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleRelativeBucketId(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    map[key] = DriveKit::DKRecordField("1");
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleSourceFileName(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    string val;
-    int32_t ret = GetString(MEDIA_DATA_DB_NAME, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    map[key] = DriveKit::DKRecordField(val);
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleSourcePath(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    string val;
-    int32_t ret = GetString(MEDIA_DATA_DB_FILE_PATH, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    map[key] = DriveKit::DKRecordField(val);
-    return E_OK;
-}
-
-int32_t FileDataConvertor::HandleTimeZone(string &key, DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    map[key] = DriveKit::DKRecordField("");
-    return E_OK;
-}
-
 /* properties - general */
-int32_t FileDataConvertor::HandleGeneral(std::string &key, DriveKit::DKRecordFieldMap &map,
+int32_t FileDataConvertor::HandleGeneral(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
     auto size = GALLERY_FILE_COLUMNS.size();
@@ -474,7 +241,7 @@ int32_t FileDataConvertor::HandleLcd(DriveKit::DKRecordData &data,
     return E_OK;
 }
 
-string FileDataConvertor::GetLowerPath(const std::string &path)
+string FileDataConvertor::GetLowerPath(const string &path)
 {
     size_t pos = path.find_first_of(sandboxPrefix_);
     if (pos == string::npos) {
@@ -485,7 +252,7 @@ string FileDataConvertor::GetLowerPath(const std::string &path)
         sandboxPrefix_.size());
 }
 
-string FileDataConvertor::GetLowerTmpPath(const std::string &path)
+string FileDataConvertor::GetLowerTmpPath(const string &path)
 {
     size_t pos = path.find_first_of(sandboxPrefix_);
     if (pos == string::npos) {
@@ -496,7 +263,7 @@ string FileDataConvertor::GetLowerTmpPath(const std::string &path)
         sandboxPrefix_.size());
 }
 
-string FileDataConvertor::GetSandboxPath(const std::string &path)
+string FileDataConvertor::GetSandboxPath(const string &path)
 {
     string localPrefix =  prefix_ + to_string(userId_) + suffix_;
     size_t pos = path.find_first_of(localPrefix);
@@ -507,7 +274,7 @@ string FileDataConvertor::GetSandboxPath(const std::string &path)
     return sandboxPrefix_ + path.substr(pos + localPrefix.size());
 }
 
-string FileDataConvertor::GetThumbPath(const std::string &path, const std::string &key)
+string FileDataConvertor::GetThumbPath(const string &path, const string &key)
 {
     if (path.length() < ROOT_MEDIA_DIR.length()) {
         return "";

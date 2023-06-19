@@ -20,12 +20,17 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <nocopyable.h>
+#include <singleton.h>
+#include <shared_mutex>
 #include <vector>
 
 #include "thread_pool.h"
 
 #include "data_handler.h"
+#include "dfs_error.h"
 #include "sdk_helper.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -46,7 +51,6 @@ private:
 constexpr int32_t INVALID_ID = -1;
 
 using TaskAction = std::function<void(std::shared_ptr<TaskContext>)>;
-
 class Task {
 public:
     Task(std::shared_ptr<TaskContext> context, TaskAction action) : id_(INVALID_ID),
@@ -79,15 +83,17 @@ private:
     TaskAction action_;
 };
 
-class TaskManager {
+class TaskRunner : public std::enable_shared_from_this<TaskRunner> {
 public:
-    TaskManager(std::function<void()> callback);
-    virtual ~TaskManager();
+    TaskRunner(std::function<void()> callback);
+    virtual ~TaskRunner();
 
-    int32_t AddTask(std::shared_ptr<Task> t);
-    int32_t StartTask(std::shared_ptr<Task> t, TaskAction action);
-    int32_t CommitTask(std::shared_ptr<Task> t);
-    void CompleteTask(int32_t id);
+    /* async */
+    template<typename T>
+    int32_t AsyncRun(std::shared_ptr<TaskContext> context, void(T::*f)(std::shared_ptr<TaskContext>),
+        T *ptr);
+    template<typename T, typename RET, typename... ARGS>
+    std::function<RET(ARGS...)> AsyncCallback(RET(T::*f)(ARGS...), T *ptr);
 
     /* dummy */
     void CommitDummyTask();
@@ -100,13 +106,21 @@ public:
 private:
     int32_t GenerateTaskId();
 
-    /* thread pool */
-    ThreadPool pool_ = ThreadPool("TaskManager");
-    const int32_t MAX_THREAD_NUM = 4;
-    const int32_t WAIT_FOR_SECOND = 30;
+    /* task operations */
+    int32_t AddTask(std::shared_ptr<Task> t);
+    int32_t StartTask(std::shared_ptr<Task> t, TaskAction action);
+    int32_t CommitTask(std::shared_ptr<Task> t);
+    void CompleteTask(int32_t id);
+
+    /* set commit func */
+    friend class TaskManager;
+    void SetCommitFunc(std::function<int32_t(std::shared_ptr<TaskRunner>,
+        std::shared_ptr<Task>)> func);
+    std::function<int32_t(std::shared_ptr<TaskRunner>, std::shared_ptr<Task>)> commitFunc_;
 
     /* stop */
     bool stopFlag_ = false;
+    const int32_t WAIT_FOR_SECOND = 30;
 
     /* id */
     std::atomic<int32_t> currentId_ = 0;
@@ -114,11 +128,80 @@ private:
     /* task list */
     std::mutex mutex_;
     std::list<std::shared_ptr<Task>> taskList_;
-    /* specific cv for shared_mutex */
     std::condition_variable cv_;
 
-    /* callback */
+    /* data syncer callback */
     std::function<void()> callback_;
+};
+
+template<typename T>
+inline int32_t TaskRunner::AsyncRun(std::shared_ptr<TaskContext> context,
+    void(T::*f)(std::shared_ptr<TaskContext>), T *ptr)
+{
+    std::shared_ptr<Task> task = std::make_shared<Task>(context,
+        [ptr, f](std::shared_ptr<TaskContext> ctx) {
+            (ptr->*f)(ctx);
+        }
+    );
+
+    int32_t ret = CommitTask(task);
+    if (ret != E_OK) {
+        LOGE("async run commit task err %{public}d", ret);
+        return ret;
+    }
+
+    return E_OK;
+}
+
+/*
+ * About ARGS...
+ * <1> async execute requires value-copy or shared_ptr like input parameters,
+ *     but no reference for lifecycle consideration.
+ * <2> In addition, [=] requires the wrapped function with const parameters.
+ */
+template<typename T, typename RET, typename... ARGS>
+inline std::function<RET(ARGS...)> TaskRunner::AsyncCallback(RET(T::*f)(ARGS...), T *ptr)
+{
+    std::shared_ptr<Task> task = std::make_shared<Task>(nullptr, nullptr);
+
+    int32_t ret = AddTask(task);
+    if (ret != E_OK) {
+        LOGE("async callback add task err %{public}d", ret);
+        return nullptr;
+    }
+
+    return [ptr, f, task, this](ARGS... args) -> RET {
+        int32_t ret = this->StartTask(task, [ptr, f, args...](std::shared_ptr<TaskContext>) {
+            (ptr->*f)(args...);
+        });
+        if (ret != E_OK) {
+            LOGE("async callback start task err %{public}d", ret);
+        }
+    };
+}
+
+class TaskManager : public NoCopyable {
+DECLARE_DELAYED_SINGLETON(TaskManager);
+
+public:
+    std::shared_ptr<TaskRunner> AllocRunner(int32_t userId, const std::string &bundleName,
+        std::function<void()> callback);
+    std::shared_ptr<TaskRunner> GetRunner(int32_t userId, const std::string &bundleName);
+    void ReleaseRunner(int32_t userId, const std::string &bundleName);
+
+    int32_t CommitTask(std::shared_ptr<TaskRunner> runner, std::shared_ptr<Task> t);
+
+private:
+    std::string GetKey(int32_t userId, const std::string &bundleName);
+    void InitRunner(TaskRunner &runner);
+
+    /* runners */
+    std::unordered_map<std::string, std::shared_ptr<TaskRunner>> map_;
+    std::shared_mutex mapMutex_;
+
+    /* thread pool */
+    ThreadPool pool_ = ThreadPool("TaskManager");
+    const int32_t MAX_THREAD_NUM = 4;
 };
 } // namespace CloudSync
 } // namespace FileManagement
