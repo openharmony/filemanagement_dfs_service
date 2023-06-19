@@ -24,6 +24,8 @@ bas_hiviewdfx_hilog_path = "//base/hiviewdfx/hilog"
 device_manager_path = "//foundation/distributedhardware/device_manager"
 dsoftbus_path = "//foundation/communication/dsoftbus"
 media_library_path = "//foundation/multimedia/media_library"
+communication_ipc_path = "//foundation/communication"
+image_framework_path = "//foundation/multimedia/image_framework"
 
 declare_args() {
   if (defined(global_parts_info) &&
