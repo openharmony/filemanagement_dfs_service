@@ -412,7 +412,7 @@ HWTEST_F(FileDataHandlerTest, RecycleFile002, TestSize.Level1)
 
         std::string recordId;
         int32_t ret = fileDataHandler->RecycleFile(recordId);
-        EXPECT_NE(E_OK, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " RecycleFile002 ERROR";

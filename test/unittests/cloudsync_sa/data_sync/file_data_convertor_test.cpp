@@ -195,7 +195,7 @@ HWTEST_F(FileDataConvertorTest, HandleRecycleTest1, TestSize.Level1)
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
-    EXPECT_CALL(resultSet, GetInt(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(resultSet, GetLong(_, _)).WillOnce(Return(0));
     string key = "recycled";
     auto ret = fileDataConvertor_->HandleRecycle(data, resultSet);
     EXPECT_EQ(E_OK, ret);
