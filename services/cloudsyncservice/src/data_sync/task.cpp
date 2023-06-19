@@ -18,32 +18,28 @@
 #include <chrono>
 #include <functional>
 
-#include "dfs_error.h"
 #include "sdk_helper.h"
-#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 using namespace std;
 
-TaskManager::TaskManager(function<void()> callback) : callback_(callback)
+/* task runner */
+TaskRunner::TaskRunner(function<void()> callback) : callback_(callback)
 {
-    pool_.SetMaxTaskNum(MAX_THREAD_NUM);
-    pool_.Start(MAX_THREAD_NUM);
 }
 
-TaskManager::~TaskManager()
+TaskRunner::~TaskRunner()
 {
-    pool_.Stop();
 }
 
-int32_t TaskManager::GenerateTaskId()
+int32_t TaskRunner::GenerateTaskId()
 {
     return currentId_.fetch_add(1);
 }
 
-int32_t TaskManager::AddTask(shared_ptr<Task> t)
+int32_t TaskRunner::AddTask(shared_ptr<Task> t)
 {
     unique_lock<mutex> lock(mutex_);
 
@@ -60,7 +56,7 @@ int32_t TaskManager::AddTask(shared_ptr<Task> t)
     return E_OK;
 }
 
-int32_t TaskManager::StartTask(shared_ptr<Task> t, TaskAction action)
+int32_t TaskRunner::StartTask(shared_ptr<Task> t, TaskAction action)
 {
     /* If stopped, no more tasks can be executed */
     if (stopFlag_) {
@@ -70,14 +66,16 @@ int32_t TaskManager::StartTask(shared_ptr<Task> t, TaskAction action)
     }
 
     t->SetAction(action);
-    pool_.AddTask([t, this]() {
-        t->Run();
-        this->CompleteTask(t->GetId());
-    });
+    int32_t ret = commitFunc_(shared_from_this(), t);
+    if (ret != E_OK) {
+        LOGE("commit task err %{public}d", ret);
+        return ret;
+    }
+
     return E_OK;
 }
 
-int32_t TaskManager::CommitTask(shared_ptr<Task> t)
+int32_t TaskRunner::CommitTask(shared_ptr<Task> t)
 {
     /* add task */
     int32_t ret = AddTask(t);
@@ -87,15 +85,16 @@ int32_t TaskManager::CommitTask(shared_ptr<Task> t)
     }
 
     /* launch */
-    pool_.AddTask([t, this]() {
-        t->Run();
-        this->CompleteTask(t->GetId());
-    });
+    ret = commitFunc_(shared_from_this(), t);
+    if (ret != E_OK) {
+        LOGE("commit task err %{public}d", ret);
+        return ret;
+    }
 
     return E_OK;
 }
 
-void TaskManager::CompleteTask(int32_t id)
+void TaskRunner::CompleteTask(int32_t id)
 {
     /* remove task */
     unique_lock<mutex> lock(mutex_);
@@ -122,7 +121,7 @@ void TaskManager::CompleteTask(int32_t id)
     }
 }
 
-bool TaskManager::StopAndWaitFor()
+bool TaskRunner::StopAndWaitFor()
 {
     unique_lock<mutex> lock(mutex_);
     LOGI("task manager stop");
@@ -136,12 +135,17 @@ bool TaskManager::StopAndWaitFor()
     });
 }
 
-void TaskManager::Reset()
+void TaskRunner::Reset()
 {
     currentId_.store(0);
 }
 
-void TaskManager::CommitDummyTask()
+void TaskRunner::SetCommitFunc(function<int32_t(shared_ptr<TaskRunner>, shared_ptr<Task>)> func)
+{
+    commitFunc_ = func;
+}
+
+void TaskRunner::CommitDummyTask()
 {
     auto task = make_shared<Task>(nullptr, nullptr);
     task->SetId(INVALID_ID);
@@ -150,9 +154,72 @@ void TaskManager::CommitDummyTask()
     taskList_.emplace_back(task);
 }
 
-void TaskManager::CompleteDummyTask()
+void TaskRunner::CompleteDummyTask()
 {
     CompleteTask(INVALID_ID);
+}
+
+/* TaskManager */
+TaskManager::TaskManager()
+{
+    pool_.SetMaxTaskNum(MAX_THREAD_NUM);
+    pool_.Start(MAX_THREAD_NUM);
+}
+
+TaskManager::~TaskManager()
+{
+    pool_.Stop();
+}
+
+shared_ptr<TaskRunner> TaskManager::AllocRunner(int32_t userId, const std::string &bundleName,
+    function<void()> callback)
+{
+    string key = GetKey(userId, bundleName);
+    unique_lock wlock(mapMutex_);
+    if (map_.find(key) == map_.end()) {
+        auto runner = make_shared<TaskRunner>(callback);
+        InitRunner(*runner);
+        map_.insert({ key, runner });
+    }
+    return map_[key];
+}
+
+void TaskManager::ReleaseRunner(int32_t userId, const std::string &bundleName)
+{
+    string key = GetKey(userId, bundleName);
+    unique_lock wlock(mapMutex_);
+    if (map_.find(key) != map_.end()) {
+        map_.erase(key);
+    }
+}
+
+shared_ptr<TaskRunner> TaskManager::GetRunner(int32_t userId, const std::string &bundleName)
+{
+    string key = GetKey(userId, bundleName);
+    shared_lock rlock(mapMutex_);
+    if (map_.find(key) == map_.end()) {
+        return nullptr;
+    }
+    return map_[key];
+}
+
+void TaskManager::InitRunner(TaskRunner &runner)
+{
+    runner.SetCommitFunc(bind(&TaskManager::CommitTask, this, placeholders::_1, placeholders::_2));
+}
+
+int32_t TaskManager::CommitTask(shared_ptr<TaskRunner> runner, shared_ptr<Task> t)
+{
+    pool_.AddTask([t, runner]() {
+        t->Run();
+        runner->CompleteTask(t->GetId());
+    });
+    return E_OK;
+}
+
+string TaskManager::GetKey(int32_t userId, const string &bundleName)
+{
+    return to_string(userId) + bundleName;
 }
 } // namespace CloudSync
 } // namespace FileManagement

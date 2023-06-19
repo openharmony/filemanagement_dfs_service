@@ -37,7 +37,7 @@ int32_t RdbDataHandler::Delete(int &deletedRows, const string &whereClause, cons
     return rdb_->Delete(deletedRows, tableName_, whereClause, whereArgs);
 }
 
-unique_ptr<NativeRdb::ResultSet> RdbDataHandler::Query(
+shared_ptr<NativeRdb::ResultSet> RdbDataHandler::Query(
     const NativeRdb::AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
 {
     return rdb_->Query(predicates, columns);
