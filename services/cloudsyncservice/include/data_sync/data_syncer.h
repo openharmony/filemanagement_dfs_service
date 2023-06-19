@@ -169,6 +169,8 @@ private:
     /* cursor*/
     DriveKit::DKQueryCursor startCursor_;
     DriveKit::DKQueryCursor nextCursor_;
+    int32_t totalPullCount_{0};
+    int32_t downloadThumbLimit_{0};
 
     /* cloud preference impl */
     CloudPrefImpl cloudPrefImpl_;

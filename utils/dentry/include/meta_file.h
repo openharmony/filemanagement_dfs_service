@@ -52,6 +52,12 @@ private:
     std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
 };
 
+enum {
+    FILE_TYPE_CONTENT = 0,
+    FILE_TYPE_THUMBNAIL,
+    FILE_TYPE_LCD,
+};
+
 class MetaFileMgr {
 public:
     static MetaFileMgr& GetInstance();
@@ -77,6 +83,7 @@ struct MetaBase {
     uint64_t mtime{0};
     uint64_t size{0};
     uint32_t mode{S_IFREG};
+    uint32_t fileType{FILE_TYPE_CONTENT};
     std::string name{};
     std::string cloudId{};
 };

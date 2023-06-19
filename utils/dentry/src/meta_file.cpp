@@ -55,7 +55,12 @@ struct HmdfsDentry {
     uint64_t mtime{0};
     uint8_t recordId[CLOUD_RECORD_ID_LEN]{0};
     /* reserved bytes for long term extend, total 60 bytes */
-    uint8_t reserved[DENTRY_RESERVED_LENGTH];
+    union {
+        struct {
+            uint8_t fileType : 2;
+        };
+        uint8_t reserved[DENTRY_RESERVED_LENGTH];
+    };
 };
 
 struct HmdfsDentryGroup {
@@ -388,6 +393,7 @@ static void UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
         LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", slots * DENTRY_NAME_LEN, name.length());
     }
     de->mtime = base.mtime;
+    de->fileType = base.fileType;
     de->size = base.size;
     de->mode = base.mode;
     if (memcpy_s(de->recordId, CLOUD_RECORD_ID_LEN, base.cloudId.c_str(), base.cloudId.length())) {
@@ -612,6 +618,7 @@ int32_t MetaFile::DoLookup(MetaBase &base)
     base.size = de->size;
     base.mtime = de->mtime;
     base.mode = de->mode;
+    base.fileType = de->fileType;
     base.cloudId = std::string(reinterpret_cast<const char *>(de->recordId), CLOUD_RECORD_ID_LEN - 1);
 
     return E_OK;
@@ -636,6 +643,7 @@ int32_t MetaFile::DoUpdate(const MetaBase &base)
     de->mtime = base.mtime;
     de->size = base.size;
     de->mode = base.mode;
+    de->fileType = base.fileType;
     if (memcpy_s(de->recordId, CLOUD_RECORD_ID_LEN, base.cloudId.c_str(), base.cloudId.length())) {
         LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", CLOUD_RECORD_ID_LEN, base.cloudId.length());
     }
@@ -691,6 +699,7 @@ static int32_t DecodeDentrys(const HmdfsDentryGroup &dentryGroup, std::vector<Me
         base.mode = dentryGroup.nsl[i].mode;
         base.mtime = dentryGroup.nsl[i].mtime;
         base.size = dentryGroup.nsl[i].size;
+        base.fileType = dentryGroup.nsl[i].fileType;
         base.cloudId = std::string(reinterpret_cast<const char *>(dentryGroup.nsl[i].recordId), CLOUD_RECORD_ID_LEN);
         bases.emplace_back(base);
     }

@@ -53,6 +53,7 @@ public:
 
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
     std::string GetThumbPath(const std::string &path, const std::string &key);
+    std::string GetThumbPathInCloud(const std::string &path, const std::string &key);
     /* path conversion */
     std::string GetLowerPath(const std::string &path);
     std::string GetLowerTmpPath(const std::string &path);
@@ -88,6 +89,8 @@ private:
     int32_t HandleSourceFileName(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleSourcePath(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleTimeZone(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleThumbSize(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleLcdSize(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     /* properties - general */
     int32_t HandleGeneral(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
 
@@ -110,10 +113,8 @@ private:
     static std::string sandboxPrefix_;
     static std::string prefixLCD_;
     static std::string suffixLCD_;
-
-    /* thumb */
-    static std::string thumb_suffix_;
-    static std::string lcd_suffix_;
+    static std::string prefixCloud_;
+    static std::string suffixCloud_;
 };
 
 /* basic */

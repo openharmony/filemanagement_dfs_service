@@ -286,8 +286,8 @@ HWTEST_F(FileDataHandlerTest, PullRecordInsert001, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
-        bool outPullThumbs;
-        int32_t ret = fileDataHandler->PullRecordInsert(record, outPullThumbs);
+        OnFetchParams onFetchParams{true};
+        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -310,8 +310,8 @@ HWTEST_F(FileDataHandlerTest, PullRecordInsert002, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
-        bool outPullThumbs;
-        int32_t ret = fileDataHandler->PullRecordInsert(record, outPullThumbs);
+        OnFetchParams onFetchParams{false};
+        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1595,12 +1595,8 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords001, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
 
         const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
-        vector<DKDownloadAsset> outAssetsToDownload;
-        shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                                      std::shared_ptr<const DriveKit::DKDatabase>,
-                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                                      const DriveKit::DKError &)>> downloadResultCallback = nullptr;
-        int32_t ret = fileDataHandler->OnFetchRecords(records, outAssetsToDownload, downloadResultCallback);
+        OnFetchParams onFetchParams;
+        int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1626,13 +1622,8 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords002, TestSize.Level1)
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
 
         const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
-        vector<DKDownloadAsset> outAssetsToDownload;
-        shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                                      std::shared_ptr<const DriveKit::DKDatabase>,
-                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                                      const DriveKit::DKError &)>> downloadResultCallback = nullptr;
-        
-        int32_t ret = fileDataHandler->OnFetchRecords(records, outAssetsToDownload, downloadResultCallback);
+        OnFetchParams onFetchParams;
+        int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1660,13 +1651,8 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords003, TestSize.Level1)
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
 
         const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
-        vector<DKDownloadAsset> outAssetsToDownload;
-        shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                                      std::shared_ptr<const DriveKit::DKDatabase>,
-                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                                      const DriveKit::DKError &)>> downloadResultCallback = nullptr;
-        
-        int32_t ret = fileDataHandler->OnFetchRecords(records, outAssetsToDownload, downloadResultCallback);
+        OnFetchParams onFetchParams;
+        int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1690,8 +1676,8 @@ HWTEST_F(FileDataHandlerTest, PullRecordUpdate001, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
-        bool outPullThumbs;
-        int32_t ret = fileDataHandler->PullRecordUpdate(record, *rset, outPullThumbs);
+        OnFetchParams onFetchParams;
+        int32_t ret = fileDataHandler->PullRecordUpdate(record, *rset, onFetchParams);
         EXPECT_NE(E_RDB, ret);
     } catch (...) {
         EXPECT_TRUE(false);

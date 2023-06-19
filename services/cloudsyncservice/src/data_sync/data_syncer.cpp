@@ -30,12 +30,22 @@ using namespace std;
 using namespace placeholders;
 using namespace DriveKit;
 
+const static std::string TOTAL_PULL_COUNT = "total_pull_count";
+const static std::string DOWNLOAD_THUMB_LIMIT = "download_thumb_limit";
+constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
 DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
     : bundleName_(bundleName), userId_(userId), cloudPrefImpl_(userId, bundleName)
 {
     /* cursor */
     cloudPrefImpl_.GetString(START_CURSOR, startCursor_);
     cloudPrefImpl_.GetString(NEXT_CURSOR, nextCursor_);
+    cloudPrefImpl_.GetInt(TOTAL_PULL_COUNT, totalPullCount_);
+
+    cloudPrefImpl_.GetInt(DOWNLOAD_THUMB_LIMIT, downloadThumbLimit_);
+    if (downloadThumbLimit_ <= 0) {
+        downloadThumbLimit_ = DEFAULT_DOWNLOAD_THUMB_LIMIT;
+        cloudPrefImpl_.SetInt(DOWNLOAD_THUMB_LIMIT, downloadThumbLimit_);
+    }
 
     /* alloc task runner */
     taskRunner_ = DelayedSingleton<TaskManager>::GetInstance()->AllocRunner(userId,
@@ -275,6 +285,38 @@ void EmptyDownLoadAssetsprogress(std::shared_ptr<DKContext>, DKDownloadAsset, To
     return;
 }
 
+
+static void ThumbDownloadCallback(shared_ptr<DKContext> context,
+                                  shared_ptr<const DKDatabase> database,
+                                  const map<DKDownloadAsset, DKDownloadResult> &resultMap,
+                                  const DKError &err)
+{
+    if (err.HasError()) {
+        LOGE("DKAssetsDownloader err, localErr: %{public}d, serverErr: %{public}d", static_cast<int>(err.dkErrorCode),
+             err.serverErrorCode);
+    } else {
+        LOGI("DKAssetsDownloader ok");
+    }
+
+    vector<DKDownloadAsset> retryList{};
+    for (const auto &it : resultMap) {
+        if (it.second.IsSuccess()) {
+            LOGI("record %s %{public}s download success", it.first.recordId.c_str(), it.first.fieldKey.c_str());
+            if (it.first.fieldKey == "thumbnail") {
+                auto ctx = static_pointer_cast<TaskContext>(context);
+                auto handler = ctx->GetHandler();
+                handler->OnDownloadThumbSuccess(it.first);
+            }
+        } else {
+            LOGE("record %s %{public}s download failed, localErr: %{public}d, serverErr: %{public}d",
+                 it.first.recordId.c_str(), it.first.fieldKey.c_str(),
+                 static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
+            retryList.push_back(it.first);
+        }
+    }
+    // retry
+}
+
 int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
     std::shared_ptr<const DKDatabase> database, std::shared_ptr<std::vector<DKRecord>> records)
 {
@@ -284,14 +326,21 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
     }
 
     DKDownloadId id;
-    vector<DKDownloadAsset> assetsToDownload;
-    shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                           std::shared_ptr<const DriveKit::DKDatabase>,
-                           const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                           const DriveKit::DKError &)>> downloadResultCallback = nullptr;
+    OnFetchParams onFetchParams;
+    auto resultCallback = make_shared<std::function<void(
+        std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
+        const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &, const DriveKit::DKError &)>>(
+        ThumbDownloadCallback);
     auto downloadProcessCallback =
         std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(
             EmptyDownLoadAssetsprogress);
+    /* for pull records, judge whether to download thumb and lcds */
+    if (startCursor_.empty()) {
+        totalPullCount_ += records->size();
+        onFetchParams.fetchThumbs = totalPullCount_ <= downloadThumbLimit_;
+        LOGI("fetchThumbs :%{public}d, totalPulls %{public}d, limit %{public}d",
+             onFetchParams.fetchThumbs, totalPullCount_, downloadThumbLimit_);
+    }
 
     auto ctx = static_pointer_cast<TaskContext>(context);
     auto handler = ctx->GetHandler();
@@ -299,17 +348,17 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
         LOGE("context get handler err");
         return E_CONTEXT;
     }
-    int32_t ret = handler->OnFetchRecords(records, assetsToDownload, downloadResultCallback);
+    int32_t ret = handler->OnFetchRecords(records, onFetchParams);
+    auto dctx = make_shared<DownloadContext>(handler, onFetchParams.assetsToDownload, id, resultCallback,
+                                             context, database, downloadProcessCallback);
+    AsyncRun(static_pointer_cast<TaskContext>(dctx), &DataSyncer::DownloadAssets);
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
         return ret;
     }
 
-    auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id,
-                                             downloadResultCallback, context, database, downloadProcessCallback);
-    ret = AsyncRun(static_pointer_cast<TaskContext>(dctx), &DataSyncer::DownloadAssets);
-    if (ret != E_OK) {
-        LOGE("async run DownloadAssets err %{public}d", ret);
+    if (startCursor_.empty()) {
+        cloudPrefImpl_.SetInt(TOTAL_PULL_COUNT, totalPullCount_);
     }
     return E_OK;
 }
@@ -332,6 +381,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
         cloudPrefImpl_.GetString(TEMP_START_CURSOR, startCursor_);
         cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
         cloudPrefImpl_.Delete(TEMP_START_CURSOR);
+        cloudPrefImpl_.Delete(TOTAL_PULL_COUNT);
         return;
     }
     nextCursor_ = nextCursor;

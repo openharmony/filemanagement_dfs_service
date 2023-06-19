@@ -16,6 +16,7 @@
 #include "file_data_convertor.h"
 
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "medialibrary_db_const.h"
 #include "thumbnail_const.h"
@@ -36,6 +37,8 @@ string FileDataConvertor::suffix_ = "/hmdfs/account/files";
 string FileDataConvertor::sandboxPrefix_ = "/storage/cloud/files";
 string FileDataConvertor::prefixLCD_ = "/mnt/hmdfs/";
 string FileDataConvertor::suffixLCD_ = "/account/device_view/local/files";
+string FileDataConvertor::prefixCloud_ = "/storage/cloud/";
+string FileDataConvertor::suffixCloud_ = "/files";
 
 FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type) : userId_(userId),
     bundleName_(bundleName), type_(type)
@@ -57,6 +60,8 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
     RETURN_ON_ERR(HandleFavorite(data, resultSet));
     RETURN_ON_ERR(HandleDescription(data, resultSet));
     RETURN_ON_ERR(HandleRecycle(data, resultSet));
+    RETURN_ON_ERR(HandleThumbSize(data, resultSet));
+    RETURN_ON_ERR(HandleLcdSize(data, resultSet));
     /* attachments */
     RETURN_ON_ERR(HandleAttachments(data, resultSet));
 
@@ -96,6 +101,8 @@ int32_t FileDataConvertor::HandleProperties(DriveKit::DKRecordData &data,
     RETURN_ON_ERR(HandleSourceFileName(map, resultSet));
     RETURN_ON_ERR(HandleSourcePath(map, resultSet));
     RETURN_ON_ERR(HandleTimeZone(map, resultSet));
+    RETURN_ON_ERR(HandleThumbSize(map, resultSet));
+    RETURN_ON_ERR(HandleLcdSize(map, resultSet));
 
     /* set map */
     data[FILE_PROPERTIES] = DriveKit::DKRecordField(map);
@@ -149,6 +156,50 @@ int32_t FileDataConvertor::FillRecordId(DriveKit::DKRecord &record,
         return ret;
     }
     record.SetRecordId(val);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::HandleThumbSize(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    string path;
+    int32_t ret = GetString(PhotoColumn::MEDIA_FILE_PATH, path, resultSet);
+    if (ret != E_OK) {
+        LOGE("get filepath failed");
+        return ret;
+    }
+
+    string thumbnailPath = GetThumbPath(path, THUMB_SUFFIX);
+    struct stat fileStat;
+    int err = stat(thumbnailPath.c_str(), &fileStat);
+    if (err < 0) {
+        LOGE("get thumb size failed errno :%{public}d", errno);
+        return E_INVAL_ARG;
+    }
+
+    map[FILE_THUMB_SIZE] = DriveKit::DKRecordField(int64_t(fileStat.st_size));
+    return E_OK;
+}
+
+int32_t FileDataConvertor::HandleLcdSize(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    string path;
+    int32_t ret = GetString(PhotoColumn::MEDIA_FILE_PATH, path, resultSet);
+    if (ret != E_OK) {
+        LOGE("get filepath failed");
+        return ret;
+    }
+
+    string lcdPath = GetThumbPath(path, LCD_SUFFIX);
+    struct stat fileStat;
+    int err = stat(lcdPath.c_str(), &fileStat);
+    if (err < 0) {
+        LOGE("get lcd size failed errno :%{public}d", errno);
+        return E_INVAL_ARG;
+    }
+
+    map[FILE_LCD_SIZE] = DriveKit::DKRecordField(int64_t(fileStat.st_size));
     return E_OK;
 }
 
@@ -282,6 +333,14 @@ string FileDataConvertor::GetThumbPath(const string &path, const string &key)
     /* transform sandbox path */
     return prefixLCD_ + to_string(userId_) + suffixLCD_ + "/" + Media::GetThumbnailPath(path,
         key).substr(ROOT_MEDIA_DIR.length());
+}
+
+string FileDataConvertor::GetThumbPathInCloud(const std::string &path, const std::string &key)
+{
+    if (path.length() < ROOT_MEDIA_DIR.length()) {
+        return "";
+    }
+    return sandboxPrefix_ + "/" + Media::GetThumbnailPath(path, key).substr(ROOT_MEDIA_DIR.length());
 }
 } // namespace CloudSync
 } // namespace FileManagement

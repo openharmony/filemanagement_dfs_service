@@ -33,7 +33,6 @@ int64_t FileUtils::ReadFile(int fd, off_t offset, size_t size, void *data)
 
     off_t err = lseek(fd, offset, SEEK_SET);
     if (err < 0) {
-        LOGE("lseek failed, errno %{public}d, offset %{public}ld, fd=%{public}d", errno, static_cast<long>(offset), fd);
         return -errno;
     }
 
@@ -62,7 +61,6 @@ int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size
 
     off_t err = lseek(fd, offset, SEEK_SET);
     if (err < 0) {
-        LOGE("lseek failed, errno %{public}d, offset %{public}d, fd=%{public}d", errno, static_cast<int>(offset), fd);
         return -errno;
     }
 

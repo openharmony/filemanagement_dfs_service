@@ -37,13 +37,8 @@ public:
 
     /* download */
     void GetFetchCondition(FetchCondition &cond) override;
-    virtual int32_t OnFetchRecords(
-        const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
-        std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
-        std::shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                           std::shared_ptr<const DriveKit::DKDatabase>,
-                           const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                           const DriveKit::DKError &)>> &downloadResultCallback) override;
+    virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
+                                   OnFetchParams &params) override;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
 
     int32_t GetDownloadAsset(std::string cloudId,
@@ -68,6 +63,7 @@ public:
     int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
+    int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset) override;
 
     /* reset */
     void Reset();
@@ -129,9 +125,10 @@ private:
     FileDataConvertor fdirtyConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DATA_MODIFY };
 
     /* pull operations */
-    int32_t PullRecordInsert(const DriveKit::DKRecord &record, bool &outPullThumbs);
+    std::tuple<std::shared_ptr<NativeRdb::ResultSet>, int> QueryLocalByCloudId(const std::string &recordId);
+    int32_t PullRecordInsert(const DriveKit::DKRecord &record, OnFetchParams &params);
     int32_t PullRecordUpdate(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
-                             bool &outPullThumbs);
+                             OnFetchParams &params);
     int32_t PullRecordDelete(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
     int32_t SetRetry(const std::string &recordId);
     int32_t RecycleFile(const std::string &recordId);
@@ -139,6 +136,13 @@ private:
     void AppendToDownload(const DriveKit::DKRecord &record,
                           const std::string &fieldKey,
                           std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
+    int AddCloudThumbs(const DriveKit::DKRecord &record);
+    int DentryInsertThumb(const std::string &fullPath,
+                          const std::string &recordId,
+                          uint64_t size,
+                          uint64_t mtime,
+                          const std::string &type);
+    bool ThumbsAtLocal(const DriveKit::DKRecord &record);
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DOWNLOAD };
