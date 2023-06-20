@@ -920,7 +920,7 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
         ->Or()
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
         ->EndWrap();
-    if(!modifyFailSet_.empty()) {
+    if (!modifyFailSet_.empty()) {
         deletePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
     }
     deletePredicates.Limit(LIMIT_SIZE);
