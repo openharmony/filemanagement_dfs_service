@@ -87,10 +87,6 @@ void GalleryDataSyncer::Schedule()
 
     int32_t ret = E_OK;
     switch (stage_) {
-        case PREPARE : {
-            ret = Prepare();
-            break;
-        }
         case DOWNLOADALBUM: {
             ret = DownloadAlbum();
             break;
@@ -107,13 +103,7 @@ void GalleryDataSyncer::Schedule()
             ret = UploadFile();
             break;
         }
-        case WAIT: {
-            ret = Wait();
-            break;
-        }
         case END: {
-            /* reset stage in case one restarts a sync */
-            stage_ = BEGIN;
             ret = Complete();
             break;
         }
@@ -126,13 +116,12 @@ void GalleryDataSyncer::Schedule()
     LOGE("schedule stage %{public}d finish, ret = %{public}d", stage_, ret);
 }
 
-int32_t GalleryDataSyncer::Prepare()
+void GalleryDataSyncer::Reset()
 {
-    LOGI("gallery data syncer prepare");
+    /* reset stage in case of stop or restart */
+    stage_ = BEGIN;
     /* restart a sync might need to update offset, etc */
     fileHandler_->Reset();
-    Schedule();
-    return E_OK;
 }
 
 int32_t GalleryDataSyncer::DownloadAlbum()
@@ -169,14 +158,6 @@ int32_t GalleryDataSyncer::UploadFile()
         LOGE("gallery data syncer push file err %{public}d", ret);
     }
     return ret;
-}
-
-/* wait for file download and upload */
-int32_t GalleryDataSyncer::Wait()
-{
-    LOGI("gallery data syncer wait");
-    Schedule();
-    return E_OK;
 }
 
 int32_t GalleryDataSyncer::Complete()

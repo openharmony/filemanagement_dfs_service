@@ -835,6 +835,9 @@ void DataSyncer::CompleteAll()
     /* unlock */
     sdkHelper_->DeleteLock(lock_);
 
+    /* reset internal status */
+    Reset();
+
     SyncState syncState;
     if (errorCode_ == E_OK) {
         syncState = SyncState::SYNC_SUCCEED;

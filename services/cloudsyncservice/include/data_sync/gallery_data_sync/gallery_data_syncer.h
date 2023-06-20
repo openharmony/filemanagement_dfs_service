@@ -30,6 +30,8 @@ public:
     virtual ~GalleryDataSyncer() = default;
 
     virtual void Schedule() override;
+    virtual void Reset() override;
+
     virtual int32_t StartDownloadFile(const std::string path, const int32_t userId) override;
     virtual int32_t StopDownloadFile(const std::string path, const int32_t userId) override;
     virtual int32_t Clean(const int action) override;
@@ -37,21 +39,17 @@ public:
 private:
     enum {
         BEGIN,
-        PREPARE,
         DOWNLOADALBUM,
         DOWNLOADFILE,
         UPLOADALBUM,
         UPLOADFILE,
-        WAIT,
         END
     };
 
-    int32_t Prepare();
     int32_t DownloadAlbum();
     int32_t DownloadFile();
     int32_t UploadAlbum();
     int32_t UploadFile();
-    int32_t Wait();
     int32_t Complete();
 
     /* stage */
