@@ -23,13 +23,20 @@ ohos_unittest("dk_asset_read_session_test") {
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
 
   deps = [
-    "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
     "${utils_path}:libdistributedfiledentry",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [ "c_utils:utils" ]
+
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
 
   defines = [ "private=public" ]
 }
@@ -43,13 +50,20 @@ ohos_unittest("dk_assets_downloader_test") {
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
 
   deps = [
-    "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
     "${utils_path}:libdistributedfiledentry",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [ "c_utils:utils" ]
+
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
 
   defines = [ "private=public" ]
 }
@@ -63,13 +77,20 @@ ohos_unittest("dk_container_test") {
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
 
   deps = [
-    "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
     "${utils_path}:libdistributedfiledentry",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [ "c_utils:utils" ]
+
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
 
   defines = [ "private=public" ]
 }
@@ -83,13 +104,20 @@ ohos_unittest("dk_error_test") {
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
 
   deps = [
-    "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
     "${utils_path}:libdistributedfiledentry",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [ "c_utils:utils" ]
+
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
 
   defines = [ "private=public" ]
 }
@@ -106,13 +134,20 @@ ohos_unittest("dk_database_test") {
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
 
   deps = [
-    "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
     "${utils_path}:libdistributedfiledentry",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [ "c_utils:utils" ]
+
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
 
   defines = [ "private=public" ]
 }
@@ -126,13 +161,20 @@ ohos_unittest("dk_record_field_test") {
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
 
   deps = [
-    "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
     "${utils_path}:libdistributedfiledentry",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [ "c_utils:utils" ]
+
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  } else {
+    external_deps += [ "drivekit_native:drivekit" ]
+  }
 
   defines = [ "private=public" ]
 }

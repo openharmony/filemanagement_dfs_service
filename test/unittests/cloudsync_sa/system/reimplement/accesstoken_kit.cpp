@@ -18,50 +18,7 @@
 namespace OHOS {
 namespace Security {
 namespace AccessToken {
-AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy)
-{
-    AccessTokenIDEx token;
-    token.tokenIDEx = 1;
-    token.tokenIdExStruct.tokenID = 1;
-    token.tokenIdExStruct.tokenAttr = 1;
-    return token;
-}
-
-int AccessTokenKit::UpdateHapToken(AccessTokenIDEx &tokenIDEx, bool isSystemApp, const std::string& appIDDesc,
-    int32_t apiVersion, const HapPolicyParams& policy)
-{
-    if (isSystemApp) {
-        tokenIDEx.tokenIdExStruct.tokenAttr = 1;
-    } else {
-        tokenIDEx.tokenIdExStruct.tokenAttr = 0;
-    }
-    return 0;
-}
-
-#ifdef BUNDLE_PERMISSION_START_FULL_FALSE
-int AccessTokenKit::GetDefPermissions(AccessTokenID tokenID, std::vector<PermissionDef>& permList)
-{
-    return -1;
-}
-#else
-int AccessTokenKit::GetDefPermissions(AccessTokenID tokenID, std::vector<PermissionDef>& permList)
-{
-    return 0;
-}
-#endif
-
-
 #ifdef BUNDLE_PERMISSION_DEF_LIST
-int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList,
-    bool isSystemGrant)
-{
-    return -1;
-}
-
-int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& permissionName, int flag)
-{
-    return 1;
-}
 
 int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& permissionName)
 {
@@ -72,21 +29,16 @@ int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& 
     }
 }
 
-int AccessTokenKit::GetDefPermission(const std::string& permissionName, PermissionDef& permissionDefResult)
-{
-    return 0;
-}
-
 ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID tokenID)
 {
     switch (tokenID) {
-        case 0: {
+        case TOKEN_HAP: {
             return TOKEN_HAP;
         }
-        case 1: {
+        case TOKEN_NATIVE: {
             return TOKEN_NATIVE;
         }
-        case 2: {
+        case TOKEN_SHELL: {
             return TOKEN_SHELL;
         }
         default: {
@@ -101,11 +53,6 @@ int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<Permiss
     return 0;
 }
 
-int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& permissionName, int flag)
-{
-    return 0;
-}
-
 int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& permissionName)
 {
     if (tokenID == 0) {
@@ -113,24 +60,19 @@ int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& 
     } else {
         return 0;
     }
-}
-
-int AccessTokenKit::GetDefPermission(const std::string& permissionName, PermissionDef& permissionDefResult)
-{
-    return -1;
 }
 
 ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID tokenID)
 {
 #ifdef BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE
     switch (tokenID) {
-        case 0: {
+        case TOKEN_HAP: {
             return TOKEN_HAP;
         }
-        case 1: {
+        case TOKEN_NATIVE: {
             return TOKEN_NATIVE;
         }
-        case 2: {
+        case TOKEN_SHELL: {
             return TOKEN_SHELL;
         }
         default: {
@@ -139,13 +81,13 @@ ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID tokenID)
     }
 #else
     switch (tokenID) {
-        case 0: {
+        case TOKEN_HAP: {
             return TOKEN_HAP;
         }
-        case 1: {
+        case TOKEN_NATIVE: {
             return TOKEN_NATIVE;
         }
-        case 2: {
+        case TOKEN_SHELL: {
             return TOKEN_SHELL;
         }
         default: {
@@ -161,32 +103,10 @@ int AccessTokenKit::VerifyAccessToken(
 {
     return 0;
 }
-
-int AccessTokenKit::DeleteToken(AccessTokenID tokenID)
-{
-    return 0;
-}
-
-int AccessTokenKit::ClearUserGrantedPermissionState(AccessTokenID tokenID)
-{
-    return 0;
-}
-
-AccessTokenID AccessTokenKit::GetHapTokenID(int userID, const std::string& bundleName, int instIndex)
-{
-    return 0;
-}
-
-AccessTokenIDEx AccessTokenKit::GetHapTokenIDEx(int userID, const std::string& bundleName, int instIndex)
-{
-    AccessTokenIDEx tokenIdEx;
-    return tokenIdEx;
-}
-
 int AccessTokenKit::GetNativeTokenInfo(AccessTokenID tokenID, NativeTokenInfo &nativeTokenInfo)
 {
-    if (tokenID == 2) {
-        return 1;
+    if (tokenID == TOKEN_SHELL) {
+        return TOKEN_NATIVE;
     } else {
         nativeTokenInfo.processName = "foundation";
         return 0;

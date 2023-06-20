@@ -55,33 +55,6 @@ void CloudDaemonServiceProxyTest::TearDown(void)
 }
 
 /**
- * @tc.name: StartFuseTest
- * @tc.desc: Verify the StartFuse function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDaemonServiceProxyTest, StartFuseTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "StartFuseTest Start";
-    try {
-        auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
-        EXPECT_NE(CloudDaemonServiceProxy, nullptr);
-        MessageParcel data;
-        EXPECT_TRUE(data.WriteInterfaceToken(ICloudDaemon::GetDescriptor()));
-        int32_t devFd = open("/dev/fuse", O_RDWR);
-        EXPECT_GE(devFd, 0);
-        string path = "/dev/fuse";
-        int32_t userId = 100;
-        int32_t ret = CloudDaemonServiceProxy->StartFuse(userId, devFd, path);
-        EXPECT_NE(ret, E_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "StartFuseTest  ERROR";
-    }
-    GTEST_LOG_(INFO) << "StartFuseTest End";
-}
-
-/**
  * @tc.name: GetInstanceTest
  * @tc.desc: Verify the GetInstance function
  * @tc.type: FUNC
@@ -91,6 +64,7 @@ HWTEST_F(CloudDaemonServiceProxyTest, GetInstanceTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetInstanceTest Start";
     try {
+        EXPECT_EQ(CloudDaemonServiceProxy::serviceProxy_, nullptr);
         auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
         EXPECT_NE(CloudDaemonServiceProxy, nullptr);
     } catch (...) {
@@ -119,5 +93,32 @@ HWTEST_F(CloudDaemonServiceProxyTest, InvaildInstanceTest, TestSize.Level1)
         GTEST_LOG_(INFO) << "InvaildInstanceTest  ERROR";
     }
     GTEST_LOG_(INFO) << "InvaildInstanceTest End";
+}
+
+/**
+ * @tc.name: StartFuseTest
+ * @tc.desc: Verify the StartFuse function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDaemonServiceProxyTest, StartFuseTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFuseTest Start";
+    try {
+        auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
+        EXPECT_NE(CloudDaemonServiceProxy, nullptr);
+        MessageParcel data;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudDaemon::GetDescriptor()));
+        int32_t devFd = open("/dev/fuse", O_RDWR);
+        EXPECT_GE(devFd, 0);
+        string path = "/dev/fuse";
+        int32_t userId = 100;
+        int32_t ret = CloudDaemonServiceProxy->StartFuse(userId, devFd, path);
+        EXPECT_NE(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartFuseTest  ERROR";
+    }
+    GTEST_LOG_(INFO) << "StartFuseTest End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

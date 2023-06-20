@@ -253,7 +253,7 @@ HWTEST_F(DataConvertorTest, RecordToValueBucket002, TestSize.Level1)
         std::vector<DriveKit::DKRecord> records;
         NativeRdb::ValuesBucket valueBucket;
         std::vector<std::string> selectionArgs;
-        std::unique_ptr<ResultSet> rstSet = DataConvertorTest::rdbStore_->QuerySql("SELECT * FROM test", selectionArgs);
+        auto rstSet = DataConvertorTest::rdbStore_->QuerySql("SELECT * FROM test", selectionArgs);
         int32_t ret = dataConvertor_->ResultSetToRecords(std::move(rstSet), records);
         EXPECT_EQ(E_OK, ret);
         EXPECT_NE(records.size(), 0);

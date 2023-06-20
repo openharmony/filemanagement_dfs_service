@@ -28,7 +28,7 @@ namespace CloudSync {
 using namespace std;
 using namespace NativeRdb;
 
-int32_t DataConvertor::ResultSetToRecords(const unique_ptr<NativeRdb::ResultSet> resultSet,
+int32_t DataConvertor::ResultSetToRecords(const shared_ptr<NativeRdb::ResultSet> resultSet,
     std::vector<DriveKit::DKRecord> &records)
 {
     /* reserve to avoid repeatedly alloc and copy */

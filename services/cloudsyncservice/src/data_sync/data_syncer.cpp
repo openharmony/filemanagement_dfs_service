@@ -72,6 +72,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     }
 
     /* lock: device-reentrant */
+    sdkHelper_->ResetLock(lock_);
     int32_t ret = sdkHelper_->GetLock(lock_);
     if (ret != E_OK) {
         return ret;
@@ -513,7 +514,7 @@ int32_t DataSyncer::Clean(const int action)
 
 int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int action)
 {
-    LOGE("Enter function DataSyncer::CleanInner");
+    LOGD("Enter function DataSyncer::CleanInner");
     int res = handler->Clean(action);
     if (res != E_OK) {
         LOGE("Clean file failed res:%{public}d", res);

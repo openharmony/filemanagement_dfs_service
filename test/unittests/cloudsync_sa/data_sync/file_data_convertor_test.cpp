@@ -86,7 +86,7 @@ HWTEST_F(FileDataConvertorTest, HandleAlbumIdTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     string key = "albumId";
-    auto ret = fileDataConvertor_->HandleAlbumId(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleAlbumId(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -95,7 +95,7 @@ HWTEST_F(FileDataConvertorTest, HandleHashIdTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     string key = "hashId";
-    auto ret = fileDataConvertor_->HandleHashId(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleHashId(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -105,7 +105,7 @@ HWTEST_F(FileDataConvertorTest, HandleFileNameTest, TestSize.Level1)
     ResultSetMock resultSet;
     string key = "fileName";
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
-    auto ret = fileDataConvertor_->HandleFileName(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleFileName(data, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -116,7 +116,7 @@ HWTEST_F(FileDataConvertorTest, HandleFileNameTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetString(_, _)).WillOnce(Return(0));
     string key = "fileName";
-    auto ret = fileDataConvertor_->HandleFileName(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleFileName(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -125,7 +125,7 @@ HWTEST_F(FileDataConvertorTest, HandleSourceTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     string key = "source";
-    auto ret = fileDataConvertor_->HandleSource(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleSource(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -134,7 +134,7 @@ HWTEST_F(FileDataConvertorTest, HandleFileTypeTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     string key = "fileType";
-    auto ret = fileDataConvertor_->HandleFileType(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleFileType(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -144,7 +144,7 @@ HWTEST_F(FileDataConvertorTest, HandleCreatedTimeTest, TestSize.Level1)
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "createdTime";
-    auto ret = fileDataConvertor_->HandleCreatedTime(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleCreatedTime(data, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -155,7 +155,7 @@ HWTEST_F(FileDataConvertorTest, HandleCreatedTimeTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetLong(_, _)).WillOnce(Return(0));
     string key = "createdTime";
-    auto ret = fileDataConvertor_->HandleCreatedTime(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleCreatedTime(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -165,7 +165,7 @@ HWTEST_F(FileDataConvertorTest, HandleFavoriteTest, TestSize.Level1)
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "favorite";
-    auto ret = fileDataConvertor_->HandleFavorite(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleFavorite(data, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -176,7 +176,7 @@ HWTEST_F(FileDataConvertorTest, HandleFavoriteTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetInt(_, _)).WillOnce(Return(0));
     string key = "favorite";
-    auto ret = fileDataConvertor_->HandleFavorite(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleFavorite(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -186,7 +186,7 @@ HWTEST_F(FileDataConvertorTest, HandleRecycleTest, TestSize.Level1)
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "recycled";
-    auto ret = fileDataConvertor_->HandleRecycle(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleRecycle(data, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -195,9 +195,9 @@ HWTEST_F(FileDataConvertorTest, HandleRecycleTest1, TestSize.Level1)
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
-    EXPECT_CALL(resultSet, GetInt(_, _)).WillOnce(Return(0));
+    EXPECT_CALL(resultSet, GetLong(_, _)).WillOnce(Return(0));
     string key = "recycled";
-    auto ret = fileDataConvertor_->HandleRecycle(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleRecycle(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -206,7 +206,7 @@ HWTEST_F(FileDataConvertorTest, HandleDescriptionTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     string key = "description";
-    auto ret = fileDataConvertor_->HandleDescription(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleDescription(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -215,7 +215,7 @@ HWTEST_F(FileDataConvertorTest, HandlePropertiesTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     string key = "properties";
-    auto ret = fileDataConvertor_->HandleProperties(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleProperties(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -224,7 +224,7 @@ HWTEST_F(FileDataConvertorTest, HandlePositionTest, TestSize.Level1)
     DriveKit::DKRecordFieldMap map;
     ResultSetMock resultSet;
     string key = "position";
-    auto ret = fileDataConvertor_->HandlePosition(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandlePosition(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -234,7 +234,7 @@ HWTEST_F(FileDataConvertorTest, HandleHeightTest, TestSize.Level1)
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "height";
-    auto ret = fileDataConvertor_->HandleHeight(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleHeight(map, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -245,7 +245,7 @@ HWTEST_F(FileDataConvertorTest, HandleHeightTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetInt(_, _)).WillOnce(Return(0));
     string key = "height";
-    auto ret = fileDataConvertor_->HandleHeight(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleHeight(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -255,7 +255,7 @@ HWTEST_F(FileDataConvertorTest, HandleRotationTest, TestSize.Level1)
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "rotation";
-    auto ret = fileDataConvertor_->HandleRotation(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleRotation(map, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -266,7 +266,7 @@ HWTEST_F(FileDataConvertorTest, HandleRotationTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetInt(_, _)).WillOnce(Return(0));
     string key = "rotation";
-    auto ret = fileDataConvertor_->HandleRotation(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleRotation(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -276,7 +276,7 @@ HWTEST_F(FileDataConvertorTest, HandleWidthTest, TestSize.Level1)
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "width";
-    auto ret = fileDataConvertor_->HandleWidth(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleWidth(map, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -287,7 +287,7 @@ HWTEST_F(FileDataConvertorTest, HandleWidthTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetInt(_, _)).WillOnce(Return(0));
     string key = "width";
-    auto ret = fileDataConvertor_->HandleWidth(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleWidth(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -297,7 +297,7 @@ HWTEST_F(FileDataConvertorTest, HandleDataModifiedTest, TestSize.Level1)
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "data_modified";
-    auto ret = fileDataConvertor_->HandleDataModified(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleDataModified(map, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -308,7 +308,7 @@ HWTEST_F(FileDataConvertorTest, HandleDataModifiedTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetLong(_, _)).WillOnce(Return(0));
     string key = "data_modified";
-    auto ret = fileDataConvertor_->HandleDataModified(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleDataModified(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -317,7 +317,7 @@ HWTEST_F(FileDataConvertorTest, HandleDetailTimeTest, TestSize.Level1)
     DriveKit::DKRecordFieldMap map;
     ResultSetMock resultSet;
     string key = "detail_time";
-    auto ret = fileDataConvertor_->HandleDetailTime(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleDetailTime(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -327,7 +327,7 @@ HWTEST_F(FileDataConvertorTest, HandleFileCreateTimeTest, TestSize.Level1)
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "fileCreateTime";
-    auto ret = fileDataConvertor_->HandleFileCreateTime(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleFileCreateTime(map, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -338,7 +338,7 @@ HWTEST_F(FileDataConvertorTest, HandleFileCreateTimeTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetLong(_, _)).WillOnce(Return(0));
     string key = "fileCreateTime";
-    auto ret = fileDataConvertor_->HandleFileCreateTime(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleFileCreateTime(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -347,7 +347,7 @@ HWTEST_F(FileDataConvertorTest, HandleFirstUpdateTimeTest, TestSize.Level1)
     DriveKit::DKRecordFieldMap map;
     ResultSetMock resultSet;
     string key = "first_update_time";
-    auto ret = fileDataConvertor_->HandleFirstUpdateTime(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleFirstUpdateTime(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -356,7 +356,7 @@ HWTEST_F(FileDataConvertorTest, HandleRelativeBucketIdTest, TestSize.Level1)
     DriveKit::DKRecordFieldMap map;
     ResultSetMock resultSet;
     string key = "relative_bucket_id";
-    auto ret = fileDataConvertor_->HandleRelativeBucketId(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleRelativeBucketId(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -366,7 +366,7 @@ HWTEST_F(FileDataConvertorTest, HandleSourceFileNameTest, TestSize.Level1)
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "sourceFileName";
-    auto ret = fileDataConvertor_->HandleSourceFileName(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleSourceFileName(map, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -377,7 +377,7 @@ HWTEST_F(FileDataConvertorTest, HandleSourceFileNameTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetString(_, _)).WillOnce(Return(0));
     string key = "sourceFileName";
-    auto ret = fileDataConvertor_->HandleSourceFileName(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleSourceFileName(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -387,7 +387,7 @@ HWTEST_F(FileDataConvertorTest, HandleSourcePathTest, TestSize.Level1)
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "sourcePath";
-    auto ret = fileDataConvertor_->HandleSourcePath(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleSourcePath(map, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -398,7 +398,7 @@ HWTEST_F(FileDataConvertorTest, HandleSourcePathTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetString(_, _)).WillOnce(Return(0));
     string key = "sourcePath";
-    auto ret = fileDataConvertor_->HandleSourcePath(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleSourcePath(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -407,7 +407,7 @@ HWTEST_F(FileDataConvertorTest, HandleTimeZoneTest, TestSize.Level1)
     DriveKit::DKRecordFieldMap map;
     ResultSetMock resultSet;
     string key = "time_zone";
-    auto ret = fileDataConvertor_->HandleTimeZone(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleTimeZone(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -440,7 +440,7 @@ HWTEST_F(FileDataConvertorTest, HandleGeneralTest, TestSize.Level1)
     DriveKit::DKRecordFieldMap map;
     ResultSetMock resultSet;
     string key = "general";
-    auto ret = fileDataConvertor_->HandleGeneral(key, map, resultSet);
+    auto ret = fileDataConvertor_->HandleGeneral(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -450,7 +450,7 @@ HWTEST_F(FileDataConvertorTest, HandleAttachmentsTest, TestSize.Level1)
     ResultSetMock resultSet;
     string key = "attachments";
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
-    auto ret = fileDataConvertor_->HandleAttachments(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleAttachments(data, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -461,7 +461,7 @@ HWTEST_F(FileDataConvertorTest, HandleAttachments1Test, TestSize.Level1)
     string key = "attachments";
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetString(_, _)).WillOnce(Return(0));
-    auto ret = fileDataConvertor_->HandleAttachments(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleAttachments(data, resultSet);
     EXPECT_EQ(E_PATH, ret);
 }
 
@@ -471,7 +471,7 @@ HWTEST_F(FileDataConvertorTest, HandleAttachments2Test, TestSize.Level1)
     ResultSetMock resultSet;
     string key = "attachments";
     fileDataConvertor_->type_ = FileDataConvertor::OperationType::FILE_METADATA_MODIFY;
-    auto ret = fileDataConvertor_->HandleAttachments(key, data, resultSet);
+    auto ret = fileDataConvertor_->HandleAttachments(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 

@@ -17,8 +17,8 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "TokenInfo.h"
 #include "dfsu_access_token_helper.h"
+#include "tokenInfo.h"
 
 namespace OHOS::FileManagement::Test {
 using namespace testing;

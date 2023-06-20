@@ -20,14 +20,14 @@
 
 class TokenInfo {
 public:
-    static int32_t TokenID_;
+    static int32_t tokenid;
     static int32_t GetTokenId()
     {
-        return TokenID_;
+        return tokenid;
     }
     void SetTokenId(int32_t tokenId)
     {
-        TokenID_ = tokenId;
+        tokenid = tokenId;
     }
 };
 

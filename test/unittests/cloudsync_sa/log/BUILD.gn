@@ -14,54 +14,46 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
-ohos_unittest("dentry_meta_file_test") {
+ohos_unittest("dfs_error_test") {
   module_out_path = "filemanagement/dfs_service"
+  sources = [ "dfs_error_test.cpp" ]
 
-  sources = [ "dentry_meta_file_test.cpp" ]
-
-  include_dirs = [ "${utils_path}/dentry/include" ]
+  include_dirs = [ "${utils_path}/log/include" ]
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
-  external_deps = [ "c_utils:utils" ]
-
   defines = [ "private=public" ]
-  defines += [
-    "LOG_DOMAIN=0xD004307",
-    "LOG_TAG=\"CLOUDSYNC_SA\"",
-  ]
-}
 
-ohos_unittest("dentry_file_utils_test") {
-  module_out_path = "filemanagement/dfs_service"
-
-  sources = [ "dentry_file_utils_test.cpp" ]
-
-  include_dirs = [ "${utils_path}/dentry/include" ]
-
-  deps = [
-    "${utils_path}:libdistributedfiledentry",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
-
-  external_deps = [ "c_utils:utils" ]
-
-  defines = [ "private=public" ]
-  defines += [
-    "LOG_DOMAIN=0xD004307",
-    "LOG_TAG=\"CLOUDSYNC_SA\"",
-  ]
   use_exceptions = true
 }
-group("cloudsync_sa_dentry_test") {
+
+ohos_unittest("utils_log_test") {
+  module_out_path = "filemanagement/dfs_service"
+  sources = [ "utils_log_test.cpp" ]
+
+  include_dirs = [ "${utils_path}/log/include" ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
+group("cloudsync_sa_log_test") {
   testonly = true
   deps = [
-    ":dentry_file_utils_test",
-    ":dentry_meta_file_test",
+    ":dfs_error_test",
+    ":utils_log_test",
   ]
 }

@@ -31,6 +31,10 @@ const std::string BUND_NAME = "com.ohos.photos";
 const std::string BUND_NAME_TEST = "com.ohos.test";
 class DataSyncManagerTest : public testing::Test {
 public:
+    enum Action {
+        RETAIN_DATA = 0,
+        CLEAR_DATA
+    };
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
@@ -349,6 +353,19 @@ HWTEST_F(DataSyncManagerTest, RegisterDownloadFileCallbackArgFailTest, TestSize.
 HWTEST_F(DataSyncManagerTest, RegisterDownloadFileCallbackOKTest, TestSize.Level1)
 {
     auto ret = dataSyncManager_->RegisterDownloadFileCallback(BUND_NAME, USER_ID, nullptr);
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: CleanCloudFileArgOKTest
+ * @tc.desc: Verify the CleanCloudFile function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncManagerTest, CleanCloudFileArgOKTest, TestSize.Level1)
+{
+    int action = RETAIN_DATA;
+    auto ret = dataSyncManager_->CleanCloudFile(USER_ID, BUND_NAME, action);
     EXPECT_EQ(E_OK, ret);
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

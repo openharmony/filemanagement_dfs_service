@@ -140,7 +140,6 @@ HWTEST_F(CloudPrefImplTest, SetStringTest, TestSize.Level1)
         EXPECT_NE(cloudPtr_->pref_, nullptr);
         std::string key;
         std::string value;
-        GTEST_LOG_(INFO) << " zjw debug1";
         cloudPtr_->SetString(key, value);
         EXPECT_TRUE(true);
     } catch (...) {

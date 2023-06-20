@@ -18,8 +18,8 @@
 #include <cstdint>
 #include <sys/types.h>
 
-#include "TokenInfo.h"
 #include "access_token_adapter.h"
+#include "accesstoken_kit.h"
 #include "iosfwd"
 #include "ipc_process_skeleton.h"
 #include "ipc_thread_skeleton.h"
@@ -28,68 +28,17 @@
 #include "iremote_object.h"
 #include "refbase.h"
 #include "string"
+#include "tokenInfo.h"
 #include "unistd.h"
 #include "utils_log.h"
 
-int32_t TokenInfo::TokenID_;
+int32_t TokenInfo::tokenid;
 
 namespace OHOS {
+using namespace Security::AccessToken;
 #ifdef CONFIG_IPC_SINGLE
 using namespace IPC_SINGLE;
 #endif
-
-void IPCSkeleton::JoinWorkThread()
-{
-    IPCThreadSkeleton *current = IPCThreadSkeleton::GetCurrent();
-    if (current != nullptr) {
-        current->JoinWorkThread(IRemoteObject::IF_PROT_DEFAULT);
-    }
-}
-
-void IPCSkeleton::StopWorkThread()
-{
-    IPCThreadSkeleton *current = IPCThreadSkeleton::GetCurrent();
-    if (current != nullptr) {
-        current->StopWorkThread(IRemoteObject::IF_PROT_DEFAULT);
-    }
-}
-
-bool IPCSkeleton::SetContextObject(sptr<IRemoteObject> &object)
-{
-    IPCProcessSkeleton *current = IPCProcessSkeleton::GetCurrent();
-    if (current != nullptr) {
-        return current->SetRegistryObject(object);
-    }
-    return false;
-}
-
-sptr<IRemoteObject> IPCSkeleton::GetContextObject()
-{
-    IPCProcessSkeleton *current = IPCProcessSkeleton::GetCurrent();
-    if (current != nullptr) {
-        return current->GetRegistryObject();
-    }
-    return nullptr;
-}
-
-bool IPCSkeleton::SetMaxWorkThreadNum(int maxThreadNum)
-{
-    IPCProcessSkeleton *current = IPCProcessSkeleton::GetCurrent();
-    if (current != nullptr) {
-        // first thread have started at IPCProcessSkeleton instances
-        return current->SetMaxWorkThread(maxThreadNum);
-    }
-    return false;
-}
-
-pid_t IPCSkeleton::GetCallingPid()
-{
-    IRemoteInvoker *invoker = IPCThreadSkeleton::GetActiveInvoker();
-    if (invoker != nullptr) {
-        return invoker->GetCallerPid();
-    }
-    return getpid();
-}
 
 pid_t IPCSkeleton::GetCallingUid()
 {
@@ -100,23 +49,19 @@ uint32_t IPCSkeleton::GetCallingTokenID()
 {
     int ret = 0;
     switch (TokenInfo::GetTokenId()) {
-        case 0: {
-            LOGE("Token Type is %{public}d", 0);
-            ret = 0;
+        case TOKEN_HAP: {
+            ret = TOKEN_HAP;
             break;
         }
-        case 1: {
-            LOGE("Token Type is %{public}d", 1);
-            ret = 1;
+        case TOKEN_NATIVE: {
+            ret = TOKEN_NATIVE;
             break;
         }
-        case 2: {
-            LOGE("Token Type is %{public}d", 2);
-            ret = 1;
+        case TOKEN_SHELL: {
+            ret = TOKEN_NATIVE;
             break;
         }
         default: {
-            LOGE("Token Type is %{public}d", -1);
             ret = -1;
             break;
         }
@@ -140,93 +85,5 @@ uint64_t IPCSkeleton::GetSelfTokenID()
         return invoker->GetSelfTokenID();
     }
     return 0;
-}
-
-uint32_t IPCSkeleton::GetFirstTokenID()
-{
-    IRemoteInvoker *invoker = IPCThreadSkeleton::GetActiveInvoker();
-    if (invoker != nullptr) {
-        return static_cast<uint32_t>(invoker->GetFirstCallerTokenID());
-    }
-    invoker = IPCThreadSkeleton::GetDefaultInvoker();
-    if (invoker != nullptr) {
-        return static_cast<uint32_t>(invoker->GetSelfFirstCallerTokenID());
-    }
-    return 0;
-}
-
-uint64_t IPCSkeleton::GetFirstFullTokenID()
-{
-    IRemoteInvoker *invoker = IPCThreadSkeleton::GetActiveInvoker();
-    if (invoker != nullptr) {
-        return invoker->GetFirstCallerTokenID();
-    }
-    invoker = IPCThreadSkeleton::GetDefaultInvoker();
-    if (invoker != nullptr) {
-        return invoker->GetSelfFirstCallerTokenID();
-    }
-    return 0;
-}
-
-std::string IPCSkeleton::GetLocalDeviceID()
-{
-    IRemoteInvoker *invoker = IPCThreadSkeleton::GetActiveInvoker();
-    if (invoker != nullptr) {
-        return invoker->GetLocalDeviceID();
-    }
-    return "";
-}
-
-std::string IPCSkeleton::GetCallingDeviceID()
-{
-    IRemoteInvoker *invoker = IPCThreadSkeleton::GetActiveInvoker();
-    if (invoker != nullptr) {
-        return invoker->GetCallerDeviceID();
-    }
-    return "";
-}
-
-IPCSkeleton &IPCSkeleton::GetInstance()
-{
-    static IPCSkeleton skeleton;
-    return skeleton;
-}
-
-bool IPCSkeleton::IsLocalCalling()
-{
-    IRemoteInvoker *invoker = IPCThreadSkeleton::GetActiveInvoker();
-    if (invoker != nullptr) {
-        return invoker->IsLocalCalling();
-    }
-    return true;
-}
-
-int IPCSkeleton::FlushCommands(IRemoteObject *object)
-{
-    IRemoteInvoker *invoker = IPCThreadSkeleton::GetProxyInvoker(object);
-    if (invoker == nullptr) {
-        return IPC_SKELETON_NULL_OBJECT_ERR;
-    }
-
-    return invoker->FlushCommands(object);
-}
-
-std::string IPCSkeleton::ResetCallingIdentity()
-{
-    IRemoteInvoker *invoker = IPCThreadSkeleton::GetActiveInvoker();
-    if (invoker != nullptr) {
-        return invoker->ResetCallingIdentity();
-    }
-    return "";
-}
-
-bool IPCSkeleton::SetCallingIdentity(std::string &identity)
-{
-    IRemoteInvoker *invoker = IPCThreadSkeleton::GetActiveInvoker();
-    if (invoker != nullptr) {
-        return invoker->SetCallingIdentity(identity);
-    }
-
-    return true;
 }
 } // namespace OHOS

@@ -41,7 +41,7 @@ protected:
         const std::vector<std::string> &whereArgs = std::vector<std::string>());
     virtual int32_t Delete(int &deletedRows, const std::string &whereClause = "",
         const std::vector<std::string> &whereArgs = std::vector<std::string>());
-    virtual std::unique_ptr<NativeRdb::ResultSet> Query(const NativeRdb::AbsRdbPredicates &predicates,
+    virtual std::shared_ptr<NativeRdb::ResultSet> Query(const NativeRdb::AbsRdbPredicates &predicates,
                                                         const std::vector<std::string> &columns);
 
 private:
