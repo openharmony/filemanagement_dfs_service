@@ -120,6 +120,26 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name:RegisterCallbackInnerTest002
+ * @tc.desc:Verify the RegisterCallbackInner function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterCallbackInner error branch start";
+    try {
+        sptr<CloudSyncCallbackMock> callback = nullptr;
+        int ret = g_servicePtr_->RegisterCallbackInner(callback);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterCallbackInner error branch FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterCallbackInner error branch end";
+}
+
+/**
  * @tc.name:StopSyncInnerTest
  * @tc.desc:Verify the StopSyncInner function.
  * @tc.type:FUNC

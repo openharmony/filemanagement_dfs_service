@@ -58,30 +58,41 @@ const std::string FILE_CONTENT = "content";
 const std::string FILE_THUMBNAIL = "thumbnail";
 const std::string FILE_LCD = "lcdThumbnail";
 
+/* file type */
+enum {
+    FILE_TYPE_IMAGE = 1,
+    FILE_TYPE_VIDEO = 4,
+};
+
 const int32_t POSITION_LOCAL = 1;
 const int32_t POSITION_CLOUD = 2;
 const int32_t POSITION_BOTH = 3;
 
 const std::vector<std::string> GALLERY_FILE_COLUMNS = {
-    Media::MEDIA_DATA_DB_FILE_PATH,
-    Media::MEDIA_DATA_DB_SIZE,
-    Media::MEDIA_DATA_DB_DATE_MODIFIED,
-    Media::MEDIA_DATA_DB_META_DATE_MODIFIED,
-    Media::MEDIA_DATA_DB_DATE_ADDED,
-    Media::MEDIA_DATA_DB_MIME_TYPE,
-    Media::MEDIA_DATA_DB_TITLE,
-    Media::MEDIA_DATA_DB_NAME,
-    Media::MEDIA_DATA_DB_ORIENTATION,
-    Media::MEDIA_DATA_DB_THUMBNAIL,
-    Media::MEDIA_DATA_DB_LCD,
-    Media::MEDIA_DATA_DB_MEDIA_TYPE,
-    Media::MEDIA_DATA_DB_IS_FAV,
-    Media::MEDIA_DATA_DB_RELATIVE_PATH,
-    Media::MEDIA_DATA_DB_HEIGHT,
-    Media::MEDIA_DATA_DB_WIDTH,
-    Media::MEDIA_DATA_DB_IS_TRASH,
+    Media::PhotoColumn::MEDIA_FILE_PATH,
+    Media::PhotoColumn::MEDIA_SIZE,
+    Media::PhotoColumn::MEDIA_DATE_MODIFIED,
+    Media::PhotoColumn::PHOTO_META_DATE_MODIFIED,
+    Media::PhotoColumn::MEDIA_DATE_ADDED,
+    Media::PhotoColumn::MEDIA_MIME_TYPE,
+    Media::PhotoColumn::MEDIA_NAME,
+    Media::PhotoColumn::PHOTO_ORIENTATION,
+    Media::PhotoColumn::MEDIA_TYPE,
+    Media::PhotoColumn::MEDIA_IS_FAV,
+    Media::PhotoColumn::PHOTO_HEIGHT,
+    Media::PhotoColumn::PHOTO_WIDTH,
+    Media::PhotoColumn::PHOTO_SUBTYPE,
+    Media::PhotoColumn::MEDIA_OWNER_PACKAGE,
+    Media::PhotoColumn::MEDIA_DEVICE_NAME,
+    Media::PhotoColumn::MEDIA_DATE_TAKEN,
+    Media::PhotoColumn::MEDIA_DURATION,
+    Media::PhotoColumn::MEDIA_DATE_TRASHED,
+    Media::PhotoColumn::MEDIA_DATE_DELETED,
+    Media::PhotoColumn::MEDIA_HIDDEN,
+    Media::PhotoColumn::PHOTO_LATITUDE,
+    Media::PhotoColumn::PHOTO_LONGITUDE,
     /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
-    Media::MEDIA_DATA_DB_CLOUD_ID
+    Media::PhotoColumn::PHOTO_CLOUD_ID
 };
 
 const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
@@ -91,17 +102,22 @@ const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
     DataType::LONG,         /* meta_date_modified */
     DataType::LONG,         /* date_added */
     DataType::STRING,       /* mime_type */
-    DataType::STRING,       /* title */
     DataType::STRING,       /* display_name */
     DataType::INT,          /* orientation */
-    DataType::STRING,       /* thumbnail */
-    DataType::STRING,       /* lcd */
     DataType::INT,          /* media_type */
     DataType::BOOL,         /* is_favorite */
-    DataType::STRING,       /* relative_path */
     DataType::INT,          /* height */
     DataType::INT,          /* width */
-    DataType::INT,          /* is_trash */
+    DataType::INT,          /* subtype */
+    DataType::STRING,       /* owner_package */
+    DataType::STRING,       /* device_name */
+    DataType::LONG,         /* date_taken */
+    DataType::INT,         /* duration */
+    DataType::LONG,         /* date_trashed */
+    DataType::LONG,         /* date_deleted */
+    DataType::INT,         /* hidden */
+    DataType::DOUBLE,       /* latitude */
+    DataType::DOUBLE,       /* longitude */
     DataType::STRING        /* cloud_id */
 };
 } // namespace CloudSync

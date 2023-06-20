@@ -41,7 +41,6 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_PERMISSION_SYSTEM,
     E_GET_TOKEN_INFO_ERROR,
     E_SYNCER_NUM_OUT_OF_RANGE,
-    E_SYNC_FAILED_CLOUD_NOT_READY,
     E_SYNC_FAILED_BATTERY_LOW,
     E_SYNC_FAILED_BATTERY_TOO_LOW,
     E_SYNC_FAILED_NETWORK_NOT_AVAILABLE,
@@ -55,7 +54,8 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_PENDING,
     E_SCHEDULE,
     E_ASYNC_RUN,
-    E_PATH
+    E_PATH,
+    E_DATA,
 };
 
 enum JsErrCode {

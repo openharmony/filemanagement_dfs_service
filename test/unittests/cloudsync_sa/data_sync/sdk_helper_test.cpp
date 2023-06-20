@@ -22,6 +22,15 @@
 #include "gallery_data_syncer.h"
 #include "sdk_helper.h"
 
+/* template link */
+namespace OHOS::FileManagement::CloudSync {
+template<typename T, typename RET, typename... ARGS>
+std::function<RET(ARGS...)> DataSyncer::AsyncCallback(RET(T::*f)(ARGS...))
+{
+    return taskRunner_->AsyncCallback<DataSyncer>(f, this);
+}
+}
+
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
@@ -48,6 +57,7 @@ void SdkHelperTest::TearDownTestCase(void)
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
+#undef LOGI
 void LOGI(string content)
 {
     GTEST_LOG_(INFO) << content;

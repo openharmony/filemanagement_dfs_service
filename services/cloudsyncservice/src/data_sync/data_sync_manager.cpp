@@ -49,18 +49,18 @@ int32_t DataSyncManager::TriggerStartSync(const std::string bundleName,
     }
 
     std::string appBundleName(it->second);
+    auto ret = IsSkipSync(appBundleName, userId);
+    if (ret != E_OK) {
+        return ret;
+    }
     /* get sdk helper */
     auto sdkHelper = std::make_shared<SdkHelper>();
-    auto ret = sdkHelper->Init(userId, appBundleName);
+    ret = sdkHelper->Init(userId, appBundleName);
     if (ret != E_OK) {
         LOGE("get sdk helper err %{public}d", ret);
         return ret;
     }
 
-    ret = IsSkipSync(appBundleName, userId);
-    if (ret != E_OK) {
-        return ret;
-    }
     auto dataSyncer = GetDataSyncer(appBundleName, userId);
     if (!dataSyncer) {
         LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
@@ -225,13 +225,13 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string bun
 
 int32_t DataSyncManager::IsSkipSync(const std::string bundleName, const int32_t userId) const
 {
-    if (!CloudStatus::IsCloudStatusOkay(bundleName)) {
-        LOGE("cloud status is not OK");
-        return E_SYNC_FAILED_CLOUD_NOT_READY;
-    }
     if (NetworkStatus::GetNetConnStatus() == NetworkStatus::NetConnStatus::NO_NETWORK) {
         LOGE("network is not available");
         return E_SYNC_FAILED_NETWORK_NOT_AVAILABLE;
+    }
+    if (!CloudStatus::IsCloudStatusOkay(bundleName, userId)) {
+        LOGE("cloud status is not OK");
+        return E_CLOUD_SDK;
     }
     if (!BatteryStatus::IsBatteryCapcityOkay()) {
         return E_SYNC_FAILED_BATTERY_TOO_LOW;
