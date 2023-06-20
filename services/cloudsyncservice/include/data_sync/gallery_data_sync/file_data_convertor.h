@@ -53,6 +53,7 @@ public:
 
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
     std::string GetThumbPath(const std::string &path, const std::string &key);
+    std::string GetHmdfsLocalPath(const std::string &path);
     std::string GetThumbPathInCloud(const std::string &path, const std::string &key);
     /* path conversion */
     std::string GetLowerPath(const std::string &path);
