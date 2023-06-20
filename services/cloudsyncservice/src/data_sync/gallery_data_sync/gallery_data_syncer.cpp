@@ -113,7 +113,11 @@ void GalleryDataSyncer::Schedule()
             break;
         }
     }
-    LOGE("schedule stage %{public}d finish, ret = %{public}d", stage_, ret);
+
+    /* if error takes place while schedule, just abort it */
+    if (ret != E_OK) {
+        Abort();
+    }
 }
 
 void GalleryDataSyncer::Reset()
