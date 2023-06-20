@@ -180,8 +180,13 @@ napi_value CloudFileDownloadNapi::On(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto callback = make_shared<CloudDownloadCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
-    int32_t ret = CloudSyncManager::GetInstance().RegisterDownloadFileCallback(callback);
+    if (callback_ != nullptr) {
+        LOGI("callback already exist");
+        return NVal::CreateUndefined(env).val_;
+    }
+
+    callback_ = make_shared<CloudDownloadCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
+    int32_t ret = CloudSyncManager::GetInstance().RegisterDownloadFileCallback(callback_);
     if (ret != E_OK) {
         LOGE("RegisterDownloadFileCallback error, ret: %{public}d", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
@@ -214,6 +219,7 @@ napi_value CloudFileDownloadNapi::Off(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
+    callback_ = nullptr;
     return NVal::CreateUndefined(env).val_;
 }
 

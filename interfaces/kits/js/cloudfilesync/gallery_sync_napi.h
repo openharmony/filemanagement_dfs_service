@@ -23,10 +23,9 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace OHOS::FileManagement::LibN;
 const int32_t ARGS_ONE = 1;
 
+class CloudSyncCallbackImpl;
 class GallerySyncNapi final : public NExporter {
 public:
-    inline static const std::string className_ = "GallerySync";
-
     bool Export() override;
     std::string GetClassName() override;
 
@@ -39,6 +38,10 @@ public:
 
     GallerySyncNapi(napi_env env, napi_value exports) : NExporter(env, exports) {};
     ~GallerySyncNapi() = default;
+
+private:
+    static inline std::shared_ptr<CloudSyncCallbackImpl> callback_;
+    inline static const std::string className_ = "GallerySync";
 };
 
 class CloudSyncCallbackImpl : public CloudSyncCallback {

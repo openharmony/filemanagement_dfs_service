@@ -21,6 +21,7 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
+class CloudDownloadCallbackImpl;
 class CloudFileDownloadNapi final : public LibN::NExporter {
 public:
     CloudFileDownloadNapi(napi_env env, napi_value exports);
@@ -34,6 +35,8 @@ public:
     static napi_value Off(napi_env env, napi_callback_info info);
     static napi_value Stop(napi_env env, napi_callback_info info);
 
+private:
+    static inline std::shared_ptr<CloudDownloadCallbackImpl> callback_;
     inline static const std::string className = "Download";
 };
 
