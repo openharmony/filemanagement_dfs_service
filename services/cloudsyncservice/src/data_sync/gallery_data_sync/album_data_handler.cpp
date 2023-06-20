@@ -41,11 +41,7 @@ void AlbumDataHandler::GetFetchCondition(FetchCondition &cond)
 }
 
 int32_t AlbumDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records,
-                                         vector<DKDownloadAsset> &outAssetsToDownload,
-                                         shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                                         std::shared_ptr<const DriveKit::DKDatabase>,
-                                         const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                                         const DriveKit::DKError &)>> &downloadResultCallback)
+                                         OnFetchParams &params)
 {
     return E_OK;
 }

@@ -279,6 +279,21 @@ static string GetParentDir(const string &path)
     return path.substr(0, pos);
 }
 
+static string GetAssetKey(int fileType)
+{
+    switch (fileType) {
+        case FILE_TYPE_CONTENT:
+            return "content";
+        case FILE_TYPE_THUMBNAIL:
+            return "thumbnail";
+        case FILE_TYPE_LCD:
+            return "lcd";
+        default:
+            LOGE("bad fileType %{public}d", fileType);
+            return "";
+    }
+}
+
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                       struct fuse_file_info *fi)
 {
@@ -304,7 +319,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
          */
         cInode->readSession = database->NewAssetReadSession("fileType",
                                                             recordId,
-                                                            "content",
+                                                            GetAssetKey(cInode->mBase->fileType),
                                                             path + "/" + cInode->mBase->name);
     }
 
