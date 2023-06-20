@@ -38,6 +38,7 @@ public:
     MOCK_METHOD2(GetDownloadAsset, int32_t(string cloudId,
                                            vector<DriveKit::DKDownloadAsset> &outAssetsToDownload));
     MOCK_METHOD1(OnDownloadSuccess, int32_t(const DriveKit::DKDownloadAsset &asset));
+    MOCK_METHOD1(OnDownloadThumbSuccess, int32_t(const DriveKit::DKDownloadAsset &asset));
     MOCK_METHOD1(Clean, int32_t(const int action));
 };
 class AlbumDataHandlerTest : public testing::Test {
@@ -81,12 +82,8 @@ HWTEST_F(AlbumDataHandlerTest, OnFetchRecords001, TestSize.Level1)
         auto rdb = make_shared<RdbStoreMock>();
         auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(rdb);
         const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
-        vector<DKDownloadAsset> outAssetsToDownload;
-        shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                                      std::shared_ptr<const DriveKit::DKDatabase>,
-                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                                      const DriveKit::DKError &)>> downloadResultCallback = nullptr;
-        int res = albumDataHandlerMock->OnFetchRecords(records, outAssetsToDownload, downloadResultCallback);
+        OnFetchParams onFetchParams;
+        int res = albumDataHandlerMock->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
