@@ -35,6 +35,7 @@ class DataSyncerMock final : public DataSyncer {
 public:
     DataSyncerMock(const std::string bundleName, const int32_t userId);
     MOCK_METHOD0(Schedule, void());
+    MOCK_METHOD0(Reset, void());
 };
 
 DataSyncerMock::DataSyncerMock(const std::string bundleName, const int32_t userId) : DataSyncer("com.ohos.test", 100) {}
