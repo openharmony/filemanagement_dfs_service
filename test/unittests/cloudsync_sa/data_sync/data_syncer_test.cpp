@@ -556,4 +556,24 @@ HWTEST_F(DataSyncerTest, StartSyncTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartSync end";
 }
 
+/**
+ * @tc.name: ClearCursorTest
+ * @tc.desc: Verify the ClearCursor function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataSyncerTest, ClearCursorTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ClearCursorTest Start";
+    try {
+        datasyncer_->ClearCursor();
+        EXPECT_EQ(datasyncer_->startCursor_, "");
+        EXPECT_EQ(datasyncer_->nextCursor_, "");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnFetchRetryRecord FAILED";
+    }
+    GTEST_LOG_(INFO) << "ClearCursorTest end";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
