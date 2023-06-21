@@ -76,6 +76,32 @@ HWTEST_F(CloudDaemonManagerImplTest, GetInstanceTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: StartFuseTest
+ * @tc.desc: Verify the StartFuse function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDaemonManagerImplTest, StartFuseTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFuseTest Start";
+    try {
+        auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
+        EXPECT_NE(CloudDaemonServiceProxy, nullptr);
+        int32_t devFd = open("/dev/fuse", O_RDWR);
+        EXPECT_GT(devFd, 0);
+        string path = "/dev/fuse";
+        int32_t userId = 100;
+        int32_t ret = cloudDaemonManagerImpl->StartFuse(userId, devFd, path);
+        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(cloudDaemonManagerImpl->isFirstCall_.test_and_set(), false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartFuseTest  ERROR";
+    }
+    GTEST_LOG_(INFO) << "StartFuseTest End";
+}
+
+/**
  * @tc.name: SetDeathRecipientTest
  * @tc.desc: Verify the SetDeathRecipient function
  * @tc.type: FUNC
@@ -90,35 +116,12 @@ HWTEST_F(CloudDaemonManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
         auto remoteObject = CloudDaemonServiceProxy->AsObject();
         EXPECT_NE(remoteObject, nullptr);
         cloudDaemonManagerImpl->SetDeathRecipient(remoteObject);
+        EXPECT_EQ(cloudDaemonManagerImpl->isFirstCall_.test_and_set(), false);
+        EXPECT_NE(cloudDaemonManagerImpl->deathRecipient_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SetDeathRecipientTest  ERROR";
     }
     GTEST_LOG_(INFO) << "SetDeathRecipientTest End";
-}
-
-/**
- * @tc.name: StartFuseTest
- * @tc.desc: Verify the StartFuse function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDaemonManagerImplTest, StartFuseTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "StartFuseTest Start";
-    try {
-        auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
-        EXPECT_NE(CloudDaemonServiceProxy, nullptr);
-        int32_t devFd = open("/dev/fuse", O_RDWR);
-        EXPECT_GE(devFd, 0);
-        string path = "/dev/fuse";
-        int32_t userId = 100;
-        int32_t ret = cloudDaemonManagerImpl->StartFuse(userId, devFd, path);
-        EXPECT_EQ(ret, E_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "StartFuseTest  ERROR";
-    }
-    GTEST_LOG_(INFO) << "StartFuseTest End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
