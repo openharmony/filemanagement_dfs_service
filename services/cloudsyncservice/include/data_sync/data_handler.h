@@ -21,16 +21,16 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+struct OnFetchParams {
+    bool fetchThumbs{true};
+    std::vector<DriveKit::DKDownloadAsset> assetsToDownload{};
+};
 class DataHandler {
 public:
     /* download */
     virtual void GetFetchCondition(FetchCondition &cond) = 0;
     virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
-                                   std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
-                                   std::shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                                   std::shared_ptr<const DriveKit::DKDatabase>,
-                                   const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                                   const DriveKit::DKError &)>> &resultCallback) = 0;
+                                   OnFetchParams &params) = 0;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) = 0;
 
     virtual int32_t GetDownloadAsset(std::string cloudId,
@@ -51,6 +51,7 @@ public:
     virtual int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map);
     virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) = 0;
+    virtual int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset) = 0;
 
     /*clean*/
     virtual int32_t Clean(const int action) = 0;

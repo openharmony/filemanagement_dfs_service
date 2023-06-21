@@ -78,6 +78,7 @@ protected:
 
     /* schedule */
     virtual void Schedule() = 0;
+    virtual void Reset() = 0;
     void Abort();
 
     /* download source file */
@@ -169,6 +170,8 @@ private:
     /* cursor*/
     DriveKit::DKQueryCursor startCursor_;
     DriveKit::DKQueryCursor nextCursor_;
+    int32_t totalPullCount_{0};
+    int32_t downloadThumbLimit_{0};
 
     /* cloud preference impl */
     CloudPrefImpl cloudPrefImpl_;

@@ -13,6 +13,14 @@
  * limitations under the License.
  */
 
+#include <fstream>
+#include <filesystem>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include <iostream>
+#include <memory>
+#include <sys/stat.h>
+
 #include "abs_shared_result_set_mock.h"
 #include "dfs_error.h"
 #include "file_data_handler.h"
@@ -23,9 +31,6 @@
 #include "rdb_store_mock.h"
 #include "result_set_mock.h"
 #include "sync_rule/cloud_status.h"
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-#include <memory>
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -286,8 +291,8 @@ HWTEST_F(FileDataHandlerTest, PullRecordInsert001, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
-        bool outPullThumbs;
-        int32_t ret = fileDataHandler->PullRecordInsert(record, outPullThumbs);
+        OnFetchParams onFetchParams{true};
+        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -310,8 +315,8 @@ HWTEST_F(FileDataHandlerTest, PullRecordInsert002, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
-        bool outPullThumbs;
-        int32_t ret = fileDataHandler->PullRecordInsert(record, outPullThumbs);
+        OnFetchParams onFetchParams{false};
+        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1595,12 +1600,8 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords001, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
 
         const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
-        vector<DKDownloadAsset> outAssetsToDownload;
-        shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                                      std::shared_ptr<const DriveKit::DKDatabase>,
-                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                                      const DriveKit::DKError &)>> downloadResultCallback = nullptr;
-        int32_t ret = fileDataHandler->OnFetchRecords(records, outAssetsToDownload, downloadResultCallback);
+        OnFetchParams onFetchParams;
+        int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1626,13 +1627,8 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords002, TestSize.Level1)
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
 
         const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
-        vector<DKDownloadAsset> outAssetsToDownload;
-        shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                                      std::shared_ptr<const DriveKit::DKDatabase>,
-                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                                      const DriveKit::DKError &)>> downloadResultCallback = nullptr;
-        
-        int32_t ret = fileDataHandler->OnFetchRecords(records, outAssetsToDownload, downloadResultCallback);
+        OnFetchParams onFetchParams;
+        int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1660,13 +1656,8 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords003, TestSize.Level1)
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
 
         const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
-        vector<DKDownloadAsset> outAssetsToDownload;
-        shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                                      std::shared_ptr<const DriveKit::DKDatabase>,
-                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                                      const DriveKit::DKError &)>> downloadResultCallback = nullptr;
-        
-        int32_t ret = fileDataHandler->OnFetchRecords(records, outAssetsToDownload, downloadResultCallback);
+        OnFetchParams onFetchParams;
+        int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1690,8 +1681,8 @@ HWTEST_F(FileDataHandlerTest, PullRecordUpdate001, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
-        bool outPullThumbs;
-        int32_t ret = fileDataHandler->PullRecordUpdate(record, *rset, outPullThumbs);
+        OnFetchParams onFetchParams;
+        int32_t ret = fileDataHandler->PullRecordUpdate(record, *rset, onFetchParams);
         EXPECT_NE(E_RDB, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1723,5 +1714,127 @@ HWTEST_F(FileDataHandlerTest, PullRecordDelete001, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "PullRecordDelete001 End";
+}
+
+/**
+ * @tc.name: ClearCloudInfo001
+ * @tc.desc: Verify the ClearCloudInfo function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, ClearCloudInfo001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ClearCloudInfo001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
+
+        std::string cloudId;
+        int32_t ret = fileDataHandler->ClearCloudInfo(cloudId);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ClearCloudInfo001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "ClearCloudInfo001 End";
+}
+
+/**
+ * @tc.name: ClearCloudInfo002
+ * @tc.desc: Verify the ClearCloudInfo function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, ClearCloudInfo002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ClearCloudInfo002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
+
+        std::string cloudId;
+        int32_t ret = fileDataHandler->ClearCloudInfo(cloudId);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ClearCloudInfo002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "ClearCloudInfo002 End";
+}
+
+/**
+ * @tc.name: DeleteDentryFile001
+ * @tc.desc: Verify the DeleteDentryFile function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, DeleteDentryFile001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteDentryFile001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        int32_t ret = fileDataHandler->DeleteDentryFile();
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DeleteDentryFile001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "DeleteDentryFile001 End";
+}
+
+/**
+ * @tc.name: CleanNotDirtyData001
+ * @tc.desc: Verify the CleanNotDirtyData function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotDirtyData001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotDirtyData001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        string thmbDir = "/test/not/exits";
+        string assetPath;
+        string cloudId;
+        int32_t ret = fileDataHandler->CleanNotDirtyData(thmbDir, assetPath, cloudId);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotDirtyData001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotDirtyData001 End";
+}
+
+/**
+ * @tc.name: Clean001
+ * @tc.desc: Verify the Clean function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, Clean001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Clean001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr)));
+        int action = 0;
+        int32_t ret = fileDataHandler->Clean(action);
+        EXPECT_EQ(E_RDB, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " Clean001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "Clean001 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

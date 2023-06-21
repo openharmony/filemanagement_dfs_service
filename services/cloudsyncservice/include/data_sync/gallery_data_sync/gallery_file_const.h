@@ -50,6 +50,8 @@ const std::string FILE_RELATIVE_BUCKET_ID = "relative_bucket_id";
 const std::string FILE_SOURCE_FILE_NAME = "sourceFileName";
 const std::string FILE_SOURCE_PATH = "sourcePath";
 const std::string FILE_TIME_ZONE = "time_zone";
+const std::string FILE_THUMB_SIZE = "thumb_size";
+const std::string FILE_LCD_SIZE = "lcd_size";
 /* properties - general */
 const std::string FILE_GENERAL = "general";
 /* attachments */
@@ -87,8 +89,8 @@ const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::PhotoColumn::MEDIA_DATE_TAKEN,
     Media::PhotoColumn::MEDIA_DURATION,
     Media::PhotoColumn::MEDIA_DATE_TRASHED,
-    Media::PhotoColumn::MEDIA_DATE_DELETED,
-    Media::PhotoColumn::MEDIA_HIDDEN,
+    // Media::PhotoColumn::MEDIA_DATE_DELETED
+    // Media::PhotoColumn::MEDIA_HIDDEN
     Media::PhotoColumn::PHOTO_LATITUDE,
     Media::PhotoColumn::PHOTO_LONGITUDE,
     /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
@@ -114,8 +116,8 @@ const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
     DataType::LONG,         /* date_taken */
     DataType::INT,         /* duration */
     DataType::LONG,         /* date_trashed */
-    DataType::LONG,         /* date_deleted */
-    DataType::INT,         /* hidden */
+    // DataType::LONG         /* date_deleted */
+    // DataType::INT         /* hidden */
     DataType::DOUBLE,       /* latitude */
     DataType::DOUBLE,       /* longitude */
     DataType::STRING        /* cloud_id */
