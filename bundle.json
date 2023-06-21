@@ -21,35 +21,36 @@
       "features": [
         "dfs_service_feature_enable_cloud_adapter"
       ],
-      "adapted_system_type": [
-        "standard"
-      ],
+      "adapted_system_type": [ "small", "standard" ],
       "rom": "2048KB",
       "ram": "4096KB",
       "deps": {
         "components": [
-          "device_auth",
+          "ability_base",
+          "access_token",
+          "battery_manager",
           "c_utils",
-          "ipc",
+          "common_event_service",
           "dataclassification",
+          "device_auth",
+          "device_manager",
+          "drivekit_native",
+          "dsoftbus",
+          "file_api",
+          "hilog_native",
+          "hiviewdfx_hilog_native",
+          "init",
+          "ipc",
           "preferences",
           "media_library",
-          "ability_base",
-          "dsoftbus",
-          "battery_manager",
-          "access_token",
-          "common_event_service",
-          "device_manager",
-          "safwk",
           "netmanager_base",
           "relational_store",
-          "file_api",
-          "init",
-          "libfuse",
-          "samgr",
-          "hiviewdfx_hilog_native"
+          "safwk",
+          "samgr"
         ],
-        "third_party": []
+        "third_party": [
+          "libfuse"
+        ]
       },
       "build": {
         "group_type": {
