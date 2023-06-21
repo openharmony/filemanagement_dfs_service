@@ -29,41 +29,26 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
-DataSyncManager::DataSyncManager()
-{
-    bundleNameConversionMap_["com.ohos.medialibrary.medialibrarydata"] = "com.ohos.photos";
-    bundleNameConversionMap_["com.ohos.photos"] = "com.ohos.photos";
-    bundleNameConversionMap_["com.ohos.cloudfilesync"] = "com.ohos.photos";
-    bundleNameConversionMap_["hdcd"] = "com.ohos.photos";
-}
-
-int32_t DataSyncManager::TriggerStartSync(const std::string bundleName,
+int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
                                           const int32_t userId,
                                           bool forceFlag,
                                           SyncTriggerType triggerType)
 {
-    auto it = bundleNameConversionMap_.find(bundleName);
-    if (it == bundleNameConversionMap_.end()) {
-        LOGE("trigger start sync failed, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
-        return E_INVAL_ARG;
-    }
-
-    std::string appBundleName(it->second);
-    auto ret = IsSkipSync(appBundleName, userId);
+    auto ret = IsSkipSync(bundleName, userId);
     if (ret != E_OK) {
         return ret;
     }
     /* get sdk helper */
     auto sdkHelper = std::make_shared<SdkHelper>();
-    ret = sdkHelper->Init(userId, appBundleName);
+    ret = sdkHelper->Init(userId, bundleName);
     if (ret != E_OK) {
         LOGE("get sdk helper err %{public}d", ret);
         return ret;
     }
 
-    auto dataSyncer = GetDataSyncer(appBundleName, userId);
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
     dataSyncer->SetSdkHelper(sdkHelper);
@@ -72,42 +57,30 @@ int32_t DataSyncManager::TriggerStartSync(const std::string bundleName,
     return E_OK;
 }
 
-int32_t DataSyncManager::TriggerStopSync(const std::string bundleName,
+int32_t DataSyncManager::TriggerStopSync(const std::string &bundleName,
                                          const int32_t userId,
                                          SyncTriggerType triggerType)
 {
-    auto it = bundleNameConversionMap_.find(bundleName);
-    if (it == bundleNameConversionMap_.end()) {
-        LOGE("trigger stop sync failed, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
-        return E_INVAL_ARG;
-    }
-    std::string appBundleName(it->second);
-    auto dataSyncer = GetDataSyncer(appBundleName, userId);
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
     std::thread([dataSyncer, triggerType]() { dataSyncer->StopSync(triggerType); }).detach();
     return E_OK;
 }
 
-int32_t DataSyncManager::StartDownloadFile(const std::string bundleName, const int32_t userId, const std::string path)
+int32_t DataSyncManager::StartDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path)
 {
-    auto it = bundleNameConversionMap_.find(bundleName);
-    if (it == bundleNameConversionMap_.end()) {
-        LOGE("trigger stop sync failed, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
-        return E_INVAL_ARG;
-    }
-    std::string appBundleName(it->second);
-    auto dataSyncer = GetDataSyncer(appBundleName, userId);
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
 
     /* get sdk helper */
     auto sdkHelper = std::make_shared<SdkHelper>();
-    auto ret = sdkHelper->Init(userId, appBundleName);
+    auto ret = sdkHelper->Init(userId, bundleName);
     if (ret != E_OK) {
         LOGE("get sdk helper err %{public}d", ret);
         return ret;
@@ -118,36 +91,24 @@ int32_t DataSyncManager::StartDownloadFile(const std::string bundleName, const i
     return E_OK;
 }
 
-int32_t DataSyncManager::StopDownloadFile(const std::string bundleName, const int32_t userId, const std::string path)
+int32_t DataSyncManager::StopDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path)
 {
-    auto it = bundleNameConversionMap_.find(bundleName);
-    if (it == bundleNameConversionMap_.end()) {
-        LOGE("trigger stop sync failed, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
-        return E_INVAL_ARG;
-    }
-    std::string appBundleName(it->second);
-    auto dataSyncer = GetDataSyncer(appBundleName, userId);
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
     std::thread([dataSyncer, userId, path]() { dataSyncer->StopDownloadFile(path, userId); }).detach();
     return E_OK;
 }
 
-int32_t DataSyncManager::RegisterDownloadFileCallback(const std::string bundleName,
+int32_t DataSyncManager::RegisterDownloadFileCallback(const std::string &bundleName,
                                                       const int32_t userId,
                                                       const sptr<ICloudDownloadCallback>& downloadCallback)
 {
-    auto it = bundleNameConversionMap_.find(bundleName);
-    if (it == bundleNameConversionMap_.end()) {
-        LOGE("trigger stop sync failed, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
-        return E_INVAL_ARG;
-    }
-    std::string appBundleName(it->second);
-    auto dataSyncer = GetDataSyncer(appBundleName, userId);
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
     std::thread([dataSyncer, userId, downloadCallback]() {
@@ -156,18 +117,12 @@ int32_t DataSyncManager::RegisterDownloadFileCallback(const std::string bundleNa
     return E_OK;
 }
 
-int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string bundleName,
+int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string &bundleName,
                                                         const int32_t userId)
 {
-    auto it = bundleNameConversionMap_.find(bundleName);
-    if (it == bundleNameConversionMap_.end()) {
-        LOGE("trigger stop sync failed, bundleName: %{private}s, useId: %{private}d", bundleName.c_str(), userId);
-        return E_INVAL_ARG;
-    }
-    std::string appBundleName(it->second);
-    auto dataSyncer = GetDataSyncer(appBundleName, userId);
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", appBundleName.c_str());
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
     std::thread([dataSyncer, userId]() { dataSyncer->UnregisterDownloadFileCallback(userId); }).detach();
@@ -208,7 +163,7 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
     return ret;
 }
 
-std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string bundleName, const int32_t userId)
+std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bundleName, const int32_t userId)
 {
     std::lock_guard<std::mutex> lck(dataSyncMutex_);
     currentUserId_ = userId;
@@ -223,7 +178,7 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string bun
     return dataSyncer_;
 }
 
-int32_t DataSyncManager::IsSkipSync(const std::string bundleName, const int32_t userId) const
+int32_t DataSyncManager::IsSkipSync(const std::string &bundleName, const int32_t userId) const
 {
     if (NetworkStatus::GetNetConnStatus() == NetworkStatus::NetConnStatus::NO_NETWORK) {
         LOGE("network is not available");

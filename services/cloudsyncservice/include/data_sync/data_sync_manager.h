@@ -28,24 +28,24 @@ namespace OHOS::FileManagement::CloudSync {
 constexpr int32_t INVALID_USER_ID = -1;
 class DataSyncManager {
 public:
-    DataSyncManager();
+    DataSyncManager() = default;
     ~DataSyncManager() = default;
 
-    int32_t TriggerStartSync(const std::string bundleName,
+    int32_t TriggerStartSync(const std::string &bundleName,
                              const int32_t userId,
                              bool forceFlag,
                              SyncTriggerType triggerType);
-    int32_t TriggerStopSync(const std::string bundleName, const int32_t userId, SyncTriggerType triggerType);
+    int32_t TriggerStopSync(const std::string &bundleName, const int32_t userId, SyncTriggerType triggerType);
 
     int32_t TriggerRecoverySync(SyncTriggerType triggerType);
-    std::shared_ptr<DataSyncer> GetDataSyncer(const std::string bundleName, const int32_t userId);
-    int32_t IsSkipSync(const std::string bundleName, const int32_t userId) const;
-    int32_t StartDownloadFile(const std::string bundleName, const int32_t userId, const std::string path);
-    int32_t StopDownloadFile(const std::string bundleName, const int32_t userId, const std::string path);
-    int32_t RegisterDownloadFileCallback(const std::string bundleName,
+    std::shared_ptr<DataSyncer> GetDataSyncer(const std::string &bundleName, const int32_t userId);
+    int32_t IsSkipSync(const std::string &bundleName, const int32_t userId) const;
+    int32_t StartDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path);
+    int32_t StopDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path);
+    int32_t RegisterDownloadFileCallback(const std::string &bundleName,
                                          const int32_t userId,
                                          const sptr<ICloudDownloadCallback> &downloadCallback);
-    int32_t UnregisterDownloadFileCallback(const std::string bundleName,
+    int32_t UnregisterDownloadFileCallback(const std::string &bundleName,
                                            const int32_t userId);
     int32_t CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action);
 
@@ -53,7 +53,6 @@ private:
     std::vector<std::shared_ptr<DataSyncer>> dataSyncers_;
     std::mutex dataSyncMutex_;
     int32_t currentUserId_{INVALID_USER_ID};
-    std::map<std::string, std::string> bundleNameConversionMap_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
