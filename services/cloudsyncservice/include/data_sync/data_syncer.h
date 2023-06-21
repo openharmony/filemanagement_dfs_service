@@ -78,6 +78,7 @@ protected:
 
     /* schedule */
     virtual void Schedule() = 0;
+    virtual void Reset() = 0;
     void Abort();
 
     /* download source file */

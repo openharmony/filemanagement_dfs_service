@@ -984,9 +984,10 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
         ->Or()
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-        ->EndWrap()
-        ->And()
-        ->NotIn(Media::PhotoColumn::MEDIA_FILE_PATH, createFailSet_);
+        ->EndWrap();
+    if (!createFailSet_.empty()) {
+        createPredicates.And()->NotIn(Media::PhotoColumn::MEDIA_FILE_PATH, createFailSet_);
+    }
 
     /* small-size first */
     createPredicates.OrderByAsc(Media::PhotoColumn::MEDIA_SIZE);
@@ -1019,9 +1020,10 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
         ->Or()
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-        ->EndWrap()
-        ->And()
-        ->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
+        ->EndWrap();
+    if (!modifyFailSet_.empty()) {
+        deletePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
+    }
     deletePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -1051,9 +1053,10 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
         ->Or()
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-        ->EndWrap()
-        ->And()
-        ->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
+        ->EndWrap();
+    if (!modifyFailSet_.empty()) {
+        updatePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
+    }
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -1116,9 +1119,10 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
         ->Or()
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-        ->EndWrap()
-        ->And()
-        ->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
+        ->EndWrap();
+    if (!modifyFailSet_.empty()) {
+        updatePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
+    }
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
@@ -1138,99 +1142,125 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
     return E_OK;
 }
 
+static string GetFilePathFromRecord(const DKRecord &record)
+{
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data cannot find properties");
+        return "";
+    }
+    DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
+    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end()) {
+        LOGE("record data cannot find file path");
+        return "";
+    }
+    string path;
+    if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad file_path in props");
+        return "";
+    }
+    return path;
+}
+
 int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
     GetLocalTimeMap(map, localMap, Media::PhotoColumn::MEDIA_FILE_PATH);
-    int32_t err;
+
+    int32_t ret = E_OK;
     for (auto &entry : map) {
+        int32_t err;
         const DKRecordOperResult &result = entry.second;
         if (result.IsSuccess()) {
             err = OnCreateRecordSuccess(entry, localMap);
-            err = (err == E_OK) ? E_OK : err;
         } else {
             err = OnRecordFailed(entry);
-            err = (err == E_OK) ? E_OK : err;
-            auto record = entry.second.GetDKRecord();
-            DKRecordData data;
-            record.GetRecordData(data);
-            if (data.find(FILE_PROPERTIES) == data.end()) {
-                LOGE("record data cannot find properties");
-                return E_INVAL_ARG;
+        }
+        if (err != E_OK) {
+            string filePath = GetFilePathFromRecord(entry.second.GetDKRecord());
+            if (!filePath.empty()) {
+                createFailSet_.push_back(filePath);
             }
-            DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
-            if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end()) {
-                LOGE("record data cannot find file path");
-                return E_INVAL_ARG;
-            }
-            string path;
-            if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
-                LOGE("bad file_path in props");
-                return E_INVAL_ARG;
-            }
-            createFailSet_.push_back(path);
-            LOGE("create record failed, cloud id: %{public}s", entry.first.c_str());
+            LOGE("create record fail: file path %{private}s", filePath.c_str());
+        }
+        if (err == E_STOP) {
+            ret = E_STOP;
         }
     }
-    return err;
+    return ret;
 }
 
 int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
-    int32_t err;
+    int32_t ret = E_OK;
     for (auto &entry : map) {
         const DKRecordOperResult &result = entry.second;
+        int32_t err;
         if (result.IsSuccess()) {
             err = OnDeleteRecordSuccess(entry);
-            err = (err == E_OK) ? E_OK : err;
         } else {
             err = OnRecordFailed(entry);
-            err = (err == E_OK) ? E_OK : err;
+        }
+        if (err != E_OK) {
             modifyFailSet_.push_back(entry.first);
-            LOGE("delete record failed, cloud id: %{public}s", entry.first.c_str());
+            LOGE("delete record fail: cloud id: %{private}s", entry.first.c_str());
+        }
+        if (err == E_STOP) {
+            ret = E_STOP;
         }
     }
-    return err;
+    return ret;
 }
 
 int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
     GetLocalTimeMap(map, localMap, Media::PhotoColumn::PHOTO_CLOUD_ID);
-    int32_t err;
+
+    int32_t ret = E_OK;
     for (auto &entry : map) {
+        int32_t err;
         const DKRecordOperResult &result = entry.second;
         if (result.IsSuccess()) {
             err = OnModifyRecordSuccess(entry, localMap);
-            err = (err == E_OK) ? E_OK : err;
         } else {
             err = OnRecordFailed(entry);
-            err = (err == E_OK) ? E_OK : err;
+        }
+        if (err != E_OK) {
             modifyFailSet_.push_back(entry.first);
-            LOGE("modify mdirty record failed, cloud id: %{public}s", entry.first.c_str());
+            LOGE("modify mdirty record fail: cloud id: %{private}s", entry.first.c_str());
+        }
+        if (err == E_STOP) {
+            ret = E_STOP;
         }
     }
-    return err;
+    return ret;
 }
 
 int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
     GetLocalTimeMap(map, localMap, Media::PhotoColumn::PHOTO_CLOUD_ID);
-    int32_t err;
+
+    int32_t ret = E_OK;
     for (auto &entry : map) {
+        int32_t err;
         const DKRecordOperResult &result = entry.second;
         if (result.IsSuccess()) {
             err = OnModifyRecordSuccess(entry, localMap);
-            err = (err == E_OK) ? E_OK : err;
         } else {
             err = OnRecordFailed(entry);
-            err = (err == E_OK) ? E_OK : err;
+        }
+        if (err != E_OK) {
             modifyFailSet_.push_back(entry.first);
-            LOGE("modify fdirty record failed, cloud id: %{public}s", entry.first.c_str());
+            LOGE("modify fdirty record fail: cloud id: %{public}s", entry.first.c_str());
+        }
+        if (err == E_STOP) {
+            ret = E_STOP;
         }
     }
-    return err;
+    return ret;
 }
 
 void FileDataHandler::Reset()
@@ -1493,6 +1523,7 @@ int32_t FileDataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOper
     const DKRecordOperResult &result = entry.second;
     int32_t serverErrorCode = INT32_MAX;
     serverErrorCode = result.GetDKError().serverErrorCode;
+    LOGE("serverErrorCode %{public}d", serverErrorCode);
     if (result.GetDKError().errorDetails.size() == 0) {
         LOGE("errorDetails is empty");
         return E_INVAL_ARG;
@@ -1516,7 +1547,7 @@ int32_t FileDataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOper
              serverErrorCode, errorDetailcode.c_str());
         return E_STOP;
     }
-    return E_STOP;
+    return E_OK;
 }
 
 int32_t FileDataHandler::HandleCloudSpaceNotEnough()
@@ -1529,19 +1560,19 @@ int32_t FileDataHandler::HandleCloudSpaceNotEnough()
 int32_t FileDataHandler::HandleATFailed()
 {
     LOGE("AT Failed");
-    return E_STOP;
+    return E_OK;
 }
 
 int32_t FileDataHandler::HandleNameConflict()
 {
     LOGE("Name Conflict");
-    return E_STOP;
+    return E_OK;
 }
 
 int32_t FileDataHandler::HandleNameInvalid()
 {
     LOGE("Name Invalid");
-    return E_STOP;
+    return E_OK;
 }
 
 int64_t FileDataHandler::UTCTimeSeconds()

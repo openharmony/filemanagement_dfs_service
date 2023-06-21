@@ -35,12 +35,10 @@ public:
     };
     enum {
         BEGIN,
-        PREPARE,
         DOWNLOADALBUM,
         DOWNLOADFILE,
         UPLOADALBUM,
         UPLOADFILE,
-        WAIT,
         END
     };
     static void SetUpTestCase(void);

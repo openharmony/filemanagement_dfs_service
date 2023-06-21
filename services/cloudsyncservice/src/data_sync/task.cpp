@@ -58,20 +58,16 @@ int32_t TaskRunner::AddTask(shared_ptr<Task> t)
 
 int32_t TaskRunner::StartTask(shared_ptr<Task> t, TaskAction action)
 {
-    /* If stopped, no more tasks can be executed */
-    if (stopFlag_) {
-        LOGI("start task fail since stop");
-        CompleteTask(t->GetId());
-        return E_STOP;
-    }
-
+    /*
+     * Try to execute the previous callback even in stop process.
+     * Yet no new task could be added in the callback.
+     */
     t->SetAction(action);
     int32_t ret = commitFunc_(shared_from_this(), t);
     if (ret != E_OK) {
         LOGE("commit task err %{public}d", ret);
         return ret;
     }
-
     return E_OK;
 }
 
