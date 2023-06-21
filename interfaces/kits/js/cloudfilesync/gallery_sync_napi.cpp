@@ -127,8 +127,13 @@ napi_value GallerySyncNapi::OnCallback(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto callback = make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
-    int32_t ret = CloudSyncManager::GetInstance().RegisterCallback(callback);
+    if (callback_ != nullptr) {
+        LOGI("callback already exist");
+        return NVal::CreateUndefined(env).val_;
+    }
+
+    callback_ = make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
+    int32_t ret = CloudSyncManager::GetInstance().RegisterCallback(callback_);
     if (ret != E_OK) {
         LOGE("OnCallback Register error, result: %{public}d", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
@@ -160,6 +165,7 @@ napi_value GallerySyncNapi::OffCallback(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
+    callback_ = nullptr;
     return NVal::CreateUndefined(env).val_;
 }
 
