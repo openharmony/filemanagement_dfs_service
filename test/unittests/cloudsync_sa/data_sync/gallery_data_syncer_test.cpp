@@ -17,8 +17,8 @@
 #include <gtest/gtest.h>
 
 #include "gallery_data_syncer.h"
-
 #include "dfs_error.h"
+
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -80,6 +80,19 @@ HWTEST_F(GalleryDataSyncerTest, CleanTest, TestSize.Level1)
 {
     int action = CLEAR_DATA;
     int res = galleryDataSyncer_->Clean(action);
+    EXPECT_EQ(res, E_OK);
+}
+
+/**
+ * @tc.name: StopDownloadFileTest
+ * @tc.desc: Verify the StopDownloadFile function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(GalleryDataSyncerTest, StopDownloadFileTest, TestSize.Level1)
+{
+    string path = "/data/service/el2/100/test";
+    int res = galleryDataSyncer_->StopDownloadFile(path, USER_ID);
     EXPECT_EQ(res, E_OK);
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
