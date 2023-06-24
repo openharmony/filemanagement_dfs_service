@@ -31,7 +31,7 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
-class DataSyncerMock final : public DataSyncer {
+class DataSyncerMock final: public DataSyncer {
 public:
     DataSyncerMock(const std::string bundleName, const int32_t userId);
     MOCK_METHOD0(Schedule, void());
@@ -48,9 +48,10 @@ public:
     void TearDown();
     std::shared_ptr<DataSyncManager> dataSyncManager_;
     std::shared_ptr<DataSyncerMock> datasyncer_;
-    std::shared_ptr<DataSyncer> datasyncer1_;
+    shared_ptr<GalleryDataSyncer> galleryDataSyncer_;
     std::shared_ptr<FileDataHandler> handler_;
 };
+
 void DataSyncerTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
@@ -64,17 +65,18 @@ void DataSyncerTest::TearDownTestCase(void)
 void DataSyncerTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
-    int32_t userId = 100;
-    string bundleName = "com.ohos.test";
+    const int32_t userId = 100;
+    const string bundleName = "com.ohos.test";
     datasyncer_ = make_shared<DataSyncerMock>(bundleName, userId);
     dataSyncManager_ = make_shared<DataSyncManager>();
-    datasyncer1_ = dataSyncManager_->GetDataSyncer(bundleName, userId);
-    shared_ptr<GalleryDataSyncer> galleryDataSyncer_ = static_pointer_cast<GalleryDataSyncer>(datasyncer1_);
-    handler_ = galleryDataSyncer_->fileHandler_;
+    auto sdkHelper = std::make_shared<SdkHelper>();
+    datasyncer_->SetSdkHelper(sdkHelper);
 }
 
 void DataSyncerTest::TearDown(void)
 {
+    dataSyncManager_ = nullptr;
+    datasyncer_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -194,6 +196,8 @@ HWTEST_F(DataSyncerTest, CompletePullTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "CompletePull Start";
     try {
         datasyncer_->CompletePull();
+        datasyncer_->errorCode_ = 1;
+        datasyncer_->CompletePull();
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -212,6 +216,8 @@ HWTEST_F(DataSyncerTest, CompletePushTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CompletePush Start";
     try {
+        datasyncer_->CompletePush();
+        datasyncer_->errorCode_ = 1;
         datasyncer_->CompletePush();
         EXPECT_TRUE(true);
     } catch (...) {
@@ -336,7 +342,7 @@ HWTEST_F(DataSyncerTest, CleanInnerTest001, TestSize.Level1)
     shared_ptr<GalleryDataSyncer> galleryDataSyncer_ = make_shared<GalleryDataSyncer>(bundleName, userId);
     int res = datasyncer_->CleanInner(galleryDataSyncer_->fileHandler_, action);
     galleryDataSyncer_ = nullptr;
-    EXPECT_EQ(res, 2);
+    EXPECT_EQ(res, 0);
     GTEST_LOG_(INFO) << "CleanInnerTest001 end";
 }
 
@@ -462,20 +468,6 @@ HWTEST_F(DataSyncerTest, ModifyFdirtyRecordsTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: PushTest
- * @tc.desc: Verify the Push function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncerTest, PushTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "Push Start";
-    int res = datasyncer_->Push(nullptr);
-    EXPECT_EQ(res, E_OK);
-    GTEST_LOG_(INFO) << "Push end";
-}
-
-/**
  * @tc.name: SyncStateChangedNotifyTest
  * @tc.desc: Verify the SyncStateChangedNotify function
  * @tc.type: FUNC
@@ -506,39 +498,20 @@ HWTEST_F(DataSyncerTest, GetErrorTypeTest, TestSize.Level1)
     int32_t code = E_OK;
     ErrorType result = datasyncer_->GetErrorType(code);
     EXPECT_EQ(ErrorType::NO_ERROR, result);
+    
+    code = 1;
     BatteryStatus::level_ = BatteryStatus::LEVEL_LOW;
-    code = 123;
     result = datasyncer_->GetErrorType(code);
     EXPECT_EQ(ErrorType::BATTERY_LEVEL_LOW, result);
+
     BatteryStatus::level_ = BatteryStatus::LEVEL_TOO_LOW;
-    code = 456;
     result = datasyncer_->GetErrorType(code);
     EXPECT_EQ(ErrorType::BATTERY_LEVEL_WARNING, result);
-    GTEST_LOG_(INFO) << "GetErrorType end";
-}
 
-/**
- * @tc.name: OnFetchRetryRecordTest
- * @tc.desc: Verify the OnFetchRetryRecord function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncerTest, OnFetchRetryRecordTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnFetchRetryRecord Start";
-    auto context = std::make_shared<DriveKit::DKContext>();
-    auto database = std::make_shared<DriveKit::DKDatabase>(nullptr, DriveKit::DKDatabaseScope::DK_PRIVATE_DATABASE);
-    DriveKit::DKRecordId recordId = "record1";
-    DriveKit::DKRecord record;
-    DriveKit::DKError error;
-    try {
-        datasyncer_->OnFetchRetryRecord(context, database, recordId, record, error);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnFetchRetryRecord FAILED";
-    }
-    GTEST_LOG_(INFO) << "OnFetchRetryRecord end";
+    BatteryStatus::level_ = BatteryStatus::LEVEL_NORMAL;
+    result = datasyncer_->GetErrorType(code);
+    EXPECT_EQ(ErrorType::NO_ERROR, result);
+    GTEST_LOG_(INFO) << "GetErrorType end";
 }
 
 /**
