@@ -64,6 +64,70 @@ void CloudSyncServiceTest::TearDown(void)
 }
 
 /**
+ * @tc.name:GetHmdfsPathTest001
+ * @tc.desc:Verify the GetHmdfsPath function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest001 start";
+    try {
+        std::string uri = "";
+        int32_t userId = 100;
+        std::string ret = g_servicePtr_->GetHmdfsPath(uri, userId);
+        EXPECT_EQ(ret, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetHmdfsPathTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest001 end";
+}
+
+/**
+ * @tc.name:GetHmdfsPathTest002
+ * @tc.desc:Verify the GetHmdfsPath function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest002 start";
+    try {
+        std::string uri = "invaild_uri";
+        int32_t userId = 100;
+        std::string ret = g_servicePtr_->GetHmdfsPath(uri, userId);
+        EXPECT_EQ(ret, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetHmdfsPathTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest002 end";
+}
+
+/**
+ * @tc.name:GetHmdfsPathTest003
+ * @tc.desc:Verify the GetHmdfsPath function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest003 start";
+    try {
+        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
+        int32_t userId = 100;
+        std::string ret = g_servicePtr_->GetHmdfsPath(uri, userId);
+        std::string out = "/mnt/hmdfs/100/account/device_view/local/data/com.hmos.notepad/dir/1.txt";
+        EXPECT_EQ(ret, out);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetHmdfsPathTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetHmdfsPathTest003 end";
+}
+
+/**
  * @tc.name: OnStartTest
  * @tc.desc: Verify the OnStart function.
  * @tc.type: FUNC
@@ -379,25 +443,49 @@ HWTEST_F(CloudSyncServiceTest, UploadAssetTest, TestSize.Level1)
 }
 
 /**
- * @tc.name:DownloadFileTest
+ * @tc.name:DownloadFileTest001
  * @tc.desc:Verify the DownloadFile function.
  * @tc.type:FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncServiceTest, DownloadFileTest, TestSize.Level1)
+HWTEST_F(CloudSyncServiceTest, DownloadFileTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "DownloadFile start";
+    GTEST_LOG_(INFO) << "DownloadFileTest001 start";
+    try {
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.photos";
+        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
+        AssetInfoObj assetInfoObj;
+        assetInfoObj.uri = uri;
+        int ret = g_servicePtr_->DownloadFile(userId, bundleName, assetInfoObj);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DownloadFileTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DownloadFileTest001 end";
+}
+
+/**
+ * @tc.name:DownloadFileTest002
+ * @tc.desc:Verify the DownloadFile function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, DownloadFileTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFileTest002 start";
     try {
         int32_t userId = 100;
         std::string bundleName = "com.ohos.photos";
         AssetInfoObj assetInfoObj;
         int ret = g_servicePtr_->DownloadFile(userId, bundleName, assetInfoObj);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "DownloadFile FAILED";
+        GTEST_LOG_(INFO) << "DownloadFileTest002 FAILED";
     }
-    GTEST_LOG_(INFO) << "DownloadFile end";
+    GTEST_LOG_(INFO) << "DownloadFileTest002 end";
 }
 
 } // namespace Test
