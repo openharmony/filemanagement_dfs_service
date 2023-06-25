@@ -1,0 +1,131 @@
+# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+ohos_unittest("dfsu_fd_guard_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${utils_path}/system/src/dfsu_fd_guard.cpp",
+    "dfsu_fd_guard_test.cpp",
+  ]
+
+  include_dirs = [
+    "${utils_path}/system/include",
+    "${utils_path}/log/include",
+    "//foundation/multimedia/image_framework/mock/native/include/log/",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [ "c_utils:utils" ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_SA\"",
+  ]
+  use_exceptions = true
+}
+
+ohos_unittest("dfsu_access_token_helper_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${utils_path}/system/src/dfsu_access_token_helper.cpp",
+    "dfsu_access_token_helper_test.cpp",
+    "reimplement/accesstoken_kit.cpp",
+    "reimplement/accesstoken_kit_mock.cpp",
+    "reimplement/ipc_skeleton.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/system/reimplement",
+    "${communication_ipc_path}/ipc/ipc/native/c/adapter/access_token/include",
+    "${communication_ipc_path}/ipc/ipc/native/src/core/include",
+    "${communication_ipc_path}/ipc/utils/include",
+    "${image_framework_path}/interfaces/innerkits/include",
+    "${image_framework_path}/mock/native/include/log/",
+    "${utils_path}/system/include",
+    "${utils_path}/log/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "c_utils:utilsbase",
+    "ipc:ipc_core",
+    "preferences:native_preferences",
+  ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_SA\"",
+  ]
+  use_exceptions = true
+}
+
+ohos_unittest("dfsu_mount_argument_descriptors_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${utils_path}/system/src/dfsu_mount_argument_descriptors.cpp",
+    "dfsu_mount_argument_descriptors_test.cpp",
+  ]
+
+  include_dirs = [
+    "${utils_path}/system/include",
+    "${utils_path}/log/include",
+    "//foundation/multimedia/image_framework/mock/native/include/log/",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [ "c_utils:utils" ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_SA\"",
+  ]
+  use_exceptions = true
+}
+group("utils_system_src_test") {
+  testonly = true
+  deps = [
+    ":dfsu_access_token_helper_test",
+    ":dfsu_fd_guard_test",
+    ":dfsu_mount_argument_descriptors_test",
+  ]
+}

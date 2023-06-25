@@ -33,13 +33,13 @@ ohos_shared_library("cloudfiledaemon") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/libfuse:libfuse",
   ]
 
   external_deps = [
-    "dfs_service:cloud_daemon_kit_inner",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

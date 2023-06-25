@@ -21,5 +21,6 @@ group("cloudsync_sa_test") {
     "ipc:cloudsync_sa_ipc_test",
     "log:cloudsync_sa_log_test",
     "sync_rule:cloudsync_sa_sync_rule_test",
+    "system:utils_system_src_test",
   ]
 }

@@ -28,7 +28,7 @@ static void InitState(napi_env env, napi_value exports)
     char propertyName[] = "State";
     napi_value obj = nullptr;
     napi_create_object(env, &obj);
-    static napi_property_descriptor desc[] = {
+    napi_property_descriptor desc[] = {
         DECLARE_NAPI_STATIC_PROPERTY("RUNNING",
                                      NVal::CreateInt32(env, (int32_t)State::CLOUD_FILE_DOWNLOAD_RUNNING).val_),
         DECLARE_NAPI_STATIC_PROPERTY("COMPLETED",

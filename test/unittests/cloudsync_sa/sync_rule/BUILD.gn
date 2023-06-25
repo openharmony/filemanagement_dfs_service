@@ -14,6 +14,35 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
+ohos_unittest("battery_status_listener_test") {
+  module_out_path = "filemanagement/dfs_service"
+  sources = [ "battery_status_listener_test.cpp" ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/sync_rule",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
+  ]
+
+  deps = [
+    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "common_event_service:cesfwk_innerkits",
+    "netmanager_base:net_conn_manager_if",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("net_conn_callback_observer_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [ "net_conn_callback_observer_test.cpp" ]
@@ -34,6 +63,36 @@ ohos_unittest("net_conn_callback_observer_test") {
   external_deps = [
     "common_event_service:cesfwk_innerkits",
     "netmanager_base:net_conn_manager_if",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("network_status_test") {
+  module_out_path = "filemanagement/dfs_service"
+  sources = [ "network_status_test.cpp" ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/sync_rule",
+  ]
+
+  deps = [
+    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "common_event_service:cesfwk_innerkits",
+    "dfs_service:cloudsync_kit_inner",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "netmanager_base:net_conn_manager_if",
+    "samgr:samgr_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -94,8 +153,10 @@ ohos_unittest("cloud_status_test") {
 group("cloudsync_sa_sync_rule_test") {
   testonly = true
   deps = [
+    ":battery_status_listener_test",
     ":battery_status_test",
     ":cloud_status_test",
     ":net_conn_callback_observer_test",
+    ":network_status_test",
   ]
 }
