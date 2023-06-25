@@ -51,7 +51,7 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
      */
     int32_t err;
     RdbCallback cb;
-    auto rdb_ = NativeRdb::RdbHelper::GetRdbStore(config, 1, cb, err);
+    auto rdb_ = NativeRdb::RdbHelper::GetRdbStore(config, Media::MEDIA_RDB_VERSION, cb, err);
     if (rdb_ == nullptr) {
         LOGE("gallyer data syncer init rdb fail");
         exit(0);
