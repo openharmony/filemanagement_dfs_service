@@ -1814,6 +1814,33 @@ HWTEST_F(FileDataHandlerTest, CleanNotDirtyData001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CleanCloudRecord001
+ * @tc.desc: Verify the CleanCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, CleanCloudRecord001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanCloudRecord001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(0));
+
+        int action = 0;
+        string filePath;
+        int32_t ret = fileDataHandler->CleanCloudRecord(*rset, action, filePath);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanCloudRecord001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanCloudRecord001 End";
+}
+
+/**
  * @tc.name: Clean001
  * @tc.desc: Verify the Clean function
  * @tc.type: FUNC
@@ -1836,6 +1863,183 @@ HWTEST_F(FileDataHandlerTest, Clean001, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "Clean001 End";
+}
+
+/**
+ * @tc.name: Clean002
+ * @tc.desc: Verify the Clean function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, Clean002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Clean002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+
+        const int count = 1;
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(count), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow())
+            .Times(count)
+            .WillRepeatedly(Return(0));
+
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
+
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int action = 0;
+        int32_t ret = fileDataHandler->Clean(action);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " Clean002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "Clean002 End";
+}
+
+/**
+ * @tc.name: CleanPureCloudRecord001
+ * @tc.desc: Verify the CleanPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        string filePath = "/test/pareantPath/thumbPpath";
+        int action = 1;
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        int32_t ret = fileDataHandler->CleanPureCloudRecord(*rset, action, filePath);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanPureCloudRecord001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord001 End";
+}
+
+/**
+ * @tc.name: CleanNotPureCloudRecord001
+ * @tc.desc: Verify the CleanNotPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotPureCloudRecord001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        string filePath = "/test/pareantPath/thumbPpath";
+        int action = 1;
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(1));
+
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
+        EXPECT_EQ(E_RDB, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotPureCloudRecord001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotPureCloudRecord001 End";
+}
+
+/**
+ * @tc.name: CleanNotPureCloudRecord002
+ * @tc.desc: Verify the CleanNotPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotPureCloudRecord002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        string filePath = "/test/pareantPath/thumbPpath";
+        int action = 0;
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
+
+        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
+
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotPureCloudRecord002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotPureCloudRecord002 End";
+}
+
+/**
+ * @tc.name: CleanNotPureCloudRecord003
+ * @tc.desc: Verify the CleanNotPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotPureCloudRecord003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        string filePath = "/test/pareantPath/thumbPpath";
+        int action = 0;
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
+
+        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
+
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotPureCloudRecord003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotPureCloudRecord003 End";
+}
+
+/**
+ * @tc.name: CleanNotPureCloudRecord004
+ * @tc.desc: Verify the CleanNotPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotPureCloudRecord004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        string filePath = "/test/pareantPath/thumbPpath";
+        int action = 1;
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
+
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(1));
+
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotPureCloudRecord004 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotPureCloudRecord004 End";
 }
 
 /**
