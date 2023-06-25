@@ -633,6 +633,37 @@ ohos_unittest("sdk_helper_unnormal_test") {
   use_exceptions = true
 }
 
+ohos_unittest("sync_state_manager_test") {
+  module_out_path = "filemanagement/dfs_service"
+  sources = [
+    "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
+    "sync_state_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
+    "${media_library_path}/frameworks/utils/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [ "init:libbegetutil" ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("task_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
@@ -712,6 +743,7 @@ group("cloudsync_sa_data_sync_test") {
     ":gallery_data_syncer_test",
     ":sdk_helper_test",
     ":sdk_helper_unnormal_test",
+    ":sync_state_manager_test",
     ":task_test",
   ]
 }
