@@ -1837,4 +1837,306 @@ HWTEST_F(FileDataHandlerTest, Clean001, TestSize.Level1)
 
     GTEST_LOG_(INFO) << "Clean001 End";
 }
+
+/**
+ * @tc.name: AppendToDownload
+ * @tc.desc: Verify the AppendToDownload function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, AppendToDownload, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AppendToDownload Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        DKRecord record;
+        std::string fieldKey;
+        std::vector<DKDownloadAsset> assetsToDownload;
+        fileDataHandler->AppendToDownload(record, fieldKey, assetsToDownload);
+        EXPECT_TRUE(true);
+        DKFieldValue fieldValue = 1;
+        DKRecordField recordField(fieldValue);
+        record.fields_.insert(std::pair<DKFieldKey, DKRecordField>("properties", recordField));
+        fileDataHandler->AppendToDownload(record, fieldKey, assetsToDownload);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " AppendToDownload ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "AppendToDownload End";
+}
+
+/**
+ * @tc.name: GetCreatedRecords001
+ * @tc.desc: Verify the GetCreatedRecords001 function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, GetCreatedRecords001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCreatedRecords001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        std::vector<DKRecord> records;
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        int32_t ret = fileDataHandler->GetCreatedRecords(records);
+        EXPECT_EQ(E_RDB, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetCreatedRecords001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "GetCreatedRecords001 End";
+}
+
+/**
+ * @tc.name: GetCreatedRecords002
+ * @tc.desc: Verify the GetCreatedRecords002 function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, GetCreatedRecords002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCreatedRecords002 Begin";
+    try {
+        const int rowCount = 3;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        std::vector<DKRecord> records;
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GoToNextRow())
+            .Times(rowCount)
+            .WillOnce(Return(0))
+            .WillOnce(Return(0))
+            .WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        int32_t ret = fileDataHandler->GetCreatedRecords(records);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetCreatedRecords002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "GetCreatedRecords002 End";
+}
+
+/**
+ * @tc.name: GetDeletedRecords001
+ * @tc.desc: Verify the GetDeletedRecords001 function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, GetDeletedRecords001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDeletedRecords001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        std::vector<DKRecord> records;
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        int32_t ret = fileDataHandler->GetDeletedRecords(records);
+        EXPECT_EQ(E_RDB, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetDeletedRecords001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "GetDeletedRecords001 End";
+}
+
+/**
+ * @tc.name: GetDeletedRecords002
+ * @tc.desc: Verify the GetDeletedRecords002 function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, GetDeletedRecords002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDeletedRecords002 Begin";
+    try {
+        const int rowCount = 3;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        std::vector<DKRecord> records;
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GoToNextRow())
+            .Times(rowCount)
+            .WillOnce(Return(0))
+            .WillOnce(Return(0))
+            .WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        int32_t ret = fileDataHandler->GetDeletedRecords(records);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetDeletedRecords002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "GetDeletedRecords002 End";
+}
+
+/**
+ * @tc.name: GetMetaModifiedRecords001
+ * @tc.desc: Verify the GetMetaModifiedRecords001 function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, GetMetaModifiedRecords001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetMetaModifiedRecords001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        std::vector<DKRecord> records;
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        int32_t ret = fileDataHandler->GetMetaModifiedRecords(records);
+        EXPECT_EQ(E_RDB, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetMetaModifiedRecords001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "GetMetaModifiedRecords001 End";
+}
+
+/**
+ * @tc.name: GetMetaModifiedRecords002
+ * @tc.desc: Verify the GetMetaModifiedRecords002 function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, GetMetaModifiedRecords002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetMetaModifiedRecords002 Begin";
+    try {
+        const int rowCount = 3;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        std::vector<DKRecord> records;
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GoToNextRow())
+            .Times(rowCount)
+            .WillOnce(Return(0))
+            .WillOnce(Return(0))
+            .WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        int32_t ret = fileDataHandler->GetMetaModifiedRecords(records);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetMetaModifiedRecords002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "GetMetaModifiedRecords002 End";
+}
+
+/**
+ * @tc.name: InsertTest
+ * @tc.desc: Verify the Insert function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, InsertTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InsertTest Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        int64_t outRowId;
+        NativeRdb::ValuesBucket initiavalues;
+        int32_t ret = fileDataHandler->Insert(outRowId, initiavalues);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InsertTest ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "InsertTest End";
+}
+
+/**
+ * @tc.name: UpdateTest
+ * @tc.desc: Verify the Update function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, UpdateTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateTest Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        int changedRows;
+        NativeRdb::ValuesBucket values;
+        int32_t ret = fileDataHandler->Update(changedRows, values);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UpdateTest ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "UpdateTest End";
+}
+
+/**
+ * @tc.name: DeleteTest
+ * @tc.desc: Verify the Delete function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, DeleteTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteTest Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        int deletedRows;
+        int32_t ret = fileDataHandler->Delete(deletedRows);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteTest ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "DeleteTest End";
+}
+
+/**
+ * @tc.name: QueryTest
+ * @tc.desc: Verify the Query function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, QueryTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryTest Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::string tableName = "test_name";
+        NativeRdb::AbsRdbPredicates predicates(tableName);
+        std::vector<std::string> columns;
+        auto ret = fileDataHandler->Query(predicates, columns);
+        EXPECT_EQ(ret, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "QueryTest ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "QueryTest End";
+}
+
 } // namespace OHOS::FileManagement::CloudSync::Test
