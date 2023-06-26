@@ -122,12 +122,22 @@ ohos_unittest("battery_status_test") {
 
 ohos_unittest("cloud_status_test") {
   module_out_path = "filemanagement/dfs_service"
-  sources = [ "cloud_status_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
+    "${distributedfile_path}/utils/log/src/dfs_error.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/cloud_status.cpp",
+    "cloud_status_test.cpp",
+  ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${media_library_path}/frameworks/utils/include",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
   ]
 
   deps = [
@@ -136,14 +146,6 @@ ohos_unittest("cloud_status_test") {
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
-
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
 
   defines = [ "private=public" ]
 
