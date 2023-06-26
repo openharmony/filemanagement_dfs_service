@@ -43,7 +43,8 @@ void CloudDownloadUriManager::AddPathToUri(const std::string& path, const std::s
         pathMap_[path] = uri;
         return;
     }
-    LOGI("download_file : unregistered_ can't add path [ %{public}s ] -> uri [ %{public}s ]", path.c_str(), uri.c_str());
+    LOGI("download_file : unregistered_ can't add path [ %{public}s ] -> uri [ %{public}s ]",
+        path.c_str(), uri.c_str());
 }
 
 void CloudDownloadUriManager::RemoveUri(const std::string& path)
