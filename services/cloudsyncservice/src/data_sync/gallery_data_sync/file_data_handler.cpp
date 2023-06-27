@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include "thumbnail_const.h"
+#include "data_sync_const.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
 #include "dk_assets_downloader.h"
@@ -39,6 +40,7 @@ using namespace std;
 using namespace NativeRdb;
 using namespace DriveKit;
 using namespace Media;
+using ChangeType = OHOS::AAFwk::ChangeInfo::ChangeType;
 
 FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
     : RdbDataHandler(TABLE_NAME, rdb), userId_(userId), bundleName_(bundleName)
@@ -130,6 +132,7 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     PhotoColumn::PHOTO_DIRTY,
     PhotoColumn::MEDIA_DATE_TRASHED,
     PhotoColumn::PHOTO_POSITION,
+    MediaColumn::MEDIA_ID,
 };
 
 tuple<shared_ptr<NativeRdb::ResultSet>, int> FileDataHandler::QueryLocalByCloudId(const string &recordId)
@@ -158,6 +161,18 @@ const std::vector<std::string> CLEAN_QUERY_COLUMNS = {
     PhotoColumn::PHOTO_CLOUD_ID,
 };
 
+
+static int32_t GetFileId(NativeRdb::ResultSet &local)
+{
+    int32_t fileId;
+    int ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, local);
+    if (ret != E_OK) {
+        LOGE("Get file id failed");
+        return 0; // 0:invalid file id, not exits in db
+    }
+    return fileId;
+}
+
 int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records, OnFetchParams &params)
 {
     LOGI("on fetch %{public}zu records", records->size());
@@ -167,15 +182,21 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
         if (resultSet == nullptr) {
             return E_RDB;
         }
-
+        int32_t fileId = 0;
+        ChangeType changeType = ChangeType::INVAILD;
         if ((rowCount == 0) && !record.GetIsDelete()) {
-            ret = PullRecordInsert(record, params);
+            ret = PullRecordInsert(record, params, fileId);
+            changeType = ChangeType::INSERT;
         } else if (rowCount == 1) {
             resultSet->GoToNextRow();
             if (record.GetIsDelete()) {
                 ret = PullRecordDelete(record, *resultSet);
+                fileId = GetFileId(*resultSet);
+                changeType = ChangeType::DELETE;
             } else {
                 ret = PullRecordUpdate(record, *resultSet, params);
+                fileId = GetFileId(*resultSet);
+                changeType = ChangeType::UPDATE;
             }
         } else {
             LOGE("recordId %s rowCount %{public}d", record.GetRecordId().c_str(), rowCount);
@@ -187,7 +208,10 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
             }
             ret = E_OK;
         }
+        string notifyUri = DataSyncConst::PHOTO_URI_PREFIX + to_string(fileId);
+        DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
     }
+    DataSyncNotifier::GetInstance().FinalNotify();
     MetaFileMgr::GetInstance().ClearAll();
     return ret;
 }
@@ -554,7 +578,7 @@ int32_t FileDataHandler::PullRecordConflict(const DKRecord &record, bool &comfla
     return ret;
 }
 
-int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, OnFetchParams &params)
+int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, OnFetchParams &params, int32_t &fileId)
 {
     LOGI("insert of record %s", record.GetRecordId().c_str());
 
@@ -594,7 +618,7 @@ int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, OnFetchParams 
         LOGE("Insert pull record failed, rdb ret=%{public}d", ret);
         return E_RDB;
     }
-
+    fileId = rowId;
     LOGI("Insert recordId %s success", record.GetRecordId().c_str());
     if (params.fetchThumbs || AddCloudThumbs(record) != E_OK) {
         AppendToDownload(record, "lcd", params.assetsToDownload);

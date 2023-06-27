@@ -292,7 +292,8 @@ HWTEST_F(FileDataHandlerTest, PullRecordInsert001, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
         OnFetchParams onFetchParams{true};
-        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams);
+        int32_t fileId = 0;
+        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams, fileId);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -316,7 +317,8 @@ HWTEST_F(FileDataHandlerTest, PullRecordInsert002, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
         OnFetchParams onFetchParams{false};
-        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams);
+        int32_t fileId = 0;
+        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams, fileId);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);

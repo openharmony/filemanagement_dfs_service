@@ -30,6 +30,8 @@ ohos_shared_library("cloudsync_sa") {
     "src/data_sync/data_handler.cpp",
     "src/data_sync/rdb_data_handler.cpp",
     "src/data_sync/task.cpp",
+    "src/data_sync/data_sync_const.cpp",
+    "src/data_sync/data_sync_notifier.cpp",
     "src/data_sync/data_sync_manager.cpp",
     "src/data_sync/sync_state_manager.cpp",
   ]
@@ -45,6 +47,7 @@ ohos_shared_library("cloudsync_sa") {
   sources = [
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "src/ipc/cloud_download_callback_manager.cpp",
     "src/ipc/cloud_download_callback_proxy.cpp",
     "src/ipc/cloud_sync_callback_manager.cpp",
@@ -73,6 +76,9 @@ ohos_shared_library("cloudsync_sa") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:dataobs_manager",
     "common_event_service:cesfwk_innerkits",
     "init:libbegetutil",
     "ipc:ipc_core",

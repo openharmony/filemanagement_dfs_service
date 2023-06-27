@@ -21,7 +21,10 @@
       "features": [
         "dfs_service_feature_enable_cloud_adapter"
       ],
-      "adapted_system_type": [ "small", "standard" ],
+      "adapted_system_type": [
+        "small",
+        "standard"
+      ],
       "rom": "2048KB",
       "ram": "4096KB",
       "deps": {
@@ -45,7 +48,8 @@
           "netmanager_base",
           "relational_store",
           "safwk",
-          "samgr"
+          "samgr",
+          "ability_runtime"
         ],
         "third_party": [
           "libfuse"

@@ -52,6 +52,8 @@ ohos_shared_library("cloudsync_kit_inner") {
 
   external_deps = [
     "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:dataobs_manager",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
