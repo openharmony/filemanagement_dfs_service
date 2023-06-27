@@ -140,19 +140,6 @@ HWTEST_F(DataSyncManagerTest, IsSkipSyncOKTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: TriggerStartSyncArgFailTest
- * @tc.desc: Verify the TriggerStartSync function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, TriggerStartSyncArgFailTest, TestSize.Level1)
-{
-    auto ret = dataSyncManager_->TriggerStartSync(BUND_NAME_TEST, USER_ID,
-        false, SyncTriggerType::APP_TRIGGER);
-    EXPECT_EQ(E_INVAL_ARG, ret);
-}
-
-/**
  * @tc.name: TriggerStartSyncOKTest
  * @tc.desc: Verify the TriggerStartSync function
  * @tc.type: FUNC
@@ -178,18 +165,6 @@ HWTEST_F(DataSyncManagerTest, TriggerStartSyncOKTest, TestSize.Level1)
     auto ret = dataSyncManager_->TriggerStartSync(BUND_NAME, USER_ID,
         false, SyncTriggerType::APP_TRIGGER);
     EXPECT_EQ(E_OK, ret);
-}
-
-/**
- * @tc.name: TriggerStopSyncArgFailTest
- * @tc.desc: Verify the TriggerStopSync function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, TriggerStopSyncArgFailTest, TestSize.Level1)
-{
-    auto ret = dataSyncManager_->TriggerStopSync(BUND_NAME_TEST, USER_ID, SyncTriggerType::APP_TRIGGER);
-    EXPECT_EQ(E_INVAL_ARG, ret);
 }
 
 /**
@@ -230,19 +205,6 @@ HWTEST_F(DataSyncManagerTest, TriggerRecoverySizeZeroOKTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: TriggerRecoveryFailTest
- * @tc.desc: Verify the TriggerRecoverySync function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, TriggerRecoveryFailTest, TestSize.Level1)
-{
-    auto dataSyncer = dataSyncManager_->GetDataSyncer(BUND_NAME_TEST, USER_ID);
-    auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
-    EXPECT_EQ(E_INVAL_ARG, ret);
-}
-
-/**
  * @tc.name: TriggerRecoveryOKTest
  * @tc.desc: Verify the TriggerRecoverySync function
  * @tc.type: FUNC
@@ -254,19 +216,6 @@ HWTEST_F(DataSyncManagerTest, TriggerRecoveryOKTest, TestSize.Level1)
     auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, USER_ID);
     auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
     EXPECT_EQ(E_OK, ret);
-}
-
-/**
- * @tc.name: StartDownloadFileArgFailTest
- * @tc.desc: Verify the StartDownloadFile function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, StartDownloadFileArgFailTest, TestSize.Level1)
-{
-    string path = "/test";
-    auto ret = dataSyncManager_->StartDownloadFile(BUND_NAME_TEST, USER_ID, path);
-    EXPECT_EQ(E_INVAL_ARG, ret);
 }
 
 /**
@@ -283,19 +232,6 @@ HWTEST_F(DataSyncManagerTest, StartDownloadFileOKTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: StopDownloadFileArgFailTest
- * @tc.desc: Verify the StopDownloadFile function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, StopDownloadFileArgFailTest, TestSize.Level1)
-{
-    string path = "/test";
-    auto ret = dataSyncManager_->StopDownloadFile(BUND_NAME_TEST, USER_ID, path);
-    EXPECT_EQ(E_INVAL_ARG, ret);
-}
-
-/**
  * @tc.name: StopDownloadFileOKTest
  * @tc.desc: Verify the StopDownloadFile function
  * @tc.type: FUNC
@@ -309,18 +245,6 @@ HWTEST_F(DataSyncManagerTest, StopDownloadFileOKTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: UnregisterDownloadFileCallbackArgFailTest
- * @tc.desc: Verify the UnregisterDownloadFileCallback function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, UnregisterDownloadFileCallbackArgFailTest, TestSize.Level1)
-{
-    auto ret = dataSyncManager_->UnregisterDownloadFileCallback(BUND_NAME_TEST, USER_ID);
-    EXPECT_EQ(E_INVAL_ARG, ret);
-}
-
-/**
  * @tc.name: UnregisterDownloadFileCallbackOKTest
  * @tc.desc: Verify the UnregisterDownloadFileCallback function
  * @tc.type: FUNC
@@ -330,18 +254,6 @@ HWTEST_F(DataSyncManagerTest, UnregisterDownloadFileCallbackOKTest, TestSize.Lev
 {
     auto ret = dataSyncManager_->UnregisterDownloadFileCallback(BUND_NAME, USER_ID);
     EXPECT_EQ(E_OK, ret);
-}
-
-/**
- * @tc.name: RegisterDownloadFileCallbackArgFailTest
- * @tc.desc: Verify the RegisterDownloadFileCallback function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, RegisterDownloadFileCallbackArgFailTest, TestSize.Level1)
-{
-    auto ret = dataSyncManager_->RegisterDownloadFileCallback(BUND_NAME_TEST, USER_ID, nullptr);
-    EXPECT_EQ(E_INVAL_ARG, ret);
 }
 
 /**

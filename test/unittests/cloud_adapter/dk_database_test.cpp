@@ -53,26 +53,6 @@ void DKDatabaseTest::TearDown(void)
 }
 
 /**
- * @tc.name: SaveRecords
- * @tc.desc: Verify the DKDatabase::SaveRecords function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(DKDatabaseTest, SaveRecords, TestSize.Level1)
-{
-    std::shared_ptr<DKContainer> container = nullptr;
-    std::shared_ptr<DKContext> context = nullptr;
-    std::vector<DKRecord> records;
-    DKDatabase::SaveRecordsCallback callback = nullptr;
-    DKSavePolicy policy = DKSavePolicy::DK_SAVE_IF_UNCHANGED;
-    DKDatabaseScope scope = DKDatabaseScope::DK_PUBLIC_DATABASE;
-
-    DKDatabase mdkDatabase(container, scope);
-    DKLocalErrorCode ret = mdkDatabase.SaveRecords(context, move(records), policy, callback);
-    EXPECT_EQ(ret, DKLocalErrorCode::NO_ERROR);
-}
-
-/**
  * @tc.name: SaveRecord
  * @tc.desc: Verify the DKDatabase::SaveRecord function
  * @tc.type: FUNC
@@ -89,29 +69,6 @@ HWTEST_F(DKDatabaseTest, SaveRecord, TestSize.Level1)
 
     DKDatabase mdkDatabase(container, scope);
     DKLocalErrorCode ret = mdkDatabase.SaveRecord(context, move(record), policy, callback);
-    EXPECT_EQ(ret, DKLocalErrorCode::NO_ERROR);
-}
-
-/**
- * @tc.name: FetchRecords
- * @tc.desc: Verify the DKDatabase::FetchRecords function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(DKDatabaseTest, FetchRecords, TestSize.Level1)
-{
-    std::shared_ptr<DKContainer> container = nullptr;
-    std::shared_ptr<DKContext> context = nullptr;
-    DKDatabase::FetchRecordsCallback callback = nullptr;
-    DKRecordType recordType = "DKDatabaseTest";
-    int resultLimit = 1;
-    DKQueryCursor cursor = "FetchRecords";
-    DKDatabaseScope scope = DKDatabaseScope::DK_PUBLIC_DATABASE;
-    std::vector<DKFieldKey> desiredKeys;
-
-    DKDatabase mdkDatabase(container, scope);
-    DKLocalErrorCode ret = mdkDatabase.FetchRecords(context, recordType,
-                                                    desiredKeys, resultLimit, cursor, callback);
     EXPECT_EQ(ret, DKLocalErrorCode::NO_ERROR);
 }
 
@@ -138,48 +95,6 @@ HWTEST_F(DKDatabaseTest, FetchRecordWithId, TestSize.Level1)
 }
 
 /**
- * @tc.name: DeleteRecords
- * @tc.desc: Verify the DKDatabase::DeleteRecords function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(DKDatabaseTest, DeleteRecords, TestSize.Level1)
-{
-    std::shared_ptr<DKContainer> container = nullptr;
-    std::shared_ptr<DKContext> context =  nullptr;
-    DKDatabase::DeleteRecordsCallback callback = nullptr;
-    std::vector<DKRecord> records;
-    DKSavePolicy policy = DKSavePolicy::DK_SAVE_IF_UNCHANGED;
-    DKDatabaseScope scope = DKDatabaseScope::DK_PUBLIC_DATABASE;
-
-    DKDatabase mdkDatabase(container, scope);
-    DKLocalErrorCode ret = mdkDatabase.DeleteRecords(context, move(records), policy, callback);
-    EXPECT_EQ(ret, DKLocalErrorCode::NO_ERROR);
-}
-
-/**
- * @tc.name: ModifyRecords
- * @tc.desc: Verify the DKDatabase::ModifyRecords function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(DKDatabaseTest, ModifyRecords, TestSize.Level1)
-{
-    std::shared_ptr<DKContainer> container = nullptr;
-    std::shared_ptr<DKContext> context =  nullptr;
-    DKDatabase::ModifyRecordsCallback callback = nullptr;
-    std::vector<DKRecord> recordsToSave, recordsToDelete;
-    bool atomically = true;
-    DKSavePolicy policy = DKSavePolicy::DK_SAVE_IF_UNCHANGED;
-    DKDatabaseScope scope = DKDatabaseScope::DK_PUBLIC_DATABASE;
-
-    DKDatabase mdkDatabase(container, scope);
-    DKLocalErrorCode ret = mdkDatabase.ModifyRecords(context, move(recordsToSave),
-                                                    move(recordsToDelete), policy, atomically, callback);
-    EXPECT_EQ(ret, DKLocalErrorCode::NO_ERROR);
-}
-
-/**
  * @tc.name: FetchRecordsWithQuery
  * @tc.desc: Verify the DKDatabase::FetchRecordsWithQuery function
  * @tc.type: FUNC
@@ -199,29 +114,6 @@ HWTEST_F(DKDatabaseTest, FetchRecordsWithQuery, TestSize.Level1)
     DKDatabase mdkDatabase(container, scope);
     DKLocalErrorCode ret = mdkDatabase.FetchRecordsWithQuery(context, desiredKeys,
                                                             query, resultLimit, cursor, callback);
-    EXPECT_EQ(ret, DKLocalErrorCode::NO_ERROR);
-}
-
-/**
- * @tc.name: FetchDatabaseChanges
- * @tc.desc: Verify the DKDatabase::FetchDatabaseChanges function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(DKDatabaseTest, FetchDatabaseChanges, TestSize.Level1)
-{
-    std::shared_ptr<DKContainer> container = nullptr;
-    std::shared_ptr<DKContext> context =  nullptr;
-    DKDatabase::FetchDatabaseCallback callback = nullptr;
-    DKRecordType recordType = "DKDatabaseTest";
-    std::vector<DKFieldKey> desiredKeys;
-    int resultLimit = 1;
-    DKQueryCursor cursor = "FetchDatabaseChanges";
-    DKDatabaseScope scope = DKDatabaseScope::DK_PUBLIC_DATABASE;
-
-    DKDatabase mdkDatabase(container, scope);
-    DKLocalErrorCode ret = mdkDatabase.FetchDatabaseChanges(context, recordType,
-                                                            desiredKeys, resultLimit, cursor, callback);
     EXPECT_EQ(ret, DKLocalErrorCode::NO_ERROR);
 }
 

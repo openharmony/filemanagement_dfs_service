@@ -17,7 +17,11 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_unittest("dk_asset_read_session_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "dk_asset_read_session_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "dk_asset_read_session_test.cpp",
+  ]
 
   include_dirs =
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
@@ -29,14 +33,6 @@ ohos_unittest("dk_asset_read_session_test") {
   ]
 
   external_deps = [ "c_utils:utils" ]
-
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
 
   defines = [ "private=public" ]
 }
@@ -44,7 +40,12 @@ ohos_unittest("dk_asset_read_session_test") {
 ohos_unittest("dk_assets_downloader_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "dk_assets_downloader_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "dk_assets_downloader_test.cpp",
+  ]
 
   include_dirs =
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
@@ -56,14 +57,6 @@ ohos_unittest("dk_assets_downloader_test") {
   ]
 
   external_deps = [ "c_utils:utils" ]
-
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
 
   defines = [ "private=public" ]
 }
@@ -71,7 +64,12 @@ ohos_unittest("dk_assets_downloader_test") {
 ohos_unittest("dk_container_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "dk_container_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "dk_container_test.cpp",
+  ]
 
   include_dirs =
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
@@ -83,14 +81,6 @@ ohos_unittest("dk_container_test") {
   ]
 
   external_deps = [ "c_utils:utils" ]
-
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
 
   defines = [ "private=public" ]
 }
@@ -98,7 +88,10 @@ ohos_unittest("dk_container_test") {
 ohos_unittest("dk_error_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "dk_error_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "dk_error_test.cpp",
+  ]
 
   include_dirs =
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
@@ -110,14 +103,6 @@ ohos_unittest("dk_error_test") {
   ]
 
   external_deps = [ "c_utils:utils" ]
-
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
 
   defines = [ "private=public" ]
 }
@@ -126,7 +111,11 @@ ohos_unittest("dk_database_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/dk_database_mock.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
     "dk_database_test.cpp",
   ]
 
@@ -141,21 +130,17 @@ ohos_unittest("dk_database_test") {
 
   external_deps = [ "c_utils:utils" ]
 
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
-
   defines = [ "private=public" ]
 }
 
 ohos_unittest("dk_record_field_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "dk_record_field_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "dk_record_field_test.cpp",
+  ]
 
   include_dirs =
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
@@ -167,14 +152,6 @@ ohos_unittest("dk_record_field_test") {
   ]
 
   external_deps = [ "c_utils:utils" ]
-
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
 
   defines = [ "private=public" ]
 }
