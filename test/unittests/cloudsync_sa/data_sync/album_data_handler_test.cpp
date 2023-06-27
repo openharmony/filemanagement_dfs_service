@@ -39,6 +39,7 @@ public:
                                            vector<DriveKit::DKDownloadAsset> &outAssetsToDownload));
     MOCK_METHOD1(OnDownloadSuccess, int32_t(const DriveKit::DKDownloadAsset &asset));
     MOCK_METHOD1(OnDownloadThumbSuccess, int32_t(const DriveKit::DKDownloadAsset &asset));
+    MOCK_METHOD1(GetAssetsToDownload, int32_t(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload));
     MOCK_METHOD1(Clean, int32_t(const int action));
 };
 class AlbumDataHandlerTest : public testing::Test {

@@ -35,6 +35,7 @@ public:
 
     int32_t GetDownloadAsset(std::string cloudId,
                                        std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) {return 0;}
+    int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) {return 0;}
     /* upload */
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) {return 0;}
     int32_t GetDeletedRecords(std::vector<DriveKit::DKRecord> &records) {return 0;}

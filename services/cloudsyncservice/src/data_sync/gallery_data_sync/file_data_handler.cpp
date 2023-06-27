@@ -75,6 +75,53 @@ int32_t FileDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &reco
     return E_OK;
 }
 
+void FileDataHandler::AppendToDownload(NativeRdb::ResultSet &local,
+                                       const std::string &fieldKey,
+                                       std::vector<DKDownloadAsset> &assetsToDownload)
+{
+    DKDownloadAsset downloadAsset;
+    downloadAsset.recordType = recordType_;
+    downloadAsset.fieldKey = fieldKey;
+    string filePath;
+    int ret = DataConvertor::GetString(PhotoColumn::MEDIA_FILE_PATH, filePath, local);
+    if (ret != E_OK) {
+        LOGE("Get file path failed");
+        return;
+    }
+    string recordId;
+    ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, recordId, local);
+    if (ret != E_OK) {
+        LOGE("cannot get cloud_id fron result set");
+        return;
+    }
+    downloadAsset.recordId = recordId;
+
+    const string &suffix = (fieldKey == "lcd") ? LCD_SUFFIX : THUMB_SUFFIX;
+    downloadAsset.downLoadPath = createConvertor_.GetThumbPath(filePath, suffix);
+    downloadAsset.asset.assetName = MetaFile::GetFileName(downloadAsset.downLoadPath);
+    downloadAsset.downLoadPath = MetaFile::GetParentDir(downloadAsset.downLoadPath);
+    ForceCreateDirectory(downloadAsset.downLoadPath);
+    assetsToDownload.push_back(downloadAsset);
+}
+
+int32_t FileDataHandler::GetAssetsToDownload(vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
+{
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    predicates.EqualTo(Media::PhotoColumn::PHOTO_SYNC_STATUS,
+                       to_string(static_cast<int32_t>(SyncStatusType::TYPE_DOWNLOAD)));
+    auto results = Query(predicates, GALLERY_FILE_COLUMNS);
+    if (results == nullptr) {
+        LOGE("get nullptr modified result");
+        return E_RDB;
+    }
+
+    while (results->GoToNextRow() == 0) {
+        AppendToDownload(*results, "lcd", outAssetsToDownload);
+        AppendToDownload(*results, "thumbnail", outAssetsToDownload);
+    }
+    return E_OK;
+}
+
 const std::vector<std::string> PULL_QUERY_COLUMNS = {
     PhotoColumn::MEDIA_FILE_PATH,
     PhotoColumn::MEDIA_SIZE,
@@ -306,8 +353,9 @@ int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, OnFetchParams 
     values.PutInt(Media::PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     values.PutString(Media::PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
-    // PHOTO_SYNC_STATUS set to params.fetchThumbs ? SyncStatusType::TYPE_DOWNLOAD :
-    // SyncStatusType::TYPE_VISIBLE
+    values.PutInt(
+        Media::PhotoColumn::PHOTO_SYNC_STATUS,
+        static_cast<int32_t>(params.fetchThumbs ? SyncStatusType::TYPE_DOWNLOAD : SyncStatusType::TYPE_VISIBLE));
     ret = Insert(rowId, values);
     if (ret != E_OK) {
         LOGE("Insert pull record failed, rdb ret=%{public}d", ret);
@@ -327,9 +375,7 @@ int32_t FileDataHandler::OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset 
     LOGI("update sync_status to visible of record %s", asset.recordId.c_str());
     int updateRows;
     ValuesBucket values;
-    values.PutInt(
-        Media::PhotoColumn::PHOTO_SYNC_STATUS,
-        static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
+    values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
 
     string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
@@ -656,34 +702,6 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
     return ret;
 }
 
-static std::string GetParentDir(const std::string &path)
-{
-    if ((path == "/") || (path == "")) {
-        return "";
-    }
-
-    auto pos = path.find_last_of('/');
-    if ((pos == std::string::npos) || (pos == 0)) {
-        return "/";
-    }
-
-    return path.substr(0, pos);
-}
-
-static std::string GetFileName(const std::string &path)
-{
-    if ((path == "/") || (path == "")) {
-        return "";
-    }
-
-    auto pos = path.find_last_of('/');
-    if (pos == std::string::npos) {
-        return "";
-    }
-
-    return path.substr(pos + 1);
-}
-
 void FileDataHandler::AppendToDownload(const DKRecord &record,
                                        const std::string &fieldKey,
                                        std::vector<DKDownloadAsset> &assetsToDownload)
@@ -713,8 +731,8 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     } else {
         downloadAsset.downLoadPath = createConvertor_.GetLowerTmpPath(path);
     }
-    downloadAsset.asset.assetName = GetFileName(downloadAsset.downLoadPath);
-    downloadAsset.downLoadPath = GetParentDir(downloadAsset.downLoadPath);
+    downloadAsset.asset.assetName = MetaFile::GetFileName(downloadAsset.downLoadPath);
+    downloadAsset.downLoadPath = MetaFile::GetParentDir(downloadAsset.downLoadPath);
     ForceCreateDirectory(downloadAsset.downLoadPath);
     assetsToDownload.push_back(downloadAsset);
 }

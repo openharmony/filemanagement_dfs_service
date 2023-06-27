@@ -122,7 +122,7 @@ static std::string GetDentryfileByPath(uint32_t userId, const std::string &path,
     return cacheDir + dentryFileName;
 }
 
-static std::string GetParentDir(const std::string &path)
+std::string MetaFile::GetParentDir(const std::string &path)
 {
     if ((path == "/") || (path == "")) {
         return "";
@@ -136,7 +136,7 @@ static std::string GetParentDir(const std::string &path)
     return path.substr(0, pos);
 }
 
-static std::string GetFileName(const std::string &path)
+std::string MetaFile::GetFileName(const std::string &path)
 {
     if ((path == "/") || (path == "")) {
         return "";
@@ -152,7 +152,7 @@ static std::string GetFileName(const std::string &path)
 
 static std::shared_ptr<MetaFile> GetParentMetaFile(uint32_t userId, const std::string &path)
 {
-    std::string parentPath = GetParentDir(path);
+    std::string parentPath = MetaFile::GetParentDir(path);
     if (parentPath == "") {
         return nullptr;
     }

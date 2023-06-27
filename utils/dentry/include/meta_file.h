@@ -43,6 +43,9 @@ public:
     int32_t DoLookup(MetaBase &base);
     int32_t LoadChildren(std::vector<MetaBase> &bases);
 
+    static std::string GetParentDir(const std::string &path);
+    static std::string GetFileName(const std::string &path);
+
 private:
     std::mutex mtx_{};
     std::string path_{};
