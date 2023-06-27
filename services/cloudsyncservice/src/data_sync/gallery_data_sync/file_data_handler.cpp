@@ -908,7 +908,7 @@ int32_t FileDataHandler::CleanNotPureCloudRecord(NativeRdb::ResultSet &local, co
 }
 
 int32_t FileDataHandler::CleanCloudRecord(NativeRdb::ResultSet &local, const int action,
-                                           const std::string &filePath)
+                                          const std::string &filePath)
 {
     int res = E_OK;
     if (!FileIsLocal(local)) {
