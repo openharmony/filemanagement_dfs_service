@@ -32,9 +32,10 @@ public:
     virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
                                    OnFetchParams &params) = 0;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) = 0;
+    virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) = 0;
 
     virtual int32_t GetDownloadAsset(std::string cloudId,
-                                       std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) = 0;
+                                     std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) = 0;
     /* upload */
     virtual int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) = 0;
     virtual int32_t GetDeletedRecords(std::vector<DriveKit::DKRecord> &records) = 0;

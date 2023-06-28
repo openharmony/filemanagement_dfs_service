@@ -201,7 +201,7 @@ private:
 
     /* thread pool */
     ThreadPool pool_ = ThreadPool("TaskManager");
-    const int32_t MAX_THREAD_NUM = 4;
+    const int32_t MAX_THREAD_NUM = 12;
 };
 } // namespace CloudSync
 } // namespace FileManagement

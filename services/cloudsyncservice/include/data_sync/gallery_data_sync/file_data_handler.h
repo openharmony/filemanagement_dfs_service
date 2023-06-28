@@ -40,6 +40,7 @@ public:
     virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
                                    OnFetchParams &params) override;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
+    virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
 
     int32_t GetDownloadAsset(std::string cloudId,
                              std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
@@ -132,7 +133,9 @@ private:
     int32_t PullRecordDelete(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
     int32_t SetRetry(const std::string &recordId);
     int32_t RecycleFile(const std::string &recordId);
-
+    void AppendToDownload(NativeRdb::ResultSet &local,
+                          const std::string &fieldKey,
+                          std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
     void AppendToDownload(const DriveKit::DKRecord &record,
                           const std::string &fieldKey,
                           std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
