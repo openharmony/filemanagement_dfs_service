@@ -32,7 +32,7 @@ using namespace NativeRdb;
 using namespace DriveKit;
 class AlbumDataHandlerMock : public AlbumDataHandler {
 public:
-    AlbumDataHandlerMock(std::shared_ptr<RdbStoreMock> rdb) : AlbumDataHandler(rdb)
+    explicit AlbumDataHandlerMock(std::shared_ptr<RdbStoreMock> rdb) : AlbumDataHandler(rdb)
     {
     }
     MOCK_METHOD2(GetDownloadAsset, int32_t(string cloudId,

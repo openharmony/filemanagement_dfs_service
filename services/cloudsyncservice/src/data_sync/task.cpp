@@ -184,9 +184,7 @@ void TaskManager::ReleaseRunner(int32_t userId, const std::string &bundleName)
 {
     string key = GetKey(userId, bundleName);
     unique_lock wlock(mapMutex_);
-    if (map_.find(key) != map_.end()) {
-        map_.erase(key);
-    }
+    map_.erase(key);
 }
 
 shared_ptr<TaskRunner> TaskManager::GetRunner(int32_t userId, const std::string &bundleName)
