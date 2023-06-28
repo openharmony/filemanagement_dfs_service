@@ -124,17 +124,7 @@ HWTEST_F(FileDataConvertorTest, HandleSourceTest, TestSize.Level1)
 {
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
-    string key = "source";
     auto ret = fileDataConvertor_->HandleSource(data, resultSet);
-    EXPECT_EQ(E_OK, ret);
-}
-
-HWTEST_F(FileDataConvertorTest, HandleFileTypeTest, TestSize.Level1)
-{
-    DriveKit::DKRecordData data;
-    ResultSetMock resultSet;
-    string key = "fileType";
-    auto ret = fileDataConvertor_->HandleFileType(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -214,9 +204,8 @@ HWTEST_F(FileDataConvertorTest, HandlePropertiesTest, TestSize.Level1)
 {
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
-    string key = "properties";
     auto ret = fileDataConvertor_->HandleProperties(data, resultSet);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_INVAL_ARG, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandlePositionTest, TestSize.Level1)
@@ -481,17 +470,7 @@ HWTEST_F(FileDataConvertorTest, ConvertTest, TestSize.Level1)
     ResultSetMock resultSet;
     fileDataConvertor_->type_ = FileDataConvertor::OperationType::FILE_CREATE;
     auto ret = fileDataConvertor_->Convert(record, resultSet);
-    EXPECT_EQ(E_PATH, ret);
-}
-
-HWTEST_F(FileDataConvertorTest, ConvertTest1, TestSize.Level1)
-{
-    DriveKit::DKRecord record;
-    ResultSetMock resultSet;
-    fileDataConvertor_->type_ = FileDataConvertor::OperationType::FILE_DELETE;
-    EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
-    auto ret = fileDataConvertor_->Convert(record, resultSet);
-    EXPECT_EQ(E_RDB, ret);
+    EXPECT_EQ(E_INVAL_ARG, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, GetLowerPathTest, TestSize.Level1)

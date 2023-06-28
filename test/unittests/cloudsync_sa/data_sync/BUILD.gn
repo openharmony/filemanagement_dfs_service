@@ -18,6 +18,11 @@ ohos_unittest("album_data_handler_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
@@ -42,6 +47,7 @@ ohos_unittest("album_data_handler_test") {
   ]
 
   include_dirs = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
@@ -64,14 +70,6 @@ ohos_unittest("album_data_handler_test") {
     "relational_store:native_rdb",
   ]
 
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
-
   defines = [
     "private=public",
     "LOG_DOMAIN=0xD004310",
@@ -85,6 +83,11 @@ ohos_unittest("data_sync_manager_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
@@ -109,6 +112,7 @@ ohos_unittest("data_sync_manager_test") {
   ]
 
   include_dirs = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
@@ -131,14 +135,6 @@ ohos_unittest("data_sync_manager_test") {
     "relational_store:native_rdb",
   ]
 
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
-
   defines = [ "private=public" ]
 
   use_exceptions = true
@@ -148,6 +144,13 @@ ohos_unittest("data_handler_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
@@ -176,6 +179,7 @@ ohos_unittest("data_handler_test") {
     "${services_path}/cloudsyncservice/include/data_sync",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${media_library_path}/frameworks/utils/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
@@ -194,14 +198,6 @@ ohos_unittest("data_handler_test") {
     "relational_store:native_rdb",
   ]
 
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
-
   defines = [ "private=public" ]
 
   use_exceptions = true
@@ -210,6 +206,11 @@ ohos_unittest("data_handler_test") {
 ohos_unittest("data_convertor_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -223,6 +224,7 @@ ohos_unittest("data_convertor_test") {
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
@@ -242,14 +244,6 @@ ohos_unittest("data_convertor_test") {
     "relational_store:native_rdb",
   ]
 
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
-
   defines = [ "private=public" ]
 
   use_exceptions = true
@@ -258,6 +252,12 @@ ohos_unittest("data_convertor_test") {
 ohos_unittest("file_data_handler_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
@@ -271,10 +271,11 @@ ohos_unittest("file_data_handler_test") {
   ]
 
   include_dirs = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
-    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
@@ -293,14 +294,6 @@ ohos_unittest("file_data_handler_test") {
     "relational_store:native_rdb",
   ]
 
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
-
   defines = [
     "private=public",
     "protected=public",
@@ -312,6 +305,12 @@ ohos_unittest("file_data_handler_test") {
 ohos_unittest("gallery_data_syncer_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_sync_callback_manager_mock.cpp",
@@ -332,10 +331,11 @@ ohos_unittest("gallery_data_syncer_test") {
   ]
 
   include_dirs = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
-    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
@@ -354,14 +354,6 @@ ohos_unittest("gallery_data_syncer_test") {
     "relational_store:native_rdb",
   ]
 
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
-
   defines = [
     "private=public",
     "LOG_DOMAIN=0xD004310",
@@ -375,6 +367,12 @@ ohos_unittest("data_syncer_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
@@ -399,6 +397,7 @@ ohos_unittest("data_syncer_test") {
   ]
 
   include_dirs = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
@@ -422,14 +421,6 @@ ohos_unittest("data_syncer_test") {
     "relational_store:native_rdb",
   ]
 
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
-
   defines = [
     "private=public",
     "protected=public",
@@ -444,6 +435,9 @@ ohos_unittest("file_data_convertor_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
@@ -465,6 +459,7 @@ ohos_unittest("file_data_convertor_test") {
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
@@ -483,14 +478,6 @@ ohos_unittest("file_data_convertor_test") {
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
   ]
-
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
 
   defines = [
     "private=public",
