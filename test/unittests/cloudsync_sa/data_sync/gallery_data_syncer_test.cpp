@@ -93,4 +93,24 @@ HWTEST_F(GalleryDataSyncerTest, StopDownloadFileTest, TestSize.Level1)
     int res = galleryDataSyncer_->StopDownloadFile(path, USER_ID);
     EXPECT_EQ(res, E_OK);
 }
+
+/**
+ * @tc.name: ResetTest
+ * @tc.desc: Verify the Reset function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(GalleryDataSyncerTest, ResetTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ResetTest Start";
+    try {
+        GalleryDataSyncer galleryDataSyncer(BUND_NAME, USER_ID);
+        galleryDataSyncer_->Reset();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ResetTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "ResetTest End";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
