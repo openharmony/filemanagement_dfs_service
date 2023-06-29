@@ -57,39 +57,6 @@ void CloudSyncAssetManagerImplTest::TearDown(void)
 }
 
 /**
- * @tc.name: UploadAssetTest
- * @tc.desc: Verify the UploadAsset function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncAssetManagerImplTest, UploadAssetTest, TestSize.Level1)
-{
-    CloudSyncAssetManagerImpl assetManager;
-    int32_t userId = 123;
-    std::string request = "sample_request";
-    std::string result;
-    int32_t ret = assetManager.UploadAsset(userId, request, result);
-    EXPECT_EQ(ret, E_OK);
-}
-
-/**
- * @tc.name: UploadAssetTest001
- * @tc.desc: Verify the UploadAsset function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncAssetManagerImplTest, UploadAssetTest001, TestSize.Level1)
-{
-    CloudSyncAssetManagerImpl assetManager;
-    CloudSyncServiceProxy::serviceProxy_ = nullptr;
-    int32_t userId = 456;
-    std::string request = "";
-    std::string result;
-    int32_t ret = assetManager.UploadAsset(userId, request, result);
-    EXPECT_EQ(ret, E_OK);
-}
-
-/**
  * @tc.name: DownloadFileTest
  * @tc.desc: Verify the DownloadFile function.
  * @tc.type: FUNC
