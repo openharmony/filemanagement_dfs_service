@@ -975,8 +975,8 @@ static int32_t DeleteThumbDir(const string &thmbDir)
     LOGD("Begin delete thumbDir");
     int res = E_OK;
     if (access(thmbDir.c_str(), F_OK) != 0) {
-        LOGE("lcdFile is not exist");
-        return E_PATH;
+        LOGI("lcdFile is not exist");
+        return E_OK;
     }
 
     LOGD("lcdFile exist");

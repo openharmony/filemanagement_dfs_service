@@ -159,6 +159,7 @@ int32_t SdkHelper::DownloadAssets(shared_ptr<DriveKit::DKContext> context,
     auto result = downloader->DownLoadAssets(context, assetsToDownload, {}, id, resultCallback, progressCallback);
     if (result != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("DownLoadAssets fail");
+        return E_CLOUD_SDK;
     }
     return E_OK;
 }

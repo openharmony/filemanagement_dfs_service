@@ -38,6 +38,7 @@ enum class SyncTriggerType : int32_t {
     CLOUD_TRIGGER,
     PENDING_TRIGGER,
     BATTERY_OK_TRIGGER,
+    NETWORK_AVAIL_TRIGGER,
 };
 
 class DataSyncer {
