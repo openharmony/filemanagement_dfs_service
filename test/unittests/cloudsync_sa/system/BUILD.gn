@@ -35,7 +35,10 @@ ohos_unittest("dfsu_fd_guard_test") {
     "//third_party/googletest:gtest_main",
   ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 
   defines = [ "private=public" ]
   defines += [
@@ -79,6 +82,7 @@ ohos_unittest("dfsu_access_token_helper_test") {
     "access_token:libtokenid_sdk",
     "c_utils:utils",
     "c_utils:utilsbase",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "preferences:native_preferences",
   ]
@@ -112,7 +116,10 @@ ohos_unittest("dfsu_mount_argument_descriptors_test") {
     "//third_party/googletest:gtest_main",
   ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 
   defines = [ "private=public" ]
   defines += [

@@ -84,6 +84,7 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
 
   external_deps = [
     "ability_base:zuri",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "media_library:media_library",
     "safwk:system_ability_fwk",

@@ -35,6 +35,7 @@ ohos_unittest("battery_status_listener_test") {
 
   external_deps = [
     "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
     "netmanager_base:net_conn_manager_if",
   ]
 
@@ -62,6 +63,7 @@ ohos_unittest("net_conn_callback_observer_test") {
 
   external_deps = [
     "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
     "netmanager_base:net_conn_manager_if",
   ]
 
@@ -89,6 +91,7 @@ ohos_unittest("network_status_test") {
   external_deps = [
     "common_event_service:cesfwk_innerkits",
     "dfs_service:cloudsync_kit_inner",
+    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
@@ -146,6 +149,8 @@ ohos_unittest("cloud_status_test") {
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
+
+  external_deps = [ "hilog:libhilog" ]
 
   defines = [ "private=public" ]
 

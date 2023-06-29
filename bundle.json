@@ -40,6 +40,7 @@
           "hilog",
           "init",
           "ipc",
+          "napi",
           "preferences",
           "media_library",
           "netmanager_base",

@@ -24,7 +24,12 @@ ohos_shared_library("cloudsyncmanager") {
     "${utils_path}:libdistributedfileutils",
   ]
 
-  external_deps = [ "file_api:filemgmt_libn" ]
+  external_deps = [
+    "file_api:filemgmt_libn",
+    "file_api:filemgmt_libhilog",
+    "hilog:libhilog",
+    "napi:ace_napi",
+  ]
 
   relative_install_dir = "module/file"
 
