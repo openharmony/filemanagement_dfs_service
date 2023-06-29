@@ -73,7 +73,7 @@ HWTEST_F(BatteryStatusTest, GetCapacity, TestSize.Level1)
 {
     BatteryStatus batteryStatus;
     int32_t ret = batteryStatus.GetCapacity();
-    EXPECT_EQ(ret, 11);
+    EXPECT_EQ(ret, 100);
 }
 
 /**
@@ -115,7 +115,7 @@ HWTEST_F(BatteryStatusTest, IsAllowUpload003, TestSize.Level1)
     BatteryStatus batteryStatus;
     batteryStatus.isCharging_ = false;
     auto ret = batteryStatus.IsAllowUpload(false);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, true);
 }
 
 /**

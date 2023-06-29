@@ -15,7 +15,6 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <memory>
 
 #include "cloud_download_callback_client.h"
 #include "dfs_error.h"
@@ -63,25 +62,47 @@ void CloudDownloadCallbackClientTest::TearDown(void)
 }
 
 /**
- * @tc.name: OnSyncStateChangedTest
- * @tc.desc: Verify the OnSyncStateChanged function.
+ * @tc.name: OnDownloadProcessTest001
+ * @tc.desc: Verify the OnDownloadProcess function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudDownloadCallbackClientTest, OnSyncStateChangedTest, TestSize.Level1)
+HWTEST_F(CloudDownloadCallbackClientTest, OnDownloadProcessTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnSyncStateChanged start";
+    GTEST_LOG_(INFO) << "OnDownloadProcess Start";
     try {
         DownloadProgressObj progress;
-        auto callback = make_shared<MockCloudDownloadCallback>();
-        CloudDownloadCallbackClient cloudDownloadCallbackClient(callback);
-        cloudDownloadCallbackClient.OnDownloadProcess(progress);
+        std::shared_ptr<CloudDownloadCallback> callback = nullptr;
+        CloudDownloadCallbackClient cloudCallback(callback);
+        cloudCallback.OnDownloadProcess(progress);
         EXPECT_TRUE(true);
-    } catch (...) {
+    } catch(...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnSyncStateChanged FAILED";
+        GTEST_LOG_(INFO) << " OnDownloadProcess ERROR";
     }
-    GTEST_LOG_(INFO) << "OnSyncStateChanged end";
+    GTEST_LOG_(INFO) << "OnDownloadProcess End";
+}
+
+/**
+ * @tc.name: OnDownloadProcessTest002
+ * @tc.desc: Verify the OnDownloadProcess function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDownloadCallbackClientTest, OnDownloadProcessTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnDownloadProcess Start";
+    try {
+        DownloadProgressObj progress;
+        std::shared_ptr<CloudDownloadCallback> callback = std::make_shared<MockCloudDownloadCallback>();
+        CloudDownloadCallbackClient cloudCallback(callback);
+        cloudCallback.OnDownloadProcess(progress);
+        EXPECT_TRUE(true);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnDownloadProcess ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnDownloadProcess End";
 }
 
 } // namespace Test

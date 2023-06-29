@@ -128,6 +128,78 @@ HWTEST_F(CloudSyncServiceProxyTest, StopSyncInner, TestSize.Level1)
     GTEST_LOG_(INFO) << "StopSyncInner End";
 }
 
+/**
+ * @tc.name: UploadAsset001
+ * @tc.desc: Verify the UploadAsset function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, UploadAsset001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UploadAsset001 Start";
+    int32_t userId = 100;
+    string request = "test_request";
+    string result;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
+    int ret = proxy_->UploadAsset(userId, request, result);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    GTEST_LOG_(INFO) << "UploadAsset001 End";
+}
+
+/**
+ * @tc.name: UploadAsset002
+ * @tc.desc: Verify the UploadAsset function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, UploadAsset002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UploadAsset002 Start";
+    int32_t userId = 100;
+    string request = "test_request";
+    string result;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    int ret = proxy_->UploadAsset(userId, request, result);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "UploadAsset002 End";
+}
+
+/**
+ * @tc.name: DownloadFile001
+ * @tc.desc: Verify the DownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, DownloadFile001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFile001 Start";
+    int32_t userId = 100;
+    string bundleName = "test_bundleName";
+    AssetInfoObj assetInfoObj;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
+    int ret = proxy_->DownloadFile(userId, bundleName, assetInfoObj);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    GTEST_LOG_(INFO) << "DownloadFile001 End";
+}
+
+/**
+ * @tc.name: DownloadFile002
+ * @tc.desc: Verify the DownloadFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, DownloadFile002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadFile002 Start";
+    int32_t userId = 100;
+    string bundleName = "test_bundleName";
+    AssetInfoObj assetInfoObj;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    int ret = proxy_->DownloadFile(userId, bundleName, assetInfoObj);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DownloadFile002 End";
+}
+
 } // namespace Test
 } // namespace FileManagement::CloudSync {
 } // namespace OHOS

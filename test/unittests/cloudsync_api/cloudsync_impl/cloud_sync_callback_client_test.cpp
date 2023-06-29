@@ -83,6 +83,10 @@ HWTEST_F(CloudSyncCallbackTest, OnSyncStateChangedTest, TestSize.Level1)
     try {
         InitCloudSyncCallback();
         callbackClient_->OnSyncStateChanged(CloudSyncState::COMPLETED, ErrorType::NO_ERROR);
+        EXPECT_TRUE(true);
+        callbackClient_->callback_ = nullptr;
+        callbackClient_->OnSyncStateChanged(CloudSyncState::COMPLETED, ErrorType::NO_ERROR);
+        EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnSyncStateChanged FAILED";
