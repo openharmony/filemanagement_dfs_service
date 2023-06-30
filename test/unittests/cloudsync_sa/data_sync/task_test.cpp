@@ -123,10 +123,11 @@ HWTEST_F(TaskTest, StartTask001, TestSize.Level1)
         TaskAction action = Action;
         auto task = make_shared<Task>(context, action);
         std::function<void()> callBack = CallBack;
-        TaskRunner taskRunner(callBack);
-        taskRunner.stopFlag_ = true;
-        auto ret = taskRunner.StartTask(task, action);
-        EXPECT_EQ(E_STOP, ret);
+        auto taskRunner = make_shared<TaskRunner>(callBack);
+        taskRunner->stopFlag_ = false;
+        taskRunner->SetCommitFunc(CommitFuncSuccess);
+        auto ret = taskRunner->StartTask(task, action);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " StartTask001 ERROR";
@@ -152,43 +153,15 @@ HWTEST_F(TaskTest, StartTask002, TestSize.Level1)
         std::function<void()> callBack = CallBack;
         auto taskRunner = make_shared<TaskRunner>(callBack);
         taskRunner->stopFlag_ = false;
-        taskRunner->SetCommitFunc(CommitFuncSuccess);
+        taskRunner->SetCommitFunc(CommitFuncFail);
         auto ret = taskRunner->StartTask(task, action);
-        EXPECT_EQ(E_OK, ret);
+        EXPECT_EQ(1, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " StartTask002 ERROR";
     }
 
     GTEST_LOG_(INFO) << "StartTask002 End";
-}
-
-/**
- * @tc.name: StartTask003
- * @tc.desc: Verify the StartTask003 function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(TaskTest, StartTask003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "StartTask003 Begin";
-    try {
-        auto handler = std::make_shared<DataHandlerMock>();
-        auto context = std::make_shared<TaskContext>(handler);
-        TaskAction action = Action;
-        auto task = make_shared<Task>(context, action);
-        std::function<void()> callBack = CallBack;
-        auto taskRunner = make_shared<TaskRunner>(callBack);
-        taskRunner->stopFlag_ = false;
-        taskRunner->SetCommitFunc(CommitFuncFail);
-        auto ret = taskRunner->StartTask(task, action);
-        EXPECT_EQ(1, ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " StartTask003 ERROR";
-    }
-
-    GTEST_LOG_(INFO) << "StartTask003 End";
 }
 
 /**

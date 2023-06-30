@@ -56,6 +56,30 @@ void CloudSyncCommonTest::TearDown(void)
 }
 
 /*
+ * @tc.name: Marshalling
+ * @tc.desc: Verify the Marshalling function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, Marshalling, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Marshalling Start";
+    try {
+        SwitchDataObj switchDataObj;
+        Parcel parcel;
+        string strSwitchData = "continue";
+        bool boolSwitchData = false;
+        switchDataObj.switchData.insert({strSwitchData, boolSwitchData});
+        auto res = switchDataObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " Marshalling FAILED";
+    }
+    GTEST_LOG_(INFO) << "Marshalling End";
+}
+
+/*
  * @tc.name: Marshalling001
  * @tc.desc: Verify the Marshalling001 function.
  * @tc.type: FUNC
@@ -67,7 +91,14 @@ HWTEST_F(CloudSyncCommonTest, Marshalling001, TestSize.Level1)
     try {
         SwitchDataObj switchDataObj;
         Parcel parcel;
+
         auto res = switchDataObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        string strSwitchData = "continue";
+        bool boolSwitchData = true;
+        switchDataObj.switchData.insert({strSwitchData, boolSwitchData});
+        res = switchDataObj.Marshalling(parcel);
         EXPECT_TRUE(res);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -86,10 +117,14 @@ HWTEST_F(CloudSyncCommonTest, Marshalling002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Marshalling002 Start";
     try {
-        DownloadProgressObj downloadProgressObj;
+        SwitchDataObj switchDataObj;
         Parcel parcel;
-        auto res = downloadProgressObj.Marshalling(parcel);
-        EXPECT_TRUE(res);
+
+        string strSwitchData = "strSwitchData";
+        bool boolSwitchData = false;
+        switchDataObj.switchData.insert({strSwitchData, boolSwitchData});
+        auto res = switchDataObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " Marshalling002 FAILED";
@@ -107,15 +142,127 @@ HWTEST_F(CloudSyncCommonTest, Marshalling003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Marshalling003 Start";
     try {
-        CleanOptions cleanOptions;
+        DownloadProgressObj downloadProgressObj;
         Parcel parcel;
-        auto res = cleanOptions.Marshalling(parcel);
-        EXPECT_TRUE(res);
+        downloadProgressObj.path = "continue";
+        downloadProgressObj.state = downloadProgressObj.RUNNING;
+        downloadProgressObj.downloadedSize = 1;
+        downloadProgressObj.totalSize = 1;
+        auto res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        downloadProgressObj.path = "continue";
+        downloadProgressObj.state = downloadProgressObj.RUNNING;
+        downloadProgressObj.downloadedSize = 1;
+        downloadProgressObj.totalSize = 0;
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        downloadProgressObj.path = "continue";
+        downloadProgressObj.state = downloadProgressObj.RUNNING;
+        downloadProgressObj.downloadedSize = 0;
+        downloadProgressObj.totalSize = 0;
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        downloadProgressObj.path = "continue";
+        downloadProgressObj.state = downloadProgressObj.STOPPED;
+        downloadProgressObj.downloadedSize = 0;
+        downloadProgressObj.totalSize = 0;
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        downloadProgressObj.path = "path";
+        downloadProgressObj.state = downloadProgressObj.STOPPED;
+        downloadProgressObj.downloadedSize = 0;
+        downloadProgressObj.totalSize = 0;
+        res = downloadProgressObj.Marshalling(parcel);
+        EXPECT_TRUE(!res);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " Marshalling003 FAILED";
     }
     GTEST_LOG_(INFO) << "Marshalling003 End";
+}
+
+/*
+ * @tc.name: Marshalling004
+ * @tc.desc: Verify the Marshalling004 function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, Marshalling004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Marshalling004 Start";
+    try {
+        CleanOptions cleanOptions;
+        Parcel parcel;
+
+        auto res = cleanOptions.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        string strActionsData = "continue";
+        int32_t intActionsData = 1;
+        cleanOptions.appActionsData.insert({strActionsData, intActionsData});
+        res = cleanOptions.Marshalling(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " Marshalling004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "Marshalling004 End";
+}
+
+/*
+ * @tc.name: Marshalling005
+ * @tc.desc: Verify the Marshalling005 function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, Marshalling005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Marshalling005 Start";
+    try {
+        CleanOptions cleanOptions;
+        Parcel parcel;
+        string strActionsData = "strActionsData";
+        int32_t intActionsData = 0;
+        cleanOptions.appActionsData.insert({strActionsData, intActionsData});
+        auto res = cleanOptions.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " Marshalling005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "Marshalling005 End";
+}
+
+/*
+ * @tc.name: Marshalling006
+ * @tc.desc: Verify the Marshalling006 function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, Marshalling006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "Marshalling006 Start";
+    try {
+        CleanOptions cleanOptions;
+        Parcel parcel;
+
+        auto res = cleanOptions.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+
+        string strActionsData = "continue";
+        int32_t intActionsData = 0;
+        cleanOptions.appActionsData.insert({strActionsData, intActionsData});
+        res = cleanOptions.Marshalling(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " Marshalling006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "Marshalling006 End";
 }
 
 /*
@@ -182,6 +329,199 @@ HWTEST_F(CloudSyncCommonTest, Unmarshalling003, TestSize.Level1)
 }
 
 /*
+ * @tc.name: ReadFromParcel001
+ * @tc.desc: Verify the ReadFromParcel001 function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, ReadFromParcel001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadFromParcel001 Start";
+    try {
+        SwitchDataObj switchDataObj;
+        Parcel parcel;
+        parcel.dataSize_ = 0;
+        auto res = switchDataObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ReadFromParcel001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ReadFromParcel001 End";
+}
+
+/*
+ * @tc.name: ReadFromParcel002
+ * @tc.desc: Verify the ReadFromParcel002 function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, ReadFromParcel002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadFromParcel002 Start";
+    try {
+        SwitchDataObj switchDataObj;
+        Parcel parcel;
+        parcel.dataSize_ = 1025;
+        auto res = switchDataObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ReadFromParcel002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ReadFromParcel002 End";
+}
+
+/*
+ * @tc.name: ReadFromParcel003
+ * @tc.desc: Verify the ReadFromParcel003 function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, ReadFromParcel003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadFromParcel003 Start";
+    try {
+        SwitchDataObj switchDataObj;
+        Parcel parcel;
+        parcel.dataSize_ = 3;
+        auto res = switchDataObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        parcel.data_ = new uint8_t();
+        parcel.writable_ = 0;
+        res = switchDataObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        parcel.writable_ = 1;
+        res = switchDataObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ReadFromParcel003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ReadFromParcel003 End";
+}
+
+/*
+ * @tc.name: ReadFromParcel004
+ * @tc.desc: Verify the ReadFromParcel004 function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, ReadFromParcel004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadFromParcel004 Start";
+    try {
+        CleanOptions cleanOptions;
+        Parcel parcel;
+        parcel.dataSize_ = 0;
+        auto res = cleanOptions.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ReadFromParcel004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ReadFromParcel004 End";
+}
+
+/*
+ * @tc.name: ReadFromParcel005
+ * @tc.desc: Verify the ReadFromParcel005 function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, ReadFromParcel005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadFromParcel005 Start";
+    try {
+        CleanOptions cleanOptions;
+        Parcel parcel;
+        parcel.dataSize_ = 1025;
+        auto res = cleanOptions.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ReadFromParcel005 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ReadFromParcel005 End";
+}
+
+/*
+ * @tc.name: ReadFromParcel006
+ * @tc.desc: Verify the ReadFromParcel006 function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, ReadFromParcel006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadFromParcel006 Start";
+    try {
+        CleanOptions cleanOptions;
+        Parcel parcel;
+        parcel.dataSize_ = 3;
+        auto res = cleanOptions.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        parcel.data_ = new uint8_t();
+        parcel.readCursor_ = 0;
+        res = cleanOptions.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        parcel.readCursor_ = 1;
+        res = cleanOptions.ReadFromParcel(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ReadFromParcel006 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ReadFromParcel006 End";
+}
+
+/*
+ * @tc.name: ReadFromParcel007
+ * @tc.desc: Verify the ReadFromParcel007 function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCommonTest, ReadFromParcel007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadFromParcel007 Start";
+    try {
+        DownloadProgressObj downloadProgressObj;
+        Parcel parcel;
+        auto res = downloadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        parcel.data_ = new uint8_t();
+        parcel.readCursor_ = 0;
+        res = downloadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        parcel.readCursor_ = 1;
+        res = downloadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        downloadProgressObj.downloadedSize = 0;
+        res = downloadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        downloadProgressObj.downloadedSize = 1;
+        downloadProgressObj.totalSize = 0;
+        res = downloadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(!res);
+
+        downloadProgressObj.totalSize = 1;
+        res = downloadProgressObj.ReadFromParcel(parcel);
+        EXPECT_TRUE(res);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ReadFromParcel007 FAILED";
+    }
+    GTEST_LOG_(INFO) << "ReadFromParcel007 End";
+}
+
+/*
  * @tc.name: to_string
  * @tc.desc: Verify the to_string function.
  * @tc.type: FUNC
@@ -201,16 +541,15 @@ HWTEST_F(CloudSyncCommonTest, to_string, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "to_string End";
 }
-
 /*
- * @tc.name: ReadFromParcel
- * @tc.desc: Verify the ReadFromParcel function.
+ * @tc.name: ReadFromParcel00
+ * @tc.desc: Verify the ReadFromParcel00 function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncCommonTest, ReadFromParcel, TestSize.Level1)
+HWTEST_F(CloudSyncCommonTest, ReadFromParcel00, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ReadFromParcel Start";
+    GTEST_LOG_(INFO) << "ReadFromParcel00 Start";
     try {
         AssetInfoObj assetInfo;
         Parcel parcel;
@@ -218,20 +557,20 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcel, TestSize.Level1)
         EXPECT_TRUE(res);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " ReadFromParcel FAILED";
+        GTEST_LOG_(INFO) << " ReadFromParcel00 FAILED";
     }
-    GTEST_LOG_(INFO) << "ReadFromParcel End";
+    GTEST_LOG_(INFO) << "ReadFromParcel00 End";
 }
 
 /*
- * @tc.name: Marshalling
- * @tc.desc: Verify the Marshalling function.
+ * @tc.name: Marshalling007
+ * @tc.desc: Verify the Marshalling007 function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncCommonTest, Marshalling, TestSize.Level1)
+HWTEST_F(CloudSyncCommonTest, Marshalling007, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "Marshalling Start";
+    GTEST_LOG_(INFO) << "Marshalling007 Start";
     try {
         AssetInfoObj assetInfo;
         Parcel parcel;
@@ -239,9 +578,9 @@ HWTEST_F(CloudSyncCommonTest, Marshalling, TestSize.Level1)
         EXPECT_TRUE(res);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " Marshalling FAILED";
+        GTEST_LOG_(INFO) << " Marshalling007 FAILED";
     }
-    GTEST_LOG_(INFO) << "Marshalling End";
+    GTEST_LOG_(INFO) << "Marshalling007 End";
 }
 
 /*

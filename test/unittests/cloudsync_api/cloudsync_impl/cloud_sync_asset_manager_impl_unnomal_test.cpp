@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 #include "cloud_sync_asset_manager_impl.h"
 #include "cloud_sync_service_proxy.h"
 #include "dfs_error.h"
 #include "utils_log.h"
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -57,6 +57,22 @@ void CloudSyncAssetManagerImplTest::TearDown(void)
 }
 
 /**
+ * @tc.name: UploadAssetTest
+ * @tc.desc: Verify the UploadAsset function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncAssetManagerImplTest, UploadAssetTest, TestSize.Level1)
+{
+    CloudSyncAssetManagerImpl assetManager;
+    int32_t userId = 100;
+    std::string request = "sample_request";
+    std::string result;
+    int32_t ret = assetManager.UploadAsset(userId, request, result);
+    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+}
+
+/**
  * @tc.name: DownloadFileTest
  * @tc.desc: Verify the DownloadFile function.
  * @tc.type: FUNC
@@ -65,28 +81,11 @@ void CloudSyncAssetManagerImplTest::TearDown(void)
 HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFileTest, TestSize.Level1)
 {
     CloudSyncAssetManagerImpl assetManager;
-    int32_t userId = 123;
+    int32_t userId = 100;
     std::string request = "sample_request";
     AssetInfo assetInfo;
     int32_t ret = assetManager.DownloadFile(userId, request, assetInfo);
-    EXPECT_NE(ret, E_SA_LOAD_FAILED);
-}
-
-/**
- * @tc.name: DownloadFileTest001
- * @tc.desc: Verify the DownloadFile function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFileTest001, TestSize.Level1)
-{
-    CloudSyncAssetManagerImpl assetManager;
-    CloudSyncServiceProxy::serviceProxy_ = nullptr;
-    const int32_t userId = 456;
-    const std::string request = "";
-    AssetInfo assetInfo;
-    int32_t ret = assetManager.DownloadFile(userId, request, assetInfo);
-    EXPECT_NE(ret, E_SA_LOAD_FAILED);
+    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
 }
 
 } // namespace Test

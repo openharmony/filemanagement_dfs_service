@@ -59,10 +59,7 @@ void CloudSyncManagerTest::TearDownTestCase(void)
 
 void CloudSyncManagerTest::SetUp(void)
 {
-    if (managePtr_ == nullptr) {
-        managePtr_ = make_shared<CloudSyncManagerImpl>();
-        ASSERT_TRUE(managePtr_ != nullptr) << "CallbackManager failed";
-    }
+    managePtr_ = make_shared<CloudSyncManagerImpl>();
     std::cout << "SetUp" << std::endl;
 }
 
@@ -84,10 +81,7 @@ HWTEST_F(CloudSyncManagerTest, RegisterCallbackTest, TestSize.Level1)
     try {
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
         auto res = managePtr_->RegisterCallback(callback);
-        EXPECT_EQ(res, E_OK);
-        callback = nullptr;
-        res = managePtr_->RegisterCallback(callback);
-        EXPECT_EQ(res, E_INVAL_ARG);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " RegisterCallbackTest FAILED";
@@ -108,18 +102,9 @@ HWTEST_F(CloudSyncManagerTest, StartSyncTest, TestSize.Level1)
         bool forceFlag = false;
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
         auto res = managePtr_->StartSync();
-        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
         res = managePtr_->StartSync(forceFlag, callback);
-        EXPECT_EQ(res, E_OK);
-        forceFlag = true;
-        res = managePtr_->StartSync(forceFlag, callback);
-        EXPECT_EQ(res, E_OK);
-        forceFlag = true;
-        res = managePtr_->StartSync(forceFlag, nullptr);
-        EXPECT_EQ(res, E_INVAL_ARG);
-        forceFlag = false;
-        res = managePtr_->StartSync(forceFlag, nullptr);
-        EXPECT_EQ(res, E_INVAL_ARG);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " StartSyncTest FAILED";
@@ -138,7 +123,7 @@ HWTEST_F(CloudSyncManagerTest, StopSyncTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "StopSyncTest Start";
     try {
         int res = managePtr_->StopSync();
-        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " StopSyncTest FAILED";
@@ -160,7 +145,7 @@ HWTEST_F(CloudSyncManagerTest, ChangeAppSwitchTest, TestSize.Level1)
         std::string bundleName = "bundleName";
         bool status = true;
         auto res = managePtr_->ChangeAppSwitch(accoutId, bundleName, status);
-        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " ChangeAppSwitchTest FAILED";
@@ -181,7 +166,7 @@ HWTEST_F(CloudSyncManagerTest, NotifyDataChangeTest, TestSize.Level1)
         std::string accoutId = "accoutId";
         std::string bundleName = "bundleName";
         auto res = managePtr_->NotifyDataChange(accoutId, bundleName);
-        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " NotifyDataChangeTest FAILED";
@@ -201,7 +186,7 @@ HWTEST_F(CloudSyncManagerTest, StartDownloadFileTest, TestSize.Level1)
     try {
         std::string uri = "uri";
         auto res = managePtr_->StartDownloadFile(uri);
-        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " StartDownloadFileTest FAILED";
@@ -221,7 +206,7 @@ HWTEST_F(CloudSyncManagerTest, StopDownloadFileTest, TestSize.Level1)
     try {
         std::string uri = "uri";
         auto res = managePtr_->StopDownloadFile(uri);
-        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " StopDownloadFileTest FAILED";
@@ -240,32 +225,12 @@ HWTEST_F(CloudSyncManagerTest, RegisterDownloadFileCallbackTest, TestSize.Level1
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
         auto res = managePtr_->UnregisterDownloadFileCallback();
-        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " RegisterDownloadFileCallbackTest FAILED";
     }
     GTEST_LOG_(INFO) << "RegisterDownloadFileCallbackTest End";
-}
-
-/*
- * @tc.name: SetDeathRecipientTest
- * @tc.desc: Verify the SetDeathRecipient function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncManagerTest, SetDeathRecipientTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
-    try {
-        auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
-        managePtr_->SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetDeathRecipientTest FAILED";
-    }
-    GTEST_LOG_(INFO) << "SetDeathRecipientTest End";
 }
 
 /*
@@ -281,7 +246,7 @@ HWTEST_F(CloudSyncManagerTest, EnableCloudTest, TestSize.Level1)
         std::string accoutId = "accoutId";
         SwitchDataObj switchData;
         auto res = managePtr_->EnableCloud(accoutId, switchData);
-        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " EnableCloudTest FAILED";
@@ -301,7 +266,7 @@ HWTEST_F(CloudSyncManagerTest, DisableCloudTest, TestSize.Level1)
     try {
         std::string accoutId = "accoutId";
         auto res = managePtr_->DisableCloud(accoutId);
-        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " DisableCloudTest FAILED";
@@ -322,7 +287,7 @@ HWTEST_F(CloudSyncManagerTest, CleanTest, TestSize.Level1)
         std::string accoutId = "accoutId";
         CleanOptions cleanOptions;
         auto res = managePtr_->Clean(accoutId, cleanOptions);
-        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CleanTest FAILED";

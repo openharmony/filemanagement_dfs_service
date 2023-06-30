@@ -57,8 +57,8 @@ ohos_unittest("cloud_daemon_manager_impl_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
+    "${distributedfile_path}/frameworks/native/cloud_daemon_kit_inner/src/cloud_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/cloud_daemon_kit_inner/src/cloud_daemon_service_proxy.cpp",
-    "../../mock/cloud_daemon_manager_impl_mock.cpp",
     "cloud_daemon_manager_impl_test.cpp",
   ]
 

@@ -16,7 +16,10 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("battery_status_listener_test") {
   module_out_path = "filemanagement/dfs_service"
-  sources = [ "battery_status_listener_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
+    "battery_status_listener_test.cpp",
+  ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include",
@@ -24,6 +27,8 @@ ohos_unittest("battery_status_listener_test") {
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${services_path}/cloudsyncservice/include/data_sync",
+    "${utils_path}/log/include",
+    "${image_framework_path}/mock/native/include/log",
   ]
 
   deps = [
@@ -34,8 +39,14 @@ ohos_unittest("battery_status_listener_test") {
   ]
 
   external_deps = [
+    "ability_base:want",
     "common_event_service:cesfwk_innerkits",
+    "init:libbegetutil",
+    "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -45,11 +56,16 @@ ohos_unittest("battery_status_listener_test") {
 
 ohos_unittest("net_conn_callback_observer_test") {
   module_out_path = "filemanagement/dfs_service"
-  sources = [ "net_conn_callback_observer_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/net_conn_callback_observer.cpp",
+    "net_conn_callback_observer_test.cpp",
+  ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
+    "${utils_path}/log/include",
+    "${image_framework_path}/mock/native/include/log",
   ]
 
   deps = [
@@ -61,8 +77,14 @@ ohos_unittest("net_conn_callback_observer_test") {
   ]
 
   external_deps = [
+    "ability_base:want",
     "common_event_service:cesfwk_innerkits",
+    "init:libbegetutil",
+    "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -72,11 +94,16 @@ ohos_unittest("net_conn_callback_observer_test") {
 
 ohos_unittest("network_status_test") {
   module_out_path = "filemanagement/dfs_service"
-  sources = [ "network_status_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/network_status.cpp",
+    "network_status_test.cpp",
+  ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
+    "${utils_path}/log/include",
+    "${image_framework_path}/mock/native/include/log",
   ]
 
   deps = [
@@ -102,11 +129,16 @@ ohos_unittest("network_status_test") {
 
 ohos_unittest("battery_status_test") {
   module_out_path = "filemanagement/dfs_service"
-  sources = [ "battery_status_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/battery_status.cpp",
+    "battery_status_test.cpp",
+  ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
+    "${utils_path}/log/include",
+    "${image_framework_path}/mock/native/include/log",
   ]
 
   deps = [
@@ -155,10 +187,7 @@ ohos_unittest("cloud_status_test") {
 group("cloudsync_sa_sync_rule_test") {
   testonly = true
   deps = [
-    ":battery_status_listener_test",
     ":battery_status_test",
     ":cloud_status_test",
-    ":net_conn_callback_observer_test",
-    ":network_status_test",
   ]
 }

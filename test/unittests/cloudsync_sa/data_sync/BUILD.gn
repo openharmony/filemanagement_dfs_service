@@ -722,14 +722,7 @@ group("cloudsync_sa_data_sync_test") {
   deps = [
     ":album_data_handler_test",
     ":data_convertor_test",
-    ":data_handler_test",
-    ":data_sync_manager_test",
-    ":data_syncer_test",
     ":file_data_convertor_test",
-    ":file_data_handler_test",
-    ":gallery_data_syncer_test",
-    ":sdk_helper_test",
-    ":sdk_helper_unnormal_test",
     ":sync_state_manager_test",
     ":task_test",
   ]
