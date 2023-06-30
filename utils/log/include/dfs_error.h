@@ -56,6 +56,7 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_ASYNC_RUN,
     E_PATH,
     E_DATA,
+    E_NOTIFY
 };
 
 enum JsErrCode {

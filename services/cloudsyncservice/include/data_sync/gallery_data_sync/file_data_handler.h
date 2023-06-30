@@ -16,6 +16,7 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_FILE_DATA_HANDLER_H
 #define OHOS_CLOUD_SYNC_SERVICE_FILE_DATA_HANDLER_H
 
+#include "data_sync_notifier.h"
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
 
@@ -136,7 +137,7 @@ private:
 
     /* pull operations */
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, int> QueryLocalByCloudId(const std::string &recordId);
-    int32_t PullRecordInsert(const DriveKit::DKRecord &record, OnFetchParams &params);
+    int32_t PullRecordInsert(const DriveKit::DKRecord &record, OnFetchParams &params, int32_t &fileId);
     int32_t PullRecordUpdate(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
                              OnFetchParams &params);
     int32_t PullRecordDelete(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
