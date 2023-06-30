@@ -23,6 +23,7 @@
 #include <tuple>
 #include <unistd.h>
 
+#include "thumbnail_const.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
 #include "dk_assets_downloader.h"
@@ -331,12 +332,244 @@ int FileDataHandler::AddCloudThumbs(const DKRecord &record)
     return E_OK;
 }
 
+string FileDataHandler::ConflictRenameThumb(NativeRdb::ResultSet &resultSet, string fullPath)
+{
+    /* thumb new path */
+    string tmpPath = cleanConvertor_.GetThumbPath(fullPath, THUMB_SUFFIX);
+    if (tmpPath == "") {
+        LOGE("err tmp Path for GetThumbPath");
+        return "";
+    }
+    size_t tmpfound = tmpPath.find_last_of('/');
+    if (tmpfound == string::npos) {
+        LOGE("err tmp Path found");
+        return "";
+    }
+    tmpPath = tmpPath.substr(0, tmpfound);
+    size_t found = tmpPath.find_last_of('.');
+    if (found == string::npos) {
+        LOGE("err thumb Path found");
+        return "";
+    }
+    string newPath = tmpPath.substr(0, found) + "_1" + tmpPath.substr(found);
+    int ret = rename(tmpPath.c_str(), newPath.c_str());
+    if (ret != 0) {
+        LOGE("err rename tmpPath to newPath");
+        return "";
+    }
+    /* new name */
+    size_t namefound = newPath.find_last_of('/');
+    if (namefound == string::npos) {
+        LOGE("err name Path found");
+        return "";
+    }
+    string newName = newPath.substr(namefound + 1);
+    return newName;
+}
+
+int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string &fullPath)
+{
+    /* sandbox new path */
+    size_t rdbfound = fullPath.find_last_of('.');
+    if (rdbfound == string::npos) {
+        LOGE("err rdb Path found");
+        return E_INVAL_ARG;
+    }
+    string rdbPath = fullPath.substr(0, rdbfound) + "_1" + fullPath.substr(rdbfound);
+    /* local new path */
+    string localPath = cleanConvertor_.GetHmdfsLocalPath(fullPath);
+    if (localPath == "") {
+        LOGE("err local Path for GetHmdfsLocalPath");
+        return E_INVAL_ARG;
+    }
+    size_t localfound = localPath.find_last_of('.');
+    if (localfound == string::npos) {
+        LOGE("err local Path found");
+        return E_INVAL_ARG;
+    }
+    string newLocalPath = localPath.substr(0, localfound) + "_1" + localPath.substr(localfound);
+    int ret = rename(localPath.c_str(), newLocalPath.c_str());
+    if (ret != 0) {
+        LOGE("err rename localPath to newLocalPath");
+        return E_INVAL_ARG;
+    }
+    /* thumb new path and new name */
+    string newName = ConflictRenameThumb(resultSet, fullPath);
+    if (newName == "") {
+        LOGE("err Rename Thumb path");
+        return E_INVAL_ARG;
+    }
+    int updateRows;
+    ValuesBucket values;
+    values.PutString(PhotoColumn::MEDIA_FILE_PATH, rdbPath);
+    values.PutString(PhotoColumn::MEDIA_NAME, newName);
+    string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
+    int32_t ret32 = Update(updateRows, values, whereClause, {fullPath});
+    if (ret32 != E_OK) {
+        LOGE("update retry flag failed, ret=%{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::ConflictDataMerge(const DKRecord &record, string &fullPath)
+{
+    int updateRows;
+    ValuesBucket values;
+    values.PutString(PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
+    values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
+    values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
+
+    string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
+    int32_t ret = Update(updateRows, values, whereClause, {fullPath});
+    if (ret != E_OK) {
+        LOGE("update retry flag failed, ret=%{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
+                                         const DKRecord &record,
+                                         string &fullPath,
+                                         int64_t isize,
+                                         int64_t mtime,
+                                         bool &comflag)
+{
+    bool modifyPathflag = false;
+    string localId;
+    int ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, localId, resultSet);
+    if (ret != E_OK) {
+        LOGI("cloud Id is NULL");
+    } else {
+        modifyPathflag = true;
+    }
+    int64_t localIsize = 0;
+    ret = DataConvertor::GetLong(PhotoColumn::MEDIA_SIZE, localIsize, resultSet);
+    if (ret != E_OK) {
+        LOGE("Get local isize failed");
+        return E_INVAL_ARG;
+    }
+    int64_t localMtime = 0;
+    ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, localMtime, resultSet);
+    if (ret != E_OK) {
+        LOGE("Get local mtime failed");
+        return E_INVAL_ARG;
+    }
+    if (localIsize == isize && localMtime == mtime) {
+        LOGI("Possible duplicate files");
+    } else {
+        modifyPathflag = true;
+    }
+    if (modifyPathflag) {
+        LOGI("Different files with the same name");
+        /* Modify path */
+        ret = ConflictRename(resultSet, fullPath);
+        if (ret != E_OK) {
+            LOGE("Conflict dataMerge rename fail");
+            return ret;
+        }
+    } else {
+        LOGI("Unification of the same document");
+        /* update database */
+        ret = ConflictDataMerge(record, fullPath);
+        if (ret != E_OK) {
+            LOGE("Conflict dataMerge fail");
+            return ret;
+        }
+        comflag = true;
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetConflictData(const DKRecord &record, string &fullPath, int64_t &isize, int64_t &mtime)
+{
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data cannot find properties");
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap prop;
+    data[FILE_PROPERTIES].GetRecordMap(prop);
+    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end() || prop.find(PhotoColumn::MEDIA_SIZE) == prop.end() ||
+        prop.find(PhotoColumn::MEDIA_DATE_MODIFIED) == prop.end()) {
+        LOGE("record data cannot find some properties");
+        return E_INVAL_ARG;
+    }
+
+    if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad file_path in props");
+        return E_INVAL_ARG;
+    }
+
+    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_SIZE], isize) != E_OK) {
+        LOGE("bad size in props");
+        return E_INVAL_ARG;
+    }
+    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_DATE_MODIFIED], mtime) != E_OK) {
+        LOGE("bad mtime in props");
+        return E_INVAL_ARG;
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::PullRecordConflict(const DKRecord &record, bool &comflag)
+{
+    LOGI("judgment downlode conflict");
+    int32_t ret = E_OK;
+    string fullPath;
+    int64_t isize, mtime;
+    ret = GetConflictData(record, fullPath, isize, mtime);
+    if (ret != E_OK) {
+        LOGE("Getdata fail");
+        return ret;
+    }
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    predicates.SetWhereClause(PhotoColumn::MEDIA_FILE_PATH + " = ?");
+    predicates.SetWhereArgs({fullPath});
+    predicates.Limit(LIMIT_SIZE);
+    auto resultSet = Query(predicates, PULL_QUERY_COLUMNS);
+    if (resultSet == nullptr) {
+        LOGE("get nullptr created result");
+        ret = E_RDB;
+    }
+    int32_t rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    if (ret != 0) {
+        LOGE("result set get row count err %{public}d", ret);
+        return E_RDB;
+    }
+    if (rowCount == 0) {
+        LOGI("Normal download process");
+        return E_OK;
+    }
+    if (rowCount == 1) {
+        resultSet->GoToNextRow();
+        ret = ConflictHandler(*resultSet, record, fullPath, isize, mtime, comflag);
+    } else {
+        LOGE("unknown error: PullRecordConflict(),same path rowCount = %{public}d", rowCount);
+        ret = E_RDB;
+    }
+    return ret;
+}
+
 int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, OnFetchParams &params)
 {
     LOGI("insert of record %s", record.GetRecordId().c_str());
 
     /* check local file conflict */
-    int ret = DentryInsert(userId_, record);
+    bool comflag = false;
+    int ret = PullRecordConflict(record, comflag);
+    if (comflag) {
+        LOGI("Conflict:same document no Insert");
+        return E_OK;
+    } else if (ret != E_OK) {
+        LOGE("MateFile Conflict failed %{public}d", ret);
+    } else {
+        LOGI("MateFile Conflict OK");
+    }
+    ret = DentryInsert(userId_, record);
     if (ret != E_OK) {
         LOGE("MetaFile Create failed %{public}d", ret);
         return ret;

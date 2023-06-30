@@ -125,6 +125,15 @@ private:
     FileDataConvertor mdirtyConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_METADATA_MODIFY };
     FileDataConvertor fdirtyConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DATA_MODIFY };
 
+    /* file Conflict */
+    std::string ConflictRenameThumb(NativeRdb::ResultSet &resultSet, std::string fullPath);
+    int32_t ConflictRename(NativeRdb::ResultSet &resultSet, std::string &fullPath);
+    int32_t ConflictDataMerge(const DriveKit::DKRecord &record, std::string &fullPath);
+    int32_t ConflictHandler(NativeRdb::ResultSet &resultSet, const DriveKit::DKRecord &record,
+                            std::string &fullPath, int64_t isize, int64_t mtime, bool &comflag);
+    int32_t GetConflictData(const DriveKit::DKRecord &record, std::string &fullPath, int64_t &isize, int64_t &mtime);
+    int32_t PullRecordConflict(const DriveKit::DKRecord &record, bool &comflag);
+
     /* pull operations */
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, int> QueryLocalByCloudId(const std::string &recordId);
     int32_t PullRecordInsert(const DriveKit::DKRecord &record, OnFetchParams &params);
