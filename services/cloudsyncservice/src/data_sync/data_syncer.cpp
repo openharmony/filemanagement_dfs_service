@@ -655,7 +655,6 @@ void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
     ret = sdkHelper_->CreateRecords(context, records, callback);
     if (ret != E_OK) {
         LOGE("sdk create records err %{public}d", ret);
-        return;
     }
 }
 

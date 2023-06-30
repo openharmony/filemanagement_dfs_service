@@ -140,10 +140,12 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
         }
 
         for (auto dataSyncer : dataSyncers_) {
-            if ((dataSyncer->GetUserId() == currentUserId_) &&
-                (dataSyncer->GetSyncState() == SyncState::SYNC_FAILED)) {
-                auto bundleName = dataSyncer->GetBundleName();
-                needSyncApps.push_back(bundleName);
+            if (dataSyncer->GetUserId() == currentUserId_) {
+                if ((triggerType == SyncTriggerType::NETWORK_AVAIL_TRIGGER) ||
+                    (dataSyncer->GetSyncState() == SyncState::SYNC_FAILED)) {
+                    auto bundleName = dataSyncer->GetBundleName();
+                    needSyncApps.push_back(bundleName);
+                }
             }
         }
     }

@@ -67,7 +67,8 @@ HWTEST_F(NetworkStatusTest, RegisterNetConnCallbackTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterNetConnCallbackTest Start";
     try {
-        int32_t ret = NetworkStatus::RegisterNetConnCallback();
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        int32_t ret = NetworkStatus::RegisterNetConnCallback(dataSyncManager);
         EXPECT_EQ(ret, E_GET_NETWORK_MANAGER_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -125,7 +126,8 @@ HWTEST_F(NetworkStatusTest, GetAndRegisterNetworkTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetAndRegisterNetworkTest Start";
     try {
-        int32_t ret = NetworkStatus::GetAndRegisterNetwork();
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        int32_t ret = NetworkStatus::GetAndRegisterNetwork(dataSyncManager);
         EXPECT_EQ(ret, E_GET_NETWORK_MANAGER_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -144,7 +146,8 @@ HWTEST_F(NetworkStatusTest, InitNetworkTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InitNetworkTest Start";
     try {
-        NetworkStatus::InitNetwork();
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        NetworkStatus::InitNetwork(dataSyncManager);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

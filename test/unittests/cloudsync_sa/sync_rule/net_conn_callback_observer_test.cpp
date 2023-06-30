@@ -45,7 +45,8 @@ void NetConnCallbackObserverTest::TearDownTestCase(void)
 void NetConnCallbackObserverTest::SetUp(void)
 {
     if (oberverPtr_ == nullptr) {
-        oberverPtr_ = make_shared<NetConnCallbackObserver>();
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        oberverPtr_ = make_shared<NetConnCallbackObserver>(dataSyncManager);
         ASSERT_TRUE(oberverPtr_ != nullptr) << "CallbackObserver failed";
     }
     GTEST_LOG_(INFO) << "SetUp";

@@ -18,10 +18,12 @@
 
 #include "net_all_capabilities.h"
 #include "net_conn_callback_stub.h"
+#include "data_sync/data_sync_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class NetConnCallbackObserver : public NetManagerStandard::NetConnCallbackStub {
 public:
+    NetConnCallbackObserver(std::shared_ptr<DataSyncManager> dataSyncManager);
     int32_t NetAvailable(sptr<NetManagerStandard::NetHandle> &netHandle) override;
 
     int32_t NetCapabilitiesChange(sptr<NetManagerStandard::NetHandle> &netHandle,
@@ -35,6 +37,10 @@ public:
     int32_t NetUnavailable() override;
 
     int32_t NetBlockStatusChange(sptr<NetManagerStandard::NetHandle> &netHandle, bool blocked) override;
+
+private:
+    std::shared_ptr<DataSyncManager> dataSyncManager_;
+    SyncTriggerType triggerType_{SyncTriggerType::NETWORK_AVAIL_TRIGGER};
 };
 } // namespace OHOS::FileManagement::CloudSync
 

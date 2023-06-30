@@ -66,6 +66,9 @@ ohos_unittest("net_conn_callback_observer_test") {
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${utils_path}/log/include",
     "${image_framework_path}/mock/native/include/log",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
   ]
 
   deps = [
@@ -104,6 +107,9 @@ ohos_unittest("network_status_test") {
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${utils_path}/log/include",
     "${image_framework_path}/mock/native/include/log",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
   ]
 
   deps = [

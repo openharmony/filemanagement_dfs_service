@@ -55,7 +55,7 @@ void CloudSyncService::PublishSA()
 
 void CloudSyncService::Init()
 {
-    NetworkStatus::InitNetwork();
+    NetworkStatus::InitNetwork(dataSyncManager_);
     /* Get Init Charging status */
     BatteryStatus::GetInitChargingStatus();
 }
