@@ -105,12 +105,18 @@ public:
     MOCK_METHOD2(QueryByStep,
                  std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates,
                                             const std::vector<std::string> columns));
+    MOCK_METHOD2(QueryByStep,
+                 std::shared_ptr<ResultSet>(const std::string &sql,
+                                            std::vector<ValueObject> &&args));
 
     MOCK_METHOD4(RemoteQuery,
                  std::shared_ptr<ResultSet>(const std::string &device,
                                             const AbsRdbPredicates &predicates,
                                             const std::vector<std::string> &columns,
                                             int &errCode));
+
+    MOCK_METHOD3(GetModifyTime, std::map<PRIKey, Date>(const std::string &table, const std::string &columnName,
+                                                       std::vector<ValueObject> &PKey));
 
     MOCK_METHOD3(SetDistributedTables, int(const std::vector<std::string> &tables, int32_t type,
                                            const DistributedRdb::DistributedConfig &distributedConfig));
