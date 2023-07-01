@@ -16,11 +16,12 @@
 #include "file_data_handler.h"
 
 #include <cstring>
+#include <tuple>
+#include <filesystem>
+
 #include <dirent.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-#include <filesystem>
-#include <tuple>
 #include <unistd.h>
 
 #include "thumbnail_const.h"
@@ -994,47 +995,6 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     assetsToDownload.push_back(downloadAsset);
 }
 
-static int32_t DeleteThumbDir(const string &thmbDir)
-{
-    LOGD("Begin delete thumbDir");
-    int res = E_OK;
-    if (access(thmbDir.c_str(), F_OK) != 0) {
-        LOGI("lcdFile is not exist");
-        return E_OK;
-    }
-
-    LOGD("lcdFile exist");
-    DIR* directory = opendir(thmbDir.c_str());
-    if (directory == nullptr) {
-        LOGE("Failed to open directory");
-        return E_PATH;
-    }
-
-    struct dirent* entry;
-    while ((entry = readdir(directory)) != nullptr) {
-        string fileName = entry->d_name;
-        if (fileName != "." && fileName != "..") {
-            string filePath = thmbDir + "/" + fileName;
-            if (entry->d_type == DT_DIR) {
-                DeleteThumbDir(filePath);
-            } else {
-                int result = remove(filePath.c_str());
-                if (result != 0) {
-                    LOGE("Failed to remove file");
-                    return E_PATH;
-                }
-            }
-        }
-    }
-    closedir(directory);
-    res = rmdir(thmbDir.c_str());
-    if (res != 0) {
-        LOGE("Failed to remove directory");
-        return res;
-    }
-    return res;
-}
-
 int32_t FileDataHandler::DeleteDentryFile(void)
 {
     std::string cacheDir =
@@ -1079,11 +1039,7 @@ int32_t FileDataHandler::CleanPureCloudRecord(NativeRdb::ResultSet &local, const
     filesystem::path thmbFileParentPath = thmbFilePath.parent_path();
     LOGD("filePath: %s, thmbFile: %s, thmbFileParentDir: %s", filePath.c_str(),
          thmbFile.c_str(), thmbFileParentPath.string().c_str());
-    res = DeleteThumbDir(thmbFileParentPath.string());
-    if (res != E_OK) {
-        LOGE("Clean remove thmbFileParentPath failed");
-        return res;
-    }
+    ForceRemoveDirectory(thmbFileParentPath.string());
     int32_t deleteRows = 0;
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     string cloudId;
@@ -1118,11 +1074,7 @@ static int32_t DeleteAsset(const string &assetPath)
 int32_t FileDataHandler::CleanNotDirtyData(const string &thmbDir, const string &assetPath, const string &cloudId)
 {
     int ret = E_OK;
-    ret = DeleteThumbDir(thmbDir);
-    if (ret != E_OK) {
-        LOGE("Clean remove thmbFileParentPath failed");
-        return ret;
-    }
+    ForceRemoveDirectory(thmbDir);
     ret = DeleteAsset(assetPath);
     if (ret != E_OK) {
         LOGE("Clean remove assetPath failed, errno %{public}d", ret);
