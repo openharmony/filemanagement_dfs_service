@@ -16,6 +16,7 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_FILE_DATA_HANDLER_H
 #define OHOS_CLOUD_SYNC_SERVICE_FILE_DATA_HANDLER_H
 
+#include "data_sync_notifier.h"
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
 
@@ -40,6 +41,7 @@ public:
     virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
                                    OnFetchParams &params) override;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
+    virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
 
     int32_t GetDownloadAsset(std::string cloudId,
                              std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
@@ -124,15 +126,26 @@ private:
     FileDataConvertor mdirtyConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_METADATA_MODIFY };
     FileDataConvertor fdirtyConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DATA_MODIFY };
 
+    /* file Conflict */
+    std::string ConflictRenameThumb(NativeRdb::ResultSet &resultSet, std::string fullPath);
+    int32_t ConflictRename(NativeRdb::ResultSet &resultSet, std::string &fullPath);
+    int32_t ConflictDataMerge(const DriveKit::DKRecord &record, std::string &fullPath);
+    int32_t ConflictHandler(NativeRdb::ResultSet &resultSet, const DriveKit::DKRecord &record,
+                            std::string &fullPath, int64_t isize, int64_t mtime, bool &comflag);
+    int32_t GetConflictData(const DriveKit::DKRecord &record, std::string &fullPath, int64_t &isize, int64_t &mtime);
+    int32_t PullRecordConflict(const DriveKit::DKRecord &record, bool &comflag);
+
     /* pull operations */
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, int> QueryLocalByCloudId(const std::string &recordId);
-    int32_t PullRecordInsert(const DriveKit::DKRecord &record, OnFetchParams &params);
+    int32_t PullRecordInsert(const DriveKit::DKRecord &record, OnFetchParams &params, int32_t &fileId);
     int32_t PullRecordUpdate(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
                              OnFetchParams &params);
     int32_t PullRecordDelete(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
     int32_t SetRetry(const std::string &recordId);
     int32_t RecycleFile(const std::string &recordId);
-
+    void AppendToDownload(NativeRdb::ResultSet &local,
+                          const std::string &fieldKey,
+                          std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
     void AppendToDownload(const DriveKit::DKRecord &record,
                           const std::string &fieldKey,
                           std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);

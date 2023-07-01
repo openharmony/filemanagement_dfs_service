@@ -103,6 +103,40 @@ ohos_unittest("cloud_sync_manager_impl_test") {
   use_exceptions = true
 }
 
+ohos_unittest("cloud_sync_manager_impl_unnomal_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/test/mock/ipc/cloud_sync_service_proxy_unnomal_mock.cpp",
+    "cloud_sync_manager_impl_unnomal_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/test/mock/ipc",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+  ]
+
+  deps = [
+    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "dfs_service:cloudsync_kit_inner",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("cloud_sync_manager_test") {
   module_out_path = "filemanagement/dfs_service"
 
@@ -167,6 +201,7 @@ ohos_unittest("cloud_download_callback_client_test") {
     "${services_path}/cloudsyncservice/include/ipc",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
   ]
 
   deps = [
@@ -181,20 +216,28 @@ ohos_unittest("cloud_download_callback_client_test") {
     "ipc:ipc_core",
   ]
 
-  defines = [ "private=public" ]
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+  ]
 
   use_exceptions = true
 }
 
-ohos_unittest("cloud_sync_common_test") {
+ohos_unittest("cloud_download_callback_stub_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "cloud_sync_common_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_stub.cpp",
+    "../../../mock/cloud_download_uri_manager_hook.cpp",
+    "cloud_download_callback_stub_test.cpp",
+  ]
 
   include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
   ]
 
   deps = [
@@ -209,7 +252,12 @@ ohos_unittest("cloud_sync_common_test") {
     "ipc:ipc_core",
   ]
 
-  defines = [ "private=public" ]
+  defines = [
+    "private=public",
+    "protected=public",
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+  ]
 
   use_exceptions = true
 }
@@ -234,6 +282,36 @@ ohos_unittest("cloud_download_uri_manager_test") {
   external_deps = [
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_sync_common_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "cloud_sync_common_test.cpp",
+    "file_hook/parcel.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "dfs_service:cloudsync_kit_inner",
     "ipc:ipc_core",
   ]
 
@@ -273,17 +351,80 @@ ohos_unittest("cloud_sync_asset_manager_impl_test") {
   use_exceptions = true
 }
 
+ohos_unittest("cloud_sync_asset_manager_impl_unnomal_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager_impl.cpp",
+    "${distributedfile_path}/test/mock/ipc/cloud_sync_service_proxy_unnomal_mock.cpp",
+    "cloud_sync_asset_manager_impl_unnomal_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "dfs_service:cloudsync_asset_kit_inner",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_sync_asset_manager_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "cloud_sync_asset_manager_test.cpp" ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "dfs_service:cloudsync_asset_kit_inner",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 group("cloudsync_impl_test") {
   testonly = true
 
   deps = [
     ":cloud_download_callback_client_test",
+    ":cloud_download_callback_stub_test",
     ":cloud_download_uri_manager_test",
     ":cloud_sync_asset_manager_impl_test",
+    ":cloud_sync_asset_manager_impl_unnomal_test",
+    ":cloud_sync_asset_manager_test",
     ":cloud_sync_callback_client_test",
     ":cloud_sync_callback_stub_test",
     ":cloud_sync_common_test",
     ":cloud_sync_manager_impl_test",
+    ":cloud_sync_manager_impl_unnomal_test",
     ":cloud_sync_manager_test",
     ":cloud_sync_service_proxy_test",
   ]

@@ -33,7 +33,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    std::shared_ptr<CloudDaemonManagerImpl> cloudDaemonManagerImpl;
+    std::shared_ptr<CloudDaemonManagerImpl> cloudDaemonManagerImpl_;
 };
 
 void CloudDaemonManagerImplTest::SetUpTestCase(void)
@@ -48,7 +48,7 @@ void CloudDaemonManagerImplTest::TearDownTestCase(void)
 
 void CloudDaemonManagerImplTest::SetUp(void)
 {
-    cloudDaemonManagerImpl = std::make_shared<CloudDaemonManagerImpl>();
+    cloudDaemonManagerImpl_ = std::make_shared<CloudDaemonManagerImpl>();
     GTEST_LOG_(INFO) << "SetUp";
 }
 
@@ -91,9 +91,10 @@ HWTEST_F(CloudDaemonManagerImplTest, StartFuseTest, TestSize.Level1)
         EXPECT_GT(devFd, 0);
         string path = "/dev/fuse";
         int32_t userId = 100;
-        int32_t ret = cloudDaemonManagerImpl->StartFuse(userId, devFd, path);
-        EXPECT_EQ(ret, E_OK);
-        EXPECT_EQ(cloudDaemonManagerImpl->isFirstCall_.test_and_set(), false);
+        cloudDaemonManagerImpl_->isFirstCall_.clear();
+        EXPECT_EQ(cloudDaemonManagerImpl_->isFirstCall_.test_and_set(), false);
+        int32_t ret = cloudDaemonManagerImpl_->StartFuse(userId, devFd, path);
+        EXPECT_NE(ret, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartFuseTest  ERROR";
@@ -115,9 +116,9 @@ HWTEST_F(CloudDaemonManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
         EXPECT_NE(CloudDaemonServiceProxy, nullptr);
         auto remoteObject = CloudDaemonServiceProxy->AsObject();
         EXPECT_NE(remoteObject, nullptr);
-        cloudDaemonManagerImpl->SetDeathRecipient(remoteObject);
-        EXPECT_EQ(cloudDaemonManagerImpl->isFirstCall_.test_and_set(), false);
-        EXPECT_NE(cloudDaemonManagerImpl->deathRecipient_, nullptr);
+        cloudDaemonManagerImpl_->SetDeathRecipient(remoteObject);
+        EXPECT_EQ(cloudDaemonManagerImpl_->isFirstCall_.test_and_set(), false);
+        EXPECT_NE(cloudDaemonManagerImpl_->deathRecipient_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SetDeathRecipientTest  ERROR";

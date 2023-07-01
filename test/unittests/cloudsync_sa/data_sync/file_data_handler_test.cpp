@@ -292,7 +292,8 @@ HWTEST_F(FileDataHandlerTest, PullRecordInsert001, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
         OnFetchParams onFetchParams{true};
-        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams);
+        int32_t fileId = 0;
+        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams, fileId);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -316,7 +317,8 @@ HWTEST_F(FileDataHandlerTest, PullRecordInsert002, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
         OnFetchParams onFetchParams{false};
-        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams);
+        int32_t fileId = 0;
+        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams, fileId);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1412,6 +1414,222 @@ HWTEST_F(FileDataHandlerTest, OnDeleteRecordSuccess001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: OnModifyFdirtyRecords001
+ * @tc.desc: Verify the OnModifyFdirtyRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, OnModifyFdirtyRecords001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnModifyFdirtyRecords001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> myMap;
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr))).WillOnce(Return(ByMove(nullptr)));
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordOperResult operResult;
+        DriveKit::DKRecordId recordId = "hh";
+        record.SetRecordData(data);
+        operResult.SetDKRecord(std::move(record));
+        DriveKit::DKError error_;
+        error_.isLocalError = true;
+        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ATOMIC_ERROR);
+        DriveKit::DKErrorDetail errorDetail2;
+        errorDetail2.errorCode = AT_FAILED;
+        error_.errorDetails.push_back(errorDetail2);
+        operResult.SetDKError(error_);
+        myMap.insert(std::make_pair(recordId, operResult));
+        int32_t ret = fileDataHandler->OnModifyFdirtyRecords(myMap);
+        EXPECT_EQ(E_STOP, ret);
+        myMap.clear();
+        error_.isLocalError = false;
+        operResult.SetDKError(error_);
+        myMap.insert(std::make_pair(recordId, operResult));
+        ret = fileDataHandler->OnModifyFdirtyRecords(myMap);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnModifyFdirtyRecords001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnModifyFdirtyRecords001 End";
+}
+
+/**
+ * @tc.name: OnModifyMdirtyRecords001
+ * @tc.desc: Verify the OnModifyMdirtyRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, OnModifyMdirtyRecords001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnModifyMdirtyRecords001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> myMap;
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr))).WillOnce(Return(ByMove(nullptr)));
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordOperResult operResult;
+        DriveKit::DKRecordId recordId = "hh";
+        record.SetRecordData(data);
+        operResult.SetDKRecord(std::move(record));
+        DriveKit::DKError error_;
+        error_.isLocalError = true;
+        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ATOMIC_ERROR);
+        DriveKit::DKErrorDetail errorDetail2;
+        errorDetail2.errorCode = AT_FAILED;
+        error_.errorDetails.push_back(errorDetail2);
+        operResult.SetDKError(error_);
+        myMap.insert(std::make_pair(recordId, operResult));
+        int32_t ret = fileDataHandler->OnModifyMdirtyRecords(myMap);
+        EXPECT_EQ(E_STOP, ret);
+        myMap.clear();
+        error_.isLocalError = false;
+        operResult.SetDKError(error_);
+        myMap.insert(std::make_pair(recordId, operResult));
+        ret = fileDataHandler->OnModifyMdirtyRecords(myMap);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnModifyMdirtyRecords001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnModifyMdirtyRecords001 End";
+}
+
+/**
+ * @tc.name: OnDeleteRecords001
+ * @tc.desc: Verify the OnDeleteRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, OnDeleteRecords001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnDeleteRecords001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> myMap;
+        EXPECT_CALL(*rdb, Delete(_, _, _, _)).WillOnce(Return(0));
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordOperResult operResult;
+        DriveKit::DKRecordId recordId = "hh";
+        record.SetRecordData(data);
+        operResult.SetDKRecord(std::move(record));
+        DriveKit::DKError error_;
+        error_.isLocalError = true;
+        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ATOMIC_ERROR);
+        DriveKit::DKErrorDetail errorDetail2;
+        errorDetail2.errorCode = AT_FAILED;
+        error_.errorDetails.push_back(errorDetail2);
+        operResult.SetDKError(error_);
+        myMap.insert(std::make_pair(recordId, operResult));
+        int32_t ret = fileDataHandler->OnDeleteRecords(myMap);
+        EXPECT_EQ(E_STOP, ret);
+        myMap.clear();
+        error_.isLocalError = false;
+        operResult.SetDKError(error_);
+        myMap.insert(std::make_pair(recordId, operResult));
+        ret = fileDataHandler->OnDeleteRecords(myMap);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnDeleteRecords001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnDeleteRecords001 End";
+}
+
+/**
+ * @tc.name: OnCreateRecords001
+ * @tc.desc: Verify the OnCreateRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, OnCreateRecords001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnCreateRecords001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> myMap;
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr)));
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordOperResult operResult;
+        DriveKit::DKRecordId recordId = "hh";
+        record.SetRecordData(data);
+        operResult.SetDKRecord(std::move(record));
+        DriveKit::DKError error_;
+        error_.isLocalError = true;
+        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ATOMIC_ERROR);
+        DriveKit::DKErrorDetail errorDetail2;
+        errorDetail2.errorCode = AT_FAILED;
+        error_.errorDetails.push_back(errorDetail2);
+        operResult.SetDKError(error_);
+        myMap.insert(std::make_pair(recordId, operResult));
+        int32_t ret = fileDataHandler->OnCreateRecords(myMap);
+        EXPECT_EQ(E_STOP, ret);
+        myMap.clear();
+        DriveKit::DKRecordFieldMap prop;
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        record.SetRecordData(data);
+        operResult.SetDKRecord(std::move(record));
+        ret = fileDataHandler->OnCreateRecords(myMap);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnCreateRecords001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnCreateRecords001 End";
+}
+
+/**
+ * @tc.name: OnCreateRecords002
+ * @tc.desc: Verify the OnCreateRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, OnCreateRecords002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnCreateRecords002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> myMap;
+        EXPECT_CALL(*rdb, Query(_, _))
+            .WillOnce(Return(ByMove(nullptr)))
+            .WillOnce(Return(ByMove(nullptr)));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordOperResult operResult;
+        DriveKit::DKRecordId recordId = "hh";
+        myMap.clear();
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("hh")));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        record.SetRecordData(data);
+        operResult.SetDKRecord(std::move(record));
+        auto ret = fileDataHandler->OnCreateRecords(myMap);
+        EXPECT_EQ(E_OK, ret);
+        myMap.clear();
+        DriveKit::DKError error_;
+        error_.isLocalError = false;
+        operResult.SetDKError(error_);
+        myMap.insert(std::make_pair(recordId, operResult));
+        ret = fileDataHandler->OnCreateRecords(myMap);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnCreateRecords002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnCreateRecords002 End";
+}
+
+/**
  * @tc.name: OnFetchRecords001
  * @tc.desc: Verify the OnFetchRecords function
  * @tc.type: FUNC
@@ -1666,6 +1884,33 @@ HWTEST_F(FileDataHandlerTest, CleanCloudRecord001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: CleanCloudRecord002
+ * @tc.desc: Verify the CleanCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, CleanCloudRecord002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanCloudRecord002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(1), Return(0)));
+
+        int action = 0;
+        string filePath;
+        int32_t ret = fileDataHandler->CleanCloudRecord(*rset, action, filePath);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanCloudRecord002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanCloudRecord002 End";
+}
+
+/**
  * @tc.name: Clean001
  * @tc.desc: Verify the Clean function
  * @tc.type: FUNC
@@ -1865,6 +2110,37 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord004, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "CleanNotPureCloudRecord004 End";
+}
+
+/**
+ * @tc.name: CleanNotPureCloudRecord005
+ * @tc.desc: Verify the CleanNotPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotPureCloudRecord005 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        string filePath = "/test/pareantPath/thumbPpath";
+        int action = 1;
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
+
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(2), Return(0)));
+
+        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
+
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
+        EXPECT_NE(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotPureCloudRecord005 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotPureCloudRecord005 End";
 }
 
 /**

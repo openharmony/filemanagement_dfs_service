@@ -17,10 +17,14 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_unittest("cloud_sync_service_stub_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "cloud_sync_service_stub_test.cpp" ]
+  sources = [
+    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
+    "cloud_sync_service_stub_test.cpp",
+  ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include/ipc",
+    "${services_path}/cloudsyncservice/include",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
   ]
 
@@ -33,6 +37,8 @@ ohos_unittest("cloud_sync_service_stub_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -59,8 +65,11 @@ ohos_unittest("cloud_sync_service_test") {
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/sdk_helper_mock.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -101,6 +110,8 @@ ohos_unittest("cloud_sync_service_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
     "common_event_service:cesfwk_innerkits",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
@@ -124,9 +135,13 @@ ohos_unittest("cloud_sync_service_test") {
 ohos_unittest("cloud_sync_callback_proxy_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "cloudsync_callback_proxy_test.cpp" ]
+  sources = [
+    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_callback_proxy.cpp",
+    "cloudsync_callback_proxy_test.cpp",
+  ]
 
   include_dirs = [
+    "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/ipc",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
   ]
@@ -140,6 +155,8 @@ ohos_unittest("cloud_sync_callback_proxy_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -171,6 +188,8 @@ ohos_unittest("cloud_sync_callback_manager_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -226,6 +245,8 @@ ohos_unittest("cloud_download_callback_manager_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "init:libbegetutil",
@@ -247,13 +268,50 @@ ohos_unittest("cloud_download_callback_manager_test") {
   use_exceptions = true
 }
 
+ohos_unittest("cloud_download_callback_proxy_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_proxy.cpp",
+    "cloud_download_callback_proxy_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+  ]
+
+  deps = [
+    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "dfs_service:cloudsync_kit_inner",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "netmanager_base:net_conn_manager_if",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 group("cloudsync_sa_ipc_test") {
   testonly = true
   deps = [
-    ":cloud_download_callback_manager_test",
-    ":cloud_sync_callback_manager_test",
+    ":cloud_download_callback_proxy_test",
     ":cloud_sync_callback_proxy_test",
     ":cloud_sync_service_stub_test",
-    ":cloud_sync_service_test",
   ]
 }

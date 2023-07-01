@@ -335,6 +335,17 @@ string FileDataConvertor::GetThumbPath(const string &path, const string &key)
         key).substr(ROOT_MEDIA_DIR.length());
 }
 
+string FileDataConvertor::GetHmdfsLocalPath(const string &path)
+{
+    size_t pos = path.find_first_of(sandboxPrefix_);
+    if (pos == string::npos) {
+        LOGE("invalid path %{private}s", path.c_str());
+        return "";
+    }
+    /* transform sandbox path to hmdfs local path*/
+    return prefixLCD_ + to_string(userId_) + suffixLCD_ + path.substr(pos + sandboxPrefix_.size());
+}
+
 string FileDataConvertor::GetThumbPathInCloud(const std::string &path, const std::string &key)
 {
     if (path.length() < ROOT_MEDIA_DIR.length()) {

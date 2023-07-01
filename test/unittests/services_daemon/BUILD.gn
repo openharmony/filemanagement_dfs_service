@@ -1,0 +1,176 @@
+# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+ohos_unittest("fuse_manager_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
+    "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/fuse_manager.cpp",
+    "fuse_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
+    "${distributedfile_path}/services/cloudfiledaemon/include",
+    "//third_party/libfuse/include",
+    "//third_party/libfuse/lib",
+    "${services_path}/cloudsyncservice/include/data_sync/",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+    "//third_party/libfuse:libfuse",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CloudFileDaemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("cloud_daemon_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
+    "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/fuse_manager.cpp",
+    "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon.cpp",
+    "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon_stub.cpp",
+    "cloud_daemon_test.cpp",
+  ]
+
+  include_dirs = [
+    "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
+    "${distributedfile_path}/services/cloudfiledaemon/include",
+    "//third_party/libfuse/include",
+    "//third_party/libfuse/lib",
+    "${services_path}/cloudsyncservice/include/data_sync/",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+    "//third_party/libfuse:libfuse",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CloudFileDaemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_unittest("cloud_daemon_stub_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
+    "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon_stub.cpp",
+    "cloud_daemon_stub_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/services/cloudfiledaemon/include",
+    "//third_party/libfuse/include",
+    "//third_party/libfuse/lib",
+    "${services_path}/cloudsyncservice/include/data_sync/",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+    "//third_party/libfuse:libfuse",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CloudFileDaemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+group("services_daemon_test") {
+  testonly = true
+
+  deps = [
+    ":cloud_daemon_stub_test",
+    ":fuse_manager_test",
+  ]
+}

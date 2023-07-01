@@ -21,15 +21,22 @@
 using namespace OHOS::NetManagerStandard;
 
 namespace OHOS::FileManagement::CloudSync {
+NetConnCallbackObserver::NetConnCallbackObserver(std::shared_ptr<DataSyncManager> dataSyncManager)
+{
+    dataSyncManager_ = dataSyncManager;
+}
+
 int32_t NetConnCallbackObserver::NetAvailable(sptr<NetHandle> &netHandle)
 {
+    LOGI("network is available");
+    NetworkStatus::OnNetworkAvail();
+    dataSyncManager_->TriggerRecoverySync(triggerType_);
     return E_OK;
 }
 
 int32_t NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle,
     const sptr<NetAllCapabilities> &netAllCap)
 {
-    LOGI("NetConnCallbackObserver::NetCapabilitiesChange");
     NetworkStatus::SetNetConnStatus(*netAllCap);
     return E_OK;
 }

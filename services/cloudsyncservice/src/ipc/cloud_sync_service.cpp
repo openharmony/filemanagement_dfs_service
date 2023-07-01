@@ -55,7 +55,7 @@ void CloudSyncService::PublishSA()
 
 void CloudSyncService::Init()
 {
-    NetworkStatus::InitNetwork();
+    NetworkStatus::InitNetwork(dataSyncManager_);
     /* Get Init Charging status */
     BatteryStatus::GetInitChargingStatus();
 }
@@ -143,7 +143,8 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
 int32_t CloudSyncService::StartSyncInner(bool forceFlag)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    return dataSyncManager_->TriggerStartSync(GALLERY_BUNDLE_NAME, callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
+    return dataSyncManager_->TriggerStartSync(GALLERY_BUNDLE_NAME, callerUserId, forceFlag,
+        SyncTriggerType::APP_TRIGGER);
 }
 
 int32_t CloudSyncService::StopSyncInner()

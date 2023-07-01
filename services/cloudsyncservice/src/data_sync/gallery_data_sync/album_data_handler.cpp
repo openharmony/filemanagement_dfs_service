@@ -27,6 +27,7 @@ namespace CloudSync {
 using namespace std;
 using namespace NativeRdb;
 using namespace DriveKit;
+using namespace Media;
 
 AlbumDataHandler::AlbumDataHandler(std::shared_ptr<RdbStore> rdb)
     : RdbDataHandler(TABLE_NAME, rdb)

@@ -29,10 +29,12 @@ using namespace OHOS::NetManagerStandard;
 
 namespace OHOS::FileManagement::CloudSync {
 static constexpr const int32_t MIN_VALID_NETID = 100;
+static constexpr const int32_t WAIT_NET_SERVICE_TIME = 4;
+static const char *NET_MANAGER_ON_STATUS = "2";
 
-int32_t NetworkStatus::RegisterNetConnCallback()
+int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
-    sptr<NetConnCallbackObserver> observer = new (std::nothrow) NetConnCallbackObserver();
+    sptr<NetConnCallbackObserver> observer = new (std::nothrow) NetConnCallbackObserver(dataSyncManager);
     if (observer == nullptr) {
         LOGE("new operator error.observer is nullptr");
         return E_GET_NETWORK_MANAGER_FAILED;
@@ -71,13 +73,10 @@ void NetworkStatus::SetNetConnStatus(NetManagerStandard::NetAllCapabilities &net
 {
     if (netAllCap.netCaps_.count(NetCap::NET_CAPABILITY_INTERNET)) {
         if (netAllCap.bearerTypes_.count(BEARER_ETHERNET)) {
-            LOGI("ethernet connected!");
             SetNetConnStatus(NetConnStatus::ETHERNET_CONNECT);
         } else if (netAllCap.bearerTypes_.count(BEARER_WIFI)) {
-            LOGI("wifi connected!");
             SetNetConnStatus(NetConnStatus::WIFI_CONNECT);
         } else if (netAllCap.bearerTypes_.count(BEARER_CELLULAR)) {
-            LOGI("celluar connected!");
             SetNetConnStatus(NetConnStatus::CELLULAR_CONNECT);
         }
     } else {
@@ -85,19 +84,19 @@ void NetworkStatus::SetNetConnStatus(NetManagerStandard::NetAllCapabilities &net
     }
 }
 
-int32_t NetworkStatus::GetAndRegisterNetwork()
+int32_t NetworkStatus::GetAndRegisterNetwork(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
     int32_t res = GetDefaultNet();
     if (res != E_OK) {
         return res;
     }
 
-    return RegisterNetConnCallback();
+    return RegisterNetConnCallback(dataSyncManager);
 }
 
-void NetworkStatus::InitNetwork()
+void NetworkStatus::InitNetwork(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
-    int status = WaitParameter("startup.service.ctl.netmanager", "2", 4);
+    int status = WaitParameter("startup.service.ctl.netmanager", NET_MANAGER_ON_STATUS, WAIT_NET_SERVICE_TIME);
     if (status != 0) {
         LOGE(" wait SAMGR error, return value %{public}d.", status);
         return;
@@ -106,7 +105,7 @@ void NetworkStatus::InitNetwork()
     int retryCount = 0;
     constexpr int RETRY_TIME_INTERVAL_MILLISECOND = 1 * 1000 * 1000;
     do {
-        if (GetAndRegisterNetwork() == E_OK) {
+        if (GetAndRegisterNetwork(dataSyncManager) == E_OK) {
             break;
         }
         LOGE("wait and retry registering network callback");
@@ -117,13 +116,19 @@ void NetworkStatus::InitNetwork()
 
 void NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus netStatus)
 {
-    NetStatus_ = netStatus;
+    netStatus_ = netStatus;
     return;
 }
 
 NetworkStatus::NetConnStatus NetworkStatus::GetNetConnStatus()
 {
-    return NetStatus_;
+    return netStatus_;
 }
 
+void NetworkStatus::OnNetworkAvail()
+{
+    if (netStatus_ == NetConnStatus::NO_NETWORK) {
+        netStatus_ = NetConnStatus::NETWORK_AVAIL;
+    }
+}
 } // namespace OHOS::FileManagement::CloudSync

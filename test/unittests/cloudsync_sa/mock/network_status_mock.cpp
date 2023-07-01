@@ -18,7 +18,7 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
-int32_t NetworkStatus::RegisterNetConnCallback()
+int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
     return E_OK;
 }
@@ -32,17 +32,17 @@ void NetworkStatus::SetNetConnStatus(NetManagerStandard::NetAllCapabilities &net
 {
 }
 
-int32_t NetworkStatus::GetAndRegisterNetwork()
+int32_t NetworkStatus::GetAndRegisterNetwork(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
     int32_t res = GetDefaultNet();
     if (res != E_OK) {
         return res;
     }
 
-    return RegisterNetConnCallback();
+    return RegisterNetConnCallback(dataSyncManager);
 }
 
-void NetworkStatus::InitNetwork()
+void NetworkStatus::InitNetwork(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
 }
 

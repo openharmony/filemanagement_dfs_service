@@ -158,7 +158,8 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
 
     shared_ptr<TaskContext> context = make_shared<TaskContext>(handler);
 
-    DataSyncer::PullRetryRecords(context);
+    RetryDownloadRecords(context);
+    PullRetryRecords(context);
 
     /* Full synchronization and incremental synchronization */
     int32_t ret = E_OK;
@@ -301,7 +302,6 @@ static void ThumbDownloadCallback(shared_ptr<DKContext> context,
         LOGI("DKAssetsDownloader ok");
     }
 
-    vector<DKDownloadAsset> retryList{};
     for (const auto &it : resultMap) {
         if (it.second.IsSuccess()) {
             LOGI("record %s %{public}s download success", it.first.recordId.c_str(), it.first.fieldKey.c_str());
@@ -314,10 +314,8 @@ static void ThumbDownloadCallback(shared_ptr<DKContext> context,
             LOGE("record %s %{public}s download failed, localErr: %{public}d, serverErr: %{public}d",
                  it.first.recordId.c_str(), it.first.fieldKey.c_str(),
                  static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
-            retryList.push_back(it.first);
         }
     }
-    // retry
 }
 
 int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
@@ -515,6 +513,40 @@ void DataSyncer::OnFetchRetryRecord(shared_ptr<DKContext> context, shared_ptr<DK
     HandleOnFetchRecords(context, database, records);
 }
 
+void DataSyncer::RetryDownloadRecords(shared_ptr<TaskContext> context)
+{
+    auto ctx = static_pointer_cast<TaskContext>(context);
+    auto handler = ctx->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return;
+    }
+
+    vector<DriveKit::DKDownloadAsset> assetsToDownload;
+    int32_t ret = handler->GetAssetsToDownload(assetsToDownload);
+    if (ret != E_OK) {
+        LOGE("get assetsToDownload err %{public}d", ret);
+        return;
+    }
+    LOGI("assetsToDownload count: %{public}zu", assetsToDownload.size());
+    if (assetsToDownload.empty()) {
+        return;
+    }
+
+    DKDownloadId id;
+    auto resultCallback = make_shared<std::function<void(
+        std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
+        const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &, const DriveKit::DKError &)>>(
+        ThumbDownloadCallback);
+    auto downloadProcessCallback =
+        std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(
+            EmptyDownLoadAssetsprogress);
+
+    auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id, resultCallback, context, nullptr,
+                                             downloadProcessCallback);
+    AsyncRun(static_pointer_cast<TaskContext>(dctx), &DataSyncer::DownloadAssets);
+}
+
 int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)
 {
     /*
@@ -623,7 +655,6 @@ void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
     ret = sdkHelper_->CreateRecords(context, records, callback);
     if (ret != E_OK) {
         LOGE("sdk create records err %{public}d", ret);
-        return;
     }
 }
 

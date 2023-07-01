@@ -63,14 +63,14 @@ void CloudSyncCallbackStubTest::TearDown(void)
 }
 
 /**
- * @tc.name: HandleOnSyncStateChangedTest
+ * @tc.name: HandleOnSyncStateChangedTest001
  * @tc.desc: Verify the HandleOnSyncStateChanged function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncCallbackStubTest, HandleOnSyncStateChangedTest, TestSize.Level1)
+HWTEST_F(CloudSyncCallbackStubTest, HandleOnSyncStateChangedTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "HandleOnSyncStateChanged Start";
+    GTEST_LOG_(INFO) << "HandleOnSyncStateChangedTest001 Start";
     try {
         MockCallback callback;
         EXPECT_CALL(callback, OnSyncStateChanged(_, _)).WillOnce(Return());
@@ -88,11 +88,69 @@ HWTEST_F(CloudSyncCallbackStubTest, HandleOnSyncStateChangedTest, TestSize.Level
             ICloudSyncCallback::SERVICE_CMD_ON_SYNC_STATE_CHANGED, data, reply, option));
     } catch(...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " HandleOnSyncStateChanged ERROR";
+        GTEST_LOG_(INFO) << " HandleOnSyncStateChangedTest001 ERROR";
     }
-    GTEST_LOG_(INFO) << "HandleOnSyncStateChanged End";
+    GTEST_LOG_(INFO) << "HandleOnSyncStateChangedTest001 End";
 }
 
+
+/**
+ * @tc.name: HandleOnSyncStateChangedTest002
+ * @tc.desc: Verify the HandleOnSyncStateChanged function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCallbackStubTest, HandleOnSyncStateChangedTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleOnSyncStateChangedTest002 Start";
+    try {
+        MockCallback callback;
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        const string bundleName = "com.ohos.photos";
+        EXPECT_TRUE(data.WriteInt32(static_cast<int>((CloudSyncState)0)));
+        EXPECT_TRUE(data.WriteInt32(static_cast<int>((ErrorType)0)));
+
+        EXPECT_NE(E_OK, callback.OnRemoteRequest(
+            ICloudSyncCallback::SERVICE_CMD_ON_SYNC_STATE_CHANGED, data, reply, option));
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleOnSyncStateChangedTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleOnSyncStateChangedTest002 End";
+}
+
+/**
+ * @tc.name: HandleOnSyncStateChangedTest003
+ * @tc.desc: Verify the HandleOnSyncStateChanged function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncCallbackStubTest, HandleOnSyncStateChangedTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleOnSyncStateChangedTest003 Start";
+    try {
+        MockCallback callback;
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncCallback::GetDescriptor()));
+        callback.opToInterfaceMap_.clear();
+
+        const string bundleName = "com.ohos.photos";
+        EXPECT_TRUE(data.WriteInt32(static_cast<int>((CloudSyncState)0)));
+        EXPECT_TRUE(data.WriteInt32(static_cast<int>((ErrorType)0)));
+
+        EXPECT_NE(E_OK, callback.OnRemoteRequest(
+            ICloudSyncCallback::SERVICE_CMD_ON_SYNC_STATE_CHANGED, data, reply, option));
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleOnSyncStateChangedTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleOnSyncStateChangedTest003 End";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync {
 } // namespace OHOS
