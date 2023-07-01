@@ -812,11 +812,9 @@ int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record, NativeRdb::Res
         LOGE("rdb update failed, err=%{public}d", ret);
         return E_RDB;
     }
-    if (mtimeChanged && ThumbsAtLocal(record)) {
+    if (mtimeChanged && (ThumbsAtLocal(record) || (AddCloudThumbs(record) != E_OK))) {
         AppendToDownload(record, "lcd", params.assetsToDownload);
         AppendToDownload(record, "thumbnail", params.assetsToDownload);
-    } else {
-        AddCloudThumbs(record);
     }
 
     LOGI("update of record success");
@@ -829,7 +827,7 @@ bool FileDataHandler::ThumbsAtLocal(const DKRecord &record)
     record.GetRecordData(datas);
     if (datas.find(FILE_PROPERTIES) == datas.end()) {
         LOGE("record data cannot find properties");
-        return E_INVAL_ARG;
+        return false;
     }
     DriveKit::DKRecordFieldMap prop;
     datas[FILE_PROPERTIES].GetRecordMap(prop);
@@ -838,7 +836,7 @@ bool FileDataHandler::ThumbsAtLocal(const DKRecord &record)
     if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end() ||
         prop[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file path in record");
-        return E_INVAL_ARG;
+        return false;
     }
 
     string thumbLocalPath = createConvertor_.GetThumbPath(fullPath, THUMB_SUFFIX);
