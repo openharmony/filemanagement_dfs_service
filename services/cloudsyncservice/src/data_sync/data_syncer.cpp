@@ -383,6 +383,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
         cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
         cloudPrefImpl_.Delete(TEMP_START_CURSOR);
         cloudPrefImpl_.Delete(TOTAL_PULL_COUNT);
+        totalPullCount_ = 0;
         return;
     }
     nextCursor_ = nextCursor;
