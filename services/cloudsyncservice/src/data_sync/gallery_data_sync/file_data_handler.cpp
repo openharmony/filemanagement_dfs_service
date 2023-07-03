@@ -16,8 +16,8 @@
 #include "file_data_handler.h"
 
 #include <cstring>
-#include <tuple>
 #include <filesystem>
+#include <tuple>
 
 #include <dirent.h>
 #include <sys/ioctl.h>
@@ -370,7 +370,7 @@ string FileDataHandler::ConflictRenameThumb(NativeRdb::ResultSet &resultSet, str
         LOGE("err tmp Path found");
         return "";
     }
-    tmpPath = tmpPath.substr(0, tmpfound);
+    tmpPath.resize(tmpfound);
     size_t found = tmpPath.find_last_of('.');
     if (found == string::npos) {
         LOGE("err thumb Path found");
