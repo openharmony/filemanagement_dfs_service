@@ -47,7 +47,7 @@ void InitENumACtions(napi_env env, napi_value exports)
     char propertyName[] = "Action";
     napi_value actionObj = nullptr;
     napi_create_object(env, &actionObj);
-    static napi_property_descriptor desc[] = {
+    napi_property_descriptor desc[] = {
         DECLARE_NAPI_STATIC_PROPERTY("RETAIN_DATA", NVal::CreateInt32(env, (int32_t)Action::RETAIN_DATA).val_),
         DECLARE_NAPI_STATIC_PROPERTY("CLEAR_DATA", NVal::CreateInt32(env, (int32_t)Action::CLEAR_DATA).val_),
     };
