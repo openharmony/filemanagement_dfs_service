@@ -25,7 +25,7 @@ public:
     {
         return tokenid;
     }
-    void SetTokenId(int32_t tokenId)
+    static void SetTokenId(int32_t tokenId)
     {
         tokenid = tokenId;
     }
