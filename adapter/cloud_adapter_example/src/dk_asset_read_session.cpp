@@ -26,5 +26,5 @@ int64_t DKAssetReadSession::PRead(int64_t offset, int64_t size, char *buffer, DK
 {
     return int64_t();
 }
-void DKAssetReadSession::Close() {}
+bool DKAssetReadSession::Close(bool needRemain) { return bool(); }
 } // namespace DriveKit
