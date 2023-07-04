@@ -60,8 +60,6 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
     RETURN_ON_ERR(HandleFavorite(data, resultSet));
     RETURN_ON_ERR(HandleDescription(data, resultSet));
     RETURN_ON_ERR(HandleRecycle(data, resultSet));
-    RETURN_ON_ERR(HandleThumbSize(data, resultSet));
-    RETURN_ON_ERR(HandleLcdSize(data, resultSet));
     /* attachments */
     RETURN_ON_ERR(HandleAttachments(data, resultSet));
 
@@ -162,6 +160,10 @@ int32_t FileDataConvertor::FillRecordId(DriveKit::DKRecord &record,
 int32_t FileDataConvertor::HandleThumbSize(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
+    if (type_ != FILE_CREATE && type_ != FILE_DATA_MODIFY) {
+        return E_OK;
+    }
+
     string path;
     int32_t ret = GetString(PhotoColumn::MEDIA_FILE_PATH, path, resultSet);
     if (ret != E_OK) {
@@ -184,6 +186,10 @@ int32_t FileDataConvertor::HandleThumbSize(DriveKit::DKRecordFieldMap &map,
 int32_t FileDataConvertor::HandleLcdSize(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
+    if (type_ != FILE_CREATE && type_ != FILE_DATA_MODIFY) {
+        return E_OK;
+    }
+
     string path;
     int32_t ret = GetString(PhotoColumn::MEDIA_FILE_PATH, path, resultSet);
     if (ret != E_OK) {
