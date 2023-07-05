@@ -20,6 +20,7 @@
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
 
+#include "cloud_pref_impl.h"
 #include "rdb_data_handler.h"
 #include "file_data_convertor.h"
 
@@ -66,6 +67,12 @@ public:
         DriveKit::DKRecordOperResult> &map) override;
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
     int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset) override;
+
+    void SetNextCursor(const DriveKit::DKQueryCursor &cursor) override;
+    void SetTempStartCursor(const DriveKit::DKQueryCursor &cursor) override;
+    void ClearCursor() override;
+    void SetTotalPullCount(const int32_t totalPullCount) override;
+    void FinishPull(const DriveKit::DKQueryCursor &nextCursor) override;
 
     /* reset */
     void Reset();
@@ -159,6 +166,9 @@ private:
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DOWNLOAD };
+
+    /* cloud preference impl */
+    CloudPrefImpl cloudPrefImpl_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

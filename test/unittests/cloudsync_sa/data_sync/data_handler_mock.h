@@ -58,6 +58,7 @@ public:
     /* cursor */
     int32_t SetCursor() {return 0;}
     int32_t GetCursor() {return 0;}
+    void FinishPull(const DriveKit::DKQueryCursor &nextCursor) {return;}
 };
 }
 #endif

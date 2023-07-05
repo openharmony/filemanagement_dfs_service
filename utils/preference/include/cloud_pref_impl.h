@@ -25,7 +25,7 @@ const static std::string CLOUDFILE_DIR = "/data/service/el1/public/cloudfile/";
 class CloudPrefImpl {
 public:
     CloudPrefImpl(const std::string& fileName);
-    CloudPrefImpl(const int32_t userId, const std::string& bundleName);
+    CloudPrefImpl(const int32_t userId, const std::string& bundleName, const std::string& tableName);
     ~CloudPrefImpl() = default;;
 
     void SetString(const std::string& key, const std::string& value);

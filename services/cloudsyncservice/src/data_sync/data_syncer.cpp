@@ -30,23 +30,9 @@ using namespace std;
 using namespace placeholders;
 using namespace DriveKit;
 
-const static std::string TOTAL_PULL_COUNT = "total_pull_count";
-const static std::string DOWNLOAD_THUMB_LIMIT = "download_thumb_limit";
-constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
 DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
-    : bundleName_(bundleName), userId_(userId), cloudPrefImpl_(userId, bundleName)
+    : bundleName_(bundleName), userId_(userId)
 {
-    /* cursor */
-    cloudPrefImpl_.GetString(START_CURSOR, startCursor_);
-    cloudPrefImpl_.GetString(NEXT_CURSOR, nextCursor_);
-    cloudPrefImpl_.GetInt(TOTAL_PULL_COUNT, totalPullCount_);
-
-    cloudPrefImpl_.GetInt(DOWNLOAD_THUMB_LIMIT, downloadThumbLimit_);
-    if (downloadThumbLimit_ <= 0) {
-        downloadThumbLimit_ = DEFAULT_DOWNLOAD_THUMB_LIMIT;
-        cloudPrefImpl_.SetInt(DOWNLOAD_THUMB_LIMIT, downloadThumbLimit_);
-    }
-
     /* alloc task runner */
     taskRunner_ = DelayedSingleton<TaskManager>::GetInstance()->AllocRunner(userId,
         bundleName, bind(&DataSyncer::Schedule, this));
@@ -163,7 +149,7 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
 
     /* Full synchronization and incremental synchronization */
     int32_t ret = E_OK;
-    if (startCursor_.empty()) {
+    if (handler->IsPullRecords()) {
         ret = AsyncRun(context, &DataSyncer::PullRecords);
     } else {
         ret = AsyncRun(context, &DataSyncer::PullDatabaseChanges);
@@ -201,11 +187,17 @@ void DataSyncer::PullRecords(shared_ptr<TaskContext> context)
     FetchCondition cond;
     handler->GetFetchCondition(cond);
 
-    std::string tempStartCursor;
-    sdkHelper_->GetStartCursor(cond.recordType, tempStartCursor);
-    cloudPrefImpl_.SetString(TEMP_START_CURSOR, tempStartCursor);
+    DKQueryCursor tempStartCursor;
+    handler->GetTempStartCursor(tempStartCursor);
+    if (tempStartCursor.empty()) {
+        sdkHelper_->GetStartCursor(cond.recordType, tempStartCursor);
+        handler->SetTempStartCursor(tempStartCursor);
+    }
 
-    int32_t ret = sdkHelper_->FetchRecords(context, cond, nextCursor_, callback);
+    DKQueryCursor nextCursor;
+    handler->GetNextCursor(nextCursor);
+
+    int32_t ret = sdkHelper_->FetchRecords(context, cond, nextCursor, callback);
     if (ret != E_OK) {
         LOGE("sdk fetch records err %{public}d", ret);
     }
@@ -221,20 +213,17 @@ void DataSyncer::PullDatabaseChanges(shared_ptr<TaskContext> context)
         return;
     }
 
-    /* If nextCursor is empty, it is the first batch of incremental synchronization. Begin with the startCursor_ */
-    if (nextCursor_.empty()) {
-        nextCursor_ = startCursor_;
-    }
-
     auto handler = context->GetHandler();
     if (handler == nullptr) {
         LOGE("context get handler err");
         return;
     }
+    DKQueryCursor nextCursor;
+    handler->GetNextCursor(nextCursor);
 
     FetchCondition cond;
     handler->GetFetchCondition(cond);
-    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, cond, nextCursor_, callback);
+    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, cond, nextCursor, callback);
     if (ret != E_OK) {
         LOGE("sdk fetch records err %{public}d", ret);
     }
@@ -336,12 +325,6 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
         std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(
             EmptyDownLoadAssetsprogress);
     /* for pull records, judge whether to download thumb and lcds */
-    if (startCursor_.empty()) {
-        totalPullCount_ += records->size();
-        onFetchParams.fetchThumbs = totalPullCount_ <= downloadThumbLimit_;
-        LOGI("fetchThumbs :%{public}d, totalPulls %{public}d, limit %{public}d",
-             onFetchParams.fetchThumbs, totalPullCount_, downloadThumbLimit_);
-    }
 
     auto ctx = static_pointer_cast<TaskContext>(context);
     auto handler = ctx->GetHandler();
@@ -349,6 +332,17 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
         LOGE("context get handler err");
         return E_CONTEXT;
     }
+
+    int32_t totalPullCount = 0;
+    int32_t downloadThumbLimit = 0;
+    if (handler->IsPullRecords()) {
+        handler->GetPullCount(totalPullCount, downloadThumbLimit);
+        totalPullCount += records->size();
+        onFetchParams.fetchThumbs = totalPullCount <= downloadThumbLimit;
+        LOGI("fetchThumbs :%{public}d, totalPulls %{public}d, limit %{public}d",
+             onFetchParams.fetchThumbs, totalPullCount, downloadThumbLimit);
+    }
+
     int32_t ret = handler->OnFetchRecords(records, onFetchParams);
     auto dctx = make_shared<DownloadContext>(handler, onFetchParams.assetsToDownload, id, resultCallback,
                                              context, database, downloadProcessCallback);
@@ -358,8 +352,8 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
         return ret;
     }
 
-    if (startCursor_.empty()) {
-        cloudPrefImpl_.SetInt(TOTAL_PULL_COUNT, totalPullCount_);
+    if (handler->IsPullRecords()) {
+        handler->SetTotalPullCount(totalPullCount);
     }
     return E_OK;
 }
@@ -373,21 +367,19 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
         LOGE("HandleOnFetchRecords failed");
         return;
     }
+    auto handler = ctx->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return;
+    }
 
     /* pull more */
     if (nextCursor.empty()) {
         LOGI("no more records");
-        nextCursor_.clear();
-        cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
-        cloudPrefImpl_.GetString(TEMP_START_CURSOR, startCursor_);
-        cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
-        cloudPrefImpl_.Delete(TEMP_START_CURSOR);
-        cloudPrefImpl_.Delete(TOTAL_PULL_COUNT);
-        totalPullCount_ = 0;
+        handler->FinishPull(nextCursor);
         return;
     }
-    nextCursor_ = nextCursor;
-    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+    handler->SetNextCursor(nextCursor);
     int ret = AsyncRun(ctx, &DataSyncer::PullRecords);
     if (ret != E_OK) {
         LOGE("asyn run pull records err %{public}d", ret);
@@ -444,18 +436,19 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
         LOGE("HandleOnFetchRecords failed");
         return;
     }
+    auto handler = ctx->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
+        return;
+    }
 
     /* pull more */
     if (!hasMore) {
         LOGI("no more records");
-        startCursor_ = nextCursor;
-        nextCursor_.clear();
-        cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
-        cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
+        handler->FinishPull(nextCursor);
         return;
     }
-    nextCursor_ = nextCursor;
-    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+    handler->SetNextCursor(nextCursor);
     int ret = AsyncRun(ctx, &DataSyncer::PullDatabaseChanges);
     if (ret != E_OK) {
         LOGE("asyn run pull database changes err %{public}d", ret);
@@ -606,16 +599,8 @@ int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int a
         LOGE("Clean file failed res:%{public}d", res);
         return res;
     }
-    ClearCursor();
+    handler->ClearCursor();
     return E_OK;
-}
-
-void DataSyncer::ClearCursor()
-{
-    startCursor_.clear();
-    nextCursor_.clear();
-    cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
-    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
 }
 
 void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)

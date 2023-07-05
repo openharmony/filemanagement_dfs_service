@@ -81,6 +81,12 @@ int32_t AlbumDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOp
 {
     return E_OK;
 }
+
+void AlbumDataHandler::FinishPull(const DriveKit::DKQueryCursor &nextCursor)
+{
+    startCursor_.clear();
+    nextCursor_.clear();
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
