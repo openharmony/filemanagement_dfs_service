@@ -31,7 +31,11 @@ public:
     void Seek(int64_t offset, DKSeekFromWhere fromWhere);
     int64_t Read(int64_t size, char *buffer, DKError &error);
     int64_t PRead(int64_t offset, int64_t size, char *buffer, DKError &error);
-    void Close();
+    /*
+     * needRemain = false: 返回值为true时清除缓存文件成功, 返回值为false清除缓存文件失败
+     * needRemain = true:  返回值为true时保留缓存文件成功, 返回值为false保留缓存文件失败
+     */
+    bool Close(bool needRemain = false);
 };
 } // namespace DriveKit
 #endif

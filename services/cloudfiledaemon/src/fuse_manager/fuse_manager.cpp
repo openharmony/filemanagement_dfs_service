@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <exception>
+#include <filesystem>
 #include <fcntl.h>
 #include <iostream>
 #include <map>
@@ -55,6 +56,10 @@ namespace FileManagement {
 namespace CloudFile {
 using namespace std;
 
+static const string LOCAL_PATH_PREFIX = "/mnt/hmdfs/";
+static const string LOCAL_PATH_SUFFIX = "/account/device_view/local";
+static const string FUSE_CACHE_PATH_PREFIX = "/data/service/el2/";
+static const string FUSE_CACHE_PATH_SUFFIX = "/hmdfs/fuse";
 static const string PHOTOS_BUNDLE_NAME = "com.ohos.photos";
 static const unsigned int OID_USER_DATA_RW = 1008;
 static const unsigned int STAT_NLINK_REG = 1;
@@ -265,20 +270,6 @@ static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
     fuse_reply_attr(req, &buf, 0);
 }
 
-static string GetParentDir(const string &path)
-{
-    if ((path == "/") || (path == "")) {
-        return "";
-    }
-
-    auto pos = path.find_last_of('/');
-    if ((pos == string::npos) || (pos == 0)) {
-        return "/";
-    }
-
-    return path.substr(0, pos);
-}
-
 static string GetAssetKey(int fileType)
 {
     switch (fileType) {
@@ -292,6 +283,36 @@ static string GetAssetKey(int fileType)
             LOGE("bad fileType %{public}d", fileType);
             return "";
     }
+}
+
+static string GetLocalPath(int32_t userId)
+{
+    return LOCAL_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX;
+}
+
+static string GetFuseCachePath(int32_t userId)
+{
+    return FUSE_CACHE_PATH_PREFIX + to_string(userId) + FUSE_CACHE_PATH_SUFFIX;
+}
+
+static string GetAssetPath(shared_ptr<CloudInode> cInode, struct FuseData *data)
+{
+    string path;
+    filesystem::path parentPath;
+    switch (cInode->mBase->fileType) {
+        case FILE_TYPE_THUMBNAIL:
+        case FILE_TYPE_LCD:
+            path = GetLocalPath(data->userId) + cInode->path;
+            break;
+        default:
+            path = GetFuseCachePath(data->userId) + cInode->path;
+            break;
+    }
+    parentPath = filesystem::path(path).parent_path();
+    ForceCreateDirectory(parentPath.string());
+    LOGD("fileType: %d, create dir: %s, relative path: %s",
+         cInode->mBase->fileType, parentPath.string().c_str(), cInode->path.c_str());
+    return path;
 }
 
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
@@ -308,19 +329,15 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
         return;
     }
     if (!cInode->readSession) {
-        string path = "/data/service/el2/" + to_string(data->userId) +
-               "/hmdfs/fuse" + GetParentDir(cInode->path);
-        ForceCreateDirectory(path);
-        LOGD("recordId: %s, create dir: %s, filename: %s",
-             recordId.c_str(), path.c_str(), cInode->mBase->name.c_str());
         /*
          * 'recordType' is fixed to "fileType" now
          * 'assetKey' is one of "content"/"lcd"/"thumbnail"
          */
+        LOGD("recordId: %s", recordId.c_str());
         cInode->readSession = database->NewAssetReadSession("fileType",
                                                             recordId,
                                                             GetAssetKey(cInode->mBase->fileType),
-                                                            path + "/" + cInode->mBase->name);
+                                                            GetAssetPath(cInode, data));
     }
 
     if (!cInode->readSession) {
@@ -336,12 +353,25 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+    bool needRemain = false;
+    bool res = false;
 
     LOGD("%s, sessionRefCount: %d", CloudPath(data, ino).c_str(), cInode->sessionRefCount.load());
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
-        LOGD("readSession released");
+        if (cInode->mBase->fileType != FILE_TYPE_CONTENT) {
+            needRemain = true;
+        }
+        res = cInode->readSession->Close(needRemain);
+        if (!res) {
+            LOGE("close error, needRemain: %d", needRemain);
+        }
+        if (!needRemain && res) {
+            GetCloudInode(data, cInode->parent)->mFile->DoRemove(*(cInode->mBase));
+            LOGD("remove from dentryfile");
+        }
         cInode->readSession = nullptr;
+        LOGD("readSession released");
     }
 
     fuse_reply_err(req, 0);
