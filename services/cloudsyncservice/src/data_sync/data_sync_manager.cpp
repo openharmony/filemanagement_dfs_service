@@ -34,6 +34,12 @@ int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
                                           bool forceFlag,
                                           SyncTriggerType triggerType)
 {
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+        return E_SYNCER_NUM_OUT_OF_RANGE;
+    }
+
     auto ret = IsSkipSync(bundleName, userId);
     if (ret != E_OK) {
         return ret;
@@ -46,11 +52,6 @@ int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
         return ret;
     }
 
-    auto dataSyncer = GetDataSyncer(bundleName, userId);
-    if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
-    }
     dataSyncer->SetSdkHelper(sdkHelper);
     std::thread([dataSyncer, forceFlag, triggerType]() { dataSyncer->StartSync(forceFlag, triggerType); }).detach();
 
@@ -66,6 +67,15 @@ int32_t DataSyncManager::TriggerStopSync(const std::string &bundleName,
         LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_SYNCER_NUM_OUT_OF_RANGE;
     }
+
+    /* get sdk helper */
+    auto sdkHelper = std::make_shared<SdkHelper>();
+    auto ret = sdkHelper->Init(userId, bundleName);
+    if (ret != E_OK) {
+        LOGE("get sdk helper err %{public}d", ret);
+        return ret;
+    }
+
     std::thread([dataSyncer, triggerType]() { dataSyncer->StopSync(triggerType); }).detach();
     return E_OK;
 }
