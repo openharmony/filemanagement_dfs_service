@@ -169,15 +169,6 @@ private:
     DriveKit::DKLock lock_;
     int32_t errorCode_{0};
 
-    /* cursor*/
-    DriveKit::DKQueryCursor startCursor_;
-    DriveKit::DKQueryCursor nextCursor_;
-    int32_t totalPullCount_{0};
-    int32_t downloadThumbLimit_{0};
-
-    /* cloud preference impl */
-    CloudPrefImpl cloudPrefImpl_;
-
     /* download callback manager*/
     CloudDownloadCallbackManager downloadCallbackMgr_;
 };

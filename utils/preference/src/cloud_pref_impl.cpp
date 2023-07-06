@@ -19,16 +19,23 @@
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
-CloudPrefImpl::CloudPrefImpl(const int32_t userId, const std::string& bundleName)
+CloudPrefImpl::CloudPrefImpl(const int32_t userId, const std::string& bundleName, const std::string& tableName)
 {
     /* the file name varies from different userId and bundle name */
-    std::string fileDir = CLOUDFILE_DIR + std::to_string(userId);
-    if (access(fileDir.c_str(), F_OK) != 0) {
-        if (mkdir(fileDir.c_str(), S_IRWXU | S_IRWXG | S_IXOTH) != 0) {
+    std::string userIdDir = CLOUDFILE_DIR + std::to_string(userId);
+    if (access(userIdDir.c_str(), F_OK) != 0) {
+        if (mkdir(userIdDir.c_str(), S_IRWXU | S_IRWXG | S_IXOTH) != 0) {
             LOGE("CloudPrefImpl: mkdir failed");
         }
     }
-    fileName_ = fileDir + "/" + bundleName;
+
+    std::string bundleDir = userIdDir + "/" + bundleName;
+    if (access(bundleDir.c_str(), F_OK) != 0) {
+        if (mkdir(bundleDir.c_str(), S_IRWXU | S_IRWXG | S_IXOTH) != 0) {
+            LOGE("CloudPrefImpl: mkdir failed");
+        }
+    }
+    fileName_ = bundleDir + "/" + tableName;
     int32_t errCode = 0;
     pref_ = NativePreferences::PreferencesHelper::GetPreferences(fileName_, errCode);
     if (!pref_) {

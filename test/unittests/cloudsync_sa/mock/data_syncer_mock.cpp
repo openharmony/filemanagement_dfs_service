@@ -27,7 +27,7 @@ using namespace placeholders;
 using namespace DriveKit;
 
 DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
-    : bundleName_(bundleName), userId_(userId), cloudPrefImpl_(userId, bundleName)
+    : bundleName_(bundleName), userId_(userId)
 {
 }
 

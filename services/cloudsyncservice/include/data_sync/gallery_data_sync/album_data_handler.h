@@ -45,6 +45,7 @@ public:
     virtual int32_t OnModifyMdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
 
+    virtual void FinishPull(const DriveKit::DKQueryCursor &nextCursor) override;
 private:
     static inline const std::string TABLE_NAME = "albums";
     static inline const int32_t LIMIT_SIZE = 5;

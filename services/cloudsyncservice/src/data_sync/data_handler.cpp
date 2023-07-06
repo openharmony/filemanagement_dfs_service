@@ -22,14 +22,51 @@ namespace FileManagement {
 namespace CloudSync {
 using namespace std;
 
-int32_t DataHandler::SetCursor()
+void DataHandler::SetNextCursor(const DriveKit::DKQueryCursor &cursor)
 {
-    return E_OK;
+    nextCursor_ = cursor;
 }
 
-int32_t DataHandler::GetCursor()
+void DataHandler::GetNextCursor(DriveKit::DKQueryCursor &cursor)
 {
-    return E_OK;
+    if (nextCursor_.empty()) {
+        cursor = startCursor_;
+        return;
+    }
+    cursor = nextCursor_;
+}
+
+void DataHandler::SetTempStartCursor(const DriveKit::DKQueryCursor &cursor)
+{
+    tempStartCursor_ = cursor;
+}
+
+void DataHandler::GetTempStartCursor(DriveKit::DKQueryCursor &cursor)
+{
+    cursor = tempStartCursor_;
+}
+
+bool DataHandler::IsPullRecords()
+{
+    return startCursor_.empty();
+}
+
+void DataHandler::ClearCursor()
+{
+    startCursor_.clear();
+    nextCursor_.clear();
+    tempStartCursor_.clear();
+}
+
+void DataHandler::GetPullCount(int32_t &totalPullCount, int32_t &downloadThumbLimit)
+{
+    totalPullCount = totalPullCount_;
+    downloadThumbLimit = downloadThumbLimit_;
+}
+
+void DataHandler::SetTotalPullCount(const int32_t totalPullCount)
+{
+    totalPullCount_ = totalPullCount;
 }
 
 int32_t DataHandler::GetFileModifiedRecords(vector<DriveKit::DKRecord> &records)

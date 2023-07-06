@@ -117,8 +117,9 @@ HWTEST_F(CloudPrefImplTest, CloudPrefImplTest003, TestSize.Level1)
     try {
         const std::string bundleName = "";
         std::string fileDir = "/data/service/el1/public/cloudfile/";
+        std::string tableName = "testTable";
         EXPECT_EQ(access(fileDir.c_str(), F_OK), 0);
-        CloudPrefImpl cloudPreImpl(userId_, bundleName);
+        CloudPrefImpl cloudPreImpl(userId_, bundleName, tableName);
         EXPECT_NE(cloudPreImpl.pref_, nullptr);
     } catch (...) {
         EXPECT_TRUE(false);

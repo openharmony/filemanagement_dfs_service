@@ -58,8 +58,22 @@ public:
     virtual int32_t Clean(const int action) = 0;
 
     /* cursor */
-    virtual int32_t SetCursor();
-    virtual int32_t GetCursor();
+    virtual void SetNextCursor(const DriveKit::DKQueryCursor &cursor);
+    virtual void GetNextCursor(DriveKit::DKQueryCursor &cursor);
+    virtual void SetTempStartCursor(const DriveKit::DKQueryCursor &cursor);
+    virtual void GetTempStartCursor(DriveKit::DKQueryCursor &cursor);
+    virtual bool IsPullRecords();
+    virtual void ClearCursor();
+    virtual void GetPullCount(int32_t &totalPullCount, int32_t &downloadThumbLimit);
+    virtual void SetTotalPullCount(const int32_t totalPullCount);
+    virtual void FinishPull(const DriveKit::DKQueryCursor &nextCursor) = 0;
+
+    /* cursor */
+    DriveKit::DKQueryCursor startCursor_;
+    DriveKit::DKQueryCursor nextCursor_;
+    DriveKit::DKQueryCursor tempStartCursor_;
+    int32_t totalPullCount_{0};
+    int32_t downloadThumbLimit_{0};
 };
 } // namespace CloudSync
 } // namespace FileManagement
