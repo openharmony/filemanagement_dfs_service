@@ -26,6 +26,10 @@ using namespace testing::ext;
 using namespace std;
 class DataHandlerMock final : public DataHandler {
 public:
+    DataHandlerMock(int32_t userId, const std::string &bundleName, const std::string &table)
+        : DataHandler(userId, bundleName, table)
+    {
+    }
     void GetFetchCondition(FetchCondition &cond) {}
     int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records, OnFetchParams &params)
     {
@@ -54,11 +58,6 @@ public:
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) {return 0;}
     int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset) {return 0;}
     int32_t Clean(const int action) {return 0;}
-
-    /* cursor */
-    int32_t SetCursor() {return 0;}
-    int32_t GetCursor() {return 0;}
-    void FinishPull(const DriveKit::DKQueryCursor &nextCursor) {return;}
 };
 }
 #endif

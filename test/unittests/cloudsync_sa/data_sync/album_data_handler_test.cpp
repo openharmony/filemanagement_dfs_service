@@ -30,9 +30,12 @@ using namespace testing::ext;
 using namespace std;
 using namespace NativeRdb;
 using namespace DriveKit;
+const int USER_ID = 100;
+const std::string BUND_NAME = "com.ohos.photos";
 class AlbumDataHandlerMock : public AlbumDataHandler {
 public:
-    explicit AlbumDataHandlerMock(std::shared_ptr<RdbStoreMock> rdb) : AlbumDataHandler(rdb)
+    explicit AlbumDataHandlerMock(int32_t userId, const std::string &bundleName, std::shared_ptr<RdbStoreMock> rdb)
+        : AlbumDataHandler(userId, bundleName, rdb)
     {
     }
     MOCK_METHOD2(GetDownloadAsset, int32_t(string cloudId,
@@ -81,7 +84,7 @@ HWTEST_F(AlbumDataHandlerTest, OnFetchRecords001, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnFetchRecords001 Begin";
     try {
         auto rdb = make_shared<RdbStoreMock>();
-        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(rdb);
+        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
         OnFetchParams onFetchParams;
         int res = albumDataHandlerMock->OnFetchRecords(records, onFetchParams);
@@ -106,7 +109,7 @@ HWTEST_F(AlbumDataHandlerTest, GetFetchCondition001, TestSize.Level1)
     try {
         FetchCondition cond;
         auto rdb = make_shared<RdbStoreMock>();
-        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(rdb);
+        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         albumDataHandlerMock->GetFetchCondition(cond);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -128,7 +131,7 @@ HWTEST_F(AlbumDataHandlerTest, GetRetryRecords001, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetRetryRecords001 Begin";
     try {
         auto rdb = make_shared<RdbStoreMock>();
-        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(rdb);
+        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         vector<DriveKit::DKRecordId> records;
         int32_t ret = albumDataHandlerMock->GetRetryRecords(records);
         EXPECT_EQ(E_OK, ret);
@@ -151,7 +154,7 @@ HWTEST_F(AlbumDataHandlerTest, GetCreatedRecords001, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetCreatedRecords001 Begin";
     try {
         auto rdb = make_shared<RdbStoreMock>();
-        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(rdb);
+        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         vector<DriveKit::DKRecord> records;
         int32_t ret = albumDataHandlerMock->GetCreatedRecords(records);
         EXPECT_EQ(E_OK, ret);
@@ -174,7 +177,7 @@ HWTEST_F(AlbumDataHandlerTest, GetDeletedRecords001, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetDeletedRecords001 Begin";
     try {
         auto rdb = make_shared<RdbStoreMock>();
-        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(rdb);
+        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         vector<DriveKit::DKRecord> records;
         int32_t ret = albumDataHandlerMock->GetDeletedRecords(records);
         EXPECT_EQ(E_OK, ret);
@@ -197,7 +200,7 @@ HWTEST_F(AlbumDataHandlerTest, GetMetaModifiedRecords001, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetMetaModifiedRecords001 Begin";
     try {
         auto rdb = make_shared<RdbStoreMock>();
-        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(rdb);
+        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         vector<DriveKit::DKRecord> records;
         int32_t ret = albumDataHandlerMock->GetMetaModifiedRecords(records);
         EXPECT_EQ(E_OK, ret);
@@ -220,7 +223,7 @@ HWTEST_F(AlbumDataHandlerTest, OnCreateRecords001, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnCreateRecords001 Begin";
     try {
         auto rdb = make_shared<RdbStoreMock>();
-        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(rdb);
+        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         map<DKRecordId, DKRecordOperResult> map;
         int32_t ret = albumDataHandlerMock->OnCreateRecords(map);
         EXPECT_EQ(E_OK, ret);
@@ -243,7 +246,7 @@ HWTEST_F(AlbumDataHandlerTest, OnDeleteRecords001, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnDeleteRecords001 Begin";
     try {
         auto rdb = make_shared<RdbStoreMock>();
-        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(rdb);
+        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         map<DKRecordId, DKRecordOperResult> map;
         int32_t ret = albumDataHandlerMock->OnDeleteRecords(map);
         EXPECT_EQ(E_OK, ret);
@@ -266,7 +269,7 @@ HWTEST_F(AlbumDataHandlerTest, OnModifyMdirtyRecords001, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnModifyMdirtyRecords001 Begin";
     try {
         auto rdb = make_shared<RdbStoreMock>();
-        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(rdb);
+        auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         map<DKRecordId, DKRecordOperResult> map;
         int32_t ret = albumDataHandlerMock->OnModifyMdirtyRecords(map);
         EXPECT_EQ(E_OK, ret);

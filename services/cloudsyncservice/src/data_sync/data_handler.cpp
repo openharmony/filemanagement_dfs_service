@@ -21,10 +21,17 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 using namespace std;
+DataHandler::DataHandler(int32_t userId, const string &bundleName, const std::string &table)
+    : cloudPrefImpl_(userId, bundleName, table)
+{
+    cloudPrefImpl_.GetString(START_CURSOR, startCursor_);
+    cloudPrefImpl_.GetString(NEXT_CURSOR, nextCursor_);
+}
 
 void DataHandler::SetNextCursor(const DriveKit::DKQueryCursor &cursor)
 {
     nextCursor_ = cursor;
+    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
 }
 
 void DataHandler::GetNextCursor(DriveKit::DKQueryCursor &cursor)
@@ -39,6 +46,7 @@ void DataHandler::GetNextCursor(DriveKit::DKQueryCursor &cursor)
 void DataHandler::SetTempStartCursor(const DriveKit::DKQueryCursor &cursor)
 {
     tempStartCursor_ = cursor;
+    cloudPrefImpl_.SetString(TEMP_START_CURSOR, nextCursor_);
 }
 
 void DataHandler::GetTempStartCursor(DriveKit::DKQueryCursor &cursor)
@@ -55,7 +63,12 @@ void DataHandler::ClearCursor()
 {
     startCursor_.clear();
     nextCursor_.clear();
-    tempStartCursor_.clear();
+    cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
+    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+    if (!tempStartCursor_.empty()) {
+        tempStartCursor_.clear();
+        cloudPrefImpl_.Delete(TEMP_START_CURSOR);
+    }
 }
 
 void DataHandler::GetPullCount(int32_t &totalPullCount, int32_t &downloadThumbLimit)
@@ -67,6 +80,26 @@ void DataHandler::GetPullCount(int32_t &totalPullCount, int32_t &downloadThumbLi
 void DataHandler::SetTotalPullCount(const int32_t totalPullCount)
 {
     totalPullCount_ = totalPullCount;
+    cloudPrefImpl_.SetInt(TOTAL_PULL_COUNT, totalPullCount_);
+}
+
+void DataHandler::FinishPull(const DriveKit::DKQueryCursor &nextCursor)
+{
+    if (IsPullRecords()) {
+        startCursor_ = tempStartCursor_;
+        nextCursor_.clear();
+        tempStartCursor_.clear();
+        totalPullCount_ = 0;
+        cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
+        cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+        cloudPrefImpl_.Delete(TEMP_START_CURSOR);
+        cloudPrefImpl_.Delete(TOTAL_PULL_COUNT);
+    } else {
+        startCursor_ = nextCursor;
+        nextCursor_.clear();
+        cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
+        cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+    }
 }
 
 int32_t DataHandler::GetFileModifiedRecords(vector<DriveKit::DKRecord> &records)

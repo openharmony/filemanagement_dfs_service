@@ -68,12 +68,6 @@ public:
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
     int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset) override;
 
-    void SetNextCursor(const DriveKit::DKQueryCursor &cursor) override;
-    void SetTempStartCursor(const DriveKit::DKQueryCursor &cursor) override;
-    void ClearCursor() override;
-    void SetTotalPullCount(const int32_t totalPullCount) override;
-    void FinishPull(const DriveKit::DKQueryCursor &nextCursor) override;
-
     /* reset */
     void Reset();
 
@@ -166,9 +160,6 @@ private:
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DOWNLOAD };
-
-    /* cloud preference impl */
-    CloudPrefImpl cloudPrefImpl_;
 };
 } // namespace CloudSync
 } // namespace FileManagement
