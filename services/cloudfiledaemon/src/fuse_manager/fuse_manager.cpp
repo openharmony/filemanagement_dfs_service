@@ -366,7 +366,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         if (!res) {
             LOGE("close error, needRemain: %d", needRemain);
         }
-        if (!needRemain && res) {
+        if (needRemain && res) {
             GetCloudInode(data, cInode->parent)->mFile->DoRemove(*(cInode->mBase));
             LOGD("remove from dentryfile");
         }
