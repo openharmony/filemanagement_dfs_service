@@ -16,6 +16,7 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_DATA_HANDLER_H
 #define OHOS_CLOUD_SYNC_SERVICE_DATA_HANDLER_H
 
+#include "cloud_pref_impl.h"
 #include "sdk_helper.h"
 
 namespace OHOS {
@@ -25,8 +26,11 @@ struct OnFetchParams {
     bool fetchThumbs{true};
     std::vector<DriveKit::DKDownloadAsset> assetsToDownload{};
 };
+const static std::string TOTAL_PULL_COUNT = "total_pull_count";
+const static std::string DOWNLOAD_THUMB_LIMIT = "download_thumb_limit";
 class DataHandler {
 public:
+    DataHandler(int32_t userId, const std::string &bundleName, const std::string &table);
     /* download */
     virtual void GetFetchCondition(FetchCondition &cond) = 0;
     virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
@@ -66,7 +70,7 @@ public:
     virtual void ClearCursor();
     virtual void GetPullCount(int32_t &totalPullCount, int32_t &downloadThumbLimit);
     virtual void SetTotalPullCount(const int32_t totalPullCount);
-    virtual void FinishPull(const DriveKit::DKQueryCursor &nextCursor) = 0;
+    virtual void FinishPull(const DriveKit::DKQueryCursor &nextCursor);
 
     /* cursor */
     DriveKit::DKQueryCursor startCursor_;
@@ -74,6 +78,9 @@ public:
     DriveKit::DKQueryCursor tempStartCursor_;
     int32_t totalPullCount_{0};
     int32_t downloadThumbLimit_{0};
+
+    /* cloud preference impl */
+    CloudPrefImpl cloudPrefImpl_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

@@ -29,8 +29,8 @@ using namespace NativeRdb;
 using namespace DriveKit;
 using namespace Media;
 
-AlbumDataHandler::AlbumDataHandler(std::shared_ptr<RdbStore> rdb)
-    : RdbDataHandler(TABLE_NAME, rdb)
+AlbumDataHandler::AlbumDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<RdbStore> rdb)
+    : RdbDataHandler(userId, bundleName, TABLE_NAME, rdb)
 {
 }
 
@@ -80,12 +80,6 @@ int32_t AlbumDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResu
 int32_t AlbumDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     return E_OK;
-}
-
-void AlbumDataHandler::FinishPull(const DriveKit::DKQueryCursor &nextCursor)
-{
-    startCursor_.clear();
-    nextCursor_.clear();
 }
 } // namespace CloudSync
 } // namespace FileManagement

@@ -43,16 +43,10 @@ using namespace DriveKit;
 using namespace Media;
 using ChangeType = OHOS::AAFwk::ChangeInfo::ChangeType;
 
-const static std::string TOTAL_PULL_COUNT = "total_pull_count";
-const static std::string DOWNLOAD_THUMB_LIMIT = "download_thumb_limit";
 constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
 FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
-    : RdbDataHandler(TABLE_NAME, rdb), userId_(userId), bundleName_(bundleName),
-    cloudPrefImpl_(userId, bundleName, TABLE_NAME)
+    : RdbDataHandler(userId, bundleName, TABLE_NAME, rdb), userId_(userId), bundleName_(bundleName)
 {
-    cloudPrefImpl_.GetString(START_CURSOR, startCursor_);
-    cloudPrefImpl_.GetString(NEXT_CURSOR, nextCursor_);
-
     cloudPrefImpl_.GetInt(TOTAL_PULL_COUNT, totalPullCount_);
 
     cloudPrefImpl_.GetInt(DOWNLOAD_THUMB_LIMIT, downloadThumbLimit_);
@@ -1821,55 +1815,6 @@ int64_t FileDataHandler::UTCTimeSeconds()
     ts.tv_nsec = 0;
     clock_gettime(CLOCK_REALTIME, &ts);
     return static_cast<int64_t>(ts.tv_sec);
-}
-
-void FileDataHandler::SetNextCursor(const DriveKit::DKQueryCursor &cursor)
-{
-    nextCursor_ = cursor;
-    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
-}
-
-void FileDataHandler::SetTempStartCursor(const DriveKit::DKQueryCursor &cursor)
-{
-    tempStartCursor_ = cursor;
-    cloudPrefImpl_.SetString(TEMP_START_CURSOR, nextCursor_);
-}
-
-void FileDataHandler::ClearCursor()
-{
-    startCursor_.clear();
-    nextCursor_.clear();
-    cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
-    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
-    if (!tempStartCursor_.empty()) {
-        tempStartCursor_.clear();
-        cloudPrefImpl_.Delete(TEMP_START_CURSOR);
-    }
-}
-
-void FileDataHandler::SetTotalPullCount(const int32_t totalPullCount)
-{
-    totalPullCount_ = totalPullCount;
-    cloudPrefImpl_.SetInt(TOTAL_PULL_COUNT, totalPullCount_);
-}
-
-void FileDataHandler::FinishPull(const DriveKit::DKQueryCursor &nextCursor)
-{
-    if (IsPullRecords()) {
-        startCursor_ = tempStartCursor_;
-        nextCursor_.clear();
-        tempStartCursor_.clear();
-        totalPullCount_ = 0;
-        cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
-        cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
-        cloudPrefImpl_.Delete(TEMP_START_CURSOR);
-        cloudPrefImpl_.Delete(TOTAL_PULL_COUNT);
-    } else {
-        startCursor_ = nextCursor;
-        nextCursor_.clear();
-        cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
-        cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
-    }
 }
 } // namespace CloudSync
 } // namespace FileManagement

@@ -29,8 +29,10 @@ namespace CloudSync {
 class RdbDataHandler : public DataHandler {
 protected:
     /* init */
-    RdbDataHandler(const std::string &table, std::shared_ptr<NativeRdb::RdbStore> rdb)
-        : rdb_(rdb),
+    RdbDataHandler(int32_t userId, const std::string &bundleName, const std::string &table,
+        std::shared_ptr<NativeRdb::RdbStore> rdb)
+        : DataHandler(userId, bundleName, table),
+          rdb_(rdb),
           tableName_(table) {}
     virtual ~RdbDataHandler() = default;
 

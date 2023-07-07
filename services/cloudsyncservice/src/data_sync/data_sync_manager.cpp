@@ -75,7 +75,7 @@ int32_t DataSyncManager::TriggerStopSync(const std::string &bundleName,
         LOGE("get sdk helper err %{public}d", ret);
         return ret;
     }
-
+    dataSyncer->SetSdkHelper(sdkHelper);
     std::thread([dataSyncer, triggerType]() { dataSyncer->StopSync(triggerType); }).detach();
     return E_OK;
 }

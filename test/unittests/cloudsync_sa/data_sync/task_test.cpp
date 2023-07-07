@@ -29,7 +29,9 @@ namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
-
+const int USER_ID = 100;
+const std::string BUND_NAME = "com.ohos.photos";
+const std::string TABLE_NAME = "test";
 void CallBack()
 {
     return;
@@ -88,7 +90,7 @@ HWTEST_F(TaskTest, AddTask, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "AddTask Begin";
     try {
-        auto handler = std::make_shared<DataHandlerMock>();
+        auto handler = std::make_shared<DataHandlerMock>(USER_ID, BUND_NAME, TABLE_NAME);
         auto context = std::make_shared<TaskContext>(handler);
         TaskAction action = Action;
         auto task = make_shared<Task>(context, action);
@@ -118,7 +120,7 @@ HWTEST_F(TaskTest, StartTask001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartTask001 Begin";
     try {
-        auto handler = std::make_shared<DataHandlerMock>();
+        auto handler = std::make_shared<DataHandlerMock>(USER_ID, BUND_NAME, TABLE_NAME);
         auto context = std::make_shared<TaskContext>(handler);
         TaskAction action = Action;
         auto task = make_shared<Task>(context, action);
@@ -146,7 +148,7 @@ HWTEST_F(TaskTest, StartTask002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartTask002 Begin";
     try {
-        auto handler = std::make_shared<DataHandlerMock>();
+        auto handler = std::make_shared<DataHandlerMock>(USER_ID, BUND_NAME, TABLE_NAME);
         auto context = std::make_shared<TaskContext>(handler);
         TaskAction action = Action;
         auto task = make_shared<Task>(context, action);
@@ -174,7 +176,7 @@ HWTEST_F(TaskTest, CommitTask001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CommitTask001 Begin";
     try {
-        auto handler = std::make_shared<DataHandlerMock>();
+        auto handler = std::make_shared<DataHandlerMock>(USER_ID, BUND_NAME, TABLE_NAME);
         auto context = std::make_shared<TaskContext>(handler);
         TaskAction action = Action;
         auto task = make_shared<Task>(context, action);
@@ -202,7 +204,7 @@ HWTEST_F(TaskTest, CommitTask002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CommitTask002 Begin";
     try {
-        auto handler = std::make_shared<DataHandlerMock>();
+        auto handler = std::make_shared<DataHandlerMock>(USER_ID, BUND_NAME, TABLE_NAME);
         auto context = std::make_shared<TaskContext>(handler);
         TaskAction action = Action;
         auto task = make_shared<Task>(context, action);
@@ -231,7 +233,7 @@ HWTEST_F(TaskTest, CommitTask003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CommitTask003 Begin";
     try {
-        auto handler = std::make_shared<DataHandlerMock>();
+        auto handler = std::make_shared<DataHandlerMock>(USER_ID, BUND_NAME, TABLE_NAME);
         auto context = std::make_shared<TaskContext>(handler);
         TaskAction action = Action;
         auto task = make_shared<Task>(context, action);
@@ -260,7 +262,7 @@ HWTEST_F(TaskTest, CompleteTask, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CompleteTask Begin";
     try {
-        auto handler = std::make_shared<DataHandlerMock>();
+        auto handler = std::make_shared<DataHandlerMock>(USER_ID, BUND_NAME, TABLE_NAME);
         auto context = std::make_shared<TaskContext>(handler);
         TaskAction action = Action;
         auto task = make_shared<Task>(context, action);
@@ -298,7 +300,7 @@ HWTEST_F(TaskTest, StopAndWaitFor, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopAndWaitFor Begin";
     try {
-        auto handler = std::make_shared<DataHandlerMock>();
+        auto handler = std::make_shared<DataHandlerMock>(USER_ID, BUND_NAME, TABLE_NAME);
         auto context = std::make_shared<TaskContext>(handler);
         TaskAction action = Action;
         auto task = make_shared<Task>(context, action);
@@ -494,7 +496,7 @@ HWTEST_F(TaskTest, TaskManager_CommitTask, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TaskManager_CommitTask Begin";
     try {
-        auto handler = std::make_shared<DataHandlerMock>();
+        auto handler = std::make_shared<DataHandlerMock>(USER_ID, BUND_NAME, TABLE_NAME);
         auto context = std::make_shared<TaskContext>(handler);
         TaskAction action = Action;
         auto task = make_shared<Task>(context, action);
