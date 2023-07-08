@@ -14,6 +14,8 @@
  */
 
 #include "ipc/cloud_daemon_stub.h"
+
+#include "cloud_file_daemon_interface_code.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -21,7 +23,8 @@ namespace FileManagement {
 namespace CloudFile {
 CloudDaemonStub::CloudDaemonStub()
 {
-    opToInterfaceMap_[CLOUD_DAEMON_CMD_START_FUSE] = &CloudDaemonStub::HandleStartFuseInner;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileDaemonInterfaceCode::CLOUD_DAEMON_CMD_START_FUSE)] =
+        &CloudDaemonStub::HandleStartFuseInner;
 }
 
 int32_t CloudDaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data,

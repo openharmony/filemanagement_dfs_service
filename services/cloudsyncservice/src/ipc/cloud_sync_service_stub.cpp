@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "ipc/cloud_sync_service_stub.h"
+#include "cloud_file_sync_service_interface_code.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "utils_log.h"
@@ -22,23 +23,38 @@ using namespace std;
 
 CloudSyncServiceStub::CloudSyncServiceStub()
 {
-    opToInterfaceMap_[SERVICE_CMD_UNREGISTER_CALLBACK] = &CloudSyncServiceStub::HandleUnRegisterCallbackInner;
-    opToInterfaceMap_[SERVICE_CMD_REGISTER_CALLBACK] = &CloudSyncServiceStub::HandleRegisterCallbackInner;
-    opToInterfaceMap_[SERVICE_CMD_START_SYNC] = &CloudSyncServiceStub::HandleStartSyncInner;
-    opToInterfaceMap_[SERVICE_CMD_STOP_SYNC] = &CloudSyncServiceStub::HandleStopSyncInner;
-    opToInterfaceMap_[SERVICE_CMD_CHANGE_APP_SWITCH] = &CloudSyncServiceStub::HandleChangeAppSwitch;
-    opToInterfaceMap_[SERVICE_CMD_CLEAN] = &CloudSyncServiceStub::HandleClean;
-    opToInterfaceMap_[SERVICE_CMD_NOTIFY_DATA_CHANGE] = &CloudSyncServiceStub::HandleNotifyDataChange;
-    opToInterfaceMap_[SERVICE_CMD_ENABLE_CLOUD] = &CloudSyncServiceStub::HandleEnableCloud;
-    opToInterfaceMap_[SERVICE_CMD_DISABLE_CLOUD] = &CloudSyncServiceStub::HandleDisableCloud;
-    opToInterfaceMap_[SERVICE_CMD_START_DOWNLOAD_FILE] = &CloudSyncServiceStub::HandleStartDownloadFile;
-    opToInterfaceMap_[SERVICE_CMD_STOP_DOWNLOAD_FILE] = &CloudSyncServiceStub::HandleStopDownloadFile;
-    opToInterfaceMap_[SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK] =
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_CALLBACK)] =
+        &CloudSyncServiceStub::HandleUnRegisterCallbackInner;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_CALLBACK)] =
+        &CloudSyncServiceStub::HandleRegisterCallbackInner;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_SYNC)] =
+        &CloudSyncServiceStub::HandleStartSyncInner;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_SYNC)] =
+        &CloudSyncServiceStub::HandleStopSyncInner;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CHANGE_APP_SWITCH)] =
+        &CloudSyncServiceStub::HandleChangeAppSwitch;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CLEAN)] =
+        &CloudSyncServiceStub::HandleClean;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_DATA_CHANGE)] =
+        &CloudSyncServiceStub::HandleNotifyDataChange;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_ENABLE_CLOUD)] =
+        &CloudSyncServiceStub::HandleEnableCloud;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DISABLE_CLOUD)] =
+        &CloudSyncServiceStub::HandleDisableCloud;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_DOWNLOAD_FILE)] =
+        &CloudSyncServiceStub::HandleStartDownloadFile;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_DOWNLOAD_FILE)] =
+        &CloudSyncServiceStub::HandleStopDownloadFile;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK)] =
         &CloudSyncServiceStub::HandleRegisterDownloadFileCallback;
-    opToInterfaceMap_[SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK] =
+    opToInterfaceMap_[static_cast<uint32_t>(
+        CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK)] =
         &CloudSyncServiceStub::HandleUnregisterDownloadFileCallback;
-    opToInterfaceMap_[SERVICE_CMD_UPLOAD_ASSET] = &CloudSyncServiceStub::HandleUploadAsset;
-    opToInterfaceMap_[SERVICE_CMD_DOWNLOAD_FILE] = &CloudSyncServiceStub::HandleDownloadFile;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UPLOAD_ASSET)] =
+        &CloudSyncServiceStub::HandleUploadAsset;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILE)] =
+        &CloudSyncServiceStub::HandleDownloadFile;
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -68,7 +84,7 @@ int32_t CloudSyncServiceStub::HandleUnRegisterCallbackInner(MessageParcel &data,
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
-    
+
     int32_t res = UnRegisterCallbackInner();
     reply.WriteInt32(res);
     LOGI("End UnRegisterCallbackInner");

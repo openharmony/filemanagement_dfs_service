@@ -16,6 +16,7 @@
 
 #include <sstream>
 
+#include "cloud_file_daemon_interface_code.h"
 #include "dfs_error.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
@@ -57,7 +58,8 @@ int32_t CloudDaemonServiceProxy::StartFuse(int32_t userId, int32_t devFd, const 
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudDaemon::CLOUD_DAEMON_CMD_START_FUSE, data, reply, option);
+    int32_t ret = remote->SendRequest(static_cast<uint32_t>(CloudFileDaemonInterfaceCode::CLOUD_DAEMON_CMD_START_FUSE),
+                                      data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
