@@ -25,6 +25,7 @@ namespace FileManagement {
 namespace CloudSync {
 using namespace std;
 
+static const uint64_t INTERVAL = 30 * 24;
 int32_t SdkHelper::Init(const int32_t userId, const std::string &bundleName)
 {
     auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
@@ -33,13 +34,13 @@ int32_t SdkHelper::Init(const int32_t userId, const std::string &bundleName)
         return E_CLOUD_SDK;
     }
 
-    auto container = driveKit->GetDefaultContainer(bundleName);
-    if (container == nullptr) {
+    auto container_ = driveKit->GetDefaultContainer(bundleName);
+    if (container_ == nullptr) {
         LOGE("sdk helper get drive kit container fail");
         return E_CLOUD_SDK;
     }
 
-    database_ = container->GetPrivateDatabase();
+    database_ = container_->GetPrivateDatabase();
     if (database_ == nullptr) {
         LOGE("sdk helper get drive kit database fail");
         return E_CLOUD_SDK;
@@ -199,6 +200,19 @@ std::shared_ptr<DriveKit::DKAssetReadSession> SdkHelper::GetAssetReadSession(Dri
     if (!database_)
         return nullptr;
     return database_->NewAssetReadSession(recordType, recordId, assetKey, assetPath);
+}
+
+int32_t SdkHelper::SaveSubscription()
+{
+    auto expireTime = std::chrono::duration_cast<std::chrono::milliseconds>
+        ((std::chrono::system_clock::now() + std::chrono::hours(INTERVAL)).time_since_epoch()).count();
+    DriveKit::DKSubscription subscription{expireTime};
+    auto err = container_->SaveSubscription(nullptr, subscription, nullptr);
+    if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("SaveSubscription fail ret %{public}d", err);
+        return E_CLOUD_SDK;
+    }
+    return E_OK;
 }
 } // namespace CloudSync
 } // namespace FileManagement
