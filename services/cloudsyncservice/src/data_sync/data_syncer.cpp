@@ -61,6 +61,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     LOGI("%{private}d %{public}s starts sync, isforceSync %{public}d, triggerType %{public}d",
         userId_, bundleName_.c_str(), forceFlag, triggerType);
 
+    sdkHelper_->SaveSubscription();
     /* only one specific data sycner running at a time */
     if (syncStateManager_.CheckAndSetPending(forceFlag)) {
         LOGI("syncing, pending sync");

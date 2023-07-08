@@ -105,8 +105,9 @@ public:
                                                                       DriveKit::DKRecordId recordId,
                                                                       DriveKit::DKFieldKey assetKey,
                                                                       DriveKit::DKAssetPath assetPath);
-
+    int32_t SaveSubscription();
 private:
+    std::shared_ptr<DriveKit::DKContainer> container_;
     std::shared_ptr<DriveKit::DKDatabase> database_;
 };
 } // namespace CloudSync
