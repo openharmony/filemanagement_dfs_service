@@ -14,6 +14,7 @@
  */
 
 #include "ipc/daemon_stub.h"
+#include "ipc/distributed_file_daemon_ipc_interface_code.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -21,7 +22,8 @@ namespace Storage {
 namespace DistributedFile {
 DaemonStub::DaemonStub()
 {
-    opToInterfaceMap_[DFS_DAEMON_CMD_ECHO] = &DaemonStub::EchoServerDemoInner;
+    opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DFS_DAEMON_CMD_ECHO)] =
+        &DaemonStub::EchoServerDemoInner;
 }
 
 int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
