@@ -565,7 +565,7 @@ int32_t FileDataHandler::PullRecordConflict(const DKRecord &record, bool &comfla
     auto resultSet = Query(predicates, PULL_QUERY_COLUMNS);
     if (resultSet == nullptr) {
         LOGE("get nullptr created result");
-        ret = E_RDB;
+        return E_RDB;
     }
     int32_t rowCount = 0;
     ret = resultSet->GetRowCount(rowCount);
@@ -884,6 +884,16 @@ int FileDataHandler::RecycleFile(const string &recordId)
     return E_OK;
 }
 
+void FileDataHandler::RemoveThmParentPath(const string &filePath)
+{
+    string thmbFile = cleanConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
+    filesystem::path thmbFilePath(thmbFile.c_str());
+    filesystem::path thmbFileParentPath = thmbFilePath.parent_path();
+    LOGD("filePath: %s, thmbFile: %s, thmbFileParentDir: %s", filePath.c_str(), thmbFile.c_str(),
+         thmbFileParentPath.string().c_str());
+    ForceRemoveDirectory(thmbFileParentPath.string());
+}
+
 int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::ResultSet &local)
 {
     LOGI("delete of record %s", record.GetRecordId().c_str());
@@ -911,7 +921,8 @@ int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::Res
                 LOGE("remove dentry failed, ret:%{public}d", ret);
             }
         }
-
+        // delete THM
+        RemoveThmParentPath(filePath);
         // delete rdb
         int32_t deletedRows;
         int ret = Delete(deletedRows, Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?", {record.GetRecordId()});
@@ -1040,12 +1051,7 @@ int32_t FileDataHandler::CleanPureCloudRecord(NativeRdb::ResultSet &local, const
                                               const std::string &filePath)
 {
     int res = E_OK;
-    string thmbFile = cleanConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
-    filesystem::path thmbFilePath(thmbFile.c_str());
-    filesystem::path thmbFileParentPath = thmbFilePath.parent_path();
-    LOGD("filePath: %s, thmbFile: %s, thmbFileParentDir: %s", filePath.c_str(),
-         thmbFile.c_str(), thmbFileParentPath.string().c_str());
-    ForceRemoveDirectory(thmbFileParentPath.string());
+    RemoveThmParentPath(filePath);
     int32_t deleteRows = 0;
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     string cloudId;
