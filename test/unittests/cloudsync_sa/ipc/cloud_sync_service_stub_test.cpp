@@ -16,6 +16,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "cloud_file_sync_service_interface_code.h"
 #include "cloud_sync_service_stub.h"
 #include "i_cloud_sync_service.h"
 #include "service_callback_mock.h"
@@ -43,8 +44,8 @@ public:
     MOCK_METHOD1(RegisterDownloadFileCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
     MOCK_METHOD0(UnregisterDownloadFileCallback, int32_t());
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
-    MOCK_METHOD3(
-        DownloadFile, int32_t(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj));
+    MOCK_METHOD3(DownloadFile,
+                 int32_t(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj));
 };
 
 class CloudSyncServiceStubTest : public testing::Test {
@@ -95,8 +96,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleUnRegisterCallbackInnerTest, TestSize.L
         sptr<CloudSyncCallbackMock> remote = sptr(new CloudSyncCallbackMock());
         EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_UNREGISTER_CALLBACK,
-            data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_CALLBACK),
+                            data, reply, option));
         remote = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
@@ -125,8 +127,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleRegisterCallbackInnerTest, TestSize.Lev
         sptr<CloudSyncCallbackMock> remote = sptr(new CloudSyncCallbackMock());
         EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_REGISTER_CALLBACK,
-            data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_CALLBACK),
+                            data, reply, option));
         remote = nullptr;
     } catch (...) {
         EXPECT_TRUE(false);
@@ -155,7 +158,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartSyncInnerTest, TestSize.Level1)
         bool forceFlag = true;
         EXPECT_TRUE(data.WriteBool(forceFlag));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_START_SYNC, data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_SYNC), data,
+                            reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleStartSyncInner ERROR";
@@ -180,7 +185,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopSyncInnerTest, TestSize.Level1)
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_STOP_SYNC, data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_SYNC), data,
+                            reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleStopSyncInner ERROR";
@@ -205,8 +212,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleChangeAppSwitchTest, TestSize.Level1)
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_CHANGE_APP_SWITCH,
-            data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CHANGE_APP_SWITCH),
+                            data, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleChangeAppSwitch ERROR";
@@ -231,8 +239,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleNotifyDataChangeTest, TestSize.Level1)
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_NOTIFY_DATA_CHANGE,
-            data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_DATA_CHANGE),
+                            data, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleNotifyDataChange ERROR";
@@ -257,7 +266,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleDisableCloudTest, TestSize.Level1)
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_DISABLE_CLOUD, data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DISABLE_CLOUD), data,
+                            reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleDisableCloud ERROR";
@@ -282,8 +293,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartDownloadFileTest, TestSize.Level1)
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_START_DOWNLOAD_FILE,
-            data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_DOWNLOAD_FILE),
+                            data, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleStartDownloadFile ERROR";
@@ -308,8 +320,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopDownloadFileTest, TestSize.Level1)
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_STOP_DOWNLOAD_FILE,
-            data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_DOWNLOAD_FILE),
+                            data, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleStopDownloadFile ERROR";
@@ -334,8 +347,10 @@ HWTEST_F(CloudSyncServiceStubTest, HandleRegisterDownloadFileCallbackTest, TestS
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK,
-            data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(
+                                CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK),
+                            data, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleRegisterDownloadFileCallback ERROR";
@@ -360,8 +375,10 @@ HWTEST_F(CloudSyncServiceStubTest, HandleUnregisterDownloadFileCallbackTest, Tes
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK,
-            data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(
+                                CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK),
+                            data, reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleUnregisterDownloadFileCallback ERROR";
@@ -386,7 +403,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleUploadAssetTest, TestSize.Level1)
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_UPLOAD_ASSET, data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UPLOAD_ASSET), data,
+                            reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleUploadAsset ERROR";
@@ -411,7 +430,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleDownloadFileTest, TestSize.Level1)
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(ICloudSyncService::SERVICE_CMD_DOWNLOAD_FILE, data, reply, option));
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILE), data,
+                            reply, option));
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleDownloadFile ERROR";

@@ -24,9 +24,6 @@ namespace CloudFile {
 class ICloudDaemon : public IRemoteBroker {
 public:
     enum {
-        CLOUD_DAEMON_CMD_START_FUSE = 0,
-    };
-    enum {
         CLOUD_DAEMON_SUCCESS = 0,
         CLOUD_DAEMON_DESCRIPTOR_IS_EMPTY,
     };

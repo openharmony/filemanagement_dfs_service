@@ -14,6 +14,7 @@
  */
 
 #include "cloud_daemon_service_proxy.h"
+#include "cloud_file_daemon_interface_code.h"
 #include "dfs_error.h"
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
@@ -201,7 +202,8 @@ HWTEST_F(CloudDaemonServiceProxyTest, StartFuseTest, TestSize.Level1)
         EXPECT_EQ(ret, E_OK);
         auto remoteObject = CloudDaemonServiceProxy->AsObject();
         EXPECT_NE(remoteObject, nullptr);
-        ret = remoteObject->SendRequest(ICloudDaemon::CLOUD_DAEMON_CMD_START_FUSE, data, reply, option);
+        ret = remoteObject->SendRequest(
+            static_cast<uint32_t>(CloudFileDaemonInterfaceCode::CLOUD_DAEMON_CMD_START_FUSE), data, reply, option);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "cloud_file_daemon_interface_code.h"
 #include "ipc/cloud_daemon_stub.h"
 #include "utils_log.h"
 
@@ -72,7 +73,8 @@ HWTEST_F(CloudDaemonStubTest, OnRemoteRequestTest001, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
-        int ret = cloudDaemonStub_->OnRemoteRequest(ICloudDaemon::CLOUD_DAEMON_CMD_START_FUSE, data, reply, option);
+        int ret = cloudDaemonStub_->OnRemoteRequest(
+            static_cast<uint32_t>(CloudFileDaemonInterfaceCode::CLOUD_DAEMON_CMD_START_FUSE), data, reply, option);
         EXPECT_EQ(ret, ICloudDaemon::CLOUD_DAEMON_DESCRIPTOR_IS_EMPTY);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -119,7 +121,8 @@ HWTEST_F(CloudDaemonStubTest, OnRemoteRequestTest003, TestSize.Level1)
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudDaemon::GetDescriptor()));
         MessageParcel reply;
         MessageOption option;
-        int ret  = cloudDaemonStub_->OnRemoteRequest(ICloudDaemon::CLOUD_DAEMON_CMD_START_FUSE, data, reply, option);
+        int ret = cloudDaemonStub_->OnRemoteRequest(
+            static_cast<uint32_t>(CloudFileDaemonInterfaceCode::CLOUD_DAEMON_CMD_START_FUSE), data, reply, option);
         EXPECT_EQ(ret, 0);
     } catch (...) {
         EXPECT_TRUE(false);

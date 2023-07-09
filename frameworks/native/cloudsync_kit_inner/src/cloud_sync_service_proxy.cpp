@@ -15,14 +15,15 @@
 #include "cloud_sync_service_proxy.h"
 
 #include "cloud_download_uri_manager.h"
+#include "cloud_file_sync_service_interface_code.h"
 
 #include <sstream>
 
 #include "dfs_error.h"
 #include "iservice_registry.h"
+#include "media_file_uri.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
-#include "media_file_uri.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -46,7 +47,8 @@ int32_t CloudSyncServiceProxy::UnRegisterCallbackInner()
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_UNREGISTER_CALLBACK, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_CALLBACK), data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
@@ -84,7 +86,8 @@ int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_REGISTER_CALLBACK, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_CALLBACK), data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
@@ -117,7 +120,8 @@ int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag)
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_START_SYNC, data, reply, option);
+    int32_t ret = remote->SendRequest(static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_SYNC),
+                                      data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
@@ -145,7 +149,8 @@ int32_t CloudSyncServiceProxy::StopSyncInner()
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_STOP_SYNC, data, reply, option);
+    int32_t ret = remote->SendRequest(static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_SYNC),
+                                      data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
@@ -187,7 +192,8 @@ int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId, cons
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_CHANGE_APP_SWITCH, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CHANGE_APP_SWITCH), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
@@ -223,7 +229,8 @@ int32_t CloudSyncServiceProxy::Clean(const std::string &accountId, const CleanOp
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_CLEAN, data, reply, option);
+    int32_t ret = remote->SendRequest(static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CLEAN), data,
+                                      reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the request, errno: %{public}d", ret);
         return E_BROKEN_IPC;
@@ -232,8 +239,7 @@ int32_t CloudSyncServiceProxy::Clean(const std::string &accountId, const CleanOp
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::EnableCloud(const std::string &accoutId,
-                                           const SwitchDataObj &switchData)
+int32_t CloudSyncServiceProxy::EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData)
 {
     LOGI("EnableCloud");
     MessageParcel data;
@@ -260,7 +266,8 @@ int32_t CloudSyncServiceProxy::EnableCloud(const std::string &accoutId,
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_ENABLE_CLOUD, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_ENABLE_CLOUD), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
@@ -291,7 +298,8 @@ int32_t CloudSyncServiceProxy::DisableCloud(const std::string &accoutId)
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_DISABLE_CLOUD, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DISABLE_CLOUD), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
@@ -327,7 +335,8 @@ int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, con
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_NOTIFY_DATA_CHANGE, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_DATA_CHANGE), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
@@ -365,7 +374,8 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_START_DOWNLOAD_FILE, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_DOWNLOAD_FILE), data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
@@ -405,7 +415,8 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_STOP_DOWNLOAD_FILE, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_DOWNLOAD_FILE), data, reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
@@ -446,8 +457,9 @@ int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteOb
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK,
-        data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK), data,
+        reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
@@ -478,8 +490,9 @@ int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret =
-        remote->SendRequest(ICloudSyncService::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK), data,
+        reply, option);
     if (ret != E_OK) {
         stringstream ss;
         ss << "Failed to send out the requeset, errno:" << ret;
@@ -517,7 +530,8 @@ int32_t CloudSyncServiceProxy::UploadAsset(const int32_t userId, const std::stri
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_UPLOAD_ASSET, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UPLOAD_ASSET), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
@@ -562,7 +576,8 @@ int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
-    int32_t ret = remote->SendRequest(ICloudSyncService::SERVICE_CMD_DOWNLOAD_FILE, data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILE), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
