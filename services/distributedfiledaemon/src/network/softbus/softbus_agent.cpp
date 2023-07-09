@@ -93,6 +93,9 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info)
 {
     SessionAttribute attr;
     attr.dataType = TYPE_BYTES;
+    attr.linkTypeNum = 2;
+    attr.linkType[0] = LINK_TYPE_WIFI_WLAN_5G;
+    attr.linkType[1] = LINK_TYPE_WIFI_WLAN_2G;
 
     LOGD("Start to Open Session, cid:%{public}s", info.GetCid().c_str());
 
