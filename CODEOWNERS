@@ -13,3 +13,5 @@
 
 # any change to xxx_ipc_interface_code.h needs to be reviewed by @leonchan5
 services/distributedfiledaemon/include/ipc/distributed_file_daemon_ipc_interface_code.h @leonchan5
+interfaces/inner_api/native/cloud_daemon_kit_inner/cloud_file_daemon_interface_code.h @leonchan5
+interfaces/inner_api/native/cloudsync_kit_inner/cloud_file_sync_service_interface_code.h @leonchan5
