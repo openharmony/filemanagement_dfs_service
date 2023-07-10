@@ -34,7 +34,7 @@ int32_t SdkHelper::Init(const int32_t userId, const std::string &bundleName)
         return E_CLOUD_SDK;
     }
 
-    auto container_ = driveKit->GetDefaultContainer(bundleName);
+    container_ = driveKit->GetDefaultContainer(bundleName);
     if (container_ == nullptr) {
         LOGE("sdk helper get drive kit container fail");
         return E_CLOUD_SDK;
