@@ -13,14 +13,25 @@
  * limitations under the License.
  */
 
-/* SAID:5201 */
+#ifndef DISTRIBUTED_FILE_DAEMON_MANAGER_H
+#define DISTRIBUTED_FILE_DAEMON_MANAGER_H
+
+#include <memory>
+
+#include "dm_device_info.h"
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-    enum class DistributedFileDaemonInterfaceCode {
-        DISTRIBUTED_FILE_OPEN_P2P_CONNECTION = 0,
-        DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION,
-    };
+class DistributedFileDaemonManager {
+public:
+    static DistributedFileDaemonManager &GetInstance();
+
+    virtual int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
+    virtual int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+
+#endif // DISTRIBUTED_FILE_DAEMON_MANAGER_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,6 +57,10 @@ class DeviceManagerAgent final : public DistributedHardware::DmInitCallback,
     DECLARE_SINGLETON(DeviceManagerAgent);
 
 public:
+    enum P2PErrCode:int32_t {
+        P2P_SUCCESS,
+        P2P_FAILED,
+    };
     void Start() override;
     void Stop() override;
     void JoinGroup(std::weak_ptr<MountPoint> mp);
@@ -66,6 +70,9 @@ public:
     void OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo) override {}
+
+    int32_t OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo);
+    int32_t OnDeviceP2POffline(const DistributedHardware::DmDeviceInfo &deviceInfo);
 
     void OfflineAllDevice();
     void ReconnectOnlineDevices();
@@ -92,6 +99,7 @@ private:
 
     // cid-->same_account/accoutless's network
     std::unordered_map<std::string, std::shared_ptr<NetworkAgentTemplate>> cidNetTypeRecord_;
+    uint8_t openP2PSessionCount_ = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage

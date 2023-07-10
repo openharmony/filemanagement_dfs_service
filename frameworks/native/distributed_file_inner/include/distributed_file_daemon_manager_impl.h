@@ -13,14 +13,28 @@
  * limitations under the License.
  */
 
-/* SAID:5201 */
+#ifndef DISTRIBUTED_FILE_DAEMON_MANAGER_IMPL_H
+#define DISTRIBUTED_FILE_DAEMON_MANAGER_IMPL_H
+
+#include "ipc/distributed_file_daemon_manager.h"
+#include "dm_device_info.h"
+#include "nocopyable.h"
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-    enum class DistributedFileDaemonInterfaceCode {
-        DISTRIBUTED_FILE_OPEN_P2P_CONNECTION = 0,
-        DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION,
-    };
+class DistributedFileDaemonManagerImpl final : public DistributedFileDaemonManager, public NoCopyable {
+public:
+    static DistributedFileDaemonManagerImpl &GetInstance();
+
+    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+
+private:
+    DistributedFileDaemonManagerImpl() = default;
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+
+#endif // DISTRIBUTED_FILE_DAEMON_MANAGER_IMPL_H

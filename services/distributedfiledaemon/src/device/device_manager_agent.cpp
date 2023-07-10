@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -211,6 +211,52 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     LOGI("OnDeviceOffline end");
 }
 
+int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
+{
+    LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline begin", deviceInfo.networkId);
+    DeviceInfo info(deviceInfo);
+    LOGI("[OnDeviceP2POnline] networkId %{public}s, QueryRelatedGroups begin", deviceInfo.networkId);
+    QueryRelatedGroups(info.udid_, info.cid_);
+    LOGI("[OnDeviceP2POnline] networkId %{public}s, QueryRelatedGroups end", deviceInfo.networkId);
+    unique_lock<mutex> lock(mpToNetworksMutex_);
+    auto it = cidNetTypeRecord_.find(info.cid_);
+    if (it == cidNetTypeRecord_.end()) {
+        LOGE("[OnDeviceP2POnline] cid %{public}s network is null!", info.cid_.c_str());
+        return P2P_FAILED;
+    }
+    openP2PSessionCount_++;
+    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
+        &NetworkAgentTemplate::ConnectDeviceByP2PAsync, info);
+    cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
+    it->second->Recv(move(cmd));
+    LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline end", deviceInfo.networkId);
+    return P2P_SUCCESS;
+}
+
+int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
+{
+    LOGI("OnDeviceP2POffline begin");
+    DeviceInfo info(deviceInfo);
+
+    unique_lock<mutex> lock(mpToNetworksMutex_);
+    openP2PSessionCount_--;
+    if (openP2PSessionCount_) {
+        return P2P_FAILED;
+    }
+    auto it = cidNetTypeRecord_.find(info.cid_);
+    if (it == cidNetTypeRecord_.end()) {
+        LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        return P2P_FAILED;
+    }
+
+    auto cmd =
+        make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
+    it->second->Recv(move(cmd));
+    cidNetTypeRecord_.erase(info.cid_);
+    LOGI("OnDeviceP2POffline end");
+    return P2P_SUCCESS;
+}
+
 void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
 {
     if (jsonObject.find(FIELD_GROUP_NAME) != jsonObject.end()) {
@@ -247,7 +293,7 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     char *returnGroupVec = nullptr;
     uint32_t groupNum = 0;
     ret = hichainDevGroupMgr_->getRelatedGroups(ANY_OS_ACCOUNT, IDaemon::SERVICE_NAME.c_str(), udid.c_str(),
-        &returnGroupVec, &groupNum);
+                                                &returnGroupVec, &groupNum);
     if (ret != 0 || returnGroupVec == nullptr) {
         LOGE("failed to get related groups, ret %{public}d", ret);
         return;

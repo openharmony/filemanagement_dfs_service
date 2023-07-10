@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,10 @@ namespace Storage {
 namespace DistributedFile {
 namespace {
     constexpr int MAX_RETRY_COUNT = 7;
+    constexpr uint8_t LINK_TYPE_AP_MAX = 2;
+    constexpr uint8_t LINK_TYPE_P2P_MAX = 4;
+    constexpr uint8_t LINK_TYPE_WIFI_IDX = 2;
+    constexpr uint8_t LINK_TYPE_BR_IDX = 3;
 }
 using namespace std;
 SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTemplate(mountPoint)
@@ -89,23 +93,37 @@ void SoftbusAgent::StopTopHalf()
 
 void SoftbusAgent::StopBottomHalf() {}
 
-void SoftbusAgent::OpenSession(const DeviceInfo &info)
+void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
+    LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
     SessionAttribute attr;
     attr.dataType = TYPE_BYTES;
-    attr.linkTypeNum = 2;
-    attr.linkType[0] = LINK_TYPE_WIFI_WLAN_5G;
-    attr.linkType[1] = LINK_TYPE_WIFI_WLAN_2G;
-
-    LOGD("Start to Open Session, cid:%{public}s", info.GetCid().c_str());
-
-    int sessionId =
-        ::OpenSession(sessionName_.c_str(), sessionName_.c_str(), info.GetCid().c_str(), "hmdfs_wifiGroup", &attr);
-    if (sessionId < 0) {
-        LOGE("Failed to open session, cid:%{public}s, sessionId:%{public}d", info.GetCid().c_str(), sessionId);
-        ThrowException(ERR_SOFTBUS_AGENT_ON_SESSION_OPENED_FAIL, "Open Session failed");
+    string groupId;
+    if (linkType == LINK_TYPE_AP) {
+        groupId = GROUP_TYPE_AP;
+        attr.linkTypeNum = LINK_TYPE_AP_MAX;
+        attr.linkType[0] = LINK_TYPE_WIFI_WLAN_5G;
+        attr.linkType[1] = LINK_TYPE_WIFI_WLAN_2G;
+    } else if (linkType == LINK_TYPE_P2P) {
+        groupId = GROUP_TYPE_P2P;
+        attr.linkTypeNum = LINK_TYPE_P2P_MAX;
+        attr.linkType[0] = LINK_TYPE_WIFI_P2P;
+        attr.linkType[1] = LINK_TYPE_WIFI_WLAN_5G;
+        attr.linkType[LINK_TYPE_WIFI_IDX] = LINK_TYPE_WIFI_WLAN_2G;
+        attr.linkType[LINK_TYPE_BR_IDX] = LINK_TYPE_BR;
+    } else {
+        LOGE("Fail to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
+        ThrowException(ERR_CONNECT_LINK_TYPE, "Fail to OpenSession");
     }
-    LOGD("Open Session SUCCESS, cid:%{public}s", info.GetCid().c_str());
+    int sessionId =
+        ::OpenSession(sessionName_.c_str(), sessionName_.c_str(), info.GetCid().c_str(), groupId.c_str(), &attr);
+    if (sessionId < 0) {
+        LOGE("Fail to OpenSession, cid:%{public}s, sessionId:%{public}d, linkType:%{public}d", info.GetCid().c_str(),
+             sessionId, linkType);
+        ThrowException(ERR_SOFTBUS_AGENT_ON_SESSION_OPENED_FAIL, "Fail to OpenSession");
+    }
+    LOGI("Success to OpenSession, cid:%{public}s, sessionId:%{public}d, linkType:%{public}d", info.GetCid().c_str(),
+         sessionId, linkType);
 }
 
 void SoftbusAgent::CloseSession(shared_ptr<BaseSession> session)

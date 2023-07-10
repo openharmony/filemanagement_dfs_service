@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <string_view>
 
 #include "device/device_info.h"
 #include "dfsu_actor.h"
@@ -32,6 +33,11 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+constexpr uint8_t LINK_TYPE_AP = 1;
+constexpr uint8_t LINK_TYPE_P2P = 2;
+constexpr std::string_view GROUP_TYPE_AP = "hmdfs_WifiGroup";
+constexpr std::string_view GROUP_TYPE_P2P = "hmdfs_P2PGroup";
+
 class NetworkAgentTemplate : public DfsuStartable, public DfsuActor<NetworkAgentTemplate> {
 public:
     explicit NetworkAgentTemplate(std::weak_ptr<MountPoint> mountPoint)
@@ -52,6 +58,7 @@ public:
     void ConnectDeviceAsync(const DeviceInfo info);
     void DisconnectDevice(const DeviceInfo info);
     void AcceptSession(std::shared_ptr<BaseSession> session);
+    void ConnectDeviceByP2PAsync(const DeviceInfo info);
     std::shared_ptr<MountPoint> GetMountPoint()
     {
         return mountPoint_.lock();
@@ -61,7 +68,7 @@ protected:
     virtual void QuitDomain() = 0;
     virtual void StopTopHalf() = 0;
     virtual void StopBottomHalf() = 0;
-    virtual void OpenSession(const DeviceInfo &info) = 0;
+    virtual void OpenSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
     virtual void CloseSession(std::shared_ptr<BaseSession> session) = 0;
 
     std::weak_ptr<MountPoint> mountPoint_;

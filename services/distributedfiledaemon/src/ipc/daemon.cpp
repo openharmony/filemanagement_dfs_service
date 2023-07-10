@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "device/device_manager_agent.h"
 #include "iremote_object.h"
 #include "mountpoint/mount_manager.h"
 #include "system_ability_definition.h"
@@ -30,7 +31,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 
-REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, false);
+REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
 
 void Daemon::PublishSA()
 {
@@ -114,9 +115,25 @@ void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &d
     subScriber_ = nullptr;
 }
 
-int32_t Daemon::EchoServerDemo(const string &echoStr)
+int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    (void)echoStr;
+    LOGI("Open P2P Connection");
+    std::thread([=]() {
+        int32_t ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
+        LOGI("Open P2P Connection result %d", ret);
+        return ret;
+        }).detach();
+    return 0;
+}
+
+int32_t Daemon::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+{
+    LOGI("Close P2P Connection");
+    std::thread([=]() {
+        int32_t ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
+        LOGI("Close P2P Connection result %d", ret);
+        return ret;
+        }).detach();
     return 0;
 }
 } // namespace DistributedFile
