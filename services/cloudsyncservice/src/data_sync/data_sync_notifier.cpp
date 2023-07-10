@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include <mutex>
-
 #include "data_sync_notifier.h"
+
+#include <mutex>
 #include "dataobs_mgr_client.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"

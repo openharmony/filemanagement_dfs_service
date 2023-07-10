@@ -17,6 +17,8 @@
 
 #include <functional>
 
+#include "data_sync_const.h"
+#include "data_sync_notifier.h"
 #include "dfs_error.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "sdk_helper.h"
@@ -29,6 +31,7 @@ namespace CloudSync {
 using namespace std;
 using namespace placeholders;
 using namespace DriveKit;
+using ChangeType = AAFwk::ChangeInfo::ChangeType;
 
 DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
     : bundleName_(bundleName), userId_(userId)
@@ -306,6 +309,10 @@ static void ThumbDownloadCallback(shared_ptr<DKContext> context,
                  static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
         }
     }
+    /* notify app update UX */
+    DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
+                                              DataSyncConst::INVALID_ID);
+    DataSyncNotifier::GetInstance().FinalNotify();
 }
 
 int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,

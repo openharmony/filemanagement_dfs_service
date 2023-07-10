@@ -1209,6 +1209,10 @@ int32_t FileDataHandler::Clean(const int action)
         return res;
     }
 
+    DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
+                                              DataSyncConst::INVALID_ID);
+    DataSyncNotifier::GetInstance().FinalNotify();
+
     return E_OK;
 }
 int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
