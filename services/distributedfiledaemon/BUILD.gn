@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -36,7 +36,11 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/network/softbus/softbus_session_dispatcher.cpp",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [
+    "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
   external_deps = [
     "ability_base:want",
     "common_event_service:cesfwk_innerkits",
@@ -52,6 +56,49 @@ ohos_shared_library("libdistributedfiledaemon") {
 
   defines = [ "LOG_TAG=\"distributedfile_daemon\"" ]
 
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+config("public_config") {
+  include_dirs = [ "." ]
+}
+
+config("private_config") {
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/utils/log/include",
+    "${media_library_path}/frameworks/utils/include",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${services_path}/distributedfiledaemon/include",
+  ]
+}
+
+ohos_shared_library("distributed_file_daemon_kit_inner") {
+  sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+  ]
+
+  defines = [ "LOG_TAG=\"distributedfile_daemon\"" ]
+
+  configs = [ ":private_config" ]
+
+  public_configs = [ ":public_config" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "device_manager:devicemanagersdk",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "media_library:media_library",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }

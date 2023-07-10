@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,6 +14,7 @@
  */
 
 #include "network/network_agent_template.h"
+
 #include "device/device_manager_agent.h"
 #include "dfsu_exception.h"
 #include "utils_log.h"
@@ -45,7 +46,13 @@ void NetworkAgentTemplate::ConnectDeviceAsync(const DeviceInfo info)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(
         OPEN_SESSSION_DELAY_TIME)); // Temporary workaround for time sequence issues(offline-onSessionOpened)
-    OpenSession(info);
+    OpenSession(info, LINK_TYPE_AP);
+}
+
+void NetworkAgentTemplate::ConnectDeviceByP2PAsync(const DeviceInfo info)
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds(OPEN_SESSSION_DELAY_TIME));
+    OpenSession(info, LINK_TYPE_P2P);
 }
 
 void NetworkAgentTemplate::ConnectOnlineDevices()
@@ -115,7 +122,7 @@ void NetworkAgentTemplate::GetSession(const string &cid)
     DeviceInfo deviceInfo;
     deviceInfo.SetCid(cid);
     try {
-        OpenSession(deviceInfo);
+        OpenSession(deviceInfo, LINK_TYPE_AP);
     } catch (const DfsuException &e) {
         LOGE("reget session failed, code: %{public}d", e.code());
     }

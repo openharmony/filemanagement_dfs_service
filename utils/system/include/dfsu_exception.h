@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,7 @@ enum {
     ERR_NETWORK_AGENT_TEMPLATE_OPEN_SESSION_FAIL,
     ERR_SOFTBUS_AGENT_ON_SESSION_OPENED_FAIL,
     ERR_DEVICE_CID_UN_INIT,
+    ERR_CONNECT_LINK_TYPE
 };
 
 class DfsuException : public std::exception {

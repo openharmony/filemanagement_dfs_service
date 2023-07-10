@@ -13,13 +13,18 @@
  * limitations under the License.
  */
 
+#include "ipc/distributed_file_daemon_manager.h"
+
+#include "distributed_file_daemon_manager_impl.h"
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-    enum class DistributedFileDaemonInterfaceCode {
-        DISTRIBUTED_FILE_OPEN_P2P_CONNECTION = 0,
-        DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION,
-    };
+using namespace std;
+DistributedFileDaemonManager &DistributedFileDaemonManager::GetInstance()
+{
+    return DistributedFileDaemonManagerImpl::GetInstance();
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #define SOFTBUS_AGENT_H
 
 #include <map>
+
 #include "network/network_agent_template.h"
 
 namespace OHOS {
@@ -34,7 +35,7 @@ protected:
     void QuitDomain() override;
     void StopTopHalf() override;
     void StopBottomHalf() override;
-    void OpenSession(const DeviceInfo &info) override;
+    void OpenSession(const DeviceInfo &info, const uint8_t &linkType) override;
     void CloseSession(std::shared_ptr<BaseSession> session) override;
 
 private:

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #ifndef I_DAEMON_H
 #define I_DAEMON_H
 
+#include "dm_device_info.h"
 #include "iremote_broker.h"
 
 namespace OHOS {
@@ -27,8 +28,8 @@ public:
         DFS_DAEMON_SUCCESS = 0,
         DFS_DAEMON_DESCRIPTOR_IS_EMPTY,
     };
-    virtual int32_t EchoServerDemo(const std::string &echoStr) = 0;
-
+    virtual int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
+    virtual int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
     static inline const std::string SERVICE_NAME { "ohos.storage.distributedfile.daemon" };
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.daemon")
 };

@@ -64,6 +64,7 @@
             "//foundation/filemanagement/dfs_service:cloudsync_kit_inner_target",
             "//foundation/filemanagement/dfs_service:cloud_daemon_kit_inner_target",
             "//foundation/filemanagement/dfs_service:cloudsync_asset_kit_inner_target",
+            "//foundation/filemanagement/dfs_service:distributed_file_daemon_kit_inner_target",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudsyncmanager:cloudsyncmanager",
             "//foundation/filemanagement/dfs_service/interfaces/kits/js/cloudfilesync:cloudsync"
           ]
@@ -102,6 +103,16 @@
                 "svc_death_recipient.h"
 		],
               "header_base": "//foundation/filemanagement/dfs_service/interfaces/inner_api/native/cloud_daemon_kit_inner"
+            }
+          },
+          {
+            "name": "//foundation/filemanagement/dfs_service/services/distributedfiledaemon:distributed_file_daemon_kit_inner",
+            "header": {
+              "header_files": [
+                "distributed_file_daemon_manager.h",
+                "i_daemon.h"
+              ],
+              "header_base": "//foundation/filemanagement/dfs_service/services/distributedfiledaemon/include/ipc"
             }
           }
         ],

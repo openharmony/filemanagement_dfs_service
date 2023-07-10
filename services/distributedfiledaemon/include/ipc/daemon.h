@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,8 @@
 #include <string>
 
 #include "daemon_stub.h"
-#include "i_daemon.h"
+#include "dm_device_info.h"
+#include "ipc/i_daemon.h"
 #include "iremote_stub.h"
 #include "multiuser/os_account_observer.h"
 #include "nocopyable.h"
@@ -49,8 +50,8 @@ public:
         return state_;
     }
 
-    int32_t EchoServerDemo(const std::string &echoStr) override;
-
+    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
 private:
     Daemon();
     ServiceRunningState state_ { ServiceRunningState::STATE_NOT_START };
