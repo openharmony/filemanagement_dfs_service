@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_FILE_SYNC_SERVICE_INTERFACE_CODE_H
 #define OHOS_FILEMGMT_CLOUD_FILE_SYNC_SERVICE_INTERFACE_CODE_H
 
+/* SAID:5204 */
 namespace OHOS::FileManagement::CloudSync {
 enum class CloudFileSyncServiceInterfaceCode {
     SERVICE_CMD_UNREGISTER_CALLBACK,
