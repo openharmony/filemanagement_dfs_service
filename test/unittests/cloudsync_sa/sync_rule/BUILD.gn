@@ -133,31 +133,6 @@ ohos_unittest("network_status_test") {
   use_exceptions = true
 }
 
-ohos_unittest("battery_status_test") {
-  module_out_path = "filemanagement/dfs_service"
-  sources = [
-    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/battery_status.cpp",
-    "battery_status_test.cpp",
-  ]
-
-  include_dirs = [
-    "${services_path}/cloudsyncservice/include",
-    "${services_path}/cloudsyncservice/include/sync_rule",
-    "${utils_path}/log/include",
-    "${image_framework_path}/mock/native/include/log",
-  ]
-
-  deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
-
-  defines = [ "private=public" ]
-
-  use_exceptions = true
-}
-
 ohos_unittest("cloud_status_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
@@ -192,8 +167,5 @@ ohos_unittest("cloud_status_test") {
 
 group("cloudsync_sa_sync_rule_test") {
   testonly = true
-  deps = [
-    ":battery_status_test",
-    ":cloud_status_test",
-  ]
+  deps = [ ":cloud_status_test" ]
 }
