@@ -42,8 +42,8 @@ public:
     MOCK_METHOD0(Clear, int());
     MOCK_METHOD0(Flush, void());
     MOCK_METHOD0(FlushSync, int());
-    MOCK_METHOD1(RegisterObserver, void(std::shared_ptr<PreferencesObserver> preferencesObserver));
-    MOCK_METHOD1(UnRegisterObserver, void(std::shared_ptr<PreferencesObserver> preferencesObserver));
+    MOCK_METHOD2(RegisterObserver, int(std::shared_ptr<PreferencesObserver> preferencesObserver, RegisterMode mode));
+    MOCK_METHOD2(UnRegisterObserver, int(std::shared_ptr<PreferencesObserver> preferencesObserver, RegisterMode mode));
 };
 
 std::string PreferencesHelper::GetRealPath(const std::string &path, int &errorCode)
@@ -51,9 +51,9 @@ std::string PreferencesHelper::GetRealPath(const std::string &path, int &errorCo
     return "";
 }
 
-std::shared_ptr<Preferences> PreferencesHelper::GetPreferences(const std::string &path, int &errCode)
+std::shared_ptr<Preferences> PreferencesHelper::GetPreferences(const Options &options, int &errCode)
 {
-    if (path == "") {
+    if (options.filePath == "") {
         return nullptr;
     }
     std::shared_ptr<PreferencesHelperMock> pref = std::make_shared<PreferencesHelperMock>();
