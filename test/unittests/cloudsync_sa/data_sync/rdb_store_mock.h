@@ -126,7 +126,7 @@ public:
     MOCK_METHOD3(Sync, int(const SyncOption &option, const std::vector<std::string>& tables, const AsyncDetail& async));
     MOCK_METHOD2(Subscribe, int(const SubscribeOption &option, RdbStoreObserver *observer));
     MOCK_METHOD2(UnSubscribe, int(const SubscribeOption &option, RdbStoreObserver *observer));
-    MOCK_METHOD2(Notify, intconst std::string &event));
+    MOCK_METHOD1(Notify, int(const std::string &event));
     MOCK_METHOD2(DropDeviceData, bool(const std::vector<std::string> &devices, const DropOption &option));
     MOCK_METHOD3(Update, int(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates));
     MOCK_METHOD2(Delete, int(int &deletedRows, const AbsRdbPredicates &predicates));
