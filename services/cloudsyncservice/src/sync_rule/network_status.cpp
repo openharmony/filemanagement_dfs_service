@@ -39,7 +39,7 @@ int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<DataSyncManager> 
         LOGE("new operator error.observer is nullptr");
         return E_GET_NETWORK_MANAGER_FAILED;
     }
-    int nRet = DelayedSingleton<NetConnClient>::GetInstance()->RegisterNetConnCallback(observer);
+    int nRet = NetConnClient::GetInstance().RegisterNetConnCallback(observer);
     if (nRet != NETMANAGER_SUCCESS) {
         LOGE("RegisterNetConnCallback failed, ret = %{public}d", nRet);
         return E_GET_NETWORK_MANAGER_FAILED;
@@ -50,7 +50,7 @@ int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<DataSyncManager> 
 int32_t NetworkStatus::GetDefaultNet()
 {
     NetHandle netHandle;
-    int ret = DelayedSingleton<NetConnClient>::GetInstance()->GetDefaultNet(netHandle);
+    int ret = NetConnClient::GetInstance().GetDefaultNet(netHandle);
     if (ret != NETMANAGER_SUCCESS) {
         LOGE("GetDefaultNet failed, ret = %{public}d", ret);
         return E_GET_NETWORK_MANAGER_FAILED;
@@ -60,7 +60,7 @@ int32_t NetworkStatus::GetDefaultNet()
         return E_OK;
     }
     NetAllCapabilities netAllCap;
-    ret = DelayedSingleton<NetConnClient>::GetInstance()->GetNetCapabilities(netHandle, netAllCap);
+    ret = NetConnClient::GetInstance().GetNetCapabilities(netHandle, netAllCap);
     if (ret != NETMANAGER_SUCCESS) {
         LOGE("GetNetCapbilities failed, ret = %{public}d", ret);
         return E_GET_NETWORK_MANAGER_FAILED;
