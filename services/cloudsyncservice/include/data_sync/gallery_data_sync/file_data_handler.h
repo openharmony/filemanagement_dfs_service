@@ -171,6 +171,11 @@ private:
                           uint64_t mtime,
                           const std::string &type);
     bool ThumbsAtLocal(const DriveKit::DKRecord &record);
+    int32_t UpdateAssetInPhotoMap(const DriveKit::DKRecord &record, int32_t fileId);
+    int32_t DeleteAssetInPhotoMap(int32_t fileId);
+    int32_t GetAlbumIdFromName(const std::string &recordId);
+    void QueryAndInsertMap(int32_t albumId, int32_t fileId);
+    void QueryAndDeleteMap(int32_t fileId, const std::set<int> &cloudMapIds);
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DOWNLOAD };
