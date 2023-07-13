@@ -59,7 +59,7 @@ public:
     virtual int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset);
 
     /*clean*/
-    virtual int32_t Clean(const int action) = 0;
+    virtual int32_t Clean(const int action);
 
     /* cursor */
     virtual void SetNextCursor(const DriveKit::DKQueryCursor &cursor);

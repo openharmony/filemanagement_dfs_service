@@ -133,6 +133,11 @@ int32_t DataHandler::OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &ass
 {
     return E_OK;
 }
+
+int32_t DataHandler::Clean(const int action)
+{
+    return E_OK;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

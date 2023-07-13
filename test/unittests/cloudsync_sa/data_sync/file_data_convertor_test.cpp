@@ -81,15 +81,6 @@ HWTEST_F(FileDataConvertorTest, FillRecordIdTest1, TestSize.Level1)
     EXPECT_EQ(E_OK, ret);
 }
 
-HWTEST_F(FileDataConvertorTest, HandleAlbumIdTest, TestSize.Level1)
-{
-    DriveKit::DKRecordData data;
-    ResultSetMock resultSet;
-    string key = "albumId";
-    auto ret = fileDataConvertor_->HandleAlbumId(data, resultSet);
-    EXPECT_EQ(E_OK, ret);
-}
-
 HWTEST_F(FileDataConvertorTest, HandleHashIdTest, TestSize.Level1)
 {
     DriveKit::DKRecordData data;

@@ -32,6 +32,10 @@ using namespace NativeRdb;
 class DataConvertorMock final : public DataConvertor {
 public:
     MOCK_METHOD2(Convert, int32_t(DriveKit::DKRecord &, NativeRdb::ResultSet &));
+    int32_t Convert(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
+    {
+        return E_OK;
+    }
 };
 
 class DataConvertorTest : public testing::Test {
