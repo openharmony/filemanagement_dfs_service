@@ -97,6 +97,19 @@ private:
     int32_t HandleNameConflict();
     int32_t HandleNameInvalid();
     int64_t UTCTimeSeconds();
+
+    int32_t EraseLocalInfo(std::vector<DriveKit::DKRecord> &records);
+
+    /* album map */
+    int32_t BindAlbums(std::vector<DriveKit::DKRecord> &records);
+    int32_t BindAlbumChanges(std::vector<DriveKit::DKRecord> &records);
+    int32_t UpdateLocalAlbumMap(const std::string &cloudId);
+
+    int32_t GetAlbumCloudIds(std::vector<int32_t> &localIds, std::vector<std::string> &cloudIds);
+    int32_t GetAlbumIdsFromResultSet(const std::shared_ptr<NativeRdb::ResultSet> resultSet, std::vector<int32_t> &ids);
+    int32_t GetAlbumIdsFromResultSet(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
+        std::vector<int32_t> &add, std::vector<int32_t> &rm);
+
     static inline const std::string TABLE_NAME = Media::PhotoColumn::PHOTOS_TABLE;
     static inline const int32_t LIMIT_SIZE = 5;
     DriveKit::DKRecordType recordType_ = "media";

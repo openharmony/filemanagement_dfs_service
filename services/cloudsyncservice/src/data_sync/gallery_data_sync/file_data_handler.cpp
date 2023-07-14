@@ -31,6 +31,7 @@
 #include "dk_assets_downloader.h"
 #include "dk_error.h"
 #include "utils_log.h"
+#include "gallery_album_const.h"
 #include "gallery_file_const.h"
 #include "meta_file.h"
 
@@ -42,6 +43,9 @@ using namespace NativeRdb;
 using namespace DriveKit;
 using namespace Media;
 using ChangeType = OHOS::AAFwk::ChangeInfo::ChangeType;
+using PAC = Media::PhotoAlbumColumns;
+using PM = Media::PhotoMap;
+using PC = Media::PhotoColumn;
 
 constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
 FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
@@ -1215,6 +1219,7 @@ int32_t FileDataHandler::Clean(const int action)
 
     return E_OK;
 }
+
 int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
@@ -1247,6 +1252,20 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
     int ret = createConvertor_.ResultSetToRecords(move(results), records);
     if (ret != 0) {
         LOGE("result set to records err %{public}d", ret);
+        return ret;
+    }
+
+    /* bind album */
+    ret = BindAlbums(records);
+    if (ret != E_OK) {
+        LOGE("bind albums err %{public}d", ret);
+        return ret;
+    }
+
+    /* erase local info */
+    ret = EraseLocalInfo(records);
+    if (ret != 0) {
+        LOGE("erase local info err %{public}d", ret);
         return ret;
     }
 
@@ -1316,6 +1335,192 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
         return ret;
     }
 
+    /* album map change */
+    ret = BindAlbumChanges(records);
+    if (ret != E_OK) {
+        LOGE("update album map change err %{public}d", ret);
+        return ret;
+    }
+
+    /* erase local info */
+    ret = EraseLocalInfo(records);
+    if (ret != 0) {
+        LOGE("erase local info err %{public}d", ret);
+        return ret;
+    }
+
+    return E_OK;
+}
+
+static inline int32_t GetFileIdFromRecord(DKRecord &record)
+{
+    DKRecordData data;
+    record.GetRecordData(data);
+    DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
+    return properties[Media::MediaColumn::MEDIA_ID];
+}
+
+static inline void InsertAlbumIds(DKRecord &record, vector<string> &cloudIds)
+{
+    DKRecordData data;
+    DKRecordFieldList list;
+    record.StealRecordData(data);
+    for (auto &id : cloudIds) {
+        list.push_back(DKRecordField(DKReference{ id, "album" }));
+    }
+    data[FILE_LOGIC_ALBUM_IDS] = DKRecordField(list);
+    record.SetRecordData(data);
+}
+
+static inline void InsertAlbumIdChanges(DKRecord &record, vector<string> &add, vector<string> &rm)
+{
+    DKRecordData data;
+    record.StealRecordData(data);
+    /* add */
+    DKRecordFieldList addList;
+    for (auto &id : add) {
+        addList.push_back(DKRecordField(DKReference{ id, "album" }));
+    }
+    data[FILE_ADD_LOGIC_ALBUM_IDS] = DKRecordField(addList);
+    /* remove */
+    DKRecordFieldList rmList;
+    for (auto &id : rm) {
+        rmList.push_back(DKRecordField(DKReference{ id, "album" }));
+    }
+    data[FILE_RM_LOGIC_ALBUM_IDS] = DKRecordField(rmList);
+    record.SetRecordData(data);
+}
+
+/* need optimization: IN or JOIN */
+int32_t FileDataHandler::GetAlbumCloudIds(vector<int32_t> &localIds, vector<string> &cloudIds)
+{
+    for (auto localId : localIds) {
+        NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
+        predicates.EqualTo(PAC::ALBUM_ID, to_string(localId));
+        /* query map */
+        auto results = Query(predicates, {});
+        if (results == nullptr) {
+            LOGE("get nullptr result");
+            return E_RDB;
+        }
+        if (results->GoToNextRow() != NativeRdb::E_OK) {
+            LOGE("failed to go to next row");
+            return E_RDB;
+        }
+        string cloudId;
+        int32_t ret = createConvertor_.GetString(PAC::ALBUM_NAME, cloudId, *results);
+        if (ret != E_OK) {
+            return ret;
+        }
+        cloudIds.push_back(cloudId);
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetAlbumIdsFromResultSet(const shared_ptr<NativeRdb::ResultSet> resultSet,
+    vector<int32_t> &ids)
+{
+    while (resultSet->GoToNextRow() == 0) {
+        int32_t id;
+        int32_t ret = createConvertor_.GetInt(PM::ALBUM_ID, id, *resultSet);
+        if (ret != E_OK) {
+            return ret;
+        }
+        ids.push_back(id);
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::BindAlbums(std::vector<DriveKit::DKRecord> &records)
+{
+    for (auto &record : records) {
+        NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PM::TABLE);
+        /* map exceed limit? */
+        predicates.EqualTo(PM::ASSET_ID, to_string(GetFileIdFromRecord(record)));
+        /* query map */
+        auto results = Query(predicates, {});
+        if (results == nullptr) {
+            LOGE("get nullptr result");
+            return E_RDB;
+        }
+        vector<int32_t> albumIds;
+        int32_t ret = GetAlbumIdsFromResultSet(results, albumIds);
+        if (ret != E_OK) {
+            LOGE("get album ids from result set err %{public}d", ret);
+            return ret;
+        }
+        /* query album */
+        vector<string> cloudIds;
+        ret = GetAlbumCloudIds(albumIds, cloudIds);
+        if (ret != E_OK) {
+            LOGE("get album cloud id err %{public}d", ret);
+            return ret;
+        }
+        /* insert album ids */
+        InsertAlbumIds(record, cloudIds);
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetAlbumIdsFromResultSet(const shared_ptr<NativeRdb::ResultSet> resultSet,
+    vector<int32_t> &add, vector<int32_t> &rm)
+{
+    while (resultSet->GoToNextRow() == 0) {
+        int32_t id;
+        int32_t ret = createConvertor_.GetInt(PM::ALBUM_ID, id, *resultSet);
+        if (ret != E_OK) {
+            return ret;
+        }
+        int32_t state;
+        ret = createConvertor_.GetInt(PM::DIRTY, state, *resultSet);
+        if (ret != E_OK) {
+            return ret;
+        }
+        if (state == static_cast<int32_t>(Media::DirtyType::TYPE_NEW)) {
+            add.push_back(id);
+        } else if (state == static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)) {
+            rm.push_back(id);
+        }
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::BindAlbumChanges(std::vector<DriveKit::DKRecord> &records)
+{
+    for (auto &record : records) {
+        NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PM::TABLE);
+        /* map exceed limit? */
+        predicates.EqualTo(PM::ASSET_ID, to_string(GetFileIdFromRecord(record)))
+            ->And()
+            ->NotEqualTo(PM::DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED)));
+        /* query map */
+        auto results = Query(predicates, {});
+        if (results == nullptr) {
+            LOGE("get nullptr result");
+            return E_RDB;
+        }
+        /* new or delete */
+        vector<int32_t> add, remove;
+        int32_t ret = GetAlbumIdsFromResultSet(results, add, remove);
+        if (ret != E_OK) {
+            LOGE("get album ids from result set err %{public}d", ret);
+            return ret;
+        }
+        /* query album */
+        vector<string> addCloud, removeCloud;
+        ret = GetAlbumCloudIds(add, addCloud);
+        if (ret != E_OK) {
+            LOGE("get album cloud id err %{public}d", ret);
+            return ret;
+        }
+        ret = GetAlbumCloudIds(remove, removeCloud);
+        if (ret != E_OK) {
+            LOGE("get album cloud id err %{public}d", ret);
+            return ret;
+        }
+        /* update */
+        InsertAlbumIdChanges(record, addCloud, removeCloud);
+    }
     return E_OK;
 }
 
@@ -1377,11 +1582,37 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
 
     /* results to records */
     int ret = fdirtyConvertor_.ResultSetToRecords(move(results), records);
-    if (ret != 0) {
+    if (ret != E_OK) {
         LOGE("result set to records err %{public}d", ret);
         return ret;
     }
 
+    /* album map change */
+    ret = BindAlbumChanges(records);
+    if (ret != E_OK) {
+        LOGE("update album map change err %{public}d", ret);
+        return ret;
+    }
+
+    /* erase local info */
+    ret = EraseLocalInfo(records);
+    if (ret != E_OK) {
+        LOGE("erase local info err %{public}d", ret);
+        return ret;
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::EraseLocalInfo(vector<DriveKit::DKRecord> &records)
+{
+    for (auto &record : records) {
+        DKRecordData data;
+        record.GetRecordData(data);
+        DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
+        properties.erase(Media::MediaColumn::MEDIA_ID);
+        properties.erase(Media::PhotoColumn::PHOTO_CLOUD_ID);
+    }
     return E_OK;
 }
 
@@ -1553,11 +1784,20 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
     }
 
+    /* update file */
     int32_t ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
     if (ret != 0) {
         LOGE("on create records update synced err %{public}d", ret);
         return ret;
     }
+
+    /* update album map */
+    ret = UpdateLocalAlbumMap(entry.first);
+    if (ret != E_OK) {
+        LOGE("update local album map err %{public}d", ret);
+        return ret;
+    }
+
     return E_OK;
 }
 
@@ -1612,7 +1852,39 @@ int32_t FileDataHandler::OnModifyRecordSuccess(
             return ret;
         }
     }
+
+    /* update album map */
+    ret = UpdateLocalAlbumMap(entry.first);
+    if (ret != E_OK) {
+        LOGE("update local album map err %{public}d", ret);
+        return ret;
+    }
+
     return E_OK;
+}
+
+int32_t FileDataHandler::UpdateLocalAlbumMap(const string &cloudId)
+{
+    /* update new */
+    string newSql = "UPDATE " + PM::TABLE + " SET " + PM::DIRTY + " = " +
+        to_string(static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED)) + " WHERE " + PM::ASSET_ID +
+        " IN (SELECT " + PC::MEDIA_ID + " FROM " + PC::PHOTOS_TABLE + " WHERE " +
+        PC::PHOTO_CLOUD_ID + " = '" + cloudId + "')";
+    int32_t ret = ExecuteSql(newSql);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("Update local album map err %{public}d", ret);
+        return ret;
+    }
+    /* update deleted */
+    string deleteSql = "DELETE FROM " + PM::TABLE + " WHERE " + PM::ASSET_ID + " IN (SELECT " +
+        PC::MEDIA_ID + " FROM " + PC::PHOTOS_TABLE + " WHERE " + PC::PHOTO_CLOUD_ID +
+        " = '" + cloudId + "')";
+    ret = ExecuteSql(deleteSql);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("delete local album map err %{public}d", ret);
+        return ret;
+    }
+    return ret;
 }
 
 bool FileDataHandler::OnCreateIsTimeChanged(
@@ -1624,7 +1896,7 @@ bool FileDataHandler::OnCreateIsTimeChanged(
     int64_t cloudtime;
     int64_t localtime;
 
-    /* any error will return true，do not update to synced */
+    /* any error will return true, do not update to synced */
     if (data.find(FILE_PROPERTIES) == data.end()) {
         LOGE("record data cannot find properties");
         return true;
@@ -1803,19 +2075,19 @@ int32_t FileDataHandler::HandleCloudSpaceNotEnough()
 int32_t FileDataHandler::HandleATFailed()
 {
     LOGE("AT Failed");
-    return E_OK;
+    return E_DATA;
 }
 
 int32_t FileDataHandler::HandleNameConflict()
 {
     LOGE("Name Conflict");
-    return E_OK;
+    return E_DATA;
 }
 
 int32_t FileDataHandler::HandleNameInvalid()
 {
     LOGE("Name Invalid");
-    return E_OK;
+    return E_DATA;
 }
 
 int64_t FileDataHandler::UTCTimeSeconds()
