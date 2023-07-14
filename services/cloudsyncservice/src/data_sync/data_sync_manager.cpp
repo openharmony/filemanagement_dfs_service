@@ -37,7 +37,7 @@ int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
     auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
         LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
+        return E_INVAL_ARG;
     }
 
     auto ret = IsSkipSync(bundleName, userId);
@@ -65,7 +65,7 @@ int32_t DataSyncManager::TriggerStopSync(const std::string &bundleName,
     auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
         LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
+        return E_INVAL_ARG;
     }
 
     /* get sdk helper */
@@ -85,7 +85,7 @@ int32_t DataSyncManager::StartDownloadFile(const std::string &bundleName, const 
     auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
         LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
+        return E_INVAL_ARG;
     }
 
     /* get sdk helper */
@@ -106,7 +106,7 @@ int32_t DataSyncManager::StopDownloadFile(const std::string &bundleName, const i
     auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
         LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
+        return E_INVAL_ARG;
     }
     std::thread([dataSyncer, userId, path]() { dataSyncer->StopDownloadFile(path, userId); }).detach();
     return E_OK;
@@ -119,7 +119,7 @@ int32_t DataSyncManager::RegisterDownloadFileCallback(const std::string &bundleN
     auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
         LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
+        return E_INVAL_ARG;
     }
     std::thread([dataSyncer, userId, downloadCallback]() {
         dataSyncer->RegisterDownloadFileCallback(userId, downloadCallback);
@@ -133,7 +133,7 @@ int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string &bundl
     auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
         LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
+        return E_INVAL_ARG;
     }
     std::thread([dataSyncer, userId]() { dataSyncer->UnregisterDownloadFileCallback(userId); }).detach();
     return E_OK;
@@ -186,6 +186,10 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bu
     }
 
     std::shared_ptr<DataSyncer> dataSyncer_ = std::make_shared<GalleryDataSyncer>(bundleName, userId);
+    int32_t ret = dataSyncer_->Init(bundleName, userId);
+    if (ret != E_OK) {
+        return nullptr;
+    }
     dataSyncers_.push_back(dataSyncer_);
     return dataSyncer_;
 }
@@ -212,7 +216,7 @@ int32_t DataSyncManager::CleanCloudFile(const int32_t userId, const std::string 
     auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
         LOGE(" Clean Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
-        return E_SYNCER_NUM_OUT_OF_RANGE;
+        return E_INVAL_ARG;
     }
     LOGD("dataSyncer.bundleName_ is %s", dataSyncer->GetBundleName().c_str());
     LOGD("dataSyncer.userId_ is %d", dataSyncer->GetUserId());

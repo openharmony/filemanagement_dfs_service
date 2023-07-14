@@ -34,6 +34,7 @@ public:
 
     virtual int32_t StartDownloadFile(const std::string path, const int32_t userId) override;
     virtual int32_t StopDownloadFile(const std::string path, const int32_t userId) override;
+    virtual int32_t Init(const std::string bundleName, const int32_t userId) override;
     virtual int32_t Clean(const int action) override;
 
 private:
