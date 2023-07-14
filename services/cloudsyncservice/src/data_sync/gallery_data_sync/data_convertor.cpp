@@ -272,8 +272,8 @@ const std::unordered_map<DataType,
              return E_OK;
          }}};
 
-int HandleField(const DriveKit::DKRecordField &value, NativeRdb::ValuesBucket &bucket, const std::string &field,
-    DataType type)
+int DataConvertor::HandleField(const DriveKit::DKRecordField &value, NativeRdb::ValuesBucket &bucket,
+    const std::string &field, DataType type)
 {
     auto it = TYPE_HANDLERS.find(type);
     if (it == TYPE_HANDLERS.end()) {
@@ -285,28 +285,7 @@ int HandleField(const DriveKit::DKRecordField &value, NativeRdb::ValuesBucket &b
 
 int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
 {
-    DriveKit::DKRecordData data;
-    record.GetRecordData(data);
-
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data donnot have properties set");
-        return E_INVAL_ARG;
-    }
-    DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
-
-    auto size = GALLERY_FILE_COLUMNS.size();
-    for (decltype(size) i = 0; i < size - 1; i++) {
-        auto field = GALLERY_FILE_COLUMNS[i];
-        auto type = GALLERY_FILE_COLUMN_TYPES[i];
-        if (properties.find(field) == properties.end()) {
-            LOGE("filed %s not found in record.properties", field.c_str());
-            continue;
-        }
-        if (HandleField(properties[field], valueBucket, field, type) != E_OK) {
-            LOGE("HandleField %s failed", field.c_str());
-        }
-    }
-    return E_OK;
+    return Convert(record, valueBucket);
 }
 } // namespace CloudSync
 } // namespace FileManagement

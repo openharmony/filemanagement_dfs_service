@@ -18,6 +18,7 @@
 
 #include "functional"
 
+#include "album_data_handler.h"
 #include "data_syncer.h"
 #include "file_data_handler.h"
 
@@ -65,6 +66,7 @@ private:
 
     /* handler */
     std::shared_ptr<FileDataHandler> fileHandler_;
+    std::shared_ptr<AlbumDataHandler> albumHandler_;
 };
 
 class RdbCallback : public NativeRdb::RdbOpenCallback {
