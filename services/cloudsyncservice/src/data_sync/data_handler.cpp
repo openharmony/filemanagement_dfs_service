@@ -112,6 +112,27 @@ int32_t DataHandler::OnModifyFdirtyRecords(const map<DriveKit::DKRecordId,
 {
     return E_OK;
 }
+
+int32_t DataHandler::GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
+{
+    return E_OK;
+}
+
+int32_t DataHandler::GetDownloadAsset(string cloudId,
+    vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
+{
+    return E_OK;
+}
+
+int32_t DataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
+{
+    return E_OK;
+}
+
+int32_t DataHandler::OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset)
+{
+    return E_OK;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
