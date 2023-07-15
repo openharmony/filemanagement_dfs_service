@@ -39,12 +39,24 @@ protected:
     /* insert, delete, update, query */
     virtual int32_t Insert(int64_t &outRowId, const NativeRdb::ValuesBucket &initialValues);
     virtual int32_t Update(int &changedRows, const NativeRdb::ValuesBucket &values,
-        const std::string &whereClause = "",
-        const std::vector<std::string> &whereArgs = std::vector<std::string>());
-    virtual int32_t Delete(int &deletedRows, const std::string &whereClause = "",
-        const std::vector<std::string> &whereArgs = std::vector<std::string>());
+        const std::string &whereClause, const std::vector<std::string> &whereArgs);
+    virtual int32_t Delete(int &deletedRows, const std::string &whereClause,
+        const std::vector<std::string> &whereArgs);
     virtual std::shared_ptr<NativeRdb::ResultSet> Query(const NativeRdb::AbsRdbPredicates &predicates,
-                                                        const std::vector<std::string> &columns);
+        const std::vector<std::string> &columns);
+
+    /* insert, delete, update with tableName */
+    virtual int32_t Insert(int64_t &outRowId, const std::string &tableName,
+        const NativeRdb::ValuesBucket &initialValues);
+    virtual int32_t Update(int &changedRows, const std::string &tableName,
+        const NativeRdb::ValuesBucket &values, const std::string &whereClause,
+        const std::vector<std::string> &whereArgs);
+    virtual int32_t Delete(int &deletedRows, const std::string &tableName,
+        const std::string &whereClause, const std::vector<std::string> &whereArgs);
+
+    /* raw */
+    virtual int32_t ExecuteSql(const std::string &sql,
+        const std::vector<NativeRdb::ValueObject> &bindArgs = std::vector<NativeRdb::ValueObject>());
 
 private:
     std::shared_ptr<NativeRdb::RdbStore> rdb_;

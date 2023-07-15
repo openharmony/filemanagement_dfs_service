@@ -59,6 +59,7 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
 
     /* init handler */
     fileHandler_ = make_shared<FileDataHandler>(userId, bundleName, rdb_);
+    albumHandler_ = make_shared<AlbumDataHandler>(userId, bundleName, rdb_);
 }
 
 int32_t GalleryDataSyncer::Clean(const int action)
@@ -132,7 +133,10 @@ int32_t GalleryDataSyncer::DownloadAlbum()
 {
     SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
     LOGI("gallery data sycner download album");
-    Schedule();
+    int32_t ret = Pull(albumHandler_);
+    if (ret != E_OK) {
+        LOGE("gallery data syncer pull album err %{public}d", ret);
+    }
     return E_OK;
 }
 
@@ -150,7 +154,10 @@ int32_t GalleryDataSyncer::UploadAlbum()
 {
     SyncStateChangedNotify(CloudSyncState::UPLOADING, ErrorType::NO_ERROR);
     LOGI("gallery data sycner upload album");
-    Schedule();
+    int32_t ret = Push(albumHandler_);
+    if (ret != E_OK) {
+        LOGE("gallery data syncer push album err %{public}d", ret);
+    }
     return E_OK;
 }
 

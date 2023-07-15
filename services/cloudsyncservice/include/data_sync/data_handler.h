@@ -36,10 +36,10 @@ public:
     virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
                                    OnFetchParams &params) = 0;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) = 0;
-    virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) = 0;
+    virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload);
 
     virtual int32_t GetDownloadAsset(std::string cloudId,
-                                     std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) = 0;
+                                     std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload);
     /* upload */
     virtual int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) = 0;
     virtual int32_t GetDeletedRecords(std::vector<DriveKit::DKRecord> &records) = 0;
@@ -55,11 +55,11 @@ public:
         DriveKit::DKRecordOperResult> &map) = 0;
     virtual int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map);
-    virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) = 0;
-    virtual int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset) = 0;
+    virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset);
+    virtual int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset);
 
     /*clean*/
-    virtual int32_t Clean(const int action) = 0;
+    virtual int32_t Clean(const int action);
 
     /* cursor */
     virtual void SetNextCursor(const DriveKit::DKQueryCursor &cursor);

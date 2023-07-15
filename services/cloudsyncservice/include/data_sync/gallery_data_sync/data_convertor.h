@@ -39,7 +39,10 @@ public:
     DataConvertor() = default;
     virtual ~DataConvertor() = default;
 
+    /* resultSet -> record */
     virtual int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet) = 0;
+    /* record -> resultSet */
+    virtual int32_t Convert(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket) = 0;
 
     int32_t ResultSetToRecords(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
         std::vector<DriveKit::DKRecord> &records);
@@ -51,6 +54,8 @@ public:
     static int32_t GetDouble(const std::string &key, double &val, NativeRdb::ResultSet &resultSet);
     static int32_t GetString(const std::string &key, std::string &val, NativeRdb::ResultSet &resultSet);
     static int32_t GetBool(const std::string &key, bool &val, NativeRdb::ResultSet &resultSet);
+    static int32_t HandleField(const DriveKit::DKRecordField &value, NativeRdb::ValuesBucket &bucket,
+        const std::string &field, DataType type);
 };
 
 #define SET_RECORD_INT(key, resultSet, record)    \

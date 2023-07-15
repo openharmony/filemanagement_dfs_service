@@ -27,7 +27,9 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 /* basic */
-const std::string FILE_ALBUM_ID = "albumId";
+const std::string FILE_LOGIC_ALBUM_IDS = "albumIds";
+const std::string FILE_ADD_LOGIC_ALBUM_IDS = "addAlbumIds";
+const std::string FILE_RM_LOGIC_ALBUM_IDS = "removeAlbumIds";
 const std::string FILE_FILE_NAME = "fileName";
 const std::string FILE_HASH_ID = "hashId";
 const std::string FILE_SOURCE = "source";
@@ -70,6 +72,7 @@ const int32_t POSITION_LOCAL = 1;
 const int32_t POSITION_CLOUD = 2;
 const int32_t POSITION_BOTH = 3;
 
+const int32_t NR_LOCAL_INFO = 2;
 const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::PhotoColumn::MEDIA_FILE_PATH,
     Media::PhotoColumn::MEDIA_SIZE,
@@ -84,7 +87,7 @@ const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::PhotoColumn::PHOTO_HEIGHT,
     Media::PhotoColumn::PHOTO_WIDTH,
     Media::PhotoColumn::PHOTO_SUBTYPE,
-    Media::PhotoColumn::MEDIA_OWNER_PACKAGE,
+    // Media::PhotoColumn::MEDIA_OWNER_PACKAGE,
     Media::PhotoColumn::MEDIA_DEVICE_NAME,
     Media::PhotoColumn::MEDIA_DATE_TAKEN,
     Media::PhotoColumn::MEDIA_DURATION,
@@ -93,7 +96,8 @@ const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     // Media::PhotoColumn::MEDIA_HIDDEN
     Media::PhotoColumn::PHOTO_LATITUDE,
     Media::PhotoColumn::PHOTO_LONGITUDE,
-    /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
+    /* NR_LOCAL_INFO: keep local info in the end */
+    Media::MediaColumn::MEDIA_ID,
     Media::PhotoColumn::PHOTO_CLOUD_ID
 };
 
@@ -111,7 +115,7 @@ const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
     DataType::INT,          /* height */
     DataType::INT,          /* width */
     DataType::INT,          /* subtype */
-    DataType::STRING,       /* owner_package */
+    // DataType::STRING,       /* owner_package */
     DataType::STRING,       /* device_name */
     DataType::LONG,         /* date_taken */
     DataType::INT,         /* duration */
@@ -120,6 +124,7 @@ const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
     // DataType::INT         /* hidden */
     DataType::DOUBLE,       /* latitude */
     DataType::DOUBLE,       /* longitude */
+    DataType::INT,        /* file_id */
     DataType::STRING        /* cloud_id */
 };
 } // namespace CloudSync

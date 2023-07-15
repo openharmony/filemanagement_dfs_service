@@ -51,7 +51,6 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
     /* properties */
     RETURN_ON_ERR(HandleProperties(data, resultSet));
     /* basic */
-    RETURN_ON_ERR(HandleAlbumId(data, resultSet));
     RETURN_ON_ERR(HandleFileName(data, resultSet));
     RETURN_ON_ERR(HandleHashId(data, resultSet));
     RETURN_ON_ERR(HandleSource(data, resultSet));
@@ -214,7 +213,7 @@ int32_t FileDataConvertor::HandleGeneral(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
     auto size = GALLERY_FILE_COLUMNS.size();
-    for (decltype(size) i = 0; i < size - 1; i++) {
+    for (decltype(size) i = 0; i < size; i++) {
         const string &key = GALLERY_FILE_COLUMNS[i];
         DataType type = GALLERY_FILE_COLUMN_TYPES[i];
         switch (type) {
@@ -358,6 +357,32 @@ string FileDataConvertor::GetThumbPathInCloud(const std::string &path, const std
         return "";
     }
     return sandboxPrefix_ + "/" + Media::GetThumbnailPath(path, key).substr(ROOT_MEDIA_DIR.length());
+}
+
+int32_t FileDataConvertor::Convert(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
+{
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data donnot have properties set");
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
+
+    auto size = GALLERY_FILE_COLUMNS.size();
+    for (decltype(size) i = 0; i < size - NR_LOCAL_INFO; i++) {
+        auto field = GALLERY_FILE_COLUMNS[i];
+        auto type = GALLERY_FILE_COLUMN_TYPES[i];
+        if (properties.find(field) == properties.end()) {
+            LOGE("filed %s not found in record.properties", field.c_str());
+            continue;
+        }
+        if (HandleField(properties[field], valueBucket, field, type) != E_OK) {
+            LOGE("HandleField %s failed", field.c_str());
+        }
+    }
+    return E_OK;
 }
 } // namespace CloudSync
 } // namespace FileManagement

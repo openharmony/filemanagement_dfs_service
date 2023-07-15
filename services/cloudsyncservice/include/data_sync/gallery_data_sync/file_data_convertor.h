@@ -51,7 +51,9 @@ public:
     FileDataConvertor(int32_t userId, std::string &bundleName, OperationType type);
     ~FileDataConvertor() = default;
 
-    int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
+    int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet) override;
+    int32_t Convert(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket) override;
+
     std::string GetThumbPath(const std::string &path, const std::string &key);
     std::string GetHmdfsLocalPath(const std::string &path);
     std::string GetThumbPathInCloud(const std::string &path, const std::string &key);
@@ -65,7 +67,6 @@ private:
     int32_t FillRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
 
     /* basic */
-    int32_t HandleAlbumId(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleFileName(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleHashId(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleSource(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
@@ -119,13 +120,6 @@ private:
 };
 
 /* basic */
-inline int32_t FileDataConvertor::HandleAlbumId(DriveKit::DKRecordData &data,
-    NativeRdb::ResultSet &resultSet)
-{
-    data[FILE_ALBUM_ID] = DriveKit::DKRecordField("default-album-1");
-    return E_OK;
-}
-
 inline int32_t FileDataConvertor::HandleFileName(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
