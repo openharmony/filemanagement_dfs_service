@@ -39,7 +39,7 @@ public:
 
     /* download */
     void GetFetchCondition(FetchCondition &cond) override;
-    virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
+    virtual int32_t OnFetchRecords(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
                                    OnFetchParams &params) override;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
     virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
@@ -77,11 +77,11 @@ private:
     int32_t OnDeleteRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnModifyRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
                                const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap);
-    bool OnCreateIsTimeChanged(const DriveKit::DKRecordData &data,
+    bool OnCreateIsTimeChanged(const DriveKit::DKRecord &record,
                              const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
                              const std::string &path,
                              const std::string &type);
-    bool OnModifyIsTimeChanged(const DriveKit::DKRecordData &data,
+    bool OnModifyIsTimeChanged(const DriveKit::DKRecord &record,
                              const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
                              const std::string &cloudId,
                              const std::string &type);
@@ -99,6 +99,18 @@ private:
     int64_t UTCTimeSeconds();
 
     int32_t EraseLocalInfo(std::vector<DriveKit::DKRecord> &records);
+
+    /* data calculate*/
+    int32_t CompensateFilePath(DriveKit::DKRecord &record);
+    int32_t CalculateFilePath(DriveKit::DKRecord &record, std::string &filePath);
+    int32_t GetMediaType(DriveKit::DKRecord &record, int32_t &mediaType);
+    int32_t GetAssetUniqueId(int32_t &type);
+    int32_t CreateAssetPathById(DriveKit::DKRecord &record, int32_t &uniqueId,
+        int32_t &mediaType, std::string &filePath);
+    int32_t CreateAssetBucket(int32_t &uniqueId, int32_t &bucketNum);
+    std::string GetFileExtension(DriveKit::DKRecord &record);
+    int32_t CreateAssetRealName(int32_t &fileId, int32_t &mediaType,
+        const std::string &extension, std::string &name);
 
     /* album map */
     int32_t BindAlbums(std::vector<DriveKit::DKRecord> &records);
@@ -146,16 +158,16 @@ private:
     int32_t ConflictDataMerge(const DriveKit::DKRecord &record, std::string &fullPath);
     int32_t ConflictHandler(NativeRdb::ResultSet &resultSet, const DriveKit::DKRecord &record,
                             std::string &fullPath, int64_t isize, int64_t mtime, bool &comflag);
-    int32_t GetConflictData(const DriveKit::DKRecord &record, std::string &fullPath, int64_t &isize, int64_t &mtime);
-    int32_t PullRecordConflict(const DriveKit::DKRecord &record, bool &comflag);
+    int32_t GetConflictData(DriveKit::DKRecord &record, std::string &fullPath, int64_t &isize, int64_t &mtime);
+    int32_t PullRecordConflict(DriveKit::DKRecord &record, bool &comflag);
 
     /* pull operations */
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, int> QueryLocalByCloudId(const std::string &recordId);
-    int32_t PullRecordInsert(const DriveKit::DKRecord &record, OnFetchParams &params, int32_t &fileId);
-    int32_t PullRecordUpdate(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
+    int32_t PullRecordInsert(DriveKit::DKRecord &record, OnFetchParams &params, int32_t &fileId);
+    int32_t PullRecordUpdate(DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
                              OnFetchParams &params);
     void RemoveThmParentPath(const std::string &filePath);
-    int32_t PullRecordDelete(const DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
+    int32_t PullRecordDelete(DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
     int32_t SetRetry(const std::string &recordId);
     int32_t RecycleFile(const std::string &recordId);
     void AppendToDownload(NativeRdb::ResultSet &local,

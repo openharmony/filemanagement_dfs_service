@@ -126,7 +126,7 @@ int32_t FileDataHandler::GetAssetsToDownload(vector<DriveKit::DKDownloadAsset> &
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     predicates.EqualTo(Media::PhotoColumn::PHOTO_SYNC_STATUS,
                        to_string(static_cast<int32_t>(SyncStatusType::TYPE_DOWNLOAD)));
-    auto results = Query(predicates, GALLERY_FILE_COLUMNS);
+    auto results = Query(predicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr modified result");
         return E_RDB;
@@ -187,17 +187,18 @@ static int32_t GetFileId(NativeRdb::ResultSet &local)
     return fileId;
 }
 
-int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records, OnFetchParams &params)
+int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, OnFetchParams &params)
 {
     LOGI("on fetch %{public}zu records", records->size());
     int32_t ret = E_OK;
-    for (const auto &record : *records) {
+    for (auto &record : *records) {
         auto [resultSet, rowCount] = QueryLocalByCloudId(record.GetRecordId());
         if (resultSet == nullptr || rowCount < 0) {
             return E_RDB;
         }
         int32_t fileId = 0;
         ChangeType changeType = ChangeType::INVAILD;
+        CompensateFilePath(record);
         if ((rowCount == 0) && !record.GetIsDelete()) {
             ret = PullRecordInsert(record, params, fileId);
             changeType = ChangeType::INSERT;
@@ -232,6 +233,28 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
     return ret;
 }
 
+int32_t FileDataHandler::CompensateFilePath(DriveKit::DKRecord &record)
+{
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_ATTRIBUTES) == data.end() || data.find(FILE_SIZE) == data.end()) {
+        LOGE("record data cannot find attributes or size");
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap attributes;
+    string fullPath;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
+        LOGE("record data cannot find some attributes, may came from old devices");
+        int ret = CalculateFilePath(record, fullPath);
+        if (ret != E_OK) {
+            return ret;
+        }
+        attributes[PhotoColumn::MEDIA_FILE_PATH] = DriveKit::DKRecordField(fullPath);
+    }
+    return E_OK;
+}
+
 static int GetDentryPathName(const string &fullPath, string &outPath, string &outFilename)
 {
     const string sandboxPrefix = "/storage/cloud";
@@ -252,20 +275,19 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
 {
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
+    if (data.find(FILE_ATTRIBUTES) == data.end() || data.find(FILE_SIZE) == data.end()) {
+        LOGE("record data cannot find attributes or size");
         return E_INVAL_ARG;
     }
-    DriveKit::DKRecordFieldMap prop;
-    data[FILE_PROPERTIES].GetRecordMap(prop);
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end() || prop.find(PhotoColumn::MEDIA_SIZE) == prop.end() ||
-        prop.find(PhotoColumn::MEDIA_DATE_MODIFIED) == prop.end()) {
-        LOGE("record data cannot find some properties");
-        return E_INVAL_ARG;
+    DriveKit::DKRecordFieldMap attibutes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attibutes);
+    if (attibutes.find(PhotoColumn::MEDIA_FILE_PATH) == attibutes.end()) {
+        LOGE("record data cannot find some attributes");
+        return E_OK;
     }
 
     string fullPath, relativePath, fileName;
-    if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
+    if (attibutes[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
         return E_INVAL_ARG;
     }
@@ -274,16 +296,12 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
         return E_INVAL_ARG;
     }
 
-    int64_t isize, mtime;
-    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_SIZE], isize) != E_OK) {
+    int64_t isize;
+    if (DataConvertor::GetLongComp(data[PhotoColumn::MEDIA_SIZE], isize) != E_OK) {
         LOGE("bad size in props");
         return E_INVAL_ARG;
     }
-    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_DATE_MODIFIED], mtime) != E_OK) {
-        LOGE("bad mtime in props");
-        return E_INVAL_ARG;
-    }
-
+    int64_t mtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
     string rawRecordId = record.GetRecordId();
     string cloudId = MetaFileMgr::RecordIdToCloudId(rawRecordId);
     auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId, relativePath);
@@ -330,35 +348,32 @@ int FileDataHandler::AddCloudThumbs(const DKRecord &record)
     LOGI("thumbs of %s add to cloud_view", record.GetRecordId().c_str());
     int64_t thumbSize = 0, lcdSize = 0;
 
-    DKRecordData datas;
-    record.GetRecordData(datas);
-    if (datas.find(FILE_PROPERTIES) == datas.end()) {
-        LOGE("record data cannot find properties");
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        LOGE("record data cannot find attributes");
         return E_INVAL_ARG;
     }
-    DriveKit::DKRecordFieldMap prop;
-    datas[FILE_PROPERTIES].GetRecordMap(prop);
+    DriveKit::DKRecordFieldMap attributes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
 
     string fullPath;
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end() ||
-        prop[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end() ||
+        attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file path in record");
         return E_INVAL_ARG;
     }
-    if (prop.find(FILE_THUMB_SIZE) == prop.end() ||
-        DataConvertor::GetLongComp(prop[FILE_THUMB_SIZE], thumbSize) != E_OK) {
+    if (attributes.find(FILE_THUMB_SIZE) == attributes.end() ||
+        DataConvertor::GetLongComp(attributes[FILE_THUMB_SIZE], thumbSize) != E_OK) {
         LOGE("bad thumb size in record");
         return E_INVAL_ARG;
     }
-    if (prop.find(FILE_LCD_SIZE) == prop.end() || DataConvertor::GetLongComp(prop[FILE_LCD_SIZE], lcdSize) != E_OK) {
+    if (attributes.find(FILE_LCD_SIZE) == attributes.end() ||
+        DataConvertor::GetLongComp(attributes[FILE_LCD_SIZE], lcdSize) != E_OK) {
         LOGE("bad lcd size in record");
         return E_INVAL_ARG;
     }
-    int64_t mtime;
-    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_DATE_MODIFIED], mtime) != E_OK) {
-        LOGE("bad mtime in props");
-        return E_INVAL_ARG;
-    }
+    int64_t mtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
     int ret = DentryInsertThumb(fullPath, record.GetRecordId(), thumbSize, mtime, THUMB_SUFFIX);
     if (ret != E_OK) {
         LOGE("dentry insert of thumb failed ret %{public}d", ret);
@@ -522,39 +537,162 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
     return E_OK;
 }
 
-int32_t FileDataHandler::GetConflictData(const DKRecord &record, string &fullPath, int64_t &isize, int64_t &mtime)
+int32_t FileDataHandler::GetConflictData(DKRecord &record, string &fullPath, int64_t &isize, int64_t &mtime)
 {
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(FILE_PROPERTIES) == data.end()) {
+    if (data.find(FILE_ATTRIBUTES) == data.end() || data.find(FILE_SIZE) == data.end()) {
+        LOGE("record data cannot find attributes or size");
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap attributes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
+        LOGE("record data cannot find some attributes, may came from old devices");
+        return E_INVAL_ARG;
+    }
+    if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad file_path in attributes");
+        return E_INVAL_ARG;
+    }
+    if (DataConvertor::GetLongComp(data[PhotoColumn::MEDIA_SIZE], isize) != E_OK) {
+        LOGE("bad size in data");
+        return E_INVAL_ARG;
+    }
+    mtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    return E_OK;
+}
+
+int32_t FileDataHandler::CalculateFilePath(DKRecord &record, string &filePath)
+{
+    // method reference from medialibrary
+    int32_t mediaType;
+    int32_t ret = GetMediaType(record, mediaType);
+    if (ret != E_OK) {
+        return E_INVAL_ARG;
+    }
+    int32_t uniqueId = GetAssetUniqueId(mediaType);
+    int32_t errCode = CreateAssetPathById(record, uniqueId, mediaType, filePath);
+    return errCode;
+}
+
+int32_t FileDataHandler::GetMediaType(DKRecord &record, int32_t &mediaType)
+{
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_FILETYPE) == data.end()) {
         LOGE("record data cannot find properties");
         return E_INVAL_ARG;
     }
-    DriveKit::DKRecordFieldMap prop;
-    data[FILE_PROPERTIES].GetRecordMap(prop);
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end() || prop.find(PhotoColumn::MEDIA_SIZE) == prop.end() ||
-        prop.find(PhotoColumn::MEDIA_DATE_MODIFIED) == prop.end()) {
-        LOGE("record data cannot find some properties");
+    int32_t fileType;
+    if (data[FILE_FILETYPE].GetInt(fileType) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("record data cannot find fileType");
         return E_INVAL_ARG;
+    }
+    mediaType = fileType == FILE_TYPE_VIDEO ? MediaType::MEDIA_TYPE_VIDEO : MediaType::MEDIA_TYPE_IMAGE;
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetAssetUniqueId(int32_t &type)
+{
+    string typeString;
+    switch (type) {
+        case MediaType::MEDIA_TYPE_IMAGE:
+            typeString += IMAGE_ASSET_TYPE;
+            break;
+        case MediaType::MEDIA_TYPE_VIDEO:
+            typeString += VIDEO_ASSET_TYPE;
+            break;
+        default:
+            LOGE("This type %{public}d can not get unique id", type);
+            return MediaType::MEDIA_TYPE_FILE;
     }
 
-    if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
-        LOGE("bad file_path in props");
-        return E_INVAL_ARG;
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(ASSET_UNIQUE_NUMBER_TABLE);
+    predicates.SetWhereClause(ASSET_MEDIA_TYPE + " = ?");
+    predicates.SetWhereArgs({typeString});
+    auto resultSet = Query(predicates, {UNIQUE_NUMBER});
+    int32_t uniqueId;
+    DataConvertor::GetInt(ASSET_MEDIA_TYPE, uniqueId, *resultSet);
+    ++uniqueId;
+
+    int updateRows;
+    ValuesBucket values;
+    values.PutInt(UNIQUE_NUMBER, uniqueId);
+    string whereClause = ASSET_MEDIA_TYPE + " = ?";
+    Update(updateRows, ASSET_UNIQUE_NUMBER_TABLE, values, whereClause, {typeString});
+    return uniqueId;
+}
+
+int32_t FileDataHandler::CreateAssetPathById(DKRecord &record, int32_t &uniqueId,
+    int32_t &mediaType, string &filePath)
+{
+    string mediaDirPath = "Photo/";
+    int32_t bucketNum = 0;
+    int32_t errCode = CreateAssetBucket(uniqueId, bucketNum);
+    if (errCode != E_OK) {
+        return errCode;
     }
 
-    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_SIZE], isize) != E_OK) {
-        LOGE("bad size in props");
+    string realName;
+    errCode = CreateAssetRealName(uniqueId, mediaType, GetFileExtension(record), realName);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    string dirPath = ROOT_MEDIA_DIR + mediaDirPath + to_string(bucketNum);
+    filePath = dirPath + "/" + realName;
+    return E_OK;
+}
+
+int32_t FileDataHandler::CreateAssetBucket(int32_t &uniqueId, int32_t &bucketNum)
+{
+    if (uniqueId < 0) {
+        LOGE("input uniqueId [%{private}d] is invalid", uniqueId);
         return E_INVAL_ARG;
     }
-    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_DATE_MODIFIED], mtime) != E_OK) {
-        LOGE("bad mtime in props");
-        return E_INVAL_ARG;
+    int start = ASSET_DIR_START_NUM;
+    int divider = ASSET_DIR_START_NUM;
+    while (uniqueId > start * ASSET_IN_BUCKET_NUM_MAX) {
+        divider = start;
+        start <<= 1;
+    }
+
+    int fileIdRemainder = uniqueId % divider;
+    if (fileIdRemainder == 0) {
+        bucketNum = start + fileIdRemainder;
+    } else {
+        bucketNum = (start - divider) + fileIdRemainder;
     }
     return E_OK;
 }
 
-int32_t FileDataHandler::PullRecordConflict(const DKRecord &record, bool &comflag)
+int32_t FileDataHandler::CreateAssetRealName(int32_t &fileId, int32_t &mediaType,
+    const string &extension, string &name)
+{
+    string fileNumStr = to_string(fileId);
+    if (fileId <= ASSET_MAX_COMPLEMENT_ID) {
+        size_t fileIdLen = fileNumStr.length();
+        fileNumStr = ("00" + fileNumStr).substr(fileIdLen - 1);
+    }
+
+    string mediaTypeStr;
+    switch (mediaType) {
+        case MediaType::MEDIA_TYPE_IMAGE:
+            mediaTypeStr = DEFAULT_IMAGE_NAME;
+            break;
+        case MediaType::MEDIA_TYPE_VIDEO:
+            mediaTypeStr = DEFAULT_VIDEO_NAME;
+            break;
+        default:
+            LOGE("This mediatype %{public}d can not get real name", mediaType);
+            return E_INVAL_ARG;
+    }
+
+    name = mediaTypeStr + to_string(UTCTimeSeconds()) + "_" + fileNumStr + "." + extension;
+    return E_OK;
+}
+
+int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
 {
     LOGI("judgment downlode conflict");
     int32_t ret = E_OK;
@@ -597,9 +735,33 @@ int32_t FileDataHandler::PullRecordConflict(const DKRecord &record, bool &comfla
     return ret;
 }
 
-int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, OnFetchParams &params, int32_t &fileId)
+string FileDataHandler::GetFileExtension(DKRecord &record)
 {
-    LOGI("insert of record %s", record.GetRecordId().c_str());
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_FILE_NAME) == data.end()) {
+        LOGE("record data cannot find properties");
+        return "";
+    }
+    string displayName;
+    if (data[FILE_FILE_NAME].GetString(displayName) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("record data cannot find fileType");
+        return "";
+    }
+    string extension;
+    if (!displayName.empty()) {
+        string::size_type pos = displayName.find_last_of('.');
+        if (pos == string::npos) {
+            return "";
+        }
+        extension = displayName.substr(pos + 1);
+    }
+    return extension;
+}
+
+int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &params, int32_t &fileId)
+{
+    LOGI("insert of record %{public}s", record.GetRecordId().c_str());
 
     /* check local file conflict */
     bool comflag = false;
@@ -766,28 +928,14 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
     }
 
     // get record mtime
-    int64_t cloudMtime = 0;
-    DKRecordData datas;
-    record.GetRecordData(datas);
-    if (datas.find(FILE_PROPERTIES) == datas.end()) {
-        LOGE("record data cannot find properties");
-        return E_INVAL_ARG;
-    }
-    DriveKit::DKRecordFieldMap prop;
-    datas[FILE_PROPERTIES].GetRecordMap(prop);
-    if (prop.find(PhotoColumn::MEDIA_DATE_MODIFIED) == prop.end() ||
-        DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_DATE_MODIFIED], cloudMtime) != E_OK) {
-        LOGE("bad mtime in record");
-        return E_INVAL_ARG;
-    }
-
+    int64_t cloudMtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
     LOGI("cloudMtime %{public}llu, localMtime %{public}llu",
          static_cast<unsigned long long>(cloudMtime), static_cast<unsigned long long>(localMtime));
     changed = !(cloudMtime == localMtime);
     return E_OK;
 }
 
-int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record, NativeRdb::ResultSet &local, OnFetchParams &params)
+int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet &local, OnFetchParams &params)
 {
     LOGI("update of record %s", record.GetRecordId().c_str());
     if (IsLocalDirty(local)) {
@@ -842,16 +990,16 @@ bool FileDataHandler::ThumbsAtLocal(const DKRecord &record)
 {
     DKRecordData datas;
     record.GetRecordData(datas);
-    if (datas.find(FILE_PROPERTIES) == datas.end()) {
-        LOGE("record data cannot find properties");
+    if (datas.find(FILE_ATTRIBUTES) == datas.end()) {
+        LOGE("record data cannot find attributes");
         return false;
     }
-    DriveKit::DKRecordFieldMap prop;
-    datas[FILE_PROPERTIES].GetRecordMap(prop);
+    DriveKit::DKRecordFieldMap attributes;
+    datas[FILE_ATTRIBUTES].GetRecordMap(attributes);
 
     string fullPath;
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end() ||
-        prop[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end() ||
+        attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file path in record");
         return false;
     }
@@ -903,7 +1051,7 @@ void FileDataHandler::RemoveThmParentPath(const string &filePath)
     ForceRemoveDirectory(thmbFileParentPath.string());
 }
 
-int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::ResultSet &local)
+int32_t FileDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::ResultSet &local)
 {
     LOGI("delete of record %s", record.GetRecordId().c_str());
     string filePath = GetFilePath(local);
@@ -997,19 +1145,19 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     downloadAsset.fieldKey = fieldKey;
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        LOGE("record data cannot find attributes");
         return;
     }
-    DKRecordFieldMap prop;
-    data[FILE_PROPERTIES].GetRecordMap(prop);
+    DKRecordFieldMap attributes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
 
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end()) {
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
         LOGE("record prop cannot find file path");
         return;
     }
     string path;
-    prop[PhotoColumn::MEDIA_FILE_PATH].GetString(path);
+    attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(path);
     if (fieldKey != "content") {
         const string &suffix = fieldKey == "lcd" ? LCD_SUFFIX : THUMB_SUFFIX;
         downloadAsset.downLoadPath = createConvertor_.GetThumbPath(path, suffix);
@@ -1400,7 +1548,7 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
     createPredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(createPredicates, GALLERY_FILE_COLUMNS);
+    auto results = Query(createPredicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr created result");
         return E_RDB;
@@ -1447,7 +1595,7 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
     deletePredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(deletePredicates, GALLERY_FILE_COLUMNS);
+    auto results = Query(deletePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr deleted result");
         return E_RDB;
@@ -1480,7 +1628,7 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(updatePredicates, GALLERY_FILE_COLUMNS);
+    auto results = Query(updatePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr modified result");
         return E_RDB;
@@ -1689,7 +1837,7 @@ int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::
     predicates.SetWhereClause(Media::PhotoColumn::MEDIA_FILE_PATH + " = ?");
     predicates.SetWhereArgs({cloudId});
     predicates.Limit(LIMIT_SIZE);
-    auto resultSet = Query(predicates, GALLERY_FILE_COLUMNS);
+    auto resultSet = Query(predicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (resultSet == nullptr) {
         LOGE("get nullptr created result");
         return E_RDB;
@@ -1732,7 +1880,7 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(updatePredicates, GALLERY_FILE_COLUMNS);
+    auto results = Query(updatePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr modified result");
         return E_RDB;
@@ -1778,17 +1926,17 @@ static string GetFilePathFromRecord(const DKRecord &record)
 {
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        LOGE("record data cannot find attributes");
         return "";
     }
-    DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end()) {
+    DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
         LOGE("record data cannot find file path");
         return "";
     }
     string path;
-    if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
+    if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
         return "";
     }
@@ -1909,18 +2057,18 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
 
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        LOGE("record data cannot find attributes");
         return E_INVAL_ARG;
     }
-    DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end()) {
+    DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
         LOGE("record data cannot find file path");
         return E_INVAL_ARG;
     }
 
     string path;
-    if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
+    if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
         return E_INVAL_ARG;
     }
@@ -1934,9 +2082,9 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
     vector<string> whereArgs = {path};
 
     /* compare mtime and metatime */
-    if (OnCreateIsTimeChanged(data, localMap, path, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
+    if (OnCreateIsTimeChanged(record, localMap, path, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY));
-    } else if (OnCreateIsTimeChanged(data, localMap, path, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
+    } else if (OnCreateIsTimeChanged(record, localMap, path, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
     } else {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
@@ -1984,7 +2132,7 @@ int32_t FileDataHandler::OnModifyRecordSuccess(
     string cloudId = entry.first;
 
     /* compare mtime */
-    if (OnModifyIsTimeChanged(data, localMap, cloudId, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
+    if (OnModifyIsTimeChanged(record, localMap, cloudId, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
         LOGI("mtime changed, need to update fdirty");
         return E_OK;
     }
@@ -2002,7 +2150,7 @@ int32_t FileDataHandler::OnModifyRecordSuccess(
     }
 
     /* compare metatime */
-    if (OnModifyIsTimeChanged(data, localMap, cloudId, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
+    if (OnModifyIsTimeChanged(record, localMap, cloudId, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
         LOGI("metatime changed, need to update mdirty");
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
         ret = Update(changedRows, valuesBucket, whereClause, {cloudId});
@@ -2047,29 +2195,13 @@ int32_t FileDataHandler::UpdateLocalAlbumMap(const string &cloudId)
 }
 
 bool FileDataHandler::OnCreateIsTimeChanged(
-    const DKRecordData &data,
+    const DriveKit::DKRecord &record,
     const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
     const std::string &path,
     const std::string &type)
 {
-    int64_t cloudtime;
+    int64_t cloudtime = record.GetCreateTime() / MILLISECOND_TO_SECOND;
     int64_t localtime;
-
-    /* any error will return true, do not update to synced */
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
-        return true;
-    }
-    DKRecordFieldMap prop = const_cast<DKRecordData&>(data)[FILE_PROPERTIES];
-    if (prop.find(type) == prop.end()) {
-        LOGE("record data cannot find some properties");
-        return true;
-    }
-
-    if (prop[type].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
-        LOGE("bad file_path in props");
-        return true;
-    }
     auto it = localMap.find(path);
     if (it == localMap.end()) {
         return true;
@@ -2089,29 +2221,14 @@ bool FileDataHandler::OnCreateIsTimeChanged(
 }
 
 bool FileDataHandler::OnModifyIsTimeChanged(
-    const DKRecordData &data,
+    const DriveKit::DKRecord &record,
     const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
     const std::string &cloudId,
     const std::string &type)
 {
-    int64_t cloudtime;
+    int64_t cloudtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
     int64_t localtime;
 
-    /* any error will return true，do not update to synced */
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
-        return true;
-    }
-    DKRecordFieldMap prop = const_cast<DKRecordData&>(data)[FILE_PROPERTIES];
-    if (prop.find(type) == prop.end()) {
-        LOGE("record data cannot find some properties");
-        return true;
-    }
-
-    if (prop[type].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
-        LOGE("bad file_path in props");
-        return true;
-    }
     auto it = localMap.find(cloudId);
     if (it == localMap.end()) {
         return true;
@@ -2120,7 +2237,21 @@ bool FileDataHandler::OnModifyIsTimeChanged(
     if (type == Media::PhotoColumn::MEDIA_DATE_MODIFIED) {
         localtime = it->second.first;
     } else {
-        localtime = it->second.second;
+        DKRecordData data;
+        record.GetRecordData(data);
+        if (data.find(FILE_ATTRIBUTES) == data.end()) {
+            LOGE("record data cannot find attributes");
+            return false;
+        }
+        DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+        if (attributes.find(type) == attributes.end()) {
+            LOGE("record data cannot find meta_dateModified_time");
+            return false;
+        }
+        if (attributes[type].GetLong(localtime) != DKLocalErrorCode::NO_ERROR) {
+            LOGE("bad meta_dateModified_time in props");
+            return true;
+        }
     }
 
     /* compare mtime or metatime */
@@ -2142,17 +2273,17 @@ void FileDataHandler::GetLocalTimeMap(const std::map<DKRecordId, DKRecordOperRes
             auto record = entry.second.GetDKRecord();
             DKRecordData data;
             record.GetRecordData(data);
-            if (data.find(FILE_PROPERTIES) == data.end()) {
-                LOGE("record data cannot find properties");
+            if (data.find(FILE_ATTRIBUTES) == data.end()) {
+                LOGE("record data cannot find attributes");
                 return;
             }
-            DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
-            if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end()) {
-                LOGE("record data cannot find some properties");
+            DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+            if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
+                LOGE("record data cannot find some attributes");
                 return;
             }
             string curPath;
-            if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(curPath) != DKLocalErrorCode::NO_ERROR) {
+            if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(curPath) != DKLocalErrorCode::NO_ERROR) {
                 LOGE("bad file_path in props");
                 return;
             }
@@ -2161,7 +2292,7 @@ void FileDataHandler::GetLocalTimeMap(const std::map<DKRecordId, DKRecordOperRes
     }
     NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     createPredicates.And()->In(type, path);
-    auto resultSet = Query(createPredicates, GALLERY_FILE_COLUMNS);
+    auto resultSet = Query(createPredicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (resultSet == nullptr) {
         return;
     }

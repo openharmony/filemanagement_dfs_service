@@ -85,7 +85,7 @@ HWTEST_F(AlbumDataHandlerTest, OnFetchRecords001, TestSize.Level1)
     try {
         auto rdb = make_shared<RdbStoreMock>();
         auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
-        const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
+        shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
         OnFetchParams onFetchParams;
         int res = albumDataHandlerMock->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(res, E_OK);

@@ -34,30 +34,40 @@ const std::string FILE_ADD_LOGIC_ALBUM_IDS = "addAlbumIds";
 const std::string FILE_RM_LOGIC_ALBUM_IDS = "removeAlbumIds";
 const std::string FILE_FILE_NAME = "fileName";
 const std::string FILE_HASH_ID = "hashId";
+const std::string FILE_SIZE = "size";
 const std::string FILE_SOURCE = "source";
 const std::string FILE_FILETYPE = "fileType";
 const std::string FILE_CREATED_TIME = "createdTime";
 const std::string FILE_FAVORITE = "favorite";
 const std::string FILE_DESCRIPTION = "description";
+const std::string FILE_RECYCLE_TIME = "recycledTime";
 const std::string FILE_RECYCLED = "recycled";
-/* properties */
-const std::string FILE_PROPERTIES = "properties";
-const std::string FILE_HEIGHT = "height";
-const std::string FILE_ROTATION = "rotation";
-const std::string FILE_WIDTH = "width";
-const std::string FILE_POSITION = "position";
+const std::string FILE_MIME_TYPE = "mimeType";
+const std::string FILE_EDITED_TIME = "editedTime";
 const std::string FILE_DATA_MODIFIED = "data_modified";
-const std::string FILE_DETAIL_TIME = "detail_time";
-const std::string FILE_FILE_CREATE_TIME = "fileCreateTime";
-const std::string FILE_FIRST_UPDATE_TIME = "first_update_time";
-const std::string FILE_RELATIVE_BUCKET_ID = "relative_bucket_id";
-const std::string FILE_SOURCE_FILE_NAME = "sourceFileName";
-const std::string FILE_SOURCE_PATH = "sourcePath";
 const std::string FILE_TIME_ZONE = "time_zone";
 const std::string FILE_THUMB_SIZE = "thumb_size";
 const std::string FILE_LCD_SIZE = "lcd_size";
+
+/* properties */
+const std::string FILE_PROPERTIES = "properties";
+const std::string FILE_SOURCE_FILE_NAME = "sourceFileName";
+const std::string FILE_FIRST_UPDATE_TIME = "first_update_time";
+const std::string FILE_FILE_CREATE_TIME = "fileCreateTime";
+const std::string FILE_DETAIL_TIME = "detail_time";
+const std::string FILE_SOURCE_PATH = "sourcePath";
+const std::string FILE_RELATIVE_BUCKET_ID = "relative_bucket_id";
+const std::string FILE_POSITION = "position";
+const std::string FILE_ROTATION = "rotate";
+const std::string FILE_HEIGHT = "height";
+const std::string FILE_WIDTH = "width";
+
+/* attributes */
+const std::string FILE_ATTRIBUTES = "attributes";
+
 /* properties - general */
 const std::string FILE_GENERAL = "general";
+
 /* attachments */
 const std::string FILE_ATTACHMENTS = "attachments";
 const std::string FILE_CONTENT = "content";
@@ -70,11 +80,46 @@ enum {
     FILE_TYPE_VIDEO = 4,
 };
 
+enum MediaType {
+    MEDIA_TYPE_FILE,
+    MEDIA_TYPE_IMAGE,
+    MEDIA_TYPE_VIDEO,
+    MEDIA_TYPE_AUDIO,
+};
+
 const int32_t POSITION_LOCAL = 1;
 const int32_t POSITION_CLOUD = 2;
 const int32_t POSITION_BOTH = 3;
 
 const int32_t NR_LOCAL_INFO = 2;
+
+const int32_t ORIENTATION_NORMAL = 1;
+const int32_t ORIENTATION_ROTATE_90 = 6;
+const int32_t ORIENTATION_ROTATE_180 = 3;
+const int32_t ORIENTATION_ROTATE_270 = 8;
+
+const int32_t ROTATE_ANGLE_0 = 0;
+const int32_t ROTATE_ANGLE_90 = 90;
+const int32_t ROTATE_ANGLE_180 = 180;
+const int32_t ROTATE_ANGLE_270 = 270;
+
+const int32_t FIRST_MATCH_PARAM = 1;
+const int32_t SECOND_MATCH_PARAM = 2;
+
+const std::string ASSET_UNIQUE_NUMBER_TABLE = "UniqueNumber";
+const std::string ASSET_MEDIA_TYPE = "media_type";
+const std::string UNIQUE_NUMBER = "unique_number";
+const std::string IMAGE_ASSET_TYPE = "image";
+const std::string VIDEO_ASSET_TYPE = "video";
+
+// data calculate args
+const int32_t ASSET_IN_BUCKET_NUM_MAX = 1000;
+const int32_t ASSET_DIR_START_NUM = 16;
+const int32_t ASSET_MAX_COMPLEMENT_ID = 999;
+const std::string DEFAULT_IMAGE_NAME = "IMG_";
+const std::string DEFAULT_VIDEO_NAME = "VID_";
+const std::string ROOT_MEDIA_DIR = "/storage/cloud/files/";
+
 const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::PhotoColumn::MEDIA_FILE_PATH,
     Media::PhotoColumn::MEDIA_SIZE,
@@ -128,6 +173,85 @@ const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
     DataType::DOUBLE,       /* longitude */
     DataType::INT,        /* file_id */
     DataType::STRING        /* cloud_id */
+};
+
+const std::vector<std::string> MEDIA_CLOUD_SYNC_COLUMNS = {
+    Media::PhotoColumn::MEDIA_FILE_PATH,
+    Media::PhotoColumn::MEDIA_TITLE,
+    Media::PhotoColumn::MEDIA_SIZE,
+    Media::PhotoColumn::MEDIA_NAME,
+    Media::PhotoColumn::MEDIA_TYPE,
+    Media::PhotoColumn::MEDIA_MIME_TYPE,
+    Media::PhotoColumn::MEDIA_DEVICE_NAME,
+    Media::PhotoColumn::MEDIA_DATE_ADDED,
+    Media::PhotoColumn::MEDIA_DATE_MODIFIED,
+    Media::PhotoColumn::MEDIA_DATE_TAKEN,
+    Media::PhotoColumn::MEDIA_DURATION,
+    Media::PhotoColumn::MEDIA_IS_FAV,
+    Media::PhotoColumn::MEDIA_DATE_TRASHED,
+    Media::PhotoColumn::MEDIA_HIDDEN,
+    Media::PhotoColumn::MEDIA_RELATIVE_PATH,
+    Media::PhotoColumn::MEDIA_VIRTURL_PATH,
+    Media::PhotoColumn::PHOTO_META_DATE_MODIFIED,
+    Media::PhotoColumn::PHOTO_ORIENTATION,
+    Media::PhotoColumn::PHOTO_LATITUDE,
+    Media::PhotoColumn::PHOTO_LONGITUDE,
+    Media::PhotoColumn::PHOTO_HEIGHT,
+    Media::PhotoColumn::PHOTO_WIDTH,
+    Media::PhotoColumn::PHOTO_SUBTYPE,
+    /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
+    Media::PhotoColumn::PHOTO_CLOUD_ID
+};
+
+const std::vector<std::string> CLOUD_SYNC_UNIQUE_COLUMNS = {
+    Media::PhotoColumn::MEDIA_FILE_PATH,
+    Media::PhotoColumn::MEDIA_TITLE,
+    Media::PhotoColumn::MEDIA_TYPE,
+    Media::PhotoColumn::MEDIA_DATE_ADDED,
+    Media::PhotoColumn::MEDIA_DURATION,
+    Media::PhotoColumn::MEDIA_HIDDEN,
+    Media::PhotoColumn::MEDIA_RELATIVE_PATH,
+    Media::PhotoColumn::MEDIA_VIRTURL_PATH,
+    Media::PhotoColumn::PHOTO_META_DATE_MODIFIED,
+    Media::PhotoColumn::PHOTO_SUBTYPE,
+};
+
+const std::vector<DataType>  CLOUD_SYNC_UNIQUE_COLUMN_TYPES = {
+    DataType::STRING,       /* data */
+    DataType::STRING,       /* title */
+    DataType::INT,          /* media_type */
+    DataType::LONG,         /* date_added */
+    DataType::INT,          /* duration */
+    DataType::INT,          /* hidden */
+    DataType::STRING,       /* relative_path */
+    DataType::STRING,       /* virtual_path */
+    DataType::LONG,         /* meta_date_modified */
+    DataType::INT,          /* subtype */
+};
+
+const std::vector<std::string> CLOUD_SYNC_COMMONS_COLUMNS = {
+    Media::PhotoColumn::MEDIA_SIZE,
+    Media::PhotoColumn::MEDIA_NAME,
+    Media::PhotoColumn::MEDIA_TYPE,
+    Media::PhotoColumn::MEDIA_MIME_TYPE,
+    Media::PhotoColumn::MEDIA_DEVICE_NAME,
+    Media::PhotoColumn::MEDIA_DATE_MODIFIED,
+    Media::PhotoColumn::MEDIA_DATE_TAKEN,
+    Media::PhotoColumn::MEDIA_DURATION,
+    Media::PhotoColumn::MEDIA_IS_FAV,
+    Media::PhotoColumn::MEDIA_DATE_TRASHED,
+    Media::PhotoColumn::MEDIA_HIDDEN,
+    Media::PhotoColumn::MEDIA_RELATIVE_PATH,
+    Media::PhotoColumn::MEDIA_VIRTURL_PATH,
+    Media::PhotoColumn::PHOTO_META_DATE_MODIFIED,
+    Media::PhotoColumn::PHOTO_ORIENTATION,
+    Media::PhotoColumn::PHOTO_LATITUDE,
+    Media::PhotoColumn::PHOTO_LONGITUDE,
+    Media::PhotoColumn::PHOTO_HEIGHT,
+    Media::PhotoColumn::PHOTO_WIDTH,
+    Media::PhotoColumn::PHOTO_SUBTYPE,
+    /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
+    Media::PhotoColumn::PHOTO_CLOUD_ID
 };
 } // namespace CloudSync
 } // namespace FileManagement

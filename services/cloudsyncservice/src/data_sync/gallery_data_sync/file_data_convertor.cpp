@@ -15,6 +15,7 @@
 
 #include "file_data_convertor.h"
 
+#include <regex>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -27,6 +28,7 @@ namespace CloudSync {
 using namespace std;
 using namespace NativeRdb;
 using namespace Media;
+using DriveKit::DKLocalErrorCode;
 
 /* record type */
 string FileDataConvertor::recordType_ = "media";
@@ -48,23 +50,13 @@ FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, Operati
 int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet)
 {
     DriveKit::DKRecordData data;
-    /* properties */
-    RETURN_ON_ERR(HandleProperties(data, resultSet));
-    /* basic */
-    RETURN_ON_ERR(HandleFileName(data, resultSet));
-    RETURN_ON_ERR(HandleHashId(data, resultSet));
-    RETURN_ON_ERR(HandleSource(data, resultSet));
-    RETURN_ON_ERR(HandleFileType(data, resultSet));
-    RETURN_ON_ERR(HandleCreatedTime(data, resultSet));
-    RETURN_ON_ERR(HandleFavorite(data, resultSet));
-    RETURN_ON_ERR(HandleDescription(data, resultSet));
-    RETURN_ON_ERR(HandleRecycle(data, resultSet));
-    /* attachments */
-    RETURN_ON_ERR(HandleAttachments(data, resultSet));
 
-    /* set data */
+    /* process cloud sync unique fileds*/
+    RETURN_ON_ERR(HandleUniqueFileds(data, resultSet));
+
+    /* process compatible fileds shared with gallery or gallery-specific fileds*/
+    RETURN_ON_ERR(HandleCompatibleFileds(data, resultSet));
     record.SetRecordData(data);
-    /* control info */
     record.SetRecordType(recordType_);
     if (type_ == FILE_CREATE) {
         record.SetNewCreate(true);
@@ -78,28 +70,97 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
     return E_OK;
 }
 
+int32_t FileDataConvertor::HandleUniqueFileds(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    DriveKit::DKRecordFieldMap map;
+    /* store media unique fileds in attributes*/
+    RETURN_ON_ERR(HandleAttributes(map, resultSet));
+    data[FILE_ATTRIBUTES] = DriveKit::DKRecordField(map);
+    return E_OK;
+}
+
+/* Cloud sync unique filed processing */
+int32_t FileDataConvertor::HandleAttributes(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    auto size = CLOUD_SYNC_UNIQUE_COLUMNS.size();
+    for (decltype(size) i = 0; i < size; i++) {
+        const string &key = CLOUD_SYNC_UNIQUE_COLUMNS[i];
+        DataType type = CLOUD_SYNC_UNIQUE_COLUMN_TYPES[i];
+        switch (type) {
+            case DataType::INT: {
+                SET_RECORD_INT(key, resultSet, map);
+                break;
+            }
+            case DataType::LONG: {
+                SET_RECORD_LONG(key, resultSet, map);
+                break;
+            }
+            case DataType::DOUBLE: {
+                SET_RECORD_DOUBLE(key, resultSet, map);
+                break;
+            }
+            case DataType::STRING: {
+                SET_RECORD_STRING(key, resultSet, map);
+                break;
+            }
+            case DataType::BOOL: {
+                SET_RECORD_BOOL(key, resultSet, map);
+                break;
+            }
+        }
+    }
+    RETURN_ON_ERR(HandleThumbSize(map, resultSet));
+    RETURN_ON_ERR(HandleLcdSize(map, resultSet));
+    return E_OK;
+}
+
+int32_t FileDataConvertor::HandleCompatibleFileds(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    /* gallery-specific or shared fileds */
+    RETURN_ON_ERR(HandleFileName(data, resultSet));
+    RETURN_ON_ERR(HandleCreatedTime(data, resultSet));
+    RETURN_ON_ERR(HandleHash(data, resultSet));
+    RETURN_ON_ERR(HandleSize(data, resultSet));
+    RETURN_ON_ERR(HandleSource(data, resultSet));
+    RETURN_ON_ERR(HandleFileType(data, resultSet));
+    RETURN_ON_ERR(HandleRecycled(data, resultSet));
+    RETURN_ON_ERR(HandleRecycleTime(data, resultSet));
+    RETURN_ON_ERR(HandleFavorite(data, resultSet));
+
+    /* gallery expand fields */
+    RETURN_ON_ERR(HandleProperties(data, resultSet));
+
+    /* cloud sdk extra feature*/
+    RETURN_ON_ERR(HandleAttachments(data, resultSet));
+
+    /* cloudsync-specific fields */
+    RETURN_ON_ERR(HandleMimeType(data, resultSet));
+    RETURN_ON_ERR(HandleEditedTime(data, resultSet));
+    return E_OK;
+}
+
 /* properties */
 int32_t FileDataConvertor::HandleProperties(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
     DriveKit::DKRecordFieldMap map;
-    /* general */
-    RETURN_ON_ERR(HandleGeneral(map, resultSet));
-    /* basic properties */
-    RETURN_ON_ERR(HandleHeight(map, resultSet));
-    RETURN_ON_ERR(HandleRotation(map, resultSet));
-    RETURN_ON_ERR(HandleWidth(map, resultSet));
-    RETURN_ON_ERR(HandlePosition(map, resultSet));
-    RETURN_ON_ERR(HandleDataModified(map, resultSet));
-    RETURN_ON_ERR(HandleDetailTime(map, resultSet));
-    RETURN_ON_ERR(HandleFileCreateTime(map, resultSet));
-    RETURN_ON_ERR(HandleFirstUpdateTime(map, resultSet));
-    RETURN_ON_ERR(HandleRelativeBucketId(map, resultSet));
+
+    /* gallery expand properties */
     RETURN_ON_ERR(HandleSourceFileName(map, resultSet));
+    RETURN_ON_ERR(HandleFirstUpdateTime(map, resultSet));
+    RETURN_ON_ERR(HandleFileCreateTime(map, resultSet));
+    RETURN_ON_ERR(HandleDetailTime(map, resultSet));
     RETURN_ON_ERR(HandleSourcePath(map, resultSet));
-    RETURN_ON_ERR(HandleTimeZone(map, resultSet));
-    RETURN_ON_ERR(HandleThumbSize(map, resultSet));
-    RETURN_ON_ERR(HandleLcdSize(map, resultSet));
+    RETURN_ON_ERR(HandleRelativeBucketId(map, resultSet));
+    RETURN_ON_ERR(HandlePosition(map, resultSet));
+    RETURN_ON_ERR(HandleRotate(map, resultSet));
+
+    /* Resolution is combined by cloud sdk, just upload height and width */
+    RETURN_ON_ERR(HandleHeight(map, resultSet));
+    RETURN_ON_ERR(HandleWidth(map, resultSet));
 
     /* set map */
     data[FILE_PROPERTIES] = DriveKit::DKRecordField(map);
@@ -205,6 +266,80 @@ int32_t FileDataConvertor::HandleLcdSize(DriveKit::DKRecordFieldMap &map,
     }
 
     map[FILE_LCD_SIZE] = DriveKit::DKRecordField(int64_t(fileStat.st_size));
+    return E_OK;
+}
+
+int32_t FileDataConvertor::HandleDetailTime(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    int64_t val;
+    int32_t ret = GetLong(Media::PhotoColumn::MEDIA_DATE_ADDED, val, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    time_t dataAddedStamp = time_t(val);
+    struct tm timeinfo;
+    char buffer[80];
+    localtime_r(&dataAddedStamp, &timeinfo);
+    size_t size = strftime(buffer, sizeof(buffer), "%Y:%m:%d %H:%M:%S", &timeinfo);
+    if (size < 0) {
+        return E_OK;
+    }
+    std::string detailTime(buffer);
+    map[FILE_DETAIL_TIME] = DriveKit::DKRecordField(detailTime);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::HandlePosition(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    double latitudeVal;
+    double longitudeVal;
+    int32_t ret = GetDouble(Media::PhotoColumn::PHOTO_LATITUDE, latitudeVal, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = GetDouble(Media::PhotoColumn::PHOTO_LONGITUDE, longitudeVal, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    std::stringstream latitudestream;
+    std::stringstream longitudestream;
+    latitudestream.precision(15); // 15:precision
+    longitudestream.precision(15); // 15:precision
+    latitudestream << latitudeVal;
+    longitudestream << longitudeVal;
+    std::string position = "{\"x\":\"" + latitudestream.str() + "\",\"y\":\"" + longitudestream.str() +"\"}";
+    map[FILE_POSITION] = DriveKit::DKRecordField(position);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::HandleRotate(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    int32_t val;
+    int32_t ret = GetInt(Media::PhotoColumn::PHOTO_ORIENTATION, val, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    switch (val) {
+        case ROTATE_ANGLE_0:
+            val = ORIENTATION_NORMAL;
+            break;
+        case ROTATE_ANGLE_90:
+            val = ORIENTATION_ROTATE_90;
+            break;
+        case ROTATE_ANGLE_180:
+            val = ORIENTATION_ROTATE_180;
+            break;
+        case ROTATE_ANGLE_270:
+            val = ORIENTATION_ROTATE_270;
+            break;
+        default:
+            val = ORIENTATION_NORMAL;
+            break;
+    }
+    map[FILE_ROTATION] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 
@@ -359,31 +494,439 @@ string FileDataConvertor::GetThumbPathInCloud(const std::string &path, const std
     return sandboxPrefix_ + "/" + Media::GetThumbnailPath(path, key).substr(ROOT_MEDIA_DIR.length());
 }
 
-int32_t FileDataConvertor::Convert(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
+bool FileDataConvertor::IfContainsAttributes(const DriveKit::DKRecord &record)
 {
     DriveKit::DKRecordData data;
     record.GetRecordData(data);
+    if (data.find(FILE_ATTRIBUTES) != data.end()) {
+        DriveKit::DKRecordFieldMap attributes;
+        data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+        return !(attributes.find(PhotoColumn::MEDIA_TITLE) == attributes.end());
+    }
+    return false;
+}
 
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data donnot have properties set");
+int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
+{
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+    if (!IfContainsAttributes(record)) {
+        int32_t ret = TryCompensateValue(record, data, valueBucket);
+        if (ret != E_OK) {
+            LOGE("record data lose key value");
+            return ret;
+        }
+    } else {
+        int32_t ret = ExtractAttributeValue(data, valueBucket);
+        if (ret != E_OK) {
+            LOGE("record data donnot have attributes set, need");
+            return ret;
+        }
+    }
+    ExtractCompatibleValue(record, data, valueBucket);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::TryCompensateValue(const DriveKit::DKRecord &record,
+    DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket)
+{
+    RETURN_ON_ERR(CompensateData(data, valueBucket));
+    RETURN_ON_ERR(CompensateTitle(data, valueBucket));
+    RETURN_ON_ERR(CompensateMediaType(data, valueBucket));
+    RETURN_ON_ERR(CompensateDataAdded(record, valueBucket));
+    RETURN_ON_ERR(CompensateMetaDateModified(record, valueBucket));
+    RETURN_ON_ERR(CompensateSubtype(data, valueBucket));
+    return E_OK;
+}
+
+int32_t FileDataConvertor::CompensateData(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        LOGE("record data cannot find attributes or size");
         return E_INVAL_ARG;
     }
-    DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
+    DriveKit::DKRecordFieldMap attributes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+    string dataPath;
+    if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(dataPath) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad file_path in attributes");
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutString(PhotoColumn::MEDIA_FILE_PATH, dataPath);
+    return E_OK;
+}
 
-    auto size = GALLERY_FILE_COLUMNS.size();
-    for (decltype(size) i = 0; i < size - NR_LOCAL_INFO; i++) {
-        auto field = GALLERY_FILE_COLUMNS[i];
-        auto type = GALLERY_FILE_COLUMN_TYPES[i];
-        if (properties.find(field) == properties.end()) {
-            LOGE("filed %s not found in record.properties", field.c_str());
+int32_t FileDataConvertor::CompensateTitle(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data cannot find properties");
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap prop;
+    data[FILE_PROPERTIES].GetRecordMap(prop);
+    if (prop.find(FILE_SOURCE_FILE_NAME) == prop.end()) {
+        LOGE("record data cannot find title, ignore it");
+        return E_OK;
+    }
+    string sourceFileName;
+    if (prop[FILE_SOURCE_FILE_NAME].GetString(sourceFileName) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad sourceFileName in props");
+        return E_INVAL_ARG;
+    }
+    string title = sourceFileName;
+    size_t pos = sourceFileName.find_last_of(".");
+    if (pos != string::npos) {
+        title = sourceFileName.substr(0, pos);
+    }
+    valueBucket.PutString(PhotoColumn::MEDIA_TITLE, title);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::CompensateMediaType(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_FILETYPE) == data.end()) {
+        LOGE("record data cannot find properties");
+        return E_INVAL_ARG;
+    }
+    int32_t fileType;
+    if (data[FILE_FILETYPE].GetInt(fileType) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("record data cannot find fileType");
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutInt(PhotoColumn::MEDIA_TYPE, (fileType == FILE_TYPE_VIDEO) ?
+        MEDIA_TYPE_VIDEO : MEDIA_TYPE_IMAGE);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::CompensateDataAdded(const DriveKit::DKRecord &record,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    uint64_t dataAdded = record.GetCreateTime() / MILLISECOND_TO_SECOND;
+    valueBucket.PutLong(PhotoColumn::MEDIA_DATE_ADDED, dataAdded);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::CompensateMetaDateModified(const DriveKit::DKRecord &record,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    uint64_t metaDataModified = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+
+    // imputed value, may not be accurate
+    valueBucket.PutLong(PhotoColumn::PHOTO_META_DATE_MODIFIED, metaDataModified);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::CompensateSubtype(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data cannot find properties");
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap prop;
+    data[FILE_PROPERTIES].GetRecordMap(prop);
+    if (prop.find(FILE_SOURCE_PATH) == prop.end()) {
+        valueBucket.PutInt(PhotoColumn::PHOTO_SUBTYPE, PhotoSubType::DEFAULT);
+        return E_OK;
+    }
+    string sourcePath;
+    if (prop[FILE_SOURCE_PATH].GetString(sourcePath) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad Subtype in props");
+        valueBucket.PutInt(PhotoColumn::PHOTO_SUBTYPE, PhotoSubType::DEFAULT);
+        return E_OK;
+    }
+    int32_t subType = PhotoSubType::DEFAULT;
+    if (sourcePath.find("DCIM") != string::npos && sourcePath.find("Camera") != string::npos) {
+        subType = PhotoSubType::CAMERA;
+    } else if (sourcePath.find("Screenshots") != string::npos) {
+        subType = PhotoSubType::SCREENSHOT;
+    } else {
+        subType = PhotoSubType::DEFAULT;
+    }
+    valueBucket.PutInt(PhotoColumn::PHOTO_SUBTYPE, subType);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractAttributeValue(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+    auto size = CLOUD_SYNC_UNIQUE_COLUMNS.size();
+    for (decltype(size) i = 0; i < size; i++) {
+        auto field = CLOUD_SYNC_UNIQUE_COLUMNS[i];
+        auto type = CLOUD_SYNC_UNIQUE_COLUMN_TYPES[i];
+        if (attributes.find(field) == attributes.end()) {
+            LOGE("filed %s not found in record.attributes", field.c_str());
             continue;
         }
-        if (HandleField(properties[field], valueBucket, field, type) != E_OK) {
+        if (HandleField(attributes[field], valueBucket, field, type) != E_OK) {
             LOGE("HandleField %s failed", field.c_str());
         }
     }
     return E_OK;
 }
+
+int32_t FileDataConvertor::ExtractCompatibleValue(const DriveKit::DKRecord &record,
+    DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGI("record data cannot find properties");
+        return E_OK;
+    }
+    DriveKit::DKRecordFieldMap prop;
+    data[FILE_PROPERTIES].GetRecordMap(prop);
+
+    /* extract value in properties*/
+    RETURN_ON_ERR(ExtractOrientation(prop, valueBucket));
+    RETURN_ON_ERR(ExtractPosition(prop, valueBucket));
+    RETURN_ON_ERR(ExtractHeight(prop, valueBucket));
+    RETURN_ON_ERR(ExtractWidth(prop, valueBucket));
+
+    /* extract value in first level*/
+    RETURN_ON_ERR(ExtractSize(data, valueBucket));
+    RETURN_ON_ERR(ExtractDisplayName(data, valueBucket));
+    RETURN_ON_ERR(ExtractMimeType(data, valueBucket));
+    RETURN_ON_ERR(ExtractDeviceName(data, valueBucket));
+    RETURN_ON_ERR(ExtractDateModified(record, valueBucket));
+    RETURN_ON_ERR(ExtractDateTaken(record, valueBucket));
+    RETURN_ON_ERR(ExtractFavorite(data, valueBucket));
+    RETURN_ON_ERR(ExtractDateTrashed(data, valueBucket));
+    RETURN_ON_ERR(ExtractCloudId(record, valueBucket));
+    return 0;
+}
+
+int32_t FileDataConvertor::ExtractOrientation(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (map.find(FILE_ROTATION) == map.end()) {
+        LOGI("RecordFieldMap cannot find orientation");
+        return E_OK;
+    }
+    int32_t exifRotateValue;
+    if (map[FILE_ROTATION].GetInt(exifRotateValue) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract orientation error");
+        return E_INVAL_ARG;
+    }
+    switch (exifRotateValue) {
+        case ORIENTATION_NORMAL:
+            exifRotateValue = ROTATE_ANGLE_0;
+            break;
+        case ORIENTATION_ROTATE_90:
+            exifRotateValue = ROTATE_ANGLE_90;
+            break;
+        case ORIENTATION_ROTATE_180:
+            exifRotateValue = ROTATE_ANGLE_180;
+            break;
+        case ORIENTATION_ROTATE_270:
+            exifRotateValue = ROTATE_ANGLE_270;
+            break;
+        default:
+            exifRotateValue = ROTATE_ANGLE_0;
+            break;
+    }
+    valueBucket.PutInt(PhotoColumn::PHOTO_ORIENTATION, exifRotateValue);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractPosition(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (map.find(FILE_POSITION) == map.end()) {
+        LOGI("RecordFieldMap cannot find position");
+        return E_OK;
+    }
+    string position;
+    if (map[FILE_POSITION].GetString(position) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract orientation error");
+        return E_INVAL_ARG;
+    }
+    string latitude;
+    string longitude;
+    regex positionPattern("(-?\\d+\\.?\\d+|0).*?(-?\\d+\\.?\\d+|0)");
+    smatch match;
+    if (regex_search(position, match, positionPattern)) {
+        latitude = match[FIRST_MATCH_PARAM];
+        longitude = match[SECOND_MATCH_PARAM];
+    } else {
+        LOGE("extract latitude or longitude error");
+        return E_INVAL_ARG;
+    }
+    stringstream latitudestream(latitude);
+    stringstream longitudestream(longitude);
+    latitudestream.precision(15); // 15:precision
+    longitudestream.precision(15); // 15:precision
+    double latitudeValue;
+    double longitudeValue;
+    latitudestream >> latitudeValue;
+    longitudestream >> longitudeValue;
+
+    valueBucket.PutDouble(PhotoColumn::PHOTO_LATITUDE, latitudeValue);
+    valueBucket.PutDouble(PhotoColumn::PHOTO_LONGITUDE, longitudeValue);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractHeight(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (map.find(FILE_HEIGHT) == map.end()) {
+        LOGI("RecordFieldMap cannot find height");
+        return E_OK;
+    }
+    int32_t height;
+    if (map[FILE_HEIGHT].GetInt(height) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract height error");
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutInt(PhotoColumn::PHOTO_HEIGHT, height);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractWidth(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (map.find(FILE_WIDTH) == map.end()) {
+        LOGI("RecordFieldMap cannot find width");
+        return E_OK;
+    }
+    int32_t width;
+    if (map[FILE_WIDTH].GetInt(width) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract height error");
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutInt(PhotoColumn::PHOTO_WIDTH, width);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractSize(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_SIZE) == data.end()) {
+        LOGE("record data cannot find FILE_SIZE");
+        return E_OK;
+    }
+    int64_t size;
+    if (data[FILE_SIZE].GetLong(size) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract size error");
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutLong(PhotoColumn::MEDIA_SIZE, size);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractDisplayName(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_FILE_NAME) == data.end()) {
+        LOGI("record data cannot find FILE_FILE_NAME");
+        return E_OK;
+    }
+    string displayName;
+    if (data[FILE_FILE_NAME].GetString(displayName) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract displayName error");
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutString(PhotoColumn::MEDIA_NAME, displayName);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractMimeType(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_MIME_TYPE) == data.end()) {
+        LOGI("record data cannot find FILE_MIME_TYPE");
+        return E_OK;
+    }
+    string mimeType;
+    if (data[FILE_MIME_TYPE].GetString(mimeType) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract mimeType error");
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutString(PhotoColumn::MEDIA_MIME_TYPE, mimeType);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractDeviceName(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_SOURCE) == data.end()) {
+        LOGI("record data cannot find FILE_SOURCE");
+        return E_OK;
+    }
+    string deviceName;
+    if (data[FILE_SOURCE].GetString(deviceName) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract deviceName error");
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutString(PhotoColumn::MEDIA_DEVICE_NAME, deviceName);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractDateModified(const DriveKit::DKRecord &record,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    uint64_t dateModified = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    valueBucket.PutLong(PhotoColumn::MEDIA_DATE_MODIFIED, dateModified);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractDateTaken(const DriveKit::DKRecord &record,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    uint64_t dataTaken = record.GetCreateTime() / MILLISECOND_TO_SECOND;
+    valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TAKEN, dataTaken);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractFavorite(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_FAVORITE) == data.end()) {
+        LOGI("record data cannot find FILE_FAVORITE");
+        return E_OK;
+    }
+    bool isFavorite;
+    if (data[FILE_FAVORITE].GetBool(isFavorite) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract isFavorite error");
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutInt(PhotoColumn::MEDIA_IS_FAV, isFavorite ? 1 : 0);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractDateTrashed(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_RECYCLE_TIME) == data.end() && data.find(FILE_RECYCLED) == data.end()) {
+        LOGI("record data cannot find FILE_RECYCLE_TIME");
+        return E_OK;
+    } else if (data.find(FILE_RECYCLED) != data.end()) {
+        bool isRecycle;
+        data[FILE_RECYCLED].GetBool(isRecycle);
+        if (!isRecycle) {
+            // 0：default recycle time, means not in recycle album
+            valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, 0);
+        }
+        return E_OK;
+    } else {
+        int64_t dataTrashed;
+        if (data[FILE_RECYCLE_TIME].GetLong(dataTrashed) != DKLocalErrorCode::NO_ERROR) {
+            LOGE("extract dataTrashed error");
+            return E_INVAL_ARG;
+        }
+        valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, dataTrashed / MILLISECOND_TO_SECOND);
+        return E_OK;
+    }
+}
+
+int32_t FileDataConvertor::ExtractCloudId(const DriveKit::DKRecord &record,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    string cloudId = record.GetRecordId();
+    valueBucket.PutString(PhotoColumn::PHOTO_CLOUD_ID, cloudId);
+    return E_OK;
+}
+
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

@@ -81,12 +81,22 @@ HWTEST_F(FileDataConvertorTest, FillRecordIdTest1, TestSize.Level1)
     EXPECT_EQ(E_OK, ret);
 }
 
-HWTEST_F(FileDataConvertorTest, HandleHashIdTest, TestSize.Level1)
+
+HWTEST_F(FileDataConvertorTest, HandleAlbumIdTest, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    ResultSetMock resultSet;
+    string key = "albumId";
+    auto ret = fileDataConvertor_->HandleAlbumId(data, resultSet);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, HandleHashTest, TestSize.Level1)
 {
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     string key = "hashId";
-    auto ret = fileDataConvertor_->HandleHashId(data, resultSet);
+    auto ret = fileDataConvertor_->HandleHash(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -167,7 +177,7 @@ HWTEST_F(FileDataConvertorTest, HandleRecycleTest, TestSize.Level1)
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "recycled";
-    auto ret = fileDataConvertor_->HandleRecycle(data, resultSet);
+    auto ret = fileDataConvertor_->HandleRecycleTime(data, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
@@ -178,7 +188,7 @@ HWTEST_F(FileDataConvertorTest, HandleRecycleTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetLong(_, _)).WillOnce(Return(0));
     string key = "recycled";
-    auto ret = fileDataConvertor_->HandleRecycle(data, resultSet);
+    auto ret = fileDataConvertor_->HandleRecycleTime(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
@@ -229,24 +239,24 @@ HWTEST_F(FileDataConvertorTest, HandleHeightTest1, TestSize.Level1)
     EXPECT_EQ(E_OK, ret);
 }
 
-HWTEST_F(FileDataConvertorTest, HandleRotationTest, TestSize.Level1)
+HWTEST_F(FileDataConvertorTest, HandleRotateTest, TestSize.Level1)
 {
     DriveKit::DKRecordFieldMap map;
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(1));
     string key = "rotation";
-    auto ret = fileDataConvertor_->HandleRotation(map, resultSet);
+    auto ret = fileDataConvertor_->HandleRotate(map, resultSet);
     EXPECT_EQ(E_RDB, ret);
 }
 
-HWTEST_F(FileDataConvertorTest, HandleRotationTest1, TestSize.Level1)
+HWTEST_F(FileDataConvertorTest, HandleRotateTest1, TestSize.Level1)
 {
     DriveKit::DKRecordFieldMap map;
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(0));
     EXPECT_CALL(resultSet, GetInt(_, _)).WillOnce(Return(0));
     string key = "rotation";
-    auto ret = fileDataConvertor_->HandleRotation(map, resultSet);
+    auto ret = fileDataConvertor_->HandleRotate(map, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
 
