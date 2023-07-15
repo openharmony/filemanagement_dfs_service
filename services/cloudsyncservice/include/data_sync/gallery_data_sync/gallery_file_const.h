@@ -20,6 +20,8 @@
 
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
+#include "photo_album_column.h"
+#include "photo_map_column.h"
 
 #include "data_convertor.h"
 
