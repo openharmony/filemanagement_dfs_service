@@ -64,6 +64,7 @@ public:
 
     /* sdk */
     void SetSdkHelper(std::shared_ptr<SdkHelper> &sdkHelper);
+    void NotifyCurrentSyncState();
 
 protected:
     /* download */
@@ -171,6 +172,12 @@ private:
 
     /* download callback manager*/
     CloudDownloadCallbackManager downloadCallbackMgr_;
+
+    /* Current sync state */
+    CloudSyncState CurrentSyncState_{CloudSyncState::COMPLETED};
+
+    /* Current error type */
+    ErrorType CurrentErrorType_{ErrorType::NO_ERROR};
 };
 } // namespace CloudSync
 } // namespace FileManagement

@@ -941,7 +941,14 @@ void DataSyncer::CompleteAll()
 
 void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)
 {
+    CurrentSyncState_ = state;
+    CurrentErrorType_ = error;
     CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(state, error);
+}
+
+void DataSyncer::NotifyCurrentSyncState()
+{
+    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(CurrentSyncState_, CurrentErrorType_);
 }
 
 ErrorType DataSyncer::GetErrorType(const int32_t code)

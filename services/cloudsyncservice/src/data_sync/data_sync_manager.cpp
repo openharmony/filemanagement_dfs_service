@@ -80,6 +80,18 @@ int32_t DataSyncManager::TriggerStopSync(const std::string &bundleName,
     return E_OK;
 }
 
+void DataSyncManager::RegisterCloudSyncCallback(const std::string &bundleName, const int32_t userId)
+{
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+        return;
+    }
+
+    /* notify app current sync state */
+    dataSyncer->NotifyCurrentSyncState();
+}
+
 int32_t DataSyncManager::StartDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path)
 {
     auto dataSyncer = GetDataSyncer(bundleName, userId);
