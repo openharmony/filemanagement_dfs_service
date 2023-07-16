@@ -29,7 +29,7 @@ public:
 
     /* download */
     virtual void GetFetchCondition(FetchCondition &cond) override;
-    virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
+    virtual int32_t OnFetchRecords(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
                                    OnFetchParams &params) override;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
 
@@ -49,9 +49,9 @@ public:
 
 private:
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, int> QueryLocalMatch(const std::string &recordId);
-    int32_t InsertCloudAlbum(const DriveKit::DKRecord &record);
-    int32_t DeleteCloudAlbum(const DriveKit::DKRecord &record);
-    int32_t UpdateCloudAlbum(const DriveKit::DKRecord &record);
+    int32_t InsertCloudAlbum(DriveKit::DKRecord &record);
+    int32_t DeleteCloudAlbum(DriveKit::DKRecord &record);
+    int32_t UpdateCloudAlbum(DriveKit::DKRecord &record);
     int32_t HandleLocalDirty(int32_t dirty, const DriveKit::DKRecord &record);
 
     int32_t OnUploadSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);

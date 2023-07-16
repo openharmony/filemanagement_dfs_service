@@ -63,7 +63,14 @@ public:
     {
         return version_;
     };
-
+    uint64_t GetCreateTime() const
+    {
+        return createdTime_;
+    }
+    uint64_t GetEditedTime() const
+    {
+        return editedTime_;
+    }
     void SetRecordId(DKRecordId id)
     {
         id_ = id;
@@ -100,7 +107,14 @@ public:
     {
         isNewCreate_ = isNew;
     };
-
+    void SetCreateTime(uint64_t createdTime)
+    {
+        createdTime_ = createdTime;
+    }
+    void SetEditedTime(uint64_t editedTime)
+    {
+        editedTime_ = editedTime;
+    }
 private:
     DKRecordId id_;
     DKRecordType type_;
@@ -110,6 +124,8 @@ private:
     bool isDelete_;
     unsigned long version_;
     bool isNewCreate_ = false;
+    uint64_t createdTime_ = 0;
+    uint64_t editedTime_ = 0;
 };
 } // namespace DriveKit
 #endif

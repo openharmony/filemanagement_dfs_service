@@ -100,7 +100,7 @@ int32_t AlbumDataConvertor::HandleGeneral(DriveKit::DKRecordFieldMap &map, Nativ
     return E_OK;
 }
 
-int32_t AlbumDataConvertor::Convert(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
+int32_t AlbumDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
 {
     DriveKit::DKRecordData data;
     record.GetRecordData(data);

@@ -283,10 +283,11 @@ int DataConvertor::HandleField(const DriveKit::DKRecordField &value, NativeRdb::
     return it->second(value, bucket, field);
 }
 
-int32_t DataConvertor::RecordToValueBucket(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
+int32_t DataConvertor::RecordToValueBucket(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
 {
     return Convert(record, valueBucket);
 }
+
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

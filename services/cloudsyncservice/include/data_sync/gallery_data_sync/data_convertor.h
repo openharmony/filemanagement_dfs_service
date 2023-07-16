@@ -42,12 +42,11 @@ public:
     /* resultSet -> record */
     virtual int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet) = 0;
     /* record -> resultSet */
-    virtual int32_t Convert(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket) = 0;
+    virtual int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket) = 0;
 
     int32_t ResultSetToRecords(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
         std::vector<DriveKit::DKRecord> &records);
-    int32_t RecordToValueBucket(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
-
+    int32_t RecordToValueBucket(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
     static int32_t GetLongComp(const DriveKit::DKRecordField &field, int64_t &val);
     static int32_t GetInt(const std::string &key, int32_t &val, NativeRdb::ResultSet &resultSet);
     static int32_t GetLong(const std::string &key, int64_t &val, NativeRdb::ResultSet &resultSet);

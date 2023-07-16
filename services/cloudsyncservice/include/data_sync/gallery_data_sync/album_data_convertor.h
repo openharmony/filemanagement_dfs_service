@@ -40,7 +40,7 @@ public:
     ~AlbumDataConvertor() = default;
 
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet) override;
-    int32_t Convert(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket) override;
+    int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket) override;
 
 private:
     /* basic */

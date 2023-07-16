@@ -43,6 +43,7 @@ void AlbumDataHandler::GetFetchCondition(FetchCondition &cond)
     cond.desiredKeys = desiredKeys_;
 }
 
+
 tuple<shared_ptr<ResultSet>, int> AlbumDataHandler::QueryLocalMatch(const std::string &recordId)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
@@ -61,7 +62,7 @@ tuple<shared_ptr<ResultSet>, int> AlbumDataHandler::QueryLocalMatch(const std::s
     return {std::move(resultSet), rowCount};
 }
 
-int32_t AlbumDataHandler::InsertCloudAlbum(const DKRecord &record)
+int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
 {
     LOGI("insert of record %s", record.GetRecordId().c_str());
     int64_t rowId;
@@ -81,7 +82,7 @@ int32_t AlbumDataHandler::InsertCloudAlbum(const DKRecord &record)
     return E_OK;
 }
 
-int32_t AlbumDataHandler::DeleteCloudAlbum(const DKRecord &record)
+int32_t AlbumDataHandler::DeleteCloudAlbum(DKRecord &record)
 {
     int32_t deletedRows;
     int ret = Delete(deletedRows, PAC::ALBUM_NAME + " = ?", { record.GetRecordId() });
@@ -92,7 +93,7 @@ int32_t AlbumDataHandler::DeleteCloudAlbum(const DKRecord &record)
     return E_OK;
 }
 
-int32_t AlbumDataHandler::UpdateCloudAlbum(const DKRecord &record)
+int32_t AlbumDataHandler::UpdateCloudAlbum(DKRecord &record)
 {
     int32_t changedRows;
     ValuesBucket values;
@@ -140,12 +141,12 @@ int32_t AlbumDataHandler::HandleLocalDirty(int32_t dirty, const DriveKit::DKReco
     return E_OK;
 }
 
-int32_t AlbumDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records,
+int32_t AlbumDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records,
                                          OnFetchParams &params)
 {
     LOGI("on fetch %{public}zu records", records->size());
     int32_t ret = E_OK;
-    for (const auto &record : *records) {
+    for (auto &record : *records) {
         auto [resultSet, rowCount] = QueryLocalMatch(record.GetRecordId());
         if (resultSet == nullptr) {
             LOGE("get nullptr query result");

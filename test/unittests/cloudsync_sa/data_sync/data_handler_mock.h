@@ -31,7 +31,7 @@ public:
     {
     }
     void GetFetchCondition(FetchCondition &cond) {}
-    int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records, OnFetchParams &params)
+    int32_t OnFetchRecords(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records, OnFetchParams &params)
     {
         return 0;
     }
