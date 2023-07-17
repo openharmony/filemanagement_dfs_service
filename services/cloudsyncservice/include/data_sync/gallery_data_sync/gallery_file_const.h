@@ -199,7 +199,9 @@ const std::vector<std::string> MEDIA_CLOUD_SYNC_COLUMNS = {
     Media::PhotoColumn::PHOTO_HEIGHT,
     Media::PhotoColumn::PHOTO_WIDTH,
     Media::PhotoColumn::PHOTO_SUBTYPE,
+
     /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
+    Media::MediaColumn::MEDIA_ID,
     Media::PhotoColumn::PHOTO_CLOUD_ID
 };
 
@@ -214,6 +216,10 @@ const std::vector<std::string> CLOUD_SYNC_UNIQUE_COLUMNS = {
     Media::PhotoColumn::MEDIA_VIRTURL_PATH,
     Media::PhotoColumn::PHOTO_META_DATE_MODIFIED,
     Media::PhotoColumn::PHOTO_SUBTYPE,
+
+    /* NR_LOCAL_INFO: keep local info in the end */
+    Media::MediaColumn::MEDIA_ID,
+    Media::PhotoColumn::PHOTO_CLOUD_ID
 };
 
 const std::vector<DataType>  CLOUD_SYNC_UNIQUE_COLUMN_TYPES = {
@@ -227,6 +233,8 @@ const std::vector<DataType>  CLOUD_SYNC_UNIQUE_COLUMN_TYPES = {
     DataType::STRING,       /* virtual_path */
     DataType::LONG,         /* meta_date_modified */
     DataType::INT,          /* subtype */
+    DataType::INT,          /* file_id */
+    DataType::STRING        /* cloud_id */
 };
 
 const std::vector<std::string> CLOUD_SYNC_COMMONS_COLUMNS = {

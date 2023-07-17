@@ -251,6 +251,8 @@ int32_t FileDataHandler::CompensateFilePath(DriveKit::DKRecord &record)
             return ret;
         }
         attributes[PhotoColumn::MEDIA_FILE_PATH] = DriveKit::DKRecordField(fullPath);
+        data[FILE_ATTRIBUTES] = DriveKit::DKRecordField(attributes);
+        record.SetRecordData(data);
     }
     return E_OK;
 }
@@ -613,7 +615,7 @@ int32_t FileDataHandler::GetAssetUniqueId(int32_t &type)
     predicates.SetWhereArgs({typeString});
     auto resultSet = Query(predicates, {UNIQUE_NUMBER});
     int32_t uniqueId;
-    DataConvertor::GetInt(ASSET_MEDIA_TYPE, uniqueId, *resultSet);
+    DataConvertor::GetInt(UNIQUE_NUMBER, uniqueId, *resultSet);
     ++uniqueId;
 
     int updateRows;
@@ -1662,8 +1664,8 @@ static inline int32_t GetFileIdFromRecord(DKRecord &record)
 {
     DKRecordData data;
     record.GetRecordData(data);
-    DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
-    return properties[Media::MediaColumn::MEDIA_ID];
+    DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+    return attributes[Media::MediaColumn::MEDIA_ID];
 }
 
 static inline void InsertAlbumIds(DKRecord &record, vector<string> &cloudIds)
@@ -1915,9 +1917,9 @@ int32_t FileDataHandler::EraseLocalInfo(vector<DriveKit::DKRecord> &records)
     for (auto &record : records) {
         DKRecordData data;
         record.GetRecordData(data);
-        DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
-        properties.erase(Media::MediaColumn::MEDIA_ID);
-        properties.erase(Media::PhotoColumn::PHOTO_CLOUD_ID);
+        DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+        attributes.erase(Media::MediaColumn::MEDIA_ID);
+        attributes.erase(Media::PhotoColumn::PHOTO_CLOUD_ID);
     }
     return E_OK;
 }
