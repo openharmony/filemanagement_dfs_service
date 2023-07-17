@@ -16,7 +16,7 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_ALBUM_DATA_HANDLER_H
 #define OHOS_CLOUD_SYNC_SERVICE_ALBUM_DATA_HANDLER_H
 
-#include "data_convertor.h"
+#include "album_data_convertor.h"
 #include "rdb_data_handler.h"
 
 namespace OHOS {
@@ -29,7 +29,7 @@ public:
 
     /* download */
     virtual void GetFetchCondition(FetchCondition &cond) override;
-    virtual int32_t OnFetchRecords(const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
+    virtual int32_t OnFetchRecords(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
                                    OnFetchParams &params) override;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
 
@@ -45,11 +45,34 @@ public:
     virtual int32_t OnModifyMdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
 
+    virtual int32_t Clean(const int action) override;
+
 private:
+    std::tuple<std::shared_ptr<NativeRdb::ResultSet>, int> QueryLocalMatch(const std::string &recordId);
+    int32_t InsertCloudAlbum(DriveKit::DKRecord &record);
+    int32_t DeleteCloudAlbum(DriveKit::DKRecord &record);
+    int32_t UpdateCloudAlbum(DriveKit::DKRecord &record);
+    int32_t HandleLocalDirty(int32_t dirty, const DriveKit::DKRecord &record);
+
+    int32_t OnUploadSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+    int32_t OnDeleteSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+    int32_t OnCreateFail(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+    int32_t OnDeleteFail(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+    int32_t OnModifyFail(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+
     static inline const std::string TABLE_NAME = "albums";
     static inline const int32_t LIMIT_SIZE = 5;
     DriveKit::DKRecordType recordType_ = "album";
     DriveKit::DKFieldKeyArray desiredKeys_;
+
+    /* failure records */
+    std::vector<std::string> modifyFailSet_;
+    std::vector<std::string> createFailSet_;
+
+    /* convert */
+    AlbumDataConvertor createConvertor_ = { AlbumDataConvertor::ALBUM_CREATE };
+    AlbumDataConvertor deleteConvertor_ = { AlbumDataConvertor::ALBUM_DELETE };
+    AlbumDataConvertor modifyConvertor_ = { AlbumDataConvertor::ALBUM_MODIFY };
 };
 } // namespace CloudSync
 } // namespace FileManagement

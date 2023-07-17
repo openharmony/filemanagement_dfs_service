@@ -42,12 +42,14 @@ ohos_shared_library("cloudsync_sa") {
     "src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "src/data_sync/gallery_data_sync/data_convertor.cpp",
     "src/data_sync/gallery_data_sync/file_data_convertor.cpp",
+    "src/data_sync/gallery_data_sync/album_data_convertor.cpp",
   ]
 
   sources = [
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "src/ipc/cloud_download_callback_manager.cpp",
     "src/ipc/cloud_download_callback_proxy.cpp",
     "src/ipc/cloud_sync_callback_manager.cpp",

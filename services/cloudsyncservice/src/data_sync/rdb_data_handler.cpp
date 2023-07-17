@@ -42,6 +42,28 @@ shared_ptr<NativeRdb::ResultSet> RdbDataHandler::Query(
 {
     return rdb_->Query(predicates, columns);
 }
+
+int32_t RdbDataHandler::Insert(int64_t &outRowId, const std::string &tableName, const ValuesBucket &initiavalues)
+{
+    return rdb_->Insert(outRowId, tableName, initiavalues);
+}
+
+int32_t RdbDataHandler::Update(int &changedRows, const std::string &tableName, const ValuesBucket &values,
+    const string &whereClause, const vector<string> &whereArgs)
+{
+    return rdb_->Update(changedRows, tableName, values, whereClause, whereArgs);
+}
+
+int32_t RdbDataHandler::Delete(int &deletedRows, const std::string &tableName,
+    const string &whereClause, const vector<string> &whereArgs)
+{
+    return rdb_->Delete(deletedRows, tableName, whereClause, whereArgs);
+}
+
+int32_t RdbDataHandler::ExecuteSql(const std::string &sql, const std::vector<NativeRdb::ValueObject> &bindArgs)
+{
+    return rdb_->ExecuteSql(sql, bindArgs);
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

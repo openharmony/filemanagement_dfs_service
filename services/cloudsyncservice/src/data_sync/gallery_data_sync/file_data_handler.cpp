@@ -18,6 +18,7 @@
 #include <cstring>
 #include <filesystem>
 #include <tuple>
+#include <set>
 
 #include <dirent.h>
 #include <sys/ioctl.h>
@@ -31,6 +32,7 @@
 #include "dk_assets_downloader.h"
 #include "dk_error.h"
 #include "utils_log.h"
+#include "gallery_album_const.h"
 #include "gallery_file_const.h"
 #include "meta_file.h"
 
@@ -42,6 +44,9 @@ using namespace NativeRdb;
 using namespace DriveKit;
 using namespace Media;
 using ChangeType = OHOS::AAFwk::ChangeInfo::ChangeType;
+using PAC = Media::PhotoAlbumColumns;
+using PM = Media::PhotoMap;
+using PC = Media::PhotoColumn;
 
 constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
 FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
@@ -121,7 +126,7 @@ int32_t FileDataHandler::GetAssetsToDownload(vector<DriveKit::DKDownloadAsset> &
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     predicates.EqualTo(Media::PhotoColumn::PHOTO_SYNC_STATUS,
                        to_string(static_cast<int32_t>(SyncStatusType::TYPE_DOWNLOAD)));
-    auto results = Query(predicates, GALLERY_FILE_COLUMNS);
+    auto results = Query(predicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr modified result");
         return E_RDB;
@@ -155,9 +160,9 @@ tuple<shared_ptr<NativeRdb::ResultSet>, int> FileDataHandler::QueryLocalByCloudI
     }
     int rowCount = 0;
     int ret = resultSet->GetRowCount(rowCount);
-    if (ret != 0) {
-        LOGE("result set get row count err %{public}d", ret);
-        return {nullptr, 0};
+    if (ret != 0 || rowCount < 0) {
+        LOGE("result set get row count err %{public}d, rowCount %{public}d", ret, rowCount);
+        return {nullptr, rowCount};
     }
     return {std::move(resultSet), rowCount};
 }
@@ -182,20 +187,22 @@ static int32_t GetFileId(NativeRdb::ResultSet &local)
     return fileId;
 }
 
-int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &records, OnFetchParams &params)
+int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, OnFetchParams &params)
 {
     LOGI("on fetch %{public}zu records", records->size());
     int32_t ret = E_OK;
-    for (const auto &record : *records) {
+    for (auto &record : *records) {
         auto [resultSet, rowCount] = QueryLocalByCloudId(record.GetRecordId());
-        if (resultSet == nullptr) {
+        if (resultSet == nullptr || rowCount < 0) {
             return E_RDB;
         }
         int32_t fileId = 0;
         ChangeType changeType = ChangeType::INVAILD;
+        CompensateFilePath(record);
         if ((rowCount == 0) && !record.GetIsDelete()) {
             ret = PullRecordInsert(record, params, fileId);
             changeType = ChangeType::INSERT;
+            UpdateAssetInPhotoMap(record, fileId);
         } else if (rowCount == 1) {
             resultSet->GoToNextRow();
             if (record.GetIsDelete()) {
@@ -206,6 +213,7 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
                 ret = PullRecordUpdate(record, *resultSet, params);
                 fileId = GetFileId(*resultSet);
                 changeType = ChangeType::UPDATE;
+                UpdateAssetInPhotoMap(record, fileId);
             }
         } else {
             LOGE("recordId %s rowCount %{public}d", record.GetRecordId().c_str(), rowCount);
@@ -223,6 +231,28 @@ int32_t FileDataHandler::OnFetchRecords(const shared_ptr<vector<DKRecord>> &reco
     DataSyncNotifier::GetInstance().FinalNotify();
     MetaFileMgr::GetInstance().ClearAll();
     return ret;
+}
+
+int32_t FileDataHandler::CompensateFilePath(DriveKit::DKRecord &record)
+{
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_ATTRIBUTES) == data.end() || data.find(FILE_SIZE) == data.end()) {
+        LOGE("record data cannot find attributes or size");
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap attributes;
+    string fullPath;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
+        LOGE("record data cannot find some attributes, may came from old devices");
+        int ret = CalculateFilePath(record, fullPath);
+        if (ret != E_OK) {
+            return ret;
+        }
+        attributes[PhotoColumn::MEDIA_FILE_PATH] = DriveKit::DKRecordField(fullPath);
+    }
+    return E_OK;
 }
 
 static int GetDentryPathName(const string &fullPath, string &outPath, string &outFilename)
@@ -245,20 +275,19 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
 {
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
+    if (data.find(FILE_ATTRIBUTES) == data.end() || data.find(FILE_SIZE) == data.end()) {
+        LOGE("record data cannot find attributes or size");
         return E_INVAL_ARG;
     }
-    DriveKit::DKRecordFieldMap prop;
-    data[FILE_PROPERTIES].GetRecordMap(prop);
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end() || prop.find(PhotoColumn::MEDIA_SIZE) == prop.end() ||
-        prop.find(PhotoColumn::MEDIA_DATE_MODIFIED) == prop.end()) {
-        LOGE("record data cannot find some properties");
-        return E_INVAL_ARG;
+    DriveKit::DKRecordFieldMap attibutes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attibutes);
+    if (attibutes.find(PhotoColumn::MEDIA_FILE_PATH) == attibutes.end()) {
+        LOGE("record data cannot find some attributes");
+        return E_OK;
     }
 
     string fullPath, relativePath, fileName;
-    if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
+    if (attibutes[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
         return E_INVAL_ARG;
     }
@@ -267,16 +296,12 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
         return E_INVAL_ARG;
     }
 
-    int64_t isize, mtime;
-    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_SIZE], isize) != E_OK) {
+    int64_t isize;
+    if (DataConvertor::GetLongComp(data[PhotoColumn::MEDIA_SIZE], isize) != E_OK) {
         LOGE("bad size in props");
         return E_INVAL_ARG;
     }
-    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_DATE_MODIFIED], mtime) != E_OK) {
-        LOGE("bad mtime in props");
-        return E_INVAL_ARG;
-    }
-
+    int64_t mtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
     string rawRecordId = record.GetRecordId();
     string cloudId = MetaFileMgr::RecordIdToCloudId(rawRecordId);
     auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId, relativePath);
@@ -323,35 +348,32 @@ int FileDataHandler::AddCloudThumbs(const DKRecord &record)
     LOGI("thumbs of %s add to cloud_view", record.GetRecordId().c_str());
     int64_t thumbSize = 0, lcdSize = 0;
 
-    DKRecordData datas;
-    record.GetRecordData(datas);
-    if (datas.find(FILE_PROPERTIES) == datas.end()) {
-        LOGE("record data cannot find properties");
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        LOGE("record data cannot find attributes");
         return E_INVAL_ARG;
     }
-    DriveKit::DKRecordFieldMap prop;
-    datas[FILE_PROPERTIES].GetRecordMap(prop);
+    DriveKit::DKRecordFieldMap attributes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
 
     string fullPath;
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end() ||
-        prop[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end() ||
+        attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file path in record");
         return E_INVAL_ARG;
     }
-    if (prop.find(FILE_THUMB_SIZE) == prop.end() ||
-        DataConvertor::GetLongComp(prop[FILE_THUMB_SIZE], thumbSize) != E_OK) {
+    if (attributes.find(FILE_THUMB_SIZE) == attributes.end() ||
+        DataConvertor::GetLongComp(attributes[FILE_THUMB_SIZE], thumbSize) != E_OK) {
         LOGE("bad thumb size in record");
         return E_INVAL_ARG;
     }
-    if (prop.find(FILE_LCD_SIZE) == prop.end() || DataConvertor::GetLongComp(prop[FILE_LCD_SIZE], lcdSize) != E_OK) {
+    if (attributes.find(FILE_LCD_SIZE) == attributes.end() ||
+        DataConvertor::GetLongComp(attributes[FILE_LCD_SIZE], lcdSize) != E_OK) {
         LOGE("bad lcd size in record");
         return E_INVAL_ARG;
     }
-    int64_t mtime;
-    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_DATE_MODIFIED], mtime) != E_OK) {
-        LOGE("bad mtime in props");
-        return E_INVAL_ARG;
-    }
+    int64_t mtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
     int ret = DentryInsertThumb(fullPath, record.GetRecordId(), thumbSize, mtime, THUMB_SUFFIX);
     if (ret != E_OK) {
         LOGE("dentry insert of thumb failed ret %{public}d", ret);
@@ -515,39 +537,162 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
     return E_OK;
 }
 
-int32_t FileDataHandler::GetConflictData(const DKRecord &record, string &fullPath, int64_t &isize, int64_t &mtime)
+int32_t FileDataHandler::GetConflictData(DKRecord &record, string &fullPath, int64_t &isize, int64_t &mtime)
 {
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(FILE_PROPERTIES) == data.end()) {
+    if (data.find(FILE_ATTRIBUTES) == data.end() || data.find(FILE_SIZE) == data.end()) {
+        LOGE("record data cannot find attributes or size");
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap attributes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
+        LOGE("record data cannot find some attributes, may came from old devices");
+        return E_INVAL_ARG;
+    }
+    if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad file_path in attributes");
+        return E_INVAL_ARG;
+    }
+    if (DataConvertor::GetLongComp(data[PhotoColumn::MEDIA_SIZE], isize) != E_OK) {
+        LOGE("bad size in data");
+        return E_INVAL_ARG;
+    }
+    mtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    return E_OK;
+}
+
+int32_t FileDataHandler::CalculateFilePath(DKRecord &record, string &filePath)
+{
+    // method reference from medialibrary
+    int32_t mediaType;
+    int32_t ret = GetMediaType(record, mediaType);
+    if (ret != E_OK) {
+        return E_INVAL_ARG;
+    }
+    int32_t uniqueId = GetAssetUniqueId(mediaType);
+    int32_t errCode = CreateAssetPathById(record, uniqueId, mediaType, filePath);
+    return errCode;
+}
+
+int32_t FileDataHandler::GetMediaType(DKRecord &record, int32_t &mediaType)
+{
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_FILETYPE) == data.end()) {
         LOGE("record data cannot find properties");
         return E_INVAL_ARG;
     }
-    DriveKit::DKRecordFieldMap prop;
-    data[FILE_PROPERTIES].GetRecordMap(prop);
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end() || prop.find(PhotoColumn::MEDIA_SIZE) == prop.end() ||
-        prop.find(PhotoColumn::MEDIA_DATE_MODIFIED) == prop.end()) {
-        LOGE("record data cannot find some properties");
+    int32_t fileType;
+    if (data[FILE_FILETYPE].GetInt(fileType) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("record data cannot find fileType");
         return E_INVAL_ARG;
+    }
+    mediaType = fileType == FILE_TYPE_VIDEO ? MediaType::MEDIA_TYPE_VIDEO : MediaType::MEDIA_TYPE_IMAGE;
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetAssetUniqueId(int32_t &type)
+{
+    string typeString;
+    switch (type) {
+        case MediaType::MEDIA_TYPE_IMAGE:
+            typeString += IMAGE_ASSET_TYPE;
+            break;
+        case MediaType::MEDIA_TYPE_VIDEO:
+            typeString += VIDEO_ASSET_TYPE;
+            break;
+        default:
+            LOGE("This type %{public}d can not get unique id", type);
+            return MediaType::MEDIA_TYPE_FILE;
     }
 
-    if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
-        LOGE("bad file_path in props");
-        return E_INVAL_ARG;
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(ASSET_UNIQUE_NUMBER_TABLE);
+    predicates.SetWhereClause(ASSET_MEDIA_TYPE + " = ?");
+    predicates.SetWhereArgs({typeString});
+    auto resultSet = Query(predicates, {UNIQUE_NUMBER});
+    int32_t uniqueId;
+    DataConvertor::GetInt(ASSET_MEDIA_TYPE, uniqueId, *resultSet);
+    ++uniqueId;
+
+    int updateRows;
+    ValuesBucket values;
+    values.PutInt(UNIQUE_NUMBER, uniqueId);
+    string whereClause = ASSET_MEDIA_TYPE + " = ?";
+    Update(updateRows, ASSET_UNIQUE_NUMBER_TABLE, values, whereClause, {typeString});
+    return uniqueId;
+}
+
+int32_t FileDataHandler::CreateAssetPathById(DKRecord &record, int32_t &uniqueId,
+    int32_t &mediaType, string &filePath)
+{
+    string mediaDirPath = "Photo/";
+    int32_t bucketNum = 0;
+    int32_t errCode = CreateAssetBucket(uniqueId, bucketNum);
+    if (errCode != E_OK) {
+        return errCode;
     }
 
-    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_SIZE], isize) != E_OK) {
-        LOGE("bad size in props");
+    string realName;
+    errCode = CreateAssetRealName(uniqueId, mediaType, GetFileExtension(record), realName);
+    if (errCode != E_OK) {
+        return errCode;
+    }
+    string dirPath = ROOT_MEDIA_DIR + mediaDirPath + to_string(bucketNum);
+    filePath = dirPath + "/" + realName;
+    return E_OK;
+}
+
+int32_t FileDataHandler::CreateAssetBucket(int32_t &uniqueId, int32_t &bucketNum)
+{
+    if (uniqueId < 0) {
+        LOGE("input uniqueId [%{private}d] is invalid", uniqueId);
         return E_INVAL_ARG;
     }
-    if (DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_DATE_MODIFIED], mtime) != E_OK) {
-        LOGE("bad mtime in props");
-        return E_INVAL_ARG;
+    int start = ASSET_DIR_START_NUM;
+    int divider = ASSET_DIR_START_NUM;
+    while (uniqueId > start * ASSET_IN_BUCKET_NUM_MAX) {
+        divider = start;
+        start <<= 1;
+    }
+
+    int fileIdRemainder = uniqueId % divider;
+    if (fileIdRemainder == 0) {
+        bucketNum = start + fileIdRemainder;
+    } else {
+        bucketNum = (start - divider) + fileIdRemainder;
     }
     return E_OK;
 }
 
-int32_t FileDataHandler::PullRecordConflict(const DKRecord &record, bool &comflag)
+int32_t FileDataHandler::CreateAssetRealName(int32_t &fileId, int32_t &mediaType,
+    const string &extension, string &name)
+{
+    string fileNumStr = to_string(fileId);
+    if (fileId <= ASSET_MAX_COMPLEMENT_ID) {
+        size_t fileIdLen = fileNumStr.length();
+        fileNumStr = ("00" + fileNumStr).substr(fileIdLen - 1);
+    }
+
+    string mediaTypeStr;
+    switch (mediaType) {
+        case MediaType::MEDIA_TYPE_IMAGE:
+            mediaTypeStr = DEFAULT_IMAGE_NAME;
+            break;
+        case MediaType::MEDIA_TYPE_VIDEO:
+            mediaTypeStr = DEFAULT_VIDEO_NAME;
+            break;
+        default:
+            LOGE("This mediatype %{public}d can not get real name", mediaType);
+            return E_INVAL_ARG;
+    }
+
+    name = mediaTypeStr + to_string(UTCTimeSeconds()) + "_" + fileNumStr + "." + extension;
+    return E_OK;
+}
+
+int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
 {
     LOGI("judgment downlode conflict");
     int32_t ret = E_OK;
@@ -580,6 +725,9 @@ int32_t FileDataHandler::PullRecordConflict(const DKRecord &record, bool &comfla
     if (rowCount == 1) {
         resultSet->GoToNextRow();
         ret = ConflictHandler(*resultSet, record, fullPath, isize, mtime, comflag);
+        if (comflag) {
+            UpdateAssetInPhotoMap(record, GetFileId(*resultSet));
+        }
     } else {
         LOGE("unknown error: PullRecordConflict(),same path rowCount = %{public}d", rowCount);
         ret = E_RDB;
@@ -587,9 +735,33 @@ int32_t FileDataHandler::PullRecordConflict(const DKRecord &record, bool &comfla
     return ret;
 }
 
-int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, OnFetchParams &params, int32_t &fileId)
+string FileDataHandler::GetFileExtension(DKRecord &record)
 {
-    LOGI("insert of record %s", record.GetRecordId().c_str());
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_FILE_NAME) == data.end()) {
+        LOGE("record data cannot find properties");
+        return "";
+    }
+    string displayName;
+    if (data[FILE_FILE_NAME].GetString(displayName) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("record data cannot find fileType");
+        return "";
+    }
+    string extension;
+    if (!displayName.empty()) {
+        string::size_type pos = displayName.find_last_of('.');
+        if (pos == string::npos) {
+            return "";
+        }
+        extension = displayName.substr(pos + 1);
+    }
+    return extension;
+}
+
+int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &params, int32_t &fileId)
+{
+    LOGI("insert of record %{public}s", record.GetRecordId().c_str());
 
     /* check local file conflict */
     bool comflag = false;
@@ -599,8 +771,6 @@ int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, OnFetchParams 
         return E_OK;
     } else if (ret != E_OK) {
         LOGE("MateFile Conflict failed %{public}d", ret);
-    } else {
-        LOGI("MateFile Conflict OK");
     }
     ret = DentryInsert(userId_, record);
     if (ret != E_OK) {
@@ -623,11 +793,12 @@ int32_t FileDataHandler::PullRecordInsert(const DKRecord &record, OnFetchParams 
         Media::PhotoColumn::PHOTO_SYNC_STATUS,
         static_cast<int32_t>(params.fetchThumbs ? SyncStatusType::TYPE_DOWNLOAD : SyncStatusType::TYPE_VISIBLE));
     ret = Insert(rowId, values);
-    if (ret != E_OK) {
+    if (ret != E_OK || rowId < 0) {
         LOGE("Insert pull record failed, rdb ret=%{public}d", ret);
         return E_RDB;
     }
     fileId = rowId;
+
     LOGI("Insert recordId %s success", record.GetRecordId().c_str());
     if (params.fetchThumbs || AddCloudThumbs(record) != E_OK) {
         AppendToDownload(record, "lcd", params.assetsToDownload);
@@ -757,28 +928,14 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
     }
 
     // get record mtime
-    int64_t cloudMtime = 0;
-    DKRecordData datas;
-    record.GetRecordData(datas);
-    if (datas.find(FILE_PROPERTIES) == datas.end()) {
-        LOGE("record data cannot find properties");
-        return E_INVAL_ARG;
-    }
-    DriveKit::DKRecordFieldMap prop;
-    datas[FILE_PROPERTIES].GetRecordMap(prop);
-    if (prop.find(PhotoColumn::MEDIA_DATE_MODIFIED) == prop.end() ||
-        DataConvertor::GetLongComp(prop[PhotoColumn::MEDIA_DATE_MODIFIED], cloudMtime) != E_OK) {
-        LOGE("bad mtime in record");
-        return E_INVAL_ARG;
-    }
-
+    int64_t cloudMtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
     LOGI("cloudMtime %{public}llu, localMtime %{public}llu",
          static_cast<unsigned long long>(cloudMtime), static_cast<unsigned long long>(localMtime));
     changed = !(cloudMtime == localMtime);
     return E_OK;
 }
 
-int32_t FileDataHandler::PullRecordUpdate(const DKRecord &record, NativeRdb::ResultSet &local, OnFetchParams &params)
+int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet &local, OnFetchParams &params)
 {
     LOGI("update of record %s", record.GetRecordId().c_str());
     if (IsLocalDirty(local)) {
@@ -833,16 +990,16 @@ bool FileDataHandler::ThumbsAtLocal(const DKRecord &record)
 {
     DKRecordData datas;
     record.GetRecordData(datas);
-    if (datas.find(FILE_PROPERTIES) == datas.end()) {
-        LOGE("record data cannot find properties");
+    if (datas.find(FILE_ATTRIBUTES) == datas.end()) {
+        LOGE("record data cannot find attributes");
         return false;
     }
-    DriveKit::DKRecordFieldMap prop;
-    datas[FILE_PROPERTIES].GetRecordMap(prop);
+    DriveKit::DKRecordFieldMap attributes;
+    datas[FILE_ATTRIBUTES].GetRecordMap(attributes);
 
     string fullPath;
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end() ||
-        prop[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end() ||
+        attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file path in record");
         return false;
     }
@@ -894,7 +1051,7 @@ void FileDataHandler::RemoveThmParentPath(const string &filePath)
     ForceRemoveDirectory(thmbFileParentPath.string());
 }
 
-int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::ResultSet &local)
+int32_t FileDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::ResultSet &local)
 {
     LOGI("delete of record %s", record.GetRecordId().c_str());
     string filePath = GetFilePath(local);
@@ -930,6 +1087,7 @@ int32_t FileDataHandler::PullRecordDelete(const DKRecord &record, NativeRdb::Res
             LOGE("delete in rdb failed, ret:%{public}d", ret);
             return E_INVAL_ARG;
         }
+        DeleteAssetInPhotoMap(GetFileId(local));
         return E_OK;
     }
 
@@ -987,19 +1145,19 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     downloadAsset.fieldKey = fieldKey;
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        LOGE("record data cannot find attributes");
         return;
     }
-    DKRecordFieldMap prop;
-    data[FILE_PROPERTIES].GetRecordMap(prop);
+    DKRecordFieldMap attributes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
 
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end()) {
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
         LOGE("record prop cannot find file path");
         return;
     }
     string path;
-    prop[PhotoColumn::MEDIA_FILE_PATH].GetString(path);
+    attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(path);
     if (fieldKey != "content") {
         const string &suffix = fieldKey == "lcd" ? LCD_SUFFIX : THUMB_SUFFIX;
         downloadAsset.downLoadPath = createConvertor_.GetThumbPath(path, suffix);
@@ -1010,6 +1168,155 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     downloadAsset.downLoadPath = MetaFile::GetParentDir(downloadAsset.downLoadPath);
     ForceCreateDirectory(downloadAsset.downLoadPath);
     assetsToDownload.push_back(downloadAsset);
+}
+
+int32_t FileDataHandler::UpdateAssetInPhotoMap(const DKRecord &record, int32_t fileId)
+{
+    NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(PhotoMap::TABLE);
+    updatePredicates.EqualTo(PhotoMap::ASSET_ID, to_string(fileId));
+    auto resultSet = Query(updatePredicates, CLEAN_QUERY_COLUMNS);
+
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_LOGIC_ALBUM_IDS) == data.end()) {
+        LOGE("record data cannot find properties");
+        return E_INVAL_ARG;
+    }
+    DKRecordFieldList list;
+    if (data[FILE_LOGIC_ALBUM_IDS].GetRecordList(list) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("cannot get album ids from record");
+        return E_INVAL_ARG;
+    }
+
+    set<int> cloudMapIds;
+    for (const auto &it : list) {
+        DKReference ref;
+        if (it.GetReference(ref) != DKLocalErrorCode::NO_ERROR) {
+            LOGE("id list member not a reference");
+            continue;
+        }
+        int albumId = GetAlbumIdFromName(ref.recordId);
+        if (albumId < 0) {
+            LOGE("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
+            continue;
+        }
+        LOGI("record get albumId %{public}d", albumId);
+        cloudMapIds.insert(albumId);
+        QueryAndInsertMap(albumId, fileId);
+    }
+
+    QueryAndDeleteMap(fileId, cloudMapIds);
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetAlbumIdFromName(const std::string &albumName)
+{
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PhotoAlbumColumns::TABLE);
+    predicates.EqualTo(PhotoAlbumColumns::ALBUM_NAME, albumName);
+    auto resultSet = Query(predicates, {PhotoAlbumColumns::ALBUM_ID});
+    int rowCount = 0;
+    int ret = resultSet->GetRowCount(rowCount);
+    if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
+        LOGE("get nullptr result or rowcount %{public}d", rowCount);
+        return -1;
+    }
+    if (resultSet->GoToNextRow() == 0) {
+        int albumId;
+        int ret = DataConvertor::GetInt(PhotoAlbumColumns::ALBUM_ID, albumId, *resultSet);
+        if (ret == E_OK) {
+            return albumId;
+        }
+    }
+    LOGE("fail to get ALBUM_ID value");
+    return -1;
+}
+
+void FileDataHandler::QueryAndInsertMap(int32_t albumId, int32_t fileId)
+{
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PhotoMap::TABLE);
+    predicates.EqualTo(PhotoMap::ALBUM_ID, to_string(albumId))->And()->EqualTo(PhotoMap::ASSET_ID, to_string(fileId));
+    auto resultSet = Query(predicates, {});
+    int rowCount = 0;
+    int ret = resultSet->GetRowCount(rowCount);
+    if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
+        LOGE("get nullptr result or rowcount %{public}d", rowCount);
+        return;
+    }
+    if (rowCount > 0) {
+        LOGI("albumId %{public}d - fileId %{public}d already mapped", albumId, fileId);
+        return;
+    }
+
+    int64_t rowId;
+    ValuesBucket values;
+    values.PutInt(PhotoMap::ALBUM_ID, albumId);
+    values.PutInt(PhotoMap::ASSET_ID, fileId);
+    values.PutInt(PhotoMap::DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
+    ret = Insert(rowId, PhotoMap::TABLE, values);
+    if (ret != E_OK) {
+        LOGE("fail to insert albumId %{public}d - fileId %{public}d mapping, ret %{public}d", albumId, fileId, ret);
+        return;
+    }
+    LOGI("albumId %{public}d - fileId %{public}d add mapping success", albumId, fileId);
+}
+
+void FileDataHandler::QueryAndDeleteMap(int32_t fileId, const set<int> &cloudMapIds)
+{
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PhotoMap::TABLE);
+    predicates.EqualTo(PhotoMap::ASSET_ID, to_string(fileId));
+
+    auto resultSet = Query(predicates, {});
+    int rowCount = 0;
+    int ret = resultSet->GetRowCount(rowCount);
+    if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
+        LOGE("get nullptr result or rowcount %{public}d", rowCount);
+        return;
+    }
+    while (resultSet->GoToNextRow() == 0) {
+        int albumId;
+        int ret = DataConvertor::GetInt(PhotoMap::ALBUM_ID, albumId, *resultSet);
+        if (ret != E_OK) {
+            LOGE("fail to get ALBUM_ID value");
+            continue;
+        }
+        int localDirty  = 0;
+        ret = DataConvertor::GetInt(PhotoMap::DIRTY, localDirty, *resultSet);
+        if (ret != E_OK) {
+            LOGE("fail to get Dirty value");
+            continue;
+        }
+
+        if (localDirty != static_cast<int32_t>(DirtyTypes::TYPE_SYNCED)) {
+            LOGI("mapping albumId %{public}d - fileId %{public}d local dirty %{public}d, skip", albumId, fileId, localDirty);
+            continue;
+        }
+        if (cloudMapIds.find(albumId) == cloudMapIds.end()) {
+            LOGE("delete mapping albumId %{public}d - fileId %{public}d", albumId, fileId);
+            int deletedRows;
+            int ret =
+                Delete(deletedRows, PhotoMap::TABLE, PhotoMap::ASSET_ID + " = ? AND " + PhotoMap::ALBUM_ID + " = ?",
+                       {to_string(fileId), to_string(albumId)});
+            if (ret != E_OK) {
+                LOGE("delete mapping failed %{public}d", ret);
+                continue;
+            }
+        }
+    }
+}
+
+int32_t FileDataHandler::DeleteAssetInPhotoMap(int32_t fileId)
+{
+    if (fileId <= 0) {
+        return E_INVAL_ARG;
+    }
+
+    int32_t deletedRows;
+    int ret = Delete(deletedRows, PhotoMap::TABLE, PhotoMap::ASSET_ID + " = ?", {to_string(fileId)});
+    if (ret != E_OK) {
+        LOGE("delete in rdb failed, ret: %{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
 }
 
 int32_t FileDataHandler::DeleteDentryFile(void)
@@ -1066,6 +1373,7 @@ int32_t FileDataHandler::CleanPureCloudRecord(NativeRdb::ResultSet &local, const
         LOGE("Clean delete in rdb failed, res:%{public}d", res);
         return E_RDB;
     }
+    DeleteAssetInPhotoMap(deleteRows);
     return E_OK;
 }
 
@@ -1100,6 +1408,7 @@ int32_t FileDataHandler::CleanNotDirtyData(const string &thmbDir, const string &
         LOGE("Clean delete in rdb failed, ret:%{public}d", ret);
         return ret;
     }
+    DeleteAssetInPhotoMap(deleteRows);
     return ret;
 }
 
@@ -1157,6 +1466,7 @@ int32_t FileDataHandler::CleanCloudRecord(NativeRdb::ResultSet &local, const int
             LOGE("Clean pure cloud record failed, res:%{public}d", res);
             return res;
         }
+        DeleteAssetInPhotoMap(GetFileId(local));
     } else {
         LOGD("File is not pure cloud data");
         res = CleanNotPureCloudRecord(local, action, filePath);
@@ -1215,6 +1525,7 @@ int32_t FileDataHandler::Clean(const int action)
 
     return E_OK;
 }
+
 int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
 {
     /* build predicates */
@@ -1237,7 +1548,7 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
     createPredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(createPredicates, GALLERY_FILE_COLUMNS);
+    auto results = Query(createPredicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr created result");
         return E_RDB;
@@ -1247,6 +1558,20 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
     int ret = createConvertor_.ResultSetToRecords(move(results), records);
     if (ret != 0) {
         LOGE("result set to records err %{public}d", ret);
+        return ret;
+    }
+
+    /* bind album */
+    ret = BindAlbums(records);
+    if (ret != E_OK) {
+        LOGE("bind albums err %{public}d", ret);
+        return ret;
+    }
+
+    /* erase local info */
+    ret = EraseLocalInfo(records);
+    if (ret != 0) {
+        LOGE("erase local info err %{public}d", ret);
         return ret;
     }
 
@@ -1270,7 +1595,7 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
     deletePredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(deletePredicates, GALLERY_FILE_COLUMNS);
+    auto results = Query(deletePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr deleted result");
         return E_RDB;
@@ -1303,7 +1628,7 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(updatePredicates, GALLERY_FILE_COLUMNS);
+    auto results = Query(updatePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr modified result");
         return E_RDB;
@@ -1316,6 +1641,192 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
         return ret;
     }
 
+    /* album map change */
+    ret = BindAlbumChanges(records);
+    if (ret != E_OK) {
+        LOGE("update album map change err %{public}d", ret);
+        return ret;
+    }
+
+    /* erase local info */
+    ret = EraseLocalInfo(records);
+    if (ret != 0) {
+        LOGE("erase local info err %{public}d", ret);
+        return ret;
+    }
+
+    return E_OK;
+}
+
+static inline int32_t GetFileIdFromRecord(DKRecord &record)
+{
+    DKRecordData data;
+    record.GetRecordData(data);
+    DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
+    return properties[Media::MediaColumn::MEDIA_ID];
+}
+
+static inline void InsertAlbumIds(DKRecord &record, vector<string> &cloudIds)
+{
+    DKRecordData data;
+    DKRecordFieldList list;
+    record.StealRecordData(data);
+    for (auto &id : cloudIds) {
+        list.push_back(DKRecordField(DKReference{ id, "album" }));
+    }
+    data[FILE_LOGIC_ALBUM_IDS] = DKRecordField(list);
+    record.SetRecordData(data);
+}
+
+static inline void InsertAlbumIdChanges(DKRecord &record, vector<string> &add, vector<string> &rm)
+{
+    DKRecordData data;
+    record.StealRecordData(data);
+    /* add */
+    DKRecordFieldList addList;
+    for (auto &id : add) {
+        addList.push_back(DKRecordField(DKReference{ id, "album" }));
+    }
+    data[FILE_ADD_LOGIC_ALBUM_IDS] = DKRecordField(addList);
+    /* remove */
+    DKRecordFieldList rmList;
+    for (auto &id : rm) {
+        rmList.push_back(DKRecordField(DKReference{ id, "album" }));
+    }
+    data[FILE_RM_LOGIC_ALBUM_IDS] = DKRecordField(rmList);
+    record.SetRecordData(data);
+}
+
+/* need optimization: IN or JOIN */
+int32_t FileDataHandler::GetAlbumCloudIds(vector<int32_t> &localIds, vector<string> &cloudIds)
+{
+    for (auto localId : localIds) {
+        NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
+        predicates.EqualTo(PAC::ALBUM_ID, to_string(localId));
+        /* query map */
+        auto results = Query(predicates, {});
+        if (results == nullptr) {
+            LOGE("get nullptr result");
+            return E_RDB;
+        }
+        if (results->GoToNextRow() != NativeRdb::E_OK) {
+            LOGE("failed to go to next row");
+            return E_RDB;
+        }
+        string cloudId;
+        int32_t ret = createConvertor_.GetString(PAC::ALBUM_NAME, cloudId, *results);
+        if (ret != E_OK) {
+            return ret;
+        }
+        cloudIds.push_back(cloudId);
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetAlbumIdsFromResultSet(const shared_ptr<NativeRdb::ResultSet> resultSet,
+    vector<int32_t> &ids)
+{
+    while (resultSet->GoToNextRow() == 0) {
+        int32_t id;
+        int32_t ret = createConvertor_.GetInt(PM::ALBUM_ID, id, *resultSet);
+        if (ret != E_OK) {
+            return ret;
+        }
+        ids.push_back(id);
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::BindAlbums(std::vector<DriveKit::DKRecord> &records)
+{
+    for (auto &record : records) {
+        NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PM::TABLE);
+        /* map exceed limit? */
+        predicates.EqualTo(PM::ASSET_ID, to_string(GetFileIdFromRecord(record)));
+        /* query map */
+        auto results = Query(predicates, {});
+        if (results == nullptr) {
+            LOGE("get nullptr result");
+            return E_RDB;
+        }
+        vector<int32_t> albumIds;
+        int32_t ret = GetAlbumIdsFromResultSet(results, albumIds);
+        if (ret != E_OK) {
+            LOGE("get album ids from result set err %{public}d", ret);
+            return ret;
+        }
+        /* query album */
+        vector<string> cloudIds;
+        ret = GetAlbumCloudIds(albumIds, cloudIds);
+        if (ret != E_OK) {
+            LOGE("get album cloud id err %{public}d", ret);
+            return ret;
+        }
+        /* insert album ids */
+        InsertAlbumIds(record, cloudIds);
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetAlbumIdsFromResultSet(const shared_ptr<NativeRdb::ResultSet> resultSet,
+    vector<int32_t> &add, vector<int32_t> &rm)
+{
+    while (resultSet->GoToNextRow() == 0) {
+        int32_t id;
+        int32_t ret = createConvertor_.GetInt(PM::ALBUM_ID, id, *resultSet);
+        if (ret != E_OK) {
+            return ret;
+        }
+        int32_t state;
+        ret = createConvertor_.GetInt(PM::DIRTY, state, *resultSet);
+        if (ret != E_OK) {
+            return ret;
+        }
+        if (state == static_cast<int32_t>(Media::DirtyType::TYPE_NEW)) {
+            add.push_back(id);
+        } else if (state == static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)) {
+            rm.push_back(id);
+        }
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::BindAlbumChanges(std::vector<DriveKit::DKRecord> &records)
+{
+    for (auto &record : records) {
+        NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PM::TABLE);
+        /* map exceed limit? */
+        predicates.EqualTo(PM::ASSET_ID, to_string(GetFileIdFromRecord(record)))
+            ->And()
+            ->NotEqualTo(PM::DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED)));
+        /* query map */
+        auto results = Query(predicates, {});
+        if (results == nullptr) {
+            LOGE("get nullptr result");
+            return E_RDB;
+        }
+        /* new or delete */
+        vector<int32_t> add, remove;
+        int32_t ret = GetAlbumIdsFromResultSet(results, add, remove);
+        if (ret != E_OK) {
+            LOGE("get album ids from result set err %{public}d", ret);
+            return ret;
+        }
+        /* query album */
+        vector<string> addCloud, removeCloud;
+        ret = GetAlbumCloudIds(add, addCloud);
+        if (ret != E_OK) {
+            LOGE("get album cloud id err %{public}d", ret);
+            return ret;
+        }
+        ret = GetAlbumCloudIds(remove, removeCloud);
+        if (ret != E_OK) {
+            LOGE("get album cloud id err %{public}d", ret);
+            return ret;
+        }
+        /* update */
+        InsertAlbumIdChanges(record, addCloud, removeCloud);
+    }
     return E_OK;
 }
 
@@ -1326,7 +1837,7 @@ int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::
     predicates.SetWhereClause(Media::PhotoColumn::MEDIA_FILE_PATH + " = ?");
     predicates.SetWhereArgs({cloudId});
     predicates.Limit(LIMIT_SIZE);
-    auto resultSet = Query(predicates, GALLERY_FILE_COLUMNS);
+    auto resultSet = Query(predicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (resultSet == nullptr) {
         LOGE("get nullptr created result");
         return E_RDB;
@@ -1369,7 +1880,7 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
     updatePredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(updatePredicates, GALLERY_FILE_COLUMNS);
+    auto results = Query(updatePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr modified result");
         return E_RDB;
@@ -1377,11 +1888,37 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
 
     /* results to records */
     int ret = fdirtyConvertor_.ResultSetToRecords(move(results), records);
-    if (ret != 0) {
+    if (ret != E_OK) {
         LOGE("result set to records err %{public}d", ret);
         return ret;
     }
 
+    /* album map change */
+    ret = BindAlbumChanges(records);
+    if (ret != E_OK) {
+        LOGE("update album map change err %{public}d", ret);
+        return ret;
+    }
+
+    /* erase local info */
+    ret = EraseLocalInfo(records);
+    if (ret != E_OK) {
+        LOGE("erase local info err %{public}d", ret);
+        return ret;
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::EraseLocalInfo(vector<DriveKit::DKRecord> &records)
+{
+    for (auto &record : records) {
+        DKRecordData data;
+        record.GetRecordData(data);
+        DriveKit::DKRecordFieldMap properties = data[FILE_PROPERTIES];
+        properties.erase(Media::MediaColumn::MEDIA_ID);
+        properties.erase(Media::PhotoColumn::PHOTO_CLOUD_ID);
+    }
     return E_OK;
 }
 
@@ -1389,17 +1926,17 @@ static string GetFilePathFromRecord(const DKRecord &record)
 {
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        LOGE("record data cannot find attributes");
         return "";
     }
-    DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end()) {
+    DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
         LOGE("record data cannot find file path");
         return "";
     }
     string path;
-    if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
+    if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
         return "";
     }
@@ -1520,18 +2057,18 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
 
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        LOGE("record data cannot find attributes");
         return E_INVAL_ARG;
     }
-    DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
-    if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end()) {
+    DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+    if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
         LOGE("record data cannot find file path");
         return E_INVAL_ARG;
     }
 
     string path;
-    if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
+    if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
         return E_INVAL_ARG;
     }
@@ -1545,19 +2082,28 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
     vector<string> whereArgs = {path};
 
     /* compare mtime and metatime */
-    if (OnCreateIsTimeChanged(data, localMap, path, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
+    if (OnCreateIsTimeChanged(record, localMap, path, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY));
-    } else if (OnCreateIsTimeChanged(data, localMap, path, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
+    } else if (OnCreateIsTimeChanged(record, localMap, path, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
     } else {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
     }
 
+    /* update file */
     int32_t ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
     if (ret != 0) {
         LOGE("on create records update synced err %{public}d", ret);
         return ret;
     }
+
+    /* update album map */
+    ret = UpdateLocalAlbumMap(entry.first);
+    if (ret != E_OK) {
+        LOGE("update local album map err %{public}d", ret);
+        return ret;
+    }
+
     return E_OK;
 }
 
@@ -1572,6 +2118,7 @@ int32_t FileDataHandler::OnDeleteRecordSuccess(const std::pair<DKRecordId, DKRec
         LOGE("on delete records update err %{public}d", ret);
         return ret;
     }
+    DeleteAssetInPhotoMap(deletedRows);
     return E_OK;
 }
 
@@ -1585,7 +2132,7 @@ int32_t FileDataHandler::OnModifyRecordSuccess(
     string cloudId = entry.first;
 
     /* compare mtime */
-    if (OnModifyIsTimeChanged(data, localMap, cloudId, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
+    if (OnModifyIsTimeChanged(record, localMap, cloudId, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
         LOGI("mtime changed, need to update fdirty");
         return E_OK;
     }
@@ -1603,7 +2150,7 @@ int32_t FileDataHandler::OnModifyRecordSuccess(
     }
 
     /* compare metatime */
-    if (OnModifyIsTimeChanged(data, localMap, cloudId, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
+    if (OnModifyIsTimeChanged(record, localMap, cloudId, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
         LOGI("metatime changed, need to update mdirty");
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
         ret = Update(changedRows, valuesBucket, whereClause, {cloudId});
@@ -1612,33 +2159,49 @@ int32_t FileDataHandler::OnModifyRecordSuccess(
             return ret;
         }
     }
+
+    /* update album map */
+    ret = UpdateLocalAlbumMap(entry.first);
+    if (ret != E_OK) {
+        LOGE("update local album map err %{public}d", ret);
+        return ret;
+    }
+
     return E_OK;
 }
 
+int32_t FileDataHandler::UpdateLocalAlbumMap(const string &cloudId)
+{
+    /* update new */
+    string newSql = "UPDATE " + PM::TABLE + " SET " + PM::DIRTY + " = " +
+        to_string(static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED)) + " WHERE " + PM::ASSET_ID +
+        " IN (SELECT " + PC::MEDIA_ID + " FROM " + PC::PHOTOS_TABLE + " WHERE " +
+        PC::PHOTO_CLOUD_ID + " = '" + cloudId + "')";
+    int32_t ret = ExecuteSql(newSql);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("Update local album map err %{public}d", ret);
+        return ret;
+    }
+    /* update deleted */
+    string deleteSql = "DELETE FROM " + PM::TABLE + " WHERE " + PM::ASSET_ID + " IN (SELECT " +
+        PC::MEDIA_ID + " FROM " + PC::PHOTOS_TABLE + " WHERE " + PC::PHOTO_CLOUD_ID +
+        " = '" + cloudId + "')";
+    ret = ExecuteSql(deleteSql);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("delete local album map err %{public}d", ret);
+        return ret;
+    }
+    return ret;
+}
+
 bool FileDataHandler::OnCreateIsTimeChanged(
-    const DKRecordData &data,
+    const DriveKit::DKRecord &record,
     const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
     const std::string &path,
     const std::string &type)
 {
-    int64_t cloudtime;
+    int64_t cloudtime = record.GetCreateTime() / MILLISECOND_TO_SECOND;
     int64_t localtime;
-
-    /* any error will return true，do not update to synced */
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
-        return true;
-    }
-    DKRecordFieldMap prop = const_cast<DKRecordData&>(data)[FILE_PROPERTIES];
-    if (prop.find(type) == prop.end()) {
-        LOGE("record data cannot find some properties");
-        return true;
-    }
-
-    if (prop[type].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
-        LOGE("bad file_path in props");
-        return true;
-    }
     auto it = localMap.find(path);
     if (it == localMap.end()) {
         return true;
@@ -1658,29 +2221,14 @@ bool FileDataHandler::OnCreateIsTimeChanged(
 }
 
 bool FileDataHandler::OnModifyIsTimeChanged(
-    const DKRecordData &data,
+    const DriveKit::DKRecord &record,
     const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
     const std::string &cloudId,
     const std::string &type)
 {
-    int64_t cloudtime;
+    int64_t cloudtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
     int64_t localtime;
 
-    /* any error will return true，do not update to synced */
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
-        return true;
-    }
-    DKRecordFieldMap prop = const_cast<DKRecordData&>(data)[FILE_PROPERTIES];
-    if (prop.find(type) == prop.end()) {
-        LOGE("record data cannot find some properties");
-        return true;
-    }
-
-    if (prop[type].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
-        LOGE("bad file_path in props");
-        return true;
-    }
     auto it = localMap.find(cloudId);
     if (it == localMap.end()) {
         return true;
@@ -1689,7 +2237,21 @@ bool FileDataHandler::OnModifyIsTimeChanged(
     if (type == Media::PhotoColumn::MEDIA_DATE_MODIFIED) {
         localtime = it->second.first;
     } else {
-        localtime = it->second.second;
+        DKRecordData data;
+        record.GetRecordData(data);
+        if (data.find(FILE_ATTRIBUTES) == data.end()) {
+            LOGE("record data cannot find attributes");
+            return false;
+        }
+        DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+        if (attributes.find(type) == attributes.end()) {
+            LOGE("record data cannot find meta_dateModified_time");
+            return false;
+        }
+        if (attributes[type].GetLong(localtime) != DKLocalErrorCode::NO_ERROR) {
+            LOGE("bad meta_dateModified_time in props");
+            return true;
+        }
     }
 
     /* compare mtime or metatime */
@@ -1711,17 +2273,17 @@ void FileDataHandler::GetLocalTimeMap(const std::map<DKRecordId, DKRecordOperRes
             auto record = entry.second.GetDKRecord();
             DKRecordData data;
             record.GetRecordData(data);
-            if (data.find(FILE_PROPERTIES) == data.end()) {
-                LOGE("record data cannot find properties");
+            if (data.find(FILE_ATTRIBUTES) == data.end()) {
+                LOGE("record data cannot find attributes");
                 return;
             }
-            DriveKit::DKRecordFieldMap prop = data[FILE_PROPERTIES];
-            if (prop.find(PhotoColumn::MEDIA_FILE_PATH) == prop.end()) {
-                LOGE("record data cannot find some properties");
+            DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+            if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
+                LOGE("record data cannot find some attributes");
                 return;
             }
             string curPath;
-            if (prop[PhotoColumn::MEDIA_FILE_PATH].GetString(curPath) != DKLocalErrorCode::NO_ERROR) {
+            if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(curPath) != DKLocalErrorCode::NO_ERROR) {
                 LOGE("bad file_path in props");
                 return;
             }
@@ -1730,7 +2292,7 @@ void FileDataHandler::GetLocalTimeMap(const std::map<DKRecordId, DKRecordOperRes
     }
     NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     createPredicates.And()->In(type, path);
-    auto resultSet = Query(createPredicates, GALLERY_FILE_COLUMNS);
+    auto resultSet = Query(createPredicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (resultSet == nullptr) {
         return;
     }
@@ -1803,19 +2365,19 @@ int32_t FileDataHandler::HandleCloudSpaceNotEnough()
 int32_t FileDataHandler::HandleATFailed()
 {
     LOGE("AT Failed");
-    return E_OK;
+    return E_DATA;
 }
 
 int32_t FileDataHandler::HandleNameConflict()
 {
     LOGE("Name Conflict");
-    return E_OK;
+    return E_DATA;
 }
 
 int32_t FileDataHandler::HandleNameInvalid()
 {
     LOGE("Name Invalid");
-    return E_OK;
+    return E_DATA;
 }
 
 int64_t FileDataHandler::UTCTimeSeconds()
