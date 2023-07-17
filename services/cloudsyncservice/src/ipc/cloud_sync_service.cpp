@@ -137,6 +137,7 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
     auto callback = iface_cast<ICloudSyncCallback>(remoteObject);
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     CloudSyncCallbackManager::GetInstance().AddCallback(GALLERY_BUNDLE_NAME, callerUserId, callback);
+    dataSyncManager_->RegisterCloudSyncCallback(GALLERY_BUNDLE_NAME, callerUserId);
     return E_OK;
 }
 
