@@ -250,6 +250,9 @@ const std::unordered_map<DataType,
              if (value.GetString(stringValue) != DriveKit::DKLocalErrorCode::NO_ERROR) {
                  return E_INVAL_ARG;
              }
+             if (stringValue == "") {
+                return E_OK;
+             }
              bucket.PutString(field, stringValue);
              return E_OK;
          }},
