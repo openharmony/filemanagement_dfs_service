@@ -36,6 +36,10 @@ const std::string IsCallerSelfFunc(const std::vector<std::string> &args)
 GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t userId)
     : DataSyncer(bundleName, userId)
 {
+}
+
+int32_t GalleryDataSyncer::Init(const std::string bundleName, const int32_t userId)
+{
     /* rdb config */
     NativeRdb::RdbStoreConfig config(DATABASE_NAME);
     config.SetPath(DATA_APP_EL2 + to_string(userId) + DATABASE_DIR + DATABASE_NAME);
@@ -54,12 +58,13 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
     auto rdb_ = NativeRdb::RdbHelper::GetRdbStore(config, Media::MEDIA_RDB_VERSION, cb, err);
     if (rdb_ == nullptr) {
         LOGE("gallyer data syncer init rdb fail");
-        exit(0);
+        return E_RDB;
     }
 
     /* init handler */
     fileHandler_ = make_shared<FileDataHandler>(userId, bundleName, rdb_);
     albumHandler_ = make_shared<AlbumDataHandler>(userId, bundleName, rdb_);
+    return E_OK;
 }
 
 int32_t GalleryDataSyncer::Clean(const int action)

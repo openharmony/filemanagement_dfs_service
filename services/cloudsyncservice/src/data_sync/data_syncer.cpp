@@ -594,6 +594,11 @@ int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)
     return E_OK;
 }
 
+int32_t DataSyncer::Init(const std::string bundleName, const int32_t userId)
+{
+    return E_OK;
+}
+
 int32_t DataSyncer::Clean(const int action)
 {
     return E_OK;

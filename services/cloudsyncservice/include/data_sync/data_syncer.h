@@ -60,6 +60,7 @@ public:
     SyncState GetSyncState() const;
 
     /*clean*/
+    virtual int32_t Init(const std::string bundleName, const int32_t userId);
     virtual int32_t Clean(const int action);
 
     /* sdk */
