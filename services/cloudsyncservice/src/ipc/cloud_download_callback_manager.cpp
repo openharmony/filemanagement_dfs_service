@@ -76,12 +76,25 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
         } else {
             downloadedState = DownloadProgressObj::COMPLETED;
         }
-        LOGI("download_file : [callback downloaded] %{public}s state is %{public}s.",
-            path.c_str(), download.to_string().c_str());
+        LOGI("download_file : [callback downloaded] %{public}s state is %{public}s, localErr is %{public}d.",
+             path.c_str(), download.to_string().c_str(), static_cast<int>(err.dkErrorCode));
+
+        /**
+         * Avoiding the issue of cloud service not returning a total error code.
+         * Currently, only single asset download is supported.
+         */
+        for (const auto &it : results) {
+            if (!it.second.IsSuccess()) {
+                LOGE("download file failed, localErr: %{public}d", it.second.GetDKError().dkErrorCode);
+                downloadedState = DownloadProgressObj::FAILED;
+                break;
+            }
+        }
+
         if (callback_ != nullptr && download.state == DownloadProgressObj::RUNNING) {
             download.state = downloadedState;
             callback_->OnDownloadProcess(download);
-            if (assetsToDownload.size() == 1) {
+            if ((assetsToDownload.size() == 1) && (download.state == DownloadProgressObj::COMPLETED)) {
                 (void)handler->OnDownloadSuccess(assetsToDownload[0]);
             }
         }
