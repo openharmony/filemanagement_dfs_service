@@ -72,6 +72,7 @@ ohos_unittest("album_data_handler_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -144,6 +145,7 @@ ohos_unittest("data_sync_manager_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -214,6 +216,7 @@ ohos_unittest("data_handler_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -264,6 +267,7 @@ ohos_unittest("data_convertor_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -320,6 +324,7 @@ ohos_unittest("file_data_handler_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -386,6 +391,7 @@ ohos_unittest("gallery_data_syncer_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -460,6 +466,7 @@ ohos_unittest("data_syncer_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -524,6 +531,7 @@ ohos_unittest("file_data_convertor_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -596,6 +604,7 @@ ohos_unittest("sdk_helper_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -668,6 +677,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -702,7 +712,10 @@ ohos_unittest("sync_state_manager_test") {
     "//third_party/googletest:gtest_main",
   ]
 
-  external_deps = [ "init:libbegetutil" ]
+  external_deps = [
+    "hilog:libhilog",
+    "init:libbegetutil",
+  ]
 
   defines = [
     "private=public",
@@ -771,6 +784,7 @@ ohos_unittest("task_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",

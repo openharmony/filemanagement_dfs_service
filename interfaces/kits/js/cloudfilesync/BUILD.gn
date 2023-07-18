@@ -25,7 +25,12 @@ ohos_shared_library("cloudsync") {
     "${utils_path}:libdistributedfileutils",
   ]
 
-  external_deps = [ "file_api:filemgmt_libn" ]
+  external_deps = [
+    "file_api:filemgmt_libhilog",
+    "file_api:filemgmt_libn",
+    "hilog:libhilog",
+    "napi:ace_napi",
+  ]
 
   defines = [
     "LOG_DOMAIN=0xD004309",

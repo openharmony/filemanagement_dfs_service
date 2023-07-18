@@ -34,9 +34,6 @@ ohos_unittest("cloud_pref_impl_test") {
     "../../../../../distributeddatamgr/preferences/frameworks/native/include",
   ]
 
-  public_deps =
-      [ "${bas_hiviewdfx_hilog_path}/interfaces/native/innerkits:libhilog" ]
-
   deps = [
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
@@ -45,6 +42,7 @@ ohos_unittest("cloud_pref_impl_test") {
 
   external_deps = [
     "dfs_service:cloudsync_kit_inner",
+    "hilog:libhilog",
     "ipc:ipc_core",
   ]
 
@@ -71,7 +69,10 @@ ohos_unittest("utils_directory_test") {
     "//third_party/googletest:gtest_main",
   ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 
   defines = [ "private=public" ]
   defines += [
