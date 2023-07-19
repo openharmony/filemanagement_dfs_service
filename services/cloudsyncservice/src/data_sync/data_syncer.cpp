@@ -65,20 +65,11 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
         userId_, bundleName_.c_str(), forceFlag, triggerType);
 
     sdkHelper_->SaveSubscription();
+
     /* only one specific data sycner running at a time */
     if (syncStateManager_.CheckAndSetPending(forceFlag)) {
         LOGI("syncing, pending sync");
         return E_PENDING;
-    }
-
-    /* lock: device-reentrant */
-    sdkHelper_->ResetLock(lock_);
-    int32_t ret = sdkHelper_->GetLock(lock_);
-    if (ret != E_OK) {
-        LOGE("sdk helper get lock err %{public}d", ret);
-        errorCode_ = ret;
-        CompleteAll();
-        return ret;
     }
 
     /* start data sync */
@@ -98,6 +89,39 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
     SyncStateChangedNotify(CloudSyncState::STOPPED, ErrorType::NO_ERROR);
 
     return E_OK;
+}
+
+int32_t DataSyncer::Lock()
+{
+    /* cas */
+    if (lock_.isLocked.test_and_set()) {
+        return E_OK;
+    }
+
+    /* lock: device-reentrant */
+    int32_t ret = sdkHelper_->GetLock(lock_.lock);
+    if (ret != E_OK) {
+        LOGE("sdk helper get lock err %{public}d", ret);
+        lock_.isLocked.clear();
+        lock_.lock = { 0 };
+        errorCode_ = ret;
+    }
+
+    return ret;
+}
+
+void DataSyncer::UnLock()
+{
+    if (!lock_.isLocked.test_and_set()) {
+        return;
+    }
+
+    /* sdk unlock */
+    sdkHelper_->DeleteLock(lock_.lock);
+
+    /* reset */
+    lock_.isLocked.clear();
+    lock_.lock = { 0 };
 }
 
 int32_t DataSyncer::StartDownloadFile(const std::string path, const int32_t userId)
@@ -910,8 +934,8 @@ void DataSyncer::CompleteAll()
 {
     LOGI("%{private}d %{private}s completes all", userId_, bundleName_.c_str());
 
-    /* unlock */
-    sdkHelper_->DeleteLock(lock_);
+    /* guarantee: unlock if locked */
+    UnLock();
 
     /* reset internal status */
     Reset();

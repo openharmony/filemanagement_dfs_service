@@ -65,6 +65,9 @@ public:
 
     /* sdk */
     void SetSdkHelper(std::shared_ptr<SdkHelper> &sdkHelper);
+    int32_t Lock();
+    void UnLock();
+
     void NotifyCurrentSyncState();
 
 protected:
@@ -168,7 +171,8 @@ private:
 
     /* sdk */
     std::shared_ptr<SdkHelper> sdkHelper_;
-    DriveKit::DKLock lock_;
+    SdkLock lock_;
+
     int32_t errorCode_{0};
 
     /* download callback manager*/
