@@ -34,7 +34,34 @@ CloudSyncCallbackImpl::CloudSyncCallbackImpl(napi_env env, napi_value fun) : env
 
 CloudSyncCallbackImpl::~CloudSyncCallbackImpl()
 {
-    napi_delete_reference(env_, cbOnRef_);
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (loop == nullptr) {
+        return;
+    }
+
+    unique_ptr<uv_work_t> work(new (nothrow) uv_work_t);
+    unique_ptr<UvDeleteMsg> msg = make_unique<UvDeleteMsg>(env_, cbOnRef_);
+
+    work->data = static_cast<void *>(msg.get());
+    int ret = uv_queue_work(loop, work.get(), [](uv_work_t *w) {}, [](uv_work_t *w, int s) {
+            auto *msg = static_cast<UvDeleteMsg *>(w->data);
+            do {
+                if (msg == nullptr || msg->ref_ == nullptr) {
+                    LOGE("UvChangeMsg is null");
+                    break;
+                }
+                napi_delete_reference(msg->env_, msg->ref_);
+            } while (0);
+            delete msg;
+            delete w;
+    });
+    if (ret != 0) {
+        LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
+        return;
+    }
+    msg.release();
+    work.release();
 }
 
 void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)

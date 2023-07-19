@@ -56,6 +56,13 @@ public:
         DownloadProgressObj downloadProgress_;
     };
 
+    class UvDeleteMsg {
+    public:
+        UvDeleteMsg(napi_env env, napi_ref ref) : env_(env), ref_(ref) {}
+        ~UvDeleteMsg() {}
+        napi_env env_;
+        napi_ref ref_;
+    };
 private:
     napi_env env_;
     napi_ref cbOnRef_ = nullptr;
