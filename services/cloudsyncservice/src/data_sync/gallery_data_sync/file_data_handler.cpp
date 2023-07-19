@@ -146,6 +146,7 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     PhotoColumn::PHOTO_DIRTY,
     PhotoColumn::MEDIA_DATE_TRASHED,
     PhotoColumn::PHOTO_POSITION,
+    PhotoColumn::PHOTO_CLOUD_ID,
     MediaColumn::MEDIA_ID,
 };
 
@@ -614,8 +615,10 @@ int32_t FileDataHandler::GetAssetUniqueId(int32_t &type)
     predicates.SetWhereClause(ASSET_MEDIA_TYPE + " = ?");
     predicates.SetWhereArgs({typeString});
     auto resultSet = Query(predicates, {UNIQUE_NUMBER});
-    int32_t uniqueId;
-    DataConvertor::GetInt(UNIQUE_NUMBER, uniqueId, *resultSet);
+    int32_t uniqueId = 0;
+    if (resultSet->GoToNextRow() == 0) {
+        DataConvertor::GetInt(UNIQUE_NUMBER, uniqueId, *resultSet);
+    }
     ++uniqueId;
 
     int updateRows;
