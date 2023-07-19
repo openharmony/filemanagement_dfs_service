@@ -27,6 +27,7 @@ using namespace std;
 using ChangeType = AAFwk::ChangeInfo::ChangeType;
 using NotifyDataMap = unordered_map<ChangeType, list<Uri>>;
 unordered_map<ChangeType, list<Uri>> DataSyncNotifier::notifyListMap_ = {};
+mutex DataSyncNotifier::mtx_{};
 constexpr int NOTIFY_INTERVALS = 10;
 
 DataSyncNotifier &DataSyncNotifier::GetInstance()
@@ -57,6 +58,7 @@ static int32_t TryNotifyChange()
 
 static int32_t NotifyFileAssetChange(const string &uri, const ChangeType changeType)
 {
+    std::lock_guard<mutex> lock(DataSyncNotifier::mtx_);
     auto iterator = DataSyncNotifier::notifyListMap_.find(changeType);
     if (iterator != DataSyncNotifier::notifyListMap_.end()) {
         iterator ->second.emplace_back(Uri(uri));
@@ -98,6 +100,7 @@ int32_t DataSyncNotifier::FinalNotify()
         LOGE("%{public}s obsMgrClient is nullptr", __func__);
         return E_SA_LOAD_FAILED;
     }
+    std::lock_guard<mutex> lock(DataSyncNotifier::mtx_);
     for (auto it = DataSyncNotifier::notifyListMap_.begin();
               it != DataSyncNotifier::notifyListMap_.end(); ++it) {
         obsMgrClient->NotifyChangeExt({it->first, it->second});

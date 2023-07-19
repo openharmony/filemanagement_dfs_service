@@ -18,13 +18,18 @@
 
 #include "cloud_pref_impl.h"
 #include "sdk_helper.h"
+#include "values_bucket.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 struct OnFetchParams {
-    bool fetchThumbs{true};
+    bool isPullChanges{true};
+    int32_t totalPullCount{0};
+    int32_t downloadThumbLimit{0};
     std::vector<DriveKit::DKDownloadAsset> assetsToDownload{};
+    std::vector<NativeRdb::ValuesBucket> insertFiles{};
+    std::map<std::string, std::set<int>> recordAlbumMaps{};
 };
 const static std::string TOTAL_PULL_COUNT = "total_pull_count";
 const static std::string DOWNLOAD_THUMB_LIMIT = "download_thumb_limit";
@@ -56,7 +61,7 @@ public:
     virtual int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map);
     virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset);
-    virtual int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset);
+    virtual int32_t OnDownloadThumb(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap);
 
     /*clean*/
     virtual int32_t Clean(const int action);

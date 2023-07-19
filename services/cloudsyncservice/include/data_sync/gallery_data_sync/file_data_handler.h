@@ -66,7 +66,7 @@ public:
     int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
-    int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset) override;
+    int32_t OnDownloadThumb(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
 
     /* reset */
     void Reset();
@@ -163,7 +163,7 @@ private:
 
     /* pull operations */
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, int> QueryLocalByCloudId(const std::string &recordId);
-    int32_t PullRecordInsert(DriveKit::DKRecord &record, OnFetchParams &params, int32_t &fileId);
+    int32_t PullRecordInsert(DriveKit::DKRecord &record, OnFetchParams &params);
     int32_t PullRecordUpdate(DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
                              OnFetchParams &params);
     void RemoveThmParentPath(const std::string &filePath);
@@ -184,10 +184,12 @@ private:
                           const std::string &type);
     bool ThumbsAtLocal(const DriveKit::DKRecord &record);
     int32_t UpdateAssetInPhotoMap(const DriveKit::DKRecord &record, int32_t fileId);
+    int32_t InsertAssetToPhotoMap(const DriveKit::DKRecord &record, OnFetchParams &params);
     int32_t DeleteAssetInPhotoMap(int32_t fileId);
     int32_t GetAlbumIdFromName(const std::string &recordId);
     void QueryAndInsertMap(int32_t albumId, int32_t fileId);
     void QueryAndDeleteMap(int32_t fileId, const std::set<int> &cloudMapIds);
+    int32_t BatchInsertAssetMaps(OnFetchParams &params);
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DOWNLOAD };

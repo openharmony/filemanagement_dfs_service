@@ -21,6 +21,30 @@ namespace CloudSync {
 using namespace std;
 using namespace NativeRdb;
 
+int32_t RdbDataHandler::BatchInsert(int64_t &outRowId, const string &table,
+    const vector<ValuesBucket> &initialBatchValues)
+{
+    if (initialBatchValues.size() != 0) {
+        return rdb_->BatchInsert(outRowId, table, initialBatchValues);
+    }
+    return E_OK;
+}
+
+int32_t RdbDataHandler::BeginTransaction()
+{
+    return rdb_->BeginTransaction();
+}
+
+int32_t RdbDataHandler::RollBack()
+{
+    return rdb_->RollBack();
+}
+
+int32_t RdbDataHandler::Commit()
+{
+    return rdb_->Commit();
+}
+
 int32_t RdbDataHandler::Insert(int64_t &outRowId, const ValuesBucket &initiavalues)
 {
     return rdb_->Insert(outRowId, tableName_, initiavalues);

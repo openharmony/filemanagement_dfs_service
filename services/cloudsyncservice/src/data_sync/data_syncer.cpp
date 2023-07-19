@@ -295,20 +295,10 @@ static void ThumbDownloadCallback(shared_ptr<DKContext> context,
         LOGI("DKAssetsDownloader ok");
     }
 
-    for (const auto &it : resultMap) {
-        if (it.second.IsSuccess()) {
-            LOGI("record %s %{public}s download success", it.first.recordId.c_str(), it.first.fieldKey.c_str());
-            if (it.first.fieldKey == "thumbnail") {
-                auto ctx = static_pointer_cast<TaskContext>(context);
-                auto handler = ctx->GetHandler();
-                handler->OnDownloadThumbSuccess(it.first);
-            }
-        } else {
-            LOGE("record %s %{public}s download failed, localErr: %{public}d, serverErr: %{public}d",
-                 it.first.recordId.c_str(), it.first.fieldKey.c_str(),
-                 static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
-        }
-    }
+    auto ctx = static_pointer_cast<TaskContext>(context);
+    auto handler = ctx->GetHandler();
+    handler->OnDownloadThumb(resultMap);
+
     /* notify app update UX */
     DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               DataSyncConst::INVALID_ID);
@@ -341,29 +331,34 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
         return E_CONTEXT;
     }
 
-    int32_t totalPullCount = 0;
-    int32_t downloadThumbLimit = 0;
     if (handler->IsPullRecords()) {
+        int32_t totalPullCount, downloadThumbLimit;
         handler->GetPullCount(totalPullCount, downloadThumbLimit);
+        onFetchParams.isPullChanges = false;
+        onFetchParams.totalPullCount = totalPullCount;
+        onFetchParams.downloadThumbLimit = downloadThumbLimit;
         totalPullCount += records->size();
-        onFetchParams.fetchThumbs = totalPullCount <= downloadThumbLimit;
-        LOGI("fetchThumbs :%{public}d, totalPulls %{public}d, limit %{public}d",
-             onFetchParams.fetchThumbs, totalPullCount, downloadThumbLimit);
+        LOGI("isPullChanges :%{public}d, totalPulls %{public}d, limit %{public}d",
+             onFetchParams.isPullChanges, totalPullCount, downloadThumbLimit);
+        handler->SetTotalPullCount(totalPullCount);
     }
 
     int32_t ret = handler->OnFetchRecords(records, onFetchParams);
-    auto dctx = make_shared<DownloadContext>(handler, onFetchParams.assetsToDownload, id, resultCallback,
-                                             context, database, downloadProcessCallback);
-    AsyncRun(static_pointer_cast<TaskContext>(dctx), &DataSyncer::DownloadAssets);
-    if (ret != E_OK) {
-        LOGE("handler on fetch records err %{public}d", ret);
-        return ret;
+    auto it = onFetchParams.assetsToDownload.begin();
+    while (it != onFetchParams.assetsToDownload.end()) {
+        constexpr int DOWNLOAD_BATCH_SIZE = 20;
+        int num = std::min(DOWNLOAD_BATCH_SIZE, static_cast<int>(onFetchParams.assetsToDownload.end() - it));
+        vector<DriveKit::DKDownloadAsset> assetsToDownload(it, it + num);
+        auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id, resultCallback, context, database,
+                                                 downloadProcessCallback);
+        DownloadAssets(static_pointer_cast<TaskContext>(dctx));
+        it += num;
     }
 
-    if (handler->IsPullRecords()) {
-        handler->SetTotalPullCount(totalPullCount);
+    if (ret != E_OK) {
+        LOGE("handler on fetch records err %{public}d", ret);
     }
-    return E_OK;
+    return ret;
 }
 
 void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::shared_ptr<const DKDatabase> database,
@@ -546,7 +541,7 @@ void DataSyncer::RetryDownloadRecords(shared_ptr<TaskContext> context)
 
     auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id, resultCallback, context, nullptr,
                                              downloadProcessCallback);
-    AsyncRun(static_pointer_cast<TaskContext>(dctx), &DataSyncer::DownloadAssets);
+    DownloadAssets(static_pointer_cast<TaskContext>(dctx));
 }
 
 int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)
