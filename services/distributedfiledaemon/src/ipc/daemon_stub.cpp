@@ -66,7 +66,7 @@ int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &
         return -1;
     }
     deviceInfo.deviceTypeId = data.ReadUint16();
-    deviceInfo.range = data.ReadUint32();
+    deviceInfo.range = static_cast<int32_t>(data.ReadUint32());
     deviceInfo.authForm = static_cast<DistributedHardware::DmAuthForm>(data.ReadInt32());
 
     int32_t res = OpenP2PConnection(deviceInfo);
@@ -95,7 +95,7 @@ int32_t DaemonStub::HandleCloseP2PConnection(MessageParcel &data, MessageParcel 
         return -1;
     }
     deviceInfo.deviceTypeId = data.ReadUint16();
-    deviceInfo.range = data.ReadUint32();
+    deviceInfo.range = static_cast<int32_t>(data.ReadUint32());
     deviceInfo.authForm = static_cast<DistributedHardware::DmAuthForm>(data.ReadInt32());
 
     int32_t res = CloseP2PConnection(deviceInfo);

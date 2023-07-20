@@ -342,10 +342,10 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
     }
 
     int32_t totalPullCount = 0;
-    int32_t downloadThumbLimit = 0;
     if (handler->IsPullRecords()) {
+        int32_t downloadThumbLimit = 0;
         handler->GetPullCount(totalPullCount, downloadThumbLimit);
-        totalPullCount += records->size();
+        totalPullCount += static_cast<int32_t>(records->size());
         onFetchParams.fetchThumbs = totalPullCount <= downloadThumbLimit;
         LOGI("fetchThumbs :%{public}d, totalPulls %{public}d, limit %{public}d",
              onFetchParams.fetchThumbs, totalPullCount, downloadThumbLimit);

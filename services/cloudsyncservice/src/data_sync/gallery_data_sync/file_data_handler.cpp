@@ -243,10 +243,10 @@ int32_t FileDataHandler::CompensateFilePath(DriveKit::DKRecord &record)
         return E_INVAL_ARG;
     }
     DriveKit::DKRecordFieldMap attributes;
-    string fullPath;
     data[FILE_ATTRIBUTES].GetRecordMap(attributes);
     if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
         LOGE("record data cannot find some attributes, may came from old devices");
+        string fullPath;
         int ret = CalculateFilePath(record, fullPath);
         if (ret != E_OK) {
             return ret;
@@ -304,7 +304,7 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
         LOGE("bad size in props");
         return E_INVAL_ARG;
     }
-    int64_t mtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    int64_t mtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
     string rawRecordId = record.GetRecordId();
     string cloudId = MetaFileMgr::RecordIdToCloudId(rawRecordId);
     auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId, relativePath);
@@ -376,7 +376,7 @@ int FileDataHandler::AddCloudThumbs(const DKRecord &record)
         LOGE("bad lcd size in record");
         return E_INVAL_ARG;
     }
-    int64_t mtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    int64_t mtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
     int ret = DentryInsertThumb(fullPath, record.GetRecordId(), thumbSize, mtime, THUMB_SUFFIX);
     if (ret != E_OK) {
         LOGE("dentry insert of thumb failed ret %{public}d", ret);
@@ -562,7 +562,7 @@ int32_t FileDataHandler::GetConflictData(DKRecord &record, string &fullPath, int
         LOGE("bad size in data");
         return E_INVAL_ARG;
     }
-    mtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    mtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
     return E_OK;
 }
 
@@ -933,7 +933,7 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
     }
 
     // get record mtime
-    int64_t cloudMtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    int64_t cloudMtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
     LOGI("cloudMtime %{public}llu, localMtime %{public}llu",
          static_cast<unsigned long long>(cloudMtime), static_cast<unsigned long long>(localMtime));
     changed = !(cloudMtime == localMtime);
@@ -1220,14 +1220,17 @@ int32_t FileDataHandler::GetAlbumIdFromName(const std::string &albumName)
     predicates.EqualTo(PhotoAlbumColumns::ALBUM_NAME, albumName);
     auto resultSet = Query(predicates, {PhotoAlbumColumns::ALBUM_ID});
     int rowCount = 0;
-    int ret = resultSet->GetRowCount(rowCount);
+    int ret = -1;
+    if (resultSet) {
+        ret = resultSet->GetRowCount(rowCount);
+    }
     if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
         LOGE("get nullptr result or rowcount %{public}d", rowCount);
         return -1;
     }
     if (resultSet->GoToNextRow() == 0) {
         int albumId;
-        int ret = DataConvertor::GetInt(PhotoAlbumColumns::ALBUM_ID, albumId, *resultSet);
+        ret = DataConvertor::GetInt(PhotoAlbumColumns::ALBUM_ID, albumId, *resultSet);
         if (ret == E_OK) {
             return albumId;
         }
@@ -1242,7 +1245,10 @@ void FileDataHandler::QueryAndInsertMap(int32_t albumId, int32_t fileId)
     predicates.EqualTo(PhotoMap::ALBUM_ID, to_string(albumId))->And()->EqualTo(PhotoMap::ASSET_ID, to_string(fileId));
     auto resultSet = Query(predicates, {});
     int rowCount = 0;
-    int ret = resultSet->GetRowCount(rowCount);
+    int ret = -1;
+    if (resultSet) {
+        ret = resultSet->GetRowCount(rowCount);
+    }
     if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
         LOGE("get nullptr result or rowcount %{public}d", rowCount);
         return;
@@ -1272,14 +1278,17 @@ void FileDataHandler::QueryAndDeleteMap(int32_t fileId, const set<int> &cloudMap
 
     auto resultSet = Query(predicates, {});
     int rowCount = 0;
-    int ret = resultSet->GetRowCount(rowCount);
+    int ret = -1;
+    if (resultSet) {
+        ret = resultSet->GetRowCount(rowCount);
+    }
     if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
         LOGE("get nullptr result or rowcount %{public}d", rowCount);
         return;
     }
     while (resultSet->GoToNextRow() == 0) {
         int albumId;
-        int ret = DataConvertor::GetInt(PhotoMap::ALBUM_ID, albumId, *resultSet);
+        ret = DataConvertor::GetInt(PhotoMap::ALBUM_ID, albumId, *resultSet);
         if (ret != E_OK) {
             LOGE("fail to get ALBUM_ID value");
             continue;
@@ -1292,15 +1301,15 @@ void FileDataHandler::QueryAndDeleteMap(int32_t fileId, const set<int> &cloudMap
         }
 
         if (localDirty != static_cast<int32_t>(DirtyTypes::TYPE_SYNCED)) {
-            LOGI("mapping albumId %{public}d - fileId %{public}d local dirty %{public}d, skip", albumId, fileId, localDirty);
+            LOGI("mapping albumId %{public}d - fileId %{public}d local dirty %{public}d, skip",
+                albumId, fileId, localDirty);
             continue;
         }
         if (cloudMapIds.find(albumId) == cloudMapIds.end()) {
             LOGE("delete mapping albumId %{public}d - fileId %{public}d", albumId, fileId);
             int deletedRows;
-            int ret =
-                Delete(deletedRows, PhotoMap::TABLE, PhotoMap::ASSET_ID + " = ? AND " + PhotoMap::ALBUM_ID + " = ?",
-                       {to_string(fileId), to_string(albumId)});
+            ret = Delete(deletedRows, PhotoMap::TABLE, PhotoMap::ASSET_ID + " = ? AND " + PhotoMap::ALBUM_ID + " = ?",
+                         {to_string(fileId), to_string(albumId)});
             if (ret != E_OK) {
                 LOGE("delete mapping failed %{public}d", ret);
                 continue;
@@ -2205,7 +2214,7 @@ bool FileDataHandler::OnCreateIsTimeChanged(
     const std::string &path,
     const std::string &type)
 {
-    int64_t cloudtime = record.GetCreateTime() / MILLISECOND_TO_SECOND;
+    int64_t cloudtime = static_cast<int64_t>(record.GetCreateTime()) / MILLISECOND_TO_SECOND;
     int64_t localtime;
     auto it = localMap.find(path);
     if (it == localMap.end()) {
@@ -2231,7 +2240,7 @@ bool FileDataHandler::OnModifyIsTimeChanged(
     const std::string &cloudId,
     const std::string &type)
 {
-    int64_t cloudtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    int64_t cloudtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
     int64_t localtime;
 
     auto it = localMap.find(cloudId);
