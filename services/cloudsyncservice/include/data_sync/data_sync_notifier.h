@@ -27,7 +27,7 @@ class DataSyncNotifier : public NoCopyable {
 using ChangeType = AAFwk::ChangeInfo::ChangeType;
 public:
     static std::unordered_map<ChangeType, std::list<Uri>> notifyListMap_;
-
+    static std::mutex mtx_;
     static DataSyncNotifier &GetInstance();
     ~DataSyncNotifier() = default;
     int32_t TryNotify(const std::string &uri, const ChangeType changeType, const std::string &fileAssetId);

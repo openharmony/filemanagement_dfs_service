@@ -109,6 +109,7 @@ public:
 private:
     std::shared_ptr<DriveKit::DKContainer> container_;
     std::shared_ptr<DriveKit::DKDatabase> database_;
+    std::shared_ptr<DriveKit::DKAssetsDownloader> downloader_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

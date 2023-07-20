@@ -201,9 +201,8 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
         ChangeType changeType = ChangeType::INVAILD;
         CompensateFilePath(record);
         if ((rowCount == 0) && !record.GetIsDelete()) {
-            ret = PullRecordInsert(record, params, fileId);
-            changeType = ChangeType::INSERT;
-            UpdateAssetInPhotoMap(record, fileId);
+            ret = PullRecordInsert(record, params);
+            InsertAssetToPhotoMap(record, params);
         } else if (rowCount == 1) {
             resultSet->GoToNextRow();
             if (record.GetIsDelete()) {
@@ -216,8 +215,6 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
                 changeType = ChangeType::UPDATE;
                 UpdateAssetInPhotoMap(record, fileId);
             }
-        } else {
-            LOGE("recordId %s rowCount %{public}d", record.GetRecordId().c_str(), rowCount);
         }
         if (ret != E_OK) {
             LOGE("recordId %s error %{public}d", record.GetRecordId().c_str(), ret);
@@ -229,6 +226,22 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
         string notifyUri = DataSyncConst::PHOTO_URI_PREFIX + to_string(fileId);
         DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
     }
+    LOGE("before BatchInsert size len %{public}zu, map size %{public}zu", params.insertFiles.size(),
+         params.recordAlbumMaps.size());
+    if (!params.insertFiles.empty() || !params.recordAlbumMaps.empty()) {
+        int64_t rowId;
+        ret = BatchInsert(rowId, TABLE_NAME, params.insertFiles);
+        if (ret != E_OK) {
+            LOGE("batch insert failed return %{public}d", ret);
+            ret = E_RDB;
+            params.assetsToDownload.clear();
+        } else {
+            BatchInsertAssetMaps(params);
+            DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
+                                                      DataSyncConst::INVALID_ID);
+        }
+    }
+    LOGE("after BatchInsert ret %{public}d", ret);
     DataSyncNotifier::GetInstance().FinalNotify();
     MetaFileMgr::GetInstance().ClearAll();
     return ret;
@@ -764,7 +777,7 @@ string FileDataHandler::GetFileExtension(DKRecord &record)
     return extension;
 }
 
-int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &params, int32_t &fileId)
+int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &params)
 {
     LOGI("insert of record %{public}s", record.GetRecordId().c_str());
 
@@ -783,7 +796,6 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
         return ret;
     }
 
-    int64_t rowId;
     ValuesBucket values;
     ret = createConvertor_.RecordToValueBucket(record, values);
     if (ret != E_OK) {
@@ -794,36 +806,40 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
     values.PutInt(Media::PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     values.PutString(Media::PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
+    bool downloadThumb = (params.isPullChanges || (++params.totalPullCount <= params.downloadThumbLimit));
     values.PutInt(
         Media::PhotoColumn::PHOTO_SYNC_STATUS,
-        static_cast<int32_t>(params.fetchThumbs ? SyncStatusType::TYPE_DOWNLOAD : SyncStatusType::TYPE_VISIBLE));
-    ret = Insert(rowId, values);
-    if (ret != E_OK || rowId < 0) {
-        LOGE("Insert pull record failed, rdb ret=%{public}d", ret);
-        return E_RDB;
-    }
-    fileId = rowId;
-
-    LOGI("Insert recordId %s success", record.GetRecordId().c_str());
-    if (params.fetchThumbs || AddCloudThumbs(record) != E_OK) {
+        static_cast<int32_t>(downloadThumb? SyncStatusType::TYPE_DOWNLOAD : SyncStatusType::TYPE_VISIBLE));
+    params.insertFiles.push_back(values);
+    if (downloadThumb || AddCloudThumbs(record) != E_OK) {
         AppendToDownload(record, "lcd", params.assetsToDownload);
         AppendToDownload(record, "thumbnail", params.assetsToDownload);
     }
     return E_OK;
 }
 
-int32_t FileDataHandler::OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset)
+int32_t FileDataHandler::OnDownloadThumb(const map<DKDownloadAsset, DKDownloadResult> &resultMap)
 {
-    LOGI("update sync_status to visible of record %s", asset.recordId.c_str());
-    int updateRows;
-    ValuesBucket values;
-    values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
+    for (const auto &it : resultMap) {
+        if (!it.second.IsSuccess()) {
+            LOGE("record %s %{public}s download failed, localErr: %{public}d, serverErr: %{public}d",
+                 it.first.recordId.c_str(), it.first.fieldKey.c_str(),
+                 static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
+            continue;
+        }
+        LOGI("record %s %{public}s download success", it.first.recordId.c_str(), it.first.fieldKey.c_str());
+        if (it.first.fieldKey == "thumbnail") {
+            LOGI("update sync_status to visible of record %s", it.first.recordId.c_str());
+            int updateRows;
+            ValuesBucket values;
+            values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
 
-    string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-    int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
-    if (ret != E_OK) {
-        LOGE("update retry flag failed, ret=%{public}d", ret);
-        return E_RDB;
+            string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
+            int32_t ret = Update(updateRows, values, whereClause, {it.first.recordId});
+            if (ret != E_OK) {
+                LOGE("update retry flag failed, ret=%{public}d", ret);
+            }
+        }
     }
     return E_OK;
 }
@@ -1212,6 +1228,76 @@ int32_t FileDataHandler::UpdateAssetInPhotoMap(const DKRecord &record, int32_t f
 
     QueryAndDeleteMap(fileId, cloudMapIds);
     return E_OK;
+}
+
+int32_t FileDataHandler::InsertAssetToPhotoMap(const DKRecord &record, OnFetchParams &params)
+{
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_LOGIC_ALBUM_IDS) == data.end()) {
+        LOGE("record data cannot find properties");
+        return E_INVAL_ARG;
+    }
+    DKRecordFieldList list;
+    if (data[FILE_LOGIC_ALBUM_IDS].GetRecordList(list) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("cannot get album ids from record");
+        return E_INVAL_ARG;
+    }
+
+    set<int> cloudMapIds;
+    for (const auto &it : list) {
+        DKReference ref;
+        if (it.GetReference(ref) != DKLocalErrorCode::NO_ERROR) {
+            LOGE("id list member not a reference");
+            continue;
+        }
+        int albumId = GetAlbumIdFromName(ref.recordId);
+        if (albumId < 0) {
+            LOGE("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
+            continue;
+        }
+        LOGI("record get albumId %{public}d", albumId);
+        cloudMapIds.insert(albumId);
+    }
+
+    params.recordAlbumMaps[record.GetRecordId()] = cloudMapIds;
+    return E_OK;
+}
+
+int32_t FileDataHandler::BatchInsertAssetMaps(OnFetchParams &params)
+{
+    int ret = E_OK;
+    for (const auto &it : params.recordAlbumMaps) {
+        auto [resultSet, rowCount] = QueryLocalByCloudId(it.first);
+        if (resultSet == nullptr || rowCount < 0) {
+            ret = E_RDB;
+            continue;
+        }
+        resultSet->GoToNextRow();
+        int fileId = 0;
+        int ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, *resultSet);
+        if (ret != E_OK) {
+            ret = E_RDB;
+            continue;
+        }
+
+        for (auto albumId : it.second) {
+            int64_t rowId;
+            ValuesBucket values;
+            values.PutInt(PhotoMap::ALBUM_ID, albumId);
+            values.PutInt(PhotoMap::ASSET_ID, fileId);
+            values.PutInt(PhotoMap::DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
+            ret = Insert(rowId, PhotoMap::TABLE, values);
+            if (ret != E_OK) {
+                LOGE("fail to insert albumId %{public}d - fileId %{public}d mapping, ret %{public}d", albumId, fileId,
+                     ret);
+                ret = E_RDB;
+                continue;
+            }
+            LOGI("albumId %{public}d - fileId %{public}d add mapping success", albumId, fileId);
+        }
+    }
+    return ret;
 }
 
 int32_t FileDataHandler::GetAlbumIdFromName(const std::string &albumName)

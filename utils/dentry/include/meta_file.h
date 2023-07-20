@@ -76,7 +76,7 @@ private:
     const MetaFileMgr &operator=(const MetaFileMgr &m) = delete;
 
     std::recursive_mutex mtx_{};
-    std::map<std::tuple<uint32_t, std::string>, std::shared_ptr<MetaFile>> metaFiles_;
+    std::map<std::pair<uint32_t, std::string>, std::shared_ptr<MetaFile>> metaFiles_;
 };
 
 struct MetaBase {
