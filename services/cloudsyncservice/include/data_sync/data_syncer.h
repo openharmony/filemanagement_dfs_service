@@ -109,7 +109,7 @@ private:
         const DriveKit::DKError &);
     void OnFetchRetryRecord(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<DriveKit::DKDatabase>,
         DriveKit::DKRecordId, const DriveKit::DKRecord &, const DriveKit::DKError &);
-    int HandleOnFetchRecords(const std::shared_ptr<DriveKit::DKContext> context,
+    int HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
         std::shared_ptr<const DriveKit::DKDatabase> database,
         std::shared_ptr<std::vector<DriveKit::DKRecord>> records);
     void OnFetchDatabaseChanges(const std::shared_ptr<DriveKit::DKContext>,

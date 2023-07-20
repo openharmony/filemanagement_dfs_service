@@ -146,7 +146,7 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
 {
     LOGI("%{private}d %{private}s pull", userId_, bundleName_.c_str());
 
-    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler);
+    shared_ptr<TaskContext> context = make_shared<DownloadTaskContext>(handler, handler->GetBatchNo());
 
     RetryDownloadRecords(context);
     PullRetryRecords(context);
@@ -305,7 +305,7 @@ static void ThumbDownloadCallback(shared_ptr<DKContext> context,
     DataSyncNotifier::GetInstance().FinalNotify();
 }
 
-int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
+int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
     std::shared_ptr<const DKDatabase> database, std::shared_ptr<std::vector<DKRecord>> records)
 {
     if (records->size() == 0) {
@@ -332,15 +332,7 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
     }
 
     if (handler->IsPullRecords()) {
-        int32_t totalPullCount, downloadThumbLimit;
-        handler->GetPullCount(totalPullCount, downloadThumbLimit);
-        onFetchParams.isPullChanges = false;
-        onFetchParams.totalPullCount = totalPullCount;
-        onFetchParams.downloadThumbLimit = downloadThumbLimit;
-        totalPullCount += static_cast<int32_t>(records->size());
-        LOGI("isPullChanges :%{public}d, totalPulls %{public}d, limit %{public}d",
-             onFetchParams.isPullChanges, totalPullCount, downloadThumbLimit);
-        handler->SetTotalPullCount(totalPullCount);
+        onFetchParams.totalPullCount = context->GetBatchNo() * handler->GetRecordSize();
     }
 
     int32_t ret = handler->OnFetchRecords(records, onFetchParams);
@@ -358,6 +350,7 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
     }
+    handler->FinishPull(context->GetBatchNo());
     return ret;
 }
 
@@ -365,27 +358,31 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
     std::shared_ptr<std::vector<DKRecord>> records, DKQueryCursor nextCursor, const DKError &err)
 {
     LOGI("%{private}d %{private}s on fetch records", userId_, bundleName_.c_str());
-    auto ctx = static_pointer_cast<TaskContext>(context);
-    if (HandleOnFetchRecords(context, database, records) != E_OK) {
-        LOGE("HandleOnFetchRecords failed");
-        return;
-    }
+    auto ctx = static_pointer_cast<DownloadTaskContext>(context);
     auto handler = ctx->GetHandler();
     if (handler == nullptr) {
         LOGE("context get handler err");
         return;
     }
-
+    if (ctx->GetBatchNo() == 0) {
+        handler->SetRecordSize(records->size());
+    }
     /* pull more */
     if (nextCursor.empty()) {
         LOGI("no more records");
-        handler->FinishPull(nextCursor);
-        return;
+        handler->GetTempStartCursor(nextCursor);
+        handler->SetTempNextCursor(nextCursor, true);
+    } else {
+        handler->SetTempNextCursor(nextCursor, false);
+        shared_ptr<DownloadTaskContext> nexCtx = make_shared<DownloadTaskContext>(handler, handler->GetBatchNo());
+        int ret = AsyncRun(nexCtx, &DataSyncer::PullRecords);
+        if (ret != E_OK) {
+            LOGE("asyn run pull records err %{public}d", ret);
+        }
     }
-    handler->SetNextCursor(nextCursor);
-    int ret = AsyncRun(ctx, &DataSyncer::PullRecords);
-    if (ret != E_OK) {
-        LOGE("asyn run pull records err %{public}d", ret);
+
+    if (HandleOnFetchRecords(ctx, database, records) != E_OK) {
+        LOGE("HandleOnFetchRecords failed");
     }
 }
 
@@ -434,11 +431,8 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
     bool hasMore, const DKError &err)
 {
     LOGI("%{private}d %{private}s on fetch database changes", userId_, bundleName_.c_str());
-    auto ctx = static_pointer_cast<TaskContext>(context);
-    if (HandleOnFetchRecords(context, database, records) != E_OK) {
-        LOGE("HandleOnFetchRecords failed");
-        return;
-    }
+    auto ctx = static_pointer_cast<DownloadTaskContext>(context);
+
     auto handler = ctx->GetHandler();
     if (handler == nullptr) {
         LOGE("context get handler err");
@@ -448,13 +442,19 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
     /* pull more */
     if (!hasMore) {
         LOGI("no more records");
-        handler->FinishPull(nextCursor);
-        return;
+        handler->SetTempNextCursor(nextCursor, true);
+    } else {
+        handler->SetTempNextCursor(nextCursor, false);
+        shared_ptr<DownloadTaskContext> nexCtx = make_shared<DownloadTaskContext>(handler, handler->GetBatchNo());
+        int ret = AsyncRun(nexCtx, &DataSyncer::PullRecords);
+        if (ret != E_OK) {
+            LOGE("asyn run pull database changes err %{public}d", ret);
+        }
     }
-    handler->SetNextCursor(nextCursor);
-    int ret = AsyncRun(ctx, &DataSyncer::PullDatabaseChanges);
-    if (ret != E_OK) {
-        LOGE("asyn run pull database changes err %{public}d", ret);
+
+    if (HandleOnFetchRecords(ctx, database, records) != E_OK) {
+        LOGE("HandleOnFetchRecords failed");
+        return;
     }
 }
 
@@ -506,8 +506,8 @@ void DataSyncer::OnFetchRetryRecord(shared_ptr<DKContext> context, shared_ptr<DK
         LOGI("handle retry record : %s", record.GetRecordId().c_str());
         records->push_back(record);
     }
-
-    HandleOnFetchRecords(context, database, records);
+    auto ctx = static_pointer_cast<DownloadTaskContext>(context);
+    HandleOnFetchRecords(ctx, database, records);
 }
 
 void DataSyncer::RetryDownloadRecords(shared_ptr<TaskContext> context)

@@ -52,8 +52,6 @@ constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
 FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
     : RdbDataHandler(userId, bundleName, TABLE_NAME, rdb), userId_(userId), bundleName_(bundleName)
 {
-    cloudPrefImpl_.GetInt(TOTAL_PULL_COUNT, totalPullCount_);
-
     cloudPrefImpl_.GetInt(DOWNLOAD_THUMB_LIMIT, downloadThumbLimit_);
     if (downloadThumbLimit_ <= 0) {
         downloadThumbLimit_ = DEFAULT_DOWNLOAD_THUMB_LIMIT;
@@ -241,7 +239,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
                                                       DataSyncConst::INVALID_ID);
         }
     }
-    LOGE("after BatchInsert ret %{public}d", ret);
+    LOGI("after BatchInsert ret %{public}d", ret);
     DataSyncNotifier::GetInstance().FinalNotify();
     MetaFileMgr::GetInstance().ClearAll();
     return ret;
@@ -806,7 +804,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
     values.PutInt(Media::PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     values.PutString(Media::PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
-    bool downloadThumb = (params.isPullChanges || (++params.totalPullCount <= params.downloadThumbLimit));
+    bool downloadThumb = (!startCursor_.empty() || (++params.totalPullCount <= downloadThumbLimit_));
     values.PutInt(
         Media::PhotoColumn::PHOTO_SYNC_STATUS,
         static_cast<int32_t>(downloadThumb? SyncStatusType::TYPE_DOWNLOAD : SyncStatusType::TYPE_VISIBLE));
@@ -827,7 +825,7 @@ int32_t FileDataHandler::OnDownloadThumb(const map<DKDownloadAsset, DKDownloadRe
                  static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
             continue;
         }
-        LOGI("record %s %{public}s download success", it.first.recordId.c_str(), it.first.fieldKey.c_str());
+        LOGD("record %s %{public}s download success", it.first.recordId.c_str(), it.first.fieldKey.c_str());
         if (it.first.fieldKey == "thumbnail") {
             LOGI("update sync_status to visible of record %s", it.first.recordId.c_str());
             int updateRows;
