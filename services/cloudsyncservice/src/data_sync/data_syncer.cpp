@@ -102,8 +102,8 @@ int32_t DataSyncer::Lock()
     int32_t ret = sdkHelper_->GetLock(lock_.lock);
     if (ret != E_OK) {
         LOGE("sdk helper get lock err %{public}d", ret);
-        lock_.isLocked.clear();
         lock_.lock = { 0 };
+        lock_.isLocked.clear();
         errorCode_ = ret;
     }
 
@@ -112,7 +112,7 @@ int32_t DataSyncer::Lock()
 
 void DataSyncer::UnLock()
 {
-    if (!lock_.isLocked.test_and_set()) {
+    if (!lock_.isLocked.test()) {
         return;
     }
 
@@ -120,8 +120,8 @@ void DataSyncer::UnLock()
     sdkHelper_->DeleteLock(lock_.lock);
 
     /* reset */
-    lock_.isLocked.clear();
     lock_.lock = { 0 };
+    lock_.isLocked.clear();
 }
 
 int32_t DataSyncer::StartDownloadFile(const std::string path, const int32_t userId)

@@ -70,9 +70,15 @@ int32_t GalleryDataSyncer::Init(const std::string bundleName, const int32_t user
 int32_t GalleryDataSyncer::Clean(const int action)
 {
     LOGD("gallery data sycner Clean");
-    int ret = CleanInner(fileHandler_, action);
+    /* file */
+    int32_t ret = CleanInner(fileHandler_, action);
     if (ret != E_OK) {
-        LOGE("gallery data syncer Clean err %{public}d", ret);
+        LOGE("gallery data syncer file clean err %{public}d", ret);
+    }
+    /* album */
+    ret = CleanInner(albumHandler_, action);
+    if (ret != E_OK) {
+        LOGE("gallery data syncer album clean err %{public}d", ret);
     }
     return ret;
 }
@@ -187,13 +193,13 @@ int32_t GalleryDataSyncer::UploadFile()
         LOGE("gallery data syncer push file err %{public}d", ret);
         Abort();
     }
-    UnLock();
     return ret;
 }
 
 int32_t GalleryDataSyncer::Complete()
 {
     LOGI("gallery data syncer complete all");
+    UnLock();
     CompleteAll();
     return E_OK;
 }
