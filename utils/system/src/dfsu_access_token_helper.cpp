@@ -50,7 +50,7 @@ bool DfsuAccessTokenHelper::CheckPermission(uint32_t tokenId, const std::string 
     int32_t ret = AccessTokenKit::VerifyAccessToken(tokenId, permissionName);
     if (ret == PermissionState::PERMISSION_DENIED) {
         LOGE("permission %{private}s: PERMISSION_DENIED", permissionName.c_str());
-        return true;
+        return false;
     }
     return true;
 }

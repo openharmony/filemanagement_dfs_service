@@ -244,7 +244,7 @@ int32_t CloudSyncServiceStub::HandleEnableCloud(MessageParcel &data, MessageParc
 int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleStartDownloadFile");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
@@ -263,7 +263,7 @@ int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, Messa
 int32_t CloudSyncServiceStub::HandleStopDownloadFile(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleStopDownloadFile");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
@@ -282,7 +282,7 @@ int32_t CloudSyncServiceStub::HandleStopDownloadFile(MessageParcel &data, Messag
 int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleRegisterDownloadFileCallback");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
@@ -302,7 +302,7 @@ int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &
 int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleUnregisterDownloadFileCallback");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
@@ -320,7 +320,7 @@ int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel
 int32_t CloudSyncServiceStub::HandleUploadAsset(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin UploadAsset");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
@@ -341,7 +341,7 @@ int32_t CloudSyncServiceStub::HandleUploadAsset(MessageParcel &data, MessageParc
 int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin DownloadFile");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
