@@ -95,8 +95,8 @@ int32_t DataSyncer::Lock()
 {
     lock_guard<mutex> lock(lock_.mtx);
     if (lock_.count > 0) {
-        count++;
-        return;
+        lock_.count++;
+        return E_OK;
     }
 
     /* lock: device-reentrant */
@@ -105,13 +105,14 @@ int32_t DataSyncer::Lock()
         LOGE("sdk helper get lock err %{public}d", ret);
         lock_.lock = { 0 };
         errorCode_ = ret;
+        return ret;
     }
     lock_.count++;
 
     return ret;
 }
 
-void DataSyncer::UnLock()
+void DataSyncer::Unlock()
 {
     lock_guard<mutex> lock(lock_.mtx);
     lock_.count--;
@@ -124,6 +125,17 @@ void DataSyncer::UnLock()
 
     /* reset sdk lock */
     lock_.lock = { 0 };
+}
+
+void DataSyncer::ForceUnlock()
+{
+    lock_guard<mutex> lock(lock_.mtx);
+    if (lock_.count == 0) {
+        return;
+    }
+    sdkHelper_->DeleteLock(lock_.lock);
+    lock_.lock = { 0 };
+    lock_.count = 0;
 }
 
 int32_t DataSyncer::StartDownloadFile(const std::string path, const int32_t userId)
@@ -937,7 +949,7 @@ void DataSyncer::CompleteAll()
     LOGI("%{private}d %{private}s completes all", userId_, bundleName_.c_str());
 
     /* guarantee: unlock if locked */
-    UnLock();
+    ForceUnlock();
 
     /* reset internal status */
     Reset();

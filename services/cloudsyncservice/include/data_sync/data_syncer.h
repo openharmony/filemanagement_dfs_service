@@ -66,7 +66,8 @@ public:
     /* sdk */
     void SetSdkHelper(std::shared_ptr<SdkHelper> &sdkHelper);
     int32_t Lock();
-    void UnLock();
+    void Unlock();
+    void ForceUnlock();
 
     void NotifyCurrentSyncState();
 

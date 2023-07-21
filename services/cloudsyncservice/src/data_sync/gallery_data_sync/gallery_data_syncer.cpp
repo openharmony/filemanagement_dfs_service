@@ -199,7 +199,7 @@ int32_t GalleryDataSyncer::UploadFile()
 int32_t GalleryDataSyncer::Complete()
 {
     LOGI("gallery data syncer complete all");
-    UnLock();
+    Unlock();
     CompleteAll();
     return E_OK;
 }
