@@ -93,9 +93,10 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 
 int32_t DataSyncer::Lock()
 {
-    /* cas */
-    if (lock_.isLocked.test_and_set()) {
-        return E_OK;
+    lock_guard<mutex> lock(lock_.mtx);
+    if (lock_.count > 0) {
+        count++;
+        return;
     }
 
     /* lock: device-reentrant */
@@ -103,25 +104,26 @@ int32_t DataSyncer::Lock()
     if (ret != E_OK) {
         LOGE("sdk helper get lock err %{public}d", ret);
         lock_.lock = { 0 };
-        lock_.isLocked.clear();
         errorCode_ = ret;
     }
+    lock_.count++;
 
     return ret;
 }
 
 void DataSyncer::UnLock()
 {
-    if (!lock_.isLocked.test()) {
+    lock_guard<mutex> lock(lock_.mtx);
+    lock_.count--;
+    if (lock_.count > 0) {
         return;
     }
 
     /* sdk unlock */
     sdkHelper_->DeleteLock(lock_.lock);
 
-    /* reset */
+    /* reset sdk lock */
     lock_.lock = { 0 };
-    lock_.isLocked.clear();
 }
 
 int32_t DataSyncer::StartDownloadFile(const std::string path, const int32_t userId)

@@ -113,7 +113,8 @@ private:
 
 struct SdkLock {
     DriveKit::DKLock lock = { 0 };
-    std::atomic_flag isLocked = ATOMIC_FLAG_INIT;
+    std::mutex mtx;
+    int count = 0;
 };
 } // namespace CloudSync
 } // namespace FileManagement
