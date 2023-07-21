@@ -36,7 +36,14 @@ protected:
           tableName_(table) {}
     virtual ~RdbDataHandler() = default;
 
+    virtual int32_t BeginTransaction();
+    virtual int32_t RollBack();
+    virtual int32_t Commit();
+
     /* insert, delete, update, query */
+    virtual int32_t BatchInsert(int64_t &outRowId,
+                                const std::string &table,
+                                const std::vector<NativeRdb::ValuesBucket> &initialBatchValues);
     virtual int32_t Insert(int64_t &outRowId, const NativeRdb::ValuesBucket &initialValues);
     virtual int32_t Update(int &changedRows, const NativeRdb::ValuesBucket &values,
         const std::string &whereClause, const std::vector<std::string> &whereArgs);

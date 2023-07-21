@@ -754,6 +754,7 @@ std::shared_ptr<MetaFile> MetaFileMgr::GetMetaFile(uint32_t userId, const std::s
 
 void MetaFileMgr::ClearAll()
 {
+    std::lock_guard<std::recursive_mutex> lock(mtx_);
     metaFiles_.clear();
 }
 
