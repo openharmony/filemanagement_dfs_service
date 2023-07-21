@@ -2009,6 +2009,7 @@ int32_t FileDataHandler::EraseLocalInfo(vector<DriveKit::DKRecord> &records)
         DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
         attributes.erase(Media::MediaColumn::MEDIA_ID);
         attributes.erase(Media::PhotoColumn::PHOTO_CLOUD_ID);
+        record.SetRecordData(data);
     }
     return E_OK;
 }
