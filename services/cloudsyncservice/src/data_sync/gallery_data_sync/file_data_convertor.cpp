@@ -282,7 +282,7 @@ int32_t FileDataConvertor::HandleDetailTime(DriveKit::DKRecordFieldMap &map,
     char buffer[80];
     localtime_r(&dataAddedStamp, &timeinfo);
     size_t size = strftime(buffer, sizeof(buffer), "%Y:%m:%d %H:%M:%S", &timeinfo);
-    if (size < 0) {
+    if (size == 0) {
         return E_OK;
     }
     std::string detailTime(buffer);

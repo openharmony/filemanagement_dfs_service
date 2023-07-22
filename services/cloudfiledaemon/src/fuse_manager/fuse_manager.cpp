@@ -133,7 +133,7 @@ static shared_ptr<CloudInode> GetRootInode(struct FuseData *data, fuse_ino_t ino
         data->rootNode->refCount = 1;
         data->rootNode->mBase = make_shared<MetaBase>();
         data->rootNode->mBase->mode = S_IFDIR;
-        data->rootNode->mBase->mtime = GetSecondsSince1970ToNow();
+        data->rootNode->mBase->mtime = static_cast<uint64_t>(GetSecondsSince1970ToNow());
         LOGD("create rootNode");
     }
     data->rootNode->mFile = MetaFileMgr::GetInstance().GetMetaFile(data->userId, "/");
@@ -163,7 +163,7 @@ static void GetMetaAttr(shared_ptr<CloudInode> ino, struct stat *stbuf)
     stbuf->st_ino = reinterpret_cast<fuse_ino_t>(ino.get());
     stbuf->st_uid = OID_USER_DATA_RW;
     stbuf->st_gid = OID_USER_DATA_RW;
-    stbuf->st_mtime = ino->mBase->mtime;
+    stbuf->st_mtime = static_cast<int64_t>(ino->mBase->mtime);
     if (ino->mBase->mode & S_IFDIR) {
         stbuf->st_mode = S_IFDIR | STAT_MODE_DIR;
         stbuf->st_nlink = STAT_NLINK_DIR;
@@ -353,16 +353,15 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
-    bool needRemain = false;
-    bool res = false;
 
     LOGD("%s, sessionRefCount: %d", CloudPath(data, ino).c_str(), cInode->sessionRefCount.load());
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
+        bool needRemain = false;
         if (cInode->mBase->fileType != FILE_TYPE_CONTENT) {
             needRemain = true;
         }
-        res = cInode->readSession->Close(needRemain);
+        bool res = cInode->readSession->Close(needRemain);
         if (!res) {
             LOGE("close error, needRemain: %d", needRemain);
         }

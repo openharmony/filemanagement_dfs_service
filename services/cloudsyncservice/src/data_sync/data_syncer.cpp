@@ -337,7 +337,7 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
         onFetchParams.isPullChanges = false;
         onFetchParams.totalPullCount = totalPullCount;
         onFetchParams.downloadThumbLimit = downloadThumbLimit;
-        totalPullCount += records->size();
+        totalPullCount += static_cast<int32_t>(records->size());
         LOGI("isPullChanges :%{public}d, totalPulls %{public}d, limit %{public}d",
              onFetchParams.isPullChanges, totalPullCount, downloadThumbLimit);
         handler->SetTotalPullCount(totalPullCount);
