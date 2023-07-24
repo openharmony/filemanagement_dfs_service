@@ -40,30 +40,28 @@ private:
     inline static const std::string className = "Download";
 };
 
-class CloudDownloadCallbackImpl : public CloudDownloadCallback {
+class CloudDownloadCallbackImpl : public CloudDownloadCallback,
+                                  public std::enable_shared_from_this<CloudDownloadCallbackImpl> {
 public:
     CloudDownloadCallbackImpl(napi_env env, napi_value fun);
-    ~CloudDownloadCallbackImpl();
+    ~CloudDownloadCallbackImpl() = default;
     void OnDownloadProcess(DownloadProgressObj &progress) override;
+    void DeleteReference();
 
     class UvChangeMsg {
     public:
-        UvChangeMsg(napi_env env, napi_ref ref, DownloadProgressObj downloadProgress)
-            : env_(env), ref_(ref), downloadProgress_(downloadProgress) {}
+        UvChangeMsg(std::shared_ptr<CloudDownloadCallbackImpl> CloudDownloadCallbackIn,
+                    DownloadProgressObj downloadProgress)
+            : CloudDownloadCallback_(CloudDownloadCallbackIn), downloadProgress_(downloadProgress)
+        {
+        }
         ~UvChangeMsg() {}
-        napi_env env_;
-        napi_ref ref_;
+        std::weak_ptr<CloudDownloadCallbackImpl> CloudDownloadCallback_;
         DownloadProgressObj downloadProgress_;
     };
 
-    class UvDeleteMsg {
-    public:
-        UvDeleteMsg(napi_env env, napi_ref ref) : env_(env), ref_(ref) {}
-        ~UvDeleteMsg() {}
-        napi_env env_;
-        napi_ref ref_;
-    };
 private:
+    static void OnComplete(UvChangeMsg *msg);
     napi_env env_;
     napi_ref cbOnRef_ = nullptr;
 };

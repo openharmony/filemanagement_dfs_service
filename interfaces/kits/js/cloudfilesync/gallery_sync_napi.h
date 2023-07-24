@@ -20,11 +20,10 @@
 #include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
-using namespace OHOS::FileManagement::LibN;
 const int32_t ARGS_ONE = 1;
 
 class CloudSyncCallbackImpl;
-class GallerySyncNapi final : public NExporter {
+class GallerySyncNapi final : public LibN::NExporter {
 public:
     bool Export() override;
     std::string GetClassName() override;
@@ -44,32 +43,28 @@ private:
     inline static const std::string className_ = "GallerySync";
 };
 
-class CloudSyncCallbackImpl : public CloudSyncCallback {
+class CloudSyncCallbackImpl : public CloudSyncCallback, public std::enable_shared_from_this<CloudSyncCallbackImpl> {
 public:
     CloudSyncCallbackImpl(napi_env env, napi_value fun);
-    ~CloudSyncCallbackImpl();
+    ~CloudSyncCallbackImpl() = default;
     void OnSyncStateChanged(SyncType type, SyncPromptState state) override;
     void OnSyncStateChanged(CloudSyncState state, ErrorType error) override;
+    void DeleteReference();
 
     class UvChangeMsg {
     public:
-        UvChangeMsg(napi_env env, napi_ref ref, CloudSyncState state, ErrorType error)
-            : env_(env), ref_(ref), state_(state), error_(error) {}
+        UvChangeMsg(std::shared_ptr<CloudSyncCallbackImpl> cloudSyncCallbackIn, CloudSyncState state, ErrorType error)
+            : cloudSyncCallback_(cloudSyncCallbackIn), state_(state), error_(error)
+        {
+        }
         ~UvChangeMsg() {}
-        napi_env env_;
-        napi_ref ref_;
+        std::weak_ptr<CloudSyncCallbackImpl> cloudSyncCallback_;
         CloudSyncState state_;
         ErrorType error_;
     };
 
-    class UvDeleteMsg {
-    public:
-        UvDeleteMsg(napi_env env, napi_ref ref) : env_(env), ref_(ref) {}
-        ~UvDeleteMsg() {}
-        napi_env env_;
-        napi_ref ref_;
-    };
 private:
+    static void OnComplete(UvChangeMsg *msg);
     napi_env env_;
     napi_ref cbOnRef_ = nullptr;
 };
