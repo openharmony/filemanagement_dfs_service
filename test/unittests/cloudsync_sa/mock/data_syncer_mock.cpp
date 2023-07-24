@@ -126,7 +126,7 @@ void EmptyDownLoadAssetsprogress(std::shared_ptr<DKContext>, DKDownloadAsset, To
     return;
 }
 
-int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DKContext> context,
+int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
     std::shared_ptr<const DKDatabase> database, std::shared_ptr<std::vector<DKRecord>> records)
 {
     return E_OK;
