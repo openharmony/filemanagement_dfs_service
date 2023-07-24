@@ -898,25 +898,24 @@ int32_t FileDataConvertor::ExtractDateTrashed(DriveKit::DKRecordData &data,
     NativeRdb::ValuesBucket &valueBucket)
 {
     if (data.find(FILE_RECYCLE_TIME) == data.end() && data.find(FILE_RECYCLED) == data.end()) {
-        LOGI("record data cannot find FILE_RECYCLE_TIME");
         return E_OK;
-    } else if (data.find(FILE_RECYCLED) != data.end()) {
-        bool isRecycle;
-        data[FILE_RECYCLED].GetBool(isRecycle);
-        if (!isRecycle) {
-            // 0：default recycle time, means not in recycle album
-            valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, 0);
-        }
-        return E_OK;
-    } else {
-        int64_t dataTrashed;
+    }
+    bool isRecycle = false;
+    if (data[FILE_RECYCLED].GetBool(isRecycle) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract FILE_RECYCLED error");
+        return E_INVAL_ARG;
+    }
+    if (isRecycle) {
+        int64_t dataTrashed = 0;
         if (data[FILE_RECYCLE_TIME].GetLong(dataTrashed) != DKLocalErrorCode::NO_ERROR) {
             LOGE("extract dataTrashed error");
             return E_INVAL_ARG;
         }
         valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, dataTrashed / MILLISECOND_TO_SECOND);
-        return E_OK;
+    } else {
+        valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, 0);
     }
+    return E_OK;
 }
 
 int32_t FileDataConvertor::ExtractCloudId(const DriveKit::DKRecord &record,
