@@ -75,6 +75,7 @@ struct CloudInode {
     atomic<int> refCount{0};
     shared_ptr<DriveKit::DKAssetReadSession> readSession{nullptr};
     atomic<int> sessionRefCount{0};
+    std::shared_mutex sessionLock;
 };
 
 struct FuseData {
@@ -322,12 +323,14 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId);
     shared_ptr<DriveKit::DKDatabase> database = GetDatabase(data);
+    std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
 
     LOGD("open %s", CloudPath(data, ino).c_str());
     if (!database) {
         fuse_reply_err(req, EPERM);
         return;
     }
+    wSesLock.lock();
     if (!cInode->readSession) {
         /*
          * 'recordType' is fixed to "fileType" now
@@ -347,13 +350,16 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
         LOGD("open success, sessionRefCount: %d", cInode->sessionRefCount.load());
         fuse_reply_open(req, fi);
     }
+    wSesLock.unlock();
 }
 
 static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+    std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
 
+    wSesLock.lock();
     LOGD("%s, sessionRefCount: %d", CloudPath(data, ino).c_str(), cInode->sessionRefCount.load());
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
@@ -372,6 +378,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         cInode->readSession = nullptr;
         LOGD("readSession released");
     }
+    wSesLock.unlock();
 
     fuse_reply_err(req, 0);
 }
