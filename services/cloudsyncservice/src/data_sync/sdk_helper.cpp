@@ -84,7 +84,7 @@ int32_t SdkHelper::FetchRecords(std::shared_ptr<DriveKit::DKContext> context, Fe
 int32_t SdkHelper::FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
     DriveKit::DKRecordId recordId, FetchRecordCallback callback)
 {
-    auto err = database_->FetchRecordWithId(context, cond.recordType, recordId, cond.desiredKeys, callback);
+    auto err = database_->FetchRecordWithId(context, cond.recordType, recordId, cond.fullKeys, callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("drivekit fetch records err %{public}d", err);
         return E_CLOUD_SDK;

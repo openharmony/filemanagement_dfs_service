@@ -42,6 +42,8 @@ public:
     virtual int32_t OnFetchRecords(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
                                    OnFetchParams &params) override;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
+    virtual int32_t GetCheckRecords(std::vector<DriveKit::DKRecordId> &checkRecords,
+                                    const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records) override;
     virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
 
     int32_t GetDownloadAsset(std::string cloudId,
@@ -122,6 +124,7 @@ private:
     static inline const int32_t LIMIT_SIZE = 5;
     DriveKit::DKRecordType recordType_ = "media";
     DriveKit::DKFieldKeyArray desiredKeys_;
+    DriveKit::DKFieldKeyArray checkedKeys_ = {"version", "id"};
     std::vector<std::string> modifyFailSet_;
     std::vector<std::string> createFailSet_;
 
