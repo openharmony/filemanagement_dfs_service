@@ -511,8 +511,11 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
     string localId;
     int ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, localId, resultSet);
     if (ret != E_OK) {
-        LOGI("cloud Id is NULL");
-    } else {
+        LOGE("Get cloud id failed");
+        return E_INVAL_ARG;
+    }
+    if (ret == E_OK && !localId.empty()) {
+        LOGI("clould id not NULL %{public}s", localId.c_str());
         modifyPathflag = true;
     }
     int64_t localIsize = 0;
@@ -1424,16 +1427,7 @@ int32_t FileDataHandler::DeleteDentryFile(void)
     std::string cacheDir =
         "/data/service/el2/" + std::to_string(userId_) + "/hmdfs/cache/account_cache/dentry_cache/cloud/";
     LOGD("cacheDir: %s", cacheDir.c_str());
-    if (!filesystem::exists(filesystem::path(cacheDir)))
-        return errno;
-
-    for (const auto& entry : filesystem::directory_iterator(cacheDir)) {
-        if (filesystem::is_directory(entry.path())) {
-            OHOS::ForceRemoveDirectory(entry.path());
-        } else {
-            remove(entry.path());
-        }
-    }
+    ForceRemoveDirectory(cacheDir);
 
     return E_OK;
 }
