@@ -652,7 +652,7 @@ int32_t FileDataConvertor::ExtractAttributeValue(DriveKit::DKRecordData &data,
     NativeRdb::ValuesBucket &valueBucket)
 {
     DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
-    auto size = CLOUD_SYNC_UNIQUE_COLUMNS.size();
+    auto size = CLOUD_SYNC_UNIQUE_COLUMNS.size() - NR_LOCAL_INFO;
     for (decltype(size) i = 0; i < size; i++) {
         auto field = CLOUD_SYNC_UNIQUE_COLUMNS[i];
         auto type = CLOUD_SYNC_UNIQUE_COLUMN_TYPES[i];

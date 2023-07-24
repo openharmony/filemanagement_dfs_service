@@ -2013,9 +2013,12 @@ int32_t FileDataHandler::EraseLocalInfo(vector<DriveKit::DKRecord> &records)
     for (auto &record : records) {
         DKRecordData data;
         record.GetRecordData(data);
-        DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+        DKRecordFieldMap attributes;
+        data[FILE_ATTRIBUTES].GetRecordMap(attributes);
         attributes.erase(Media::MediaColumn::MEDIA_ID);
         attributes.erase(Media::PhotoColumn::PHOTO_CLOUD_ID);
+        data[FILE_ATTRIBUTES] = DKRecordField(attributes);
+        record.SetRecordData(data);
     }
     return E_OK;
 }

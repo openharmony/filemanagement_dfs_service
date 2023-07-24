@@ -70,11 +70,6 @@ void SdkHelper::DeleteLock(DriveKit::DKLock &lock)
     database_->DeleteLock(lock);
 }
 
-void SdkHelper::ResetLock(DriveKit::DKLock &lock)
-{
-    lock = { 0 };
-}
-
 int32_t SdkHelper::FetchRecords(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
     DriveKit::DKQueryCursor cursor, FetchRecordsCallback callback)
 {

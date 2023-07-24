@@ -65,20 +65,11 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
         userId_, bundleName_.c_str(), forceFlag, triggerType);
 
     sdkHelper_->SaveSubscription();
+
     /* only one specific data sycner running at a time */
     if (syncStateManager_.CheckAndSetPending(forceFlag)) {
         LOGI("syncing, pending sync");
         return E_PENDING;
-    }
-
-    /* lock: device-reentrant */
-    sdkHelper_->ResetLock(lock_);
-    int32_t ret = sdkHelper_->GetLock(lock_);
-    if (ret != E_OK) {
-        LOGE("sdk helper get lock err %{public}d", ret);
-        errorCode_ = ret;
-        CompleteAll();
-        return ret;
     }
 
     /* start data sync */
@@ -98,6 +89,53 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
     SyncStateChangedNotify(CloudSyncState::STOPPED, ErrorType::NO_ERROR);
 
     return E_OK;
+}
+
+int32_t DataSyncer::Lock()
+{
+    lock_guard<mutex> lock(lock_.mtx);
+    if (lock_.count > 0) {
+        lock_.count++;
+        return E_OK;
+    }
+
+    /* lock: device-reentrant */
+    int32_t ret = sdkHelper_->GetLock(lock_.lock);
+    if (ret != E_OK) {
+        LOGE("sdk helper get lock err %{public}d", ret);
+        lock_.lock = { 0 };
+        errorCode_ = ret;
+        return ret;
+    }
+    lock_.count++;
+
+    return ret;
+}
+
+void DataSyncer::Unlock()
+{
+    lock_guard<mutex> lock(lock_.mtx);
+    lock_.count--;
+    if (lock_.count > 0) {
+        return;
+    }
+
+    /* sdk unlock */
+    sdkHelper_->DeleteLock(lock_.lock);
+
+    /* reset sdk lock */
+    lock_.lock = { 0 };
+}
+
+void DataSyncer::ForceUnlock()
+{
+    lock_guard<mutex> lock(lock_.mtx);
+    if (lock_.count == 0) {
+        return;
+    }
+    sdkHelper_->DeleteLock(lock_.lock);
+    lock_.lock = { 0 };
+    lock_.count = 0;
 }
 
 int32_t DataSyncer::StartDownloadFile(const std::string path, const int32_t userId)
@@ -910,8 +948,8 @@ void DataSyncer::CompleteAll()
 {
     LOGI("%{private}d %{private}s completes all", userId_, bundleName_.c_str());
 
-    /* unlock */
-    sdkHelper_->DeleteLock(lock_);
+    /* guarantee: unlock if locked */
+    ForceUnlock();
 
     /* reset internal status */
     Reset();
