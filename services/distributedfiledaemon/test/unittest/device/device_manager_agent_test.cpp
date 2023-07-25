@@ -172,6 +172,73 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceReady_0100, Test
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceReady_0100 end";
 }
+
+/**
+ * @tc.name: DeviceManagerAgentTest_OnDeviceP2POnline_0100
+ * @tc.desc: Verify the OnDeviceP2POnline function.
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceP2POnline_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceP2POnline_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceP2POnline_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_OnDeviceP2POffline_0100
+ * @tc.desc: Verify the OnDeviceP2POffline function.
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceP2POffline_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceP2POffline_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceP2POffline_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_OnDeviceP2POffline_0200
+ * @tc.desc: Verify the OnDeviceP2POffline function.
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceP2POffline_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceP2POffline_0200 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
+        DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceP2POffline_0200 end";
+}
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage
