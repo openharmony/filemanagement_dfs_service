@@ -77,13 +77,9 @@ private:
     int32_t OnDeleteRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnModifyRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
                                const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap);
-    bool OnCreateIsTimeChanged(const DriveKit::DKRecord &record,
+    bool IfTimeChanged(const DriveKit::DKRecord &record,
                              const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
                              const std::string &path,
-                             const std::string &type);
-    bool OnModifyIsTimeChanged(const DriveKit::DKRecord &record,
-                             const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
-                             const std::string &cloudId,
                              const std::string &type);
     void GetLocalTimeMap(const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &map,
                          std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,

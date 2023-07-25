@@ -2087,9 +2087,9 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
     vector<string> whereArgs = {path};
 
     /* compare mtime and metatime */
-    if (OnCreateIsTimeChanged(record, localMap, path, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
+    if (IfTimeChanged(record, localMap, path, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY));
-    } else if (OnCreateIsTimeChanged(record, localMap, path, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
+    } else if (IfTimeChanged(record, localMap, path, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
     } else {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
@@ -2137,7 +2137,7 @@ int32_t FileDataHandler::OnModifyRecordSuccess(
     string cloudId = entry.first;
 
     /* compare mtime */
-    if (OnModifyIsTimeChanged(record, localMap, cloudId, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
+    if (IfTimeChanged(record, localMap, cloudId, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
         LOGI("mtime changed, need to update fdirty");
         return E_OK;
     }
@@ -2155,7 +2155,7 @@ int32_t FileDataHandler::OnModifyRecordSuccess(
     }
 
     /* compare metatime */
-    if (OnModifyIsTimeChanged(record, localMap, cloudId, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
+    if (IfTimeChanged(record, localMap, cloudId, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
         LOGI("metatime changed, need to update mdirty");
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
         ret = Update(changedRows, valuesBucket, whereClause, {cloudId});
@@ -2199,14 +2199,14 @@ int32_t FileDataHandler::UpdateLocalAlbumMap(const string &cloudId)
     return ret;
 }
 
-bool FileDataHandler::OnCreateIsTimeChanged(
+bool FileDataHandler::IfTimeChanged(
     const DriveKit::DKRecord &record,
     const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
     const std::string &path,
     const std::string &type)
 {
-    int64_t cloudtime = record.GetCreateTime() / MILLISECOND_TO_SECOND;
-    int64_t localtime;
+    int64_t cloudtime = 0;
+    int64_t localtime = 0;
     auto it = localMap.find(path);
     if (it == localMap.end()) {
         return true;
@@ -2214,52 +2214,22 @@ bool FileDataHandler::OnCreateIsTimeChanged(
     /* get mtime or metatime */
     if (type == Media::PhotoColumn::MEDIA_DATE_MODIFIED) {
         localtime = it->second.first;
+        cloudtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
     } else {
         localtime = it->second.second;
-    }
-
-    /* compare mtime metatime */
-    if (localtime == cloudtime) {
-        return false;
-    }
-    return true;
-}
-
-bool FileDataHandler::OnModifyIsTimeChanged(
-    const DriveKit::DKRecord &record,
-    const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
-    const std::string &cloudId,
-    const std::string &type)
-{
-    int64_t cloudtime = record.GetEditedTime() / MILLISECOND_TO_SECOND;
-    int64_t localtime;
-
-    auto it = localMap.find(cloudId);
-    if (it == localMap.end()) {
-        return true;
-    }
-    /* get mtime or metatime */
-    if (type == Media::PhotoColumn::MEDIA_DATE_MODIFIED) {
-        localtime = it->second.first;
-    } else {
         DKRecordData data;
         record.GetRecordData(data);
         if (data.find(FILE_ATTRIBUTES) == data.end()) {
             LOGE("record data cannot find attributes");
             return false;
         }
-        DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
-        if (attributes.find(type) == attributes.end()) {
-            LOGE("record data cannot find meta_dateModified_time");
+        DriveKit::DKRecordFieldMap attributes;
+        data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+        if (attributes[PhotoColumn::PHOTO_META_DATE_MODIFIED].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
+            LOGE("obtain PHOTO_META_DATE_MODIFIED error");
             return false;
         }
-        if (attributes[type].GetLong(localtime) != DKLocalErrorCode::NO_ERROR) {
-            LOGE("bad meta_dateModified_time in props");
-            return true;
-        }
     }
-
-    /* compare mtime or metatime */
     if (localtime == cloudtime) {
         return false;
     }
