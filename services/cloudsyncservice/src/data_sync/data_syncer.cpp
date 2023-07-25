@@ -395,6 +395,12 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
 void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::shared_ptr<const DKDatabase> database,
     std::shared_ptr<std::vector<DKRecord>> records, DKQueryCursor nextCursor, const DKError &err)
 {
+    if (err.HasError()) {
+        LOGE("OnFetchDatabaseChanges server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
+            err.dkErrorCode);
+        return;
+    }
+
     LOGI("%{private}d %{private}s on fetch records", userId_, bundleName_.c_str());
     auto ctx = static_pointer_cast<DownloadTaskContext>(context);
     auto handler = ctx->GetHandler();
@@ -410,6 +416,9 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
         LOGI("no more records");
         handler->GetTempStartCursor(nextCursor);
         handler->SetTempNextCursor(nextCursor, true);
+        if (records->size() == 0) {
+            handler->FinishPull(ctx->GetBatchNo());
+        }
     } else {
         handler->SetTempNextCursor(nextCursor, false);
         shared_ptr<DownloadTaskContext> nexCtx = make_shared<DownloadTaskContext>(handler, handler->GetBatchNo());
@@ -468,6 +477,11 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
     std::shared_ptr<std::vector<DriveKit::DKRecord>> records, DKQueryCursor nextCursor,
     bool hasMore, const DKError &err)
 {
+    if (err.HasError()) {
+        LOGE("OnFetchDatabaseChanges server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
+            err.dkErrorCode);
+        return;
+    }
     LOGI("%{private}d %{private}s on fetch database changes", userId_, bundleName_.c_str());
     auto ctx = static_pointer_cast<DownloadTaskContext>(context);
 
@@ -481,6 +495,9 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
     if (!hasMore) {
         LOGI("no more records");
         handler->SetTempNextCursor(nextCursor, true);
+        if (records->size() == 0) {
+            handler->FinishPull(ctx->GetBatchNo());
+        }
     } else {
         handler->SetTempNextCursor(nextCursor, false);
         shared_ptr<DownloadTaskContext> nexCtx = make_shared<DownloadTaskContext>(handler, handler->GetBatchNo());
