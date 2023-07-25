@@ -57,10 +57,24 @@ void NetworkAgentTemplate::ConnectDeviceByP2PAsync(const DeviceInfo info)
 
 void NetworkAgentTemplate::ConnectOnlineDevices()
 {
+    string pkgName = IDaemon::SERVICE_NAME;
+    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
+
     auto dma = DeviceManagerAgent::GetInstance();
     auto infos = dma->GetRemoteDevicesInfo();
     LOGI("Have %{public}zu devices Online", infos.size());
     for (const auto &info : infos) {
+        int32_t networkType;
+        int errCode = deviceManager.GetNetworkTypeByNetworkId(pkgName, info.GetCid(), networkType);
+        if (errCode) {
+            LOGE("failed to get network type by network id errCode = %{public}d", errCode);
+            continue;
+        }
+        if (!(networkType & (1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI))) {
+            LOGI("not wifi network networkType = %{public}d == %{public}d", networkType, 1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI);
+            continue;
+        }
+
         auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
             &NetworkAgentTemplate::ConnectDeviceAsync, info);
         cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
