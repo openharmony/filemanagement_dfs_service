@@ -45,13 +45,13 @@ sptr<IDaemon> DistributedFileDaemonProxy::GetInstance()
 
     auto object = samgr->CheckSystemAbility(FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID);
     if (object == nullptr) {
-        LOGE("CloudDaemon::Connect object == nullptr");
+        LOGE("object == nullptr");
         return nullptr;
     }
 
     daemonProxy_ = iface_cast<IDaemon>(object);
     if (daemonProxy_ == nullptr) {
-        LOGE("CloudDaemon::Connect service == nullptr");
+        LOGE("service == nullptr");
         return nullptr;
     }
     return daemonProxy_;
