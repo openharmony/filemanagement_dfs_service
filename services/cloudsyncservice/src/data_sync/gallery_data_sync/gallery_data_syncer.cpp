@@ -70,9 +70,15 @@ int32_t GalleryDataSyncer::Init(const std::string bundleName, const int32_t user
 int32_t GalleryDataSyncer::Clean(const int action)
 {
     LOGD("gallery data sycner Clean");
-    int ret = CleanInner(fileHandler_, action);
+    /* file */
+    int32_t ret = CleanInner(fileHandler_, action);
     if (ret != E_OK) {
-        LOGE("gallery data syncer Clean err %{public}d", ret);
+        LOGE("gallery data syncer file clean err %{public}d", ret);
+    }
+    /* album */
+    ret = CleanInner(albumHandler_, action);
+    if (ret != E_OK) {
+        LOGE("gallery data syncer album clean err %{public}d", ret);
     }
     return ret;
 }
@@ -137,10 +143,12 @@ void GalleryDataSyncer::Reset()
 int32_t GalleryDataSyncer::DownloadAlbum()
 {
     SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
+
     LOGI("gallery data sycner download album");
     int32_t ret = Pull(albumHandler_);
     if (ret != E_OK) {
         LOGE("gallery data syncer pull album err %{public}d", ret);
+        Abort();
     }
     return E_OK;
 }
@@ -151,27 +159,39 @@ int32_t GalleryDataSyncer::DownloadFile()
     int ret = Pull(fileHandler_);
     if (ret != E_OK) {
         LOGE("gallery data syncer pull file err %{public}d", ret);
+        Abort();
     }
     return ret;
 }
 
 int32_t GalleryDataSyncer::UploadAlbum()
 {
+    int32_t ret = Lock();
+    if (ret != E_OK) {
+        LOGE("gallery data syncer lock err %{public}d", ret);
+        Abort();
+        return E_CLOUD_SDK;
+    }
+
     SyncStateChangedNotify(CloudSyncState::UPLOADING, ErrorType::NO_ERROR);
+
     LOGI("gallery data sycner upload album");
-    int32_t ret = Push(albumHandler_);
+    ret = Push(albumHandler_);
     if (ret != E_OK) {
         LOGE("gallery data syncer push album err %{public}d", ret);
+        Abort();
     }
+
     return E_OK;
 }
 
 int32_t GalleryDataSyncer::UploadFile()
 {
     LOGI("gallery data sycner upload file");
-    int ret = Push(fileHandler_);
+    int32_t ret = Push(fileHandler_);
     if (ret != E_OK) {
         LOGE("gallery data syncer push file err %{public}d", ret);
+        Abort();
     }
     return ret;
 }
@@ -179,6 +199,7 @@ int32_t GalleryDataSyncer::UploadFile()
 int32_t GalleryDataSyncer::Complete()
 {
     LOGI("gallery data syncer complete all");
+    Unlock();
     CompleteAll();
     return E_OK;
 }

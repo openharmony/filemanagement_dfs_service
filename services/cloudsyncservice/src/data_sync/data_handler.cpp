@@ -16,7 +16,7 @@
 #include "data_handler.h"
 
 #include "dfs_error.h"
-
+#include "utils_log.h"
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
@@ -26,32 +26,44 @@ DataHandler::DataHandler(int32_t userId, const string &bundleName, const std::st
 {
     cloudPrefImpl_.GetString(START_CURSOR, startCursor_);
     cloudPrefImpl_.GetString(NEXT_CURSOR, nextCursor_);
-}
-
-void DataHandler::SetNextCursor(const DriveKit::DKQueryCursor &cursor)
-{
-    nextCursor_ = cursor;
-    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+    cloudPrefImpl_.GetString(NEXT_CURSOR, tempNextCursor_);
+    cloudPrefImpl_.GetInt(BATCH_NO, batchNo_);
+    cloudPrefImpl_.GetInt(RECORD_SIZE, recordSize_);
 }
 
 void DataHandler::GetNextCursor(DriveKit::DKQueryCursor &cursor)
 {
-    if (nextCursor_.empty()) {
+    if (tempNextCursor_.empty()) {
         cursor = startCursor_;
         return;
     }
-    cursor = nextCursor_;
+    cursor = tempNextCursor_;
 }
 
 void DataHandler::SetTempStartCursor(const DriveKit::DKQueryCursor &cursor)
 {
     tempStartCursor_ = cursor;
-    cloudPrefImpl_.SetString(TEMP_START_CURSOR, nextCursor_);
+    cloudPrefImpl_.SetString(TEMP_START_CURSOR, tempStartCursor_);
 }
 
 void DataHandler::GetTempStartCursor(DriveKit::DKQueryCursor &cursor)
 {
     cursor = tempStartCursor_;
+}
+
+void DataHandler::SetTempNextCursor(const DriveKit::DKQueryCursor &cursor, bool isFinish)
+{
+    tempNextCursor_ = cursor;
+    cursorMap_.insert(std::pair<int32_t, DriveKit::DKQueryCursor>(batchNo_, cursor));
+    cursorFinishMap_.insert(std::pair<int32_t, bool>(batchNo_, false));
+    if (!isFinish) {
+        batchNo_ ++;
+    }
+}
+
+int32_t DataHandler::GetBatchNo()
+{
+    return batchNo_;
 }
 
 bool DataHandler::IsPullRecords()
@@ -71,35 +83,47 @@ void DataHandler::ClearCursor()
     }
 }
 
-void DataHandler::GetPullCount(int32_t &totalPullCount, int32_t &downloadThumbLimit)
+void DataHandler::FinishPull(const int32_t batchNo)
 {
-    totalPullCount = totalPullCount_;
-    downloadThumbLimit = downloadThumbLimit_;
-}
-
-void DataHandler::SetTotalPullCount(const int32_t totalPullCount)
-{
-    totalPullCount_ = totalPullCount;
-    cloudPrefImpl_.SetInt(TOTAL_PULL_COUNT, totalPullCount_);
-}
-
-void DataHandler::FinishPull(const DriveKit::DKQueryCursor &nextCursor)
-{
-    if (IsPullRecords()) {
-        startCursor_ = tempStartCursor_;
-        nextCursor_.clear();
-        tempStartCursor_.clear();
-        totalPullCount_ = 0;
-        cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
-        cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
-        cloudPrefImpl_.Delete(TEMP_START_CURSOR);
-        cloudPrefImpl_.Delete(TOTAL_PULL_COUNT);
-    } else {
-        startCursor_ = nextCursor;
-        nextCursor_.clear();
-        cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
-        cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+    cursorFinishMap_[batchNo] = true;
+    if (cursorFinishMap_.begin()->first == batchNo) {
+        while (!cursorFinishMap_.empty() && cursorFinishMap_.begin()->second) {
+            nextCursor_ = cursorMap_.begin()->second;
+            cloudPrefImpl_.SetInt(BATCH_NO, cursorFinishMap_.begin()->first);
+            cursorMap_.erase(cursorMap_.begin()->first);
+            cursorFinishMap_.erase(cursorFinishMap_.begin()->first);
+        }
     }
+    cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+
+    if (cursorMap_.empty() && batchNo == batchNo_) {
+        if (IsPullRecords()) {
+            startCursor_ = tempStartCursor_;
+            tempStartCursor_.clear();
+            recordSize_ = 0;
+            cloudPrefImpl_.Delete(TEMP_START_CURSOR);
+            cloudPrefImpl_.Delete(RECORD_SIZE);
+        } else {
+            startCursor_ = nextCursor_;
+        }
+        nextCursor_.clear();
+        tempNextCursor_.clear();
+        cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
+        cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
+        cloudPrefImpl_.Delete(BATCH_NO);
+        batchNo_ = 0;
+    }
+}
+
+void DataHandler::SetRecordSize(const int32_t recordSize)
+{
+    recordSize_ = recordSize;
+    cloudPrefImpl_.SetInt(RECORD_SIZE, recordSize_);
+}
+
+int32_t DataHandler::GetRecordSize()
+{
+    return recordSize_;
 }
 
 int32_t DataHandler::GetFileModifiedRecords(vector<DriveKit::DKRecord> &records)
@@ -129,7 +153,7 @@ int32_t DataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
     return E_OK;
 }
 
-int32_t DataHandler::OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset)
+int32_t DataHandler::OnDownloadThumb(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap)
 {
     return E_OK;
 }

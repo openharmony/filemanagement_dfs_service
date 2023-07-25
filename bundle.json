@@ -43,6 +43,7 @@
           "hilog",
           "init",
           "ipc",
+          "napi",
           "preferences",
           "media_library",
           "netmanager_base",
@@ -118,7 +119,8 @@
         ],
         "test": [
           "//foundation/filemanagement/dfs_service:dfs_test_moudule",
-          "//foundation/filemanagement/dfs_service:cloudsync_test_module"
+          "//foundation/filemanagement/dfs_service:cloudsync_test_module",
+          "//foundation/filemanagement/dfs_service:distributedfile_test_module"
         ]
       }
     }

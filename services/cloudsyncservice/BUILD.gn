@@ -19,6 +19,7 @@ ohos_shared_library("cloudsync_sa") {
     "include",
     "include/data_sync",
     "include/data_sync/gallery_data_sync",
+    "${innerkits_native_path}/cloudsync_kit_inner",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "${media_library_path}/frameworks/utils/include",
@@ -46,6 +47,7 @@ ohos_shared_library("cloudsync_sa") {
   ]
 
   sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
@@ -71,7 +73,6 @@ ohos_shared_library("cloudsync_sa") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
   ]
@@ -82,6 +83,7 @@ ohos_shared_library("cloudsync_sa") {
     "ability_runtime:ability_manager",
     "ability_runtime:dataobs_manager",
     "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",

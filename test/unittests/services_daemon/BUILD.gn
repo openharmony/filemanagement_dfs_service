@@ -47,7 +47,10 @@ ohos_unittest("fuse_manager_test") {
     "//third_party/libfuse:libfuse",
   ]
 
-  external_deps = [ "ipc:ipc_single" ]
+  external_deps = [
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
 
   defines = [
     "private=public",
@@ -96,6 +99,7 @@ ohos_unittest("cloud_daemon_test") {
   ]
 
   external_deps = [
+    "hilog:libhilog",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -145,6 +149,7 @@ ohos_unittest("cloud_daemon_stub_test") {
   ]
 
   external_deps = [
+    "hilog:libhilog",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

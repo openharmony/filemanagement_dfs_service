@@ -46,6 +46,12 @@ int32_t SdkHelper::Init(const int32_t userId, const std::string &bundleName)
         return E_CLOUD_SDK;
     }
 
+    downloader_ = database_->GetAssetsDownloader();
+    if (downloader_ == nullptr) {
+        LOGE("sdk helper get drive kit downloader_ fail");
+        return E_CLOUD_SDK;
+    }
+
     return E_OK;
 }
 
@@ -62,11 +68,6 @@ int32_t SdkHelper::GetLock(DriveKit::DKLock &lock)
 void SdkHelper::DeleteLock(DriveKit::DKLock &lock)
 {
     database_->DeleteLock(lock);
-}
-
-void SdkHelper::ResetLock(DriveKit::DKLock &lock)
-{
-    lock = { 0 };
 }
 
 int32_t SdkHelper::FetchRecords(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
@@ -156,8 +157,8 @@ int32_t SdkHelper::DownloadAssets(shared_ptr<DriveKit::DKContext> context,
     std::function<void(std::shared_ptr<DriveKit::DKContext>, DriveKit::DKDownloadAsset,
                        DriveKit::TotalSize, DriveKit::DownloadSize)> progressCallback)
 {
-    auto downloader = database_->GetAssetsDownloader();
-    auto result = downloader->DownLoadAssets(context, assetsToDownload, {}, id, resultCallback, progressCallback);
+    auto result =
+        downloader_->DownLoadAssets(context, assetsToDownload, downLoadPath, id, resultCallback, progressCallback);
     if (result != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("DownLoadAssets fail");
         return E_CLOUD_SDK;
@@ -167,8 +168,7 @@ int32_t SdkHelper::DownloadAssets(shared_ptr<DriveKit::DKContext> context,
 
 int32_t SdkHelper::DownloadAssets(DriveKit::DKDownloadAsset &assetsToDownload)
 {
-    auto downloader = database_->GetAssetsDownloader();
-    auto result = downloader->DownLoadAssets(assetsToDownload);
+    auto result = downloader_->DownLoadAssets(assetsToDownload);
     if (result != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("DownLoadAssets fail ret %{public}d", static_cast<int>(result));
         return E_CLOUD_SDK;

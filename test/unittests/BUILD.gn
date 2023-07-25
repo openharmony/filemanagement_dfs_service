@@ -24,3 +24,8 @@ group("cloudsyncunittests") {
     "utils:utils_test",
   ]
 }
+
+group("distributedfileunittests") {
+  testonly = true
+  deps = [ "distributed_file_daemon:distributed_daemon_test" ]
+}

@@ -27,6 +27,8 @@ ohos_unittest("dfs_error_test") {
     "//third_party/googletest:gtest_main",
   ]
 
+  external_deps = [ "hilog:libhilog" ]
+
   defines = [ "private=public" ]
 
   use_exceptions = true
@@ -44,6 +46,8 @@ ohos_unittest("utils_log_test") {
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
+
+  external_deps = [ "hilog:libhilog" ]
 
   defines = [ "private=public" ]
 

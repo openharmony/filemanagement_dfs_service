@@ -25,6 +25,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
+const int32_t ARGS_ONE = 1;
 
 CloudFileDownloadNapi::CloudFileDownloadNapi(napi_env env, napi_value exports) : NExporter(env, exports) {}
 
@@ -94,46 +95,35 @@ CloudDownloadCallbackImpl::CloudDownloadCallbackImpl(napi_env env, napi_value fu
     }
 }
 
-CloudDownloadCallbackImpl::~CloudDownloadCallbackImpl()
+void CloudDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
 {
-    napi_delete_reference(env_, cbOnRef_);
-}
-
-static void DownloadCallbackComplete(uv_work_t *work, int stat)
-{
-    if (work == nullptr) {
+    auto downloadcCallback = msg->CloudDownloadCallback_.lock();
+    if (downloadcCallback == nullptr || downloadcCallback->cbOnRef_ == nullptr) {
+        LOGE("downloadcCallback->cbOnRef_ is nullptr");
         return;
     }
-    CloudDownloadCallbackImpl::UvChangeMsg *msg =
-        reinterpret_cast<CloudDownloadCallbackImpl::UvChangeMsg *>(work->data);
-    do {
-        if (msg == nullptr || msg->ref_ == nullptr) {
-            LOGE("UvChangeMsg is null");
-            break;
-        }
-
-        napi_value jsCallback = nullptr;
-        napi_status status = napi_get_reference_value(msg->env_, msg->ref_, &jsCallback);
-        if (status != napi_ok) {
-            LOGE("Create reference fail, status: %{public}d", status);
-            break;
-        }
-        if (jsCallback == nullptr) {
-            LOGE("jsCallback is null");
-            break;
-        }
-        NVal obj = NVal::CreateObject(msg->env_);
-        obj.AddProp("state", NVal::CreateInt32(msg->env_, (int32_t)msg->downloadProgress_.state).val_);
-        obj.AddProp("processed", NVal::CreateInt64(msg->env_, (int64_t)msg->downloadProgress_.downloadedSize).val_);
-        obj.AddProp("size", NVal::CreateInt64(msg->env_, (int64_t)msg->downloadProgress_.totalSize).val_);
-        obj.AddProp("uri", NVal::CreateUTF8String(msg->env_, msg->downloadProgress_.path).val_);
-        napi_value retVal = nullptr;
-        status = napi_call_function(msg->env_, nullptr, jsCallback, 1, &(obj.val_), &retVal);
-        if (status != napi_ok) {
-            break;
-        }
-    } while (0);
-    delete work;
+    auto env = downloadcCallback->env_;
+    auto ref = downloadcCallback->cbOnRef_;
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(env, &scope);
+    napi_value jsCallback = nullptr;
+    napi_status status = napi_get_reference_value(env, ref, &jsCallback);
+    if (status != napi_ok) {
+        LOGE("Create reference failed, status: %{public}d", status);
+        return;
+    }
+    NVal obj = NVal::CreateObject(env);
+    obj.AddProp("state", NVal::CreateInt32(env, (int32_t)msg->downloadProgress_.state).val_);
+    obj.AddProp("processed", NVal::CreateInt64(env, (int64_t)msg->downloadProgress_.downloadedSize).val_);
+    obj.AddProp("size", NVal::CreateInt64(env, (int64_t)msg->downloadProgress_.totalSize).val_);
+    obj.AddProp("uri", NVal::CreateUTF8String(env, msg->downloadProgress_.path).val_);
+    napi_value retVal = nullptr;
+    napi_value global = nullptr;
+    napi_get_global(env, &global);
+    status = napi_call_function(env, global, jsCallback, ARGS_ONE, &(obj.val_), &retVal);
+    if (status != napi_ok) {
+        LOGE("napi call function failed, status: %{public}d", status);
+    }
 }
 
 void CloudDownloadCallbackImpl::OnDownloadProcess(DownloadProgressObj &progress)
@@ -146,21 +136,36 @@ void CloudDownloadCallbackImpl::OnDownloadProcess(DownloadProgressObj &progress)
 
     uv_work_t *work = new (nothrow) uv_work_t;
     if (work == nullptr) {
+        LOGE("Failed to create uv work");
         return;
     }
 
-    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(env_, cbOnRef_, progress);
+    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(shared_from_this(), progress);
     if (msg == nullptr) {
         delete work;
         return;
     }
     work->data = reinterpret_cast<void *>(msg);
-
-    int ret = uv_queue_work(loop, work, [](uv_work_t *work) {},
-                            reinterpret_cast<uv_after_work_cb>(DownloadCallbackComplete));
+    int ret = uv_queue_work(
+        loop, work, [](uv_work_t *work) {},
+        [](uv_work_t *work, int status) {
+            auto msg = reinterpret_cast<UvChangeMsg *>(work->data);
+            OnComplete(msg);
+            delete msg;
+            delete work;
+        });
     if (ret != 0) {
-        HILOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
+        LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
+        delete msg;
         delete work;
+    }
+}
+
+void CloudDownloadCallbackImpl::DeleteReference()
+{
+    if (cbOnRef_ != nullptr) {
+        napi_delete_reference(env_, cbOnRef_);
+        cbOnRef_ = nullptr;
     }
 }
 
@@ -218,8 +223,11 @@ napi_value CloudFileDownloadNapi::Off(napi_env env, napi_callback_info info)
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
         return nullptr;
     }
-
-    callback_ = nullptr;
+    if (callback_ != nullptr) {
+        /* napi delete reference */
+        callback_->DeleteReference();
+        callback_ = nullptr;
+    }
     return NVal::CreateUndefined(env).val_;
 }
 

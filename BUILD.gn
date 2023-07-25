@@ -65,3 +65,8 @@ group("cloudsync_test_module") {
   testonly = true
   deps = [ "test/unittests:cloudsyncunittests" ]
 }
+
+group("distributedfile_test_module") {
+  testonly = true
+  deps = [ "test/unittests:distributedfileunittests" ]
+}

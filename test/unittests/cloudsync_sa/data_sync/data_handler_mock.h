@@ -56,7 +56,10 @@ public:
     int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) {return 0;}
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) {return 0;}
-    int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset) {return 0;}
+    int32_t OnDownloadThumb(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap)
+    {
+        return 0;
+    }
     int32_t Clean(const int action) {return 0;}
 };
 }

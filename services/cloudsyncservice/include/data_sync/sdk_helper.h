@@ -41,7 +41,6 @@ public:
     /* lock */
     int32_t GetLock(DriveKit::DKLock &lock);
     void DeleteLock(DriveKit::DKLock &lock);
-    void ResetLock(DriveKit::DKLock &lock);
 
     /* record download */
     using FetchRecordsCallback = std::function<void(const std::shared_ptr<DriveKit::DKContext>,
@@ -109,6 +108,13 @@ public:
 private:
     std::shared_ptr<DriveKit::DKContainer> container_;
     std::shared_ptr<DriveKit::DKDatabase> database_;
+    std::shared_ptr<DriveKit::DKAssetsDownloader> downloader_;
+};
+
+struct SdkLock {
+    DriveKit::DKLock lock = { 0 };
+    std::mutex mtx;
+    int count = 0;
 };
 } // namespace CloudSync
 } // namespace FileManagement

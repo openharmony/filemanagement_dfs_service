@@ -65,6 +65,11 @@ public:
 
     /* sdk */
     void SetSdkHelper(std::shared_ptr<SdkHelper> &sdkHelper);
+    int32_t Lock();
+    void Unlock();
+    void ForceUnlock();
+
+    void NotifyCurrentSyncState();
 
 protected:
     /* download */
@@ -108,7 +113,7 @@ private:
         const DriveKit::DKError &);
     void OnFetchRetryRecord(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<DriveKit::DKDatabase>,
         DriveKit::DKRecordId, const DriveKit::DKRecord &, const DriveKit::DKError &);
-    int HandleOnFetchRecords(const std::shared_ptr<DriveKit::DKContext> context,
+    int HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
         std::shared_ptr<const DriveKit::DKDatabase> database,
         std::shared_ptr<std::vector<DriveKit::DKRecord>> records);
     void OnFetchDatabaseChanges(const std::shared_ptr<DriveKit::DKContext>,
@@ -167,11 +172,18 @@ private:
 
     /* sdk */
     std::shared_ptr<SdkHelper> sdkHelper_;
-    DriveKit::DKLock lock_;
+    SdkLock lock_;
+
     int32_t errorCode_{0};
 
     /* download callback manager*/
     CloudDownloadCallbackManager downloadCallbackMgr_;
+
+    /* Current sync state */
+    CloudSyncState CurrentSyncState_{CloudSyncState::COMPLETED};
+
+    /* Current error type */
+    ErrorType CurrentErrorType_{ErrorType::NO_ERROR};
 };
 } // namespace CloudSync
 } // namespace FileManagement

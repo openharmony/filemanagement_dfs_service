@@ -18,16 +18,20 @@
 
 #include "cloud_pref_impl.h"
 #include "sdk_helper.h"
+#include "values_bucket.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 struct OnFetchParams {
-    bool fetchThumbs{true};
+    int32_t totalPullCount{0};
     std::vector<DriveKit::DKDownloadAsset> assetsToDownload{};
+    std::vector<NativeRdb::ValuesBucket> insertFiles{};
+    std::map<std::string, std::set<int>> recordAlbumMaps{};
 };
-const static std::string TOTAL_PULL_COUNT = "total_pull_count";
 const static std::string DOWNLOAD_THUMB_LIMIT = "download_thumb_limit";
+const static std::string BATCH_NO = "batch_no";
+const static std::string RECORD_SIZE = "record_size";
 class DataHandler {
 public:
     DataHandler(int32_t userId, const std::string &bundleName, const std::string &table);
@@ -56,28 +60,34 @@ public:
     virtual int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map);
     virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset);
-    virtual int32_t OnDownloadThumbSuccess(const DriveKit::DKDownloadAsset &asset);
+    virtual int32_t OnDownloadThumb(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap);
 
     /*clean*/
     virtual int32_t Clean(const int action);
 
     /* cursor */
-    virtual void SetNextCursor(const DriveKit::DKQueryCursor &cursor);
     virtual void GetNextCursor(DriveKit::DKQueryCursor &cursor);
     virtual void SetTempStartCursor(const DriveKit::DKQueryCursor &cursor);
     virtual void GetTempStartCursor(DriveKit::DKQueryCursor &cursor);
+    virtual void SetTempNextCursor(const DriveKit::DKQueryCursor &cursor, bool isFinish);
+    virtual int32_t GetBatchNo();
     virtual bool IsPullRecords();
     virtual void ClearCursor();
-    virtual void GetPullCount(int32_t &totalPullCount, int32_t &downloadThumbLimit);
-    virtual void SetTotalPullCount(const int32_t totalPullCount);
-    virtual void FinishPull(const DriveKit::DKQueryCursor &nextCursor);
+    virtual void FinishPull(const int32_t barchNo);
+    virtual void SetRecordSize(const int32_t recordSize);
+    virtual int32_t GetRecordSize();
 
+protected:
     /* cursor */
     DriveKit::DKQueryCursor startCursor_;
     DriveKit::DKQueryCursor nextCursor_;
     DriveKit::DKQueryCursor tempStartCursor_;
-    int32_t totalPullCount_{0};
+    DriveKit::DKQueryCursor tempNextCursor_;
+    int32_t batchNo_{0};
+    int32_t recordSize_{0};
     int32_t downloadThumbLimit_{0};
+    std::map<int32_t, DriveKit::DKQueryCursor> cursorMap_;
+    std::map<int32_t, bool> cursorFinishMap_;
 
     /* cloud preference impl */
     CloudPrefImpl cloudPrefImpl_;

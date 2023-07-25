@@ -23,6 +23,7 @@
 #include "uv.h"
 
 namespace OHOS::FileManagement::CloudSync {
+using namespace FileManagement::LibN;
 using namespace std;
 
 CloudSyncCallbackImpl::CloudSyncCallbackImpl(napi_env env, napi_value fun) : env_(env)
@@ -32,9 +33,33 @@ CloudSyncCallbackImpl::CloudSyncCallbackImpl(napi_env env, napi_value fun) : env
     }
 }
 
-CloudSyncCallbackImpl::~CloudSyncCallbackImpl()
+void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
 {
-    napi_delete_reference(env_, cbOnRef_);
+    auto cloudSyncCallback = msg->cloudSyncCallback_.lock();
+    if (cloudSyncCallback == nullptr || cloudSyncCallback->cbOnRef_ == nullptr) {
+        LOGE("cloudSyncCallback->cbOnRef_ is nullptr");
+        return;
+    }
+    auto env = cloudSyncCallback->env_;
+    auto ref = cloudSyncCallback->cbOnRef_;
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(env, &scope);
+    napi_value jsCallback = nullptr;
+    napi_status status = napi_get_reference_value(env, ref, &jsCallback);
+    if (status != napi_ok) {
+        LOGE("Create reference failed, status: %{public}d", status);
+        return;
+    }
+    NVal obj = NVal::CreateObject(env);
+    obj.AddProp("state", NVal::CreateInt32(env, (int32_t)msg->state_).val_);
+    obj.AddProp("error", NVal::CreateInt32(env, (int32_t)msg->error_).val_);
+    napi_value retVal = nullptr;
+    napi_value global = nullptr;
+    napi_get_global(env, &global);
+    status = napi_call_function(env, global, jsCallback, ARGS_ONE, &(obj.val_), &retVal);
+    if (status != napi_ok) {
+        LOGE("napi call function failed, status: %{public}d", status);
+    }
 }
 
 void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)
@@ -47,52 +72,37 @@ void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType e
 
     uv_work_t *work = new (nothrow) uv_work_t;
     if (work == nullptr) {
+        LOGE("Failed to create uv work");
         return;
     }
 
-    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(env_, cbOnRef_, state, error);
+    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(shared_from_this(), state, error);
     if (msg == nullptr) {
         delete work;
         return;
     }
 
     work->data = reinterpret_cast<void *>(msg);
-    int ret = uv_queue_work(loop, work, [](uv_work_t *w) {}, [](uv_work_t *w, int s) {
-            // js thread
-            if (w == nullptr) {
-                return;
-            }
-            UvChangeMsg *msg = reinterpret_cast<UvChangeMsg *>(w->data);
-            do {
-                if (msg == nullptr || msg->ref_ == nullptr) {
-                    LOGE("UvChangeMsg is null");
-                    break;
-                }
-
-                napi_value jsCallback = nullptr;
-                napi_status status = napi_get_reference_value(msg->env_, msg->ref_, &jsCallback);
-                if (status != napi_ok) {
-                    LOGE("Create reference fail, status: %{public}d", status);
-                    break;
-                }
-                if (jsCallback == nullptr) {
-                    LOGE("jsCallback is null");
-                    break;
-                }
-                NVal obj = NVal::CreateObject(msg->env_);
-                obj.AddProp("state", NVal::CreateInt32(msg->env_, (int32_t)msg->state_).val_);
-                obj.AddProp("error", NVal::CreateInt32(msg->env_, (int32_t)msg->error_).val_);
-                napi_value retVal = nullptr;
-                status = napi_call_function(msg->env_, nullptr, jsCallback, ARGS_ONE, &(obj.val_), &retVal);
-                if (status != napi_ok) {
-                    break;
-                }
-            } while (0);
-            delete w;
-    });
+    int ret = uv_queue_work(
+        loop, work, [](uv_work_t *work) {},
+        [](uv_work_t *work, int status) {
+            auto msg = reinterpret_cast<UvChangeMsg *>(work->data);
+            OnComplete(msg);
+            delete msg;
+            delete work;
+        });
     if (ret != 0) {
         LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
+        delete msg;
         delete work;
+    }
+}
+
+void CloudSyncCallbackImpl::DeleteReference()
+{
+    if (cbOnRef_ != nullptr) {
+        napi_delete_reference(env_, cbOnRef_);
+        cbOnRef_ = nullptr;
     }
 }
 
@@ -164,8 +174,11 @@ napi_value GallerySyncNapi::OffCallback(napi_env env, napi_callback_info info)
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
         return nullptr;
     }
-
-    callback_ = nullptr;
+    if (callback_ != nullptr) {
+        /* napi delete reference */
+        callback_->DeleteReference();
+        callback_ = nullptr;
+    }
     return NVal::CreateUndefined(env).val_;
 }
 
@@ -187,7 +200,7 @@ napi_value GallerySyncNapi::Start(napi_env env, napi_callback_info info)
 
     auto cbComplete = [](napi_env env, NError err) -> NVal {
         if (err) {
-            return { env, err.GetNapiErr(env) };
+            return {env, err.GetNapiErr(env)};
         }
         return NVal::CreateUndefined(env);
     };
@@ -221,7 +234,7 @@ napi_value GallerySyncNapi::Stop(napi_env env, napi_callback_info info)
 
     auto cbComplete = [](napi_env env, NError err) -> NVal {
         if (err) {
-            return { env, err.GetNapiErr(env) };
+            return {env, err.GetNapiErr(env)};
         }
         return NVal::CreateUndefined(env);
     };
@@ -251,8 +264,8 @@ bool GallerySyncNapi::Export()
     };
 
     std::string className = GetClassName();
-    auto [succ, classValue] = NClass::DefineClass(exports_.env_, className,
-        GallerySyncNapi::Constructor, std::move(props));
+    auto [succ, classValue] =
+        NClass::DefineClass(exports_.env_, className, GallerySyncNapi::Constructor, std::move(props));
     if (!succ) {
         NError(E_GETRESULT).ThrowErr(exports_.env_);
         LOGE("Failed to define GallerySync class");

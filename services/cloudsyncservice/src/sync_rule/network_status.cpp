@@ -34,7 +34,7 @@ static const char *NET_MANAGER_ON_STATUS = "2";
 
 int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
-    sptr<NetConnCallbackObserver> observer = new (std::nothrow) NetConnCallbackObserver(dataSyncManager);
+    sptr<NetConnCallbackObserver> observer(new (std::nothrow) NetConnCallbackObserver(dataSyncManager));
     if (observer == nullptr) {
         LOGE("new operator error.observer is nullptr");
         return E_GET_NETWORK_MANAGER_FAILED;
