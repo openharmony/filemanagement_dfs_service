@@ -66,6 +66,8 @@ public:
     void JoinGroup(std::weak_ptr<MountPoint> mp);
     void QuitGroup(std::weak_ptr<MountPoint> mp);
 
+    void InitDeviceInfos();
+
     void OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
@@ -89,6 +91,9 @@ private:
     void RegisterToExternalDm();
     void UnregisterFromExternalDm();
 
+    int32_t GetNetworkType(const std::string &cid);
+    bool isWifiNetworkType(int32_t networkType);
+
     void QueryRelatedGroups(const std::string &udid, const std::string &networkId);
     bool CheckIsAccountless(const GroupInfo &group);
     std::shared_ptr<NetworkAgentTemplate> FindNetworkBaseTrustRelation(bool isAccountless);
@@ -99,6 +104,7 @@ private:
 
     // cid-->same_account/accoutless's network
     std::unordered_map<std::string, std::shared_ptr<NetworkAgentTemplate>> cidNetTypeRecord_;
+    std::unordered_map<std::string, int32_t> cidNetworkType_;
     uint8_t openP2PSessionCount_ = 0;
 };
 } // namespace DistributedFile

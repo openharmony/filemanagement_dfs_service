@@ -168,6 +168,28 @@ std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRe
     return nullptr;
 }
 
+int32_t DeviceManagerAgent::GetNetworkType(const string &cid)
+{
+    int32_t networkType = 0;
+    string pkgName = IDaemon::SERVICE_NAME;
+    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
+    int errCode = deviceManager.GetNetworkTypeByNetworkId(pkgName, cid, networkType);
+    if (errCode) {
+        LOGE("get network type error:%{public}d", errCode);
+    }
+
+    return networkType;
+}
+
+bool DeviceManagerAgent::isWifiNetworkType(int32_t networkType)
+{
+    if ((networkType == -1) || !(networkType & (1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI))) {
+        return false;
+    }
+
+    return true;
+}
+
 void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("networkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
@@ -182,8 +204,26 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        LOGI("OnDeviceOnline end");
         return;
     }
+
+    auto type_ = cidNetworkType_.find(info.cid_);
+    if (type_ == cidNetworkType_.end()) {
+        LOGE("cid %{public}s network type is null!", info.cid_.c_str());
+        LOGI("OnDeviceOnline end");
+        return;
+    }
+
+    int32_t newNetworkType = type_->second = GetNetworkType(info.cid_);
+    LOGI("newNetworkType:%{public}d", newNetworkType);
+
+    if (!isWifiNetworkType(newNetworkType)) {
+        LOGE("cid %{public}s networkType:%{public}d", info.cid_.c_str(), type_->second);
+        LOGI("OnDeviceOnline end");
+        return;
+    }
+
     auto cmd =
         make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
     cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
@@ -201,6 +241,14 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        LOGI("OnDeviceOffline end");
+        return;
+    }
+
+    auto type_ = cidNetworkType_.find(info.cid_);
+    if (type_ == cidNetworkType_.end()) {
+        LOGE("cid %{public}s network type is null!", info.cid_.c_str());
+        LOGI("OnDeviceOffline end");
         return;
     }
 
@@ -208,6 +256,7 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
         make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
     it->second->Recv(move(cmd));
     cidNetTypeRecord_.erase(info.cid_);
+    cidNetworkType_.erase(info.cid_);
     LOGI("OnDeviceOffline end");
 }
 
@@ -222,6 +271,11 @@ int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDevic
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
         LOGE("[OnDeviceP2POnline] cid %{public}s network is null!", info.cid_.c_str());
+        return P2P_FAILED;
+    }
+    auto type_ = cidNetworkType_.find(info.cid_);
+    if (type_ == cidNetworkType_.end()) {
+        LOGE("[OnDeviceP2POnline] cid %{public}s network type is null!", info.cid_.c_str());
         return P2P_FAILED;
     }
     openP2PSessionCount_++;
@@ -248,11 +302,16 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
         return P2P_FAILED;
     }
-
+    auto type_ = cidNetworkType_.find(info.cid_);
+    if (type_ == cidNetworkType_.end()) {
+        LOGE("cid %{public}s network type is null!", info.cid_.c_str());
+        return P2P_FAILED;
+    }
     auto cmd =
         make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
     it->second->Recv(move(cmd));
     cidNetTypeRecord_.erase(info.cid_);
+    cidNetworkType_.erase(info.cid_);
     LOGI("OnDeviceP2POffline end");
     return P2P_SUCCESS;
 }
@@ -323,6 +382,7 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
         auto network = FindNetworkBaseTrustRelation(CheckIsAccountless(group));
         if (network != nullptr) {
             cidNetTypeRecord_.insert({ networkId, network });
+            cidNetworkType_.insert({ networkId, GetNetworkType(networkId) });
         }
     }
 
@@ -348,8 +408,58 @@ bool DeviceManagerAgent::CheckIsAccountless(const GroupInfo &group)
 
 void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    (void)deviceInfo;
-    LOGI("OnDeviceInfoChanged");
+    LOGI("OnDeviceInfoChanged begin");
+    DeviceInfo info(deviceInfo);
+    unique_lock<mutex> lock(mpToNetworksMutex_);
+
+    auto it = cidNetTypeRecord_.find(info.cid_);
+    if (it == cidNetTypeRecord_.end()) {
+        LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        LOGI("OnDeviceInfoChanged end");
+        return;
+    }
+
+    auto type_ = cidNetworkType_.find(info.cid_);
+    if (type_ == cidNetworkType_.end()) {
+        LOGE("cid %{public}s network type is null!", info.cid_.c_str());
+        LOGI("OnDeviceInfoChanged end");
+        return;
+    }
+
+    int32_t oldNetworkType = type_->second;
+    int32_t newNetworkType = type_->second = deviceInfo.networkType;
+
+    LOGI("oldNetworkType %{public}d, newNetworkType %{public}d", oldNetworkType, newNetworkType);
+
+    if (!isWifiNetworkType(newNetworkType) || isWifiNetworkType(oldNetworkType)) {
+        LOGE("not wifi connect");
+        LOGI("OnDeviceInfoChanged end");
+        return;
+    }
+    auto cmd =
+        make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
+    cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
+    it->second->Recv(move(cmd));
+
+    LOGI("OnDeviceInfoChanged end");
+}
+
+void DeviceManagerAgent::InitDeviceInfos()
+{
+    string extra = "";
+    string pkgName = IDaemon::SERVICE_NAME;
+    vector<DistributedHardware::DmDeviceInfo> deviceInfoList;
+
+    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
+    int errCode = deviceManager.GetTrustedDeviceList(pkgName, extra, deviceInfoList);
+    if (errCode) {
+        ThrowException(errCode, "Failed to get info of remote devices");
+    }
+
+    for (const auto &deviceInfo : deviceInfoList) {
+        DeviceInfo info(deviceInfo);
+        QueryRelatedGroups(info.udid_, info.cid_);
+    }
 }
 
 void DeviceManagerAgent::InitLocalNodeInfo()

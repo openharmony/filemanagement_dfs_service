@@ -39,6 +39,8 @@ OsAccountObserver::OsAccountObserver(const EventFwk::CommonEventSubscribeInfo &s
     curUsrId = DEFAULT_ACCOUNT;
     AddMPInfo(curUsrId, SAME_ACCOUNT);
     AddMPInfo(curUsrId, ACCOUNT_LESS);
+    auto dm = DeviceManagerAgent::GetInstance();
+    dm->Recv(make_unique<DfsuCmd<DeviceManagerAgent>>(&DeviceManagerAgent::InitDeviceInfos));
     LOGI("init first to create network of user %{public}d, done", DEFAULT_ACCOUNT);
 }
 
