@@ -396,7 +396,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
     std::shared_ptr<std::vector<DKRecord>> records, DKQueryCursor nextCursor, const DKError &err)
 {
     if (err.HasError()) {
-        LOGE("OnFetchDatabaseChanges server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
+        LOGE("OnFetchRecords server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
             err.dkErrorCode);
         return;
     }
@@ -501,7 +501,7 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
     } else {
         handler->SetTempNextCursor(nextCursor, false);
         shared_ptr<DownloadTaskContext> nexCtx = make_shared<DownloadTaskContext>(handler, handler->GetBatchNo());
-        int ret = AsyncRun(nexCtx, &DataSyncer::PullRecords);
+        int ret = AsyncRun(nexCtx, &DataSyncer::PullDatabaseChanges);
         if (ret != E_OK) {
             LOGE("asyn run pull database changes err %{public}d", ret);
         }
