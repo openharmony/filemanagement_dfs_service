@@ -86,6 +86,7 @@ protected:
     int32_t batchNo_{0};
     int32_t recordSize_{0};
     int32_t downloadThumbLimit_{0};
+    bool isFinish_{false};
     std::map<int32_t, DriveKit::DKQueryCursor> cursorMap_;
     std::map<int32_t, bool> cursorFinishMap_;
 
