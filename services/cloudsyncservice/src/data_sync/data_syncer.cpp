@@ -657,12 +657,12 @@ int32_t DataSyncer::Clean(const int action)
 int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int action)
 {
     LOGD("Enter function DataSyncer::CleanInner");
+    handler->ClearCursor();
     int res = handler->Clean(action);
     if (res != E_OK) {
         LOGE("Clean file failed res:%{public}d", res);
         return res;
     }
-    handler->ClearCursor();
     return E_OK;
 }
 

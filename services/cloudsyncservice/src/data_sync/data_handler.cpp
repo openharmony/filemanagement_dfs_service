@@ -58,6 +58,8 @@ void DataHandler::SetTempNextCursor(const DriveKit::DKQueryCursor &cursor, bool 
     cursorFinishMap_.insert(std::pair<int32_t, bool>(batchNo_, false));
     if (!isFinish) {
         batchNo_ ++;
+    } else {
+        isFinish_ = true;
     }
 }
 
@@ -75,12 +77,18 @@ void DataHandler::ClearCursor()
 {
     startCursor_.clear();
     nextCursor_.clear();
+    tempStartCursor_.clear();
+    tempNextCursor_.clear();
+    batchNo_ = 0;
+    recordSize_ = 0;
+    isFinish_ = false;
+    cursorMap_.clear();
+    cursorFinishMap_.clear();
     cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
     cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
-    if (!tempStartCursor_.empty()) {
-        tempStartCursor_.clear();
-        cloudPrefImpl_.Delete(TEMP_START_CURSOR);
-    }
+    cloudPrefImpl_.SetInt(BATCH_NO, batchNo_);
+    cloudPrefImpl_.Delete(TEMP_START_CURSOR);
+    cloudPrefImpl_.Delete(RECORD_SIZE);
 }
 
 void DataHandler::FinishPull(const int32_t batchNo)
@@ -96,7 +104,7 @@ void DataHandler::FinishPull(const int32_t batchNo)
     }
     cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
 
-    if (cursorMap_.empty() && batchNo == batchNo_) {
+    if (cursorMap_.empty() && isFinish_) {
         if (IsPullRecords()) {
             startCursor_ = tempStartCursor_;
             tempStartCursor_.clear();
@@ -112,6 +120,7 @@ void DataHandler::FinishPull(const int32_t batchNo)
         cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
         cloudPrefImpl_.Delete(BATCH_NO);
         batchNo_ = 0;
+        isFinish_ = false;
     }
 }
 
