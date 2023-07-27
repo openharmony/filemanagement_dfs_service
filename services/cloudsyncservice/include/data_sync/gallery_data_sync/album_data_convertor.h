@@ -43,6 +43,9 @@ public:
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket) override;
 
 private:
+    /* record id */
+    int32_t FillRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
+
     /* basic */
     int32_t HandleAlbumId(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleAlbumName(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);

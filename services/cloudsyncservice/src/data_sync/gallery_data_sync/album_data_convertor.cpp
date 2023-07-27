@@ -48,10 +48,28 @@ int32_t AlbumDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Resul
     record.SetRecordData(data);
     /* control info */
     record.SetRecordType(recordType_);
-    record.SetRecordId(data[ALBUM_NAME]);
     if (type_ == ALBUM_CREATE) {
         record.SetNewCreate(true);
+    } else {
+        int32_t ret = FillRecordId(record, resultSet);
+        if (ret != E_OK) {
+            LOGE("fill record id err %{public}d", ret);
+            return ret;
+        }
     }
+    return E_OK;
+}
+
+/* record id */
+int32_t AlbumDataConvertor::FillRecordId(DriveKit::DKRecord &record,
+    NativeRdb::ResultSet &resultSet)
+{
+    string val;
+    int32_t ret = GetString(PhotoAlbumColumns::ALBUM_CLOUD_ID, val, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    record.SetRecordId(val);
     return E_OK;
 }
 

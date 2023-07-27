@@ -1217,7 +1217,7 @@ int32_t FileDataHandler::UpdateAssetInPhotoMap(const DKRecord &record, int32_t f
             LOGE("id list member not a reference");
             continue;
         }
-        int albumId = GetAlbumIdFromName(ref.recordId);
+        int albumId = GetAlbumIdFromCloudId(ref.recordId);
         if (albumId < 0) {
             LOGE("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
             continue;
@@ -1252,7 +1252,7 @@ int32_t FileDataHandler::InsertAssetToPhotoMap(const DKRecord &record, OnFetchPa
             LOGE("id list member not a reference");
             continue;
         }
-        int albumId = GetAlbumIdFromName(ref.recordId);
+        int albumId = GetAlbumIdFromCloudId(ref.recordId);
         if (albumId < 0) {
             LOGE("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
             continue;
@@ -1301,10 +1301,10 @@ int32_t FileDataHandler::BatchInsertAssetMaps(OnFetchParams &params)
     return ret;
 }
 
-int32_t FileDataHandler::GetAlbumIdFromName(const std::string &albumName)
+int32_t FileDataHandler::GetAlbumIdFromCloudId(const std::string &cloudId)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PhotoAlbumColumns::TABLE);
-    predicates.EqualTo(PhotoAlbumColumns::ALBUM_NAME, albumName);
+    predicates.EqualTo(PhotoAlbumColumns::ALBUM_CLOUD_ID, cloudId);
     auto resultSet = Query(predicates, {PhotoAlbumColumns::ALBUM_ID});
     int rowCount = 0;
     int ret = -1;
@@ -1806,11 +1806,13 @@ int32_t FileDataHandler::GetAlbumCloudIds(vector<int32_t> &localIds, vector<stri
             return E_RDB;
         }
         string cloudId;
-        int32_t ret = createConvertor_.GetString(PAC::ALBUM_NAME, cloudId, *results);
+        int32_t ret = createConvertor_.GetString(PAC::ALBUM_CLOUD_ID, cloudId, *results);
         if (ret != E_OK) {
             return ret;
         }
-        cloudIds.push_back(cloudId);
+        if (!cloudId.empty()) {
+            cloudIds.push_back(cloudId);
+        }
     }
     return E_OK;
 }

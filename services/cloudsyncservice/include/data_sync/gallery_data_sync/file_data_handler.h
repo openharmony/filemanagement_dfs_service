@@ -182,7 +182,7 @@ private:
     int32_t UpdateAssetInPhotoMap(const DriveKit::DKRecord &record, int32_t fileId);
     int32_t InsertAssetToPhotoMap(const DriveKit::DKRecord &record, OnFetchParams &params);
     int32_t DeleteAssetInPhotoMap(int32_t fileId);
-    int32_t GetAlbumIdFromName(const std::string &recordId);
+    int32_t GetAlbumIdFromCloudId(const std::string &recordId);
     void QueryAndInsertMap(int32_t albumId, int32_t fileId);
     void QueryAndDeleteMap(int32_t fileId, const std::set<int> &cloudMapIds);
     int32_t BatchInsertAssetMaps(OnFetchParams &params);

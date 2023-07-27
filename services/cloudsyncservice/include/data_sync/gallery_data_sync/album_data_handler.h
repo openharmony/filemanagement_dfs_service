@@ -56,6 +56,7 @@ private:
 
     int32_t OnUploadSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnDeleteSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+    int32_t OnCreateSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnCreateFail(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnDeleteFail(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnModifyFail(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
