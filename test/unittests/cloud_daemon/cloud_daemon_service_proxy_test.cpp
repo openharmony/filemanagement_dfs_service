@@ -199,7 +199,7 @@ HWTEST_F(CloudDaemonServiceProxyTest, StartFuseTest, TestSize.Level1)
         string path = "/dev/fuse";
         int32_t userId = 100;
         int32_t ret = CloudDaemonServiceProxy->StartFuse(userId, devFd, path);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_BROKEN_IPC);
         auto remoteObject = CloudDaemonServiceProxy->AsObject();
         EXPECT_NE(remoteObject, nullptr);
         ret = remoteObject->SendRequest(

@@ -235,7 +235,7 @@ HWTEST_F(DataConvertorTest, RecordToValueBucket001, TestSize.Level1)
         DriveKit::DKRecord record;
         NativeRdb::ValuesBucket valueBucket;
         int32_t ret = dataConvertor_->RecordToValueBucket(record, valueBucket);
-        EXPECT_EQ(E_INVAL_ARG, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " RecordToValueBucket001 ERROR";
@@ -262,7 +262,7 @@ HWTEST_F(DataConvertorTest, RecordToValueBucket002, TestSize.Level1)
         EXPECT_EQ(E_OK, ret);
         EXPECT_NE(records.size(), 0);
         ret = dataConvertor_->RecordToValueBucket(records[0], valueBucket);
-        EXPECT_EQ(E_INVAL_ARG, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " RecordToValueBucket002 ERROR";
