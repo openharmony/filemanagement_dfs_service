@@ -16,6 +16,8 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_DATA_HANDLER_H
 #define OHOS_CLOUD_SYNC_SERVICE_DATA_HANDLER_H
 
+#include <mutex>
+
 #include "cloud_pref_impl.h"
 #include "sdk_helper.h"
 #include "values_bucket.h"
@@ -89,6 +91,8 @@ protected:
     bool isFinish_{false};
     std::map<int32_t, DriveKit::DKQueryCursor> cursorMap_;
     std::map<int32_t, bool> cursorFinishMap_;
+
+    std::mutex mutex_;
 
     /* cloud preference impl */
     CloudPrefImpl cloudPrefImpl_;

@@ -224,7 +224,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
         string notifyUri = DataSyncConst::PHOTO_URI_PREFIX + to_string(fileId);
         DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
     }
-    LOGE("before BatchInsert size len %{public}zu, map size %{public}zu", params.insertFiles.size(),
+    LOGI("before BatchInsert size len %{public}zu, map size %{public}zu", params.insertFiles.size(),
          params.recordAlbumMaps.size());
     if (!params.insertFiles.empty() || !params.recordAlbumMaps.empty()) {
         int64_t rowId;
