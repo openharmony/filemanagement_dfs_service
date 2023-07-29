@@ -152,12 +152,29 @@ private:
     FileDataConvertor fdirtyConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DATA_MODIFY };
 
     /* file Conflict */
-    std::string ConflictRenameThumb(NativeRdb::ResultSet &resultSet, std::string fullPath);
-    int32_t ConflictRename(NativeRdb::ResultSet &resultSet, std::string &fullPath);
+    static inline const std::string CON_SUFFIX = "_1";
+    std::string ConflictRenameThumb(NativeRdb::ResultSet &resultSet,
+                                    std::string fullPath,
+                                    std::string &tmpPath,
+                                    std::string &newPath);
+    int32_t ConflictRename(NativeRdb::ResultSet &resultSet, std::string &fullPath, std::string &relativePath);
+    int32_t ConflictRenamePath(NativeRdb::ResultSet &resultSet,
+                               std::string &fullPath,
+                               std::string &rdbPath,
+                               std::string &localPath,
+                               std::string &newLocalPath);
     int32_t ConflictDataMerge(const DriveKit::DKRecord &record, std::string &fullPath);
-    int32_t ConflictHandler(NativeRdb::ResultSet &resultSet, const DriveKit::DKRecord &record,
-                            std::string &fullPath, int64_t isize, int64_t mtime, bool &comflag);
-    int32_t GetConflictData(DriveKit::DKRecord &record, std::string &fullPath, int64_t &isize, int64_t &mtime);
+    int32_t ConflictHandler(NativeRdb::ResultSet &resultSet, int64_t isize, int64_t crTime, bool &modifyPathflag);
+    int32_t ConflictMerge(NativeRdb::ResultSet &resultSet,
+                          const DriveKit::DKRecord &record,
+                          std::string &fullPath,
+                          std::string &relativePath);
+    int32_t ConflictDownload(const DriveKit::DKRecord &record, std::string &fullPath, bool &comflag);
+    int32_t GetConflictData(DriveKit::DKRecord &record,
+                            std::string &fullPath,
+                            int64_t &isize,
+                            int64_t &crTime,
+                            std::string &relativePath);
     int32_t PullRecordConflict(DriveKit::DKRecord &record, bool &comflag);
 
     /* pull operations */
