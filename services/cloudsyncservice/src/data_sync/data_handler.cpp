@@ -53,6 +53,8 @@ void DataHandler::GetTempStartCursor(DriveKit::DKQueryCursor &cursor)
 
 void DataHandler::SetTempNextCursor(const DriveKit::DKQueryCursor &cursor, bool isFinish)
 {
+    LOGI("batchNo_ %{public}d set temp next cursor %{public}s, isFinish %{public}d",
+        batchNo_, cursor.c_str(), isFinish);
     tempNextCursor_ = cursor;
     cursorMap_.insert(std::pair<int32_t, DriveKit::DKQueryCursor>(batchNo_, cursor));
     cursorFinishMap_.insert(std::pair<int32_t, bool>(batchNo_, false));
@@ -93,6 +95,8 @@ void DataHandler::ClearCursor()
 
 void DataHandler::FinishPull(const int32_t batchNo)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+    LOGI("batchNo %{public}d finish pull", batchNo);
     cursorFinishMap_[batchNo] = true;
     if (cursorFinishMap_.begin()->first == batchNo) {
         while (!cursorFinishMap_.empty() && cursorFinishMap_.begin()->second) {
@@ -102,16 +106,19 @@ void DataHandler::FinishPull(const int32_t batchNo)
             cursorFinishMap_.erase(cursorFinishMap_.begin()->first);
         }
     }
+    LOGD("The next cursor is %{public}s", nextCursor_.c_str());
     cloudPrefImpl_.SetString(NEXT_CURSOR, nextCursor_);
 
     if (cursorMap_.empty() && isFinish_) {
         if (IsPullRecords()) {
+            LOGD("PullRecords finish all");
             startCursor_ = tempStartCursor_;
             tempStartCursor_.clear();
             recordSize_ = 0;
             cloudPrefImpl_.Delete(TEMP_START_CURSOR);
             cloudPrefImpl_.Delete(RECORD_SIZE);
         } else {
+            LOGD("PullDatabaseChanged finish all");
             startCursor_ = nextCursor_;
         }
         nextCursor_.clear();
@@ -122,6 +129,9 @@ void DataHandler::FinishPull(const int32_t batchNo)
         batchNo_ = 0;
         isFinish_ = false;
     }
+    LOGD("When batchNo finish pull startCursor %{public}s, nextCursor %{public}s, tempStartCursor %{public}s,",
+        startCursor_.c_str(), nextCursor_.c_str(), tempStartCursor_.c_str());
+    LOGD("tempNextCursor %{public}s, batchNo_ %{public}d", tempNextCursor_.c_str(), batchNo_);
 }
 
 void DataHandler::SetRecordSize(const int32_t recordSize)
