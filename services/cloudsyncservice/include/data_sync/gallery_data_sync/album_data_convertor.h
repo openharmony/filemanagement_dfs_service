@@ -18,6 +18,8 @@
 
 #include <unordered_map>
 
+#include <uuid/uuid.h>
+
 #include "data_convertor.h"
 #include "dfs_error.h"
 #include "gallery_album_const.h"
@@ -26,6 +28,8 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+
+#define UUID_STR_LENGTH 37
 
 class AlbumDataConvertor : public DataConvertor {
 public:
@@ -43,6 +47,9 @@ public:
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket) override;
 
 private:
+    /* record id */
+    int32_t FillRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
+
     /* basic */
     int32_t HandleAlbumId(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleAlbumName(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
@@ -62,13 +69,11 @@ private:
 
 inline int32_t AlbumDataConvertor::HandleAlbumId(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet)
 {
-    std::string val;
-    /* use album name as cloud id */
-    int32_t ret = GetString(Media::PhotoAlbumColumns::ALBUM_NAME, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
-    }
-    data[ALBUM_ID] = DriveKit::DKRecordField(val);
+    uuid_t uuid;
+    uuid_generate(uuid);
+    char str[UUID_STR_LENGTH] = {};
+    uuid_unparse(uuid, str);
+    data[ALBUM_ID] = DriveKit::DKRecordField(str);
     return E_OK;
 }
 

@@ -47,6 +47,9 @@ public:
 
     virtual int32_t Clean(const int action) override;
 
+    /* reset */
+    void Reset();
+
 private:
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, int> QueryLocalMatch(const std::string &recordId);
     int32_t InsertCloudAlbum(DriveKit::DKRecord &record);
@@ -56,6 +59,7 @@ private:
 
     int32_t OnUploadSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnDeleteSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+    int32_t OnCreateSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnCreateFail(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnDeleteFail(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnModifyFail(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);

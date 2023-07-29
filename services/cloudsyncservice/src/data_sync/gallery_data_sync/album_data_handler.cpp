@@ -47,7 +47,7 @@ void AlbumDataHandler::GetFetchCondition(FetchCondition &cond)
 tuple<shared_ptr<ResultSet>, int> AlbumDataHandler::QueryLocalMatch(const std::string &recordId)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
-    predicates.EqualTo(PAC::ALBUM_NAME, recordId);
+    predicates.EqualTo(PAC::ALBUM_CLOUD_ID, recordId);
     auto resultSet = Query(predicates, ALBUM_LOCAL_QUERY_COLUMNS);
     if (resultSet == nullptr) {
         LOGE("get nullptr query result");
@@ -59,13 +59,13 @@ tuple<shared_ptr<ResultSet>, int> AlbumDataHandler::QueryLocalMatch(const std::s
         LOGE("result set get row count err %{public}d", ret);
         return {nullptr, 0};
     }
-    return {std::move(resultSet), rowCount};
+    return { move(resultSet), rowCount };
 }
 
 int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
 {
     LOGI("insert of record %s", record.GetRecordId().c_str());
-    int64_t rowId;
+
     ValuesBucket values;
     int32_t ret = createConvertor_.RecordToValueBucket(record, values);
     if (ret != E_OK) {
@@ -73,10 +73,13 @@ int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
         return ret;
     }
     values.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
+    values.PutString(PAC::ALBUM_CLOUD_ID, record.GetRecordId());
 
+    /* update if a album with the same name exists? */
+    int64_t rowId;
     ret = Insert(rowId, values);
     if (ret != E_OK) {
-        LOGE("Insert pull record failed, rdb ret=%{public}d", ret);
+        LOGE("Insert pull record failed, rdb ret = %{public}d", ret);
         return E_RDB;
     }
     return E_OK;
@@ -85,7 +88,7 @@ int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
 int32_t AlbumDataHandler::DeleteCloudAlbum(DKRecord &record)
 {
     int32_t deletedRows;
-    int ret = Delete(deletedRows, PAC::ALBUM_NAME + " = ?", { record.GetRecordId() });
+    int ret = Delete(deletedRows, PAC::ALBUM_CLOUD_ID + " = ?", { record.GetRecordId() });
     if (ret != E_OK) {
         LOGE("delete in rdb failed, ret: %{public}d", ret);
         return E_INVAL_ARG;
@@ -104,9 +107,9 @@ int32_t AlbumDataHandler::UpdateCloudAlbum(DKRecord &record)
     }
     values.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
 
-    ret = Update(changedRows, values, PAC::ALBUM_NAME + " = ?", { record.GetRecordId() });
+    ret = Update(changedRows, values, PAC::ALBUM_CLOUD_ID + " = ?", { record.GetRecordId() });
     if (ret != E_OK) {
-        LOGE("rdb update failed, err=%{public}d", ret);
+        LOGE("rdb update failed, err = %{public}d", ret);
         return E_RDB;
     }
     return E_OK;
@@ -133,7 +136,7 @@ int32_t AlbumDataHandler::HandleLocalDirty(int32_t dirty, const DriveKit::DKReco
         values.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
         int32_t ret = Update(changedRows, values, PAC::ALBUM_NAME + " = ?", { record.GetRecordId() });
         if (ret != E_OK) {
-            LOGE("rdb update failed, err=%{public}d", ret);
+            LOGE("rdb update failed, err = %{public}d", ret);
             return E_RDB;
         }
         return E_OK;
@@ -293,7 +296,7 @@ int32_t AlbumDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResu
         int32_t err;
         const DKRecordOperResult &result = entry.second;
         if (result.IsSuccess()) {
-            err = OnUploadSuccess(entry);
+            err = OnCreateSuccess(entry);
         } else {
             err = OnCreateFail(entry);
         }
@@ -340,13 +343,37 @@ int32_t AlbumDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOp
     return ret;
 }
 
+static inline string GetAlbumNameFromRecord(const DriveKit::DKRecordOperResult &result)
+{
+    auto record = result.GetDKRecord();
+    DKRecordData data;
+    record.GetRecordData(data);
+    return data[ALBUM_NAME];
+}
+
+int32_t AlbumDataHandler::OnCreateSuccess(const pair<DriveKit::DKRecordId,
+    DriveKit::DKRecordOperResult> &entry)
+{
+    ValuesBucket valuesBucket;
+    int32_t changedRows;
+    string whereClause = PAC::ALBUM_NAME + " = ?";
+    vector<string> whereArgs = { GetAlbumNameFromRecord(entry.second) };
+    valuesBucket.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
+    valuesBucket.PutString(PAC::ALBUM_CLOUD_ID, entry.first);
+    int32_t ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
+    if (ret != 0) {
+        LOGE("update local records err %{public}d", ret);
+        return ret;
+    }
+    return E_OK;
+}
+
 int32_t AlbumDataHandler::OnUploadSuccess(const pair<DriveKit::DKRecordId,
     DriveKit::DKRecordOperResult> &entry)
 {
     ValuesBucket valuesBucket;
     int32_t changedRows;
-    /* use album name as cloud id */
-    string whereClause = PAC::ALBUM_NAME + " = ?";
+    string whereClause = PAC::ALBUM_CLOUD_ID + " = ?";
     vector<string> whereArgs = { entry.first };
     valuesBucket.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
     int32_t ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
@@ -361,8 +388,7 @@ int32_t AlbumDataHandler::OnDeleteSuccess(const pair<DriveKit::DKRecordId,
     DriveKit::DKRecordOperResult> &entry)
 {
     int32_t deletedRows;
-    /* use album name as cloud id */
-    string whereClause = PAC::ALBUM_NAME + " = ?";
+    string whereClause = PAC::ALBUM_CLOUD_ID + " = ?";
     vector<string> whereArgs = { entry.first };
     int32_t ret = Delete(deletedRows, whereClause, whereArgs);
     if (ret != 0) {
@@ -391,6 +417,12 @@ int32_t AlbumDataHandler::OnModifyFail(const pair<DriveKit::DKRecordId,
 {
     modifyFailSet_.push_back(entry.first);
     return E_OK;
+}
+
+void AlbumDataHandler::Reset()
+{
+    modifyFailSet_.clear();
+    createFailSet_.clear();
 }
 } // namespace CloudSync
 } // namespace FileManagement
