@@ -39,24 +39,28 @@ int32_t AlbumDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Resul
     RETURN_ON_ERR(HandleProperties(data, resultSet));
     /* basic */
     RETURN_ON_ERR(HandleAlbumName(data, resultSet));
-    RETURN_ON_ERR(HandleAlbumId(data, resultSet));
     RETURN_ON_ERR(HandleAlbumLogicType(data, resultSet));
     RETURN_ON_ERR(HandleType(data, resultSet));
     RETURN_ON_ERR(HandlePath(data, resultSet));
 
-    /* set data */
-    record.SetRecordData(data);
     /* control info */
     record.SetRecordType(recordType_);
     if (type_ == ALBUM_CREATE) {
         record.SetNewCreate(true);
+        RETURN_ON_ERR(HandleAlbumId(data, resultSet));
+        record.SetRecordId(data[ALBUM_ID]);
     } else {
         int32_t ret = FillRecordId(record, resultSet);
         if (ret != E_OK) {
             LOGE("fill record id err %{public}d", ret);
             return ret;
         }
+        data[ALBUM_ID] = DriveKit::DKRecordField(record.GetRecordId());
     }
+
+    /* set data */
+    record.SetRecordData(data);
+
     return E_OK;
 }
 

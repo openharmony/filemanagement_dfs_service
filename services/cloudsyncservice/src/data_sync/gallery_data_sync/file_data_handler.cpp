@@ -2280,9 +2280,10 @@ int32_t FileDataHandler::UpdateLocalAlbumMap(const string &cloudId)
         return ret;
     }
     /* update deleted */
-    string deleteSql = "DELETE FROM " + PM::TABLE + " WHERE " + PM::ASSET_ID + " IN (SELECT " +
-        PC::MEDIA_ID + " FROM " + PC::PHOTOS_TABLE + " WHERE " + PC::PHOTO_CLOUD_ID +
-        " = '" + cloudId + "')";
+    string deleteSql = "DELETE FROM " + PM::TABLE + " WHERE " + PM::DIRTY + " = " +
+        to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)) + " AND " + PM::ASSET_ID +
+        " IN (SELECT " + PC::MEDIA_ID + " FROM " + PC::PHOTOS_TABLE + " WHERE " +
+        PC::PHOTO_CLOUD_ID + " = '" + cloudId + "')";
     ret = ExecuteSql(deleteSql);
     if (ret != NativeRdb::E_OK) {
         LOGE("delete local album map err %{public}d", ret);

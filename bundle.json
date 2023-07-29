@@ -53,6 +53,7 @@
           "ability_runtime"
         ],
         "third_party": [
+          "e2fsprogs",
           "libfuse"
         ]
       },

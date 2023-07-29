@@ -388,7 +388,7 @@ int32_t AlbumDataHandler::OnDeleteSuccess(const pair<DriveKit::DKRecordId,
     DriveKit::DKRecordOperResult> &entry)
 {
     int32_t deletedRows;
-    string whereClause = PAC::ALBUM_NAME + " = ?";
+    string whereClause = PAC::ALBUM_CLOUD_ID + " = ?";
     vector<string> whereArgs = { entry.first };
     int32_t ret = Delete(deletedRows, whereClause, whereArgs);
     if (ret != 0) {
