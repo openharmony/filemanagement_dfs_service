@@ -138,6 +138,7 @@ void GalleryDataSyncer::Reset()
     stage_ = BEGIN;
     /* restart a sync might need to update offset, etc */
     fileHandler_->Reset();
+    albumHandler_->Reset();
 }
 
 int32_t GalleryDataSyncer::DownloadAlbum()

@@ -47,6 +47,9 @@ public:
 
     virtual int32_t Clean(const int action) override;
 
+    /* reset */
+    void Reset();
+
 private:
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, int> QueryLocalMatch(const std::string &recordId);
     int32_t InsertCloudAlbum(DriveKit::DKRecord &record);

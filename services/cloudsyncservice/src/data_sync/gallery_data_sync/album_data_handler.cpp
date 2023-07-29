@@ -418,6 +418,12 @@ int32_t AlbumDataHandler::OnModifyFail(const pair<DriveKit::DKRecordId,
     modifyFailSet_.push_back(entry.first);
     return E_OK;
 }
+
+void AlbumDataHandler::Reset()
+{
+    modifyFailSet_.clear();
+    createFailSet_.clear();
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
