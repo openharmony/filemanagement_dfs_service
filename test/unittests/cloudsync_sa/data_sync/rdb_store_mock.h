@@ -104,10 +104,10 @@ public:
                  std::shared_ptr<ResultSet>(const std::string &sql, const std::vector<std::string> &selectionArgs));
     MOCK_METHOD2(QueryByStep,
                  std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates,
-                                            const std::vector<std::string> columns));
+                                            const std::vector<std::string> &columns));
     MOCK_METHOD2(QueryByStep,
                  std::shared_ptr<ResultSet>(const std::string &sql,
-                                            std::vector<ValueObject> &&args));
+                                            std::vector<ValueObject> &args));
 
     MOCK_METHOD4(RemoteQuery,
                  std::shared_ptr<ResultSet>(const std::string &device,
