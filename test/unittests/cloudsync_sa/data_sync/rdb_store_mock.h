@@ -106,7 +106,7 @@ public:
     MOCK_METHOD2(Count, int(int64_t &outValue, const AbsRdbPredicates &predicates));
     MOCK_METHOD2(Query,
                  std::shared_ptr<AbsSharedResultSet>(const AbsRdbPredicates &predicates,
-                                                     const std::vector<std::string> columns));
+                                                     const std::vector<std::string> &columns));
     MOCK_METHOD10(Query,
                   std::shared_ptr<AbsSharedResultSet>((int &errCode,
                                                        bool distinct,
@@ -127,14 +127,11 @@ public:
     MOCK_METHOD2(QueryByStep,
                  std::shared_ptr<ResultSet>(const std::string &sql, const std::vector<std::string> &selectionArgs));
     MOCK_METHOD2(QueryByStep,
-                 std::shared_ptr<ResultSet>(const std::string &sql, const std::vector<ValueObject> &bindArgs)));
+                 std::shared_ptr<ResultSet>(const std::string &sql, const std::vector<ValueObject> &bindArgs));
 
     MOCK_METHOD2(QueryByStep,
                  std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates,
                                             const std::vector<std::string> &columns));
-    MOCK_METHOD2(QueryByStep,
-                 std::shared_ptr<ResultSet>(const std::string &sql,
-                                            std::vector<ValueObject> &args));
 
     MOCK_METHOD4(RemoteQuery,
                  std::shared_ptr<ResultSet>(const std::string &device,
