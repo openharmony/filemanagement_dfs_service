@@ -56,10 +56,11 @@ namespace FileManagement {
 namespace CloudFile {
 using namespace std;
 
-static const string LOCAL_PATH_PREFIX = "/mnt/hmdfs/";
+static const string HMDFS_PATH_PREFIX = "/mnt/hmdfs/";
 static const string LOCAL_PATH_SUFFIX = "/account/device_view/local";
 static const string FUSE_CACHE_PATH_PREFIX = "/data/service/el2/";
 static const string FUSE_CACHE_PATH_SUFFIX = "/hmdfs/fuse";
+static const string CLOUD_MERGE_VIEW_PATH_SUFFIX = "/account/cloud_merge_view";
 static const string PHOTOS_BUNDLE_NAME = "com.ohos.photos";
 static const unsigned int OID_USER_DATA_RW = 1008;
 static const unsigned int STAT_NLINK_REG = 1;
@@ -288,12 +289,17 @@ static string GetAssetKey(int fileType)
 
 static string GetLocalPath(int32_t userId)
 {
-    return LOCAL_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX;
+    return HMDFS_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX;
 }
 
 static string GetFuseCachePath(int32_t userId)
 {
     return FUSE_CACHE_PATH_PREFIX + to_string(userId) + FUSE_CACHE_PATH_SUFFIX;
+}
+
+static string GetCloudMergeViewPath(int32_t userId)
+{
+    return HMDFS_PATH_PREFIX + to_string(userId) + CLOUD_MERGE_VIEW_PATH_SUFFIX;
 }
 
 static string GetAssetPath(shared_ptr<CloudInode> cInode, struct FuseData *data)
@@ -374,6 +380,11 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         if (needRemain && res) {
             GetCloudInode(data, cInode->parent)->mFile->DoRemove(*(cInode->mBase));
             LOGD("remove from dentryfile");
+            /*
+             * after removing file item from dentryfile, we should delete file
+             * of cloud merge view to update kernel dentry cache.
+             */
+            remove((GetCloudMergeViewPath(data->userId) + cInode->path).c_str());
         }
         cInode->readSession = nullptr;
         LOGD("readSession released");
