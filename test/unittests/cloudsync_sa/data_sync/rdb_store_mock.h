@@ -19,6 +19,7 @@
 #include "abs_rdb_predicates.h"
 #include "rdb_helper.h"
 #include "result_set.h"
+#include "value_object.h"
 #include "values_bucket.h"
 
 #include <gmock/gmock.h>
@@ -48,6 +49,12 @@ public:
                      const ValuesBucket &values,
                      const std::string &whereClause,
                      const std::vector<std::string> &whereArgs));
+    MOCK_METHOD5(Update,
+                 int(int &changedRows,
+                     const std::string &table,
+                     const ValuesBucket &values,
+                     const std::string &whereClause,
+                     const std::vector<ValueObject> &bindArgs));
 
     MOCK_METHOD6(UpdateWithConflictResolution,
                  int(int &changedRows,
@@ -57,11 +64,25 @@ public:
                      const std::vector<std::string> &whereArgs,
                      ConflictResolution conflictResolution));
 
+    MOCK_METHOD6(UpdateWithConflictResolution,
+                 int(int &changedRows,
+                     const std::string &table,
+                     const ValuesBucket &values,
+                     const std::string &whereClause,
+                     const std::vector<ValueObject> &bindArgs,
+                     ConflictResolution conflictResolution));
+
     MOCK_METHOD4(Delete,
                  int(int &deletedRows,
                      const std::string &table,
                      const std::string &whereClause,
                      const std::vector<std::string> &whereArgs));
+
+    MOCK_METHOD4(Delete,
+                 int(int &deletedRows,
+                     const std::string &table,
+                     const std::string &whereClause,
+                     const std::vector<ValueObject> &bindArgs));
 
     MOCK_METHOD2(ExecuteSql, int(const std::string &sql, const std::vector<ValueObject> &bindArgs));
 
@@ -85,7 +106,7 @@ public:
     MOCK_METHOD2(Count, int(int64_t &outValue, const AbsRdbPredicates &predicates));
     MOCK_METHOD2(Query,
                  std::shared_ptr<AbsSharedResultSet>(const AbsRdbPredicates &predicates,
-                                                     const std::vector<std::string> columns));
+                                                     const std::vector<std::string> &columns));
     MOCK_METHOD10(Query,
                   std::shared_ptr<AbsSharedResultSet>((int &errCode,
                                                        bool distinct,
@@ -100,14 +121,17 @@ public:
     MOCK_METHOD2(QuerySql,
                  std::shared_ptr<AbsSharedResultSet>(const std::string &sql,
                                                      const std::vector<std::string> &selectionArgs));
+    MOCK_METHOD2(QuerySql,
+                 std::shared_ptr<AbsSharedResultSet>(const std::string &sql,
+                                                     const std::vector<ValueObject> &bindArgs));
     MOCK_METHOD2(QueryByStep,
                  std::shared_ptr<ResultSet>(const std::string &sql, const std::vector<std::string> &selectionArgs));
     MOCK_METHOD2(QueryByStep,
-                 std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates,
-                                            const std::vector<std::string> columns));
+                 std::shared_ptr<ResultSet>(const std::string &sql, const std::vector<ValueObject> &bindArgs));
+
     MOCK_METHOD2(QueryByStep,
-                 std::shared_ptr<ResultSet>(const std::string &sql,
-                                            std::vector<ValueObject> &&args));
+                 std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates,
+                                            const std::vector<std::string> &columns));
 
     MOCK_METHOD4(RemoteQuery,
                  std::shared_ptr<ResultSet>(const std::string &device,
