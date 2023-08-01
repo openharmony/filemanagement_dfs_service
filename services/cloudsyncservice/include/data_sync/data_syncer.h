@@ -40,6 +40,7 @@ enum class SyncTriggerType : int32_t {
     BATTERY_OK_TRIGGER,
     NETWORK_AVAIL_TRIGGER,
 };
+struct DownloadContext;
 
 class DataSyncer {
 public:
@@ -108,7 +109,7 @@ private:
     void PullDatabaseChanges(std::shared_ptr<TaskContext> context);
     void PullRecordsWithId(std::shared_ptr<TaskContext> context, const std::vector<DriveKit::DKRecordId> &records,
         bool retry);
-    void DownloadAssets(std::shared_ptr<TaskContext> context);
+    void DownloadAssets(DownloadContext &ctx);
     void RetryDownloadRecords(std::shared_ptr<TaskContext> context);
     /* dowload callback */
     void OnFetchRecords(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
