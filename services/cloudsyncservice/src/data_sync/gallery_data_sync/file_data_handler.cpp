@@ -1587,7 +1587,6 @@ int32_t FileDataHandler::CleanCloudRecord(NativeRdb::ResultSet &local, const int
             LOGE("Clean pure cloud record failed, res:%{public}d", res);
             return res;
         }
-        DeleteAssetInPhotoMap(GetFileId(local));
     } else {
         LOGD("File is not pure cloud data");
         res = CleanNotPureCloudRecord(local, action, filePath);
