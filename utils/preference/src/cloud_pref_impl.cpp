@@ -75,6 +75,17 @@ void CloudPrefImpl::GetInt(const std::string& key, int32_t &value)
     value = pref_->GetInt(key, 0);
 }
 
+void CloudPrefImpl::SetBool(const std::string& key, const bool& value)
+{
+    pref_->PutBool(key, value);
+    pref_->Flush();
+}
+
+void CloudPrefImpl::GetBool(const std::string& key, bool& value)
+{
+    value = pref_->GetBool(key, false);
+}
+
 void CloudPrefImpl::Clear()
 {
     pref_->Clear();

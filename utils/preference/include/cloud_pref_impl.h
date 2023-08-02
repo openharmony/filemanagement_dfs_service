@@ -32,6 +32,8 @@ public:
     void GetString(const std::string& key, std::string& value);
     void SetInt(const std::string& key, const int value);
     void GetInt(const std::string& key, int32_t& value);
+    void SetBool(const std::string& key, const bool& value);
+    void GetBool(const std::string& key, bool& value);
     void Clear();
     void Delete(const std::string& key);
 

@@ -63,7 +63,12 @@ void FileDataHandler::GetFetchCondition(FetchCondition &cond)
 {
     cond.limitRes = LIMIT_SIZE;
     cond.recordType = recordType_;
-    cond.desiredKeys = desiredKeys_;
+    if (isChecking_) {
+        cond.desiredKeys = checkedKeys_;
+    } else {
+        cond.desiredKeys = desiredKeys_;
+    }
+    cond.fullKeys = desiredKeys_;
 }
 
 int32_t FileDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &records)
@@ -145,6 +150,7 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     PhotoColumn::MEDIA_DATE_TRASHED,
     PhotoColumn::PHOTO_POSITION,
     PhotoColumn::PHOTO_CLOUD_ID,
+    PhotoColumn::PHOTO_CLOUD_VERSION,
     MediaColumn::MEDIA_ID,
 };
 
@@ -1005,6 +1011,32 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
     }
 
     LOGI("update of record success");
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkRecords,
+    const shared_ptr<std::vector<DriveKit::DKRecord>> &records)
+{
+    for (const auto &record : *records) {
+        auto [resultSet, rowCount] = QueryLocalByCloudId(record.GetRecordId());
+        if (resultSet == nullptr || rowCount < 0) {
+            return E_RDB;
+        }
+
+        if ((rowCount == 0) && !record.GetIsDelete()) {
+            checkRecords.push_back(record.GetRecordId());
+        } else if (rowCount == 1) {
+            resultSet->GoToNextRow();
+            int64_t version = 0;
+            DataConvertor::GetLong(PhotoColumn::PHOTO_CLOUD_VERSION, version, *resultSet);
+            if (record.GetVersion() != version && (!IsLocalDirty(*resultSet) || record.GetIsDelete())) {
+                checkRecords.push_back(record.GetRecordId());
+            }
+        } else {
+            LOGE("recordId %s has multiple file in db!", record.GetRecordId().c_str());
+        }
+    }
+
     return E_OK;
 }
 

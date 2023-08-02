@@ -41,6 +41,7 @@ void AlbumDataHandler::GetFetchCondition(FetchCondition &cond)
     cond.limitRes = LIMIT_SIZE;
     cond.recordType = recordType_;
     cond.desiredKeys = desiredKeys_;
+    cond.fullKeys = desiredKeys_;
 }
 
 

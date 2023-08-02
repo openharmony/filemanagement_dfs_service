@@ -29,6 +29,7 @@ DataHandler::DataHandler(int32_t userId, const string &bundleName, const std::st
     cloudPrefImpl_.GetString(NEXT_CURSOR, tempNextCursor_);
     cloudPrefImpl_.GetInt(BATCH_NO, batchNo_);
     cloudPrefImpl_.GetInt(RECORD_SIZE, recordSize_);
+    cloudPrefImpl_.GetBool(CHECKING_FLAG, isChecking_);
 }
 
 void DataHandler::GetNextCursor(DriveKit::DKQueryCursor &cursor)
@@ -84,6 +85,7 @@ void DataHandler::ClearCursor()
     batchNo_ = 0;
     recordSize_ = 0;
     isFinish_ = false;
+    isChecking_ = false;
     cursorMap_.clear();
     cursorFinishMap_.clear();
     cloudPrefImpl_.SetString(START_CURSOR, startCursor_);
@@ -91,6 +93,7 @@ void DataHandler::ClearCursor()
     cloudPrefImpl_.SetInt(BATCH_NO, batchNo_);
     cloudPrefImpl_.Delete(TEMP_START_CURSOR);
     cloudPrefImpl_.Delete(RECORD_SIZE);
+    cloudPrefImpl_.SetBool(CHECKING_FLAG, isChecking_);
 }
 
 void DataHandler::FinishPull(const int32_t batchNo)
@@ -115,8 +118,10 @@ void DataHandler::FinishPull(const int32_t batchNo)
             startCursor_ = tempStartCursor_;
             tempStartCursor_.clear();
             recordSize_ = 0;
+            isChecking_ = false;
             cloudPrefImpl_.Delete(TEMP_START_CURSOR);
             cloudPrefImpl_.Delete(RECORD_SIZE);
+            cloudPrefImpl_.SetBool(CHECKING_FLAG, isChecking_);
         } else {
             LOGD("PullDatabaseChanged finish all");
             startCursor_ = nextCursor_;
@@ -143,6 +148,24 @@ void DataHandler::SetRecordSize(const int32_t recordSize)
 int32_t DataHandler::GetRecordSize()
 {
     return recordSize_;
+}
+
+bool DataHandler::GetCheckFlag()
+{
+    return isChecking_;
+}
+
+void DataHandler::SetChecking()
+{
+    ClearCursor();
+    isChecking_ = true;
+    cloudPrefImpl_.SetBool(CHECKING_FLAG, isChecking_);
+}
+
+int32_t DataHandler::GetCheckRecords(std::vector<DriveKit::DKRecordId> &checkRecords,
+    const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records)
+{
+    return E_OK;
 }
 
 int32_t DataHandler::GetFileModifiedRecords(vector<DriveKit::DKRecord> &records)
