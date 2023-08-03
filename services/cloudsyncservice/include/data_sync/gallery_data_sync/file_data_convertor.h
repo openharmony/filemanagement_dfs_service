@@ -422,10 +422,10 @@ inline int32_t FileDataConvertor::HandleLocalInfo(DriveKit::DKRecordData &data,
     int32_t val;
     int32_t ret = GetInt(Media::PhotoColumn::MEDIA_ID, val, resultSet);
     if (ret != E_OK) {
-            return ret;
+        return ret;
     }
     data[FILE_LOCAL_ID] = DriveKit::DKRecordField(val);
-   return E_OK;
+    return E_OK;
 }
 } // namespace CloudSync
 } // namespace FileManagement

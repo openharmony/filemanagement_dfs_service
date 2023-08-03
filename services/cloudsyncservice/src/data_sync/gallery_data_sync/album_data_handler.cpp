@@ -18,6 +18,8 @@
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
 
+#include "data_sync_const.h"
+#include "data_sync_notifier.h"
 #include "dfs_error.h"
 #include "gallery_album_const.h"
 #include "utils_log.h"
@@ -30,6 +32,7 @@ using namespace NativeRdb;
 using namespace DriveKit;
 using namespace Media;
 using PAC = Media::PhotoAlbumColumns;
+using ChangeType = OHOS::AAFwk::ChangeInfo::ChangeType;
 
 AlbumDataHandler::AlbumDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<RdbStore> rdb)
     : RdbDataHandler(userId, bundleName, PAC::TABLE, rdb)
@@ -187,9 +190,13 @@ int32_t AlbumDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records,
                 return E_STOP;
             }
             continue;
+        } else {
+            /* notify */
+            (void)DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::ALBUM_URI_PREFIX,
+                ChangeType::UPDATE, DataSyncConst::INVALID_ID);
         }
     }
-
+    (void)DataSyncNotifier::GetInstance().FinalNotify();
     return E_OK;
 }
 

@@ -2226,8 +2226,8 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
     /* notify */
     int32_t fileId;
     if (data[FILE_LOCAL_ID].GetInt(fileId) == DKLocalErrorCode::NO_ERROR) {
-        string notifyUri = DataSyncConst::PHOTO_URI_PREFIX + to_string(fileId);
-        DataSyncNotifier::GetInstance().TryNotify(notifyUri, ChangeType::UPDATE, to_string(fileId));
+        (void)DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX + to_string(fileId),
+            ChangeType::UPDATE, to_string(fileId));
     }
 
     /* update album map */
