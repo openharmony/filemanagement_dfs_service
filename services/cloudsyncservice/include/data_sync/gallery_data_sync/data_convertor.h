@@ -64,7 +64,7 @@ public:
         if (ret != E_OK) {    \
             return ret;    \
         }    \
-        map[key] = DriveKit::DKRecordField(val);    \
+        record[key] = DriveKit::DKRecordField(val);    \
     } while (0)
 
 #define SET_RECORD_LONG(key, resultSet, record)    \
@@ -74,7 +74,7 @@ public:
         if (ret != E_OK) {    \
             return ret;    \
         }    \
-        map[key] = DriveKit::DKRecordField(val);    \
+        record[key] = DriveKit::DKRecordField(val);    \
     } while (0)
 
 #define SET_RECORD_DOUBLE(key, resultSet, record)    \
@@ -84,7 +84,7 @@ public:
         if (ret != E_OK) {    \
             return ret;    \
         }    \
-        map[key] = DriveKit::DKRecordField(val);    \
+        record[key] = DriveKit::DKRecordField(val);    \
     } while (0)
 
 #define SET_RECORD_STRING(key, resultSet, record)    \
@@ -94,7 +94,7 @@ public:
         if (ret != E_OK) {    \
             return ret;    \
         }    \
-        map[key] = DriveKit::DKRecordField(val);    \
+        record[key] = DriveKit::DKRecordField(val);    \
     } while (0)
 
 #define SET_RECORD_BOOL(key, resultSet, record)    \
@@ -104,7 +104,7 @@ public:
         if (ret != E_OK) {    \
             return ret;    \
         }    \
-        map[key] = DriveKit::DKRecordField(val);    \
+        record[key] = DriveKit::DKRecordField(val);    \
     } while (0)
 
 #define RETURN_ON_ERR(ret)    \

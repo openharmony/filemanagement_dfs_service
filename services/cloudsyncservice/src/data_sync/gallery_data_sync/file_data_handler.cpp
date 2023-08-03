@@ -2093,6 +2093,7 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
             ret = E_STOP;
         }
     }
+    (void)DataSyncNotifier::GetInstance().FinalNotify();
     return ret;
 }
 
@@ -2220,6 +2221,13 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
     if (ret != 0) {
         LOGE("on create records update synced err %{public}d", ret);
         return ret;
+    }
+
+    /* notify */
+    int32_t fileId;
+    if (data[FILE_LOCAL_ID].GetInt(fileId) == DKLocalErrorCode::NO_ERROR) {
+        string notifyUri = DataSyncConst::PHOTO_URI_PREFIX + to_string(fileId);
+        DataSyncNotifier::GetInstance().TryNotify(notifyUri, ChangeType::UPDATE, to_string(fileId));
     }
 
     /* update album map */
