@@ -26,6 +26,7 @@ CloudDownloadCallbackManager::CloudDownloadCallbackManager()
 
 void CloudDownloadCallbackManager::StartDonwload(const std::string path, const int32_t userId)
 {
+    lock_guard<mutex> lock(downloadsMtx_);
     downloads_[path].state = DownloadProgressObj::Status::RUNNING;
     downloads_[path].path = path;
     LOGI("download_file : %{public}d start download %{public}s callback success.", userId, path.c_str());
@@ -33,6 +34,7 @@ void CloudDownloadCallbackManager::StartDonwload(const std::string path, const i
 
 void CloudDownloadCallbackManager::StopDonwload(const std::string path, const int32_t userId)
 {
+    lock_guard<mutex> lock(downloadsMtx_);
     if (downloads_.find(path) != downloads_.end()) {
         downloads_[path].state = DownloadProgressObj::Status::STOPPED;
         LOGI("download_file : %{public}d stop download %{public}s callback success.", userId, path.c_str());
@@ -65,41 +67,42 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
     const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &results,
     const DriveKit::DKError &err)
 {
-    auto downloadedState = DownloadProgressObj::FAILED;
-    bool isDownloading = (downloads_.find(path) != downloads_.end());
-    LOGI("download_file : [callback downloaded] %{public}s is downloading : %{public}d .",
-        path.c_str(), isDownloading);
-    if (isDownloading) {
-        auto &download = downloads_[path];
-        if (err.HasError()) {
+    unique_lock<mutex> lock(downloadsMtx_);
+    auto res = downloads_.find(path);
+    bool isDownloading = (res != downloads_.end());
+
+    LOGI("download_file : [callback downloaded] %{public}s is downloading : %{public}d .", path.c_str(),
+            isDownloading);
+    if (!isDownloading) {
+        lock.unlock();
+        return;
+    }
+
+    auto download = res->second;
+    downloads_.erase(res);
+    lock.unlock();
+
+    LOGI("download_file : [callback downloaded] %{public}s state is %{public}s, localErr is %{public}d.",
+            path.c_str(), download.to_string().c_str(), static_cast<int>(err.dkErrorCode));
+    auto downloadedState = err.HasError() ? DownloadProgressObj::FAILED : DownloadProgressObj::COMPLETED;
+    /**
+     * Avoiding the issue of cloud service not returning a total error code.
+     * Currently, only single asset download is supported.
+     */
+    for (const auto &it : results) {
+        if (!it.second.IsSuccess()) {
+            LOGE("download file failed, localErr: %{public}d", it.second.GetDKError().dkErrorCode);
             downloadedState = DownloadProgressObj::FAILED;
-        } else {
-            downloadedState = DownloadProgressObj::COMPLETED;
+            break;
         }
-        LOGI("download_file : [callback downloaded] %{public}s state is %{public}s, localErr is %{public}d.",
-             path.c_str(), download.to_string().c_str(), static_cast<int>(err.dkErrorCode));
+    }
 
-        /**
-         * Avoiding the issue of cloud service not returning a total error code.
-         * Currently, only single asset download is supported.
-         */
-        for (const auto &it : results) {
-            if (!it.second.IsSuccess()) {
-                LOGE("download file failed, localErr: %{public}d", it.second.GetDKError().dkErrorCode);
-                downloadedState = DownloadProgressObj::FAILED;
-                break;
-            }
+    if (callback_ != nullptr && download.state == DownloadProgressObj::RUNNING) {
+        download.state = downloadedState;
+        callback_->OnDownloadProcess(download);
+        if ((assetsToDownload.size() == 1) && (download.state == DownloadProgressObj::COMPLETED)) {
+            (void)handler->OnDownloadSuccess(assetsToDownload[0]);
         }
-
-        if (callback_ != nullptr && download.state == DownloadProgressObj::RUNNING) {
-            download.state = downloadedState;
-            callback_->OnDownloadProcess(download);
-            if ((assetsToDownload.size() == 1) && (download.state == DownloadProgressObj::COMPLETED)) {
-                (void)handler->OnDownloadSuccess(assetsToDownload[0]);
-            }
-        }
-
-        downloads_.erase(path);
     }
 }
 
@@ -109,18 +112,26 @@ void CloudDownloadCallbackManager::OnDownloadProcess(const std::string path,
                                                      DriveKit::TotalSize totalSize,
                                                      DriveKit::DownloadSize downloadSize)
 {
-    bool isDownloading = (downloads_.find(path) != downloads_.end());
+    unique_lock<mutex> lock(downloadsMtx_);
+    auto res = downloads_.find(path);
+    bool isDownloading = (res != downloads_.end());
+
     LOGI("download_file : [callback downloading] %{public}s is downloading : %{public}d .",
         path.c_str(), isDownloading);
-    if (isDownloading) {
-        auto &download = downloads_[path];
-        download.downloadedSize = downloadSize;
-        download.totalSize = totalSize;
-        LOGI("download_file : [callback downloading] %{public}s state is %{public}s.",
-            path.c_str(), download.to_string().c_str());
-        if (callback_ != nullptr && download.state == DownloadProgressObj::RUNNING) {
-            callback_->OnDownloadProcess(download);
-        }
+    if (!isDownloading) {
+        lock.unlock();
+        return;
+    }
+
+    auto download = res->second;
+    lock.unlock();
+
+    download.downloadedSize = downloadSize;
+    download.totalSize = totalSize;
+    LOGI("download_file : [callback downloading] %{public}s state is %{public}s.", path.c_str(),
+         download.to_string().c_str());
+    if (callback_ != nullptr && download.state == DownloadProgressObj::RUNNING) {
+        callback_->OnDownloadProcess(download);
     }
 }
 

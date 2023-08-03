@@ -1299,18 +1299,16 @@ int32_t FileDataHandler::InsertAssetToPhotoMap(const DKRecord &record, OnFetchPa
 
 int32_t FileDataHandler::BatchInsertAssetMaps(OnFetchParams &params)
 {
-    int ret = E_OK;
     for (const auto &it : params.recordAlbumMaps) {
         auto [resultSet, rowCount] = QueryLocalByCloudId(it.first);
         if (resultSet == nullptr || rowCount < 0) {
-            ret = E_RDB;
             continue;
         }
         resultSet->GoToNextRow();
         int fileId = 0;
         int ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, *resultSet);
         if (ret != E_OK) {
-            ret = E_RDB;
+            LOGE("Get media id failed");
             continue;
         }
 
@@ -1324,13 +1322,12 @@ int32_t FileDataHandler::BatchInsertAssetMaps(OnFetchParams &params)
             if (ret != E_OK) {
                 LOGE("fail to insert albumId %{public}d - fileId %{public}d mapping, ret %{public}d", albumId, fileId,
                      ret);
-                ret = E_RDB;
                 continue;
             }
             LOGI("albumId %{public}d - fileId %{public}d add mapping success", albumId, fileId);
         }
     }
-    return ret;
+    return E_OK;
 }
 
 int32_t FileDataHandler::GetAlbumIdFromCloudId(const std::string &cloudId)
@@ -1590,7 +1587,6 @@ int32_t FileDataHandler::CleanCloudRecord(NativeRdb::ResultSet &local, const int
             LOGE("Clean pure cloud record failed, res:%{public}d", res);
             return res;
         }
-        DeleteAssetInPhotoMap(GetFileId(local));
     } else {
         LOGD("File is not pure cloud data");
         res = CleanNotPureCloudRecord(local, action, filePath);

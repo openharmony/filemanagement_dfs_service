@@ -51,6 +51,7 @@ public:
                            DriveKit::DownloadSize downloadSize);
 
 private:
+    std::mutex downloadsMtx_;
     std::unordered_map<std::string, DownloadProgressObj> downloads_;
     sptr<ICloudDownloadCallback> callback_;
 };

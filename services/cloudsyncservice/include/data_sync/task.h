@@ -48,10 +48,10 @@ private:
     std::shared_ptr<DataHandler> handler_;
 };
 
-class DownloadTaskContext: public TaskContext {
+class DownloadTaskContext : public TaskContext {
 public:
-    DownloadTaskContext(std::shared_ptr<DataHandler> handler, int32_t batchNo) : TaskContext(std::move(handler)),
-        batchNo_(batchNo) {}
+    DownloadTaskContext(std::shared_ptr<DataHandler> handler, int32_t batchNo)
+        : TaskContext(std::move(handler)), batchNo_(batchNo) {}
 
     int32_t GetBatchNo() const
     {
