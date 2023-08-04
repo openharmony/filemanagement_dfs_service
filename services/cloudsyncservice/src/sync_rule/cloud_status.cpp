@@ -36,6 +36,12 @@ int32_t CloudStatus::GetCurrentCloudInfo(const std::string &bundleName, const in
         return E_CLOUD_SDK;
     }
 
+    if (!((userInfo_.cloudStatus == DKCloudStatus::DK_CLOUD_STATUS_LOGIN) &&
+          (userInfo_.spaceStatus == DKSpaceStatus::DK_SPACE_STATUS_NORMAL))) {
+        LOGE("cloudstatus:%{public}d, spaceStatus:%{public}d", userInfo_.cloudStatus, userInfo_.spaceStatus);
+        return E_CLOUD_SDK;
+    }
+
     std::map<DriveKit::DKAppBundleName, DriveKit::DKAppInfo> appInfos;
     err = driveKit->GetCloudAppInfo({bundleName}, appInfos);
     if (err.HasError()) {
@@ -79,38 +85,24 @@ bool CloudStatus::IsCloudStatusOkay(const std::string &bundleName, const int32_t
 
     LOGI("bundleName:%{private}s, cloudSatus:%{public}d, spaceStatus:%{public}d, switcheStatus:%{public}d",
          bundleName.c_str(), userInfo_.cloudStatus, userInfo_.spaceStatus, appSwitches_[bundleName]);
-    if (!((userInfo_.cloudStatus == DKCloudStatus::DK_CLOUD_STATUS_LOGIN) &&
-          (userInfo_.spaceStatus == DKSpaceStatus::DK_SPACE_STATUS_NORMAL))) {
-        LOGE("cloudstatus:%{public}d, spaceStatus:%{public}d", userInfo_.cloudStatus, userInfo_.spaceStatus);
-        return false;
-    }
-
     return appSwitches_[bundleName];
 }
 
 int32_t CloudStatus::ChangeAppSwitch(const std::string &bundleName, const int32_t userId, bool appSwitchStatus)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    /* User switching */
-    if (userId_ != userId) {
+    if (appSwitchStatus == true) {
+        auto iter = appSwitches_.find(bundleName);
+        if (iter != appSwitches_.end()) {
+            LOGI("change app swtich, originStatus:%{public}d, currentStatus:%{public}d", appSwitches_[bundleName],
+                 appSwitchStatus);
+            appSwitches_[bundleName] = appSwitchStatus;
+        }
+    } else {
+        /* Actively obtaining cloud information when next sync */
         appSwitches_.erase(bundleName);
     }
 
-    /* Obtain cloud information only during first sync */
-    auto iter = appSwitches_.find(bundleName);
-    if (iter == appSwitches_.end()) {
-        LOGI("appSwitches unknown, bundleName:%{private}s, userId:%{public}d", bundleName.c_str(), userId);
-        auto ret = GetCurrentCloudInfo(bundleName, userId);
-        if (ret) {
-            return ret;
-        }
-    }
-
-    bool switchStatus = appSwitches_[bundleName];
-    if (switchStatus != appSwitchStatus) {
-        LOGI("chage app swtich, originStatus:%{public}d, currentStatus:%{public}d", switchStatus, appSwitchStatus);
-        appSwitches_[bundleName] = appSwitchStatus;
-    }
     return E_OK;
 }
 
