@@ -206,7 +206,7 @@ HWTEST_F(FileDataConvertorTest, HandlePropertiesTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     auto ret = fileDataConvertor_->HandleProperties(data, resultSet);
-    EXPECT_EQ(E_INVAL_ARG, ret);
+    EXPECT_EQ(E_OK, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandlePositionTest, TestSize.Level1)

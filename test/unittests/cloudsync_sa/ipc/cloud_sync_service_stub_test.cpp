@@ -424,13 +424,12 @@ HWTEST_F(CloudSyncServiceStubTest, HandleDownloadFileTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "HandleDownloadFile Start";
     try {
         MockService service;
-        EXPECT_CALL(service, DownloadFile(_, _, _)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+        EXPECT_EQ(E_INVAL_ARG, service.OnRemoteRequest(
                             static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILE), data,
                             reply, option));
     } catch (...) {

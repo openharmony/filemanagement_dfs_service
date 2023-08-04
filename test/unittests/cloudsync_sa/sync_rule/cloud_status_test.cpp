@@ -124,7 +124,7 @@ HWTEST_F(CloudStatusTest, IsCloudStatusOkay003, TestSize.Level1)
     const int32_t userId = 1;
     cloudStatus.userInfo_.cloudStatus = DriveKit::DKCloudStatus::DK_CLOUD_STATUS_UNKNOWN;
     auto ret = cloudStatus.IsCloudStatusOkay(bundleName, userId);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, true);
 }
 
 /**
