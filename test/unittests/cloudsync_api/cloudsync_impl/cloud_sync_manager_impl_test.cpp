@@ -59,10 +59,6 @@ void CloudSyncManagerTest::TearDownTestCase(void)
 
 void CloudSyncManagerTest::SetUp(void)
 {
-    if (managePtr_ == nullptr) {
-        managePtr_ = make_shared<CloudSyncManagerImpl>();
-        ASSERT_TRUE(managePtr_ != nullptr) << "CallbackManager failed";
-    }
     std::cout << "SetUp" << std::endl;
 }
 
@@ -83,10 +79,10 @@ HWTEST_F(CloudSyncManagerTest, RegisterCallbackTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
     try {
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
-        auto res = managePtr_->RegisterCallback(callback);
+        auto res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callback);
         EXPECT_EQ(res, E_OK);
         callback = nullptr;
-        res = managePtr_->RegisterCallback(callback);
+        res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callback);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -107,18 +103,18 @@ HWTEST_F(CloudSyncManagerTest, StartSyncTest, TestSize.Level1)
     try {
         bool forceFlag = false;
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
-        auto res = managePtr_->StartSync();
+        auto res = CloudSyncManagerImpl::GetInstance().StartSync();
         EXPECT_EQ(res, E_OK);
-        res = managePtr_->StartSync(forceFlag, callback);
-        EXPECT_EQ(res, E_OK);
-        forceFlag = true;
-        res = managePtr_->StartSync(forceFlag, callback);
+        res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
         EXPECT_EQ(res, E_OK);
         forceFlag = true;
-        res = managePtr_->StartSync(forceFlag, nullptr);
+        res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
+        EXPECT_EQ(res, E_OK);
+        forceFlag = true;
+        res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, nullptr);
         EXPECT_EQ(res, E_INVAL_ARG);
         forceFlag = false;
-        res = managePtr_->StartSync(forceFlag, nullptr);
+        res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, nullptr);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -137,7 +133,7 @@ HWTEST_F(CloudSyncManagerTest, StopSyncTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopSyncTest Start";
     try {
-        int res = managePtr_->StopSync();
+        int res = CloudSyncManagerImpl::GetInstance().StopSync();
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -159,7 +155,7 @@ HWTEST_F(CloudSyncManagerTest, ChangeAppSwitchTest, TestSize.Level1)
         std::string accoutId = "accoutId";
         std::string bundleName = "bundleName";
         bool status = true;
-        auto res = managePtr_->ChangeAppSwitch(accoutId, bundleName, status);
+        auto res = CloudSyncManagerImpl::GetInstance().ChangeAppSwitch(accoutId, bundleName, status);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -180,7 +176,7 @@ HWTEST_F(CloudSyncManagerTest, NotifyDataChangeTest, TestSize.Level1)
     try {
         std::string accoutId = "accoutId";
         std::string bundleName = "bundleName";
-        auto res = managePtr_->NotifyDataChange(accoutId, bundleName);
+        auto res = CloudSyncManagerImpl::GetInstance().NotifyDataChange(accoutId, bundleName);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -200,7 +196,7 @@ HWTEST_F(CloudSyncManagerTest, StartDownloadFileTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
         std::string uri = "uri";
-        auto res = managePtr_->StartDownloadFile(uri);
+        auto res = CloudSyncManagerImpl::GetInstance().StartDownloadFile(uri);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -220,7 +216,7 @@ HWTEST_F(CloudSyncManagerTest, StopDownloadFileTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
         std::string uri = "uri";
-        auto res = managePtr_->StopDownloadFile(uri);
+        auto res = CloudSyncManagerImpl::GetInstance().StopDownloadFile(uri);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -239,7 +235,7 @@ HWTEST_F(CloudSyncManagerTest, RegisterDownloadFileCallbackTest, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
-        auto res = managePtr_->UnregisterDownloadFileCallback();
+        auto res = CloudSyncManagerImpl::GetInstance().UnregisterDownloadFileCallback();
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -259,7 +255,7 @@ HWTEST_F(CloudSyncManagerTest, SetDeathRecipientTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
         auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
-        managePtr_->SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+        CloudSyncManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -280,7 +276,7 @@ HWTEST_F(CloudSyncManagerTest, EnableCloudTest, TestSize.Level1)
     try {
         std::string accoutId = "accoutId";
         SwitchDataObj switchData;
-        auto res = managePtr_->EnableCloud(accoutId, switchData);
+        auto res = CloudSyncManagerImpl::GetInstance().EnableCloud(accoutId, switchData);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -300,7 +296,7 @@ HWTEST_F(CloudSyncManagerTest, DisableCloudTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
         std::string accoutId = "accoutId";
-        auto res = managePtr_->DisableCloud(accoutId);
+        auto res = CloudSyncManagerImpl::GetInstance().DisableCloud(accoutId);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -321,7 +317,7 @@ HWTEST_F(CloudSyncManagerTest, CleanTest, TestSize.Level1)
     try {
         std::string accoutId = "accoutId";
         CleanOptions cleanOptions;
-        auto res = managePtr_->Clean(accoutId, cleanOptions);
+        auto res = CloudSyncManagerImpl::GetInstance().Clean(accoutId, cleanOptions);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
