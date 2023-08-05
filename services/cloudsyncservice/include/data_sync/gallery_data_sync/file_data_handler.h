@@ -94,6 +94,7 @@ private:
     int32_t HandleATFailed();
     int32_t HandleNameConflict();
     int32_t HandleNameInvalid();
+    int32_t HandleNetworkErr();
     int64_t UTCTimeSeconds();
 
     int32_t EraseLocalInfo(std::vector<DriveKit::DKRecord> &records);

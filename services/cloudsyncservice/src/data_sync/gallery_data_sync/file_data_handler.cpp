@@ -2089,8 +2089,8 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
             }
             LOGE("create record fail: file path %{private}s", filePath.c_str());
         }
-        if (err == E_STOP) {
-            ret = E_STOP;
+        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
+            ret = err;
         }
     }
     return ret;
@@ -2111,8 +2111,8 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
             modifyFailSet_.push_back(entry.first);
             LOGE("delete record fail: cloud id: %{private}s", entry.first.c_str());
         }
-        if (err == E_STOP) {
-            ret = E_STOP;
+        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
+            ret = err;
         }
     }
     return ret;
@@ -2136,8 +2136,8 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
             modifyFailSet_.push_back(entry.first);
             LOGE("modify mdirty record fail: cloud id: %{private}s", entry.first.c_str());
         }
-        if (err == E_STOP) {
-            ret = E_STOP;
+        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
+            ret = err;
         }
     }
     return ret;
@@ -2161,8 +2161,8 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
             modifyFailSet_.push_back(entry.first);
             LOGE("modify fdirty record fail: cloud id: %{public}s", entry.first.c_str());
         }
-        if (err == E_STOP) {
-            ret = E_STOP;
+        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
+            ret = err;
         }
     }
     return ret;
@@ -2443,6 +2443,9 @@ int32_t FileDataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOper
     } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::ATOMIC_ERROR &&
                errorDetailcode == INVALID_FILE) {
         return HandleNameInvalid();
+    } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
+        LOGE("errorDetailcode = %{public}s", errorDetailcode.c_str());
+        return HandleNetworkErr();
     } else {
         LOGE(" unknown error code record failed, serverErrorCode = %{public}d, errorDetailcode = %{public}s",
              serverErrorCode, errorDetailcode.c_str());
@@ -2455,7 +2458,7 @@ int32_t FileDataHandler::HandleCloudSpaceNotEnough()
 {
     LOGE("Cloud Space Not Enough");
     /* Stop sync */
-    return E_STOP;
+    return E_CLOUD_STORAGE_FULL;
 }
 
 int32_t FileDataHandler::HandleATFailed()
@@ -2474,6 +2477,12 @@ int32_t FileDataHandler::HandleNameInvalid()
 {
     LOGE("Name Invalid");
     return E_DATA;
+}
+
+int32_t FileDataHandler::HandleNetworkErr()
+{
+    LOGE("Network Error");
+    return E_SYNC_FAILED_NETWORK_NOT_AVAILABLE;
 }
 
 int64_t FileDataHandler::UTCTimeSeconds()

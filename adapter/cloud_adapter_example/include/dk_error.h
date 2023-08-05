@@ -66,6 +66,7 @@ enum class DKServerErrorCode {
     TRY_AGAIN_LATER = 503,
     VALIDATING_REFERENCE_ERROR = 412,
     ZONE_NOT_FOUND = 404,
+    NETWORK_ERROR = 1008,
 };
 
 struct DKErrorDetail {

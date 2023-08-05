@@ -43,8 +43,10 @@ private:
         BEGIN,
         DOWNLOADALBUM,
         DOWNLOADFILE,
+        COMPLETEPULL,
         UPLOADALBUM,
         UPLOADFILE,
+        COMPLETEPUSH,
         END
     };
 

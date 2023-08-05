@@ -94,9 +94,9 @@ protected:
                           const int32_t userId);
 
     /* notify */
-    void CompletePull();
-    void CompletePush();
-    void CompleteAll();
+    int32_t CompletePull();
+    int32_t CompletePush();
+    void CompleteAll(bool isNeedNotify = true);
 
     void SyncStateChangedNotify(const CloudSyncState state, const ErrorType error);
 
@@ -161,6 +161,7 @@ private:
     template<typename T, typename RET, typename... ARGS>
     std::function<RET(ARGS...)> AsyncCallback(RET(T::*f)(ARGS...));
 
+    void SetErrorCodeMask(int32_t &errorCode, ErrorType errorType);
     /* cloud sync result */
     ErrorType GetErrorType(const int32_t code);
 

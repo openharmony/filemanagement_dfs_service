@@ -107,12 +107,20 @@ void GalleryDataSyncer::Schedule()
             ret = DownloadFile();
             break;
         }
+        case COMPLETEPULL: {
+            ret = CompletePull();
+            break;
+        }
         case UPLOADALBUM: {
             ret = UploadAlbum();
             break;
         }
         case UPLOADFILE: {
             ret = UploadFile();
+            break;
+        }
+        case COMPLETEPUSH: {
+            ret = CompletePush();
             break;
         }
         case END: {
@@ -149,9 +157,8 @@ int32_t GalleryDataSyncer::DownloadAlbum()
     int32_t ret = Pull(albumHandler_);
     if (ret != E_OK) {
         LOGE("gallery data syncer pull album err %{public}d", ret);
-        Abort();
     }
-    return E_OK;
+    return ret;
 }
 
 int32_t GalleryDataSyncer::DownloadFile()
@@ -160,7 +167,6 @@ int32_t GalleryDataSyncer::DownloadFile()
     int ret = Pull(fileHandler_);
     if (ret != E_OK) {
         LOGE("gallery data syncer pull file err %{public}d", ret);
-        Abort();
     }
     return ret;
 }
@@ -170,7 +176,6 @@ int32_t GalleryDataSyncer::UploadAlbum()
     int32_t ret = Lock();
     if (ret != E_OK) {
         LOGE("gallery data syncer lock err %{public}d", ret);
-        Abort();
         return E_CLOUD_SDK;
     }
 
@@ -180,10 +185,9 @@ int32_t GalleryDataSyncer::UploadAlbum()
     ret = Push(albumHandler_);
     if (ret != E_OK) {
         LOGE("gallery data syncer push album err %{public}d", ret);
-        Abort();
     }
 
-    return E_OK;
+    return ret;
 }
 
 int32_t GalleryDataSyncer::UploadFile()
@@ -192,7 +196,6 @@ int32_t GalleryDataSyncer::UploadFile()
     int32_t ret = Push(fileHandler_);
     if (ret != E_OK) {
         LOGE("gallery data syncer push file err %{public}d", ret);
-        Abort();
     }
     return ret;
 }

@@ -237,15 +237,17 @@ SyncState DataSyncer::GetSyncState() const
     return SyncState::SYNC_FAILED;
 }
 
-void DataSyncer::CompletePull()
+int DataSyncer::CompletePull()
 {
+    return E_OK;
 }
 
-void DataSyncer::CompletePush()
+int DataSyncer::CompletePush()
 {
+    return E_OK;
 }
 
-void DataSyncer::CompleteAll()
+void DataSyncer::CompleteAll(bool isNeedNotify)
 {
 }
 
