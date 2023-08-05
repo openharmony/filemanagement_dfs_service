@@ -157,6 +157,7 @@ int32_t FileDataConvertor::HandleProperties(DriveKit::DKRecordData &data,
     RETURN_ON_ERR(HandleRelativeBucketId(map, resultSet));
     RETURN_ON_ERR(HandlePosition(map, resultSet));
     RETURN_ON_ERR(HandleRotate(map, resultSet));
+    RETURN_ON_ERR(HandleDuration(map, resultSet));
 
     /* Resolution is combined by cloud sdk, just upload height and width */
     RETURN_ON_ERR(HandleHeight(map, resultSet));
@@ -536,6 +537,7 @@ int32_t FileDataConvertor::TryCompensateValue(const DriveKit::DKRecord &record,
     RETURN_ON_ERR(CompensateDataAdded(record, valueBucket));
     RETURN_ON_ERR(CompensateMetaDateModified(record, valueBucket));
     RETURN_ON_ERR(CompensateSubtype(data, valueBucket));
+    RETURN_ON_ERR(CompensateDuration(data, valueBucket));
     return E_OK;
 }
 
@@ -645,6 +647,29 @@ int32_t FileDataConvertor::CompensateSubtype(DriveKit::DKRecordData &data,
         subType = PhotoSubType::DEFAULT;
     }
     valueBucket.PutInt(PhotoColumn::PHOTO_SUBTYPE, subType);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::CompensateDuration(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGE("record data cannot find properties");
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap prop;
+    data[FILE_PROPERTIES].GetRecordMap(prop);
+    if (prop.find(FILE_DURATION) == prop.end()) {
+        valueBucket.PutInt(PhotoColumn::MEDIA_DURATION, 0);
+        return E_OK;
+    }
+    int32_t duration = 0;
+    if (prop[FILE_DURATION].GetString(duration) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad Subtype in props");
+        valueBucket.PutInt(PhotoColumn::MEDIA_DURATION, 0);
+        return E_OK;
+    }
+    valueBucket.PutInt(PhotoColumn::MEDIA_DURATION, duration);
     return E_OK;
 }
 

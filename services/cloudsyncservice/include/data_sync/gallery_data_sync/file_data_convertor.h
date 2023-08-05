@@ -99,6 +99,7 @@ private:
     /* properties */
     int32_t HandleProperties(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
 
+    int32_t HandleDuration(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleHeight(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleRotate(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleWidth(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
@@ -135,6 +136,7 @@ private:
     int32_t CompensateDataAdded(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
     int32_t CompensateMetaDateModified(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
     int32_t CompensateSubtype(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
+    int32_t CompensateDuration(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
 
     /* extract compatible value stored in properties */
     int32_t ExtractCompatibleValue(const DriveKit::DKRecord &record,
@@ -354,6 +356,18 @@ inline int32_t FileDataConvertor::HandleSourcePath(DriveKit::DKRecordFieldMap &m
 inline int32_t FileDataConvertor::HandleRelativeBucketId(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
+    return E_OK;
+}
+
+inline int32_t FileDataConvertor::HandleDuration(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    int32_t duration;
+    int32_t ret = GetInt(Media::PhotoColumn::PHOTO_DURATION, duration, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    map[FILE_DURATION] = DriveKit::DKRecordField(duration);
     return E_OK;
 }
 
