@@ -352,14 +352,13 @@ inline int32_t FileDataConvertor::HandleSourcePath(DriveKit::DKRecordFieldMap &m
     if (ret != E_OK) {
         return ret;
     }
-    map[FILE_SOURCE_PATH] = DriveKit::DKRecordField("/stroage/emulated/0/Pictures/" + displayName);
+    map[FILE_SOURCE_PATH] = DriveKit::DKRecordField("/stroage/emulated/0/Pictures/Imports/" + displayName);
     return E_OK;
 }
 
 inline int32_t FileDataConvertor::HandleRelativeBucketId(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
-    map[FILE_RELATIVE_BUCKET_ID] = DriveKit::DKRecordField("1");
     return E_OK;
 }
 
