@@ -94,9 +94,9 @@ protected:
                           const int32_t userId);
 
     /* notify */
-    void CompletePull();
-    void CompletePush();
-    void CompleteAll();
+    int32_t CompletePull();
+    int32_t CompletePush();
+    void CompleteAll(bool isNeedNotify = true);
 
     void SyncStateChangedNotify(const CloudSyncState state, const ErrorType error);
 
@@ -104,18 +104,22 @@ private:
     /* download */
     void PullRecords(std::shared_ptr<TaskContext> context);
     void PullDatabaseChanges(std::shared_ptr<TaskContext> context);
-    void PullRetryRecords(std::shared_ptr<TaskContext> context);
+    void PullRecordsWithId(std::shared_ptr<TaskContext> context, const std::vector<DriveKit::DKRecordId> &records,
+        bool retry);
     void DownloadAssets(std::shared_ptr<TaskContext> context);
     void RetryDownloadRecords(std::shared_ptr<TaskContext> context);
     /* dowload callback */
     void OnFetchRecords(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
         const DriveKit::DKError &);
-    void OnFetchRetryRecord(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<DriveKit::DKDatabase>,
+    void OnFetchCheckRecords(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
+        std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
+        const DriveKit::DKError &);
+    void OnFetchRecordWithId(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<DriveKit::DKDatabase>,
         DriveKit::DKRecordId, const DriveKit::DKRecord &, const DriveKit::DKError &);
     int HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
         std::shared_ptr<const DriveKit::DKDatabase> database,
-        std::shared_ptr<std::vector<DriveKit::DKRecord>> records);
+        std::shared_ptr<std::vector<DriveKit::DKRecord>> records, bool checkOrRetry);
     void OnFetchDatabaseChanges(const std::shared_ptr<DriveKit::DKContext>,
         std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
@@ -157,6 +161,7 @@ private:
     template<typename T, typename RET, typename... ARGS>
     std::function<RET(ARGS...)> AsyncCallback(RET(T::*f)(ARGS...));
 
+    void SetErrorCodeMask(int32_t &errorCode, ErrorType errorType);
     /* cloud sync result */
     ErrorType GetErrorType(const int32_t code);
 

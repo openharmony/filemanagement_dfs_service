@@ -127,7 +127,7 @@ void EmptyDownLoadAssetsprogress(std::shared_ptr<DKContext>, DKDownloadAsset, To
 }
 
 int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
-    std::shared_ptr<const DKDatabase> database, std::shared_ptr<std::vector<DKRecord>> records)
+    std::shared_ptr<const DKDatabase> database, std::shared_ptr<std::vector<DKRecord>> records, bool checkOrRetry)
 {
     return E_OK;
 }
@@ -151,11 +151,12 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
 {
 }
 
-void DataSyncer::PullRetryRecords(shared_ptr<TaskContext> context)
+void DataSyncer::PullRecordsWithId(shared_ptr<TaskContext> context, const std::vector<DriveKit::DKRecordId> &records,
+    bool retry)
 {
 }
 
-void DataSyncer::OnFetchRetryRecord(shared_ptr<DKContext> context, shared_ptr<DKDatabase> database,
+void DataSyncer::OnFetchRecordWithId(shared_ptr<DKContext> context, shared_ptr<DKDatabase> database,
     DKRecordId recordId, const DKRecord &record, const DKError &error)
 {
 }
@@ -236,15 +237,17 @@ SyncState DataSyncer::GetSyncState() const
     return SyncState::SYNC_FAILED;
 }
 
-void DataSyncer::CompletePull()
+int DataSyncer::CompletePull()
 {
+    return E_OK;
 }
 
-void DataSyncer::CompletePush()
+int DataSyncer::CompletePush()
 {
+    return E_OK;
 }
 
-void DataSyncer::CompleteAll()
+void DataSyncer::CompleteAll(bool isNeedNotify)
 {
 }
 

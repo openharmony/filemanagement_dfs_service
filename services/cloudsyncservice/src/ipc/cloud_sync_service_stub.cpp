@@ -235,6 +235,10 @@ int32_t CloudSyncServiceStub::HandleEnableCloud(MessageParcel &data, MessageParc
     }
     string accountId = data.ReadString();
     sptr<SwitchDataObj> switchObj = data.ReadParcelable<SwitchDataObj>();
+    if (!switchObj) {
+        LOGE("object of SwitchDataObj is nullptr");
+        return E_INVAL_ARG;
+    }
     int32_t res = EnableCloud(accountId, *switchObj);
     reply.WriteInt32(res);
     LOGI("End EnableCloud");
@@ -352,6 +356,10 @@ int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessagePar
     int32_t userId = data.ReadInt32();
     string bundleName = data.ReadString();
     sptr<AssetInfoObj> assetInfoObj = data.ReadParcelable<AssetInfoObj>();
+    if (!assetInfoObj) {
+        LOGE("object of AssetInfoObj is nullptr");
+        return E_INVAL_ARG;
+    }
     int32_t res = DownloadFile(userId, bundleName, *assetInfoObj);
     reply.WriteInt32(res);
     LOGI("End DownloadFile");

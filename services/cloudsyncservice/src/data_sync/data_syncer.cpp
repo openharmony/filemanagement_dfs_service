@@ -85,9 +85,6 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 
     syncStateManager_.SetStopSyncFlag();
     Abort();
-
-    SyncStateChangedNotify(CloudSyncState::STOPPED, ErrorType::NO_ERROR);
-
     return E_OK;
 }
 
@@ -104,7 +101,6 @@ int32_t DataSyncer::Lock()
     if (ret != E_OK) {
         LOGE("sdk helper get lock err %{public}d", ret);
         lock_.lock = { 0 };
-        errorCode_ = ret;
         return ret;
     }
     lock_.count++;
@@ -187,10 +183,13 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
     shared_ptr<TaskContext> context = make_shared<DownloadTaskContext>(handler, handler->GetBatchNo());
 
     RetryDownloadRecords(context);
-    PullRetryRecords(context);
+    vector<DKRecordId> records;
+    int32_t ret = handler->GetRetryRecords(records);
+    if (ret == E_OK) {
+        DataSyncer::PullRecordsWithId(context, records, true);
+    }
 
     /* Full synchronization and incremental synchronization */
-    int32_t ret = E_OK;
     if (handler->IsPullRecords()) {
         ret = AsyncRun(context, &DataSyncer::PullRecords);
     } else {
@@ -214,12 +213,6 @@ void DataSyncer::PullRecords(shared_ptr<TaskContext> context)
     LOGI("%{private}d %{private}s pull records", userId_, bundleName_.c_str());
 
     /* get query condition here */
-    auto callback = AsyncCallback(&DataSyncer::OnFetchRecords);
-    if (callback == nullptr) {
-        LOGE("wrap on fetch records fail");
-        return;
-    }
-
     auto handler = context->GetHandler();
     if (handler == nullptr) {
         LOGE("context get handler err");
@@ -238,6 +231,17 @@ void DataSyncer::PullRecords(shared_ptr<TaskContext> context)
 
     DKQueryCursor nextCursor;
     handler->GetNextCursor(nextCursor);
+
+    SdkHelper::FetchRecordsCallback callback = nullptr;
+    if (handler->GetCheckFlag()) {
+        callback = AsyncCallback(&DataSyncer::OnFetchCheckRecords);
+    } else {
+        callback = AsyncCallback(&DataSyncer::OnFetchRecords);
+    }
+    if (callback == nullptr) {
+        LOGE("wrap on fetch records fail");
+        return;
+    }
 
     int32_t ret = sdkHelper_->FetchRecords(context, cond, nextCursor, callback);
     if (ret != E_OK) {
@@ -344,7 +348,7 @@ static void ThumbDownloadCallback(shared_ptr<DKContext> context,
 }
 
 int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
-    std::shared_ptr<const DKDatabase> database, std::shared_ptr<std::vector<DKRecord>> records)
+    std::shared_ptr<const DKDatabase> database, std::shared_ptr<std::vector<DKRecord>> records, bool checkOrRetry)
 {
     if (records->size() == 0) {
         LOGI("no records to handle");
@@ -369,7 +373,7 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
         return E_CONTEXT;
     }
 
-    if (handler->IsPullRecords()) {
+    if (handler->IsPullRecords() && !checkOrRetry) {
         onFetchParams.totalPullCount = context->GetBatchNo() * handler->GetRecordSize();
     }
 
@@ -388,7 +392,9 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
     }
-    handler->FinishPull(context->GetBatchNo());
+    if (!checkOrRetry) {
+        handler->FinishPull(context->GetBatchNo());
+    }
     return ret;
 }
 
@@ -396,8 +402,10 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
     std::shared_ptr<std::vector<DKRecord>> records, DKQueryCursor nextCursor, const DKError &err)
 {
     if (err.HasError()) {
-        LOGE("OnFetchRecords server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
-            err.dkErrorCode);
+        LOGE("OnFetchRecords server err %{public}d and dk errcor %{public}d", err.serverErrorCode, err.dkErrorCode);
+        if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
+            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
+        }
         return;
     }
 
@@ -428,7 +436,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
         }
     }
 
-    if (HandleOnFetchRecords(ctx, database, records) != E_OK) {
+    if (HandleOnFetchRecords(ctx, database, records, false) != E_OK) {
         LOGE("HandleOnFetchRecords failed");
     }
 }
@@ -479,7 +487,10 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
 {
     if (err.HasError()) {
         LOGE("OnFetchDatabaseChanges server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
-            err.dkErrorCode);
+             err.dkErrorCode);
+        if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
+            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
+        }
         return;
     }
     LOGI("%{private}d %{private}s on fetch database changes", userId_, bundleName_.c_str());
@@ -507,25 +518,64 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
         }
     }
 
-    if (HandleOnFetchRecords(ctx, database, records) != E_OK) {
+    if (HandleOnFetchRecords(ctx, database, records, false) != E_OK) {
         LOGE("HandleOnFetchRecords failed");
         return;
     }
 }
 
-void DataSyncer::PullRetryRecords(shared_ptr<TaskContext> context)
+void DataSyncer::OnFetchCheckRecords(const shared_ptr<DKContext> context,
+    shared_ptr<const DKDatabase> database, shared_ptr<std::vector<DKRecord>> records,
+    DKQueryCursor nextCursor, const DKError &err)
 {
-    auto ctx = static_pointer_cast<TaskContext>(context);
+    if (err.HasError()) {
+        LOGE("OnFetchCheckRecords server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
+             err.dkErrorCode);
+        if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
+            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
+        }
+        return;
+    }
+    LOGI("%{private}d %{private}s on fetch records", userId_, bundleName_.c_str());
+    auto ctx = static_pointer_cast<DownloadTaskContext>(context);
     auto handler = ctx->GetHandler();
     if (handler == nullptr) {
         LOGE("context get handler err");
         return;
     }
 
-    vector<DKRecordId> records;
-    int32_t ret = handler->GetRetryRecords(records);
+    int32_t ret = E_OK;
+    /* pull more */
+    if (nextCursor.empty()) {
+        LOGI("no more records");
+        handler->GetTempStartCursor(nextCursor);
+        handler->SetTempNextCursor(nextCursor, true);
+    } else {
+        handler->SetTempNextCursor(nextCursor, false);
+        shared_ptr<DownloadTaskContext> nexCtx = make_shared<DownloadTaskContext>(handler, handler->GetBatchNo());
+        ret = AsyncRun(nexCtx, &DataSyncer::PullRecords);
+        if (ret != E_OK) {
+            LOGE("asyn run pull records err %{public}d", ret);
+        }
+    }
+
+    std::vector<DriveKit::DKRecordId> checkRecords;
+    ret = handler->GetCheckRecords(checkRecords, records);
     if (ret != E_OK) {
-        LOGE("get retry records err %{public}d", ret);
+        LOGE("handler get check records err %{public}d", ret);
+        return;
+    }
+
+    DataSyncer::PullRecordsWithId(ctx, checkRecords, false);
+}
+
+void DataSyncer::PullRecordsWithId(shared_ptr<TaskContext> context, const std::vector<DriveKit::DKRecordId> &records,
+    bool retry)
+{
+    auto ctx = static_pointer_cast<DownloadTaskContext>(context);
+    auto handler = ctx->GetHandler();
+    if (handler == nullptr) {
+        LOGE("context get handler err");
         return;
     }
 
@@ -533,19 +583,22 @@ void DataSyncer::PullRetryRecords(shared_ptr<TaskContext> context)
     handler->GetFetchCondition(cond);
     LOGI("retry records count: %{public}u", static_cast<uint32_t>(records.size()));
     for (auto it : records) {
-        auto callback = AsyncCallback(&DataSyncer::OnFetchRetryRecord);
+        auto callback = AsyncCallback(&DataSyncer::OnFetchRecordWithId);
         if (callback == nullptr) {
             LOGE("wrap on fetch records fail");
             continue;
         }
-        ret = sdkHelper_->FetchRecordWithId(context, cond, it, callback);
+        int32_t ret = sdkHelper_->FetchRecordWithId(context, cond, it, callback);
         if (ret != E_OK) {
             LOGE("sdk fetch records err %{public}d", ret);
         }
     }
+    if (!retry) {
+        handler->FinishPull(ctx->GetBatchNo());
+    }
 }
 
-void DataSyncer::OnFetchRetryRecord(shared_ptr<DKContext> context, shared_ptr<DKDatabase> database,
+void DataSyncer::OnFetchRecordWithId(shared_ptr<DKContext> context, shared_ptr<DKDatabase> database,
     DKRecordId recordId, const DKRecord &record, const DKError &error)
 {
     auto records = make_shared<std::vector<DKRecord>>();
@@ -562,7 +615,7 @@ void DataSyncer::OnFetchRetryRecord(shared_ptr<DKContext> context, shared_ptr<DK
         records->push_back(record);
     }
     auto ctx = static_pointer_cast<DownloadTaskContext>(context);
-    HandleOnFetchRecords(ctx, database, records);
+    HandleOnFetchRecords(ctx, database, records, true);
 }
 
 void DataSyncer::RetryDownloadRecords(shared_ptr<TaskContext> context)
@@ -691,7 +744,7 @@ void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
 
     if (!BatteryStatus::IsAllowUpload(syncStateManager_.GetForceFlag())) {
         LOGE("battery status abnormal, abort upload");
-        errorCode_ = E_SYNC_FAILED_BATTERY_LOW;
+        SetErrorCodeMask(errorCode_, ErrorType::BATTERY_LEVEL_LOW);
         return;
     }
 
@@ -826,6 +879,11 @@ void DataSyncer::OnCreateRecords(shared_ptr<DKContext> context,
     int32_t ret = handler->OnCreateRecords(*map);
     if (ret != E_OK) {
         LOGE("handler on create records err %{public}d", ret);
+        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
+            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
+        } else if (ret == E_CLOUD_STORAGE_FULL) {
+            SetErrorCodeMask(errorCode_, ErrorType::CLOUD_STORAGE_FULL);
+        }
         return;
     }
 
@@ -851,6 +909,11 @@ void DataSyncer::OnDeleteRecords(shared_ptr<DKContext> context,
     int32_t ret = handler->OnDeleteRecords(*map);
     if (ret != E_OK) {
         LOGE("handler on delete records err %{public}d", ret);
+        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
+            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
+        } else if (ret == E_CLOUD_STORAGE_FULL) {
+            SetErrorCodeMask(errorCode_, ErrorType::CLOUD_STORAGE_FULL);
+        }
         return;
     }
 
@@ -878,6 +941,11 @@ void DataSyncer::OnModifyMdirtyRecords(shared_ptr<DKContext> context,
     int32_t ret = handler->OnModifyMdirtyRecords(*saveMap);
     if (ret != E_OK) {
         LOGE("handler on modify records err %{public}d", ret);
+        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
+            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
+        } else if (ret == E_CLOUD_STORAGE_FULL) {
+            SetErrorCodeMask(errorCode_, ErrorType::CLOUD_STORAGE_FULL);
+        }
         return;
     }
 
@@ -905,6 +973,11 @@ void DataSyncer::OnModifyFdirtyRecords(shared_ptr<DKContext> context,
     int32_t ret = handler->OnModifyFdirtyRecords(*saveMap);
     if (ret != E_OK) {
         LOGE("handler on modify records err %{public}d", ret);
+        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
+            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
+        } else if (ret == E_CLOUD_STORAGE_FULL) {
+            SetErrorCodeMask(errorCode_, ErrorType::CLOUD_STORAGE_FULL);
+        }
         return;
     }
 
@@ -941,27 +1014,39 @@ SyncState DataSyncer::GetSyncState() const
     return syncStateManager_.GetSyncState();
 }
 
-void DataSyncer::CompletePull()
+int32_t DataSyncer::CompletePull()
 {
     LOGI("%{private}d %{private}s completes pull", userId_, bundleName_.c_str());
     /* call syncer manager callback */
     auto error = GetErrorType(errorCode_);
     if (error) {
+        LOGE("pull failed, errorType:%{public}d", error);
         SyncStateChangedNotify(CloudSyncState::DOWNLOAD_FAILED, error);
+        CompleteAll(false);
+    } else {
+        /* schedule to next stage */
+        Schedule();
     }
+    return E_OK;
 }
 
-void DataSyncer::CompletePush()
+int32_t DataSyncer::CompletePush()
 {
     LOGI("%{private}d %{public}s completes push", userId_, bundleName_.c_str());
     /* call syncer manager callback */
     auto error = GetErrorType(errorCode_);
     if (error) {
+        LOGE("pull failed, errorType:%{public}d", error);
         SyncStateChangedNotify(CloudSyncState::UPLOAD_FAILED, error);
+        CompleteAll(false);
+    } else {
+        /* schedule to next stage */
+        Schedule();
     }
+    return E_OK;
 }
 
-void DataSyncer::CompleteAll()
+void DataSyncer::CompleteAll(bool isNeedNotify)
 {
     LOGI("%{private}d %{private}s completes all", userId_, bundleName_.c_str());
 
@@ -971,26 +1056,35 @@ void DataSyncer::CompleteAll()
     /* reset internal status */
     Reset();
 
-    SyncState syncState;
-    if (errorCode_ == E_OK) {
-        syncState = SyncState::SYNC_SUCCEED;
-    } else {
+    SyncState syncState = SyncState::SYNC_SUCCEED;
+    if (errorCode_ != E_OK) {
         syncState = SyncState::SYNC_FAILED;
+    }
+
+    CloudSyncState notifyState = CloudSyncState::COMPLETED;
+    if (syncStateManager_.GetStopSyncFlag()) {
+        notifyState = CloudSyncState::STOPPED;
     }
 
     auto nextAction = syncStateManager_.UpdateSyncState(syncState);
     if (nextAction == Action::START) {
+        /* Retrigger sync, clear errorcode */
+        errorCode_ = E_OK;
         StartSync(false, SyncTriggerType::PENDING_TRIGGER);
         return;
     }
     if (nextAction == Action::FORCE_START) {
+        /* Retrigger sync, clear errorcode */
+        errorCode_ = E_OK;
         StartSync(true, SyncTriggerType::PENDING_TRIGGER);
         return;
     }
 
     /* notify sync state */
-    auto error = GetErrorType(errorCode_);
-    SyncStateChangedNotify(CloudSyncState::COMPLETED, error);
+    if (isNeedNotify) {
+        SyncStateChangedNotify(notifyState, ErrorType::NO_ERROR);
+    }
+    /* clear errorcode */
     errorCode_ = E_OK;
 }
 
@@ -1006,20 +1100,26 @@ void DataSyncer::NotifyCurrentSyncState()
     CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(CurrentSyncState_, CurrentErrorType_);
 }
 
+void DataSyncer::SetErrorCodeMask(int32_t &errorCode, ErrorType errorType)
+{
+    errorCode |= 1 << errorType;
+}
+
 ErrorType DataSyncer::GetErrorType(const int32_t code)
 {
     if (code == E_OK) {
         return ErrorType::NO_ERROR;
     }
-    ErrorType error(ErrorType::NO_ERROR);
-    auto capacityLevel = BatteryStatus::GetCapacityLevel();
-    if (capacityLevel == BatteryStatus::LEVEL_LOW) {
-        error = ErrorType::BATTERY_LEVEL_LOW;
-    } else if (capacityLevel == BatteryStatus::LEVEL_TOO_LOW) {
-        error = ErrorType::BATTERY_LEVEL_WARNING;
-    }
 
-    return error;
+    std::vector<ErrorType> errorTypes = {NETWORK_UNAVAILABLE, WIFI_UNAVAILABLE,   BATTERY_LEVEL_WARNING,
+                                         BATTERY_LEVEL_LOW,   CLOUD_STORAGE_FULL, LOCAL_STORAGE_FULL};
+    for (const auto &errorType : errorTypes) {
+        if (code & (1 << errorType)) {
+            return errorType;
+        }
+    }
+    LOGE("errorcode unexpected, errcode: %{public}d", code);
+    return ErrorType::NO_ERROR;
 }
 } // namespace CloudSync
 } // namespace FileManagement

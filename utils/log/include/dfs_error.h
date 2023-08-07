@@ -56,7 +56,9 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_ASYNC_RUN,
     E_PATH,
     E_DATA,
-    E_NOTIFY
+    E_NOTIFY,
+    E_CLOUD_STORAGE_FULL,
+    E_LOCAL_STORAGE_FULL
 };
 
 enum JsErrCode {
@@ -76,7 +78,7 @@ const std::unordered_map<int32_t, int32_t> errCodeTable {
     { E_BROKEN_IPC, E_IPCSS },
     { E_CLOUD_SDK, E_CLOUD_NOT_READY },
     { E_SYNC_FAILED_NETWORK_NOT_AVAILABLE, E_NETWORK_ERR },
-    { E_SYNC_FAILED_BATTERY_LOW, E_BATTERY_WARNING },
+    { E_SYNC_FAILED_BATTERY_TOO_LOW, E_BATTERY_WARNING },
 };
 
 int32_t Convert2JsErrNum(int32_t errNum);

@@ -24,6 +24,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <utime.h>
 
 #include "thumbnail_const.h"
 #include "data_sync_const.h"
@@ -63,7 +64,12 @@ void FileDataHandler::GetFetchCondition(FetchCondition &cond)
 {
     cond.limitRes = LIMIT_SIZE;
     cond.recordType = recordType_;
-    cond.desiredKeys = desiredKeys_;
+    if (isChecking_) {
+        cond.desiredKeys = checkedKeys_;
+    } else {
+        cond.desiredKeys = desiredKeys_;
+    }
+    cond.fullKeys = desiredKeys_;
 }
 
 int32_t FileDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &records)
@@ -145,6 +151,7 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     PhotoColumn::MEDIA_DATE_TRASHED,
     PhotoColumn::PHOTO_POSITION,
     PhotoColumn::PHOTO_CLOUD_ID,
+    PhotoColumn::PHOTO_CLOUD_VERSION,
     MediaColumn::MEDIA_ID,
 };
 
@@ -1008,6 +1015,32 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
     return E_OK;
 }
 
+int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkRecords,
+    const shared_ptr<std::vector<DriveKit::DKRecord>> &records)
+{
+    for (const auto &record : *records) {
+        auto [resultSet, rowCount] = QueryLocalByCloudId(record.GetRecordId());
+        if (resultSet == nullptr || rowCount < 0) {
+            return E_RDB;
+        }
+
+        if ((rowCount == 0) && !record.GetIsDelete()) {
+            checkRecords.push_back(record.GetRecordId());
+        } else if (rowCount == 1) {
+            resultSet->GoToNextRow();
+            int64_t version = 0;
+            DataConvertor::GetLong(PhotoColumn::PHOTO_CLOUD_VERSION, version, *resultSet);
+            if (record.GetVersion() != version && (!IsLocalDirty(*resultSet) || record.GetIsDelete())) {
+                checkRecords.push_back(record.GetRecordId());
+            }
+        } else {
+            LOGE("recordId %s has multiple file in db!", record.GetRecordId().c_str());
+        }
+    }
+
+    return E_OK;
+}
+
 bool FileDataHandler::ThumbsAtLocal(const DKRecord &record)
 {
     DKRecordData datas;
@@ -1126,7 +1159,8 @@ int32_t FileDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::ResultSet
 
 int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
 {
-    string filePath = localConvertor_.GetSandboxPath(asset.downLoadPath + "/" + asset.asset.assetName);
+    string downloadPath = asset.downLoadPath + "/" + asset.asset.assetName;
+    string filePath = localConvertor_.GetSandboxPath(downloadPath);
 
     int ret = E_OK;
 
@@ -1141,6 +1175,24 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
     ret = mFile->DoRemove(mBase);
     if (ret != E_OK) {
         LOGE("remove dentry failed, ret:%{public}d", ret);
+    }
+
+    auto [resultSet, rowCount] = QueryLocalByCloudId(asset.recordId);
+    if (resultSet == nullptr || rowCount != 1) {
+        LOGE("QueryLocalByCloudId failed rowCount %{public}d", rowCount);
+        return E_INVAL_ARG;
+    }
+    resultSet->GoToNextRow();
+    int64_t localMtime = 0;
+    ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, localMtime, *resultSet);
+    if (ret == E_OK) {
+        struct utimbuf ubuf {
+            .actime = localMtime, .modtime = localMtime
+        };
+        LOGI("update downloaded file mtime %{public}llu", static_cast<unsigned long long>(localMtime));
+        if (utime(downloadPath.c_str(), &ubuf) < 0) {
+            LOGE("utime failed return %{public}d ", errno);
+        }
     }
 
     // update rdb
@@ -1267,18 +1319,16 @@ int32_t FileDataHandler::InsertAssetToPhotoMap(const DKRecord &record, OnFetchPa
 
 int32_t FileDataHandler::BatchInsertAssetMaps(OnFetchParams &params)
 {
-    int ret = E_OK;
     for (const auto &it : params.recordAlbumMaps) {
         auto [resultSet, rowCount] = QueryLocalByCloudId(it.first);
         if (resultSet == nullptr || rowCount < 0) {
-            ret = E_RDB;
             continue;
         }
         resultSet->GoToNextRow();
         int fileId = 0;
         int ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, *resultSet);
         if (ret != E_OK) {
-            ret = E_RDB;
+            LOGE("Get media id failed");
             continue;
         }
 
@@ -1292,13 +1342,12 @@ int32_t FileDataHandler::BatchInsertAssetMaps(OnFetchParams &params)
             if (ret != E_OK) {
                 LOGE("fail to insert albumId %{public}d - fileId %{public}d mapping, ret %{public}d", albumId, fileId,
                      ret);
-                ret = E_RDB;
                 continue;
             }
             LOGI("albumId %{public}d - fileId %{public}d add mapping success", albumId, fileId);
         }
     }
-    return ret;
+    return E_OK;
 }
 
 int32_t FileDataHandler::GetAlbumIdFromCloudId(const std::string &cloudId)
@@ -1558,7 +1607,6 @@ int32_t FileDataHandler::CleanCloudRecord(NativeRdb::ResultSet &local, const int
             LOGE("Clean pure cloud record failed, res:%{public}d", res);
             return res;
         }
-        DeleteAssetInPhotoMap(GetFileId(local));
     } else {
         LOGD("File is not pure cloud data");
         res = CleanNotPureCloudRecord(local, action, filePath);
@@ -2061,10 +2109,11 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
             }
             LOGE("create record fail: file path %{private}s", filePath.c_str());
         }
-        if (err == E_STOP) {
-            ret = E_STOP;
+        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
+            ret = err;
         }
     }
+    (void)DataSyncNotifier::GetInstance().FinalNotify();
     return ret;
 }
 
@@ -2083,8 +2132,8 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
             modifyFailSet_.push_back(entry.first);
             LOGE("delete record fail: cloud id: %{private}s", entry.first.c_str());
         }
-        if (err == E_STOP) {
-            ret = E_STOP;
+        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
+            ret = err;
         }
     }
     return ret;
@@ -2108,8 +2157,8 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
             modifyFailSet_.push_back(entry.first);
             LOGE("modify mdirty record fail: cloud id: %{private}s", entry.first.c_str());
         }
-        if (err == E_STOP) {
-            ret = E_STOP;
+        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
+            ret = err;
         }
     }
     return ret;
@@ -2133,8 +2182,8 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
             modifyFailSet_.push_back(entry.first);
             LOGE("modify fdirty record fail: cloud id: %{public}s", entry.first.c_str());
         }
-        if (err == E_STOP) {
-            ret = E_STOP;
+        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
+            ret = err;
         }
     }
     return ret;
@@ -2192,6 +2241,13 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
     if (ret != 0) {
         LOGE("on create records update synced err %{public}d", ret);
         return ret;
+    }
+
+    /* notify */
+    int32_t fileId;
+    if (data[FILE_LOCAL_ID].GetInt(fileId) == DKLocalErrorCode::NO_ERROR) {
+        (void)DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX + to_string(fileId),
+            ChangeType::UPDATE, to_string(fileId));
     }
 
     /* update album map */
@@ -2415,6 +2471,9 @@ int32_t FileDataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOper
     } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::ATOMIC_ERROR &&
                errorDetailcode == INVALID_FILE) {
         return HandleNameInvalid();
+    } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
+        LOGE("errorDetailcode = %{public}s", errorDetailcode.c_str());
+        return HandleNetworkErr();
     } else {
         LOGE(" unknown error code record failed, serverErrorCode = %{public}d, errorDetailcode = %{public}s",
              serverErrorCode, errorDetailcode.c_str());
@@ -2427,7 +2486,7 @@ int32_t FileDataHandler::HandleCloudSpaceNotEnough()
 {
     LOGE("Cloud Space Not Enough");
     /* Stop sync */
-    return E_STOP;
+    return E_CLOUD_STORAGE_FULL;
 }
 
 int32_t FileDataHandler::HandleATFailed()
@@ -2446,6 +2505,12 @@ int32_t FileDataHandler::HandleNameInvalid()
 {
     LOGE("Name Invalid");
     return E_DATA;
+}
+
+int32_t FileDataHandler::HandleNetworkErr()
+{
+    LOGE("Network Error");
+    return E_SYNC_FAILED_NETWORK_NOT_AVAILABLE;
 }
 
 int64_t FileDataHandler::UTCTimeSeconds()

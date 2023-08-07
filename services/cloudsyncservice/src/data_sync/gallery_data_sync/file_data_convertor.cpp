@@ -77,6 +77,8 @@ int32_t FileDataConvertor::HandleUniqueFileds(DriveKit::DKRecordData &data,
     /* store media unique fileds in attributes*/
     RETURN_ON_ERR(HandleAttributes(map, resultSet));
     data[FILE_ATTRIBUTES] = DriveKit::DKRecordField(map);
+    /* local info */
+    RETURN_ON_ERR(HandleLocalInfo(data, resultSet));
     return E_OK;
 }
 
@@ -664,8 +666,8 @@ int32_t FileDataConvertor::CompensateDuration(DriveKit::DKRecordData &data,
         return E_OK;
     }
     int32_t duration = 0;
-    if (prop[FILE_DURATION].GetString(duration) != DKLocalErrorCode::NO_ERROR) {
-        LOGE("bad Subtype in props");
+    if (prop[FILE_DURATION].GetInt(duration) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad duration in props");
         valueBucket.PutInt(PhotoColumn::MEDIA_DURATION, 0);
         return E_OK;
     }

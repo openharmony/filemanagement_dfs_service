@@ -431,15 +431,24 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
 
     LOGI("oldNetworkType %{public}d, newNetworkType %{public}d", oldNetworkType, newNetworkType);
 
-    if (!isWifiNetworkType(newNetworkType) || isWifiNetworkType(oldNetworkType)) {
-        LOGE("not wifi connect");
+    if (isWifiNetworkType(newNetworkType) && !isWifiNetworkType(oldNetworkType)) {
+        LOGI("Wifi connect");
+        auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>
+            (&NetworkAgentTemplate::ConnectDeviceAsync, info);
+        cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
+        it->second->Recv(move(cmd));
         LOGI("OnDeviceInfoChanged end");
         return;
     }
-    auto cmd =
-        make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
-    cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
-    it->second->Recv(move(cmd));
+
+    if (!isWifiNetworkType(newNetworkType) && isWifiNetworkType(oldNetworkType)) {
+        LOGI("Wifi disconnect");
+        auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>
+            (&NetworkAgentTemplate::DisconnectDevice, info);
+        it->second->Recv(move(cmd));
+        LOGI("OnDeviceInfoChanged end");
+        return;
+    }
 
     LOGI("OnDeviceInfoChanged end");
 }

@@ -34,6 +34,7 @@ struct OnFetchParams {
 const static std::string DOWNLOAD_THUMB_LIMIT = "download_thumb_limit";
 const static std::string BATCH_NO = "batch_no";
 const static std::string RECORD_SIZE = "record_size";
+const static std::string CHECKING_FLAG = "checking_flag";
 class DataHandler {
 public:
     DataHandler(int32_t userId, const std::string &bundleName, const std::string &table);
@@ -42,6 +43,8 @@ public:
     virtual int32_t OnFetchRecords(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
                                    OnFetchParams &params) = 0;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) = 0;
+    virtual int32_t GetCheckRecords(std::vector<DriveKit::DKRecordId> &checkRecords,
+                                    const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records);
     virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload);
 
     virtual int32_t GetDownloadAsset(std::string cloudId,
@@ -78,6 +81,8 @@ public:
     virtual void FinishPull(const int32_t barchNo);
     virtual void SetRecordSize(const int32_t recordSize);
     virtual int32_t GetRecordSize();
+    virtual bool GetCheckFlag();
+    virtual void SetChecking();
 
 protected:
     /* cursor */
@@ -91,6 +96,7 @@ protected:
     bool isFinish_{false};
     std::map<int32_t, DriveKit::DKQueryCursor> cursorMap_;
     std::map<int32_t, bool> cursorFinishMap_;
+    bool isChecking_{false};
 
     std::mutex mutex_;
 

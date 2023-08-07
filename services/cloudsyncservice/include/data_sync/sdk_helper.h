@@ -29,6 +29,7 @@ struct FetchCondition {
     int32_t limitRes;
     DriveKit::DKRecordType recordType;
     DriveKit::DKFieldKeyArray desiredKeys;
+    DriveKit::DKFieldKeyArray fullKeys;
 };
 class SdkHelper {
 public:

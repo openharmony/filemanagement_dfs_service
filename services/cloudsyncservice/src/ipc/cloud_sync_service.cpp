@@ -123,7 +123,12 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
 
 int32_t CloudSyncService::UnRegisterCallbackInner()
 {
-    CloudSyncCallbackManager::GetInstance().RemoveCallback(GALLERY_BUNDLE_NAME);
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
+
+    CloudSyncCallbackManager::GetInstance().RemoveCallback(bundleName);
     return E_OK;
 }
 
@@ -134,9 +139,14 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
         return E_INVAL_ARG;
     }
 
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
+
     auto callback = iface_cast<ICloudSyncCallback>(remoteObject);
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    CloudSyncCallbackManager::GetInstance().AddCallback(GALLERY_BUNDLE_NAME, callerUserId, callback);
+    CloudSyncCallbackManager::GetInstance().AddCallback(bundleName, callerUserId, callback);
     dataSyncManager_->RegisterCloudSyncCallback(GALLERY_BUNDLE_NAME, callerUserId);
     return E_OK;
 }
