@@ -24,6 +24,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <utime.h>
 
 #include "thumbnail_const.h"
 #include "data_sync_const.h"
@@ -1158,7 +1159,8 @@ int32_t FileDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::ResultSet
 
 int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
 {
-    string filePath = localConvertor_.GetSandboxPath(asset.downLoadPath + "/" + asset.asset.assetName);
+    string downloadPath = asset.downLoadPath + "/" + asset.asset.assetName;
+    string filePath = localConvertor_.GetSandboxPath(downloadPath);
 
     int ret = E_OK;
 
@@ -1173,6 +1175,24 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
     ret = mFile->DoRemove(mBase);
     if (ret != E_OK) {
         LOGE("remove dentry failed, ret:%{public}d", ret);
+    }
+
+    auto [resultSet, rowCount] = QueryLocalByCloudId(asset.recordId);
+    if (resultSet == nullptr || rowCount != 1) {
+        LOGE("QueryLocalByCloudId failed rowCount %{public}d", rowCount);
+        return E_INVAL_ARG;
+    }
+    resultSet->GoToNextRow();
+    int64_t localMtime = 0;
+    ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, localMtime, *resultSet);
+    if (ret == E_OK) {
+        struct utimbuf ubuf {
+            .actime = localMtime, .modtime = localMtime
+        };
+        LOGI("update downloaded file mtime %{public}llu", static_cast<unsigned long long>(localMtime));
+        if (utime(downloadPath.c_str(), &ubuf) < 0) {
+            LOGE("utime failed return %{public}d ", errno);
+        }
     }
 
     // update rdb
