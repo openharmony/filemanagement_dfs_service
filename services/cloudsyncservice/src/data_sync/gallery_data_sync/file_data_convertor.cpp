@@ -77,6 +77,8 @@ int32_t FileDataConvertor::HandleUniqueFileds(DriveKit::DKRecordData &data,
     /* store media unique fileds in attributes*/
     RETURN_ON_ERR(HandleAttributes(map, resultSet));
     data[FILE_ATTRIBUTES] = DriveKit::DKRecordField(map);
+    /* local info */
+    RETURN_ON_ERR(HandleLocalInfo(data, resultSet));
     return E_OK;
 }
 

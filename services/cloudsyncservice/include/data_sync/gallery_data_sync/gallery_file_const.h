@@ -65,6 +65,9 @@ const std::string FILE_WIDTH = "width";
 /* attributes */
 const std::string FILE_ATTRIBUTES = "attributes";
 
+/* local info */
+const std::string FILE_LOCAL_ID = "local_id";
+
 /* properties - general */
 const std::string FILE_GENERAL = "general";
 

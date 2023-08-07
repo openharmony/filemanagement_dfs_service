@@ -120,6 +120,9 @@ private:
     /* attachments */
     int32_t HandleAttachments(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
 
+    /* local info */
+    int32_t HandleLocalInfo(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+
     int32_t HandleContent(DriveKit::DKRecordData &data, std::string &path);
     int32_t HandleThumbnail(DriveKit::DKRecordData &data, std::string &path);
     int32_t HandleLcd(DriveKit::DKRecordData &data, std::string &path);
@@ -410,6 +413,18 @@ inline int32_t FileDataConvertor::HandleDescription(DriveKit::DKRecordData &data
 inline int32_t FileDataConvertor::HandleAlbumId(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    return E_OK;
+}
+
+inline int32_t FileDataConvertor::HandleLocalInfo(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    int32_t val;
+    int32_t ret = GetInt(Media::PhotoColumn::MEDIA_ID, val, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    data[FILE_LOCAL_ID] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 } // namespace CloudSync
