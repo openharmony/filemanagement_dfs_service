@@ -59,6 +59,7 @@ const std::string FILE_SOURCE_PATH = "sourcePath";
 const std::string FILE_RELATIVE_BUCKET_ID = "relative_bucket_id";
 const std::string FILE_POSITION = "position";
 const std::string FILE_ROTATION = "rotate";
+const std::string FILE_DURATION = "duration";
 const std::string FILE_HEIGHT = "height";
 const std::string FILE_WIDTH = "width";
 
