@@ -366,7 +366,7 @@ inline int32_t FileDataConvertor::HandleDuration(DriveKit::DKRecordFieldMap &map
     NativeRdb::ResultSet &resultSet)
 {
     int32_t duration;
-    int32_t ret = GetInt(Media::PhotoColumn::PHOTO_DURATION, duration, resultSet);
+    int32_t ret = GetInt(Media::PhotoColumn::MEDIA_DURATION, duration, resultSet);
     if (ret != E_OK) {
         return ret;
     }
