@@ -2104,7 +2104,6 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
     updatePredicates
         .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)))
         ->And()
-        ->EqualTo(Media::PhotoColumn::MEDIA_DATE_TRASHED, "0")
         ->BeginWrap()
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
         ->Or()
