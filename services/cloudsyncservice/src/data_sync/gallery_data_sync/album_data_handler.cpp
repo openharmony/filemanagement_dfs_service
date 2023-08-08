@@ -432,6 +432,11 @@ void AlbumDataHandler::Reset()
     modifyFailSet_.clear();
     createFailSet_.clear();
 }
+
+void AlbumDataHandler::SetChecking()
+{
+    ClearCursor();
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

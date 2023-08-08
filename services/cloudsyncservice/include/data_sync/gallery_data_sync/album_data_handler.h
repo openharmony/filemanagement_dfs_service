@@ -47,6 +47,7 @@ public:
 
     virtual int32_t Clean(const int action) override;
 
+    virtual void SetChecking() override;
     /* reset */
     void Reset();
 
