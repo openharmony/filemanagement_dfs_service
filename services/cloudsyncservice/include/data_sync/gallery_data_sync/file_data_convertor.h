@@ -73,6 +73,7 @@ public:
     std::string GetLowerPath(const std::string &path);
     std::string GetLowerTmpPath(const std::string &path);
     std::string GetSandboxPath(const std::string &path);
+    std::string GetPathWithoutTmp(const std::string &path);
 
 private:
     /* record id */
@@ -175,6 +176,7 @@ private:
     static std::string suffixLCD_;
     static std::string prefixCloud_;
     static std::string suffixCloud_;
+    static std::string tmpSuffix_;
 };
 
 inline int32_t FileDataConvertor::HandleFileName(DriveKit::DKRecordData &data,

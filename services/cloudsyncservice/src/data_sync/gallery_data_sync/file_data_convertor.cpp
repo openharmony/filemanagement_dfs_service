@@ -41,6 +41,7 @@ string FileDataConvertor::prefixLCD_ = "/mnt/hmdfs/";
 string FileDataConvertor::suffixLCD_ = "/account/device_view/local/files";
 string FileDataConvertor::prefixCloud_ = "/storage/cloud/";
 string FileDataConvertor::suffixCloud_ = "/files";
+string FileDataConvertor::tmpSuffix_ = ".temp.download";
 
 FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type) : userId_(userId),
     bundleName_(bundleName), type_(type)
@@ -448,13 +449,11 @@ string FileDataConvertor::GetLowerPath(const string &path)
 
 string FileDataConvertor::GetLowerTmpPath(const string &path)
 {
-    size_t pos = path.find_first_of(sandboxPrefix_);
-    if (pos == string::npos) {
-        LOGE("invalid path %{private}s", path.c_str());
+    string lowerPath = GetLowerPath(path);
+    if (lowerPath == "") {
         return "";
     }
-    return prefix_ + to_string(userId_) + suffix_ + path.substr(pos +
-        sandboxPrefix_.size());
+    return lowerPath + tmpSuffix_;
 }
 
 string FileDataConvertor::GetSandboxPath(const string &path)
@@ -466,6 +465,25 @@ string FileDataConvertor::GetSandboxPath(const string &path)
         return "";
     }
     return sandboxPrefix_ + path.substr(pos + localPrefix.size());
+}
+
+static bool EndsWith(const string &fullString, const string &ending)
+{
+    if (fullString.length() >= ending.length()) {
+        return (!fullString.compare(fullString.length() - ending.length(),
+                                    ending.length(),
+                                    ending));
+    }
+    return false;
+}
+
+string FileDataConvertor::GetPathWithoutTmp(const string &path)
+{
+    string ret = path;
+    if (EndsWith(path, tmpSuffix_)) {
+        ret = path.substr(0, path.length() - tmpSuffix_.length());
+    }
+    return ret;
 }
 
 string FileDataConvertor::GetThumbPath(const string &path, const string &key)
