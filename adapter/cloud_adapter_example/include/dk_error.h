@@ -79,7 +79,7 @@ enum class DKDetailErrorCode {
     ILLEGAL_CHARACTER_INCLUDED = 4007,                          //包含有非法的字符
     PARAMETER_LENGTH_BEYOND_LIMIT = 4008,                       //参数长度超过限制
     PARENTFOLDER_NOT_FOUND = 4009,                              //父目录不在
-    TOKEN_CFG_INVALID = 4010,                                   //token配置项无效 
+    TOKEN_CFG_INVALID = 4010,                                   //token配置项无效
     USER_NOT_AUTHORIZED = 4011,                                 //用户没有授权
     APP_NOT_AUTHORIZED = 4012,                                  //App没有授权
     TICKET_INVALID = 4013,                                      //ticket无效
@@ -113,7 +113,7 @@ enum class DKDetailErrorCode {
     SILENCE_USER_FAILED = 4092,                                 //沉默用户拒绝失败
     FILE_USING_FORBIDDEN_OP = 4093,                             //文件正在使用禁止操作
     CURSOR_EXPIRED = 4100,                                      //游标过期
-    TEMP_DATA_CLEARD= 4101,                                     //临时数据已经被清理
+    TEMP_DATA_CLEARD = 4101,                                    //临时数据已经被清理
     CLOUD_DATA_UPDATED = 4121,                                  //云端数据已被更新
     USER_REQUEST_TOO_MANY = 4291,                               //用户请求太频繁
     APP_REQUEST_TOO_MANY = 4292,                                //应用请求太频繁
@@ -122,7 +122,7 @@ enum class DKDetailErrorCode {
     PARTIAL_FILE_NOT_SUPPORT_SHARE = 4905,                      //部分文件不支持分享
     PARENTFOLDER_TRASHED = 4906,                                //父目录被删除到回收站
     ACCOUNT_NAME_WRONG = 4907,                                  //用户账号错误
-    CIPHER_INVALID = 4908 ,                                     //用户秘钥已经失效
+    CIPHER_INVALID = 4908,                                      //用户秘钥已经失效
     DUPLICATED_ID = 4909,                                       //id已存在
     VUDID_IMEI_INVALID = 4910,                                  //VUDID转换IMEI失败
     FILE_NOT_SUPPORT_SHARE = 4911,                              //所有文件不支持分享
