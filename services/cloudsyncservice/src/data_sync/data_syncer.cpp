@@ -64,8 +64,6 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     LOGI("%{private}d %{public}s starts sync, isforceSync %{public}d, triggerType %{public}d",
         userId_, bundleName_.c_str(), forceFlag, triggerType);
 
-    sdkHelper_->SaveSubscription();
-
     /* only one specific data sycner running at a time */
     if (syncStateManager_.CheckAndSetPending(forceFlag)) {
         LOGI("syncing, pending sync");
@@ -714,9 +712,8 @@ int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int a
     int res = handler->Clean(action);
     if (res != E_OK) {
         LOGE("Clean file failed res:%{public}d", res);
-        return res;
     }
-    return E_OK;
+    return res;
 }
 
 void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
@@ -1064,6 +1061,8 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
     CloudSyncState notifyState = CloudSyncState::COMPLETED;
     if (syncStateManager_.GetStopSyncFlag()) {
         notifyState = CloudSyncState::STOPPED;
+    } else {
+        SaveSubscription();
     }
 
     auto nextAction = syncStateManager_.UpdateSyncState(syncState);
@@ -1120,6 +1119,28 @@ ErrorType DataSyncer::GetErrorType(const int32_t code)
     }
     LOGE("errorcode unexpected, errcode: %{public}d", code);
     return ErrorType::NO_ERROR;
+}
+
+void DataSyncer::SaveSubscription()
+{
+    sdkHelper_->SaveSubscription([] (auto, shared_ptr<DriveKit::DKContainer>,
+        DriveKit::DKSubscriptionResult & res) {
+        if (!res.IsSuccess()) {
+            auto err = res.GetDKError();
+            LOGE("drivekit save subscription server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
+                err.dkErrorCode);
+        }
+    });
+}
+
+void DataSyncer::DeleteSubscription()
+{
+    sdkHelper_->DeleteSubscription([] (auto, DriveKit::DKError err) {
+        if (err.HasError()) {
+            LOGE("drivekit delete subscription server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
+                err.dkErrorCode);
+        }
+    });
 }
 } // namespace CloudSync
 } // namespace FileManagement

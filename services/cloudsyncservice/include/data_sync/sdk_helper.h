@@ -105,7 +105,12 @@ public:
                                                                       DriveKit::DKRecordId recordId,
                                                                       DriveKit::DKFieldKey assetKey,
                                                                       DriveKit::DKAssetPath assetPath);
-    int32_t SaveSubscription();
+    using SaveSubscriptionCallback = std::function<void(std::shared_ptr<DriveKit::DKContext>,
+        std::shared_ptr<DriveKit::DKContainer>, DriveKit::DKSubscriptionResult &)>;
+    using DelSubscriptionCallback = std::function<void(std::shared_ptr<DriveKit::DKContext>,
+        const DriveKit::DKError &)>;
+    int32_t SaveSubscription(SaveSubscriptionCallback callback);
+    int32_t DeleteSubscription(DelSubscriptionCallback callback);
 private:
     std::shared_ptr<DriveKit::DKContainer> container_;
     std::shared_ptr<DriveKit::DKDatabase> database_;

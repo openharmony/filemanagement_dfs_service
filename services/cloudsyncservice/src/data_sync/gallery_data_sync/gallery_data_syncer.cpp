@@ -80,6 +80,7 @@ int32_t GalleryDataSyncer::Clean(const int action)
     if (ret != E_OK) {
         LOGE("gallery data syncer album clean err %{public}d", ret);
     }
+    DeleteSubscription();
     return ret;
 }
 
