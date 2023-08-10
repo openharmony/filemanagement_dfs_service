@@ -267,6 +267,15 @@ const std::vector<std::string> CLOUD_SYNC_COMMONS_COLUMNS = {
     /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
     Media::PhotoColumn::PHOTO_CLOUD_ID
 };
+
+const std::vector<std::string> ON_UPLOAD_COLUMNS = {
+    Media::PhotoColumn::MEDIA_FILE_PATH,
+    Media::PhotoColumn::MEDIA_DATE_MODIFIED,
+    Media::PhotoColumn::PHOTO_META_DATE_MODIFIED,
+    Media::MediaColumn::MEDIA_ID,
+    Media::PhotoColumn::PHOTO_CLOUD_ID,
+    Media::PhotoColumn::PHOTO_DIRTY,
+};
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
