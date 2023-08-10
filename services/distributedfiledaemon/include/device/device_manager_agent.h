@@ -92,7 +92,7 @@ private:
     void UnregisterFromExternalDm();
 
     int32_t GetNetworkType(const std::string &cid);
-    bool isWifiNetworkType(int32_t networkType);
+    bool IsWifiNetworkType(int32_t networkType);
 
     void QueryRelatedGroups(const std::string &udid, const std::string &networkId);
     bool CheckIsAccountless(const GroupInfo &group);
