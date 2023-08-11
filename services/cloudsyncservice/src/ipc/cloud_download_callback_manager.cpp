@@ -71,8 +71,8 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
     auto res = downloads_.find(path);
     bool isDownloading = (res != downloads_.end());
 
-    LOGI("download_file : [callback downloaded] %{public}s is downloading : %{public}d .", path.c_str(),
-            isDownloading);
+    LOGI("download_file : [callback downloaded] %{public}s is downloading : %{public}d .",
+         path.c_str(), isDownloading);
     if (!isDownloading) {
         lock.unlock();
         return;
@@ -83,7 +83,7 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
     lock.unlock();
 
     LOGI("download_file : [callback downloaded] %{public}s state is %{public}s, localErr is %{public}d.",
-            path.c_str(), download.to_string().c_str(), static_cast<int>(err.dkErrorCode));
+         path.c_str(), download.to_string().c_str(), static_cast<int>(err.dkErrorCode));
     auto downloadedState = err.HasError() ? DownloadProgressObj::FAILED : DownloadProgressObj::COMPLETED;
     /**
      * Avoiding the issue of cloud service not returning a total error code.

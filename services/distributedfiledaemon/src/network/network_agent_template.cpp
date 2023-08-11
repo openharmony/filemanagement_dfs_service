@@ -71,7 +71,8 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
             continue;
         }
         if (!(networkType & (1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI))) {
-            LOGI("not wifi network networkType = %{public}d == %{public}d", networkType, 1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI);
+            LOGI("not wifi network networkType = %{public}d == %{public}d", networkType,
+                 1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI);
             continue;
         }
 

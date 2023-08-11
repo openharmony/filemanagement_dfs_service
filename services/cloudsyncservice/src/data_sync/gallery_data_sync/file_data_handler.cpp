@@ -1030,7 +1030,8 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
             resultSet->GoToNextRow();
             int64_t version = 0;
             DataConvertor::GetLong(PhotoColumn::PHOTO_CLOUD_VERSION, version, *resultSet);
-            if (record.GetVersion() != version && (!IsLocalDirty(*resultSet) || record.GetIsDelete())) {
+            if (record.GetVersion() != static_cast<unsigned long>(version) &&
+                (!IsLocalDirty(*resultSet) || record.GetIsDelete())) {
                 checkRecords.push_back(record.GetRecordId());
             }
         } else {
