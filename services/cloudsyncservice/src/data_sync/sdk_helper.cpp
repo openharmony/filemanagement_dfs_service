@@ -202,14 +202,24 @@ std::shared_ptr<DriveKit::DKAssetReadSession> SdkHelper::GetAssetReadSession(Dri
     return database_->NewAssetReadSession(recordType, recordId, assetKey, assetPath);
 }
 
-int32_t SdkHelper::SaveSubscription()
+int32_t SdkHelper::SaveSubscription(SaveSubscriptionCallback callback)
 {
     auto expireTime = std::chrono::duration_cast<std::chrono::milliseconds>
         ((std::chrono::system_clock::now() + std::chrono::hours(INTERVAL)).time_since_epoch()).count();
     DriveKit::DKSubscription subscription{expireTime};
-    auto err = container_->SaveSubscription(nullptr, subscription, nullptr);
+    auto err = container_->SaveSubscription(nullptr, subscription, callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("SaveSubscription fail ret %{public}d", err);
+        return E_CLOUD_SDK;
+    }
+    return E_OK;
+}
+
+int32_t SdkHelper::DeleteSubscription(DelSubscriptionCallback callback)
+{
+    auto err = container_->DeleteSubscription(nullptr, "", callback);
+    if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("DeleteSubscription fail ret %{public}d", err);
         return E_CLOUD_SDK;
     }
     return E_OK;
