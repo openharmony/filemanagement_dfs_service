@@ -485,20 +485,27 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
     std::shared_ptr<std::vector<DriveKit::DKRecord>> records, DKQueryCursor nextCursor,
     bool hasMore, const DKError &err)
 {
-    if (err.HasError()) {
-        LOGE("OnFetchDatabaseChanges server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
-             err.dkErrorCode);
-        if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
-            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
-        }
-        return;
-    }
     LOGI("%{private}d %{private}s on fetch database changes", userId_, bundleName_.c_str());
     auto ctx = static_pointer_cast<DownloadTaskContext>(context);
 
     auto handler = ctx->GetHandler();
     if (handler == nullptr) {
         LOGE("context get handler err");
+        return;
+    }
+
+    if (err.HasError()) {
+        LOGE("OnFetchDatabaseChanges server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
+            err.dkErrorCode);
+        if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
+            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
+        } else if (!err.errorDetails.empty()) {
+            DKDetailErrorCode detailCode = static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode);
+            if (detailCode == DKDetailErrorCode::PARAM_INVALID || detailCode == DKDetailErrorCode::CURSOR_EXPIRED) {
+                handler->SetChecking();
+                Pull(handler);
+            }
+        }
         return;
     }
 
