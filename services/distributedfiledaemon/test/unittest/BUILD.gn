@@ -311,7 +311,10 @@ ohos_unittest("softbus_agent_test") {
     "samgr:samgr_proxy",
   ]
 
-  defines = [ "private=public" ]
+  defines = [
+    "private=public",
+    "protected=public",
+  ]
 }
 
 ohos_unittest("softbus_session_dispatcher_test") {
