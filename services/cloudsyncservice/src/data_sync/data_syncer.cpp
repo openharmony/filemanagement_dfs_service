@@ -297,15 +297,8 @@ void DataSyncer::DownloadAssets(DownloadContext &ctx)
         LOGE("progressCallback nullptr");
         return;
     }
-    sdkHelper_->DownloadAssets(ctx.context, ctx.assets, {}, ctx.id,
-        ctx.resultCallback, ctx.progressCallback);
+    sdkHelper_->DownloadAssets(ctx.context, ctx.assets, {}, ctx.id, ctx.resultCallback, ctx.progressCallback);
 }
-
-void EmptyDownLoadAssetsprogress(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)
-{
-    return;
-}
-
 
 static void ThumbDownloadCallback(shared_ptr<DKContext> context,
                                   shared_ptr<const DKDatabase> database,
@@ -322,11 +315,16 @@ static void ThumbDownloadCallback(shared_ptr<DKContext> context,
     auto ctx = static_pointer_cast<TaskContext>(context);
     auto handler = ctx->GetHandler();
     handler->OnDownloadThumb(resultMap);
+}
 
-    /* notify app update UX */
-    DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
-                                              DataSyncConst::INVALID_ID);
-    DataSyncNotifier::GetInstance().FinalNotify();
+void ThumbDownLoadProgress(shared_ptr<DKContext> context, DKDownloadAsset asset, TotalSize total, DownloadSize download)
+{
+    LOGI("record %s %{public}s download progress", asset.recordId.c_str(), asset.fieldKey.c_str());
+    if (total == download) {
+        auto ctx = static_pointer_cast<TaskContext>(context);
+        auto handler = ctx->GetHandler();
+        handler->OnDownloadThumb(asset);
+    }
 }
 
 int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
@@ -350,19 +348,12 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
     }
 
     int32_t ret = handler->OnFetchRecords(records, onFetchParams);
-    auto it = onFetchParams.assetsToDownload.begin();
-    while (it != onFetchParams.assetsToDownload.end()) {
-        constexpr int DOWNLOAD_BATCH_SIZE = 20;
-        int num = std::min(DOWNLOAD_BATCH_SIZE, static_cast<int>(onFetchParams.assetsToDownload.end() - it));
-        vector<DriveKit::DKDownloadAsset> assetsToDownload(it, it + num);
-        DownloadContext dctx = {.context = context,
-                                .assets = assetsToDownload,
-                                .id = 0,
-                                .resultCallback = ThumbDownloadCallback,
-                                .progressCallback = EmptyDownLoadAssetsprogress};
-        DownloadAssets(dctx);
-        it += num;
-    }
+    DownloadContext dctx = {.context = context,
+                            .assets = onFetchParams.assetsToDownload,
+                            .id = 0,
+                            .resultCallback = ThumbDownloadCallback,
+                            .progressCallback = ThumbDownLoadProgress};
+    DownloadAssets(dctx);
 
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
@@ -610,16 +601,16 @@ void DataSyncer::RetryDownloadRecords(shared_ptr<TaskContext> context)
         LOGE("get assetsToDownload err %{public}d", ret);
         return;
     }
-    LOGI("assetsToDownload count: %{public}zu", assetsToDownload.size());
     if (assetsToDownload.empty()) {
         return;
     }
 
+    LOGI("assetsToDownload count: %{public}zu", assetsToDownload.size());
     DownloadContext dctx = {.context = ctx,
                             .assets = assetsToDownload,
                             .id = 0,
                             .resultCallback = ThumbDownloadCallback,
-                            .progressCallback = EmptyDownLoadAssetsprogress};
+                            .progressCallback = ThumbDownLoadProgress};
     DownloadAssets(dctx);
 }
 

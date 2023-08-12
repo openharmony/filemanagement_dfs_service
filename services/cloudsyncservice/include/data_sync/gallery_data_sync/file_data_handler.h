@@ -69,6 +69,7 @@ public:
         DriveKit::DKRecordOperResult> &map) override;
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
     int32_t OnDownloadThumb(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
+    int32_t OnDownloadThumb(const DriveKit::DKDownloadAsset &asset) override;
 
     /* reset */
     void Reset();
@@ -182,6 +183,7 @@ private:
                           uint64_t size,
                           uint64_t mtime,
                           const std::string &type);
+    int DentryRemoveThumb(const std::string &downloadPath);
     bool ThumbsAtLocal(const DriveKit::DKRecord &record);
     int32_t UpdateAssetInPhotoMap(const DriveKit::DKRecord &record, int32_t fileId);
     int32_t InsertAssetToPhotoMap(const DriveKit::DKRecord &record, OnFetchParams &params);

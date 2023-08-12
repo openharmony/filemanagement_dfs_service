@@ -497,6 +497,18 @@ string FileDataConvertor::GetThumbPathInCloud(const std::string &path, const std
     return sandboxPrefix_ + "/" + Media::GetThumbnailPath(path, key).substr(ROOT_MEDIA_DIR.length());
 }
 
+string FileDataConvertor::GetLocalPathToCloud(const std::string &path)
+{
+    string localPrefix = prefixLCD_ + to_string(userId_) + suffixLCD_;
+    size_t pos = path.find_first_of(localPrefix);
+    if (pos == string::npos || pos != 0) {
+        LOGE("invalid path %{private}s", path.c_str());
+        return "";
+    }
+
+    return sandboxPrefix_ + path.substr(localPrefix.length());
+}
+
 bool FileDataConvertor::IfContainsAttributes(const DriveKit::DKRecord &record)
 {
     DriveKit::DKRecordData data;

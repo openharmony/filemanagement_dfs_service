@@ -132,7 +132,7 @@ int32_t FileDataHandler::GetAssetsToDownload(vector<DriveKit::DKDownloadAsset> &
                        to_string(static_cast<int32_t>(SyncStatusType::TYPE_DOWNLOAD)));
     auto results = Query(predicates, MEDIA_CLOUD_SYNC_COLUMNS);
     if (results == nullptr) {
-        LOGE("get nullptr modified result");
+        LOGE("get nullptr TYPE_DOWNLOAD result");
         return E_RDB;
     }
 
@@ -364,10 +364,24 @@ int FileDataHandler::DentryInsertThumb(const string &fullPath,
     return mFile->DoCreate(mBase);
 }
 
+int FileDataHandler::DentryRemoveThumb(const string &downloadPath)
+{
+    string thumbnailPath = createConvertor_.GetLocalPathToCloud(downloadPath);
+    string relativePath, fileName;
+    if (GetDentryPathName(thumbnailPath, relativePath, fileName) != E_OK) {
+        LOGE("split to dentry path failed, path:%s", thumbnailPath.c_str());
+        return E_INVAL_ARG;
+    }
+
+    auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
+    MetaBase mBase(fileName, "");
+    return mFile->DoRemove(mBase);
+}
+
 int FileDataHandler::AddCloudThumbs(const DKRecord &record)
 {
     LOGI("thumbs of %s add to cloud_view", record.GetRecordId().c_str());
-    int64_t thumbSize = 0, lcdSize = 0;
+    constexpr int64_t THUMB_SIZE = 2 * 1024 * 1024; // thumbnail and lcd size show as 2MB
 
     DKRecordData data;
     record.GetRecordData(data);
@@ -384,23 +398,13 @@ int FileDataHandler::AddCloudThumbs(const DKRecord &record)
         LOGE("bad file path in record");
         return E_INVAL_ARG;
     }
-    if (attributes.find(FILE_THUMB_SIZE) == attributes.end() ||
-        DataConvertor::GetLongComp(attributes[FILE_THUMB_SIZE], thumbSize) != E_OK) {
-        LOGE("bad thumb size in record");
-        return E_INVAL_ARG;
-    }
-    if (attributes.find(FILE_LCD_SIZE) == attributes.end() ||
-        DataConvertor::GetLongComp(attributes[FILE_LCD_SIZE], lcdSize) != E_OK) {
-        LOGE("bad lcd size in record");
-        return E_INVAL_ARG;
-    }
-    int64_t mtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
-    int ret = DentryInsertThumb(fullPath, record.GetRecordId(), thumbSize, mtime, THUMB_SUFFIX);
+    int64_t mtime = static_cast<int64_t>(record.GetCreateTime()) / MILLISECOND_TO_SECOND;
+    int ret = DentryInsertThumb(fullPath, record.GetRecordId(), THUMB_SIZE, mtime, THUMB_SUFFIX);
     if (ret != E_OK) {
         LOGE("dentry insert of thumb failed ret %{public}d", ret);
         return ret;
     }
-    ret = DentryInsertThumb(fullPath, record.GetRecordId(), lcdSize, mtime, LCD_SUFFIX);
+    ret = DentryInsertThumb(fullPath, record.GetRecordId(), THUMB_SIZE, mtime, LCD_SUFFIX);
     if (ret != E_OK) {
         LOGE("dentry insert of lcd failed ret %{public}d", ret);
         return ret;
@@ -819,7 +823,8 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
         Media::PhotoColumn::PHOTO_SYNC_STATUS,
         static_cast<int32_t>(downloadThumb? SyncStatusType::TYPE_DOWNLOAD : SyncStatusType::TYPE_VISIBLE));
     params.insertFiles.push_back(values);
-    if (downloadThumb || AddCloudThumbs(record) != E_OK) {
+    AddCloudThumbs(record);
+    if (downloadThumb) {
         AppendToDownload(record, "lcd", params.assetsToDownload);
         AppendToDownload(record, "thumbnail", params.assetsToDownload);
     }
@@ -829,14 +834,13 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
 int32_t FileDataHandler::OnDownloadThumb(const map<DKDownloadAsset, DKDownloadResult> &resultMap)
 {
     for (const auto &it : resultMap) {
-        if (!it.second.IsSuccess()) {
+        if (it.second.IsSuccess()) {
+            continue;
+        }
+        if (it.first.fieldKey == "thumbnail") {
             LOGE("record %s %{public}s download failed, localErr: %{public}d, serverErr: %{public}d",
                  it.first.recordId.c_str(), it.first.fieldKey.c_str(),
                  static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
-            continue;
-        }
-        LOGD("record %s %{public}s download success", it.first.recordId.c_str(), it.first.fieldKey.c_str());
-        if (it.first.fieldKey == "thumbnail") {
             LOGI("update sync_status to visible of record %s", it.first.recordId.c_str());
             int updateRows;
             ValuesBucket values;
@@ -847,8 +851,32 @@ int32_t FileDataHandler::OnDownloadThumb(const map<DKDownloadAsset, DKDownloadRe
             if (ret != E_OK) {
                 LOGE("update retry flag failed, ret=%{public}d", ret);
             }
+            DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
+                                                      to_string(updateRows));
         }
     }
+    return E_OK;
+}
+
+int32_t FileDataHandler::OnDownloadThumb(const DKDownloadAsset &asset)
+{
+    if (asset.fieldKey == "thumbnail") {
+        LOGI("update sync_status to visible of record %s", asset.recordId.c_str());
+        int updateRows;
+        ValuesBucket values;
+        values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
+
+        string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
+        int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
+        if (ret != E_OK) {
+            LOGE("update retry flag failed, ret=%{public}d", ret);
+        }
+        DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
+                                                  to_string(updateRows));
+        DataSyncNotifier::GetInstance().FinalNotify();
+    }
+
+    DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
     return E_OK;
 }
 

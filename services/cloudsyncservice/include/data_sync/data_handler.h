@@ -66,6 +66,7 @@ public:
         DriveKit::DKRecordOperResult> &map);
     virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset);
     virtual int32_t OnDownloadThumb(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap);
+    virtual int32_t OnDownloadThumb(const DriveKit::DKDownloadAsset &asset);
 
     /*clean*/
     virtual int32_t Clean(const int action);
