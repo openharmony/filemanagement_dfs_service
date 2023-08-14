@@ -45,7 +45,6 @@ constexpr uint32_t HMDFS_SLOT_LEN_BITS = 3;
 constexpr uint64_t DELTA = 0x9E3779B9; /* Hashing code copied from f2fs */
 constexpr uint64_t HMDFS_HASH_COL_BIT = (0x1ULL) << 63;
 constexpr uint32_t DIR_SIZE = 4096;
-static const unsigned int OID_USER_DATA_RW = 1008;
 
 #pragma pack(push, 1)
 struct HmdfsDentry {
@@ -167,9 +166,6 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
     cacheFile_ = GetDentryfileByPath(userId, path);
     fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
     LOGD("fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
-
-    if (chown(cacheFile_.c_str(), -1, OID_USER_DATA_RW) == -1)
-        LOGE("chown falied");
 
     int ret = fsetxattr(fd_, "user.hmdfs_cache", path.c_str(), path.size(), 0);
     if (ret != 0) {
