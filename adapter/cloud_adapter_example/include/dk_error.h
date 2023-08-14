@@ -66,7 +66,17 @@ enum class DKServerErrorCode {
     TRY_AGAIN_LATER = 503,
     VALIDATING_REFERENCE_ERROR = 412,
     ZONE_NOT_FOUND = 404,
-    NETWORK_ERROR = 1008,
+    UID_EMPTY = 1003,         // 云空间未登录, userid为空
+    RESPONSE_EMPTY = 1004,    // 服务器端返回为空
+    RESPONSE_NOT_OK = 1005,   // 服务端返回结果错误
+    NO_NETWORK = 1006,        // 云空间没有网络
+    GRS_NULL = 1007,          // grs为空
+    NETWORK_ERROR = 1008,     // 云空间网络异常
+    ERROR_PARAM = 1009,       // 参数错误
+    GET_AT_FAIL = 1010,       // 获取AT失效
+    ASSET_NOT_EXIST = 1011,   // Asset不存在
+    DELETE_ASSET_FAIL = 1012, // 删除Asset失败
+    SWITCH_OFF = 1013,        // 同步开关关闭
 };
 
 enum class DKDetailErrorCode {

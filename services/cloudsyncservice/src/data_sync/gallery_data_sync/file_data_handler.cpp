@@ -2138,9 +2138,7 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
             }
             LOGE("create record fail: file path %{private}s", filePath.c_str());
         }
-        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
-            ret = err;
-        }
+        GetReturn(err, ret);
     }
     (void)DataSyncNotifier::GetInstance().FinalNotify();
     return ret;
@@ -2161,9 +2159,7 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
             modifyFailSet_.push_back(entry.first);
             LOGE("delete record fail: cloud id: %{private}s", entry.first.c_str());
         }
-        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
-            ret = err;
-        }
+        GetReturn(err, ret);
     }
     return ret;
 }
@@ -2186,9 +2182,7 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
             modifyFailSet_.push_back(entry.first);
             LOGE("modify mdirty record fail: cloud id: %{private}s", entry.first.c_str());
         }
-        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
-            ret = err;
-        }
+        GetReturn(err, ret);
     }
     return ret;
 }
@@ -2211,9 +2205,7 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
             modifyFailSet_.push_back(entry.first);
             LOGE("modify fdirty record fail: cloud id: %{public}s", entry.first.c_str());
         }
-        if ((err == E_STOP) || (err == E_CLOUD_STORAGE_FULL) || (err == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
-            ret = err;
-        }
+        GetReturn(err, ret);
     }
     return ret;
 }
@@ -2474,72 +2466,6 @@ void FileDataHandler::OnResultSetConvertToMap(const shared_ptr<NativeRdb::Result
             cloudMap.insert(std::make_pair(idValue, std::make_pair(mtime, metatime)));
         }
     }
-}
-
-int32_t FileDataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOperResult> &entry)
-{
-    const DKRecordOperResult &result = entry.second;
-    int32_t serverErrorCode = INT32_MAX;
-    serverErrorCode = result.GetDKError().serverErrorCode;
-    LOGE("serverErrorCode %{public}d", serverErrorCode);
-    if (result.GetDKError().errorDetails.size() == 0) {
-        LOGE("errorDetails is empty");
-        return E_INVAL_ARG;
-    }
-    string errorDetailcode = "";
-    errorDetailcode = result.GetDKError().errorDetails[0].errorCode;
-    if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::ACCESS_DENIED &&
-        errorDetailcode == SPACE_NOT_ENOUGH) {
-        return HandleCloudSpaceNotEnough();
-    } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::AUTHENTICATION_FAILED &&
-               errorDetailcode == AT_FAILED) {
-        return HandleATFailed();
-    } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::ACCESS_DENIED &&
-               errorDetailcode == NAME_CONFLICT) {
-        return HandleNameConflict();
-    } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::ATOMIC_ERROR &&
-               errorDetailcode == INVALID_FILE) {
-        return HandleNameInvalid();
-    } else if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
-        LOGE("errorDetailcode = %{public}s", errorDetailcode.c_str());
-        return HandleNetworkErr();
-    } else {
-        LOGE(" unknown error code record failed, serverErrorCode = %{public}d, errorDetailcode = %{public}s",
-             serverErrorCode, errorDetailcode.c_str());
-        return E_STOP;
-    }
-    return E_OK;
-}
-
-int32_t FileDataHandler::HandleCloudSpaceNotEnough()
-{
-    LOGE("Cloud Space Not Enough");
-    /* Stop sync */
-    return E_CLOUD_STORAGE_FULL;
-}
-
-int32_t FileDataHandler::HandleATFailed()
-{
-    LOGE("AT Failed");
-    return E_DATA;
-}
-
-int32_t FileDataHandler::HandleNameConflict()
-{
-    LOGE("Name Conflict");
-    return E_DATA;
-}
-
-int32_t FileDataHandler::HandleNameInvalid()
-{
-    LOGE("Name Invalid");
-    return E_DATA;
-}
-
-int32_t FileDataHandler::HandleNetworkErr()
-{
-    LOGE("Network Error");
-    return E_SYNC_FAILED_NETWORK_NOT_AVAILABLE;
 }
 
 int64_t FileDataHandler::UTCTimeSeconds()

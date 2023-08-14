@@ -21,6 +21,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 using namespace std;
+using namespace DriveKit;
 DataHandler::DataHandler(int32_t userId, const string &bundleName, const std::string &table)
     : cloudPrefImpl_(userId, bundleName, table)
 {
@@ -208,6 +209,65 @@ int32_t DataHandler::OnDownloadThumb(const DriveKit::DKDownloadAsset &asset)
 int32_t DataHandler::Clean(const int action)
 {
     return E_OK;
+}
+
+int32_t DataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOperResult> &entry)
+{
+    const DKRecordOperResult &result = entry.second;
+    int32_t serverErrorCode = INT32_MAX;
+    serverErrorCode = result.GetDKError().serverErrorCode;
+    LOGE("serverErrorCode %{public}d", serverErrorCode);
+    if (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
+        return HandleNetworkErr();
+    } else if ((static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::UID_EMPTY) ||
+               (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::SWITCH_OFF)) {
+        return HandleNotSupportSync();
+    }
+    if (result.GetDKError().errorDetails.size() == 0) {
+        LOGE("errorDetails is empty");
+        return E_INVAL_ARG;
+    }
+    auto errorDetailcode = static_cast<DKDetailErrorCode>(result.GetDKError().errorDetails[0].detailCode);
+    if (errorDetailcode == DKDetailErrorCode::SPACE_FULL) {
+        return HandleCloudSpaceNotEnough();
+    } else {
+        LOGE("unknown error code record failed, serverErrorCode = %{public}d, errorDetailcode = %{public}d",
+             serverErrorCode, errorDetailcode);
+        return HandleDetailcode(errorDetailcode);
+    }
+    return E_OK;
+}
+
+int32_t DataHandler::HandleCloudSpaceNotEnough()
+{
+    LOGE("Cloud Space Not Enough");
+    /* Stop sync */
+    return E_CLOUD_STORAGE_FULL;
+}
+
+int32_t DataHandler::HandleNotSupportSync()
+{
+    LOGE("switch off or uid empty");
+    return E_STOP;
+}
+
+int32_t DataHandler::HandleNetworkErr()
+{
+    LOGE("Network Error");
+    return E_SYNC_FAILED_NETWORK_NOT_AVAILABLE;
+}
+
+int32_t DataHandler::HandleDetailcode(DKDetailErrorCode detailCode)
+{
+    /* Only one record failed, not stop sync */
+    return E_UNKNOWN;
+}
+
+void DataHandler::GetReturn(const int32_t error, int32_t &retCode)
+{
+    if ((error == E_STOP) || (error == E_CLOUD_STORAGE_FULL) || (error == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE)) {
+        retCode = error;
+    }
 }
 } // namespace CloudSync
 } // namespace FileManagement

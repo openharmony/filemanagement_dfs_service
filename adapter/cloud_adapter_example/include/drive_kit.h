@@ -77,6 +77,9 @@ public:
                                 std::map<DKAppBundleName, DKAppSwitchStatus> &appSwitchs);
     DKError GetServerTime(time_t &time);
     int32_t OnUploadAsset(const std::string &request, const std::string &result);
+    void ReleaseDefaultContainer(DKAppBundleName bundleName);
+    void ReleaseContainer(DKAppBundleName bundleName, DKContainerName containerName);
+    void ReleaseCloudUserInfo();
 private:
     DriveKitNative(int userId);
 

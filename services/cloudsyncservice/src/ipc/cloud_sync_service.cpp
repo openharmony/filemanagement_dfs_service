@@ -188,6 +188,13 @@ int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const st
 
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
 {
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    auto driveKit = DriveKit::DriveKitNative::GetInstance(callerUserId);
+    if (driveKit == nullptr) {
+        LOGE("get drive kit instance fail");
+        return E_CLOUD_SDK;
+    }
+    driveKit->ReleaseCloudUserInfo();
     return E_OK;
 }
 

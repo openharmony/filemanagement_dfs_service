@@ -84,8 +84,12 @@ public:
     virtual int32_t GetRecordSize();
     virtual bool GetCheckFlag();
     virtual void SetChecking();
+    virtual int32_t HandleDetailcode(DriveKit::DKDetailErrorCode detailCode);
 
 protected:
+    int32_t OnRecordFailed(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+    void GetReturn(const int32_t error, int32_t &retCode);
+
     /* cursor */
     DriveKit::DKQueryCursor startCursor_;
     DriveKit::DKQueryCursor nextCursor_;
@@ -103,6 +107,11 @@ protected:
 
     /* cloud preference impl */
     CloudPrefImpl cloudPrefImpl_;
+
+private:
+    int32_t HandleCloudSpaceNotEnough();
+    int32_t HandleNotSupportSync();
+    int32_t HandleNetworkErr();
 };
 } // namespace CloudSync
 } // namespace FileManagement
