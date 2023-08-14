@@ -273,55 +273,32 @@ void DataSyncer::PullDatabaseChanges(shared_ptr<TaskContext> context)
     }
 }
 
-class DownloadContext : public TaskContext {
-public:
-    DownloadContext(std::shared_ptr<DataHandler> handler,
-                    const vector<DKDownloadAsset> &assets,
-                    DriveKit::DKDownloadId &id,
-                    shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                           std::shared_ptr<const DriveKit::DKDatabase>,
-                           const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                           const DriveKit::DKError &)>> resultCallback,
-                    const std::shared_ptr<DKContext> context,
-                    std::shared_ptr<const DKDatabase> database,
-                    shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                                                  DriveKit::DKDownloadAsset, TotalSize,
-                                                  DriveKit::DownloadSize)>> progressCallback)
-        : TaskContext(handler), assets(assets), id(id), resultCallback(resultCallback),
-          context(context), database(database), progressCallback(progressCallback){};
+struct DownloadContext {
+    std::shared_ptr<DKContext> context;
     vector<DKDownloadAsset> assets;
-    DriveKit::DKDownloadId &id;
-    shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                           std::shared_ptr<const DriveKit::DKDatabase>,
-                           const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
-                           const DriveKit::DKError &)>> resultCallback = nullptr;
-    const std::shared_ptr<DKContext> context;
-    std::shared_ptr<const DKDatabase> database;
-    shared_ptr<std::function<void(std::shared_ptr<DriveKit::DKContext>,
-                                  DriveKit::DKDownloadAsset,
-                                  TotalSize, DriveKit::DownloadSize)>> progressCallback;
+    DriveKit::DKDownloadId id;
+    std::function<void(std::shared_ptr<DriveKit::DKContext>,
+                       std::shared_ptr<const DriveKit::DKDatabase>,
+                       const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &,
+                       const DriveKit::DKError &)>
+        resultCallback;
+    std::function<
+        void(std::shared_ptr<DriveKit::DKContext>, DriveKit::DKDownloadAsset, TotalSize, DriveKit::DownloadSize)>
+        progressCallback;
 };
 
-void DataSyncer::DownloadAssets(std::shared_ptr<TaskContext> context)
+void DataSyncer::DownloadAssets(DownloadContext &ctx)
 {
-    auto ctx = static_pointer_cast<DownloadContext>(context);
-    if (ctx->resultCallback == nullptr) {
+    if (ctx.resultCallback == nullptr) {
         LOGE("resultCallback nullptr");
         return;
     }
-    if (ctx->progressCallback == nullptr) {
+    if (ctx.progressCallback == nullptr) {
         LOGE("progressCallback nullptr");
         return;
     }
-    sdkHelper_->DownloadAssets(ctx->context, ctx->assets, {}, ctx->id,
-        *(ctx->resultCallback), *(ctx->progressCallback));
+    sdkHelper_->DownloadAssets(ctx.context, ctx.assets, {}, ctx.id, ctx.resultCallback, ctx.progressCallback);
 }
-
-void EmptyDownLoadAssetsprogress(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)
-{
-    return;
-}
-
 
 static void ThumbDownloadCallback(shared_ptr<DKContext> context,
                                   shared_ptr<const DKDatabase> database,
@@ -338,11 +315,16 @@ static void ThumbDownloadCallback(shared_ptr<DKContext> context,
     auto ctx = static_pointer_cast<TaskContext>(context);
     auto handler = ctx->GetHandler();
     handler->OnDownloadThumb(resultMap);
+}
 
-    /* notify app update UX */
-    DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
-                                              DataSyncConst::INVALID_ID);
-    DataSyncNotifier::GetInstance().FinalNotify();
+void ThumbDownLoadProgress(shared_ptr<DKContext> context, DKDownloadAsset asset, TotalSize total, DownloadSize download)
+{
+    LOGI("record %s %{public}s download progress", asset.recordId.c_str(), asset.fieldKey.c_str());
+    if (total == download) {
+        auto ctx = static_pointer_cast<TaskContext>(context);
+        auto handler = ctx->GetHandler();
+        handler->OnDownloadThumb(asset);
+    }
 }
 
 int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
@@ -353,17 +335,7 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
         return E_OK;
     }
 
-    DKDownloadId id;
     OnFetchParams onFetchParams;
-    auto resultCallback = make_shared<std::function<void(
-        std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-        const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &, const DriveKit::DKError &)>>(
-        ThumbDownloadCallback);
-    auto downloadProcessCallback =
-        std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(
-            EmptyDownLoadAssetsprogress);
-    /* for pull records, judge whether to download thumb and lcds */
-
     auto ctx = static_pointer_cast<TaskContext>(context);
     auto handler = ctx->GetHandler();
     if (handler == nullptr) {
@@ -376,16 +348,12 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
     }
 
     int32_t ret = handler->OnFetchRecords(records, onFetchParams);
-    auto it = onFetchParams.assetsToDownload.begin();
-    while (it != onFetchParams.assetsToDownload.end()) {
-        constexpr int DOWNLOAD_BATCH_SIZE = 20;
-        int num = std::min(DOWNLOAD_BATCH_SIZE, static_cast<int>(onFetchParams.assetsToDownload.end() - it));
-        vector<DriveKit::DKDownloadAsset> assetsToDownload(it, it + num);
-        auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id, resultCallback, context, database,
-                                                 downloadProcessCallback);
-        DownloadAssets(static_pointer_cast<TaskContext>(dctx));
-        it += num;
-    }
+    DownloadContext dctx = {.context = context,
+                            .assets = onFetchParams.assetsToDownload,
+                            .id = 0,
+                            .resultCallback = ThumbDownloadCallback,
+                            .progressCallback = ThumbDownLoadProgress};
+    DownloadAssets(dctx);
 
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
@@ -443,7 +411,6 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
                                   const std::string path,
                                   const int32_t userId)
 {
-    DKDownloadId id;
     auto ctx = std::make_shared<TaskContext>(handler);
     std::vector<DKDownloadAsset> assetsToDownload;
     int32_t ret = handler->GetDownloadAsset(path, assetsToDownload);
@@ -461,20 +428,16 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
                                       const DriveKit::DKError &err) {
         this->downloadCallbackMgr_.OnDownloadedResult(path, assetsToDownload, handler, context, database, results, err);
     };
-    auto downloadResultPtr = std::make_shared<std::function<void(
-        std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-        const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &, const DriveKit::DKError &)>>(
-        downloadResultCallback);
     auto downloadProcessCallback = [this, path](std::shared_ptr<DKContext> context, DKDownloadAsset asset,
                                                      TotalSize totalSize, DownloadSize downloadSize) {
         this->downloadCallbackMgr_.OnDownloadProcess(path, context, asset, totalSize, downloadSize);
     };
-    auto downloadProcessPtr =
-        std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(
-            downloadProcessCallback);
-    auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id, downloadResultPtr, ctx, nullptr,
-                                             downloadProcessPtr);
-    DownloadAssets(static_pointer_cast<TaskContext>(dctx));
+    DownloadContext dctx = {.context = ctx,
+                            .assets = assetsToDownload,
+                            .id = 0,
+                            .resultCallback = downloadResultCallback,
+                            .progressCallback = downloadProcessCallback};
+    DownloadAssets(dctx);
     return E_OK;
 }
 
@@ -638,23 +601,17 @@ void DataSyncer::RetryDownloadRecords(shared_ptr<TaskContext> context)
         LOGE("get assetsToDownload err %{public}d", ret);
         return;
     }
-    LOGI("assetsToDownload count: %{public}zu", assetsToDownload.size());
     if (assetsToDownload.empty()) {
         return;
     }
 
-    DKDownloadId id;
-    auto resultCallback = make_shared<std::function<void(
-        std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
-        const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &, const DriveKit::DKError &)>>(
-        ThumbDownloadCallback);
-    auto downloadProcessCallback =
-        std::make_shared<std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)>>(
-            EmptyDownLoadAssetsprogress);
-
-    auto dctx = make_shared<DownloadContext>(handler, assetsToDownload, id, resultCallback, context, nullptr,
-                                             downloadProcessCallback);
-    DownloadAssets(static_pointer_cast<TaskContext>(dctx));
+    LOGI("assetsToDownload count: %{public}zu", assetsToDownload.size());
+    DownloadContext dctx = {.context = ctx,
+                            .assets = assetsToDownload,
+                            .id = 0,
+                            .resultCallback = ThumbDownloadCallback,
+                            .progressCallback = ThumbDownLoadProgress};
+    DownloadAssets(dctx);
 }
 
 int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)

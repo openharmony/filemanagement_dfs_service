@@ -26,7 +26,7 @@ DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(
                        std::shared_ptr<const DKDatabase>,
                        const std::map<DKDownloadAsset, DKDownloadResult> &,
                        const DKError &)> resultCallback,
-    std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)> &progressCallback)
+    std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)> progressCallback)
 {
     return DKLocalErrorCode::NO_ERROR;
 }

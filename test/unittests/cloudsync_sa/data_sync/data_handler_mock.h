@@ -60,6 +60,10 @@ public:
     {
         return 0;
     }
+    int32_t OnDownloadThumb(const DriveKit::DKDownloadAsset &asset)
+    {
+        return 0;
+    }
     int32_t Clean(const int action) {return 0;}
 };
 }

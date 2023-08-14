@@ -108,7 +108,7 @@ void DataSyncer::PullDatabaseChanges(shared_ptr<TaskContext> context)
 {
 }
 
-void DataSyncer::DownloadAssets(std::shared_ptr<TaskContext> context)
+void DataSyncer::DownloadAssets(DownloadContext &ctx)
 {
 }
 

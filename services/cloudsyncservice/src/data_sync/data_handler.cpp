@@ -200,6 +200,11 @@ int32_t DataHandler::OnDownloadThumb(const std::map<DriveKit::DKDownloadAsset, D
     return E_OK;
 }
 
+int32_t DataHandler::OnDownloadThumb(const DriveKit::DKDownloadAsset &asset)
+{
+    return E_OK;
+}
+
 int32_t DataHandler::Clean(const int action)
 {
     return E_OK;

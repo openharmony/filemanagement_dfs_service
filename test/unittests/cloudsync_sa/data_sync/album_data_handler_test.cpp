@@ -43,6 +43,7 @@ public:
     MOCK_METHOD1(OnDownloadSuccess, int32_t(const DriveKit::DKDownloadAsset &asset));
     MOCK_METHOD1(OnDownloadThumb,
                  int32_t(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap));
+    MOCK_METHOD1(OnDownloadThumb, int32_t(const DKDownloadAsset &asset));
     MOCK_METHOD1(GetAssetsToDownload, int32_t(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload));
     MOCK_METHOD1(Clean, int32_t(const int action));
 };
