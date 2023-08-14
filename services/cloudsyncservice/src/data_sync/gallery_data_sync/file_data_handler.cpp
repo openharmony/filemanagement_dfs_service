@@ -204,8 +204,8 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
         }
         int32_t fileId = 0;
         ChangeType changeType = ChangeType::INVAILD;
-        CompensateFilePath(record);
         if ((rowCount == 0) && !record.GetIsDelete()) {
+            CompensateFilePath(record);
             ret = PullRecordInsert(record, params);
             InsertAssetToPhotoMap(record, params);
         } else if (rowCount == 1) {
@@ -785,6 +785,18 @@ string FileDataHandler::GetFileExtension(DKRecord &record)
     return extension;
 }
 
+static bool IfContainsFullField(const DriveKit::DKRecord &record)
+{
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_ATTRIBUTES) != data.end()) {
+        DriveKit::DKRecordFieldMap attributes;
+        data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+        return !(attributes.find(PhotoColumn::MEDIA_TITLE) == attributes.end());
+    }
+    return false;
+}
+
 int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &params)
 {
     LOGI("insert of record %{public}s", record.GetRecordId().c_str());
@@ -810,7 +822,11 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
         LOGE("record to valuebucket failed, ret=%{public}d", ret);
         return ret;
     }
-    values.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
+    if (IfContainsFullField(record)) {
+        values.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
+    } else {
+        values.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
+    }
     values.PutInt(Media::PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     values.PutString(Media::PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
