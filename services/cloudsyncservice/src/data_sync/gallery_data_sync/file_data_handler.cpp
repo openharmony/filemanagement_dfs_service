@@ -153,6 +153,8 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     PhotoColumn::PHOTO_CLOUD_ID,
     PhotoColumn::PHOTO_CLOUD_VERSION,
     MediaColumn::MEDIA_ID,
+    PhotoColumn::MEDIA_RELATIVE_PATH,
+    PhotoColumn::MEDIA_DATE_ADDED,
 };
 
 tuple<shared_ptr<NativeRdb::ResultSet>, int> FileDataHandler::QueryLocalByCloudId(const string &recordId)
@@ -412,10 +414,13 @@ int FileDataHandler::AddCloudThumbs(const DKRecord &record)
     return E_OK;
 }
 
-string FileDataHandler::ConflictRenameThumb(NativeRdb::ResultSet &resultSet, string fullPath)
+string FileDataHandler::ConflictRenameThumb(NativeRdb::ResultSet &resultSet,
+                                            string fullPath,
+                                            string &tmpPath,
+                                            string &newPath)
 {
     /* thumb new path */
-    string tmpPath = cleanConvertor_.GetThumbPath(fullPath, THUMB_SUFFIX);
+    tmpPath = cleanConvertor_.GetThumbPath(fullPath, THUMB_SUFFIX);
     if (tmpPath == "") {
         LOGE("err tmp Path for GetThumbPath");
         return "";
@@ -431,12 +436,7 @@ string FileDataHandler::ConflictRenameThumb(NativeRdb::ResultSet &resultSet, str
         LOGE("err thumb Path found");
         return "";
     }
-    string newPath = tmpPath.substr(0, found) + "_1" + tmpPath.substr(found);
-    int ret = rename(tmpPath.c_str(), newPath.c_str());
-    if (ret != 0) {
-        LOGE("err rename tmpPath to newPath");
-        return "";
-    }
+    newPath = tmpPath.substr(0, found) + CON_SUFFIX + tmpPath.substr(found);
     /* new name */
     size_t namefound = newPath.find_last_of('/');
     if (namefound == string::npos) {
@@ -447,7 +447,11 @@ string FileDataHandler::ConflictRenameThumb(NativeRdb::ResultSet &resultSet, str
     return newName;
 }
 
-int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string &fullPath)
+int32_t FileDataHandler::ConflictRenamePath(NativeRdb::ResultSet &resultSet,
+                                            string &fullPath,
+                                            string &rdbPath,
+                                            string &localPath,
+                                            string &newLocalPath)
 {
     /* sandbox new path */
     size_t rdbfound = fullPath.find_last_of('.');
@@ -455,9 +459,9 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
         LOGE("err rdb Path found");
         return E_INVAL_ARG;
     }
-    string rdbPath = fullPath.substr(0, rdbfound) + "_1" + fullPath.substr(rdbfound);
+    rdbPath = fullPath.substr(0, rdbfound) + CON_SUFFIX + fullPath.substr(rdbfound);
     /* local new path */
-    string localPath = cleanConvertor_.GetHmdfsLocalPath(fullPath);
+    localPath = cleanConvertor_.GetHmdfsLocalPath(fullPath);
     if (localPath == "") {
         LOGE("err local Path for GetHmdfsLocalPath");
         return E_INVAL_ARG;
@@ -467,14 +471,20 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
         LOGE("err local Path found");
         return E_INVAL_ARG;
     }
-    string newLocalPath = localPath.substr(0, localfound) + "_1" + localPath.substr(localfound);
-    int ret = rename(localPath.c_str(), newLocalPath.c_str());
-    if (ret != 0) {
-        LOGE("err rename localPath to newLocalPath");
+    newLocalPath = localPath.substr(0, localfound) + CON_SUFFIX + localPath.substr(localfound);
+    return E_OK;
+}
+
+int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string &fullPath, string &relativePath)
+{
+    string rdbPath, newvirPath, tmpPath, newPath, localPath, newLocalPath;
+    int ret = ConflictRenamePath(resultSet, fullPath, rdbPath, tmpPath, newPath);
+    if (ret != E_OK) {
+        LOGE("ConflictRenamePath failed, ret=%{public}d", ret);
         return E_INVAL_ARG;
     }
     /* thumb new path and new name */
-    string newName = ConflictRenameThumb(resultSet, fullPath);
+    string newName = ConflictRenameThumb(resultSet, fullPath, localPath, newLocalPath);
     if (newName == "") {
         LOGE("err Rename Thumb path");
         return E_INVAL_ARG;
@@ -483,11 +493,25 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
     ValuesBucket values;
     values.PutString(PhotoColumn::MEDIA_FILE_PATH, rdbPath);
     values.PutString(PhotoColumn::MEDIA_NAME, newName);
+    if (!relativePath.empty()) {
+        newvirPath = relativePath + newName;
+        values.PutString(PhotoColumn::MEDIA_VIRTURL_PATH, newvirPath);
+    }
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
-    int32_t ret32 = Update(updateRows, values, whereClause, {fullPath});
-    if (ret32 != E_OK) {
+    ret = Update(updateRows, values, whereClause, {fullPath});
+    if (ret != E_OK) {
         LOGE("update retry flag failed, ret=%{public}d", ret);
         return E_RDB;
+    }
+    ret = rename(tmpPath.c_str(), newPath.c_str());
+    if (ret != 0) {
+        LOGE("err rename localPath to newLocalPath, ret = %{public}d", ret);
+        return E_INVAL_ARG;
+    }
+    ret = rename(localPath.c_str(), newLocalPath.c_str());
+    if (ret != 0) {
+        LOGE("err rename tmpPath to newPath, ret = %{public}d", ret);
+        return E_INVAL_ARG;
     }
     return E_OK;
 }
@@ -510,13 +534,10 @@ int32_t FileDataHandler::ConflictDataMerge(const DKRecord &record, string &fullP
 }
 
 int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
-                                         const DKRecord &record,
-                                         string &fullPath,
                                          int64_t isize,
-                                         int64_t mtime,
-                                         bool &comflag)
+                                         int64_t crTime,
+                                         bool &modifyPathflag)
 {
-    bool modifyPathflag = false;
     string localId;
     int ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, localId, resultSet);
     if (ret != E_OK) {
@@ -533,39 +554,55 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
         LOGE("Get local isize failed");
         return E_INVAL_ARG;
     }
-    int64_t localMtime = 0;
-    ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, localMtime, resultSet);
+    int64_t localCrtime = 0;
+    ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_ADDED, localCrtime, resultSet);
     if (ret != E_OK) {
-        LOGE("Get local mtime failed");
+        LOGE("Get local ctime failed");
         return E_INVAL_ARG;
     }
-    if (localIsize == isize && localMtime == mtime) {
+    if (localIsize == isize && localCrtime == crTime) {
         LOGI("Possible duplicate files");
     } else {
         modifyPathflag = true;
     }
-    if (modifyPathflag) {
-        LOGI("Different files with the same name");
-        /* Modify path */
-        ret = ConflictRename(resultSet, fullPath);
-        if (ret != E_OK) {
-            LOGE("Conflict dataMerge rename fail");
-            return ret;
-        }
-    } else {
-        LOGI("Unification of the same document");
-        /* update database */
-        ret = ConflictDataMerge(record, fullPath);
-        if (ret != E_OK) {
-            LOGE("Conflict dataMerge fail");
-            return ret;
-        }
-        comflag = true;
+    return E_OK;
+}
+
+int32_t FileDataHandler::ConflictMerge(NativeRdb::ResultSet &resultSet,
+                                       const DKRecord &record,
+                                       string &fullPath,
+                                       string &relativePath)
+{
+    LOGI("Different files with the same name");
+    /* Modify path */
+    int ret = ConflictRename(resultSet, fullPath, relativePath);
+    if (ret != E_OK) {
+        LOGE("Conflict dataMerge rename fail");
+        return ret;
     }
     return E_OK;
 }
 
-int32_t FileDataHandler::GetConflictData(DKRecord &record, string &fullPath, int64_t &isize, int64_t &mtime)
+int32_t FileDataHandler::ConflictDownload(const DKRecord &record,
+                                          string &fullPath,
+                                          bool &comflag)
+{
+    LOGI("Unification of the same document");
+    /* update database */
+    int ret = ConflictDataMerge(record, fullPath);
+    if (ret != E_OK) {
+        LOGE("Conflict dataMerge fail");
+        return ret;
+    }
+    comflag = true;
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetConflictData(DKRecord &record,
+                                         string &fullPath,
+                                         int64_t &isize,
+                                         int64_t &crTime,
+                                         string &relativePath)
 {
     DKRecordData data;
     record.GetRecordData(data);
@@ -583,11 +620,15 @@ int32_t FileDataHandler::GetConflictData(DKRecord &record, string &fullPath, int
         LOGE("bad file_path in attributes");
         return E_INVAL_ARG;
     }
+    if (attributes[PhotoColumn::MEDIA_RELATIVE_PATH].GetString(relativePath) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad virtual_Path in attributes");
+        return E_INVAL_ARG;
+    }
     if (DataConvertor::GetLongComp(data[PhotoColumn::MEDIA_SIZE], isize) != E_OK) {
         LOGE("bad size in data");
         return E_INVAL_ARG;
     }
-    mtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
+    crTime = static_cast<int64_t>(record.GetCreateTime()) / MILLISECOND_TO_SECOND;
     return E_OK;
 }
 
@@ -725,10 +766,10 @@ int32_t FileDataHandler::CreateAssetRealName(int32_t &fileId, int32_t &mediaType
 int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
 {
     LOGI("judgment downlode conflict");
-    int32_t ret = E_OK;
-    string fullPath;
-    int64_t isize, mtime;
-    ret = GetConflictData(record, fullPath, isize, mtime);
+    string fullPath, relativePath;
+    int64_t isize, crTime;
+    bool modifyPathflag = false;
+    int32_t ret = GetConflictData(record, fullPath, isize, crTime, relativePath);
     if (ret != E_OK) {
         LOGE("Getdata fail");
         return ret;
@@ -754,7 +795,15 @@ int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
     }
     if (rowCount == 1) {
         resultSet->GoToNextRow();
-        ret = ConflictHandler(*resultSet, record, fullPath, isize, mtime, comflag);
+        ret = ConflictHandler(*resultSet, isize, crTime, modifyPathflag);
+        if (ret != E_OK) {
+            return ret;
+        }
+        if (modifyPathflag) {
+            ret = ConflictMerge(*resultSet, record, fullPath, relativePath);
+        } else {
+            ret = ConflictDownload(record, fullPath, comflag);
+        }
         if (comflag) {
             UpdateAssetInPhotoMap(record, GetFileId(*resultSet));
         }
@@ -993,18 +1042,18 @@ static bool FileIsLocal(NativeRdb::ResultSet &local)
 static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, bool &changed)
 {
     // get local mtime
-    int64_t localMtime = 0;
-    int ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, localMtime, local);
+    int64_t localCrtime = 0;
+    int ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_ADDED, localCrtime, local);
     if (ret != E_OK) {
-        LOGE("Get local mtime failed");
+        LOGE("Get local ctime failed");
         return E_INVAL_ARG;
     }
 
     // get record mtime
-    int64_t cloudMtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
+    int64_t crTime = static_cast<int64_t>(record.GetCreateTime()) / MILLISECOND_TO_SECOND;
     LOGI("cloudMtime %{public}llu, localMtime %{public}llu",
-         static_cast<unsigned long long>(cloudMtime), static_cast<unsigned long long>(localMtime));
-    changed = !(cloudMtime == localMtime);
+         static_cast<unsigned long long>(crTime), static_cast<unsigned long long>(localCrtime));
+    changed = !(crTime == localCrtime);
     return E_OK;
 }
 
