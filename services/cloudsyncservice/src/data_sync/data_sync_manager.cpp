@@ -230,6 +230,15 @@ int32_t DataSyncManager::CleanCloudFile(const int32_t userId, const std::string 
         LOGE(" Clean Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_INVAL_ARG;
     }
+    /* get sdk helper */
+    auto sdkHelper = std::make_shared<SdkHelper>();
+    auto ret = sdkHelper->Init(userId, bundleName);
+    if (ret != E_OK) {
+        LOGE("get sdk helper err %{public}d", ret);
+        return ret;
+    }
+
+    dataSyncer->SetSdkHelper(sdkHelper);
     LOGD("dataSyncer.bundleName_ is %s", dataSyncer->GetBundleName().c_str());
     LOGD("dataSyncer.userId_ is %d", dataSyncer->GetUserId());
     return dataSyncer->Clean(action);
