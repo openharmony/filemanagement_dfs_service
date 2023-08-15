@@ -826,7 +826,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
         LOGE("record to valuebucket failed, ret=%{public}d", ret);
         return ret;
     }
-    if (IfContainsFullField(record)) {
+    if (!IfContainsFullField(record)) {
         values.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
     } else {
         values.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
