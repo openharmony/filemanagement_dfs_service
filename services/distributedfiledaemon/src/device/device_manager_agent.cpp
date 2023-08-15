@@ -183,7 +183,8 @@ int32_t DeviceManagerAgent::GetNetworkType(const string &cid)
 
 bool DeviceManagerAgent::IsWifiNetworkType(int32_t networkType)
 {
-    if ((networkType == -1) || !(networkType & (1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI))) {
+    if ((networkType == -1) ||
+        !(static_cast<uint32_t>(networkType) & (1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI))) {
         return false;
     }
 
