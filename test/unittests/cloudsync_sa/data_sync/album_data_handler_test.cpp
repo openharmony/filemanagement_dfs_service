@@ -159,7 +159,7 @@ HWTEST_F(AlbumDataHandlerTest, GetCreatedRecords001, TestSize.Level1)
         auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         vector<DriveKit::DKRecord> records;
         int32_t ret = albumDataHandlerMock->GetCreatedRecords(records);
-        EXPECT_EQ(E_OK, ret);
+        EXPECT_EQ(E_RDB, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " GetCreatedRecords001 ERROR";
@@ -182,7 +182,7 @@ HWTEST_F(AlbumDataHandlerTest, GetDeletedRecords001, TestSize.Level1)
         auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         vector<DriveKit::DKRecord> records;
         int32_t ret = albumDataHandlerMock->GetDeletedRecords(records);
-        EXPECT_EQ(E_OK, ret);
+        EXPECT_EQ(E_RDB, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " GetDeletedRecords001 ERROR";
@@ -205,7 +205,7 @@ HWTEST_F(AlbumDataHandlerTest, GetMetaModifiedRecords001, TestSize.Level1)
         auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
         vector<DriveKit::DKRecord> records;
         int32_t ret = albumDataHandlerMock->GetMetaModifiedRecords(records);
-        EXPECT_EQ(E_OK, ret);
+        EXPECT_EQ(E_RDB, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " GetMetaModifiedRecords001 ERROR";

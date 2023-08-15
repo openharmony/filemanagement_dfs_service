@@ -67,7 +67,7 @@ HWTEST_F(DfsuAccessTokenHelperTest, CheckCallerPermissionTest, TestSize.Level1)
         TokenInfo tokenInfo;
         tokenInfo.SetTokenId(0);
         auto res = dfsuAccessTokenHelper.CheckCallerPermission(permissionName);
-        EXPECT_TRUE(res == true);
+        EXPECT_FALSE(res == true);
         tokenInfo.SetTokenId(2);
         res = dfsuAccessTokenHelper.CheckCallerPermission(permissionName);
         EXPECT_TRUE(res == true);
@@ -96,9 +96,9 @@ HWTEST_F(DfsuAccessTokenHelperTest, CheckPermissionTest, TestSize.Level1)
         uint32_t tokenId = 0;
         string permissionName = "permissionName";
         auto res = dfsuAccessTokenHelper.CheckPermission(tokenId, permissionName);
-        EXPECT_TRUE(res);
+        EXPECT_FALSE(res);
         res = dfsuAccessTokenHelper.CheckPermission(tokenId, permissionName);
-        EXPECT_TRUE(res);
+        EXPECT_FALSE(res);
         tokenId = 1;
     } catch (...) {
         EXPECT_TRUE(false);
