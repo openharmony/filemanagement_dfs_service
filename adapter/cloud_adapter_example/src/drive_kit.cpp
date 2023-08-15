@@ -125,4 +125,18 @@ int32_t DriveKitNative::OnUploadAsset(const std::string &request, const std::str
 {
     return 0;
 }
+
+void DriveKitNative::ReleaseDefaultContainer(DKAppBundleName bundleName)
+{
+    return;
+}
+
+void DriveKitNative::ReleaseContainer(DKAppBundleName bundleName, DKContainerName containerName)
+{
+    return;
+}
+void DriveKitNative::ReleaseCloudUserInfo()
+{
+    return;
+}
 } // namespace DriveKit

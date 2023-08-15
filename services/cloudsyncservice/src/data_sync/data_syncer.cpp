@@ -370,7 +370,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
     if (err.HasError()) {
         LOGE("OnFetchRecords server err %{public}d and dk errcor %{public}d", err.serverErrorCode, err.dkErrorCode);
         if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
-            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
+            SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
         }
         return;
     }
@@ -459,7 +459,7 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
         LOGE("OnFetchDatabaseChanges server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
             err.dkErrorCode);
         if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
-            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
+            SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
         } else if (!err.errorDetails.empty()) {
             DKDetailErrorCode detailCode = static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode);
             if (detailCode == DKDetailErrorCode::PARAM_INVALID || detailCode == DKDetailErrorCode::CURSOR_EXPIRED) {
@@ -500,7 +500,7 @@ void DataSyncer::OnFetchCheckRecords(const shared_ptr<DKContext> context,
         LOGE("OnFetchCheckRecords server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
              err.dkErrorCode);
         if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
-            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
+            SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
         }
         return;
     }
@@ -705,7 +705,7 @@ void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
 
     if (!BatteryStatus::IsAllowUpload(syncStateManager_.GetForceFlag())) {
         LOGE("battery status abnormal, abort upload");
-        SetErrorCodeMask(errorCode_, ErrorType::BATTERY_LEVEL_LOW);
+        SetErrorCodeMask(ErrorType::BATTERY_LEVEL_LOW);
         return;
     }
 
@@ -840,11 +840,7 @@ void DataSyncer::OnCreateRecords(shared_ptr<DKContext> context,
     int32_t ret = handler->OnCreateRecords(*map);
     if (ret != E_OK) {
         LOGE("handler on create records err %{public}d", ret);
-        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
-            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
-        } else if (ret == E_CLOUD_STORAGE_FULL) {
-            SetErrorCodeMask(errorCode_, ErrorType::CLOUD_STORAGE_FULL);
-        }
+        UpdateErrorCode(ret);
         return;
     }
 
@@ -870,11 +866,7 @@ void DataSyncer::OnDeleteRecords(shared_ptr<DKContext> context,
     int32_t ret = handler->OnDeleteRecords(*map);
     if (ret != E_OK) {
         LOGE("handler on delete records err %{public}d", ret);
-        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
-            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
-        } else if (ret == E_CLOUD_STORAGE_FULL) {
-            SetErrorCodeMask(errorCode_, ErrorType::CLOUD_STORAGE_FULL);
-        }
+        UpdateErrorCode(ret);
         return;
     }
 
@@ -902,11 +894,7 @@ void DataSyncer::OnModifyMdirtyRecords(shared_ptr<DKContext> context,
     int32_t ret = handler->OnModifyMdirtyRecords(*saveMap);
     if (ret != E_OK) {
         LOGE("handler on modify records err %{public}d", ret);
-        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
-            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
-        } else if (ret == E_CLOUD_STORAGE_FULL) {
-            SetErrorCodeMask(errorCode_, ErrorType::CLOUD_STORAGE_FULL);
-        }
+        UpdateErrorCode(ret);
         return;
     }
 
@@ -934,11 +922,7 @@ void DataSyncer::OnModifyFdirtyRecords(shared_ptr<DKContext> context,
     int32_t ret = handler->OnModifyFdirtyRecords(*saveMap);
     if (ret != E_OK) {
         LOGE("handler on modify records err %{public}d", ret);
-        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
-            SetErrorCodeMask(errorCode_, ErrorType::NETWORK_UNAVAILABLE);
-        } else if (ret == E_CLOUD_STORAGE_FULL) {
-            SetErrorCodeMask(errorCode_, ErrorType::CLOUD_STORAGE_FULL);
-        }
+        UpdateErrorCode(ret);
         return;
     }
 
@@ -979,7 +963,7 @@ int32_t DataSyncer::CompletePull()
 {
     LOGI("%{private}d %{private}s completes pull", userId_, bundleName_.c_str());
     /* call syncer manager callback */
-    auto error = GetErrorType(errorCode_);
+    auto error = GetErrorType();
     if (error) {
         LOGE("pull failed, errorType:%{public}d", error);
         SyncStateChangedNotify(CloudSyncState::DOWNLOAD_FAILED, error);
@@ -995,7 +979,7 @@ int32_t DataSyncer::CompletePush()
 {
     LOGI("%{private}d %{public}s completes push", userId_, bundleName_.c_str());
     /* call syncer manager callback */
-    auto error = GetErrorType(errorCode_);
+    auto error = GetErrorType();
     if (error) {
         LOGE("pull failed, errorType:%{public}d", error);
         SyncStateChangedNotify(CloudSyncState::UPLOAD_FAILED, error);
@@ -1063,25 +1047,46 @@ void DataSyncer::NotifyCurrentSyncState()
     CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(CurrentSyncState_, CurrentErrorType_);
 }
 
-void DataSyncer::SetErrorCodeMask(int32_t &errorCode, ErrorType errorType)
+void DataSyncer::UpdateErrorCode(int32_t code)
 {
-    errorCode |= 1 << errorType;
+    switch (code) {
+        case E_SYNC_FAILED_NETWORK_NOT_AVAILABLE:
+            SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
+            break;
+        case E_LOCAL_STORAGE_FULL:
+            SetErrorCodeMask(ErrorType::LOCAL_STORAGE_FULL);
+            break;
+        case E_CLOUD_STORAGE_FULL:
+            SetErrorCodeMask(ErrorType::CLOUD_STORAGE_FULL);
+            break;
+        case E_SYNC_FAILED_BATTERY_LOW:
+            SetErrorCodeMask(ErrorType::BATTERY_LEVEL_LOW);
+            break;
+        default:
+            LOGI("ignore errcode, errcode: %{public}d", code);
+            break;
+    }
 }
 
-ErrorType DataSyncer::GetErrorType(const int32_t code)
+void DataSyncer::SetErrorCodeMask(ErrorType errorType)
 {
-    if (code == E_OK) {
+    errorCode_ |= 1 << errorType;
+}
+
+ErrorType DataSyncer::GetErrorType()
+{
+    if (errorCode_ == E_OK) {
         return ErrorType::NO_ERROR;
     }
 
     std::vector<ErrorType> errorTypes = {NETWORK_UNAVAILABLE, WIFI_UNAVAILABLE,   BATTERY_LEVEL_WARNING,
                                          BATTERY_LEVEL_LOW,   CLOUD_STORAGE_FULL, LOCAL_STORAGE_FULL};
     for (const auto &errorType : errorTypes) {
-        if (code & (1 << errorType)) {
+        if (errorCode_ & (1 << errorType)) {
             return errorType;
         }
     }
-    LOGE("errorcode unexpected, errcode: %{public}d", code);
+    LOGE("errorcode unexpected, errcode: %{public}d", errorCode_);
     return ErrorType::NO_ERROR;
 }
 

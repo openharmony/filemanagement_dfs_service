@@ -23,10 +23,6 @@
 #include "errors.h"
 
 namespace OHOS::FileManagement {
-constexpr std::string_view SPACE_NOT_ENOUGH = "30184039";
-constexpr std::string_view AT_FAILED = "31000401";
-constexpr std::string_view NAME_CONFLICT = "31084932";
-constexpr std::string_view INVALID_FILE = "31004002";
 constexpr int STORAGE_SERVICE_SYS_CAP_TAG = 13600000;
 constexpr int DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG = 22400000;
 
@@ -57,6 +53,7 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_PATH,
     E_DATA,
     E_NOTIFY,
+    E_UNKNOWN,
     E_CLOUD_STORAGE_FULL,
     E_LOCAL_STORAGE_FULL
 };

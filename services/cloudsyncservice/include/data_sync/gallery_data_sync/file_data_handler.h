@@ -90,12 +90,6 @@ private:
     void OnResultSetConvertToMap(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
                                  std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
                                  const std::string &type);
-    int32_t OnRecordFailed(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
-    int32_t HandleCloudSpaceNotEnough();
-    int32_t HandleATFailed();
-    int32_t HandleNameConflict();
-    int32_t HandleNameInvalid();
-    int32_t HandleNetworkErr();
     int64_t UTCTimeSeconds();
 
     int32_t EraseLocalInfo(std::vector<DriveKit::DKRecord> &records);

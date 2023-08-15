@@ -306,11 +306,10 @@ int32_t AlbumDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResu
         if (result.IsSuccess()) {
             err = OnCreateSuccess(entry);
         } else {
-            err = OnCreateFail(entry);
+            err = OnRecordFailed(entry);
+            OnCreateFail(entry);
         }
-        if (err == E_STOP) {
-            ret = E_STOP;
-        }
+        GetReturn(err, ret);
     }
     return ret;
 }
@@ -324,11 +323,10 @@ int32_t AlbumDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResu
         if (result.IsSuccess()) {
             err = OnDeleteSuccess(entry);
         } else {
-            err = OnCreateFail(entry);
+            err = OnRecordFailed(entry);
+            OnDeleteFail(entry);
         }
-        if (err == E_STOP) {
-            ret = E_STOP;
-        }
+        GetReturn(err, ret);
     }
     return ret;
 }
@@ -342,11 +340,10 @@ int32_t AlbumDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOp
         if (result.IsSuccess()) {
             err = OnUploadSuccess(entry);
         } else {
-            err = OnCreateFail(entry);
+            err = OnRecordFailed(entry);
+            OnModifyFail(entry);
         }
-        if (err == E_STOP) {
-            ret = E_STOP;
-        }
+        GetReturn(err, ret);
     }
     return ret;
 }

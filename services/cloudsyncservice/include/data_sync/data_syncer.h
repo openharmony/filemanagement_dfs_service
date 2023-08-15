@@ -164,9 +164,10 @@ private:
     template<typename T, typename RET, typename... ARGS>
     std::function<RET(ARGS...)> AsyncCallback(RET(T::*f)(ARGS...));
 
-    void SetErrorCodeMask(int32_t &errorCode, ErrorType errorType);
+    void UpdateErrorCode(int32_t code);
+    void SetErrorCodeMask(ErrorType errorType);
     /* cloud sync result */
-    ErrorType GetErrorType(const int32_t code);
+    ErrorType GetErrorType();
 
     /* identifier */
     const std::string bundleName_;
