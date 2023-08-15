@@ -1826,7 +1826,7 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
     if (!modifyFailSet_.empty()) {
         deletePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
     }
-    deletePredicates.Limit(LIMIT_SIZE);
+    deletePredicates.Limit(DELETE_BATCH_NUM);
 
     /* query */
     auto results = Query(deletePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
@@ -1859,7 +1859,7 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
     if (!modifyFailSet_.empty()) {
         updatePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
     }
-    updatePredicates.Limit(LIMIT_SIZE);
+    updatePredicates.Limit(MODIFY_BATCH_NUM);
 
     /* query */
     auto results = Query(updatePredicates, MEDIA_CLOUD_SYNC_COLUMNS);

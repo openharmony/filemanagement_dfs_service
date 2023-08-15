@@ -139,7 +139,7 @@ int32_t SdkHelper::ModifyRecords(shared_ptr<DriveKit::DKContext> context,
 {
     vector<DriveKit::DKRecord> null;
     auto err = database_->ModifyRecords(context, move(records), move(null),
-        DriveKit::DKSavePolicy::DK_SAVE_IF_UNCHANGED, true, callback);
+        DriveKit::DKSavePolicy::DK_SAVE_IF_UNCHANGED, false, callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("drivekit modifies records err %{public}d", err);
         return E_CLOUD_SDK;
