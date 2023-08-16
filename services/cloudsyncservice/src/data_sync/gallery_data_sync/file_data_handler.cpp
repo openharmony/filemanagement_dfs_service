@@ -477,7 +477,7 @@ int32_t FileDataHandler::ConflictRenamePath(NativeRdb::ResultSet &resultSet,
 
 int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string &fullPath, string &relativePath)
 {
-    string rdbPath, newvirPath, tmpPath, newPath, localPath, newLocalPath;
+    string rdbPath, tmpPath, newPath, localPath, newLocalPath;
     int ret = ConflictRenamePath(resultSet, fullPath, rdbPath, tmpPath, newPath);
     if (ret != E_OK) {
         LOGE("ConflictRenamePath failed, ret=%{public}d", ret);
@@ -494,7 +494,7 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
     values.PutString(PhotoColumn::MEDIA_FILE_PATH, rdbPath);
     values.PutString(PhotoColumn::MEDIA_NAME, newName);
     if (!relativePath.empty()) {
-        newvirPath = relativePath + newName;
+        string newvirPath = relativePath + newName;
         values.PutString(PhotoColumn::MEDIA_VIRTURL_PATH, newvirPath);
     }
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
@@ -768,7 +768,6 @@ int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
     LOGI("judgment downlode conflict");
     string fullPath, relativePath;
     int64_t isize, crTime;
-    bool modifyPathflag = false;
     int32_t ret = GetConflictData(record, fullPath, isize, crTime, relativePath);
     if (ret != E_OK) {
         LOGE("Getdata fail");
@@ -795,10 +794,13 @@ int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
     }
     if (rowCount == 1) {
         resultSet->GoToNextRow();
+
+        bool modifyPathflag = false;
         ret = ConflictHandler(*resultSet, isize, crTime, modifyPathflag);
         if (ret != E_OK) {
             return ret;
         }
+
         if (modifyPathflag) {
             ret = ConflictMerge(*resultSet, record, fullPath, relativePath);
         } else {
@@ -1826,7 +1828,7 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
     if (!modifyFailSet_.empty()) {
         deletePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
     }
-    deletePredicates.Limit(LIMIT_SIZE);
+    deletePredicates.Limit(DELETE_BATCH_NUM);
 
     /* query */
     auto results = Query(deletePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
@@ -1859,7 +1861,7 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
     if (!modifyFailSet_.empty()) {
         updatePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
     }
-    updatePredicates.Limit(LIMIT_SIZE);
+    updatePredicates.Limit(MODIFY_BATCH_NUM);
 
     /* query */
     auto results = Query(updatePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
@@ -2104,7 +2106,6 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
     updatePredicates
         .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)))
         ->And()
-        ->EqualTo(Media::PhotoColumn::MEDIA_DATE_TRASHED, "0")
         ->BeginWrap()
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
         ->Or()
