@@ -793,8 +793,9 @@ int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
         return E_OK;
     }
     if (rowCount == 1) {
-        bool modifyPathflag = false;
         resultSet->GoToNextRow();
+
+        bool modifyPathflag = false;
         ret = ConflictHandler(*resultSet, isize, crTime, modifyPathflag);
         if (ret != E_OK) {
             return ret;
