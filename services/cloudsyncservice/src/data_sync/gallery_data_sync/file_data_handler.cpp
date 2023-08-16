@@ -477,7 +477,7 @@ int32_t FileDataHandler::ConflictRenamePath(NativeRdb::ResultSet &resultSet,
 
 int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string &fullPath, string &relativePath)
 {
-    string rdbPath, newvirPath, tmpPath, newPath, localPath, newLocalPath;
+    string rdbPath, tmpPath, newPath, localPath, newLocalPath;
     int ret = ConflictRenamePath(resultSet, fullPath, rdbPath, tmpPath, newPath);
     if (ret != E_OK) {
         LOGE("ConflictRenamePath failed, ret=%{public}d", ret);
@@ -494,7 +494,7 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
     values.PutString(PhotoColumn::MEDIA_FILE_PATH, rdbPath);
     values.PutString(PhotoColumn::MEDIA_NAME, newName);
     if (!relativePath.empty()) {
-        newvirPath = relativePath + newName;
+        string newvirPath = relativePath + newName;
         values.PutString(PhotoColumn::MEDIA_VIRTURL_PATH, newvirPath);
     }
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
@@ -768,7 +768,6 @@ int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
     LOGI("judgment downlode conflict");
     string fullPath, relativePath;
     int64_t isize, crTime;
-    bool modifyPathflag = false;
     int32_t ret = GetConflictData(record, fullPath, isize, crTime, relativePath);
     if (ret != E_OK) {
         LOGE("Getdata fail");
@@ -794,11 +793,13 @@ int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
         return E_OK;
     }
     if (rowCount == 1) {
+        bool modifyPathflag = false;
         resultSet->GoToNextRow();
         ret = ConflictHandler(*resultSet, isize, crTime, modifyPathflag);
         if (ret != E_OK) {
             return ret;
         }
+
         if (modifyPathflag) {
             ret = ConflictMerge(*resultSet, record, fullPath, relativePath);
         } else {
