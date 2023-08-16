@@ -50,6 +50,16 @@ struct DKDownloadAsset {
     DKFieldKey fieldKey;
     DKAsset asset;
     DKAssetPath downLoadPath;
+    bool operator<(const DKDownloadAsset &downloadAsset) const
+    {
+        if (recordType != downloadAsset.recordType) {
+            return recordType < downloadAsset.recordType;
+        }
+        if (recordId != downloadAsset.recordId) {
+            return recordId < downloadAsset.recordId;
+        }
+        return fieldKey < downloadAsset.fieldKey;
+    }
 };
 
 class DKAssetsDownloader {

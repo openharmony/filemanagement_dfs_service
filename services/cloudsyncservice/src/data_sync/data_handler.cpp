@@ -196,12 +196,12 @@ int32_t DataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
     return E_OK;
 }
 
-int32_t DataHandler::OnDownloadThumb(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap)
+int32_t DataHandler::OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap)
 {
     return E_OK;
 }
 
-int32_t DataHandler::OnDownloadThumb(const DriveKit::DKDownloadAsset &asset)
+int32_t DataHandler::OnDownloadAssets(const DriveKit::DKDownloadAsset &asset)
 {
     return E_OK;
 }
