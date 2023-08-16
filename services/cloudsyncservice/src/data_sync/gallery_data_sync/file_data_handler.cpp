@@ -898,7 +898,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
     return E_OK;
 }
 
-int32_t FileDataHandler::OnDownloadThumb(const map<DKDownloadAsset, DKDownloadResult> &resultMap)
+int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadResult> &resultMap)
 {
     for (const auto &it : resultMap) {
         if (it.second.IsSuccess()) {
@@ -925,7 +925,7 @@ int32_t FileDataHandler::OnDownloadThumb(const map<DKDownloadAsset, DKDownloadRe
     return E_OK;
 }
 
-int32_t FileDataHandler::OnDownloadThumb(const DKDownloadAsset &asset)
+int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
 {
     if (asset.fieldKey == "thumbnail") {
         LOGI("update sync_status to visible of record %s", asset.recordId.c_str());

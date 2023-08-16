@@ -56,11 +56,11 @@ public:
     int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) {return 0;}
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) {return 0;}
-    int32_t OnDownloadThumb(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap)
+    int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap)
     {
         return 0;
     }
-    int32_t OnDownloadThumb(const DriveKit::DKDownloadAsset &asset)
+    int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset)
     {
         return 0;
     }
