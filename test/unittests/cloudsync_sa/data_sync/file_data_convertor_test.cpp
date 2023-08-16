@@ -539,4 +539,151 @@ HWTEST_F(FileDataConvertorTest, GetThumbPathTest1, TestSize.Level1)
     string out = "/mnt/hmdfs/100/account/device_view/local/files/.thumbs/1/.jpg";
     EXPECT_EQ(out, ret);
 }
+
+HWTEST_F(FileDataConvertorTest, CompensateDataTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->CompensateData(data, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, CompensateTitleTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->CompensateTitle(data, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, CompensateMediaTypeTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->CompensateMediaType(data, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, CompensateSubtypeTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->CompensateSubtype(data, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, CompensateSubtypeTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    data[FILE_PROPERTIES] = DriveKit::DKRecordField();
+    auto ret = fileDataConvertor_->CompensateSubtype(data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, CompensateDurationTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->CompensateDuration(data, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, CompensateDurationTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    data[FILE_PROPERTIES] = DriveKit::DKRecordField();
+    auto ret = fileDataConvertor_->CompensateDuration(data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractCompatibleValueTest1, TestSize.Level1)
+{
+    DriveKit::DKRecord record;
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->ExtractCompatibleValue(record, data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractOrientationTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldMap map;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->ExtractOrientation(map, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractPositionTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldMap map;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->ExtractPosition(map, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractHeightTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldMap map;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->ExtractHeight(map, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractWidthTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldMap map;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->ExtractWidth(map, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractSizeTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->ExtractSize(data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractDisplayNameTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->ExtractDisplayName(data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractMimeTypeTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->ExtractMimeType(data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractDeviceNameTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->ExtractDeviceName(data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractFavoriteTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->ExtractFavorite(data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractDateTrashedTest1, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->ExtractDateTrashed(data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
