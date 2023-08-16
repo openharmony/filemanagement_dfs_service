@@ -333,11 +333,11 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
     wSesLock.lock();
     if (!cInode->readSession) {
         /*
-         * 'recordType' is fixed to "fileType" now
+         * 'recordType' is fixed to "media" now
          * 'assetKey' is one of "content"/"lcd"/"thumbnail"
          */
         LOGD("recordId: %s", recordId.c_str());
-        cInode->readSession = database->NewAssetReadSession("fileType",
+        cInode->readSession = database->NewAssetReadSession("media",
                                                             recordId,
                                                             GetAssetKey(cInode->mBase->fileType),
                                                             GetAssetPath(cInode, data));
