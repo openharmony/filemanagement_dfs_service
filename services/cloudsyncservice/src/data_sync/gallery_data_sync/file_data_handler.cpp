@@ -17,25 +17,26 @@
 
 #include <cstring>
 #include <filesystem>
-#include <tuple>
 #include <set>
+#include <tuple>
 
 #include <dirent.h>
-#include <sys/ioctl.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include <utime.h>
 
-#include "thumbnail_const.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
 #include "dk_assets_downloader.h"
 #include "dk_error.h"
-#include "utils_log.h"
 #include "gallery_album_const.h"
 #include "gallery_file_const.h"
+#include "medialibrary_rdb_utils.h"
 #include "meta_file.h"
+#include "thumbnail_const.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -211,7 +212,8 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
     for (auto &record : *records) {
         auto [resultSet, rowCount] = QueryLocalByCloudId(record.GetRecordId());
         if (resultSet == nullptr || rowCount < 0) {
-            return E_RDB;
+            // Try to fetch records as many as possible
+            continue;
         }
         int32_t fileId = 0;
         ChangeType changeType = ChangeType::INVAILD;
@@ -257,6 +259,8 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
                                                       DataSyncConst::INVALID_ID);
         }
     }
+    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
     LOGI("after BatchInsert ret %{public}d", ret);
     DataSyncNotifier::GetInstance().FinalNotify();
     MetaFileMgr::GetInstance().ClearAll();
@@ -932,6 +936,9 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
                                                       to_string(updateRows));
         }
     }
+
+    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
     return E_OK;
 }
 
@@ -954,6 +961,8 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
     }
 
     DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
+    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
     return E_OK;
 }
 
