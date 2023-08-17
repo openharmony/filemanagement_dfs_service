@@ -49,6 +49,14 @@ using PAC = Media::PhotoAlbumColumns;
 using PM = Media::PhotoMap;
 using PC = Media::PhotoColumn;
 
+static const string HMDFS_PATH_PREFIX = "/mnt/hmdfs/";
+static const string CLOUD_MERGE_VIEW_PATH_SUFFIX = "/account/cloud_merge_view";
+
+static string GetCloudMergeViewPath(int32_t userId, string relativePath)
+{
+    return HMDFS_PATH_PREFIX + to_string(userId) + CLOUD_MERGE_VIEW_PATH_SUFFIX + relativePath;
+}
+
 constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
 FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
     : RdbDataHandler(userId, bundleName, TABLE_NAME, rdb), userId_(userId), bundleName_(bundleName)
@@ -1255,15 +1263,17 @@ int32_t FileDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::ResultSet
 
 int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
 {
-    string downloadPath = asset.downLoadPath + "/" + asset.asset.assetName;
-    string filePath = localConvertor_.GetSandboxPath(downloadPath);
+    string tmpLocalPath = asset.downLoadPath + "/" + asset.asset.assetName;
+    string localPath = localConvertor_.GetPathWithoutTmp(tmpLocalPath);
+    string tmpSboxPath = localConvertor_.GetSandboxPath(tmpLocalPath);
+    string sboxPath = localConvertor_.GetPathWithoutTmp(tmpSboxPath);
 
     int ret = E_OK;
 
     // delete dentry
     string relativePath, fileName;
-    if (GetDentryPathName(filePath, relativePath, fileName) != E_OK) {
-        LOGE("split to dentry path failed, path:%s", filePath.c_str());
+    if (GetDentryPathName(sboxPath, relativePath, fileName) != E_OK) {
+        LOGE("split to dentry path failed, path:%s", sboxPath.c_str());
         return E_INVAL_ARG;
     }
     auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
@@ -1271,6 +1281,19 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
     ret = mFile->DoRemove(mBase);
     if (ret != E_OK) {
         LOGE("remove dentry failed, ret:%{public}d", ret);
+    }
+    /*
+     * after removing file item from dentryfile, we should delete file
+     * of cloud merge view to update kernel dentry cache.
+     */
+    string cloudMergeViewPath = GetCloudMergeViewPath(userId_, relativePath + "/" + mBase.name);
+    if (remove(cloudMergeViewPath.c_str()) != 0) {
+        LOGE("update kernel dentry cache fail, errno: %{public}d, cloudMergeViewPath: %{public}s",
+             errno, cloudMergeViewPath.c_str());
+    }
+    if (rename(tmpLocalPath.c_str(), localPath.c_str()) != 0) {
+        LOGE("err rename, errno: %{public}d, tmpLocalPath: %s, localPath: %s",
+             errno, tmpLocalPath.c_str(), localPath.c_str());
     }
 
     auto [resultSet, rowCount] = QueryLocalByCloudId(asset.recordId);
@@ -1286,8 +1309,8 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
             .actime = localMtime, .modtime = localMtime
         };
         LOGI("update downloaded file mtime %{public}llu", static_cast<unsigned long long>(localMtime));
-        if (utime(downloadPath.c_str(), &ubuf) < 0) {
-            LOGE("utime failed return %{public}d ", errno);
+        if (utime(localPath.c_str(), &ubuf) < 0) {
+            LOGE("utime failed return %{public}d, localPath: %{public}s", errno, localPath.c_str());
         }
     }
 
@@ -1297,7 +1320,7 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
 
     int32_t changedRows;
     string whereClause = Media::PhotoColumn::MEDIA_FILE_PATH + " = ?";
-    vector<string> whereArgs = {filePath};
+    vector<string> whereArgs = {sboxPath};
     ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
     if (ret != 0) {
         LOGE("on download file from cloud err %{public}d", ret);
