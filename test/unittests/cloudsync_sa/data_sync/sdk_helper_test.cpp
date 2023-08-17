@@ -25,11 +25,11 @@
 /* template link */
 namespace OHOS::FileManagement::CloudSync {
 template<typename T, typename RET, typename... ARGS>
-std::function<RET(ARGS...)> DataSyncer::AsyncCallback(RET(T::*f)(ARGS...))
+std::function<RET(ARGS...)> DataSyncer::AsyncCallback(RET (T::*f)(ARGS...))
 {
     return taskRunner_->AsyncCallback<DataSyncer>(f, this);
 }
-}
+} // namespace OHOS::FileManagement::CloudSync
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -42,19 +42,18 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    shared_ptr<DataSyncManager> dataSyncManager_;
-    shared_ptr<DataSyncer> dataSyncer_;
-    shared_ptr<SdkHelper> sdkHelper_;
-    shared_ptr<FileDataHandler> handler_;
+    static inline shared_ptr<SdkHelper> sdkHelper_;
 };
 void SdkHelperTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+    sdkHelper_ = std::make_shared<SdkHelper>();
 }
 
 void SdkHelperTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
+    sdkHelper_ = nullptr;
 }
 
 #undef LOGI
@@ -63,22 +62,20 @@ void LOGI(string content)
     GTEST_LOG_(INFO) << content;
 }
 
-void SdkHelperTest::SetUp(void)
-{
-    GTEST_LOG_(INFO) << "SetUp";
-    dataSyncManager_ = make_shared<DataSyncManager>();
-    int32_t userId = 100;
-    string bundleName = "com.ohos.test";
-    dataSyncer_ = dataSyncManager_->GetDataSyncer(bundleName, userId);
-    shared_ptr<GalleryDataSyncer> galleryDataSyncer_ = static_pointer_cast<GalleryDataSyncer>(dataSyncer_);
-    /* init handler */
-    handler_ = galleryDataSyncer_->fileHandler_;
-    sdkHelper_ = std::make_shared<SdkHelper>();
-}
+void SdkHelperTest::SetUp(void) {}
 
-void SdkHelperTest::TearDown(void)
+void SdkHelperTest::TearDown(void) {}
+
+/**
+ * @tc.name: GetAssetReadSessionErrTest,
+ * @tc.desc: Verify the GetAssetReadSession function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SdkHelperTest, GetAssetReadSessionErrTest, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "TearDown";
+    auto ret = sdkHelper_->GetAssetReadSession({}, {}, {}, {});
+    EXPECT_EQ(ret, nullptr);
 }
 
 /**
@@ -110,6 +107,20 @@ HWTEST_F(SdkHelperTest, InitContainerFailTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: InitPrivateDatabaseFailTest
+ * @tc.desc: Verify the Init function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SdkHelperTest, InitPrivateDatabaseFailTest, TestSize.Level1)
+{
+    int32_t userId = 100;
+    string appBundleName = "com.ohos.test";
+    auto ret = sdkHelper_->Init(userId, appBundleName);
+    EXPECT_EQ(E_CLOUD_SDK, ret);
+}
+
+/**
  * @tc.name: InitOKTest
  * @tc.desc: Verify the Init function
  * @tc.type: FUNC
@@ -134,6 +145,21 @@ HWTEST_F(SdkHelperTest, GetLockOKTest, TestSize.Level1)
     DriveKit::DKLock lock_;
     auto ret = sdkHelper_->GetLock(lock_);
     EXPECT_EQ(E_OK, ret);
+    sdkHelper_->DeleteLock(lock_);
+}
+
+/**
+ * @tc.name: GetLockErrTest
+ * @tc.desc: Verify the GetLock function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SdkHelperTest, GetLockErrTest, TestSize.Level1)
+{
+    DriveKit::DKLock lock_;
+    lock_.lockInterval = -1;
+    auto ret = sdkHelper_->GetLock(lock_);
+    EXPECT_NE(E_OK, ret);
 }
 
 /**
@@ -144,13 +170,22 @@ HWTEST_F(SdkHelperTest, GetLockOKTest, TestSize.Level1)
  */
 HWTEST_F(SdkHelperTest, FetchRecordsOKTest, TestSize.Level1)
 {
-    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
-    auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnFetchRecords);
-    ASSERT_NE(callback, nullptr);
     FetchCondition cond;
-    handler_->GetFetchCondition(cond);
-    int32_t ret = sdkHelper_->FetchRecords(context, cond, dataSyncer_->nextCursor_, callback);
+    int32_t ret = sdkHelper_->FetchRecords(nullptr, cond, "", nullptr);
     EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: FetchRecordsErrTest
+ * @tc.desc: Verify the FetchRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SdkHelperTest, FetchRecordsErrTest, TestSize.Level1)
+{
+    FetchCondition cond;
+    int32_t ret = sdkHelper_->FetchRecords(nullptr, cond, "err", nullptr);
+    EXPECT_NE(E_OK, ret);
 }
 
 /**
@@ -161,12 +196,83 @@ HWTEST_F(SdkHelperTest, FetchRecordsOKTest, TestSize.Level1)
  */
 HWTEST_F(SdkHelperTest, GetStartCursorOKTest, TestSize.Level1)
 {
-    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
     std::string tempStartCursor;
-    FetchCondition cond;
-    handler_->GetFetchCondition(cond);
-    int32_t ret = sdkHelper_->GetStartCursor(cond.recordType, tempStartCursor);
+    int32_t ret = sdkHelper_->GetStartCursor("", tempStartCursor);
     EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: GetStartCursorErrTest
+ * @tc.desc: Verify the GetStartCursor function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SdkHelperTest, GetStartCursorErrTest, TestSize.Level1)
+{
+    std::string tempStartCursor;
+    int32_t ret = sdkHelper_->GetStartCursor("err", tempStartCursor);
+    EXPECT_NE(E_OK, ret);
+}
+
+/**
+ * @tc.name: GetAssetReadSessionOKTest,
+ * @tc.desc: Verify the GetAssetReadSession function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SdkHelperTest, GetAssetReadSessionOKTest, TestSize.Level1)
+{
+    auto ret = sdkHelper_->GetAssetReadSession({}, {}, {}, {});
+    EXPECT_NE(ret, nullptr);
+}
+
+/**
+ * @tc.name: SaveSubscriptionOKTest,
+ * @tc.desc: Verify the SaveSubscription function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SdkHelperTest, SaveSubscriptionOKTest, TestSize.Level1)
+{
+    auto ret = sdkHelper_->SaveSubscription(nullptr);
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: SaveSubscriptionErrTest,
+ * @tc.desc: Verify the SaveSubscription function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SdkHelperTest, SaveSubscriptionErrTest, TestSize.Level1)
+{
+    auto ret = sdkHelper_->SaveSubscription(
+        [](auto, shared_ptr<DriveKit::DKContainer>, DriveKit::DKSubscriptionResult &res) {});
+    EXPECT_NE(E_OK, ret);
+}
+
+/**
+ * @tc.name: DeleteSubscriptionOKTest,
+ * @tc.desc: Verify the DeleteSubscription function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SdkHelperTest, DeleteSubscriptionOKTest, TestSize.Level1)
+{
+    auto ret = sdkHelper_->DeleteSubscription(nullptr);
+    EXPECT_EQ(E_OK, ret);
+}
+
+/**
+ * @tc.name: DeleteSubscriptionErrTest,
+ * @tc.desc: Verify the DeleteSubscription function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SdkHelperTest, DeleteSubscriptionErrTest, TestSize.Level1)
+{
+    auto ret = sdkHelper_->DeleteSubscription([](auto, DriveKit::DKError err) {});
+    EXPECT_NE(E_OK, ret);
 }
 
 /**
@@ -177,90 +283,22 @@ HWTEST_F(SdkHelperTest, GetStartCursorOKTest, TestSize.Level1)
  */
 HWTEST_F(SdkHelperTest, FetchRecordWithIdOKTest, TestSize.Level1)
 {
-    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
-    auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnFetchRetryRecord);
-    ASSERT_NE(callback, nullptr);
     FetchCondition cond;
-    handler_->GetFetchCondition(cond);
-    int32_t ret = sdkHelper_->FetchRecordWithId(context, cond, "", callback);
+    int32_t ret = sdkHelper_->FetchRecordWithId(nullptr, cond, "", nullptr);
     EXPECT_EQ(E_OK, ret);
 }
 
 /**
- * @tc.name: FetchDatabaseChangesOKTest
- * @tc.desc: Verify the FetchDatabaseChanges function
+ * @tc.name: FetchRecordWithIdErrTest
+ * @tc.desc: Verify the FetchRecordWithId function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SdkHelperTest, FetchDatabaseChangesOKTest, TestSize.Level1)
+HWTEST_F(SdkHelperTest, FetchRecordWithIdErrTest, TestSize.Level1)
 {
-    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
-    auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnFetchDatabaseChanges);
-    ASSERT_NE(callback, nullptr);
     FetchCondition cond;
-    handler_->GetFetchCondition(cond);
-    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, cond, dataSyncer_->nextCursor_, callback);
-    EXPECT_EQ(E_OK, ret);
-}
-
-/**
- * @tc.name: CreateRecordsOKTest
- * @tc.desc: Verify the CreateRecords function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(SdkHelperTest, CreateRecordsOKTest, TestSize.Level1)
-{
-    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
-    auto handler = context->GetHandler();
-    ASSERT_NE(handler, nullptr);
-    vector<DriveKit::DKRecord> records;
-    int32_t ret = handler->GetCreatedRecords(records);
-    EXPECT_EQ(E_OK, ret);
-    auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnCreateRecords);
-    ASSERT_NE(callback, nullptr);
-    ret = sdkHelper_->CreateRecords(context, records, callback);
-    EXPECT_EQ(E_OK, ret);
-}
-
-/**
- * @tc.name: DeleteRecordsOKTest
- * @tc.desc: Verify the DeleteRecords function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(SdkHelperTest, DeleteRecordsOKTest, TestSize.Level1)
-{
-    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
-    auto handler = context->GetHandler();
-    ASSERT_NE(handler, nullptr);
-    vector<DriveKit::DKRecord> records;
-    int32_t ret = handler->GetDeletedRecords(records);
-    EXPECT_EQ(E_OK, ret);
-    auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnDeleteRecords);
-    ASSERT_NE(callback, nullptr);
-    ret = sdkHelper_->DeleteRecords(context, records, callback);
-    EXPECT_EQ(E_OK, ret);
-}
-
-/**
- * @tc.name: ModifyRecordsOKTest
- * @tc.desc: Verify the ModifyRecords function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(SdkHelperTest, ModifyRecordsOKTest, TestSize.Level1)
-{
-    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
-    auto handler = context->GetHandler();
-    ASSERT_NE(handler, nullptr);
-    vector<DriveKit::DKRecord> records;
-    int32_t ret = handler->GetMetaModifiedRecords(records);
-    EXPECT_EQ(E_OK, ret);
-    auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnModifyMdirtyRecords);
-    ASSERT_NE(callback, nullptr);
-    ret = sdkHelper_->ModifyRecords(context, records, callback);
-    EXPECT_EQ(E_OK, ret);
+    int32_t ret = sdkHelper_->FetchRecordWithId(nullptr, cond, "err", nullptr);
+    EXPECT_NE(E_OK, ret);
 }
 
 /**

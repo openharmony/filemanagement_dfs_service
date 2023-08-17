@@ -18,6 +18,8 @@
 #include <iostream>
 #include <thread>
 
+#include <gtest/gtest.h>
+
 #include "dk_context.h"
 
 namespace DriveKit {
@@ -42,6 +44,10 @@ DKLocalErrorCode DKDatabase::FetchRecords(std::shared_ptr<DKContext> context,
                                           DKQueryCursor cursor,
                                           FetchRecordsCallback callback)
 {
+    GTEST_LOG_(INFO) << "FetchRecords begin";
+    if (cursor == "err") {
+        return DKLocalErrorCode::IPC_CONNECT_FAILED;
+    }
     return DKLocalErrorCode::NO_ERROR;
 }
 
@@ -51,6 +57,9 @@ DKLocalErrorCode DKDatabase::FetchRecordWithId(std::shared_ptr<DKContext> contex
                                                DKFieldKeyArray &desiredKeys,
                                                FetchRecordCallback callback)
 {
+    if (recordId == "err") {
+        return DKLocalErrorCode::IPC_CONNECT_FAILED;
+    }
     return DKLocalErrorCode::NO_ERROR;
 }
 
@@ -94,7 +103,12 @@ DKLocalErrorCode DKDatabase::FetchDatabaseChanges(std::shared_ptr<DKContext> con
 
 DKError DKDatabase::GetStartCursor(DKRecordType recordType, DKQueryCursor &cursor)
 {
+    GTEST_LOG_(INFO) << "GetStartCursor begin";
     DKError e;
+    if (recordType == "err") {
+        e.isLocalError = true;
+        return e;
+    }
     return e;
 }
 DKError DKDatabase::GenerateIds(int count, std::vector<DKRecordId> &ids)
@@ -105,6 +119,9 @@ DKError DKDatabase::GenerateIds(int count, std::vector<DKRecordId> &ids)
 DKError DKDatabase::GetLock(DKLock &lock)
 {
     DKError e;
+    if (lock.lockInterval == -1) {
+        e.isLocalError = true;
+    }
     return e;
 }
 void DKDatabase::DeleteLock(DKLock lock) {}
@@ -119,10 +136,6 @@ std::shared_ptr<DKAssetReadSession> DKDatabase::NewAssetReadSession(DKRecordType
 {
     return std::make_shared<DKAssetReadSession>();
 }
-DKDatabase::DKDatabase(std::shared_ptr<DKContainer> container, DKDatabaseScope scope)
-{
-}
-void DKDatabase::Init()
-{
-}
+DKDatabase::DKDatabase(std::shared_ptr<DKContainer> container, DKDatabaseScope scope) {}
+void DKDatabase::Init() {}
 } // namespace DriveKit

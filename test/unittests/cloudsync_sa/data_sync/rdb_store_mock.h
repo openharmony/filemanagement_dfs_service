@@ -167,8 +167,6 @@ public:
     MOCK_CONST_METHOD0(IsReadOnly, bool());
     MOCK_CONST_METHOD0(IsMemoryRdb, bool());
     MOCK_METHOD2(Restore, int(const std::string backupPath, const std::vector<uint8_t> &newKey));
-    MOCK_METHOD3(ChangeDbFileForRestore,
-                 int(const std::string newPath, const std::string backupPath, const std::vector<uint8_t> &newKey));
 };
 } // namespace OHOS::FileManagement::CloudSync::Test
 #endif
