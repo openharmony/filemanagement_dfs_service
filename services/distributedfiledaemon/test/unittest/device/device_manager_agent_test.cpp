@@ -17,9 +17,9 @@
 #include <memory>
 #include <unistd.h>
 
-#include "gtest/gtest.h"
 #include "device/device_manager_agent.h"
 #include "mountpoint/mount_point.h"
+#include "gtest/gtest.h"
 
 namespace OHOS {
 namespace Storage {
@@ -207,7 +207,8 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceP2POffline_0100,
     bool res = true;
 
     try {
-        DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
+        auto ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
+        EXPECT_EQ(ret, 1);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
         res = false;
@@ -238,6 +239,415 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceP2POffline_0200,
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceP2POffline_0200 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_StopInstance_0100
+ * @tc.desc: Verify the StopInstance function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_StopInstance_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_StopInstance_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->StopInstance();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_StopInstance_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_Stop_0100
+ * @tc.desc: Verify the Stop function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_Stop_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_Stop_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->Start();
+        DeviceManagerAgent::GetInstance()->Stop();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_Stop_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_JoinGroup_0100
+ * @tc.desc: Verify the JoinGroup function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_JoinGroup_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_0100 start";
+    bool res = true;
+
+    try {
+        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
+        DeviceManagerAgent::GetInstance()->JoinGroup(smp);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_QuitGroup_0100
+ * @tc.desc: Verify the QuitGroup function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_QuitGroup_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_QuitGroup_0100 start";
+    bool res = true;
+
+    try {
+        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
+        DeviceManagerAgent::GetInstance()->QuitGroup(smp);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res != true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_QuitGroup_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_OfflineAllDevice_0100
+ * @tc.desc: Verify the OfflineAllDevice function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OfflineAllDevice_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OfflineAllDevice_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->OfflineAllDevice();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OfflineAllDevice_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_ReconnectOnlineDevices_0100
+ * @tc.desc: Verify the ReconnectOnlineDevices function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_ReconnectOnlineDevices_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ReconnectOnlineDevices_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->ReconnectOnlineDevices();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ReconnectOnlineDevices_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0100
+ * @tc.desc: Verify the FindNetworkBaseTrustRelation function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->FindNetworkBaseTrustRelation(true);
+        DeviceManagerAgent::GetInstance()->FindNetworkBaseTrustRelation(false);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_GetNetworkType_0100
+ * @tc.desc: Verify the GetNetworkType function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_GetNetworkType_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetNetworkType_0100 start";
+    bool res = true;
+
+    try {
+        int ret = DeviceManagerAgent::GetInstance()->GetNetworkType("100");
+        EXPECT_EQ(ret, 0);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetNetworkType_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_IsWifiNetworkType_0100
+ * @tc.desc: Verify the IsWifiNetworkType function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_IsWifiNetworkType_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_IsWifiNetworkType_0100 start";
+    bool res = true;
+
+    try {
+        int ret = DeviceManagerAgent::GetInstance()->IsWifiNetworkType(-1);
+        EXPECT_FALSE(ret);
+        ret = DeviceManagerAgent::GetInstance()->IsWifiNetworkType(1);
+        EXPECT_FALSE(ret);
+        ret = DeviceManagerAgent::GetInstance()->IsWifiNetworkType(3);
+        EXPECT_TRUE(ret);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_IsWifiNetworkType_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_CheckIsAccountless_0100
+ * @tc.desc: Verify the CheckIsAccountless function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_CheckIsAccountless_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_CheckIsAccountless_0100 start";
+    bool res = true;
+
+    try {
+        GroupInfo group{};
+        auto ret = DeviceManagerAgent::GetInstance()->CheckIsAccountless(group);
+        EXPECT_FALSE(ret);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_CheckIsAccountless_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_InitDeviceInfos_0100
+ * @tc.desc: Verify the InitDeviceInfos function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitDeviceInfos_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitDeviceInfos_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->InitDeviceInfos();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitDeviceInfos_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_InitLocalNodeInfo_0100
+ * @tc.desc: Verify the InitLocalNodeInfo function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitLocalNodeInfo_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitLocalNodeInfo_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->InitLocalNodeInfo();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitLocalNodeInfo_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_OnRemoteDied_0100
+ * @tc.desc: Verify the OnRemoteDied function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnRemoteDied_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnRemoteDied_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->OnRemoteDied();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnRemoteDied_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_GetLocalDeviceInfo_0100
+ * @tc.desc: Verify the GetLocalDeviceInfo function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_GetLocalDeviceInfo_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetLocalDeviceInfo_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->GetLocalDeviceInfo();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetLocalDeviceInfo_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_GetRemoteDevicesInfo_0100
+ * @tc.desc: Verify the GetRemoteDevicesInfo function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_GetRemoteDevicesInfo_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetRemoteDevicesInfo_0100 start";
+    bool res = true;
+
+    try {
+        auto info = DeviceManagerAgent::GetInstance()->GetRemoteDevicesInfo();
+        EXPECT_NE(info.size(), 0);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetRemoteDevicesInfo_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_RegisterToExternalDm_0100
+ * @tc.desc: Verify the RegisterToExternalDm function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_RegisterToExternalDm_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_RegisterToExternalDm_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->RegisterToExternalDm();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_RegisterToExternalDm_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_UnregisterFromExternalDm_0100
+ * @tc.desc: Verify the UnregisterFromExternalDm function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_UnregisterFromExternalDm_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UnregisterFromExternalDm_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->UnregisterFromExternalDm();
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UnregisterFromExternalDm_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_QueryRelatedGroups_0100
+ * @tc.desc: Verify the QueryRelatedGroups function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_QueryRelatedGroups_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_QueryRelatedGroups_0100 start";
+    bool res = true;
+
+    try {
+        DeviceManagerAgent::GetInstance()->QueryRelatedGroups("100", "100");
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_QueryRelatedGroups_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile
