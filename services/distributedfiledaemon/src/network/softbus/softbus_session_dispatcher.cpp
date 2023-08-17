@@ -43,7 +43,7 @@ void SoftbusSessionDispatcher::RegisterSessionListener(const string busName, wea
     auto agent = busNameToAgent_.find(busName);
     if (agent != busNameToAgent_.end()) {
         stringstream ss;
-        ss << "this softbusAgent is not exist, busName: " << busName.c_str();
+        ss << "this softbusAgent is exist, busName: " << busName.c_str();
         LOGE("%{public}s", ss.str().c_str());
         throw runtime_error(ss.str());
     } else {

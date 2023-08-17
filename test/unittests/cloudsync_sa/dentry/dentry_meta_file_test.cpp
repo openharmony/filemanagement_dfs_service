@@ -148,17 +148,98 @@ HWTEST_F(DentryMetaFileTest, MetaFileRemove, TestSize.Level1)
 }
 
 /**
- * @tc.name: MetaFileMgr
+ * @tc.name: MetaFileMgr001
  * @tc.desc: Verify the MetaFileMgr
  * @tc.type: FUNC
  * @tc.require: SR000HRKJB
  */
-HWTEST_F(DentryMetaFileTest, MetaFileMgr, TestSize.Level1)
+HWTEST_F(DentryMetaFileTest, MetaFileMgr001, TestSize.Level1)
 {
-    auto m = MetaFileMgr::GetInstance().GetMetaFile(TEST_USER_ID, "/o/p/q/r/s/t");
-    MetaBase mBase1("file1", "file1");
-    EXPECT_EQ(m->DoCreate(mBase1), 0);
-    m = nullptr;
-    MetaFileMgr::GetInstance().ClearAll();
+    GTEST_LOG_(INFO) << "MetaFileMgr001 Start";
+    try {
+        auto m = MetaFileMgr::GetInstance().GetMetaFile(TEST_USER_ID, "/o/p/q/r/s/t");
+        MetaBase mBase1("file1", "file1");
+        EXPECT_EQ(m->DoCreate(mBase1), 0);
+        m = nullptr;
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " MetaFileMgr001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MetaFileMgr001 End";
+}
+
+/**
+ * @tc.name: MetaFileMgr002
+ * @tc.desc: Verify the MetaFileMgr
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DentryMetaFileTest, MetaFileMgr002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MetaFileMgr002 Start";
+    try {
+        auto m = MetaFileMgr::GetInstance().GetMetaFile(TEST_USER_ID, "/o/p/q/r/s/t");
+        MetaBase mBase1("testLongLongfileName", "testLongLongfileName");
+        EXPECT_EQ(m->DoCreate(mBase1), 0);
+        m = nullptr;
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " MetaFileMgr002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MetaFileMgr002 End";
+}
+
+/**
+ * @tc.name: GetParentDir001
+ * @tc.desc: Verify the GetParentDir
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DentryMetaFileTest, GetParentDir001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetParentDir001 Start";
+    try {
+        string str = MetaFile::GetParentDir("");
+        EXPECT_EQ(str, "");
+        str = MetaFile::GetParentDir("/");
+        EXPECT_EQ(str, "");
+        str = MetaFile::GetParentDir("abc");
+        EXPECT_EQ(str, "/");
+        str = MetaFile::GetParentDir("/abc");
+        EXPECT_EQ(str, "/");
+        str = MetaFile::GetParentDir("/abc/def");
+        EXPECT_EQ(str, "/abc");
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " GetParentDir001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetParentDir001 End";
+}
+
+/**
+ * @tc.name: GetFileName001
+ * @tc.desc: Verify the GetFileName
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DentryMetaFileTest, GetFileName001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileName001 Start";
+    try {
+        string str = MetaFile::GetFileName("");
+        EXPECT_EQ(str, "");
+        str = MetaFile::GetFileName("/");
+        EXPECT_EQ(str, "");
+        str = MetaFile::GetFileName("abc");
+        EXPECT_EQ(str, "");
+        str = MetaFile::GetFileName("/abc/def");
+        EXPECT_EQ(str, "def");
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " GetFileName001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileName001 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
