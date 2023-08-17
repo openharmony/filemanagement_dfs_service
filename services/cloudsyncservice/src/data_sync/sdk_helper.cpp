@@ -59,7 +59,11 @@ int32_t SdkHelper::GetLock(DriveKit::DKLock &lock)
 {
     auto err = database_->GetLock(lock);
     if (err.HasError()) {
-        LOGE("get sdk lock err");
+        LOGE("get sdk lock err, server err %{public}d and dk errcor %{public}d", err.serverErrorCode, err.dkErrorCode);
+        if (static_cast<DriveKit::DKServerErrorCode>(err.serverErrorCode) ==
+            DriveKit::DKServerErrorCode::NETWORK_ERROR) {
+            return E_SYNC_FAILED_NETWORK_NOT_AVAILABLE;
+        }
         return E_CLOUD_SDK;
     }
     return E_OK;

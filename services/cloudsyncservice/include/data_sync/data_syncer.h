@@ -183,7 +183,7 @@ private:
     std::shared_ptr<SdkHelper> sdkHelper_;
     SdkLock lock_;
 
-    int32_t errorCode_{0};
+    uint32_t errorCode_{0};
 
     /* download callback manager*/
     CloudDownloadCallbackManager downloadCallbackMgr_;
