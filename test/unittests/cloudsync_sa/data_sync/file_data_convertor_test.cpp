@@ -548,6 +548,18 @@ HWTEST_F(FileDataConvertorTest, CompensateDataTest1, TestSize.Level1)
     EXPECT_EQ(E_INVAL_ARG, ret);
 }
 
+HWTEST_F(FileDataConvertorTest, CompensateDataTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[PhotoColumn::MEDIA_FILE_PATH] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    data[FILE_PROPERTIES] = DriveKit::DKRecordField(fieldValue);
+    auto ret = fileDataConvertor_->CompensateData(data, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
 HWTEST_F(FileDataConvertorTest, CompensateTitleTest1, TestSize.Level1)
 {
     DriveKit::DKRecordData data;
@@ -556,10 +568,43 @@ HWTEST_F(FileDataConvertorTest, CompensateTitleTest1, TestSize.Level1)
     EXPECT_EQ(E_INVAL_ARG, ret);
 }
 
+HWTEST_F(FileDataConvertorTest, CompensateTitleTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    data[FILE_PROPERTIES] = DriveKit::DKRecordField();
+    auto ret = fileDataConvertor_->CompensateTitle(data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, CompensateTitleTest3, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_SOURCE_FILE_NAME] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    data[FILE_PROPERTIES] = DriveKit::DKRecordField(fieldValue);
+    auto ret = fileDataConvertor_->CompensateTitle(data, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
 HWTEST_F(FileDataConvertorTest, CompensateMediaTypeTest1, TestSize.Level1)
 {
     DriveKit::DKRecordData data;
     NativeRdb::ValuesBucket valueBucket;
+    auto ret = fileDataConvertor_->CompensateMediaType(data, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, CompensateMediaTypeeTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_FILETYPE] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    data[FILE_FILETYPE] = DriveKit::DKRecordField(fieldValue);
     auto ret = fileDataConvertor_->CompensateMediaType(data, valueBucket);
     EXPECT_EQ(E_INVAL_ARG, ret);
 }
@@ -581,6 +626,18 @@ HWTEST_F(FileDataConvertorTest, CompensateSubtypeTest2, TestSize.Level1)
     EXPECT_EQ(E_OK, ret);
 }
 
+HWTEST_F(FileDataConvertorTest, CompensateSubtypeTest3, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_SOURCE_PATH] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    data[FILE_PROPERTIES] = DriveKit::DKRecordField(fieldValue);
+    auto ret = fileDataConvertor_->CompensateSubtype(data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
 HWTEST_F(FileDataConvertorTest, CompensateDurationTest1, TestSize.Level1)
 {
     DriveKit::DKRecordData data;
@@ -594,6 +651,18 @@ HWTEST_F(FileDataConvertorTest, CompensateDurationTest2, TestSize.Level1)
     DriveKit::DKRecordData data;
     NativeRdb::ValuesBucket valueBucket;
     data[FILE_PROPERTIES] = DriveKit::DKRecordField();
+    auto ret = fileDataConvertor_->CompensateDuration(data, valueBucket);
+    EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, CompensateDurationTest3, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_DURATION] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    data[FILE_PROPERTIES] = DriveKit::DKRecordField(fieldValue);
     auto ret = fileDataConvertor_->CompensateDuration(data, valueBucket);
     EXPECT_EQ(E_OK, ret);
 }
@@ -615,12 +684,36 @@ HWTEST_F(FileDataConvertorTest, ExtractOrientationTest1, TestSize.Level1)
     EXPECT_EQ(E_OK, ret);
 }
 
+HWTEST_F(FileDataConvertorTest, ExtractOrientationTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldMap map;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_ROTATION] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    map[FILE_ROTATION] = DriveKit::DKRecordField(fieldValue);
+    auto ret = fileDataConvertor_->ExtractOrientation(map, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
 HWTEST_F(FileDataConvertorTest, ExtractPositionTest1, TestSize.Level1)
 {
     DriveKit::DKRecordFieldMap map;
     NativeRdb::ValuesBucket valueBucket;
     auto ret = fileDataConvertor_->ExtractPosition(map, valueBucket);
     EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractPositionTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldMap map;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_POSITION] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    map[FILE_POSITION] = DriveKit::DKRecordField(fieldValue);
+    auto ret = fileDataConvertor_->ExtractPosition(map, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, ExtractHeightTest1, TestSize.Level1)
@@ -631,12 +724,36 @@ HWTEST_F(FileDataConvertorTest, ExtractHeightTest1, TestSize.Level1)
     EXPECT_EQ(E_OK, ret);
 }
 
+HWTEST_F(FileDataConvertorTest, ExtractHeightTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldMap map;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_HEIGHT] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    map[FILE_HEIGHT] = DriveKit::DKRecordField(fieldValue);
+    auto ret = fileDataConvertor_->ExtractHeight(map, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
 HWTEST_F(FileDataConvertorTest, ExtractWidthTest1, TestSize.Level1)
 {
     DriveKit::DKRecordFieldMap map;
     NativeRdb::ValuesBucket valueBucket;
     auto ret = fileDataConvertor_->ExtractWidth(map, valueBucket);
     EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractWidthTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldMap map;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_WIDTH] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    map[FILE_WIDTH] = DriveKit::DKRecordField(fieldValue);
+    auto ret = fileDataConvertor_->ExtractWidth(map, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, ExtractSizeTest1, TestSize.Level1)
@@ -647,12 +764,36 @@ HWTEST_F(FileDataConvertorTest, ExtractSizeTest1, TestSize.Level1)
     EXPECT_EQ(E_OK, ret);
 }
 
+HWTEST_F(FileDataConvertorTest, ExtractSizeTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordFieldMap map;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_SIZE] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    map[FILE_SIZE] = DriveKit::DKRecordField(fieldValue);
+    auto ret = fileDataConvertor_->ExtractSize(map, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
 HWTEST_F(FileDataConvertorTest, ExtractDisplayNameTest1, TestSize.Level1)
 {
     DriveKit::DKRecordData data;
     NativeRdb::ValuesBucket valueBucket;
     auto ret = fileDataConvertor_->ExtractDisplayName(data, valueBucket);
     EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractDisplayNameTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_FILE_NAME] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    data[FILE_FILE_NAME] = DriveKit::DKRecordField(fieldValue);
+    auto ret = fileDataConvertor_->ExtractDisplayName(data, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, ExtractMimeTypeTest1, TestSize.Level1)
@@ -663,12 +804,36 @@ HWTEST_F(FileDataConvertorTest, ExtractMimeTypeTest1, TestSize.Level1)
     EXPECT_EQ(E_OK, ret);
 }
 
+HWTEST_F(FileDataConvertorTest, ExtractMimeTypeTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_MIME_TYPE] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    data[FILE_MIME_TYPE] = DriveKit::DKRecordField(fieldValue);
+    auto ret = fileDataConvertor_->ExtractMimeType(data, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
+}
+
 HWTEST_F(FileDataConvertorTest, ExtractDeviceNameTest1, TestSize.Level1)
 {
     DriveKit::DKRecordData data;
     NativeRdb::ValuesBucket valueBucket;
     auto ret = fileDataConvertor_->ExtractDeviceName(data, valueBucket);
     EXPECT_EQ(E_OK, ret);
+}
+
+HWTEST_F(FileDataConvertorTest, ExtractDeviceNameTest2, TestSize.Level1)
+{
+    DriveKit::DKRecordData data;
+    NativeRdb::ValuesBucket valueBucket;
+    DriveKit::DKRecordFieldMap fieldValue1;
+    fieldValue1[FILE_SOURCE] = DriveKit::DKRecordField();
+    DriveKit::DKFieldValue fieldValue = fieldValue1;
+    data[FILE_SOURCE] = DriveKit::DKRecordField(fieldValue);
+    auto ret = fileDataConvertor_->ExtractDeviceName(data, valueBucket);
+    EXPECT_EQ(E_INVAL_ARG, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, ExtractFavoriteTest1, TestSize.Level1)
