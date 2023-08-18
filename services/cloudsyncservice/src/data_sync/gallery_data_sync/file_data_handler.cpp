@@ -2265,10 +2265,13 @@ static string GetFilePathFromRecord(const DKRecord &record)
 
 int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
-    std::map<std::string, LocalInfo> localMap;
-    GetLocalInfo(map, localMap, Media::PhotoColumn::MEDIA_FILE_PATH);
+    unordered_map<string, LocalInfo> localMap;
+    int32_t ret = GetLocalInfo(map, localMap, Media::PhotoColumn::MEDIA_FILE_PATH);
+    if (ret != E_OK) {
+        LOGE("get local match info err %{public}d", ret);
+        return ret;
+    }
 
-    int32_t ret = E_OK;
     for (auto &entry : map) {
         int32_t err;
         const DKRecordOperResult &result = entry.second;
@@ -2287,6 +2290,7 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
         GetReturn(err, ret);
     }
     (void)DataSyncNotifier::GetInstance().FinalNotify();
+
     return ret;
 }
 
@@ -2312,10 +2316,13 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
 
 int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
-    std::map<std::string, LocalInfo> localMap;
-    GetLocalInfo(map, localMap, Media::PhotoColumn::PHOTO_CLOUD_ID);
+    unordered_map<string, LocalInfo> localMap;
+    int32_t ret = GetLocalInfo(map, localMap, Media::PhotoColumn::PHOTO_CLOUD_ID);
+    if (ret != E_OK) {
+        LOGE("get local match info err %{public}d", ret);
+        return ret;
+    }
 
-    int32_t ret = E_OK;
     for (auto &entry : map) {
         int32_t err;
         const DKRecordOperResult &result = entry.second;
@@ -2330,15 +2337,19 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
         }
         GetReturn(err, ret);
     }
+
     return ret;
 }
 
 int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
-    std::map<std::string, LocalInfo> localMap;
-    GetLocalInfo(map, localMap, Media::PhotoColumn::PHOTO_CLOUD_ID);
+    unordered_map<string, LocalInfo> localMap;
+    int32_t ret = GetLocalInfo(map, localMap, Media::PhotoColumn::PHOTO_CLOUD_ID);
+    if (ret != E_OK) {
+        LOGE("get local match info err %{public}d", ret);
+        return ret;
+    }
 
-    int32_t ret = E_OK;
     for (auto &entry : map) {
         int32_t err;
         const DKRecordOperResult &result = entry.second;
@@ -2363,8 +2374,8 @@ void FileDataHandler::Reset()
 }
 
 int32_t FileDataHandler::OnCreateRecordSuccess(
-    const std::pair<DKRecordId, DKRecordOperResult> &entry,
-    const std::map<std::string, LocalInfo> &localMap)
+    const pair<DKRecordId, DKRecordOperResult> &entry,
+    const unordered_map<string, LocalInfo> &localMap)
 {
     auto record = entry.second.GetDKRecord();
 
@@ -2399,17 +2410,15 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
      * A file can be modify after the local match query.
      * Possible Solution: if-else in SQL update
      */
-    if (IfTimeChanged(record, localMap, path, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
+    if (IsTimeChanged(record, localMap, path, Media::PhotoColumn::MEDIA_DATE_MODIFIED)) {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY));
-    } else if (IfTimeChanged(record, localMap, path, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
+    } else if (IsTimeChanged(record, localMap, path, PhotoColumn::PHOTO_META_DATE_MODIFIED)) {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
     } else {
         valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
     }
 
-    /**
-     * Fix me: might need a transaction to do an atomic update for files and their album maps
-     */
+    /* Fix me: might need a transaction to do an atomic update for files and their album maps */
     int32_t ret = UpdateLocalAlbumMap(entry.first);
     if (ret != E_OK) {
         LOGE("update local album map err %{public}d", ret);
@@ -2452,17 +2461,15 @@ int32_t FileDataHandler::OnDeleteRecordSuccess(const std::pair<DKRecordId, DKRec
 }
 
 int32_t FileDataHandler::OnMdirtyRecordSuccess(
-    const std::pair<DKRecordId, DKRecordOperResult> &entry,
-    const std::map<std::string, LocalInfo> &localMap)
+    const pair<DKRecordId, DKRecordOperResult> &entry,
+    const unordered_map<string, LocalInfo> &localMap)
 {
     auto record = entry.second.GetDKRecord();
     DKRecordData data;
     record.GetRecordData(data);
     string cloudId = entry.first;
 
-    /**
-     * Fix me: might need a transaction to do an atomic update for files and their album maps
-     */
+    /* Fix me: might need a transaction to do an atomic update for files and their album maps */
     int32_t ret = UpdateLocalAlbumMap(entry.first);
     if (ret != E_OK) {
         LOGE("update local album map err %{public}d", ret);
@@ -2491,7 +2498,7 @@ int32_t FileDataHandler::OnMdirtyRecordSuccess(
     valuesBucket.PutInt(Media::PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
     /* mdirty -> synced: only if no change in meta_date_modified */
     ret = Update(changedRows, valuesBucket, PC::PHOTO_CLOUD_ID + " = ? AND " +
-        PC::PHOTO_META_DATE_MODIFIED + " = ?" , { cloudId, to_string(meta_date_modified) });
+        PC::PHOTO_META_DATE_MODIFIED + " = ?", { cloudId, to_string(meta_date_modified) });
     if (ret != E_OK) {
         LOGE("on modify records update synced err %{public}d", ret);
         /* update record version anyway */
@@ -2508,17 +2515,15 @@ int32_t FileDataHandler::OnMdirtyRecordSuccess(
 }
 
 int32_t FileDataHandler::OnFdirtyRecordSuccess(
-    const std::pair<DKRecordId, DKRecordOperResult> &entry,
-    const std::map<std::string, LocalInfo> &localMap)
+    const pair<DKRecordId, DKRecordOperResult> &entry,
+    const unordered_map<string, LocalInfo> &localMap)
 {
     auto record = entry.second.GetDKRecord();
     DKRecordData data;
     record.GetRecordData(data);
     string cloudId = entry.first;
 
-    /**
-     * Fix me: might need a transaction to do an atomic update for files and their album maps
-     */
+    /* Fix me: might need a transaction to do an atomic update for files and their album maps */
     int32_t ret = UpdateLocalAlbumMap(entry.first);
     if (ret != E_OK) {
         LOGE("update local album map err %{public}d", ret);
@@ -2550,7 +2555,7 @@ int32_t FileDataHandler::OnFdirtyRecordSuccess(
      * Fix me: if date_modified unchanged, update fdirty -> mdirty
      */
     ret = Update(changedRows, valuesBucket, PC::PHOTO_CLOUD_ID + " = ? AND " +
-        PC::PHOTO_META_DATE_MODIFIED + " = ?" , { cloudId, to_string(meta_date_modified) });
+        PC::PHOTO_META_DATE_MODIFIED + " = ?", { cloudId, to_string(meta_date_modified) });
     if (ret != E_OK) {
         LOGE("on modify records update synced err %{public}d", ret);
         /* update record version anyway */
@@ -2591,8 +2596,8 @@ int32_t FileDataHandler::UpdateLocalAlbumMap(const string &cloudId)
     return ret;
 }
 
-bool FileDataHandler::IfTimeChanged(const DriveKit::DKRecord &record,
-    const map<string, LocalInfo> &localMap, const string &path, const string &type)
+bool FileDataHandler::IsTimeChanged(const DriveKit::DKRecord &record,
+    const unordered_map<string, LocalInfo> &localMap, const string &path, const string &type)
 {
     int64_t cloudtime = 0;
     int64_t localtime = 0;
@@ -2625,10 +2630,10 @@ bool FileDataHandler::IfTimeChanged(const DriveKit::DKRecord &record,
     return true;
 }
 
-void FileDataHandler::GetLocalInfo(const map<DKRecordId, DKRecordOperResult> &map,
-    std::map<string, LocalInfo> &cloudMap, const string &type)
+int32_t FileDataHandler::GetLocalInfo(const map<DKRecordId, DKRecordOperResult> &map,
+    unordered_map<string, LocalInfo> &infoMap, const string &type)
 {
-    std::vector<std::string> path;
+    vector<string> path;
     for (auto &entry : map) {
         if (type == Media::PhotoColumn::PHOTO_CLOUD_ID) {
             path.push_back(entry.first);
@@ -2638,33 +2643,35 @@ void FileDataHandler::GetLocalInfo(const map<DKRecordId, DKRecordOperResult> &ma
             record.GetRecordData(data);
             if (data.find(FILE_ATTRIBUTES) == data.end()) {
                 LOGE("record data cannot find attributes");
-                return;
+                return E_DATA;
             }
             DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
             if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end()) {
                 LOGE("record data cannot find some attributes");
-                return;
+                return E_DATA;
             }
             string curPath;
             if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(curPath) != DKLocalErrorCode::NO_ERROR) {
                 LOGE("bad file_path in props");
-                return;
+                return E_DATA;
             }
             path.push_back(curPath);
         }
     }
+
     NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     createPredicates.And()->In(type, path);
     auto resultSet = Query(createPredicates, ON_UPLOAD_COLUMNS);
     if (resultSet == nullptr) {
-        return;
+        LOGE("query rdb err");
+        return E_RDB;
     }
 
-    (void)OnResultSetConvertToMap(move(resultSet), cloudMap, type);
+    return BuildInfoMap(move(resultSet), infoMap, type);
 }
 
-int32_t FileDataHandler::OnResultSetConvertToMap(const shared_ptr<NativeRdb::ResultSet> resultSet,
-    map<string, LocalInfo> &infoMap, const string &type)
+int32_t FileDataHandler::BuildInfoMap(const shared_ptr<NativeRdb::ResultSet> resultSet,
+    unordered_map<string, LocalInfo> &infoMap, const string &type)
 {
     int32_t idIndex = -1;
     int32_t mtimeIndex = -1;
