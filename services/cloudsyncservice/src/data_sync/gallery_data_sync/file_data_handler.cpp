@@ -51,6 +51,7 @@ using PC = Media::PhotoColumn;
 
 static const string HMDFS_PATH_PREFIX = "/mnt/hmdfs/";
 static const string CLOUD_MERGE_VIEW_PATH_SUFFIX = "/account/cloud_merge_view";
+static mutex g_uniqueNumberLock;
 
 static string GetCloudMergeViewPath(int32_t userId, string relativePath)
 {
@@ -688,6 +689,7 @@ int32_t FileDataHandler::GetAssetUniqueId(int32_t &type)
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(ASSET_UNIQUE_NUMBER_TABLE);
     predicates.SetWhereClause(ASSET_MEDIA_TYPE + " = ?");
     predicates.SetWhereArgs({typeString});
+    lock_guard<mutex> lock(g_uniqueNumberLock);
     auto resultSet = Query(predicates, {UNIQUE_NUMBER});
     int32_t uniqueId = 0;
     if (resultSet->GoToNextRow() == 0) {
