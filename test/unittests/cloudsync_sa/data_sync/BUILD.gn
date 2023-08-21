@@ -424,9 +424,13 @@ ohos_unittest("data_syncer_test") {
     "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_download_callback_manager_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_sync_callback_manager_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/sdk_helper_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/sync_state_manager_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/task_mock.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
@@ -443,10 +447,6 @@ ohos_unittest("data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
-    "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
     "data_syncer_test.cpp",
   ]
 
@@ -819,6 +819,7 @@ group("cloudsync_sa_data_sync_test") {
   deps = [
     ":album_data_handler_test",
     ":data_convertor_test",
+    ":data_syncer_test",
     ":file_data_convertor_test",
     ":sdk_helper_test",
     ":sync_state_manager_test",
