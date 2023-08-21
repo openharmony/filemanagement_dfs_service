@@ -286,17 +286,17 @@ static string GetAssetKey(int fileType)
     }
 }
 
-static string GetLocalPath(int32_t userId, string relativePath)
+static string GetLocalPath(int32_t userId, const string &relativePath)
 {
     return HMDFS_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX + relativePath;
 }
 
-static string GetLocalTmpPath(int32_t userId, string relativePath)
+static string GetLocalTmpPath(int32_t userId, const string &relativePath)
 {
     return GetLocalPath(userId, relativePath) + PATH_TEMP_SUFFIX;
 }
 
-static string GetCloudMergeViewPath(int32_t userId, string relativePath)
+static string GetCloudMergeViewPath(int32_t userId, const string &relativePath)
 {
     return HMDFS_PATH_PREFIX + to_string(userId) + CLOUD_MERGE_VIEW_PATH_SUFFIX + relativePath;
 }
