@@ -98,7 +98,10 @@ int32_t DataSyncer::Lock()
     int32_t ret = sdkHelper_->GetLock(lock_.lock);
     if (ret != E_OK) {
         LOGE("sdk helper get lock err %{public}d", ret);
-        lock_.lock = { 0 };
+        lock_.lock = {0};
+        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
+            SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
+        }
         return ret;
     }
     lock_.count++;
@@ -1091,7 +1094,7 @@ ErrorType DataSyncer::GetErrorType()
             return errorType;
         }
     }
-    LOGE("errorcode unexpected, errcode: %{public}d", errorCode_);
+    LOGE("errorcode unexpected, errcode: %{public}u", errorCode_);
     return ErrorType::NO_ERROR;
 }
 

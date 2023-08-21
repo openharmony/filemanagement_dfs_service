@@ -49,6 +49,7 @@ enum class DKLocalErrorCode {
     CONFIGURATION_ERROR,
     SHARE_UI_TIMEOUT,
     BAD_ALLOC_MEMORY,
+    LOCAL_SPACE_FULL, // 本地空间不足
 };
 
 enum class DKServerErrorCode {
