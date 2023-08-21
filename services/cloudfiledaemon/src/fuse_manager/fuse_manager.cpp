@@ -56,10 +56,10 @@ namespace FileManagement {
 namespace CloudFile {
 using namespace std;
 
-static const string LOCAL_PATH_PREFIX = "/mnt/hmdfs/";
+static const string HMDFS_PATH_PREFIX = "/mnt/hmdfs/";
 static const string LOCAL_PATH_SUFFIX = "/account/device_view/local";
-static const string FUSE_CACHE_PATH_PREFIX = "/data/service/el2/";
-static const string FUSE_CACHE_PATH_SUFFIX = "/hmdfs/fuse";
+static const string CLOUD_MERGE_VIEW_PATH_SUFFIX = "/account/cloud_merge_view";
+static const string PATH_TEMP_SUFFIX = ".temp.fuse";
 static const string PHOTOS_BUNDLE_NAME = "com.ohos.photos";
 static const unsigned int OID_USER_DATA_RW = 1008;
 static const unsigned int STAT_NLINK_REG = 1;
@@ -286,29 +286,26 @@ static string GetAssetKey(int fileType)
     }
 }
 
-static string GetLocalPath(int32_t userId)
+static string GetLocalPath(int32_t userId, string relativePath)
 {
-    return LOCAL_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX;
+    return HMDFS_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX + relativePath;
 }
 
-static string GetFuseCachePath(int32_t userId)
+static string GetLocalTmpPath(int32_t userId, string relativePath)
 {
-    return FUSE_CACHE_PATH_PREFIX + to_string(userId) + FUSE_CACHE_PATH_SUFFIX;
+    return GetLocalPath(userId, relativePath) + PATH_TEMP_SUFFIX;
+}
+
+static string GetCloudMergeViewPath(int32_t userId, string relativePath)
+{
+    return HMDFS_PATH_PREFIX + to_string(userId) + CLOUD_MERGE_VIEW_PATH_SUFFIX + relativePath;
 }
 
 static string GetAssetPath(shared_ptr<CloudInode> cInode, struct FuseData *data)
 {
     string path;
     filesystem::path parentPath;
-    switch (cInode->mBase->fileType) {
-        case FILE_TYPE_THUMBNAIL:
-        case FILE_TYPE_LCD:
-            path = GetLocalPath(data->userId) + cInode->path;
-            break;
-        default:
-            path = GetFuseCachePath(data->userId) + cInode->path;
-            break;
-    }
+    path = GetLocalTmpPath(data->userId, cInode->path);
     parentPath = filesystem::path(path).parent_path();
     ForceCreateDirectory(parentPath.string());
     LOGD("fileType: %d, create dir: %s, relative path: %s",
@@ -358,6 +355,9 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+    string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
+    string localPath = GetLocalPath(data->userId, cInode->path);
+    string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
 
     wSesLock.lock();
     LOGD("%s, sessionRefCount: %d", CloudPath(data, ino).c_str(), cInode->sessionRefCount.load());
@@ -374,6 +374,21 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         if (needRemain && res) {
             GetCloudInode(data, cInode->parent)->mFile->DoRemove(*(cInode->mBase));
             LOGD("remove from dentryfile");
+
+            /*
+             * after removing file item from dentryfile, we should delete file
+             * of cloud merge view to update kernel dentry cache.
+             */
+            if (remove(cloudMergeViewPath.c_str()) != 0) {
+                LOGE("update kernel dentry cache fail, errno: %{public}d, cloudMergeViewPath: %{public}s",
+                     errno, cloudMergeViewPath.c_str());
+            }
+
+            filesystem::path parentPath = filesystem::path(localPath).parent_path();
+            ForceCreateDirectory(parentPath.string());
+            if (rename(tmpPath.c_str(), localPath.c_str()) != 0) {
+                LOGE("err rename tmpPath to localPath, errno: %{public}d", errno);
+            }
         }
         cInode->readSession = nullptr;
         LOGD("readSession released");

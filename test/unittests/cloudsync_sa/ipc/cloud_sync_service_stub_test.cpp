@@ -223,6 +223,32 @@ HWTEST_F(CloudSyncServiceStubTest, HandleChangeAppSwitchTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: HandleCleanTest
+ * @tc.desc: Verify the HandleClean function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleCleandTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleClean Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_EQ(E_INVAL_ARG, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CLEAN), data,
+                            reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleClean ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleClean End";
+}
+
+/**
  * @tc.name: HandleNotifyDataChangeTest
  * @tc.desc: Verify the HandleNotifyDataChange function.
  * @tc.type: FUNC
@@ -274,6 +300,32 @@ HWTEST_F(CloudSyncServiceStubTest, HandleDisableCloudTest, TestSize.Level1)
         GTEST_LOG_(INFO) << " HandleDisableCloud ERROR";
     }
     GTEST_LOG_(INFO) << "HandleDisableCloud End";
+}
+
+/**
+ * @tc.name: HandleEnableCloudTest
+ * @tc.desc: Verify the HandleEnableCloud function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleEnableCloudTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleEnableCloudFile Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_EQ(E_INVAL_ARG, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_ENABLE_CLOUD), data,
+                            reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleEnableCloud ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleEnableCloud End";
 }
 
 /**

@@ -30,6 +30,7 @@ using namespace std;
 
 constexpr int E_OK = 0;
 constexpr int USER_ID = 100;
+constexpr int MAX_RETRY_COUNT = 7;
 static const string SAME_ACCOUNT = "account";
 
 class SoftbusAgentTest : public testing::Test {
@@ -92,6 +93,34 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_0200, TestSize.Level
     sleep(1);
     execThread.join();
     GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0200 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_OnSessionOpened_0300
+ * @tc.desc: Verify the OnSessionOpened function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0300 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+
+    auto execFun = [](std::shared_ptr<SoftbusAgent> ag) {
+        const int sessionId = 1;
+        const int result = E_OK;
+        ag->OpenSessionRetriedTimesMap_.clear();
+        int ret = ag->OnSessionOpened(sessionId, result);
+        EXPECT_TRUE(ret == E_OK);
+    };
+
+    std::thread execThread(execFun, agent);
+    sleep(1);
+    execThread.join();
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0300 end";
 }
 
 /**
@@ -357,6 +386,59 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectDeviceByP2PAsync_0100, TestSi
     EXPECT_TRUE(res == false);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectDeviceByP2PAsync_0100 end";
 }
+
+/**
+ * @tc.name: SoftbusAgentTest_CloseSession_0100
+ * @tc.desc: Verify the CloseSession function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_CloseSession_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_CloseSession_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    try {
+        agent->CloseSession(nullptr);
+        EXPECT_TRUE(true);
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_CloseSession_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_IsContinueRetry_0100
+ * @tc.desc: Verify the IsContinueRetry function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_IsContinueRetry_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_IsContinueRetry_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    string cid = "notExitCid";
+    try {
+        bool ret = agent->IsContinueRetry(cid);
+        EXPECT_EQ(agent->OpenSessionRetriedTimesMap_[cid], 0);
+        ret = agent->IsContinueRetry(cid);
+        EXPECT_EQ(ret, true);
+        agent->OpenSessionRetriedTimesMap_[cid] = MAX_RETRY_COUNT;
+        ret = agent->IsContinueRetry(cid);
+        EXPECT_EQ(ret, false);
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_IsContinueRetry_0100 end";
+}
+
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage

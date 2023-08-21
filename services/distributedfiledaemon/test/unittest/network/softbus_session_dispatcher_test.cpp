@@ -29,6 +29,7 @@ using namespace testing::ext;
 using namespace std;
 
 constexpr int TEST_SESSION_ID = 10;
+constexpr int TEST_INVALID_SESSION_ID = -1;
 constexpr int E_OK = 0;
 constexpr int E_UNKNOWN = -1;
 static const string SAME_ACCOUNT = "account";
@@ -73,6 +74,85 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_RegisterSess
 }
 
 /**
+ * @tc.name: SoftbusSessionDispatcherTest_RegisterSessionListener_0200
+ * @tc.desc: Verify the RegisterSessionListener/UnregisterSessionListener function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_RegisterSessionListener_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_RegisterSessionListener_0200 start";
+    constexpr int userId = 100;
+    auto mp = make_unique<MountPoint>(
+            OHOS::Storage::DistributedFile::Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    weak_ptr<SoftbusAgent> wsba(agent);
+    const string busName = "";
+
+    try {
+        SoftbusSessionDispatcher::RegisterSessionListener(busName, wsba);
+        EXPECT_TRUE(false);
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
+        EXPECT_TRUE(true);
+    }
+
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_RegisterSessionListener_0200 end";
+}
+
+/**
+ * @tc.name: SoftbusSessionDispatcherTest_RegisterSessionListener_0300
+ * @tc.desc: Verify the RegisterSessionListener/UnregisterSessionListener function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_RegisterSessionListener_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_RegisterSessionListener_0300 start";
+    constexpr int userId = 100;
+    auto mp = make_unique<MountPoint>(
+            OHOS::Storage::DistributedFile::Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    weak_ptr<SoftbusAgent> wsba(agent);
+    const string busName = "testBus";
+    try {
+        SoftbusSessionDispatcher::busNameToAgent_.insert(make_pair(busName, wsba));
+        SoftbusSessionDispatcher::RegisterSessionListener(busName, wsba);
+        EXPECT_TRUE(false);
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
+        EXPECT_TRUE(true);
+    }
+
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_RegisterSessionListener_0300 end";
+}
+
+/**
+ * @tc.name: SoftbusSessionDispatcherTest_UnregisterSessionListener_0100
+ * @tc.desc: Verify the RegisterSessionListener/UnregisterSessionListener function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_UnregisterSessionListener_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_UnregisterSessionListener_0100 start";
+    const string busName = "testBus";
+    try {
+        SoftbusSessionDispatcher::UnregisterSessionListener(busName);
+        EXPECT_TRUE(false);
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
+        EXPECT_TRUE(true);
+    }
+
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_UnregisterSessionListener_0100 end";
+}
+
+/**
  * @tc.name: SoftbusSessionDispatcherTest_GetAgent_0100
  * @tc.desc: Verify the GetAgent function.
  * @tc.type: FUNC
@@ -88,6 +168,56 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_GetAgent_010
         LOGE("%{public}s", e.what());
     }
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_GetAgent_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusSessionDispatcherTest_GetAgent_0200
+ * @tc.desc: Verify the GetAgent function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_GetAgent_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_GetAgent_0200 start";
+    try {
+        weak_ptr<SoftbusAgent> wp = SoftbusSessionDispatcher::GetAgent(TEST_INVALID_SESSION_ID);
+        auto ptr = wp.lock();
+        EXPECT_EQ(ptr, nullptr);
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_GetAgent_0200 end";
+}
+
+/**
+ * @tc.name: SoftbusSessionDispatcherTest_GetAgent_0300
+ * @tc.desc: Verify the GetAgent function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_GetAgent_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_GetAgent_0300 start";
+    constexpr int userId = 100;
+    auto mp = make_unique<MountPoint>(
+            OHOS::Storage::DistributedFile::Utils::DfsuMountArgumentDescriptors::Alpha(userId, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    weak_ptr<SoftbusAgent> wsba(agent);
+    const string busName = "testBus";
+    try {
+        SoftbusSessionDispatcher::RegisterSessionListener(busName, wsba);
+        SoftbusSessionDispatcher::busNameToAgent_.erase(busName);
+        weak_ptr<SoftbusAgent> wp = SoftbusSessionDispatcher::GetAgent(TEST_SESSION_ID);
+        auto ptr = wp.lock();
+        EXPECT_EQ(ptr, nullptr);
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_GetAgent_0300 end";
 }
 
 /**

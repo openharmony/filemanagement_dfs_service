@@ -63,7 +63,7 @@ void DaemonTest::TearDown(void)
  * @tc.name: OnStopTest
  * @tc.desc: Verify the OnStop function
  * @tc.type: FUNC
- * @tc.require: I7M6L1
+ * @tc.require: issueI7M6L1
  */
 HWTEST_F(DaemonTest, OnStopTest, TestSize.Level1)
 {
@@ -80,4 +80,82 @@ HWTEST_F(DaemonTest, OnStopTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnStop End";
 }
 
+/**
+ * @tc.name: DaemonTest_PublishSA_0100
+ * @tc.desc: Verify the PublishSA function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DaemonTest, DaemonTest_PublishSA_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_PublishSA_0100 start";
+    try {
+        daemon_->registerToService_ = false;
+        daemon_->PublishSA();
+        EXPECT_TRUE(daemon_->registerToService_);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "DaemonTest_PublishSA_0100 end";
+}
+
+/**
+ * @tc.name: DaemonTest_OnStart_0100
+ * @tc.desc: Verify the OnStart function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DaemonTest, DaemonTest_OnStart_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_OnStart_0100 start";
+    try {
+        daemon_->state_ = ServiceRunningState::STATE_RUNNING;
+        daemon_->OnStart();
+        EXPECT_EQ(daemon_->state_, ServiceRunningState::STATE_RUNNING);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "DaemonTest_OnStart_0100 end";
+}
+
+/**
+ * @tc.name: DaemonTest_OnRemoveSystemAbility_0100
+ * @tc.desc: Verify the OnRemoveSystemAbility function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_0100 start";
+    try {
+        daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID + 1, 0);
+        EXPECT_TRUE(true);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_0100 end";
+}
+
+/**
+ * @tc.name: DaemonTest_OnRemoveSystemAbility_0200
+ * @tc.desc: Verify the OnRemoveSystemAbility function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_0200 start";
+    try {
+        daemon_->subScriber_ = nullptr;
+        daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID, 0);
+        EXPECT_TRUE(true);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_0200 end";
+}
 } // namespace OHOS::Storage::DistributedFile::Test

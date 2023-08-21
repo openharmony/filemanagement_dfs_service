@@ -127,6 +127,10 @@ private:
         std::shared_ptr<const DriveKit::DKDatabase>,
         std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
         bool, const DriveKit::DKError &);
+    void FetchRecordsDownloadCallback(std::shared_ptr<DriveKit::DKContext> context,
+                                      std::shared_ptr<const DriveKit::DKDatabase> database,
+                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap,
+                                      const DriveKit::DKError &err);
 
     /* upload */
     void CreateRecords(std::shared_ptr<TaskContext> context);
@@ -183,7 +187,7 @@ private:
     std::shared_ptr<SdkHelper> sdkHelper_;
     SdkLock lock_;
 
-    int32_t errorCode_{0};
+    uint32_t errorCode_{0};
 
     /* download callback manager*/
     CloudDownloadCallbackManager downloadCallbackMgr_;

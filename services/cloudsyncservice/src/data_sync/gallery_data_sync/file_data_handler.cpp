@@ -49,6 +49,15 @@ using PAC = Media::PhotoAlbumColumns;
 using PM = Media::PhotoMap;
 using PC = Media::PhotoColumn;
 
+static const string HMDFS_PATH_PREFIX = "/mnt/hmdfs/";
+static const string CLOUD_MERGE_VIEW_PATH_SUFFIX = "/account/cloud_merge_view";
+static mutex g_uniqueNumberLock;
+
+static string GetCloudMergeViewPath(int32_t userId, string relativePath)
+{
+    return HMDFS_PATH_PREFIX + to_string(userId) + CLOUD_MERGE_VIEW_PATH_SUFFIX + relativePath;
+}
+
 constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
 FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
     : RdbDataHandler(userId, bundleName, TABLE_NAME, rdb), userId_(userId), bundleName_(bundleName)
@@ -478,7 +487,7 @@ int32_t FileDataHandler::ConflictRenamePath(NativeRdb::ResultSet &resultSet,
 
 int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string &fullPath, string &relativePath)
 {
-    string rdbPath, newvirPath, tmpPath, newPath, localPath, newLocalPath;
+    string rdbPath, tmpPath, newPath, localPath, newLocalPath;
     int ret = ConflictRenamePath(resultSet, fullPath, rdbPath, tmpPath, newPath);
     if (ret != E_OK) {
         LOGE("ConflictRenamePath failed, ret=%{public}d", ret);
@@ -495,7 +504,7 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
     values.PutString(PhotoColumn::MEDIA_FILE_PATH, rdbPath);
     values.PutString(PhotoColumn::MEDIA_NAME, newName);
     if (!relativePath.empty()) {
-        newvirPath = relativePath + newName;
+        string newvirPath = relativePath + newName;
         values.PutString(PhotoColumn::MEDIA_VIRTURL_PATH, newvirPath);
     }
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
@@ -703,6 +712,7 @@ int32_t FileDataHandler::GetAssetUniqueId(int32_t &type)
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(ASSET_UNIQUE_NUMBER_TABLE);
     predicates.SetWhereClause(ASSET_MEDIA_TYPE + " = ?");
     predicates.SetWhereArgs({typeString});
+    lock_guard<mutex> lock(g_uniqueNumberLock);
     auto resultSet = Query(predicates, {UNIQUE_NUMBER});
     int32_t uniqueId = 0;
     if (resultSet->GoToNextRow() == 0) {
@@ -919,7 +929,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
     return E_OK;
 }
 
-int32_t FileDataHandler::OnDownloadThumb(const map<DKDownloadAsset, DKDownloadResult> &resultMap)
+int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadResult> &resultMap)
 {
     for (const auto &it : resultMap) {
         if (it.second.IsSuccess()) {
@@ -946,7 +956,7 @@ int32_t FileDataHandler::OnDownloadThumb(const map<DKDownloadAsset, DKDownloadRe
     return E_OK;
 }
 
-int32_t FileDataHandler::OnDownloadThumb(const DKDownloadAsset &asset)
+int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
 {
     if (asset.fieldKey == "thumbnail") {
         LOGI("update sync_status to visible of record %s", asset.recordId.c_str());
@@ -1276,15 +1286,17 @@ int32_t FileDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::ResultSet
 
 int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
 {
-    string downloadPath = asset.downLoadPath + "/" + asset.asset.assetName;
-    string filePath = localConvertor_.GetSandboxPath(downloadPath);
+    string tmpLocalPath = asset.downLoadPath + "/" + asset.asset.assetName;
+    string localPath = localConvertor_.GetPathWithoutTmp(tmpLocalPath);
+    string tmpSboxPath = localConvertor_.GetSandboxPath(tmpLocalPath);
+    string sboxPath = localConvertor_.GetPathWithoutTmp(tmpSboxPath);
 
     int ret = E_OK;
 
     // delete dentry
     string relativePath, fileName;
-    if (GetDentryPathName(filePath, relativePath, fileName) != E_OK) {
-        LOGE("split to dentry path failed, path:%s", filePath.c_str());
+    if (GetDentryPathName(sboxPath, relativePath, fileName) != E_OK) {
+        LOGE("split to dentry path failed, path:%s", sboxPath.c_str());
         return E_INVAL_ARG;
     }
     auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
@@ -1292,6 +1304,19 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
     ret = mFile->DoRemove(mBase);
     if (ret != E_OK) {
         LOGE("remove dentry failed, ret:%{public}d", ret);
+    }
+    /*
+     * after removing file item from dentryfile, we should delete file
+     * of cloud merge view to update kernel dentry cache.
+     */
+    string cloudMergeViewPath = GetCloudMergeViewPath(userId_, relativePath + "/" + mBase.name);
+    if (remove(cloudMergeViewPath.c_str()) != 0) {
+        LOGE("update kernel dentry cache fail, errno: %{public}d, cloudMergeViewPath: %{public}s",
+             errno, cloudMergeViewPath.c_str());
+    }
+    if (rename(tmpLocalPath.c_str(), localPath.c_str()) != 0) {
+        LOGE("err rename, errno: %{public}d, tmpLocalPath: %s, localPath: %s",
+             errno, tmpLocalPath.c_str(), localPath.c_str());
     }
 
     auto [resultSet, rowCount] = QueryLocalByCloudId(asset.recordId);
@@ -1307,8 +1332,8 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
             .actime = localMtime, .modtime = localMtime
         };
         LOGI("update downloaded file mtime %{public}llu", static_cast<unsigned long long>(localMtime));
-        if (utime(downloadPath.c_str(), &ubuf) < 0) {
-            LOGE("utime failed return %{public}d ", errno);
+        if (utime(localPath.c_str(), &ubuf) < 0) {
+            LOGE("utime failed return %{public}d, localPath: %{public}s", errno, localPath.c_str());
         }
     }
 
@@ -1318,7 +1343,7 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
 
     int32_t changedRows;
     string whereClause = Media::PhotoColumn::MEDIA_FILE_PATH + " = ?";
-    vector<string> whereArgs = {filePath};
+    vector<string> whereArgs = {sboxPath};
     ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
     if (ret != 0) {
         LOGE("on download file from cloud err %{public}d", ret);
@@ -1849,7 +1874,7 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
     if (!modifyFailSet_.empty()) {
         deletePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
     }
-    deletePredicates.Limit(LIMIT_SIZE);
+    deletePredicates.Limit(DELETE_BATCH_NUM);
 
     /* query */
     auto results = Query(deletePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
@@ -1882,7 +1907,7 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
     if (!modifyFailSet_.empty()) {
         updatePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
     }
-    updatePredicates.Limit(LIMIT_SIZE);
+    updatePredicates.Limit(MODIFY_BATCH_NUM);
 
     /* query */
     auto results = Query(updatePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
@@ -2127,7 +2152,6 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
     updatePredicates
         .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)))
         ->And()
-        ->EqualTo(Media::PhotoColumn::MEDIA_DATE_TRASHED, "0")
         ->BeginWrap()
         ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
         ->Or()

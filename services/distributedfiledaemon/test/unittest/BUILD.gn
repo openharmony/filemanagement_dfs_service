@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -28,6 +28,9 @@ ohos_unittest("device_manager_agent_test") {
   module_out_path = module_output_path
 
   sources = [
+    "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
+    "${distributedfile_path}/test/mock/device_manager_mock.cpp",
+    "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
@@ -53,6 +56,7 @@ ohos_unittest("device_manager_agent_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -311,7 +315,10 @@ ohos_unittest("softbus_agent_test") {
     "samgr:samgr_proxy",
   ]
 
-  defines = [ "private=public" ]
+  defines = [
+    "private=public",
+    "protected=public",
+  ]
 }
 
 ohos_unittest("softbus_session_dispatcher_test") {

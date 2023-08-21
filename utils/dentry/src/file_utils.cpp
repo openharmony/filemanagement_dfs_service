@@ -17,6 +17,8 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "dfs_error.h"
 #include "utils_log.h"
@@ -36,6 +38,7 @@ int64_t FileUtils::ReadFile(int fd, off_t offset, size_t size, void *data)
         return -errno;
     }
 
+    FileRangeLock fileLock(fd, offset, size);
     size_t readLen = 0;
     while (readLen < size) {
         ssize_t ret = read(fd, data, size - readLen);
@@ -64,6 +67,7 @@ int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size
         return -errno;
     }
 
+    FileRangeLock fileLock(fd, offset, size);
     size_t writeLen = 0;
     while (writeLen < size) {
         ssize_t ret = write(fd, data, size - writeLen);
@@ -76,5 +80,35 @@ int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size
 
     return writeLen;
 }
+
+FileRangeLock::FileRangeLock(int fd, off_t offset, size_t size) : fd_(fd), offset_(offset), size_(size)
+{
+    struct flock fl;
+    fl.l_type = F_WRLCK;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = offset;
+    fl.l_len = size;
+    if (fcntl(fd, F_SETLKW, &fl) < 0) {
+        LOGE("fcntl set F_WRLCK failed: %{public}d", errno);
+        lockFailed_ = true;
+    }
+}
+
+FileRangeLock::~FileRangeLock()
+{
+    if (lockFailed_) {
+        return;
+    }
+
+    struct flock fl;
+    fl.l_type = F_UNLCK;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = offset_;
+    fl.l_len = size_;
+    if (fcntl(fd_, F_SETLKW, &fl) < 0) {
+        LOGE("fcntl F_UNLCK failed: %{public}d", errno);
+    }
+}
+
 } // namespace FileManagement
 } // namespace OHOS

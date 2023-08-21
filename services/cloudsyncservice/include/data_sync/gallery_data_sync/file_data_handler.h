@@ -68,8 +68,8 @@ public:
     int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
-    int32_t OnDownloadThumb(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
-    int32_t OnDownloadThumb(const DriveKit::DKDownloadAsset &asset) override;
+    int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
+    int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
 
     /* reset */
     void Reset();
@@ -118,6 +118,8 @@ private:
 
     static inline const std::string TABLE_NAME = Media::PhotoColumn::PHOTOS_TABLE;
     static inline const int32_t LIMIT_SIZE = 5;
+    static inline const int32_t MODIFY_BATCH_NUM = 20;
+    static inline const int32_t DELETE_BATCH_NUM = 20;
     DriveKit::DKRecordType recordType_ = "media";
     DriveKit::DKFieldKeyArray desiredKeys_;
     DriveKit::DKFieldKeyArray checkedKeys_ = {"version", "id"};

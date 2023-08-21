@@ -98,7 +98,10 @@ int32_t DataSyncer::Lock()
     int32_t ret = sdkHelper_->GetLock(lock_.lock);
     if (ret != E_OK) {
         LOGE("sdk helper get lock err %{public}d", ret);
-        lock_.lock = { 0 };
+        lock_.lock = {0};
+        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
+            SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
+        }
         return ret;
     }
     lock_.count++;
@@ -300,10 +303,10 @@ void DataSyncer::DownloadAssets(DownloadContext &ctx)
     sdkHelper_->DownloadAssets(ctx.context, ctx.assets, {}, ctx.id, ctx.resultCallback, ctx.progressCallback);
 }
 
-static void ThumbDownloadCallback(shared_ptr<DKContext> context,
-                                  shared_ptr<const DKDatabase> database,
-                                  const map<DKDownloadAsset, DKDownloadResult> &resultMap,
-                                  const DKError &err)
+void DataSyncer::FetchRecordsDownloadCallback(shared_ptr<DKContext> context,
+                                              shared_ptr<const DKDatabase> database,
+                                              const map<DKDownloadAsset, DKDownloadResult> &resultMap,
+                                              const DKError &err)
 {
     if (err.HasError()) {
         LOGE("DKAssetsDownloader err, localErr: %{public}d, serverErr: %{public}d", static_cast<int>(err.dkErrorCode),
@@ -314,16 +317,19 @@ static void ThumbDownloadCallback(shared_ptr<DKContext> context,
 
     auto ctx = static_pointer_cast<TaskContext>(context);
     auto handler = ctx->GetHandler();
-    handler->OnDownloadThumb(resultMap);
+    handler->OnDownloadAssets(resultMap);
 }
 
-void ThumbDownLoadProgress(shared_ptr<DKContext> context, DKDownloadAsset asset, TotalSize total, DownloadSize download)
+static void FetchRecordsDownloadProgress(shared_ptr<DKContext> context,
+                                         DKDownloadAsset asset,
+                                         TotalSize total,
+                                         DownloadSize download)
 {
     LOGI("record %s %{public}s download progress", asset.recordId.c_str(), asset.fieldKey.c_str());
     if (total == download) {
         auto ctx = static_pointer_cast<TaskContext>(context);
         auto handler = ctx->GetHandler();
-        handler->OnDownloadThumb(asset);
+        handler->OnDownloadAssets(asset);
     }
 }
 
@@ -348,12 +354,14 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
     }
 
     int32_t ret = handler->OnFetchRecords(records, onFetchParams);
-    DownloadContext dctx = {.context = context,
-                            .assets = onFetchParams.assetsToDownload,
-                            .id = 0,
-                            .resultCallback = ThumbDownloadCallback,
-                            .progressCallback = ThumbDownLoadProgress};
-    DownloadAssets(dctx);
+    if (!onFetchParams.assetsToDownload.empty()) {
+        DownloadContext dctx = {.context = context,
+                                .assets = onFetchParams.assetsToDownload,
+                                .id = 0,
+                                .resultCallback = AsyncCallback(&DataSyncer::FetchRecordsDownloadCallback),
+                                .progressCallback = FetchRecordsDownloadProgress};
+        DownloadAssets(dctx);
+    }
 
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
@@ -609,8 +617,8 @@ void DataSyncer::RetryDownloadRecords(shared_ptr<TaskContext> context)
     DownloadContext dctx = {.context = ctx,
                             .assets = assetsToDownload,
                             .id = 0,
-                            .resultCallback = ThumbDownloadCallback,
-                            .progressCallback = ThumbDownLoadProgress};
+                            .resultCallback = AsyncCallback(&DataSyncer::FetchRecordsDownloadCallback),
+                            .progressCallback = FetchRecordsDownloadProgress};
     DownloadAssets(dctx);
 }
 
@@ -1086,7 +1094,7 @@ ErrorType DataSyncer::GetErrorType()
             return errorType;
         }
     }
-    LOGE("errorcode unexpected, errcode: %{public}d", errorCode_);
+    LOGE("errorcode unexpected, errcode: %{public}u", errorCode_);
     return ErrorType::NO_ERROR;
 }
 

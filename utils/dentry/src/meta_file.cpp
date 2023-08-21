@@ -164,7 +164,7 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
 {
     path_ = path;
     cacheFile_ = GetDentryfileByPath(userId, path);
-    fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)};
+    fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
     LOGD("fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
 
     int ret = fsetxattr(fd_, "user.hmdfs_cache", path.c_str(), path.size(), 0);

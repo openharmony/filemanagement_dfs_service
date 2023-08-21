@@ -102,6 +102,30 @@ HWTEST_F(FileUtilsTest, ReadFileTest002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ReadFileTest003
+ * @tc.desc: Verify the ReadFile function
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(FileUtilsTest, ReadFileTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadFileTest003 Start";
+    try {
+        auto data = make_shared<char>(1);
+        int64_t ret = FileUtils::ReadFile(-1, 0, 0, data.get());
+        EXPECT_EQ(ret, -1);
+        ret = FileUtils::ReadFile(0, -1, 0, data.get());
+        EXPECT_EQ(ret, -1);
+        ret = FileUtils::ReadFile(0, 0, 0, nullptr);
+        EXPECT_EQ(ret, -1);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " ReadFileTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ReadFileTest003 End";
+}
+
+/**
  * @tc.name: WriteFileTest001
  * @tc.desc: Verify the WriteFile function
  * @tc.type: FUNC
@@ -147,5 +171,29 @@ HWTEST_F(FileUtilsTest, WriteFileTest002, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "WriteFileTest002 End";
+}
+
+/**
+ * @tc.name: WriteFileTest003
+ * @tc.desc: Verify the WriteFile function
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(FileUtilsTest, WriteFileTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "WriteFileTest003 Start";
+    try {
+        auto data = make_shared<char>(1);
+        int64_t ret = FileUtils::WriteFile(-1, data.get(), 0, 1);
+        EXPECT_EQ(ret, -1);
+        ret = FileUtils::WriteFile(0, nullptr, 0, 0);
+        EXPECT_EQ(ret, -1);
+        ret = FileUtils::WriteFile(0, data.get(), -1, 1);
+        EXPECT_EQ(ret, -1);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " WriteFileTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "WriteFileTest003 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
