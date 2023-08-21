@@ -164,6 +164,7 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     MediaColumn::MEDIA_ID,
     PhotoColumn::MEDIA_RELATIVE_PATH,
     PhotoColumn::MEDIA_DATE_ADDED,
+    PhotoColumn::PHOTO_META_DATE_MODIFIED,
 };
 
 tuple<shared_ptr<NativeRdb::ResultSet>, int> FileDataHandler::QueryLocalByCloudId(const string &recordId)
@@ -525,14 +526,19 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
     return E_OK;
 }
 
-int32_t FileDataHandler::ConflictDataMerge(const DKRecord &record, string &fullPath)
+int32_t FileDataHandler::ConflictDataMerge(DKRecord &record, string &fullPath, bool upflag)
 {
     int updateRows;
     ValuesBucket values;
     values.PutString(PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
-    values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
-
+    if (upflag) {
+        values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+    } else {
+        createConvertor_.RecordToValueBucket(record, values);
+        values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
+        values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
+    }
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
     int32_t ret = Update(updateRows, values, whereClause, {fullPath});
     if (ret != E_OK) {
@@ -543,8 +549,8 @@ int32_t FileDataHandler::ConflictDataMerge(const DKRecord &record, string &fullP
 }
 
 int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
+                                         const DKRecord &record,
                                          int64_t isize,
-                                         int64_t crTime,
                                          bool &modifyPathflag)
 {
     string localId;
@@ -569,6 +575,7 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
         LOGE("Get local ctime failed");
         return E_INVAL_ARG;
     }
+    int64_t crTime = static_cast<int64_t>(record.GetCreateTime()) / MILLISECOND_TO_SECOND;
     if (localIsize == isize && localCrtime == crTime) {
         LOGI("Possible duplicate files");
     } else {
@@ -577,10 +584,10 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
     return E_OK;
 }
 
-int32_t FileDataHandler::ConflictMerge(NativeRdb::ResultSet &resultSet,
-                                       const DKRecord &record,
-                                       string &fullPath,
-                                       string &relativePath)
+int32_t FileDataHandler::ConflictDifferent(NativeRdb::ResultSet &resultSet,
+                                           const DKRecord &record,
+                                           string &fullPath,
+                                           string &relativePath)
 {
     LOGI("Different files with the same name");
     /* Modify path */
@@ -592,13 +599,26 @@ int32_t FileDataHandler::ConflictMerge(NativeRdb::ResultSet &resultSet,
     return E_OK;
 }
 
-int32_t FileDataHandler::ConflictDownload(const DKRecord &record,
-                                          string &fullPath,
-                                          bool &comflag)
+int32_t FileDataHandler::ConflictMerge(NativeRdb::ResultSet &resultSet,
+                                       DKRecord &record,
+                                       string &fullPath,
+                                       bool &comflag,
+                                       int64_t &imetaModified)
 {
     LOGI("Unification of the same document");
+    /* flag for update local data */
+    bool upflag = false;
+    int64_t localMeta = 0;
+    int ret = DataConvertor::GetLong(PhotoColumn::PHOTO_META_DATE_MODIFIED, localMeta, resultSet);
+    if (ret != E_OK) {
+        LOGE("Get local meta data modified failed");
+        return E_INVAL_ARG;
+    }
+    if (imetaModified < localMeta) {
+        upflag = true;
+    }
     /* update database */
-    int ret = ConflictDataMerge(record, fullPath);
+    ret = ConflictDataMerge(record, fullPath, upflag);
     if (ret != E_OK) {
         LOGE("Conflict dataMerge fail");
         return ret;
@@ -607,10 +627,10 @@ int32_t FileDataHandler::ConflictDownload(const DKRecord &record,
     return E_OK;
 }
 
-int32_t FileDataHandler::GetConflictData(DKRecord &record,
+int32_t FileDataHandler::GetConflictData(const DKRecord &record,
                                          string &fullPath,
                                          int64_t &isize,
-                                         int64_t &crTime,
+                                         int64_t &imetaModified,
                                          string &relativePath)
 {
     DKRecordData data;
@@ -637,7 +657,10 @@ int32_t FileDataHandler::GetConflictData(DKRecord &record,
         LOGE("bad size in data");
         return E_INVAL_ARG;
     }
-    crTime = static_cast<int64_t>(record.GetCreateTime()) / MILLISECOND_TO_SECOND;
+    if (attributes[PhotoColumn::PHOTO_META_DATE_MODIFIED].GetLong(imetaModified) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("bad meta data modified in attributes");
+        return E_INVAL_ARG;
+    }
     return E_OK;
 }
 
@@ -777,8 +800,8 @@ int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
 {
     LOGI("judgment downlode conflict");
     string fullPath, relativePath;
-    int64_t isize, crTime;
-    int32_t ret = GetConflictData(record, fullPath, isize, crTime, relativePath);
+    int64_t isize, imetaModified;
+    int32_t ret = GetConflictData(record, fullPath, isize, imetaModified, relativePath);
     if (ret != E_OK) {
         LOGE("Getdata fail");
         return ret;
@@ -804,17 +827,15 @@ int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
     }
     if (rowCount == 1) {
         resultSet->GoToNextRow();
-
         bool modifyPathflag = false;
-        ret = ConflictHandler(*resultSet, isize, crTime, modifyPathflag);
+        ret = ConflictHandler(*resultSet, record, isize, modifyPathflag);
         if (ret != E_OK) {
             return ret;
         }
-
         if (modifyPathflag) {
-            ret = ConflictMerge(*resultSet, record, fullPath, relativePath);
+            ret = ConflictDifferent(*resultSet, record, fullPath, relativePath);
         } else {
-            ret = ConflictDownload(record, fullPath, comflag);
+            ret = ConflictMerge(*resultSet, record, fullPath, comflag, imetaModified);
         }
         if (comflag) {
             UpdateAssetInPhotoMap(record, GetFileId(*resultSet));
@@ -873,7 +894,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
         LOGI("Conflict:same document no Insert");
         return E_OK;
     } else if (ret != E_OK) {
-        LOGE("MateFile Conflict failed %{public}d", ret);
+        LOGE("MetaFile Conflict failed %{public}d", ret);
     }
     ret = DentryInsert(userId_, record);
     if (ret != E_OK) {

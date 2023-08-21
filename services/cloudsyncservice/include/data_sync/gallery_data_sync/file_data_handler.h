@@ -161,17 +161,24 @@ private:
                                std::string &rdbPath,
                                std::string &localPath,
                                std::string &newLocalPath);
-    int32_t ConflictDataMerge(const DriveKit::DKRecord &record, std::string &fullPath);
-    int32_t ConflictHandler(NativeRdb::ResultSet &resultSet, int64_t isize, int64_t crTime, bool &modifyPathflag);
+    int32_t ConflictDataMerge(DriveKit::DKRecord &record, std::string &fullPath, bool upflag);
+    int32_t ConflictHandler(NativeRdb::ResultSet &resultSet,
+                            const DriveKit::DKRecord &record,
+                            int64_t isize,
+                            bool &modifyPathflag);
+    int32_t ConflictDifferent(NativeRdb::ResultSet &resultSet,
+                              const DriveKit::DKRecord &record,
+                              std::string &fullPath,
+                              std::string &relativePath);
     int32_t ConflictMerge(NativeRdb::ResultSet &resultSet,
-                          const DriveKit::DKRecord &record,
+                          DriveKit::DKRecord &record,
                           std::string &fullPath,
-                          std::string &relativePath);
-    int32_t ConflictDownload(const DriveKit::DKRecord &record, std::string &fullPath, bool &comflag);
-    int32_t GetConflictData(DriveKit::DKRecord &record,
+                          bool &comflag,
+                          int64_t &imetaModified);
+    int32_t GetConflictData(const DriveKit::DKRecord &record,
                             std::string &fullPath,
                             int64_t &isize,
-                            int64_t &crTime,
+                            int64_t &imetaModified,
                             std::string &relativePath);
     int32_t PullRecordConflict(DriveKit::DKRecord &record, bool &comflag);
 
