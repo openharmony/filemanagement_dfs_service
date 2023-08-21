@@ -59,7 +59,7 @@ public:
                  int32_t(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap));
     MOCK_METHOD1(OnDownloadThumb, int32_t(const DriveKit::DKDownloadAsset &asset));
     /*clean*/
-    MOCK_METHOD1(OnClean, int32_t(const int action));
+    MOCK_METHOD1(Clean, int32_t(const int action));
 
     /* cursor */
     MOCK_METHOD1(GetNextCursor, void(DriveKit::DKQueryCursor &cursor));

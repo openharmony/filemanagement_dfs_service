@@ -782,4 +782,500 @@ HWTEST_F(DataSyncerTest, OnFetchCheckRecordsTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "OnFetchCheckRecordsTest end";
 }
+
+/**
+ * @tc.name: OnFetchCheckRecordsTest002
+ * @tc.desc: Verify the OnFetchCheckRecords function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, OnFetchCheckRecordsTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnFetchCheckRecordsTest002 Start";
+    try {
+        shared_ptr<DownloadTaskContext> context = make_shared<DownloadTaskContext>(dataHandler_, 0);
+        DriveKit::DKError err;
+        EXPECT_CALL(*dataHandler_, GetBatchNo()).Times(4).WillRepeatedly(Return(0));
+        EXPECT_CALL(*dataHandler_, GetCheckRecords(_, _)).Times(1).WillOnce(Return(1));
+        datasyncer_->OnFetchCheckRecords(context, nullptr, nullptr, "", err);
+        GTEST_LOG_(INFO) << "OnFetchCheckRecordsTest002 other";
+        EXPECT_CALL(*dataHandler_, GetCheckRecords(_, _)).Times(1).WillOnce(Return(0));
+        datasyncer_->OnFetchCheckRecords(context, nullptr, nullptr, "test", err);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnFetchCheckRecordsTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnFetchCheckRecordsTest002 end";
+}
+
+/**
+ * @tc.name: PullRecordsWithIdTest
+ * @tc.desc: Verify the PullRecordsWithId function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, PullRecordsWithIdTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordsWithIdTest Start";
+    try {
+        shared_ptr<DownloadTaskContext> context = make_shared<DownloadTaskContext>(nullptr, 0);
+        vector<DriveKit::DKRecordId> records;
+        datasyncer_->PullRecordsWithId(context, records, false);
+        GTEST_LOG_(INFO) << "PullRecordsWithIdTest other 001";
+        shared_ptr<DownloadTaskContext> contextOther = make_shared<DownloadTaskContext>(dataHandler_, 0);
+        datasyncer_->PullRecordsWithId(contextOther, records, false);
+        GTEST_LOG_(INFO) << "PullRecordsWithIdTest other 002";
+        records.push_back("test");
+        datasyncer_->PullRecordsWithId(contextOther, records, true);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PullRecordsWithIdTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "PullRecordsWithIdTest end";
+}
+
+/**
+ * @tc.name: OnFetchRecordWithIdTest
+ * @tc.desc: Verify the OnFetchRecordWithId function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, OnFetchRecordWithIdTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnFetchRecordWithIdTest Start";
+    try {
+        shared_ptr<DownloadTaskContext> context = make_shared<DownloadTaskContext>(nullptr, 0);
+        vector<DriveKit::DKRecordId> records;
+        DriveKit::DKError err;
+        DriveKit::DKRecord record;
+        datasyncer_->OnFetchRecordWithId(context, nullptr, "test", record, err);
+        GTEST_LOG_(INFO) << "OnFetchRecordWithIdTest other 001";
+        err.isLocalError = true;
+        datasyncer_->OnFetchRecordWithId(context, nullptr, "test", record, err);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnFetchRecordWithIdTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnFetchRecordWithIdTest end";
+}
+
+/**
+ * @tc.name: RetryDownloadRecordsTest
+ * @tc.desc: Verify the RetryDownloadRecords function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, RetryDownloadRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RetryDownloadRecordsTest Start";
+    try {
+        shared_ptr<DownloadTaskContext> context = make_shared<DownloadTaskContext>(nullptr, 0);
+        datasyncer_->RetryDownloadRecords(context);
+        shared_ptr<DownloadTaskContext> contextTest = make_shared<DownloadTaskContext>(dataHandler_, 0);
+        EXPECT_CALL(*dataHandler_, GetAssetsToDownload(_)).Times(1).WillOnce(Return(1));
+        datasyncer_->RetryDownloadRecords(contextTest);
+        EXPECT_CALL(*dataHandler_, GetAssetsToDownload(_)).Times(1).WillOnce(Return(0));
+        datasyncer_->RetryDownloadRecords(contextTest);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RetryDownloadRecordsTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "RetryDownloadRecordsTest end";
+}
+
+/**
+ * @tc.name: InitTest
+ * @tc.desc: Verify the Init function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, InitTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitTest Start";
+    try {
+        auto ret = datasyncer_->Init("test", 100);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "InitTest end";
+}
+
+/**
+ * @tc.name: CleanTest
+ * @tc.desc: Verify the Clean function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, CleanTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanTest Start";
+    try {
+        auto ret = datasyncer_->Clean(0);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanTest end";
+}
+
+/**
+ * @tc.name: CleanInnerTest
+ * @tc.desc: Verify the CleanInner function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, CleanInnerTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanInnerTest Start";
+    try {
+        EXPECT_CALL(*dataHandler_, ClearCursor()).Times(2);
+        EXPECT_CALL(*dataHandler_, Clean(_)).Times(1).WillOnce(Return(1));
+        auto ret = datasyncer_->CleanInner(dataHandler_, 0);
+        EXPECT_NE(ret, E_OK);
+        GTEST_LOG_(INFO) << "CleanInnerTest other";
+        EXPECT_CALL(*dataHandler_, Clean(_)).Times(1).WillOnce(Return(0));
+        ret = datasyncer_->CleanInner(dataHandler_, 0);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanInnerTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanInnerTest end";
+}
+
+/**
+ * @tc.name: CreateRecordsTest
+ * @tc.desc: Verify the CreateRecords function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, CreateRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateRecords Start";
+    try {
+        shared_ptr<TaskContext> context = make_shared<TaskContext>(nullptr);
+        datasyncer_->CreateRecords(context);
+        GTEST_LOG_(INFO) << "CreateRecords other 001";
+        EXPECT_CALL(*dataHandler_, GetCreatedRecords(_)).Times(1).WillOnce(Return(1));
+        shared_ptr<TaskContext> contextTest = make_shared<TaskContext>(dataHandler_);
+        datasyncer_->CreateRecords(contextTest);
+        GTEST_LOG_(INFO) << "CreateRecords other 002";
+        EXPECT_CALL(*dataHandler_, GetCreatedRecords(_)).Times(1).WillOnce(Return(0));
+        datasyncer_->CreateRecords(contextTest);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateRecords FAILED";
+    }
+    GTEST_LOG_(INFO) << "CreateRecords end";
+}
+
+/**
+ * @tc.name: DeleteRecordsTest
+ * @tc.desc: Verify the DeleteRecords function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, DeleteRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteRecords Start";
+    try {
+        shared_ptr<TaskContext> context = make_shared<TaskContext>(nullptr);
+        datasyncer_->DeleteRecords(context);
+        GTEST_LOG_(INFO) << "DeleteRecords other 001";
+        EXPECT_CALL(*dataHandler_, GetDeletedRecords(_)).Times(1).WillOnce(Return(1));
+        shared_ptr<TaskContext> contextTest = make_shared<TaskContext>(dataHandler_);
+        datasyncer_->DeleteRecords(contextTest);
+        GTEST_LOG_(INFO) << "DeleteRecords other 002";
+        EXPECT_CALL(*dataHandler_, GetDeletedRecords(_)).Times(1).WillOnce(Return(0));
+        datasyncer_->DeleteRecords(contextTest);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteRecords FAILED";
+    }
+    GTEST_LOG_(INFO) << "DeleteRecords end";
+}
+
+/**
+ * @tc.name: ModifyMdirtyRecordsTest
+ * @tc.desc: Verify the ModifyMdirtyRecords function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, ModifyMdirtyRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ModifyMdirtyRecordsTest Start";
+    try {
+        shared_ptr<TaskContext> context = make_shared<TaskContext>(nullptr);
+        datasyncer_->ModifyMdirtyRecords(context);
+        GTEST_LOG_(INFO) << "ModifyMdirtyRecordsTest other 001";
+        EXPECT_CALL(*dataHandler_, GetMetaModifiedRecords(_)).Times(1).WillOnce(Return(1));
+        shared_ptr<TaskContext> contextTest = make_shared<TaskContext>(dataHandler_);
+        datasyncer_->ModifyMdirtyRecords(contextTest);
+        GTEST_LOG_(INFO) << "ModifyMdirtyRecordsTest other 002";
+        EXPECT_CALL(*dataHandler_, GetMetaModifiedRecords(_)).Times(1).WillOnce(Return(0));
+        datasyncer_->ModifyMdirtyRecords(contextTest);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ModifyMdirtyRecordsTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "ModifyMdirtyRecordsTest end";
+}
+
+/**
+ * @tc.name: ModifyFdirtyRecordsTest
+ * @tc.desc: Verify the ModifyFdirtyRecords function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, ModifyFdirtyRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ModifyFdirtyRecordsTest Start";
+    try {
+        shared_ptr<TaskContext> context = make_shared<TaskContext>(nullptr);
+        datasyncer_->ModifyFdirtyRecords(context);
+        GTEST_LOG_(INFO) << "ModifyFdirtyRecordsTest other 001";
+        EXPECT_CALL(*dataHandler_, GetFileModifiedRecords(_)).Times(1).WillOnce(Return(1));
+        shared_ptr<TaskContext> contextTest = make_shared<TaskContext>(dataHandler_);
+        datasyncer_->ModifyFdirtyRecords(contextTest);
+        GTEST_LOG_(INFO) << "ModifyFdirtyRecordsTest other 002";
+        EXPECT_CALL(*dataHandler_, GetFileModifiedRecords(_)).Times(1).WillOnce(Return(0));
+        datasyncer_->ModifyFdirtyRecords(contextTest);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ModifyFdirtyRecordsTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "ModifyFdirtyRecordsTest end";
+}
+
+/**
+ * @tc.name: OnCreateRecordsTest
+ * @tc.desc: Verify the OnCreateRecords function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, OnCreateRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnCreateRecordsTest Start";
+    try {
+        shared_ptr<TaskContext> context = make_shared<TaskContext>(dataHandler_);
+        DriveKit::DKError err;
+        shared_ptr<map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>> map =
+            make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
+
+        EXPECT_CALL(*dataHandler_, OnCreateRecords(_)).Times(1).WillOnce(Return(1));
+        datasyncer_->OnCreateRecords(context, nullptr, map, err);
+        GTEST_LOG_(INFO) << "OnCreateRecordsTest other 001";
+        EXPECT_CALL(*dataHandler_, OnCreateRecords(_)).Times(1).WillOnce(Return(12));
+        datasyncer_->OnCreateRecords(context, nullptr, map, err);
+        GTEST_LOG_(INFO) << "OnCreateRecordsTest other 002";
+        EXPECT_CALL(*dataHandler_, OnCreateRecords(_)).Times(1).WillOnce(Return(24));
+        datasyncer_->OnCreateRecords(context, nullptr, map, err);
+        GTEST_LOG_(INFO) << "OnCreateRecordsTest other 003";
+        EXPECT_CALL(*dataHandler_, OnCreateRecords(_)).Times(1).WillOnce(Return(0));
+        datasyncer_->OnCreateRecords(context, nullptr, map, err);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnCreateRecordsTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnCreateRecordsTest end";
+}
+
+/**
+ * @tc.name: OnDeleteRecordsTest
+ * @tc.desc: Verify the OnDeleteRecords function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, OnDeleteRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnDeleteRecordsTest Start";
+    try {
+        shared_ptr<TaskContext> context = make_shared<TaskContext>(dataHandler_);
+        DriveKit::DKError err;
+        shared_ptr<map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>> map =
+            make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
+
+        EXPECT_CALL(*dataHandler_, OnDeleteRecords(_)).Times(1).WillOnce(Return(1));
+        datasyncer_->OnDeleteRecords(context, nullptr, map, err);
+        GTEST_LOG_(INFO) << "OnDeleteRecordsTest other 001";
+        EXPECT_CALL(*dataHandler_, OnDeleteRecords(_)).Times(1).WillOnce(Return(12));
+        datasyncer_->OnDeleteRecords(context, nullptr, map, err);
+        GTEST_LOG_(INFO) << "OnDeleteRecordsTest other 002";
+        EXPECT_CALL(*dataHandler_, OnDeleteRecords(_)).Times(1).WillOnce(Return(24));
+        datasyncer_->OnDeleteRecords(context, nullptr, map, err);
+        GTEST_LOG_(INFO) << "OnDeleteRecordsTest other 003";
+        EXPECT_CALL(*dataHandler_, OnDeleteRecords(_)).Times(1).WillOnce(Return(0));
+        datasyncer_->OnDeleteRecords(context, nullptr, map, err);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnDeleteRecordsTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnDeleteRecordsTest end";
+}
+
+/**
+ * @tc.name: OnModifyMdirtyRecordsTest
+ * @tc.desc: Verify the OnModifyMdirtyRecords function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, OnModifyMdirtyRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnModifyMdirtyRecordsTest Start";
+    try {
+        shared_ptr<TaskContext> context = make_shared<TaskContext>(dataHandler_);
+        DriveKit::DKError err;
+        shared_ptr<map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>> saveMap =
+            make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
+
+        EXPECT_CALL(*dataHandler_, OnModifyMdirtyRecords(_)).Times(1).WillOnce(Return(1));
+        datasyncer_->OnModifyMdirtyRecords(context, nullptr, saveMap, nullptr, err);
+        GTEST_LOG_(INFO) << "OnModifyMdirtyRecordsTest other 001";
+        EXPECT_CALL(*dataHandler_, OnModifyMdirtyRecords(_)).Times(1).WillOnce(Return(12));
+        datasyncer_->OnModifyMdirtyRecords(context, nullptr, saveMap, nullptr, err);
+        GTEST_LOG_(INFO) << "OnModifyMdirtyRecordsTest other 002";
+        EXPECT_CALL(*dataHandler_, OnModifyMdirtyRecords(_)).Times(1).WillOnce(Return(24));
+        datasyncer_->OnModifyMdirtyRecords(context, nullptr, saveMap, nullptr, err);
+        GTEST_LOG_(INFO) << "OnModifyMdirtyRecordsTest other 003";
+        EXPECT_CALL(*dataHandler_, OnModifyMdirtyRecords(_)).Times(1).WillOnce(Return(0));
+        datasyncer_->OnModifyMdirtyRecords(context, nullptr, saveMap, nullptr, err);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnModifyMdirtyRecordsTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnModifyMdirtyRecordsTest end";
+}
+
+/**
+ * @tc.name: OnModifyFdirtyRecordsTest
+ * @tc.desc: Verify the OnModifyFdirtyRecords function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, OnModifyFdirtyRecordsTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnModifyFdirtyRecordsTest Start";
+    try {
+        shared_ptr<TaskContext> context = make_shared<TaskContext>(dataHandler_);
+        DriveKit::DKError err;
+        shared_ptr<map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>> saveMap =
+            make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
+
+        EXPECT_CALL(*dataHandler_, OnModifyFdirtyRecords(_)).Times(1).WillOnce(Return(1));
+        datasyncer_->OnModifyFdirtyRecords(context, nullptr, saveMap, nullptr, err);
+        GTEST_LOG_(INFO) << "OnModifyFdirtyRecordsTest other 001";
+        EXPECT_CALL(*dataHandler_, OnModifyFdirtyRecords(_)).Times(1).WillOnce(Return(12));
+        datasyncer_->OnModifyFdirtyRecords(context, nullptr, saveMap, nullptr, err);
+        GTEST_LOG_(INFO) << "OnModifyFdirtyRecordsTest other 002";
+        EXPECT_CALL(*dataHandler_, OnModifyFdirtyRecords(_)).Times(1).WillOnce(Return(24));
+        datasyncer_->OnModifyFdirtyRecords(context, nullptr, saveMap, nullptr, err);
+        GTEST_LOG_(INFO) << "OnModifyFdirtyRecordsTest other 003";
+        EXPECT_CALL(*dataHandler_, OnModifyFdirtyRecords(_)).Times(1).WillOnce(Return(0));
+        datasyncer_->OnModifyFdirtyRecords(context, nullptr, saveMap, nullptr, err);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnModifyFdirtyRecordsTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnModifyFdirtyRecordsTest end";
+}
+
+/**
+ * @tc.name: BeginTransactionTest
+ * @tc.desc: Verify the BeginTransaction function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, BeginTransactionTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BeginTransaction Start";
+    try {
+        datasyncer_->BeginTransaction();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BeginTransaction FAILED";
+    }
+    GTEST_LOG_(INFO) << "BeginTransaction end";
+}
+
+/**
+ * @tc.name: EndTransactionTest
+ * @tc.desc: Verify the EndTransaction function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, EndTransactionTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "EndTransaction Start";
+    try {
+        datasyncer_->EndTransaction();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "EndTransaction FAILED";
+    }
+    GTEST_LOG_(INFO) << "EndTransaction end";
+}
+
+/**
+ * @tc.name: GetBundleNameTest
+ * @tc.desc: Verify the GetBundleName function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, GetBundleNameTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundleName Start";
+    string res = datasyncer_->GetBundleName();
+    EXPECT_EQ(res, datasyncer_->bundleName_);
+    GTEST_LOG_(INFO) << "GetBundleName end";
+}
+
+/**
+ * @tc.name: GetUserIdTest
+ * @tc.desc: Verify the GetUserId function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, GetUserIdTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetUserId Start";
+    int res = datasyncer_->GetUserId();
+    EXPECT_EQ(res, datasyncer_->userId_);
+    GTEST_LOG_(INFO) << "GetUserId end";
+}
+
+/**
+ * @tc.name: GetSyncStateTest
+ * @tc.desc: Verify the GetSyncState function
+ * @tc.type: FUNC
+ * @tc.require: #I7UU3Z
+ */
+HWTEST_F(DataSyncerTest, GetSyncStateTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSyncState Start";
+    try {
+        datasyncer_->GetSyncState();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSyncState FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetSyncState end";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
