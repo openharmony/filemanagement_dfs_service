@@ -68,10 +68,12 @@ void DeviceManagerAgent::Start()
     DevslDispatcher::Start();
     RegisterToExternalDm();
     InitLocalNodeInfo();
+    InitDeviceAuthService();
 }
 
 void DeviceManagerAgent::Stop()
 {
+    DestroyDeviceAuthService();
     UnregisterFromExternalDm();
     DevslDispatcher::Stop();
 }
@@ -338,12 +340,6 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
 
 void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::string &networkId)
 {
-    int ret = InitDeviceAuthService();
-    if (ret != 0) {
-        LOGE("InitDeviceAuthService failed, ret %{public}d", ret);
-        return;
-    }
-
     auto hichainDevGroupMgr_ = GetGmInstance();
     if (hichainDevGroupMgr_ == nullptr) {
         LOGE("failed to get hichain device group manager");
@@ -352,7 +348,7 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
 
     char *returnGroupVec = nullptr;
     uint32_t groupNum = 0;
-    ret = hichainDevGroupMgr_->getRelatedGroups(ANY_OS_ACCOUNT, IDaemon::SERVICE_NAME.c_str(), udid.c_str(),
+    int ret = hichainDevGroupMgr_->getRelatedGroups(ANY_OS_ACCOUNT, IDaemon::SERVICE_NAME.c_str(), udid.c_str(),
                                                 &returnGroupVec, &groupNum);
     if (ret != 0 || returnGroupVec == nullptr) {
         LOGE("failed to get related groups, ret %{public}d", ret);

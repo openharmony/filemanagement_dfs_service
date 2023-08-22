@@ -30,6 +30,11 @@ int32_t RdbDataHandler::BatchInsert(int64_t &outRowId, const string &table,
     return E_OK;
 }
 
+shared_ptr<NativeRdb::RdbStore> RdbDataHandler::GetRaw()
+{
+    return rdb_;
+}
+
 int32_t RdbDataHandler::BeginTransaction()
 {
     return rdb_->BeginTransaction();

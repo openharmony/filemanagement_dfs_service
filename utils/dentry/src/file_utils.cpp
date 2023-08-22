@@ -87,7 +87,7 @@ FileRangeLock::FileRangeLock(int fd, off_t offset, size_t size) : fd_(fd), offse
     fl.l_type = F_WRLCK;
     fl.l_whence = SEEK_SET;
     fl.l_start = offset;
-    fl.l_len = size;
+    fl.l_len = static_cast<decltype(fl.l_len)>(size);
     if (fcntl(fd, F_SETLKW, &fl) < 0) {
         LOGE("fcntl set F_WRLCK failed: %{public}d", errno);
         lockFailed_ = true;
@@ -104,7 +104,7 @@ FileRangeLock::~FileRangeLock()
     fl.l_type = F_UNLCK;
     fl.l_whence = SEEK_SET;
     fl.l_start = offset_;
-    fl.l_len = size_;
+    fl.l_len = static_cast<decltype(fl.l_len)>(size_);
     if (fcntl(fd_, F_SETLKW, &fl) < 0) {
         LOGE("fcntl F_UNLCK failed: %{public}d", errno);
     }
