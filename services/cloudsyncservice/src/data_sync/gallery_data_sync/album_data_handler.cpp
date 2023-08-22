@@ -207,6 +207,17 @@ int32_t AlbumDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &rec
 
 int32_t AlbumDataHandler::Clean(const int action)
 {
+    /* delete all albums on user exit */
+    string rawSql = "DELETE FROM " + PAC::TABLE;
+    int32_t ret = ExecuteSql(rawSql);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("delete all albums err %{public}d", ret);
+        return ret;
+    }
+    /* notify */
+    (void)DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::ALBUM_URI_PREFIX,
+        ChangeType::DELETE, DataSyncConst::INVALID_ID);
+    (void)DataSyncNotifier::GetInstance().FinalNotify();
     return E_OK;
 }
 
