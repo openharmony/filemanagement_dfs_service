@@ -94,24 +94,7 @@ HWTEST_F(SdkHelperTest, FetchRecordsErrorTest, TestSize.Level1)
     ASSERT_NE(callback, nullptr);
     FetchCondition cond;
     handler_->GetFetchCondition(cond);
-    int32_t ret = sdkHelper_->FetchRecords(context, cond, dataSyncer_->nextCursor_, callback);
-    EXPECT_EQ(E_CLOUD_SDK, ret);
-}
-
-/**
- * @tc.name: FetchRecordWithIdErrorTest
- * @tc.desc: Verify the FetchRecordWithId function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(SdkHelperTest, FetchRecordWithIdErrorTest, TestSize.Level1)
-{
-    shared_ptr<TaskContext> context = make_shared<TaskContext>(handler_);
-    auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnFetchRetryRecord);
-    ASSERT_NE(callback, nullptr);
-    FetchCondition cond;
-    handler_->GetFetchCondition(cond);
-    int32_t ret = sdkHelper_->FetchRecordWithId(context, cond, "", callback);
+    int32_t ret = sdkHelper_->FetchRecords(context, cond, "nextCursor", callback);
     EXPECT_EQ(E_CLOUD_SDK, ret);
 }
 
@@ -128,7 +111,7 @@ HWTEST_F(SdkHelperTest, FetchDatabaseChangesErrorTest, TestSize.Level1)
     ASSERT_NE(callback, nullptr);
     FetchCondition cond;
     handler_->GetFetchCondition(cond);
-    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, cond, dataSyncer_->nextCursor_, callback);
+    int32_t ret = sdkHelper_->FetchDatabaseChanges(context, cond, "nextCursor", callback);
     EXPECT_EQ(E_CLOUD_SDK, ret);
 }
 

@@ -17,9 +17,10 @@
 #include <memory>
 
 #include "cloud_sync_service_proxy.h"
-#include "service_callback_mock.h"
-#include "i_cloud_sync_service_mock.h"
 #include "dfs_error.h"
+#include "i_cloud_download_callback_mock.h"
+#include "i_cloud_sync_service_mock.h"
+#include "service_callback_mock.h"
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -37,6 +38,7 @@ public:
     shared_ptr<CloudSyncServiceProxy> proxy_ = nullptr;
     sptr<CloudSyncServiceMock> mock_ = nullptr;
     sptr<CloudSyncCallbackMock> remote_ = nullptr;
+    sptr<CloudDownloadCallbackMock> download_ = nullptr;
 };
 
 void CloudSyncServiceProxyTest::SetUpTestCase(void)
@@ -54,6 +56,7 @@ void CloudSyncServiceProxyTest::SetUp(void)
     mock_ = sptr(new CloudSyncServiceMock());
     proxy_ = make_shared<CloudSyncServiceProxy>(mock_);
     remote_ = sptr(new CloudSyncCallbackMock());
+    download_ = sptr(new CloudDownloadCallbackMock());
     std::cout << "SetUp" << std::endl;
 }
 
@@ -198,6 +201,25 @@ HWTEST_F(CloudSyncServiceProxyTest, DownloadFile002, TestSize.Level1)
     int ret = proxy_->DownloadFile(userId, bundleName, assetInfoObj);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DownloadFile002 End";
+}
+
+/**
+ * @tc.name: RegisterDownloadFileCallback
+ * @tc.desc: Verify the RegisterDownloadFileCallback function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7UYAL
+ */
+HWTEST_F(CloudSyncServiceProxyTest, RegisterDownloadFileCallback, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback Start";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .WillOnce(Invoke(mock_.GetRefPtr(), &CloudSyncServiceMock::InvokeSendRequest));
+    int result = proxy_->RegisterDownloadFileCallback(download_);
+    EXPECT_EQ(result, E_OK);
+
+    result = proxy_->RegisterDownloadFileCallback(nullptr);
+    EXPECT_NE(result, E_OK);
+    GTEST_LOG_(INFO) << "RegisterDownloadFileCallback End";
 }
 
 } // namespace Test

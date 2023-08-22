@@ -57,6 +57,15 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
     return E_OK;
 }
 
+int32_t DataSyncer::Lock()
+{
+    return E_OK;
+}
+
+void DataSyncer::Unlock()
+{
+}
+
 int32_t DataSyncer::StartDownloadFile(const std::string path, const int32_t userId)
 {
     return E_OK;
@@ -166,6 +175,11 @@ int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)
     return E_OK;
 }
 
+int32_t DataSyncer::Init(const std::string bundleName, const int32_t userId)
+{
+    return E_OK;
+}
+
 void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
 {
 }
@@ -252,6 +266,10 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
 }
 
 void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)
+{
+}
+
+void DataSyncer::DeleteSubscription()
 {
 }
 } // namespace CloudSync

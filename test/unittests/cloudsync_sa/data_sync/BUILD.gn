@@ -63,6 +63,16 @@ ohos_unittest("album_data_handler_test") {
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
+
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -75,6 +85,7 @@ ohos_unittest("album_data_handler_test") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -138,6 +149,16 @@ ohos_unittest("data_sync_manager_test") {
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
+
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -150,6 +171,7 @@ ohos_unittest("data_sync_manager_test") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -211,6 +233,16 @@ ohos_unittest("data_handler_test") {
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
+
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -223,6 +255,7 @@ ohos_unittest("data_handler_test") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -320,6 +353,16 @@ ohos_unittest("file_data_handler_test") {
     "${media_library_path}/frameworks/services/media_thumbnail/include",
   ]
 
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
+
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -331,6 +374,7 @@ ohos_unittest("file_data_handler_test") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -385,11 +429,23 @@ ohos_unittest("gallery_data_syncer_test") {
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
+    "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
+
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -398,6 +454,7 @@ ohos_unittest("gallery_data_syncer_test") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -463,6 +520,16 @@ ohos_unittest("data_syncer_test") {
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
+
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -475,6 +542,7 @@ ohos_unittest("data_syncer_test") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -530,6 +598,16 @@ ohos_unittest("file_data_convertor_test") {
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
+
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -542,6 +620,7 @@ ohos_unittest("file_data_convertor_test") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -606,6 +685,16 @@ ohos_unittest("sdk_helper_test") {
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
+
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -618,6 +707,7 @@ ohos_unittest("sdk_helper_test") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -652,6 +742,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
@@ -678,11 +769,23 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "${media_library_path}/frameworks/utils/include",
+    "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
+
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -691,6 +794,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -788,6 +892,16 @@ ohos_unittest("task_test") {
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
+
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -800,6 +914,7 @@ ohos_unittest("task_test") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
@@ -819,9 +934,12 @@ group("cloudsync_sa_data_sync_test") {
   deps = [
     ":album_data_handler_test",
     ":data_convertor_test",
+    ":data_sync_manager_test",
     ":data_syncer_test",
     ":file_data_convertor_test",
+    ":file_data_handler_test",
     ":sdk_helper_test",
+    ":sdk_helper_unnormal_test",
     ":sync_state_manager_test",
     ":task_test",
   ]
