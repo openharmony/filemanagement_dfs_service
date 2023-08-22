@@ -32,6 +32,7 @@ using namespace NativeRdb;
 using namespace DriveKit;
 using namespace Media;
 using PAC = Media::PhotoAlbumColumns;
+using PM = Media::PhotoMap;
 using ChangeType = OHOS::AAFwk::ChangeInfo::ChangeType;
 
 AlbumDataHandler::AlbumDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<RdbStore> rdb)
@@ -207,11 +208,28 @@ int32_t AlbumDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &rec
 
 int32_t AlbumDataHandler::Clean(const int action)
 {
-    /* delete all albums on user exit */
-    string rawSql = "DELETE FROM " + PAC::TABLE;
-    int32_t ret = ExecuteSql(rawSql);
+    /* update album */
+    string albumSql = "UPDATE " + PAC::TABLE + " SET " + PAC::ALBUM_CLOUD_ID + " = NULL, " +
+        PAC::ALBUM_DIRTY + " = " + to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW));
+    int32_t ret = ExecuteSql(albumSql);
     if (ret != NativeRdb::E_OK) {
-        LOGE("delete all albums err %{public}d", ret);
+        LOGE("update all albums err %{public}d", ret);
+        return ret;
+    }
+    /* update album map */
+    string mapSql = "UPDATE " + PM::TABLE + " SET " + PM::DIRTY + " = " + to_string(static_cast<int32_t>(
+        Media::DirtyType::TYPE_NEW)) + " WHERE " + PM::DIRTY + " = " + to_string(static_cast<int32_t>(
+        Media::DirtyType::TYPE_SYNCED));
+    ret = ExecuteSql(mapSql);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("update album maps err %{public}d", ret);
+        return ret;
+    }
+    mapSql = "DELETE FROM " + PM::TABLE + " WHERE " + PM::DIRTY + " = " + to_string(static_cast<int32_t>(
+        Media::DirtyType::TYPE_DELETED));
+    ret = ExecuteSql(mapSql);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("delete album maps err %{public}d", ret);
         return ret;
     }
     /* notify */
