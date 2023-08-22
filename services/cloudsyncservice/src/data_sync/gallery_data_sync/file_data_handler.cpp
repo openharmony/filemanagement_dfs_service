@@ -1823,6 +1823,8 @@ int32_t FileDataHandler::Clean(const int action)
         return res;
     }
 
+    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
     DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               DataSyncConst::INVALID_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
