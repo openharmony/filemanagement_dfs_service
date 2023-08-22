@@ -36,6 +36,8 @@ protected:
           tableName_(table) {}
     virtual ~RdbDataHandler() = default;
 
+    std::shared_ptr<NativeRdb::RdbStore> GetRaw();
+
     virtual int32_t BeginTransaction();
     virtual int32_t RollBack();
     virtual int32_t Commit();

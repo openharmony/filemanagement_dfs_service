@@ -41,6 +41,7 @@
           "dsoftbus",
           "file_api",
           "hilog",
+          "hitrace",
           "init",
           "ipc",
           "napi",

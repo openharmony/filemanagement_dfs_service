@@ -102,6 +102,16 @@ ohos_unittest("cloud_sync_service_test") {
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
   ]
 
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
+
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -116,6 +126,7 @@ ohos_unittest("cloud_sync_service_test") {
     "common_event_service:cesfwk_innerkits",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
