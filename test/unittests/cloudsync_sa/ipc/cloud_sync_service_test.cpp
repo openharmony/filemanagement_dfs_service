@@ -226,6 +226,75 @@ HWTEST_F(CloudSyncServiceTest, StopSyncInnerTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name:ChangeAppSwitchTest1
+ * @tc.desc:Verify the ChangeAppSwitch function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeAppSwitch Start";
+    try {
+        std::string accountId = "testId";
+        std::string bundleName = "com.ohos.photos";
+        int32_t callerUserId = 100;
+        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
+        int ret = dataSyncManager->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ChangeAppSwitch FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChangeAppSwitch End";
+}
+
+/**
+ * @tc.name:ChangeAppSwitchTest2
+ * @tc.desc:Verify the ChangeAppSwitch function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest2, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ChangeAppSwitch Start";
+    try {
+        std::string accountId = "testId";
+        std::string bundleName = "com.ohos.photos";
+        int32_t callerUserId = 100;
+        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
+        int ret = dataSyncManager->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ChangeAppSwitch FAILED";
+    }
+    GTEST_LOG_(INFO) << "ChangeAppSwitch End";
+}
+
+/**
+ * @tc.name:NotifyDataChangeTest
+ * @tc.desc:Verify the NotifyDataChange function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, NotifyDataChangeTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyDataChange Start";
+    try {
+        std::string accountId = "testId";
+        string bundleName = "com.ohos.photos";
+        int32_t callerUserId = 100;
+        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
+        int ret = dataSyncManager->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NotifyDataChange FAILED";
+    }
+    GTEST_LOG_(INFO) << "NotifyDataChange End";
+}
+
+/**
  * @tc.name:UnRegisterCallbackInnerTest
  * @tc.desc:Verify the UnRegisterCallbackInner function.
  * @tc.type:FUNC
