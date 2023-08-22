@@ -73,6 +73,7 @@ weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int sessionId)
         LOGE("Get my peer session name failed, session id is %{public}d.", sessionId);
         return {};
     }
+    lock_guard<mutex> lock(softbusAgentMutex_);
     auto agent = busNameToAgent_.find(string(peeSessionName));
     if (agent != busNameToAgent_.end()) {
         LOGD("Get softbus Agent Success, busName:%{public}s", peeSessionName);
