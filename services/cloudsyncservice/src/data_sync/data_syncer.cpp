@@ -1078,7 +1078,7 @@ void DataSyncer::UpdateErrorCode(int32_t code)
 
 void DataSyncer::SetErrorCodeMask(ErrorType errorType)
 {
-    errorCode_ |= 1 << errorType;
+    errorCode_ |= 1 << static_cast<uint32_t>(errorType);
 }
 
 ErrorType DataSyncer::GetErrorType()
@@ -1090,7 +1090,7 @@ ErrorType DataSyncer::GetErrorType()
     std::vector<ErrorType> errorTypes = {NETWORK_UNAVAILABLE, WIFI_UNAVAILABLE,   BATTERY_LEVEL_WARNING,
                                          BATTERY_LEVEL_LOW,   CLOUD_STORAGE_FULL, LOCAL_STORAGE_FULL};
     for (const auto &errorType : errorTypes) {
-        if (errorCode_ & (1 << errorType)) {
+        if (errorCode_ & (1 << static_cast<uint32_t>(errorType))) {
             return errorType;
         }
     }
