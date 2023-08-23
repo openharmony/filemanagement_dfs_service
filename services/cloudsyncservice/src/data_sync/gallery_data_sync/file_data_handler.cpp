@@ -984,6 +984,7 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
     DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
     MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
     MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+    MetaFileMgr::GetInstance().ClearAll();
     return E_OK;
 }
 

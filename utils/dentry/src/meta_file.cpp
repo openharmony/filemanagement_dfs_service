@@ -196,19 +196,6 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
 
 MetaFile::~MetaFile()
 {
-    if ((dentryCount_ == 0) && (path_ != "/")) {
-        unlink(cacheFile_.c_str());
-        if (parentMetaFile_) {
-            std::string dirName = GetFileName(path_);
-            if (dirName == "") {
-                return;
-            }
-            MetaBase m(dirName, std::to_string(PathHash(path_, false)));
-            parentMetaFile_->DoRemove(m);
-        }
-        return;
-    }
-
     HmdfsDcacheHeader header{.dentryCount = dentryCount_};
     (void)FileUtils::WriteFile(fd_, &header, 0, sizeof(header));
 }
