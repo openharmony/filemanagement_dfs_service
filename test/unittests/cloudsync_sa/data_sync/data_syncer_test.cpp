@@ -1278,4 +1278,195 @@ HWTEST_F(DataSyncerTest, GetSyncStateTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetSyncState end";
 }
+
+/**
+ * @tc.name: CompletePullTest
+ * @tc.desc: Verify the CompletePull function
+ * @tc.type: FUNC
+ * @tc.require: #I7VDFI
+ */
+HWTEST_F(DataSyncerTest, CompletePullTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompletePull Start";
+    try {
+        datasyncer_->CompletePull();
+        datasyncer_->errorCode_ = 1;
+        datasyncer_->CompletePull();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompletePull FAILED";
+    }
+    GTEST_LOG_(INFO) << "CompletePull end";
+}
+
+/**
+ * @tc.name: CompletePushTest
+ * @tc.desc: Verify the CompletePush function
+ * @tc.type: FUNC
+ * @tc.require: #I7VDFI
+ */
+HWTEST_F(DataSyncerTest, CompletePushTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompletePush Start";
+    try {
+        datasyncer_->CompletePush();
+        datasyncer_->errorCode_ = 1;
+        datasyncer_->CompletePush();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompletePush FAILED";
+    }
+    GTEST_LOG_(INFO) << "CompletePush end";
+}
+
+/**
+ * @tc.name: CompleteAllTest
+ * @tc.desc: Verify the CompleteAll function
+ * @tc.type: FUNC
+ * @tc.require: #I7VDFI
+ */
+HWTEST_F(DataSyncerTest, CompleteAllTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CompleteAllTest Start";
+    try {
+        datasyncer_->lock_.count = 0;
+        datasyncer_->errorCode_ = 0;
+        datasyncer_->CompleteAll(true);
+        datasyncer_->errorCode_ = 1;
+        datasyncer_->CompleteAll(false);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CompleteAllTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CompleteAllTest end";
+}
+
+/**
+ * @tc.name: SyncStateChangedNotifyTest
+ * @tc.desc: Verify the SyncStateChangedNotify function
+ * @tc.type: FUNC
+ * @tc.require: #I7VDFI
+ */
+HWTEST_F(DataSyncerTest, SyncStateChangedNotifyTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateChangedNotify Start";
+    try {
+        datasyncer_->SyncStateChangedNotify(CloudSyncState::STOPPED, ErrorType::NO_ERROR);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateChangedNotify FAILED";
+    }
+    GTEST_LOG_(INFO) << "SyncStateChangedNotify end";
+}
+
+/**
+ * @tc.name: NotifyCurrentSyncStateTest
+ * @tc.desc: Verify the NotifyCurrentSyncState function
+ * @tc.type: FUNC
+ * @tc.require: #I7VDFI
+ */
+HWTEST_F(DataSyncerTest, NotifyCurrentSyncStateTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyCurrentSyncStateTest Start";
+    try {
+        datasyncer_->NotifyCurrentSyncState();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NotifyCurrentSyncStateTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "NotifyCurrentSyncStateTest end";
+}
+
+/**
+ * @tc.name: SetErrorCodeMaskTest
+ * @tc.desc: Verify the SetErrorCodeMask function
+ * @tc.type: FUNC
+ * @tc.require: #I7VDFI
+ */
+HWTEST_F(DataSyncerTest, SetErrorCodeMaskTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetErrorCodeMaskTest Start";
+    try {
+        ErrorType errorType = NO_ERROR;
+        datasyncer_->errorCode_ = 0;
+        datasyncer_->SetErrorCodeMask(errorType);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetErrorCodeMaskTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetErrorCodeMaskTest end";
+}
+
+/**
+ * @tc.name: GetErrorTypeTest
+ * @tc.desc: Verify the GetErrorType function
+ * @tc.type: FUNC
+ * @tc.require: #I7VDFI
+ */
+HWTEST_F(DataSyncerTest, GetErrorTypeTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetErrorType Start";
+    datasyncer_->errorCode_ = E_OK;
+    ErrorType result = datasyncer_->GetErrorType();
+    EXPECT_EQ(ErrorType::NO_ERROR, result);
+
+    datasyncer_->errorCode_ = 11;
+    BatteryStatus::level_ = BatteryStatus::LEVEL_LOW;
+    result = datasyncer_->GetErrorType();
+    EXPECT_NE(ErrorType::NO_ERROR, result);
+
+    datasyncer_->errorCode_ = 222;
+    BatteryStatus::level_ = BatteryStatus::LEVEL_TOO_LOW;
+    result = datasyncer_->GetErrorType();
+    EXPECT_NE(ErrorType::NO_ERROR, result);
+
+    BatteryStatus::level_ = BatteryStatus::LEVEL_NORMAL;
+    result = datasyncer_->GetErrorType();
+    EXPECT_NE(ErrorType::NO_ERROR, result);
+    GTEST_LOG_(INFO) << "GetErrorType end";
+}
+
+/**
+ * @tc.name: SaveSubscriptionTest
+ * @tc.desc: Verify the SaveSubscription function
+ * @tc.type: FUNC
+ * @tc.require: #I7VDFI
+ */
+HWTEST_F(DataSyncerTest, SaveSubscriptionTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SaveSubscriptionTest Start";
+    try {
+        datasyncer_->SaveSubscription();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SaveSubscriptionTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "SaveSubscriptionTest end";
+}
+
+/**
+ * @tc.name: DeleteSubscriptionTest
+ * @tc.desc: Verify the DeleteSubscription function
+ * @tc.type: FUNC
+ * @tc.require: #I7VDFI
+ */
+HWTEST_F(DataSyncerTest, DeleteSubscriptionTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteSubscriptionTest Start";
+    try {
+        datasyncer_->DeleteSubscription();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteSubscriptionTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "DeleteSubscriptionTest end";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
