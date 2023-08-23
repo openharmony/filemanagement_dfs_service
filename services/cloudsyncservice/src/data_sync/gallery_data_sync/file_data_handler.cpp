@@ -398,6 +398,7 @@ int FileDataHandler::AddCloudThumbs(const DKRecord &record)
 {
     LOGI("thumbs of %s add to cloud_view", record.GetRecordId().c_str());
     constexpr int64_t THUMB_SIZE = 2 * 1024 * 1024; // thumbnail and lcd size show as 2MB
+    int64_t thumbSize = 0, lcdSize = 0;
 
     DKRecordData data;
     record.GetRecordData(data);
@@ -414,13 +415,23 @@ int FileDataHandler::AddCloudThumbs(const DKRecord &record)
         LOGE("bad file path in record");
         return E_INVAL_ARG;
     }
-    int64_t mtime = static_cast<int64_t>(record.GetCreateTime()) / MILLISECOND_TO_SECOND;
-    int ret = DentryInsertThumb(fullPath, record.GetRecordId(), THUMB_SIZE, mtime, THUMB_SUFFIX);
+    if (attributes.find(FILE_THUMB_SIZE) == attributes.end() ||
+        DataConvertor::GetLongComp(attributes[FILE_THUMB_SIZE], thumbSize) != E_OK) {
+        LOGE("bad thumb size in record");
+        thumbSize = THUMB_SIZE;
+    }
+    if (attributes.find(FILE_LCD_SIZE) == attributes.end() ||
+        DataConvertor::GetLongComp(attributes[FILE_LCD_SIZE], lcdSize) != E_OK) {
+        LOGE("bad lcd size in record");
+        lcdSize = THUMB_SIZE;
+    }
+    int64_t mtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
+    int ret = DentryInsertThumb(fullPath, record.GetRecordId(), thumbSize, mtime, THUMB_SUFFIX);
     if (ret != E_OK) {
         LOGE("dentry insert of thumb failed ret %{public}d", ret);
         return ret;
     }
-    ret = DentryInsertThumb(fullPath, record.GetRecordId(), THUMB_SIZE, mtime, LCD_SUFFIX);
+    ret = DentryInsertThumb(fullPath, record.GetRecordId(), lcdSize, mtime, LCD_SUFFIX);
     if (ret != E_OK) {
         LOGE("dentry insert of lcd failed ret %{public}d", ret);
         return ret;
@@ -925,8 +936,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
         Media::PhotoColumn::PHOTO_SYNC_STATUS,
         static_cast<int32_t>(downloadThumb? SyncStatusType::TYPE_DOWNLOAD : SyncStatusType::TYPE_VISIBLE));
     params.insertFiles.push_back(values);
-    AddCloudThumbs(record);
-    if (downloadThumb) {
+    if (AddCloudThumbs(record) != E_OK || downloadThumb) {
         AppendToDownload(record, "lcd", params.assetsToDownload);
         AppendToDownload(record, "thumbnail", params.assetsToDownload);
     }
