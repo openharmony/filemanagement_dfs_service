@@ -934,8 +934,8 @@ group("cloudsync_sa_data_sync_test") {
   deps = [
     ":album_data_handler_test",
     ":data_convertor_test",
-    ":data_sync_manager_test",
     ":data_handler_test",
+    ":data_sync_manager_test",
     ":data_syncer_test",
     ":file_data_convertor_test",
     ":file_data_handler_test",
