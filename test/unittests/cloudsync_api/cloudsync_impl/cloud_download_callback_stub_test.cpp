@@ -112,6 +112,30 @@ HWTEST_F(CloudDownloadCallbackStubTest, OnRemoteRequestTest002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: OnRemoteRequestTest003
+ * @tc.desc: Verify the OnRemoteRequest function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7UYAL
+ */
+HWTEST_F(CloudDownloadCallbackStubTest, OnRemoteRequestTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequest Start";
+    try {
+        uint32_t code = ICloudDownloadCallback::SERVICE_CMD_ON_PROCESS;
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudDownloadCallback::GetDescriptor()));
+        int32_t ret = cloudDownloadCallbackStub_->OnRemoteRequest(code, data, reply, option);
+        EXPECT_NE(E_OK, ret);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnRemoteRequest ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnRemoteRequest End";
+}
+
+/**
  * @tc.name: HandleOnProcessTest001
  * @tc.desc: Verify the HandleOnProcess function.
  * @tc.type: FUNC

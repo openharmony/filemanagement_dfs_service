@@ -81,6 +81,9 @@ HWTEST_F(FileDataHandlerTest, GetFetchCondition001, TestSize.Level1)
         FetchCondition cond;
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        fileDataHandler->isChecking_ = true;
+        fileDataHandler->GetFetchCondition(cond);
+        fileDataHandler->isChecking_ = false;
         fileDataHandler->GetFetchCondition(cond);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -292,8 +295,7 @@ HWTEST_F(FileDataHandlerTest, PullRecordInsert001, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
         OnFetchParams onFetchParams{true};
-        int32_t fileId = 0;
-        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams, fileId);
+        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -317,8 +319,7 @@ HWTEST_F(FileDataHandlerTest, PullRecordInsert002, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DKRecord record;
         OnFetchParams onFetchParams{false};
-        int32_t fileId = 0;
-        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams, fileId);
+        int32_t ret = fileDataHandler->PullRecordInsert(record, onFetchParams);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -340,7 +341,7 @@ HWTEST_F(FileDataHandlerTest, SetRetry001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
 
         std::string recordId = "recordId";
         int32_t ret = fileDataHandler->SetRetry(recordId);
@@ -365,7 +366,7 @@ HWTEST_F(FileDataHandlerTest, SetRetry002, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
 
         std::string recordId = "recordId";
         int32_t ret = fileDataHandler->SetRetry(recordId);
@@ -390,7 +391,7 @@ HWTEST_F(FileDataHandlerTest, RecycleFile001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
 
         std::string recordId;
         int32_t ret = fileDataHandler->RecycleFile(recordId);
@@ -415,7 +416,7 @@ HWTEST_F(FileDataHandlerTest, RecycleFile002, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
 
         std::string recordId;
         int32_t ret = fileDataHandler->RecycleFile(recordId);
@@ -481,284 +482,149 @@ HWTEST_F(FileDataHandlerTest, GetFileModifiedRecords002, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnCreateIsTimeChanged001
- * @tc.desc: Verify the OnCreateIsTimeChanged function
+ * @tc.name: IfTimeChanged001
+ * @tc.desc: Verify the IfTimeChanged function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnCreateIsTimeChangedd001, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, IfTimeChanged001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnCreateIsTimeChanged001 Begin";
+    GTEST_LOG_(INFO) << "IfTimeChanged001 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        DriveKit::DKRecordData data;
+        DriveKit::DKRecord record;
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
         std::string path = "";
         std::string type = "hh";
-        int32_t ret = fileDataHandler->OnCreateIsTimeChanged(data, localMap, path, type);
+        int32_t ret = fileDataHandler->IfTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnCreateIsTimeChanged001 ERROR";
+        GTEST_LOG_(INFO) << " IfTimeChanged001 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnCreateIsTimeChanged001 End";
+    GTEST_LOG_(INFO) << "IfTimeChanged001 End";
 }
 
 /**
- * @tc.name: OnCreateIsTimeChangedd002
- * @tc.desc: Verify the OnCreateIsTimeChanged function
+ * @tc.name: IfTimeChanged002
+ * @tc.desc: Verify the IfTimeChanged function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnCreateIsTimeChangedd002, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, IfTimeChanged002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnCreateIsTimeChanged002 Begin";
+    GTEST_LOG_(INFO) << "IfTimeChanged002 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DriveKit::DKRecordData data;
+        DriveKit::DKRecord record;
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
         std::string path = "";
         std::string type = "hh";
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("123")));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
-        int32_t ret = fileDataHandler->OnCreateIsTimeChanged(data, localMap, path, type);
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        record.SetRecordData(data);
+        int32_t ret = fileDataHandler->IfTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnCreateIsTimeChanged002 ERROR";
+        GTEST_LOG_(INFO) << " IfTimeChanged002 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnCreateIsTimeChanged002 End";
+    GTEST_LOG_(INFO) << "IfTimeChanged002 End";
 }
 
 /**
- * @tc.name: OnCreateIsTimeChanged003
- * @tc.desc: Verify the OnCreateIsTimeChanged function
+ * @tc.name: IfTimeChanged003
+ * @tc.desc: Verify the IfTimeChanged function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnCreateIsTimeChanged003, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, IfTimeChanged003, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnCreateIsTimeChanged003 Begin";
+    GTEST_LOG_(INFO) << "IfTimeChanged003 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DriveKit::DKRecordData data;
+        DriveKit::DKRecord record;
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
         std::string path = "";
         std::string type = Media::PhotoColumn::PHOTO_META_DATE_MODIFIED;
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
-        int32_t ret = fileDataHandler->OnCreateIsTimeChanged(data, localMap, path, type);
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        record.SetRecordData(data);
+        int32_t ret = fileDataHandler->IfTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnCreateIsTimeChanged003 ERROR";
+        GTEST_LOG_(INFO) << " IfTimeChanged003 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnCreateIsTimeChanged003 End";
+    GTEST_LOG_(INFO) << "IfTimeChanged003 End";
 }
 
 /**
- * @tc.name: OnCreateIsTimeChanged004
- * @tc.desc: Verify the OnCreateIsTimeChanged function
+ * @tc.name: IfTimeChanged004
+ * @tc.desc: Verify the IfTimeChanged function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnCreateIsTimeChanged004, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, IfTimeChanged004, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnCreateIsTimeChanged004 Begin";
+    GTEST_LOG_(INFO) << "IfTimeChanged004 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DriveKit::DKRecordData data;
+        DriveKit::DKRecord record;
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
         std::string path = "hh";
         std::string type = Media::PhotoColumn::PHOTO_META_DATE_MODIFIED;
         localMap[path] = std::make_pair(1111, 1111);
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
-        int32_t ret = fileDataHandler->OnCreateIsTimeChanged(data, localMap, path, type);
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        record.SetEditedTime(1111000);
+        record.SetRecordData(data);
+        int32_t ret = fileDataHandler->IfTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnCreateIsTimeChanged004 ERROR";
+        GTEST_LOG_(INFO) << " IfTimeChanged004 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnCreateIsTimeChanged004 End";
+    GTEST_LOG_(INFO) << "IfTimeChanged004 End";
 }
 
 /**
- * @tc.name: OnCreateIsTimeChanged005
- * @tc.desc: Verify the OnCreateIsTimeChanged function
+ * @tc.name: IfTimeChanged005
+ * @tc.desc: Verify the IfTimeChanged function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnCreateIsTimeChanged005, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, IfTimeChanged005, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnCreateIsTimeChanged005 Begin";
+    GTEST_LOG_(INFO) << "IfTimeChanged005 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
 
         DriveKit::DKRecordData data;
+        DriveKit::DKRecord record;
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
         std::string path = "hh";
         std::string type = Media::PhotoColumn::MEDIA_DATE_MODIFIED;
 
         localMap[path] = std::make_pair(11, 11);
-        DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
-
-        int32_t ret = fileDataHandler->OnCreateIsTimeChanged(data, localMap, path, type);
+        int32_t ret = fileDataHandler->IfTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnCreateIsTimeChanged005 ERROR";
+        GTEST_LOG_(INFO) << "IfTimeChanged005 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnCreateIsTimeChanged005 End";
-}
-
-/**
- * @tc.name: OnModifyIsTimeChanged001
- * @tc.desc: Verify the OnModifyIsTimeChanged function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, OnModifyIsTimeChanged001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnModifyIsTimeChanged001 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        DriveKit::DKRecordData data;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
-        std::string cloudId = "";
-        std::string type = "hh";
-        int32_t ret = fileDataHandler->OnModifyIsTimeChanged(data, localMap, cloudId, type);
-        EXPECT_EQ(ret, true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnModifyIsTimeChanged001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "OnModifyIsTimeChanged001 End";
-}
-
-/**
- * @tc.name: OnModifyIsTimeChanged002
- * @tc.desc: Verify the OnModifyIsTimeChanged function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, OnModifyIsTimeChanged002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnModifyIsTimeChanged001 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        DriveKit::DKRecordData data;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
-        std::string cloudId = "";
-        std::string type = "hh";
-        DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("123")));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
-        int32_t ret = fileDataHandler->OnModifyIsTimeChanged(data, localMap, cloudId, type);
-        EXPECT_EQ(ret, true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnModifyIsTimeChanged002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "OnModifyIsTimeChanged002 End";
-}
-
-/**
- * @tc.name: OnModifyIsTimeChanged003
- * @tc.desc: Verify the OnModifyIsTimeChanged function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, OnModifyIsTimeChanged003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnModifyIsTimeChanged003 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        DriveKit::DKRecordData data;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
-        std::string cloudId = "";
-        std::string type = Media::PhotoColumn::PHOTO_META_DATE_MODIFIED;
-        DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
-        int32_t ret = fileDataHandler->OnModifyIsTimeChanged(data, localMap, cloudId, type);
-        EXPECT_EQ(ret, true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnModifyIsTimeChanged003 ERROR";
-    }
-    GTEST_LOG_(INFO) << "OnModifyIsTimeChanged003 End";
-}
-
-/**
- * @tc.name: OnModifyIsTimeChanged004
- * @tc.desc: Verify the OnModifyIsTimeChanged function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, OnModifyIsTimeChanged004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnModifyIsTimeChanged004 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        DriveKit::DKRecordData data;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
-        std::string cloudId = "hh";
-        std::string type = Media::PhotoColumn::PHOTO_META_DATE_MODIFIED;
-        localMap[cloudId] = std::make_pair(1111, 1111);
-        DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
-        int32_t ret = fileDataHandler->OnModifyIsTimeChanged(data, localMap, cloudId, type);
-        EXPECT_EQ(ret, false);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnModifyIsTimeChanged004 ERROR";
-    }
-    GTEST_LOG_(INFO) << "OnModifyIsTimeChanged004 End";
-}
-
-/**
- * @tc.name: OnModifyIsTimeChanged005
- * @tc.desc: Verify the OnModifyIsTimeChanged function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, OnModifyIsTimeChanged005, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnModifyIsTimeChanged005 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        DriveKit::DKRecordData data;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
-        std::string cloudId = "hh";
-        std::string type = Media::PhotoColumn::MEDIA_DATE_MODIFIED;
-        localMap[cloudId] = std::make_pair(11, 11);
-        DriveKit::DKRecordFieldMap prop;
-        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
-        int32_t ret = fileDataHandler->OnModifyIsTimeChanged(data, localMap, cloudId, type);
-        EXPECT_EQ(ret, true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnModifyIsTimeChanged005 ERROR";
-    }
-    GTEST_LOG_(INFO) << "OnModifyIsTimeChanged005 End";
+    GTEST_LOG_(INFO) << "IfTimeChanged005 End";
 }
 
 /**
@@ -841,7 +707,7 @@ HWTEST_F(FileDataHandlerTest, GetLocalTimeMap003, TestSize.Level1)
         DriveKit::DKRecordData data2;
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("123")));
-        data2.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        data2.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
         DriveKit::DKRecordId recordId = "1";
@@ -873,7 +739,7 @@ HWTEST_F(FileDataHandlerTest, GetLocalTimeMap004, TestSize.Level1)
         auto result = std::make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
         DriveKit::DKRecordData data2;
         DriveKit::DKRecordFieldMap prop;
-        data2.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        data2.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
         DriveKit::DKRecordId recordId = "1";
@@ -905,7 +771,7 @@ HWTEST_F(FileDataHandlerTest, GetLocalTimeMap005, TestSize.Level1)
         auto result = std::make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
         DriveKit::DKRecordData data2;
         DriveKit::DKRecordFieldMap prop;
-        data2.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        data2.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
         DriveKit::DKRecordId recordId = "1";
@@ -976,171 +842,6 @@ HWTEST_F(FileDataHandlerTest, Reset001, TestSize.Level1)
 }
 
 /**
- * @tc.name: HandleCloudSpaceNotEnough001
- * @tc.desc: Verify the HandleCloudSpaceNotEnough function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, HandleCloudSpaceNotEnough001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleCloudSpaceNotEnough001 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry;
-        DriveKit::DKError error_;
-        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ACCESS_DENIED);
-        DriveKit::DKErrorDetail errorDetail2;
-        errorDetail2.errorCode = SPACE_NOT_ENOUGH;
-        error_.errorDetails.push_back(errorDetail2);
-        entry.second.SetDKError(error_);
-        int32_t result = fileDataHandler->OnRecordFailed(entry);
-        EXPECT_EQ(result, static_cast<int32_t>(fileDataHandler->HandleCloudSpaceNotEnough()));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "HandleCloudSpaceNotEnough001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "HandleCloudSpaceNotEnough001 End";
-}
-
-/**
- * @tc.name: HandleATFailed001
- * @tc.desc: Verify the HandleATFailed function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, HandleATFailed001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleATFailed001 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry;
-        DriveKit::DKError error_;
-        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::AUTHENTICATION_FAILED);
-        DriveKit::DKErrorDetail errorDetail2;
-        errorDetail2.errorCode = AT_FAILED;
-        error_.errorDetails.push_back(errorDetail2);
-        entry.second.SetDKError(error_);
-        int32_t result = fileDataHandler->OnRecordFailed(entry);
-        EXPECT_EQ(result, static_cast<int32_t>(fileDataHandler->HandleATFailed()));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "HandleATFailed001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "HandleATFailed001 End";
-}
-
-/**
- * @tc.name: HandleNameConflict001
- * @tc.desc: Verify the HandleNameConflict function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, HandleNameConflict001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleNameConflict001 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry;
-        DriveKit::DKError error_;
-        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ACCESS_DENIED);
-        DriveKit::DKErrorDetail errorDetail2;
-        errorDetail2.errorCode = NAME_CONFLICT;
-        error_.errorDetails.push_back(errorDetail2);
-        entry.second.SetDKError(error_);
-        int32_t result = fileDataHandler->OnRecordFailed(entry);
-        EXPECT_EQ(result, static_cast<int32_t>(fileDataHandler->HandleNameConflict()));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "HandleNameConflict001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "HandleNameConflict001 End";
-}
-
-/**
- * @tc.name: HandleNameInvalid001
- * @tc.desc: Verify the HandleNameInvalid function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, HandleNameInvalid001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleNameInvalid001 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry;
-        DriveKit::DKError error_;
-        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ATOMIC_ERROR);
-        DriveKit::DKErrorDetail errorDetail2;
-        errorDetail2.errorCode = INVALID_FILE;
-        error_.errorDetails.push_back(errorDetail2);
-        entry.second.SetDKError(error_);
-        int32_t result = fileDataHandler->OnRecordFailed(entry);
-        EXPECT_EQ(result, static_cast<int32_t>(fileDataHandler->HandleNameInvalid()));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "HandleNameInvalid001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "HandleNameInvalid001 End";
-}
-
-/**
- * @tc.name: OnRecordFailed001
- * @tc.desc: Verify the OnRecordFailed function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, OnRecordFailed001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnRecordFailed001";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry;
-        DriveKit::DKError error_;
-        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ATOMIC_ERROR);
-        entry.second.SetDKError(error_);
-        int32_t ret = fileDataHandler->OnRecordFailed(entry);
-        EXPECT_EQ(E_INVAL_ARG, ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "HandleNameInvalid ERROR";
-    }
-    GTEST_LOG_(INFO) << "HandleNameInvalid End";
-}
-
-/**
- * @tc.name: OnRecordFailed002
- * @tc.desc: Verify the OnRecordFailed002 function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, OnRecordFailed002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnRecordFailed002";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry;
-        DriveKit::DKError error_;
-        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ATOMIC_ERROR);
-        DriveKit::DKErrorDetail errorDetail2;
-        errorDetail2.errorCode = AT_FAILED;
-        error_.errorDetails.push_back(errorDetail2);
-        entry.second.SetDKError(error_);
-        int32_t ret = fileDataHandler->OnRecordFailed(entry);
-        EXPECT_EQ(E_STOP, ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnRecordFailed002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "OnRecordFailed002 End";
-}
-
-/**
  * @tc.name: OnCreateRecordSuccess001
  * @tc.desc: Verify the OnCreateRecordSuccess function
  * @tc.type: FUNC
@@ -1148,7 +849,7 @@ HWTEST_F(FileDataHandlerTest, OnRecordFailed002, TestSize.Level1)
  */
 HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetLocalTimeMap001 Begin";
+    GTEST_LOG_(INFO) << "OnCreateRecordSuccess Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
@@ -1177,7 +878,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess001, TestSize.Level1)
  */
 HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetLocalTimeMap002 Begin";
+    GTEST_LOG_(INFO) << "OnCreateRecordSuccess002 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
@@ -1187,7 +888,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess002, TestSize.Level1)
         DriveKit::DKRecordOperResult operResult;
         DriveKit::DKRecordId recordId = "1";
         DriveKit::DKRecordFieldMap prop;
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry(recordId, operResult);
@@ -1208,12 +909,12 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess002, TestSize.Level1)
  */
 HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess003, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetLocalTimeMap003 Begin";
+    GTEST_LOG_(INFO) << "OnCreateRecordSuccess003 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _))
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>()))
             .WillOnce(Return(0))
             .WillOnce(Return(1))
             .WillOnce(Return(0))
@@ -1228,7 +929,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess003, TestSize.Level1)
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("hh")));
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry(recordId, operResult);
@@ -1284,12 +985,12 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess001, TestSize.Level1)
  */
 HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccesss002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetLocalTimeMap002 Begin";
+    GTEST_LOG_(INFO) << "OnModifyRecordSuccess002 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0)).WillOnce(Return(1));
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
@@ -1299,7 +1000,8 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccesss002, TestSize.Level1)
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        record.SetEditedTime(1111000);
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry(recordId, operResult);
@@ -1320,14 +1022,14 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccesss002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccesss003, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess003, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnModifyRecordSuccesss003 Begin";
+    GTEST_LOG_(INFO) << "OnModifyRecordSuccess003 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0)).WillOnce(Return(0));
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
@@ -1337,7 +1039,8 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccesss003, TestSize.Level1)
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        record.SetEditedTime(1111000);
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry(recordId, operResult);
@@ -1345,9 +1048,9 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccesss003, TestSize.Level1)
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnModifyRecordSuccesss003 ERROR";
+        GTEST_LOG_(INFO) << " OnModifyRecordSuccess003 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnModifyRecordSuccesss003 End";
+    GTEST_LOG_(INFO) << "OnModifyRecordSuccess003 End";
 }
 
 /**
@@ -1363,7 +1066,7 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess004, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0)).WillOnce(Return(1));
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
@@ -1373,7 +1076,8 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess004, TestSize.Level1)
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        record.SetEditedTime(1111000);
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry(recordId, operResult);
@@ -1398,7 +1102,7 @@ HWTEST_F(FileDataHandlerTest, OnDeleteRecordSuccess001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Delete(_, _, _, _)).WillOnce(Return(0)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillOnce(Return(0)).WillOnce(Return(1));
         DriveKit::DKRecordOperResult operResult;
         DriveKit::DKRecordId recordId = "1";
         std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry(recordId, operResult);
@@ -1434,17 +1138,18 @@ HWTEST_F(FileDataHandlerTest, OnModifyFdirtyRecords001, TestSize.Level1)
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         DriveKit::DKError error_;
-        error_.isLocalError = true;
-        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ATOMIC_ERROR);
-        DriveKit::DKErrorDetail errorDetail2;
-        errorDetail2.errorCode = AT_FAILED;
-        error_.errorDetails.push_back(errorDetail2);
+        error_.isLocalError = false;
+        error_.SetServerError(static_cast<int32_t>(DriveKit::DKServerErrorCode::UID_EMPTY));
+        DriveKit::DKErrorDetail errorDetail;
+        errorDetail.detailCode = static_cast<int32_t>(DriveKit::DKDetailErrorCode::PARAM_INVALID);
+        error_.errorDetails.push_back(errorDetail);
         operResult.SetDKError(error_);
         myMap.insert(std::make_pair(recordId, operResult));
         int32_t ret = fileDataHandler->OnModifyFdirtyRecords(myMap);
         EXPECT_EQ(E_STOP, ret);
+
         myMap.clear();
-        error_.isLocalError = false;
+        error_.isServerError = false;
         operResult.SetDKError(error_);
         myMap.insert(std::make_pair(recordId, operResult));
         ret = fileDataHandler->OnModifyFdirtyRecords(myMap);
@@ -1457,14 +1162,14 @@ HWTEST_F(FileDataHandlerTest, OnModifyFdirtyRecords001, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnModifyMdirtyRecords001
+ * @tc.name: OnModifyMdirtyRecords002
  * @tc.desc: Verify the OnModifyMdirtyRecords function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnModifyMdirtyRecords001, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, OnModifyMdirtyRecords002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnModifyMdirtyRecords001 Begin";
+    GTEST_LOG_(INFO) << "OnModifyMdirtyRecords002 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
@@ -1477,26 +1182,24 @@ HWTEST_F(FileDataHandlerTest, OnModifyMdirtyRecords001, TestSize.Level1)
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         DriveKit::DKError error_;
-        error_.isLocalError = true;
-        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ATOMIC_ERROR);
-        DriveKit::DKErrorDetail errorDetail2;
-        errorDetail2.errorCode = AT_FAILED;
-        error_.errorDetails.push_back(errorDetail2);
+        error_.isLocalError = false;
+        error_.SetServerError(static_cast<int32_t>(DriveKit::DKServerErrorCode::UID_EMPTY));
         operResult.SetDKError(error_);
         myMap.insert(std::make_pair(recordId, operResult));
         int32_t ret = fileDataHandler->OnModifyMdirtyRecords(myMap);
         EXPECT_EQ(E_STOP, ret);
+
         myMap.clear();
-        error_.isLocalError = false;
+        error_.isServerError = false;
         operResult.SetDKError(error_);
         myMap.insert(std::make_pair(recordId, operResult));
         ret = fileDataHandler->OnModifyMdirtyRecords(myMap);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnModifyMdirtyRecords001 ERROR";
+        GTEST_LOG_(INFO) << " OnModifyMdirtyRecords002 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnModifyMdirtyRecords001 End";
+    GTEST_LOG_(INFO) << "OnModifyMdirtyRecords002 End";
 }
 
 /**
@@ -1512,7 +1215,7 @@ HWTEST_F(FileDataHandlerTest, OnDeleteRecords001, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> myMap;
-        EXPECT_CALL(*rdb, Delete(_, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillOnce(Return(0));
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
@@ -1520,17 +1223,18 @@ HWTEST_F(FileDataHandlerTest, OnDeleteRecords001, TestSize.Level1)
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         DriveKit::DKError error_;
-        error_.isLocalError = true;
-        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ATOMIC_ERROR);
-        DriveKit::DKErrorDetail errorDetail2;
-        errorDetail2.errorCode = AT_FAILED;
-        error_.errorDetails.push_back(errorDetail2);
+        error_.isLocalError = false;
+        error_.SetServerError(static_cast<int32_t>(DriveKit::DKServerErrorCode::UID_EMPTY));
+        DriveKit::DKErrorDetail errorDetail;
+        errorDetail.detailCode = static_cast<int32_t>(DriveKit::DKDetailErrorCode::PARAM_INVALID);
+        error_.errorDetails.push_back(errorDetail);
         operResult.SetDKError(error_);
         myMap.insert(std::make_pair(recordId, operResult));
         int32_t ret = fileDataHandler->OnDeleteRecords(myMap);
         EXPECT_EQ(E_STOP, ret);
+
         myMap.clear();
-        error_.isLocalError = false;
+        error_.isServerError = false;
         operResult.SetDKError(error_);
         myMap.insert(std::make_pair(recordId, operResult));
         ret = fileDataHandler->OnDeleteRecords(myMap);
@@ -1563,18 +1267,18 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecords001, TestSize.Level1)
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         DriveKit::DKError error_;
-        error_.isLocalError = true;
-        error_.serverErrorCode = static_cast<int32_t>(DriveKit::DKServerErrorCode::ATOMIC_ERROR);
-        DriveKit::DKErrorDetail errorDetail2;
-        errorDetail2.errorCode = AT_FAILED;
-        error_.errorDetails.push_back(errorDetail2);
+        error_.isLocalError = false;
+        error_.SetServerError(static_cast<int32_t>(DriveKit::DKServerErrorCode::UID_EMPTY));
+        DriveKit::DKErrorDetail errorDetail;
+        errorDetail.detailCode = static_cast<int32_t>(DriveKit::DKDetailErrorCode::PARAM_INVALID);
+        error_.errorDetails.push_back(errorDetail);
         operResult.SetDKError(error_);
         myMap.insert(std::make_pair(recordId, operResult));
         int32_t ret = fileDataHandler->OnCreateRecords(myMap);
         EXPECT_EQ(E_STOP, ret);
         myMap.clear();
         DriveKit::DKRecordFieldMap prop;
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         ret = fileDataHandler->OnCreateRecords(myMap);
@@ -1602,7 +1306,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecords002, TestSize.Level1)
         EXPECT_CALL(*rdb, Query(_, _))
             .WillOnce(Return(ByMove(nullptr)))
             .WillOnce(Return(ByMove(nullptr)));
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
@@ -1610,7 +1314,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecords002, TestSize.Level1)
         myMap.clear();
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("hh")));
-        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_PROPERTIES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         auto ret = fileDataHandler->OnCreateRecords(myMap);
@@ -1642,7 +1346,7 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords001, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
 
-        const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
+        shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
         OnFetchParams onFetchParams;
         int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(E_OK, ret);
@@ -1669,7 +1373,7 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords002, TestSize.Level1)
 
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
 
-        const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
+        shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
         OnFetchParams onFetchParams;
         int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(E_OK, ret);
@@ -1691,14 +1395,14 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnFetchRecords003 Begin";
     try {
-        const int rowCount = 3;
+        int rowCount = 3;
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
 
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
 
-        const shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
+        shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
         OnFetchParams onFetchParams;
         int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(E_OK, ret);
@@ -1771,7 +1475,7 @@ HWTEST_F(FileDataHandlerTest, ClearCloudInfo001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
 
         std::string cloudId;
         int32_t ret = fileDataHandler->ClearCloudInfo(cloudId);
@@ -1796,7 +1500,7 @@ HWTEST_F(FileDataHandlerTest, ClearCloudInfo002, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
 
         std::string cloudId;
         int32_t ret = fileDataHandler->ClearCloudInfo(cloudId);
@@ -1822,7 +1526,7 @@ HWTEST_F(FileDataHandlerTest, DeleteDentryFile001, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         int32_t ret = fileDataHandler->DeleteDentryFile();
-        EXPECT_NE(E_OK, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " DeleteDentryFile001 ERROR";
@@ -1847,7 +1551,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotDirtyData001, TestSize.Level1)
         string assetPath;
         string cloudId;
         int32_t ret = fileDataHandler->CleanNotDirtyData(thmbDir, assetPath, cloudId);
-        EXPECT_NE(E_OK, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CleanNotDirtyData001 ERROR";
@@ -1874,7 +1578,7 @@ HWTEST_F(FileDataHandlerTest, CleanCloudRecord001, TestSize.Level1)
         int action = 0;
         string filePath;
         int32_t ret = fileDataHandler->CleanCloudRecord(*rset, action, filePath);
-        EXPECT_NE(E_OK, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CleanCloudRecord001 ERROR";
@@ -1953,14 +1657,15 @@ HWTEST_F(FileDataHandlerTest, Clean002, TestSize.Level1)
         const int count = 1;
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(count), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow())
-            .Times(count)
-            .WillRepeatedly(Return(0));
+            .Times(count + 1)
+            .WillOnce(Return(0))
+            .WillRepeatedly(Return(1));
 
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
 
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
 
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset)))).WillOnce(Return(ByMove(nullptr)));
 
         int action = 0;
         int32_t ret = fileDataHandler->Clean(action);
@@ -1989,7 +1694,7 @@ HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord001, TestSize.Level1)
         int action = 1;
         std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
         int32_t ret = fileDataHandler->CleanPureCloudRecord(*rset, action, filePath);
-        EXPECT_NE(E_OK, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CleanPureCloudRecord001 ERROR";
@@ -2042,7 +1747,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord002, TestSize.Level1)
         std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
 
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
 
         int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
         EXPECT_NE(E_OK, ret);
@@ -2071,7 +1776,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord003, TestSize.Level1)
         std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
 
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
 
         int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
         EXPECT_EQ(E_OK, ret);
@@ -2103,7 +1808,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord004, TestSize.Level1)
         EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(1));
 
         int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
-        EXPECT_NE(E_OK, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CleanNotPureCloudRecord004 ERROR";
@@ -2131,7 +1836,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord005, TestSize.Level1)
 
         EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(2), Return(0)));
 
-        EXPECT_CALL(*rdb, Update(_, _, _, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
 
         int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
         EXPECT_NE(E_OK, ret);
@@ -2175,6 +1880,88 @@ HWTEST_F(FileDataHandlerTest, AppendToDownload, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetAssetsToDownload001
+ * @tc.desc: Verify the GetAssetsToDownload function
+ * @tc.type: FUNC
+ * @tc.require: issueI7UYAL
+ */
+HWTEST_F(FileDataHandlerTest, GetAssetsToDownload001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAssetsToDownload001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        vector<DriveKit::DKDownloadAsset> outAssetsToDownload;
+        int32_t ret = fileDataHandler->GetAssetsToDownload(outAssetsToDownload);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetAssetsToDownload001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "GetAssetsToDownload001 End";
+}
+
+/**
+ * @tc.name: GetAssetsToDownload002
+ * @tc.desc: Verify the GetAssetsToDownload function
+ * @tc.type: FUNC
+ * @tc.require: issueI7UYAL
+ */
+HWTEST_F(FileDataHandlerTest, GetAssetsToDownload002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAssetsToDownload002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+
+        EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        vector<DriveKit::DKDownloadAsset> outAssetsToDownload;
+        int32_t ret = fileDataHandler->GetAssetsToDownload(outAssetsToDownload);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetAssetsToDownload002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "GetAssetsToDownload002 End";
+}
+
+/**
+ * @tc.name: QueryLocalByCloudId
+ * @tc.desc: Verify the QueryLocalByCloudId function
+ * @tc.type: FUNC
+ * @tc.require: issueI7UYAL
+ */
+HWTEST_F(FileDataHandlerTest, QueryLocalByCloudId, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryLocalByCloudId Begin";
+    try {
+        const string recordId = "1";
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr)));
+        auto [db, cnt] = fileDataHandler->QueryLocalByCloudId(recordId);
+        EXPECT_EQ(db, NULL);
+        EXPECT_EQ(cnt, 0);
+
+        const int count = 0;
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(count), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        auto [ptr, ret] = fileDataHandler->QueryLocalByCloudId(recordId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " QueryLocalByCloudId ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "QueryLocalByCloudId End";
+}
+
+/**
  * @tc.name: GetCreatedRecords001
  * @tc.desc: Verify the GetCreatedRecords001 function
  * @tc.type: FUNC
@@ -2215,7 +2002,7 @@ HWTEST_F(FileDataHandlerTest, GetCreatedRecords002, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         std::vector<DKRecord> records;
-        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow())
             .Times(rowCount)
             .WillOnce(Return(0))
@@ -2273,7 +2060,7 @@ HWTEST_F(FileDataHandlerTest, GetDeletedRecords002, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         std::vector<DKRecord> records;
-        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow())
             .Times(rowCount)
             .WillOnce(Return(0))
@@ -2331,15 +2118,17 @@ HWTEST_F(FileDataHandlerTest, GetMetaModifiedRecords002, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         std::vector<DKRecord> records;
-        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow())
             .Times(rowCount)
             .WillOnce(Return(0))
             .WillOnce(Return(0))
             .WillRepeatedly(Return(1));
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset)))).WillRepeatedly(Return(nullptr));
         int32_t ret = fileDataHandler->GetMetaModifiedRecords(records);
-        EXPECT_EQ(E_OK, ret);
+        EXPECT_EQ(E_RDB, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " GetMetaModifiedRecords002 ERROR";
@@ -2386,7 +2175,7 @@ HWTEST_F(FileDataHandlerTest, UpdateTest, TestSize.Level1)
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         int changedRows;
         NativeRdb::ValuesBucket values;
-        int32_t ret = fileDataHandler->Update(changedRows, values);
+        int32_t ret = fileDataHandler->Update(changedRows, values, "", {""});
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2409,7 +2198,7 @@ HWTEST_F(FileDataHandlerTest, DeleteTest, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         int deletedRows;
-        int32_t ret = fileDataHandler->Delete(deletedRows);
+        int32_t ret = fileDataHandler->Delete(deletedRows, "", {""});
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
