@@ -482,165 +482,165 @@ HWTEST_F(FileDataHandlerTest, GetFileModifiedRecords002, TestSize.Level1)
 }
 
 /**
- * @tc.name: IfTimeChanged001
- * @tc.desc: Verify the IfTimeChanged function
+ * @tc.name: IsTimeChanged001
+ * @tc.desc: Verify the IsTimeChanged function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, IfTimeChanged001, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, IsTimeChanged001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IfTimeChanged001 Begin";
+    GTEST_LOG_(INFO) << "IsTimeChanged001 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DriveKit::DKRecord record;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         std::string path = "";
         std::string type = "hh";
-        int32_t ret = fileDataHandler->IfTimeChanged(record, localMap, path, type);
+        int32_t ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " IfTimeChanged001 ERROR";
+        GTEST_LOG_(INFO) << " IsTimeChanged001 ERROR";
     }
-    GTEST_LOG_(INFO) << "IfTimeChanged001 End";
+    GTEST_LOG_(INFO) << "IsTimeChanged001 End";
 }
 
 /**
- * @tc.name: IfTimeChanged002
- * @tc.desc: Verify the IfTimeChanged function
+ * @tc.name: IsTimeChanged002
+ * @tc.desc: Verify the IsTimeChanged function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, IfTimeChanged002, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, IsTimeChanged002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IfTimeChanged002 Begin";
+    GTEST_LOG_(INFO) << "IsTimeChanged002 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         std::string path = "";
         std::string type = "hh";
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("123")));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         record.SetRecordData(data);
-        int32_t ret = fileDataHandler->IfTimeChanged(record, localMap, path, type);
+        int32_t ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " IfTimeChanged002 ERROR";
+        GTEST_LOG_(INFO) << " IsTimeChanged002 ERROR";
     }
-    GTEST_LOG_(INFO) << "IfTimeChanged002 End";
+    GTEST_LOG_(INFO) << "IsTimeChanged002 End";
 }
 
 /**
- * @tc.name: IfTimeChanged003
- * @tc.desc: Verify the IfTimeChanged function
+ * @tc.name: IsTimeChanged003
+ * @tc.desc: Verify the IsTimeChanged function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, IfTimeChanged003, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, IsTimeChanged003, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IfTimeChanged003 Begin";
+    GTEST_LOG_(INFO) << "IsTimeChanged003 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         std::string path = "";
         std::string type = Media::PhotoColumn::PHOTO_META_DATE_MODIFIED;
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         record.SetRecordData(data);
-        int32_t ret = fileDataHandler->IfTimeChanged(record, localMap, path, type);
+        int32_t ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " IfTimeChanged003 ERROR";
+        GTEST_LOG_(INFO) << " IsTimeChanged003 ERROR";
     }
-    GTEST_LOG_(INFO) << "IfTimeChanged003 End";
+    GTEST_LOG_(INFO) << "IsTimeChanged003 End";
 }
 
 /**
- * @tc.name: IfTimeChanged004
- * @tc.desc: Verify the IfTimeChanged function
+ * @tc.name: IsTimeChanged004
+ * @tc.desc: Verify the IsTimeChanged function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, IfTimeChanged004, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, IsTimeChanged004, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IfTimeChanged004 Begin";
+    GTEST_LOG_(INFO) << "IsTimeChanged004 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         std::string path = "hh";
         std::string type = Media::PhotoColumn::PHOTO_META_DATE_MODIFIED;
-        localMap[path] = std::make_pair(1111, 1111);
+        localMap[path] = { 1111, 1111 };
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         record.SetEditedTime(1111000);
         record.SetRecordData(data);
-        int32_t ret = fileDataHandler->IfTimeChanged(record, localMap, path, type);
+        int32_t ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " IfTimeChanged004 ERROR";
+        GTEST_LOG_(INFO) << " IsTimeChanged004 ERROR";
     }
-    GTEST_LOG_(INFO) << "IfTimeChanged004 End";
+    GTEST_LOG_(INFO) << "IsTimeChanged004 End";
 }
 
 /**
- * @tc.name: IfTimeChanged005
- * @tc.desc: Verify the IfTimeChanged function
+ * @tc.name: IsTimeChanged005
+ * @tc.desc: Verify the IsTimeChanged function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, IfTimeChanged005, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, IsTimeChanged005, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IfTimeChanged005 Begin";
+    GTEST_LOG_(INFO) << "IsTimeChanged005 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
 
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         std::string path = "hh";
         std::string type = Media::PhotoColumn::MEDIA_DATE_MODIFIED;
 
-        localMap[path] = std::make_pair(11, 11);
-        int32_t ret = fileDataHandler->IfTimeChanged(record, localMap, path, type);
+        localMap[path] = { 11, 11 };
+        int32_t ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IfTimeChanged005 ERROR";
+        GTEST_LOG_(INFO) << "IsTimeChanged005 ERROR";
     }
-    GTEST_LOG_(INFO) << "IfTimeChanged005 End";
+    GTEST_LOG_(INFO) << "IsTimeChanged005 End";
 }
 
 /**
- * @tc.name: GetLocalTimeMap001
- * @tc.desc: Verify the GetLocalTimeMap function
+ * @tc.name: GetLocalInfo001
+ * @tc.desc: Verify the GetLocalInfo function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, GetLocalTimeMap001, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, GetLocalInfo001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetLocalTimeMap001 Begin";
+    GTEST_LOG_(INFO) << "GetLocalInfo001 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> map;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> cloudMap;
+        std::unordered_map<std::string, LocalInfo> cloudMap;
         auto result = std::make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
         DriveKit::DKRecordData data2;
         DriveKit::DKRecord record;
@@ -649,28 +649,28 @@ HWTEST_F(FileDataHandlerTest, GetLocalTimeMap001, TestSize.Level1)
         record.SetRecordData(data2);
         operResult.SetDKRecord(std::move(record));
         (*result)[recordId] = operResult;
-        fileDataHandler->GetLocalTimeMap(*result, cloudMap, "hh");
+        fileDataHandler->GetLocalInfo(*result, cloudMap, "hh");
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetLocalTimeMap001 ERROR";
+        GTEST_LOG_(INFO) << " GetLocalInfo001 ERROR";
     }
-    GTEST_LOG_(INFO) << "GetLocalTimeMap001 End";
+    GTEST_LOG_(INFO) << "GetLocalInfo001 End";
 }
 
 /**
- * @tc.name: GetLocalTimeMap002
- * @tc.desc: Verify the GetLocalTimeMap function
+ * @tc.name: GetLocalInfo002
+ * @tc.desc: Verify the GetLocalInfo function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, GetLocalTimeMap002, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, GetLocalInfo002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetLocalTimeMap002 Begin";
+    GTEST_LOG_(INFO) << "GetLocalInfo002 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> map;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> cloudMap;
+        std::unordered_map<std::string, LocalInfo> cloudMap;
         auto result = std::make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
         DriveKit::DKRecordData data2;
         DriveKit::DKRecordOperResult operResult;
@@ -680,26 +680,26 @@ HWTEST_F(FileDataHandlerTest, GetLocalTimeMap002, TestSize.Level1)
         record.SetRecordData(data2);
         operResult.SetDKRecord(std::move(record));
         (*result)[recordId] = operResult;
-        fileDataHandler->GetLocalTimeMap(*result, cloudMap, "cloud_id");
+        fileDataHandler->GetLocalInfo(*result, cloudMap, "cloud_id");
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetLocalTimeMap002 ERROR";
+        GTEST_LOG_(INFO) << " GetLocalInfo002 ERROR";
     }
-    GTEST_LOG_(INFO) << "GetLocalTimeMap002 End";
+    GTEST_LOG_(INFO) << "GetLocalInfo002 End";
 }
 
 /**
- * @tc.name: GetLocalTimeMap003
- * @tc.desc: Verify the GetLocalTimeMap function
+ * @tc.name: GetLocalInfo003
+ * @tc.desc: Verify the GetLocalInfo function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, GetLocalTimeMap003, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, GetLocalInfo003, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetLocalTimeMap003 Begin";
+    GTEST_LOG_(INFO) << "GetLocalInfo003 Begin";
     try {
         std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> map;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> cloudMap;
+        std::unordered_map<std::string, LocalInfo> cloudMap;
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         auto result = std::make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
@@ -714,28 +714,28 @@ HWTEST_F(FileDataHandlerTest, GetLocalTimeMap003, TestSize.Level1)
         record.SetRecordData(data2);
         operResult.SetDKRecord(std::move(record));
         (*result)[recordId] = operResult;
-        fileDataHandler->GetLocalTimeMap(*result, cloudMap, "hh");
+        fileDataHandler->GetLocalInfo(*result, cloudMap, "hh");
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetLocalTimeMap003 ERROR";
+        GTEST_LOG_(INFO) << " GetLocalInfo003 ERROR";
     }
-    GTEST_LOG_(INFO) << "GetLocalTimeMap003 End";
+    GTEST_LOG_(INFO) << "GetLocalInfo003 End";
 }
 
 /**
- * @tc.name: GetLocalTimeMap004
- * @tc.desc: Verify the GetLocalTimeMap function
+ * @tc.name: GetLocalInfo004
+ * @tc.desc: Verify the GetLocalInfo function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, GetLocalTimeMap004, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, GetLocalInfo004, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetLocalTimeMap004 Begin";
+    GTEST_LOG_(INFO) << "GetLocalInfo004 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> map;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> cloudMap;
+        std::unordered_map<std::string, LocalInfo> cloudMap;
         auto result = std::make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
         DriveKit::DKRecordData data2;
         DriveKit::DKRecordFieldMap prop;
@@ -746,28 +746,28 @@ HWTEST_F(FileDataHandlerTest, GetLocalTimeMap004, TestSize.Level1)
         record.SetRecordData(data2);
         operResult.SetDKRecord(std::move(record));
         (*result)[recordId] = operResult;
-        fileDataHandler->GetLocalTimeMap(*result, cloudMap, "hh");
+        fileDataHandler->GetLocalInfo(*result, cloudMap, "hh");
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetLocalTimeMap004 ERROR";
+        GTEST_LOG_(INFO) << " GetLocalInfo004 ERROR";
     }
-    GTEST_LOG_(INFO) << "GetLocalTimeMap004 End";
+    GTEST_LOG_(INFO) << "GetLocalInfo004 End";
 }
 
 /**
- * @tc.name: GetLocalTimeMap005
- * @tc.desc: Verify the GetLocalTimeMap function
+ * @tc.name: GetLocalInfo005
+ * @tc.desc: Verify the GetLocalInfo function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, GetLocalTimeMap005, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, GetLocalInfo005, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetLocalTimeMap005 Begin";
+    GTEST_LOG_(INFO) << "GetLocalInfo005 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> map;
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> cloudMap;
+        std::unordered_map<std::string, LocalInfo> cloudMap;
         auto result = std::make_shared<std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult>>();
         DriveKit::DKRecordData data2;
         DriveKit::DKRecordFieldMap prop;
@@ -778,28 +778,28 @@ HWTEST_F(FileDataHandlerTest, GetLocalTimeMap005, TestSize.Level1)
         record.SetRecordData(data2);
         operResult.SetDKRecord(std::move(record));
         (*result)[recordId] = operResult;
-        fileDataHandler->GetLocalTimeMap(*result, cloudMap, "hh");
+        fileDataHandler->GetLocalInfo(*result, cloudMap, "hh");
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetLocalTimeMap005 ERROR";
+        GTEST_LOG_(INFO) << " GetLocalInfo005 ERROR";
     }
-    GTEST_LOG_(INFO) << "GetLocalTimeMap005 End";
+    GTEST_LOG_(INFO) << "GetLocalInfo005 End";
 }
 
 /**
- * @tc.name: OnResultSetConvertToMap001
- * @tc.desc: Verify the OnResultSetConvertToMap function
+ * @tc.name: BuildInfoMap001
+ * @tc.desc: Verify the BuildInfoMap function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnResultSetConvertToMap001, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, BuildInfoMap001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnResultSetConvertToMap Begin";
+    GTEST_LOG_(INFO) << "BuildInfoMap Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> cloudMap;
+        std::unordered_map<std::string, LocalInfo> cloudMap;
         const int count = 3;
         EXPECT_CALL(*rset, GoToNextRow())
             .Times(count)
@@ -809,12 +809,12 @@ HWTEST_F(FileDataHandlerTest, OnResultSetConvertToMap001, TestSize.Level1)
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(0));
-        fileDataHandler->OnResultSetConvertToMap(move(rset), cloudMap, Media::PhotoColumn::PHOTO_CLOUD_ID);
+        fileDataHandler->BuildInfoMap(move(rset), cloudMap, Media::PhotoColumn::PHOTO_CLOUD_ID);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnResultSetConvertToMap001 ERROR";
+        GTEST_LOG_(INFO) << " BuildInfoMap001 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnResultSetConvertToMap001 End";
+    GTEST_LOG_(INFO) << "BuildInfoMap001 End";
 }
 
 /**
@@ -853,7 +853,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         DriveKit::DKRecordData data2;
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
@@ -882,7 +882,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess002, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
@@ -913,7 +913,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess003, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>()))
             .WillOnce(Return(0))
             .WillOnce(Return(1))
@@ -925,7 +925,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess003, TestSize.Level1)
         DriveKit::DKRecordId recordId = "hh";
         std::string path = "hh";
         DriveKit::DKRecordFieldMap prop;
-        localMap[path] = std::make_pair(1111, 1111);
+        localMap[path] = { 1111, 1111 };
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("hh")));
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
@@ -937,10 +937,10 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess003, TestSize.Level1)
         EXPECT_EQ(E_OK, ret);
         ret = fileDataHandler->OnCreateRecordSuccess(entry, localMap);
         EXPECT_EQ(ret, 1);
-        localMap[path] = std::make_pair(11, 1111);
+        localMap[path] = { 11, 1111 };
         ret = fileDataHandler->OnCreateRecordSuccess(entry, localMap);
         EXPECT_EQ(E_OK, ret);
-        localMap[path] = std::make_pair(1111, 11);
+        localMap[path] = { 1111, 11 };
         ret = fileDataHandler->OnCreateRecordSuccess(entry, localMap);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
@@ -962,7 +962,7 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
         DriveKit::DKRecordId recordId = "1";
@@ -989,14 +989,14 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccesss002, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0)).WillOnce(Return(1));
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
         DriveKit::DKRecordId recordId = "hh";
         std::string cloudId = "hh";
-        localMap[cloudId] = std::make_pair(1111, 1111);
+        localMap[cloudId] = { 1111, 1111 };
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
@@ -1028,14 +1028,14 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess003, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0)).WillOnce(Return(0));
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
         DriveKit::DKRecordId recordId = "hh";
         std::string cloudId = "hh";
-        localMap[cloudId] = std::make_pair(1111, 11);
+        localMap[cloudId] = { 1111, 11 };
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
@@ -1065,14 +1065,14 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess004, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::map<std::string, std::pair<std::int64_t, std::int64_t>> localMap;
+        std::unordered_map<std::string, LocalInfo> localMap;
         EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0)).WillOnce(Return(1));
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
         DriveKit::DKRecordOperResult operResult;
         DriveKit::DKRecordId recordId = "hh";
         std::string cloudId = "hh";
-        localMap[cloudId] = std::make_pair(1111, 11);
+        localMap[cloudId] = { 1111, 11 };
         DriveKit::DKRecordFieldMap prop;
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
