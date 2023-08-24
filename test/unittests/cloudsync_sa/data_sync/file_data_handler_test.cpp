@@ -951,14 +951,14 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess003, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnModifyRecordSuccess001
- * @tc.desc: Verify the OnModifyRecordSuccess function
+ * @tc.name: OnMdirtyRecordSuccess001
+ * @tc.desc: Verify the OnMdirtyRecordSuccess function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess001, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, OnMdirtyRecordSuccess001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnModifyRecordSuccess001 Begin";
+    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccess001 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
@@ -968,24 +968,24 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess001, TestSize.Level1)
         DriveKit::DKRecordId recordId = "1";
         operResult.SetDKRecord(std::move(record));
         std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry(recordId, operResult);
-        int32_t ret = fileDataHandler->OnModifyRecordSuccess(entry, localMap);
+        int32_t ret = fileDataHandler->OnMdirtyRecordSuccess(entry, localMap);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnModifyRecordSuccess001 ERROR";
+        GTEST_LOG_(INFO) << " OnMdirtyRecordSuccess001 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnModifyRecordSuccesss001 End";
+    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccesss001 End";
 }
 
 /**
- * @tc.name: OnModifyRecordSuccess002
- * @tc.desc: Verify the OnModifyRecordSuccess function
+ * @tc.name: OnMdirtyRecordSuccess002
+ * @tc.desc: Verify the OnMdirtyRecordSuccess function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccesss002, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, OnMdirtyRecordSuccesss002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnModifyRecordSuccess002 Begin";
+    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccess002 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
@@ -1005,26 +1005,26 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccesss002, TestSize.Level1)
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry(recordId, operResult);
-        int32_t ret = fileDataHandler->OnModifyRecordSuccess(entry, localMap);
+        int32_t ret = fileDataHandler->OnMdirtyRecordSuccess(entry, localMap);
         EXPECT_EQ(E_OK, ret);
-        ret = fileDataHandler->OnModifyRecordSuccess(entry, localMap);
+        ret = fileDataHandler->OnMdirtyRecordSuccess(entry, localMap);
         EXPECT_EQ(1, ret);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnModifyRecordSuccesss002 ERROR";
+        GTEST_LOG_(INFO) << " OnMdirtyRecordSuccesss002 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnModifyRecordSuccesss002 End";
+    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccesss002 End";
 }
 
 /**
- * @tc.name: OnModifyRecordSuccess003
- * @tc.desc: Verify the OnModifyRecordSuccess function
+ * @tc.name: OnMdirtyRecordSuccess003
+ * @tc.desc: Verify the OnMdirtyRecordSuccess function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess003, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, OnMdirtyRecordSuccess003, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnModifyRecordSuccess003 Begin";
+    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccess003 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
@@ -1044,24 +1044,24 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess003, TestSize.Level1)
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry(recordId, operResult);
-        int32_t ret = fileDataHandler->OnModifyRecordSuccess(entry, localMap);
+        int32_t ret = fileDataHandler->OnMdirtyRecordSuccess(entry, localMap);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnModifyRecordSuccess003 ERROR";
+        GTEST_LOG_(INFO) << " OnMdirtyRecordSuccess003 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnModifyRecordSuccess003 End";
+    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccess003 End";
 }
 
 /**
- * @tc.name: OnModifyRecordSuccess004
- * @tc.desc: Verify the OnModifyRecordSuccess function
+ * @tc.name: OnMdirtyRecordSuccess004
+ * @tc.desc: Verify the OnMdirtyRecordSuccess function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess004, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, OnMdirtyRecordSuccess004, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnModifyRecordSuccess004 Begin";
+    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccess004 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
@@ -1081,13 +1081,13 @@ HWTEST_F(FileDataHandlerTest, OnModifyRecordSuccess004, TestSize.Level1)
         record.SetRecordData(data);
         operResult.SetDKRecord(std::move(record));
         std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry(recordId, operResult);
-        int32_t ret = fileDataHandler->OnModifyRecordSuccess(entry, localMap);
+        int32_t ret = fileDataHandler->OnMdirtyRecordSuccess(entry, localMap);
         EXPECT_EQ(1, ret);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnModifyRecordSuccess004 ERROR";
+        GTEST_LOG_(INFO) << " OnMdirtyRecordSuccess004 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnModifyRecordSuccess004 End";
+    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccess004 End";
 }
 
 /**
