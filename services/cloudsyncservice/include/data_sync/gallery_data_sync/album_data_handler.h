@@ -65,6 +65,9 @@ private:
     int32_t OnDeleteFail(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnModifyFail(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
 
+    bool IsConflict(DriveKit::DKRecord &record, int32_t &albumId);
+    int32_t MergeAlbumOnConflict(DriveKit::DKRecord &record, int32_t albumId);
+
     static inline const std::string TABLE_NAME = "albums";
     static inline const int32_t LIMIT_SIZE = 5;
     DriveKit::DKRecordType recordType_ = "album";

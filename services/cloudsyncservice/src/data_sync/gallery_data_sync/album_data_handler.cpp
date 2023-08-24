@@ -67,9 +67,77 @@ tuple<shared_ptr<ResultSet>, int> AlbumDataHandler::QueryLocalMatch(const std::s
     return { move(resultSet), rowCount };
 }
 
+bool AlbumDataHandler::IsConflict(DriveKit::DKRecord &record, int32_t &albumId)
+{
+    /* get record album name */
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(ALBUM_NAME) == data.end()) {
+        LOGE("no album name in record");
+        return false;
+    }
+    string albumName;
+    if (data[ALBUM_NAME].GetString(albumName) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("get album name err");
+        return false;
+    }
+
+    /* query local */
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
+    predicates.EqualTo(PAC::ALBUM_NAME, albumName);
+    auto resultSet = Query(predicates, ALBUM_LOCAL_QUERY_COLUMNS);
+    if (resultSet == nullptr) {
+        LOGE("get nullptr query result");
+        return false;
+    }
+    int rowCount = 0;
+    int ret = resultSet->GetRowCount(rowCount);
+    if (ret != 0) {
+        LOGE("result set get row count err %{public}d", ret);
+        return false;
+    }
+
+    if (rowCount > 0) {
+        ret = resultSet->GoToNextRow();
+        if (ret != NativeRdb::E_OK) {
+            return false;
+        }
+        ret = createConvertor_.GetInt(PAC::ALBUM_ID, albumId, *resultSet);
+        if (ret != E_OK) {
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+int32_t AlbumDataHandler::MergeAlbumOnConflict(DriveKit::DKRecord &record, int32_t albumId)
+{
+    ValuesBucket values;
+    values.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
+    values.PutString(PAC::ALBUM_CLOUD_ID, record.GetRecordId());
+    int32_t changedRows;
+    int32_t ret = Update(changedRows, values, PAC::ALBUM_ID+ " = ?", { to_string(albumId) });
+    if (ret != E_OK) {
+        LOGE("rdb update failed, err = %{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
 int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
 {
     LOGI("insert of record %s", record.GetRecordId().c_str());
+
+    /* merge if same album name */
+    int32_t albumId;
+    if (IsConflict(record, albumId)) {
+        int32_t ret = MergeAlbumOnConflict(record, albumId);
+        if (ret != E_OK) {
+            LOGE("merge album err %{public}d", ret);
+        }
+        return ret;
+    }
 
     ValuesBucket values;
     int32_t ret = createConvertor_.RecordToValueBucket(record, values);
