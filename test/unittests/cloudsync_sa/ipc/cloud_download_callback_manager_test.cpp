@@ -173,8 +173,9 @@ HWTEST_F(CloudDownloadCallbackManagerTest, OnDownloadedResultTest, TestSize.Leve
         DriveKit::DKDatabaseScope scope;
 
         std::string path = "data/";
+        std::string table = "data";
         std::vector<DriveKit::DKDownloadAsset> assetsToDownload;
-        auto handler = std::make_shared<DataHandlerMock>();
+        auto handler = std::make_shared<DataHandlerMock>(userId, bundleName, table);
         auto context = std::make_shared<DriveKit::DKContext>();
         auto database = std::make_shared<DriveKit::DKDatabase>(container, scope);
         std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> results;
