@@ -16,9 +16,11 @@
 #ifndef OHOS_FILEMGMT_CLOUD_SYNC_ASSET_MANAGER_IMPL_H
 #define OHOS_FILEMGMT_CLOUD_SYNC_ASSET_MANAGER_IMPL_H
 
-#include "nocopyable.h"
+#include <atomic>
 
 #include "cloud_sync_asset_manager.h"
+#include "nocopyable.h"
+#include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncAssetManagerImpl final : public CloudSyncAssetManager, public NoCopyable {
@@ -30,6 +32,10 @@ public:
 
 private:
     CloudSyncAssetManagerImpl() = default;
+    void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
+
+    std::atomic_flag isFirstCall_{false};
+    sptr<SvcDeathRecipient> deathRecipient_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

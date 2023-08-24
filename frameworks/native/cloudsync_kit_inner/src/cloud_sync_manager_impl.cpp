@@ -119,6 +119,11 @@ int32_t CloudSyncManagerImpl::ChangeAppSwitch(const std::string &accoutId, const
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+
+    if (!isFirstCall_.test_and_set()) {
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
+
     int32_t ret = CloudSyncServiceProxy->ChangeAppSwitch(accoutId, bundleName, status);
     LOGI("ChangeAppSwitch ret %{public}d", ret);
     return ret;
@@ -131,6 +136,11 @@ int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, cons
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+
+    if (!isFirstCall_.test_and_set()) {
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
+
     int32_t ret = CloudSyncServiceProxy->NotifyDataChange(accoutId, bundleName);
     LOGI("NotifyDataChange ret %{public}d", ret);
     return ret;
@@ -213,6 +223,10 @@ int32_t CloudSyncManagerImpl::EnableCloud(const std::string &accoutId,
         return E_SA_LOAD_FAILED;
     }
 
+    if (!isFirstCall_.test_and_set()) {
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
+
     return CloudSyncServiceProxy->EnableCloud(accoutId, switchData);
 }
 
@@ -222,6 +236,10 @@ int32_t CloudSyncManagerImpl::DisableCloud(const std::string &accoutId)
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
+    }
+
+    if (!isFirstCall_.test_and_set()) {
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     }
 
     return CloudSyncServiceProxy->DisableCloud(accoutId);
@@ -234,6 +252,11 @@ int32_t CloudSyncManagerImpl::Clean(const std::string &accountId, const CleanOpt
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+
+    if (!isFirstCall_.test_and_set()) {
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
+
     return CloudSyncServiceProxy->Clean(accountId, cleanOptions);
 }
 } // namespace OHOS::FileManagement::CloudSync

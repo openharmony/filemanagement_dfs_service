@@ -34,6 +34,10 @@ int32_t CloudSyncAssetManagerImpl::UploadAsset(const int32_t userId,
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+
+    if (!isFirstCall_.test_and_set()) {
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
     int32_t ret = CloudSyncServiceProxy->UploadAsset(userId, request, result);
     LOGI("UploadAsset ret %{public}d", ret);
     return ret;
@@ -48,9 +52,24 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+
+    if (!isFirstCall_.test_and_set()) {
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
     AssetInfoObj assetInfoObj(assetInfo);
     int32_t ret = CloudSyncServiceProxy->DownloadFile(userId, bundleName, assetInfoObj);
     LOGI("DownloadFile ret %{public}d", ret);
     return ret;
+}
+
+void CloudSyncAssetManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
+{
+    auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
+        LOGE("service died. Died remote obj");
+        CloudSyncServiceProxy::InvaildInstance();
+        isFirstCall_.clear();
+    };
+    deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));
+    remoteObject->AddDeathRecipient(deathRecipient_);
 }
 } // namespace OHOS::FileManagement::CloudSync
