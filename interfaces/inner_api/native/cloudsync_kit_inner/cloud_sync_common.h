@@ -31,6 +31,7 @@ struct DownloadProgressObj : public Parcelable {
         STOPPED = 3,
     };
     std::string path;
+    int64_t downloadId;
     Status state;
     int64_t downloadedSize;
     int64_t totalSize;

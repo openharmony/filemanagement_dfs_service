@@ -142,7 +142,10 @@ int32_t DataSyncer::StartDownloadFile(const std::string path, const int32_t user
 
 int32_t DataSyncer::StopDownloadFile(const std::string path, const int32_t userId)
 {
-    downloadCallbackMgr_.StopDonwload(path, userId);
+    int64_t downloadId = 0;
+    if (downloadCallbackMgr_.StopDonwload(path, userId, downloadId)) {
+        sdkHelper_->CancelDownloadAssets(downloadId);
+    }
     return E_OK;
 }
 
@@ -427,8 +430,6 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
         return ret;
     }
 
-    downloadCallbackMgr_.StartDonwload(path, userId);
-
     auto downloadResultCallback = [this, path, assetsToDownload, handler](
                                       std::shared_ptr<DriveKit::DKContext> context,
                                       std::shared_ptr<const DriveKit::DKDatabase> database,
@@ -446,6 +447,8 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
                             .resultCallback = downloadResultCallback,
                             .progressCallback = downloadProcessCallback};
     DownloadAssets(dctx);
+    downloadCallbackMgr_.StartDonwload(path, userId, dctx.id);
+
     return E_OK;
 }
 
@@ -685,6 +688,12 @@ int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int a
     if (res != E_OK) {
         LOGE("Clean file failed res:%{public}d", res);
     }
+
+    std::vector<int64_t> downloadIds = downloadCallbackMgr_.StopAllDownloads(userId_);
+    for (const auto &id : downloadIds) {
+        sdkHelper_->CancelDownloadAssets(id);
+    }
+
     return res;
 }
 

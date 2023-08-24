@@ -25,9 +25,22 @@ CloudDownloadCallbackManager::CloudDownloadCallbackManager()
     callback_ = nullptr;
 }
 
-void CloudDownloadCallbackManager::StartDonwload(const std::string path, const int32_t userId) {}
+void CloudDownloadCallbackManager::StartDonwload(const std::string path,
+                                                 const int32_t userId,
+                                                 const int64_t downloadId)
+{
+}
 
-void CloudDownloadCallbackManager::StopDonwload(const std::string path, const int32_t userId) {}
+bool CloudDownloadCallbackManager::StopDonwload(const std::string path, const int32_t userId, int64_t &downloadId)
+{
+    return true;
+}
+
+std::vector<int64_t> CloudDownloadCallbackManager::StopAllDownloads(const int32_t userId)
+{
+    std::vector<int64_t> ret;
+    return ret;
+}
 
 void CloudDownloadCallbackManager::RegisterCallback(const int32_t userId,
                                                     const sptr<ICloudDownloadCallback> downloadCallback)

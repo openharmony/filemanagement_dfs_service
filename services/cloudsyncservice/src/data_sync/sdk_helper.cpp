@@ -182,6 +182,7 @@ int32_t SdkHelper::DownloadAssets(DriveKit::DKDownloadAsset &assetsToDownload)
 
 int32_t SdkHelper::CancelDownloadAssets(int32_t id)
 {
+    downloader_->CancelDownloadAssets(id);
     return E_OK;
 }
 
