@@ -32,6 +32,7 @@ using namespace NativeRdb;
 using namespace DriveKit;
 using namespace Media;
 using PAC = Media::PhotoAlbumColumns;
+using PM = Media::PhotoMap;
 using ChangeType = OHOS::AAFwk::ChangeInfo::ChangeType;
 
 AlbumDataHandler::AlbumDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<RdbStore> rdb)
@@ -66,9 +67,77 @@ tuple<shared_ptr<ResultSet>, int> AlbumDataHandler::QueryLocalMatch(const std::s
     return { move(resultSet), rowCount };
 }
 
+bool AlbumDataHandler::IsConflict(DriveKit::DKRecord &record, int32_t &albumId)
+{
+    /* get record album name */
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(ALBUM_NAME) == data.end()) {
+        LOGE("no album name in record");
+        return false;
+    }
+    string albumName;
+    if (data[ALBUM_NAME].GetString(albumName) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("get album name err");
+        return false;
+    }
+
+    /* query local */
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
+    predicates.EqualTo(PAC::ALBUM_NAME, albumName);
+    auto resultSet = Query(predicates, ALBUM_LOCAL_QUERY_COLUMNS);
+    if (resultSet == nullptr) {
+        LOGE("get nullptr query result");
+        return false;
+    }
+    int rowCount = 0;
+    int ret = resultSet->GetRowCount(rowCount);
+    if (ret != 0) {
+        LOGE("result set get row count err %{public}d", ret);
+        return false;
+    }
+
+    if (rowCount > 0) {
+        ret = resultSet->GoToNextRow();
+        if (ret != NativeRdb::E_OK) {
+            return false;
+        }
+        ret = createConvertor_.GetInt(PAC::ALBUM_ID, albumId, *resultSet);
+        if (ret != E_OK) {
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+int32_t AlbumDataHandler::MergeAlbumOnConflict(DriveKit::DKRecord &record, int32_t albumId)
+{
+    ValuesBucket values;
+    values.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
+    values.PutString(PAC::ALBUM_CLOUD_ID, record.GetRecordId());
+    int32_t changedRows;
+    int32_t ret = Update(changedRows, values, PAC::ALBUM_ID+ " = ?", { to_string(albumId) });
+    if (ret != E_OK) {
+        LOGE("rdb update failed, err = %{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
 int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
 {
     LOGI("insert of record %s", record.GetRecordId().c_str());
+
+    /* merge if same album name */
+    int32_t albumId;
+    if (IsConflict(record, albumId)) {
+        int32_t ret = MergeAlbumOnConflict(record, albumId);
+        if (ret != E_OK) {
+            LOGE("merge album err %{public}d", ret);
+        }
+        return ret;
+    }
 
     ValuesBucket values;
     int32_t ret = createConvertor_.RecordToValueBucket(record, values);
@@ -207,11 +276,28 @@ int32_t AlbumDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &rec
 
 int32_t AlbumDataHandler::Clean(const int action)
 {
-    /* delete all albums on user exit */
-    string rawSql = "DELETE FROM " + PAC::TABLE;
-    int32_t ret = ExecuteSql(rawSql);
+    /* update album */
+    string albumSql = "UPDATE " + PAC::TABLE + " SET " + PAC::ALBUM_CLOUD_ID + " = NULL, " +
+        PAC::ALBUM_DIRTY + " = " + to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW));
+    int32_t ret = ExecuteSql(albumSql);
     if (ret != NativeRdb::E_OK) {
-        LOGE("delete all albums err %{public}d", ret);
+        LOGE("update all albums err %{public}d", ret);
+        return ret;
+    }
+    /* update album map */
+    string mapSql = "UPDATE " + PM::TABLE + " SET " + PM::DIRTY + " = " + to_string(static_cast<int32_t>(
+        Media::DirtyType::TYPE_NEW)) + " WHERE " + PM::DIRTY + " = " + to_string(static_cast<int32_t>(
+        Media::DirtyType::TYPE_SYNCED));
+    ret = ExecuteSql(mapSql);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("update album maps err %{public}d", ret);
+        return ret;
+    }
+    mapSql = "DELETE FROM " + PM::TABLE + " WHERE " + PM::DIRTY + " = " + to_string(static_cast<int32_t>(
+        Media::DirtyType::TYPE_DELETED));
+    ret = ExecuteSql(mapSql);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("delete album maps err %{public}d", ret);
         return ret;
     }
     /* notify */
