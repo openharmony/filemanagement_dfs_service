@@ -204,7 +204,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         LOGE("lookup %s error, err: %{public}d", childName.c_str(), err);
         return err;
     }
-    if (create && child->mBase->mode & S_IFDIR) {
+    if (create && (child->mBase->mode & S_IFDIR)) {
         child->mFile = std::make_shared<MetaFile>(data->userId, childName);
     }
     child->parent = parent;
