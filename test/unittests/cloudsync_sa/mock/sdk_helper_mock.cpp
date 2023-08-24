@@ -152,6 +152,8 @@ int32_t SdkHelper::DeleteSubscription(DelSubscriptionCallback callback)
 {
     return E_OK;
 }
+
+void SdkHelper::ReleaseDownloader() {}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
