@@ -85,6 +85,7 @@ void DataSyncerTest::TearDownTestCase(void)
     datasyncer_ = nullptr;
     galleryDataSyncer_ = nullptr;
     handler_ = nullptr;
+    dataHandler_ = nullptr;
 }
 
 void DataSyncerTest::SetUp(void) {}
@@ -633,7 +634,6 @@ HWTEST_F(DataSyncerTest, OnFetchRecordsTest003, TestSize.Level1)
     try {
         DriveKit::DKError err;
         EXPECT_CALL(*dataHandler_, GetBatchNo()).Times(1).WillOnce(Return(0));
-        EXPECT_CALL(*dataHandler_, GetBatchNo()).Times(1).WillOnce(Return(0));
         shared_ptr<DownloadTaskContext> contextErr = make_shared<DownloadTaskContext>(dataHandler_, 1);
         shared_ptr<vector<DriveKit::DKRecord>> records = make_shared<vector<DriveKit::DKRecord>>();
         datasyncer_->OnFetchRecords(contextErr, nullptr, records, "", err);
@@ -736,9 +736,8 @@ HWTEST_F(DataSyncerTest, OnFetchDatabaseChangesTest002, TestSize.Level1)
     try {
         shared_ptr<DownloadTaskContext> context = make_shared<DownloadTaskContext>(dataHandler_, 0);
         DriveKit::DKError err;
-        EXPECT_CALL(*dataHandler_, GetBatchNo()).Times(3).WillRepeatedly(Return(0));
-        EXPECT_CALL(*dataHandler_, IsPullRecords()).Times(4).WillRepeatedly(Return(0));
-        EXPECT_CALL(*dataHandler_, OnFetchRecords(_, _)).Times(1).WillOnce(Return(1));
+        EXPECT_CALL(*dataHandler_, GetBatchNo()).Times(1).WillRepeatedly(Return(0));
+        EXPECT_CALL(*dataHandler_, IsPullRecords()).Times(2).WillRepeatedly(Return(0));
         shared_ptr<vector<DriveKit::DKRecord>> records = make_shared<vector<DriveKit::DKRecord>>();
         datasyncer_->OnFetchDatabaseChanges(context, nullptr, records, "", false, err);
         GTEST_LOG_(INFO) << "OnFetchDatabaseChangesTest002 other 002";
@@ -795,7 +794,7 @@ HWTEST_F(DataSyncerTest, OnFetchCheckRecordsTest002, TestSize.Level1)
     try {
         shared_ptr<DownloadTaskContext> context = make_shared<DownloadTaskContext>(dataHandler_, 0);
         DriveKit::DKError err;
-        EXPECT_CALL(*dataHandler_, GetBatchNo()).Times(4).WillRepeatedly(Return(0));
+        EXPECT_CALL(*dataHandler_, GetBatchNo()).Times(1).WillRepeatedly(Return(0));
         EXPECT_CALL(*dataHandler_, GetCheckRecords(_, _)).Times(1).WillOnce(Return(1));
         datasyncer_->OnFetchCheckRecords(context, nullptr, nullptr, "", err);
         GTEST_LOG_(INFO) << "OnFetchCheckRecordsTest002 other";
