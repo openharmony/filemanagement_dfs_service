@@ -30,7 +30,7 @@ using namespace testing::ext;
 using namespace testing;
 using namespace std;
 
-class CloudSyncManagerTest : public testing::Test {
+class CloudSyncManagerImplTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -47,22 +47,30 @@ public:
     }
 };
 
-void CloudSyncManagerTest::SetUpTestCase(void)
+class CloudDownloadCallbackDerived : public CloudDownloadCallback {
+public:
+    void OnDownloadProcess(DownloadProgressObj& progress)
+    {
+        std::cout << "OnDownloadProcess" << std::endl;
+    }
+};
+
+void CloudSyncManagerImplTest::SetUpTestCase(void)
 {
     std::cout << "SetUpTestCase" << std::endl;
 }
 
-void CloudSyncManagerTest::TearDownTestCase(void)
+void CloudSyncManagerImplTest::TearDownTestCase(void)
 {
     std::cout << "TearDownTestCase" << std::endl;
 }
 
-void CloudSyncManagerTest::SetUp(void)
+void CloudSyncManagerImplTest::SetUp(void)
 {
     std::cout << "SetUp" << std::endl;
 }
 
-void CloudSyncManagerTest::TearDown(void)
+void CloudSyncManagerImplTest::TearDown(void)
 {
     managePtr_ = nullptr;
     std::cout << "TearDown" << std::endl;
@@ -74,7 +82,7 @@ void CloudSyncManagerTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, RegisterCallbackTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
     try {
@@ -91,13 +99,32 @@ HWTEST_F(CloudSyncManagerTest, RegisterCallbackTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterCallbackTest End";
 }
 
+/*
+ * @tc.name: UnRegisterCallbackTest
+ * @tc.desc: Verify the UnRegisterCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterCallbackTest Start";
+    try {
+        auto res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback();
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " UnRegisterCallbackTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterCallbackTest End";
+}
+
 /**
  * @tc.name: StartSyncTest
  * @tc.desc: Verify the StartSync function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, StartSyncTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartSyncTest Start";
     try {
@@ -129,7 +156,7 @@ HWTEST_F(CloudSyncManagerTest, StartSyncTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, StopSyncTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, StopSyncTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopSyncTest Start";
     try {
@@ -148,7 +175,7 @@ HWTEST_F(CloudSyncManagerTest, StopSyncTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, ChangeAppSwitchTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, ChangeAppSwitchTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ChangeAppSwitchTest Start";
     try {
@@ -170,7 +197,7 @@ HWTEST_F(CloudSyncManagerTest, ChangeAppSwitchTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, NotifyDataChangeTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, NotifyDataChangeTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
@@ -191,7 +218,7 @@ HWTEST_F(CloudSyncManagerTest, NotifyDataChangeTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, StartDownloadFileTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, StartDownloadFileTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
@@ -211,7 +238,7 @@ HWTEST_F(CloudSyncManagerTest, StartDownloadFileTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, StopDownloadFileTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, StopDownloadFileTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
@@ -231,11 +258,12 @@ HWTEST_F(CloudSyncManagerTest, StopDownloadFileTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, RegisterDownloadFileCallbackTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, RegisterDownloadFileCallbackTest, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    GTEST_LOG_(INFO) << "RegisterDownloadFileCallbackTest Start";
     try {
-        auto res = CloudSyncManagerImpl::GetInstance().UnregisterDownloadFileCallback();
+        shared_ptr<CloudDownloadCallback> downloadCallback = make_shared<CloudDownloadCallbackDerived>();
+        auto res = CloudSyncManagerImpl::GetInstance().RegisterDownloadFileCallback(downloadCallback);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -245,12 +273,31 @@ HWTEST_F(CloudSyncManagerTest, RegisterDownloadFileCallbackTest, TestSize.Level1
 }
 
 /*
+ * @tc.name: UnregisterDownloadFileCallbackTest
+ * @tc.desc: Verify the UnregisterDownloadFileCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, UnregisterDownloadFileCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallbackTest Start";
+    try {
+        auto res = CloudSyncManagerImpl::GetInstance().UnregisterDownloadFileCallback();
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " UnregisterDownloadFileCallbackTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnregisterDownloadFileCallbackTest End";
+}
+
+/*
  * @tc.name: SetDeathRecipientTest
  * @tc.desc: Verify the SetDeathRecipient function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, SetDeathRecipientTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
@@ -270,7 +317,7 @@ HWTEST_F(CloudSyncManagerTest, SetDeathRecipientTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, EnableCloudTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, EnableCloudTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
@@ -291,7 +338,7 @@ HWTEST_F(CloudSyncManagerTest, EnableCloudTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, DisableCloudTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, DisableCloudTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
@@ -311,7 +358,7 @@ HWTEST_F(CloudSyncManagerTest, DisableCloudTest, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerTest, CleanTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, CleanTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
     try {
