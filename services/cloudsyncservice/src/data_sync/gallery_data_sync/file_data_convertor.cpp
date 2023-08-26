@@ -141,6 +141,7 @@ int32_t FileDataConvertor::HandleCompatibleFileds(DriveKit::DKRecordData &data,
 
     /* cloudsync-specific fields */
     RETURN_ON_ERR(HandleMimeType(data, resultSet));
+    RETURN_ON_ERR(HandleEditedTime(data, resultSet));
     return E_OK;
 }
 
