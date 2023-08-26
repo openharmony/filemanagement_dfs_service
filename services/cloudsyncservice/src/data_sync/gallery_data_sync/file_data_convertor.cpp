@@ -141,7 +141,6 @@ int32_t FileDataConvertor::HandleCompatibleFileds(DriveKit::DKRecordData &data,
 
     /* cloudsync-specific fields */
     RETURN_ON_ERR(HandleMimeType(data, resultSet));
-    RETURN_ON_ERR(HandleEditedTime(data, resultSet));
     return E_OK;
 }
 
@@ -555,6 +554,7 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Values
             LOGE("record data donnot have attributes set, need");
             return ret;
         }
+        RETURN_ON_ERR(CompensateTitle(data, valueBucket));
     }
     ExtractCompatibleValue(record, data, valueBucket);
     return E_OK;

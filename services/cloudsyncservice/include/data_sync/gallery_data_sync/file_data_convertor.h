@@ -285,7 +285,6 @@ inline int32_t FileDataConvertor::HandleMimeType(DriveKit::DKRecordData &data,
     return E_OK;
 }
 
-
 inline int32_t FileDataConvertor::HandleEditedTime(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
