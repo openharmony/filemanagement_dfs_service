@@ -24,24 +24,44 @@ CloudDownloadCallbackManager::CloudDownloadCallbackManager()
     callback_ = nullptr;
 }
 
-void CloudDownloadCallbackManager::StartDonwload(const std::string path, const int32_t userId)
+void CloudDownloadCallbackManager::StartDonwload(const std::string path,
+                                                 const int32_t userId,
+                                                 const int64_t downloadId)
 {
     lock_guard<mutex> lock(downloadsMtx_);
     downloads_[path].state = DownloadProgressObj::Status::RUNNING;
     downloads_[path].path = path;
+    downloads_[path].downloadId = downloadId;
     LOGI("download_file : %{public}d start download %{public}s callback success.", userId, path.c_str());
 }
 
-void CloudDownloadCallbackManager::StopDonwload(const std::string path, const int32_t userId)
+bool CloudDownloadCallbackManager::StopDonwload(const std::string path, const int32_t userId, int64_t &downloadId)
 {
+    bool ret = false;
     lock_guard<mutex> lock(downloadsMtx_);
     if (downloads_.find(path) != downloads_.end()) {
         downloads_[path].state = DownloadProgressObj::Status::STOPPED;
+        downloadId = downloads_[path].downloadId;
         LOGI("download_file : %{public}d stop download %{public}s callback success.", userId, path.c_str());
+        ret = true;
     } else {
         LOGI("download_file : %{public}d stop download %{public}s callback fail, task not exist.",
             userId, path.c_str());
+        ret = false;
     }
+    return ret;
+}
+
+std::vector<int64_t> CloudDownloadCallbackManager::StopAllDownloads(const int32_t userId)
+{
+    std::vector<int64_t> ret;
+    lock_guard<mutex> lock(downloadsMtx_);
+    for (auto &pair : downloads_) {
+        pair.second.state = DownloadProgressObj::Status::STOPPED;
+        ret.push_back(pair.second.downloadId);
+        LOGI("download_file : %{public}d stop download %{public}s callback success.", userId, pair.first.c_str());
+    }
+    return ret;
 }
 
 void CloudDownloadCallbackManager::RegisterCallback(const int32_t userId,

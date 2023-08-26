@@ -75,7 +75,7 @@ HWTEST_F(CloudDownloadCallbackManagerTest, StartDonwloadTest, TestSize.Level1)
         auto cloudDownloadCallbackManager =std::make_shared<CloudDownloadCallbackManager>();
         std::string path = "data/";
         int32_t userId = 1;
-        cloudDownloadCallbackManager->StartDonwload(path, userId);
+        cloudDownloadCallbackManager->StartDonwload(path, userId, 0);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -97,11 +97,12 @@ HWTEST_F(CloudDownloadCallbackManagerTest, StopDonwloadTest, TestSize.Level1)
         CloudDownloadCallbackManager cloudDownloadCallbackManager;
         std::string path = "data/";
         int32_t userId = 1;
-        cloudDownloadCallbackManager.StopDonwload(path, userId);
+        int64_t downloadId = 0;
+        cloudDownloadCallbackManager.StopDonwload(path, userId, downloadId);
 
         DownloadProgressObj downloadProgressObj;
         cloudDownloadCallbackManager.downloads_.insert({path, downloadProgressObj});
-        cloudDownloadCallbackManager.StopDonwload(path, userId);
+        cloudDownloadCallbackManager.StopDonwload(path, userId, downloadId);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);

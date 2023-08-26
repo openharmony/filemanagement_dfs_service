@@ -33,8 +33,9 @@ public:
     CloudDownloadCallbackManager();
     ~CloudDownloadCallbackManager() = default;
 
-    void StartDonwload(const std::string path, const int32_t userId);
-    void StopDonwload(const std::string path, const int32_t userId);
+    void StartDonwload(const std::string path, const int32_t userId, const int64_t downloadId);
+    bool StopDonwload(const std::string path, const int32_t userId, int64_t &downloadId);
+    std::vector<int64_t> StopAllDownloads(const int32_t userId);
     void RegisterCallback(const int32_t userId, const sptr<ICloudDownloadCallback> downloadCallback);
     void UnregisterCallback(const int32_t userId);
     void OnDownloadedResult(const std::string path,
