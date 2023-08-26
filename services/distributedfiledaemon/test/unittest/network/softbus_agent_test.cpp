@@ -426,7 +426,7 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_IsContinueRetry_0100, TestSize.Level
     string cid = "notExitCid";
     try {
         bool ret = agent->IsContinueRetry(cid);
-        EXPECT_EQ(agent->OpenSessionRetriedTimesMap_[cid], 0);
+        EXPECT_EQ(agent->OpenSessionRetriedTimesMap_[cid], 1);
         ret = agent->IsContinueRetry(cid);
         EXPECT_EQ(ret, true);
         agent->OpenSessionRetriedTimesMap_[cid] = MAX_RETRY_COUNT;

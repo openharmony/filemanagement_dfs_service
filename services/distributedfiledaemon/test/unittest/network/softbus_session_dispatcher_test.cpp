@@ -124,6 +124,7 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_RegisterSess
         SoftbusSessionDispatcher::RegisterSessionListener(busName, wsba);
         EXPECT_TRUE(false);
     } catch (const exception &e) {
+        SoftbusSessionDispatcher::busNameToAgent_.erase(busName);
         LOGE("%{public}s", e.what());
         EXPECT_TRUE(true);
     }

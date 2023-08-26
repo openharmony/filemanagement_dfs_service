@@ -592,3 +592,412 @@ HWTEST_F(FileDataHandlerTest, OnDownloadAssets004, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "OnDownloadAssets004 End";
 }
+
+/**
+ * @tc.name: GetFileExtension001
+ * @tc.desc: Verify the GetFileExtension function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, GetFileExtension001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileExtension001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DriveKit::DKRecordData data;
+        data.insert(std::make_pair(FILE_FILE_NAME, DriveKit::DKRecordField("test.txt")));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string ret = fileDataHandler->GetFileExtension(record);
+        EXPECT_EQ(ret, "txt");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetFileExtension001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileExtension001 End";
+}
+
+/**
+ * @tc.name: GetFileExtension002
+ * @tc.desc: Verify the GetFileExtension function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, GetFileExtension002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileExtension002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DriveKit::DKRecord record;
+        string ret = fileDataHandler->GetFileExtension(record);
+        EXPECT_EQ(ret, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetFileExtension002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileExtension002 End";
+}
+
+/**
+ * @tc.name: GetFileExtension003
+ * @tc.desc: Verify the GetFileExtension function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, GetFileExtension003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileExtension003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DriveKit::DKRecordData data;
+        data.insert(std::make_pair(FILE_FILE_NAME, DriveKit::DKRecordField(1)));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string ret = fileDataHandler->GetFileExtension(record);
+        EXPECT_EQ(ret, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetFileExtension003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileExtension003 End";
+}
+
+/**
+ * @tc.name: GetFileExtension004
+ * @tc.desc: Verify the GetFileExtension function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, GetFileExtension004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileExtension004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DriveKit::DKRecordData data;
+        data.insert(std::make_pair(FILE_FILE_NAME, DriveKit::DKRecordField("")));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string ret = fileDataHandler->GetFileExtension(record);
+        EXPECT_EQ(ret, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetFileExtension004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileExtension004 End";
+}
+
+/**
+ * @tc.name: GetFileExtension005
+ * @tc.desc: Verify the GetFileExtension function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, GetFileExtension005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetFileExtension005 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DriveKit::DKRecordData data;
+        data.insert(std::make_pair(FILE_FILE_NAME, DriveKit::DKRecordField("text")));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string ret = fileDataHandler->GetFileExtension(record);
+        EXPECT_EQ(ret, "");
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetFileExtension005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetFileExtension005 End";
+}
+
+/**
+ * @tc.name: CreateAssetRealName001
+ * @tc.desc: Verify the CreateAssetRealName function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, CreateAssetRealName001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateAssetRealName001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        int32_t fileId = 1;
+        int32_t mediaType = static_cast<int32_t>(MediaType::MEDIA_TYPE_IMAGE);
+        string extension = "txt";
+        string name = "";
+        int32_t ret = fileDataHandler->CreateAssetRealName(fileId, mediaType, extension, name);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CreateAssetRealName001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CreateAssetRealName001 End";
+}
+
+/**
+ * @tc.name: CreateAssetRealName002
+ * @tc.desc: Verify the CreateAssetRealName function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, CreateAssetRealName002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateAssetRealName002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        int32_t fileId = ASSET_MAX_COMPLEMENT_ID + 1;
+        int32_t mediaType = static_cast<int32_t>(MediaType::MEDIA_TYPE_IMAGE);
+        string extension = "txt";
+        string name = "";
+        int32_t ret = fileDataHandler->CreateAssetRealName(fileId, mediaType, extension, name);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CreateAssetRealName002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CreateAssetRealName002 End";
+}
+
+/**
+ * @tc.name: CreateAssetRealName003
+ * @tc.desc: Verify the CreateAssetRealName function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, CreateAssetRealName003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateAssetRealName003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        int32_t fileId = 1;
+        int32_t mediaType = static_cast<int32_t>(MediaType::MEDIA_TYPE_VIDEO);
+        string extension = "txt";
+        string name = "";
+        int32_t ret = fileDataHandler->CreateAssetRealName(fileId, mediaType, extension, name);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CreateAssetRealName003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CreateAssetRealName003 End";
+}
+
+/**
+ * @tc.name: CreateAssetRealName004
+ * @tc.desc: Verify the CreateAssetRealName function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, CreateAssetRealName004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateAssetRealName004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        int32_t fileId = 1;
+        int32_t mediaType = static_cast<int32_t>(MediaType::MEDIA_TYPE_AUDIO);
+        string extension = "txt";
+        string name = "";
+        int32_t ret = fileDataHandler->CreateAssetRealName(fileId, mediaType, extension, name);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CreateAssetRealName004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CreateAssetRealName004 End";
+}
+
+/**
+ * @tc.name: BindAlbums001
+ * @tc.desc: Verify the BindAlbums function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, BindAlbums001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BindAlbums001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset1 = std::make_unique<AbsSharedResultSetMock>();
+        std::unique_ptr<AbsSharedResultSetMock> rset2 = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset1, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
+        EXPECT_CALL(*rset2, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset1, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset2, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset1, GetString(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset1, GetInt(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(1), Return(0)));
+        EXPECT_CALL(*rset2, GetString(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _))
+            .WillOnce(Return(ByMove(std::move(rset1))))
+            .WillOnce(Return(ByMove(std::move(rset2))));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::MediaColumn::MEDIA_ID, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        std::vector<DriveKit::DKRecord> records;
+        records.push_back(record);
+        int32_t ret = fileDataHandler->BindAlbums(records);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BindAlbums001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BindAlbums001 End";
+}
+
+/**
+ * @tc.name: BindAlbums002
+ * @tc.desc: Verify the BindAlbums function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, BindAlbums002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BindAlbums002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr)));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::MediaColumn::MEDIA_ID, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        std::vector<DriveKit::DKRecord> records;
+        records.push_back(record);
+        int32_t ret = fileDataHandler->BindAlbums(records);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BindAlbums002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BindAlbums002 End";
+}
+
+/**
+ * @tc.name: BindAlbums003
+ * @tc.desc: Verify the BindAlbums function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, BindAlbums003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BindAlbums003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::MediaColumn::MEDIA_ID, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        std::vector<DriveKit::DKRecord> records;
+        records.push_back(record);
+        int32_t ret = fileDataHandler->BindAlbums(records);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BindAlbums003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BindAlbums003 End";
+}
+
+/**
+ * @tc.name: BindAlbums004
+ * @tc.desc: Verify the BindAlbums function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, BindAlbums004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BindAlbums004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(1), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset)))).WillOnce(Return(ByMove(nullptr)));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::MediaColumn::MEDIA_ID, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        std::vector<DriveKit::DKRecord> records;
+        records.push_back(record);
+        int32_t ret = fileDataHandler->BindAlbums(records);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BindAlbums004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BindAlbums004 End";
+}
+
+/**
+ * @tc.name: BindAlbumChanges001
+ * @tc.desc: Verify the BindAlbumChanges function
+ * @tc.type: FUNC
+ * @tc.require: issueI7VPAH
+ */
+HWTEST_F(FileDataHandlerTest, BindAlbumChanges001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BindAlbumChanges001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(1));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::MediaColumn::MEDIA_ID, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        std::vector<DriveKit::DKRecord> records;
+        records.push_back(record);
+        int32_t ret = fileDataHandler->BindAlbumChanges(records);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BindAlbumChanges001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BindAlbumChanges001 End";
+}

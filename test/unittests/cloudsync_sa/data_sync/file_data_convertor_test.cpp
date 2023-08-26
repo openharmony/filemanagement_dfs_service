@@ -502,7 +502,7 @@ HWTEST_F(FileDataConvertorTest, GetLowerTmpPathTest1, TestSize.Level1)
 {
     string path = "/storage/cloud/files/1";
     auto ret = fileDataConvertor_->GetLowerTmpPath(path);
-    string out = "/data/service/el2/100/hmdfs/account/files/1";
+    string out = "/data/service/el2/100/hmdfs/account/files/1.temp.download";
     EXPECT_EQ(out, ret);
 }
 
