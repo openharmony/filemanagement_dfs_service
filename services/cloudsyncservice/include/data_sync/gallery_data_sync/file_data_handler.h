@@ -27,6 +27,12 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+
+struct LocalInfo {
+    int64_t mdirtyTime;
+    int64_t fdirtyTime;
+};
+
 class FileDataHandler : public RdbDataHandler {
 public:
     enum Action {
@@ -76,20 +82,19 @@ public:
 
 private:
     int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
-                               const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap);
+        const std::unordered_map<std::string, LocalInfo> &localMap);
     int32_t OnDeleteRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
-    int32_t OnModifyRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
-                               const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap);
-    bool IfTimeChanged(const DriveKit::DKRecord &record,
-                             const std::map<std::string, std::pair<std::int64_t, std::int64_t>> &localMap,
-                             const std::string &path,
-                             const std::string &type);
-    void GetLocalTimeMap(const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &map,
-                         std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
-                         const std::string &type);
-    void OnResultSetConvertToMap(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
-                                 std::map<std::string, std::pair<std::int64_t, std::int64_t>> &cloudMap,
-                                 const std::string &type);
+    int32_t OnMdirtyRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
+        const std::unordered_map<std::string, LocalInfo> &localMap);
+    int32_t OnFdirtyRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
+        const std::unordered_map<std::string, LocalInfo> &localMap);
+
+    bool IsTimeChanged(const DriveKit::DKRecord &record, const std::unordered_map<std::string, LocalInfo> &localMap,
+        const std::string &path, const std::string &type);
+    int32_t GetLocalInfo(const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &map,
+        std::unordered_map<std::string, LocalInfo> &infoMap, const std::string &type);
+    int32_t BuildInfoMap(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
+        std::unordered_map<std::string, LocalInfo> &cloudMap, const std::string &type);
     int64_t UTCTimeSeconds();
 
     int32_t EraseLocalInfo(std::vector<DriveKit::DKRecord> &records);
