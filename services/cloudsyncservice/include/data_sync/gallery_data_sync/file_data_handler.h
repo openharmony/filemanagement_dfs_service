@@ -144,15 +144,25 @@ private:
     int32_t CleanPureCloudRecord(NativeRdb::ResultSet &local, const int action, const std::string &filePath);
     int32_t DeleteDentryFile(void);
 
+    /* err handle */
+    void HandleCreateConvertErr(NativeRdb::ResultSet &resultSet);
+    void HandleFdirtyConvertErr(NativeRdb::ResultSet &resultSet);
+
     /* create */
-    FileDataConvertor createConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_CREATE };
+    FileDataConvertor createConvertor_ = {
+        userId_, bundleName_, FileDataConvertor::FILE_CREATE,
+        std::bind(&FileDataHandler::HandleCreateConvertErr, this, std::placeholders::_1)
+    };
 
     /* delete */
     FileDataConvertor deleteConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DELETE };
 
     /* update */
     FileDataConvertor mdirtyConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_METADATA_MODIFY };
-    FileDataConvertor fdirtyConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DATA_MODIFY };
+    FileDataConvertor fdirtyConvertor_ = {
+        userId_, bundleName_, FileDataConvertor::FILE_DATA_MODIFY,
+        std::bind(&FileDataHandler::HandleFdirtyConvertErr, this, std::placeholders::_1)
+    };
 
     /* file Conflict */
     static inline const std::string CON_SUFFIX = "_1";

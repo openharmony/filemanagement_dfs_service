@@ -1843,6 +1843,28 @@ int32_t FileDataHandler::Clean(const int action)
     return E_OK;
 }
 
+void FileDataHandler::HandleCreateConvertErr(NativeRdb::ResultSet &resultSet)
+{
+    string path;
+    int32_t ret = createConvertor_.GetString(PC::MEDIA_FILE_PATH, path, resultSet);
+    if (ret != E_OK) {
+        LOGE("get path err");
+        return;
+    }
+    createFailSet_.push_back(path);
+}
+
+void FileDataHandler::HandleFdirtyConvertErr(NativeRdb::ResultSet &resultSet)
+{
+    string cloudId;
+    int32_t ret = createConvertor_.GetString(PC::PHOTO_CLOUD_ID, cloudId, resultSet);
+    if (ret != E_OK) {
+        LOGE("get cloud id err");
+        return;
+    }
+    modifyFailSet_.push_back(cloudId);
+}
+
 int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
 {
     /* build predicates */

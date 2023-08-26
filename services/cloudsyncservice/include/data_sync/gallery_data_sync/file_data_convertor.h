@@ -60,10 +60,14 @@ public:
         CAMERA
     };
 
-    FileDataConvertor(int32_t userId, std::string &bundleName, OperationType type);
+    FileDataConvertor(int32_t userId, std::string &bundleName, OperationType type, const std::function<void(
+        NativeRdb::ResultSet &resultSet)> &func = nullptr);
     ~FileDataConvertor() = default;
 
+    /* resultSet -> record */
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
+    void HandleErr(NativeRdb::ResultSet &resultSet);
+    /* record -> resultSet */
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valuesBucket);
 
     std::string GetThumbPath(const std::string &path, const std::string &key);
@@ -178,6 +182,9 @@ private:
     static std::string prefixCloud_;
     static std::string suffixCloud_;
     static std::string tmpSuffix_;
+
+    /* err */
+    std::function<void(NativeRdb::ResultSet &resultSet)> errHandler_;
 };
 
 inline int32_t FileDataConvertor::HandleFileName(DriveKit::DKRecordData &data,
