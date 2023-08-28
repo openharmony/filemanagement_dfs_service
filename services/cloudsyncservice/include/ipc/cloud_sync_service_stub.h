@@ -21,7 +21,7 @@
 #include "i_cloud_sync_service.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudSyncServiceStub : public IRemoteStub<ICloudSyncService> {
+class __attribute__ ((visibility("default"))) CloudSyncServiceStub : public IRemoteStub<ICloudSyncService> {
 public:
     CloudSyncServiceStub();
     virtual ~CloudSyncServiceStub() = default;

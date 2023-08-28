@@ -18,6 +18,7 @@
 #include <exception>
 #include <stdexcept>
 #include <thread>
+#include <malloc.h>
 
 #include "iremote_object.h"
 #include "system_ability_definition.h"
@@ -48,6 +49,12 @@ void CloudDaemon::PublishSA()
 
 void CloudDaemon::OnStart()
 {
+    int ret = mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_DISABLE);
+    LOGI("Begin to start service M_SET_THREAD_CACHE:%{public}d", ret);
+    ret = mallopt(M_OHOS_CONFIG, M_DISABLE_OPT_TCACHE);
+    LOGI("Begin to start service M_OHOS_CONFIG:%{public}d", ret);
+    ret = mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
+    LOGI("Begin to start service M_DELAYED_FREE:%{public}d", ret);
     LOGI("Begin to start service");
     if (state_ == ServiceRunningState::STATE_RUNNING) {
         LOGI("Daemon has already started");

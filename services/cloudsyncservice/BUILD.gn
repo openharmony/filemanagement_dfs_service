@@ -13,7 +13,18 @@
 
 import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
-
+config("optimize-size") {
+  cflags = [
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Oz",
+  ]
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Oz",
+  ]
+}
 ohos_shared_library("cloudsync_sa") {
   include_dirs = [
     "include",
@@ -118,6 +129,7 @@ ohos_shared_library("cloudsync_sa") {
 
     defines += [ "SUPPORT_POWER" ]
   }
+  configs = [ ":optimize-size" ]
 
   use_exceptions = true
   part_name = "dfs_service"
