@@ -69,6 +69,7 @@ void FileDataHandlerTest::TearDown(void)
 }
 
 #include "file_data_handler_two_test.cpp"
+#include "file_data_handler_three_test.cpp"
 
 /**
  * @tc.name: GetFetchCondition001
