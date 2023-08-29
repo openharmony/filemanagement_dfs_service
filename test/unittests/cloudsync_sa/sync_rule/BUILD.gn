@@ -32,7 +32,7 @@ ohos_unittest("battery_status_listener_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -73,7 +73,7 @@ ohos_unittest("net_conn_callback_observer_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
@@ -116,7 +116,7 @@ ohos_unittest("network_status_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -159,7 +159,7 @@ ohos_unittest("cloud_status_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
