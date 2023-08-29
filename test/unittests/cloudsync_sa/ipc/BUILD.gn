@@ -29,7 +29,7 @@ ohos_unittest("cloud_sync_service_stub_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -165,7 +165,7 @@ ohos_unittest("cloud_sync_callback_proxy_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -198,7 +198,7 @@ ohos_unittest("cloud_sync_callback_manager_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -263,7 +263,7 @@ ohos_unittest("cloud_download_callback_manager_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -311,7 +311,7 @@ ohos_unittest("cloud_download_callback_proxy_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",

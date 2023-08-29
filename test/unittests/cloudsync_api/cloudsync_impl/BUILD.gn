@@ -86,7 +86,7 @@ ohos_unittest("cloud_sync_manager_impl_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -120,7 +120,7 @@ ohos_unittest("cloud_sync_manager_impl_unnomal_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
