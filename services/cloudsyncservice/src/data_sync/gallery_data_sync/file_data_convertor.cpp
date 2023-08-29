@@ -43,8 +43,9 @@ string FileDataConvertor::prefixCloud_ = "/storage/cloud/";
 string FileDataConvertor::suffixCloud_ = "/files";
 string FileDataConvertor::tmpSuffix_ = ".temp.download";
 
-FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type) : userId_(userId),
-    bundleName_(bundleName), type_(type)
+FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type,
+    const function<void(NativeRdb::ResultSet &resultSet)> &func) : userId_(userId),
+    bundleName_(bundleName), type_(type), errHandler_(func)
 {
 }
 
@@ -69,6 +70,13 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
         }
     }
     return E_OK;
+}
+
+void FileDataConvertor::HandleErr(NativeRdb::ResultSet &resultSet)
+{
+    if (errHandler_ != nullptr) {
+        errHandler_(resultSet);
+    }
 }
 
 int32_t FileDataConvertor::HandleUniqueFileds(DriveKit::DKRecordData &data,

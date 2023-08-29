@@ -1843,43 +1843,66 @@ int32_t FileDataHandler::Clean(const int action)
     return E_OK;
 }
 
+void FileDataHandler::HandleCreateConvertErr(NativeRdb::ResultSet &resultSet)
+{
+    string path;
+    int32_t ret = createConvertor_.GetString(PC::MEDIA_FILE_PATH, path, resultSet);
+    if (ret != E_OK) {
+        LOGE("get path err");
+        return;
+    }
+    createFailSet_.push_back(path);
+}
+
+void FileDataHandler::HandleFdirtyConvertErr(NativeRdb::ResultSet &resultSet)
+{
+    string cloudId;
+    int32_t ret = createConvertor_.GetString(PC::PHOTO_CLOUD_ID, cloudId, resultSet);
+    if (ret != E_OK) {
+        LOGE("get cloud id err");
+        return;
+    }
+    modifyFailSet_.push_back(cloudId);
+}
+
 int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
 {
-    /* build predicates */
-    NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    createPredicates
-        .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)))
-        ->And()
-        ->EqualTo(Media::PhotoColumn::MEDIA_DATE_TRASHED, "0")
-        ->BeginWrap()
-        ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
-        ->Or()
-        ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-        ->EndWrap();
-    if (!createFailSet_.empty()) {
-        createPredicates.And()->NotIn(Media::PhotoColumn::MEDIA_FILE_PATH, createFailSet_);
-    }
-
-    /* small-size first */
-    createPredicates.OrderByAsc(Media::PhotoColumn::MEDIA_SIZE);
-    createPredicates.Limit(LIMIT_SIZE);
-
-    /* query */
-    auto results = Query(createPredicates, MEDIA_CLOUD_SYNC_COLUMNS);
-    if (results == nullptr) {
-        LOGE("get nullptr created result");
-        return E_RDB;
-    }
-
-    /* results to records */
-    int ret = createConvertor_.ResultSetToRecords(move(results), records);
-    if (ret != 0) {
-        LOGE("result set to records err %{public}d", ret);
-        return ret;
+    while (records.size() == 0) {
+        /* build predicates */
+        NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+        createPredicates
+            .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)))
+            ->And()->EqualTo(Media::PhotoColumn::MEDIA_DATE_TRASHED, "0")
+            ->BeginWrap()
+            ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
+            ->Or()
+            ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
+            ->EndWrap();
+        if (!createFailSet_.empty()) {
+            createPredicates.And()->NotIn(Media::PhotoColumn::MEDIA_FILE_PATH, createFailSet_);
+        }
+        /* small-size first */
+        createPredicates.OrderByAsc(Media::PhotoColumn::MEDIA_SIZE);
+        createPredicates.Limit(LIMIT_SIZE);
+        /* query */
+        auto results = Query(createPredicates, MEDIA_CLOUD_SYNC_COLUMNS);
+        if (results == nullptr) {
+            LOGE("get nullptr created result");
+            return E_RDB;
+        }
+        /* results to records */
+        int32_t ret = createConvertor_.ResultSetToRecords(move(results), records);
+        if (ret != E_OK) {
+            if (ret == E_STOP) {
+                return E_OK;
+            }
+            LOGE("result set to records err %{public}d", ret);
+            return ret;
+        }
     }
 
     /* bind album */
-    ret = BindAlbums(records);
+    int32_t ret = BindAlbums(records);
     if (ret != E_OK) {
         LOGE("bind albums err %{public}d", ret);
         return ret;
@@ -2182,37 +2205,41 @@ int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::
 
 int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
 {
-    /* build predicates */
-    NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    updatePredicates
-        .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)))
-        ->And()
-        ->BeginWrap()
-        ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
-        ->Or()
-        ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-        ->EndWrap();
-    if (!modifyFailSet_.empty()) {
-        updatePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
-    }
-    updatePredicates.Limit(LIMIT_SIZE);
-
-    /* query */
-    auto results = Query(updatePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
-    if (results == nullptr) {
-        LOGE("get nullptr modified result");
-        return E_RDB;
-    }
-
-    /* results to records */
-    int ret = fdirtyConvertor_.ResultSetToRecords(move(results), records);
-    if (ret != E_OK) {
-        LOGE("result set to records err %{public}d", ret);
-        return ret;
+    while (records.size() == 0) {
+        /* build predicates */
+        NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+        updatePredicates
+            .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)))
+            ->And()
+            ->BeginWrap()
+            ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
+            ->Or()
+            ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
+            ->EndWrap();
+        if (!modifyFailSet_.empty()) {
+            updatePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
+        }
+        updatePredicates.OrderByAsc(Media::PhotoColumn::MEDIA_SIZE);
+        updatePredicates.Limit(LIMIT_SIZE);
+        /* query */
+        auto results = Query(updatePredicates, MEDIA_CLOUD_SYNC_COLUMNS);
+        if (results == nullptr) {
+            LOGE("get nullptr modified result");
+            return E_RDB;
+        }
+        /* results to records */
+        int32_t ret = fdirtyConvertor_.ResultSetToRecords(move(results), records);
+        if (ret != E_OK) {
+            if (ret == E_STOP) {
+                return E_OK;
+            }
+            LOGE("result set to records err %{public}d", ret);
+            return ret;
+        }
     }
 
     /* album map change */
-    ret = BindAlbumChanges(records);
+    int32_t ret = BindAlbumChanges(records);
     if (ret != E_OK) {
         LOGE("update album map change err %{public}d", ret);
         return ret;
