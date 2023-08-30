@@ -57,10 +57,14 @@ ohos_shared_library("cloudsync_kit_inner") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
-    "media_library:media_library",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  if (cloudsync_service_media_library) {
+    external_deps += [ "media_library:media_library" ]
+    defines += [ "SUPPORT_MEDIA_LIBRARY" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
@@ -88,7 +92,6 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
     "ability_base:zuri",
     "hilog:libhilog",
     "ipc:ipc_core",
-    "media_library:media_library",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

@@ -21,7 +21,9 @@
 
 #include "dfs_error.h"
 #include "iservice_registry.h"
+#ifdef SUPPORT_MEDIA_LIBRARY
 #include "media_file_uri.h"
+#endif
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -347,6 +349,7 @@ int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, con
 
 int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 {
+#ifdef SUPPORT_MEDIA_LIBRARY
     LOGI("StartDownloadFile Start");
     MessageParcel data;
     MessageParcel reply;
@@ -384,10 +387,15 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
     }
     LOGI("StartDownloadFile Success");
     return reply.ReadInt32();
+#else
+    LOGE("Function StartDownloadFile is undefined");
+    return 0;
+#endif
 }
 
 int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
 {
+#ifdef SUPPORT_MEDIA_LIBRARY
     LOGI("StopDownloadFile Start");
     MessageParcel data;
     MessageParcel reply;
@@ -397,6 +405,7 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
         LOGE("Failed to write interface token");
         return E_BROKEN_IPC;
     }
+
 
     OHOS::Media::MediaFileUri Muri(uri);
     string path = Muri.GetFilePath();
@@ -425,6 +434,10 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
     }
     LOGI("StopDownloadFile Success");
     return reply.ReadInt32();
+#else
+    LOGE("Function StopDownloadFile is undefined");
+    return 0;
+#endif
 }
 
 int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)

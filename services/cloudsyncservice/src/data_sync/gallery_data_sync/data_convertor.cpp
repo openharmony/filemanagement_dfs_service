@@ -29,29 +29,38 @@ using namespace std;
 using namespace NativeRdb;
 
 int32_t DataConvertor::ResultSetToRecords(const shared_ptr<NativeRdb::ResultSet> resultSet,
-    std::vector<DriveKit::DKRecord> &records)
+    vector<DriveKit::DKRecord> &records)
 {
-    /* reserve to avoid repeatedly alloc and copy */
     int32_t rowCount = 0;
     int ret = resultSet->GetRowCount(rowCount);
-    if (ret != 0 || rowCount < 0) {
+    if (ret != NativeRdb::E_OK || rowCount < 0) {
         LOGE("result set get row count err %{public}d", ret);
         return E_RDB;
     }
+    /* no match rows */
+    if (rowCount == 0) {
+        return E_STOP;
+    }
+    /* reserve to avoid repeatedly alloc and copy */
     records.reserve(rowCount);
 
     /* iterate all rows */
-    while (resultSet->GoToNextRow() == 0) {
+    while (resultSet->GoToNextRow() == NativeRdb::E_OK) {
         DriveKit::DKRecord record;
         ret = Convert(record, *resultSet);
         if (ret != E_OK) {
             LOGE("covert result to record err %{public}d", ret);
+            HandleErr(*resultSet);
             continue;
         }
         records.emplace_back(move(record));
     }
 
     return E_OK;
+}
+
+void DataConvertor::HandleErr(NativeRdb::ResultSet &resultSet)
+{
 }
 
 int32_t DataConvertor::GetInt(const string &key, int32_t &val, NativeRdb::ResultSet &resultSet)
