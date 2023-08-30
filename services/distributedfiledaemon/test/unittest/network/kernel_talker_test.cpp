@@ -36,6 +36,13 @@ shared_ptr<MountPoint> g_smp;
 weak_ptr<MountPoint> g_wmp;
 shared_ptr<KernelTalker> g_talker;
 
+enum Notify {
+    NOTIFY_GET_SESSION = 0,
+    NOTIFY_OFFLINE,
+    NOTIFY_NONE,
+    NOTIFY_CNT,
+};
+
 class KernelTalkerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -156,6 +163,93 @@ HWTEST_F(KernelTalkerTest, KernelTalkerTest_WaitForPollThreadExited_0100, TestSi
     }
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "KernelTalkerTest_WaitForPollThreadExited_0100 end";
+}
+
+/**
+ * @tc.name: KernelTalkerTest_HandleAllNotify_0100
+ * @tc.desc: Verify the HandleAllNotify function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(KernelTalkerTest, KernelTalkerTest_HandleAllNotify_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "KernelTalkerTest_HandleAllNotify_0100 start";
+    bool res = true;
+    int fd = -1;
+    try {
+        g_talker->HandleAllNotify(fd);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "KernelTalkerTest_HandleAllNotify_0100 end";
+}
+
+/**
+ * @tc.name: KernelTalkerTest_NotifyHandler_0100
+ * @tc.desc: Verify the NotifyHandler function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(KernelTalkerTest, KernelTalkerTest_NotifyHandler_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "KernelTalkerTest_NotifyHandler_0100 start";
+    bool res = true;
+    NotifyParam param;
+    param.notify = NOTIFY_GET_SESSION;
+    try {
+        g_talker->NotifyHandler(param);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "KernelTalkerTest_NotifyHandler_0100 end";
+}
+
+/**
+ * @tc.name: KernelTalkerTest_NotifyHandler_0200
+ * @tc.desc: Verify the NotifyHandler function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(KernelTalkerTest, KernelTalkerTest_NotifyHandler_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "KernelTalkerTest_NotifyHandler_0200 start";
+    bool res = true;
+    NotifyParam param;
+    param.notify = NOTIFY_OFFLINE;
+    try {
+        g_talker->NotifyHandler(param);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "KernelTalkerTest_NotifyHandler_0200 end";
+}
+
+/**
+ * @tc.name: KernelTalkerTest_NotifyHandler_0300
+ * @tc.desc: Verify the NotifyHandler function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(KernelTalkerTest, KernelTalkerTest_NotifyHandler_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "KernelTalkerTest_NotifyHandler_0300 start";
+    bool res = true;
+    NotifyParam param;
+    param.notify = NOTIFY_NONE;
+    try {
+        g_talker->NotifyHandler(param);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "KernelTalkerTest_NotifyHandler_0300 end";
 }
 } // namespace Test
 } // namespace DistributedFile

@@ -76,6 +76,28 @@ HWTEST_F(CloudDaemonManagerImplTest, GetInstanceTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: StartFuseTest
+ * @tc.desc: Verify the StartFuse function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDaemonManagerImplTest, StartFuseTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFuseTest Start";
+    try {
+        int32_t devFd = -1;
+        string path = "path";
+        int32_t userId = 100;
+        auto res = CloudDaemonManagerImpl::GetInstance().StartFuse(userId, devFd, path);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartFuse  ERROR";
+    }
+    GTEST_LOG_(INFO) << "StartFuse End";
+}
+
+/**
  * @tc.name: SetDeathRecipientTest
  * @tc.desc: Verify the SetDeathRecipient function
  * @tc.type: FUNC
