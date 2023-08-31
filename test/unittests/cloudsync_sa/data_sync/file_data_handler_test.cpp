@@ -982,7 +982,7 @@ HWTEST_F(FileDataHandlerTest, OnMdirtyRecordSuccess001, TestSize.Level1)
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " OnMdirtyRecordSuccess001 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccesss001 End";
+    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccess001 End";
 }
 
 /**
@@ -991,7 +991,7 @@ HWTEST_F(FileDataHandlerTest, OnMdirtyRecordSuccess001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(FileDataHandlerTest, OnMdirtyRecordSuccesss002, TestSize.Level1)
+HWTEST_F(FileDataHandlerTest, OnMdirtyRecordSuccess002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnMdirtyRecordSuccess002 Begin";
     try {
@@ -1020,9 +1020,9 @@ HWTEST_F(FileDataHandlerTest, OnMdirtyRecordSuccesss002, TestSize.Level1)
         EXPECT_EQ(1, ret);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnMdirtyRecordSuccesss002 ERROR";
+        GTEST_LOG_(INFO) << " OnMdirtyRecordSuccess002 ERROR";
     }
-    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccesss002 End";
+    GTEST_LOG_(INFO) << "OnMdirtyRecordSuccess002 End";
 }
 
 /**
@@ -1724,7 +1724,9 @@ HWTEST_F(FileDataHandlerTest, Clean003, TestSize.Level1)
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
 
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(Return(1));
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        EXPECT_CALL(*rdb, Query(_, _))
+            .WillOnce(Return(ByMove(std::move(rset))))
+            .WillRepeatedly(Return(nullptr));
 
         int32_t ret = fileDataHandler->Clean(0);
         EXPECT_EQ(ret, E_OK);
@@ -1752,7 +1754,9 @@ HWTEST_F(FileDataHandlerTest, Clean004, TestSize.Level1)
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
 
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        EXPECT_CALL(*rdb, Query(_, _))
+            .WillOnce(Return(ByMove(std::move(rset))))
+            .WillRepeatedly(Return(nullptr));
 
         int32_t ret = fileDataHandler->Clean(0);
         EXPECT_EQ(ret, E_OK);
@@ -1852,7 +1856,8 @@ HWTEST_F(FileDataHandlerTest, Clean007, TestSize.Level1)
         EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
         EXPECT_CALL(*rdb, Query(_, _))
             .WillOnce(Return(ByMove(std::move(rset1))))
-            .WillOnce(Return(ByMove(std::move(rset2))));
+            .WillOnce(Return(ByMove(std::move(rset2))))
+            .WillRepeatedly(Return(nullptr));
 
         int32_t ret = fileDataHandler->Clean(0);
         EXPECT_EQ(ret, E_OK);

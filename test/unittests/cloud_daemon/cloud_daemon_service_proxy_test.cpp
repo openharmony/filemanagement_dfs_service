@@ -193,6 +193,7 @@ HWTEST_F(CloudDaemonServiceProxyTest, StartFuseTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        reply.WriteInt32(E_OK);
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudDaemon::GetDescriptor()));
         int32_t devFd = open("/dev/fuse", O_RDWR);
         EXPECT_GT(devFd, 0);

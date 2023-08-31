@@ -90,7 +90,7 @@ HWTEST_F(DaemonTest, DaemonTest_PublishSA_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PublishSA_0100 start";
     try {
-        daemon_->registerToService_ = false;
+        daemon_->registerToService_ = true;
         daemon_->PublishSA();
         EXPECT_TRUE(daemon_->registerToService_);
     } catch (const exception &e) {
@@ -130,7 +130,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_0100 start";
     try {
-        daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID + 1, 0);
+        daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID + 1, "");
         EXPECT_TRUE(true);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
@@ -150,7 +150,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0200, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_0200 start";
     try {
         daemon_->subScriber_ = nullptr;
-        daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID, 0);
+        daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID, "");
         EXPECT_TRUE(true);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
