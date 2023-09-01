@@ -148,7 +148,7 @@ HWTEST_F(SdkHelperTest, DeleteRecordsErrorTest, TestSize.Level1)
     ASSERT_NE(handler, nullptr);
     vector<DriveKit::DKRecord> records;
     int32_t ret = handler->GetDeletedRecords(records);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_STOP, ret);
     auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnDeleteRecords);
     ASSERT_NE(callback, nullptr);
     ret = sdkHelper_->DeleteRecords(context, records, callback);
@@ -168,7 +168,7 @@ HWTEST_F(SdkHelperTest, ModifyRecordsErrorTest, TestSize.Level1)
     ASSERT_NE(handler, nullptr);
     vector<DriveKit::DKRecord> records;
     int32_t ret = handler->GetMetaModifiedRecords(records);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_STOP, ret);
     auto callback = dataSyncer_->AsyncCallback(&DataSyncer::OnModifyMdirtyRecords);
     ASSERT_NE(callback, nullptr);
     ret = sdkHelper_->ModifyRecords(context, records, callback);
