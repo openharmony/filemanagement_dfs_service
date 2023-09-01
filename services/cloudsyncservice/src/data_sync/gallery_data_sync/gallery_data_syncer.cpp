@@ -102,10 +102,15 @@ void GalleryDataSyncer::PutHandler()
 int32_t GalleryDataSyncer::Clean(const int action)
 {
     LOGD("gallery data sycner Clean");
+    
+    /* start clean */
+    BeginClean();
+
     int32_t ret = GetHandler();
     if (ret != E_OK) {
         return ret;
     }
+
     /* file */
     ret = CleanInner(fileHandler_, action);
     if (ret != E_OK) {
@@ -116,8 +121,13 @@ int32_t GalleryDataSyncer::Clean(const int action)
     if (ret != E_OK) {
         LOGE("gallery data syncer album clean err %{public}d", ret);
     }
+    
     DeleteSubscription();
     PutHandler();
+
+    /* complete clean */
+    CompleteClean();
+
     return ret;
 }
 

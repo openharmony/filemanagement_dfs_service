@@ -101,6 +101,9 @@ protected:
     int32_t CompletePush();
     void CompleteAll(bool isNeedNotify = true);
 
+    void BeginClean();
+    void CompleteClean();
+
     void SyncStateChangedNotify(const CloudSyncState state, const ErrorType error);
 
     /* identifier */

@@ -33,7 +33,7 @@ Action SyncStateManager::UpdateSyncState(SyncState newState)
 bool SyncStateManager::CheckAndSetPending(bool forceFlag)
 {
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
-    if (state_ != SyncState::SYNCING) {
+    if (state_ != SyncState::SYNCING && state_ != SyncState::CLEANING) {
         state_ = SyncState::SYNCING;
         nextAction_ = Action::STOP;
         isForceSync_ = forceFlag;
