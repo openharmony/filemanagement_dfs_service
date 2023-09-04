@@ -1001,3 +1001,904 @@ HWTEST_F(FileDataHandlerTest, BindAlbumChanges001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "BindAlbumChanges001 End";
 }
+
+/**
+ * @tc.name: BindAlbumChanges002
+ * @tc.desc: Verify the BindAlbumChanges function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, BindAlbumChanges002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BindAlbumChanges002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr)));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::MediaColumn::MEDIA_ID, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        std::vector<DriveKit::DKRecord> records;
+        records.push_back(record);
+        int32_t ret = fileDataHandler->BindAlbumChanges(records);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BindAlbumChanges002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BindAlbumChanges002 End";
+}
+
+/**
+ * @tc.name: BindAlbumChanges003
+ * @tc.desc: Verify the BindAlbumChanges function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, BindAlbumChanges003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BindAlbumChanges003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::MediaColumn::MEDIA_ID, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        std::vector<DriveKit::DKRecord> records;
+        records.push_back(record);
+        int32_t ret = fileDataHandler->BindAlbumChanges(records);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BindAlbumChanges003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BindAlbumChanges003 End";
+}
+
+/**
+ * @tc.name: BindAlbumChanges004
+ * @tc.desc: Verify the BindAlbumChanges function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, BindAlbumChanges004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BindAlbumChanges004 Begin";
+    try {
+        int type = static_cast<int32_t>(Media::DirtyType::TYPE_NEW);
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(1), Return(0)))
+            .WillOnce(DoAll(SetArgReferee<1>(type), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset)))).WillOnce(Return(ByMove(nullptr)));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::MediaColumn::MEDIA_ID, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        std::vector<DriveKit::DKRecord> records;
+        records.push_back(record);
+        int32_t ret = fileDataHandler->BindAlbumChanges(records);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BindAlbumChanges004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BindAlbumChanges004 End";
+}
+
+/**
+ * @tc.name: BindAlbumChanges005
+ * @tc.desc: Verify the BindAlbumChanges function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, BindAlbumChanges005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BindAlbumChanges005 Begin";
+    try {
+        int type = static_cast<int32_t>(Media::DirtyType::TYPE_DELETED);
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>(2), Return(0)))
+            .WillOnce(DoAll(SetArgReferee<1>(type), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _))
+            .WillOnce(Return(ByMove(std::move(rset))))
+            .WillOnce(Return(ByMove(nullptr)));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::MediaColumn::MEDIA_ID, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        std::vector<DriveKit::DKRecord> records;
+        records.push_back(record);
+        int32_t ret = fileDataHandler->BindAlbumChanges(records);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BindAlbumChanges005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BindAlbumChanges005 End";
+}
+
+/**
+ * @tc.name: ConflictHandler001
+ * @tc.desc: Verify the ConflictHandler function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, ConflictHandler001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConflictHandler001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillOnce(Return(0)).WillOnce(Return(0));
+
+        DKRecord record;
+        int64_t isize = 0;
+        bool modifyPathflag = false;
+        int32_t ret = fileDataHandler->ConflictHandler(*rset, record, isize, modifyPathflag);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ConflictHandler001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ConflictHandler001 End";
+}
+
+/**
+ * @tc.name: ConflictHandler002
+ * @tc.desc: Verify the ConflictHandler function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, ConflictHandler002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConflictHandler002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillOnce(Return(1));
+
+        DKRecord record;
+        int64_t isize = 0;
+        bool modifyPathflag = false;
+        int32_t ret = fileDataHandler->ConflictHandler(*rset, record, isize, modifyPathflag);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ConflictHandler002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ConflictHandler002 End";
+}
+
+/**
+ * @tc.name: ConflictHandler003
+ * @tc.desc: Verify the ConflictHandler function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, ConflictHandler003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConflictHandler003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(0)));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillOnce(Return(1));
+
+        DKRecord record;
+        int64_t isize = 0;
+        bool modifyPathflag = false;
+        int32_t ret = fileDataHandler->ConflictHandler(*rset, record, isize, modifyPathflag);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ConflictHandler003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ConflictHandler003 End";
+}
+
+/**
+ * @tc.name: ConflictHandler004
+ * @tc.desc: Verify the ConflictHandler function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, ConflictHandler004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConflictHandler004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(0)));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillOnce(Return(0)).WillOnce(Return(1));
+
+        DKRecord record;
+        int64_t isize = 0;
+        bool modifyPathflag = false;
+        int32_t ret = fileDataHandler->ConflictHandler(*rset, record, isize, modifyPathflag);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ConflictHandler004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ConflictHandler004 End";
+}
+
+/**
+ * @tc.name: ConflictHandler005
+ * @tc.desc: Verify the ConflictHandler function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, ConflictHandler005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConflictHandler005 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(0)));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillOnce(Return(0)).WillOnce(Return(0));
+
+        DKRecord record;
+        int64_t isize = 1;
+        bool modifyPathflag = false;
+        int32_t ret = fileDataHandler->ConflictHandler(*rset, record, isize, modifyPathflag);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ConflictHandler005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ConflictHandler005 End";
+}
+
+/**
+ * @tc.name: ConflictHandler006
+ * @tc.desc: Verify the ConflictHandler function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, ConflictHandler006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConflictHandler006 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(0)));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillOnce(Return(0)).WillOnce(DoAll(SetArgReferee<1>(100), Return(0)));
+
+        DKRecord record;
+        int64_t isize = 0;
+        bool modifyPathflag =false;
+        int32_t ret = fileDataHandler->ConflictHandler(*rset, record, isize, modifyPathflag);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ConflictHandler006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ConflictHandler006 End";
+}
+
+/**
+ * @tc.name: GetConflictData001
+ * @tc.desc: Verify the GetConflictData function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, GetConflictData001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConflictData001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_RELATIVE_PATH, DriveKit::DKRecordField("relativePath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string fullPath = "";
+        int64_t isize = 0;
+        int64_t imetaModified = 0;
+        std::string relativePath = "";
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetConflictData001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetConflictData001 End";
+}
+
+/**
+ * @tc.name: GetConflictData002
+ * @tc.desc: Verify the GetConflictData function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, GetConflictData002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConflictData002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DriveKit::DKRecord record;
+        string fullPath = "";
+        int64_t isize = 0;
+        int64_t imetaModified = 0;
+        std::string relativePath = "";
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetConflictData002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetConflictData002 End";
+}
+
+/**
+ * @tc.name: GetConflictData003
+ * @tc.desc: Verify the GetConflictData function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, GetConflictData003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConflictData003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string fullPath = "";
+        int64_t isize = 0;
+        int64_t imetaModified = 0;
+        std::string relativePath = "";
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetConflictData003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetConflictData003 End";
+}
+
+/**
+ * @tc.name: GetConflictData004
+ * @tc.desc: Verify the GetConflictData function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, GetConflictData004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConflictData004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string fullPath = "";
+        int64_t isize = 0;
+        int64_t imetaModified = 0;
+        std::string relativePath = "";
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetConflictData004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetConflictData004 End";
+}
+
+/**
+ * @tc.name: GetConflictData005
+ * @tc.desc: Verify the GetConflictData function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, GetConflictData005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConflictData005 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField(0)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string fullPath = "";
+        int64_t isize = 0;
+        int64_t imetaModified = 0;
+        std::string relativePath = "";
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetConflictData005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetConflictData005 End";
+}
+
+/**
+ * @tc.name: GetConflictData006
+ * @tc.desc: Verify the GetConflictData function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, GetConflictData006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConflictData006 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string fullPath = "";
+        int64_t isize = 0;
+        int64_t imetaModified = 0;
+        std::string relativePath = "";
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetConflictData006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetConflictData006 End";
+}
+
+/**
+ * @tc.name: GetConflictData007
+ * @tc.desc: Verify the GetConflictData function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, GetConflictData007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConflictData007 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_RELATIVE_PATH, DriveKit::DKRecordField(0)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string fullPath = "";
+        int64_t isize = 0;
+        int64_t imetaModified = 0;
+        std::string relativePath = "";
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetConflictData007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetConflictData007 End";
+}
+
+/**
+ * @tc.name: GetConflictData008
+ * @tc.desc: Verify the GetConflictData function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, GetConflictData008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConflictData008 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_RELATIVE_PATH, DriveKit::DKRecordField("relativePath")));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string fullPath = "";
+        int64_t isize = 0;
+        int64_t imetaModified = 0;
+        std::string relativePath = "";
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetConflictData008 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetConflictData008 End";
+}
+
+/**
+ * @tc.name: GetConflictData009
+ * @tc.desc: Verify the GetConflictData function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, GetConflictData009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetConflictData009 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_RELATIVE_PATH, DriveKit::DKRecordField("relativePath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField("abc")));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        string fullPath = "";
+        int64_t isize = 0;
+        int64_t imetaModified = 0;
+        std::string relativePath = "";
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetConflictData009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetConflictData009 End";
+}
+
+/**
+ * @tc.name: PullRecordConflict001
+ * @tc.desc: Verify the PullRecordConflict function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordConflict001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordConflict001 Begin";
+    try {
+        const int rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_RELATIVE_PATH, DriveKit::DKRecordField("relativePath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(Media::PhotoColumn::MEDIA_SIZE), 0));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        bool comflag = false;
+        int32_t ret = fileDataHandler->PullRecordConflict(record, comflag);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " PullRecordConflict001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PullRecordConflict001 End";
+}
+
+/**
+ * @tc.name: PullRecordConflict002
+ * @tc.desc: Verify the PullRecordConflict function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordConflict002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordConflict002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+       
+        DriveKit::DKRecord record;
+        bool comflag = false;
+        int32_t ret = fileDataHandler->PullRecordConflict(record, comflag);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " PullRecordConflict002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PullRecordConflict002 End";
+}
+
+/**
+ * @tc.name: PullRecordConflict003
+ * @tc.desc: Verify the PullRecordConflict function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordConflict003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordConflict003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_RELATIVE_PATH, DriveKit::DKRecordField("relativePath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(Media::PhotoColumn::MEDIA_SIZE), 0));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        bool comflag = false;
+        int32_t ret = fileDataHandler->PullRecordConflict(record, comflag);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " PullRecordConflict003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PullRecordConflict003 End";
+}
+
+/**
+ * @tc.name: PullRecordConflict004
+ * @tc.desc: Verify the PullRecordConflict function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordConflict004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordConflict004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_RELATIVE_PATH, DriveKit::DKRecordField("relativePath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(Media::PhotoColumn::MEDIA_SIZE), 0));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        bool comflag = false;
+        int32_t ret = fileDataHandler->PullRecordConflict(record, comflag);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " PullRecordConflict004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PullRecordConflict004 End";
+}
+
+/**
+ * @tc.name: PullRecordConflict005
+ * @tc.desc: Verify the PullRecordConflict function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordConflict005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordConflict005 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(0), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_RELATIVE_PATH, DriveKit::DKRecordField("relativePath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(Media::PhotoColumn::MEDIA_SIZE), 0));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        bool comflag = false;
+        int32_t ret = fileDataHandler->PullRecordConflict(record, comflag);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " PullRecordConflict005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PullRecordConflict005 End";
+}
+
+/**
+ * @tc.name: PullRecordConflict006
+ * @tc.desc: Verify the PullRecordConflict function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordConflict006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordConflict006 Begin";
+    try {
+        const int rowCount = 2;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_RELATIVE_PATH, DriveKit::DKRecordField("relativePath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(Media::PhotoColumn::MEDIA_SIZE), 0));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        bool comflag = false;
+        int32_t ret = fileDataHandler->PullRecordConflict(record, comflag);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " PullRecordConflict006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PullRecordConflict006 End";
+}
+
+/**
+ * @tc.name: PullRecordConflict007
+ * @tc.desc: Verify the PullRecordConflict function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordConflict007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordConflict007 Begin";
+    try {
+        const int rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_RELATIVE_PATH, DriveKit::DKRecordField("relativePath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(Media::PhotoColumn::MEDIA_SIZE), 0));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        bool comflag = false;
+        int32_t ret = fileDataHandler->PullRecordConflict(record, comflag);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " PullRecordConflict007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PullRecordConflict007 End";
+}
+
+/**
+ * @tc.name: PullRecordConflict008
+ * @tc.desc: Verify the PullRecordConflict function
+ * @tc.type: FUNC
+ * @tc.require: issueI7Y6UO
+ */
+HWTEST_F(FileDataHandlerTest, PullRecordConflict008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PullRecordConflict008 Begin";
+    try {
+        const int rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(1));
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_RELATIVE_PATH, DriveKit::DKRecordField("relativePath")));
+        prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_SIZE), 1));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(Media::PhotoColumn::MEDIA_SIZE), 1));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        bool comflag = false;
+        int32_t ret = fileDataHandler->PullRecordConflict(record, comflag);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " PullRecordConflict008 ERROR";
+    }
+    GTEST_LOG_(INFO) << "PullRecordConflict008 End";
+}
