@@ -130,6 +130,14 @@ void DataSyncer::ClearCursor()
 {
 }
 
+void DataSyncer::BeginClean()
+{
+}
+
+void DataSyncer::CompleteClean()
+{
+}
+
 void EmptyDownLoadAssetsprogress(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)
 {
     return;
