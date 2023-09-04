@@ -175,10 +175,11 @@ HWTEST_F(DataConvertorTest, DataConvertorTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ResultSetToRecords002 Begin";
     try {
+        const int rowCount = 1;
         std::unique_ptr<ResultSetMock> resultSet = std::make_unique<ResultSetMock>();
         std::vector<DriveKit::DKRecord> records;
 
-        EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(Return(0));
+        EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(1));
 
         int32_t ret = dataConvertor_->ResultSetToRecords(std::move(resultSet), records);
