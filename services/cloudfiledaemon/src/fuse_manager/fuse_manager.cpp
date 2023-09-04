@@ -135,9 +135,9 @@ static shared_ptr<CloudInode> GetRootInode(struct FuseData *data, fuse_ino_t ino
         data->rootNode->mBase = make_shared<MetaBase>();
         data->rootNode->mBase->mode = S_IFDIR;
         data->rootNode->mBase->mtime = static_cast<uint64_t>(GetSecondsSince1970ToNow());
-        data->rootNode->mFile = std::make_shared<MetaFile>(data->userId, "/");
         LOGD("create rootNode");
     }
+    data->rootNode->mFile = std::make_shared<MetaFile>(data->userId, "/");
     ret = data->rootNode;
     wLock.unlock();
 
@@ -204,7 +204,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         LOGE("lookup %s error, err: %{public}d", childName.c_str(), err);
         return err;
     }
-    if (create && (child->mBase->mode & S_IFDIR)) {
+    if (child->mBase->mode & S_IFDIR) {
         child->mFile = std::make_shared<MetaFile>(data->userId, childName);
     }
     child->parent = parent;
