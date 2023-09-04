@@ -914,3 +914,323 @@ HWTEST_F(FileDataHandlerTest, AddCloudThumbs003, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "AddCloudThumbs003 End";
 }
+
+/**
+ * @tc.name: AddCloudThumbs004
+ * @tc.desc: Verify the AddCloudThumbs function
+ * @tc.type: FUNC
+ * @tc.require: issueI7YE3V
+ */
+HWTEST_F(FileDataHandlerTest, AddCloudThumbs004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddCloudThumbs004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        int32_t ret = fileDataHandler->AddCloudThumbs(record);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " AddCloudThumbs004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "AddCloudThumbs004 End";
+}
+
+/**
+ * @tc.name: AddCloudThumbs005
+ * @tc.desc: Verify the AddCloudThumbs function
+ * @tc.type: FUNC
+ * @tc.require: issueI7YE3V
+ */
+HWTEST_F(FileDataHandlerTest, AddCloudThumbs005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddCloudThumbs005 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        int32_t ret = fileDataHandler->AddCloudThumbs(record);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " AddCloudThumbs005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "AddCloudThumbs005 End";
+}
+
+/**
+ * @tc.name: AddCloudThumbs006
+ * @tc.desc: Verify the AddCloudThumbs function
+ * @tc.type: FUNC
+ * @tc.require: issueI7YE3V
+ */
+HWTEST_F(FileDataHandlerTest, AddCloudThumbs006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddCloudThumbs006 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_THUMB_SIZE), "abc"));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        int32_t ret = fileDataHandler->AddCloudThumbs(record);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " AddCloudThumbs006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "AddCloudThumbs006 End";
+}
+
+/**
+ * @tc.name: AddCloudThumbs007
+ * @tc.desc: Verify the AddCloudThumbs function
+ * @tc.type: FUNC
+ * @tc.require: issueI7YE3V
+ */
+HWTEST_F(FileDataHandlerTest, AddCloudThumbs007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddCloudThumbs007 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_THUMB_SIZE), 1));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        int32_t ret = fileDataHandler->AddCloudThumbs(record);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " AddCloudThumbs007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "AddCloudThumbs007 End";
+}
+
+/**
+ * @tc.name: AddCloudThumbs008
+ * @tc.desc: Verify the AddCloudThumbs function
+ * @tc.type: FUNC
+ * @tc.require: issueI7YE3V
+ */
+HWTEST_F(FileDataHandlerTest, AddCloudThumbs008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddCloudThumbs008 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_THUMB_SIZE), 1));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_LCD_SIZE), "abc"));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        int32_t ret = fileDataHandler->AddCloudThumbs(record);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " AddCloudThumbs008 ERROR";
+    }
+    GTEST_LOG_(INFO) << "AddCloudThumbs008 End";
+}
+
+/**
+ * @tc.name: AddCloudThumbs009
+ * @tc.desc: Verify the AddCloudThumbs function
+ * @tc.type: FUNC
+ * @tc.require: issueI7YE3V
+ */
+HWTEST_F(FileDataHandlerTest, AddCloudThumbs009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddCloudThumbs009 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("fullPath")));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_THUMB_SIZE), 1));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_LCD_SIZE), 1));
+        DriveKit::DKRecord record;
+        record.SetRecordData(data);
+        int32_t ret = fileDataHandler->AddCloudThumbs(record);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " AddCloudThumbs009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "AddCloudThumbs009 End";
+}
+
+/**
+ * @tc.name: ConflictDifferent001
+ * @tc.desc: Verify the ConflictDifferent function
+ * @tc.type: FUNC
+ * @tc.require: issueI7YE3V
+ */
+HWTEST_F(FileDataHandlerTest, ConflictDifferent001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConflictDifferent001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
+
+        DKRecord record;
+        string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
+        string relativePath = "";
+        int32_t ret = fileDataHandler->ConflictDifferent(*rset, record, fullPath, relativePath);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ConflictDifferent001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ConflictDifferent001 End";
+}
+
+/**
+ * @tc.name: ConflictMerge001
+ * @tc.desc: Verify the ConflictMerge function
+ * @tc.type: FUNC
+ * @tc.require: issueI7YE3V
+ */
+HWTEST_F(FileDataHandlerTest, ConflictMerge001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConflictMerge001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
+
+        DKRecord record;
+        string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
+        bool comflag = false;
+        int64_t imetaModified = 0;
+        int32_t ret = fileDataHandler->ConflictMerge(*rset, record, fullPath, comflag, imetaModified);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ConflictMerge001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ConflictMerge001 End";
+}
+
+/**
+ * @tc.name: ConflictMerge002
+ * @tc.desc: Verify the ConflictMerge function
+ * @tc.type: FUNC
+ * @tc.require: issueI7YE3V
+ */
+HWTEST_F(FileDataHandlerTest, ConflictMerge002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConflictMerge002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillOnce(Return(1));
+
+        DKRecord record;
+        string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
+        bool comflag = false;
+        int64_t imetaModified = 0;
+        int32_t ret = fileDataHandler->ConflictMerge(*rset, record, fullPath, comflag, imetaModified);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ConflictMerge002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ConflictMerge002 End";
+}
+
+/**
+ * @tc.name: ConflictMerge003
+ * @tc.desc: Verify the ConflictMerge function
+ * @tc.type: FUNC
+ * @tc.require: issueI7YE3V
+ */
+HWTEST_F(FileDataHandlerTest, ConflictMerge003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConflictMerge003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
+
+        DKRecord record;
+        string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
+        bool comflag = false;
+        int64_t imetaModified = -1;
+        int32_t ret = fileDataHandler->ConflictMerge(*rset, record, fullPath, comflag, imetaModified);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ConflictMerge003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ConflictMerge003 End";
+}
+
+/**
+ * @tc.name: ConflictMerge004
+ * @tc.desc: Verify the ConflictMerge function
+ * @tc.type: FUNC
+ * @tc.require: issueI7YE3V
+ */
+HWTEST_F(FileDataHandlerTest, ConflictMerge004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConflictMerge004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(1));
+
+        DKRecord record;
+        string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
+        bool comflag = false;
+        int64_t imetaModified = 0;
+        int32_t ret = fileDataHandler->ConflictMerge(*rset, record, fullPath, comflag, imetaModified);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ConflictMerge004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ConflictMerge004 End";
+}
