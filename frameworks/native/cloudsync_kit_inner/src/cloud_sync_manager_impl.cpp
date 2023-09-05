@@ -183,6 +183,7 @@ int32_t CloudSyncManagerImpl::RegisterDownloadFileCallback(
     }
     int32_t ret = CloudSyncServiceProxy->RegisterDownloadFileCallback(
         sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback)));
+    downloadCallback_ = downloadCallback;
     LOGI("RegisterDownloadFileCallback ret %{public}d", ret);
     return ret;
 }
@@ -196,6 +197,9 @@ int32_t CloudSyncManagerImpl::UnregisterDownloadFileCallback()
         return E_SA_LOAD_FAILED;
     }
     int32_t ret = CloudSyncServiceProxy->UnregisterDownloadFileCallback();
+    if (!ret) {
+        downloadCallback_ = nullptr;
+    }
     LOGI("UnregisterDownloadFileCallback ret %{public}d", ret);
     return ret;
 }
@@ -205,8 +209,10 @@ void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteOb
         LOGE("service died.");
         CloudSyncServiceProxy::InvaildInstance();
         if (callback_) {
-            callback_->OnSyncStateChanged(CloudSyncState::COMPLETED, ErrorType::NO_ERROR);
-            callback_ = nullptr;
+            RegisterCallback(callback_);
+        }
+        if (downloadCallback_) {
+            RegisterDownloadFileCallback(downloadCallback_);
         }
         isFirstCall_.clear();
     };
