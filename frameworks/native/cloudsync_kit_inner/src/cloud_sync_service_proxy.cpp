@@ -411,9 +411,6 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
     string path = Muri.GetFilePath();
     LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
 
-    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-    uriMgr.RemoveUri(path);
-
     if (!data.WriteString(path)) {
         LOGE("Failed to send the cloud id");
         return E_INVAL_ARG;

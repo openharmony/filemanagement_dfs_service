@@ -30,6 +30,7 @@ struct DownloadProgressObj : public Parcelable {
         FAILED = 2,
         STOPPED = 3,
     };
+    uint32_t refCount;
     std::string path;
     int64_t downloadId;
     Status state;

@@ -25,6 +25,11 @@ CloudDownloadCallbackManager::CloudDownloadCallbackManager()
     callback_ = nullptr;
 }
 
+bool CloudDownloadCallbackManager::FindDownload(const std::string path)
+{
+    return true;
+}
+
 void CloudDownloadCallbackManager::StartDonwload(const std::string path,
                                                  const int32_t userId,
                                                  const int64_t downloadId)

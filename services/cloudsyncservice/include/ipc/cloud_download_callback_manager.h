@@ -33,6 +33,7 @@ public:
     CloudDownloadCallbackManager();
     ~CloudDownloadCallbackManager() = default;
 
+    bool FindDownload(const std::string path);
     void StartDonwload(const std::string path, const int32_t userId, const int64_t downloadId);
     bool StopDonwload(const std::string path, const int32_t userId, int64_t &downloadId);
     std::vector<int64_t> StopAllDownloads(const int32_t userId);
