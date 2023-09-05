@@ -48,6 +48,13 @@ bool SyncStateManager::CheckAndSetPending(bool forceFlag)
     return true;
 }
 
+void SyncStateManager::SetCleaningFlag()
+{
+    std::unique_lock<std::shared_mutex> lck(syncMutex_);
+    state_ = SyncState::CLEANING;
+    nextAction_ = Action::STOP;
+}
+
 bool SyncStateManager::GetStopSyncFlag()
 {
     return stopSyncFlag_;

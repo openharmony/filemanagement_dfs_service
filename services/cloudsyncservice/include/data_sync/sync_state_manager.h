@@ -39,6 +39,7 @@ class SyncStateManager {
 public:
     Action UpdateSyncState(SyncState newState);
     bool CheckAndSetPending(bool forceFlag);
+    void SetCleaningFlag();
     bool GetStopSyncFlag();
     void SetStopSyncFlag();
     SyncState GetSyncState() const;

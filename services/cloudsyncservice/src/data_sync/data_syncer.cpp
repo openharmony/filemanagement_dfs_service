@@ -1074,23 +1074,14 @@ void DataSyncer::BeginClean()
     if (!taskRunner_->StopAndWaitFor()) {
         LOGE("wait for tasks stop fail");
     }
+    /* set cleaning  state */
+    (void)syncStateManager_.SetCleaningFlag();
 }
 
 void DataSyncer::CompleteClean()
 {
     DeleteSubscription();
     (void)syncStateManager_.UpdateSyncState(SyncState::CLEAN_SUCCEED);
-    // if (nextAction == Action::START) {
-    //     /* Retrigger sync, clear errorcode */
-    //     errorCode_ = E_OK;
-    //     StartSync(false, SyncTriggerType::PENDING_TRIGGER);
-    //     return;
-    // } else if (nextAction == Action::FORCE_START) {
-    //     /* Retrigger sync, clear errorcode */
-    //     errorCode_ = E_OK;
-    //     StartSync(true, SyncTriggerType::PENDING_TRIGGER);
-    //     return;
-    // }
 }
 
 void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)
