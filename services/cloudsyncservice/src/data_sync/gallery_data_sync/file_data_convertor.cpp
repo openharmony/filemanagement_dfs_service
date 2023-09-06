@@ -653,7 +653,7 @@ int32_t FileDataConvertor::CompensateDataAdded(const DriveKit::DKRecord &record,
 int32_t FileDataConvertor::CompensateMetaDateModified(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
-    uint64_t metaDataModified = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    uint64_t metaDataModified = record.GetEditedTime();
 
     // imputed value, may not be accurate
     valueBucket.PutLong(PhotoColumn::PHOTO_META_DATE_MODIFIED, metaDataModified);
