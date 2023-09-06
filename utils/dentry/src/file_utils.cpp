@@ -38,7 +38,6 @@ int64_t FileUtils::ReadFile(int fd, off_t offset, size_t size, void *data)
         return -errno;
     }
 
-    FileRangeLock fileLock(fd, offset, size);
     size_t readLen = 0;
     while (readLen < size) {
         ssize_t ret = read(fd, data, size - readLen);
@@ -67,7 +66,6 @@ int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size
         return -errno;
     }
 
-    FileRangeLock fileLock(fd, offset, size);
     size_t writeLen = 0;
     while (writeLen < size) {
         ssize_t ret = write(fd, data, size - writeLen);

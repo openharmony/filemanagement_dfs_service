@@ -409,6 +409,7 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
     HmdfsDentryGroup dentryBlk = {0};
 
     std::unique_lock<std::mutex> lock(mtx_);
+    FileRangeLock fileLock(fd_, 0, 0);
     namehash = DentryHash(base.name);
 
     bool found = false;
@@ -561,6 +562,7 @@ int32_t MetaFile::DoRemove(const MetaBase &base)
     }
 
     std::unique_lock<std::mutex> lock(mtx_);
+    FileRangeLock fileLock(fd_, 0, 0);
     DcacheLookupCtx ctx;
     InitDcacheLookupCtx(&ctx, base, fd_);
     HmdfsDentry *de = FindDentry(&ctx);
@@ -594,6 +596,7 @@ int32_t MetaFile::DoLookup(MetaBase &base)
     }
 
     std::unique_lock<std::mutex> lock(mtx_);
+    FileRangeLock fileLock(fd_, 0, 0);
     struct DcacheLookupCtx ctx;
     InitDcacheLookupCtx(&ctx, base, fd_);
     struct HmdfsDentry *de = FindDentry(&ctx);
@@ -619,6 +622,7 @@ int32_t MetaFile::DoUpdate(const MetaBase &base)
     }
 
     std::unique_lock<std::mutex> lock(mtx_);
+    FileRangeLock fileLock(fd_, 0, 0);
     struct DcacheLookupCtx ctx;
     InitDcacheLookupCtx(&ctx, base, fd_);
     struct HmdfsDentry *de = FindDentry(&ctx);
@@ -701,6 +705,7 @@ int32_t MetaFile::LoadChildren(std::vector<MetaBase> &bases)
     }
 
     std::lock_guard<std::mutex> lock(mtx_);
+    FileRangeLock fileLock(fd_, 0, 0);
     struct stat fileStat;
     int ret = fstat(fd_, &fileStat);
     if (ret != E_OK) {
