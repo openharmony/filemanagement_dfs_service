@@ -197,10 +197,10 @@ HWTEST_F(CloudDaemonServiceProxyTest, StartFuseTest, TestSize.Level1)
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudDaemon::GetDescriptor()));
         int32_t devFd = open("/dev/fuse", O_RDWR);
         EXPECT_GT(devFd, 0);
-        string path = "/dev/fuse";
+        string path = "continue";
         int32_t userId = 100;
         int32_t ret = CloudDaemonServiceProxy->StartFuse(userId, devFd, path);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_BROKEN_IPC);
         auto remoteObject = CloudDaemonServiceProxy->AsObject();
         EXPECT_NE(remoteObject, nullptr);
         ret = remoteObject->SendRequest(
