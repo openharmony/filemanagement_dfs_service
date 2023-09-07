@@ -197,8 +197,7 @@ void SdkHelper::ReleaseDownloader()
 
 int32_t SdkHelper::CancelDownloadAssets(int32_t id)
 {
-    downloader_->CancelDownloadAssets(id);
-    return E_OK;
+    return static_cast<int32_t>(downloader_->CancelDownloadAssets(id));
 }
 
 int32_t SdkHelper::GetStartCursor(DriveKit::DKRecordType recordType, DriveKit::DKQueryCursor &cursor)

@@ -144,7 +144,12 @@ int32_t DataSyncer::StopDownloadFile(const std::string path, const int32_t userI
 {
     int64_t downloadId = 0;
     if (downloadCallbackMgr_.StopDonwload(path, userId, downloadId)) {
-        sdkHelper_->CancelDownloadAssets(downloadId);
+        int32_t res = sdkHelper_->CancelDownloadAssets(downloadId);
+        LOGD("CancelDownloadAssets result: %d", res);
+        if (res != NO_ERROR) {
+            LOGE("CancelDownloadAssets fail %{public}d", res);
+            return res;
+        }
     }
     return E_OK;
 }
@@ -430,6 +435,11 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
         return ret;
     }
 
+    if (downloadCallbackMgr_.FindDownload(path)) {
+        LOGI("download exist %{public}s", path.c_str());
+        return E_OK;
+    }
+
     auto downloadResultCallback = [this, path, assetsToDownload, handler](
                                       std::shared_ptr<DriveKit::DKContext> context,
                                       std::shared_ptr<const DriveKit::DKDatabase> database,
@@ -682,19 +692,25 @@ int32_t DataSyncer::Clean(const int action)
 
 int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int action)
 {
+    int ret = 0;
     LOGD("Enter function DataSyncer::CleanInner");
     handler->ClearCursor();
-    int res = handler->Clean(action);
-    if (res != E_OK) {
-        LOGE("Clean file failed res:%{public}d", res);
+    ret = handler->Clean(action);
+    if (ret != E_OK) {
+        LOGE("Clean file failed res:%{public}d", ret);
+        return ret;
     }
 
     std::vector<int64_t> downloadIds = downloadCallbackMgr_.StopAllDownloads(userId_);
     for (const auto &id : downloadIds) {
-        sdkHelper_->CancelDownloadAssets(id);
+        ret = sdkHelper_->CancelDownloadAssets(id);
+        if (ret != NO_ERROR) {
+            LOGE("CancelDownloadAssets fail %{public}d", ret);
+            return ret;
+        }
     }
 
-    return res;
+    return ret;
 }
 
 void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)

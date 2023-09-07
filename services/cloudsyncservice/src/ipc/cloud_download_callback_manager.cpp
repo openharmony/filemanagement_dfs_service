@@ -24,11 +24,27 @@ CloudDownloadCallbackManager::CloudDownloadCallbackManager()
     callback_ = nullptr;
 }
 
+bool CloudDownloadCallbackManager::FindDownload(const std::string path)
+{
+    bool ret = false;
+    lock_guard<mutex> lock(downloadsMtx_);
+    if (downloads_.find(path) != downloads_.end() &&
+        downloads_[path].state == DownloadProgressObj::Status::RUNNING) {
+        ret = true;
+    }
+    return ret;
+}
+
 void CloudDownloadCallbackManager::StartDonwload(const std::string path,
                                                  const int32_t userId,
                                                  const int64_t downloadId)
 {
     lock_guard<mutex> lock(downloadsMtx_);
+    if (downloads_.find(path) == downloads_.end()) {
+        downloads_[path].refCount = 1;
+    } else {
+        downloads_[path].refCount++;
+    }
     downloads_[path].state = DownloadProgressObj::Status::RUNNING;
     downloads_[path].path = path;
     downloads_[path].downloadId = downloadId;
@@ -99,11 +115,24 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
     }
 
     auto download = res->second;
-    downloads_.erase(res);
+    download.refCount--;
+    if (download.refCount == 0) {
+        downloads_.erase(res);
+    } else {
+        lock.unlock();
+        return;
+    }
     lock.unlock();
 
     LOGI("download_file : [callback downloaded] %{public}s state is %{public}s, localErr is %{public}d.",
          path.c_str(), download.to_string().c_str(), static_cast<int>(err.dkErrorCode));
+
+    if (callback_ != nullptr && download.state == DownloadProgressObj::STOPPED) {
+        LOGI("stop state");
+        callback_->OnDownloadProcess(download);
+        return;
+    }
+
     auto downloadedState = err.HasError() ? DownloadProgressObj::FAILED : DownloadProgressObj::COMPLETED;
     /**
      * Avoiding the issue of cloud service not returning a total error code.
