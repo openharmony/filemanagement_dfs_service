@@ -82,4 +82,43 @@ HWTEST_F(CloudDaemonTest, OnStopTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "OnStop End";
 }
 
+/**
+ * @tc.name: OnStartTest1
+ * @tc.desc: Verify the OnStart function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDaemonTest, OnStartTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStart1 Start";
+    try {
+        cloudDaemon_->state_ = ServiceRunningState::STATE_RUNNING;
+        cloudDaemon_->OnStart();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStart1  ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnStart1 End";
+}
+
+/**
+ * @tc.name: OnStartTest2
+ * @tc.desc: Verify the OnStart function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDaemonTest, OnStartTest2, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStart2 Start";
+    try {
+        cloudDaemon_->state_ = ServiceRunningState::STATE_NOT_START;
+        cloudDaemon_->OnStart();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStart2  ERROR";
+    }
+    GTEST_LOG_(INFO) << "OnStart2 End";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
