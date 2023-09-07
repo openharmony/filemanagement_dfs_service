@@ -2634,20 +2634,23 @@ bool FileDataHandler::IsTimeChanged(const DriveKit::DKRecord &record,
     if (it == localMap.end()) {
         return true;
     }
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        LOGE("record data cannot find attributes");
+        return false;
+    }
+    DriveKit::DKRecordFieldMap attributes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
     /* get mtime or metatime */
     if (type == Media::PhotoColumn::MEDIA_DATE_MODIFIED) {
-        localtime = it->second.mdirtyTime;
-        cloudtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
-    } else {
         localtime = it->second.fdirtyTime;
-        DKRecordData data;
-        record.GetRecordData(data);
-        if (data.find(FILE_ATTRIBUTES) == data.end()) {
-            LOGE("record data cannot find attributes");
+        if (attributes[PhotoColumn::MEDIA_DATE_MODIFIED].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
+            LOGE("obtain MEDIA_DATE_MODIFIED error");
             return false;
         }
-        DriveKit::DKRecordFieldMap attributes;
-        data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+    } else {
+        localtime = it->second.mdirtyTime;
         if (attributes[PhotoColumn::PHOTO_META_DATE_MODIFIED].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
             LOGE("obtain PHOTO_META_DATE_MODIFIED error");
             return false;
