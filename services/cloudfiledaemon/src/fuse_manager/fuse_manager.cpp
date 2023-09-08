@@ -69,7 +69,6 @@ static const unsigned int STAT_MODE_DIR = 0771;
 
 struct CloudInode {
     shared_ptr<MetaBase> mBase{nullptr};
-    shared_ptr<MetaFile> mFile{nullptr};
     string path;
     fuse_ino_t parent{0};
     atomic<int> refCount{0};
@@ -137,7 +136,6 @@ static shared_ptr<CloudInode> GetRootInode(struct FuseData *data, fuse_ino_t ino
         data->rootNode->mBase->mtime = static_cast<uint64_t>(GetSecondsSince1970ToNow());
         LOGD("create rootNode");
     }
-    data->rootNode->mFile = std::make_shared<MetaFile>(data->userId, "/");
     ret = data->rootNode;
     wLock.unlock();
 
@@ -199,14 +197,12 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     child->mBase = make_shared<MetaBase>(name);
     child->path = childName;
     child->refCount++;
-    err = GetCloudInode(data, parent)->mFile->DoLookup(*(child->mBase));
+    err = MetaFile(data->userId, GetCloudInode(data, parent)->path).DoLookup(*(child->mBase));
     if (err) {
         LOGE("lookup %s error, err: %{public}d", childName.c_str(), err);
         return err;
     }
-    if (child->mBase->mode & S_IFDIR) {
-        child->mFile = std::make_shared<MetaFile>(data->userId, childName);
-    }
+
     child->parent = parent;
     if (create) {
         wLock.lock();
@@ -371,7 +367,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
             LOGE("close error, needRemain: %d", needRemain);
         }
         if (needRemain && res) {
-            GetCloudInode(data, cInode->parent)->mFile->DoRemove(*(cInode->mBase));
+            MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
             LOGD("remove from dentryfile");
 
             /*
