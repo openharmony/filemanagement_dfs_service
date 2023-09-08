@@ -246,7 +246,8 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
         DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
     }
     LOGI("before BatchInsert size len %{public}zu, map size %{public}zu", params.insertFiles.size(),
-         params.recordAlbumMaps.size());
+        params.recordAlbumMaps.size());
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     if (!params.insertFiles.empty() || !params.recordAlbumMaps.empty()) {
         int64_t rowId;
         ret = BatchInsert(rowId, TABLE_NAME, params.insertFiles);
@@ -945,6 +946,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
 
 int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadResult> &resultMap)
 {
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     for (const auto &it : resultMap) {
         if (it.second.IsSuccess()) {
             continue;
@@ -975,6 +977,7 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
 
 int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
 {
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     if (asset.fieldKey == "thumbnail") {
         LOGI("update sync_status to visible of record %s", asset.recordId.c_str());
         int updateRows;

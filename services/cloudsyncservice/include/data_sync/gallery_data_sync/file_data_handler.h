@@ -230,6 +230,8 @@ private:
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DOWNLOAD };
+
+    std::mutex rdbMutex_;
 };
 } // namespace CloudSync
 } // namespace FileManagement
