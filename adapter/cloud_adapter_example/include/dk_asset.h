@@ -31,6 +31,11 @@ struct DKAsset {
     std::string assetName;
     DKAssetOperType operationType;
     std::string hash;
+    uint64_t version{0};
+    std::string assetId;
+    std::string subPath;
+    std::string exCheckInfo;
+    uint64_t size{0};
 };
 } // namespace DriveKit
 

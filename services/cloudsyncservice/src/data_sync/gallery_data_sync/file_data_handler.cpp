@@ -398,33 +398,34 @@ int FileDataHandler::AddCloudThumbs(const DKRecord &record)
 {
     LOGI("thumbs of %s add to cloud_view", record.GetRecordId().c_str());
     constexpr int64_t THUMB_SIZE = 2 * 1024 * 1024; // thumbnail and lcd size show as 2MB
-    int64_t thumbSize = 0, lcdSize = 0;
+    int64_t thumbSize = THUMB_SIZE, lcdSize = THUMB_SIZE;
 
     DKRecordData data;
+    DKAsset val;
     record.GetRecordData(data);
-    if (data.find(FILE_ATTRIBUTES) == data.end()) {
-        LOGE("record data cannot find attributes");
-        return E_INVAL_ARG;
+    if ((data.find(FILE_THUMBNAIL) != data.end()) &&
+        (data[FILE_THUMBNAIL].GetAsset(val) == DKLocalErrorCode::NO_ERROR) && (val.size != 0)) {
+        thumbSize = val.size;
+    } else {
+        LOGE("record data cannot get FILE_THUMBNAIL");
+    }
+    if ((data.find(FILE_LCD) != data.end()) && 
+        (data[FILE_LCD].GetAsset(val) == DKLocalErrorCode::NO_ERROR) && (val.size != 0)) {
+        lcdSize = val.size;
+    } else {
+        LOGE("record data cannot get FILE_LCD");
     }
     DriveKit::DKRecordFieldMap attributes;
-    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
-
     string fullPath;
+    if (data.find(FILE_ATTRIBUTES) != data.end()) {
+        data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+    }
     if (attributes.find(PhotoColumn::MEDIA_FILE_PATH) == attributes.end() ||
         attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file path in record");
         return E_INVAL_ARG;
     }
-    if (attributes.find(FILE_THUMB_SIZE) == attributes.end() ||
-        DataConvertor::GetLongComp(attributes[FILE_THUMB_SIZE], thumbSize) != E_OK) {
-        LOGE("bad thumb size in record");
-        thumbSize = THUMB_SIZE;
-    }
-    if (attributes.find(FILE_LCD_SIZE) == attributes.end() ||
-        DataConvertor::GetLongComp(attributes[FILE_LCD_SIZE], lcdSize) != E_OK) {
-        LOGE("bad lcd size in record");
-        lcdSize = THUMB_SIZE;
-    }
+
     int64_t mtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
     int ret = DentryInsertThumb(fullPath, record.GetRecordId(), thumbSize, mtime, THUMB_SUFFIX);
     if (ret != E_OK) {
