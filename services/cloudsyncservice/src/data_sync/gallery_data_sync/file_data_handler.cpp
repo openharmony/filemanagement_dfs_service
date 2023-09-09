@@ -85,8 +85,8 @@ void FileDataHandler::GetFetchCondition(FetchCondition &cond)
 int32_t FileDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &records)
 {
     NativeRdb::AbsRdbPredicates retryPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    retryPredicates.SetWhereClause(PhotoColumn::PHOTO_DIRTY + " = ? AND " + PhotoColumn::MEDIA_DATE_TRASHED + " = ?");
-    retryPredicates.SetWhereArgs({to_string(static_cast<int32_t>(DirtyType::TYPE_RETRY)), "0"});
+    retryPredicates.SetWhereClause(PhotoColumn::PHOTO_DIRTY + " = ? ");
+    retryPredicates.SetWhereArgs({to_string(static_cast<int32_t>(DirtyType::TYPE_RETRY))});
     retryPredicates.Limit(LIMIT_SIZE);
 
     auto results = Query(retryPredicates, {PhotoColumn::PHOTO_CLOUD_ID});
@@ -1149,6 +1149,7 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
     ValuesBucket values;
     createConvertor_.RecordToValueBucket(record, values);
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
+    values.PutInt(PhotoMap::DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
     int32_t changedRows;
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     ret = Update(changedRows, values, whereClause, {record.GetRecordId()});
