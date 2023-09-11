@@ -83,6 +83,14 @@ struct MetaBase {
     MetaBase(const std::string &name) : name(name) {}
     MetaBase(const std::string &name, const std::string &cloudId) : name(name), cloudId(cloudId) {}
     MetaBase() = default;
+    inline bool operator!=(const MetaBase &other) const
+    {
+        return !operator==(other);
+    }
+    inline bool operator==(const MetaBase &other) const
+    {
+        return other.cloudId == cloudId && other.name == name && other.size == size;
+    }
     uint64_t mtime{0};
     uint64_t size{0};
     uint32_t mode{S_IFREG};

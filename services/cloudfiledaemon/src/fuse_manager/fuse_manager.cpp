@@ -194,20 +194,24 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         create = true;
         LOGD("new child %s", child->path.c_str());
     }
-    child->mBase = make_shared<MetaBase>(name);
-    child->path = childName;
-    child->refCount++;
-    err = MetaFile(data->userId, GetCloudInode(data, parent)->path).DoLookup(*(child->mBase));
+    MetaBase mBase(name);
+    err = MetaFile(data->userId, GetCloudInode(data, parent)->path).DoLookup(mBase);
     if (err) {
         LOGE("lookup %s error, err: %{public}d", childName.c_str(), err);
         return err;
     }
 
-    child->parent = parent;
+    child->refCount++;
     if (create) {
+        child->mBase = make_shared<MetaBase>(mBase);
+        child->path = childName;
+        child->parent = parent;
         wLock.lock();
         data->inodeCache[child->path] = child;
         wLock.unlock();
+    } else if (*(child->mBase) != mBase) {
+        LOGW("invalidate %s", childName.c_str());
+        child->mBase = make_shared<MetaBase>(mBase);
     }
     LOGD("lookup success, child: %{private}s, refCount: %lld", child->path.c_str(),
          static_cast<long long>(child->refCount));
