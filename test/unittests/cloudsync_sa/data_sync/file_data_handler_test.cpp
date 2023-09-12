@@ -504,7 +504,7 @@ HWTEST_F(FileDataHandlerTest, IsTimeChanged001, TestSize.Level1)
         std::unordered_map<std::string, LocalInfo> localMap;
         std::string path = "";
         std::string type = "hh";
-        int32_t ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
+        bool ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -534,7 +534,7 @@ HWTEST_F(FileDataHandlerTest, IsTimeChanged002, TestSize.Level1)
         prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("123")));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         record.SetRecordData(data);
-        int32_t ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
+        bool ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -564,7 +564,7 @@ HWTEST_F(FileDataHandlerTest, IsTimeChanged003, TestSize.Level1)
         prop.insert(std::make_pair(Media::PhotoColumn::PHOTO_META_DATE_MODIFIED, DriveKit::DKRecordField(1111)));
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         record.SetRecordData(data);
-        int32_t ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
+        bool ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -596,7 +596,7 @@ HWTEST_F(FileDataHandlerTest, IsTimeChanged004, TestSize.Level1)
         data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
         record.SetEditedTime(1111000);
         record.SetRecordData(data);
-        int32_t ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
+        bool ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
         EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -625,8 +625,8 @@ HWTEST_F(FileDataHandlerTest, IsTimeChanged005, TestSize.Level1)
         std::string type = Media::PhotoColumn::MEDIA_DATE_MODIFIED;
 
         localMap[path] = { 11, 11 };
-        int32_t ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
-        EXPECT_EQ(ret, true);
+        bool ret = fileDataHandler->IsTimeChanged(record, localMap, path, type);
+        EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "IsTimeChanged005 ERROR";
