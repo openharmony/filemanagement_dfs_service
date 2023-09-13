@@ -230,7 +230,7 @@ napi_value CloudFileDownloadNapi::Off(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    if (funcArg.GetArgc() == 2 &&!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+    if (funcArg.GetArgc() == NARG_CNT::TWO &&!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
