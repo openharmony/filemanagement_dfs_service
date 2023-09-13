@@ -82,6 +82,11 @@ napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
     if (funcArg.GetArgc() == (uint)NARG_CNT::THREE) {
         return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
     } else {
+        if (!NVal(env, funcArg[NARG_POS::FOURTH]).TypeIs(napi_function)) {
+            LOGE("Argument type mismatch");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
         NVal cb(env, funcArg[(int)NARG_POS::FOURTH]);
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
     }
@@ -134,6 +139,11 @@ napi_value NotifyDataChange(napi_env env, napi_callback_info info)
     if (funcArg.GetArgc() == (uint)NARG_CNT::TWO) {
         return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
     } else {
+        if (!NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_function)) {
+            LOGE("Argument type mismatch");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
         NVal cb(env, funcArg[(int)NARG_POS::THIRD]);
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
     }
@@ -179,6 +189,11 @@ napi_value DisableCloud(napi_env env, napi_callback_info info)
     if (funcArg.GetArgc() == (uint)NARG_CNT::ONE) {
         return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
     } else {
+        if (!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+            LOGE("Argument type mismatch");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
         NVal cb(env, funcArg[(int)NARG_POS::SECOND]);
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
     }
@@ -266,6 +281,11 @@ napi_value EnableCloud(napi_env env, napi_callback_info info)
     if (funcArg.GetArgc() == (uint)NARG_CNT::TWO) {
         return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
     } else {
+        if (!NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_function)) {
+            LOGE("Argument type mismatch");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
         NVal cb(env, funcArg[(int)NARG_POS::THIRD]);
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
     }
@@ -348,6 +368,11 @@ napi_value Clean(napi_env env, napi_callback_info info)
     if (funcArg.GetArgc() == (uint)NARG_CNT::TWO) {
         return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
     } else {
+        if (!NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_function)) {
+            LOGE("Argument type mismatch");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }        
         NVal cb(env, funcArg[(int)NARG_POS::THIRD]);
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
     }

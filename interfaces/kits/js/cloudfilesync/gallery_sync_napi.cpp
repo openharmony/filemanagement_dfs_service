@@ -48,6 +48,7 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
     napi_status status = napi_get_reference_value(env, ref, &jsCallback);
     if (status != napi_ok) {
         LOGE("Create reference failed, status: %{public}d", status);
+        napi_close_handle_scope(env, scope);
         return;
     }
     NVal obj = NVal::CreateObject(env);
@@ -60,6 +61,7 @@ void CloudSyncCallbackImpl::OnComplete(UvChangeMsg *msg)
     if (status != napi_ok) {
         LOGE("napi call function failed, status: %{public}d", status);
     }
+    napi_close_handle_scope(env, scope);
 }
 
 void CloudSyncCallbackImpl::OnSyncStateChanged(CloudSyncState state, ErrorType error)
@@ -137,6 +139,12 @@ napi_value GallerySyncNapi::OnCallback(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
+    if (!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+        LOGE("Argument type mismatch");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
     if (callback_ != nullptr) {
         LOGI("callback already exist");
         return NVal::CreateUndefined(env).val_;
@@ -156,7 +164,7 @@ napi_value GallerySyncNapi::OnCallback(napi_env env, napi_callback_info info)
 napi_value GallerySyncNapi::OffCallback(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+    if (!funcArg.InitArgs(NARG_CNT::ONE,NARG_CNT::TWO)) {
         NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OffCallback Number of arguments unmatched");
         return nullptr;
@@ -164,6 +172,12 @@ napi_value GallerySyncNapi::OffCallback(napi_env env, napi_callback_info info)
 
     auto [succ, type, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
     if (!(succ && (type.get() == std::string("progress")))) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    if (funcArg.GetArgc() == NARG_CNT::TWO && !NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+        LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
@@ -210,6 +224,11 @@ napi_value GallerySyncNapi::Start(napi_env env, napi_callback_info info)
     if (funcArg.GetArgc() == NARG_CNT::ZERO) {
         return NAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
     } else {
+        if (!NVal(env, funcArg[NARG_POS::FIRST]).TypeIs(napi_function)) {
+            LOGE("Argument type mismatch");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
         NVal cb(env, funcArg[NARG_POS::FIRST]);
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
     }
@@ -244,6 +263,11 @@ napi_value GallerySyncNapi::Stop(napi_env env, napi_callback_info info)
     if (funcArg.GetArgc() == NARG_CNT::ZERO) {
         return NAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
     } else {
+        if (!NVal(env, funcArg[NARG_POS::FIRST]).TypeIs(napi_function)) {
+            LOGE("Argument type mismatch");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
         NVal cb(env, funcArg[NARG_POS::FIRST]);
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
     }
