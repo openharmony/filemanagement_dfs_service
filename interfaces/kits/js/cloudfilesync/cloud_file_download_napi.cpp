@@ -80,15 +80,15 @@ napi_value CloudFileDownloadNapi::Start(napi_env env, napi_callback_info info)
 
     NVal thisVar(env, funcArg.GetThisVar());
     string procedureName = "cloudFileDownload";
-    if (funcArg.GetArgc() == NARG_CNT::ONE) {
+    if (funcArg.GetArgc() == (uint)NARG_CNT::ONE) {
         return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
     } else {
-        if (!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+        NVal cb(env, funcArg[NARG_POS::SECOND]);
+        if (!cb.TypeIs(napi_function)) {
             LOGE("Argument type mismatch");
             NError(E_PARAMS).ThrowErr(env);
             return nullptr;
         }
-        NVal cb(env, funcArg[NARG_POS::SECOND]);
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbCompl).val_;
     }
 }
@@ -230,7 +230,7 @@ napi_value CloudFileDownloadNapi::Off(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    if (funcArg.GetArgc() == NARG_CNT::TWO &&!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+    if (funcArg.GetArgc() == (uint)NARG_CNT::TWO &&!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
@@ -288,12 +288,12 @@ napi_value CloudFileDownloadNapi::Stop(napi_env env, napi_callback_info info)
     if (funcArg.GetArgc() == NARG_CNT::ONE) {
         return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
     } else {
-        if (!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+        NVal cb(env, funcArg[NARG_POS::SECOND]);
+        if (!cb.TypeIs(napi_function)) {
             LOGE("Argument type mismatch");
             NError(E_PARAMS).ThrowErr(env);
             return nullptr;
         }
-        NVal cb(env, funcArg[NARG_POS::SECOND]);
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbCompl).val_;
     }
 }

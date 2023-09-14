@@ -139,7 +139,7 @@ napi_value GallerySyncNapi::OnCallback(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    if (!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+    if (!NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
@@ -176,7 +176,7 @@ napi_value GallerySyncNapi::OffCallback(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    if (funcArg.GetArgc() == NARG_CNT::TWO && !NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+    if (funcArg.GetArgc() == (uint)NARG_CNT::TWO && !NVal(env, funcArg[(int)NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
@@ -224,12 +224,12 @@ napi_value GallerySyncNapi::Start(napi_env env, napi_callback_info info)
     if (funcArg.GetArgc() == NARG_CNT::ZERO) {
         return NAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
     } else {
-        if (!NVal(env, funcArg[NARG_POS::FIRST]).TypeIs(napi_function)) {
+        NVal cb(env, funcArg[NARG_POS::FIRST]);
+        if (!cb.TypeIs(napi_function)) {
             LOGE("Argument type mismatch");
             NError(E_PARAMS).ThrowErr(env);
             return nullptr;
         }
-        NVal cb(env, funcArg[NARG_POS::FIRST]);
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
     }
 }
@@ -263,12 +263,12 @@ napi_value GallerySyncNapi::Stop(napi_env env, napi_callback_info info)
     if (funcArg.GetArgc() == NARG_CNT::ZERO) {
         return NAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
     } else {
-        if (!NVal(env, funcArg[NARG_POS::FIRST]).TypeIs(napi_function)) {
+        NVal cb(env, funcArg[NARG_POS::FIRST]);
+        if (!cb.TypeIs(napi_function)) {
             LOGE("Argument type mismatch");
             NError(E_PARAMS).ThrowErr(env);
             return nullptr;
         }
-        NVal cb(env, funcArg[NARG_POS::FIRST]);
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
     }
 }
