@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "cloud_daemon_service_mock.h"
 #include "cloud_daemon_service_proxy.h"
 #include "cloud_file_daemon_interface_code.h"
 #include "dfs_error.h"
@@ -93,6 +94,8 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    shared_ptr<CloudDaemonServiceProxy> proxy_ = nullptr;
+    sptr<CloudDaemonServiceMock> mock_ = nullptr;
 };
 
 void CloudDaemonServiceProxyTest::SetUpTestCase(void)
@@ -107,6 +110,8 @@ void CloudDaemonServiceProxyTest::TearDownTestCase(void)
 
 void CloudDaemonServiceProxyTest::SetUp(void)
 {
+    mock_ = sptr(new CloudDaemonServiceMock());
+    proxy_ = make_shared<CloudDaemonServiceProxy>(mock_);
     GTEST_LOG_(INFO) << "SetUp";
 }
 
@@ -178,38 +183,48 @@ HWTEST_F(CloudDaemonServiceProxyTest, InvaildInstanceTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: StartFuseTest
+ * @tc.name: StartFuseTest001
  * @tc.desc: Verify the StartFuse function
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudDaemonServiceProxyTest, StartFuseTest, TestSize.Level1)
+HWTEST_F(CloudDaemonServiceProxyTest, StartFuseTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "StartFuseTest Start";
+    GTEST_LOG_(INFO) << "StartFuseTest001 Start";
     try {
-        g_smcflag = true;
-        auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
-        EXPECT_NE(CloudDaemonServiceProxy, nullptr);
-        MessageParcel data;
-        MessageParcel reply;
-        MessageOption option;
-        reply.WriteInt32(E_OK);
-        EXPECT_TRUE(data.WriteInterfaceToken(ICloudDaemon::GetDescriptor()));
-        int32_t devFd = open("/dev/fuse", O_RDWR);
-        EXPECT_GT(devFd, 0);
-        string path = "continue";
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
         int32_t userId = 100;
-        int32_t ret = CloudDaemonServiceProxy->StartFuse(userId, devFd, path);
-        EXPECT_EQ(ret, E_BROKEN_IPC);
-        auto remoteObject = CloudDaemonServiceProxy->AsObject();
-        EXPECT_NE(remoteObject, nullptr);
-        ret = remoteObject->SendRequest(
-            static_cast<uint32_t>(CloudFileDaemonInterfaceCode::CLOUD_DAEMON_CMD_START_FUSE), data, reply, option);
+        int32_t devFd = open("/dev/fuse", O_RDWR);
+        string path = "continue";
+        int ret = proxy_->StartFuse(userId, devFd, path);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "StartFuseTest  ERROR";
+        GTEST_LOG_(INFO) << "StartFuseTest001 ERROR";
     }
-    GTEST_LOG_(INFO) << "StartFuseTest End";
+    GTEST_LOG_(INFO) << "StartFuseTest001 End";
+}
+
+/**
+ * @tc.name: StartFuseTest002
+ * @tc.desc: Verify the StartFuse function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDaemonServiceProxyTest, StartFuseTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFuseTest002 Start";
+    try {
+        EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
+        int32_t userId = 100;
+        int32_t devFd = open("/dev/fuse", O_RDWR);
+        string path = "continue";
+        int ret = proxy_->StartFuse(userId, devFd, path);
+        EXPECT_EQ(ret, E_BROKEN_IPC);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartFuseTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "StartFuseTest002 End";
 }
 } // namespace OHOS::FileManagement::CloudFile::Test
