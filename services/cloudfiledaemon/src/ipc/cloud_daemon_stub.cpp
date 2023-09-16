@@ -16,6 +16,7 @@
 #include "ipc/cloud_daemon_stub.h"
 
 #include "cloud_file_daemon_interface_code.h"
+#include "dfsu_memory_guard.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -30,6 +31,7 @@ CloudDaemonStub::CloudDaemonStub()
 int32_t CloudDaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
                                          MessageParcel &reply, MessageOption &option)
 {
+    CloudSync::DfsuMemoryGuard cacheGuard;
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return CLOUD_DAEMON_DESCRIPTOR_IS_EMPTY;
     }
