@@ -103,6 +103,10 @@ protected:
 
     void SyncStateChangedNotify(const CloudSyncState state, const ErrorType error);
 
+    /* identifier */
+    const std::string bundleName_;
+    const int32_t userId_;
+
 private:
     /* download */
     void PullRecords(std::shared_ptr<TaskContext> context);
@@ -172,10 +176,6 @@ private:
     void SetErrorCodeMask(ErrorType errorType);
     /* cloud sync result */
     ErrorType GetErrorType();
-
-    /* identifier */
-    const std::string bundleName_;
-    const int32_t userId_;
 
     /* state management */
     SyncStateManager syncStateManager_;

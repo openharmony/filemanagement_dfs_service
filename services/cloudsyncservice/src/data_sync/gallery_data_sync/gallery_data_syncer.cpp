@@ -40,6 +40,11 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
 
 int32_t GalleryDataSyncer::Init(const std::string bundleName, const int32_t userId)
 {
+    return E_OK;
+}
+
+std::shared_ptr<NativeRdb::RdbStore> GalleryDataSyncer::RdbInit(const std::string &bundleName, const int32_t userId)
+{
     /* rdb config */
     NativeRdb::RdbStoreConfig config(DATABASE_NAME);
     config.SetPath(DATA_APP_EL2 + to_string(userId) + DATABASE_DIR + DATABASE_NAME);
@@ -55,23 +60,54 @@ int32_t GalleryDataSyncer::Init(const std::string bundleName, const int32_t user
      */
     int32_t err;
     RdbCallback cb;
-    auto rdb_ = NativeRdb::RdbHelper::GetRdbStore(config, Media::MEDIA_RDB_VERSION, cb, err);
-    if (rdb_ == nullptr) {
+    auto rdb = NativeRdb::RdbHelper::GetRdbStore(config, Media::MEDIA_RDB_VERSION, cb, err);
+    if (rdb == nullptr) {
         LOGE("gallyer data syncer init rdb fail");
-        return E_RDB;
     }
 
-    /* init handler */
-    fileHandler_ = make_shared<FileDataHandler>(userId, bundleName, rdb_);
-    albumHandler_ = make_shared<AlbumDataHandler>(userId, bundleName, rdb_);
+    return rdb;
+}
+
+int32_t GalleryDataSyncer::GetHandler()
+{
+    lock_guard<mutex> lock{handleInitMutex_};
+    if (!fileHandler_) {
+        auto rdb = RdbInit(bundleName_, userId_);
+        if (!rdb) {
+            return E_RDB;
+        }
+        /* init handler */
+        fileHandler_ = make_shared<FileDataHandler>(userId_, bundleName_, rdb);
+        albumHandler_ = make_shared<AlbumDataHandler>(userId_, bundleName_, rdb);
+    }
+    dataHandlerRefCount_++;
+    LOGD("get handler, refCount: %{public}d", dataHandlerRefCount_);
     return E_OK;
+}
+
+void GalleryDataSyncer::PutHandler()
+{
+    lock_guard<mutex> lock{handleInitMutex_};
+    LOGD("put handler, refCount: %{public}d", dataHandlerRefCount_);
+    if (dataHandlerRefCount_ > 0) {
+        dataHandlerRefCount_--;
+    }
+    if ((fileHandler_ != nullptr) && (dataHandlerRefCount_ == 0)) {
+        fileHandler_ = nullptr;
+        albumHandler_ = nullptr;
+        LOGI("handler destroyed");
+    }
 }
 
 int32_t GalleryDataSyncer::Clean(const int action)
 {
     LOGD("gallery data sycner Clean");
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
     /* file */
-    int32_t ret = CleanInner(fileHandler_, action);
+    ret = CleanInner(fileHandler_, action);
     if (ret != E_OK) {
         LOGE("gallery data syncer file clean err %{public}d", ret);
     }
@@ -81,17 +117,30 @@ int32_t GalleryDataSyncer::Clean(const int action)
         LOGE("gallery data syncer album clean err %{public}d", ret);
     }
     DeleteSubscription();
+    PutHandler();
     return ret;
 }
 
 int32_t GalleryDataSyncer::StartDownloadFile(const std::string path, const int32_t userId)
 {
-    return DownloadInner(fileHandler_, path, userId);
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = DownloadInner(fileHandler_, path, userId);
+    PutHandler();
+    return ret;
 }
 
 int32_t GalleryDataSyncer::StopDownloadFile(const std::string path, const int32_t userId)
 {
-    return DataSyncer::StopDownloadFile(path, userId);
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = DataSyncer::StopDownloadFile(path, userId);
+    PutHandler();
+    return ret;
 }
 
 void GalleryDataSyncer::Schedule()
@@ -100,6 +149,10 @@ void GalleryDataSyncer::Schedule()
 
     int32_t ret = E_OK;
     switch (stage_) {
+        case PREPARE: {
+            ret = Prepare();
+            break;
+        }
         case DOWNLOADALBUM: {
             ret = DownloadAlbum();
             break;
@@ -143,11 +196,26 @@ void GalleryDataSyncer::Schedule()
 
 void GalleryDataSyncer::Reset()
 {
+    /* release some resources after last sycn is completed */
+    if (stage_ != BEGIN) {
+        /* release DataHandler */
+        PutHandler();
+    }
     /* reset stage in case of stop or restart */
     stage_ = BEGIN;
-    /* restart a sync might need to update offset, etc */
-    fileHandler_->Reset();
-    albumHandler_->Reset();
+}
+
+int32_t GalleryDataSyncer::Prepare()
+{
+    /* call putHandler in the Reset function when sync is completed */
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        LOGE("Get handler failed, may be rdb init failed");
+        return ret;
+    }
+    /* schedule to next stage */
+    Schedule();
+    return E_OK;
 }
 
 int32_t GalleryDataSyncer::DownloadAlbum()
