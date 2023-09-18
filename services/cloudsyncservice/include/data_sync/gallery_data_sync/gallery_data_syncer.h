@@ -41,6 +41,7 @@ public:
 private:
     enum {
         BEGIN,
+        PREPARE,
         DOWNLOADALBUM,
         DOWNLOADFILE,
         COMPLETEPULL,
@@ -50,11 +51,15 @@ private:
         END
     };
 
+    int32_t Prepare();
     int32_t DownloadAlbum();
     int32_t DownloadFile();
     int32_t UploadAlbum();
     int32_t UploadFile();
     int32_t Complete();
+    std::shared_ptr<NativeRdb::RdbStore> RdbInit(const std::string &bundleName, const int32_t userId);
+    int32_t GetHandler();
+    void PutHandler();
 
     /* stage */
     int32_t stage_ = BEGIN;
@@ -65,11 +70,12 @@ private:
     const std::string DATABASE_NAME = "media_library.db";
     const std::string BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
     const int32_t CONNECT_SIZE = 10;
-    std::shared_ptr<NativeRdb::RdbStore> rdb_;
 
     /* handler */
     std::shared_ptr<FileDataHandler> fileHandler_;
     std::shared_ptr<AlbumDataHandler> albumHandler_;
+    std::mutex handleInitMutex_;
+    int32_t dataHandlerRefCount_{0};
 };
 
 class RdbCallback : public NativeRdb::RdbOpenCallback {
