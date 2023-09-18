@@ -80,10 +80,15 @@ napi_value CloudFileDownloadNapi::Start(napi_env env, napi_callback_info info)
 
     NVal thisVar(env, funcArg.GetThisVar());
     string procedureName = "cloudFileDownload";
-    if (funcArg.GetArgc() == NARG_CNT::ONE) {
+    if (funcArg.GetArgc() == (uint)NARG_CNT::ONE) {
         return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
     } else {
         NVal cb(env, funcArg[NARG_POS::SECOND]);
+        if (!cb.TypeIs(napi_function)) {
+            LOGE("Argument type mismatch");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbCompl).val_;
     }
 }
@@ -110,6 +115,7 @@ void CloudDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
     napi_status status = napi_get_reference_value(env, ref, &jsCallback);
     if (status != napi_ok) {
         LOGE("Create reference failed, status: %{public}d", status);
+        napi_close_handle_scope(env, scope);
         return;
     }
     NVal obj = NVal::CreateObject(env);
@@ -124,6 +130,7 @@ void CloudDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
     if (status != napi_ok) {
         LOGE("napi call function failed, status: %{public}d", status);
     }
+    napi_close_handle_scope(env, scope);
 }
 
 void CloudDownloadCallbackImpl::OnDownloadProcess(DownloadProgressObj &progress)
@@ -185,6 +192,12 @@ napi_value CloudFileDownloadNapi::On(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
+    if (!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+        LOGE("Argument type mismatch");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
     if (callback_ != nullptr) {
         LOGI("callback already exist");
         return NVal::CreateUndefined(env).val_;
@@ -205,7 +218,7 @@ napi_value CloudFileDownloadNapi::Off(napi_env env, napi_callback_info info)
 {
     LOGI("Off begin");
     NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         LOGE("Off Number of arguments unmatched");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
@@ -213,6 +226,12 @@ napi_value CloudFileDownloadNapi::Off(napi_env env, napi_callback_info info)
     auto [succProgress, progress, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
     if (!(succProgress && std::string(progress.get()) == "progress")) {
         LOGE("Off get progress failed!");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    if (funcArg.GetArgc() == (uint)NARG_CNT::TWO &&!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+        LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
@@ -270,6 +289,11 @@ napi_value CloudFileDownloadNapi::Stop(napi_env env, napi_callback_info info)
         return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
     } else {
         NVal cb(env, funcArg[NARG_POS::SECOND]);
+        if (!cb.TypeIs(napi_function)) {
+            LOGE("Argument type mismatch");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
         return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbCompl).val_;
     }
 }
