@@ -16,6 +16,7 @@
 #include "cloud_file_sync_service_interface_code.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
+#include "dfsu_memory_guard.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -62,6 +63,7 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
                                               MessageParcel &reply,
                                               MessageOption &option)
 {
+    DfsuMemoryGuard cacheGuard;
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return E_SERVICE_DESCRIPTOR_IS_EMPTY;
     }

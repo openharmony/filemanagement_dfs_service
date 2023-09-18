@@ -18,6 +18,7 @@
 #include <chrono>
 #include <functional>
 
+#include "dfsu_memory_guard.h"
 #include "sdk_helper.h"
 
 namespace OHOS {
@@ -205,6 +206,7 @@ void TaskManager::InitRunner(TaskRunner &runner)
 int32_t TaskManager::CommitTask(shared_ptr<TaskRunner> runner, shared_ptr<Task> t)
 {
     pool_.AddTask([t, runner]() {
+        DfsuMemoryGuard cacheGuard;
         t->Run();
         runner->CompleteTask(t->GetId());
     });
