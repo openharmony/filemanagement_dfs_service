@@ -1234,3 +1234,756 @@ HWTEST_F(FileDataHandlerTest, ConflictMerge004, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ConflictMerge004 End";
 }
+
+/**
+ * @tc.name: ThumbsAtLocal001
+ * @tc.desc: Verify the ThumbsAtLocal function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, ThumbsAtLocal001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ThumbsAtLocal001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField("filePath")));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        record.SetRecordData(data);
+
+        bool ret = fileDataHandler->ThumbsAtLocal(record);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ThumbsAtLocal001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ThumbsAtLocal001 End";
+}
+
+/**
+ * @tc.name: ThumbsAtLocal002
+ * @tc.desc: Verify the ThumbsAtLocal function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, ThumbsAtLocal002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ThumbsAtLocal002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DriveKit::DKRecord record;
+        bool ret = fileDataHandler->ThumbsAtLocal(record);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ThumbsAtLocal002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ThumbsAtLocal002 End";
+}
+
+/**
+ * @tc.name: ThumbsAtLocal003
+ * @tc.desc: Verify the ThumbsAtLocal function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, ThumbsAtLocal003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ThumbsAtLocal003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        record.SetRecordData(data);
+
+        bool ret = fileDataHandler->ThumbsAtLocal(record);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ThumbsAtLocal003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ThumbsAtLocal003 End";
+}
+
+/**
+ * @tc.name: ThumbsAtLocal004
+ * @tc.desc: Verify the ThumbsAtLocal function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, ThumbsAtLocal004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ThumbsAtLocal004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecordFieldMap prop;
+        prop.insert(std::make_pair(Media::PhotoColumn::MEDIA_FILE_PATH, DriveKit::DKRecordField(1)));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_ATTRIBUTES), prop));
+        record.SetRecordData(data);
+
+        bool ret = fileDataHandler->ThumbsAtLocal(record);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " ThumbsAtLocal004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ThumbsAtLocal004 End";
+}
+
+/**
+ * @tc.name: UpdateAssetInPhotoMap001
+ * @tc.desc: Verify the UpdateAssetInPhotoMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, UpdateAssetInPhotoMap001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateAssetInPhotoMap001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rdb, Query(_, _))
+            .WillOnce(Return(ByMove(std::move(rset))))
+            .WillOnce(Return(nullptr));
+
+        int32_t fileId = 0;
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecordFieldList list;
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_LOGIC_ALBUM_IDS), list));
+        record.SetRecordData(data);
+
+        int32_t ret = fileDataHandler->UpdateAssetInPhotoMap(record, fileId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " UpdateAssetInPhotoMap001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "UpdateAssetInPhotoMap001 End";
+}
+
+/**
+ * @tc.name: UpdateAssetInPhotoMap002
+ * @tc.desc: Verify the UpdateAssetInPhotoMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, UpdateAssetInPhotoMap002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateAssetInPhotoMap002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t fileId = 0;
+        DriveKit::DKRecord record;
+
+        int32_t ret = fileDataHandler->UpdateAssetInPhotoMap(record, fileId);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " UpdateAssetInPhotoMap002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "UpdateAssetInPhotoMap002 End";
+}
+
+/**
+ * @tc.name: UpdateAssetInPhotoMap003
+ * @tc.desc: Verify the UpdateAssetInPhotoMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, UpdateAssetInPhotoMap003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateAssetInPhotoMap003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t fileId = 0;
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        record.SetRecordData(data);
+
+        int32_t ret = fileDataHandler->UpdateAssetInPhotoMap(record, fileId);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " UpdateAssetInPhotoMap003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "UpdateAssetInPhotoMap003 End";
+}
+
+/**
+ * @tc.name: UpdateAssetInPhotoMap004
+ * @tc.desc: Verify the UpdateAssetInPhotoMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, UpdateAssetInPhotoMap004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UpdateAssetInPhotoMap004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rdb, Query(_, _))
+            .WillOnce(Return(ByMove(std::move(rset))))
+            .WillOnce(Return(nullptr));
+
+        int32_t fileId = 0;
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecordFieldList list;
+        list.push_back(DKRecordField(0));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_LOGIC_ALBUM_IDS), list));
+        record.SetRecordData(data);
+
+        int32_t ret = fileDataHandler->UpdateAssetInPhotoMap(record, fileId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " UpdateAssetInPhotoMap004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "UpdateAssetInPhotoMap004 End";
+}
+
+/**
+ * @tc.name: InsertAssetToPhotoMap001
+ * @tc.desc: Verify the InsertAssetToPhotoMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, InsertAssetToPhotoMap001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InsertAssetToPhotoMap001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+
+        OnFetchParams params;
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecordFieldList list;
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_LOGIC_ALBUM_IDS), list));
+        record.SetRecordData(data);
+
+        int32_t ret = fileDataHandler->InsertAssetToPhotoMap(record, params);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " InsertAssetToPhotoMap001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InsertAssetToPhotoMap001 End";
+}
+
+/**
+ * @tc.name: InsertAssetToPhotoMap002
+ * @tc.desc: Verify the InsertAssetToPhotoMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, InsertAssetToPhotoMap002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InsertAssetToPhotoMap002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+
+        OnFetchParams params;
+        DriveKit::DKRecord record;
+
+        int32_t ret = fileDataHandler->InsertAssetToPhotoMap(record, params);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " InsertAssetToPhotoMap002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InsertAssetToPhotoMap002 End";
+}
+
+/**
+ * @tc.name: InsertAssetToPhotoMap003
+ * @tc.desc: Verify the InsertAssetToPhotoMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, InsertAssetToPhotoMap003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InsertAssetToPhotoMap003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+
+        OnFetchParams params;
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        record.SetRecordData(data);
+
+        int32_t ret = fileDataHandler->InsertAssetToPhotoMap(record, params);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " InsertAssetToPhotoMap003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InsertAssetToPhotoMap003 End";
+}
+
+/**
+ * @tc.name: InsertAssetToPhotoMap004
+ * @tc.desc: Verify the InsertAssetToPhotoMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, InsertAssetToPhotoMap004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InsertAssetToPhotoMap004 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+
+        OnFetchParams params;
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        DriveKit::DKRecordFieldList list;
+        list.push_back(DKRecordField(0));
+        data.insert(std::make_pair(DriveKit::DKFieldKey(FILE_LOGIC_ALBUM_IDS), list));
+        record.SetRecordData(data);
+
+        int32_t ret = fileDataHandler->InsertAssetToPhotoMap(record, params);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " InsertAssetToPhotoMap004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "InsertAssetToPhotoMap004 End";
+}
+
+/**
+ * @tc.name: DeleteAssetInPhotoMap001
+ * @tc.desc: Verify the DeleteAssetInPhotoMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, DeleteAssetInPhotoMap001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteAssetInPhotoMap001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
+
+        int32_t fileId = 1;
+        int32_t ret = fileDataHandler->DeleteAssetInPhotoMap(fileId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DeleteAssetInPhotoMap001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DeleteAssetInPhotoMap001 End";
+}
+
+/**
+ * @tc.name: DeleteAssetInPhotoMap002
+ * @tc.desc: Verify the DeleteAssetInPhotoMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, DeleteAssetInPhotoMap002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteAssetInPhotoMap002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+
+        int32_t fileId = 0;
+        int32_t ret = fileDataHandler->DeleteAssetInPhotoMap(fileId);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DeleteAssetInPhotoMap002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DeleteAssetInPhotoMap002 End";
+}
+
+/**
+ * @tc.name: DeleteAssetInPhotoMap003
+ * @tc.desc: Verify the DeleteAssetInPhotoMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, DeleteAssetInPhotoMap003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteAssetInPhotoMap003 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillRepeatedly(Return(1));
+
+        int32_t fileId = 1;
+        int32_t ret = fileDataHandler->DeleteAssetInPhotoMap(fileId);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " DeleteAssetInPhotoMap003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DeleteAssetInPhotoMap003 End";
+}
+
+/**
+ * @tc.name: GetAlbumIdFromCloudId001
+ * @tc.desc: Verify the GetAlbumIdFromCloudId function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, GetAlbumIdFromCloudId001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId001 Begin";
+    try {
+        const int32_t rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        std::string cloudId = "0";
+        int32_t ret = fileDataHandler->GetAlbumIdFromCloudId(cloudId);
+        EXPECT_EQ(ret, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetAlbumIdFromCloudId001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId001 End";
+}
+
+/**
+ * @tc.name: GetAlbumIdFromCloudId002
+ * @tc.desc: Verify the GetAlbumIdFromCloudId function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, GetAlbumIdFromCloudId002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
+
+        std::string cloudId = "0";
+        int32_t ret = fileDataHandler->GetAlbumIdFromCloudId(cloudId);
+        EXPECT_EQ(ret, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetAlbumIdFromCloudId002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId002 End";
+}
+
+/**
+ * @tc.name: GetAlbumIdFromCloudId003
+ * @tc.desc: Verify the GetAlbumIdFromCloudId function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, GetAlbumIdFromCloudId003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId003 Begin";
+    try {
+        const int32_t rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(1)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        std::string cloudId = "0";
+        int32_t ret = fileDataHandler->GetAlbumIdFromCloudId(cloudId);
+        EXPECT_EQ(ret, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetAlbumIdFromCloudId003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId003 End";
+}
+
+/**
+ * @tc.name: GetAlbumIdFromCloudId004
+ * @tc.desc: Verify the GetAlbumIdFromCloudId function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, GetAlbumIdFromCloudId004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId004 Begin";
+    try {
+        const int32_t rowCount = -1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        std::string cloudId = "0";
+        int32_t ret = fileDataHandler->GetAlbumIdFromCloudId(cloudId);
+        EXPECT_EQ(ret, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetAlbumIdFromCloudId004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId004 End";
+}
+
+/**
+ * @tc.name: GetAlbumIdFromCloudId005
+ * @tc.desc: Verify the GetAlbumIdFromCloudId function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, GetAlbumIdFromCloudId005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId005 Begin";
+    try {
+        const int32_t rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(1));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        std::string cloudId = "0";
+        int32_t ret = fileDataHandler->GetAlbumIdFromCloudId(cloudId);
+        EXPECT_EQ(ret, -1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetAlbumIdFromCloudId005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId005 End";
+}
+
+/**
+ * @tc.name: GetAlbumIdFromCloudId006
+ * @tc.desc: Verify the GetAlbumIdFromCloudId function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, GetAlbumIdFromCloudId006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId006 Begin";
+    try {
+        const int32_t rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(E_OK), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        std::string cloudId = "0";
+        int32_t ret = fileDataHandler->GetAlbumIdFromCloudId(cloudId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetAlbumIdFromCloudId006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetAlbumIdFromCloudId006 End";
+}
+
+/**
+ * @tc.name: QueryAndInsertMap001
+ * @tc.desc: Verify the QueryAndInsertMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, QueryAndInsertMap001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryAndInsertMap001 Begin";
+    try {
+        const int32_t rowCount = 0;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        EXPECT_CALL(*rdb, Insert(_, _, _)).WillRepeatedly(Return(0));
+
+        int32_t albumId = 0;
+        int32_t fileId = 0;
+        fileDataHandler->QueryAndInsertMap(albumId, fileId);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " QueryAndInsertMap001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "QueryAndInsertMap001 End";
+}
+
+/**
+ * @tc.name: QueryAndInsertMap002
+ * @tc.desc: Verify the QueryAndInsertMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, QueryAndInsertMap002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryAndInsertMap002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
+
+        int32_t albumId = 0;
+        int32_t fileId = 0;
+        fileDataHandler->QueryAndInsertMap(albumId, fileId);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " QueryAndInsertMap002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "QueryAndInsertMap002 End";
+}
+
+/**
+ * @tc.name: QueryAndInsertMap003
+ * @tc.desc: Verify the QueryAndInsertMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, QueryAndInsertMap003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryAndInsertMap003 Begin";
+    try {
+        const int32_t rowCount = 0;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(1)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t albumId = 0;
+        int32_t fileId = 0;
+        fileDataHandler->QueryAndInsertMap(albumId, fileId);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " QueryAndInsertMap003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "QueryAndInsertMap003 End";
+}
+
+/**
+ * @tc.name: QueryAndInsertMap004
+ * @tc.desc: Verify the QueryAndInsertMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, QueryAndInsertMap004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryAndInsertMap004 Begin";
+    try {
+        const int32_t rowCount = -1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t albumId = 0;
+        int32_t fileId = 0;
+        fileDataHandler->QueryAndInsertMap(albumId, fileId);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " QueryAndInsertMap004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "QueryAndInsertMap004 End";
+}
+
+/**
+ * @tc.name: QueryAndInsertMap005
+ * @tc.desc: Verify the QueryAndInsertMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, QueryAndInsertMap005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryAndInsertMap005 Begin";
+    try {
+        const int32_t rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t albumId = 0;
+        int32_t fileId = 0;
+        fileDataHandler->QueryAndInsertMap(albumId, fileId);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " QueryAndInsertMap005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "QueryAndInsertMap005 End";
+}
+
+/**
+ * @tc.name: QueryAndInsertMap006
+ * @tc.desc: Verify the QueryAndInsertMap function
+ * @tc.type: FUNC
+ * @tc.require: issueI82BDE
+ */
+HWTEST_F(FileDataHandlerTest, QueryAndInsertMap006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "QueryAndInsertMap006 Begin";
+    try {
+        const int32_t rowCount = 0;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        EXPECT_CALL(*rdb, Insert(_, _, _)).WillRepeatedly(Return(1));
+
+        int32_t albumId = 0;
+        int32_t fileId = 0;
+        fileDataHandler->QueryAndInsertMap(albumId, fileId);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " QueryAndInsertMap006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "QueryAndInsertMap006 End";
+}
