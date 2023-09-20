@@ -23,6 +23,7 @@
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "utils_log.h"
+#include "async_work.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
@@ -79,17 +80,8 @@ napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
 
     std::string procedureName = "ChangeAppCloudSwitch";
     NVal thisVar(env, funcArg.GetThisVar());
-    if (funcArg.GetArgc() == (uint)NARG_CNT::THREE) {
-        return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
-    } else {
-        NVal cb(env, funcArg[(int)NARG_POS::FOURTH]);
-        if (!cb.TypeIs(napi_function)) {
-            LOGE("Argument type mismatch");
-            NError(E_PARAMS).ThrowErr(env);
-            return nullptr;
-        }
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
-    }
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::FOUR));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
 napi_value NotifyDataChange(napi_env env, napi_callback_info info)
@@ -135,18 +127,8 @@ napi_value NotifyDataChange(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "NotifyDataChange";
-    NVal thisVar(env, funcArg.GetThisVar());
-    if (funcArg.GetArgc() == (uint)NARG_CNT::TWO) {
-        return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
-    } else {
-        NVal cb(env, funcArg[(int)NARG_POS::THIRD]);
-        if (!cb.TypeIs(napi_function)) {
-            LOGE("Argument type mismatch");
-            NError(E_PARAMS).ThrowErr(env);
-            return nullptr;
-        }
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
-    }
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
 napi_value DisableCloud(napi_env env, napi_callback_info info)
@@ -185,18 +167,8 @@ napi_value DisableCloud(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "DisableCloud";
-    NVal thisVar(env, funcArg.GetThisVar());
-    if (funcArg.GetArgc() == (uint)NARG_CNT::ONE) {
-        return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
-    } else {
-        NVal cb(env, funcArg[(int)NARG_POS::SECOND]);
-        if (!cb.TypeIs(napi_function)) {
-            LOGE("Argument type mismatch");
-            NError(E_PARAMS).ThrowErr(env);
-            return nullptr;
-        } 
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
-    }
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
 
@@ -277,18 +249,8 @@ napi_value EnableCloud(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "EnableCloud";
-    NVal thisVar(env, funcArg.GetThisVar());
-    if (funcArg.GetArgc() == (uint)NARG_CNT::TWO) {
-        return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
-    } else {
-        NVal cb(env, funcArg[(int)NARG_POS::THIRD]);
-        if (!NVal(env, funcArg[NARG_POS::THIRD]).TypeIs(napi_function)) {
-            LOGE("Argument type mismatch");
-            NError(E_PARAMS).ThrowErr(env);
-            return nullptr;
-        } 
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
-    }
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
 bool ParseAppActions(napi_env env, napi_value object, CleanOptions &cleanOptions)
@@ -364,18 +326,8 @@ napi_value Clean(napi_env env, napi_callback_info info)
     };
 
     std::string procedureName = "Clean";
-    NVal thisVar(env, funcArg.GetThisVar());
-    if (funcArg.GetArgc() == (uint)NARG_CNT::TWO) {
-        return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbComplete).val_;
-    } else {       
-        NVal cb(env, funcArg[(int)NARG_POS::THIRD]);
-        if (!cb.TypeIs(napi_function)) {
-            LOGE("Argument type mismatch");
-            NError(E_PARAMS).ThrowErr(env);
-            return nullptr;
-        } 
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbComplete).val_;
-    }
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
 } // namespace OHOS::FileManagement::CloudSync

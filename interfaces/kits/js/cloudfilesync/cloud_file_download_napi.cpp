@@ -20,6 +20,7 @@
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "utils_log.h"
+#include "async_work.h"
 #include "uv.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -78,19 +79,9 @@ napi_value CloudFileDownloadNapi::Start(napi_env env, napi_callback_info info)
         return NVal::CreateUndefined(env);
     };
 
-    NVal thisVar(env, funcArg.GetThisVar());
     string procedureName = "cloudFileDownload";
-    if (funcArg.GetArgc() == (uint)NARG_CNT::ONE) {
-        return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
-    } else {
-        NVal cb(env, funcArg[NARG_POS::SECOND]);
-        if (!cb.TypeIs(napi_function)) {
-            LOGE("Argument type mismatch");
-            NError(E_PARAMS).ThrowErr(env);
-            return nullptr;
-        }
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbCompl).val_;
-    }
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
 CloudDownloadCallbackImpl::CloudDownloadCallbackImpl(napi_env env, napi_value fun) : env_(env)
@@ -283,19 +274,9 @@ napi_value CloudFileDownloadNapi::Stop(napi_env env, napi_callback_info info)
         return NVal::CreateUndefined(env);
     };
 
-    NVal thisVar(env, funcArg.GetThisVar());
     string procedureName = "cloudFileDownload";
-    if (funcArg.GetArgc() == NARG_CNT::ONE) {
-        return NAsyncWorkPromise(env, thisVar).Schedule(procedureName, cbExec, cbCompl).val_;
-    } else {
-        NVal cb(env, funcArg[NARG_POS::SECOND]);
-        if (!cb.TypeIs(napi_function)) {
-            LOGE("Argument type mismatch");
-            NError(E_PARAMS).ThrowErr(env);
-            return nullptr;
-        }
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(procedureName, cbExec, cbCompl).val_;
-    }
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
 bool CloudFileDownloadNapi::Export()

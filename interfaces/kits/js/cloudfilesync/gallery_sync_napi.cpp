@@ -20,6 +20,7 @@
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "utils_log.h"
+#include "async_work.h"
 #include "uv.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -164,7 +165,7 @@ napi_value GallerySyncNapi::OnCallback(napi_env env, napi_callback_info info)
 napi_value GallerySyncNapi::OffCallback(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::ONE,NARG_CNT::TWO)) {
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         LOGE("OffCallback Number of arguments unmatched");
         return nullptr;
@@ -220,18 +221,8 @@ napi_value GallerySyncNapi::Start(napi_env env, napi_callback_info info)
     };
 
     std::string PROCEDURE_NAME = "Start";
-    NVal thisVar(env, funcArg.GetThisVar());
-    if (funcArg.GetArgc() == NARG_CNT::ZERO) {
-        return NAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
-    } else {
-        NVal cb(env, funcArg[NARG_POS::FIRST]);
-        if (!cb.TypeIs(napi_function)) {
-            LOGE("Argument type mismatch");
-            NError(E_PARAMS).ThrowErr(env);
-            return nullptr;
-        }
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
-    }
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
 }
 
 napi_value GallerySyncNapi::Stop(napi_env env, napi_callback_info info)
@@ -259,18 +250,8 @@ napi_value GallerySyncNapi::Stop(napi_env env, napi_callback_info info)
     };
 
     std::string PROCEDURE_NAME = "Stop";
-    NVal thisVar(env, funcArg.GetThisVar());
-    if (funcArg.GetArgc() == NARG_CNT::ZERO) {
-        return NAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
-    } else {
-        NVal cb(env, funcArg[NARG_POS::FIRST]);
-        if (!cb.TypeIs(napi_function)) {
-            LOGE("Argument type mismatch");
-            NError(E_PARAMS).ThrowErr(env);
-            return nullptr;
-        }
-        return NAsyncWorkCallback(env, thisVar, cb).Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
-    }
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(PROCEDURE_NAME, cbExec, cbComplete).val_;
 }
 
 std::string GallerySyncNapi::GetClassName()

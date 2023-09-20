@@ -47,6 +47,7 @@ config("compiler_configs") {
 
 config("utils_public_config") {
   include_dirs = [
+    "work/include",
     "log/include",
     "preference/include",
     "system/include",
@@ -63,6 +64,7 @@ ohos_shared_library("libdistributedfileutils") {
     "system/src/dfsu_memory_guard.cpp",
     "system/src/dfsu_mount_argument_descriptors.cpp",
     "system/src/utils_directory.cpp",
+    "work/src/async_work.cpp",
   ]
 
   configs = [ "//build/config/compiler:exceptions" ]
@@ -84,8 +86,11 @@ ohos_shared_library("libdistributedfileutils") {
     "access_token:libtokenid_sdk",
     "c_utils:utils",
     "c_utils:utilsbase",
+    "file_api:filemgmt_libhilog",
+    "file_api:filemgmt_libn",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "napi:ace_napi",
     "preferences:native_preferences",
   ]
 
