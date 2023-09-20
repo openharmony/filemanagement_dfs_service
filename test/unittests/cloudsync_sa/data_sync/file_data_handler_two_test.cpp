@@ -1309,7 +1309,7 @@ HWTEST_F(FileDataHandlerTest, ConflictHandler006, TestSize.Level1)
 
         DKRecord record;
         int64_t isize = 0;
-        bool modifyPathflag =false;
+        bool modifyPathflag = false;
         int32_t ret = fileDataHandler->ConflictHandler(*rset, record, isize, modifyPathflag);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {

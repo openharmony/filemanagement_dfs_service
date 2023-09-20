@@ -398,8 +398,8 @@ int FileDataHandler::DentryRemoveThumb(const string &downloadPath)
 int FileDataHandler::AddCloudThumbs(const DKRecord &record)
 {
     LOGI("thumbs of %s add to cloud_view", record.GetRecordId().c_str());
-    constexpr int64_t THUMB_SIZE = 2 * 1024 * 1024; // thumbnail and lcd size show as 2MB
-    int64_t thumbSize = THUMB_SIZE, lcdSize = THUMB_SIZE;
+    constexpr uint64_t THUMB_SIZE = 2 * 1024 * 1024; // thumbnail and lcd size show as 2MB
+    uint64_t thumbSize = THUMB_SIZE, lcdSize = THUMB_SIZE;
 
     DKRecordData data;
     DKAsset val;
