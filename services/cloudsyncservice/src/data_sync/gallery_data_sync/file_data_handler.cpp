@@ -410,7 +410,7 @@ int FileDataHandler::AddCloudThumbs(const DKRecord &record)
     } else {
         LOGE("record data cannot get FILE_THUMBNAIL");
     }
-    if ((data.find(FILE_LCD) != data.end()) && 
+    if ((data.find(FILE_LCD) != data.end()) &&
         (data[FILE_LCD].GetAsset(val) == DKLocalErrorCode::NO_ERROR) && (val.size != 0)) {
         lcdSize = val.size;
     } else {
