@@ -44,15 +44,7 @@ int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
     if (ret != E_OK) {
         return ret;
     }
-    /* get sdk helper */
-    auto sdkHelper = std::make_shared<SdkHelper>();
-    ret = sdkHelper->Init(userId, bundleName);
-    if (ret != E_OK) {
-        LOGE("get sdk helper err %{public}d", ret);
-        return ret;
-    }
 
-    dataSyncer->SetSdkHelper(sdkHelper);
     std::thread([dataSyncer, forceFlag, triggerType]() { dataSyncer->StartSync(forceFlag, triggerType); }).detach();
 
     return E_OK;
@@ -68,14 +60,6 @@ int32_t DataSyncManager::TriggerStopSync(const std::string &bundleName,
         return E_INVAL_ARG;
     }
 
-    /* get sdk helper */
-    auto sdkHelper = std::make_shared<SdkHelper>();
-    auto ret = sdkHelper->Init(userId, bundleName);
-    if (ret != E_OK) {
-        LOGE("get sdk helper err %{public}d", ret);
-        return ret;
-    }
-    dataSyncer->SetSdkHelper(sdkHelper);
     std::thread([dataSyncer, triggerType]() { dataSyncer->StopSync(triggerType); }).detach();
     return E_OK;
 }
@@ -100,15 +84,6 @@ int32_t DataSyncManager::StartDownloadFile(const std::string &bundleName, const 
         return E_INVAL_ARG;
     }
 
-    /* get sdk helper */
-    auto sdkHelper = std::make_shared<SdkHelper>();
-    auto ret = sdkHelper->Init(userId, bundleName);
-    if (ret != E_OK) {
-        LOGE("get sdk helper err %{public}d", ret);
-        return ret;
-    }
-
-    dataSyncer->SetSdkHelper(sdkHelper);
     std::thread([dataSyncer, path, userId]() { dataSyncer->StartDownloadFile(path, userId); }).detach();
     return E_OK;
 }
@@ -197,13 +172,22 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bu
         }
     }
 
-    std::shared_ptr<DataSyncer> dataSyncer_ = std::make_shared<GalleryDataSyncer>(bundleName, userId);
-    int32_t ret = dataSyncer_->Init(bundleName, userId);
+    std::shared_ptr<DataSyncer> dataSyncer = std::make_shared<GalleryDataSyncer>(bundleName, userId);
+    int32_t ret = dataSyncer->Init(bundleName, userId);
     if (ret != E_OK) {
         return nullptr;
     }
-    dataSyncers_.push_back(dataSyncer_);
-    return dataSyncer_;
+
+    /* get sdk helper */
+    auto sdkHelper = std::make_shared<SdkHelper>();
+    ret = sdkHelper->Init(userId, bundleName);
+    if (ret != E_OK) {
+        LOGE("get sdk helper err %{public}d", ret);
+        return nullptr;
+    }
+    dataSyncer->SetSdkHelper(sdkHelper);
+    dataSyncers_.push_back(dataSyncer);
+    return dataSyncer;
 }
 
 int32_t DataSyncManager::IsSkipSync(const std::string &bundleName, const int32_t userId) const
@@ -230,17 +214,8 @@ int32_t DataSyncManager::CleanCloudFile(const int32_t userId, const std::string 
         LOGE(" Clean Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_INVAL_ARG;
     }
-    /* get sdk helper */
-    auto sdkHelper = std::make_shared<SdkHelper>();
-    auto ret = sdkHelper->Init(userId, bundleName);
-    if (ret != E_OK) {
-        LOGE("get sdk helper err %{public}d", ret);
-        return ret;
-    }
 
-    dataSyncer->SetSdkHelper(sdkHelper);
-    LOGD("dataSyncer.bundleName_ is %s", dataSyncer->GetBundleName().c_str());
-    LOGD("dataSyncer.userId_ is %d", dataSyncer->GetUserId());
+    LOGD("bundleName:%{private}s, userId:%{private}d", dataSyncer->GetBundleName().c_str(), dataSyncer->GetUserId());
     return dataSyncer->Clean(action);
 }
 } // namespace OHOS::FileManagement::CloudSync
