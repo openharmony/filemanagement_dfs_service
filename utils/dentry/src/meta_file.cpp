@@ -642,7 +642,7 @@ int32_t MetaFile::DoUpdate(const MetaBase &base)
     off_t ipos = GetDentryGroupPos(ctx.bidx);
     ssize_t size = FileUtils::WriteFile(fd_, ctx.page.get(), sizeof(struct HmdfsDentryGroup), ipos);
     if (size != sizeof(struct HmdfsDentryGroup)) {
-        LOGI("write failed, ret = %zd", size);
+        LOGI("write failed, ret = %{public}zd", size);
         return EIO;
     }
     return E_OK;
