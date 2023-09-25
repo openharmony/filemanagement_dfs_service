@@ -1,5 +1,5 @@
 {
-	"process": "cloudfiledaemon",
+	"process": "cloudfileservice",
 	"systemability": [
         {
             "name": 5204,
