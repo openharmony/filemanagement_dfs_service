@@ -1053,8 +1053,7 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
         errorCode_ = E_OK;
         StartSync(false, SyncTriggerType::PENDING_TRIGGER);
         return;
-    }
-    if (nextAction == Action::FORCE_START) {
+    } else if (nextAction == Action::FORCE_START) {
         /* Retrigger sync, clear errorcode */
         errorCode_ = E_OK;
         StartSync(true, SyncTriggerType::PENDING_TRIGGER);
@@ -1067,6 +1066,22 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
     }
     /* clear errorcode */
     errorCode_ = E_OK;
+}
+
+void DataSyncer::BeginClean()
+{
+    /* stop all the tasks and wait for tasks' termination */
+    if (!taskRunner_->StopAndWaitFor()) {
+        LOGE("wait for tasks stop fail");
+    }
+    /* set cleaning  state */
+    (void)syncStateManager_.SetCleaningFlag();
+}
+
+void DataSyncer::CompleteClean()
+{
+    DeleteSubscription();
+    (void)syncStateManager_.UpdateSyncState(SyncState::CLEAN_SUCCEED);
 }
 
 void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)

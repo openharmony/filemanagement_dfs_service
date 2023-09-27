@@ -23,8 +23,10 @@ namespace OHOS::FileManagement::CloudSync {
 enum class SyncState : int32_t {
     INIT = 0,
     SYNCING,
+    CLEANING,
     SYNC_FAILED,
     SYNC_SUCCEED,
+    CLEAN_SUCCEED,
 };
 
 enum class Action : int32_t {
@@ -37,6 +39,7 @@ class SyncStateManager {
 public:
     Action UpdateSyncState(SyncState newState);
     bool CheckAndSetPending(bool forceFlag);
+    void SetCleaningFlag();
     bool GetStopSyncFlag();
     void SetStopSyncFlag();
     SyncState GetSyncState() const;
