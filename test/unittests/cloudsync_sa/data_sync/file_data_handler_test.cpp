@@ -2192,19 +2192,20 @@ HWTEST_F(FileDataHandlerTest, QueryLocalByCloudId, TestSize.Level1)
     GTEST_LOG_(INFO) << "QueryLocalByCloudId Begin";
     try {
         const string recordId = "1";
+        std::vector<std::string> recordIds;
+        recordIds.push_back(recordId);
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr)));
-        auto [db, cnt] = fileDataHandler->QueryLocalByCloudId(recordId);
+        auto [db, mp] = fileDataHandler->QueryLocalByCloudId(recordIds);
         EXPECT_EQ(db, NULL);
-        EXPECT_EQ(cnt, 0);
 
         const int count = 0;
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(count), Return(0)));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
-        auto [ptr, ret] = fileDataHandler->QueryLocalByCloudId(recordId);
-        EXPECT_EQ(ret, E_OK);
+        auto [ptr, ret] = fileDataHandler->QueryLocalByCloudId(recordIds);
+        EXPECT_EQ(static_cast<int>(ret.size()), E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " QueryLocalByCloudId ERROR";

@@ -19,6 +19,7 @@
 #include <filesystem>
 #include <set>
 #include <tuple>
+#include <map>
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -168,22 +169,31 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     PhotoColumn::PHOTO_META_DATE_MODIFIED,
 };
 
-tuple<shared_ptr<NativeRdb::ResultSet>, int> FileDataHandler::QueryLocalByCloudId(const string &recordId)
+tuple<shared_ptr<NativeRdb::ResultSet>, map<string, int>> FileDataHandler::QueryLocalByCloudId(const vector<string> &recordIds)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    predicates.EqualTo(PhotoColumn::PHOTO_CLOUD_ID, recordId);
+    predicates.In(PhotoColumn::PHOTO_CLOUD_ID, recordIds);
     auto resultSet = Query(predicates, PULL_QUERY_COLUMNS);
+    auto recordIdRowIdMap = map<string, int>();
     if (resultSet == nullptr) {
         LOGE("get nullptr created result");
-        return {nullptr, 0};
+        return {nullptr, std::move(recordIdRowIdMap)};
     }
     int rowCount = 0;
     int ret = resultSet->GetRowCount(rowCount);
     if (ret != 0 || rowCount < 0) {
         LOGE("result set get row count err %{public}d, rowCount %{public}d", ret, rowCount);
-        return {nullptr, rowCount};
+        return {nullptr, std::move(recordIdRowIdMap)};
     }
-    return {std::move(resultSet), rowCount};
+    int columnIndex = 0;
+    resultSet->GetColumnIndex(PhotoColumn::PHOTO_CLOUD_ID, columnIndex);
+    for (int rowId = 0; rowId < rowCount; ++rowId) {
+        resultSet->GoToNextRow();
+        string recordId = "";
+        resultSet->GetString(columnIndex, recordId);
+        recordIdRowIdMap.insert(make_pair(recordId, rowId));
+    }
+    return {std::move(resultSet), std::move(recordIdRowIdMap)};
 }
 
 const std::vector<std::string> CLEAN_QUERY_COLUMNS = {
@@ -210,20 +220,21 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
 {
     LOGI("on fetch %{public}zu records", records->size());
     int32_t ret = E_OK;
+    auto recordIds = vector<string>();
     for (auto &record : *records) {
-        auto [resultSet, rowCount] = QueryLocalByCloudId(record.GetRecordId());
-        if (resultSet == nullptr || rowCount < 0) {
-            // Try to fetch records as many as possible
-            continue;
-        }
+        recordIds.push_back(record.GetRecordId());
+    }
+    auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
+    if (resultSet == nullptr) {return E_RDB;}
+    for (auto &record : *records) {
         int32_t fileId = 0;
         ChangeType changeType = ChangeType::INVAILD;
-        if ((rowCount == 0) && !record.GetIsDelete()) {
+        if ((recordIdRowIdMap.find(record.GetRecordId()) == recordIdRowIdMap.end()) && !record.GetIsDelete()) {
             CompensateFilePath(record);
             ret = PullRecordInsert(record, params);
             InsertAssetToPhotoMap(record, params);
-        } else if (rowCount == 1) {
-            resultSet->GoToNextRow();
+        } else if (recordIdRowIdMap.find(record.GetRecordId()) != recordIdRowIdMap.end()) {
+            resultSet->GoToRow(recordIdRowIdMap.at(record.GetRecordId()));
             if (record.GetIsDelete()) {
                 ret = PullRecordDelete(record, *resultSet);
                 fileId = GetFileId(*resultSet);
@@ -1169,16 +1180,19 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
 int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkRecords,
     const shared_ptr<std::vector<DriveKit::DKRecord>> &records)
 {
+    auto recordIds = vector<string>();
     for (const auto &record : *records) {
-        auto [resultSet, rowCount] = QueryLocalByCloudId(record.GetRecordId());
-        if (resultSet == nullptr || rowCount < 0) {
-            return E_RDB;
-        }
-
-        if ((rowCount == 0) && !record.GetIsDelete()) {
+        recordIds.push_back(record.GetRecordId());
+    }
+    auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
+    if (resultSet == nullptr) {
+        return E_RDB;
+    }
+    for (const auto &record : *records) {
+        if ((recordIdRowIdMap.find(record.GetRecordId()) == recordIdRowIdMap.end()) && !record.GetIsDelete()) {
             checkRecords.push_back(record.GetRecordId());
-        } else if (rowCount == 1) {
-            resultSet->GoToNextRow();
+        } else if (recordIdRowIdMap.find(record.GetRecordId()) != recordIdRowIdMap.end()) {
+            resultSet->GoToRow(recordIdRowIdMap.at(record.GetRecordId()));
             int64_t version = 0;
             DataConvertor::GetLong(PhotoColumn::PHOTO_CLOUD_VERSION, version, *resultSet);
             if (record.GetVersion() != static_cast<unsigned long>(version) &&
@@ -1189,7 +1203,6 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
             LOGE("recordId %s has multiple file in db!", record.GetRecordId().c_str());
         }
     }
-
     return E_OK;
 }
 
@@ -1357,9 +1370,11 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
              errno, tmpLocalPath.c_str(), localPath.c_str());
     }
 
-    auto [resultSet, rowCount] = QueryLocalByCloudId(asset.recordId);
-    if (resultSet == nullptr || rowCount != 1) {
-        LOGE("QueryLocalByCloudId failed rowCount %{public}d", rowCount);
+    auto recordIds = vector<string>();
+    recordIds.push_back(asset.recordId);
+    auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
+    if (resultSet == nullptr || recordIdRowIdMap.size() != 1) {
+        LOGE("QueryLocalByCloudId failed rowCount %{public}zu", recordIdRowIdMap.size());
         return E_INVAL_ARG;
     }
     resultSet->GoToNextRow();
@@ -1499,32 +1514,38 @@ int32_t FileDataHandler::InsertAssetToPhotoMap(const DKRecord &record, OnFetchPa
 
 int32_t FileDataHandler::BatchInsertAssetMaps(OnFetchParams &params)
 {
+    auto recordIds = vector<string>();
     for (const auto &it : params.recordAlbumMaps) {
-        auto [resultSet, rowCount] = QueryLocalByCloudId(it.first);
-        if (resultSet == nullptr || rowCount < 0) {
-            continue;
-        }
-        resultSet->GoToNextRow();
-        int fileId = 0;
-        int ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, *resultSet);
-        if (ret != E_OK) {
-            LOGE("Get media id failed");
-            continue;
-        }
-
-        for (auto albumId : it.second) {
-            int64_t rowId;
-            ValuesBucket values;
-            values.PutInt(PhotoMap::ALBUM_ID, albumId);
-            values.PutInt(PhotoMap::ASSET_ID, fileId);
-            values.PutInt(PhotoMap::DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
-            ret = Insert(rowId, PhotoMap::TABLE, values);
-            if (ret != E_OK) {
-                LOGE("fail to insert albumId %{public}d - fileId %{public}d mapping, ret %{public}d", albumId, fileId,
-                     ret);
+        recordIds.push_back(it.first);
+    }
+    auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
+    if (resultSet != nullptr) {
+        for (const auto &it : params.recordAlbumMaps) {
+            if (recordIdRowIdMap.find(it.first) == recordIdRowIdMap.end()) {
                 continue;
             }
-            LOGI("albumId %{public}d - fileId %{public}d add mapping success", albumId, fileId);
+            resultSet->GoToRow(recordIdRowIdMap.at(it.first));
+            int fileId = 0;
+            int ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, *resultSet);
+            if (ret != E_OK) {
+                LOGE("Get media id failed");
+                continue;
+            }
+
+            for (auto albumId : it.second) {
+                int64_t rowId;
+                ValuesBucket values;
+                values.PutInt(PhotoMap::ALBUM_ID, albumId);
+                values.PutInt(PhotoMap::ASSET_ID, fileId);
+                values.PutInt(PhotoMap::DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
+                ret = Insert(rowId, PhotoMap::TABLE, values);
+                if (ret != E_OK) {
+                    LOGE("fail to insert albumId %{public}d - fileId %{public}d mapping, ret %{public}d", albumId, fileId,
+                         ret);
+                    continue;
+                }
+                LOGI("albumId %{public}d - fileId %{public}d add mapping success", albumId, fileId);
+            }
         }
     }
     return E_OK;
