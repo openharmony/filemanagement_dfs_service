@@ -18,6 +18,9 @@
 
 #include <iostream>
 #include <vector>
+namespace Json {
+class Value;
+}
 
 namespace DriveKit {
 enum class DKLocalErrorCode {
@@ -50,6 +53,21 @@ enum class DKLocalErrorCode {
     SHARE_UI_TIMEOUT,
     BAD_ALLOC_MEMORY,
     LOCAL_SPACE_FULL, // 本地空间不足
+    TASK_CANCEL_FAIL,
+    TASK_CANCEL,
+    DECRYPT_FAIL,
+    OPEN_FILE_FAIL,
+    INIT_DECRYPT_FAIL,
+    DOWNLOAD_REQUEST_ERROR,
+    GET_DECRYPT_FAIL,
+    GET_ASSET_FAIL,
+    CREAT_TEMP_FILE_FAIL,
+    ADD_SLICE_TASK_FAIL,
+    SYNC_SWITCH_OFF,
+    DOWNLOAD_PATH_ERROR,
+    PREAD_MULTI_SLICE_NO_SUPPORT,
+    RENAME_TEMPFILE_FAIL,
+    SLTCE_NOT_DOWN_ALL,
 };
 
 enum class DKServerErrorCode {
@@ -98,7 +116,7 @@ enum class DKDetailErrorCode {
     LOGIN_FAILED = 4015,                                        //登录失败
     SESSION_TIMEOUT = 4016,                                     //会话过期
     FORCE_RELOGIN = 4017,                                       //强制重新登录账号
-    FLOE_ID_NOT_MATCH = 4020,                                   //越权
+    FLOW_ID_NOT_MATCH = 4020,                                   //越权
     DATA_MIGRATING = 4031,                                      //数据割接未完成
     SERVICE_NOT_SUPPORT = 4032,                                 //服务未开放
     AGREEMENT_NOT_SIGNED = 4033,                                //协议未签署
@@ -111,14 +129,14 @@ enum class DKDetailErrorCode {
     CONTENT_NOT_FIND = 4041,                                    //内容未发现
     CONTENT_UNAVAILABLE = 4042,                                 //内容解析失败
     CHANNEL_NOT_FOUND = 4043,                                   //订阅未发现
-    THUMBNALL_NOT_FOUND = 4044,                                 //缩略图不存在
+    THUMBNAIL_NOT_FOUND = 4044,                                 //缩略图不存在
     SHARE_LINK_NOT_FOUND = 4045,                                //分享链接不存在
     TEMP_DATA_INVALID = 4046,                                   //临时数据无效
     FILE_NOT_FOUND = 4047,                                      //实体数据不存在
     APP_NOT_EXISTS = 4048,                                      //APP不存在
-    CATAGORY_NOT_EXISTS = 4049,                                 //分类不存在
-    SHARE_CONTENT_NOE_EXISTS = 4050,                            //分享内容不存在
-    THUMBNALL_GENERATE_FAILED = 4051,                           //缩略图生成失败
+    CATEGORY_NOT_EXISTS = 4049,                                 //分类不存在
+    SHARE_CONTENT_NOT_EXISTS = 4050,                            //分享内容不存在
+    THUMBNAIL_GENERATE_FAILED = 4051,                           //缩略图生成失败
     VERSION_CONFLICT = 4090,                                    //版本冲突
     LOCK_FAILED = 4091,                                         //获取锁失败
     SILENCE_USER_FAILED = 4092,                                 //沉默用户拒绝失败
@@ -138,7 +156,7 @@ enum class DKDetailErrorCode {
     VUDID_IMEI_INVALID = 4910,                                  //VUDID转换IMEI失败
     FILE_NOT_SUPPORT_SHARE = 4911,                              //所有文件不支持分享
     EXTERNAL_LINK_NOT_AUTHORIZED = 4912,                        //外部链接没有授权
-    ORIGINAL_NOT_EXIST = 4913,                                  //源文件不存在
+    ORIGINAL_NOT_EXSIT = 4913,                                  //源文件不存在
     ABNORMAL_DOWNLOAD = 4931,                                   //用户异常下载
     SAME_FILENAME_NOT_ALLOWED = 4932,                           //禁止重复文件名
     CANNOT_USE_SERVICE = 4933,                                  //无法为此用户提供服务
@@ -149,7 +167,7 @@ enum class DKDetailErrorCode {
     COPY_FORBIDDEN = 4938,                                      //此文件禁止拷贝
     USER_SUSPEND_SERVICE = 4939,                                //用户停用服务
     FILE_VERSION_CONFLICT = 4940,                               //文件版本冲突
-    REAL_NAME_AUTHENTCATION_FAILED = 4941,                      //实名认证失败
+    REAL_NAME_AUTHENTICATION_FAILED = 4941,                      //实名认证失败
     SHARE_LINK_EXPIRED = 4942,                                  //分享链接已过期
     RECEIVER_BEYOND_LIMIT = 4943,                               //分享人数达到限制
     CONTENT_SHARE_NOT_ALLOWED = 4944,                           //内容禁止分享
@@ -219,6 +237,7 @@ public:
     bool HasError() const;
     void SetLocalError(DKLocalErrorCode code);
     void SetServerError(int code);
+    void ParseErrorFromJson(const Json::Value &jvError);
 
     bool isLocalError = false;
     DKLocalErrorCode dkErrorCode;

@@ -710,7 +710,7 @@ HWTEST_F(DataSyncerTest, OnFetchDatabaseChangesTest, TestSize.Level1)
         datasyncer_->OnFetchDatabaseChanges(contextTest, nullptr, nullptr, "", false, err);
         GTEST_LOG_(INFO) << "OnFetchDatabaseChanges other 004";
         err.errorDetails.clear();
-        detailErr.detailCode = static_cast<int>(DriveKit::DKDetailErrorCode::FLOE_ID_NOT_MATCH);
+        detailErr.detailCode = static_cast<int>(DriveKit::DKDetailErrorCode::FLOW_ID_NOT_MATCH);
         err.errorDetails.push_back(detailErr);
         datasyncer_->OnFetchDatabaseChanges(contextTest, nullptr, nullptr, "", false, err);
         GTEST_LOG_(INFO) << "OnFetchDatabaseChanges other 005";

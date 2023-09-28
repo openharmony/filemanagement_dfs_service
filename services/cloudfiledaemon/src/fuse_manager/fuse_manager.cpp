@@ -337,10 +337,22 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                                                             recordId,
                                                             GetAssetKey(cInode->mBase->fileType),
                                                             GetAssetPath(cInode, data));
+        if (cInode->readSession) {
+            DriveKit::DKError dkError = cInode->readSession->InitSession();
+            if(!dkError.HasError()) {
+                LOGD("sessionInit success");
+            } else if(dkError.isLocalError) {
+                LOGE("open fail, local errorCode is: %d", dkError.dkErrorCode);
+                fuse_reply_err(req, EINVAL);
+            } else if(dkError.isServerError) {
+                LOGE("open fail, server errorCode is: %d", dkError.serverErrorCode);
+                fuse_reply_err(req, EIO);
+            }
+        }
     }
-
     if (!cInode->readSession) {
         fuse_reply_err(req, EPERM);
+        LOGE("readSession is null");
     } else {
         cInode->sessionRefCount++;
         LOGD("open success, sessionRefCount: %d", cInode->sessionRefCount.load());
@@ -434,23 +446,32 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     });
     if (!buf) {
         fuse_reply_err(req, ENOMEM);
+        LOGD("buffer is null");
         return;
     }
 
     if (!cInode->readSession) {
         fuse_reply_err(req, EPERM);
+        LOGD("read fail, readsession is null");
         return;
     }
 
     readSize = cInode->readSession->PRead(off, size, buf.get(), dkError);
-    if (dkError.HasError()) {
-        LOGE("read error");
-        fuse_reply_err(req, EIO);
+    if (!dkError.HasError()) {
+        LOGD("read %s success, %lld bytes", CloudPath(data, ino).c_str(), static_cast<long long>(readSize));
+        fuse_reply_buf(req, buf.get(), readSize);
         return;
     }
-
-    LOGD("read %s success, %lld bytes", CloudPath(data, ino).c_str(), static_cast<long long>(readSize));
-    fuse_reply_buf(req, buf.get(), readSize);
+    if(dkError.isLocalError&&dkError.dkErrorCode == DriveKit::DKLocalErrorCode::DOWNLOAD_REQUEST_ERROR) {
+        LOGE("read fail, network error, local errorCode is: %d", dkError.dkErrorCode);
+        fuse_reply_err(req, ENOTCONN);
+    } else if(dkError.isLocalError) {
+        LOGE("read fail, Local errorCode is: %d", dkError.dkErrorCode);
+        fuse_reply_err(req, EINVAL);
+    } else if(dkError.isServerError) {
+        LOGE("read fail, server errorCode is: %d", dkError.serverErrorCode);
+        fuse_reply_err(req, EIO);
+    }
 }
 
 static const struct fuse_lowlevel_ops cloudFuseOps = {
