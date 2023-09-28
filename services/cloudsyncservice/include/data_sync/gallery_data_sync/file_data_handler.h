@@ -198,7 +198,8 @@ private:
     int32_t PullRecordConflict(DriveKit::DKRecord &record, bool &comflag);
 
     /* pull operations */
-    std::tuple<std::shared_ptr<NativeRdb::ResultSet>, std::map<std::string, int>> QueryLocalByCloudId(const std::vector<std::string> &recordIds);
+    std::tuple<std::shared_ptr<NativeRdb::ResultSet>, std::map<std::string, int>> QueryLocalByCloudId(
+        const std::vector<std::string> &recordIds);
     int32_t PullRecordInsert(DriveKit::DKRecord &record, OnFetchParams &params);
     int32_t PullRecordUpdate(DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
                              OnFetchParams &params);
