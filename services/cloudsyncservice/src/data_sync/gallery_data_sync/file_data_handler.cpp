@@ -169,7 +169,8 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     PhotoColumn::PHOTO_META_DATE_MODIFIED,
 };
 
-tuple<shared_ptr<NativeRdb::ResultSet>, map<string, int>> FileDataHandler::QueryLocalByCloudId(const vector<string> &recordIds)
+tuple<shared_ptr<NativeRdb::ResultSet>, map<string, int>> FileDataHandler::QueryLocalByCloudId(
+    const vector<string> &recordIds)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     predicates.In(PhotoColumn::PHOTO_CLOUD_ID, recordIds);
@@ -1519,33 +1520,32 @@ int32_t FileDataHandler::BatchInsertAssetMaps(OnFetchParams &params)
         recordIds.push_back(it.first);
     }
     auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
-    if (resultSet != nullptr) {
-        for (const auto &it : params.recordAlbumMaps) {
-            if (recordIdRowIdMap.find(it.first) == recordIdRowIdMap.end()) {
-                continue;
-            }
-            resultSet->GoToRow(recordIdRowIdMap.at(it.first));
-            int fileId = 0;
-            int ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, *resultSet);
-            if (ret != E_OK) {
-                LOGE("Get media id failed");
-                continue;
-            }
+    if (resultSet == nullptr) {return E_RDB;}
+    for (const auto &it : params.recordAlbumMaps) {
+        if (recordIdRowIdMap.find(it.first) == recordIdRowIdMap.end()) {
+            continue;
+        }
+        resultSet->GoToRow(recordIdRowIdMap.at(it.first));
+        int fileId = 0;
+        int ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, *resultSet);
+        if (ret != E_OK) {
+            LOGE("Get media id failed");
+            continue;
+        }
 
-            for (auto albumId : it.second) {
-                int64_t rowId;
-                ValuesBucket values;
-                values.PutInt(PhotoMap::ALBUM_ID, albumId);
-                values.PutInt(PhotoMap::ASSET_ID, fileId);
-                values.PutInt(PhotoMap::DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
-                ret = Insert(rowId, PhotoMap::TABLE, values);
-                if (ret != E_OK) {
-                    LOGE("fail to insert albumId %{public}d - fileId %{public}d mapping, ret %{public}d", albumId, fileId,
-                         ret);
-                    continue;
-                }
-                LOGI("albumId %{public}d - fileId %{public}d add mapping success", albumId, fileId);
+        for (auto albumId : it.second) {
+            int64_t rowId;
+            ValuesBucket values;
+            values.PutInt(PhotoMap::ALBUM_ID, albumId);
+            values.PutInt(PhotoMap::ASSET_ID, fileId);
+            values.PutInt(PhotoMap::DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
+            ret = Insert(rowId, PhotoMap::TABLE, values);
+            if (ret != E_OK) {
+                LOGE("fail to insert albumId %{public}d - fileId %{public}d mapping, ret %{public}d",
+                 albumId, fileId, ret);
+                continue;
             }
+            LOGI("albumId %{public}d - fileId %{public}d add mapping success", albumId, fileId);
         }
     }
     return E_OK;
