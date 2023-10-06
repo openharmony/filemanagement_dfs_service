@@ -84,8 +84,7 @@ int32_t DataSyncManager::StartDownloadFile(const std::string &bundleName, const 
         return E_INVAL_ARG;
     }
 
-    std::thread([dataSyncer, path, userId]() { dataSyncer->StartDownloadFile(path, userId); }).detach();
-    return E_OK;
+    return dataSyncer->StartDownloadFile(path, userId);
 }
 
 int32_t DataSyncManager::StopDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path)
@@ -95,8 +94,8 @@ int32_t DataSyncManager::StopDownloadFile(const std::string &bundleName, const i
         LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_INVAL_ARG;
     }
-    std::thread([dataSyncer, userId, path]() { dataSyncer->StopDownloadFile(path, userId); }).detach();
-    return E_OK;
+
+    return dataSyncer->StopDownloadFile(path, userId);
 }
 
 int32_t DataSyncManager::RegisterDownloadFileCallback(const std::string &bundleName,
