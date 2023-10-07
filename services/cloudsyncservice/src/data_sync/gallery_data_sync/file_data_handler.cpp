@@ -1542,7 +1542,7 @@ int32_t FileDataHandler::BatchInsertAssetMaps(OnFetchParams &params)
             ret = Insert(rowId, PhotoMap::TABLE, values);
             if (ret != E_OK) {
                 LOGE("fail to insert albumId %{public}d - fileId %{public}d mapping, ret %{public}d",
-                 albumId, fileId, ret);
+                     albumId, fileId, ret);
                 continue;
             }
             LOGI("albumId %{public}d - fileId %{public}d add mapping success", albumId, fileId);
