@@ -55,10 +55,13 @@ bool CloudDownloadCallbackManager::StopDonwload(const std::string path, const in
 {
     bool ret = false;
     lock_guard<mutex> lock(downloadsMtx_);
-    if (downloads_.find(path) != downloads_.end()) {
-        downloads_[path].state = DownloadProgressObj::Status::STOPPED;
-        downloadId = downloads_[path].downloadId;
+
+    auto res = downloads_.find(path);
+    bool isDownloading = (res != downloads_.end());
+    if (isDownloading) {
+        downloadId = res->second.downloadId;
         LOGI("download_file : %{public}d stop download %{public}s callback success.", userId, path.c_str());
+        downloads_.erase(res);
         ret = true;
     } else {
         LOGI("download_file : %{public}d stop download %{public}s callback fail, task not exist.",
@@ -73,10 +76,14 @@ std::vector<int64_t> CloudDownloadCallbackManager::StopAllDownloads(const int32_
     std::vector<int64_t> ret;
     lock_guard<mutex> lock(downloadsMtx_);
     for (auto &pair : downloads_) {
-        pair.second.state = DownloadProgressObj::Status::STOPPED;
+        pair.second.state = DownloadProgressObj::Status::FAILED;
         ret.push_back(pair.second.downloadId);
-        LOGI("download_file : %{public}d stop download %{public}s callback success.", userId, pair.first.c_str());
+        if (callback_ != nullptr) {
+            callback_->OnDownloadProcess(pair.second);
+            LOGI("download_file : %{public}d stop download %{public}s callback success.", userId, pair.first.c_str());
+        }
     }
+    downloads_.clear();
     return ret;
 }
 
