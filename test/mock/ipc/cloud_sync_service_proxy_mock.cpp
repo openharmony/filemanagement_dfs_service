@@ -82,4 +82,8 @@ int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetI
     return E_OK;
 }
 
+int32_t DeleteAsset(const int32_t userId, const std::string &uri)
+{
+    return E_OK;
+}
 } // namespace OHOS::FileManagement::CloudSync

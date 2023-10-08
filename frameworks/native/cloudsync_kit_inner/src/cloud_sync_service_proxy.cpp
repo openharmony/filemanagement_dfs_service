@@ -596,6 +596,44 @@ int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::DeleteAsset(const int32_t userId, const std::string &uri)
+{
+    LOGI("DeleteAsset");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        LOGE("Failed to send the user id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(uri)) {
+        LOGE("Failed to send the uri");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DELETE_ASSET), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        return E_BROKEN_IPC;
+    }
+    ret = reply.ReadInt32();
+    LOGI("DeleteAsset Success");
+    return ret;
+}
+
 sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 {
     LOGI("getinstance");

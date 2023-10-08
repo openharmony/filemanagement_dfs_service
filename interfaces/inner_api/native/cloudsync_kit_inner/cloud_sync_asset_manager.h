@@ -48,6 +48,14 @@ public:
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo) = 0;
+    /**
+     * @brief 接口触发附件删除
+     *
+     * @param userId 用户Id
+     * @param uri 用户uri
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t DeleteAsset(const int32_t userId, const std::string &uri) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

@@ -22,6 +22,7 @@
 #include "dfsu_access_token_helper.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "meta_file.h"
+#include "sandbox_helper.h"
 #include "sync_rule/battery_status.h"
 #include "sync_rule/cloud_status.h"
 #include "sync_rule/net_conn_callback_observer.h"
@@ -286,5 +287,24 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
     // Not to pass the assetinfo.fieldkey
     DriveKit::DKDownloadAsset assetsToDownload{assetInfoObj.recordType, assetInfoObj.recordId, {}, asset, {}};
     return sdkHelper->DownloadAssets(assetsToDownload);
+}
+
+int32_t CloudSyncService::DeleteAsset(const int32_t userId, const std::string &uri)
+{
+    std::string physicalPath = "";
+    int ret = AppFileService::SandboxHelper::GetPhysicalPath(uri, std::to_string(userId), physicalPath);
+    if (ret != 0) {
+        LOGE("Get physical path failed with %{public}d", ret);
+        return E_GET_PHYSICAL_PATH_FAILED;
+    }
+
+    LOGD("delete assert, path %{public}s", physicalPath.c_str());
+
+    ret = unlink(physicalPath.c_str());
+    if (ret != 0) {
+        LOGE("fail to delete asset, errno %{public}d", errno);
+        return E_DELETE_FAILED;
+    }
+    return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync
