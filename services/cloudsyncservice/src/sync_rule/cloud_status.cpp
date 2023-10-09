@@ -36,8 +36,7 @@ int32_t CloudStatus::GetCurrentCloudInfo(const std::string &bundleName, const in
         return E_CLOUD_SDK;
     }
 
-    if (!((userInfo_.cloudStatus == DKCloudStatus::DK_CLOUD_STATUS_LOGIN) &&
-          (userInfo_.spaceStatus == DKSpaceStatus::DK_SPACE_STATUS_NORMAL))) {
+    if (!(userInfo_.cloudStatus == DKCloudStatus::DK_CLOUD_STATUS_LOGIN)) {
         LOGE("cloudstatus:%{public}d, spaceStatus:%{public}d", userInfo_.cloudStatus, userInfo_.spaceStatus);
         return E_CLOUD_SDK;
     }
