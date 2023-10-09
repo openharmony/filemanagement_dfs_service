@@ -406,6 +406,9 @@ bool DeviceManagerAgent::CheckIsAccountless(const GroupInfo &group)
 void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("OnDeviceInfoChanged begin");
+    if (deviceInfo.networkType == -1) {
+        return;
+    }
     DeviceInfo info(deviceInfo);
     unique_lock<mutex> lock(mpToNetworksMutex_);
 
