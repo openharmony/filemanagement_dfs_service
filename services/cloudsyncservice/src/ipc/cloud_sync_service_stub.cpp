@@ -56,6 +56,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         &CloudSyncServiceStub::HandleUploadAsset;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILE)] =
         &CloudSyncServiceStub::HandleDownloadFile;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DELETE_ASSET)] =
+        &CloudSyncServiceStub::HandleDeleteAsset;
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -365,6 +367,26 @@ int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessagePar
     int32_t res = DownloadFile(userId, bundleName, *assetInfoObj);
     reply.WriteInt32(res);
     LOGI("End DownloadFile");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleDeleteAsset(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin DeleteAsset");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    int32_t userId = data.ReadInt32();
+    string uri = data.ReadString();
+    int32_t res = DeleteAsset(userId, uri);
+    reply.WriteInt32(res);
+    reply.WriteString(uri);
+    LOGI("End DeleteAsset");
     return res;
 }
 } // namespace OHOS::FileManagement::CloudSync

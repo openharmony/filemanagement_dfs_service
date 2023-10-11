@@ -62,6 +62,22 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
     return ret;
 }
 
+int32_t CloudSyncAssetManagerImpl::DeleteAsset(const int32_t userId, const std::string &uri)
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    if (!isFirstCall_.test_and_set()) {
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
+    int32_t ret = CloudSyncServiceProxy->DeleteAsset(userId, uri);
+    LOGI("DeleteAsset ret %{public}d", ret);
+    return ret;
+}
+
 void CloudSyncAssetManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
     auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
