@@ -598,7 +598,7 @@ int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
 
 int32_t CloudSyncServiceProxy::DeleteAsset(const int32_t userId, const std::string &uri)
 {
-    LOGI("DeleteAsset");
+    LOGD("DeleteAsset");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
