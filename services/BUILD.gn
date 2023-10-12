@@ -18,8 +18,10 @@ ohos_sa_profile("distributedfile_sa_profile") {
   sources = [
     "5201.json",
     "5204.json",
-    "5205.json",
   ]
+  if (dfs_service_feature_enable_cloud_adapter) {
+    sources += [ "5205.json" ]
+  }
   part_name = "dfs_service"
 }
 
