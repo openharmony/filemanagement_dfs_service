@@ -24,6 +24,7 @@
 #include "ipc/cloud_sync_callback_manager.h"
 #include "sdk_helper.h"
 #include "sync_rule/battery_status.h"
+#include "task_state_manager.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -40,6 +41,7 @@ DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
     /* alloc task runner */
     taskRunner_ = DelayedSingleton<TaskManager>::GetInstance()->AllocRunner(userId,
         bundleName, bind(&DataSyncer::Schedule, this));
+    downloadCallbackMgr_.SetBundleName(bundleName);
 }
 
 DataSyncer::~DataSyncer()
@@ -71,6 +73,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
         return E_PENDING;
     }
 
+    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::SYNC_TASK);
     /* start data sync */
     Schedule();
 
@@ -1061,6 +1064,8 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
         errorCode_ = E_OK;
         StartSync(true, SyncTriggerType::PENDING_TRIGGER);
         return;
+    } else {
+        TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::SYNC_TASK);
     }
 
     /* notify sync state */
@@ -1073,6 +1078,7 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
 
 void DataSyncer::BeginClean()
 {
+    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::CLEAN_TASK);
     /* stop all the tasks and wait for tasks' termination */
     if (!taskRunner_->StopAndWaitFor()) {
         LOGE("wait for tasks stop fail");
@@ -1086,6 +1092,7 @@ void DataSyncer::CompleteClean()
     DeleteSubscription();
     (void)syncStateManager_.UpdateSyncState(SyncState::CLEAN_SUCCEED);
     DataSyncerRdbStore::GetInstance().UpdateSyncState(userId_, bundleName_, SyncState::CLEAN_SUCCEED);
+    TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::CLEAN_TASK);
 }
 
 void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)

@@ -15,6 +15,7 @@
 
 #include "utils_log.h"
 #include "ipc/cloud_download_callback_manager.h"
+#include "data_sync/task_state_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -40,6 +41,7 @@ void CloudDownloadCallbackManager::StartDonwload(const std::string path,
                                                  const int64_t downloadId)
 {
     lock_guard<mutex> lock(downloadsMtx_);
+    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::DOWNLOAD_TASK);
     if (downloads_.find(path) == downloads_.end()) {
         downloads_[path].refCount = 1;
     } else {
@@ -68,6 +70,7 @@ bool CloudDownloadCallbackManager::StopDonwload(const std::string path, const in
             userId, path.c_str());
         ret = false;
     }
+    CheckTaskState();
     return ret;
 }
 
@@ -84,6 +87,7 @@ std::vector<int64_t> CloudDownloadCallbackManager::StopAllDownloads(const int32_
         }
     }
     downloads_.clear();
+    CheckTaskState();
     return ret;
 }
 
@@ -125,6 +129,7 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
     download.refCount--;
     if (download.refCount == 0) {
         downloads_.erase(res);
+        CheckTaskState();
     } else {
         lock.unlock();
         return;
@@ -191,4 +196,15 @@ void CloudDownloadCallbackManager::OnDownloadProcess(const std::string path,
     }
 }
 
+void CloudDownloadCallbackManager::SetBundleName(const std::string &bundleName)
+{
+    bundleName_ = bundleName;
+}
+
+void CloudDownloadCallbackManager::CheckTaskState()
+{
+    if (downloads_.empty()) {
+        TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_TASK);
+    }
+}
 } // namespace OHOS::FileManagement::CloudSync
