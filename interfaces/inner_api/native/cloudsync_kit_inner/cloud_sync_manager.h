@@ -77,6 +77,7 @@ public:
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
+    virtual int32_t NotifyEventChange(const std::string &eventId, const std::string &extraData) = 0;
     virtual int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) = 0;
     virtual int32_t DisableCloud(const std::string &accoutId) = 0;
     /**
