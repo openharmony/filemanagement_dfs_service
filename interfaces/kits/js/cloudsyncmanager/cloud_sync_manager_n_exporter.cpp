@@ -131,6 +131,53 @@ napi_value NotifyDataChange(napi_env env, napi_callback_info info)
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
+napi_value NotifyEventChange(napi_env eventId, napi_callback_info extraData)
+{
+    NFuncArg funcArg(eventId, extraData);
+    if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::TWO), static_cast<size_t>(NARG_CNT::THREE))) {
+        NError(E_PARAMS).ThrowErr(eventId, "Number of arguments unmatched");
+        return nullptr;
+    }
+
+    bool succ = false;
+    std::unique_ptr<char []> accoutId;
+    std::unique_ptr<char []> bundleName;
+
+    tie(succ, accoutId, std::ignore) = NVal(eventId, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+    if (!succ) {
+        NError(E_PARAMS).ThrowErr(eventId);
+        return nullptr;
+    }
+
+    tie(succ, bundleName, std::ignore) = NVal(eventId, funcArg[(int)NARG_POS::SECOND]).ToUTF8String();
+    if (!succ) {
+        NError(E_PARAMS).ThrowErr(eventId);
+        return nullptr;
+    }
+
+    string accoutIdStr(accoutId.get());
+    string bundleNameStr(bundleName.get());
+
+    auto cbExec = [accoutIdStr, bundleNameStr]() -> NError {
+        int32_t result = CloudSyncManager::GetInstance().NotifyEventChange(accoutIdStr, bundleNameStr);
+        if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
+            return result == E_PERMISSION_DENIED? NError(Convert2JsErrNum(E_PERMISSION_DENIED)) :
+            NError(Convert2JsErrNum(E_PERMISSION_SYSTEM));
+        }
+        return NError(ERRNO_NOERR);
+    };
+    auto cbComplete = [](napi_env eventId, NError err) -> NVal {
+        if (err) {
+            return { eventId, err.GetNapiErr(eventId) };
+        }
+        return { NVal::CreateUndefined(eventId) };
+    };
+
+    std::string procedureName = "NotifyDataChange2";
+    auto asyncWork = GetPromiseOrCallBackWork(eventId, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
+}
+
 napi_value DisableCloud(napi_env env, napi_callback_info info)
 {
     LOGI("DisableCloud");

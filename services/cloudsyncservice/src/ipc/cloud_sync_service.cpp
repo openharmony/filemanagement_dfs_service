@@ -187,6 +187,12 @@ int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const st
     return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
 }
 
+int32_t CloudSyncService::NotifyEventChange(const std::string &eventId, const std::string &extraData)
+{
+    LOGD("Not yet implemented");
+    return 0;
+}
+
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
 {
     return E_OK;
