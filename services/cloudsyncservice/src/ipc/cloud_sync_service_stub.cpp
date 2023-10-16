@@ -38,6 +38,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         &CloudSyncServiceStub::HandleClean;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_DATA_CHANGE)] =
         &CloudSyncServiceStub::HandleNotifyDataChange;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_EVENT_CHANGE)] =
+        &CloudSyncServiceStub::HandleNotifyEventChange;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_ENABLE_CLOUD)] =
         &CloudSyncServiceStub::HandleEnableCloud;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DISABLE_CLOUD)] =
@@ -209,6 +211,26 @@ int32_t CloudSyncServiceStub::HandleNotifyDataChange(MessageParcel &data, Messag
     LOGI("End NotifyDataChange");
     return res;
 }
+
+int32_t CloudSyncServiceStub::HandleNotifyEventChange(MessageParcel &eventId, MessageParcel &extraData)
+{
+    LOGI("Begin NotifyDataChange");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    string accountId = eventId.ReadString();
+    string bundleName = eventId.ReadString();
+    int32_t res = NotifyEventChange(accountId, bundleName);
+    extraData.WriteInt32(res);
+    LOGI("End NotifyEventChange");
+    return res;
+}
+
 int32_t CloudSyncServiceStub::HandleDisableCloud(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin DisableCloud");
