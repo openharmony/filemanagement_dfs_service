@@ -1407,12 +1407,12 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr))).WillOnce(Return(ByMove(nullptr)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr)));
 
         shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
         OnFetchParams onFetchParams;
         int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
-        EXPECT_EQ(E_OK, ret);
+        EXPECT_EQ(E_RDB, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnFetchRecords001 ERROR";
@@ -1431,11 +1431,16 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnFetchRecords002 Begin";
     try {
+        const int rowCount = 0;
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr))).WillOnce(Return(ByMove(nullptr)));
-
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _))
+            .WillOnce(Return(ByMove(std::move(rset))))
+            .WillOnce(Return(ByMove(nullptr)))
+            .WillOnce(Return(ByMove(nullptr)));
 
         shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
         OnFetchParams onFetchParams;
@@ -1459,15 +1464,24 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnFetchRecords003 Begin";
     try {
-        int rowCount = 3;
+        int rowCount = 1;
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr))).WillOnce(Return(ByMove(nullptr)));
 
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
-        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
-
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GoToRow(_)).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(0)));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset)))).WillRepeatedly(Return(nullptr));
+        DKRecord record;
+        record.SetRecordId("1");
         shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
+        records->push_back(record);
         OnFetchParams onFetchParams;
         int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
         EXPECT_EQ(E_OK, ret);
@@ -2197,6 +2211,7 @@ HWTEST_F(FileDataHandlerTest, QueryLocalByCloudId, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr)));
         auto [db, mp] = fileDataHandler->QueryLocalByCloudId(recordIds);
         EXPECT_EQ(db, NULL);
