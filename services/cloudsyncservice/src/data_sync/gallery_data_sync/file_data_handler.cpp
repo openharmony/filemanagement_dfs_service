@@ -226,6 +226,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
     }
     auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
     if (resultSet == nullptr) {return E_RDB;}
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     for (auto &record : *records) {
         int32_t fileId = 0;
         ChangeType changeType = ChangeType::INVAILD;
@@ -253,12 +254,13 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
             }
             ret = E_OK;
         }
-        string notifyUri = DataSyncConst::PHOTO_URI_PREFIX + to_string(fileId);
-        DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
+        if (changeType != ChangeType::INVAILD) {
+            string notifyUri = DataSyncConst::PHOTO_URI_PREFIX + to_string(fileId);
+            DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
+        }
     }
     LOGI("before BatchInsert size len %{public}zu, map size %{public}zu", params.insertFiles.size(),
         params.recordAlbumMaps.size());
-    std::lock_guard<std::mutex> lock(rdbMutex_);
     if (!params.insertFiles.empty() || !params.recordAlbumMaps.empty()) {
         int64_t rowId;
         ret = BatchInsert(rowId, TABLE_NAME, params.insertFiles);
@@ -268,13 +270,13 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
             params.assetsToDownload.clear();
         } else {
             BatchInsertAssetMaps(params);
-            DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
-                                                      DataSyncConst::INVALID_ID);
         }
     }
     MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
     MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
     LOGI("after BatchInsert ret %{public}d", ret);
+    DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
+                                              DataSyncConst::INVALID_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
     MetaFileMgr::GetInstance().ClearAll();
     return ret;
@@ -741,8 +743,8 @@ int32_t FileDataHandler::GetAssetUniqueId(int32_t &type)
     predicates.SetWhereClause(ASSET_MEDIA_TYPE + " = ?");
     predicates.SetWhereArgs({typeString});
     /* In a multithreaded scenario, if a thread opens a transaction,
-       other threads' updates will be invalid */
-    lock_guard<mutex> lock(rdbMutex_);
+       other threads' updates will be invalid.
+       We use the rdblock guarantee in OnFetchRecords */
     auto resultSet = Query(predicates, {UNIQUE_NUMBER});
     int32_t uniqueId = 0;
     if (resultSet->GoToNextRow() == 0) {
