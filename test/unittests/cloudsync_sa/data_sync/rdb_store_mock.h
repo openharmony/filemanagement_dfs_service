@@ -148,6 +148,7 @@ public:
     MOCK_METHOD3(ObtainDistributedTableName,
                  std::string(const std::string &device, const std::string &table, int &errCode));
     MOCK_METHOD3(Sync, int(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief& async));
+    MOCK_METHOD3(Sync, int(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail& async));
     MOCK_METHOD3(Sync, int(const SyncOption &option, const std::vector<std::string>& tables, const AsyncDetail& async));
     MOCK_METHOD2(Subscribe, int(const SubscribeOption &option, RdbStoreObserver *observer));
     MOCK_METHOD2(UnSubscribe, int(const SubscribeOption &option, RdbStoreObserver *observer));
