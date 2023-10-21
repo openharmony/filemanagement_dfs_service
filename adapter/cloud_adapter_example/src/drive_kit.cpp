@@ -99,6 +99,11 @@ DKError DriveKitNative::GetServerTime(time_t &time)
     return DKError();
 }
 
+DKError DriveKitNative::ResolveNotificationEvent(const std::string &extraData, DKRecordChangeEvent &event)
+{
+    return DKError();
+}
+
 std::shared_ptr<DriveKitNative> DriveKitNative::GetInstance(int userId)
 {
     std::lock_guard<std::mutex> lck(drivekitMutex_);

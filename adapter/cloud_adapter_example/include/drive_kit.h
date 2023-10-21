@@ -49,12 +49,27 @@ enum class DKSpaceStatus {
     DK_SPACE_STATUS_NORMAL = 0,
     DK_SPACE_STATUS_ALREADY_FULL,
 };
+enum class DKCloudSyncDemon {
+    DK_CLOUD_DATA = 0, //数据子系统加载时传入
+    DK_CLOUD_FILE, //文件子系统加载时传入
+    DK_CLOUD_UNKNOWN,
+};
+struct DKRecordChangeEvent {
+   std::string accountId;
+   DKAppBundleName appBundleName;
+   DKContainerName containerName;
+   std::vector<DKDatabaseScope> databaseScopes;
+   std::vector<DKRecordType> recordTypes;
+   std::map<std::string, std::string> properties;
+};
 struct DKUserInfo {
-    std::string accountId;
-    DKCloudStatus cloudStatus;
-    DKSpaceStatus spaceStatus;
-    uint64_t totalSpace;
-    uint64_t remainSpace;
+    std::string accountId;     //云空间用户id
+    DKCloudStatus cloudStatus; //云空间登录状态
+    DKSpaceStatus spaceStatus; //云空间存储状态
+    uint64_t totalSpace;       //用户总的云空间
+    uint64_t remainSpace;      //用户剩余云空间
+    std::string pushKeyId;
+    std::string pushKeyValue;
 };
 class DriveKitNative : public std::enable_shared_from_this<DriveKitNative> {
     friend class DKContainer;
@@ -76,6 +91,8 @@ public:
     DKError GetCloudAppSwitches(const std::vector<DKAppBundleName> &bundleNames,
                                 std::map<DKAppBundleName, DKAppSwitchStatus> &appSwitchs);
     DKError GetServerTime(time_t &time);
+    //校验和解析通知消息，调用该函数前，要先调用GetCloudUserInfo,否则会报错
+    DKError ResolveNotificationEvent(const std::string &extraData, DKRecordChangeEvent &event);
     int32_t OnUploadAsset(const std::string &request, const std::string &result);
     void ReleaseDefaultContainer(DKAppBundleName bundleName);
     void ReleaseContainer(DKAppBundleName bundleName, DKContainerName containerName);

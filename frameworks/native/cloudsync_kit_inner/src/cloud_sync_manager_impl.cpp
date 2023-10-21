@@ -146,7 +146,7 @@ int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, cons
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::NotifyEventChange(const std::string &eventId, const std::string &extraData)
+int32_t CloudSyncManagerImpl::NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData)
 {
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
@@ -157,8 +157,8 @@ int32_t CloudSyncManagerImpl::NotifyEventChange(const std::string &eventId, cons
     if (!isFirstCall_.test_and_set()) {
         SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     }
-
-    int32_t ret = CloudSyncServiceProxy->NotifyEventChange(eventId, extraData);
+   
+    int32_t ret = CloudSyncServiceProxy->NotifyEventChange(userId, eventId, extraData);
     LOGI("NotifyDataChange ret %{public}d", ret);
     return ret;
 }

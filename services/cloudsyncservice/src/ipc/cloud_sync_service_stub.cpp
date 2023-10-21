@@ -193,9 +193,9 @@ int32_t CloudSyncServiceStub::HandleClean(MessageParcel &data, MessageParcel &re
     return res;
 }
 
-int32_t CloudSyncServiceStub::HandleNotifyDataChange(MessageParcel &data, MessageParcel &reply)
+int32_t CloudSyncServiceStub::HandleNotifyEventChange(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin NotifyDataChange");
+    LOGI("Begin NotifyEventChange");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
@@ -204,17 +204,19 @@ int32_t CloudSyncServiceStub::HandleNotifyDataChange(MessageParcel &data, Messag
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
-    string accountId = data.ReadString();
-    string bundleName = data.ReadString();
-    int32_t res = NotifyDataChange(accountId, bundleName);
+    int32_t userId = data.ReadInt32();
+    string eventIdStr = data.ReadString();
+    string extraDataStr = data.ReadString();
+    
+    int32_t res = NotifyEventChange(userId, eventIdStr, extraDataStr);
     reply.WriteInt32(res);
-    LOGI("End NotifyDataChange");
+    LOGI("End NotifyEventChange");
     return res;
 }
 
-int32_t CloudSyncServiceStub::HandleNotifyEventChange(MessageParcel &eventId, MessageParcel &extraData)
+int32_t CloudSyncServiceStub::HandleNotifyEventChange(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin NotifyDataChange");
+    LOGI("Begin NotifyEventChange");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
@@ -223,10 +225,12 @@ int32_t CloudSyncServiceStub::HandleNotifyEventChange(MessageParcel &eventId, Me
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
-    string accountId = eventId.ReadString();
-    string bundleName = eventId.ReadString();
-    int32_t res = NotifyEventChange(accountId, bundleName);
-    extraData.WriteInt32(res);
+    string userIdStr = data.ReadString();
+    string eventIdStr = data.ReadString();
+    string extraDataStr = data.ReadString();
+    //string转int
+    int32_t res = NotifyEventChange(atoi(userIdStr.c_str()), eventIdStr, extraDataStr);
+    reply.WriteInt32(res);
     LOGI("End NotifyEventChange");
     return res;
 }

@@ -84,14 +84,9 @@ napi_value ChangeAppCloudSwitch(napi_env env, napi_callback_info info)
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
-napi_value NotifyDataChange(napi_env env, napi_callback_info info)
+napi_value NotifyDataChangeInner(napi_env env, NFuncArg &funcArg)
 {
-    NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::TWO), static_cast<size_t>(NARG_CNT::THREE))) {
-        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
-        return nullptr;
-    }
-
+    LOGI("NotifyDataChangeInner entrance");
     bool succ = false;
     std::unique_ptr<char []> accoutId;
     std::unique_ptr<char []> bundleName;
@@ -131,51 +126,84 @@ napi_value NotifyDataChange(napi_env env, napi_callback_info info)
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
-napi_value NotifyEventChange(napi_env eventId, napi_callback_info extraData)
+static bool IsNotifyEventChange(napi_env env, NFuncArg &funcArg)
 {
-    NFuncArg funcArg(eventId, extraData);
-    if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::TWO), static_cast<size_t>(NARG_CNT::THREE))) {
-        NError(E_PARAMS).ThrowErr(eventId, "Number of arguments unmatched");
-        return nullptr;
+    auto options = NVal(env, funcArg[NARG_POS::SECOND]);
+    if (options.TypeIs(napi_object)) {
+        return true;
     }
+    return false;
+}
 
+napi_value NotifyEventChange(napi_env env, NFuncArg &funcArg)
+{
+
+    LOGI("NotifyEventChange entrance");
+    
     bool succ = false;
-    std::unique_ptr<char []> accoutId;
-    std::unique_ptr<char []> bundleName;
-
-    tie(succ, accoutId, std::ignore) = NVal(eventId, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+    int32_t userId;
+    tie(succ, userId) = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToInt32();
     if (!succ) {
-        NError(E_PARAMS).ThrowErr(eventId);
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
-    tie(succ, bundleName, std::ignore) = NVal(eventId, funcArg[(int)NARG_POS::SECOND]).ToUTF8String();
-    if (!succ) {
-        NError(E_PARAMS).ThrowErr(eventId);
+    auto argv = NVal(env, funcArg[NARG_POS::SECOND]);
+    if (!argv.HasProp("eventId") || !argv.HasProp("extraData")) {
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
-    string accoutIdStr(accoutId.get());
-    string bundleNameStr(bundleName.get());
+    std::unique_ptr<char []> eventId;
+    std::unique_ptr<char []> extraData;
 
-    auto cbExec = [accoutIdStr, bundleNameStr]() -> NError {
-        int32_t result = CloudSyncManager::GetInstance().NotifyEventChange(accoutIdStr, bundleNameStr);
+    tie(succ, eventId, std::ignore) = argv.GetProp("eventId").ToUTF8String();
+    if (!succ) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    tie(succ, extraData, std::ignore) = argv.GetProp("extraData").ToUTF8String();
+    if (!succ) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    
+    string eventIdStr(eventId.get());
+    string extraDataStr(extraData.get());
+    
+    auto cbExec = [userId, eventIdStr, extraDataStr]() -> NError {
+        int32_t result = CloudSyncManager::GetInstance().NotifyEventChange(userId, eventIdStr, extraDataStr);
         if (result == E_PERMISSION_DENIED || result == E_PERMISSION_SYSTEM) {
             return result == E_PERMISSION_DENIED? NError(Convert2JsErrNum(E_PERMISSION_DENIED)) :
             NError(Convert2JsErrNum(E_PERMISSION_SYSTEM));
         }
         return NError(ERRNO_NOERR);
     };
-    auto cbComplete = [](napi_env eventId, NError err) -> NVal {
+    auto cbComplete = [](napi_env env, NError err) -> NVal {
         if (err) {
-            return { eventId, err.GetNapiErr(eventId) };
+            return { env, err.GetNapiErr(env) };
         }
-        return { NVal::CreateUndefined(eventId) };
+        return { NVal::CreateUndefined(env) };
     };
 
-    std::string procedureName = "NotifyDataChange2";
-    auto asyncWork = GetPromiseOrCallBackWork(eventId, funcArg, static_cast<size_t>(NARG_CNT::THREE));
+    std::string procedureName = "NotifyEventChange";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::THREE));
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
+}
+
+napi_value NotifyDataChange(napi_env env, napi_callback_info info)
+{
+    LOGI("NotifyDataChange entrance");
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(static_cast<size_t>(NARG_CNT::TWO), static_cast<size_t>(NARG_CNT::THREE))) {
+        NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
+        return nullptr;
+    }
+
+    if (IsNotifyEventChange(env, funcArg)) {
+        return NotifyEventChange(env, funcArg);
+    }
+    return NotifyDataChangeInner(env, funcArg);
 }
 
 napi_value DisableCloud(napi_env env, napi_callback_info info)

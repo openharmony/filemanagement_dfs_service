@@ -34,7 +34,7 @@ public:
     virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
     virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;
     virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
-    virtual int32_t NotifyEventChange(const std::string &eventId, const std::string &extraData) = 0;
+    virtual int32_t NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) = 0;
     virtual int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) = 0;
     virtual int32_t DisableCloud(const std::string &accoutId) = 0;
     virtual int32_t StartDownloadFile(const std::string &path) = 0;

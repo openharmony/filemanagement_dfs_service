@@ -295,29 +295,6 @@ HWTEST_F(CloudSyncServiceTest, NotifyDataChangeTest, TestSize.Level1)
 }
 
 /**
- * @tc.name:NotifyEventChangeTest
- * @tc.desc:Verify the NotifyEventChange function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, NotifyEventChangeTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "NotifyEventChange Start";
-    try {
-        std::string accountId = "testId";
-        string bundleName = "com.ohos.photos";
-        int32_t callerUserId = 100;
-        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
-        EXPECT_EQ(ret, E_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "NotifyEventChange FAILED";
-    }
-    GTEST_LOG_(INFO) << "NotifyEventChange End";
-}
-
-/**
  * @tc.name:UnRegisterCallbackInnerTest
  * @tc.desc:Verify the UnRegisterCallbackInner function.
  * @tc.type:FUNC

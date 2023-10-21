@@ -347,9 +347,9 @@ int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, con
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::NotifyEventChange(const std::string &eventId, const std::string &extraData)
+int32_t CloudSyncServiceProxy::NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData)
 {
-    LOGI("NotifyDataChange");
+    LOGI("NotifyEventChange");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -357,6 +357,11 @@ int32_t CloudSyncServiceProxy::NotifyEventChange(const std::string &eventId, con
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOGE("Failed to write interface token");
         return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        LOGE("Failed to send the user id");
+        return E_INVAL_ARG;
     }
 
     if (!data.WriteString(eventId)) {
@@ -380,7 +385,7 @@ int32_t CloudSyncServiceProxy::NotifyEventChange(const std::string &eventId, con
         LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
     }
-    LOGI("NotifyDataChange Success");
+    LOGI("NotifyEventChange Success");
     return reply.ReadInt32();
 }
 

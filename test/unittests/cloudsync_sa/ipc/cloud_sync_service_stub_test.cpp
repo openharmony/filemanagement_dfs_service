@@ -287,7 +287,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleNotifyEventChangeTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "HandleNotifyEventChange Start";
     try {
         MockService service;
-        EXPECT_CALL(service, NotifyDataChange(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(service, NotifyEventChange(_, _)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;

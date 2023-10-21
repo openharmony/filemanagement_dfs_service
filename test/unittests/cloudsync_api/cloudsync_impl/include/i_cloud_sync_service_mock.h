@@ -75,7 +75,7 @@ public:
     {
         return E_OK;
     }
-    int32_t NotifyEventChange(const std::string &eventId, const std::string &extraData) override
+    int32_t NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) override
     {
         return E_OK;
     }

@@ -187,10 +187,30 @@ int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const st
     return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
 }
 
-int32_t CloudSyncService::NotifyEventChange(const std::string &eventId, const std::string &extraData)
+int32_t CloudSyncService::NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData)
 {
-    LOGD("Not yet implemented");
-    return 0;
+    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
+    if (driveKit == nullptr) {
+        LOGE("sdk helper get drive kit instance fail");
+        return E_CLOUD_SDK;
+    }
+
+    DriveKit::DKUserInfo userInfo;
+    auto err = driveKit->GetCloudUserInfo(userInfo);
+    if (err.HasError()) {
+        LOGE("GetCloudUserInfo failed, server err:%{public}d and dk err:%{public}d", err.serverErrorCode,
+             err.dkErrorCode);
+        return E_CLOUD_SDK;
+    }
+
+    DriveKit::DKRecordChangeEvent event;
+    auto eventErr = driveKit->ResolveNotificationEvent(extraData, event);
+    if (eventErr.HasError()) {
+        LOGE("ResolveNotificationEvent failed, server err:%{public}d and dk err:%{public}d", eventErr.serverErrorCode,
+             eventErr.dkErrorCode);
+        return E_CLOUD_SDK;
+    }
+    return dataSyncManager_->TriggerStartSync(event.appBundleName, userId, false, SyncTriggerType::CLOUD_TRIGGER);
 }
 
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
