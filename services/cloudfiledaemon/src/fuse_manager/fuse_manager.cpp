@@ -454,6 +454,10 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
 }
 
 static const struct fuse_lowlevel_ops cloudFuseOps = {
+    .readdir = CloudReadDir,
+};
+
+static const struct fuse_lowlevel_ops cloudMediaFuseOps = {
     .lookup             = CloudLookup,
     .forget             = CloudForget,
     .getattr            = CloudGetAttr,
@@ -477,8 +481,16 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         return -EINVAL;
     }
 
-    se = fuse_session_new(&args, &cloudFuseOps,
-                          sizeof(cloudFuseOps), &data);
+    if (path.find("cloud_fuse") != string::npos) {
+        se = fuse_session_new(&args, &cloudFuseOps,
+                              sizeof(cloudFuseOps), &data);
+    } else {
+        se = fuse_session_new(&args, &cloudMediaFuseOps,
+                              sizeof(cloudMediaFuseOps), &data);
+        if (se != nullptr) {
+            sessions_[userId] = se;
+        }
+    }
     if (se == nullptr) {
         LOGE("fuse_session_new error");
         return -EINVAL;
@@ -490,7 +502,6 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     LOGI("fuse_session_new success, userId: %{public}d", userId);
     se->fd = devFd;
     se->mountpoint = strdup(path.c_str());
-    sessions_[userId] = se;
 
     fuse_daemonize(true);
     config.max_idle_threads = 1;
