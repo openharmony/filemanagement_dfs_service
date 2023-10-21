@@ -43,6 +43,8 @@ string FileDataConvertor::prefixCloud_ = "/storage/cloud/";
 string FileDataConvertor::suffixCloud_ = "/files";
 string FileDataConvertor::tmpSuffix_ = ".temp.download";
 
+constexpr size_t DEFAULT_TIME_SIZE = 32;
+
 FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type,
     const function<void(NativeRdb::ResultSet &resultSet)> &func) : userId_(userId),
     bundleName_(bundleName), type_(type), errHandler_(func)
@@ -124,6 +126,7 @@ int32_t FileDataConvertor::HandleAttributes(DriveKit::DKRecordFieldMap &map,
     }
     RETURN_ON_ERR(HandleThumbSize(map, resultSet));
     RETURN_ON_ERR(HandleLcdSize(map, resultSet));
+    RETURN_ON_ERR(HandleFormattedDate(map, resultSet));
     return E_OK;
 }
 
@@ -278,6 +281,37 @@ int32_t FileDataConvertor::HandleLcdSize(DriveKit::DKRecordFieldMap &map,
     }
 
     map[FILE_LCD_SIZE] = DriveKit::DKRecordField(int64_t(fileStat.st_size));
+    return E_OK;
+}
+
+string FileDataConvertor::StrCreateTime(const string &format, int64_t time)
+{
+    char strTime[DEFAULT_TIME_SIZE] = "";
+    auto tm = localtime(&time);
+    (void)strftime(strTime, sizeof(strTime), format.c_str(), tm);
+    return strTime;
+}
+
+int32_t FileDataConvertor::HandleFormattedDate(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet)
+{
+    string year;
+    string month;
+    string day;
+    RETURN_ON_ERR(GetString(PhotoColumn::PHOTO_DATE_YEAR, year, resultSet));
+    RETURN_ON_ERR(GetString(PhotoColumn::PHOTO_DATE_MONTH, year, resultSet));
+    RETURN_ON_ERR(GetString(PhotoColumn::PHOTO_DATE_DAY, year, resultSet));
+
+    if (year.empty() || month.empty() || day.empty()) {
+        int64_t createTime = 0;
+        RETURN_ON_ERR(GetLong(PhotoColumn::MEDIA_DATE_ADDED, createTime, resultSet));
+        year = StrCreateTime(PhotoColumn::PHOTO_DATE_YEAR_FORMAT, createTime);
+        month = StrCreateTime(PhotoColumn::PHOTO_DATE_MONTH_FORMAT, createTime);
+        day = StrCreateTime(PhotoColumn::PHOTO_DATE_DAY_FORMAT, createTime);
+    }
+
+    map[PhotoColumn::PHOTO_DATE_YEAR] = DriveKit::DKRecordField(year);
+    map[PhotoColumn::PHOTO_DATE_MONTH] = DriveKit::DKRecordField(month);
+    map[PhotoColumn::PHOTO_DATE_DAY] = DriveKit::DKRecordField(day);
     return E_OK;
 }
 
@@ -565,6 +599,7 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Values
         }
         RETURN_ON_ERR(CompensateTitle(data, valueBucket));
     }
+    RETURN_ON_ERR(CompensateFormattedDate(data, valueBucket));
     ExtractCompatibleValue(record, data, valueBucket);
     return E_OK;
 }
@@ -647,6 +682,7 @@ int32_t FileDataConvertor::CompensateDataAdded(const DriveKit::DKRecord &record,
 {
     uint64_t dataAdded = record.GetCreateTime() / MILLISECOND_TO_SECOND;
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_ADDED, dataAdded);
+    CompensateFormattedDate(dataAdded, valueBucket);
     return E_OK;
 }
 
@@ -714,6 +750,28 @@ int32_t FileDataConvertor::CompensateDuration(DriveKit::DKRecordData &data,
     return E_OK;
 }
 
+int32_t FileDataConvertor::CompensateFormattedDate(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
+    if (attributes.find(PhotoColumn::PHOTO_DATE_YEAR) == attributes.end()) {
+        LOGI("record data cannot find formatted date");
+        int64_t timeAdded = attributes[PhotoColumn::MEDIA_DATE_ADDED];
+        CompensateFormattedDate(timeAdded, valueBucket);
+    }
+    return E_OK;
+}
+
+int32_t FileDataConvertor::CompensateFormattedDate(uint64_t dateAdded, NativeRdb::ValuesBucket &valueBucket)
+{
+    string year = StrCreateTime(PhotoColumn::PHOTO_DATE_YEAR_FORMAT, dateAdded);
+    string month = StrCreateTime(PhotoColumn::PHOTO_DATE_MONTH_FORMAT, dateAdded);
+    string day = StrCreateTime(PhotoColumn::PHOTO_DATE_DAY_FORMAT, dateAdded);
+    valueBucket.PutString(PhotoColumn::PHOTO_DATE_YEAR, year);
+    valueBucket.PutString(PhotoColumn::PHOTO_DATE_MONTH, month);
+    valueBucket.PutString(PhotoColumn::PHOTO_DATE_DAY, day);
+    return E_OK;
+}
 int32_t FileDataConvertor::ExtractAttributeValue(DriveKit::DKRecordData &data,
     NativeRdb::ValuesBucket &valueBucket)
 {
