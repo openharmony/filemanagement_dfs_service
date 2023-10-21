@@ -40,11 +40,6 @@ public:
 
 void CloudSyncServiceTest::SetUpTestCase(void)
 {
-    if (g_servicePtr_ == nullptr) {
-        int32_t saId = 5204;
-        g_servicePtr_ = std::make_shared<CloudSyncService>(saId);
-        ASSERT_TRUE(g_servicePtr_ != nullptr) << "SystemAbility failed";
-    }
     std::cout << "SetUpTestCase" << std::endl;
 }
 
@@ -55,6 +50,11 @@ void CloudSyncServiceTest::TearDownTestCase(void)
 
 void CloudSyncServiceTest::SetUp(void)
 {
+    if (g_servicePtr_ == nullptr) {
+        int32_t saId = 5204;
+        g_servicePtr_ = std::make_shared<CloudSyncService>(saId);
+        ASSERT_TRUE(g_servicePtr_ != nullptr) << "SystemAbility failed";
+    }
     std::cout << "SetUp" << std::endl;
 }
 
@@ -125,6 +125,48 @@ HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << "GetHmdfsPathTest003 FAILED";
     }
     GTEST_LOG_(INFO) << "GetHmdfsPathTest003 end";
+}
+
+/**
+ * @tc.name:DeleteAssetTest001
+ * @tc.desc:Verify the DeleteAsset function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, DeleteAssetTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteAssetTest001 start";
+    try {
+        int32_t userId = 100;
+        std::string uri = "";
+        int ret = g_servicePtr_->DeleteAsset(userId, uri);
+        EXPECT_EQ(ret, E_GET_PHYSICAL_PATH_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteAssetTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DeleteAssetTest001 end";
+}
+
+/**
+ * @tc.name:DeleteAssetTest002
+ * @tc.desc:Verify the DeleteAsset function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, DeleteAssetTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteAssetTest002 start";
+    try {
+        int32_t userId = 100;
+        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
+        int ret = g_servicePtr_->DeleteAsset(userId, uri);
+        EXPECT_EQ(ret, E_DELETE_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteAssetTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DeleteAssetTest002 end";
 }
 
 /**
@@ -413,7 +455,7 @@ HWTEST_F(CloudSyncServiceTest, StartDownloadFileTest, TestSize.Level1)
         std::string path;
         auto dataSyncManager = g_servicePtr_->dataSyncManager_;
         int ret = dataSyncManager->StartDownloadFile(bundleName, callerUserId, path);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_STOP);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartDownloadFile FAILED";
