@@ -140,7 +140,7 @@ public:
                                             const std::vector<std::string> &columns,
                                             int &errCode));
 
-    MOCK_METHOD3(GetModifyTime, std::map<PRIKey, Date>(const std::string &table, const std::string &columnName,
+    MOCK_METHOD3(GetModifyTime, ModifyTime(const std::string &table, const std::string &columnName,
                                                        std::vector<PRIKey> &keys));
 
     MOCK_METHOD3(SetDistributedTables, int(const std::vector<std::string> &tables, int32_t type,
