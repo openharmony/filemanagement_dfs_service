@@ -64,6 +64,17 @@ void CloudPrefImpl::GetString(const std::string& key, std::string &value)
     value = pref_->GetString(key, "");
 }
 
+void CloudPrefImpl::SetLong(const std::string& key, const int64_t value)
+{
+    pref_->PutLong(key, value);
+    pref_->Flush();
+}
+
+void CloudPrefImpl::GetLong(const std::string& key, int64_t &value)
+{
+    value = pref_->GetLong(key, 0);
+}
+
 void CloudPrefImpl::SetInt(const std::string& key, const int value)
 {
     pref_->PutInt(key, value);
