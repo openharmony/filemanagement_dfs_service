@@ -29,6 +29,7 @@ ohos_shared_library("cloudsync_sa") {
   include_dirs = [
     "include",
     "include/data_sync",
+    "include/cycle_task",
     "include/disk_db",
     "include/data_sync/gallery_data_sync",
     "${innerkits_native_path}/cloudsync_kit_inner",
@@ -52,6 +53,11 @@ ohos_shared_library("cloudsync_sa") {
     "src/data_sync/data_sync_notifier.cpp",
     "src/data_sync/data_sync_manager.cpp",
     "src/data_sync/sync_state_manager.cpp",
+  ]
+
+  cycle_task = [
+    "src/cycle_task/cycle_task.cpp",
+    "src/cycle_task/cycle_task_runner.cpp",
   ]
 
   disk_db = [
@@ -92,6 +98,7 @@ ohos_shared_library("cloudsync_sa") {
     "src/sync_rule/network_status.cpp",
   ]
   sources += data_sync
+  sources += cycle_task
   sources += disk_db
   sources += gallery_data_sync
   sources += medialibrary_rdb_utils_source
@@ -148,6 +155,7 @@ ohos_static_library("cloudsync_sa_static") {
   include_dirs = [
     "include",
     "include/data_sync",
+    "include/cycle_task",
     "include/disk_db",
     "include/data_sync/gallery_data_sync",
     "${innerkits_native_path}/cloudsync_kit_inner",
@@ -171,6 +179,11 @@ ohos_static_library("cloudsync_sa_static") {
     "src/data_sync/data_sync_notifier.cpp",
     "src/data_sync/data_sync_manager.cpp",
     "src/data_sync/sync_state_manager.cpp",
+  ]
+
+  cycle_task = [
+    "src/cycle_task/cycle_task.cpp",
+    "src/cycle_task/cycle_task_runner.cpp",
   ]
 
   disk_db = [
@@ -211,6 +224,7 @@ ohos_static_library("cloudsync_sa_static") {
     "src/sync_rule/network_status.cpp",
   ]
   sources += data_sync
+  sources += cycle_task
   sources += disk_db
   sources += gallery_data_sync
   sources += medialibrary_rdb_utils_source
