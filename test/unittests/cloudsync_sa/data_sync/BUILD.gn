@@ -38,6 +38,7 @@ ohos_unittest("album_data_handler_test") {
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -88,6 +89,7 @@ ohos_unittest("album_data_handler_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -124,6 +126,7 @@ ohos_unittest("data_sync_manager_test") {
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -174,6 +177,7 @@ ohos_unittest("data_sync_manager_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -207,6 +211,7 @@ ohos_unittest("data_handler_test") {
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -258,6 +263,7 @@ ohos_unittest("data_handler_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -309,6 +315,7 @@ ohos_unittest("data_convertor_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -377,6 +384,7 @@ ohos_unittest("file_data_handler_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -497,6 +505,7 @@ ohos_unittest("data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -545,6 +554,7 @@ ohos_unittest("data_syncer_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -574,6 +584,7 @@ ohos_unittest("file_data_convertor_test") {
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
@@ -623,6 +634,7 @@ ohos_unittest("file_data_convertor_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -655,6 +667,7 @@ ohos_unittest("sdk_helper_test") {
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -710,6 +723,7 @@ ohos_unittest("sdk_helper_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -742,6 +756,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -797,6 +812,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -863,6 +879,7 @@ ohos_unittest("task_test") {
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
@@ -917,6 +934,7 @@ ohos_unittest("task_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 

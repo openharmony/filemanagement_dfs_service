@@ -19,6 +19,7 @@
 
 #include "data_sync_const.h"
 #include "data_sync_notifier.h"
+#include "data_syncer_rdb_store.h"
 #include "dfs_error.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "sdk_helper.h"
@@ -1048,6 +1049,8 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
     }
 
     auto nextAction = syncStateManager_.UpdateSyncState(syncState);
+    DataSyncerRdbStore::GetInstance().UpdateSyncState(userId_, bundleName_, syncState);
+
     if (nextAction == Action::START) {
         /* Retrigger sync, clear errorcode */
         errorCode_ = E_OK;
@@ -1082,6 +1085,7 @@ void DataSyncer::CompleteClean()
 {
     DeleteSubscription();
     (void)syncStateManager_.UpdateSyncState(SyncState::CLEAN_SUCCEED);
+    DataSyncerRdbStore::GetInstance().UpdateSyncState(userId_, bundleName_, SyncState::CLEAN_SUCCEED);
 }
 
 void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)

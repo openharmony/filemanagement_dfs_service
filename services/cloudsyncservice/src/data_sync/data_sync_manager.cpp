@@ -18,6 +18,8 @@
 #include <thread>
 #include <vector>
 
+#include "data_syncer_rdb_col.h"
+#include "data_syncer_rdb_store.h"
 #include "dfs_error.h"
 #include "gallery_data_syncer.h"
 #include "ipc/cloud_sync_callback_manager.h"
@@ -27,7 +29,11 @@
 #include "sync_rule/network_status.h"
 #include "utils_log.h"
 
+#include "os_account_manager.h"
+#include "rdb_sql_utils.h"
+#include "rdb_store_config.h"
 namespace OHOS::FileManagement::CloudSync {
+using namespace std;
 
 int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
                                           const int32_t userId,
@@ -130,18 +136,33 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
     std::vector<std::string> needSyncApps;
     {
         std::lock_guard<std::mutex> lck(dataSyncMutex_);
-        if (currentUserId_ == INVALID_USER_ID) {
-            LOGE("useId is invalid");
-            return E_INVAL_ARG;
+        vector<int32_t> activeUsers;
+        if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeUsers) != E_OK) {
+            LOGE("query active user failed");
+            return E_OSACCOUNT;
         }
 
-        for (auto dataSyncer : dataSyncers_) {
-            if (dataSyncer->GetUserId() == currentUserId_) {
-                if ((triggerType == SyncTriggerType::NETWORK_AVAIL_TRIGGER) ||
-                    (dataSyncer->GetSyncState() == SyncState::SYNC_FAILED)) {
-                    auto bundleName = dataSyncer->GetBundleName();
-                    needSyncApps.push_back(bundleName);
-                }
+        currentUserId_ = activeUsers.front();
+
+        std::shared_ptr<NativeRdb::ResultSet> resultSet;
+        RETURN_ON_ERR(DataSyncerRdbStore::GetInstance().QueryDataSyncer(currentUserId_, resultSet));
+
+        while (resultSet->GoToNextRow() == E_OK) {
+            string bundleName;
+            int32_t ret = DataConvertor::GetString(BUNDLE_NAME, bundleName, *resultSet);
+            if (ret != E_OK) {
+                LOGE("get bundle name failed");
+                continue;
+            }
+            int32_t state;
+            ret = DataConvertor::GetInt(SYNC_STATE, state, *resultSet);
+            if (ret != E_OK) {
+                LOGE("get sync state failed");
+                continue;
+            }
+            if ((triggerType == SyncTriggerType::NETWORK_AVAIL_TRIGGER) ||
+                static_cast<SyncState>(state) == SyncState::SYNC_FAILED) {
+                needSyncApps.push_back(bundleName);
             }
         }
     }
@@ -186,6 +207,7 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bu
     }
     dataSyncer->SetSdkHelper(sdkHelper);
     dataSyncers_.push_back(dataSyncer);
+    DataSyncerRdbStore::GetInstance().Insert(userId, bundleName);
     return dataSyncer;
 }
 

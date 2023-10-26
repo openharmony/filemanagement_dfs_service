@@ -52,7 +52,8 @@
           "relational_store",
           "safwk",
           "samgr",
-          "ability_runtime"
+          "ability_runtime",
+          "os_account"
         ],
         "third_party": [
           "e2fsprogs",
