@@ -38,7 +38,7 @@ bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionN
         return isGranted;
     } else if ((tokenType == TOKEN_SHELL) && (uid == ROOT_UID)) {
         LOGI("Token type is shell");
-        return true;
+        return false;
     } else {
         LOGE("Unsupported token type:%{public}d", tokenType);
         return false;
