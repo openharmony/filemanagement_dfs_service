@@ -598,8 +598,8 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Values
             return ret;
         }
         RETURN_ON_ERR(CompensateTitle(data, valueBucket));
+        RETURN_ON_ERR(CompensateFormattedDate(record, valueBucket));
     }
-    RETURN_ON_ERR(CompensateFormattedDate(data, valueBucket));
     ExtractCompatibleValue(record, data, valueBucket);
     return E_OK;
 }
@@ -750,14 +750,23 @@ int32_t FileDataConvertor::CompensateDuration(DriveKit::DKRecordData &data,
     return E_OK;
 }
 
-int32_t FileDataConvertor::CompensateFormattedDate(DriveKit::DKRecordData &data,
+int32_t FileDataConvertor::CompensateFormattedDate(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
     DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
     if (attributes.find(PhotoColumn::PHOTO_DATE_YEAR) == attributes.end()) {
         LOGI("record data cannot find formatted date");
-        int64_t timeAdded = attributes[PhotoColumn::MEDIA_DATE_ADDED];
-        CompensateFormattedDate(timeAdded, valueBucket);
+        uint64_t timeAdded = 0;
+        if (attributes.find(PhotoColumn::MEDIA_DATE_ADDED) != attributes.end()) {
+            int64_t sTimeAdded;
+            attributes[PhotoColumn::MEDIA_DATE_ADDED].GetLong(sTimeAdded);
+            timeAdded = static_cast<uint64_t>(sTimeAdded);
+        } else {
+            timeAdded = record.GetCreateTime();
+        }
+        CompensateFormattedDate(timeAdded / MILLISECOND_TO_SECOND, valueBucket);
     }
     return E_OK;
 }
