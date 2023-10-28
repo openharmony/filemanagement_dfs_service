@@ -148,7 +148,7 @@ private:
     int32_t CompensateMetaDateModified(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
     int32_t CompensateSubtype(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
     int32_t CompensateDuration(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
-    int32_t CompensateFormattedDate(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
+    int32_t CompensateFormattedDate(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
     int32_t CompensateFormattedDate(uint64_t dateAdded, NativeRdb::ValuesBucket &valueBucket);
     /* extract compatible value stored in properties */
     int32_t ExtractCompatibleValue(const DriveKit::DKRecord &record,
