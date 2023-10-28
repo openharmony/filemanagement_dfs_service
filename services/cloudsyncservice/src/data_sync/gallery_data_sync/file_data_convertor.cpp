@@ -645,7 +645,7 @@ int32_t FileDataConvertor::CompensateMediaType(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::CompensateDataAdded(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
-    uint64_t dataAdded = record.GetCreateTime() / MILLISECOND_TO_SECOND;
+    uint64_t dataAdded = record.GetCreateTime();
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_ADDED, dataAdded);
     return E_OK;
 }
@@ -931,7 +931,7 @@ int32_t FileDataConvertor::ExtractDeviceName(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::ExtractDateModified(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
-    uint64_t dateModified = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    uint64_t dateModified = record.GetEditedTime();
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_MODIFIED, dateModified);
     return E_OK;
 }
@@ -977,7 +977,7 @@ int32_t FileDataConvertor::ExtractDateTrashed(DriveKit::DKRecordData &data,
             LOGE("extract dataTrashed error");
             return E_INVAL_ARG;
         }
-        valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, dataTrashed / MILLISECOND_TO_SECOND);
+        valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, dataTrashed);
     } else {
         valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, 0);
     }
