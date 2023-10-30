@@ -87,6 +87,25 @@ struct FuseData {
     struct fuse_session *se;
 };
 
+static bool HandleDkError (fuse_req_t req, DriveKit::DKError dkError)
+{
+    if (!dkError.HasError()) {
+        return false;
+    }
+    if ((dkError.serverErrorCode == (uint)DriveKit::DKServerErrorCode::NETWORK_ERROR)
+        || dkError.dkErrorCode == DriveKit::DKLocalErrorCode::DOWNLOAD_REQUEST_ERROR) {
+        LOGE("network error");
+        fuse_reply_err(req, ENOTCONN);
+    } else if (dkError.isServerError) {
+        LOGE("server errorCode is: %d", dkError.serverErrorCode);
+        fuse_reply_err(req, EIO);
+    } else if (dkError.isLocalError) {
+        LOGE("local errorCode is: %d", dkError.dkErrorCode);
+        fuse_reply_err(req, EINVAL);
+    }
+    return true;
+}
+
 static shared_ptr<DriveKit::DKDatabase> GetDatabase(struct FuseData *data)
 {
     if (!data->database) {
@@ -324,6 +343,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
     LOGD("open %s", CloudPath(data, ino).c_str());
     if (!database) {
         fuse_reply_err(req, EPERM);
+        LOGE("database is null");
         return;
     }
     wSesLock.lock();
@@ -337,10 +357,22 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                                                             recordId,
                                                             GetAssetKey(cInode->mBase->fileType),
                                                             GetAssetPath(cInode, data));
+        if (cInode->readSession) {
+            DriveKit::DKError dkError = cInode->readSession->InitSession();
+            if (!HandleDkError(req, dkError)) {
+                cInode->sessionRefCount++;
+                LOGD("open success, sessionRefCount: %d", cInode->sessionRefCount.load());
+                fuse_reply_open(req, fi);
+            } else {
+                LOGE("open fali");
+            }
+            wSesLock.unlock();
+            return;
+        }
     }
-
     if (!cInode->readSession) {
         fuse_reply_err(req, EPERM);
+        LOGE("readSession is null");
     } else {
         cInode->sessionRefCount++;
         LOGD("open success, sessionRefCount: %d", cInode->sessionRefCount.load());
@@ -426,31 +458,31 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
-
     LOGD("%s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
 
     buf.reset(new char[size], [](char* ptr) {
         delete[] ptr;
     });
+
     if (!buf) {
         fuse_reply_err(req, ENOMEM);
+        LOGE("buffer is null");
         return;
     }
 
     if (!cInode->readSession) {
         fuse_reply_err(req, EPERM);
+        LOGE("read fail, readsession is null");
         return;
     }
 
     readSize = cInode->readSession->PRead(off, size, buf.get(), dkError);
-    if (dkError.HasError()) {
-        LOGE("read error");
-        fuse_reply_err(req, EIO);
-        return;
+    if (!HandleDkError(req, dkError)) {
+        LOGD("read %s success, %lld bytes", CloudPath(data, ino).c_str(), static_cast<long long>(readSize));
+        fuse_reply_buf(req, buf.get(), readSize);
+    } else {
+        LOGE("read fali");
     }
-
-    LOGD("read %s success, %lld bytes", CloudPath(data, ino).c_str(), static_cast<long long>(readSize));
-    fuse_reply_buf(req, buf.get(), readSize);
 }
 
 static const struct fuse_lowlevel_ops cloudFuseOps = {

@@ -16,6 +16,14 @@
 #include "dk_asset_read_session.h"
 
 namespace DriveKit {
+DKError DKAssetReadSession::InitSession()
+{
+    return DKError();
+}
+int64_t DKAssetReadSession::GetAssetSize() const
+{
+    return int64_t();
+}
 void DKAssetReadSession::GetAssetInfo() {}
 void DKAssetReadSession::Seek(int64_t offset, DKSeekFromWhere fromWhere) {}
 int64_t DKAssetReadSession::Read(int64_t size, char *buffer, DKError &error)
