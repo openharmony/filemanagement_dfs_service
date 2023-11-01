@@ -41,4 +41,10 @@ declare_args() {
   } else {
     cloudsync_service_media_library = false
   }
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.hiviewdfx_hicollie)) {
+    cloudsync_service_hicollie_enable = true
+  } else {
+    cloudsync_service_hicollie_enable = false
+  }
 }
