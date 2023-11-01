@@ -203,6 +203,9 @@ const std::vector<std::string> MEDIA_CLOUD_SYNC_COLUMNS = {
     Media::PhotoColumn::PHOTO_HEIGHT,
     Media::PhotoColumn::PHOTO_WIDTH,
     Media::PhotoColumn::PHOTO_SUBTYPE,
+    Media::PhotoColumn::PHOTO_DATE_YEAR,
+    Media::PhotoColumn::PHOTO_DATE_MONTH,
+    Media::PhotoColumn::PHOTO_DATE_DAY,
 
     /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
     Media::MediaColumn::MEDIA_ID,
