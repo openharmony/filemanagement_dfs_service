@@ -304,9 +304,9 @@ int32_t FileDataConvertor::HandleFormattedDate(DriveKit::DKRecordFieldMap &map, 
     if (year.empty() || month.empty() || day.empty()) {
         int64_t createTime = 0;
         RETURN_ON_ERR(GetLong(PhotoColumn::MEDIA_DATE_ADDED, createTime, resultSet));
-        year = StrCreateTime(PhotoColumn::PHOTO_DATE_YEAR_FORMAT, createTime);
-        month = StrCreateTime(PhotoColumn::PHOTO_DATE_MONTH_FORMAT, createTime);
-        day = StrCreateTime(PhotoColumn::PHOTO_DATE_DAY_FORMAT, createTime);
+        year = StrCreateTime(PhotoColumn::PHOTO_DATE_YEAR_FORMAT, createTime / MILLISECOND_TO_SECOND);
+        month = StrCreateTime(PhotoColumn::PHOTO_DATE_MONTH_FORMAT, createTime / MILLISECOND_TO_SECOND);
+        day = StrCreateTime(PhotoColumn::PHOTO_DATE_DAY_FORMAT, createTime / MILLISECOND_TO_SECOND);
     }
 
     map[PhotoColumn::PHOTO_DATE_YEAR] = DriveKit::DKRecordField(year);
@@ -682,7 +682,7 @@ int32_t FileDataConvertor::CompensateDataAdded(const DriveKit::DKRecord &record,
 {
     uint64_t dataAdded = record.GetCreateTime();
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_ADDED, dataAdded);
-    CompensateFormattedDate(dataAdded, valueBucket);
+    CompensateFormattedDate(dataAdded / MILLISECOND_TO_SECOND, valueBucket);
     return E_OK;
 }
 
