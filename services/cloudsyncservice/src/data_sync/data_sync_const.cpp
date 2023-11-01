@@ -19,26 +19,24 @@
 #include "photo_album_column.h"
 #include "photo_map_column.h"
 
-
 namespace OHOS::FileManagement::CloudSync {
 // PhotoAlbum table
-const std::string DataSyncConst::ALBUM_TABLE_NAME = "PhotoAlbum";
-const std::string DataSyncConst::ALBUM_ID = "album_id";
-const std::string DataSyncConst::ALBUM_TYPE = "album_type";
-const std::string DataSyncConst::ALBUM_SUBTYPE = "album_subtype";
-const std::string DataSyncConst::ALBUM_NAME = "album_name";
-const std::string DataSyncConst::ALBUM_COVER_URI = "cover_uri";
-const std::string DataSyncConst::ALBUM_COUNT = "count";
-const std::string DataSyncConst::ALBUM_DATE_MODIFIED = "date_modified";
+const std::string ALBUM_TABLE_NAME = "PhotoAlbum";
+const std::string ALBUM_ID = "album_id";
+const std::string ALBUM_TYPE = "album_type";
+const std::string ALBUM_SUBTYPE = "album_subtype";
+const std::string ALBUM_NAME = "album_name";
+const std::string ALBUM_COVER_URI = "cover_uri";
+const std::string ALBUM_COUNT = "count";
+const std::string ALBUM_DATE_MODIFIED = "date_modified";
 // For api9 compatibility
-const std::string DataSyncConst::ALBUM_RELATIVE_PATH = "relative_path";
+const std::string ALBUM_RELATIVE_PATH = "relative_path";
 // default fetch columns
-const std::set<std::string> DataSyncConst::DEFAULT_FETCH_COLUMNS = {
-    ALBUM_ID, ALBUM_TYPE, ALBUM_SUBTYPE, ALBUM_NAME, ALBUM_COVER_URI, ALBUM_COUNT
-};
+const std::set<std::string> DEFAULT_FETCH_COLUMNS = {ALBUM_ID,   ALBUM_TYPE,      ALBUM_SUBTYPE,
+                                                     ALBUM_NAME, ALBUM_COVER_URI, ALBUM_COUNT};
 
-const std::string DataSyncConst::ALBUM_URI_PREFIX = Media::PhotoAlbumColumns::ALBUM_URI_PREFIX;
-const std::string DataSyncConst::PHOTO_URI_PREFIX = Media::PhotoColumn::PHOTO_URI_PREFIX;
+const std::string ALBUM_URI_PREFIX = Media::PhotoAlbumColumns::ALBUM_URI_PREFIX;
+const std::string PHOTO_URI_PREFIX = Media::PhotoColumn::PHOTO_URI_PREFIX;
 
-const std::string DataSyncConst::INVALID_ID = "0";
+const std::string INVALID_ID = "0";
 } // namespace OHOS::FileManagement::CloudSync

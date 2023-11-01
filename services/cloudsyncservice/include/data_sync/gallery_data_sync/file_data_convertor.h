@@ -23,33 +23,15 @@
 
 #include "data_convertor.h"
 #include "dfs_error.h"
-#include "gallery_file_const.h"
 #include "utils_log.h"
+#include "gallery_file_const.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
-/* thumb */
-const std::string THUMB_SUFFIX = "THM";
-const std::string LCD_SUFFIX = "LCD";
-
-/* ms -> s */
-const int32_t MILLISECOND_TO_SECOND = 1000;
-
 class FileDataConvertor : public DataConvertor {
 public:
-    enum OperationType {
-        /* upload */
-        FILE_CREATE,
-        FILE_DELETE,
-        FILE_METADATA_MODIFY,
-        FILE_DATA_MODIFY,
-        /* download */
-        FILE_DOWNLOAD,
-        /*clean*/
-        FILE_CLEAN
-    };
 
     enum PhotoSubType {
         DEFAULT,

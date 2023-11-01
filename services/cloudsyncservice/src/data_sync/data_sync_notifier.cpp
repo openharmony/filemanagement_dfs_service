@@ -17,7 +17,7 @@
 
 #include <mutex>
 #include "dataobs_mgr_client.h"
-#include "data_sync_const.h"
+#include "gallery_file_const.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 #include "uri.h"
@@ -83,9 +83,9 @@ static int32_t NotifyAlbumMapChange(const string &uri, const ChangeType changeTy
 int32_t DataSyncNotifier::TryNotify(const string &uri, const ChangeType changeType, const string &fileAssetId)
 {
     int ret = E_NOTIFY;
-    if (uri.find(DataSyncConst::PHOTO_URI_PREFIX) != string::npos) {
+    if (uri.find(PHOTO_URI_PREFIX) != string::npos) {
         ret = NotifyFileAssetChange(uri, changeType);
-    } else if (uri.find(DataSyncConst::ALBUM_URI_PREFIX) != string::npos && fileAssetId == DataSyncConst::INVALID_ID) {
+    } else if (uri.find(ALBUM_URI_PREFIX) != string::npos && fileAssetId == INVALID_ASSET_ID) {
         ret = NotifyAlbumChange(uri, changeType);
     } else {
         ret = NotifyAlbumMapChange(uri, changeType, fileAssetId);

@@ -34,6 +34,7 @@
 #include "dk_error.h"
 #include "gallery_album_const.h"
 #include "gallery_file_const.h"
+#include "media_column.h"
 #include "medialibrary_rdb_utils.h"
 #include "meta_file.h"
 #include "thumbnail_const.h"
@@ -255,7 +256,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
             ret = E_OK;
         }
         if (changeType != ChangeType::INVAILD) {
-            string notifyUri = DataSyncConst::PHOTO_URI_PREFIX + to_string(fileId);
+            string notifyUri = PHOTO_URI_PREFIX + to_string(fileId);
             DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
         }
     }
@@ -275,8 +276,8 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
     MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
     MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
     LOGI("after BatchInsert ret %{public}d", ret);
-    DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
-                                              DataSyncConst::INVALID_ID);
+    DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
+                                              INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
     MetaFileMgr::GetInstance().ClearAll();
     return ret;
@@ -981,7 +982,7 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
             if (ret != E_OK) {
                 LOGE("update retry flag failed, ret=%{public}d", ret);
             }
-            DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
+            DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                                       to_string(updateRows));
         }
     }
@@ -1005,7 +1006,7 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
         if (ret != E_OK) {
             LOGE("update retry flag failed, ret=%{public}d", ret);
         }
-        DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
+        DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                                   to_string(updateRows));
         DataSyncNotifier::GetInstance().FinalNotify();
     }
@@ -1342,7 +1343,7 @@ static int32_t DeleteMetaFile(const string &sboxPath, const int32_t &userId)
     if (ret != E_OK) {
         LOGE("remove dentry failed, ret:%{public}d", ret);
     }
-    
+
     /*
      * after removing file item from dentryfile, we should delete file
      * of cloud merge view to update kernel dentry cache.
@@ -1773,7 +1774,7 @@ int32_t FileDataHandler::CleanNotPureCloudRecord(NativeRdb::ResultSet &local, co
     LOGD("filePath: %s, thmbFile: %s, thmbFileParentPath: %s, lowerPath: %s", filePath.c_str(),
          thmbFile.c_str(), thmbFileParentPath.string().c_str(), lowerPath.c_str());
     int32_t ret = E_OK;
-    if (action == FileDataHandler::Action::CLEAR_DATA) {
+    if (action == CleanAction::CLEAR_DATA) {
         if (IsLocalDirty(local)) {
             LOGD("data is dirty, action:clear");
             ret = ClearCloudInfo(cloudId);
@@ -1865,8 +1866,8 @@ int32_t FileDataHandler::Clean(const int action)
 
     MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
     MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
-    DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX, ChangeType::INSERT,
-                                              DataSyncConst::INVALID_ID);
+    DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
+                                              INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
 
     return E_OK;
@@ -2495,7 +2496,7 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
     /* notify */
     int32_t fileId;
     if (data[FILE_LOCAL_ID].GetInt(fileId) == DKLocalErrorCode::NO_ERROR) {
-        (void)DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::PHOTO_URI_PREFIX + to_string(fileId),
+        (void)DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX + to_string(fileId),
             ChangeType::UPDATE, to_string(fileId));
     }
 

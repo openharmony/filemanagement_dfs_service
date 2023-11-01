@@ -16,6 +16,7 @@
 #include "file_column.h"
 
 #include <string>
+#include <vector>
 
 namespace OHOS {
 namespace FileManagement {
@@ -87,6 +88,11 @@ const std::set<std::string> FileColumn::DEFAULT_FETCH_COLUMNS = {
     FILE_ID, CLOUD_ID, PARENT_ID, PARENT_CLOUD_ID, FILE_SIZE, FILE_TIME_ADDED,
     FILE_TIME_EDITED, FILE_TIME_RECYCLED, META_TIME_EDITED, VERSION, POSITION,
     DIRTY_TYPE
+};
+
+const std::vector<std::string> FileColumn::LOCAL_COLUMNS = {
+    FILE_ID, PARENT_ID, FILE_TIME_VISIT, SYNC_STATUS, POSITION, DIRTY_TYPE, SRC_PATH,
+    LCD_PATH, THUMBNAIL_PATH, LBR_VIDEO_PATH, MIME_TYPE, IS_DIRECTORY, FILE_TYPE, FILE_CATEGORY,
 };
 
 bool FileColumn::IsFileColumn(const std::string &columnName)

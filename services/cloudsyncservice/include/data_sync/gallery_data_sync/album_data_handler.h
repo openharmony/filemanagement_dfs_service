@@ -17,6 +17,7 @@
 #define OHOS_CLOUD_SYNC_SERVICE_ALBUM_DATA_HANDLER_H
 
 #include "album_data_convertor.h"
+#include "gallery_file_const.h"
 #include "rdb_data_handler.h"
 
 namespace OHOS {
@@ -78,9 +79,9 @@ private:
     std::vector<std::string> createFailSet_;
 
     /* convert */
-    AlbumDataConvertor createConvertor_ = { AlbumDataConvertor::ALBUM_CREATE };
-    AlbumDataConvertor deleteConvertor_ = { AlbumDataConvertor::ALBUM_DELETE };
-    AlbumDataConvertor modifyConvertor_ = { AlbumDataConvertor::ALBUM_MODIFY };
+    AlbumDataConvertor createConvertor_ = { FILE_CREATE };
+    AlbumDataConvertor deleteConvertor_ = { FILE_DELETE };
+    AlbumDataConvertor modifyConvertor_ = { FILE_METADATA_MODIFY };
 };
 } // namespace CloudSync
 } // namespace FileManagement

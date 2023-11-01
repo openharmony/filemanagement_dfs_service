@@ -45,7 +45,7 @@ int32_t AlbumDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Resul
 
     /* control info */
     record.SetRecordType(recordType_);
-    if (type_ == ALBUM_CREATE) {
+    if (type_ == FILE_CREATE) {
         record.SetNewCreate(true);
         RETURN_ON_ERR(HandleAlbumId(data, resultSet));
         record.SetRecordId(data[ALBUM_ID]);

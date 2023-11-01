@@ -261,8 +261,8 @@ int32_t AlbumDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records,
             continue;
         } else {
             /* notify */
-            (void)DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::ALBUM_URI_PREFIX,
-                ChangeType::UPDATE, DataSyncConst::INVALID_ID);
+            (void)DataSyncNotifier::GetInstance().TryNotify(ALBUM_URI_PREFIX,
+                ChangeType::UPDATE, INVALID_ASSET_ID);
         }
     }
     (void)DataSyncNotifier::GetInstance().FinalNotify();
@@ -301,8 +301,8 @@ int32_t AlbumDataHandler::Clean(const int action)
         return ret;
     }
     /* notify */
-    (void)DataSyncNotifier::GetInstance().TryNotify(DataSyncConst::ALBUM_URI_PREFIX,
-        ChangeType::DELETE, DataSyncConst::INVALID_ID);
+    (void)DataSyncNotifier::GetInstance().TryNotify(ALBUM_URI_PREFIX,
+        ChangeType::DELETE, INVALID_ASSET_ID);
     (void)DataSyncNotifier::GetInstance().FinalNotify();
     return E_OK;
 }

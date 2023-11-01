@@ -28,18 +28,8 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
-struct LocalInfo {
-    int64_t mdirtyTime;
-    int64_t fdirtyTime;
-};
-
 class FileDataHandler : public RdbDataHandler {
 public:
-    enum Action {
-        RETAIN_DATA = 0,
-        CLEAR_DATA
-    };
-
     FileDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<NativeRdb::RdbStore> rdb);
     virtual ~FileDataHandler() = default;
 
@@ -136,7 +126,7 @@ private:
     std::string bundleName_;
 
     /*clean*/
-    FileDataConvertor cleanConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_CLEAN };
+    FileDataConvertor cleanConvertor_ = { userId_, bundleName_, FILE_CLEAN };
     int32_t ClearCloudInfo(const std::string &cloudId);
     int32_t CleanCloudRecord(NativeRdb::ResultSet &local, const int action, const std::string &filePath);
     int32_t CleanNotDirtyData(const std::string &thmbDir, const std::string &assetPath, const std::string &cloudId);
@@ -150,17 +140,17 @@ private:
 
     /* create */
     FileDataConvertor createConvertor_ = {
-        userId_, bundleName_, FileDataConvertor::FILE_CREATE,
+        userId_, bundleName_, FILE_CREATE,
         std::bind(&FileDataHandler::HandleCreateConvertErr, this, std::placeholders::_1)
     };
 
     /* delete */
-    FileDataConvertor deleteConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DELETE };
+    FileDataConvertor deleteConvertor_ = { userId_, bundleName_, FILE_DELETE };
 
     /* update */
-    FileDataConvertor mdirtyConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_METADATA_MODIFY };
+    FileDataConvertor mdirtyConvertor_ = { userId_, bundleName_, FILE_METADATA_MODIFY };
     FileDataConvertor fdirtyConvertor_ = {
-        userId_, bundleName_, FileDataConvertor::FILE_DATA_MODIFY,
+        userId_, bundleName_, FILE_DATA_MODIFY,
         std::bind(&FileDataHandler::HandleFdirtyConvertErr, this, std::placeholders::_1)
     };
 
@@ -230,7 +220,7 @@ private:
     int32_t BatchInsertAssetMaps(OnFetchParams &params);
 
     /* db result to record */
-    FileDataConvertor localConvertor_ = { userId_, bundleName_, FileDataConvertor::FILE_DOWNLOAD };
+    FileDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
 
     std::mutex rdbMutex_;
 };
