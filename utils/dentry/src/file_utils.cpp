@@ -22,6 +22,7 @@
 
 #include "dfs_error.h"
 #include "utils_log.h"
+#include "xcollie_helper.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -81,6 +82,8 @@ int64_t FileUtils::WriteFile(int fd, const void *data, off_t offset, size_t size
 
 FileRangeLock::FileRangeLock(int fd, off_t offset, size_t size) : fd_(fd), offset_(offset), size_(size)
 {
+    const int DFX_DELAY_S = 5;
+    xcollieId_ = XCollieHelper::SetTimer("CloudSyncService_RangeLockTask", DFX_DELAY_S, nullptr, nullptr, true);
     struct flock fl;
     fl.l_type = F_WRLCK;
     fl.l_whence = SEEK_SET;
@@ -95,6 +98,7 @@ FileRangeLock::FileRangeLock(int fd, off_t offset, size_t size) : fd_(fd), offse
 FileRangeLock::~FileRangeLock()
 {
     if (lockFailed_) {
+        XCollieHelper::CancelTimer(xcollieId_);
         return;
     }
 
@@ -106,6 +110,7 @@ FileRangeLock::~FileRangeLock()
     if (fcntl(fd_, F_SETLKW, &fl) < 0) {
         LOGE("fcntl F_UNLCK failed: %{public}d", errno);
     }
+    XCollieHelper::CancelTimer(xcollieId_);
 }
 
 } // namespace FileManagement

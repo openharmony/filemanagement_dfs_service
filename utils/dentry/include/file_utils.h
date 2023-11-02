@@ -40,6 +40,7 @@ private:
     off_t offset_{0};
     size_t size_{0};
     bool lockFailed_{false};
+    int xcollieId_{0};
 };
 } // namespace FileManagement
 } // namespace OHOS

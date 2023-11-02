@@ -47,6 +47,7 @@ config("compiler_configs") {
 
 config("utils_public_config") {
   include_dirs = [
+    "dfx/include",
     "work/include",
     "log/include",
     "preference/include",
@@ -56,6 +57,7 @@ config("utils_public_config") {
 
 ohos_shared_library("libdistributedfileutils") {
   sources = [
+    "dfx/src/xcollie_helper.cpp",
     "log/src/dfs_error.cpp",
     "log/src/utils_log.cpp",
     "preference/src/cloud_pref_impl.cpp",
@@ -94,6 +96,11 @@ ohos_shared_library("libdistributedfileutils") {
     "preferences:native_preferences",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
   part_name = "dfs_service"
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "filemanagement"
@@ -126,6 +133,11 @@ ohos_shared_library("libdistributedfiledentry") {
     "LOG_DOMAIN=0xD004307",
     "LOG_TAG=\"CLOUDSYNC_SA\"",
   ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 
   part_name = "dfs_service"
   subsystem_name = "filemanagement"

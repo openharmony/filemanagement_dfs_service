@@ -41,6 +41,7 @@
           "drivekit_native",
           "dsoftbus",
           "file_api",
+          "hicollie",
           "hilog",
           "hitrace",
           "init",
