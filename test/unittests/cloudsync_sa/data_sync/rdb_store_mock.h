@@ -154,7 +154,7 @@ public:
     MOCK_METHOD2(UnSubscribe, int(const SubscribeOption &option, RdbStoreObserver *observer));
     MOCK_METHOD1(RegisterAutoSyncCallback, int(std::shared_ptr<DetailProgressObserver> syncObserver));
     MOCK_METHOD1(UnregisterAutoSyncCallback, int(std::shared_ptr<DetailProgressObserver> syncObserver));
-    MOCK_METHOD1(CleanDirtyData, int(const std::string &table, uint64_t cursor = UINT64_MAX));
+    MOCK_METHOD2(CleanDirtyData, int(const std::string &table, uint64_t cursor));
     MOCK_METHOD1(Notify, int(const std::string &event));
     MOCK_METHOD2(DropDeviceData, bool(const std::vector<std::string> &devices, const DropOption &option));
     MOCK_METHOD3(Update, int(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates));
