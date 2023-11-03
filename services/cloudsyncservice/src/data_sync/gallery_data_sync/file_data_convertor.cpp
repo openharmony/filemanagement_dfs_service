@@ -826,7 +826,7 @@ int32_t FileDataConvertor::ExtractCompatibleValue(const DriveKit::DKRecord &reco
     RETURN_ON_ERR(ExtractFavorite(data, valueBucket));
     RETURN_ON_ERR(ExtractDateTrashed(data, valueBucket));
     RETURN_ON_ERR(ExtractCloudId(record, valueBucket));
-    return 0;
+    return E_OK;
 }
 
 int32_t FileDataConvertor::ExtractOrientation(DriveKit::DKRecordFieldMap &map,

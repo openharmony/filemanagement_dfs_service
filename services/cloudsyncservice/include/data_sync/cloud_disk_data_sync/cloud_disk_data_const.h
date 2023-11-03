@@ -16,9 +16,9 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_CLOUD_DISK_CONST_H
 #define OHOS_CLOUD_SYNC_SERVICE_CLOUD_DISK_CONST_H
 
-#include <string>
 #include "data_sync_const.h"
 #include "gallery_file_const.h"
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
@@ -27,10 +27,15 @@ const std::string DK_FILE_NAME = FILE_FILE_NAME;
 const std::string DK_PARENT_CLOUD_ID = "parentFolder";
 const std::string DK_FILE_SIZE = FILE_SIZE;
 const std::string DK_FILE_SHA256 = "sha256";
+const std::string DK_IS_DIRECTORY = "type";
 const std::string DK_FILE_TIME_ADDED = "createTime";
-const std::string DK_FILE_TIME_EDITED = FILE_EDITED_TIME;
+const std::string DK_FILE_TIME_EDITED = "fileEditedTime";
+const std::string DK_META_TIME_EDITED = "metaDataEditedTime";
 const std::string DK_FILE_TIME_RECYCLED = FILE_RECYCLE_TIME;
 const std::string DK_DIRECTLY_RECYCLED = "directlyRecycled";
+const std::string DK_MIME_TYPE = FILE_MIME_TYPE;
+const std::string DK_IS_RECYLED = FILE_RECYCLED;
+const std::string DK_FILE_ATTRIBUTES = FILE_ATTRIBUTES;
 
 } // namespace CloudSync
 } // namespace FileManagement
