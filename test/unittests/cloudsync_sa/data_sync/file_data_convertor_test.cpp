@@ -22,6 +22,7 @@
 #include "medialibrary_db_const.h"
 #include "result_set_mock.h"
 #include "thumbnail_const.h"
+#include "data_sync_const.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -53,7 +54,7 @@ void FileDataConvertorTest::SetUp(void)
     GTEST_LOG_(INFO) << "SetUp";
     int32_t userId = 100;
     string bundleName = "com.ohos.test";
-    FileDataConvertor::OperationType Type = FileDataConvertor::OperationType::FILE_CREATE;
+    OperationType Type = OperationType::FILE_CREATE;
     fileDataConvertor_ = make_shared<FileDataConvertor>(userId, bundleName, Type);
 }
 
@@ -460,7 +461,7 @@ HWTEST_F(FileDataConvertorTest, HandleAttachments2Test, TestSize.Level1)
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     string key = "attachments";
-    fileDataConvertor_->type_ = FileDataConvertor::OperationType::FILE_METADATA_MODIFY;
+    fileDataConvertor_->type_ = OperationType::FILE_METADATA_MODIFY;
     auto ret = fileDataConvertor_->HandleAttachments(data, resultSet);
     EXPECT_EQ(E_OK, ret);
 }
@@ -469,7 +470,7 @@ HWTEST_F(FileDataConvertorTest, ConvertTest, TestSize.Level1)
 {
     DriveKit::DKRecord record;
     ResultSetMock resultSet;
-    fileDataConvertor_->type_ = FileDataConvertor::OperationType::FILE_CREATE;
+    fileDataConvertor_->type_ = OperationType::FILE_CREATE;
     auto ret = fileDataConvertor_->Convert(record, resultSet);
     EXPECT_EQ(E_INVAL_ARG, ret);
 }

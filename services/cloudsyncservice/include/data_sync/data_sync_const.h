@@ -12,38 +12,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef OHOS_FILEMGMT_DATA_SYNC_MANAGER_H
-#define OHOS_FILEMGMT_DATA_SYNC_MANAGER_H
+#ifndef OHOS_CLOUD_SYNC_SERVICE_DATA_SYNC_CONST_H
+#define OHOS_CLOUD_SYNC_SERVICE_DATA_SYNC_CONST_H
 
+#include "medialibrary_db_const.h"
+#include "medialibrary_type_const.h"
+#include "photo_album_column.h"
+#include "photo_map_column.h"
 #include <set>
 #include <string>
-
 namespace OHOS::FileManagement::CloudSync {
-class DataSyncConst {
-public:
-    // photo album table name
-    static const std::string ALBUM_TABLE_NAME;
-    
-    // columns only in PhotoAlbumTable
-    static const std::string ALBUM_ID;
-    static const std::string ALBUM_TYPE;
-    static const std::string ALBUM_SUBTYPE;
-    static const std::string ALBUM_NAME;
-    static const std::string ALBUM_COVER_URI;
-    static const std::string ALBUM_COUNT;
-    static const std::string ALBUM_DATE_MODIFIED;
 
-    // For api9 compatibility
-    static const std::string ALBUM_RELATIVE_PATH;
-
-    // default fetch columns
-    static const std::set<std::string> DEFAULT_FETCH_COLUMNS;
-
-    // util constants
-    static const std::string ALBUM_URI_PREFIX;
-    static const std::string PHOTO_URI_PREFIX;
-
-    static const std::string INVALID_ID;
+enum CleanAction {
+    RETAIN_DATA = 0,
+    CLEAR_DATA
 };
-}
-#endif // OHOS_FILEMGMT_DATA_SYNC_MANAGER_H
+
+enum OperationType {
+    /* upload */
+    FILE_CREATE,
+    FILE_DELETE,
+    FILE_METADATA_MODIFY,
+    FILE_DATA_MODIFY,
+    /* download */
+    FILE_DOWNLOAD,
+    /*clean*/
+    FILE_CLEAN
+};
+
+struct LocalInfo {
+    int64_t mdirtyTime;
+    int64_t fdirtyTime;
+};
+
+const int32_t POSITION_LOCAL = 1;
+const int32_t POSITION_CLOUD = 2;
+const int32_t POSITION_BOTH = 3;
+
+const int32_t MILLISECOND_TO_SECOND = 1000;
+const int32_t SECOND_TO_MILLISECOND = 1000;
+
+} // namespace OHOS::FileManagement::CloudSync
+#endif // OHOS_CLOUD_SYNC_SERVICE_DATA_SYNC_CONST_H

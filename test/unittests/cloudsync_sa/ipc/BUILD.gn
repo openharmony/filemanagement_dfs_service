@@ -70,7 +70,6 @@ ohos_unittest("cloud_sync_service_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",

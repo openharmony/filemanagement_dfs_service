@@ -18,6 +18,7 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 namespace OHOS {
 namespace FileManagement {
@@ -63,6 +64,8 @@ public:
     static const std::set<std::string> FILE_COLUMNS;
 
     static const std::set<std::string> DEFAULT_FETCH_COLUMNS;
+
+    static const std::vector<std::string> LOCAL_COLUMNS;
 
     static bool IsFileColumn(const std::string &columnName);
 };

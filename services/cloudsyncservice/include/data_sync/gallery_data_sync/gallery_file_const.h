@@ -22,12 +22,17 @@
 #include "medialibrary_type_const.h"
 #include "photo_album_column.h"
 #include "photo_map_column.h"
-
+#include "data_sync_const.h"
 #include "data_convertor.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+
+/* thumb */
+const std::string THUMB_SUFFIX = "THM";
+const std::string LCD_SUFFIX = "LCD";
+
 /* basic */
 const std::string FILE_LOGIC_ALBUM_IDS = "albumIds";
 const std::string FILE_ADD_LOGIC_ALBUM_IDS = "addAlbumIds";
@@ -91,10 +96,6 @@ enum MediaType {
     MEDIA_TYPE_AUDIO,
 };
 
-const int32_t POSITION_LOCAL = 1;
-const int32_t POSITION_CLOUD = 2;
-const int32_t POSITION_BOTH = 3;
-
 const int32_t NR_LOCAL_INFO = 2;
 
 const int32_t ORIENTATION_NORMAL = 1;
@@ -109,6 +110,11 @@ const int32_t ROTATE_ANGLE_270 = 270;
 
 const int32_t FIRST_MATCH_PARAM = 1;
 const int32_t SECOND_MATCH_PARAM = 2;
+
+// util constants
+const std::string ALBUM_URI_PREFIX = Media::PhotoAlbumColumns::ALBUM_URI_PREFIX;
+const std::string PHOTO_URI_PREFIX = Media::PhotoColumn::PHOTO_URI_PREFIX;
+const std::string INVALID_ASSET_ID = "0";
 
 const std::string ASSET_UNIQUE_NUMBER_TABLE = "UniqueNumber";
 const std::string ASSET_MEDIA_TYPE = "media_type";

@@ -23,6 +23,7 @@
 #include "data_convertor.h"
 #include "dfs_error.h"
 #include "gallery_album_const.h"
+#include "data_sync_const.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -33,12 +34,6 @@ namespace CloudSync {
 
 class AlbumDataConvertor : public DataConvertor {
 public:
-    enum OperationType {
-        /* upload */
-        ALBUM_CREATE,
-        ALBUM_DELETE,
-        ALBUM_MODIFY,
-    };
 
     AlbumDataConvertor(OperationType type);
     ~AlbumDataConvertor() = default;

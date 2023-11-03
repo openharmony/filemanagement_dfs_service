@@ -73,6 +73,7 @@ const std::vector<DataType> GALLERY_ALBUM_COLUMN_TYPES = {
     DataType::LONG,        /* date_modified */
     DataType::STRING        /* cloud_id */
 };
+
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

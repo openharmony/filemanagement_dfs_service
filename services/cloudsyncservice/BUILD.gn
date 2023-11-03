@@ -32,6 +32,7 @@ ohos_shared_library("cloudsync_sa") {
     "include/cycle_task",
     "include/disk_db",
     "include/data_sync/gallery_data_sync",
+    "include/data_sync/cloud_disk_data_sync",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
@@ -49,7 +50,6 @@ ohos_shared_library("cloudsync_sa") {
     "src/data_sync/data_handler.cpp",
     "src/data_sync/rdb_data_handler.cpp",
     "src/data_sync/task.cpp",
-    "src/data_sync/data_sync_const.cpp",
     "src/data_sync/data_sync_notifier.cpp",
     "src/data_sync/data_sync_manager.cpp",
     "src/data_sync/data_syncer_rdb_store.cpp",
@@ -75,6 +75,12 @@ ohos_shared_library("cloudsync_sa") {
     "src/data_sync/gallery_data_sync/album_data_convertor.cpp",
   ]
 
+  cloud_disk_data_sync = [
+    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+  ]
+
   medialibrary_rdb_utils_source = [
     "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
@@ -98,10 +104,12 @@ ohos_shared_library("cloudsync_sa") {
     "src/sync_rule/net_conn_callback_observer.cpp",
     "src/sync_rule/network_status.cpp",
   ]
+
   sources += data_sync
   sources += cycle_task
   sources += disk_db
   sources += gallery_data_sync
+  sources += cloud_disk_data_sync
   sources += medialibrary_rdb_utils_source
 
   defines = [
@@ -160,6 +168,7 @@ ohos_static_library("cloudsync_sa_static") {
     "include/cycle_task",
     "include/disk_db",
     "include/data_sync/gallery_data_sync",
+    "include/data_sync/cloud_disk_data_sync",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
@@ -177,7 +186,6 @@ ohos_static_library("cloudsync_sa_static") {
     "src/data_sync/data_handler.cpp",
     "src/data_sync/rdb_data_handler.cpp",
     "src/data_sync/task.cpp",
-    "src/data_sync/data_sync_const.cpp",
     "src/data_sync/data_sync_notifier.cpp",
     "src/data_sync/data_sync_manager.cpp",
     "src/data_sync/data_syncer_rdb_store.cpp",
@@ -203,6 +211,12 @@ ohos_static_library("cloudsync_sa_static") {
     "src/data_sync/gallery_data_sync/album_data_convertor.cpp",
   ]
 
+  cloud_disk_data_sync = [
+    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+  ]
+
   medialibrary_rdb_utils_source = [
     "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
@@ -226,10 +240,12 @@ ohos_static_library("cloudsync_sa_static") {
     "src/sync_rule/net_conn_callback_observer.cpp",
     "src/sync_rule/network_status.cpp",
   ]
+
   sources += data_sync
   sources += cycle_task
   sources += disk_db
   sources += gallery_data_sync
+  sources += cloud_disk_data_sync
   sources += medialibrary_rdb_utils_source
 
   defines = [
