@@ -44,7 +44,7 @@ string FileDataConvertor::suffixCloud_ = "/files";
 string FileDataConvertor::tmpSuffix_ = ".temp.download";
 
 constexpr size_t DEFAULT_TIME_SIZE = 32;
-
+constexpr size_t FORMATTED_YEAR_SIZE = 4;
 FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type,
     const function<void(NativeRdb::ResultSet &resultSet)> &func) : userId_(userId),
     bundleName_(bundleName), type_(type), errHandler_(func)
@@ -298,8 +298,8 @@ int32_t FileDataConvertor::HandleFormattedDate(DriveKit::DKRecordFieldMap &map, 
     string month;
     string day;
     RETURN_ON_ERR(GetString(PhotoColumn::PHOTO_DATE_YEAR, year, resultSet));
-    RETURN_ON_ERR(GetString(PhotoColumn::PHOTO_DATE_MONTH, year, resultSet));
-    RETURN_ON_ERR(GetString(PhotoColumn::PHOTO_DATE_DAY, year, resultSet));
+    RETURN_ON_ERR(GetString(PhotoColumn::PHOTO_DATE_MONTH, month, resultSet));
+    RETURN_ON_ERR(GetString(PhotoColumn::PHOTO_DATE_DAY, day, resultSet));
 
     if (year.empty() || month.empty() || day.empty()) {
         int64_t createTime = 0;
@@ -753,21 +753,37 @@ int32_t FileDataConvertor::CompensateDuration(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::CompensateFormattedDate(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
+    LOGE("try to compensate formatted date");
     DriveKit::DKRecordData data;
     record.GetRecordData(data);
     DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
-    if (attributes.find(PhotoColumn::PHOTO_DATE_YEAR) == attributes.end()) {
-        LOGI("record data cannot find formatted date");
-        uint64_t timeAdded = 0;
-        if (attributes.find(PhotoColumn::MEDIA_DATE_ADDED) != attributes.end()) {
-            int64_t sTimeAdded;
-            attributes[PhotoColumn::MEDIA_DATE_ADDED].GetLong(sTimeAdded);
-            timeAdded = static_cast<uint64_t>(sTimeAdded);
+    string dateYear;
+    if (attributes.find(PhotoColumn::PHOTO_DATE_YEAR) != attributes.end() &&
+        attributes[PhotoColumn::PHOTO_DATE_YEAR].GetString(dateYear) == DriveKit::DKLocalErrorCode::NO_ERROR) {
+        if (dateYear.length() == FORMATTED_YEAR_SIZE && dateYear != "1970") {
+            LOGI("formatted date in cloud is correct");
+            return E_OK;
         } else {
-            timeAdded = record.GetCreateTime();
+            LOGE("formatted date in cloud is incorrect");
+            valueBucket.Delete(PhotoColumn::PHOTO_DATE_YEAR);
+            valueBucket.Delete(PhotoColumn::PHOTO_DATE_MONTH);
+            valueBucket.Delete(PhotoColumn::PHOTO_DATE_DAY);
         }
-        CompensateFormattedDate(timeAdded / MILLISECOND_TO_SECOND, valueBucket);
     }
+
+    LOGI("record data cannot find formatted date");
+    uint64_t timeAdded = 0;
+    if (attributes.find(PhotoColumn::MEDIA_DATE_ADDED) != attributes.end()) {
+        int64_t sTimeAdded;
+        attributes[PhotoColumn::MEDIA_DATE_ADDED].GetLong(sTimeAdded);
+        timeAdded = static_cast<uint64_t>(sTimeAdded);
+    } else {
+        timeAdded = record.GetCreateTime();
+        if (timeAdded == 0) {
+            LOGE("cloud date is invalid");
+        }
+    }
+    CompensateFormattedDate(timeAdded / MILLISECOND_TO_SECOND, valueBucket);
     return E_OK;
 }
 
