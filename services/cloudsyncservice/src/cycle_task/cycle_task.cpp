@@ -21,17 +21,22 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-std::string CycleTask::getTaskName() const
+CycleTask::CycleTask(std::string taskName, std::string bundleName, int32_t intervalTime)
+    : taskName_(taskName), bundleName_(bundleName), intervalTime_(intervalTime)
+{
+}
+
+std::string CycleTask::GetTaskName() const
 {
     return this->taskName_;
 }
 
-std::string CycleTask::getBundleName() const
+std::string CycleTask::GetBundleName() const
 {
     return this->bundleName_;
 }
 
-int32_t CycleTask::getIntervalTime() const
+int32_t CycleTask::GetIntervalTime() const
 {
     return this->intervalTime_;
 }

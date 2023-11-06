@@ -33,12 +33,11 @@ CycleTaskRunner::CycleTaskRunner()
 {
     cloudPrefImpl_ = std::make_unique<CloudPrefImpl>(FILE_PATH);
     cloudPrefImpl_->GetInt("userId", userId_);
-    auto now = std::chrono::system_clock::now();
-    setUpTime_ = std::chrono::system_clock::to_time_t(now);
+    setUpTime_ = std::time(nullptr);
     InitTasks();
 }
 
-void CycleTaskRunner::startTask()
+void CycleTaskRunner::StartTask()
 {
     if (userId_ == DEFAULT_VALUE) {
         LOGD("defaukt userId skip tasks");
@@ -47,14 +46,15 @@ void CycleTaskRunner::startTask()
     }
     for (const auto &task_data : cycleTasks_) {
         time_t lastRunTime = DEFAULT_VALUE;
-        GetLastRunTime(task_data->getTaskName(), lastRunTime);
-        if (difftime(setUpTime_, lastRunTime) > task_data->getIntervalTime()) {
-            int32_t ret = task_data->runTask(userId_);
+        GetLastRunTime(task_data->GetTaskName(), lastRunTime);
+        if (difftime(setUpTime_, lastRunTime) > task_data->GetIntervalTime()) {
+            LOGD("run task task name is %{public}s", task_data->GetTaskName().c_str());
+            int32_t ret = task_data->RunTask(userId_);
             if (ret == E_OK) {
-                LOGD("task run success, taskName is %s, ret = %d", task_data->getTaskName().c_str(), ret);
-                SetLastRunTime(task_data->getTaskName(), setUpTime_);
+                LOGD("task run success, taskName is %s, ret = %d", task_data->GetTaskName().c_str(), ret);
+                SetLastRunTime(task_data->GetTaskName(), setUpTime_);
             } else {
-                LOGD("task run fail, taskName is %s, ret = %d", task_data->getTaskName().c_str(), ret);
+                LOGD("task run fail, taskName is %s, ret = %d", task_data->GetTaskName().c_str(), ret);
             }
         }
     }

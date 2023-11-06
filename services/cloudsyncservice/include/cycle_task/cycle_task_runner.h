@@ -29,14 +29,21 @@ namespace FileManagement {
 namespace CloudSync {
 class CycleTaskRunner {
 public:
+    enum IntervalTime {
+        ONE_DAY = 24 * 60 * 60 - 30 * 60,
+        TWO_DAY = ONE_DAY * 2,
+        THREE_DAY = ONE_DAY * 3,
+        ONE_WEEK = ONE_DAY * 7,
+    };
+
     static const std::string FILE_PATH;
     static const int32_t DEFAULT_VALUE;
     static const int32_t DEFAULT_USER_ID;
     CycleTaskRunner();
-    void startTask();
+    void StartTask();
 
 private:
-    int32_t userId_ ;
+    int32_t userId_;
     std::time_t setUpTime_;
     std::unique_ptr<CloudPrefImpl> cloudPrefImpl_;
     std::vector<std::shared_ptr<CycleTask>> cycleTasks_ {};

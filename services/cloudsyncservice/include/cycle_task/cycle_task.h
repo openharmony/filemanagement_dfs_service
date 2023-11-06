@@ -21,12 +21,12 @@ namespace FileManagement {
 namespace CloudSync {
 class CycleTask {
 public:
-    CycleTask() = default;
+    CycleTask(std::string taskName, std::string bundleName, int32_t intervalTime);
     virtual ~CycleTask() = default;
-    virtual int32_t runTask(int32_t userId) = 0;
-    std::string getTaskName() const;
-    std::string getBundleName() const;
-    int32_t getIntervalTime() const;
+    virtual int32_t RunTask(int32_t userId) = 0;
+    std::string GetTaskName() const;
+    std::string GetBundleName() const;
+    int32_t GetIntervalTime() const;
 private:
     std::string taskName_;
     std::string bundleName_;
