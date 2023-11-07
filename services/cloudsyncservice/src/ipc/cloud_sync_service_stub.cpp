@@ -14,6 +14,7 @@
  */
 #include "ipc/cloud_sync_service_stub.h"
 #include "cloud_file_sync_service_interface_code.h"
+#include "data_sync/task_state_manager.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "dfsu_memory_guard.h"
@@ -66,6 +67,7 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
                                               MessageOption &option)
 {
     DfsuMemoryGuard cacheGuard;
+    TaskStateManager::GetInstance().DelayUnloadTask();
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return E_SERVICE_DESCRIPTOR_IS_EMPTY;
     }
