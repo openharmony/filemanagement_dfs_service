@@ -34,7 +34,6 @@ namespace {
     constexpr uint8_t LINK_TYPE_AP_MAX = 2;
     constexpr uint8_t LINK_TYPE_P2P_MAX = 4;
     constexpr uint8_t LINK_TYPE_WIFI_IDX = 2;
-    constexpr uint8_t LINK_TYPE_BR_IDX = 3;
 }
 using namespace std;
 SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTemplate(mountPoint)
@@ -110,7 +109,6 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
         attr.linkType[0] = LINK_TYPE_WIFI_P2P;
         attr.linkType[1] = LINK_TYPE_WIFI_WLAN_5G;
         attr.linkType[LINK_TYPE_WIFI_IDX] = LINK_TYPE_WIFI_WLAN_2G;
-        attr.linkType[LINK_TYPE_BR_IDX] = LINK_TYPE_BR;
     } else {
         LOGE("Fail to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
         ThrowException(ERR_CONNECT_LINK_TYPE, "Fail to OpenSession");
