@@ -179,7 +179,8 @@ HWTEST_F(CloudSyncServiceTest, OnStartTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "OnStart start";
     try {
-        g_servicePtr_->OnStart();
+        SystemAbilityOnDemandReason reason;
+        g_servicePtr_->OnStart(reason);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnStart FAILED";

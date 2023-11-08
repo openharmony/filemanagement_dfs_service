@@ -69,6 +69,8 @@ ohos_unittest("cloud_sync_service_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/cycle_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/cycle_task_runner.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
@@ -98,6 +100,7 @@ ohos_unittest("cloud_sync_service_test") {
   include_dirs = [
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/cycle_task",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",

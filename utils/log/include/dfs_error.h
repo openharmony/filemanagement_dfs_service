@@ -58,7 +58,8 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_UNKNOWN,
     E_CLOUD_STORAGE_FULL,
     E_LOCAL_STORAGE_FULL,
-    E_OSACCOUNT
+    E_OSACCOUNT,
+    E_USER_LOCKED
 };
 
 enum JsErrCode {
