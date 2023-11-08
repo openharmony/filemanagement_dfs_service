@@ -13,27 +13,19 @@
  * limitations under the License.
  */
 
+#ifndef OHOS_FILEMGMT_FILE_SYNC_NAPI_H
+#define OHOS_FILEMGMT_FILE_SYNC_NAPI_H
+
+#include "filemgmt_libn.h"
 #include "gallery_sync_napi.h"
-
-#include <sys/types.h>
-
-#include "cloud_sync_manager.h"
-#include "dfs_error.h"
-#include "utils_log.h"
-#include "async_work.h"
-#include "uv.h"
+#include "cloud_sync_napi.h"
 
 namespace OHOS::FileManagement::CloudSync {
-using namespace FileManagement::LibN;
-using namespace std;
-
-bool GallerySyncNapi::Export()
-{
-    SetClassName("GallerySync");
-    bool success = CloudSyncNapi::Export();
-    if (!success) {
-        return false;
-    }
-    return true;
-}
+class FileSyncNapi final : public CloudSyncNapi {
+public:
+    bool Export() override;
+    FileSyncNapi(napi_env env, napi_value exports) : CloudSyncNapi(env, exports) {};
+    ~FileSyncNapi() = default;
+};
 } // namespace OHOS::FileManagement::CloudSync
+#endif // OHOS_FILEMGMT_FILE_SYNC_NAPI_H
