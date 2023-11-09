@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define FUSE_USE_VERSION 34
-
 #include "fuse_manager/fuse_manager.h"
 
 #include <atomic>
@@ -37,16 +35,14 @@
 #include <thread>
 #include <unistd.h>
 
-#include <fuse.h>
-#include <fuse_i.h>
-#include <fuse_lowlevel.h> /* for fuse_cmdline_opts */
-
+#include "cloud_disk_inode.h"
 #include "datetime_ex.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
 #include "dk_database.h"
 #include "dk_asset_read_session.h"
 #include "drive_kit.h"
+#include "fuse_operations.h"
 #include "meta_file.h"
 #include "sdk_helper.h"
 #include "utils_log.h"
@@ -485,8 +481,18 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     }
 }
 
-static const struct fuse_lowlevel_ops cloudFuseOps = {
-    .readdir = CloudReadDir,
+static const struct fuse_lowlevel_ops cloudDiskFuseOps = {
+    .lookup             = CloudDisk::FuseOperations::Lookup,
+    .forget             = CloudDisk::FuseOperations::Forget,
+    .getattr            = CloudDisk::FuseOperations::GetAttr,
+    .readdir            = CloudDisk::FuseOperations::ReadDir,
+    .forget_multi       = CloudDisk::FuseOperations::ForgetMulti,
+    .create             = CloudDisk::FuseOperations::Create,
+    .open               = CloudDisk::FuseOperations::Open,
+    .access             = CloudDisk::FuseOperations::Access,
+    .setxattr           = CloudDisk::FuseOperations::SetXattr,
+    .getxattr           = CloudDisk::FuseOperations::GetXattr,
+    .mknod              = CloudDisk::FuseOperations::MkNod,
 };
 
 static const struct fuse_lowlevel_ops cloudMediaFuseOps = {
@@ -504,6 +510,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
 {
     struct fuse_loop_config config;
     struct fuse_args args = FUSE_ARGS_INIT(0, nullptr);
+    struct CloudDisk::CloudDiskFuseData cloudDiskData;
     struct FuseData data;
     struct fuse_session *se = nullptr;
     int ret;
@@ -514,22 +521,24 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     }
 
     if (path.find("cloud_fuse") != string::npos) {
-        se = fuse_session_new(&args, &cloudFuseOps,
-                              sizeof(cloudFuseOps), &data);
+        se = fuse_session_new(&args, &cloudDiskFuseOps,
+                              sizeof(cloudDiskFuseOps), &cloudDiskData);
+        if (se == nullptr) {
+            LOGE("cloud disk fuse_session_new error");
+            return -EINVAL;
+        }
+        cloudDiskData.userId = userId;
+        cloudDiskData.se = se;
     } else {
         se = fuse_session_new(&args, &cloudMediaFuseOps,
                               sizeof(cloudMediaFuseOps), &data);
-        if (se != nullptr) {
-            sessions_[userId] = se;
+        if (se == nullptr) {
+            LOGE("cloud media fuse_session_new error");
+            return -EINVAL;
         }
+        data.userId = userId;
+        data.se = se;
     }
-    if (se == nullptr) {
-        LOGE("fuse_session_new error");
-        return -EINVAL;
-    }
-
-    data.userId = userId;
-    data.se = se;
 
     LOGI("fuse_session_new success, userId: %{public}d", userId);
     se->fd = devFd;

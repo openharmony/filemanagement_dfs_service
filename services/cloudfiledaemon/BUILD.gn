@@ -22,11 +22,20 @@ ohos_shared_library("cloudfiledaemon") {
     debug = false
   }
 
+  cloud_disk = [
+    "src/cloud_disk/file_operations_base.cpp",
+    "src/cloud_disk/file_operations_cloud.cpp",
+    "src/cloud_disk/file_operations_local.cpp",
+    "src/cloud_disk/fuse_operations.cpp",
+  ]
+
   sources = [
     "src/fuse_manager/fuse_manager.cpp",
     "src/ipc/cloud_daemon.cpp",
     "src/ipc/cloud_daemon_stub.cpp",
   ]
+
+  sources += cloud_disk
 
   configs = [ "${utils_path}:compiler_configs" ]
 
@@ -37,6 +46,7 @@ ohos_shared_library("cloudfiledaemon") {
     "//third_party/libfuse/include",
     "//third_party/libfuse/lib",
     "${innerkits_native_path}/cloud_daemon_kit_inner",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudsyncservice/include/data_sync/",
   ]
 
