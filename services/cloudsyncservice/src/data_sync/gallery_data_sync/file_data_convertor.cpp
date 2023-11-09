@@ -681,6 +681,9 @@ int32_t FileDataConvertor::CompensateDataAdded(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
     uint64_t dataAdded = record.GetCreateTime();
+    if (dataAdded == 0) {
+        LOGE("The createTime of record is incorrect");
+    }
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_ADDED, dataAdded);
     CompensateFormattedDate(dataAdded / MILLISECOND_TO_SECOND, valueBucket);
     return E_OK;
@@ -927,6 +930,9 @@ int32_t FileDataConvertor::ExtractHeight(DriveKit::DKRecordFieldMap &map,
         LOGE("extract height error");
         return E_INVAL_ARG;
     }
+    if (height == 0) {
+        LOGE("The height of the record is incorrect");
+    }
     valueBucket.PutInt(PhotoColumn::PHOTO_HEIGHT, height);
     return E_OK;
 }
@@ -942,6 +948,9 @@ int32_t FileDataConvertor::ExtractWidth(DriveKit::DKRecordFieldMap &map,
     if (map[FILE_WIDTH].GetInt(width) != DKLocalErrorCode::NO_ERROR) {
         LOGE("extract height error");
         return E_INVAL_ARG;
+    }
+    if (width == 0) {
+        LOGE("The width of the record is incorrect");
     }
     valueBucket.PutInt(PhotoColumn::PHOTO_WIDTH, width);
     return E_OK;

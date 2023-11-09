@@ -370,8 +370,9 @@ inline int32_t FileDataConvertor::HandleHeight(DriveKit::DKRecordFieldMap &map,
 {
     int32_t val;
     int32_t ret = GetInt(Media::PhotoColumn::PHOTO_HEIGHT, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
+    if (ret != E_OK || val == 0) {
+        LOGE("Get local height err %{public}d", ret);
+        return E_RDB;
     }
     map[FILE_HEIGHT] = DriveKit::DKRecordField(val);
     return E_OK;
@@ -382,8 +383,9 @@ inline int32_t FileDataConvertor::HandleWidth(DriveKit::DKRecordFieldMap &map,
 {
     int32_t val;
     int32_t ret = GetInt(Media::PhotoColumn::PHOTO_WIDTH, val, resultSet);
-    if (ret != E_OK) {
-        return ret;
+    if (ret != E_OK || val == 0) {
+        LOGE("Get local wdith err %{public}d", ret);
+        return E_RDB;
     }
     map[FILE_WIDTH] = DriveKit::DKRecordField(val);
     return E_OK;
