@@ -22,9 +22,13 @@
 #include <iomanip>
 #include <sstream>
 
+#include "os_account_manager.h"
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+using namespace std;
+
 const std::string CycleTaskRunner::FILE_PATH = CLOUDFILE_DIR + "/cycletask";
 const int32_t CycleTaskRunner::DEFAULT_VALUE = 0;
 const int32_t CycleTaskRunner::DEFAULT_USER_ID = 100;
@@ -32,7 +36,13 @@ const int32_t CycleTaskRunner::DEFAULT_USER_ID = 100;
 CycleTaskRunner::CycleTaskRunner()
 {
     cloudPrefImpl_ = std::make_unique<CloudPrefImpl>(FILE_PATH);
-    cloudPrefImpl_->GetInt("userId", userId_);
+    vector<int32_t> activeUsers;
+    if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeUsers) != E_OK && activeUsers.size() != 0) {
+        LOGE("query active user failed");
+        return;
+    }
+
+    userId_ = activeUsers.front();
     setUpTime_ = std::time(nullptr);
     InitTasks();
 }
@@ -40,7 +50,7 @@ CycleTaskRunner::CycleTaskRunner()
 void CycleTaskRunner::StartTask()
 {
     if (userId_ == DEFAULT_VALUE) {
-        LOGD("defaukt userId skip tasks");
+        LOGI("defaukt userId skip tasks");
         cloudPrefImpl_->SetInt("userId", DEFAULT_USER_ID);
         return;
     }
@@ -48,13 +58,13 @@ void CycleTaskRunner::StartTask()
         time_t lastRunTime = DEFAULT_VALUE;
         GetLastRunTime(task_data->GetTaskName(), lastRunTime);
         if (difftime(setUpTime_, lastRunTime) > task_data->GetIntervalTime()) {
-            LOGD("run task task name is %{public}s", task_data->GetTaskName().c_str());
+            LOGI("run task task name is %{public}s", task_data->GetTaskName().c_str());
             int32_t ret = task_data->RunTask(userId_);
             if (ret == E_OK) {
                 LOGD("task run success, taskName is %s, ret = %d", task_data->GetTaskName().c_str(), ret);
                 SetLastRunTime(task_data->GetTaskName(), setUpTime_);
             } else {
-                LOGD("task run fail, taskName is %s, ret = %d", task_data->GetTaskName().c_str(), ret);
+                LOGE("task run fail, taskName is %s, ret = %d", task_data->GetTaskName().c_str(), ret);
             }
         }
     }

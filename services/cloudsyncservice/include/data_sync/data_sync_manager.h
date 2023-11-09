@@ -53,6 +53,8 @@ private:
     std::vector<std::shared_ptr<DataSyncer>> dataSyncers_;
     std::mutex dataSyncMutex_;
     int32_t currentUserId_{INVALID_USER_ID};
+
+    int32_t IsUserVerified(const int32_t userId);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

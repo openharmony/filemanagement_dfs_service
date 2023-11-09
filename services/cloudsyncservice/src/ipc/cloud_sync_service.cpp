@@ -18,6 +18,7 @@
 
 #include "system_ability_definition.h"
 
+#include "cycle_task/cycle_task_runner.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "ipc/cloud_sync_callback_manager.h"
@@ -27,6 +28,7 @@
 #include "sync_rule/cloud_status.h"
 #include "sync_rule/net_conn_callback_observer.h"
 #include "sync_rule/network_status.h"
+#include "task_state_manager.h"
 #include "utils_log.h"
 #include "directory_ex.h"
 #include "sdk_helper.h"
@@ -49,7 +51,7 @@ void CloudSyncService::PublishSA()
 {
     LOGI("Begin to init");
     if (!SystemAbility::Publish(this)) {
-        throw runtime_error(" Failed to publish the daemon");
+        throw runtime_error("Failed to publish the daemon");
     }
     LOGI("Init finished successfully");
 }
@@ -98,10 +100,9 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
     return outputPath;
 }
 
-void CloudSyncService::OnStart()
+void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
 {
     Init();
-    LOGI("Begin to start service");
     try {
         PublishSA();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
@@ -109,11 +110,27 @@ void CloudSyncService::OnStart()
         LOGE("%{public}s", e.what());
     }
     LOGI("Start service successfully");
+    TaskStateManager::GetInstance().DelayUnloadTask();
+    HandleStartReason(startReason);
 }
 
 void CloudSyncService::OnStop()
 {
     LOGI("Stop finished successfully");
+}
+
+void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& startReason)
+{
+    string reason = startReason.GetName();
+    LOGI("Begin to start service reason: %{public}s", reason.c_str());
+    if (reason == "loopevent") {
+        shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>();
+        taskRunner->StartTask();
+    } else if (reason == "usual.event.wifi.SCAN_FINISHED") {
+        dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
+    } else if (reason == "usual.event.BATTERY_OKAY") {
+        dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
+    }
 }
 
 void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)

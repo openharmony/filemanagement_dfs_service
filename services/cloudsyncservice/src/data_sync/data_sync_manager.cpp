@@ -131,19 +131,32 @@ int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string &bundl
     return E_OK;
 }
 
+int32_t DataSyncManager::IsUserVerified(const int32_t userId)
+{
+    bool isVerified = false;
+    if (AccountSA::OsAccountManager::IsOsAccountVerified(userId, isVerified) != E_OK) {
+        LOGE("check user verified failed");
+        return E_OSACCOUNT;
+    }
+    if (!isVerified) {
+        LOGE("user is locked");
+        return E_USER_LOCKED;
+    }
+    return E_OK;
+}
+
 int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
 {
     std::vector<std::string> needSyncApps;
     {
         std::lock_guard<std::mutex> lck(dataSyncMutex_);
         vector<int32_t> activeUsers;
-        if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeUsers) != E_OK) {
+        if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeUsers) != E_OK || activeUsers.empty()) {
             LOGE("query active user failed");
             return E_OSACCOUNT;
         }
-
         currentUserId_ = activeUsers.front();
-
+        RETURN_ON_ERR(IsUserVerified(currentUserId_));
         std::shared_ptr<NativeRdb::ResultSet> resultSet;
         RETURN_ON_ERR(DataSyncerRdbStore::GetInstance().QueryDataSyncer(currentUserId_, resultSet));
 

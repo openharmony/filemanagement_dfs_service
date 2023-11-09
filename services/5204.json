@@ -6,7 +6,52 @@
             "libpath": "libcloudsync_sa.z.so",
             "run-on-create": false,
             "distributed": false,
-            "dump-level": 1
+            "dump-level": 1,
+            "start-on-demand": {
+                "timedevent": [
+                    {
+                        "name": "loopevent",
+                        "value": "86400"
+                    }
+                ],
+                "commonevent": [
+                    {
+                        "name": "usual.event.wifi.SCAN_FINISHED",
+                        "value": "1"
+                    },
+                    {
+                        "name": "usual.event.CHARGING",
+                        "conditions": [
+                            {
+                                "eventId": "commonevent",
+                                "name": "usual.event.wifi.SCAN_FINISHED",
+                                "value": "1"
+                            },
+                            {
+                                "eventId": "commonevent",
+                                "name": "usual.event.SCREEN_OFF"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "usual.event.SCREEN_OFF",
+                        "conditions": [
+                            {
+                                "eventId": "commonevent",
+                                "name": "usual.event.CHARGING"
+                            },
+                            {
+                                "eventId": "commonevent",
+                                "name": "usual.event.wifi.SCAN_FINISHED",
+                                "value": "1"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "usual.event.BATTERY_OKAY"
+                    }
+                ]
+            }
         }
     ]
 }
