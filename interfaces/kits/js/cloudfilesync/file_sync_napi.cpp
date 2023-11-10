@@ -13,27 +13,31 @@
  * limitations under the License.
  */
 
-#include "gallery_sync_napi.h"
+#include "file_sync_napi.h"
 
+#include <memory>
 #include <sys/types.h>
 
+#include "async_work.h"
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "utils_log.h"
-#include "async_work.h"
 #include "uv.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
 
-bool GallerySyncNapi::Export()
+bool FileSyncNapi::Export()
 {
-    SetClassName("GallerySync");
-    bool success = CloudSyncNapi::Export();
-    if (!success) {
-        return false;
-    }
-    return true;
+    std::vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiFunction("on", FileSyncNapi::OnCallback),
+        NVal::DeclareNapiFunction("off", FileSyncNapi::OffCallback),
+        NVal::DeclareNapiFunction("start", FileSyncNapi::Start),
+        NVal::DeclareNapiFunction("stop", FileSyncNapi::Stop),
+    };
+
+    SetClassName("FileSync");
+    return ToExport(props);
 }
 } // namespace OHOS::FileManagement::CloudSync

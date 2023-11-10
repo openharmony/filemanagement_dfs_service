@@ -25,6 +25,8 @@ ohos_shared_library("cloudsync") {
   sources = [
     "cloud_file_download_napi.cpp",
     "cloud_sync_n_exporter.cpp",
+    "cloud_sync_napi.cpp",
+    "file_sync_napi.cpp",
     "gallery_sync_napi.cpp",
   ]
   deps = [
