@@ -29,11 +29,21 @@ ohos_unittest("fuse_manager_test") {
     "fuse_manager_test.cpp",
   ]
 
+  cloud_disk = [
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_cloud.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_local.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
+  ]
+
+  sources += cloud_disk
+
   include_dirs = [
     "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
     "${distributedfile_path}/services/cloudfiledaemon/include",
     "//third_party/libfuse/include",
     "//third_party/libfuse/lib",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudsyncservice/include/data_sync/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
   ]
@@ -80,11 +90,21 @@ ohos_unittest("cloud_daemon_test") {
     "cloud_daemon_test.cpp",
   ]
 
+  cloud_disk = [
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_cloud.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_local.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
+  ]
+
+  sources += cloud_disk
+
   include_dirs = [
     "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
     "${distributedfile_path}/services/cloudfiledaemon/include",
     "//third_party/libfuse/include",
     "//third_party/libfuse/lib",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudsyncservice/include/data_sync/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
   ]
