@@ -17,6 +17,7 @@
 #define OHOS_CLOUD_DISK_SERVICE_DB_CONST_H
 
 #include <string>
+#include "clouddisk_type_const.h"
 
 namespace OHOS {
 namespace FileManagement {

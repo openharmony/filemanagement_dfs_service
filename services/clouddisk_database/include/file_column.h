@@ -16,9 +16,10 @@
 #ifndef OHOS_CLOUD_DISK_SERVICE_FILE_COLUMN_H
 #define OHOS_CLOUD_DISK_SERVICE_FILE_COLUMN_H
 
-#include <set>
 #include <string>
 #include <vector>
+
+#include "clouddisk_db_const.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -27,6 +28,7 @@ class FileColumn {
 public:
     // Local And Cloud
     static const std::string CLOUD_ID;
+    static const std::string IS_DIRECTORY;
     static const std::string FILE_NAME;
     static const std::string PARENT_CLOUD_ID;
     static const std::string FILE_SIZE;
@@ -37,20 +39,14 @@ public:
     static const std::string META_TIME_EDITED;
     static const std::string DIRECTLY_RECYCLED;
     static const std::string VERSION;
+    static const std::string OPERATE_TYPE;
 
     // Only Local
-    static const std::string FILE_ID;
-    static const std::string PARENT_ID;
     static const std::string FILE_TIME_VISIT;
     static const std::string SYNC_STATUS;
     static const std::string POSITION;
     static const std::string DIRTY_TYPE;
-    static const std::string SRC_PATH;
-    static const std::string LCD_PATH;
-    static const std::string THUMBNAIL_PATH;
-    static const std::string LBR_VIDEO_PATH;
     static const std::string MIME_TYPE;
-    static const std::string IS_DIRECTORY;
     static const std::string FILE_TYPE;
     static const std::string FILE_CATEGORY;
 
@@ -60,17 +56,19 @@ public:
     // create FileTable sql
     static const std::string CREATE_FILE_TABLE;
 
-    // All Columns
-    static const std::set<std::string> FILE_COLUMNS;
+    // Query FILES_TABLE for FileSystem
+    static const std::vector<std::string> FILE_SYSTEM_QUERY_COLUMNS;
 
-    static const std::set<std::string> DEFAULT_FETCH_COLUMNS;
+    // Query FILES_TABLE for Disk Push
+    static const std::vector<std::string> DISK_CLOUD_SYNC_COLUMNS;
 
     static const std::vector<std::string> LOCAL_COLUMNS;
 
     // Query pull info columns
     static const std::vector<std::string> PULL_QUERY_COLUMNS;
 
-    static bool IsFileColumn(const std::string &columnName);
+    // Query local info columns
+    static const std::vector<std::string> DISK_ON_UPLOAD_COLUMNS;
 };
 } // namespace CloudDisk
 } // namespace FileManagement

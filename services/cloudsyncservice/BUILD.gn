@@ -38,9 +38,9 @@ ohos_shared_library("cloudsync_sa") {
     "include/data_sync",
     "include/cycle_task",
     "include/cycle_task/tasks",
-    "include/disk_db",
     "include/data_sync/gallery_data_sync",
     "include/data_sync/cloud_disk_data_sync",
+    "${clouddisk_database_path}/include",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
@@ -72,9 +72,10 @@ ohos_shared_library("cloudsync_sa") {
     "src/cycle_task/tasks/optimize_storage_task.cpp",
   ]
 
-  disk_db = [
-    "src/disk_db/clouddisk_rdbstore.cpp",
-    "src/disk_db/file_column.cpp",
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
   ]
 
   gallery_data_sync = [
@@ -119,10 +120,10 @@ ohos_shared_library("cloudsync_sa") {
 
   sources += data_sync
   sources += cycle_task
-  sources += disk_db
   sources += gallery_data_sync
   sources += cloud_disk_data_sync
   sources += medialibrary_rdb_utils_source
+  sources += clouddisk_database
 
   defines = [
     "LOG_DOMAIN=0xD004307",
@@ -180,9 +181,9 @@ ohos_static_library("cloudsync_sa_static") {
     "include/data_sync",
     "include/cycle_task",
     "include/cycle_task/tasks",
-    "include/disk_db",
     "include/data_sync/gallery_data_sync",
     "include/data_sync/cloud_disk_data_sync",
+    "${clouddisk_database_path}/include",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
@@ -214,9 +215,10 @@ ohos_static_library("cloudsync_sa_static") {
     "src/cycle_task/tasks/optimize_storage_task.cpp",
   ]
 
-  disk_db = [
-    "src/disk_db/clouddisk_rdbstore.cpp",
-    "src/disk_db/file_column.cpp",
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
   ]
 
   gallery_data_sync = [
@@ -261,10 +263,10 @@ ohos_static_library("cloudsync_sa_static") {
 
   sources += data_sync
   sources += cycle_task
-  sources += disk_db
   sources += gallery_data_sync
   sources += cloud_disk_data_sync
   sources += medialibrary_rdb_utils_source
+  sources += clouddisk_database
 
   defines = [
     "LOG_DOMAIN=0xD004307",
