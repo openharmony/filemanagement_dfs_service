@@ -69,9 +69,6 @@ private:
     CloudDiskDataConvertor cleanConvertor_ = { userId_, bundleName_, FILE_CLEAN };
     int32_t ClearCloudInfo(const std::string &cloudId);
     int32_t CleanCloudRecord(NativeRdb::ResultSet &local, const int action, const std::string &filePath);
-    int32_t CleanNotDirtyData(const std::string &thmbDir, const std::string &assetPath, const std::string &cloudId);
-    int32_t CleanNotPureCloudRecord(NativeRdb::ResultSet &local, const int action, const std::string &filePath);
-    int32_t CleanPureCloudRecord(NativeRdb::ResultSet &local, const int action, const std::string &filePath);
     void HandleCreateConvertErr(NativeRdb::ResultSet &resultSet);
     CloudDiskDataConvertor createConvertor_ = {
         userId_, bundleName_, FILE_CREATE,
@@ -86,22 +83,8 @@ private:
     int32_t RecycleFile(const std::string &recordId);
     int32_t GetMetaFilePath(const std::string &cloudId, std::string &path);
     int32_t PullRecordConflict(DriveKit::DKRecord &record, bool &comflag);
-    int32_t GetConflictData(const DriveKit::DKRecord &record, std::string &parentCloudId,
-                            std::string &sha256, std::int64_t &imetaModified);
-    int32_t ConflictHandler(NativeRdb::ResultSet &resultSet, const DriveKit::DKRecord &record,
-                            const std::string &parentCloudId, const std::string &sha256, bool &modifyPathflag);
-    int32_t ConflictRenamePath(NativeRdb::ResultSet &resultSet, const DriveKit::DKRecord &record,
-                               const std::string &parentCloudId, const std::string &sha256);
-    int32_t ConflictMerge(NativeRdb::ResultSet &resultSet, DriveKit::DKRecord &record,
-                          bool &comflag, int64_t &imetaModified);
-    int32_t ConflictDataMerge(DriveKit::DKRecord &record, bool upflag);
     int SetRetry(const std::string &recordId);
-
     int32_t UpdateDirPosition(std::string cloudId);
-    void AppendToDownload(const DriveKit::DKRecord &record, const std::string &fieldKey,
-                                       std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
-    int32_t AppendDirectoryToDownload(const DriveKit::DKRecord &record,
-                                       std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
 
     CloudDiskDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
     int64_t UTCTimeSeconds();

@@ -67,6 +67,9 @@ public:
 
     static const std::vector<std::string> LOCAL_COLUMNS;
 
+    // Query pull info columns
+    static const std::vector<std::string> PULL_QUERY_COLUMNS;
+
     static bool IsFileColumn(const std::string &columnName);
 };
 } // namespace CloudDisk

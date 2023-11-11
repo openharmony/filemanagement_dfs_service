@@ -99,6 +99,9 @@ bool FileColumn::IsFileColumn(const std::string &columnName)
 {
     return (FILE_COLUMNS.find(columnName) != FILE_COLUMNS.end());
 }
+const std::vector<std::string> FileColumn::PULL_QUERY_COLUMNS = {
+    CLOUD_ID, FILE_TIME_RECYCLED, VERSION, DIRTY_TYPE, POSITION,
+};
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS
