@@ -252,4 +252,15 @@ int32_t DataSyncManager::CleanCloudFile(const int32_t userId, const std::string 
     LOGD("bundleName:%{private}s, userId:%{private}d", dataSyncer->GetBundleName().c_str(), dataSyncer->GetUserId());
     return dataSyncer->Clean(action);
 }
+
+int32_t DataSyncManager::OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays)
+{
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+        return E_INVAL_ARG;
+    }
+
+    return dataSyncer->OptimizeStorage(agingDays);
+}
 } // namespace OHOS::FileManagement::CloudSync

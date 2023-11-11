@@ -24,6 +24,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/statvfs.h>
 #include <unistd.h>
 #include <utime.h>
 
@@ -52,12 +53,63 @@ using PAC = Media::PhotoAlbumColumns;
 using PM = Media::PhotoMap;
 using PC = Media::PhotoColumn;
 
+constexpr uint32_t DAY_TO_SECONDS = 24 * 60 * 60;
+constexpr uint32_t TO_MILLISECONDS = 1000;
 static const string HMDFS_PATH_PREFIX = "/mnt/hmdfs/";
 static const string CLOUD_MERGE_VIEW_PATH_SUFFIX = "/account/cloud_merge_view";
+static const double START_AGING_SIZE = 0.5;
+static const double STOP_AGING_SIZE = 0.6;
+static const double LOWEST_START_AGING_SIZE = 0.15;
+static const double LOWEST_STOP_AGING_SIZE = 0.2;
+static const int64_t UNIT = 1000;
+static const int64_t STD_UNIT = 1024;
+static const int64_t THRESHOLD = 512;
 
 static string GetCloudMergeViewPath(int32_t userId, const string &relativePath)
 {
     return HMDFS_PATH_PREFIX + to_string(userId) + CLOUD_MERGE_VIEW_PATH_SUFFIX + relativePath;
+}
+
+static int64_t GetTotalSize()
+{
+    struct statvfs diskInfo;
+    int ret = statvfs("/data", &diskInfo);
+    if (ret != 0) {
+        LOGE("get totalsize failed, errno:%{public}d", errno);
+        return E_GET_SIZE_ERROR;
+    }
+    int64_t totalSize =
+        static_cast<long long>(diskInfo.f_bsize) * static_cast<long long>(diskInfo.f_blocks);
+    return totalSize;
+}
+
+static int64_t GetFreeSize()
+{
+    struct statvfs diskInfo;
+    int ret = statvfs("/data", &diskInfo);
+    if (ret != 0) {
+        LOGE("get feeesize failed, errno:%{public}d", errno);
+        return E_GET_SIZE_ERROR;
+    }
+    int64_t freeSize =
+        static_cast<long long>(diskInfo.f_bsize) * static_cast<long long>(diskInfo.f_bfree);
+    return freeSize;
+}
+
+static int64_t GetRoundSize(int64_t size)
+{
+    uint64_t val = 1;
+    int64_t multple = UNIT;
+    int64_t stdMultiple = STD_UNIT;
+    while (val * stdMultiple < size) {
+        val <<= 1;
+        if (val > THRESHOLD) {
+            val = 1;
+            multple *= UNIT;
+            stdMultiple *= STD_UNIT;
+        }
+    }
+    return val * multple;
 }
 
 constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
@@ -2762,6 +2814,124 @@ int64_t FileDataHandler::UTCTimeSeconds()
     ts.tv_nsec = 0;
     clock_gettime(CLOCK_REALTIME, &ts);
     return static_cast<int64_t>(ts.tv_sec);
+}
+
+int32_t FileDataHandler::OptimizeStorage(const int32_t agingDays)
+{
+    int64_t totalSize = GetTotalSize();
+    totalSize = GetRoundSize(totalSize);
+    int64_t freeSize = GetFreeSize();
+    int64_t agingTime = 0;
+    int64_t deleteSize = 0;
+    int ret = 0;
+    if (totalSize * START_AGING_SIZE > static_cast<double>(freeSize)) {
+        agingTime = agingDays * DAY_TO_SECONDS;
+        deleteSize = int64_t(totalSize * STOP_AGING_SIZE - static_cast<double>(freeSize));
+        ret = FileAgingDelete(agingTime, deleteSize);
+        if (ret != E_OK) {
+            LOGE("OptimizeStorage Error");
+            return E_OPTIMIZE_STORAGE_ERROR;
+        }
+    }
+
+    freeSize = GetFreeSize();
+    if (totalSize * LOWEST_START_AGING_SIZE > static_cast<double>(freeSize)) {
+        agingTime = 0;
+        deleteSize = int64_t(totalSize * LOWEST_STOP_AGING_SIZE - static_cast<double>(freeSize));
+        ret = FileAgingDelete(agingTime, deleteSize);
+        if (ret != E_OK) {
+            LOGE("OptimizeStorage Error");
+            return E_OPTIMIZE_STORAGE_ERROR;
+        }
+    }
+    return E_OK;
+}
+
+std::shared_ptr<NativeRdb::ResultSet> FileDataHandler::GetAgingFile(const int64_t agingTime,
+                                                                    int32_t &rowCount)
+{
+    auto time = UTCTimeSeconds();
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    predicates.LessThanOrEqualTo(PC::PHOTO_LAST_VISIT_TIME, to_string(TO_MILLISECONDS * (time - agingTime)));
+    predicates.And()->EqualTo(PC::PHOTO_POSITION, POSITION_BOTH);
+    predicates.OrderByAsc(PC::PHOTO_LAST_VISIT_TIME);
+    auto results = Query(predicates, MEDIA_CLOUD_SYNC_COLUMNS);
+    if (results == nullptr) {
+        LOGE("get nullptr result");
+        return results;
+    }
+    int ret = results->GetRowCount(rowCount);
+    LOGE("rowCount = %{public}d", rowCount);
+    if (ret != 0) {
+        LOGE("get rowCount error");
+        return nullptr;
+    }
+    return results;
+}
+
+int32_t FileDataHandler::UpdateAgingFile(const string cloudId)
+{
+    ValuesBucket values;
+    values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
+    int32_t changedRows;
+    string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
+    int ret = Update(changedRows, values, whereClause, {cloudId});
+    if (ret != E_OK) {
+        LOGE("rdb update failed, err=%{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::FileAgingDelete(const int64_t agingTime, const int64_t deleteSize)
+{
+    int rowCount = 0;
+    int64_t totalSize = 0;
+    auto results = GetAgingFile(agingTime, rowCount);
+    if (results == nullptr) {
+        LOGE("get nullptr result");
+        return E_RDB;
+    }
+    if (rowCount == 0) {
+        LOGE("get null file");
+        return E_OK;
+    }
+    while (results->GoToNextRow() == 0) {
+        string path;
+        int64_t size;
+        string cloudId;
+        int ret = DataConvertor::GetString(MEDIA_DATA_DB_FILE_PATH, path, *results);
+        if (ret != E_OK) {
+            LOGE("get path error");
+            continue;
+        }
+        ret = DataConvertor::GetString(MEDIA_DATA_DB_CLOUD_ID, cloudId, *results);
+        if (ret != E_OK) {
+            LOGE("get cloudId error");
+            continue;
+        }
+        ret = DataConvertor::GetLong(MEDIA_DATA_DB_SIZE, size, *results);
+        if (ret != E_OK) {
+            LOGE("get size error");
+            continue;
+        }
+        string filePath = GetLocalPath(userId_, path);
+        ret = unlink(filePath.c_str());
+        if (ret != 0) {
+            LOGE("fail to delete");
+            continue;
+        }
+        ret = UpdateAgingFile(cloudId);
+        if (ret != E_OK) {
+            LOGE("update failed");
+            continue;
+        }
+        totalSize += size;
+        if (totalSize > deleteSize) {
+            break;
+        }
+    }
+    return E_OK;
 }
 } // namespace CloudSync
 } // namespace FileManagement

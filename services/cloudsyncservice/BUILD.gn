@@ -37,6 +37,7 @@ ohos_shared_library("cloudsync_sa") {
     "include",
     "include/data_sync",
     "include/cycle_task",
+    "include/cycle_task/tasks",
     "include/disk_db",
     "include/data_sync/gallery_data_sync",
     "include/data_sync/cloud_disk_data_sync",
@@ -68,6 +69,7 @@ ohos_shared_library("cloudsync_sa") {
   cycle_task = [
     "src/cycle_task/cycle_task.cpp",
     "src/cycle_task/cycle_task_runner.cpp",
+    "src/cycle_task/tasks/optimize_storage_task.cpp",
   ]
 
   disk_db = [
@@ -177,6 +179,7 @@ ohos_static_library("cloudsync_sa_static") {
     "include",
     "include/data_sync",
     "include/cycle_task",
+    "include/cycle_task/tasks",
     "include/disk_db",
     "include/data_sync/gallery_data_sync",
     "include/data_sync/cloud_disk_data_sync",
@@ -208,6 +211,7 @@ ohos_static_library("cloudsync_sa_static") {
   cycle_task = [
     "src/cycle_task/cycle_task.cpp",
     "src/cycle_task/cycle_task_runner.cpp",
+    "src/cycle_task/tasks/optimize_storage_task.cpp",
   ]
 
   disk_db = [

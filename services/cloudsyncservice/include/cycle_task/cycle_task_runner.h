@@ -39,13 +39,14 @@ public:
     static const std::string FILE_PATH;
     static const int32_t DEFAULT_VALUE;
     static const int32_t DEFAULT_USER_ID;
-    CycleTaskRunner();
+    CycleTaskRunner(std::shared_ptr<DataSyncManager> dataSyncManager);
     void StartTask();
 
 private:
     int32_t userId_;
     std::time_t setUpTime_;
     std::unique_ptr<CloudPrefImpl> cloudPrefImpl_;
+    std::shared_ptr<DataSyncManager> dataSyncManager_;
     std::vector<std::shared_ptr<CycleTask>> cycleTasks_ {};
 
     void InitTasks();

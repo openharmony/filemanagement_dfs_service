@@ -16,21 +16,25 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_CYCLE_TASK_H
 #define OHOS_CLOUD_SYNC_SERVICE_CYCLE_TASK_H
 #include <string>
+#include "data_sync_manager.h"
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 class CycleTask {
 public:
-    CycleTask(std::string taskName, std::string bundleName, int32_t intervalTime);
+    CycleTask(std::string taskName, std::string bundleName, int32_t intervalTime,
+              std::shared_ptr<DataSyncManager> dataSyncManager);
     virtual ~CycleTask() = default;
     virtual int32_t RunTask(int32_t userId) = 0;
     std::string GetTaskName() const;
     std::string GetBundleName() const;
     int32_t GetIntervalTime() const;
+    std::shared_ptr<DataSyncManager> GetDataSyncManager() const;
 private:
     std::string taskName_;
     std::string bundleName_;
     int32_t intervalTime_;
+    std::shared_ptr<DataSyncManager> dataSyncManager_;
 };
 
 } // namespace CloudSync

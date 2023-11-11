@@ -72,6 +72,9 @@ public:
 
     void NotifyCurrentSyncState();
 
+    /* optimizestorage */
+    virtual int32_t OptimizeStorage(const int32_t agingDays);
+
 protected:
     /* download */
     int32_t Pull(std::shared_ptr<DataHandler> handler);
