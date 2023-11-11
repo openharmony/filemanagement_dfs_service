@@ -26,6 +26,7 @@ dsoftbus_path = "//foundation/communication/dsoftbus"
 media_library_path = "//foundation/multimedia/media_library"
 communication_ipc_path = "//foundation/communication"
 image_framework_path = "//foundation/multimedia/image_framework"
+clouddisk_database_path = "${services_path}/clouddisk_database"
 
 declare_args() {
   if (defined(global_parts_info) &&
