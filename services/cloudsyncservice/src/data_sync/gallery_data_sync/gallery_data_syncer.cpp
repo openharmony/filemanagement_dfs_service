@@ -286,6 +286,22 @@ int32_t GalleryDataSyncer::Complete()
     CompleteAll();
     return E_OK;
 }
+
+int32_t GalleryDataSyncer::OptimizeStorage(const int32_t agingDays)
+{
+    LOGD("gallery data sycner FileAging");
+
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
+    
+    ret = fileHandler_->OptimizeStorage(agingDays);
+
+    PutHandler();
+
+    return ret;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

@@ -75,6 +75,8 @@ public:
                             std::map<DKAppBundleName, DKAppInfo> &appInfos);
     DKError GetCloudAppSwitches(const std::vector<DKAppBundleName> &bundleNames,
                                 std::map<DKAppBundleName, DKAppSwitchStatus> &appSwitchs);
+    DKError GetAppConfigParams(const DKAppBundleName &bundleNames,
+                               std::map<std::string, std::string> &param);
     DKError GetServerTime(time_t &time);
     int32_t OnUploadAsset(const std::string &request, const std::string &result);
     void ReleaseDefaultContainer(DKAppBundleName bundleName);

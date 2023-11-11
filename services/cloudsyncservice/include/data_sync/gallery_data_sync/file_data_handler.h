@@ -67,6 +67,12 @@ public:
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
 
+    /* optimizestorage */
+    int32_t OptimizeStorage(const int32_t agingDays);
+    std::shared_ptr<NativeRdb::ResultSet> GetAgingFile(const int64_t agingTime, int32_t &rowCount);
+    int32_t UpdateAgingFile(const std::string cloudId);
+    int32_t FileAgingDelete(const int64_t agingTime, const int64_t deleteSize);
+
     /* reset */
     void Reset();
 

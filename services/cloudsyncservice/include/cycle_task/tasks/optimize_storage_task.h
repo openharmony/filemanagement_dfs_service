@@ -13,40 +13,23 @@
  * limitations under the License.
  */
 
+#ifndef OHOS_CLOUD_SYNC_SERVICE_OPTIMIZE_STORAGE_TASK_H
+#define OHOS_CLOUD_SYNC_SERVICE_OPTIMIZE_STORAGE_TASK_H
+#include "cloud_pref_impl.h"
 #include "cycle_task.h"
-#include "dfs_error.h"
-#include "gallery_data_syncer.h"
-#include "utils_log.h"
-
+#include "rdb_data_handler.h"
+#include <memory>
+#include <string>
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-CycleTask::CycleTask(std::string taskName, std::string bundleName, int32_t intervalTime,
-                     std::shared_ptr<DataSyncManager> dataSyncManager)
-    : taskName_(taskName), bundleName_(bundleName), intervalTime_(intervalTime), dataSyncManager_(dataSyncManager)
-{
-}
 
-std::string CycleTask::GetTaskName() const
-{
-    return this->taskName_;
-}
-
-std::string CycleTask::GetBundleName() const
-{
-    return this->bundleName_;
-}
-
-int32_t CycleTask::GetIntervalTime() const
-{
-    return this->intervalTime_;
-}
-
-std::shared_ptr<DataSyncManager> CycleTask::GetDataSyncManager() const
-{
-    return this->dataSyncManager_;
-}
-
+class OptimizeStorageTask : public CycleTask {
+public:
+    OptimizeStorageTask(std::shared_ptr<DataSyncManager> dataSyncManager);
+    int32_t RunTask(int32_t userId) override;
+};
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
+#endif // OHOS_CLOUD_SYNC_SERVICE_OPTIMIZE_STORAGE_TASK_H

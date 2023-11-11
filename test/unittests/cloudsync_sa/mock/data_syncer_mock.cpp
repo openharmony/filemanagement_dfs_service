@@ -280,6 +280,11 @@ void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorT
 void DataSyncer::DeleteSubscription()
 {
 }
+
+int32_t DataSyncer::OptimizeStorage(const int32_t agingDays)
+{
+    return E_OK;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

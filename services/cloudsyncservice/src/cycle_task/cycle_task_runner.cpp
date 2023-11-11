@@ -17,6 +17,7 @@
 #include "cloud_pref_impl.h"
 #include "cycle_task.h"
 #include "dfs_error.h"
+#include "tasks/optimize_storage_task.h"
 #include "utils_log.h"
 #include <cstdint>
 #include <iomanip>
@@ -33,8 +34,9 @@ const std::string CycleTaskRunner::FILE_PATH = CLOUDFILE_DIR + "/cycletask";
 const int32_t CycleTaskRunner::DEFAULT_VALUE = 0;
 const int32_t CycleTaskRunner::DEFAULT_USER_ID = 100;
 
-CycleTaskRunner::CycleTaskRunner()
+CycleTaskRunner::CycleTaskRunner(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
+    dataSyncManager_ = dataSyncManager;
     cloudPrefImpl_ = std::make_unique<CloudPrefImpl>(FILE_PATH);
     vector<int32_t> activeUsers;
     if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeUsers) != E_OK && activeUsers.size() != 0) {
@@ -73,6 +75,7 @@ void CycleTaskRunner::StartTask()
 void CycleTaskRunner::InitTasks()
 {
     //push tasks here
+    cycleTasks_.push_back(std::make_shared<OptimizeStorageTask>(dataSyncManager_));
 }
 
 void CycleTaskRunner::GetLastRunTime(std::string taskName, std::time_t &time)
