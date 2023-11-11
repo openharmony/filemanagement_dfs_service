@@ -13,27 +13,20 @@
  * limitations under the License.
  */
 
-#include "cloud_file_download_napi.h"
+#ifndef OHOS_FILEMGMT_CLOUD_FILE_CACHE_NAPI_H
+#define OHOS_FILEMGMT_CLOUD_FILE_CACHE_NAPI_H
 
-#include <sys/types.h>
-
-#include "cloud_sync_manager.h"
-#include "dfs_error.h"
-#include "utils_log.h"
-#include "async_work.h"
-#include "uv.h"
+#include "cloud_download_callback.h"
+#include "cloud_file_napi.h"
+#include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
-using namespace FileManagement::LibN;
-using namespace std;
+class CloudFileCacheNapi final : public CloudFileNapi {
+public:
+    CloudFileCacheNapi(napi_env env, napi_value exports) : CloudFileNapi(env, exports) {}
+    ~CloudFileCacheNapi() = default;
 
-bool CloudFileDownloadNapi::Export()
-{
-    SetClassName("Download");
-    bool success = CloudFileNapi::Export();
-    if (!success) {
-        return false;
-    }
-    return true;
-}
+    bool Export() override;
+};
 } // namespace OHOS::FileManagement::CloudSync
+#endif // OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H
