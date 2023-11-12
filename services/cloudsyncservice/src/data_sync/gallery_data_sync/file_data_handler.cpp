@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <utime.h>
 
+#include "cycle_task_runner.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
@@ -325,8 +326,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
             BatchInsertAssetMaps(params);
         }
     }
-    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+    UpdateAlbumInternal();
     LOGI("after BatchInsert ret %{public}d", ret);
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
@@ -1039,8 +1039,7 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
         }
     }
 
-    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+    UpdateAlbumInternal();
     return E_OK;
 }
 
@@ -1064,8 +1063,7 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
     }
 
     DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
-    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+    UpdateAlbumInternal();
     MetaFileMgr::GetInstance().ClearAll();
     return E_OK;
 }
@@ -1134,6 +1132,11 @@ static bool LocalWriteOpen(const string &dfsPath)
 
     close(fd);
     return writeOpenCnt != 0;
+}
+
+void FileDataHandler::UpdateAlbumInternal() {
+    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
 }
 
 int FileDataHandler::SetRetry(const string &recordId)
@@ -1916,8 +1919,7 @@ int32_t FileDataHandler::Clean(const int action)
         return res;
     }
 
-    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+    UpdateAlbumInternal();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();

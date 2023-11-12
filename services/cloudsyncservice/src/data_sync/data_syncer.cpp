@@ -694,6 +694,16 @@ int32_t DataSyncer::Clean(const int action)
     return E_OK;
 }
 
+int32_t DataSyncer::ActualClean(const int action)
+{
+    return E_OK;
+}
+
+int32_t DataSyncer::CancelClean()
+{
+    return E_OK;
+}
+
 int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int action)
 {
     int ret = 0;
@@ -714,6 +724,20 @@ int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int a
         }
     }
 
+    return ret;
+}
+
+int32_t DataSyncer::CancelDownload(std::shared_ptr<DataHandler> handler)
+{
+    int32_t ret = 0;
+    std::vector<int64_t> downloadIds = downloadCallbackMgr_.StopAllDownloads(userId_);
+    for (const auto &id : downloadIds) {
+        ret = sdkHelper_->CancelDownloadAssets(id);
+        if (ret != NO_ERROR) {
+            LOGE("CancelDownloadAssets fail %{public}d", ret);
+            return ret;
+        }
+    }
     return ret;
 }
 

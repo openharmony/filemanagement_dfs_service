@@ -16,8 +16,9 @@
 
 #include <memory>
 
+#include "cloud_pref_impl.h"
 #include "system_ability_definition.h"
-
+#include "delay_clean_task.h"
 #include "cycle_task/cycle_task_runner.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
@@ -191,11 +192,12 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
     if (ret != E_OK) {
         return ret;
     }
-
     if (status) {
+        dataSyncManager_->RestoreClean(bundleName, callerUserId);
         return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+    } else {
+        return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
     }
-    return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
 }
 
 int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)

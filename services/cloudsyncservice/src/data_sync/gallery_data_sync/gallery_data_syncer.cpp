@@ -15,8 +15,14 @@
 
 #include "gallery_data_syncer.h"
 
+#include "delay_clean_task.h"
+#include "media_column.h"
 #include "dfs_error.h"
+#include "cycle_task_runner.h"
+#include "nlohmann/json.hpp"
 #include "utils_log.h"
+#include <string>
+#include <vector>
 
 namespace OHOS {
 namespace FileManagement {
@@ -102,16 +108,41 @@ void GalleryDataSyncer::PutHandler()
 int32_t GalleryDataSyncer::Clean(const int action)
 {
     LOGD("gallery data sycner Clean");
-    
+
     /* start clean */
     BeginClean();
-
     int32_t ret = GetHandler();
     if (ret != E_OK) {
         return ret;
     }
-
     /* file */
+    ret = CancelDownload(fileHandler_);
+    if (ret != E_OK) {
+        LOGE("gallery data syncer file cancel download err %{public}d", ret);
+    }
+    DeleteSubscription();
+    auto cloudPrefImpl = CloudPrefImpl(CycleTaskRunner::FILE_PATH);
+    cloudPrefImpl.SetInt("needClean-" + bundleName_ + "-" + to_string(userId_), DelayCleanTask::NEED_CLEAN);
+    fileHandler_->UpdateAlbumInternal();
+    PutHandler();
+    return ret;
+}
+
+int32_t GalleryDataSyncer::ActualClean(const int action)
+{
+    auto rdb = RdbInit(bundleName_, userId_);
+    if (!rdb) {
+        return E_RDB;
+    }
+    int32_t rows;
+    vector<string> whereArgs = {to_string(DelayCleanTask::NEED_CLEAN)};
+    rdb->Delete(rows, Media::PhotoColumn::PHOTOS_TABLE,
+    Media::PhotoColumn::PHOTO_NEED_CLEAN + " = ?", whereArgs);
+    /* file */
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
     ret = CleanInner(fileHandler_, action);
     if (ret != E_OK) {
         LOGE("gallery data syncer file clean err %{public}d", ret);
@@ -121,13 +152,33 @@ int32_t GalleryDataSyncer::Clean(const int action)
     if (ret != E_OK) {
         LOGE("gallery data syncer album clean err %{public}d", ret);
     }
-    
-    DeleteSubscription();
+
     PutHandler();
+    return ret;
+}
 
-    /* complete clean */
-    CompleteClean();
-
+int32_t GalleryDataSyncer::CancelClean()
+{
+    auto rdb = RdbInit(bundleName_, userId_);
+    if (!rdb) {
+        return E_RDB;
+    }
+    int32_t changedRows;
+    NativeRdb::ValuesBucket values;
+    values.PutInt(Media::PhotoColumn::PHOTO_NEED_CLEAN, DelayCleanTask::NOT_NEED_CLEAN);
+    vector<string> whereArgs = {to_string(DelayCleanTask::NEED_CLEAN)};
+    int32_t ret =
+        rdb->Update(changedRows, Media::PhotoColumn::PHOTOS_TABLE, values,
+        Media::PhotoColumn::PHOTO_NEED_CLEAN + " = ?", whereArgs);
+    /* file */
+    ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
+    auto cloudPrefImpl = CloudPrefImpl(CycleTaskRunner::FILE_PATH);
+    cloudPrefImpl.SetInt("needClean-" + bundleName_ + "-" + to_string(userId_), DelayCleanTask::NOT_NEED_CLEAN);
+    fileHandler_->UpdateAlbumInternal();
+    PutHandler();
     return ret;
 }
 
@@ -295,7 +346,7 @@ int32_t GalleryDataSyncer::OptimizeStorage(const int32_t agingDays)
     if (ret != E_OK) {
         return ret;
     }
-    
+
     ret = fileHandler_->OptimizeStorage(agingDays);
 
     PutHandler();
