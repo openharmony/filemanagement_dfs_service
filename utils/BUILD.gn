@@ -47,6 +47,7 @@ config("compiler_configs") {
 
 config("utils_public_config") {
   include_dirs = [
+    "cloud_disk/include",
     "dfx/include",
     "work/include",
     "log/include",
@@ -64,6 +65,7 @@ ohos_shared_library("libdistributedfileutils") {
   }
 
   sources = [
+    "cloud_disk/src/cloud_file_utils.cpp",
     "dfx/src/xcollie_helper.cpp",
     "log/src/dfs_error.cpp",
     "log/src/utils_log.cpp",
