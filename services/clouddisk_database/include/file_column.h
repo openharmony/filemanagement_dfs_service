@@ -16,7 +16,6 @@
 #ifndef OHOS_CLOUD_DISK_SERVICE_FILE_COLUMN_H
 #define OHOS_CLOUD_DISK_SERVICE_FILE_COLUMN_H
 
-#include <string>
 #include <vector>
 
 #include "clouddisk_db_const.h"

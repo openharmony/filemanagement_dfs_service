@@ -213,6 +213,7 @@ public:
 
     DKError GetStartCursor(DKRecordType recordType, DKQueryCursor &cursor);
     DKError GenerateIds(int count, std::vector<DKRecordId> &ids);
+    DKError GetRootId(DKRecordId &id);
     DKError GetLock(DKLock &lock);
     void DeleteLock(DKLock lock);
 

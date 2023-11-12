@@ -15,8 +15,6 @@
 
 #include "clouddisk_rdb_utils.h"
 
-#include <string>
-
 #include "utils_log.h"
 #include "dfs_error.h"
 #include "clouddisk_db_const.h"
@@ -41,6 +39,57 @@ int32_t CloudDiskRdbUtils::GetLong(const string &key, int64_t &val,
 
 int32_t CloudDiskRdbUtils::GetString(const string &key, string &val,
                                      const shared_ptr<ResultSet> resultSet)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbUtils::FillInfoFileName(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbUtils::FillInfoCloudId(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbUtils::FillInfoParentId(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbUtils::FillInfoLocation(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbUtils::FillInfoFileSize(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbUtils::FillInfoFileATime(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbUtils::FillInfoFileCTime(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbUtils::FillInfoFileMTime(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbUtils::FillInfoFileType(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbUtils::ResultSetToFileInfo(const shared_ptr<ResultSet> resultSet,
+                                               vector<CloudDiskFileInfo> &infos)
 {
     return E_OK;
 }
