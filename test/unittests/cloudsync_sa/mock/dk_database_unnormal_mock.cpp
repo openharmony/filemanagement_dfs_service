@@ -122,6 +122,11 @@ std::shared_ptr<DKAssetReadSession> DKDatabase::NewAssetReadSession(DKRecordType
 DKDatabase::DKDatabase(std::shared_ptr<DKContainer> container, DKDatabaseScope scope)
 {
 }
+DKError DKDatabase::GetRootId(DKRecordId &id)
+{
+    DKError e;
+    return e;
+}
 void DKDatabase::Init()
 {
 }

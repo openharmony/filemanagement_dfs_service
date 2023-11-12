@@ -473,7 +473,7 @@ int32_t CloudDiskDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOper
 }
 int32_t CloudDiskDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
-   int32_t ret = E_OK;
+    int32_t ret = E_OK;
     for (auto &entry : map) {
         const DKRecordOperResult &result = entry.second;
         int32_t err;
@@ -723,6 +723,12 @@ int32_t CloudDiskDataHandler::BuildInfoMap(const shared_ptr<NativeRdb::ResultSet
         }
     }
     return E_OK;
+}
+
+void CloudDiskDataHandler::Reset()
+{
+    modifyFailSet_.clear();
+    createFailSet_.clear();
 }
 } // namespace CloudSync
 } // namespace FileManagement

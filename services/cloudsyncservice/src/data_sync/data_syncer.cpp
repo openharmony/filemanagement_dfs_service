@@ -92,52 +92,12 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 
 int32_t DataSyncer::Lock()
 {
-    lock_guard<mutex> lock(lock_.mtx);
-    if (lock_.count > 0) {
-        lock_.count++;
-        return E_OK;
-    }
-
-    /* lock: device-reentrant */
-    int32_t ret = sdkHelper_->GetLock(lock_.lock);
-    if (ret != E_OK) {
-        LOGE("sdk helper get lock err %{public}d", ret);
-        lock_.lock = {0};
-        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
-            SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
-        }
-        return ret;
-    }
-    lock_.count++;
-
-    return ret;
+    return E_OK;
 }
 
-void DataSyncer::Unlock()
-{
-    lock_guard<mutex> lock(lock_.mtx);
-    lock_.count--;
-    if (lock_.count > 0) {
-        return;
-    }
+void DataSyncer::Unlock() {}
 
-    /* sdk unlock */
-    sdkHelper_->DeleteLock(lock_.lock);
-
-    /* reset sdk lock */
-    lock_.lock = { 0 };
-}
-
-void DataSyncer::ForceUnlock()
-{
-    lock_guard<mutex> lock(lock_.mtx);
-    if (lock_.count == 0) {
-        return;
-    }
-    sdkHelper_->DeleteLock(lock_.lock);
-    lock_.lock = { 0 };
-    lock_.count = 0;
-}
+void DataSyncer::ForceUnlock() {}
 
 int32_t DataSyncer::StartDownloadFile(const std::string path, const int32_t userId)
 {

@@ -14,10 +14,123 @@
  */
 
 #include "cloud_disk_data_syncer.h"
+#include "clouddisk_rdbstore.h"
+#include "dfs_error.h"
+#include "utils_log.h"
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+using namespace std;
+using namespace OHOS::FileManagement::CloudDisk;
+CloudDiskDataSyncer::CloudDiskDataSyncer(const std::string bundleName, const int32_t userId)
+    : DataSyncer(bundleName, userId) {}
 
+int32_t CloudDiskDataSyncer::Init(const std::string bundleName, const int32_t userId)
+{
+    CloudDisk::CloudDiskRdbStore cloudDiskRdbStore(bundleName_, userId_);
+    auto rdb = cloudDiskRdbStore.GetRaw();
+    if (!rdb) {
+        LOGE("clouddisk rdb init fail");
+        return E_RDB;
+    }
+    /* init handler */
+    cloudDiskHandler_ = make_shared<CloudDiskDataHandler>(userId_, bundleName_, rdb);
+    return E_OK;
+}
+
+int32_t CloudDiskDataSyncer::Clean(const int action)
+{
+    LOGD("cloud disk data sycner Clean");
+    /* file */
+    int32_t ret = CleanInner(cloudDiskHandler_, action);
+    if (ret != E_OK) {
+        LOGE("disk data syncer file clean err %{public}d", ret);
+    }
+    DeleteSubscription();
+    return ret;
+}
+
+int32_t CloudDiskDataSyncer::StartDownloadFile(const std::string path, const int32_t userId)
+{
+    return DownloadInner(cloudDiskHandler_, path, userId);
+}
+
+int32_t CloudDiskDataSyncer::StopDownloadFile(const std::string path, const int32_t userId)
+{
+    return DataSyncer::StopDownloadFile(path, userId);
+}
+
+void CloudDiskDataSyncer::Schedule()
+{
+    LOGI("schedule to stage %{public}d", ++stage_);
+    int32_t ret = E_OK;
+    switch (stage_) {
+        case DOWNLOADFILE: {
+            ret = DownloadFile();
+            break;
+        }
+        case COMPLETEPULL: {
+            ret = CompletePull();
+            break;
+        }
+        case UPLOADFILE: {
+            ret = UploadFile();
+            break;
+        }
+        case COMPLETEPUSH: {
+            ret = CompletePush();
+            break;
+        }
+        case END: {
+            ret = Complete();
+            break;
+        }
+        default: {
+            ret = E_SCHEDULE;
+            LOGE("schedule fail %{public}d", ret);
+            break;
+        }
+    }
+    /* if error takes place while schedule, just abort it */
+    if (ret != E_OK) {
+        Abort();
+    }
+}
+
+void CloudDiskDataSyncer::Reset()
+{
+    stage_ = BEGIN;
+    cloudDiskHandler_->Reset();
+}
+
+int32_t CloudDiskDataSyncer::DownloadFile()
+{
+    LOGI("cloud disk data sycner download file");
+    int ret = Pull(cloudDiskHandler_);
+    if (ret != E_OK) {
+        LOGE("disk data syncer pull file err %{public}d", ret);
+    }
+    return ret;
+}
+
+int32_t CloudDiskDataSyncer::UploadFile()
+{
+    LOGI("cloud disk data sycner upload file");
+    int32_t ret = Push(cloudDiskHandler_);
+    if (ret != E_OK) {
+        LOGE("disk data syncer push file err %{public}d", ret);
+    }
+    return ret;
+}
+
+int32_t CloudDiskDataSyncer::Complete()
+{
+    LOGI("cloud disk data syncer complete all");
+    Unlock();
+    CompleteAll();
+    return E_OK;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

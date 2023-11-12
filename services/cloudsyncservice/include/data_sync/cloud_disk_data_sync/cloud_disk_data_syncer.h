@@ -15,9 +15,45 @@
 
 #ifndef CLOUD_DISK_DATA_SYNCER_H
 #define CLOUD_DISK_DATA_SYNCER_H
+
+#include "cloud_disk_data_handler.h"
+#include "functional"
+#include "file_column.h"
+#include "data_syncer.h"
+#include "data_sync_const.h"
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+class CloudDiskDataSyncer : public DataSyncer, std::enable_shared_from_this<CloudDiskDataSyncer> {
+public:
+    CloudDiskDataSyncer(const std::string bundleName, const int32_t userId);
+    virtual ~CloudDiskDataSyncer() = default;
+    virtual void Schedule() override;
+    virtual void Reset() override;
+
+    virtual int32_t StartDownloadFile(const std::string path, const int32_t userId) override;
+    virtual int32_t StopDownloadFile(const std::string path, const int32_t userId) override;
+    virtual int32_t Init(const std::string bundleName, const int32_t userId) override;
+    virtual int32_t Clean(const int action) override;
+
+private:
+    enum {
+        BEGIN,
+        DOWNLOADFILE,
+        COMPLETEPULL,
+        UPLOADFILE,
+        COMPLETEPUSH,
+        END
+    };
+
+    int32_t DownloadFile();
+    int32_t UploadFile();
+    int32_t Complete();
+
+    int32_t stage_ = BEGIN;
+    std::shared_ptr<CloudDiskDataHandler> cloudDiskHandler_;
+};
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

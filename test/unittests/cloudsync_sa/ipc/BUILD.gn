@@ -98,13 +98,32 @@ ohos_unittest("cloud_sync_service_test") {
     "cloud_sync_service_test.cpp",
   ]
 
+  cloud_disk_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
+  ]
+
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  sources += cloud_disk_sync
+  sources += clouddisk_database
+
   include_dirs = [
+    "${clouddisk_database_path}/include",
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/cycle_task",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "${media_library_path}/frameworks/utils/include",
@@ -261,8 +280,10 @@ ohos_unittest("cloud_download_callback_manager_test") {
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/services/cloudsyncservice/include/data_sync",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${clouddisk_database_path}/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
