@@ -16,8 +16,6 @@
 #ifndef OHOS_CLOUD_DISK_SERVICE_TYPE_CONST_H
 #define OHOS_CLOUD_DISK_SERVICE_TYPE_CONST_H
 
-#include <limits>
-
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {

@@ -15,9 +15,6 @@
 
 #include "file_column.h"
 
-#include <string>
-#include <vector>
-
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {

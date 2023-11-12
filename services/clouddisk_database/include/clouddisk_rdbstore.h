@@ -22,10 +22,10 @@
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 
-#include "dk_database.h"
 #include "drive_kit.h"
 #include "clouddisk_db_const.h"
 #include "file_column.h"
+#include "cloud_file_utils.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -40,8 +40,11 @@ public:
     std::shared_ptr<NativeRdb::RdbStore> GetRaw();
     void InitRootId();
 
+    int32_t LookUp(const std::string &parentCloudId, const std::string &fileName, CloudDiskFileInfo &info);
+    int32_t GetAttr(const std::string &cloudId, CloudDiskFileInfo &info);
+    int32_t ReadDir(const std::string &cloudId, std::vector<CloudDiskFileInfo> &infos);
     int32_t FillFileType(const std::string &fileName, NativeRdb::ValuesBucket &fileInfo);
-    int32_t UpdateParentFolder(const std::string &parentCloudId);
+    int32_t UpdateParentFolder(const std::string &parentCloudId, const std::string &filePath);
     int32_t Create(const std::string &cloudId, const std::string &parentCloudId,
         const std::string &fileName);
     int32_t GetXAttr(const std::string &cloudId, const std::string &position, std::string &value);
@@ -63,6 +66,14 @@ public:
     int32_t OnCreate(NativeRdb::RdbStore &rdbStore) override;
     int32_t OnUpgrade(NativeRdb::RdbStore &rdbStore, int32_t oldVersion, int32_t newVersion) override;
 };
+
+#define RDBPTR_IS_NULLPTR(rdbStore_)    \
+    do {    \
+        if (rdbStore_ == nullptr) {    \
+            LOGE("rdbStore_ is nullptr");    \
+            return E_RDB;    \
+        }    \
+    } while (0)
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS
