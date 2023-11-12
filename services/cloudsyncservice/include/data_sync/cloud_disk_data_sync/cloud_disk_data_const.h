@@ -36,7 +36,8 @@ const std::string DK_DIRECTLY_RECYCLED = "directlyRecycled";
 const std::string DK_MIME_TYPE = FILE_MIME_TYPE;
 const std::string DK_IS_RECYLED = FILE_RECYCLED;
 const std::string DK_FILE_ATTRIBUTES = FILE_ATTRIBUTES;
-
+const std::string DK_FILE_CONTENT = "content";
+const std::string DK_FILE_OPERATE_TYPE = "operateType";
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

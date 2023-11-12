@@ -115,6 +115,10 @@ public:
     {
         editedTime_ = editedTime;
     }
+    void SetBaseCursor(std::string cursor)
+    {
+        baseCursor_ = cursor;
+    }
 private:
     DKRecordId id_;
     DKRecordType type_;
@@ -126,6 +130,7 @@ private:
     bool isNewCreate_ = false;
     uint64_t createdTime_ = 0;
     uint64_t editedTime_ = 0;
+    std::string baseCursor_;
 };
 } // namespace DriveKit
 #endif

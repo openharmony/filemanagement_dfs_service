@@ -20,6 +20,7 @@
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
 #include "rdb_data_handler.h"
+#include "clouddisk_type_const.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -63,17 +64,35 @@ private:
     std::vector<std::string> modifyFailSet_;
     std::vector<std::string> createFailSet_;
 
-    int32_t userId_;
+    int32_t userId_{0};
     std::string bundleName_;
 
     CloudDiskDataConvertor cleanConvertor_ = { userId_, bundleName_, FILE_CLEAN };
     int32_t ClearCloudInfo(const std::string &cloudId);
     int32_t CleanCloudRecord(NativeRdb::ResultSet &local, const int action, const std::string &filePath);
     void HandleCreateConvertErr(NativeRdb::ResultSet &resultSet);
+    void HandleFdirtyConvertErr(NativeRdb::ResultSet &resultSet);
     CloudDiskDataConvertor createConvertor_ = {
         userId_, bundleName_, FILE_CREATE,
         std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, this, std::placeholders::_1)
     };
+    CloudDiskDataConvertor deleteConvertor_ = { userId_, bundleName_, FILE_DELETE };
+    CloudDiskDataConvertor mdirtyConvertor_ = { userId_, bundleName_, FILE_METADATA_MODIFY };
+    CloudDiskDataConvertor fdirtyConvertor_ = {
+        userId_, bundleName_, FILE_DATA_MODIFY,
+        std::bind(&CloudDiskDataHandler::HandleFdirtyConvertErr, this, std::placeholders::_1)
+    };
+    int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
+        const std::unordered_map<std::string, LocalInfo> &localMap);
+    int32_t OnDeleteRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
+    int32_t OnModifyRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
+        const std::unordered_map<std::string, LocalInfo> &localMap);
+    bool IsTimeChanged(const DriveKit::DKRecord &record, const std::unordered_map<std::string, LocalInfo> &localMap,
+        const std::string &cloudId, const std::string &type);
+    int32_t GetLocalInfo(const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &map,
+        std::unordered_map<std::string, LocalInfo> &infoMap, const std::string &type);
+    int32_t BuildInfoMap(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
+        std::unordered_map<std::string, LocalInfo> &cloudMap, const std::string &type);
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, std::map<std::string, int>> QueryLocalByCloudId(
         const std::vector<std::string> &recordIds);
     int32_t PullRecordInsert(DriveKit::DKRecord &record, OnFetchParams &params);

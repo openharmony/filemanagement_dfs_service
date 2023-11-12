@@ -78,7 +78,7 @@ void CloudDiskRdbStore::InitRootId()
 {
     CloudPrefImpl cloudPrefImpl(userId_, bundleName_, FileColumn::FILES_TABLE);
     cloudPrefImpl.GetString("rootId", rootId_);
-    if(!rootId_.empty()) {
+    if (!rootId_.empty()) {
         return;
     } else {
         auto driveKit = DriveKit::DriveKitNative::GetInstance(userId_);
@@ -118,7 +118,8 @@ shared_ptr<RdbStore> CloudDiskRdbStore::GetRaw()
     return rdbStore_;
 }
 
-int32_t CloudDiskRdbStore::LookUp(const std::string &parentCloudId, const std::string &fileName, CloudDiskFileInfo &info)
+int32_t CloudDiskRdbStore::LookUp(const std::string &parentCloudId,
+    const std::string &fileName, CloudDiskFileInfo &info)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     AbsRdbPredicates lookUpPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);

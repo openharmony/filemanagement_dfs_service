@@ -69,7 +69,7 @@ public:
 
 #define RDBPTR_IS_NULLPTR(rdbStore_)    \
     do {    \
-        if (rdbStore_ == nullptr) {    \
+        if ((rdbStore_) == nullptr) {    \
             LOGE("rdbStore_ is nullptr");    \
             return E_RDB;    \
         }    \
