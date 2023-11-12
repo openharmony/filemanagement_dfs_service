@@ -30,6 +30,7 @@
 #include "file_column.h"
 #include "rdb_errno.h"
 #include "utils_log.h"
+#include "cloud_file_utils.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -103,13 +104,16 @@ void CloudDiskDataHandler::HandleCreateConvertErr(NativeRdb::ResultSet &resultSe
 {
     string cloudId;
     int32_t ret = createConvertor_.GetString(FC::CLOUD_ID, cloudId, resultSet);
-    string path;
-    ret = localConvertor_.GetMetaFilePath(cloudId, path);
     if (ret != E_OK) {
-        LOGE("get path err");
+        LOGE("get create cloudId err, %{public}d", ret);
         return;
     }
-    createFailSet_.push_back(path);
+    createFailSet_.push_back(cloudId);
+}
+
+void CloudDiskDataHandler::HandleFdirtyConvertErr(NativeRdb::ResultSet &resultSet)
+{
+        return;
 }
 
 tuple<shared_ptr<NativeRdb::ResultSet>, map<string, int>> CloudDiskDataHandler::QueryLocalByCloudId(
@@ -213,11 +217,7 @@ int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::Resu
     }
     int ret = E_OK;
     if (FileIsLocal(local)) {
-        string localPath;
-        int32_t ret = localConvertor_.GetMetaFilePath(record.GetRecordId(), localPath);
-        if (ret != E_OK) {
-            LOGE("get mate file path by cloudId error");
-        }
+        string localPath = CloudFileUtils::GetLocalFilePath(record.GetRecordId(), bundleName_, userId_);
     }
     LOGI("cloud file META changed, %s", record.GetRecordId().c_str());
     /* update rdb */
@@ -238,18 +238,17 @@ int32_t CloudDiskDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::Resu
 {
     LOGI("delete of record %s", record.GetRecordId().c_str());
     bool isLocal = FileIsLocal(local);
-    string path;
-    int32_t ret = localConvertor_.GetMetaFilePath(record.GetRecordId(), path);
+    string path = CloudFileUtils::GetLocalFilePath(record.GetRecordId(), bundleName_, userId_);
     if (FileIsRecycled(local) || !isLocal) {
         if (isLocal) {
             LOGI("force delete instead");
-            ret = unlink(path.c_str());
+            int32_t ret = unlink(path.c_str());
             if (ret != 0) {
                 LOGE("unlink local failed, errno %{public}d", errno);
             }
         }
         int32_t deletedRows;
-        int ret = Delete(deletedRows, FC::CLOUD_ID + " = ?", {record.GetRecordId()});
+        int32_t ret = Delete(deletedRows, FC::CLOUD_ID + " = ?", {record.GetRecordId()});
         if (ret != E_OK) {
             LOGE("delete in rdb failed, ret:%{public}d", ret);
             return E_INVAL_ARG;
@@ -367,6 +366,37 @@ int32_t CloudDiskDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKReco
     return E_OK;
 }
 int32_t CloudDiskDataHandler::OnDownloadAssets(const DriveKit::DKDownloadAsset &asset)
+{
+    return E_OK;
+}
+int32_t CloudDiskDataHandler::OnCreateRecordSuccess(
+    const pair<DKRecordId, DKRecordOperResult> &entry,
+    const unordered_map<string, LocalInfo> &localMap)
+{
+    return E_OK;
+}
+int32_t CloudDiskDataHandler::OnDeleteRecordSuccess(const std::pair<DKRecordId, DKRecordOperResult> &entry)
+{
+    return E_OK;
+}
+int32_t CloudDiskDataHandler::OnModifyRecordSuccess(
+    const pair<DKRecordId, DKRecordOperResult> &entry,
+    const unordered_map<string, LocalInfo> &localMap)
+{
+    return E_OK;
+}
+bool CloudDiskDataHandler::IsTimeChanged(const DriveKit::DKRecord &record,
+    const unordered_map<string, LocalInfo> &localMap, const string &cloudId, const string &type)
+{
+    return true;
+}
+int32_t CloudDiskDataHandler::GetLocalInfo(const map<DKRecordId, DKRecordOperResult> &map,
+    unordered_map<string, LocalInfo> &infoMap, const string &type)
+{
+    return E_OK;
+}
+int32_t CloudDiskDataHandler::BuildInfoMap(const shared_ptr<NativeRdb::ResultSet> resultSet,
+    unordered_map<string, LocalInfo> &infoMap, const string &type)
 {
     return E_OK;
 }

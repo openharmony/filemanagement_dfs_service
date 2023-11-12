@@ -15,21 +15,22 @@
 
 #include "cloud_disk_data_convertor.h"
 
-#include "mimetype_utils.h"
 #include <regex>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include "mimetype_utils.h"
+#include "cloud_file_utils.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 using namespace std;
 using namespace NativeRdb;
+using namespace CloudDisk;
 using DriveKit::DKLocalErrorCode;
 
 string CloudDiskDataConvertor::recordType_ = "file";
-string CloudDiskDataConvertor::prefix_ = "/data/service/el2/";
-string CloudDiskDataConvertor::suffix_ = "/hmdfs/cloud/data/";
 
 CloudDiskDataConvertor::CloudDiskDataConvertor(int32_t userId,
                                                string &bundleName,
@@ -53,12 +54,18 @@ int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::V
 }
 int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet)
 {
-    return E_OK;
-}
-int32_t CloudDiskDataConvertor::GetMetaFilePath(const std::string &cloudId, std::string &path)
-{
-    std::string bucketId = "bucketId";
-    path = prefix_ + to_string(userId_) + suffix_ + bundleName_ + "/" + bucketId + "/";
+    DriveKit::DKRecordData data;
+    RETURN_ON_ERR(FillRecordId(record, resultSet));
+    RETURN_ON_ERR(FillCreatedTime(record, resultSet));
+    RETURN_ON_ERR(FillMetaEditedTime(record, resultSet));
+    RETURN_ON_ERR(FillVersion(record, resultSet));
+    RETURN_ON_ERR(HandleCompatibleFileds(data, resultSet));
+    RETURN_ON_ERR(HandleAttributes(data, resultSet));
+    record.SetRecordData(data);
+    record.SetRecordType(recordType_);
+    if (type_ == FILE_CREATE) {
+        record.SetNewCreate(true);
+    }
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::ExtractCompatibleValue(const DriveKit::DKRecord &record,
@@ -226,6 +233,161 @@ int32_t CloudDiskDataConvertor::ExtractIsDirectory(const DriveKit::DKRecordData 
         RETURN_ON_ERR(ExtractFileSize(data, valueBucket));
     }
     valueBucket.PutString(FileColumn::IS_DIRECTORY, fileType);
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleCompatibleFileds(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    RETURN_ON_ERR(HandleFileName(data, resultSet));
+    RETURN_ON_ERR(HandleParentId(data, resultSet));
+    RETURN_ON_ERR(HandleDirectlyRecycled(data, resultSet));
+    RETURN_ON_ERR(HandleRecycleTime(data, resultSet));
+    RETURN_ON_ERR(HandleType(data, resultSet));
+    RETURN_ON_ERR(HandleOperateType(data, resultSet));
+    RETURN_ON_ERR(HandleAttachments(data, resultSet));
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleAttachments(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    if (type_ != FILE_CREATE && type_ != FILE_DATA_MODIFY) {
+        return E_OK;
+    }
+    string cloudId;
+    string filePath;
+    if (!GetString(FileColumn::CLOUD_ID, cloudId, resultSet)) {
+        filePath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
+    } else {
+        LOGE("Get File Path is failed");
+        return E_RDB;
+    }
+    int32_t ret = HandleContent(data, filePath);
+    if (ret != E_OK) {
+        LOGE("handle content err %{public}d", ret);
+        return ret;
+    }
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleAttributes(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    DriveKit::DKRecordFieldMap map;
+    RETURN_ON_ERR(HandleCreateTime(map, resultSet));
+    RETURN_ON_ERR(HandleMetaEditedTime(map, resultSet));
+    RETURN_ON_ERR(HandleEditedTime(map, resultSet));
+    data[DK_FILE_ATTRIBUTES] = DriveKit::DKRecordField(map);
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::FillRecordId(DriveKit::DKRecord &record,
+    NativeRdb::ResultSet &resultSet)
+{
+    string val;
+    int32_t ret = GetString(FileColumn::CLOUD_ID, val, resultSet);
+    if (ret != E_OK) {
+        LOGE("Fill record id failed, ret %{public}d", ret);
+        return ret;
+    }
+    record.SetRecordId(val);
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::FillCreatedTime(DriveKit::DKRecord &record,
+    NativeRdb::ResultSet &resultSet)
+{
+    int64_t createdTime;
+    int32_t ret = GetLong(FileColumn::FILE_TIME_ADDED, createdTime, resultSet);
+    if (ret != E_OK) {
+        LOGE("Fill CreatedTime failed, ret = %{public}d", ret);
+        return ret;
+    }
+    record.SetCreateTime(static_cast<uint64_t>(createdTime));
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::FillMetaEditedTime(DriveKit::DKRecord &record,
+    NativeRdb::ResultSet &resultSet)
+{
+    int64_t metaEditedTime;
+    int32_t ret = GetLong(FileColumn::META_TIME_EDITED, metaEditedTime, resultSet);
+    if (ret != E_OK) {
+        LOGE("Fill MetaEditedTime failed, ret = %{public}d", ret);
+        return ret;
+    }
+    record.SetEditedTime(static_cast<uint64_t>(metaEditedTime));
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::FillVersion(DriveKit::DKRecord &record,
+    NativeRdb::ResultSet &resultSet)
+{
+    int64_t version;
+    int32_t ret = GetLong(FileColumn::VERSION, version, resultSet);
+    if (ret != E_OK) {
+        LOGE("Fill Version failed, ret = %{public}d", ret);
+        return ret;
+    }
+    record.SetVersion(static_cast<unsigned long>(version));
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleFileName(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    std::string displayName;
+    int32_t ret = GetString(FileColumn::FILE_NAME, displayName, resultSet);
+    if (ret != E_OK) {
+        LOGE("handler FileName failed, ret = %{public}d", ret);
+        return ret;
+    }
+    data[DK_FILE_NAME] = DriveKit::DKRecordField(displayName);
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleParentId(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    std::string parentFolder;
+    int32_t ret = GetString(FileColumn::PARENT_CLOUD_ID, parentFolder, resultSet);
+    if (ret != E_OK) {
+        LOGE("handler ParentId failed, ret = %{public}d", ret);
+        return ret;
+    }
+    data[DK_PARENT_CLOUD_ID] = DriveKit::DKRecordField(parentFolder);
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleDirectlyRecycled(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleRecycleTime(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleType(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleOperateType(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleCreateTime(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleMetaEditedTime(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleEditedTime(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleContent(DriveKit::DKRecordData &data,
+    string &path)
+{
     return E_OK;
 }
 } // namespace CloudSync

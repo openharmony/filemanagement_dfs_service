@@ -43,6 +43,9 @@ public:
 
 private:
     int32_t FillRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
+    int32_t FillCreatedTime(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
+    int32_t FillMetaEditedTime(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
+    int32_t FillVersion(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
     int32_t ExtractCompatibleValue(const DriveKit::DKRecord &record,
                                    const DriveKit::DKRecordData &data,
                                    NativeRdb::ValuesBucket &valueBucket);
@@ -58,13 +61,24 @@ private:
     int32_t ExtractDirectlyRecycled(const DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
     int32_t ExtractIsDirectory(const DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
     int32_t ExtractVersion(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
+    int32_t HandleFileName(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleParentId(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleDirectlyRecycled(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleRecycleTime(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleType(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleOperateType(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleCompatibleFileds(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleAttributes(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleCreateTime(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleMetaEditedTime(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleEditedTime(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleAttachments(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleContent(DriveKit::DKRecordData &data, std::string &path);
 
-    int32_t userId_;
+    int32_t userId_{0};
     std::string bundleName_;
     OperationType type_;
     static std::string recordType_;
-    static std::string prefix_;
-    static std::string suffix_;
     std::function<void(NativeRdb::ResultSet &resultSet)> errHandler_;
 };
 } // namespace CloudSync
