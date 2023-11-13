@@ -57,13 +57,6 @@ config("utils_public_config") {
 }
 
 ohos_shared_library("libdistributedfileutils") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
     "dfx/src/xcollie_helper.cpp",
@@ -120,13 +113,6 @@ config("dentry_public_config") {
 }
 
 ohos_shared_library("libdistributedfiledentry") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
   include_dirs = [
     "dentry/include",
     "log/include",
