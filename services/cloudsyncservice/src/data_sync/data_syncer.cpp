@@ -1136,6 +1136,14 @@ int32_t DataSyncer::OptimizeStorage(const int32_t agingDays)
 {
     return E_OK;
 }
+
+bool DataSyncer::HasSdkHelper()
+{
+    if (sdkHelper_ == nullptr) {
+        return false;
+    }
+    return true;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

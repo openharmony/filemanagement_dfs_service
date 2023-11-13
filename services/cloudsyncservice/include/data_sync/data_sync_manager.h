@@ -56,6 +56,7 @@ private:
     int32_t currentUserId_{INVALID_USER_ID};
 
     int32_t IsUserVerified(const int32_t userId);
+    int32_t InitSdk(const int32_t userId, const std::string bundleName, std::shared_ptr<DataSyncer> dataSyncer);
 };
 } // namespace OHOS::FileManagement::CloudSync
 
