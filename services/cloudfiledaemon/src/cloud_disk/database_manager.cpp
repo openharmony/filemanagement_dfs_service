@@ -12,29 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "database_manager.h"
 
-#ifndef OHOS_CLOUD_SYNC_SERVICE_DELAY_CLEAN_TASK_H
-#define OHOS_CLOUD_SYNC_SERVICE_DELAY_CLEAN_TASK_H
-#include "cloud_pref_impl.h"
-#include "cycle_task.h"
-#include "rdb_data_handler.h"
-#include <memory>
-#include <string>
 namespace OHOS {
 namespace FileManagement {
-namespace CloudSync {
+namespace CloudDisk {
+using namespace std;
+DatabaseManager &DatabaseManager::GetInstance()
+{
+    static DatabaseManager instance_;
+    return instance_;
+}
 
-class DelayCleanTask : public CycleTask {
-public:
-    enum Clean {
-        NOT_NEED_CLEAN = 0,
-        NEED_CLEAN,
-        DO_CLEAN,
-    };
-    DelayCleanTask(std::shared_ptr<DataSyncManager> dataSyncManager);
-    int32_t RunTask(int32_t userId) override;
-};
-} // namespace CloudSync
+shared_ptr<CloudDiskRdbStore> DatabaseManager::GetRdbStore(const string &bundleName, int32_t userId)
+{
+    std::unique_lock<std::shared_mutex> wLock(mapLock_, std::defer_lock);
+    string key = to_string(userId) + bundleName;
+
+    wLock.lock();
+    if (rdbMap_.find(key) == rdbMap_.end()) {
+        rdbMap_[key] = make_shared<CloudDiskRdbStore>(bundleName, userId);
+    }
+    wLock.unlock();
+
+    return rdbMap_[key];
+}
+} // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS
-#endif // OHOS_CLOUD_SYNC_SERVICE_DELAY_CLEAN_TASK_H

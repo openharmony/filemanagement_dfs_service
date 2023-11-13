@@ -17,7 +17,9 @@
 
 #include <thread>
 #include <vector>
+#include <regex>
 
+#include "cloud_disk_data_syncer.h"
 #include "data_syncer_rdb_col.h"
 #include "data_syncer_rdb_store.h"
 #include "dfs_error.h"
@@ -131,13 +133,6 @@ int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string &bundl
     return E_OK;
 }
 
-int32_t DataSyncManager::DelayedClean(const std::string &bundleName, const int32_t userId, int32_t action)
-{
-    auto dataSyncer = GetDataSyncer(bundleName, userId);
-    return dataSyncer->ActualClean(action);
-}
-
-
 int32_t DataSyncManager::RestoreClean(const std::string &bundleName, const int32_t userId)
 {
     auto dataSyncer = GetDataSyncer(bundleName, userId);
@@ -218,7 +213,13 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bu
         }
     }
 
-    std::shared_ptr<DataSyncer> dataSyncer = std::make_shared<GalleryDataSyncer>(bundleName, userId);
+    std::shared_ptr<DataSyncer> dataSyncer;
+    std::regex regexString(".*(.photos)$");
+    if (std::regex_match(bundleName, regexString)) {
+        dataSyncer = std::make_shared<GalleryDataSyncer>(bundleName, userId);
+    } else {
+        dataSyncer = std::make_shared<CloudDiskDataSyncer>(bundleName, userId);
+    }
     int32_t ret = dataSyncer->Init(bundleName, userId);
     if (ret != E_OK) {
         return nullptr;

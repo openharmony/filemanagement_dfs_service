@@ -353,41 +353,100 @@ int32_t CloudDiskDataConvertor::HandleParentId(DriveKit::DKRecordData &data,
 int32_t CloudDiskDataConvertor::HandleDirectlyRecycled(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    int32_t directlyRecycled;
+    int32_t ret = GetInt(FileColumn::DIRECTLY_RECYCLED, directlyRecycled, resultSet);
+    if (ret != E_OK) {
+        LOGE("handler DirectlyRecycled failed, ret = %{public}d", ret);
+        return ret;
+    }
+    data[DK_DIRECTLY_RECYCLED] = DriveKit::DKRecordField((directlyRecycled != 0));
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleRecycleTime(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    int64_t recycleTime;
+    int32_t ret = GetLong(FileColumn::FILE_TIME_RECYCLED, recycleTime, resultSet);
+    if (ret != E_OK) {
+        LOGE("handler RecycleTime failed, ret = %{public}d", ret);
+        return ret;
+    }
+    data[DK_FILE_TIME_RECYCLED] = DriveKit::DKRecordField(recycleTime);
+    data[DK_IS_RECYLED] = DriveKit::DKRecordField((recycleTime != 0));
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleType(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    std::string type;
+    int32_t ret = GetString(FileColumn::IS_DIRECTORY, type, resultSet);
+    if (ret != E_OK) {
+        LOGE("handler type failed, ret = %{public}d", ret);
+        return ret;
+    }
+    data[DK_IS_DIRECTORY] = DriveKit::DKRecordField(type);
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleOperateType(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    int64_t operateType;
+    int32_t ret = GetLong(FileColumn::OPERATE_TYPE, operateType, resultSet);
+    if (ret != E_OK) {
+        LOGE("handler operateType failed, ret = %{public}d", ret);
+        return ret;
+    }
+    data[DK_FILE_OPERATE_TYPE] = DriveKit::DKRecordField(operateType);
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleCreateTime(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
+    int64_t createTime;
+    int32_t ret = GetLong(FileColumn::FILE_TIME_ADDED, createTime, resultSet);
+    if (ret != E_OK) {
+        LOGE("handler CreateTime failed, ret = %{public}d", ret);
+        return ret;
+    }
+    map[DK_FILE_TIME_ADDED] = DriveKit::DKRecordField(createTime);
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleMetaEditedTime(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
+    int64_t metaEditedTime;
+    int32_t ret = GetLong(FileColumn::META_TIME_EDITED, metaEditedTime, resultSet);
+    if (ret != E_OK) {
+        LOGE("handler MetaEditedTime failed, ret = %{public}d", ret);
+        return ret;
+    }
+    map[DK_META_TIME_EDITED] = DriveKit::DKRecordField(metaEditedTime);
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleEditedTime(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
+    int64_t editedTime;
+    int32_t ret = GetLong(FileColumn::FILE_TIME_EDITED, editedTime, resultSet);
+    if (ret != E_OK) {
+        LOGE("handler EditedTime failed, ret = %{public}d", ret);
+        return ret;
+    }
+    map[DK_FILE_TIME_EDITED] = DriveKit::DKRecordField(editedTime);
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleContent(DriveKit::DKRecordData &data,
     string &path)
 {
+    if (access(path.c_str(), F_OK)) {
+        LOGE("content %{private}s doesn't exist", path.c_str());
+        return E_PATH;
+    }
+    DriveKit::DKAsset content;
+    content.uri = move(path);
+    content.assetName = DK_FILE_CONTENT;
+    content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
+    data[DK_FILE_CONTENT] = DriveKit::DKRecordField(content);
     return E_OK;
 }
 } // namespace CloudSync

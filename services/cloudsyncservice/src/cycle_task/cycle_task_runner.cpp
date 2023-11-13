@@ -18,7 +18,6 @@
 #include "cycle_task.h"
 #include "dfs_error.h"
 #include "tasks/optimize_storage_task.h"
-#include "delay_clean_task.h"
 #include "utils_log.h"
 #include <cstdint>
 #include <iomanip>
@@ -77,7 +76,6 @@ void CycleTaskRunner::InitTasks()
 {
     //push tasks here
     cycleTasks_.push_back(std::make_shared<OptimizeStorageTask>(dataSyncManager_));
-    cycleTasks_.push_back(std::make_shared<DelayCleanTask>(dataSyncManager_));
 }
 
 void CycleTaskRunner::GetLastRunTime(std::string taskName, std::time_t &time)

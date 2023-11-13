@@ -30,13 +30,24 @@ ohos_unittest("fuse_manager_test") {
   ]
 
   cloud_disk = [
+    "${services_path}/cloudfiledaemon/src/cloud_disk/database_manager.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_cloud.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_local.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
   ]
 
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  media_library = [ "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp" ]
+
   sources += cloud_disk
+  sources += clouddisk_database
+  sources += media_library
 
   include_dirs = [
     "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
@@ -46,6 +57,10 @@ ohos_unittest("fuse_manager_test") {
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudsyncservice/include/data_sync/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${clouddisk_database_path}/include",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/utils/include",
   ]
 
   deps = [
@@ -60,6 +75,7 @@ ohos_unittest("fuse_manager_test") {
   external_deps = [
     "hilog:libhilog",
     "ipc:ipc_single",
+    "relational_store:native_rdb",
   ]
 
   defines = [
@@ -91,13 +107,24 @@ ohos_unittest("cloud_daemon_test") {
   ]
 
   cloud_disk = [
+    "${services_path}/cloudfiledaemon/src/cloud_disk/database_manager.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_cloud.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_local.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
   ]
 
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  media_library = [ "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp" ]
+
   sources += cloud_disk
+  sources += clouddisk_database
+  sources += media_library
 
   include_dirs = [
     "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
@@ -107,6 +134,10 @@ ohos_unittest("cloud_daemon_test") {
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudsyncservice/include/data_sync/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${clouddisk_database_path}/include",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/utils/include",
   ]
 
   deps = [
@@ -121,6 +152,7 @@ ohos_unittest("cloud_daemon_test") {
   external_deps = [
     "hilog:libhilog",
     "ipc:ipc_single",
+    "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

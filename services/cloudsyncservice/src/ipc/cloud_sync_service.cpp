@@ -16,23 +16,21 @@
 
 #include <memory>
 
-#include "cloud_pref_impl.h"
-#include "system_ability_definition.h"
-#include "delay_clean_task.h"
 #include "cycle_task/cycle_task_runner.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
+#include "directory_ex.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "meta_file.h"
 #include "sandbox_helper.h"
+#include "sdk_helper.h"
 #include "sync_rule/battery_status.h"
 #include "sync_rule/cloud_status.h"
 #include "sync_rule/net_conn_callback_observer.h"
 #include "sync_rule/network_status.h"
+#include "system_ability_definition.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
-#include "directory_ex.h"
-#include "sdk_helper.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -208,6 +206,13 @@ int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const st
 
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
 {
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    vector<std::string> bundleNames = {GALLERY_BUNDLE_NAME};
+    for(std::string bundleName : bundleNames) {
+        auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, callerUserId);
+        dataSyncer->Clean();
+        dataSyncer->ActualClean();
+    }
     return E_OK;
 }
 

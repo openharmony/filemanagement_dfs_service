@@ -28,7 +28,6 @@
 #include <unistd.h>
 #include <utime.h>
 
-#include "cycle_task_runner.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
@@ -1884,7 +1883,7 @@ int32_t FileDataHandler::Clean(const int action)
     int res = E_OK;
     NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     cleanPredicates.IsNotNull(PhotoColumn::PHOTO_CLOUD_ID);
-    cleanPredicates.Limit(LIMIT_SIZE);
+    cleanPredicates.Limit(LIMIT_SIZE * 200);
     while (1) {
         auto resultSet = Query(cleanPredicates, CLEAN_QUERY_COLUMNS);
         if (resultSet == nullptr) {
@@ -1919,12 +1918,42 @@ int32_t FileDataHandler::Clean(const int action)
         return res;
     }
 
-    UpdateAlbumInternal();
+    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
 
     return E_OK;
+}
+
+int32_t FileDataHandler::UnMarkClean() {
+    int32_t changedRows;
+    NativeRdb::ValuesBucket values;
+    values.PutInt(PC::PHOTO_CLEAN_FLAG, NOT_NEED_CLEAN);
+    vector<string> whereArgs = {to_string(NEED_CLEAN)};
+    int32_t ret =
+        Update(changedRows,PC::PHOTOS_TABLE, values,
+        PC::PHOTO_CLEAN_FLAG + " = ?", whereArgs);
+    UpdateAlbumInternal();
+    return ret;
+}
+
+int32_t FileDataHandler::MarkClean() {
+    int32_t changedRows;
+    NativeRdb::ValuesBucket values;
+    values.PutNull(PhotoColumn::PHOTO_CLOUD_ID);
+    values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_NEW));
+    values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_LOCAL);
+    values.PutLong(PhotoColumn::PHOTO_CLOUD_VERSION, 0);
+    values.PutInt(PC::PHOTO_CLEAN_FLAG, NEED_CLEAN);
+    vector<string> whereArgs = {to_string(POSITION_CLOUD)};
+    int32_t ret =
+        Update(changedRows, PC::PHOTOS_TABLE, values,
+        PC::PHOTO_POSITION + " = ?", whereArgs);
+    UpdateAlbumInternal();
+    ClearCursor();
+    return ret;
 }
 
 void FileDataHandler::HandleCreateConvertErr(NativeRdb::ResultSet &resultSet)

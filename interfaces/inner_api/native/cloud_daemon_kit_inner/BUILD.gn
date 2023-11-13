@@ -26,13 +26,6 @@ config("private_config") {
 }
 
 ohos_shared_library("cloud_daemon_kit_inner") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_daemon_kit_inner/src/cloud_daemon_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloud_daemon_kit_inner/src/cloud_daemon_manager_impl.cpp",
