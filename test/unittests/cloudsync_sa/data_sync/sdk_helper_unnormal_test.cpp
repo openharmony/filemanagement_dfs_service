@@ -72,6 +72,7 @@ void SdkHelperTest::SetUp(void)
     dataSyncer_ = dataSyncManager_->GetDataSyncer(bundleName, userId);
     shared_ptr<GalleryDataSyncer> galleryDataSyncer_ = static_pointer_cast<GalleryDataSyncer>(dataSyncer_);
     /* init handler */
+    galleryDataSyncer_->GetHandler();
     handler_ = galleryDataSyncer_->fileHandler_;
     sdkHelper_ = std::make_shared<SdkHelper>();
 }

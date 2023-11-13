@@ -51,11 +51,14 @@ public:
                            DriveKit::DKDownloadAsset asset,
                            DriveKit::TotalSize totalSize,
                            DriveKit::DownloadSize downloadSize);
+    void SetBundleName(const std::string &bundleName);
 
 private:
     std::mutex downloadsMtx_;
     std::unordered_map<std::string, DownloadProgressObj> downloads_;
     sptr<ICloudDownloadCallback> callback_;
+    std::string bundleName_;
+    void CheckTaskState();
 };
 } // namespace OHOS::FileManagement::CloudSync
 

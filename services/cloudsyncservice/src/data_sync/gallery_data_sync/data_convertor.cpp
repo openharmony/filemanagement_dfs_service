@@ -271,6 +271,9 @@ const std::unordered_map<DataType,
              if (GetDoubleComp(value, doubleValue) != E_OK) {
                  return E_INVAL_ARG;
              }
+             if (doubleValue == 0 && field == Media::PhotoColumn::MEDIA_DATE_ADDED) {
+                LOGE("The value of date added is incorrect");
+             }
              bucket.PutDouble(field, doubleValue);
              return E_OK;
          }},

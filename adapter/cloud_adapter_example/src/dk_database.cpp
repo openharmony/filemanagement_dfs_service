@@ -148,6 +148,11 @@ DKError DKDatabase::GenerateIds(int count, std::vector<DKRecordId> &ids)
     DKError e;
     return e;
 }
+DKError DKDatabase::GetRootId(DKRecordId &id)
+{
+    DKError e;
+    return e;
+}
 DKError DKDatabase::GetLock(DKLock &lock)
 {
     DKError e;

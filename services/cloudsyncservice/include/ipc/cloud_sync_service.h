@@ -53,11 +53,12 @@ public:
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
-    void OnStart() override;
+    void OnStart(const SystemAbilityOnDemandReason& startReason) override;
     void OnStop() override;
     void PublishSA();
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     void Init();
+    void HandleStartReason(const SystemAbilityOnDemandReason& startReason);
 
     std::shared_ptr<DataSyncManager> dataSyncManager_;
     std::shared_ptr<BatteryStatusListener> batteryStatusListener_;

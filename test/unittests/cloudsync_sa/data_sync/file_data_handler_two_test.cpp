@@ -1666,7 +1666,7 @@ HWTEST_F(FileDataHandlerTest, PullRecordConflict002, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-       
+
         DriveKit::DKRecord record;
         bool comflag = false;
         int32_t ret = fileDataHandler->PullRecordConflict(record, comflag);

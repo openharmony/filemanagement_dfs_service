@@ -140,7 +140,7 @@ public:
                                             const std::vector<std::string> &columns,
                                             int &errCode));
 
-    MOCK_METHOD3(GetModifyTime, std::map<PRIKey, Date>(const std::string &table, const std::string &columnName,
+    MOCK_METHOD3(GetModifyTime, ModifyTime(const std::string &table, const std::string &columnName,
                                                        std::vector<PRIKey> &keys));
 
     MOCK_METHOD3(SetDistributedTables, int(const std::vector<std::string> &tables, int32_t type,
@@ -148,9 +148,13 @@ public:
     MOCK_METHOD3(ObtainDistributedTableName,
                  std::string(const std::string &device, const std::string &table, int &errCode));
     MOCK_METHOD3(Sync, int(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncBrief& async));
+    MOCK_METHOD3(Sync, int(const SyncOption &option, const AbsRdbPredicates &predicate, const AsyncDetail& async));
     MOCK_METHOD3(Sync, int(const SyncOption &option, const std::vector<std::string>& tables, const AsyncDetail& async));
     MOCK_METHOD2(Subscribe, int(const SubscribeOption &option, RdbStoreObserver *observer));
     MOCK_METHOD2(UnSubscribe, int(const SubscribeOption &option, RdbStoreObserver *observer));
+    MOCK_METHOD1(RegisterAutoSyncCallback, int(std::shared_ptr<DetailProgressObserver> syncObserver));
+    MOCK_METHOD1(UnregisterAutoSyncCallback, int(std::shared_ptr<DetailProgressObserver> syncObserver));
+    MOCK_METHOD2(CleanDirtyData, int(const std::string &table, uint64_t cursor));
     MOCK_METHOD1(Notify, int(const std::string &event));
     MOCK_METHOD2(DropDeviceData, bool(const std::vector<std::string> &devices, const DropOption &option));
     MOCK_METHOD3(Update, int(int &changedRows, const ValuesBucket &values, const AbsRdbPredicates &predicates));

@@ -37,6 +37,7 @@ public:
     MOCK_METHOD3(ChangeAppSwitch, int32_t(const std::string &accoutId, const std::string &bundleName, bool status));
     MOCK_METHOD2(Clean, int32_t(const std::string &accountId, const CleanOptions &cleanOptions));
     MOCK_METHOD2(NotifyDataChange, int32_t(const std::string &accoutId, const std::string &bundleName));
+    MOCK_METHOD3(NotifyEventChange, int32_t(int32_t userId, const std::string &eventId, const std::string &extraData));
     MOCK_METHOD2(EnableCloud, int32_t(const std::string &accoutId, const SwitchDataObj &switchData));
     MOCK_METHOD1(DisableCloud, int32_t(const std::string &accoutId));
     MOCK_METHOD1(StartDownloadFile, int32_t(const std::string &path));
@@ -274,33 +275,6 @@ HWTEST_F(CloudSyncServiceStubTest, HandleNotifyDataChangeTest, TestSize.Level1)
         GTEST_LOG_(INFO) << " HandleNotifyDataChange ERROR";
     }
     GTEST_LOG_(INFO) << "HandleNotifyDataChange End";
-}
-
-/**
- * @tc.name: HandleNotifyEventChangeTest
- * @tc.desc: Verify the HandleNotifyEventChange function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceStubTest, HandleNotifyEventChangeTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleNotifyEventChange Start";
-    try {
-        MockService service;
-        EXPECT_CALL(service, NotifyEventChange(_, _)).WillOnce(Return(E_OK));
-        MessageParcel data;
-        MessageParcel reply;
-        MessageOption option;
-        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
-
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(
-                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_EVENT_CHANGE),
-                            data, reply, option));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " HandleNotifyEventChange ERROR";
-    }
-    GTEST_LOG_(INFO) << "HandleNotifyEventChange End";
 }
 
 /**

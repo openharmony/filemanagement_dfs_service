@@ -72,4 +72,12 @@ void CloudDownloadCallbackManager::OnDownloadProcess(const std::string path,
                                                      DriveKit::DownloadSize downloadSize)
 {
 }
+
+void CloudDownloadCallbackManager::SetBundleName(const std::string &bundleName)
+{
+}
+
+void CloudDownloadCallbackManager::CheckTaskState()
+{
+}
 } // namespace OHOS::FileManagement::CloudSync

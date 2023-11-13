@@ -22,12 +22,17 @@
 #include "medialibrary_type_const.h"
 #include "photo_album_column.h"
 #include "photo_map_column.h"
-
+#include "data_sync_const.h"
 #include "data_convertor.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+
+/* thumb */
+const std::string THUMB_SUFFIX = "THM";
+const std::string LCD_SUFFIX = "LCD";
+
 /* basic */
 const std::string FILE_LOGIC_ALBUM_IDS = "albumIds";
 const std::string FILE_ADD_LOGIC_ALBUM_IDS = "addAlbumIds";
@@ -91,10 +96,6 @@ enum MediaType {
     MEDIA_TYPE_AUDIO,
 };
 
-const int32_t POSITION_LOCAL = 1;
-const int32_t POSITION_CLOUD = 2;
-const int32_t POSITION_BOTH = 3;
-
 const int32_t NR_LOCAL_INFO = 2;
 
 const int32_t ORIENTATION_NORMAL = 1;
@@ -109,6 +110,11 @@ const int32_t ROTATE_ANGLE_270 = 270;
 
 const int32_t FIRST_MATCH_PARAM = 1;
 const int32_t SECOND_MATCH_PARAM = 2;
+
+// util constants
+const std::string ALBUM_URI_PREFIX = Media::PhotoAlbumColumns::ALBUM_URI_PREFIX;
+const std::string PHOTO_URI_PREFIX = Media::PhotoColumn::PHOTO_URI_PREFIX;
+const std::string INVALID_ASSET_ID = "0";
 
 const std::string ASSET_UNIQUE_NUMBER_TABLE = "UniqueNumber";
 const std::string ASSET_MEDIA_TYPE = "media_type";
@@ -203,6 +209,9 @@ const std::vector<std::string> MEDIA_CLOUD_SYNC_COLUMNS = {
     Media::PhotoColumn::PHOTO_HEIGHT,
     Media::PhotoColumn::PHOTO_WIDTH,
     Media::PhotoColumn::PHOTO_SUBTYPE,
+    Media::PhotoColumn::PHOTO_DATE_YEAR,
+    Media::PhotoColumn::PHOTO_DATE_MONTH,
+    Media::PhotoColumn::PHOTO_DATE_DAY,
 
     /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
     Media::MediaColumn::MEDIA_ID,
@@ -211,6 +220,7 @@ const std::vector<std::string> MEDIA_CLOUD_SYNC_COLUMNS = {
 
 const std::vector<std::string> CLOUD_SYNC_UNIQUE_COLUMNS = {
     Media::PhotoColumn::MEDIA_FILE_PATH,
+    Media::PhotoColumn::MEDIA_TITLE,
     Media::PhotoColumn::MEDIA_TYPE,
     Media::PhotoColumn::MEDIA_DATE_ADDED,
     Media::PhotoColumn::MEDIA_DATE_MODIFIED,
@@ -220,14 +230,18 @@ const std::vector<std::string> CLOUD_SYNC_UNIQUE_COLUMNS = {
     Media::PhotoColumn::MEDIA_VIRTURL_PATH,
     Media::PhotoColumn::PHOTO_META_DATE_MODIFIED,
     Media::PhotoColumn::PHOTO_SUBTYPE,
+    Media::PhotoColumn::PHOTO_DATE_YEAR,
+    Media::PhotoColumn::PHOTO_DATE_MONTH,
+    Media::PhotoColumn::PHOTO_DATE_DAY,
 
     /* NR_LOCAL_INFO: keep local info in the end */
     Media::MediaColumn::MEDIA_ID,
     Media::PhotoColumn::PHOTO_CLOUD_ID
 };
 
-const std::vector<DataType>  CLOUD_SYNC_UNIQUE_COLUMN_TYPES = {
+const std::vector<DataType> CLOUD_SYNC_UNIQUE_COLUMN_TYPES = {
     DataType::STRING,       /* data */
+    DataType::STRING,       /* title */
     DataType::INT,          /* media_type */
     DataType::LONG,         /* date_added */
     DataType::LONG,         /* date_modified */
@@ -237,6 +251,9 @@ const std::vector<DataType>  CLOUD_SYNC_UNIQUE_COLUMN_TYPES = {
     DataType::STRING,       /* virtual_path */
     DataType::LONG,         /* meta_date_modified */
     DataType::INT,          /* subtype */
+    DataType::STRING,       /* date_year */
+    DataType::STRING,       /* date_month */
+    DataType::STRING,       /* date_day */
     DataType::INT,          /* file_id */
     DataType::STRING        /* cloud_id */
 };

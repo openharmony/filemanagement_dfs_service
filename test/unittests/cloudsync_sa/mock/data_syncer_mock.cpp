@@ -57,6 +57,14 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
     return E_OK;
 }
 
+void DataSyncer::ForceUnlock()
+{
+}
+
+void DataSyncer::SetErrorCodeMask(ErrorType errorType)
+{
+}
+
 int32_t DataSyncer::Lock()
 {
     return E_OK;
@@ -279,6 +287,11 @@ void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorT
 
 void DataSyncer::DeleteSubscription()
 {
+}
+
+int32_t DataSyncer::OptimizeStorage(const int32_t agingDays)
+{
+    return E_OK;
 }
 } // namespace CloudSync
 } // namespace FileManagement

@@ -30,6 +30,8 @@ public:
 
     void SetString(const std::string& key, const std::string& value);
     void GetString(const std::string& key, std::string& value);
+    void SetLong(const std::string& key, const int64_t value);
+    void GetLong(const std::string& key, int64_t& value);
     void SetInt(const std::string& key, const int value);
     void GetInt(const std::string& key, int32_t& value);
     void SetBool(const std::string& key, const bool& value);

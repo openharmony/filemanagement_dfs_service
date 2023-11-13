@@ -33,6 +33,11 @@ DataHandler::DataHandler(int32_t userId, const string &bundleName, const std::st
     cloudPrefImpl_.GetBool(CHECKING_FLAG, isChecking_);
 }
 
+void DataHandler::GetStartCursor(DriveKit::DKQueryCursor &cursor)
+{
+    cursor = startCursor_;
+}
+
 void DataHandler::GetNextCursor(DriveKit::DKQueryCursor &cursor)
 {
     if (tempNextCursor_.empty()) {

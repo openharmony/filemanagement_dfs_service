@@ -1479,7 +1479,6 @@ HWTEST_F(FileDataHandlerTest, InsertAssetToPhotoMap001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
 
         OnFetchParams params;
         DriveKit::DKRecord record;
@@ -1509,7 +1508,6 @@ HWTEST_F(FileDataHandlerTest, InsertAssetToPhotoMap002, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
 
         OnFetchParams params;
         DriveKit::DKRecord record;
@@ -1535,7 +1533,6 @@ HWTEST_F(FileDataHandlerTest, InsertAssetToPhotoMap003, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
 
         OnFetchParams params;
         DriveKit::DKRecord record;
@@ -1563,7 +1560,6 @@ HWTEST_F(FileDataHandlerTest, InsertAssetToPhotoMap004, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
 
         OnFetchParams params;
         DriveKit::DKRecord record;

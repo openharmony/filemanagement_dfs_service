@@ -14,8 +14,11 @@
  */
 #include "cloud_sync_n_exporter.h"
 
+#include "cloud_file_cache_napi.h"
 #include "cloud_file_download_napi.h"
-#include "cloud_sync_n_exporter.h"
+#include "cloud_file_napi.h"
+#include "cloud_sync_napi.h"
+#include "file_sync_napi.h"
 #include "gallery_sync_napi.h"
 #include "utils_log.h"
 
@@ -52,8 +55,10 @@ napi_value CloudSyncExport(napi_env env, napi_value exports)
     InitState(env, exports);
 
     std::vector<std::unique_ptr<NExporter>> products;
+    products.emplace_back(std::make_unique<CloudFileCacheNapi>(env, exports));
     products.emplace_back(std::make_unique<CloudFileDownloadNapi>(env, exports));
     products.emplace_back(std::make_unique<GallerySyncNapi>(env, exports));
+    products.emplace_back(std::make_unique<FileSyncNapi>(env, exports));
     for (auto &&product : products) {
         if (!product->Export()) {
             LOGE("INNER BUG. Failed to export class %{public}s for module cloudSyncDownload ",

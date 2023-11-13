@@ -55,12 +55,12 @@ enum class DKCloudSyncDemon {
     DK_CLOUD_UNKNOWN,
 };
 struct DKRecordChangeEvent {
-   std::string accountId;
-   DKAppBundleName appBundleName;
-   DKContainerName containerName;
-   std::vector<DKDatabaseScope> databaseScopes;
-   std::vector<DKRecordType> recordTypes;
-   std::map<std::string, std::string> properties;
+    std::string accountId;
+    DKAppBundleName appBundleName;
+    DKContainerName containerName;
+    std::vector<DKDatabaseScope> databaseScopes;
+    std::vector<DKRecordType> recordTypes;
+    std::map<std::string, std::string> properties;
 };
 struct DKUserInfo {
     std::string accountId;     //云空间用户id
@@ -90,6 +90,8 @@ public:
                             std::map<DKAppBundleName, DKAppInfo> &appInfos);
     DKError GetCloudAppSwitches(const std::vector<DKAppBundleName> &bundleNames,
                                 std::map<DKAppBundleName, DKAppSwitchStatus> &appSwitchs);
+    DKError GetAppConfigParams(const DKAppBundleName &bundleNames,
+                               std::map<std::string, std::string> &param);
     DKError GetServerTime(time_t &time);
     //校验和解析通知消息，调用该函数前，要先调用GetCloudUserInfo,否则会报错
     DKError ResolveNotificationEvent(const std::string &extraData, DKRecordChangeEvent &event);

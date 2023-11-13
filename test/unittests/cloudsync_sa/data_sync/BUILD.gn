@@ -35,9 +35,9 @@ ohos_unittest("album_data_handler_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -47,17 +47,37 @@ ohos_unittest("album_data_handler_test") {
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
     "album_data_handler_test.cpp",
   ]
 
+  cloud_disk_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
+  ]
+
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  sources += cloud_disk_sync
+  sources += clouddisk_database
+
   include_dirs = [
+    "${clouddisk_database_path}/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "${media_library_path}/frameworks/utils/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
@@ -84,11 +104,14 @@ ohos_unittest("album_data_handler_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
+    "samgr:samgr_proxy",
   ]
 
   defines = [
@@ -121,9 +144,9 @@ ohos_unittest("data_sync_manager_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -133,16 +156,36 @@ ohos_unittest("data_sync_manager_test") {
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
     "data_sync_manager_test.cpp",
   ]
 
+  cloud_disk_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
+  ]
+
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  sources += cloud_disk_sync
+  sources += clouddisk_database
+
   include_dirs = [
+    "${clouddisk_database_path}/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "${media_library_path}/frameworks/utils/include",
@@ -170,11 +213,14 @@ ohos_unittest("data_sync_manager_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
+    "samgr:samgr_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -203,10 +249,10 @@ ohos_unittest("data_handler_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -217,17 +263,37 @@ ohos_unittest("data_handler_test") {
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
     "data_handler_test.cpp",
   ]
 
+  cloud_disk_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
+  ]
+
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  sources += cloud_disk_sync
+  sources += clouddisk_database
+
   include_dirs = [
+    "${clouddisk_database_path}/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
@@ -254,11 +320,14 @@ ohos_unittest("data_handler_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
+    "samgr:samgr_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -309,6 +378,7 @@ ohos_unittest("data_convertor_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -331,7 +401,6 @@ ohos_unittest("file_data_handler_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
@@ -343,10 +412,12 @@ ohos_unittest("file_data_handler_test") {
   ]
 
   include_dirs = [
+    "${clouddisk_database_path}/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
@@ -377,6 +448,7 @@ ohos_unittest("file_data_handler_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
 
@@ -405,7 +477,6 @@ ohos_unittest("gallery_data_syncer_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -416,16 +487,36 @@ ohos_unittest("gallery_data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
     "gallery_data_syncer_test.cpp",
   ]
 
+  cloud_disk_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
+  ]
+
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  sources += cloud_disk_sync
+  sources += clouddisk_database
+
   include_dirs = [
+    "${clouddisk_database_path}/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
@@ -453,11 +544,13 @@ ohos_unittest("gallery_data_syncer_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "relational_store:native_rdb",
+    "samgr:samgr_proxy",
   ]
 
   defines = [
@@ -493,10 +586,10 @@ ohos_unittest("data_syncer_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -504,17 +597,37 @@ ohos_unittest("data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "data_syncer_test.cpp",
   ]
 
+  cloud_disk_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
+  ]
+
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  sources += cloud_disk_sync
+  sources += clouddisk_database
+
   include_dirs = [
+    "${clouddisk_database_path}/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
@@ -541,11 +654,14 @@ ohos_unittest("data_syncer_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
+    "samgr:samgr_proxy",
   ]
 
   defines = [
@@ -570,10 +686,10 @@ ohos_unittest("file_data_convertor_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
@@ -583,15 +699,35 @@ ohos_unittest("file_data_convertor_test") {
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "file_data_convertor_test.cpp",
   ]
 
+  cloud_disk_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
+  ]
+
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  sources += cloud_disk_sync
+  sources += clouddisk_database
+
   include_dirs = [
+    "${clouddisk_database_path}/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "${media_library_path}/frameworks/utils/include",
@@ -619,11 +755,14 @@ ohos_unittest("file_data_convertor_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
+    "samgr:samgr_proxy",
   ]
 
   defines = [
@@ -651,10 +790,10 @@ ohos_unittest("sdk_helper_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -665,6 +804,7 @@ ohos_unittest("sdk_helper_test") {
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_sync_callback_manager.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/battery_status.cpp",
@@ -673,12 +813,31 @@ ohos_unittest("sdk_helper_test") {
     "sdk_helper_test.cpp",
   ]
 
+  cloud_disk_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
+  ]
+
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  sources += cloud_disk_sync
+  sources += clouddisk_database
+
   include_dirs = [
+    "${clouddisk_database_path}/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "${media_library_path}/frameworks/utils/include",
@@ -706,11 +865,14 @@ ohos_unittest("sdk_helper_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
+    "samgr:samgr_proxy",
   ]
 
   defines = [
@@ -738,10 +900,10 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
@@ -752,6 +914,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_sync_callback_manager.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/battery_status.cpp",
@@ -760,13 +923,32 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "sdk_helper_unnormal_test.cpp",
   ]
 
+  cloud_disk_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
+  ]
+
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  sources += cloud_disk_sync
+  sources += clouddisk_database
+
   include_dirs = [
+    "${clouddisk_database_path}/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "${media_library_path}/frameworks/utils/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
@@ -793,11 +975,14 @@ ohos_unittest("sdk_helper_unnormal_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
+    "samgr:samgr_proxy",
   ]
 
   defines = [
@@ -859,10 +1044,10 @@ ohos_unittest("task_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_const.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
@@ -872,6 +1057,7 @@ ohos_unittest("task_test") {
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_sync_callback_manager.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/battery_status.cpp",
@@ -880,12 +1066,31 @@ ohos_unittest("task_test") {
     "task_test.cpp",
   ]
 
+  cloud_disk_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
+  ]
+
+  clouddisk_database = [
+    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
+    "${clouddisk_database_path}/src/file_column.cpp",
+    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+  ]
+
+  sources += cloud_disk_sync
+  sources += clouddisk_database
+
   include_dirs = [
+    "${clouddisk_database_path}/include",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "${media_library_path}/frameworks/utils/include",
@@ -913,11 +1118,14 @@ ohos_unittest("task_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
     "relational_store:native_rdb",
+    "samgr:samgr_proxy",
   ]
 
   defines = [

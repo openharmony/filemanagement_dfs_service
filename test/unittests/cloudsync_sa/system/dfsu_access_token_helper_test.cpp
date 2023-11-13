@@ -121,7 +121,7 @@ HWTEST_F(DfsuAccessTokenHelperTest, GetCallerBundleNameTest, TestSize.Level1)
         DfsuAccessTokenHelper dfsuAccessTokenHelper;
         string bundleName = "bundleName";
         auto res = dfsuAccessTokenHelper.GetCallerBundleName(bundleName);
-        EXPECT_EQ(res, 8);
+        EXPECT_EQ(res, 9);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " GetCallerBundleNameTest ERROR";
@@ -144,16 +144,16 @@ HWTEST_F(DfsuAccessTokenHelperTest, GetBundleNameByTokenTest, TestSize.Level1)
         uint32_t tokenId = 0;
         string bundleName = "bundleName";
         auto res = dfsuAccessTokenHelper.GetBundleNameByToken(tokenId, bundleName);
-        EXPECT_EQ(res, 8);
+        EXPECT_EQ(res, 9);
         tokenId = 1;
         res = dfsuAccessTokenHelper.GetBundleNameByToken(tokenId, bundleName);
         EXPECT_EQ(res, 0);
         tokenId = 2;
         res = dfsuAccessTokenHelper.GetBundleNameByToken(tokenId, bundleName);
-        EXPECT_EQ(res, 8);
+        EXPECT_EQ(res, 9);
         tokenId = 3;
         res = dfsuAccessTokenHelper.GetBundleNameByToken(tokenId, bundleName);
-        EXPECT_EQ(res, 8);
+        EXPECT_EQ(res, 9);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " GetBundleNameByTokenTest ERROR";

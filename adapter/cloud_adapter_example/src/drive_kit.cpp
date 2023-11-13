@@ -104,6 +104,12 @@ DKError DriveKitNative::ResolveNotificationEvent(const std::string &extraData, D
     return DKError();
 }
 
+DKError DriveKitNative::GetAppConfigParams(const DKAppBundleName &bundleNames,
+                                           std::map<std::string, std::string> &param)
+{
+    return DKError();
+}
+
 std::shared_ptr<DriveKitNative> DriveKitNative::GetInstance(int userId)
 {
     std::lock_guard<std::mutex> lck(drivekitMutex_);

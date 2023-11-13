@@ -66,11 +66,14 @@ public:
 
     /* sdk */
     void SetSdkHelper(std::shared_ptr<SdkHelper> &sdkHelper);
-    int32_t Lock();
-    void Unlock();
-    void ForceUnlock();
+    virtual int32_t Lock();
+    virtual void Unlock();
+    virtual void ForceUnlock();
 
     void NotifyCurrentSyncState();
+
+    /* optimizestorage */
+    virtual int32_t OptimizeStorage(const int32_t agingDays);
 
 protected:
     /* download */
@@ -105,10 +108,17 @@ protected:
     void CompleteClean();
 
     void SyncStateChangedNotify(const CloudSyncState state, const ErrorType error);
+    void SetErrorCodeMask(ErrorType errorType);
 
     /* identifier */
     const std::string bundleName_;
     const int32_t userId_;
+
+    /* sdk */
+    std::shared_ptr<SdkHelper> sdkHelper_;
+    SdkLock lock_;
+
+    uint32_t errorCode_{0};
 
 private:
     /* download */
@@ -176,7 +186,6 @@ private:
     std::function<RET(ARGS...)> AsyncCallback(RET(T::*f)(ARGS...));
 
     void UpdateErrorCode(int32_t code);
-    void SetErrorCodeMask(ErrorType errorType);
     /* cloud sync result */
     ErrorType GetErrorType();
 
@@ -185,12 +194,6 @@ private:
 
     /* task management */
     std::shared_ptr<TaskRunner> taskRunner_;
-
-    /* sdk */
-    std::shared_ptr<SdkHelper> sdkHelper_;
-    SdkLock lock_;
-
-    uint32_t errorCode_{0};
 
     /* download callback manager*/
     CloudDownloadCallbackManager downloadCallbackMgr_;

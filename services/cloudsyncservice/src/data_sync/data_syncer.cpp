@@ -19,10 +19,12 @@
 
 #include "data_sync_const.h"
 #include "data_sync_notifier.h"
+#include "data_syncer_rdb_store.h"
 #include "dfs_error.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "sdk_helper.h"
 #include "sync_rule/battery_status.h"
+#include "task_state_manager.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -39,6 +41,7 @@ DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
     /* alloc task runner */
     taskRunner_ = DelayedSingleton<TaskManager>::GetInstance()->AllocRunner(userId,
         bundleName, bind(&DataSyncer::Schedule, this));
+    downloadCallbackMgr_.SetBundleName(bundleName);
 }
 
 DataSyncer::~DataSyncer()
@@ -70,6 +73,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
         return E_PENDING;
     }
 
+    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::SYNC_TASK);
     /* start data sync */
     Schedule();
 
@@ -88,52 +92,12 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 
 int32_t DataSyncer::Lock()
 {
-    lock_guard<mutex> lock(lock_.mtx);
-    if (lock_.count > 0) {
-        lock_.count++;
-        return E_OK;
-    }
-
-    /* lock: device-reentrant */
-    int32_t ret = sdkHelper_->GetLock(lock_.lock);
-    if (ret != E_OK) {
-        LOGE("sdk helper get lock err %{public}d", ret);
-        lock_.lock = {0};
-        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
-            SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
-        }
-        return ret;
-    }
-    lock_.count++;
-
-    return ret;
+    return E_OK;
 }
 
-void DataSyncer::Unlock()
-{
-    lock_guard<mutex> lock(lock_.mtx);
-    lock_.count--;
-    if (lock_.count > 0) {
-        return;
-    }
+void DataSyncer::Unlock() {}
 
-    /* sdk unlock */
-    sdkHelper_->DeleteLock(lock_.lock);
-
-    /* reset sdk lock */
-    lock_.lock = { 0 };
-}
-
-void DataSyncer::ForceUnlock()
-{
-    lock_guard<mutex> lock(lock_.mtx);
-    if (lock_.count == 0) {
-        return;
-    }
-    sdkHelper_->DeleteLock(lock_.lock);
-    lock_.lock = { 0 };
-    lock_.count = 0;
-}
+void DataSyncer::ForceUnlock() {}
 
 int32_t DataSyncer::StartDownloadFile(const std::string path, const int32_t userId)
 {
@@ -1048,6 +1012,8 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
     }
 
     auto nextAction = syncStateManager_.UpdateSyncState(syncState);
+    DataSyncerRdbStore::GetInstance().UpdateSyncState(userId_, bundleName_, syncState);
+
     if (nextAction == Action::START) {
         /* Retrigger sync, clear errorcode */
         errorCode_ = E_OK;
@@ -1058,6 +1024,8 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
         errorCode_ = E_OK;
         StartSync(true, SyncTriggerType::PENDING_TRIGGER);
         return;
+    } else {
+        TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::SYNC_TASK);
     }
 
     /* notify sync state */
@@ -1070,6 +1038,7 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
 
 void DataSyncer::BeginClean()
 {
+    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::CLEAN_TASK);
     /* stop all the tasks and wait for tasks' termination */
     if (!taskRunner_->StopAndWaitFor()) {
         LOGE("wait for tasks stop fail");
@@ -1082,6 +1051,8 @@ void DataSyncer::CompleteClean()
 {
     DeleteSubscription();
     (void)syncStateManager_.UpdateSyncState(SyncState::CLEAN_SUCCEED);
+    DataSyncerRdbStore::GetInstance().UpdateSyncState(userId_, bundleName_, SyncState::CLEAN_SUCCEED);
+    TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::CLEAN_TASK);
 }
 
 void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)
@@ -1159,6 +1130,11 @@ void DataSyncer::DeleteSubscription()
                 err.dkErrorCode);
         }
     });
+}
+
+int32_t DataSyncer::OptimizeStorage(const int32_t agingDays)
+{
+    return E_OK;
 }
 } // namespace CloudSync
 } // namespace FileManagement

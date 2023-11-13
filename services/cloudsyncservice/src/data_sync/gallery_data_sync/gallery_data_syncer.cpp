@@ -102,7 +102,7 @@ void GalleryDataSyncer::PutHandler()
 int32_t GalleryDataSyncer::Clean(const int action)
 {
     LOGD("gallery data sycner Clean");
-    
+
     /* start clean */
     BeginClean();
 
@@ -121,7 +121,7 @@ int32_t GalleryDataSyncer::Clean(const int action)
     if (ret != E_OK) {
         LOGE("gallery data syncer album clean err %{public}d", ret);
     }
-    
+
     DeleteSubscription();
     PutHandler();
 
@@ -285,6 +285,71 @@ int32_t GalleryDataSyncer::Complete()
     Unlock();
     CompleteAll();
     return E_OK;
+}
+
+int32_t GalleryDataSyncer::OptimizeStorage(const int32_t agingDays)
+{
+    LOGD("gallery data sycner FileAging");
+
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    ret = fileHandler_->OptimizeStorage(agingDays);
+
+    PutHandler();
+
+    return ret;
+}
+
+int32_t GalleryDataSyncer::Lock()
+{
+    lock_guard<mutex> lock(lock_.mtx);
+    if (lock_.count > 0) {
+        lock_.count++;
+        return E_OK;
+    }
+
+    /* lock: device-reentrant */
+    int32_t ret = sdkHelper_->GetLock(lock_.lock);
+    if (ret != E_OK) {
+        LOGE("sdk helper get lock err %{public}d", ret);
+        lock_.lock = {0};
+        if (ret == E_SYNC_FAILED_NETWORK_NOT_AVAILABLE) {
+            SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
+        }
+        return ret;
+    }
+    lock_.count++;
+
+    return ret;
+}
+
+void GalleryDataSyncer::Unlock()
+{
+    lock_guard<mutex> lock(lock_.mtx);
+    lock_.count--;
+    if (lock_.count > 0) {
+        return;
+    }
+
+    /* sdk unlock */
+    sdkHelper_->DeleteLock(lock_.lock);
+
+    /* reset sdk lock */
+    lock_.lock = { 0 };
+}
+
+void GalleryDataSyncer::ForceUnlock()
+{
+    lock_guard<mutex> lock(lock_.mtx);
+    if (lock_.count == 0) {
+        return;
+    }
+    sdkHelper_->DeleteLock(lock_.lock);
+    lock_.lock = { 0 };
+    lock_.count = 0;
 }
 } // namespace CloudSync
 } // namespace FileManagement

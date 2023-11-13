@@ -27,6 +27,8 @@ enum class DKSeekFromWhere {
 
 class DKAssetReadSession {
 public:
+    DKError InitSession();
+    int64_t GetAssetSize() const;
     void GetAssetInfo();
     void Seek(int64_t offset, DKSeekFromWhere fromWhere);
     int64_t Read(int64_t size, char *buffer, DKError &error);

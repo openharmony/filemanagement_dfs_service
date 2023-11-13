@@ -72,6 +72,7 @@ public:
     virtual int32_t Clean(const int action);
 
     /* cursor */
+    virtual void GetStartCursor(DriveKit::DKQueryCursor &cursor);
     virtual void GetNextCursor(DriveKit::DKQueryCursor &cursor);
     virtual void SetTempStartCursor(const DriveKit::DKQueryCursor &cursor);
     virtual void GetTempStartCursor(DriveKit::DKQueryCursor &cursor);

@@ -40,7 +40,9 @@
           "device_manager",
           "drivekit_native",
           "dsoftbus",
+          "eventhandler",
           "file_api",
+          "hicollie",
           "hilog",
           "hitrace",
           "init",
@@ -52,7 +54,8 @@
           "relational_store",
           "safwk",
           "samgr",
-          "ability_runtime"
+          "ability_runtime",
+          "os_account"
         ],
         "third_party": [
           "e2fsprogs",

@@ -14,6 +14,7 @@
  */
 #include "ipc/cloud_sync_service_stub.h"
 #include "cloud_file_sync_service_interface_code.h"
+#include "data_sync/task_state_manager.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "dfsu_memory_guard.h"
@@ -68,6 +69,7 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
                                               MessageOption &option)
 {
     DfsuMemoryGuard cacheGuard;
+    TaskStateManager::GetInstance().DelayUnloadTask();
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return E_SERVICE_DESCRIPTOR_IS_EMPTY;
     }
@@ -193,6 +195,25 @@ int32_t CloudSyncServiceStub::HandleClean(MessageParcel &data, MessageParcel &re
     return res;
 }
 
+int32_t CloudSyncServiceStub::HandleNotifyDataChange(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin NotifyDataChange");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    string accountId = data.ReadString();
+    string bundleName = data.ReadString();
+    int32_t res = NotifyDataChange(accountId, bundleName);
+    reply.WriteInt32(res);
+    LOGI("End NotifyDataChange");
+    return res;
+}
+
 int32_t CloudSyncServiceStub::HandleNotifyEventChange(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin NotifyEventChange");
@@ -209,27 +230,6 @@ int32_t CloudSyncServiceStub::HandleNotifyEventChange(MessageParcel &data, Messa
     string extraDataStr = data.ReadString();
     
     int32_t res = NotifyEventChange(userId, eventIdStr, extraDataStr);
-    reply.WriteInt32(res);
-    LOGI("End NotifyEventChange");
-    return res;
-}
-
-int32_t CloudSyncServiceStub::HandleNotifyEventChange(MessageParcel &data, MessageParcel &reply)
-{
-    LOGI("Begin NotifyEventChange");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
-        LOGE("permission denied");
-        return E_PERMISSION_DENIED;
-    }
-    if (!DfsuAccessTokenHelper::IsSystemApp()) {
-        LOGE("caller hap is not system hap");
-        return E_PERMISSION_SYSTEM;
-    }
-    string userIdStr = data.ReadString();
-    string eventIdStr = data.ReadString();
-    string extraDataStr = data.ReadString();
-    //string转int
-    int32_t res = NotifyEventChange(atoi(userIdStr.c_str()), eventIdStr, extraDataStr);
     reply.WriteInt32(res);
     LOGI("End NotifyEventChange");
     return res;

@@ -137,9 +137,7 @@ static bool IsNotifyEventChange(napi_env env, NFuncArg &funcArg)
 
 napi_value NotifyEventChange(napi_env env, NFuncArg &funcArg)
 {
-
     LOGI("NotifyEventChange entrance");
-    
     bool succ = false;
     int32_t userId;
     tie(succ, userId) = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToInt32();

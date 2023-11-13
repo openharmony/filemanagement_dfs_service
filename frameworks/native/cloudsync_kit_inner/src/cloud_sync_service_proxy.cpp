@@ -347,7 +347,8 @@ int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, con
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData)
+int32_t CloudSyncServiceProxy::NotifyEventChange(
+    int32_t userId, const std::string &eventId, const std::string &extraData)
 {
     LOGI("NotifyEventChange");
     MessageParcel data;
