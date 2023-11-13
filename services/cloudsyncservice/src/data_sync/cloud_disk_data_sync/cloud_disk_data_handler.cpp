@@ -198,6 +198,7 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
         LOGE("MetaFile Conflict failed %{public}d", ret);
     }
     ValuesBucket values;
+    localConvertor_.Convert(record, values);
     if (ret != E_OK) {
         LOGE("record to valuebucket failed, ret=%{public}d", ret);
         return ret;
@@ -228,6 +229,7 @@ int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::Resu
     LOGI("cloud file META changed, %s", record.GetRecordId().c_str());
     /* update rdb */
     ValuesBucket values;
+    localConvertor_.Convert(record, values);
     values.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
     int32_t changedRows;
     string whereClause = FC::CLOUD_ID + " = ?";
