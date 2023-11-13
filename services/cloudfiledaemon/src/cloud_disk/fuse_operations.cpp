@@ -15,13 +15,22 @@
 #include "fuse_operations.h"
 
 #include "cloud_disk_inode.h"
+#include "file_operations_local.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
+using namespace std;
 void FuseOperations::Lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
-    struct CloudDiskInode *inoPtr = reinterpret_cast<struct CloudDiskInode*>(parent);
+    struct CloudDiskInode *inoPtr = nullptr;
+    if (parent == FUSE_ROOT_ID) {
+        shared_ptr<FileOperationsLocal> opsPtr = make_shared<FileOperationsLocal>();
+        opsPtr->Lookup(req, parent, name);
+        return;
+    }
+    inoPtr= reinterpret_cast<struct CloudDiskInode*>(parent);
     inoPtr->ops->Lookup(req, parent, name);
 }
 
@@ -33,7 +42,13 @@ void FuseOperations::Access(fuse_req_t req, fuse_ino_t ino, int mask)
 
 void FuseOperations::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
-    struct CloudDiskInode *inoPtr = reinterpret_cast<struct CloudDiskInode*>(ino);
+    struct CloudDiskInode *inoPtr = nullptr;
+    if (ino == FUSE_ROOT_ID) {
+        shared_ptr<FileOperationsLocal> opsPtr = make_shared<FileOperationsLocal>();
+        opsPtr->GetAttr(req, ino, fi);
+        return;
+    }
+    inoPtr = reinterpret_cast<struct CloudDiskInode*>(ino);
     inoPtr->ops->GetAttr(req, ino, fi);
 }
 
@@ -75,7 +90,14 @@ void FuseOperations::Create(fuse_req_t req, fuse_ino_t parent, const char *name,
 void FuseOperations::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                              struct fuse_file_info *fi)
 {
-    struct CloudDiskInode *inoPtr = reinterpret_cast<struct CloudDiskInode*>(ino);
+    struct CloudDiskInode *inoPtr = nullptr;
+    (void) fi;
+    if (ino == FUSE_ROOT_ID) {
+        shared_ptr<FileOperationsLocal> opsPtr = make_shared<FileOperationsLocal>();
+        opsPtr->ReadDir(req, ino, size, off, fi);
+        return;
+    }
+    inoPtr = reinterpret_cast<struct CloudDiskInode*>(ino);
     inoPtr->ops->ReadDir(req, ino, size, off, fi);
 }
 
