@@ -378,7 +378,7 @@ int32_t CloudDiskDataConvertor::HandleRecycleTime(DriveKit::DKRecordData &data,
 int32_t CloudDiskDataConvertor::HandleType(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-   std::string type;
+    std::string type;
     int32_t ret = GetString(FileColumn::IS_DIRECTORY, type, resultSet);
     if (ret != E_OK) {
         LOGE("handler type failed, ret = %{public}d", ret);

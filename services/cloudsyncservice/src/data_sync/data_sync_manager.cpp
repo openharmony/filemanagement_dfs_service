@@ -17,7 +17,9 @@
 
 #include <thread>
 #include <vector>
+#include <regex>
 
+#include "cloud_disk_data_syncer.h"
 #include "data_syncer_rdb_col.h"
 #include "data_syncer_rdb_store.h"
 #include "dfs_error.h"
@@ -205,7 +207,13 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bu
         }
     }
 
-    std::shared_ptr<DataSyncer> dataSyncer = std::make_shared<GalleryDataSyncer>(bundleName, userId);
+    std::shared_ptr<DataSyncer> dataSyncer;
+    std::regex regexString(".*(.photos)$");
+    if (std::regex_match(bundleName, regexString)) {
+        dataSyncer = std::make_shared<GalleryDataSyncer>(bundleName, userId);
+    } else {
+        dataSyncer = std::make_shared<CloudDiskDataSyncer>(bundleName, userId);
+    }
     int32_t ret = dataSyncer->Init(bundleName, userId);
     if (ret != E_OK) {
         return nullptr;

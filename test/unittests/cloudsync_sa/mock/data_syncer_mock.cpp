@@ -57,6 +57,14 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
     return E_OK;
 }
 
+void DataSyncer::ForceUnlock()
+{
+}
+
+void DataSyncer::SetErrorCodeMask(ErrorType errorType)
+{
+}
+
 int32_t DataSyncer::Lock()
 {
     return E_OK;
