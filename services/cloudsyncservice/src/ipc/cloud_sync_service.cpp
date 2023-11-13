@@ -123,13 +123,14 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
 {
     string reason = startReason.GetName();
     LOGI("Begin to start service reason: %{public}s", reason.c_str());
-    if (reason == "loopevent") {
-        shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
-        taskRunner->StartTask();
-    } else if (reason == "usual.event.wifi.SCAN_FINISHED") {
+    if (reason == "usual.event.wifi.SCAN_FINISHED") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
     } else if (reason == "usual.event.BATTERY_OKAY") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
+    }
+    if (reason != "load") {
+        shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
+        taskRunner->StartTask();
     }
 }
 

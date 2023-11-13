@@ -2830,7 +2830,7 @@ int32_t FileDataHandler::OptimizeStorage(const int32_t agingDays)
         ret = FileAgingDelete(agingTime, deleteSize);
         if (ret != E_OK) {
             LOGE("OptimizeStorage Error");
-            return E_OPTIMIZE_STORAGE_ERROR;
+            return ret;
         }
     }
 
@@ -2841,7 +2841,7 @@ int32_t FileDataHandler::OptimizeStorage(const int32_t agingDays)
         ret = FileAgingDelete(agingTime, deleteSize);
         if (ret != E_OK) {
             LOGE("OptimizeStorage Error");
-            return E_OPTIMIZE_STORAGE_ERROR;
+            return ret;
         }
     }
     return E_OK;

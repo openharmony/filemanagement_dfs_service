@@ -285,6 +285,11 @@ int32_t DataSyncer::OptimizeStorage(const int32_t agingDays)
 {
     return E_OK;
 }
+
+bool DataSyncer::HasSdkHelper()
+{
+    return true;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

@@ -46,7 +46,11 @@ int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
         return E_INVAL_ARG;
     }
 
-    auto ret = IsSkipSync(bundleName, userId);
+    auto ret = InitSdk(userId, bundleName, dataSyncer);
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = IsSkipSync(bundleName, userId);
     if (ret != E_OK) {
         return ret;
     }
@@ -66,6 +70,10 @@ int32_t DataSyncManager::TriggerStopSync(const std::string &bundleName,
         return E_INVAL_ARG;
     }
 
+    auto ret = InitSdk(userId, bundleName, dataSyncer);
+    if (ret != E_OK) {
+        return ret;
+    }
     std::thread([dataSyncer, triggerType]() { dataSyncer->StopSync(triggerType); }).detach();
     return E_OK;
 }
@@ -89,7 +97,10 @@ int32_t DataSyncManager::StartDownloadFile(const std::string &bundleName, const 
         LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_INVAL_ARG;
     }
-
+    auto ret = InitSdk(userId, bundleName, dataSyncer);
+    if (ret != E_OK) {
+        return ret;
+    }
     return dataSyncer->StartDownloadFile(path, userId);
 }
 
@@ -100,7 +111,10 @@ int32_t DataSyncManager::StopDownloadFile(const std::string &bundleName, const i
         LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_INVAL_ARG;
     }
-
+    auto ret = InitSdk(userId, bundleName, dataSyncer);
+    if (ret != E_OK) {
+        return ret;
+    }
     return dataSyncer->StopDownloadFile(path, userId);
 }
 
@@ -211,14 +225,6 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bu
         return nullptr;
     }
 
-    /* get sdk helper */
-    auto sdkHelper = std::make_shared<SdkHelper>();
-    ret = sdkHelper->Init(userId, bundleName);
-    if (ret != E_OK) {
-        LOGE("get sdk helper err %{public}d", ret);
-        return nullptr;
-    }
-    dataSyncer->SetSdkHelper(sdkHelper);
     dataSyncers_.push_back(dataSyncer);
     DataSyncerRdbStore::GetInstance().Insert(userId, bundleName);
     return dataSyncer;
@@ -262,5 +268,22 @@ int32_t DataSyncManager::OptimizeStorage(const std::string &bundleName, const in
     }
 
     return dataSyncer->OptimizeStorage(agingDays);
+}
+
+int32_t DataSyncManager::InitSdk(const int32_t userId, const string bundleName, std::shared_ptr<DataSyncer> dataSyncer)
+{
+    std::lock_guard<std::mutex> lck(dataSyncMutex_);
+    if (dataSyncer->HasSdkHelper()) {
+        return E_OK;
+    }
+    /* get sdk helper */
+    auto sdkHelper = std::make_shared<SdkHelper>();
+    auto ret = sdkHelper->Init(userId, bundleName);
+    if (ret != E_OK) {
+        LOGE("get sdk helper err %{public}d", ret);
+        return ret;
+    }
+    dataSyncer->SetSdkHelper(sdkHelper);
+    return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync

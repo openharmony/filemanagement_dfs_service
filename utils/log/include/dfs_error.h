@@ -61,7 +61,6 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_OSACCOUNT,
     E_USER_LOCKED,
     E_GET_SIZE_ERROR,
-    E_OPTIMIZE_STORAGE_ERROR,
 };
 
 enum JsErrCode {

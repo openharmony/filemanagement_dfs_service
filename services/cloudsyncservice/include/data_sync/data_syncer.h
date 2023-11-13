@@ -65,6 +65,7 @@ public:
     virtual int32_t Clean(const int action);
 
     /* sdk */
+    bool HasSdkHelper();
     void SetSdkHelper(std::shared_ptr<SdkHelper> &sdkHelper);
     int32_t Lock();
     void Unlock();
