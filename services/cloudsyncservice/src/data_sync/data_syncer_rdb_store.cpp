@@ -93,7 +93,7 @@ int32_t DataSyncerRdbStore::UpdateSyncState(int32_t userId, const string &bundle
     return E_OK;
 }
 
-int32_t DataSyncerRdbStore::QueryDataSyncer(int32_t userId, std::shared_ptr<NativeRdb::ResultSet> resultSet)
+int32_t DataSyncerRdbStore::QueryDataSyncer(int32_t userId, std::shared_ptr<NativeRdb::ResultSet> &resultSet)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(DATA_SYNCER_TABLE);
     predicates.EqualTo(USER_ID, userId);
@@ -101,7 +101,7 @@ int32_t DataSyncerRdbStore::QueryDataSyncer(int32_t userId, std::shared_ptr<Nati
 }
 
 int32_t DataSyncerRdbStore::Query(NativeRdb::AbsRdbPredicates predicates,
-    std::shared_ptr<NativeRdb::ResultSet> resultSet)
+    std::shared_ptr<NativeRdb::ResultSet> &resultSet)
 {
     if (rdb_ == nullptr) {
         if (RdbInit() != E_OK) {

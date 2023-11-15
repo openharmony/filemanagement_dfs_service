@@ -28,6 +28,7 @@
 #include "sync_rule/cloud_status.h"
 #include "sync_rule/net_conn_callback_observer.h"
 #include "sync_rule/network_status.h"
+#include "sync_rule/screen_status.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
 #include "directory_ex.h"
@@ -45,6 +46,7 @@ CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbili
 {
     dataSyncManager_ = make_shared<DataSyncManager>();
     batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
+    screenStatusListener_ = make_shared<ScreenStatusListener>();
 }
 
 void CloudSyncService::PublishSA()
@@ -61,6 +63,7 @@ void CloudSyncService::Init()
     NetworkStatus::InitNetwork(dataSyncManager_);
     /* Get Init Charging status */
     BatteryStatus::GetInitChargingStatus();
+    ScreenStatus::InitScreenStatus();
 }
 
 std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userId)
@@ -138,6 +141,7 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
 {
     LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
     batteryStatusListener_->Start();
+    screenStatusListener_->Start();
 }
 
 int32_t CloudSyncService::UnRegisterCallbackInner()

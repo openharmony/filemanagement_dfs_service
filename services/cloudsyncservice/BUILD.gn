@@ -116,6 +116,8 @@ ohos_shared_library("cloudsync_sa") {
     "src/sync_rule/cloud_status.cpp",
     "src/sync_rule/net_conn_callback_observer.cpp",
     "src/sync_rule/network_status.cpp",
+    "src/sync_rule/screen_status.cpp",
+    "src/sync_rule/screen_status_listener.cpp",
   ]
 
   sources += data_sync
@@ -150,6 +152,7 @@ ohos_shared_library("cloudsync_sa") {
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -259,6 +262,8 @@ ohos_static_library("cloudsync_sa_static") {
     "src/sync_rule/cloud_status.cpp",
     "src/sync_rule/net_conn_callback_observer.cpp",
     "src/sync_rule/network_status.cpp",
+    "src/sync_rule/screen_status.cpp",
+    "src/sync_rule/screen_status_listener.cpp",
   ]
 
   sources += data_sync
@@ -293,6 +298,7 @@ ohos_static_library("cloudsync_sa_static") {
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
