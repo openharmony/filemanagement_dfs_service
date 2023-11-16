@@ -154,7 +154,11 @@ void FileOperationsCloud::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLooku
         return (void) fuse_reply_none(req);
     }
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-    shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, inoPtr->cloudId);
+    string key = inoPtr->cloudId;
+    if (inoPtr->layer != CLOUD_DISK_INODE_OTHER_LAYER) {
+        key = inoPtr->path;
+    }
+    shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, key);
     FileOperationsHelper::PutCloudDiskInode(data, node, nLookup);
     fuse_reply_none(req);
 }
@@ -168,7 +172,11 @@ void FileOperationsCloud::ForgetMulti(fuse_req_t req, size_t count, struct fuse_
             return (void) fuse_reply_none(req);
         }
         auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(forgets[i].ino);
-        shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, inoPtr->cloudId);
+        string key = inoPtr->cloudId;
+        if (inoPtr->layer != CLOUD_DISK_INODE_OTHER_LAYER) {
+            key = inoPtr->path;
+        }
+        shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, key);
         FileOperationsHelper::PutCloudDiskInode(data, node, forgets[i].nlookup);
     }
     fuse_reply_none(req);
