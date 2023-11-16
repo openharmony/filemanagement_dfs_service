@@ -83,7 +83,7 @@ struct FuseData {
     struct fuse_session *se;
 };
 
-static bool HandleDkError (fuse_req_t req, DriveKit::DKError dkError)
+static bool HandleDkError(fuse_req_t req, DriveKit::DKError dkError)
 {
     if (!dkError.HasError()) {
         return false;

@@ -89,7 +89,15 @@ int32_t CloudDiskDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> 
 
 static bool IsLocalDirty(NativeRdb::ResultSet &local)
 {
-    return false;
+    int dirty;
+    int ret = DataConvertor::GetInt(FC::DIRTY_TYPE, dirty, local);
+    if (ret != E_OK) {
+        LOGE("Get dirty int failed");
+        return false;
+    }
+    return (dirty == static_cast<int32_t>(DirtyType::TYPE_MDIRTY)) ||
+           (dirty == static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) ||
+           (dirty == static_cast<int32_t>(DirtyType::TYPE_DELETED));
 }
 static bool FileIsRecycled(NativeRdb::ResultSet &local)
 {
@@ -311,12 +319,38 @@ int32_t CloudDiskDataHandler::ClearCloudInfo(const string &cloudId)
 int32_t CloudDiskDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkRecords,
                                               const shared_ptr<std::vector<DriveKit::DKRecord>> &records)
 {
+    auto recordIds = vector<string>();
+    for (const auto &record : *records) {
+        recordIds.push_back(record.GetRecordId());
+    }
+    auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
+    if (resultSet == nullptr) {
+        return E_RDB;
+    }
+    for (const auto &record : *records) {
+        if ((recordIdRowIdMap.find(record.GetRecordId()) == recordIdRowIdMap.end()) && !record.GetIsDelete()) {
+            checkRecords.push_back(record.GetRecordId());
+        } else if (recordIdRowIdMap.find(record.GetRecordId()) != recordIdRowIdMap.end()) {
+            resultSet->GoToRow(recordIdRowIdMap.at(record.GetRecordId()));
+            int64_t version = 0;
+            DataConvertor::GetLong(FC::VERSION, version, *resultSet);
+            if (record.GetVersion() != static_cast<unsigned long>(version) &&
+                (!IsLocalDirty(*resultSet) || record.GetIsDelete())) {
+                checkRecords.push_back(record.GetRecordId());
+            }
+        } else {
+            LOGE("recordId %s has multiple file in db!", record.GetRecordId().c_str());
+        }
+    }
     return E_OK;
 }
+
 int32_t CloudDiskDataHandler::Clean(const int action)
 {
+    LOGD("Enter function FileDataHandler::Clean");
     return E_OK;
 }
+
 int32_t CloudDiskDataHandler::CleanCloudRecord(NativeRdb::ResultSet &local,
                                                const int action,
                                                const std::string &cloudId)
