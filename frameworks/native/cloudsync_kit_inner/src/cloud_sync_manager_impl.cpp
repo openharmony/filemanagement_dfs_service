@@ -146,6 +146,24 @@ int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, cons
     return ret;
 }
 
+int32_t CloudSyncManagerImpl::NotifyEventChange(
+    int32_t userId, const std::string &eventId, const std::string &extraData)
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    if (!isFirstCall_.test_and_set()) {
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
+   
+    int32_t ret = CloudSyncServiceProxy->NotifyEventChange(userId, eventId, extraData);
+    LOGI("NotifyDataChange ret %{public}d", ret);
+    return ret;
+}
+
 int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri)
 {
     LOGI("StartDownloadFile start");
