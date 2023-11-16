@@ -143,6 +143,10 @@ void FileOperationsHelper::PutCloudDiskInode(struct CloudDiskFuseData *data,
                                              shared_ptr<CloudDiskInode> inoPtr, uint64_t num)
 {
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
+    if (inoPtr == nullptr) {
+        LOGD("Get an invalid inode!");
+        return;
+    }
     inoPtr->refCount -= num;
     if (inoPtr->refCount == 0) {
         LOGD("node released: %{public}s", inoPtr->path.c_str());
