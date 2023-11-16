@@ -43,16 +43,21 @@ public:
     int32_t LookUp(const std::string &parentCloudId, const std::string &fileName, CloudDiskFileInfo &info);
     int32_t GetAttr(const std::string &cloudId, CloudDiskFileInfo &info);
     int32_t ReadDir(const std::string &cloudId, std::vector<CloudDiskFileInfo> &infos);
-    int32_t FillFileType(const std::string &fileName, NativeRdb::ValuesBucket &fileInfo);
-    int32_t UpdateParentFolder(const std::string &parentCloudId, const std::string &filePath);
+    int32_t MkDir(const std::string &cloudId, const std::string &parentCloudId,
+        const std::string &directoryName);
     int32_t Create(const std::string &cloudId, const std::string &parentCloudId,
         const std::string &fileName);
+    int32_t Write(const std::string &cloudId);
     int32_t GetXAttr(const std::string &cloudId, const std::string &position, std::string &value);
     int32_t SetXAttr(const std::string &cloudId, const std::string &position, const std::string &value);
     int32_t Rename(const std::string &cloudId, const std::string &newParentCloudId, const std::string &newFileName);
+    int32_t UnlinkSyncedFile(const std::string &cloudId, const int32_t &isDirectory, const int32_t &position);
+    int32_t UnlinkLocalFile(const std::string &cloudId, const int32_t &isDirectory, const int32_t &position);
+    int32_t Unlink(const std::string &cloudId);
 
 private:
     void Stop();
+    const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args);
 
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     NativeRdb::RdbStoreConfig config_{""};
@@ -72,6 +77,14 @@ public:
         if ((rdbStore_) == nullptr) {    \
             LOGE("rdbStore_ is nullptr");    \
             return E_RDB;    \
+        }    \
+    } while (0)
+
+#define CLOUDID_IS_NULL(cloudId)    \
+    do {    \
+        if ((cloudId).empty()) {    \
+            LOGE("cloudId is null");    \
+            return E_INVAL_ARG;    \
         }    \
     } while (0)
 } // namespace CloudDisk

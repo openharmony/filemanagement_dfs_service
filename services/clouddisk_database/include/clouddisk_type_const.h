@@ -48,6 +48,14 @@ enum class OperationType : int64_t {
     RENAME,
     OPEN
 };
+
+constexpr int64_t SECOND_TO_MILLISECOND = 1e3;
+constexpr int64_t MILLISECOND_TO_NANOSECOND = 1e6;
+constexpr int32_t LOCAL = 1;
+constexpr int32_t CLOUD = 2;
+constexpr int32_t LOCAL_AND_CLOUD = 3;
+constexpr int32_t FILE = 0;
+constexpr int32_t DIRECTORY = 1;
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

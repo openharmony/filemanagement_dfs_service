@@ -44,7 +44,7 @@ const std::string FileColumn::FILES_TABLE = "CloudDisk";
 const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " +
     FILES_TABLE + " (" +
     CLOUD_ID + " TEXT PRIMARY KEY, " +
-    IS_DIRECTORY + " TEXT, " +
+    IS_DIRECTORY + " INT, " +
     FILE_NAME + " TEXT, " +
     PARENT_CLOUD_ID + " TEXT, " +
     FILE_SIZE + " BIGINT, " +
