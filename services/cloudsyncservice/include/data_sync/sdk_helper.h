@@ -123,6 +123,7 @@ struct SdkLock {
     DriveKit::DKLock lock = { 0 };
     std::mutex mtx;
     int count = 0;
+    uint32_t timerId{0};
 };
 } // namespace CloudSync
 } // namespace FileManagement

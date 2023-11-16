@@ -16,6 +16,7 @@
 #include "gallery_data_syncer.h"
 
 #include "dfs_error.h"
+#include "dfsu_timer.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -321,6 +322,26 @@ int32_t GalleryDataSyncer::Lock()
         }
         return ret;
     }
+
+    auto timerCallback = [this]() {
+        lock_guard<mutex> lock(lock_.mtx);
+        if (lock_.lock.lockSessionId.empty()) {
+            LOGE("session is unlocked, please lock first");
+            return;
+        }
+        auto ret = sdkHelper_->GetLock(lock_.lock);
+        if (ret != E_OK) {
+            LOGE("sdk helper get lock err %{public}d", ret);
+            return;
+        }
+        LOGD("timer trigger, lockSessionId:%{public}s", lock_.lock.lockSessionId.c_str());
+    };
+
+    const uint32_t KEEP_ALIVE_PERIOD_COEF = 3;
+    uint32_t period = lock_.lock.lockInterval * SECOND_TO_MILLISECOND / KEEP_ALIVE_PERIOD_COEF;
+    LOGD("period %{public}d", period);
+    DfsuTimer::GetInstance().Register(timerCallback, lock_.timerId, period);
+
     lock_.count++;
 
     return ret;
@@ -334,11 +355,12 @@ void GalleryDataSyncer::Unlock()
         return;
     }
 
+    DfsuTimer::GetInstance().Unregister(lock_.timerId);
     /* sdk unlock */
     sdkHelper_->DeleteLock(lock_.lock);
-
     /* reset sdk lock */
     lock_.lock = { 0 };
+    lock_.timerId = 0;
 }
 
 void GalleryDataSyncer::ForceUnlock()
@@ -347,9 +369,11 @@ void GalleryDataSyncer::ForceUnlock()
     if (lock_.count == 0) {
         return;
     }
+    DfsuTimer::GetInstance().Unregister(lock_.timerId);
     sdkHelper_->DeleteLock(lock_.lock);
     lock_.lock = { 0 };
     lock_.count = 0;
+    lock_.timerId = 0;
 }
 } // namespace CloudSync
 } // namespace FileManagement
