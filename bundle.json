@@ -55,7 +55,8 @@
           "safwk",
           "samgr",
           "ability_runtime",
-          "os_account"
+          "os_account",
+          "power_manager"
         ],
         "third_party": [
           "e2fsprogs",
