@@ -304,9 +304,9 @@ int32_t FileDataConvertor::HandleFormattedDate(DriveKit::DKRecordFieldMap &map, 
     if (year.empty() || month.empty() || day.empty()) {
         int64_t createTime = 0;
         RETURN_ON_ERR(GetLong(PhotoColumn::MEDIA_DATE_ADDED, createTime, resultSet));
-        year = StrCreateTime(PhotoColumn::PHOTO_DATE_YEAR_FORMAT, createTime / MILLISECOND_TO_SECOND);
-        month = StrCreateTime(PhotoColumn::PHOTO_DATE_MONTH_FORMAT, createTime / MILLISECOND_TO_SECOND);
-        day = StrCreateTime(PhotoColumn::PHOTO_DATE_DAY_FORMAT, createTime / MILLISECOND_TO_SECOND);
+        year = StrCreateTime(PhotoColumn::PHOTO_DATE_YEAR_FORMAT, createTime);
+        month = StrCreateTime(PhotoColumn::PHOTO_DATE_MONTH_FORMAT, createTime);
+        day = StrCreateTime(PhotoColumn::PHOTO_DATE_DAY_FORMAT, createTime);
     }
 
     map[PhotoColumn::PHOTO_DATE_YEAR] = DriveKit::DKRecordField(year);
@@ -680,12 +680,12 @@ int32_t FileDataConvertor::CompensateMediaType(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::CompensateDataAdded(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
-    uint64_t dataAdded = record.GetCreateTime();
+    uint64_t dataAdded = record.GetCreateTime() / MILLISECOND_TO_SECOND;
     if (dataAdded == 0) {
         LOGE("The createTime of record is incorrect");
     }
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_ADDED, dataAdded);
-    CompensateFormattedDate(dataAdded / MILLISECOND_TO_SECOND, valueBucket);
+    CompensateFormattedDate(dataAdded, valueBucket);
     return E_OK;
 }
 
@@ -1023,7 +1023,7 @@ int32_t FileDataConvertor::ExtractDeviceName(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::ExtractDateModified(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
-    uint64_t dateModified = record.GetEditedTime();
+    uint64_t dateModified = record.GetEditedTime() / MILLISECOND_TO_SECOND;
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_MODIFIED, dateModified);
     return E_OK;
 }
@@ -1069,7 +1069,7 @@ int32_t FileDataConvertor::ExtractDateTrashed(DriveKit::DKRecordData &data,
             LOGE("extract dataTrashed error");
             return E_INVAL_ARG;
         }
-        valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, dataTrashed);
+        valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, dataTrashed / MILLISECOND_TO_SECOND);
     } else {
         valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, 0);
     }

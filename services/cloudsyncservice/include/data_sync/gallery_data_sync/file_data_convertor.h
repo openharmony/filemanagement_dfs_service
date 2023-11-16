@@ -190,7 +190,7 @@ inline int32_t FileDataConvertor::HandleCreatedTime(DriveKit::DKRecordData &data
         return ret;
     }
     /* no overflow: 64 >> 32 + 3 */
-    data[FILE_CREATED_TIME] = DriveKit::DKRecordField(std::to_string(val));
+    data[FILE_CREATED_TIME] = DriveKit::DKRecordField(std::to_string(val * SECOND_TO_MILLISECOND));
     return E_OK;
 }
 
@@ -258,7 +258,7 @@ inline int32_t FileDataConvertor::HandleRecycleTime(DriveKit::DKRecordData &data
     if (ret != E_OK) {
         return ret;
     }
-    data[FILE_RECYCLE_TIME] = DriveKit::DKRecordField(std::to_string(val));
+    data[FILE_RECYCLE_TIME] = DriveKit::DKRecordField(std::to_string(val * SECOND_TO_MILLISECOND));
     return E_OK;
 }
 
@@ -282,7 +282,7 @@ inline int32_t FileDataConvertor::HandleEditedTime(DriveKit::DKRecordData &data,
     if (ret != E_OK) {
         return ret;
     }
-    data[FILE_EDITED_TIME] = DriveKit::DKRecordField(std::to_string(val));
+    data[FILE_EDITED_TIME] = DriveKit::DKRecordField(std::to_string(val * SECOND_TO_MILLISECOND));
     return E_OK;
 }
 
@@ -319,7 +319,7 @@ inline int32_t FileDataConvertor::HandleFirstUpdateTime(DriveKit::DKRecordFieldM
     if (ret != E_OK) {
         return ret;
     }
-    map[FILE_FIRST_UPDATE_TIME] = DriveKit::DKRecordField(std::to_string(val));
+    map[FILE_FIRST_UPDATE_TIME] = DriveKit::DKRecordField(std::to_string(val * SECOND_TO_MILLISECOND));
     return E_OK;
 }
 
@@ -331,7 +331,7 @@ inline int32_t FileDataConvertor::HandleFileCreateTime(DriveKit::DKRecordFieldMa
     if (ret != E_OK) {
         return ret;
     }
-    map[FILE_FILE_CREATE_TIME] = DriveKit::DKRecordField(std::to_string(val));
+    map[FILE_FILE_CREATE_TIME] = DriveKit::DKRecordField(std::to_string(val * SECOND_TO_MILLISECOND));
     return E_OK;
 }
 

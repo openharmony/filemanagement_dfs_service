@@ -658,7 +658,7 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
         LOGE("Get local ctime failed");
         return E_INVAL_ARG;
     }
-    int64_t crTime = static_cast<int64_t>(record.GetCreateTime());
+    int64_t crTime = static_cast<int64_t>(record.GetCreateTime() / MILLISECOND_TO_SECOND);
     if (localIsize == isize && localCrtime == crTime) {
         LOGI("Possible duplicate files");
     } else {
@@ -1175,7 +1175,7 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
     }
 
     // get record mtime
-    int64_t crTime = static_cast<int64_t>(record.GetCreateTime());
+    int64_t crTime = static_cast<int64_t>(record.GetCreateTime() / MILLISECOND_TO_SECOND);
     LOGI("cloudMtime %{public}llu, localMtime %{public}llu",
          static_cast<unsigned long long>(crTime), static_cast<unsigned long long>(localCrtime));
     changed = !(crTime == localCrtime);
