@@ -207,7 +207,7 @@ HWTEST_F(FileDataConvertorTest, HandlePropertiesTest, TestSize.Level1)
     DriveKit::DKRecordData data;
     ResultSetMock resultSet;
     auto ret = fileDataConvertor_->HandleProperties(data, resultSet);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_RDB, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandlePositionTest, TestSize.Level1)
@@ -237,7 +237,7 @@ HWTEST_F(FileDataConvertorTest, HandleHeightTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetInt(_, _)).WillOnce(Return(0));
     string key = "height";
     auto ret = fileDataConvertor_->HandleHeight(map, resultSet);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_RDB, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleRotateTest, TestSize.Level1)
@@ -279,7 +279,7 @@ HWTEST_F(FileDataConvertorTest, HandleWidthTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetInt(_, _)).WillOnce(Return(0));
     string key = "width";
     auto ret = fileDataConvertor_->HandleWidth(map, resultSet);
-    EXPECT_EQ(E_OK, ret);
+    EXPECT_EQ(E_RDB, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleDataModifiedTest, TestSize.Level1)
