@@ -43,7 +43,7 @@ int32_t OptimizeStorageTask::RunTask(int32_t userId)
     std::string bundleName = GetBundleName();
     std::map<std::string, std::string> param;
     auto err = driveKit->GetAppConfigParams(bundleName, param);
-    if (err.HasError()) {
+    if (err.HasError() || param.empty()) {
         LOGE("GetAppConfigParams failed, server err:%{public}d and dk err:%{public}d", err.serverErrorCode,
              err.dkErrorCode);
         return E_CLOUD_SDK;
