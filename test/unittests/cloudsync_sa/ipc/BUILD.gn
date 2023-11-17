@@ -18,6 +18,7 @@ ohos_unittest("cloud_sync_service_stub_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/dfsu_access_token_helper_mock.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
     "cloud_sync_service_stub_test.cpp",
   ]
