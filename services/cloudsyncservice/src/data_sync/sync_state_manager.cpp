@@ -30,7 +30,7 @@ Action SyncStateManager::UpdateSyncState(SyncState newState)
     return nextAction_;
 }
 
-bool SyncStateManager::CheckAndSetPending(bool forceFlag)
+bool SyncStateManager::CheckAndSetPending(bool forceFlag, SyncTriggerType triggerType)
 {
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
     if (state_ != SyncState::SYNCING && state_ != SyncState::CLEANING) {
@@ -40,8 +40,13 @@ bool SyncStateManager::CheckAndSetPending(bool forceFlag)
         return false;
     }
 
+    if (nextAction_ == Action::CHECK) {
+        return true;
+    }
     if (forceFlag) {
         nextAction_ = Action::FORCE_START;
+    } else if (triggerType == SyncTriggerType::TASK_TRIGGER) {
+        nextAction_ = Action::CHECK;
     } else {
         nextAction_ = Action::START;
     }

@@ -26,7 +26,7 @@ Action SyncStateManager::UpdateSyncState(SyncState newState)
     return nextAction_;
 }
 
-bool SyncStateManager::CheckAndSetPending(bool forceFlag)
+bool SyncStateManager::CheckAndSetPending(bool forceFlag, SyncTriggerType triggerType)
 {
     GTEST_LOG_(INFO) << "CheckAndSetPending Start";
     return forceFlag;

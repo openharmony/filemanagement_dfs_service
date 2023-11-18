@@ -131,6 +131,11 @@ int32_t CloudDiskDataSyncer::Complete()
     CompleteAll();
     return E_OK;
 }
+
+void CloudDiskDataSyncer::ScheduleByType(SyncTriggerType syncTriggerType)
+{
+    return;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

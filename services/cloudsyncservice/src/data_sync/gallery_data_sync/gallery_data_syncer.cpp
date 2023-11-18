@@ -103,7 +103,6 @@ void GalleryDataSyncer::PutHandler()
 int32_t GalleryDataSyncer::Clean(const int action)
 {
     LOGD("gallery data sycner Clean");
-
     /* start clean */
     BeginClean();
 
@@ -203,6 +202,21 @@ void GalleryDataSyncer::Schedule()
     if (ret != E_OK) {
         Abort();
     }
+}
+
+void GalleryDataSyncer::ScheduleByType(SyncTriggerType syncTriggerType)
+{
+    LOGI("schedule to stage %{public}d", ++stage_);
+    /* call putHandler in the Reset function when sync is completed */
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        LOGE("Get handler failed, may be rdb init failed");
+        return;
+    }
+    if (syncTriggerType == SyncTriggerType::TASK_TRIGGER) {
+        fileHandler_->SetChecking();
+    }
+    Schedule();
 }
 
 void GalleryDataSyncer::Reset()

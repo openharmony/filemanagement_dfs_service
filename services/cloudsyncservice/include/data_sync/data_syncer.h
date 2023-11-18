@@ -33,13 +33,6 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-enum class SyncTriggerType : int32_t {
-    APP_TRIGGER,
-    CLOUD_TRIGGER,
-    PENDING_TRIGGER,
-    BATTERY_OK_TRIGGER,
-    NETWORK_AVAIL_TRIGGER,
-};
 struct DownloadContext;
 
 class DataSyncer {
@@ -92,6 +85,7 @@ protected:
     void DeleteSubscription();
     /* schedule */
     virtual void Schedule() = 0;
+    virtual void ScheduleByType(SyncTriggerType syncTriggerType) = 0;
     virtual void Reset() = 0;
     void Abort();
 

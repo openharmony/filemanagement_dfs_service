@@ -40,6 +40,14 @@ enum OperationType {
     FILE_CLEAN
 };
 
+enum class SyncTriggerType : int32_t {
+    APP_TRIGGER,
+    CLOUD_TRIGGER,
+    PENDING_TRIGGER,
+    BATTERY_OK_TRIGGER,
+    NETWORK_AVAIL_TRIGGER,
+    TASK_TRIGGER,
+};
 struct LocalInfo {
     int64_t mdirtyTime;
     int64_t fdirtyTime;

@@ -68,14 +68,14 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
         userId_, bundleName_.c_str(), forceFlag, triggerType);
 
     /* only one specific data sycner running at a time */
-    if (syncStateManager_.CheckAndSetPending(forceFlag)) {
+    if (syncStateManager_.CheckAndSetPending(forceFlag, triggerType)) {
         LOGI("syncing, pending sync");
         return E_PENDING;
     }
 
     TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::SYNC_TASK);
     /* start data sync */
-    Schedule();
+    ScheduleByType(triggerType);
 
     return E_OK;
 }
@@ -1023,6 +1023,10 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
         /* Retrigger sync, clear errorcode */
         errorCode_ = E_OK;
         StartSync(true, SyncTriggerType::PENDING_TRIGGER);
+        return;
+    } else if (nextAction == Action::CHECK) {
+        errorCode_ = E_OK;
+        StartSync(false, SyncTriggerType::TASK_TRIGGER);
         return;
     } else {
         TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::SYNC_TASK);
