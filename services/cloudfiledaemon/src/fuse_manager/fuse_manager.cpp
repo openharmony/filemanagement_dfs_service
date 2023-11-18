@@ -493,6 +493,9 @@ static const struct fuse_lowlevel_ops cloudDiskFuseOps = {
     .setxattr           = CloudDisk::FuseOperations::SetXattr,
     .getxattr           = CloudDisk::FuseOperations::GetXattr,
     .mknod              = CloudDisk::FuseOperations::MkNod,
+    .mkdir              = CloudDisk::FuseOperations::MkDir,
+    .unlink             = CloudDisk::FuseOperations::Unlink,
+    .rmdir              = CloudDisk::FuseOperations::RmDir,
 };
 
 static const struct fuse_lowlevel_ops cloudMediaFuseOps = {

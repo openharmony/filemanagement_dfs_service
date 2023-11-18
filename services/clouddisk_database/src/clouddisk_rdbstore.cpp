@@ -134,7 +134,8 @@ int32_t CloudDiskRdbStore::LookUp(const std::string &parentCloudId,
     }
     lookUpPredicates
         .EqualTo(FileColumn::PARENT_CLOUD_ID, tempParentCloudId)->And()
-        ->EqualTo(FileColumn::FILE_NAME, fileName)->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0");
+        ->EqualTo(FileColumn::FILE_NAME, fileName)->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0")->And()
+        ->NotEqualTo(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_DELETED));
     auto resultSet = rdbStore_->Query(lookUpPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
     vector<CloudDiskFileInfo> infos;
     int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(move(resultSet), infos);
@@ -178,7 +179,8 @@ int32_t CloudDiskRdbStore::ReadDir(const std::string &cloudId, vector<CloudDiskF
         }
     }
     readDirPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, tempParentCloudId)
-        ->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0");
+        ->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0")->And()
+        ->NotEqualTo(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_DELETED));
     auto resultSet = rdbStore_->Query(readDirPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
     int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(move(resultSet), infos);
     if (ret != E_OK) {

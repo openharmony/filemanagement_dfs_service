@@ -39,6 +39,9 @@ public:
                         mode_t mode, struct fuse_file_info *fi);
     virtual void ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                          struct fuse_file_info *fi);
+    virtual void MkDir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode);
+    virtual void RmDir(fuse_req_t req, fuse_ino_t parent, const char *name);
+    virtual void Unlink(fuse_req_t req, fuse_ino_t parent, const char *name);
     virtual void SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                           const char *value, size_t size, int flags);
     virtual void GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,

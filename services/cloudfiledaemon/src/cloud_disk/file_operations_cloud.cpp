@@ -24,6 +24,7 @@
 #include "dk_database.h"
 #include "drive_kit.h"
 #include "file_operations_helper.h"
+#include "securec.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -36,6 +37,7 @@ namespace {
     static const uint32_t STAT_NLINK_DIR = 2;
     static const uint32_t STAT_MODE_REG = 0770;
     static const uint32_t STAT_MODE_DIR = 0771;
+    static const string HMDFS_PERMISSION_XATTR = "user.hmdfs.perm";
     static const uint32_t MILLISECOND_TO_SECONDS_TIMES = 1000;
 }
 
@@ -360,34 +362,112 @@ void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
     return;
 }
 
+static bool CheckIsHmdfsPermission(const string &key)
+{
+    return key == HMDFS_PERMISSION_XATTR;
+}
+
 void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    const char *value, size_t size, int flags)
 {
-    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-    const string path =  CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
-    int32_t err = setxattr(path.c_str(), name, value, size, 0);
-    if (err != 0) {
-        LOGD("setxattr faile with err:%{public}d! path:%{private}s", errno, path.c_str());
-        return (void) fuse_reply_err(req, errno);
+    LOGD("Setxattr begin name:%{public}s", name);
+    if (CheckIsHmdfsPermission(name)) {
+        fuse_reply_err(req, 0);
+    } else {
+        fuse_reply_err(req, ENOSYS);
     }
-    fuse_reply_err(req, 0);
 }
 
 void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    size_t size)
 {
-    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-    const string path = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
-    shared_ptr<char> value = make_shared<char>(size);
-    int32_t err = getxattr(path.c_str(), name, value.get(), size);
-    if (err != 0) {
-        LOGD("getxattr faile with err:%{public}d path:%{private}s", errno, path.c_str());
-        return (void) fuse_reply_err(req, errno);
+    LOGD("GetXattr begin name:%{public}s", name);
+    if (!CheckIsHmdfsPermission(name)) {
+        return (void) fuse_reply_err(req, ENOSYS);
     }
-    fuse_reply_buf(req, value.get(), err);
+    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    shared_ptr<char> value = make_shared<char>(size);
+    string hmdfsLayer = to_string(inoPtr->layer + 2);
+    memcpy_s(value.get(), size, hmdfsLayer.c_str(), hmdfsLayer.size());
+    fuse_reply_buf(req, value.get(), 0);
     fuse_reply_err(req, 0);
+}
+
+void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode)
+{
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto parentInode = reinterpret_cast<struct CloudDiskInode *>(parent);
+    string cloudId;
+    int32_t err = GenerateCloudId(data->userId, parentInode->bundleName, cloudId);
+    if (err != 0) {
+        LOGE("Failed to generate cloud id");
+        return (void) fuse_reply_err(req, err);
+    }
+
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName,
+                                                                         data->userId);
+    err = rdbStore->MkDir(cloudId, parentInode->cloudId, name);
+    if (err != 0) {
+        LOGE("Failed to mkdir to DB err:%{public}d", err);
+        return (void) fuse_reply_err(req, ENOSYS);
+    }
+
+    struct fuse_entry_param e;
+    err = DoCloudLookup(req, parent, name, &e);
+    if (err != 0) {
+        LOGE("Faile to find dir %{private}s", name);
+        return (void) fuse_reply_err(req, err);
+    }
+    fuse_reply_entry(req, &e);
+    fuse_reply_err(req, 0);
+}
+
+int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
+{
+    struct fuse_entry_param e;
+    int32_t err = DoCloudLookup(req, parent, name, &e);
+    if (err != 0) {
+        return ENOENT;
+    }
+
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto parentInode = reinterpret_cast<struct CloudDiskInode *>(parent);
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName,
+                                                                         data->userId);
+    CloudDiskFileInfo childInfo;
+    err = rdbStore->LookUp(parentInode->cloudId, name, childInfo);
+    if (err != 0) {
+        LOGE("lookup %{public}s error, err: %{public}d", name, err);
+        return ENOENT;
+    }
+    err = rdbStore->Unlink(childInfo.cloudId);
+    if (err != 0) {
+        LOGE("Failed to unlink DB name:%{private}s err:%{public}d", name, err);
+        return ENOSYS;
+    }
+    return 0;
+}
+
+void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *name)
+{
+    int32_t err = DoCloudUnlink(req, parent, name);
+    if (err != 0) {
+        fuse_reply_err(req, err);
+        return;
+    }
+    return (void) fuse_reply_err(req, 0);
+}
+
+void FileOperationsCloud::Unlink(fuse_req_t req, fuse_ino_t parent, const char *name)
+{
+    int32_t err = DoCloudUnlink(req, parent, name);
+    if (err != 0) {
+        fuse_reply_err(req, err);
+        return;
+    }
+    return (void) fuse_reply_err(req, 0);
 }
 } // namespace CloudDisk
 } // namespace FileManagement
