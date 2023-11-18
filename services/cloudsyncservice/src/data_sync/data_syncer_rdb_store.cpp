@@ -63,7 +63,10 @@ int32_t DataSyncerRdbStore::Insert(int32_t userId, const std::string &bundleName
     predicates.EqualTo(USER_ID, userId)->And()->EqualTo(BUNDLE_NAME, bundleName);
     std::shared_ptr<NativeRdb::ResultSet> resultSet;
     RETURN_ON_ERR(Query(predicates, resultSet));
-
+    int32_t rowCount = 0;
+    if (resultSet->GetRowCount(rowCount) == E_OK && rowCount == 1) {
+        return E_OK;
+    }
     int64_t rowId;
     NativeRdb::ValuesBucket values;
     values.PutInt(USER_ID, userId);
