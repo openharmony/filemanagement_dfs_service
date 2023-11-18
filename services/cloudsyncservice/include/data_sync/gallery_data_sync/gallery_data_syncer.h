@@ -31,6 +31,7 @@ public:
     virtual ~GalleryDataSyncer() = default;
 
     virtual void Schedule() override;
+    virtual void ScheduleByType(SyncTriggerType syncTriggerType) override;
     virtual void Reset() override;
 
     virtual int32_t StartDownloadFile(const std::string path, const int32_t userId) override;

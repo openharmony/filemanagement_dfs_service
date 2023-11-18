@@ -78,7 +78,7 @@ HWTEST_F(SyncStateManagerTest, CheckAndSetPending001, TestSize.Level1)
     GTEST_LOG_(INFO) << "CheckAndSetPending001 Start";
     SyncStateManager syncStateMgr;
     syncStateMgr.state_ = SyncState::SYNC_FAILED;
-    auto ret = syncStateMgr.CheckAndSetPending(false);
+    auto ret = syncStateMgr.CheckAndSetPending(false, SyncTriggerType::CLOUD_TRIGGER);
     EXPECT_EQ(ret, false);
     GTEST_LOG_(INFO) << "CheckAndSetPending001 End";
 }
@@ -94,7 +94,7 @@ HWTEST_F(SyncStateManagerTest, CheckAndSetPending002, TestSize.Level1)
     GTEST_LOG_(INFO) << "CheckAndSetPending002 Start";
     SyncStateManager syncStateMgr;
     syncStateMgr.state_ = SyncState::SYNCING;
-    auto ret = syncStateMgr.CheckAndSetPending(false);
+    auto ret = syncStateMgr.CheckAndSetPending(false, SyncTriggerType::CLOUD_TRIGGER);
     EXPECT_EQ(ret, true);
     GTEST_LOG_(INFO) << "CheckAndSetPending002 End";
 }
@@ -110,7 +110,7 @@ HWTEST_F(SyncStateManagerTest, CheckAndSetPending003, TestSize.Level1)
     GTEST_LOG_(INFO) << "CheckAndSetPending003 Start";
     SyncStateManager syncStateMgr;
     syncStateMgr.state_ = SyncState::SYNCING;
-    auto ret = syncStateMgr.CheckAndSetPending(true);
+    auto ret = syncStateMgr.CheckAndSetPending(true, SyncTriggerType::CLOUD_TRIGGER);
     EXPECT_EQ(ret, true);
     GTEST_LOG_(INFO) << "CheckAndSetPending003 End";
 }

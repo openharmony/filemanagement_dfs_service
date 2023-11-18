@@ -19,6 +19,7 @@
 #include <atomic>
 #include <shared_mutex>
 
+#include "data_sync_const.h"
 namespace OHOS::FileManagement::CloudSync {
 enum class SyncState : int32_t {
     INIT = 0,
@@ -33,12 +34,13 @@ enum class Action : int32_t {
     STOP = 0,
     START,
     FORCE_START,
+    CHECK,
 };
 
 class SyncStateManager {
 public:
     Action UpdateSyncState(SyncState newState);
-    bool CheckAndSetPending(bool forceFlag);
+    bool CheckAndSetPending(bool forceFlag, SyncTriggerType triggerType);
     void SetCleaningFlag();
     bool GetStopSyncFlag();
     void SetStopSyncFlag();
