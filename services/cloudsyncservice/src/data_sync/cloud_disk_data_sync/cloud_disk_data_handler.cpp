@@ -213,6 +213,7 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
     }
     int64_t rowId;
     values.PutInt(FC::POSITION, POSITION_CLOUD);
+    values.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     params.insertFiles.push_back(values);
     ret = Insert(rowId, FC::FILES_TABLE, values);
     return E_OK;
@@ -385,6 +386,8 @@ int32_t CloudDiskDataHandler::GetCreatedRecords(vector<DKRecord> &records)
         if (!createFailSet_.empty()) {
             createPredicates.And()->NotIn(FC::CLOUD_ID, createFailSet_);
         }
+        createPredicates.OrderByDesc(FC::IS_DIRECTORY);
+        createPredicates.OrderByAsc(FC::FILE_TIME_ADDED);
         createPredicates.OrderByAsc(FC::FILE_SIZE);
         createPredicates.Limit(LIMIT_SIZE);
         auto results = Query(createPredicates, FileColumn::DISK_CLOUD_SYNC_COLUMNS);

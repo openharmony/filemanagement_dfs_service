@@ -17,6 +17,7 @@
 
 #include <ctime>
 #include <sys/stat.h>
+#include <sstream>
 
 #include "clouddisk_rdb_utils.h"
 #include "rdb_sql_utils.h"
@@ -32,9 +33,6 @@ using namespace OHOS::NativeRdb;
 using namespace DriveKit;
 using namespace CloudSync;
 using namespace OHOS::Media;
-
-constexpr int64_t SECOND_TO_MILLISECOND = 1e3;
-constexpr int64_t MILLISECOND_TO_NANOSECOND = 1e6;
 
 CloudDiskRdbStore::CloudDiskRdbStore(const std::string &bundleName, const int32_t &userId)
     : bundleName_(bundleName), userId_(userId)
@@ -122,6 +120,10 @@ int32_t CloudDiskRdbStore::LookUp(const std::string &parentCloudId,
     const std::string &fileName, CloudDiskFileInfo &info)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
+    if (fileName.empty()) {
+        LOGE("fileName is invalid");
+        return E_INVAL_ARG;
+    }
     AbsRdbPredicates lookUpPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
     string tempParentCloudId = parentCloudId;
     if (tempParentCloudId.empty()) {
@@ -144,12 +146,16 @@ int32_t CloudDiskRdbStore::LookUp(const std::string &parentCloudId,
         return E_RDB;
     }
     info = move(infos.front());
+    if (info.parentCloudId == rootId_) {
+        info.parentCloudId = "";
+    }
     return E_OK;
 }
 
 int32_t CloudDiskRdbStore::GetAttr(const std::string &cloudId, CloudDiskFileInfo &info)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
+    CLOUDID_IS_NULL(cloudId);
     AbsRdbPredicates getAttrPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
     getAttrPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
     auto resultSet = rdbStore_->Query(getAttrPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
@@ -161,6 +167,9 @@ int32_t CloudDiskRdbStore::GetAttr(const std::string &cloudId, CloudDiskFileInfo
         return E_RDB;
     }
     info = move(infos.front());
+    if (info.parentCloudId == rootId_) {
+        info.parentCloudId = "";
+    }
     return E_OK;
 }
 
@@ -186,17 +195,20 @@ int32_t CloudDiskRdbStore::ReadDir(const std::string &cloudId, vector<CloudDiskF
         infos.clear();
         return E_RDB;
     }
+    for (auto &info : infos) {
+        if (info.parentCloudId == rootId_) {
+            info.parentCloudId = "";
+        }
+    }
     return E_OK;
 }
 
 static int32_t GetFileExtension(const std::string &fileName, std::string &extension)
 {
-    if (!fileName.empty()) {
-        size_t dotIndex = fileName.rfind(".");
-        if (dotIndex != string::npos) {
-            extension = fileName.substr(dotIndex + 1);
-            return E_OK;
-        }
+    size_t dotIndex = fileName.rfind(".");
+    if (dotIndex != string::npos) {
+        extension = fileName.substr(dotIndex + 1);
+        return E_OK;
     }
     LOGE("Failed to obtain file extension");
     return E_INVAL_ARG;
@@ -206,7 +218,7 @@ static int32_t GetFileTypeFromMimeType(const std::string &mimeType)
 {
     size_t pos = mimeType.find_first_of("/");
     if (pos == string::npos) {
-        LOGE("Invalid mime type: %{private}s", mimeType.c_str());
+        LOGE("Invalid mime type: %{public}s", mimeType.c_str());
         return E_INVAL_ARG;
     }
     string prefix = mimeType.substr(0, pos);
@@ -227,25 +239,15 @@ static int64_t Timespec2Milliseconds(struct timespec &time)
     return time.tv_sec * SECOND_TO_MILLISECOND + time.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 
-int32_t CloudDiskRdbStore::FillFileType(const std::string &fileName, ValuesBucket &fileInfo)
+static void FillFileType(const std::string &fileName, ValuesBucket &fileInfo)
 {
-    if (!fileName.empty()) {
-        string extension;
-        int32_t ret = GetFileExtension(fileName, extension);
-        if (ret == E_OK) {
-            fileInfo.PutString(FileColumn::FILE_CATEGORY, extension);
-            string mimeType = MimeTypeUtils::GetMimeTypeFromExtension(extension);
-            fileInfo.PutString(FileColumn::MIME_TYPE, mimeType);
-            int32_t fileType = GetFileTypeFromMimeType(mimeType);
-            fileInfo.PutInt(FileColumn::FILE_TYPE, fileType);
-            return E_OK;
-        } else {
-            LOGE("fill file type fail, ret %{public}d", ret);
-            return ret;
-        }
-    } else {
-        LOGE("fill file type fail, the file name is invalid");
-        return E_INVAL_ARG;
+    string extension;
+    if (!GetFileExtension(fileName, extension)) {
+        fileInfo.PutString(FileColumn::FILE_CATEGORY, extension);
+        string mimeType = MimeTypeUtils::GetMimeTypeFromExtension(extension);
+        fileInfo.PutString(FileColumn::MIME_TYPE, mimeType);
+        int32_t fileType = GetFileTypeFromMimeType(mimeType);
+        fileInfo.PutInt(FileColumn::FILE_TYPE, fileType);
     }
 }
 
@@ -256,43 +258,34 @@ static int64_t UTCTimeMilliSeconds()
     return t.tv_sec * SECOND_TO_MILLISECOND + t.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 
-int32_t CloudDiskRdbStore::UpdateParentFolder(const std::string &parentCloudId, const std::string &filePath)
+static int32_t CreateFile(const std::string &fileName, const std::string &filePath, ValuesBucket &fileInfo)
 {
-    RDBPTR_IS_NULLPTR(rdbStore_);
     struct stat statInfo {};
     int32_t ret = stat(filePath.c_str(), &statInfo);
     if (ret) {
         LOGE("filePath %{private}s is invalid", filePath.c_str());
         return E_PATH;
     }
-    if (!parentCloudId.empty()) {
-        ValuesBucket dirInfo;
-        dirInfo.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
-        dirInfo.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
-        int32_t changedRows = 0;
-        vector<ValueObject> bindArgs;
-        bindArgs.emplace_back(parentCloudId);
-        ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, dirInfo,
-            FileColumn::CLOUD_ID + " = ?", bindArgs);
-        if (ret != E_OK) {
-            LOGE("update file parent folder fail, ret %{public}d", ret);
-            return ret;
-        }
-        return E_OK;
-    } else {
-        LOGI("The parent folder is root folder, no update is required");
-        return E_OK;
-    }
+    fileInfo.PutInt(FileColumn::IS_DIRECTORY, FILE);
+    fileInfo.PutLong(FileColumn::FILE_SIZE, statInfo.st_size);
+    fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
+    fileInfo.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
+    FillFileType(fileName, fileInfo);
+    return E_OK;
 }
 
 int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string &parentCloudId,
     const std::string &fileName)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    string filePath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
     ValuesBucket fileInfo;
+    if (cloudId.empty() || fileName.empty()) {
+        LOGE("create parameter is invalid");
+        return E_INVAL_ARG;
+    }
     fileInfo.PutString(FileColumn::CLOUD_ID, cloudId);
     fileInfo.PutString(FileColumn::FILE_NAME, fileName);
+    fileInfo.PutLong(FileColumn::FILE_TIME_ADDED, UTCTimeMilliSeconds());
     string tempParentCloudId = parentCloudId;
     if (tempParentCloudId.empty()) {
         if (!rootId_.empty()) {
@@ -304,42 +297,318 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
     }
     fileInfo.PutString(FileColumn::PARENT_CLOUD_ID, tempParentCloudId);
     fileInfo.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::NEW));
+    string filePath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
+    if (CreateFile(fileName, filePath, fileInfo)) {
+        LOGE("file path is invalid, cannot create file record");
+        return E_PATH;
+    }
+    int64_t outRowId = 0;
+    int32_t ret = rdbStore_->Insert(outRowId, FileColumn::FILES_TABLE, fileInfo);
+    if (ret != E_OK) {
+        LOGE("insert new file record in DB is failed, ret = %{public}d", ret);
+        return ret;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &parentCloudId,
+    const std::string &directoryName)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    ValuesBucket dirInfo;
+    if (cloudId.empty() || directoryName.empty()) {
+        LOGE("make directory parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    dirInfo.PutString(FileColumn::CLOUD_ID, cloudId);
+    dirInfo.PutString(FileColumn::FILE_NAME, directoryName);
+    dirInfo.PutLong(FileColumn::FILE_TIME_ADDED, UTCTimeMilliSeconds());
+    dirInfo.PutLong(FileColumn::FILE_TIME_EDITED, UTCTimeMilliSeconds());
+    dirInfo.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
+    dirInfo.PutInt(FileColumn::IS_DIRECTORY, DIRECTORY);
+    string tempParentCloudId = parentCloudId;
+    if (tempParentCloudId.empty()) {
+        if (!rootId_.empty()) {
+            tempParentCloudId = rootId_;
+        } else {
+            LOGE("root Id is empty, cannot make directory");
+            return E_INVAL_ARG;
+        }
+    }
+    dirInfo.PutString(FileColumn::PARENT_CLOUD_ID, tempParentCloudId);
+    dirInfo.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::NEW));
+    int64_t outRowId = 0;
+    int32_t ret = rdbStore_->Insert(outRowId, FileColumn::FILES_TABLE, dirInfo);
+    if (ret != E_OK) {
+        LOGE("insert new directory record in DB is failed, ret = %{public}d", ret);
+        return ret;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::Write(const std::string &cloudId)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    CLOUDID_IS_NULL(cloudId);
+    string filePath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
     struct stat statInfo {};
     int32_t ret = stat(filePath.c_str(), &statInfo);
     if (ret) {
         LOGE("filePath %{private}s is invalid", filePath.c_str());
         return E_PATH;
     }
-    fileInfo.PutLong(FileColumn::FILE_SIZE, statInfo.st_size);
-    fileInfo.PutLong(FileColumn::FILE_TIME_ADDED, UTCTimeMilliSeconds());
-    fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
-    fileInfo.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
-    fileInfo.PutString(FileColumn::IS_DIRECTORY, S_ISDIR(statInfo.st_mode) ? "directory" : "file");
-    if (!S_ISDIR(statInfo.st_mode)) {
-        if (FillFileType(fileName, fileInfo)) {
-            LOGE("fille file type fail");
-            return E_INVAL_ARG;
-        }
+    CloudDiskFileInfo info;
+    if (GetAttr(cloudId, info)) {
+        LOGE("get write cloudId info in DB fail");
+        return E_RDB;
     }
-    int64_t outRowId = 0;
-    ret = rdbStore_->Insert(outRowId, FileColumn::FILES_TABLE, fileInfo);
+    int32_t position = static_cast<int32_t>(info.location);
+    ValuesBucket write;
+    write.PutLong(FileColumn::FILE_SIZE, statInfo.st_size);
+    write.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
+    write.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
+    write.PutLong(FileColumn::FILE_TIME_VISIT, Timespec2Milliseconds(statInfo.st_atim));
+    if (position != LOCAL) {
+        write.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_FDIRTY));
+        write.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::UPDATE));
+    }
+    int32_t changedRows = -1;
+    vector<ValueObject> bindArgs;
+    bindArgs.emplace_back(cloudId);
+    ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, write,
+        FileColumn::CLOUD_ID + " = ?", bindArgs);
     if (ret != E_OK) {
-        LOGE("insert new file record in DB is failed, ret = %{public}d", ret);
-        return ret;
-    }
-    if (UpdateParentFolder(parentCloudId, filePath)) {
-        LOGE("update parent folder edited time fail");
+        LOGE("write file record in DB fail, ret %{public}d", ret);
+        return E_RDB;
     }
     return E_OK;
 }
 
 int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &position, std::string &value)
 {
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (cloudId.empty() || position != FileColumn::POSITION) {
+        LOGE("getxattr parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    CloudDiskFileInfo info;
+    if (GetAttr(cloudId, info)) {
+        LOGE("get getxattr cloudId info in DB fail");
+        return E_RDB;
+    }
+    int32_t location = static_cast<int32_t>(info.location);
+    value = to_string(location);
     return E_OK;
 }
 
 int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &position, const std::string &value)
 {
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (cloudId.empty() || position != FileColumn::POSITION) {
+        LOGE("setxattr parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    int32_t val = -1;
+    istringstream transfer(value);
+    transfer >> val;
+    if (val != LOCAL && val != CLOUD && val != LOCAL_AND_CLOUD) {
+        LOGE("setxattr unknown value");
+        return E_INVAL_ARG;
+    }
+    ValuesBucket setXAttr;
+    setXAttr.PutInt(position, val);
+    int32_t changedRows = -1;
+    vector<ValueObject> bindArgs;
+    bindArgs.emplace_back(cloudId);
+    int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setXAttr,
+        FileColumn::CLOUD_ID + " = ?", bindArgs);
+    if (ret != E_OK) {
+        LOGE("set xAttr location fail, ret %{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+static void FileRename(ValuesBucket &values, const int32_t &position, const std::string &newFileName)
+{
+    values.PutString(FileColumn::FILE_NAME, newFileName);
+    FillFileType(newFileName, values);
+    if (position != LOCAL) {
+        values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::RENAME));
+    }
+}
+
+static void FileMove(ValuesBucket &values, const int32_t &position, const std::string &newParentCloudId)
+{
+    values.PutString(FileColumn::PARENT_CLOUD_ID, newParentCloudId);
+    if (position != LOCAL) {
+        values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::MOVE));
+    }
+}
+
+int32_t CloudDiskRdbStore::Rename(const std::string &cloudId,
+    const std::string &newParentCloudId, const std::string &newFileName)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    CLOUDID_IS_NULL(cloudId);
+    if (newFileName.empty()) {
+        LOGE("new file name is null, cannot be renamed");
+        return E_INVAL_ARG;
+    }
+    CloudDiskFileInfo info;
+    if (GetAttr(cloudId, info)) {
+        LOGE("get rename cloudId info in DB fail");
+        return E_RDB;
+    }
+    string oldFileName = info.fileName;
+    string oldParentCloudId = info.parentCloudId;
+    int32_t position = static_cast<int32_t>(info.location);
+    if (oldFileName == newFileName && oldParentCloudId == newParentCloudId) {
+        LOGI("the rename parameter is same as old");
+        return E_OK;
+    }
+    ValuesBucket rename;
+    rename.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
+    if (oldFileName != newFileName && oldParentCloudId == newParentCloudId) {
+        FileRename(rename, position, newFileName);
+    }
+    string tempNewParentCloudId = newParentCloudId;
+    if (tempNewParentCloudId.empty()) {
+        if (!rootId_.empty()) {
+            tempNewParentCloudId = rootId_;
+        } else {
+            LOGE("root Id is empty, cannot rename file to root directory");
+            return E_INVAL_ARG;
+        }
+    }
+    if (oldFileName == newFileName && oldParentCloudId != newParentCloudId) {
+        FileMove(rename, position, tempNewParentCloudId);
+    }
+    int32_t changedRows = -1;
+    vector<ValueObject> bindArgs;
+    bindArgs.emplace_back(cloudId);
+    int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, rename,
+        FileColumn::CLOUD_ID + " = ?", bindArgs);
+    if (ret != E_OK) {
+        LOGE("rename file fail, ret %{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::UnlinkSyncedFile(const std::string &cloudId,
+    const int32_t &isDirectory, const int32_t &position)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    CLOUDID_IS_NULL(cloudId);
+    if (isDirectory == DIRECTORY && position != LOCAL) {
+        AbsRdbPredicates deleteSyncedPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+        deleteSyncedPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, cloudId);
+        auto resultSet = rdbStore_->Query(deleteSyncedPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
+        int32_t rowCount = 0;
+        int32_t ret = E_OK;
+        if (resultSet) {
+            ret = resultSet->GetRowCount(rowCount);
+        }
+        if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
+            LOGE("result set is nullptr or get result set rowCount is failed, ret %{public}d, rowCount %{public}d",
+                ret, rowCount);
+            return E_RDB;
+        }
+        while (resultSet->GoToNextRow() == E_OK) {
+            int32_t childIsDirectory;
+            string childCloudId;
+            int32_t childPosition = -1;
+            if (CloudDiskRdbUtils::GetInt(FileColumn::IS_DIRECTORY, childIsDirectory, resultSet) ||
+                CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, childCloudId, resultSet) ||
+                CloudDiskRdbUtils::GetInt(FileColumn::POSITION, childPosition, resultSet)) {
+                LOGE("handle synced result set query fail");
+                return E_RDB;
+            }
+            RETURN_ON_ERR(UnlinkLocalFile(childCloudId, childIsDirectory, childPosition));
+            RETURN_ON_ERR(UnlinkSyncedFile(childCloudId, childIsDirectory, childPosition));
+        }
+    }
+    if (position != LOCAL) {
+        int32_t changedRows = -1;
+        ValuesBucket deleteValue;
+        deleteValue.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_DELETED));
+        vector<ValueObject> bindArgs;
+        bindArgs.emplace_back(cloudId);
+        int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, deleteValue,
+            FileColumn::CLOUD_ID + " = ?", bindArgs);
+        if (ret != E_OK) {
+            LOGE("unlink synced file itself fail, ret %{public}d", ret);
+            return E_RDB;
+        }
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::UnlinkLocalFile(const std::string &cloudId, const int32_t &isDirectory,
+    const int32_t &position = LOCAL)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    CLOUDID_IS_NULL(cloudId);
+    int32_t changedRows = -1;
+    vector<ValueObject> bindArgs;
+    bindArgs.emplace_back(cloudId);
+    if (isDirectory == DIRECTORY && position == LOCAL) {
+        AbsRdbPredicates deleteLocalPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+        deleteLocalPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, cloudId)
+            ->And()->EqualTo(FileColumn::IS_DIRECTORY, DIRECTORY);
+        auto resultSet = rdbStore_->Query(deleteLocalPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
+        int32_t rowCount = 0;
+        int32_t ret = E_OK;
+        if (resultSet) {
+            ret = resultSet->GetRowCount(rowCount);
+        }
+        if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
+            LOGE("result set is nullptr or get result set rowCount is failed, ret %{public}d, rowCount %{public}d",
+                ret, rowCount);
+            return E_RDB;
+        }
+        while (resultSet->GoToNextRow() == E_OK) {
+            string childCloudId;
+            if (CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, childCloudId, resultSet)) {
+                LOGE("unlink local directory query cloudId fail");
+                return E_RDB;
+            }
+            RETURN_ON_ERR(UnlinkLocalFile(childCloudId, DIRECTORY));
+        }
+        ret = rdbStore_->Delete(changedRows, FileColumn::FILES_TABLE,
+            FileColumn::PARENT_CLOUD_ID + " = ?", bindArgs);
+        if (ret != E_OK) {
+            LOGE("unlink local directory fail, ret %{public}d", ret);
+            return E_RDB;
+        }
+    }
+    if (position == LOCAL) {
+        int32_t ret = rdbStore_->Delete(changedRows, FileColumn::FILES_TABLE,
+            FileColumn::CLOUD_ID + " = ?", bindArgs);
+        if (ret != E_OK) {
+            LOGE("unlink local file itself fail, ret %{public}d", ret);
+            return E_RDB;
+        }
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    CLOUDID_IS_NULL(cloudId);
+    CloudDiskFileInfo info;
+    if (GetAttr(cloudId, info)) {
+        LOGE("get deleted cloudId info in DB fail");
+        return E_RDB;
+    }
+    int32_t isDirectory = info.IsDirectory ? DIRECTORY : FILE;
+    int32_t position = static_cast<int32_t>(info.location);
+    RETURN_ON_ERR(UnlinkLocalFile(cloudId, isDirectory, position));
+    RETURN_ON_ERR(UnlinkSyncedFile(cloudId, isDirectory, position));
     return E_OK;
 }
 

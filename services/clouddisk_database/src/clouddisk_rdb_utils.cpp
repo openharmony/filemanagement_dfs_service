@@ -174,13 +174,13 @@ int32_t CloudDiskRdbUtils::FillInfoFileMTime(CloudDiskFileInfo &info, const shar
 
 int32_t CloudDiskRdbUtils::FillInfoFileType(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
 {
-    string fileType;
-    int32_t ret = GetString(FileColumn::IS_DIRECTORY, fileType, resultSet);
+    int32_t fileType;
+    int32_t ret = GetInt(FileColumn::IS_DIRECTORY, fileType, resultSet);
     if (ret != E_OK) {
         LOGE("fill fileType failed, ret = %{public}d", ret);
         return ret;
     }
-    info.IsDirectory = (fileType == "directory");
+    info.IsDirectory = (fileType == DIRECTORY);
     return E_OK;
 }
 

@@ -49,6 +49,9 @@ const int32_t POSITION_LOCAL = 1;
 const int32_t POSITION_CLOUD = 2;
 const int32_t POSITION_BOTH = 3;
 
+const int32_t FILE = 0;
+const int32_t DIRECTORY = 1;
+
 const int32_t MILLISECOND_TO_SECOND = 1000;
 const int32_t SECOND_TO_MILLISECOND = 1000;
 

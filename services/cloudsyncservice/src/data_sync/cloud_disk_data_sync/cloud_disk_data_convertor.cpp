@@ -184,9 +184,9 @@ int32_t CloudDiskDataConvertor::ExtractFileTimeRecycled(const DriveKit::DKRecord
 {
     int64_t fileTimeRecycled = 0;
     bool isRecyled = false;
-    if (data.find(DK_IS_RECYLED) == data.end()
-        || data.at(DK_IS_RECYLED).GetBool(isRecyled) != DKLocalErrorCode::NO_ERROR) {
-        LOGE("extract DK_IS_RECYLED error");
+    if (data.find(DK_IS_RECYCLED) == data.end()
+        || data.at(DK_IS_RECYCLED).GetBool(isRecyled) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract DK_IS_RECYCLED error");
         return E_INVAL_ARG;
     }
     if (isRecyled) {
@@ -228,11 +228,13 @@ int32_t CloudDiskDataConvertor::ExtractIsDirectory(const DriveKit::DKRecordData 
         LOGE("extract type error");
         return E_INVAL_ARG;
     }
+    int32_t type = DIRECTORY;
     if (fileType == "file") {
+        type = FILE;
         RETURN_ON_ERR(ExtractSha256(data, valueBucket));
         RETURN_ON_ERR(ExtractFileSize(data, valueBucket));
     }
-    valueBucket.PutString(FileColumn::IS_DIRECTORY, fileType);
+    valueBucket.PutInt(FileColumn::IS_DIRECTORY, type);
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleCompatibleFileds(DriveKit::DKRecordData &data,
@@ -253,18 +255,25 @@ int32_t CloudDiskDataConvertor::HandleAttachments(DriveKit::DKRecordData &data,
     if (type_ != FILE_CREATE && type_ != FILE_DATA_MODIFY) {
         return E_OK;
     }
-    string cloudId;
-    string filePath;
-    if (!GetString(FileColumn::CLOUD_ID, cloudId, resultSet)) {
-        filePath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
-    } else {
-        LOGE("Get File Path is failed");
+    int32_t isDirectory;
+    if (GetInt(FileColumn::IS_DIRECTORY, isDirectory, resultSet)) {
+        LOGE("Get File Type is failed");
         return E_RDB;
     }
-    int32_t ret = HandleContent(data, filePath);
-    if (ret != E_OK) {
-        LOGE("handle content err %{public}d", ret);
-        return ret;
+    if (isDirectory == FILE) {
+        string cloudId;
+        string filePath;
+        if (!GetString(FileColumn::CLOUD_ID, cloudId, resultSet)) {
+            filePath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
+        } else {
+            LOGE("Get File Path is failed");
+            return E_RDB;
+        }
+        int32_t ret = HandleContent(data, filePath);
+        if (ret != E_OK) {
+            LOGE("handle content err %{public}d", ret);
+            return ret;
+        }
     }
     return E_OK;
 }
@@ -371,20 +380,22 @@ int32_t CloudDiskDataConvertor::HandleRecycleTime(DriveKit::DKRecordData &data,
         LOGE("handler RecycleTime failed, ret = %{public}d", ret);
         return ret;
     }
-    data[DK_FILE_TIME_RECYCLED] = DriveKit::DKRecordField(recycleTime);
-    data[DK_IS_RECYLED] = DriveKit::DKRecordField((recycleTime != 0));
+    data[DK_IS_RECYCLED] = DriveKit::DKRecordField((recycleTime != 0));
+    if (recycleTime != 0) {
+        data[DK_FILE_TIME_RECYCLED] = DriveKit::DKRecordField(recycleTime);
+    }
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleType(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-    std::string type;
-    int32_t ret = GetString(FileColumn::IS_DIRECTORY, type, resultSet);
+    int32_t type;
+    int32_t ret = GetInt(FileColumn::IS_DIRECTORY, type, resultSet);
     if (ret != E_OK) {
         LOGE("handler type failed, ret = %{public}d", ret);
         return ret;
     }
-    data[DK_IS_DIRECTORY] = DriveKit::DKRecordField(type);
+    data[DK_IS_DIRECTORY] = DriveKit::DKRecordField(type == DIRECTORY ? "directory" : "file");
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleOperateType(DriveKit::DKRecordData &data,
