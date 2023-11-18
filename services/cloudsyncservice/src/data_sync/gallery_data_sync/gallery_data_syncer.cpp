@@ -105,29 +105,48 @@ int32_t GalleryDataSyncer::Clean(const int action)
     LOGD("gallery data sycner Clean");
     /* start clean */
     BeginClean();
-
     int32_t ret = GetHandler();
     if (ret != E_OK) {
         return ret;
     }
-
     /* file */
+    ret = CancelDownload(fileHandler_);
+    if (ret != E_OK) {
+        LOGE("gallery data syncer file cancel download err %{public}d", ret);
+    }
+    DeleteSubscription();
+    ret = fileHandler_->MarkClean();
+    PutHandler();
+    CompleteClean();
+    return ret;
+}
+
+int32_t GalleryDataSyncer::ActualClean(const int action)
+{
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
     ret = CleanInner(fileHandler_, action);
     if (ret != E_OK) {
         LOGE("gallery data syncer file clean err %{public}d", ret);
     }
-    /* album */
     ret = CleanInner(albumHandler_, action);
     if (ret != E_OK) {
         LOGE("gallery data syncer album clean err %{public}d", ret);
     }
-
-    DeleteSubscription();
     PutHandler();
+    return ret;
+}
 
-    /* complete clean */
-    CompleteClean();
-
+int32_t GalleryDataSyncer::CancelClean()
+{
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = fileHandler_->UnMarkClean();
+    PutHandler();
     return ret;
 }
 

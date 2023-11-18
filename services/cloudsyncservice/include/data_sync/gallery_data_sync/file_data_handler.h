@@ -23,6 +23,7 @@
 #include "cloud_pref_impl.h"
 #include "rdb_data_handler.h"
 #include "file_data_convertor.h"
+#include <vector>
 
 namespace OHOS {
 namespace FileManagement {
@@ -30,6 +31,10 @@ namespace CloudSync {
 
 class FileDataHandler : public RdbDataHandler {
 public:
+    enum Clean {
+        NOT_NEED_CLEAN = 0,
+        NEED_CLEAN,
+    };
     FileDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<NativeRdb::RdbStore> rdb);
     virtual ~FileDataHandler() = default;
 
@@ -47,6 +52,8 @@ public:
 
     /*clean*/
     int32_t Clean(const int action) override;
+    int32_t UnMarkClean();
+    int32_t MarkClean();
 
     /* upload */
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;
@@ -72,6 +79,8 @@ public:
     std::shared_ptr<NativeRdb::ResultSet> GetAgingFile(const int64_t agingTime, int32_t &rowCount);
     int32_t UpdateAgingFile(const std::string cloudId);
     int32_t FileAgingDelete(const int64_t agingTime, const int64_t deleteSize);
+
+    void UpdateAlbumInternal();
 
     /* reset */
     void Reset();

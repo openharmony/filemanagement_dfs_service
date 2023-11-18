@@ -36,7 +36,6 @@ protected:
     int32_t intervalTime_;
     std::shared_ptr<DataSyncManager> dataSyncManager_;
 };
-
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

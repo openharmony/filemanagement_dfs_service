@@ -48,6 +48,7 @@ public:
     int32_t UnregisterDownloadFileCallback(const std::string &bundleName,
                                            const int32_t userId);
     int32_t CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action);
+    int32_t RestoreClean(const std::string &bundleName, const int32_t userId);
     int32_t OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays);
 
 private:

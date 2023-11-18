@@ -16,24 +16,23 @@
 
 #include <memory>
 
-#include "system_ability_definition.h"
-
 #include "cycle_task/cycle_task_runner.h"
 #include "dfs_error.h"
 #include "data_sync_const.h"
 #include "dfsu_access_token_helper.h"
+#include "directory_ex.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "meta_file.h"
 #include "sandbox_helper.h"
+#include "sdk_helper.h"
 #include "sync_rule/battery_status.h"
 #include "sync_rule/cloud_status.h"
 #include "sync_rule/net_conn_callback_observer.h"
 #include "sync_rule/network_status.h"
+#include "system_ability_definition.h"
 #include "sync_rule/screen_status.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
-#include "directory_ex.h"
-#include "sdk_helper.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -203,11 +202,12 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
     if (ret != E_OK) {
         return ret;
     }
-
     if (status) {
+        dataSyncManager_->RestoreClean(bundleName, callerUserId);
         return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+    } else {
+        return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
     }
-    return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
 }
 
 int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
@@ -244,6 +244,13 @@ int32_t CloudSyncService::NotifyEventChange(int32_t userId, const std::string &e
 
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
 {
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    vector<std::string> bundleNames = {GALLERY_BUNDLE_NAME};
+    for (std::string bundleName : bundleNames) {
+        auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, callerUserId);
+        dataSyncer->Clean(CleanAction::CLEAR_DATA);
+        dataSyncer->ActualClean(CleanAction::CLEAR_DATA);
+    }
     return E_OK;
 }
 

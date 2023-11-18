@@ -325,8 +325,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
             BatchInsertAssetMaps(params);
         }
     }
-    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+    UpdateAlbumInternal();
     LOGI("after BatchInsert ret %{public}d", ret);
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
@@ -1039,8 +1038,7 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
         }
     }
 
-    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+    UpdateAlbumInternal();
     return E_OK;
 }
 
@@ -1064,8 +1062,7 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
     }
 
     DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
-    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+    UpdateAlbumInternal();
     MetaFileMgr::GetInstance().ClearAll();
     return E_OK;
 }
@@ -1134,6 +1131,12 @@ static bool LocalWriteOpen(const string &dfsPath)
 
     close(fd);
     return writeOpenCnt != 0;
+}
+
+void FileDataHandler::UpdateAlbumInternal()
+{
+    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
 }
 
 int FileDataHandler::SetRetry(const string &recordId)
@@ -1923,6 +1926,32 @@ int32_t FileDataHandler::Clean(const int action)
     DataSyncNotifier::GetInstance().FinalNotify();
 
     return E_OK;
+}
+
+int32_t FileDataHandler::UnMarkClean()
+{
+    int32_t changedRows;
+    NativeRdb::ValuesBucket values;
+    values.PutInt(PC::PHOTO_CLEAN_FLAG, NOT_NEED_CLEAN);
+    vector<string> whereArgs = {to_string(NEED_CLEAN)};
+    int32_t ret =
+        Update(changedRows, PC::PHOTOS_TABLE, values,
+        PC::PHOTO_CLEAN_FLAG + " = ?", whereArgs);
+    UpdateAlbumInternal();
+    return ret;
+}
+
+int32_t FileDataHandler::MarkClean()
+{
+    int32_t changedRows;
+    NativeRdb::ValuesBucket values;
+    values.PutInt(PC::PHOTO_CLEAN_FLAG, NEED_CLEAN);
+    vector<string> whereArgs = {to_string(POSITION_CLOUD)};
+    int32_t ret =
+        Update(changedRows, PC::PHOTOS_TABLE, values,
+        PC::PHOTO_POSITION + " = ?", whereArgs);
+    UpdateAlbumInternal();
+    return ret;
 }
 
 void FileDataHandler::HandleCreateConvertErr(NativeRdb::ResultSet &resultSet)

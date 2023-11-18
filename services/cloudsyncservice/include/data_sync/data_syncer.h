@@ -37,6 +37,10 @@ struct DownloadContext;
 
 class DataSyncer {
 public:
+    enum CleanAction {
+        RETAIN_DATA = 0,
+        CLEAR_DATA
+    };
     DataSyncer(const std::string bundleName, const int32_t userId);
     virtual ~DataSyncer();
 
@@ -56,6 +60,8 @@ public:
     /*clean*/
     virtual int32_t Init(const std::string bundleName, const int32_t userId);
     virtual int32_t Clean(const int action);
+    virtual int32_t ActualClean(const int action);
+    virtual int32_t CancelClean();
 
     /* sdk */
     bool HasSdkHelper();
@@ -78,6 +84,7 @@ protected:
 
     /*clean cloud files*/
     int32_t CleanInner(std::shared_ptr<DataHandler> handler, const int action);
+    int32_t CancelDownload(std::shared_ptr<DataHandler> handler);
 
     void ClearCursor();
 

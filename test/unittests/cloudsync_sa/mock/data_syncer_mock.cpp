@@ -18,6 +18,8 @@
 #include <functional>
 
 #include "dfs_error.h"
+#include "foundation/filemanagement/dfs_service/services/cloudsyncservice/include/data_sync/data_handler.h"
+#include "foundation/filemanagement/dfs_service/services/cloudsyncservice/include/data_sync/data_syncer.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -63,6 +65,21 @@ void DataSyncer::ForceUnlock()
 
 void DataSyncer::SetErrorCodeMask(ErrorType errorType)
 {
+}
+
+int32_t DataSyncer::ActualClean(int action)
+{
+    return E_OK;
+}
+
+int32_t DataSyncer::CancelClean()
+{
+    return E_OK;
+}
+
+int32_t DataSyncer::CancelDownload(std::shared_ptr<DataHandler> handler)
+{
+    return E_OK;
 }
 
 int32_t DataSyncer::Lock()

@@ -148,6 +148,12 @@ int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string &bundl
     return E_OK;
 }
 
+int32_t DataSyncManager::RestoreClean(const std::string &bundleName, const int32_t userId)
+{
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
+    return dataSyncer->CancelClean();
+}
+
 int32_t DataSyncManager::IsUserVerified(const int32_t userId)
 {
     bool isVerified = false;
