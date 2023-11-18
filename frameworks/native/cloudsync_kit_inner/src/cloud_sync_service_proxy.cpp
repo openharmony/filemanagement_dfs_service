@@ -347,6 +347,49 @@ int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, con
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::NotifyEventChange(
+    int32_t userId, const std::string &eventId, const std::string &extraData)
+{
+    LOGI("NotifyEventChange");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        LOGE("Failed to send the user id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(eventId)) {
+        LOGE("Failed to send the event id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(extraData)) {
+        LOGE("Failed to send the extra data");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_EVENT_CHANGE), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("NotifyEventChange Success");
+    return reply.ReadInt32();
+}
+
 int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 {
 #ifdef SUPPORT_MEDIA_LIBRARY

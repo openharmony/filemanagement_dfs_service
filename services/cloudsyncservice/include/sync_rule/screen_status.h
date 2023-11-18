@@ -13,30 +13,29 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_CLOUD_SYNC_SERVICE_CYCLE_TASK_H
-#define OHOS_CLOUD_SYNC_SERVICE_CYCLE_TASK_H
-#include <string>
-#include "data_sync_manager.h"
+#ifndef OHOS_FILEMGMT_CLOUD_SYNC_SCREEN_STATUS_H
+#define OHOS_FILEMGMT_CLOUD_SYNC_SCREEN_STATUS_H
+
+#include "common_event_subscriber.h"
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-class CycleTask {
+class ScreenStatus {
 public:
-    CycleTask(std::string taskName, std::string bundleName, int32_t intervalTime,
-              std::shared_ptr<DataSyncManager> dataSyncManager);
-    virtual ~CycleTask() = default;
-    virtual int32_t RunTask(int32_t userId) = 0;
-    std::string GetTaskName() const;
-    std::string GetBundleName() const;
-    int32_t GetIntervalTime() const;
-    std::shared_ptr<DataSyncManager> GetDataSyncManager() const;
+    enum ScreenState {
+        SCREEN_ON,
+        SCREEN_OFF,
+    };
+    static bool IsScreenOn();
+    static void InitScreenStatus();
+    static void SetScreenState(ScreenState screenState);
+
 private:
-    std::string taskName_;
-    std::string bundleName_;
-    int32_t intervalTime_;
-    std::shared_ptr<DataSyncManager> dataSyncManager_;
+    static inline ScreenState screenState_{ScreenState::SCREEN_ON};
 };
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
-#endif // OHOS_CLOUD_SYNC_SERVICE_CYCLE_TASK_H
+
+#endif // OHOS_FILEMGMT_CLOUD_SYNC_SCREEN_STATUS_H

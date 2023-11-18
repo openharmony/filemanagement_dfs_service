@@ -99,6 +99,11 @@ DKError DriveKitNative::GetServerTime(time_t &time)
     return DKError();
 }
 
+DKError DriveKitNative::ResolveNotificationEvent(const std::string &extraData, DKRecordChangeEvent &event)
+{
+    return DKError();
+}
+
 DKError DriveKitNative::GetAppConfigParams(const DKAppBundleName &bundleNames,
                                            std::map<std::string, std::string> &param)
 {

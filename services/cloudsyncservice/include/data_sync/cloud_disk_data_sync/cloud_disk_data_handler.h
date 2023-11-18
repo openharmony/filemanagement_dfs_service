@@ -59,7 +59,7 @@ private:
     static inline const int32_t LIMIT_SIZE = 5;
     static inline const int32_t MODIFY_BATCH_NUM = 20;
     static inline const int32_t DELETE_BATCH_NUM = 20;
-    DriveKit::DKRecordType recordType_ = "clouddrive";
+    DriveKit::DKRecordType recordType_ = "file";
     DriveKit::DKFieldKeyArray desiredKeys_;
     DriveKit::DKFieldKeyArray checkedKeys_ = {"version", "id"};
     std::vector<std::string> modifyFailSet_;

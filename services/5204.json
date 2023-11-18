@@ -11,7 +11,7 @@
                 "timedevent": [
                     {
                         "name": "loopevent",
-                        "value": "86400"
+                        "value": "21600"
                     }
                 ],
                 "commonevent": [

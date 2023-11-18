@@ -18,6 +18,7 @@ ohos_unittest("cloud_sync_service_stub_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/dfsu_access_token_helper_mock.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
     "cloud_sync_service_stub_test.cpp",
   ]
@@ -95,6 +96,8 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/net_conn_callback_observer.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/screen_status_listener.cpp",
     "cloud_sync_service_test.cpp",
   ]
 
@@ -163,6 +166,7 @@ ohos_unittest("cloud_sync_service_test") {
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

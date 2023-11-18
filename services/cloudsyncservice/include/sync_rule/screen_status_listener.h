@@ -13,30 +13,33 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_CLOUD_SYNC_SERVICE_CYCLE_TASK_H
-#define OHOS_CLOUD_SYNC_SERVICE_CYCLE_TASK_H
-#include <string>
-#include "data_sync_manager.h"
+#ifndef OHOS_FILEMGMT_SCREEN_STATUS_LISTENER_H
+#define OHOS_FILEMGMT_SCREEN_STATUS_LISTENER_H
+
+#include "common_event_subscriber.h"
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-class CycleTask {
+class ScreenStatusListener {
 public:
-    CycleTask(std::string taskName, std::string bundleName, int32_t intervalTime,
-              std::shared_ptr<DataSyncManager> dataSyncManager);
-    virtual ~CycleTask() = default;
-    virtual int32_t RunTask(int32_t userId) = 0;
-    std::string GetTaskName() const;
-    std::string GetBundleName() const;
-    int32_t GetIntervalTime() const;
-    std::shared_ptr<DataSyncManager> GetDataSyncManager() const;
+    explicit ScreenStatusListener() = default;
+    ~ScreenStatusListener();
+    void Start();
+    void Stop();
+
 private:
-    std::string taskName_;
-    std::string bundleName_;
-    int32_t intervalTime_;
-    std::shared_ptr<DataSyncManager> dataSyncManager_;
+    std::shared_ptr<EventFwk::CommonEventSubscriber> commonEventSubscriber_ = nullptr;
+};
+
+class ScreenStatusSubscriber : public EventFwk::CommonEventSubscriber {
+public:
+    ScreenStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
+    ~ScreenStatusSubscriber() override {}
+    void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override;
 };
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
-#endif // OHOS_CLOUD_SYNC_SERVICE_CYCLE_TASK_H
+
+#endif // OHOS_FILEMGMT_SCREEN_STATUS_LISTENER_H

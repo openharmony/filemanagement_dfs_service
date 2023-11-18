@@ -66,11 +66,12 @@ public:
 
     /*clean*/
     virtual int32_t Init(const std::string bundleName, const int32_t userId);
-    virtual int32_t Clean(const int action = 0);
-    virtual int32_t ActualClean(const int action = 0);
+    virtual int32_t Clean(const int action);
+    virtual int32_t ActualClean(const int action);
     virtual int32_t CancelClean();
 
     /* sdk */
+    bool HasSdkHelper();
     void SetSdkHelper(std::shared_ptr<SdkHelper> &sdkHelper);
     virtual int32_t Lock();
     virtual void Unlock();

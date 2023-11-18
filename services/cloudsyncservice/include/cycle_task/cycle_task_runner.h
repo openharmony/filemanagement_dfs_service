@@ -30,7 +30,7 @@ namespace CloudSync {
 class CycleTaskRunner {
 public:
     enum IntervalTime {
-        ONE_DAY = 24 * 60 * 60 - 30 * 60,
+        ONE_DAY = 24 * 60 * 60,
         TWO_DAY = ONE_DAY * 2,
         THREE_DAY = ONE_DAY * 3,
         ONE_WEEK = ONE_DAY * 7,

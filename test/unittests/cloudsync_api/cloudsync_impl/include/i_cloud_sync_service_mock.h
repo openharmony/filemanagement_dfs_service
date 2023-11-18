@@ -75,6 +75,10 @@ public:
     {
         return E_OK;
     }
+    int32_t NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) override
+    {
+        return E_OK;
+    }
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override
     {
         return E_OK;

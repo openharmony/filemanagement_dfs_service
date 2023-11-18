@@ -39,7 +39,7 @@ public:
     int32_t TriggerRecoverySync(SyncTriggerType triggerType);
     void RegisterCloudSyncCallback(const std::string &bundleName, const int32_t userId);
     std::shared_ptr<DataSyncer> GetDataSyncer(const std::string &bundleName, const int32_t userId);
-    int32_t IsSkipSync(const std::string &bundleName, const int32_t userId) const;
+    int32_t IsSkipSync(const std::string &bundleName, const int32_t userId);
     int32_t StartDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path);
     int32_t StopDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path);
     int32_t RegisterDownloadFileCallback(const std::string &bundleName,
@@ -57,6 +57,8 @@ private:
     int32_t currentUserId_{INVALID_USER_ID};
 
     int32_t IsUserVerified(const int32_t userId);
+    int32_t InitSdk(const int32_t userId, const std::string &bundleName, std::shared_ptr<DataSyncer> dataSyncer);
+    void Convert2BundleName(const std::string &bundle, std::string &bundleName);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

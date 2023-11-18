@@ -18,6 +18,7 @@
 
 #include "cycle_task/cycle_task_runner.h"
 #include "dfs_error.h"
+#include "data_sync_const.h"
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
 #include "ipc/cloud_sync_callback_manager.h"
@@ -29,6 +30,7 @@
 #include "sync_rule/net_conn_callback_observer.h"
 #include "sync_rule/network_status.h"
 #include "system_ability_definition.h"
+#include "sync_rule/screen_status.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
 
@@ -36,14 +38,13 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 using namespace OHOS;
 
-const string GALLERY_BUNDLE_NAME = "com.ohos.photos";
-
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
 CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
 {
     dataSyncManager_ = make_shared<DataSyncManager>();
     batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
+    screenStatusListener_ = make_shared<ScreenStatusListener>();
 }
 
 void CloudSyncService::PublishSA()
@@ -60,6 +61,7 @@ void CloudSyncService::Init()
     NetworkStatus::InitNetwork(dataSyncManager_);
     /* Get Init Charging status */
     BatteryStatus::GetInitChargingStatus();
+    ScreenStatus::InitScreenStatus();
 }
 
 std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userId)
@@ -122,13 +124,14 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
 {
     string reason = startReason.GetName();
     LOGI("Begin to start service reason: %{public}s", reason.c_str());
-    if (reason == "loopevent") {
-        shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
-        taskRunner->StartTask();
-    } else if (reason == "usual.event.wifi.SCAN_FINISHED") {
+    if (reason == "usual.event.wifi.SCAN_FINISHED") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
     } else if (reason == "usual.event.BATTERY_OKAY") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
+    }
+    if (reason != "load") {
+        shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
+        taskRunner->StartTask();
     }
 }
 
@@ -136,6 +139,7 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
 {
     LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
     batteryStatusListener_->Start();
+    screenStatusListener_->Start();
 }
 
 int32_t CloudSyncService::UnRegisterCallbackInner()
@@ -164,21 +168,29 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
     auto callback = iface_cast<ICloudSyncCallback>(remoteObject);
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     CloudSyncCallbackManager::GetInstance().AddCallback(bundleName, callerUserId, callback);
-    dataSyncManager_->RegisterCloudSyncCallback(GALLERY_BUNDLE_NAME, callerUserId);
+    dataSyncManager_->RegisterCloudSyncCallback(bundleName, callerUserId);
     return E_OK;
 }
 
 int32_t CloudSyncService::StartSyncInner(bool forceFlag)
 {
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    return dataSyncManager_->TriggerStartSync(GALLERY_BUNDLE_NAME, callerUserId, forceFlag,
+    return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, forceFlag,
         SyncTriggerType::APP_TRIGGER);
 }
 
 int32_t CloudSyncService::StopSyncInner()
 {
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    return dataSyncManager_->TriggerStopSync(GALLERY_BUNDLE_NAME, callerUserId, SyncTriggerType::APP_TRIGGER);
+    return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::APP_TRIGGER);
 }
 
 int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
@@ -204,14 +216,40 @@ int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const st
     return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
 }
 
+int32_t CloudSyncService::NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData)
+{
+    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
+    if (driveKit == nullptr) {
+        LOGE("sdk helper get drive kit instance fail");
+        return E_CLOUD_SDK;
+    }
+
+    DriveKit::DKUserInfo userInfo;
+    auto err = driveKit->GetCloudUserInfo(userInfo);
+    if (err.HasError()) {
+        LOGE("GetCloudUserInfo failed, server err:%{public}d and dk err:%{public}d", err.serverErrorCode,
+             err.dkErrorCode);
+        return E_CLOUD_SDK;
+    }
+
+    DriveKit::DKRecordChangeEvent event;
+    auto eventErr = driveKit->ResolveNotificationEvent(extraData, event);
+    if (eventErr.HasError()) {
+        LOGE("ResolveNotificationEvent failed, server err:%{public}d and dk err:%{public}d", eventErr.serverErrorCode,
+             eventErr.dkErrorCode);
+        return E_CLOUD_SDK;
+    }
+    return dataSyncManager_->TriggerStartSync(event.appBundleName, userId, false, SyncTriggerType::CLOUD_TRIGGER);
+}
+
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     vector<std::string> bundleNames = {GALLERY_BUNDLE_NAME};
-    for(std::string bundleName : bundleNames) {
+    for (std::string bundleName : bundleNames) {
         auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, callerUserId);
-        dataSyncer->Clean();
-        dataSyncer->ActualClean();
+        dataSyncer->Clean(CleanAction::CLEAR_DATA);
+        dataSyncer->ActualClean(CleanAction::CLEAR_DATA);
     }
     return E_OK;
 }
@@ -241,43 +279,59 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
 constexpr int TEST_MAIN_USR_ID = 100;
 int32_t CloudSyncService::StartDownloadFile(const std::string &path)
 {
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     LOGI("start StartDownloadFile");
     if (callerUserId == 0) {
         callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
     }
-    return dataSyncManager_->StartDownloadFile(GALLERY_BUNDLE_NAME, callerUserId, path);
+    return dataSyncManager_->StartDownloadFile(bundleName, callerUserId, path);
 }
 
 int32_t CloudSyncService::StopDownloadFile(const std::string &path)
 {
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     LOGI("start StopDownloadFile");
     if (callerUserId == 0) {
         callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
     }
-    return dataSyncManager_->StopDownloadFile(GALLERY_BUNDLE_NAME, callerUserId, path);
+    return dataSyncManager_->StopDownloadFile(bundleName, callerUserId, path);
 }
 
 int32_t CloudSyncService::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
 {
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     auto downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
     LOGI("start RegisterDownloadFileCallback");
     if (callerUserId == 0) {
         callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
     }
-    return dataSyncManager_->RegisterDownloadFileCallback(GALLERY_BUNDLE_NAME, callerUserId, downloadCb);
+    return dataSyncManager_->RegisterDownloadFileCallback(bundleName, callerUserId, downloadCb);
 }
 
 int32_t CloudSyncService::UnregisterDownloadFileCallback()
 {
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     LOGI("start UnregisterDownloadFileCallback");
     if (callerUserId == 0) {
         callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
     }
-    return dataSyncManager_->UnregisterDownloadFileCallback(GALLERY_BUNDLE_NAME, callerUserId);
+    return dataSyncManager_->UnregisterDownloadFileCallback(bundleName, callerUserId);
 }
 
 int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &request, std::string &result)

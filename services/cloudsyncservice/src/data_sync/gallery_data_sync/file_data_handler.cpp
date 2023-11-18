@@ -657,7 +657,7 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
         LOGE("Get local ctime failed");
         return E_INVAL_ARG;
     }
-    int64_t crTime = static_cast<int64_t>(record.GetCreateTime());
+    int64_t crTime = static_cast<int64_t>(record.GetCreateTime() / MILLISECOND_TO_SECOND);
     if (localIsize == isize && localCrtime == crTime) {
         LOGI("Possible duplicate files");
     } else {
@@ -1133,7 +1133,8 @@ static bool LocalWriteOpen(const string &dfsPath)
     return writeOpenCnt != 0;
 }
 
-void FileDataHandler::UpdateAlbumInternal() {
+void FileDataHandler::UpdateAlbumInternal()
+{
     MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
     MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
 }
@@ -1177,7 +1178,7 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
     }
 
     // get record mtime
-    int64_t crTime = static_cast<int64_t>(record.GetCreateTime());
+    int64_t crTime = static_cast<int64_t>(record.GetCreateTime() / MILLISECOND_TO_SECOND);
     LOGI("cloudMtime %{public}llu, localMtime %{public}llu",
          static_cast<unsigned long long>(crTime), static_cast<unsigned long long>(localCrtime));
     changed = !(crTime == localCrtime);
@@ -1883,7 +1884,7 @@ int32_t FileDataHandler::Clean(const int action)
     int res = E_OK;
     NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     cleanPredicates.IsNotNull(PhotoColumn::PHOTO_CLOUD_ID);
-    cleanPredicates.Limit(LIMIT_SIZE * 200);
+    cleanPredicates.Limit(LIMIT_SIZE);
     while (1) {
         auto resultSet = Query(cleanPredicates, CLEAN_QUERY_COLUMNS);
         if (resultSet == nullptr) {
@@ -1927,32 +1928,29 @@ int32_t FileDataHandler::Clean(const int action)
     return E_OK;
 }
 
-int32_t FileDataHandler::UnMarkClean() {
+int32_t FileDataHandler::UnMarkClean()
+{
     int32_t changedRows;
     NativeRdb::ValuesBucket values;
     values.PutInt(PC::PHOTO_CLEAN_FLAG, NOT_NEED_CLEAN);
     vector<string> whereArgs = {to_string(NEED_CLEAN)};
     int32_t ret =
-        Update(changedRows,PC::PHOTOS_TABLE, values,
+        Update(changedRows, PC::PHOTOS_TABLE, values,
         PC::PHOTO_CLEAN_FLAG + " = ?", whereArgs);
     UpdateAlbumInternal();
     return ret;
 }
 
-int32_t FileDataHandler::MarkClean() {
+int32_t FileDataHandler::MarkClean()
+{
     int32_t changedRows;
     NativeRdb::ValuesBucket values;
-    values.PutNull(PhotoColumn::PHOTO_CLOUD_ID);
-    values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_NEW));
-    values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_LOCAL);
-    values.PutLong(PhotoColumn::PHOTO_CLOUD_VERSION, 0);
     values.PutInt(PC::PHOTO_CLEAN_FLAG, NEED_CLEAN);
     vector<string> whereArgs = {to_string(POSITION_CLOUD)};
     int32_t ret =
         Update(changedRows, PC::PHOTOS_TABLE, values,
         PC::PHOTO_POSITION + " = ?", whereArgs);
     UpdateAlbumInternal();
-    ClearCursor();
     return ret;
 }
 
@@ -2861,7 +2859,7 @@ int32_t FileDataHandler::OptimizeStorage(const int32_t agingDays)
         ret = FileAgingDelete(agingTime, deleteSize);
         if (ret != E_OK) {
             LOGE("OptimizeStorage Error");
-            return E_OPTIMIZE_STORAGE_ERROR;
+            return ret;
         }
     }
 
@@ -2872,7 +2870,7 @@ int32_t FileDataHandler::OptimizeStorage(const int32_t agingDays)
         ret = FileAgingDelete(agingTime, deleteSize);
         if (ret != E_OK) {
             LOGE("OptimizeStorage Error");
-            return E_OPTIMIZE_STORAGE_ERROR;
+            return ret;
         }
     }
     return E_OK;

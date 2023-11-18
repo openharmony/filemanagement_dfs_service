@@ -39,7 +39,7 @@ CycleTaskRunner::CycleTaskRunner(std::shared_ptr<DataSyncManager> dataSyncManage
     dataSyncManager_ = dataSyncManager;
     cloudPrefImpl_ = std::make_unique<CloudPrefImpl>(FILE_PATH);
     vector<int32_t> activeUsers;
-    if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeUsers) != E_OK && activeUsers.size() != 0) {
+    if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeUsers) != E_OK || activeUsers.empty()) {
         LOGE("query active user failed");
         return;
     }

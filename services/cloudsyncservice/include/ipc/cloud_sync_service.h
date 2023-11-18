@@ -25,6 +25,7 @@
 #include "i_cloud_download_callback.h"
 #include "i_cloud_sync_callback.h"
 #include "sync_rule/battery_status_listener.h"
+#include "sync_rule/screen_status_listener.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncService final : public SystemAbility, public CloudSyncServiceStub, protected NoCopyable {
@@ -40,6 +41,7 @@ public:
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
     int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
+    int32_t NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) override;
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     int32_t DisableCloud(const std::string &accoutId) override;
     int32_t StartDownloadFile(const std::string &path) override;
@@ -61,6 +63,7 @@ private:
 
     std::shared_ptr<DataSyncManager> dataSyncManager_;
     std::shared_ptr<BatteryStatusListener> batteryStatusListener_;
+    std::shared_ptr<ScreenStatusListener> screenStatusListener_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
