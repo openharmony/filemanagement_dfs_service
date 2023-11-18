@@ -22,6 +22,7 @@
 #include "cloud_disk_data_syncer.h"
 #include "data_syncer_rdb_col.h"
 #include "data_syncer_rdb_store.h"
+#include "data_sync_const.h"
 #include "dfs_error.h"
 #include "gallery_data_syncer.h"
 #include "ipc/cloud_sync_callback_manager.h"
@@ -30,10 +31,10 @@
 #include "sync_rule/cloud_status.h"
 #include "sync_rule/network_status.h"
 #include "utils_log.h"
-
 #include "os_account_manager.h"
 #include "rdb_sql_utils.h"
 #include "rdb_store_config.h"
+
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
@@ -211,10 +212,12 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
     return ret;
 }
 
-std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bundleName, const int32_t userId)
+std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bundle, const int32_t userId)
 {
     std::lock_guard<std::mutex> lck(dataSyncMutex_);
     currentUserId_ = userId;
+    string bundleName;
+    Convert2BundleName(bundle, bundleName);
     for (auto dataSyncer : dataSyncers_) {
         if ((dataSyncer->GetBundleName() == bundleName) && (dataSyncer->GetUserId() == userId)) {
             return dataSyncer;
@@ -222,9 +225,8 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bu
     }
 
     std::shared_ptr<DataSyncer> dataSyncer;
-    std::regex regexString(".*(.photos)$");
-    if (std::regex_match(bundleName, regexString)) {
-        dataSyncer = std::make_shared<GalleryDataSyncer>(bundleName, userId);
+    if (bundleName == GALLERY_BUNDLE_NAME) {
+        dataSyncer = std::make_shared<GalleryDataSyncer>(GALLERY_BUNDLE_NAME, userId);
     } else {
         dataSyncer = std::make_shared<CloudDiskDataSyncer>(bundleName, userId);
     }
@@ -238,12 +240,14 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bu
     return dataSyncer;
 }
 
-int32_t DataSyncManager::IsSkipSync(const std::string &bundleName, const int32_t userId) const
+int32_t DataSyncManager::IsSkipSync(const std::string &bundle, const int32_t userId)
 {
     if (NetworkStatus::GetNetConnStatus() == NetworkStatus::NetConnStatus::NO_NETWORK) {
         LOGE("network is not available");
         return E_SYNC_FAILED_NETWORK_NOT_AVAILABLE;
     }
+    string bundleName;
+    Convert2BundleName(bundle, bundleName);
     if (!CloudStatus::IsCloudStatusOkay(bundleName, userId)) {
         LOGE("cloud status is not OK");
         return E_CLOUD_SDK;
@@ -278,7 +282,7 @@ int32_t DataSyncManager::OptimizeStorage(const std::string &bundleName, const in
     return dataSyncer->OptimizeStorage(agingDays);
 }
 
-int32_t DataSyncManager::InitSdk(const int32_t userId, const string bundleName, std::shared_ptr<DataSyncer> dataSyncer)
+int32_t DataSyncManager::InitSdk(const int32_t userId, const string &bundle, std::shared_ptr<DataSyncer> dataSyncer)
 {
     std::lock_guard<std::mutex> lck(dataSyncMutex_);
     if (dataSyncer->HasSdkHelper()) {
@@ -286,6 +290,8 @@ int32_t DataSyncManager::InitSdk(const int32_t userId, const string bundleName, 
     }
     /* get sdk helper */
     auto sdkHelper = std::make_shared<SdkHelper>();
+    string bundleName;
+    Convert2BundleName(bundle, bundleName);
     auto ret = sdkHelper->Init(userId, bundleName);
     if (ret != E_OK) {
         LOGE("get sdk helper err %{public}d", ret);
@@ -293,5 +299,15 @@ int32_t DataSyncManager::InitSdk(const int32_t userId, const string bundleName, 
     }
     dataSyncer->SetSdkHelper(sdkHelper);
     return E_OK;
+}
+
+void DataSyncManager::Convert2BundleName(const string &bundle, string &bundleName)
+{
+    string photo = ".photos";
+    bundleName = bundle;
+    if (bundleName == MEDIALIBRARY_BUNDLE_NAME || (bundle.size() > photo.size() &&
+        (bundle.substr(bundle.size() - photo.size()) == photo))) {
+        bundleName = GALLERY_BUNDLE_NAME;
+    }
 }
 } // namespace OHOS::FileManagement::CloudSync

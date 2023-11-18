@@ -52,5 +52,8 @@ const int32_t POSITION_BOTH = 3;
 const int32_t MILLISECOND_TO_SECOND = 1000;
 const int32_t SECOND_TO_MILLISECOND = 1000;
 
+const std::string GALLERY_BUNDLE_NAME = "com.ohos.photos";
+const std::string MEDIALIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
+
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_CLOUD_SYNC_SERVICE_DATA_SYNC_CONST_H
