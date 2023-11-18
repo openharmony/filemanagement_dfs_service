@@ -91,6 +91,24 @@ void FileOperationsBase::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *na
     LOGE("GetXattr operation is not supported!");
     fuse_reply_err(req, ENOSYS);
 }
+
+void FileOperationsBase::MkDir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode)
+{
+    LOGE("MkDir operation is not supported!");
+    fuse_reply_err(req, ENOSYS);
+}
+
+void FileOperationsBase::RmDir(fuse_req_t req, fuse_ino_t parent, const char *name)
+{
+    LOGE("RmDir operation is not supported!");
+    fuse_reply_err(req, ENOSYS);
+}
+
+void FileOperationsBase::Unlink(fuse_req_t req, fuse_ino_t parent, const char *name)
+{
+    LOGE("Unlink operation is not supported!");
+    fuse_reply_err(req, ENOSYS);
+}
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

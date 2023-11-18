@@ -34,6 +34,9 @@ public:
                 mode_t mode, struct fuse_file_info *fi) override;
     void ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                  struct fuse_file_info *fi) override;
+    void MkDir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode) override;
+    void RmDir(fuse_req_t req, fuse_ino_t parent, const char *name) override;
+    void Unlink(fuse_req_t req, fuse_ino_t parent, const char *name) override;
     void SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                   const char *value, size_t size, int flags) override;
     void GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
