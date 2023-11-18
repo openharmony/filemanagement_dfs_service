@@ -14,11 +14,51 @@
  */
 
 #include "download_asset_callback_client.h"
+
+#include <cinttypes>
+
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 void DownloadAssetCallbackClient::OnFinished(const TaskId taskId, const std::string &uri, const int32_t result)
 {
+    auto callback = GetDownloadTaskCallback(taskId);
+    if (!callback) {
+        callback(uri, result);
+    }
+    RemoveDownloadTaskCallback(taskId);
+    LOGD("On Download finished, taskId:%{public}" PRIu64 ", uri:%{public}s, ret:%{public}d", taskId, uri.c_str(), result);
+}
+
+void DownloadAssetCallbackClient::AddDownloadTaskCallback(TaskId taskId, CloudSyncAssetManager::ResultCallback callback)
+{
+    LOGD("taskId = %{public}" PRIu64 "", taskId);
+    callbackListMap_.EnsureInsert(taskId, std::move(callback));
+}
+
+void DownloadAssetCallbackClient::RemoveDownloadTaskCallback(TaskId taskId)
+{
+    CloudSyncAssetManager::ResultCallback callback;
+    if (callbackListMap_.Find(taskId, callback)) {
+        callbackListMap_.Erase(taskId);
+        return;
+    }
+    LOGE("not find task callback, taskId = %{public}" PRIu64 "", taskId);
+}
+
+CloudSyncAssetManager::ResultCallback DownloadAssetCallbackClient::GetDownloadTaskCallback(TaskId taskId)
+{
+    CloudSyncAssetManager::ResultCallback callback;
+    if (callbackListMap_.Find(taskId, callback)) {
+        return callback;
+    }
+    LOGE("not find task callback, taskId = %{public}" PRIu64 "", taskId);
+    return std::function<void(const std::string &, int32_t)>{}; // empty function
+}
+
+DownloadAssetCallback::TaskId DownloadAssetCallbackClient::GetTaskId()
+{
+    return taskId_.fetch_add(1);
 }
 } // namespace OHOS::FileManagement::CloudSync

@@ -69,7 +69,25 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
                                                 AssetInfo &assetInfo,
                                                 ResultCallback resultCallback)
 {
-    return E_OK;
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    if (!isFirstCall_.test_and_set()) {
+        if (downloadAssetCallback_ == nullptr) {
+            downloadAssetCallback_ = sptr(new (std::nothrow) DownloadAssetCallbackClient());
+        }
+        CloudSyncServiceProxy->RegisterDownloadAssetCallback(downloadAssetCallback_);
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
+    auto taskId = downloadAssetCallback_->GetTaskId();
+    downloadAssetCallback_->AddDownloadTaskCallback(taskId, resultCallback);
+    AssetInfoObj assetInfoObj(assetInfo);
+    int32_t ret = CloudSyncServiceProxy->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
+    LOGI("DownloadFile ret %{public}d", ret);
+    return ret;
 }
 
 int32_t CloudSyncAssetManagerImpl::DeleteAsset(const int32_t userId, const std::string &uri)

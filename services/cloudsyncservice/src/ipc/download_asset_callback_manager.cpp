@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 #include "ipc/download_asset_callback_manager.h"
+
+#include <cinttypes>
+
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -22,5 +25,30 @@ DownloadAssetCallbackManager &DownloadAssetCallbackManager::GetInstance()
 {
     static DownloadAssetCallbackManager instance;
     return instance;
+}
+
+void DownloadAssetCallbackManager::AddCallback(const sptr<IDownloadAssetCallback> &callback)
+{
+    if (callback == nullptr) {
+        return;
+    }
+    callbackProxy_ = callback;
+    auto remoteObject = callback->AsObject();
+    auto deathCb = [this](const wptr<IRemoteObject> &obj) {
+        callbackProxy_ = nullptr;
+        LOGE("client died");
+    };
+    deathRecipient_ = sptr(new SvcDeathRecipient(deathCb));
+    remoteObject->AddDeathRecipient(deathRecipient_);
+}
+
+void DownloadAssetCallbackManager::OnDownloadFinshed(const TaskId taskId, const std::string &uri, const int32_t result)
+{
+    auto callback = callbackProxy_;
+    if (callback == nullptr) {
+        LOGE("callbackProxy_ is nullptr");
+    }
+    LOGD("On Download finished, taskId:%{public}" PRIu64 ", uri:%{public}s, ret:%{public}d", taskId, uri.c_str(), result);
+    callback->OnFinished(taskId, uri, result);
 }
 } // namespace OHOS::FileManagement::CloudSync

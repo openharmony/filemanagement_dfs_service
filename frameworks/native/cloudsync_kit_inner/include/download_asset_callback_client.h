@@ -32,6 +32,14 @@ public:
     DownloadAssetCallbackClient() = default;
     ~DownloadAssetCallbackClient() = default;
     void OnFinished(const TaskId taskId, const std::string &uri, const int32_t result) override;
+    void AddDownloadTaskCallback(const TaskId taskId, CloudSyncAssetManager::ResultCallback callback);
+    void RemoveDownloadTaskCallback(const TaskId taskId);
+    CloudSyncAssetManager::ResultCallback GetDownloadTaskCallback(const TaskId taskId);
+    TaskId GetTaskId();
+
+private:
+    SafeMap<const TaskId, CloudSyncAssetManager::ResultCallback> callbackListMap_;
+    std::atomic<TaskId> taskId_{0};
 };
 } // namespace OHOS::FileManagement::CloudSync
 

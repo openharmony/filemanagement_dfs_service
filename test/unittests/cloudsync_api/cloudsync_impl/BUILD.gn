@@ -325,6 +325,8 @@ ohos_unittest("cloud_sync_asset_manager_impl_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_stub.cpp",
     "cloud_sync_asset_manager_impl_test.cpp",
   ]
 
@@ -356,6 +358,8 @@ ohos_unittest("cloud_sync_asset_manager_impl_unnomal_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_asset_manager_impl.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_client.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_stub.cpp",
     "${distributedfile_path}/test/mock/ipc/cloud_sync_service_proxy_unnomal_mock.cpp",
     "cloud_sync_asset_manager_impl_unnomal_test.cpp",
   ]

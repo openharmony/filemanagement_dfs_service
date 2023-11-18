@@ -257,6 +257,8 @@ ohos_static_library("cloudsync_sa_static") {
     "src/ipc/cloud_sync_callback_proxy.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/cloud_sync_service_stub.cpp",
+    "src/ipc/download_asset_callback_manager.cpp",
+    "src/ipc/download_asset_callback_proxy.cpp",
     "src/sync_rule/battery_status.cpp",
     "src/sync_rule/battery_status_listener.cpp",
     "src/sync_rule/cloud_status.cpp",
