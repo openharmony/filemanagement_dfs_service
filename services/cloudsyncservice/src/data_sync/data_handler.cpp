@@ -190,6 +190,11 @@ int32_t DataHandler::GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> 
     return E_OK;
 }
 
+int32_t DataHandler::GetThumbToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
+{
+    return E_OK;
+}
+
 int32_t DataHandler::GetDownloadAsset(string cloudId,
     vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
 {

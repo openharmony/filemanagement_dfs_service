@@ -44,7 +44,7 @@ public:
     virtual int32_t Lock() override;
     virtual void Unlock() override;
     virtual void ForceUnlock() override;
-
+    virtual int32_t DownloadThumb() override;
 private:
     enum {
         BEGIN,

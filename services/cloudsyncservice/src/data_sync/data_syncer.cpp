@@ -24,6 +24,8 @@
 #include "ipc/cloud_sync_callback_manager.h"
 #include "sdk_helper.h"
 #include "sync_rule/battery_status.h"
+#include "sync_rule/network_status.h"
+#include "sync_rule/screen_status.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
 
@@ -1171,6 +1173,57 @@ bool DataSyncer::HasSdkHelper()
         return false;
     }
     return true;
+}
+
+// download the thumb and lcd of file when screenoff and charging
+int32_t DataSyncer::DownloadThumb()
+{
+    return E_OK;
+}
+
+int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
+{
+    if (!BatteryStatus::IsCharging() || (NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT) ||
+        ScreenStatus::IsScreenOn()) {
+        LOGI("download thumb condition is not met");
+        return E_OK;
+    }
+    vector<DriveKit::DKDownloadAsset> assetsToDownload;
+    int32_t ret = handler->GetThumbToDownload(assetsToDownload);
+    if (ret != E_OK) {
+        LOGE("get assetsToDownload err %{public}d", ret);
+        return ret;
+    }
+    if (assetsToDownload.empty()) {
+        return E_OK;
+    }
+
+    LOGI("assetsToDownload count: %{public}zu", assetsToDownload.size());
+    auto ctx = std::make_shared<TaskContext>(handler);
+    DownloadContext dctx = {.context = ctx,
+                            .assets = assetsToDownload,
+                            .id = 0,
+                            .resultCallback = AsyncCallback(&DataSyncer::FetchThumbDownloadCallback),
+                            .progressCallback = FetchRecordsDownloadProgress};
+    DownloadAssets(dctx);
+    return E_OK;
+}
+
+void DataSyncer::FetchThumbDownloadCallback(shared_ptr<DKContext> context,
+                                            shared_ptr<const DKDatabase> database,
+                                            const map<DKDownloadAsset, DKDownloadResult> &resultMap,
+                                            const DKError &err)
+{
+    auto ctx = static_pointer_cast<TaskContext>(context);
+    auto handler = ctx->GetHandler();
+    handler->OnDownloadAssets(resultMap);
+    if (err.HasError()) {
+        LOGE("DKAssetsDownloader err, localErr: %{public}d, serverErr: %{public}d", static_cast<int>(err.dkErrorCode),
+             err.serverErrorCode);
+    } else {
+        LOGI("DKAssetsDownloader ok");
+        DownloadThumbInner(handler);
+    }
 }
 } // namespace CloudSync
 } // namespace FileManagement

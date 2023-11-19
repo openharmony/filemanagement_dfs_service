@@ -32,7 +32,7 @@ int32_t PeriodicCheckTask::RunTask(int32_t userId)
     int32_t ret = E_OK;
     std::string bundleNames[] = {"com.ohos.photos"};
     for (auto bundleName : bundleNames) {
-        int32_t ret = dataSyncManager_->TriggerStartSync(bundleName, userId, false, SyncTriggerType::TASK_TRIGGER);
+        ret = dataSyncManager_->TriggerStartSync(bundleName, userId, false, SyncTriggerType::TASK_TRIGGER);
         if (ret != E_OK) {
             LOGE("trigger %{public}s periodic sync failed", bundleName.c_str());
         }

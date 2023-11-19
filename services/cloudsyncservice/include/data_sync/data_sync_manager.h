@@ -50,7 +50,7 @@ public:
     int32_t CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action);
     int32_t RestoreClean(const std::string &bundleName, const int32_t userId);
     int32_t OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays);
-
+    int32_t DownloadThumb();
 private:
     std::vector<std::shared_ptr<DataSyncer>> dataSyncers_;
     std::mutex dataSyncMutex_;
@@ -59,6 +59,7 @@ private:
     int32_t IsUserVerified(const int32_t userId);
     int32_t InitSdk(const int32_t userId, const std::string &bundleName, std::shared_ptr<DataSyncer> dataSyncer);
     void Convert2BundleName(const std::string &bundle, std::string &bundleName);
+    int32_t GetUserId(int32_t &userId);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

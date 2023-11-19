@@ -134,6 +134,7 @@ int32_t CloudDiskDataSyncer::Complete()
 
 void CloudDiskDataSyncer::ScheduleByType(SyncTriggerType syncTriggerType)
 {
+    Schedule();
     return;
 }
 } // namespace CloudSync

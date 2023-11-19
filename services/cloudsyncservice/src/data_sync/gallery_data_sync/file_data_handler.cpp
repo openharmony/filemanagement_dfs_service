@@ -999,6 +999,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
     }
     values.PutInt(Media::PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
+    values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbStatus::TO_DOWNLOAD));
     values.PutString(Media::PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
     bool downloadThumb = (!startCursor_.empty() || (++params.totalPullCount <= downloadThumbLimit_));
     values.PutInt(
@@ -1050,7 +1051,7 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
         int updateRows;
         ValuesBucket values;
         values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
-
+        values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbStatus::DOWNLOADED));
         string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
         int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
         if (ret != E_OK) {
@@ -1938,6 +1939,9 @@ int32_t FileDataHandler::UnMarkClean()
         Update(changedRows, PC::PHOTOS_TABLE, values,
         PC::PHOTO_CLEAN_FLAG + " = ?", whereArgs);
     UpdateAlbumInternal();
+    DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
+                                              INVALID_ASSET_ID);
+    DataSyncNotifier::GetInstance().FinalNotify();
     return ret;
 }
 
@@ -1951,6 +1955,9 @@ int32_t FileDataHandler::MarkClean()
         Update(changedRows, PC::PHOTOS_TABLE, values,
         PC::PHOTO_POSITION + " = ?", whereArgs);
     UpdateAlbumInternal();
+    DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
+                                              INVALID_ASSET_ID);
+    DataSyncNotifier::GetInstance().FinalNotify();
     return ret;
 }
 
@@ -2959,6 +2966,25 @@ int32_t FileDataHandler::FileAgingDelete(const int64_t agingTime, const int64_t 
         if (totalSize > deleteSize) {
             break;
         }
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetThumbToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
+{
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    predicates.EqualTo(Media::PhotoColumn::PHOTO_THUMB_STATUS,
+                       to_string(static_cast<int32_t>(ThumbStatus::TO_DOWNLOAD)));
+    predicates.Limit(LIMIT_SIZE);
+    auto results = Query(predicates, MEDIA_CLOUD_SYNC_COLUMNS);
+    if (results == nullptr) {
+        LOGE("get nullptr TYPE_DOWNLOAD result");
+        return E_RDB;
+    }
+
+    while (results->GoToNextRow() == 0) {
+        AppendToDownload(*results, "lcd", outAssetsToDownload);
+        AppendToDownload(*results, "thumbnail", outAssetsToDownload);
     }
     return E_OK;
 }

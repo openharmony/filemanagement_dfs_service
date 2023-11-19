@@ -265,6 +265,7 @@ ohos_unittest("data_handler_test") {
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
     "data_handler_test.cpp",
   ]
 
@@ -327,6 +328,7 @@ ohos_unittest("data_handler_test") {
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
@@ -490,6 +492,7 @@ ohos_unittest("gallery_data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
     "gallery_data_syncer_test.cpp",
   ]
 
@@ -550,6 +553,7 @@ ohos_unittest("gallery_data_syncer_test") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
+    "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
@@ -599,6 +603,7 @@ ohos_unittest("data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
     "data_syncer_test.cpp",
   ]
 
@@ -661,6 +666,7 @@ ohos_unittest("data_syncer_test") {
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
@@ -701,6 +707,7 @@ ohos_unittest("file_data_convertor_test") {
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
     "file_data_convertor_test.cpp",
   ]
 
@@ -762,6 +769,7 @@ ohos_unittest("file_data_convertor_test") {
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
@@ -811,6 +819,7 @@ ohos_unittest("sdk_helper_test") {
     "${services_path}/cloudsyncservice/src/sync_rule/battery_status.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/cloud_status.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/network_status.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
     "sdk_helper_test.cpp",
   ]
 
@@ -872,6 +881,7 @@ ohos_unittest("sdk_helper_test") {
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
@@ -921,6 +931,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "${services_path}/cloudsyncservice/src/sync_rule/battery_status.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/cloud_status.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/network_status.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
     "sdk_helper_unnormal_test.cpp",
   ]
 
@@ -982,6 +993,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
@@ -1067,6 +1079,7 @@ ohos_unittest("task_test") {
     "${services_path}/cloudsyncservice/src/sync_rule/battery_status.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/cloud_status.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/network_status.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
     "task_test.cpp",
   ]
 
@@ -1128,6 +1141,7 @@ ohos_unittest("task_test") {
     "init:libbegetutil",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]

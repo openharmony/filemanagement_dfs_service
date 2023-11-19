@@ -173,13 +173,7 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
     std::vector<std::string> needSyncApps;
     {
         std::lock_guard<std::mutex> lck(dataSyncMutex_);
-        vector<int32_t> activeUsers;
-        if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeUsers) != E_OK || activeUsers.empty()) {
-            LOGE("query active user failed");
-            return E_OSACCOUNT;
-        }
-        currentUserId_ = activeUsers.front();
-        RETURN_ON_ERR(IsUserVerified(currentUserId_));
+        RETURN_ON_ERR(GetUserId(currentUserId_));
         std::shared_ptr<NativeRdb::ResultSet> resultSet;
         RETURN_ON_ERR(DataSyncerRdbStore::GetInstance().QueryDataSyncer(currentUserId_, resultSet));
 
@@ -316,4 +310,29 @@ void DataSyncManager::Convert2BundleName(const string &bundle, string &bundleNam
         bundleName = GALLERY_BUNDLE_NAME;
     }
 }
+
+int32_t DataSyncManager::DownloadThumb()
+{
+    RETURN_ON_ERR(GetUserId(currentUserId_));
+    auto dataSyncer = GetDataSyncer(GALLERY_BUNDLE_NAME, currentUserId_);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", GALLERY_BUNDLE_NAME.c_str());
+        return E_INVAL_ARG;
+    }
+
+    return dataSyncer->DownloadThumb();
+}
+
+int32_t DataSyncManager::GetUserId(int32_t &userId)
+{
+    vector<int32_t> activeUsers;
+    if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeUsers) != E_OK || activeUsers.empty()) {
+        LOGE("query active user failed");
+        return E_OSACCOUNT;
+    }
+    userId = activeUsers.front();
+    RETURN_ON_ERR(IsUserVerified(currentUserId_));
+    return E_OK;
+}
 } // namespace OHOS::FileManagement::CloudSync
+ 

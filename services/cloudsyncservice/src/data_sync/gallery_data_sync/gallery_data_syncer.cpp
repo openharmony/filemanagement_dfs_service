@@ -408,6 +408,17 @@ void GalleryDataSyncer::ForceUnlock()
     lock_.count = 0;
     lock_.timerId = 0;
 }
+
+int32_t GalleryDataSyncer::DownloadThumb()
+{
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = DataSyncer::DownloadThumbInner(fileHandler_);
+    PutHandler();
+    return ret;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

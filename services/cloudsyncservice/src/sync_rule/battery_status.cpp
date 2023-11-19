@@ -89,4 +89,9 @@ BatteryStatus::CapacityLevel BatteryStatus::GetCapacityLevel()
 {
     return level_;
 }
+
+bool BatteryStatus::IsCharging()
+{
+    return isCharging_;
+}
 } // namespace OHOS::FileManagement::CloudSync
