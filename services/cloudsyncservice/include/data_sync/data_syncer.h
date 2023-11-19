@@ -74,6 +74,7 @@ public:
 
     /* optimizestorage */
     virtual int32_t OptimizeStorage(const int32_t agingDays);
+    virtual int32_t DownloadThumb();
 
 protected:
     /* download */
@@ -86,6 +87,7 @@ protected:
     int32_t CleanInner(std::shared_ptr<DataHandler> handler, const int action);
     int32_t CancelDownload(std::shared_ptr<DataHandler> handler);
 
+    int32_t DownloadThumbInner(std::shared_ptr<DataHandler> handler);
     void ClearCursor();
 
     void SaveSubscription();
@@ -147,6 +149,10 @@ private:
         std::shared_ptr<std::vector<DriveKit::DKRecord>>, DriveKit::DKQueryCursor,
         bool, const DriveKit::DKError &);
     void FetchRecordsDownloadCallback(std::shared_ptr<DriveKit::DKContext> context,
+                                      std::shared_ptr<const DriveKit::DKDatabase> database,
+                                      const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap,
+                                      const DriveKit::DKError &err);
+    void FetchThumbDownloadCallback(std::shared_ptr<DriveKit::DKContext> context,
                                       std::shared_ptr<const DriveKit::DKDatabase> database,
                                       const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap,
                                       const DriveKit::DKError &err);

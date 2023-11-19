@@ -315,6 +315,15 @@ bool DataSyncer::HasSdkHelper()
 {
     return true;
 }
+int32_t DataSyncer::DownloadThumb()
+{
+    return E_OK;
+}
+
+int32_t DataSyncer::DownloadThumbInner(shared_ptr<DataHandler> handler)
+{
+    return E_OK;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

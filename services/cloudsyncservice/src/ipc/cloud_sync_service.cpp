@@ -128,6 +128,8 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
     } else if (reason == "usual.event.BATTERY_OKAY") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
+    } else if (reason == "usual.event.SCREEN_OFF") {
+        dataSyncManager_->DownloadThumb();
     }
     if (reason != "load") {
         shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);

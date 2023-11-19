@@ -46,7 +46,7 @@ public:
     virtual int32_t GetCheckRecords(std::vector<DriveKit::DKRecordId> &checkRecords,
                                     const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records);
     virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload);
-
+    virtual int32_t GetThumbToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload);
     virtual int32_t GetDownloadAsset(std::string cloudId,
                                      std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload);
     /* upload */

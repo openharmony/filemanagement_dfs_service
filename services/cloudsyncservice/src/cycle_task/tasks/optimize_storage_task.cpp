@@ -33,6 +33,10 @@ OptimizeStorageTask::OptimizeStorageTask(std::shared_ptr<DataSyncManager> dataSy
 
 int32_t OptimizeStorageTask::RunTask(int32_t userId)
 {
+    if (!CloudStatus::IsCloudStatusOkay(bundleName_, userId)) {
+        LOGI("CloudStatus is not ok");
+        return E_OK;
+    }
     auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
     auto dataSyncManager_ = GetDataSyncManager();
     if (driveKit == nullptr) {
@@ -40,9 +44,8 @@ int32_t OptimizeStorageTask::RunTask(int32_t userId)
         return E_CLOUD_SDK;
     }
 
-    std::string bundleName = GetBundleName();
     std::map<std::string, std::string> param;
-    auto err = driveKit->GetAppConfigParams(bundleName, param);
+    auto err = driveKit->GetAppConfigParams(bundleName_, param);
     if (err.HasError() || param.empty()) {
         LOGE("GetAppConfigParams failed, server err:%{public}d and dk err:%{public}d", err.serverErrorCode,
              err.dkErrorCode);
@@ -52,7 +55,7 @@ int32_t OptimizeStorageTask::RunTask(int32_t userId)
     int32_t agingDays = std::stoi(param["validDays"]);
     int32_t agingPolicy = std::stoi(param["dataAgingPolicy"]);
     if (agingPolicy == 0) {
-        return dataSyncManager_->OptimizeStorage(bundleName, userId, agingDays);
+        return dataSyncManager_->OptimizeStorage(bundleName_, userId, agingDays);
     }
 
     return E_OK;

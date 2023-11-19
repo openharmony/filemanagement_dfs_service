@@ -37,7 +37,7 @@ public:
     static CapacityLevel GetCapacityLevel();
     static void GetInitChargingStatus();
     static void SetChargingStatus(bool status);
-
+    static bool IsCharging();
 private:
     static int32_t GetCapacity();
     static inline CapacityLevel level_{LEVEL_NORMAL};
