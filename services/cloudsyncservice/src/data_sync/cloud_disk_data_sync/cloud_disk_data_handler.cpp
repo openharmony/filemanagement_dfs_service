@@ -274,7 +274,15 @@ int32_t CloudDiskDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::Resu
     }
     if (IsLocalDirty(local)) {
         LOGI("local record dirty, ignore cloud delete");
-        return ClearCloudInfo(record.GetRecordId());
+        int32_t changedRows = -1;
+        ValuesBucket values;
+        values.PutInt(FC::VERSION, static_cast<int32_t>(record.GetVersion()));
+        string whereClause = FC::CLOUD_ID + " = ?";
+        int32_t ret = Update(changedRows, values, whereClause, {record.GetRecordId()});
+        if (ret != E_OK) {
+            LOGE("Update in rdb failed, ret:%{public}d", ret);
+            return ret;
+        }
     }
     return RecycleFile(record.GetRecordId());
 }
@@ -303,7 +311,6 @@ int CloudDiskDataHandler::SetRetry(const string &recordId)
     int updateRows;
     ValuesBucket values;
     values.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_RETRY));
-
     string whereClause = FC::CLOUD_ID + " = ?";
     int32_t ret = Update(updateRows, values, whereClause, {recordId});
     if (ret != E_OK) {
@@ -313,10 +320,6 @@ int CloudDiskDataHandler::SetRetry(const string &recordId)
     return E_OK;
 }
 
-int32_t CloudDiskDataHandler::ClearCloudInfo(const string &cloudId)
-{
-    return E_OK;
-}
 int32_t CloudDiskDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkRecords,
                                               const shared_ptr<std::vector<DriveKit::DKRecord>> &records)
 {
@@ -348,16 +351,92 @@ int32_t CloudDiskDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &chec
 
 int32_t CloudDiskDataHandler::Clean(const int action)
 {
-    LOGD("Enter function FileDataHandler::Clean");
+    LOGD("Enter function CloudDiskDataHandler::Clean");
+    RETURN_ON_ERR(CleanPureCloudRecord());
+    RETURN_ON_ERR(CleanNotPureCloudRecord(action));
     return E_OK;
 }
 
-int32_t CloudDiskDataHandler::CleanCloudRecord(NativeRdb::ResultSet &local,
-                                               const int action,
-                                               const std::string &cloudId)
+int32_t CloudDiskDataHandler::CleanPureCloudRecord()
 {
-    return E_OK;
+    int32_t deleteRows = -1;
+    vector<string> whereArgs = {to_string(static_cast<int32_t>(POSITION_CLOUD))};
+    string whereClause =  FC::POSITION + " = ?";
+    int32_t ret = Delete(deleteRows, whereClause, whereArgs);
+    if (ret != E_OK) {
+        LOGE("delete in rdb failed, ret:%{public}d", ret);
+        return E_INVAL_ARG;
+    }
+    return ret;
 }
+
+int32_t CloudDiskDataHandler::CleanNotPureCloudRecord(const int32_t action)
+{
+    int32_t ret = E_OK;
+    if (action == CleanAction::CLEAR_DATA) {
+        ret  = CleanNotDirtyData();
+        if (ret != E_OK) {
+            LOGE("clean not dirty data err");
+            return ret;
+        }
+    }
+    return ClearCloudInfo();
+}
+
+int32_t CloudDiskDataHandler::CleanNotDirtyData()
+{
+    int32_t ret = E_OK;
+    NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(FC::FILES_TABLE);
+    cleanPredicates.EqualTo(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
+    cleanPredicates.EqualTo(FC::POSITION, static_cast<int32_t>(POSITION_BOTH));
+    int32_t count = 0;
+    auto resultSet = Query(cleanPredicates, {FC::CLOUD_ID});
+    if (resultSet == nullptr) {
+        LOGE("get nullptr result");
+        return E_RDB;
+    }
+    ret = resultSet->GetRowCount(count);
+    if (ret != E_OK) {
+        LOGE("get row count error, ret: %{public}d", ret);
+        return ret;
+    }
+    while (resultSet->GoToNextRow() == E_OK) {
+        string cloudId;
+        ret = DataConvertor::GetString(FC::CLOUD_ID, cloudId, *resultSet);
+        string localPath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
+        if (ret != E_OK) {
+            LOGE("Get path wrong");
+            return E_INVAL_ARG;
+        }
+        ret = unlink(localPath.c_str());
+        if (ret != 0) {
+            LOGE("unlink local failed, errno %{public}d", errno);
+        }
+    }
+    int32_t deletedRows;
+    vector<string> whereArgs = {to_string(static_cast<int32_t>(DirtyTypes::TYPE_SYNCED)),
+        to_string(static_cast<int32_t>(POSITION_BOTH))};
+    ret = Delete(deletedRows, FC::DIRTY_TYPE + " = ? AND " + FC::POSITION +  " = ?", whereArgs);
+    return ret;
+}
+
+int32_t CloudDiskDataHandler::ClearCloudInfo()
+{
+    int32_t changedRows = 0;
+    NativeRdb::ValuesBucket values;
+    values.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_NEW));
+    values.PutInt(FC::POSITION, POSITION_LOCAL);
+    values.PutLong(FC::VERSION, 0);
+    std::string whereClause = FC::POSITION + " = ?";
+    vector<string> whereArgs = {to_string(static_cast<int32_t>(POSITION_BOTH))};
+    int32_t ret =
+        Update(changedRows, values, whereClause, whereArgs);
+    if (ret != E_OK) {
+        LOGE("update in rdb failed, ret:%{public}d", ret);
+    }
+    return ret;
+}
+
 int32_t CloudDiskDataHandler::GetDownloadAsset(std::string cloudId,
                                                vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
 {

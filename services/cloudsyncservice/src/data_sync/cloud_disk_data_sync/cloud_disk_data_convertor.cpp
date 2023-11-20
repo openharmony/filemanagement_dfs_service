@@ -38,6 +38,7 @@ CloudDiskDataConvertor::CloudDiskDataConvertor(int32_t userId,
                                                const function<void(NativeRdb::ResultSet &resultSet)> &func)
     : userId_(userId), bundleName_(bundleName), type_(type), errHandler_(func)
 {
+    Media::MimeTypeUtils::InitMimeTypeMap();
 }
 void CloudDiskDataConvertor::HandleErr(NativeRdb::ResultSet &resultSet)
 {
@@ -89,25 +90,28 @@ int32_t CloudDiskDataConvertor::CompensateAttributes(const DriveKit::DKRecordDat
                                                      const DriveKit::DKRecord &record,
                                                      NativeRdb::ValuesBucket &valueBucket)
 {
+    int64_t fileTimeAdded = 0;
+    int64_t fileTimeEdited = 0;
+    int64_t metaTimeEdited = 0;
     DriveKit::DKRecordFieldMap attributes;
     if (data.find(DK_FILE_ATTRIBUTES) == data.end()) {
-        return E_INVAL_ARG;
-    }
-    data.at(DK_FILE_ATTRIBUTES).GetRecordMap(attributes);
-    int64_t fileTimeAdded = 0;
-    if (attributes.find(DK_FILE_TIME_ADDED) == attributes.end() ||
-        attributes[DK_FILE_TIME_ADDED].GetLong(fileTimeAdded) != DKLocalErrorCode::NO_ERROR) {
         fileTimeAdded = record.GetCreateTime();
-    }
-    int64_t fileTimeEdited = 0;
-    if (attributes.find(DK_FILE_TIME_EDITED) == attributes.end() ||
-        attributes[DK_FILE_TIME_ADDED].GetLong(fileTimeEdited) != DKLocalErrorCode::NO_ERROR) {
         fileTimeEdited = record.GetEditedTime();
-    }
-    int64_t metaTimeEdited = 0;
-    if (attributes.find(DK_META_TIME_EDITED) == attributes.end() ||
-        attributes[DK_FILE_TIME_ADDED].GetLong(metaTimeEdited) != DKLocalErrorCode::NO_ERROR) {
         metaTimeEdited = record.GetEditedTime();
+    } else {
+        data.at(DK_FILE_ATTRIBUTES).GetRecordMap(attributes);
+        if (attributes.find(DK_FILE_TIME_ADDED) == attributes.end() ||
+            attributes[DK_FILE_TIME_ADDED].GetLong(fileTimeAdded) != DKLocalErrorCode::NO_ERROR) {
+            fileTimeAdded = record.GetCreateTime();
+        }
+        if (attributes.find(DK_FILE_TIME_EDITED) == attributes.end() ||
+            attributes[DK_FILE_TIME_ADDED].GetLong(fileTimeEdited) != DKLocalErrorCode::NO_ERROR) {
+            fileTimeEdited = record.GetEditedTime();
+        }
+        if (attributes.find(DK_META_TIME_EDITED) == attributes.end() ||
+            attributes[DK_FILE_TIME_ADDED].GetLong(metaTimeEdited) != DKLocalErrorCode::NO_ERROR) {
+            metaTimeEdited = record.GetEditedTime();
+        }
     }
     valueBucket.PutLong(FileColumn::FILE_TIME_ADDED, fileTimeAdded);
     valueBucket.PutLong(FileColumn::FILE_TIME_EDITED, fileTimeEdited);
