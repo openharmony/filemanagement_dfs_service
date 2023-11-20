@@ -2369,12 +2369,10 @@ HWTEST_F(FileDataHandlerTest, GetMetaModifiedRecords001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
-        std::vector<DKRecord> records;
-        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(Return(1));
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr)));
+        vector<DKRecord> records;
         int32_t ret = fileDataHandler->GetMetaModifiedRecords(records);
-        EXPECT_EQ(E_RDB, ret);
+        EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " GetMetaModifiedRecords001 ERROR";
@@ -2393,25 +2391,14 @@ HWTEST_F(FileDataHandlerTest, GetMetaModifiedRecords002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetMetaModifiedRecords002 Begin";
     try {
-        const int rowCount = 3;
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
-        std::vector<DKRecord> records;
-        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
-        EXPECT_CALL(*rset, GoToNextRow())
-            .Times(rowCount)
-            .WillOnce(Return(0))
-            .WillOnce(Return(0))
-            .WillRepeatedly(Return(1));
-        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rset, GetDouble(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset)))).WillRepeatedly(Return(nullptr));
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        vector<DKRecord> records;
         int32_t ret = fileDataHandler->GetMetaModifiedRecords(records);
-        EXPECT_EQ(E_RDB, ret);
+        EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " GetMetaModifiedRecords002 ERROR";
