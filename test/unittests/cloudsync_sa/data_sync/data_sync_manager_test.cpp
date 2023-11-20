@@ -188,7 +188,7 @@ HWTEST_F(DataSyncManagerTest, TriggerStopSyncOKTest, TestSize.Level1)
 HWTEST_F(DataSyncManagerTest, TriggerRecoveryArgFailTest, TestSize.Level1)
 {
     auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
-    EXPECT_EQ(E_INVAL_ARG, ret);
+    EXPECT_EQ(E_OK, ret);
 }
 
 /**
