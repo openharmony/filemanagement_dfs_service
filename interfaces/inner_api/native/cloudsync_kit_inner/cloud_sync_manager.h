@@ -92,6 +92,8 @@ public:
     virtual int32_t StopDownloadFile(const std::string &path) = 0;
     virtual int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) = 0;
     virtual int32_t UnregisterDownloadFileCallback() = 0;
+    virtual int32_t GetSyncTime(int64_t &syncTime) = 0;
+    virtual int32_t CleanCache(const std::string &uri) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

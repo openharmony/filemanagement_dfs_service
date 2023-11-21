@@ -27,6 +27,31 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
 
+napi_value CloudFileCacheNapi::CleanCloudFileCache(napi_env env, napi_callback_info info)
+{
+    LOGI("CleanCache start");
+    NFuncArg funcArg(env, info);
+
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto [succ, uri, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+    if (!succ) {
+        LOGE("Get uri error");
+        NError(EINVAL).ThrowErr(env);
+        return nullptr;
+    }
+
+    int32_t ret = CloudSyncManager::GetInstance().CleanCache(uri.get());
+    if (ret != E_OK) {
+        NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        return nullptr;
+    }
+    return NVal::CreateUndefined(env).val_;
+}
+
 bool CloudFileCacheNapi::Export()
 {
     std::vector<napi_property_descriptor> props = {
@@ -34,6 +59,7 @@ bool CloudFileCacheNapi::Export()
         NVal::DeclareNapiFunction("off", CloudFileCacheNapi::Off),
         NVal::DeclareNapiFunction("start", CloudFileCacheNapi::Start),
         NVal::DeclareNapiFunction("stop", CloudFileCacheNapi::Stop),
+        NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCache),
     };
 
     SetClassName("CloudFileCache");

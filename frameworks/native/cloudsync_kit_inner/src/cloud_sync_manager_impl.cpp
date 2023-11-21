@@ -74,6 +74,17 @@ int32_t CloudSyncManagerImpl::StartSync()
     return CloudSyncServiceProxy->StartSyncInner(false);
 }
 
+int32_t CloudSyncManagerImpl::GetSyncTime(int64_t &syncTime)
+{
+    LOGI("GetSyncTime Start");
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    return CloudSyncServiceProxy->GetSyncTimeInner(syncTime);
+}
+
 int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)
 {
     if (!callback) {
@@ -276,5 +287,16 @@ int32_t CloudSyncManagerImpl::Clean(const std::string &accountId, const CleanOpt
     }
 
     return CloudSyncServiceProxy->Clean(accountId, cleanOptions);
+}
+
+int32_t CloudSyncManagerImpl::CleanCache(const std::string &uri)
+{
+    LOGI("CleanCache Start");
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    return CloudSyncServiceProxy->CleanCacheInner(uri);
 }
 } // namespace OHOS::FileManagement::CloudSync

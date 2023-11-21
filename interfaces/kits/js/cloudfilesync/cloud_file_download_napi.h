@@ -16,9 +16,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H
 #define OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H
 
-#include "cloud_download_callback.h"
 #include "cloud_file_napi.h"
-#include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudFileDownloadNapi final : public CloudFileNapi {

@@ -51,6 +51,8 @@ public:
     int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) override;
     int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj) override;
     int32_t DeleteAsset(const int32_t userId, const std::string &uri) override;
+    int32_t GetSyncTimeInner(int64_t &syncTime) override;
+    int32_t CleanCacheInner(const std::string &uri) override;
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);

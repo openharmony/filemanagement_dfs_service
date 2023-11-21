@@ -45,6 +45,8 @@ public:
     int32_t StopDownloadFile(const std::string &uri) override;
     int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) override;
     int32_t UnregisterDownloadFileCallback() override;
+    int32_t GetSyncTime(int64_t &syncTime) override;
+    int32_t CleanCache(const std::string &uri) override;
 private:
     CloudSyncManagerImpl() = default;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);

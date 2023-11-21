@@ -52,9 +52,7 @@ int32_t CloudSyncServiceProxy::UnRegisterCallbackInner()
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_CALLBACK), data, reply, option);
     if (ret != E_OK) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s", ss.str().c_str());
+        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("UnRegisterCallbackInner Success");
@@ -91,9 +89,7 @@ int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_CALLBACK), data, reply, option);
     if (ret != E_OK) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s", ss.str().c_str());
+        LOGE("Failed to send out the request, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("RegisterCallbackInner Success");
@@ -125,12 +121,73 @@ int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag)
     int32_t ret = remote->SendRequest(static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_SYNC),
                                       data, reply, option);
     if (ret != E_OK) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s", ss.str().c_str());
+        LOGE("Failed to send out the request, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("StartSyncInner Success");
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::GetSyncTimeInner(int64_t &syncTime)
+{
+    LOGI("Start GetSyncTimeInner");
+    LOGI("Start Sync");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_GET_SYNC_TIME), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+
+    syncTime = reply.ReadInt64();
+
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::CleanCacheInner(const std::string &uri)
+{
+    LOGI("Start CleanCacheInner");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(uri)) {
+        LOGE("Failed to send the uri");
+        return E_BROKEN_IPC;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CLEAN_CACHE),
+                                      data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the request, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+
     return reply.ReadInt32();
 }
 
@@ -154,8 +211,7 @@ int32_t CloudSyncServiceProxy::StopSyncInner()
     int32_t ret = remote->SendRequest(static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_SYNC),
                                       data, reply, option);
     if (ret != E_OK) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
+        LOGE("Failed to send out the request, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("StopSyncInner Success");
@@ -423,9 +479,7 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_DOWNLOAD_FILE), data, reply, option);
     if (ret != E_OK) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s", ss.str().c_str());
+        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("StartDownloadFile Success");
@@ -467,9 +521,7 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_DOWNLOAD_FILE), data, reply, option);
     if (ret != E_OK) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s", ss.str().c_str());
+        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("StopDownloadFile Success");
@@ -514,9 +566,7 @@ int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteOb
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK), data,
         reply, option);
     if (ret != E_OK) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s", ss.str().c_str());
+        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("RegisterDownloadFileCallback Success");
@@ -547,9 +597,7 @@ int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK), data,
         reply, option);
     if (ret != E_OK) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s", ss.str().c_str());
+        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("UnregisterDownloadFileCallback Success");

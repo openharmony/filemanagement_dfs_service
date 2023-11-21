@@ -53,6 +53,7 @@ napi_value CloudSyncExport(napi_env env, napi_value exports)
     InitCloudSyncState(env, exports);
     InitErrorType(env, exports);
     InitState(env, exports);
+    InitFileSyncState(env, exports);
 
     std::vector<std::unique_ptr<NExporter>> products;
     products.emplace_back(std::make_unique<CloudFileCacheNapi>(env, exports));
@@ -81,6 +82,21 @@ void InitCloudSyncState(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("DOWNLOAD_FAILED", NVal::CreateInt32(env, DOWNLOAD_FAILED).val_),
         DECLARE_NAPI_STATIC_PROPERTY("COMPLETED", NVal::CreateInt32(env, COMPLETED).val_),
         DECLARE_NAPI_STATIC_PROPERTY("STOPPED", NVal::CreateInt32(env, STOPPED).val_),
+    };
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
+
+void InitFileSyncState(napi_env env, napi_value exports)
+{
+    char propertyName[] = "FileSyncState";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("UPLOADING", NVal::CreateInt32(env, FILESYNCSTATE_UPLOADING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("DOWNLOADING", NVal::CreateInt32(env, FILESYNCSTATE_DOWNLOADING).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("COMPLETED", NVal::CreateInt32(env, FILESYNCSTATE_COMPLETED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("STOPPED", NVal::CreateInt32(env, FILESYNCSTATE_STOPPED).val_),
     };
     napi_value obj = nullptr;
     napi_create_object(env, &obj);

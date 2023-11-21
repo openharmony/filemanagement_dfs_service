@@ -115,6 +115,14 @@ public:
     {
         return E_OK;
     }
+    int32_t GetSyncTimeInner(int64_t &syncTime)
+    {
+        return E_OK;
+    }
+    int32_t CleanCacheInner(const std::string &uri)
+    {
+        return E_OK;
+    }
 };
 
 } // namespace OHOS::FileManagement::CloudSync

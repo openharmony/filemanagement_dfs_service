@@ -61,6 +61,10 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         &CloudSyncServiceStub::HandleDownloadFile;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DELETE_ASSET)] =
         &CloudSyncServiceStub::HandleDeleteAsset;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_GET_SYNC_TIME)] =
+        &CloudSyncServiceStub::HandleGetSyncTime;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CLEAN_CACHE)] =
+        &CloudSyncServiceStub::HandleCleanCache;
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -413,6 +417,44 @@ int32_t CloudSyncServiceStub::HandleDeleteAsset(MessageParcel &data, MessageParc
     reply.WriteInt32(res);
     reply.WriteString(uri);
     LOGI("End DeleteAsset");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleGetSyncTime(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin GetSyncTime");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+	
+    int64_t syncTime = 0;
+    int32_t res = GetSyncTimeInner(syncTime);
+    reply.WriteInt64(syncTime);
+    reply.WriteInt32(res);
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleCleanCache(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleCleanCache");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+
+    string uri = data.ReadString();
+    int32_t res = CleanCacheInner(uri);
+
+    reply.WriteInt32(res);
     return res;
 }
 } // namespace OHOS::FileManagement::CloudSync
