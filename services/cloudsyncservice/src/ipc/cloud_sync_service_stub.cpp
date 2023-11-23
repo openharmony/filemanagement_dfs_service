@@ -65,6 +65,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         &CloudSyncServiceStub::HandleGetSyncTime;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CLEAN_CACHE)] =
         &CloudSyncServiceStub::HandleCleanCache;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_CACHE)] =
+        &CloudSyncServiceStub::HandleStartFileCache;
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -295,6 +297,21 @@ int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, Messa
     int32_t res = StartDownloadFile(path);
     reply.WriteInt32(res);
     LOGI("End HandleStartDownloadFile");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleStartFileCache");
+    string path = data.ReadString();
+    if (!DfsuAccessTokenHelper::CheckUriPermission(path) &&
+        !DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    int32_t res = StartDownloadFile(path);
+    reply.WriteInt32(res);
+    LOGI("End HandleStartFileCache");
     return res;
 }
 

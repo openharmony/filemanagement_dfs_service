@@ -97,7 +97,7 @@ HWTEST_F(CloudDownloadCallbackManagerTest, StopDonwloadTest, TestSize.Level1)
         CloudDownloadCallbackManager cloudDownloadCallbackManager;
         std::string path = "data/";
         int32_t userId = 1;
-        int64_t downloadId = 0;
+        DownloadProgressObj downloadId;
         cloudDownloadCallbackManager.StopDonwload(path, userId, downloadId);
 
         DownloadProgressObj downloadProgressObj;

@@ -57,12 +57,50 @@ bool CloudFileCacheNapi::Export()
     std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("on", CloudFileCacheNapi::On),
         NVal::DeclareNapiFunction("off", CloudFileCacheNapi::Off),
-        NVal::DeclareNapiFunction("start", CloudFileCacheNapi::Start),
+        NVal::DeclareNapiFunction("start", CloudFileCacheNapi::StartFileCache),
         NVal::DeclareNapiFunction("stop", CloudFileCacheNapi::Stop),
         NVal::DeclareNapiFunction("cleanCache", CloudFileCacheNapi::CleanCloudFileCache),
     };
 
     SetClassName("CloudFileCache");
     return ToExport(props);
+}
+
+napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info info)
+{
+    LOGI("Start begin");
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
+        LOGE("Start Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    auto [succUri, uri, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
+    if (!succUri) {
+        LOGE("Start get uri parameter failed!");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto cbExec = [uri = string(uri.get()), env = env]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().StartFileCache(uri);
+        if (ret != E_OK) {
+            LOGE("Start Download failed! ret = %{public}d", ret);
+            return NError(Convert2JsErrNum(ret));
+        }
+        LOGI("Start Download Success!");
+        return NError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return NVal::CreateUndefined(env);
+    };
+
+    string procedureName = "cloudFileCache";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 } // namespace OHOS::FileManagement::CloudSync

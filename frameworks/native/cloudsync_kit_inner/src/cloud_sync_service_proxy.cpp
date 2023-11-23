@@ -490,9 +490,43 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 #endif
 }
 
+int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
+{
+    LOGI("StartFileCache Start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(uri)) {
+        LOGE("Failed to send the cloud id");
+        return E_INVAL_ARG;
+    }
+
+    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
+    uriMgr.AddPathToUri(uri, uri);
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_CACHE), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the request, errno %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("StartFileCache Success");
+    return reply.ReadInt32();
+}
+
 int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
 {
-#ifdef SUPPORT_MEDIA_LIBRARY
     LOGI("StopDownloadFile Start");
     MessageParcel data;
     MessageParcel reply;
@@ -503,9 +537,13 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
         return E_BROKEN_IPC;
     }
 
-
-    OHOS::Media::MediaFileUri Muri(uri);
-    string path = Muri.GetFilePath();
+    string path = uri;
+#ifdef SUPPORT_MEDIA_LIBRARY
+    if (uri.find("file://media") == 0) {
+        OHOS::Media::MediaFileUri Muri(uri);
+        string path = Muri.GetFilePath();
+    }
+#endif
     LOGI("StopDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
 
     if (!data.WriteString(path)) {
@@ -526,10 +564,6 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
     }
     LOGI("StopDownloadFile Success");
     return reply.ReadInt32();
-#else
-    LOGE("Function StopDownloadFile is undefined");
-    return 0;
-#endif
 }
 
 int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)

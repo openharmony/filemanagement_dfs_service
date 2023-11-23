@@ -53,7 +53,8 @@ void CloudDownloadCallbackManager::StartDonwload(const std::string path,
     LOGI("download_file : %{public}d start download %{public}s callback success.", userId, path.c_str());
 }
 
-bool CloudDownloadCallbackManager::StopDonwload(const std::string path, const int32_t userId, int64_t &downloadId)
+bool CloudDownloadCallbackManager::StopDonwload(const std::string path, const int32_t userId,
+    DownloadProgressObj &download)
 {
     bool ret = false;
     lock_guard<mutex> lock(downloadsMtx_);
@@ -61,7 +62,7 @@ bool CloudDownloadCallbackManager::StopDonwload(const std::string path, const in
     auto res = downloads_.find(path);
     bool isDownloading = (res != downloads_.end());
     if (isDownloading) {
-        downloadId = res->second.downloadId;
+        download = res->second;
         LOGI("download_file : %{public}d stop download %{public}s callback success.", userId, path.c_str());
         downloads_.erase(res);
         ret = true;
@@ -205,6 +206,14 @@ void CloudDownloadCallbackManager::CheckTaskState()
 {
     if (downloads_.empty()) {
         TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_TASK);
+    }
+}
+
+void CloudDownloadCallbackManager::NotifyProcessStop(DownloadProgressObj &download)
+{
+    download.state = DownloadProgressObj::Status::STOPPED;
+    if (callback_ != nullptr) {
+        callback_->OnDownloadProcess(download);
     }
 }
 } // namespace OHOS::FileManagement::CloudSync

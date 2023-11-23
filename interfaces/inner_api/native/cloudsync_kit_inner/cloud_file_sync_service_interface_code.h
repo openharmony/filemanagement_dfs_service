@@ -37,7 +37,8 @@ enum class CloudFileSyncServiceInterfaceCode {
     SERVICE_CMD_DOWNLOAD_FILE,
     SERVICE_CMD_DELETE_ASSET,
     SERVICE_CMD_GET_SYNC_TIME,
-    SERVICE_CMD_CLEAN_CACHE
+    SERVICE_CMD_CLEAN_CACHE,
+    SERVICE_CMD_START_FILE_CACHE,
 };
 } // namespace OHOS::FileManagement::CloudSync
 

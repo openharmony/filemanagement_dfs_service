@@ -36,7 +36,8 @@ void CloudDownloadCallbackManager::StartDonwload(const std::string path,
 {
 }
 
-bool CloudDownloadCallbackManager::StopDonwload(const std::string path, const int32_t userId, int64_t &downloadId)
+bool CloudDownloadCallbackManager::StopDonwload(const std::string path, const int32_t userId,
+    DownloadProgressObj &download)
 {
     return true;
 }
@@ -78,6 +79,10 @@ void CloudDownloadCallbackManager::SetBundleName(const std::string &bundleName)
 }
 
 void CloudDownloadCallbackManager::CheckTaskState()
+{
+}
+
+void CloudDownloadCallbackManager::NotifyProcessStop(DownloadProgressObj &download)
 {
 }
 } // namespace OHOS::FileManagement::CloudSync

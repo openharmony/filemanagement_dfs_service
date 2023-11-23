@@ -91,6 +91,10 @@ public:
     {
         return E_OK;
     }
+    int32_t StartFileCache(const std::string &path)
+    {
+        return E_OK;
+    }
     int32_t StopDownloadFile(const std::string &path)
     {
         return E_OK;
