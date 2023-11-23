@@ -656,6 +656,9 @@ int32_t FileDataConvertor::CompensateTitle(DriveKit::DKRecordData &data, NativeR
     if (pos != string::npos) {
         title = sourceFileName.substr(0, pos);
     }
+    if (valueBucket.HasColumn(PhotoColumn::MEDIA_TITLE)) {
+        valueBucket.Delete(PhotoColumn::MEDIA_TITLE);
+    }
     valueBucket.PutString(PhotoColumn::MEDIA_TITLE, title);
     return E_OK;
 }

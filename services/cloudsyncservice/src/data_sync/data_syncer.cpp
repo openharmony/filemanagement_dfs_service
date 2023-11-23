@@ -26,6 +26,7 @@
 #include "sync_rule/battery_status.h"
 #include "sync_rule/network_status.h"
 #include "sync_rule/screen_status.h"
+#include "sync_rule/cloud_status.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
 
@@ -1080,9 +1081,17 @@ void DataSyncer::BeginClean()
 void DataSyncer::CompleteClean()
 {
     DeleteSubscription();
-    (void)syncStateManager_.UpdateSyncState(SyncState::CLEAN_SUCCEED);
     DataSyncerRdbStore::GetInstance().UpdateSyncState(userId_, bundleName_, SyncState::CLEAN_SUCCEED);
     TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::CLEAN_TASK);
+    auto nextAction = syncStateManager_.UpdateSyncState(SyncState::CLEAN_SUCCEED);
+    if (nextAction != Action::STOP) {
+         /* Retrigger sync, clear errorcode */
+         if (!Cloudstatus::IsCloudStatusOkay(bundleName_, userId_)) {
+            LOGE("cloud status is not OK");
+            return;
+         }
+         StartSync(false, SyncTriggerType::PENDING_TRIGGER);
+    }
 }
 
 void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)
