@@ -37,7 +37,7 @@ public:
     virtual int32_t GetCheckRecords(std::vector<DriveKit::DKRecordId> &checkRecords,
                                     const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records) override;
     int32_t GetDownloadAsset(std::string cloudId, std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
-    int32_t Clean(const int action) override;
+    int32_t Clean(const int32_t action) override;
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;
     int32_t GetDeletedRecords(std::vector<DriveKit::DKRecord> &records) override;
     int32_t GetMetaModifiedRecords(std::vector<DriveKit::DKRecord> &records) override;
@@ -69,8 +69,10 @@ private:
     std::string bundleName_;
 
     CloudDiskDataConvertor cleanConvertor_ = { userId_, bundleName_, FILE_CLEAN };
-    int32_t ClearCloudInfo(const std::string &cloudId);
-    int32_t CleanCloudRecord(NativeRdb::ResultSet &local, const int action, const std::string &filePath);
+    int32_t ClearCloudInfo();
+    int32_t CleanNotDirtyData();
+    int32_t CleanPureCloudRecord();
+    int32_t CleanNotPureCloudRecord(const int32_t action);
     void HandleCreateConvertErr(NativeRdb::ResultSet &resultSet);
     void HandleFdirtyConvertErr(NativeRdb::ResultSet &resultSet);
     CloudDiskDataConvertor createConvertor_ = {
