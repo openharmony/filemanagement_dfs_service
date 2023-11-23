@@ -77,4 +77,12 @@ DKLocalErrorCode DKContainer::DeleteSubscription(
 {
     return DKLocalErrorCode::NO_ERROR;
 }
+
+DKLocalErrorCode DKContainer::ChangesNotify(
+    std::shared_ptr<DKContext> contex,
+    DKSubscriptionId id,
+    ChangesNotifyCallback callback)
+{
+    return DKLocalErrorCode::NO_ERROR;
+}
 } // namespace DriveKit

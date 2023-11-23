@@ -51,6 +51,7 @@ private:
     int32_t DownloadFile();
     int32_t UploadFile();
     int32_t Complete();
+    void ChangesNotify();
 
     int32_t stage_ = BEGIN;
     std::shared_ptr<CloudDiskDataHandler> cloudDiskHandler_;

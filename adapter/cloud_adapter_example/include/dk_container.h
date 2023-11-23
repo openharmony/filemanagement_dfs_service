@@ -57,6 +57,7 @@ private:
 using SaveSubscriptionCallback = std::function<void(std::shared_ptr<DKContext>,
     std::shared_ptr<DKContainer>, DKSubscriptionResult &)>;
 using DelSubscriptionCallback = std::function<void(std::shared_ptr<DKContext>, const DKError &)>;
+using ChangesNotifyCallback = std::function<void(std::shared_ptr<DKContext>, const DKError &)>;
 
 class DriveKitNative;
 class DKContainer : public std::enable_shared_from_this<DKContainer> {
@@ -70,6 +71,9 @@ public:
     DKLocalErrorCode DeleteSubscription(std::shared_ptr<DKContext> context,
                                         DKSubscriptionId id,
                                         DelSubscriptionCallback callback);
+    DKLocalErrorCode ChangesNotify(std::shared_ptr<DKContext> context,
+                                   DKSubscriptionId id,
+                                   ChangesNotifyCallback callback);
 
 public:
     DKContainer(DKAppBundleName bundleName, DKContainerName containerName, std::shared_ptr<DriveKitNative> driveKit)
