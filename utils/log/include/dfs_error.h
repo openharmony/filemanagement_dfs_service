@@ -61,6 +61,10 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_OSACCOUNT,
     E_USER_LOCKED,
     E_GET_SIZE_ERROR,
+
+    E_IPC_READ_FAILED,
+    E_IPC_WRITE_FAILED,
+    E_SOFTBUS_SESSION_FAILED,
 };
 
 enum JsErrCode {

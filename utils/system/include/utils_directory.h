@@ -16,8 +16,15 @@
 #ifndef UTILS_DIRECTORY_H
 #define UTILS_DIRECTORY_H
 
-#include <sys/types.h>
 #include <string>
+#include <sys/types.h>
+#include <vector>
+
+#include <cstring>
+#include <unistd.h>
+
+#include <dirent.h>
+#include <iostream>
 
 namespace OHOS {
 namespace Storage {
@@ -34,6 +41,9 @@ void ForceCreateDirectory(const std::string &path, mode_t mode);
 void ForceCreateDirectory(const std::string &path, mode_t mode, uid_t uid, gid_t gid);
 
 void ForceRemoveDirectory(const std::string &path);
+bool IsFolder(const std::string &name);
+std::vector<std::string> GetFilePath(const std::string &name);
+int32_t ChangeOwnerRecursive(const std::string &path, uid_t uid, gid_t gid);
 } // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage

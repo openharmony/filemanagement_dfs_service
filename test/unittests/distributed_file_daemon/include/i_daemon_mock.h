@@ -50,6 +50,17 @@ public:
     {
         return FileManagement::E_OK;
     }
+    int32_t PrepareSession(const std::string &srcUri, const std::string &dstUri, const std::string &remoteDeviceId)
+    {
+        return FileManagement::E_OK;
+    }
+    int32_t RequestSendFile(const std::string &srcUri,
+                            const std::string &dstPath,
+                            const std::string &remoteDeviceId,
+                            const std::string &sessionName)
+    {
+        return FileManagement::E_OK;
+    }
 };
 
 } // namespace OHOS::Storage::DistributedFile

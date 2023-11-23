@@ -12,17 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
+#define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
 
-/* SAID:5201 */
+#include "softbus_handler.h"
+#include <vector>
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-    enum class DistributedFileDaemonInterfaceCode {
-        DISTRIBUTED_FILE_OPEN_P2P_CONNECTION = 0,
-        DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION,
-        DISTRIBUTED_FILE_PREPARE_SESSION,
-        DISTRIBUTED_FILE_REQUEST_SEND_FILE,
-    };
+class SoftBusSessionListener {
+public:
+    static int OnSessionOpened(int sessionId, int result);
+    static void OnSessionClosed(int sessionId);
+
+private:
+    static int32_t QueryActiveUserId();
+    static std::vector<std::string> GetFileName(const std::vector<std::string> &fileList, const std::string &path);
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+#endif // FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H

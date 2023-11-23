@@ -13,16 +13,26 @@
  * limitations under the License.
  */
 
-/* SAID:5201 */
+#ifndef FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_FILE_SEND_LISTENER_H
+#define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_FILE_SEND_LISTENER_H
+
+#include <stdint.h>
+#include <string>
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-    enum class DistributedFileDaemonInterfaceCode {
-        DISTRIBUTED_FILE_OPEN_P2P_CONNECTION = 0,
-        DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION,
-        DISTRIBUTED_FILE_PREPARE_SESSION,
-        DISTRIBUTED_FILE_REQUEST_SEND_FILE,
-    };
+class SoftBusFileSendListener {
+public:
+    static int32_t OnSendFileProcess(int sessionId, uint64_t bytesUpload, uint64_t bytesTotal);
+    static int32_t OnSendFileFinished(int sessionId, const char *firstFile);
+    static void OnFileTransError(int sessionId);
+    static void RemoveSession(int sessionId);
+
+private:
+    static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+#endif // FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_FILE_SEND_LISTENER_H

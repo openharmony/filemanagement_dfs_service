@@ -52,6 +52,13 @@ public:
 
     int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    int32_t PrepareSession(const std::string &srcUri,
+                           const std::string &dstUri,
+                           const std::string &srcDeviceId) override;
+    int32_t RequestSendFile(const std::string &srcUri,
+                            const std::string &dstPath,
+                            const std::string &dstDeviceId,
+                            const std::string &sessionName) override;
 private:
     Daemon();
     ServiceRunningState state_ { ServiceRunningState::STATE_NOT_START };
@@ -61,6 +68,12 @@ private:
     std::shared_ptr<OsAccountObserver> subScriber_;
     void PublishSA();
     void RegisterOsAccount();
+    int32_t LoadRemoteSA(const std::string &srcUri,
+                         const std::string &dstPath,
+                         const std::string &localDeviceId,
+                         const std::string &remoteDeviceId,
+                         const std::string &sessionName);
+    void RemoveSession(const std::string &sessionName);
 };
 } // namespace DistributedFile
 } // namespace Storage

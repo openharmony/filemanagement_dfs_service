@@ -32,8 +32,13 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/network/network_agent_template.cpp",
     "src/network/session_pool.cpp",
     "src/network/softbus/softbus_agent.cpp",
+    "src/network/softbus/softbus_file_receive_listener.cpp",
+    "src/network/softbus/softbus_file_send_listener.cpp",
+    "src/network/softbus/softbus_handler.cpp",
     "src/network/softbus/softbus_session.cpp",
     "src/network/softbus/softbus_session_dispatcher.cpp",
+    "src/network/softbus/softbus_session_listener.cpp",
+    "src/network/softbus/softbus_session_pool.cpp",
   ]
 
   deps = [
@@ -43,6 +48,10 @@ ohos_shared_library("libdistributedfiledaemon") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -51,7 +60,9 @@ ohos_shared_library("libdistributedfiledaemon") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
   configs = [ "${utils_path}:compiler_configs" ]
 
