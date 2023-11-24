@@ -509,25 +509,6 @@ string FileDataConvertor::GetSandboxPath(const string &path)
     return sandboxPrefix_ + path.substr(pos + localPrefix.size());
 }
 
-static bool EndsWith(const string &fullString, const string &ending)
-{
-    if (fullString.length() >= ending.length()) {
-        return (!fullString.compare(fullString.length() - ending.length(),
-                                    ending.length(),
-                                    ending));
-    }
-    return false;
-}
-
-string FileDataConvertor::GetPathWithoutTmp(const string &path)
-{
-    string ret = path;
-    if (EndsWith(path, tmpSuffix_)) {
-        ret = path.substr(0, path.length() - tmpSuffix_.length());
-    }
-    return ret;
-}
-
 string FileDataConvertor::GetThumbPath(const string &path, const string &key)
 {
     if (path.length() < ROOT_MEDIA_DIR.length()) {

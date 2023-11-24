@@ -51,6 +51,7 @@ public:
     int32_t RestoreClean(const std::string &bundleName, const int32_t userId);
     int32_t OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays);
     int32_t DownloadThumb();
+    int32_t CleanCache(const std::string &bundleName, const int32_t userId, const std::string &uri);
 private:
     std::vector<std::shared_ptr<DataSyncer>> dataSyncers_;
     std::mutex dataSyncMutex_;

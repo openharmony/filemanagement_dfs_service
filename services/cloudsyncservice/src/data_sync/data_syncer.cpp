@@ -1228,6 +1228,11 @@ void DataSyncer::FetchThumbDownloadCallback(shared_ptr<DKContext> context,
         DownloadThumbInner(handler);
     }
 }
+
+int32_t DataSyncer::CleanCache(const string &uri)
+{
+    return E_OK;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

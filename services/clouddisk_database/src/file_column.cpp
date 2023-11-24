@@ -45,7 +45,7 @@ const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " 
     FILES_TABLE + " (" +
     CLOUD_ID + " TEXT PRIMARY KEY NOT NULL, " +
     IS_DIRECTORY + " INT, " +
-    FILE_NAME + " TEXT NOI NULL, " +
+    FILE_NAME + " TEXT NOT NULL, " +
     PARENT_CLOUD_ID + " TEXT NOT NULL, " +
     FILE_SIZE + " BIGINT, " +
     FILE_SHA256 + " TEXT, " +

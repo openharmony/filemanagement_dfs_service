@@ -204,8 +204,12 @@ int32_t CloudSyncService::GetSyncTimeInner(int64_t &syncTime)
 
 int32_t CloudSyncService::CleanCacheInner(const std::string &uri)
 {
-    LOGE("CleanCacheInner(service) is ok");
-    return E_OK;
+    string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    return dataSyncManager_->CleanCache(bundleName, callerUserId, uri);
 }
 
 int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)

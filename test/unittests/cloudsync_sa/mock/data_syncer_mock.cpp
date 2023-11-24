@@ -324,6 +324,11 @@ int32_t DataSyncer::DownloadThumbInner(shared_ptr<DataHandler> handler)
 {
     return E_OK;
 }
+
+int32_t DataSyncer::CleanCache(const std::string &uri)
+{
+    return E_OK;
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

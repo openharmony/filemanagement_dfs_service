@@ -38,6 +38,11 @@ public:
                                           int32_t userId);
     static std::string GetLocalFilePath(std::string cloudId, std::string bundleName,
                                         int32_t userId);
+    static std::string GetPathWithoutTmp(const std::string &path);
+    static std::string GetCloudId(const std::string &path);
+    static const std::string TMP_SUFFIX;
+private:
+    static bool EndsWith(const std::string &fullString, const std::string &ending);
 };
 } // namespace CloudDisk
 } // namespace FileManagement

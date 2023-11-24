@@ -54,7 +54,7 @@ public:
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
     void Reset();
-
+    int32_t CleanCache(const std::string &uri);
 private:
     static inline const int32_t LIMIT_SIZE = 5;
     static inline const int32_t MODIFY_BATCH_NUM = 20;
@@ -106,7 +106,9 @@ private:
     int32_t GetMetaFilePath(const std::string &cloudId, std::string &path);
     int32_t PullRecordConflict(DriveKit::DKRecord &record, bool &comflag);
     int SetRetry(const std::string &recordId);
-    int32_t UpdateDirPosition(std::string cloudId);
+    void AppendFileToDownload(const std::string &cloudId,
+                              const std::string &fieldKey,
+                              std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
 
     CloudDiskDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
     int64_t UTCTimeSeconds();

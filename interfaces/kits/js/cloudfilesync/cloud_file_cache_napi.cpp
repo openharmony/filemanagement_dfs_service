@@ -82,7 +82,7 @@ napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info i
         return nullptr;
     }
 
-    auto cbExec = [uri = string(uri.get()), env = env]() -> NError {
+    auto cbExec = [uri = string(uri.get())]() -> NError {
         int32_t ret = CloudSyncManager::GetInstance().StartFileCache(uri);
         if (ret != E_OK) {
             LOGE("Start Download failed! ret = %{public}d", ret);
