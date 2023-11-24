@@ -28,7 +28,7 @@ using namespace std;
 static const uint64_t INTERVAL = 30 * 24;
 int32_t SdkHelper::Init(const int32_t userId, const std::string &bundleName)
 {
-    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
+    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId, DriveKit::DKCloudSyncDemon::DK_CLOUD_FILE);
     if (driveKit == nullptr) {
         LOGE("sdk helper get drive kit instance fail");
         return E_CLOUD_SDK;
@@ -239,6 +239,16 @@ int32_t SdkHelper::DeleteSubscription(DelSubscriptionCallback callback)
     auto err = container_->DeleteSubscription(nullptr, "", callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("DeleteSubscription fail ret %{public}d", err);
+        return E_CLOUD_SDK;
+    }
+    return E_OK;
+}
+
+int32_t SdkHelper::ChangesNotify(ChangesNotifyCallback callback)
+{
+    auto err = container_->ChangesNotify(nullptr, "", callback);
+    if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("ChangesNotify fail ret %{public}d", err);
         return E_CLOUD_SDK;
     }
     return E_OK;

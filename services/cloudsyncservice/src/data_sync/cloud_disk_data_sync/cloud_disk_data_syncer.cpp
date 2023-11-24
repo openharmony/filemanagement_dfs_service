@@ -129,7 +129,18 @@ int32_t CloudDiskDataSyncer::Complete()
     LOGI("cloud disk data syncer complete all");
     Unlock();
     CompleteAll();
+    ChangesNotify();
     return E_OK;
+}
+
+void CloudDiskDataSyncer::ChangesNotify()
+{
+    sdkHelper_->ChangesNotify([] (auto, DriveKit::DKError err) {
+        if (err.HasError()) {
+            LOGE("drivekit changes notify server err %{public}d and dk error %{public}d", err.serverErrorCode,
+                err.dkErrorCode);
+        }
+    });
 }
 
 void CloudDiskDataSyncer::ScheduleByType(SyncTriggerType syncTriggerType)

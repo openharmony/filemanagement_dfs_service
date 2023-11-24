@@ -81,6 +81,7 @@ public:
     DriveKitNative &operator=(const DriveKitNative &) = delete;
     DriveKitNative &operator=(DriveKitNative &&) = delete;
     static std::shared_ptr<DriveKitNative> GetInstance(int userId);
+    static std::shared_ptr<DriveKitNative> GetInstance(int userId, DKCloudSyncDemon syncDemon);
     virtual ~DriveKitNative();
 
     std::shared_ptr<DKContainer> GetDefaultContainer(DKAppBundleName bundleName);
@@ -110,6 +111,7 @@ private:
     static std::map<int, std::shared_ptr<DriveKitNative>> driveKits_;
     DKUserInfo userInfo_;
     int userId_;
+    DKCloudSyncDemon syncDemon_;
 };
 } // namespace DriveKit
 #endif

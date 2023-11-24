@@ -50,14 +50,14 @@ public:
     int32_t Write(const std::string &cloudId);
     int32_t GetXAttr(const std::string &cloudId, const std::string &position, std::string &value);
     int32_t SetXAttr(const std::string &cloudId, const std::string &position, const std::string &value);
-    int32_t Rename(const std::string &cloudId, const std::string &newParentCloudId, const std::string &newFileName);
-    int32_t UnlinkSyncedFile(const std::string &cloudId, const int32_t &isDirectory, const int32_t &position);
-    int32_t UnlinkLocalFile(const std::string &cloudId, const int32_t &isDirectory, const int32_t &position);
-    int32_t Unlink(const std::string &cloudId);
+    int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
+        const std::string &newParentCloudId, const std::string &newFileName);
+    int32_t Unlink(const std::string &parentCloudId, const std::string &fileName);
 
 private:
     void Stop();
-    const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args);
+    int32_t UnlinkSyncedDirectory(const std::string &cloudId);
+    int32_t UnlinkLocalDirectory(const std::string &cloudId);
 
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     NativeRdb::RdbStoreConfig config_{""};

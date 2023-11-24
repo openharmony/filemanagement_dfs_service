@@ -125,6 +125,15 @@ std::shared_ptr<DriveKitNative> DriveKitNative::GetInstance(int userId)
     return driveKit;
 }
 
+std::shared_ptr<DriveKitNative> DriveKitNative::GetInstance(int userId, DKCloudSyncDemon syncDemon)
+{
+    auto drivekit = GetInstance(userId);
+    if (drivekit) {
+        drivekit->syncDemon_ = syncDemon;
+    }
+    return drivekit;
+}
+
 DriveKitNative::DriveKitNative(int userId)
 {
     userId_ = userId;

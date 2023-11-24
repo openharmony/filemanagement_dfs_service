@@ -109,8 +109,11 @@ public:
         std::shared_ptr<DriveKit::DKContainer>, DriveKit::DKSubscriptionResult &)>;
     using DelSubscriptionCallback = std::function<void(std::shared_ptr<DriveKit::DKContext>,
         const DriveKit::DKError &)>;
+    using ChangesNotifyCallback = std::function<void(std::shared_ptr<DriveKit::DKContext>,
+        const DriveKit::DKError &)>;
     int32_t SaveSubscription(SaveSubscriptionCallback callback);
     int32_t DeleteSubscription(DelSubscriptionCallback callback);
+    int32_t ChangesNotify(ChangesNotifyCallback callback);
     void ReleaseDownloader();
 private:
     std::shared_ptr<DriveKit::DKContainer> container_;

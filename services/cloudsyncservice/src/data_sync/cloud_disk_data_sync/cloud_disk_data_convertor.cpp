@@ -284,6 +284,9 @@ int32_t CloudDiskDataConvertor::HandleAttachments(DriveKit::DKRecordData &data,
 int32_t CloudDiskDataConvertor::HandleAttributes(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    if (type_ == FILE_DELETE) {
+        return E_OK;
+    }
     DriveKit::DKRecordFieldMap map;
     RETURN_ON_ERR(HandleCreateTime(map, resultSet));
     RETURN_ON_ERR(HandleMetaEditedTime(map, resultSet));
@@ -306,6 +309,9 @@ int32_t CloudDiskDataConvertor::FillRecordId(DriveKit::DKRecord &record,
 int32_t CloudDiskDataConvertor::FillCreatedTime(DriveKit::DKRecord &record,
     NativeRdb::ResultSet &resultSet)
 {
+    if (type_ == FILE_DELETE) {
+        return E_OK;
+    }
     int64_t createdTime;
     int32_t ret = GetLong(FileColumn::FILE_TIME_ADDED, createdTime, resultSet);
     if (ret != E_OK) {
@@ -318,6 +324,9 @@ int32_t CloudDiskDataConvertor::FillCreatedTime(DriveKit::DKRecord &record,
 int32_t CloudDiskDataConvertor::FillMetaEditedTime(DriveKit::DKRecord &record,
     NativeRdb::ResultSet &resultSet)
 {
+    if (type_ == FILE_DELETE) {
+        return E_OK;
+    }
     int64_t metaEditedTime;
     int32_t ret = GetLong(FileColumn::META_TIME_EDITED, metaEditedTime, resultSet);
     if (ret != E_OK) {
@@ -342,6 +351,9 @@ int32_t CloudDiskDataConvertor::FillVersion(DriveKit::DKRecord &record,
 int32_t CloudDiskDataConvertor::HandleFileName(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    if (type_ == FILE_DELETE) {
+        return E_OK;
+    }
     std::string displayName;
     int32_t ret = GetString(FileColumn::FILE_NAME, displayName, resultSet);
     if (ret != E_OK) {
@@ -354,6 +366,9 @@ int32_t CloudDiskDataConvertor::HandleFileName(DriveKit::DKRecordData &data,
 int32_t CloudDiskDataConvertor::HandleParentId(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    if (type_ == FILE_DELETE) {
+        return E_OK;
+    }
     std::string parentFolder;
     int32_t ret = GetString(FileColumn::PARENT_CLOUD_ID, parentFolder, resultSet);
     if (ret != E_OK) {
@@ -366,6 +381,9 @@ int32_t CloudDiskDataConvertor::HandleParentId(DriveKit::DKRecordData &data,
 int32_t CloudDiskDataConvertor::HandleDirectlyRecycled(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    if (type_ == FILE_DELETE) {
+        return E_OK;
+    }
     int32_t directlyRecycled;
     int32_t ret = GetInt(FileColumn::DIRECTLY_RECYCLED, directlyRecycled, resultSet);
     if (ret != E_OK) {
@@ -378,6 +396,9 @@ int32_t CloudDiskDataConvertor::HandleDirectlyRecycled(DriveKit::DKRecordData &d
 int32_t CloudDiskDataConvertor::HandleRecycleTime(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    if (type_ == FILE_DELETE) {
+        return E_OK;
+    }
     int64_t recycleTime;
     int32_t ret = GetLong(FileColumn::FILE_TIME_RECYCLED, recycleTime, resultSet);
     if (ret != E_OK) {
@@ -405,6 +426,9 @@ int32_t CloudDiskDataConvertor::HandleType(DriveKit::DKRecordData &data,
 int32_t CloudDiskDataConvertor::HandleOperateType(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
+    if (type_ == FILE_DELETE) {
+        return E_OK;
+    }
     int64_t operateType;
     int32_t ret = GetLong(FileColumn::OPERATE_TYPE, operateType, resultSet);
     if (ret != E_OK) {

@@ -137,7 +137,7 @@ int32_t CloudDiskRdbStore::LookUp(const std::string &parentCloudId,
     lookUpPredicates
         .EqualTo(FileColumn::PARENT_CLOUD_ID, tempParentCloudId)->And()
         ->EqualTo(FileColumn::FILE_NAME, fileName)->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0")->And()
-        ->NotEqualTo(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_DELETED));
+        ->NotEqualTo(FileColumn::DIRTY_TYPE, to_string(static_cast<int32_t>(DirtyType::TYPE_DELETED)));
     auto resultSet = rdbStore_->Query(lookUpPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
     vector<CloudDiskFileInfo> infos;
     int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(move(resultSet), infos);
@@ -189,7 +189,7 @@ int32_t CloudDiskRdbStore::ReadDir(const std::string &cloudId, vector<CloudDiskF
     }
     readDirPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, tempParentCloudId)
         ->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0")->And()
-        ->NotEqualTo(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_DELETED));
+        ->NotEqualTo(FileColumn::DIRTY_TYPE, to_string(static_cast<int32_t>(DirtyType::TYPE_DELETED)));
     auto resultSet = rdbStore_->Query(readDirPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
     int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(move(resultSet), infos);
     if (ret != E_OK) {
@@ -450,22 +450,20 @@ static void FileMove(ValuesBucket &values, const int32_t &position, const std::s
     }
 }
 
-int32_t CloudDiskRdbStore::Rename(const std::string &cloudId,
+int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
     const std::string &newParentCloudId, const std::string &newFileName)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    CLOUDID_IS_NULL(cloudId);
     if (newFileName.empty()) {
         LOGE("new file name is null, cannot be renamed");
         return E_INVAL_ARG;
     }
     CloudDiskFileInfo info;
-    if (GetAttr(cloudId, info)) {
+    if (LookUp(oldParentCloudId, oldFileName, info)) {
         LOGE("get rename cloudId info in DB fail");
         return E_RDB;
     }
-    string oldFileName = info.fileName;
-    string oldParentCloudId = info.parentCloudId;
+    string cloudId = info.cloudId;
     int32_t position = static_cast<int32_t>(info.location);
     if (oldFileName == newFileName && oldParentCloudId == newParentCloudId) {
         LOGI("the rename parameter is same as old");
@@ -500,117 +498,147 @@ int32_t CloudDiskRdbStore::Rename(const std::string &cloudId,
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UnlinkSyncedFile(const std::string &cloudId,
-    const int32_t &isDirectory, const int32_t &position)
+static int32_t QueryDirInUnlinkedDir(vector<string> &childCloudIds, const shared_ptr<ResultSet> resultSet)
 {
-    RDBPTR_IS_NULLPTR(rdbStore_);
-    CLOUDID_IS_NULL(cloudId);
-    if (isDirectory == DIRECTORY && position != LOCAL) {
-        AbsRdbPredicates deleteSyncedPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
-        deleteSyncedPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, cloudId);
-        auto resultSet = rdbStore_->Query(deleteSyncedPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
-        int32_t rowCount = 0;
-        int32_t ret = E_OK;
-        if (resultSet) {
-            ret = resultSet->GetRowCount(rowCount);
-        }
-        if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
-            LOGE("result set is nullptr or get result set rowCount is failed, ret %{public}d, rowCount %{public}d",
-                ret, rowCount);
-            return E_RDB;
-        }
-        while (resultSet->GoToNextRow() == E_OK) {
-            int32_t childIsDirectory;
-            string childCloudId;
-            int32_t childPosition = -1;
-            if (CloudDiskRdbUtils::GetInt(FileColumn::IS_DIRECTORY, childIsDirectory, resultSet) ||
-                CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, childCloudId, resultSet) ||
-                CloudDiskRdbUtils::GetInt(FileColumn::POSITION, childPosition, resultSet)) {
-                LOGE("handle synced result set query fail");
-                return E_RDB;
-            }
-            RETURN_ON_ERR(UnlinkLocalFile(childCloudId, childIsDirectory, childPosition));
-            RETURN_ON_ERR(UnlinkSyncedFile(childCloudId, childIsDirectory, childPosition));
-        }
+    int32_t rowCount = 0;
+    int32_t ret = E_OK;
+    if (resultSet) {
+        ret = resultSet->GetRowCount(rowCount);
     }
-    if (position != LOCAL) {
-        int32_t changedRows = -1;
-        ValuesBucket deleteValue;
-        deleteValue.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_DELETED));
-        vector<ValueObject> bindArgs;
-        bindArgs.emplace_back(cloudId);
-        int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, deleteValue,
-            FileColumn::CLOUD_ID + " = ?", bindArgs);
-        if (ret != E_OK) {
-            LOGE("unlink synced file itself fail, ret %{public}d", ret);
+    if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
+        LOGE("result set is nullptr or get result set rowCount is failed, ret %{public}d, rowCount %{public}d",
+            ret, rowCount);
+        return E_RDB;
+    }
+    while (resultSet->GoToNextRow() == E_OK) {
+        string childCloudId;
+        if (CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, childCloudId, resultSet)) {
+            LOGE("query directory cloud id in parent directory fail");
             return E_RDB;
         }
+        childCloudIds.emplace_back(childCloudId);
     }
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UnlinkLocalFile(const std::string &cloudId, const int32_t &isDirectory,
-    const int32_t &position = LOCAL)
+int32_t CloudDiskRdbStore::UnlinkSyncedDirectory(const std::string &cloudId)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     CLOUDID_IS_NULL(cloudId);
     int32_t changedRows = -1;
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(cloudId);
-    if (isDirectory == DIRECTORY && position == LOCAL) {
-        AbsRdbPredicates deleteLocalPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
-        deleteLocalPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, cloudId)
-            ->And()->EqualTo(FileColumn::IS_DIRECTORY, DIRECTORY);
-        auto resultSet = rdbStore_->Query(deleteLocalPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
-        int32_t rowCount = 0;
-        int32_t ret = E_OK;
-        if (resultSet) {
-            ret = resultSet->GetRowCount(rowCount);
-        }
-        if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
-            LOGE("result set is nullptr or get result set rowCount is failed, ret %{public}d, rowCount %{public}d",
-                ret, rowCount);
-            return E_RDB;
-        }
-        while (resultSet->GoToNextRow() == E_OK) {
-            string childCloudId;
-            if (CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, childCloudId, resultSet)) {
-                LOGE("unlink local directory query cloudId fail");
-                return E_RDB;
-            }
-            RETURN_ON_ERR(UnlinkLocalFile(childCloudId, DIRECTORY));
-        }
-        ret = rdbStore_->Delete(changedRows, FileColumn::FILES_TABLE,
-            FileColumn::PARENT_CLOUD_ID + " = ?", bindArgs);
-        if (ret != E_OK) {
-            LOGE("unlink local directory fail, ret %{public}d", ret);
-            return E_RDB;
-        }
+    AbsRdbPredicates deleteLocalPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    deleteLocalPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, cloudId)
+        ->And()->EqualTo(FileColumn::POSITION, to_string(LOCAL))
+        ->And()->EqualTo(FileColumn::IS_DIRECTORY, to_string(DIRECTORY));
+    auto localResultSet = rdbStore_->Query(deleteLocalPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
+    vector<string> localChildCloudIds;
+    if (QueryDirInUnlinkedDir(localChildCloudIds, localResultSet)) {
+        LOGE("query local directory in synced directory fail");
+        return E_RDB;
     }
-    if (position == LOCAL) {
-        int32_t ret = rdbStore_->Delete(changedRows, FileColumn::FILES_TABLE,
-            FileColumn::CLOUD_ID + " = ?", bindArgs);
-        if (ret != E_OK) {
-            LOGE("unlink local file itself fail, ret %{public}d", ret);
-            return E_RDB;
-        }
+    for (auto &localChildCloudId : localChildCloudIds) {
+        RETURN_ON_ERR(UnlinkLocalDirectory(localChildCloudId));
+    }
+    bindArgs.emplace_back(to_string(LOCAL));
+    int32_t ret = rdbStore_->Delete(changedRows, FileColumn::FILES_TABLE,
+        FileColumn::PARENT_CLOUD_ID + " = ? AND " + FileColumn::POSITION + " = ?", bindArgs);
+    if (ret != E_OK) {
+        LOGE("unlink local file in synced directory fail, ret %{public}d", ret);
+        return E_RDB;
+    }
+    AbsRdbPredicates updateSyncedPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    updateSyncedPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, cloudId)
+        ->And()->NotEqualTo(FileColumn::POSITION, to_string(LOCAL))
+        ->And()->EqualTo(FileColumn::IS_DIRECTORY, to_string(DIRECTORY));
+    auto cloudResultSet = rdbStore_->Query(updateSyncedPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
+    vector<string> cloudChildCloudIds;
+    if (QueryDirInUnlinkedDir(cloudChildCloudIds, cloudResultSet)) {
+        LOGE("query cloud directory in synced directory fail");
+        return E_RDB;
+    }
+    for (auto &cloudChildCloudId : cloudChildCloudIds) {
+        RETURN_ON_ERR(UnlinkSyncedDirectory(cloudChildCloudId));
+    }
+    ValuesBucket updateValue;
+    updateValue.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_DELETED));
+    ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, updateValue,
+        FileColumn::PARENT_CLOUD_ID + " = ? AND " + FileColumn::POSITION + " <> ?", bindArgs);
+    if (ret != E_OK) {
+        LOGE("unlink cloud file in synced directory fail, ret %{public}d", ret);
+        return E_RDB;
     }
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId)
+int32_t CloudDiskRdbStore::UnlinkLocalDirectory(const std::string &cloudId)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     CLOUDID_IS_NULL(cloudId);
+    int32_t changedRows = -1;
+    vector<ValueObject> bindArgs;
+    bindArgs.emplace_back(cloudId);
+    AbsRdbPredicates deleteLocalPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    deleteLocalPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, cloudId)
+        ->And()->EqualTo(FileColumn::IS_DIRECTORY, to_string(DIRECTORY));
+    auto resultSet = rdbStore_->Query(deleteLocalPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
+    vector<string> childCloudIds;
+    if (QueryDirInUnlinkedDir(childCloudIds, resultSet)) {
+        LOGE("query local directory in synced directory fail");
+        return E_RDB;
+    }
+    for (auto &childCloudId : childCloudIds) {
+        RETURN_ON_ERR(UnlinkLocalDirectory(childCloudId));
+    }
+    int32_t ret = rdbStore_->Delete(changedRows, FileColumn::FILES_TABLE,
+        FileColumn::PARENT_CLOUD_ID + " = ?", bindArgs);
+    if (ret != E_OK) {
+        LOGE("unlink local directory fail, ret %{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::Unlink(const std::string &parentCloudId, const std::string &fileName)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
     CloudDiskFileInfo info;
-    if (GetAttr(cloudId, info)) {
+    if (LookUp(parentCloudId, fileName, info)) {
         LOGE("get deleted cloudId info in DB fail");
         return E_RDB;
     }
+    string cloudId = info.cloudId;
     int32_t isDirectory = info.IsDirectory ? DIRECTORY : FILE;
     int32_t position = static_cast<int32_t>(info.location);
-    RETURN_ON_ERR(UnlinkLocalFile(cloudId, isDirectory, position));
-    RETURN_ON_ERR(UnlinkSyncedFile(cloudId, isDirectory, position));
+    int32_t changedRows = -1;
+    vector<ValueObject> bindArgs;
+    int32_t ret = E_OK;
+    bindArgs.emplace_back(cloudId);
+    if (isDirectory == DIRECTORY && position == LOCAL) {
+        RETURN_ON_ERR(UnlinkLocalDirectory(cloudId));
+    }
+    if (isDirectory == DIRECTORY && position != LOCAL) {
+        RETURN_ON_ERR(UnlinkSyncedDirectory(cloudId));
+    }
+    if (position == LOCAL) {
+        ret = rdbStore_->Delete(changedRows, FileColumn::FILES_TABLE,
+        FileColumn::CLOUD_ID + " = ?", bindArgs);
+        if (ret != E_OK) {
+            LOGE("unlink local itself fail, ret %{public}d", ret);
+            return E_RDB;
+        }
+    }
+    if (position != LOCAL) {
+        ValuesBucket updateValue;
+        updateValue.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_DELETED));
+        ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, updateValue,
+            FileColumn::CLOUD_ID + " = ?", bindArgs);
+        if (ret != E_OK) {
+            LOGE("unlink synced file itself fail, ret %{public}d", ret);
+            return E_RDB;
+        }
+    }
     return E_OK;
 }
 

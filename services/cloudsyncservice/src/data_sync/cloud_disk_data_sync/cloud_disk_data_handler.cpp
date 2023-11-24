@@ -504,17 +504,6 @@ int32_t CloudDiskDataHandler::GetDeletedRecords(vector<DKRecord> &records)
         LOGE("result set to records err %{public}d", ret);
         return ret;
     }
-    for (auto &record : records) {
-        DKRecordData data;
-        record.GetRecordData(data);
-        string isDirectory;
-        data[DK_IS_DIRECTORY].GetString(isDirectory);
-        if (isDirectory == "directory") {
-            DriveKit::DKQueryCursor baseCursor;
-            GetStartCursor(baseCursor);
-            record.SetBaseCursor(baseCursor);
-        }
-    }
     return E_OK;
 }
 int32_t CloudDiskDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
