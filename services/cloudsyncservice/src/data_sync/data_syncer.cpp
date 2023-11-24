@@ -1086,7 +1086,7 @@ void DataSyncer::CompleteClean()
     auto nextAction = syncStateManager_.UpdateSyncState(SyncState::CLEAN_SUCCEED);
     if (nextAction != Action::STOP) {
          /* Retrigger sync, clear errorcode */
-         if (!Cloudstatus::IsCloudStatusOkay(bundleName_, userId_)) {
+         if (!CloudStatus::IsCloudStatusOkay(bundleName_, userId_)) {
             LOGE("cloud status is not OK");
             return;
          }
