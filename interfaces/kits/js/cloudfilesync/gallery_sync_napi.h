@@ -16,9 +16,8 @@
 #ifndef OHOS_FILEMGMT_GALLERY_SYNC_NAPI_H
 #define OHOS_FILEMGMT_GALLERY_SYNC_NAPI_H
 
-#include "filemgmt_libn.h"
-
 #include "cloud_sync_napi.h"
+
 namespace OHOS::FileManagement::CloudSync {
 class GallerySyncNapi final : public CloudSyncNapi {
 public:

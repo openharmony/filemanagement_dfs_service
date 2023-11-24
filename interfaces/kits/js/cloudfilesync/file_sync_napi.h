@@ -16,7 +16,6 @@
 #ifndef OHOS_FILEMGMT_FILE_SYNC_NAPI_H
 #define OHOS_FILEMGMT_FILE_SYNC_NAPI_H
 
-#include "filemgmt_libn.h"
 #include "gallery_sync_napi.h"
 #include "cloud_sync_napi.h"
 
@@ -24,6 +23,7 @@ namespace OHOS::FileManagement::CloudSync {
 class FileSyncNapi final : public CloudSyncNapi {
 public:
     bool Export() override;
+    static napi_value GetLastSyncTime(napi_env env, napi_callback_info info);
     FileSyncNapi(napi_env env, napi_value exports) : CloudSyncNapi(env, exports) {};
     ~FileSyncNapi() = default;
 };

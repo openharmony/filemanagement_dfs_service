@@ -195,6 +195,19 @@ int32_t CloudSyncService::StopSyncInner()
     return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::APP_TRIGGER);
 }
 
+int32_t CloudSyncService::GetSyncTimeInner(int64_t &syncTime)
+{
+    syncTime = 0;
+    LOGI("GetLasySyncTime(service) is ok");
+    return E_OK;
+}
+
+int32_t CloudSyncService::CleanCacheInner(const std::string &uri)
+{
+    LOGE("CleanCacheInner(service) is ok");
+    return E_OK;
+}
+
 int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();

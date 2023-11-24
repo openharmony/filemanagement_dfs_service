@@ -16,9 +16,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_FILE_CACHE_NAPI_H
 #define OHOS_FILEMGMT_CLOUD_FILE_CACHE_NAPI_H
 
-#include "cloud_download_callback.h"
 #include "cloud_file_napi.h"
-#include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudFileCacheNapi final : public CloudFileNapi {
@@ -27,6 +25,7 @@ public:
     ~CloudFileCacheNapi() = default;
 
     bool Export() override;
+    static napi_value CleanCloudFileCache(napi_env env, napi_callback_info info);
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H

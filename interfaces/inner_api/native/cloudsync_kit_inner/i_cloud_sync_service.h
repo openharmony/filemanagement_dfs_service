@@ -44,6 +44,8 @@ public:
     virtual int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) = 0;
     virtual int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj) = 0;
     virtual int32_t DeleteAsset(const int32_t userId, const std::string &uri) = 0;
+    virtual int32_t GetSyncTimeInner(int64_t &syncTime) = 0;
+    virtual int32_t CleanCacheInner(const std::string &uri) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
