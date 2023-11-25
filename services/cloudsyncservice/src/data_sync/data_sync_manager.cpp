@@ -190,10 +190,7 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
                 LOGE("get sync state failed");
                 continue;
             }
-            if ((triggerType == SyncTriggerType::NETWORK_AVAIL_TRIGGER) ||
-                static_cast<SyncState>(state) == SyncState::SYNC_FAILED) {
-                needSyncApps.push_back(bundleName);
-            }
+            needSyncApps.push_back(bundleName);
         }
     }
 
