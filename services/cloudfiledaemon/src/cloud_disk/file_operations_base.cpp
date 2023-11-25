@@ -82,14 +82,14 @@ void FileOperationsBase::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *na
                                   const char *value, size_t size, int flags)
 {
     LOGE("SetXattr operation is not supported!");
-    fuse_reply_err(req, ENOSYS);
+    fuse_reply_err(req, EINVAL);
 }
 
 void FileOperationsBase::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                   size_t size)
 {
     LOGE("GetXattr operation is not supported!");
-    fuse_reply_err(req, ENOSYS);
+    fuse_reply_err(req, EINVAL);
 }
 
 void FileOperationsBase::MkDir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode)
@@ -107,6 +107,45 @@ void FileOperationsBase::RmDir(fuse_req_t req, fuse_ino_t parent, const char *na
 void FileOperationsBase::Unlink(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
     LOGE("Unlink operation is not supported!");
+    fuse_reply_err(req, ENOSYS);
+}
+
+void FileOperationsBase::Rename(fuse_req_t req, fuse_ino_t parent, const char *name,
+                                fuse_ino_t newParent, const char *newName, unsigned int flags)
+{
+    LOGE("Rename operation is not supported!");
+    fuse_reply_err(req, ENOSYS);
+}
+
+void FileOperationsBase::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
+                              off_t offset, struct fuse_file_info *fi)
+{
+    LOGE("Read operation is not supported!");
+    fuse_reply_err(req, ENOSYS);
+}
+
+void FileOperationsBase::Write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size,
+                               off_t off, struct fuse_file_info *fi)
+{
+    LOGE("Write operation is not supported!");
+    fuse_reply_err(req, ENOSYS);
+}
+
+void FileOperationsBase::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
+{
+    LOGE("Release operation is not supported!");
+    fuse_reply_err(req, ENOSYS);
+}
+void FileOperationsBase::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *attr, int valid,
+                                 struct fuse_file_info *fi)
+{
+    LOGE("SetAttr operation is not supported!");
+    fuse_reply_err(req, EINVAL);
+}
+void FileOperationsBase::Lseek(fuse_req_t req, fuse_ino_t ino, off_t off, int whence,
+                               struct fuse_file_info *fi)
+{
+    LOGE("Lseek operation is not supported!");
     fuse_reply_err(req, ENOSYS);
 }
 } // namespace CloudDisk

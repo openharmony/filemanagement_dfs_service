@@ -35,9 +35,9 @@ using namespace DriveKit;
 namespace {
     static const uint32_t STAT_NLINK_REG = 1;
     static const uint32_t STAT_NLINK_DIR = 2;
+    static const uint32_t CLOUD_FILE_LAYER = 2;
     static const uint32_t STAT_MODE_REG = 0770;
     static const uint32_t STAT_MODE_DIR = 0771;
-    static const string HMDFS_PERMISSION_XATTR = "user.hmdfs.perm";
     static const uint32_t MILLISECOND_TO_SECONDS_TIMES = 1000;
 }
 
@@ -123,7 +123,7 @@ void FileOperationsCloud::Lookup(fuse_req_t req, fuse_ino_t parent, const char *
 
 void FileOperationsCloud::Access(fuse_req_t req, fuse_ino_t ino, int mask)
 {
-    LOGE("Access operation is not supported!");
+    LOGI("Access operation is not supported!");
     fuse_reply_err(req, ENOSYS);
 }
 
@@ -137,9 +137,15 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
 {
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-
     string path = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
-    int32_t fd = open(path.c_str(), fi->flags & O_NOFOLLOW);
+    if ((fi->flags & O_ACCMODE) & O_WRONLY) {
+        fi->flags &= ~O_WRONLY;
+        fi->flags |= O_RDWR;
+    }
+    if (fi->flags & O_APPEND) {
+        fi->flags &= ~O_APPEND;
+    }
+    int32_t fd = open(path.c_str(), fi->flags);
     if (fd < 0) {
         LOGE("open file failed path:%{public}s errno:%{public}d", path.c_str(), errno);
         return (void) fuse_reply_err(req, errno);
@@ -269,11 +275,6 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
         return fd;
     }
 
-    int32_t num = write(fd, cloudId.c_str(), cloudId.size());
-    if (num != cloudId.size()) {
-        LOGD("Write cloud id failed!");
-    }
-
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     string path = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
     shared_ptr<CloudDiskRdbStore> rdbStore =
@@ -362,35 +363,65 @@ void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
     return;
 }
 
-static bool CheckIsHmdfsPermission(const string &key)
-{
-    return key == HMDFS_PERMISSION_XATTR;
-}
-
 void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    const char *value, size_t size, int flags)
 {
     LOGD("Setxattr begin name:%{public}s", name);
-    if (CheckIsHmdfsPermission(name)) {
+    if (CloudFileUtils::CheckIsHmdfsPermission(name)) {
+        fuse_reply_err(req, 0);
+    } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
+        auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+        DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+        auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+        int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, CLOUD_FILE_LOCATION, value);
+        if (err != 0) {
+            LOGE("set cloud id fail %{public}d", err);
+            fuse_reply_err(req, EINVAL);
+            return;
+        }
         fuse_reply_err(req, 0);
     } else {
-        fuse_reply_err(req, ENOSYS);
+        fuse_reply_err(req, EINVAL);
     }
 }
 
 void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    size_t size)
 {
-    LOGD("GetXattr begin name:%{public}s", name);
-    if (!CheckIsHmdfsPermission(name)) {
-        return (void) fuse_reply_err(req, ENOSYS);
-    }
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-    shared_ptr<char> value = make_shared<char>(size);
-    string hmdfsLayer = to_string(inoPtr->layer + 2);
-    memcpy_s(value.get(), size, hmdfsLayer.c_str(), hmdfsLayer.size());
-    fuse_reply_buf(req, value.get(), 0);
-    fuse_reply_err(req, 0);
+    string buf;
+    if (CloudFileUtils::CheckIsHmdfsPermission(name)) {
+        buf = to_string(inoPtr->layer + CLOUD_FILE_LAYER);
+    } else if (CloudFileUtils::CheckIsCloud(name)) {
+        buf = inoPtr->cloudId;
+    } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
+        DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+        auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+        int32_t err = rdbStore->GetXAttr(inoPtr->cloudId, CLOUD_FILE_LOCATION, buf);
+        if (err!=0) {
+            LOGE("get cloud id error %{public}d", err);
+            fuse_reply_err(req, EINVAL);
+            return;
+        }
+    } else {
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    if (size == 0) {
+        fuse_reply_xattr(req, buf.size());
+        return;
+    }
+    if (buf.size() > size) {
+        fuse_reply_err(req, ERANGE);
+        return;
+    }
+    if (buf.size() > 0) {
+        fuse_reply_buf(req, buf.c_str(), buf.size());
+    } else {
+        fuse_reply_err(req, 0);
+    }
 }
 
 void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode)
@@ -462,6 +493,100 @@ void FileOperationsCloud::Unlink(fuse_req_t req, fuse_ino_t parent, const char *
         return;
     }
     return (void) fuse_reply_err(req, 0);
+}
+
+void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *name,
+                                 fuse_ino_t newParent, const char *newName, unsigned int flags)
+{
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto parentInode = reinterpret_cast<struct CloudDiskInode *>(parent);
+    auto newParentInode = reinterpret_cast<struct CloudDiskInode *>(newParent);
+    if (flags) {
+        LOGE("Fuse failed to support flag");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName,
+                                                                         data->userId);
+    int32_t err = rdbStore->Rename(parentInode->cloudId, name, newParentInode->cloudId, newName);
+    if (err != 0) {
+        fuse_reply_err(req, err);
+        LOGE("Failed to Rename DB name:%{private}s err:%{public}d", name, err);
+        return;
+    }
+    return (void) fuse_reply_err(req, 0);
+}
+
+void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
+                               off_t offset, struct fuse_file_info *fi)
+{
+    auto buf = make_shared<char>(size);
+    ssize_t len = pread(fi->fh, buf.get(), size, offset);
+    if (len < 0) {
+        LOGE("pread error errno is %{public}d", errno);
+        fuse_reply_err(req, errno);
+        return;
+    }
+    FileOperationsHelper::FuseReplyLimited(req, buf.get(), len, offset, size);
+}
+
+static void UpdateCloudDiskInode(shared_ptr<CloudDiskRdbStore> rdbStore, struct CloudDiskInode *inoPtr)
+{
+    CloudDiskFileInfo childInfo;
+    int32_t err = rdbStore->GetAttr(inoPtr->cloudId, childInfo);
+    if (err != 0) {
+        LOGE("update file fail");
+        return;
+    }
+    inoPtr->stat.st_size = childInfo.size;
+    inoPtr->stat.st_mtime = childInfo.mtime / MILLISECOND_TO_SECONDS_TIMES;
+}
+
+void FileOperationsCloud::Write(fuse_req_t req, fuse_ino_t ino,  const char *buf, size_t size,
+                                off_t off, struct fuse_file_info *fi)
+{
+    int res = pwrite(fi->fh, buf, size, off);
+    if (res < 0) {
+        fuse_reply_err(req, errno);
+    } else {
+        fuse_reply_write(req, (size_t) res);
+    }
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    shared_ptr<CloudDiskRdbStore> rdbStore =
+        databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    res = rdbStore->Write(inoPtr->cloudId);
+    if (res != 0) {
+        LOGE("write file fail");
+    }
+    UpdateCloudDiskInode(rdbStore, inoPtr);
+    return;
+}
+
+void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
+{
+    close(fi->fh);
+    fuse_reply_err(req, 0);
+}
+
+void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
+                                  int valid, struct fuse_file_info *fi)
+{
+    LOGI("SetAttr operation begin");
+    fuse_reply_err(req, 0);
+}
+
+void FileOperationsCloud::Lseek(fuse_req_t req, fuse_ino_t ino, off_t off, int whence,
+                                struct fuse_file_info *fi)
+{
+    off_t res = lseek(fi->fh, off, whence);
+    if (res != -1)
+        fuse_reply_lseek(req, res);
+    else
+        fuse_reply_err(req, errno);
 }
 } // namespace CloudDisk
 } // namespace FileManagement

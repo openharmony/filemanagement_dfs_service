@@ -192,6 +192,81 @@ void FuseOperations::Unlink(fuse_req_t req, fuse_ino_t parent, const char *name)
     inoPtr = reinterpret_cast<struct CloudDiskInode*>(parent);
     inoPtr->ops->Unlink(req, parent, name);
 }
+
+void FuseOperations::Rename(fuse_req_t req, fuse_ino_t parent, const char *name,
+                            fuse_ino_t newParent, const char *newName, unsigned int flags)
+{
+    struct CloudDiskInode *inoPtr = nullptr;
+    if (parent == FUSE_ROOT_ID) {
+        auto opsPtr = make_shared<FileOperationsLocal>();
+        opsPtr->Rename(req, parent, name, newParent, newName, flags);
+        return;
+    }
+    inoPtr = reinterpret_cast<struct CloudDiskInode*>(parent);
+    inoPtr->ops->Rename(req, parent, name, newParent, newName, flags);
+}
+
+void FuseOperations::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
+                          off_t offset, struct fuse_file_info *fi)
+{
+    struct CloudDiskInode *inoPtr = nullptr;
+    if (ino == FUSE_ROOT_ID) {
+        auto opsPtr = make_shared<FileOperationsLocal>();
+        opsPtr->Read(req, ino, size, offset, fi);
+        return;
+    }
+    inoPtr = reinterpret_cast<struct CloudDiskInode*>(ino);
+    inoPtr->ops->Read(req, ino, size, offset, fi);
+}
+
+void FuseOperations::Write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size,
+                           off_t off, struct fuse_file_info *fi)
+{
+    struct CloudDiskInode *inoPtr = nullptr;
+    if (ino == FUSE_ROOT_ID) {
+        auto opsPtr = make_shared<FileOperationsLocal>();
+        opsPtr->Write(req, ino, buf, size, off, fi);
+        return;
+    }
+    inoPtr = reinterpret_cast<struct CloudDiskInode*>(ino);
+    inoPtr->ops->Write(req, ino, buf, size, off, fi);
+}
+
+void FuseOperations::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
+{
+    struct CloudDiskInode *inoPtr = nullptr;
+    if (ino == FUSE_ROOT_ID) {
+        auto opsPtr = make_shared<FileOperationsLocal>();
+        opsPtr->Release(req, ino, fi);
+        return;
+    }
+    inoPtr = reinterpret_cast<struct CloudDiskInode*>(ino);
+    inoPtr->ops->Release(req, ino, fi);
+}
+void FuseOperations::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
+                             int valid, struct fuse_file_info *fi)
+{
+    struct CloudDiskInode *inoPtr = nullptr;
+    if (ino == FUSE_ROOT_ID) {
+        auto opsPtr = make_shared<FileOperationsLocal>();
+        opsPtr->SetAttr(req, ino, attr, valid, fi);
+        return;
+    }
+    inoPtr = reinterpret_cast<struct CloudDiskInode*>(ino);
+    inoPtr->ops->SetAttr(req, ino, attr, valid, fi);
+}
+void FuseOperations::Lseek(fuse_req_t req, fuse_ino_t ino, off_t off, int whence,
+                           struct fuse_file_info *fi)
+{
+    struct CloudDiskInode *inoPtr = nullptr;
+    if (ino == FUSE_ROOT_ID) {
+        auto opsPtr = make_shared<FileOperationsLocal>();
+        opsPtr->Lseek(req, ino, off, whence, fi);
+        return;
+    }
+    inoPtr = reinterpret_cast<struct CloudDiskInode*>(ino);
+    inoPtr->ops->Lseek(req, ino, off, whence, fi);
+}
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

@@ -496,6 +496,12 @@ static const struct fuse_lowlevel_ops cloudDiskFuseOps = {
     .mkdir              = CloudDisk::FuseOperations::MkDir,
     .unlink             = CloudDisk::FuseOperations::Unlink,
     .rmdir              = CloudDisk::FuseOperations::RmDir,
+    .rename             = CloudDisk::FuseOperations::Rename,
+    .read               = CloudDisk::FuseOperations::Read,
+    .write              = CloudDisk::FuseOperations::Write,
+    .release            = CloudDisk::FuseOperations::Release,
+    .setattr            = CloudDisk::FuseOperations::SetAttr,
+    .lseek              = CloudDisk::FuseOperations::Lseek,
 };
 
 static const struct fuse_lowlevel_ops cloudMediaFuseOps = {

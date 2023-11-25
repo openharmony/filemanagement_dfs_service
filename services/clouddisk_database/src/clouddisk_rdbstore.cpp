@@ -389,7 +389,7 @@ int32_t CloudDiskRdbStore::Write(const std::string &cloudId)
 int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &position, std::string &value)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || position != FileColumn::POSITION) {
+    if (cloudId.empty() || position != CLOUD_FILE_LOCATION) {
         LOGE("getxattr parameter is invalid");
         return E_INVAL_ARG;
     }
@@ -406,7 +406,7 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
 int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &position, const std::string &value)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || position != FileColumn::POSITION) {
+    if (cloudId.empty() || position != CLOUD_FILE_LOCATION) {
         LOGE("setxattr parameter is invalid");
         return E_INVAL_ARG;
     }
@@ -418,7 +418,7 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
         return E_INVAL_ARG;
     }
     ValuesBucket setXAttr;
-    setXAttr.PutInt(position, val);
+    setXAttr.PutInt(FileColumn::POSITION, val);
     int32_t changedRows = -1;
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(cloudId);

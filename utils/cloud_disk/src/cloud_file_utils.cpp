@@ -87,6 +87,21 @@ string CloudFileUtils::GetCloudId(const string &path)
     }
     return string(cloudId);
 }
+
+bool CloudFileUtils::CheckIsCloud(const string &key)
+{
+    return key == CLOUD_CLOUD_ID_XATTR;
+}
+
+bool CloudFileUtils::CheckIsCloudLocation(const string &key)
+{
+    return key == CLOUD_FILE_LOCATION;
+}
+
+bool CloudFileUtils::CheckIsHmdfsPermission(const string &key)
+{
+    return key == HMDFS_PERMISSION_XATTR;
+}
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

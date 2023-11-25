@@ -33,19 +33,30 @@ public:
     virtual void Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
     virtual void Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLookup);
     virtual void ForgetMulti(fuse_req_t req, size_t count, struct fuse_forget_data *forgets);
+    virtual void MkDir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode);
+    virtual void RmDir(fuse_req_t req, fuse_ino_t parent, const char *name);
+    virtual void Unlink(fuse_req_t req, fuse_ino_t parent, const char *name);
+    virtual void Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi);
     virtual void MkNod(fuse_req_t req, fuse_ino_t parent, const char *name,
                        mode_t mode, dev_t rdev);
     virtual void Create(fuse_req_t req, fuse_ino_t parent, const char *name,
                         mode_t mode, struct fuse_file_info *fi);
     virtual void ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                          struct fuse_file_info *fi);
-    virtual void MkDir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode);
-    virtual void RmDir(fuse_req_t req, fuse_ino_t parent, const char *name);
-    virtual void Unlink(fuse_req_t req, fuse_ino_t parent, const char *name);
     virtual void SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                           const char *value, size_t size, int flags);
     virtual void GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                           size_t size);
+    virtual void Rename(fuse_req_t req, fuse_ino_t parent, const char *name,
+                        fuse_ino_t newParent, const char *newName, unsigned int flags);
+    virtual void Read(fuse_req_t req, fuse_ino_t ino, size_t size,
+                      off_t offset, struct fuse_file_info *fi);
+    virtual void Write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size,
+                       off_t off, struct fuse_file_info *fi);
+    virtual void SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
+                         int valid, struct fuse_file_info *fi);
+    virtual void Lseek(fuse_req_t req, fuse_ino_t ino, off_t off, int whence,
+                       struct fuse_file_info *fi);
 };
 } // namespace CloudDisk
 } // namespace FileManagement
