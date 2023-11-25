@@ -15,10 +15,13 @@
 
 #include "dfsu_access_token_helper.h"
 #include "accesstoken_kit.h"
+#include "dfs_error.h"
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
+#include "uri.h"
+#include "uri_permission_manager_client.h"
 #include "utils_log.h"
-#include "dfs_error.h"
+#include "want.h"
 
 namespace OHOS::FileManagement {
 using namespace std;
@@ -111,5 +114,20 @@ int32_t DfsuAccessTokenHelper::GetUserId()
 {
     auto uid = IPCSkeleton::GetCallingUid();
     return uid / BASE_USER_RANGE;
+}
+
+bool DfsuAccessTokenHelper::CheckUriPermission(const std::string &uriStr)
+{
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    string bundleName;
+    GetBundleNameByToken(tokenId, bundleName);
+    Uri uri(uriStr);
+    auto &uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
+    if (bundleName != uri.GetAuthority() &&
+        !uriPermissionClient.VerifyUriPermission(uri, AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION, tokenId)) {
+        LOGE("uri permission denied");
+        return false;
+    }
+    return true;
 }
 } // namespace OHOS::FileManagement

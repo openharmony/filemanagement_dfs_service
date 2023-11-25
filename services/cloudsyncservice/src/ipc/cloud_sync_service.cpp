@@ -290,6 +290,13 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
 
     return E_OK;
 }
+int32_t CloudSyncService::StartFileCache(const std::string &uriStr)
+{
+    Uri uri(uriStr);
+    string bundleName = uri.GetAuthority();
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    return dataSyncManager_->StartDownloadFile(bundleName, callerUserId, uriStr);
+}
 
 constexpr int TEST_MAIN_USR_ID = 100;
 int32_t CloudSyncService::StartDownloadFile(const std::string &path)

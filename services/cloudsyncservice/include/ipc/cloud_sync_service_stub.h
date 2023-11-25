@@ -41,6 +41,7 @@ private:
     int32_t HandleEnableCloud(MessageParcel &data, MessageParcel &reply);
     int32_t HandleDisableCloud(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStartDownloadFile(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleStartFileCache(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStopDownloadFile(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRegisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply);
     int32_t HandleUnregisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply);

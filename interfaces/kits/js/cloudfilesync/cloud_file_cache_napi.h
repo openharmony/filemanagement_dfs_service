@@ -24,6 +24,7 @@ public:
     CloudFileCacheNapi(napi_env env, napi_value exports) : CloudFileNapi(env, exports) {}
     ~CloudFileCacheNapi() = default;
 
+    static napi_value StartFileCache(napi_env env, napi_callback_info info);
     bool Export() override;
     static napi_value CleanCloudFileCache(napi_env env, napi_callback_info info);
 };

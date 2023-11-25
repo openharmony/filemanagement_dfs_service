@@ -21,11 +21,13 @@
 namespace OHOS::FileManagement {
 inline const std::string PERM_CLOUD_SYNC_MANAGER = "ohos.permission.CLOUDFILE_SYNC_MANAGER";
 inline const std::string PERM_CLOUD_SYNC = "ohos.permission.CLOUDFILE_SYNC";
+inline const std::string PERM_AUTH_URI = "ohos.permission.PROXY_AUTHORIZATION_URI";
 class DfsuAccessTokenHelper final {
 public:
     static bool CheckCallerPermission(const std::string &permissionName);
     static int32_t GetCallerBundleName(std::string &bundleName);
     static bool CheckPermission(uint32_t tokenId, const std::string &permissionName);
+    static bool CheckUriPermission(const std::string &uri);
     static int32_t GetBundleNameByToken(uint32_t tokenId, std::string &bundleName);
     static bool IsSystemApp();
     static int32_t GetUserId();

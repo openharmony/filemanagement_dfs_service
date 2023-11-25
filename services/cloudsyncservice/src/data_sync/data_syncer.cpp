@@ -108,17 +108,20 @@ int32_t DataSyncer::StartDownloadFile(const std::string path, const int32_t user
 
 int32_t DataSyncer::StopDownloadFile(const std::string path, const int32_t userId)
 {
-    int64_t downloadId = 0;
-    if (downloadCallbackMgr_.StopDonwload(path, userId, downloadId)) {
+    DownloadProgressObj download;
+    if (downloadCallbackMgr_.StopDonwload(path, userId, download)) {
+        int64_t downloadId = download.downloadId;
         int32_t res = sdkHelper_->CancelDownloadAssets(downloadId);
         LOGD("CancelDownloadAssets result: %d", res);
         if (res != NO_ERROR) {
             LOGE("CancelDownloadAssets fail %{public}d", res);
             return res;
         }
+        downloadCallbackMgr_.NotifyProcessStop(download);
     }
     return E_OK;
 }
+
 
 int32_t DataSyncer::RegisterDownloadFileCallback(const int32_t userId,
                                                  const sptr<ICloudDownloadCallback> downloadCallback)

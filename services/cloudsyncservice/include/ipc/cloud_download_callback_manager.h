@@ -35,8 +35,9 @@ public:
 
     bool FindDownload(const std::string path);
     void StartDonwload(const std::string path, const int32_t userId, const int64_t downloadId);
-    bool StopDonwload(const std::string path, const int32_t userId, int64_t &downloadId);
+    bool StopDonwload(const std::string path, const int32_t userId, DownloadProgressObj &download);
     std::vector<int64_t> StopAllDownloads(const int32_t userId);
+    void NotifyProcessStop(DownloadProgressObj &download);
     void RegisterCallback(const int32_t userId, const sptr<ICloudDownloadCallback> downloadCallback);
     void UnregisterCallback(const int32_t userId);
     void OnDownloadedResult(const std::string path,

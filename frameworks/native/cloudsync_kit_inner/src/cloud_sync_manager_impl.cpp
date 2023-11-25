@@ -188,6 +188,22 @@ int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri)
     return ret;
 }
 
+int32_t CloudSyncManagerImpl::StartFileCache(const std::string &uri)
+{
+    LOGI("StartDownloadCache start");
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    if (!isFirstCall_.test_and_set()) {
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
+    int32_t ret = CloudSyncServiceProxy->StartFileCache(uri);
+    LOGI("StartDownloadCache ret %{public}d", ret);
+    return ret;
+}
+
 int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri)
 {
     LOGI("StopDownloadFile start");
