@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <utime.h>
 
+#include "cloud_file_utils.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
@@ -1416,9 +1417,9 @@ static int32_t DeleteMetaFile(const string &sboxPath, const int32_t &userId)
 int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
 {
     string tmpLocalPath = asset.downLoadPath + "/" + asset.asset.assetName;
-    string localPath = localConvertor_.GetPathWithoutTmp(tmpLocalPath);
+    string localPath = CloudDisk::CloudFileUtils::GetPathWithoutTmp(tmpLocalPath);
     string tmpSboxPath = localConvertor_.GetSandboxPath(tmpLocalPath);
-    string sboxPath = localConvertor_.GetPathWithoutTmp(tmpSboxPath);
+    string sboxPath = CloudDisk::CloudFileUtils::GetPathWithoutTmp(tmpSboxPath);
 
     // delete dentry
     int ret = DeleteMetaFile(sboxPath, userId_);

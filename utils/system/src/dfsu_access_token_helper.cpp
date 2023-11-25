@@ -120,7 +120,10 @@ bool DfsuAccessTokenHelper::CheckUriPermission(const std::string &uriStr)
 {
     auto tokenId = IPCSkeleton::GetCallingTokenID();
     string bundleName;
-    GetBundleNameByToken(tokenId, bundleName);
+    if (GetBundleNameByToken(tokenId, bundleName) != E_OK) {
+        LOGE("get caller bundle name failed");
+        return false;
+    }
     Uri uri(uriStr);
     auto &uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
     if (bundleName != uri.GetAuthority() &&

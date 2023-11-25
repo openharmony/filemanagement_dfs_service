@@ -104,6 +104,7 @@ ohos_unittest("album_data_handler_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -213,6 +214,7 @@ ohos_unittest("data_sync_manager_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -322,6 +324,7 @@ ohos_unittest("data_handler_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -548,6 +551,7 @@ ohos_unittest("gallery_data_syncer_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -660,6 +664,7 @@ ohos_unittest("data_syncer_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -763,6 +768,7 @@ ohos_unittest("file_data_convertor_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -875,6 +881,7 @@ ohos_unittest("sdk_helper_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -987,6 +994,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -1135,6 +1143,7 @@ ohos_unittest("task_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",

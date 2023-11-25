@@ -21,16 +21,20 @@
 #include <map>
 #include <string>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <tuple>
 #include <unistd.h>
 #include "clouddisk_db_const.h"
+#include "cloud_file_utils.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
+#include "directory_ex.h"
 #include "dk_record.h"
+#include "errors.h"
 #include "file_column.h"
 #include "rdb_errno.h"
+#include "sandbox_helper.h"
 #include "utils_log.h"
-#include "cloud_file_utils.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -437,19 +441,6 @@ int32_t CloudDiskDataHandler::ClearCloudInfo()
     return ret;
 }
 
-int32_t CloudDiskDataHandler::GetDownloadAsset(std::string cloudId,
-                                               vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
-{
-    return E_OK;
-}
-int32_t CloudDiskDataHandler::UpdateDirPosition(string cloudId)
-{
-    return E_OK;
-}
-int32_t CloudDiskDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
-{
-    return E_OK;
-}
 int32_t CloudDiskDataHandler::OnDownloadAssets(
     const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap)
 {
@@ -836,6 +827,114 @@ void CloudDiskDataHandler::Reset()
 {
     modifyFailSet_.clear();
     createFailSet_.clear();
+}
+
+int32_t CloudDiskDataHandler::GetDownloadAsset(std::string uri,
+                                               vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
+{
+    string path;
+    int32_t ret = AppFileService::SandboxHelper::GetPhysicalPath(uri, to_string(userId_), path);
+    if (ret != E_OK) {
+        LOGE("get physical path failed");
+        return E_INVAL_ARG;
+    }
+    string cloudId = CloudFileUtils::GetCloudId(path);
+    if (cloudId.empty()) {
+        LOGE("get cloud id failed, errno %{public}d", errno);
+        return E_INVAL_ARG;
+    }
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.SetWhereClause(FileColumn::CLOUD_ID + " = ?");
+    predicates.SetWhereArgs({cloudId});
+    predicates.Limit(LIMIT_SIZE);
+    auto resultSet = Query(predicates, {FileColumn::IS_DIRECTORY});
+    if (resultSet == nullptr) {
+        LOGE("get nullptr created result");
+        return E_RDB;
+    }
+    int32_t rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    if (ret != 0) {
+        LOGE("result set get row count err %{public}d", ret);
+        return E_RDB;
+    }
+    int32_t columnIndex = 0;
+    int32_t isDirectory = 0;
+    resultSet->GetColumnIndex(FileColumn::IS_DIRECTORY, columnIndex);
+    resultSet->GetInt(columnIndex, isDirectory);
+    if (isDirectory == FILE) {
+        AppendFileToDownload(cloudId, "content", outAssetsToDownload);
+    } else {
+        return ERR_INVALID_VALUE;
+    }
+    return E_OK;
+}
+
+void CloudDiskDataHandler::AppendFileToDownload(const string &cloudId,
+                                                const std::string &fieldKey,
+                                                std::vector<DKDownloadAsset> &assetsToDownload)
+{
+    DKDownloadAsset downloadAsset;
+    downloadAsset.recordType = recordType_;
+    downloadAsset.fieldKey = fieldKey;
+    downloadAsset.recordId = cloudId;
+    downloadAsset.downLoadPath = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName_, userId_);
+    downloadAsset.asset.assetName = cloudId + CloudFileUtils::TMP_SUFFIX;
+    ForceCreateDirectory(downloadAsset.downLoadPath);
+    assetsToDownload.push_back(downloadAsset);
+}
+
+int32_t CloudDiskDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
+{
+    string tmpLocalPath = asset.downLoadPath + "/" + asset.asset.assetName;
+    string localPath = CloudFileUtils::GetPathWithoutTmp(tmpLocalPath);
+    string cloudId = CloudFileUtils::GetPathWithoutTmp(asset.asset.assetName);
+    if (rename(tmpLocalPath.c_str(), localPath.c_str()) != 0) {
+        LOGE("err rename, errno: %{public}d, tmpLocalPath: %s, localPath: %s",
+             errno, tmpLocalPath.c_str(), localPath.c_str());
+    }
+    // update rdb
+    int32_t changedRows;
+    ValuesBucket valuesBucket;
+    valuesBucket.PutInt(FC::POSITION, POSITION_BOTH);
+    string whereClause = FC::CLOUD_ID + " = ?";
+    vector<string> whereArgs = {cloudId};
+    int32_t ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
+    if (ret != E_OK) {
+        LOGE("on download file from cloud err %{public}d", ret);
+    }
+    return ret;
+}
+
+int32_t CloudDiskDataHandler::CleanCache(const string &uri)
+{
+    string path;
+    int32_t ret = AppFileService::SandboxHelper::GetPhysicalPath(uri, to_string(userId_), path);
+    if (ret != E_OK) {
+        LOGE("get physical path failed");
+        return E_INVAL_ARG;
+    }
+    string cloudId = CloudFileUtils::GetCloudId(path);
+    if (cloudId.empty()) {
+        LOGE("get cloud id failed, errno %{public}d", errno);
+        return E_INVAL_ARG;
+    }
+    string bucketPaht = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName_, userId_) + "/" + cloudId;
+    ret = unlink(bucketPaht.c_str());
+    if (ret != 0) {
+        LOGE("Unlink failed errno %{public}d", errno);
+        return E_DELETE_FAILED;
+    }
+    ValuesBucket values;
+    values.PutInt(FC::POSITION, POSITION_CLOUD);
+    int32_t changedRows = 0;
+    string whereClause = FC::CLOUD_ID + " = ?";
+    ret = Update(changedRows, values, whereClause, {cloudId});
+    if (ret != E_OK) {
+        LOGE("rdb update failed, err=%{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
 }
 } // namespace CloudSync
 } // namespace FileManagement

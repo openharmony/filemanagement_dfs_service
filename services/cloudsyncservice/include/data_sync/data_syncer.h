@@ -52,6 +52,7 @@ public:
     int32_t RegisterDownloadFileCallback(const int32_t userId,
                                          const sptr<ICloudDownloadCallback> downloadCallback);
     int32_t UnregisterDownloadFileCallback(const int32_t userId);
+    virtual int32_t CleanCache(const std::string &uri);
     /* properties */
     std::string GetBundleName() const;
     int32_t GetUserId() const;

@@ -331,5 +331,16 @@ int32_t DataSyncManager::GetUserId(int32_t &userId)
     RETURN_ON_ERR(IsUserVerified(currentUserId_));
     return E_OK;
 }
+
+int32_t DataSyncManager::CleanCache(const string &bundleName, const int32_t userId, const string &uri)
+{
+    auto dataSyncer = GetDataSyncer(bundleName, userId);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", GALLERY_BUNDLE_NAME.c_str());
+        return E_INVAL_ARG;
+    }
+
+    return dataSyncer->CleanCache(uri);
+}
 } // namespace OHOS::FileManagement::CloudSync
  

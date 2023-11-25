@@ -61,6 +61,11 @@ int32_t CloudDiskDataSyncer::StopDownloadFile(const std::string path, const int3
     return DataSyncer::StopDownloadFile(path, userId);
 }
 
+int32_t CloudDiskDataSyncer::CleanCache(const string &uri)
+{
+    return cloudDiskHandler_->CleanCache(uri);
+}
+
 void CloudDiskDataSyncer::Schedule()
 {
     LOGI("schedule to stage %{public}d", ++stage_);
