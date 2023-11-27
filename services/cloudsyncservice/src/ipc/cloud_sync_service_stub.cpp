@@ -31,6 +31,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         &CloudSyncServiceStub::HandleRegisterCallbackInner;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_SYNC)] =
         &CloudSyncServiceStub::HandleStartSyncInner;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_TRIGGER_SYNC)] =
+        &CloudSyncServiceStub::HandleTriggerSyncInner;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_SYNC)] =
         &CloudSyncServiceStub::HandleStopSyncInner;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CHANGE_APP_SWITCH)] =
@@ -138,6 +140,25 @@ int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageP
     int32_t res = StartSyncInner(forceFlag);
     reply.WriteInt32(res);
     LOGI("End StartSyncInner");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleTriggerSyncInner(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin TriggerSyncInner");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t res = TriggerSyncInner(bundleName, userId);
+    reply.WriteInt32(res);
+    LOGI("End TriggerSyncInner");
     return res;
 }
 

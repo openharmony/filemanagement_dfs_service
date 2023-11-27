@@ -28,6 +28,7 @@ ohos_shared_library("cloudfiledaemon") {
     "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
     "${clouddisk_database_path}/src/file_column.cpp",
     "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+    "${clouddisk_database_path}/src/clouddisk_sync_helper.cpp",
   ]
 
   media_library = [ "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp" ]
@@ -60,6 +61,7 @@ ohos_shared_library("cloudfiledaemon") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/libfuse:libfuse",

@@ -33,6 +33,7 @@ private:
     int32_t HandleUnRegisterCallbackInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStartSyncInner(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleTriggerSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStopSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleChangeAppSwitch(MessageParcel &data, MessageParcel &reply);
     int32_t HandleClean(MessageParcel &data, MessageParcel &reply);

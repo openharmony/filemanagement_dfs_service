@@ -38,7 +38,6 @@ public:
 
     int32_t RdbInit();
     std::shared_ptr<NativeRdb::RdbStore> GetRaw();
-    void InitRootId();
 
     int32_t LookUp(const std::string &parentCloudId, const std::string &fileName, CloudDiskFileInfo &info);
     int32_t GetAttr(const std::string &cloudId, CloudDiskFileInfo &info);
@@ -48,8 +47,8 @@ public:
     int32_t Create(const std::string &cloudId, const std::string &parentCloudId,
         const std::string &fileName);
     int32_t Write(const std::string &cloudId);
-    int32_t GetXAttr(const std::string &cloudId, const std::string &position, std::string &value);
-    int32_t SetXAttr(const std::string &cloudId, const std::string &position, const std::string &value);
+    int32_t GetXAttr(const std::string &cloudId, const std::string &key, std::string &value);
+    int32_t SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value);
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
         const std::string &newParentCloudId, const std::string &newFileName);
     int32_t Unlink(const std::string &parentCloudId, const std::string &fileName);
@@ -63,7 +62,6 @@ private:
     NativeRdb::RdbStoreConfig config_{""};
     std::string bundleName_;
     int32_t userId_{0};
-    DriveKit::DKRecordId rootId_;
 };
 
 class CloudDiskDataCallBack : public NativeRdb::RdbOpenCallback {

@@ -56,6 +56,11 @@ public:
         return E_OK;
     }
 
+    int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) override
+    {
+        return E_OK;
+    }
+
     int32_t StopSyncInner() override
     {
         return E_OK;
