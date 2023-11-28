@@ -14,7 +14,8 @@
  */
 
 #include "rdb_data_handler.h"
-
+#include <sstream>
+#include "dfs_error.h"
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
@@ -28,6 +29,24 @@ int32_t RdbDataHandler::BatchInsert(int64_t &outRowId, const string &table,
         return rdb_->BatchInsert(outRowId, table, initialBatchValues);
     }
     return E_OK;
+}
+
+int32_t RdbDataHandler::BatchDetete(const string &whichTable,
+                                    const string &whichColumn,
+                                    const std::vector<NativeRdb::ValueObject> &bindArgs)
+{
+    if (bindArgs.size() > DELETE_LIMIT_SIZE || bindArgs.size() < 0) {
+        return E_INVAL_ARG;
+    }
+    std::stringstream ss;
+    for (int i = 0; i < bindArgs.size(); i++) {
+        if (ss.tellp() != 0) {
+            ss << ",";
+        }
+        ss <<" ? ";
+    }
+    string SQL = "DELETE FROM " + whichTable + " WHERE " + whichColumn + " IN (" + ss.str() + ")";
+    return rdb_->ExecuteSql(SQL, bindArgs);
 }
 
 shared_ptr<NativeRdb::RdbStore> RdbDataHandler::GetRaw()

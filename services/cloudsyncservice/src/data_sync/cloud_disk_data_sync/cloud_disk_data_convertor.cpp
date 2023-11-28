@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include "mimetype_utils.h"
+#include "cloud_pref_impl.h"
 #include "cloud_file_utils.h"
 
 namespace OHOS {
@@ -46,8 +47,50 @@ void CloudDiskDataConvertor::HandleErr(NativeRdb::ResultSet &resultSet)
         errHandler_(resultSet);
     }
 }
+
+void CloudDiskDataConvertor::SetRootId(string rootId)
+{
+    rootId_ = rootId;
+}
+
+int32_t CloudDiskDataConvertor::InitRootId()
+{
+    if (!rootId_.empty()) {
+        return E_OK;
+    }
+    CloudPrefImpl cloudPrefImpl(userId_, bundleName_, FileColumn::FILES_TABLE);
+    cloudPrefImpl.GetString("rootId", rootId_);
+    LOGD("local rootId is %{public}s", rootId_.c_str());
+    if (rootId_.empty()) {
+        auto driveKit = DriveKit::DriveKitNative::GetInstance(userId_);
+        if (driveKit == nullptr) {
+            LOGE("sdk helper get drive kit instance fail");
+            return E_INVAL_ARG;
+        }
+        auto container = driveKit->GetDefaultContainer(bundleName_);
+        if (container == nullptr) {
+            LOGE("sdk helper get drive kit container fail");
+            return E_INVAL_ARG;
+        }
+        shared_ptr<DriveKit::DKDatabase> database = container->GetPrivateDatabase();
+        if (database == nullptr) {
+            LOGE("sdk helper get drive kit database fail");
+            return E_INVAL_ARG;
+        }
+        DriveKit::DKError dkErr = database->GetRootId(rootId_);
+        LOGD("database rootId is %{public}s", rootId_.c_str());
+        if (dkErr.dkErrorCode != DriveKit::DKLocalErrorCode::NO_ERROR || rootId_.empty()) {
+            LOGE("get root id failed, err %{public}d", dkErr.dkErrorCode);
+            return E_INVAL_ARG;
+        }
+        cloudPrefImpl.SetString("rootId", rootId_);
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
 {
+    InitRootId();
     DriveKit::DKRecordData data;
     record.GetRecordData(data);
     ExtractCompatibleValue(record, data, valueBucket);
@@ -55,6 +98,7 @@ int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::V
 }
 int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet)
 {
+    InitRootId();
     DriveKit::DKRecordData data;
     RETURN_ON_ERR(FillRecordId(record, resultSet));
     RETURN_ON_ERR(FillCreatedTime(record, resultSet));
@@ -150,13 +194,16 @@ int32_t CloudDiskDataConvertor::ExtractFileName(const DriveKit::DKRecordData &da
 int32_t CloudDiskDataConvertor::ExtractFileParentCloudId(const DriveKit::DKRecordData &data,
                                                          NativeRdb::ValuesBucket &valueBucket)
 {
-    string cloudId;
+    string parentFolder;
     if (data.find(DK_PARENT_CLOUD_ID) == data.end() ||
-        data.at(DK_PARENT_CLOUD_ID).GetString(cloudId) != DKLocalErrorCode::NO_ERROR) {
+        data.at(DK_PARENT_CLOUD_ID).GetString(parentFolder) != DKLocalErrorCode::NO_ERROR) {
         LOGE("extract parent cloudId error");
         return E_INVAL_ARG;
     }
-    valueBucket.PutString(FileColumn::PARENT_CLOUD_ID, cloudId);
+    if (parentFolder == rootId_) {
+        parentFolder = "rootId";
+    }
+    valueBucket.PutString(FileColumn::PARENT_CLOUD_ID, parentFolder);
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::ExtractFileSize(const DriveKit::DKRecordData &data,
@@ -177,7 +224,7 @@ int32_t CloudDiskDataConvertor::ExtractSha256(const DriveKit::DKRecordData &data
     string fileSha256;
     if (data.find(DK_FILE_SHA256) == data.end() ||
         data.at(DK_FILE_SHA256).GetString(fileSha256) != DKLocalErrorCode::NO_ERROR) {
-        LOGE("extract sha256 error");
+        LOGW("extract sha256 error");
         return E_INVAL_ARG;
     }
     valueBucket.PutString(FileColumn::FILE_SHA256, fileSha256);
@@ -235,7 +282,7 @@ int32_t CloudDiskDataConvertor::ExtractIsDirectory(const DriveKit::DKRecordData 
     int32_t type = DIRECTORY;
     if (fileType == "file") {
         type = FILE;
-        RETURN_ON_ERR(ExtractSha256(data, valueBucket));
+        ExtractSha256(data, valueBucket);
         RETURN_ON_ERR(ExtractFileSize(data, valueBucket));
     }
     valueBucket.PutInt(FileColumn::IS_DIRECTORY, type);
@@ -374,6 +421,9 @@ int32_t CloudDiskDataConvertor::HandleParentId(DriveKit::DKRecordData &data,
     if (ret != E_OK) {
         LOGE("handler ParentId failed, ret = %{public}d", ret);
         return ret;
+    }
+    if (parentFolder == "rootId") {
+        parentFolder = rootId_;
     }
     data[DK_PARENT_CLOUD_ID] = DriveKit::DKRecordField(parentFolder);
     return E_OK;

@@ -1147,7 +1147,6 @@ int FileDataHandler::SetRetry(const string &recordId)
     int updateRows;
     ValuesBucket values;
     values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_RETRY));
-
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     int32_t ret = Update(updateRows, values, whereClause, {recordId});
     if (ret != E_OK) {
