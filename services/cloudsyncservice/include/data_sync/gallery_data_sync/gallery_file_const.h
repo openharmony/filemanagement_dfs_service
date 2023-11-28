@@ -144,6 +144,7 @@ const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::PhotoColumn::PHOTO_HEIGHT,
     Media::PhotoColumn::PHOTO_WIDTH,
     Media::PhotoColumn::PHOTO_SUBTYPE,
+    Media::PhotoColumn::PHOTO_USER_COMMENT,
     // Media::PhotoColumn::MEDIA_OWNER_PACKAGE,
     Media::PhotoColumn::MEDIA_DEVICE_NAME,
     Media::PhotoColumn::MEDIA_DATE_TAKEN,
@@ -155,7 +156,7 @@ const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::PhotoColumn::PHOTO_LONGITUDE,
     /* NR_LOCAL_INFO: keep local info in the end */
     Media::MediaColumn::MEDIA_ID,
-    Media::PhotoColumn::PHOTO_CLOUD_ID
+    Media::PhotoColumn::PHOTO_CLOUD_ID 
 };
 
 const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
