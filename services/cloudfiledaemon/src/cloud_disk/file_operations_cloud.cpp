@@ -522,14 +522,13 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
 void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
                                off_t offset, struct fuse_file_info *fi)
 {
-    auto buf = make_shared<char>(size);
-    ssize_t len = pread(fi->fh, buf.get(), size, offset);
-    if (len < 0) {
-        LOGE("pread error errno is %{public}d", errno);
-        fuse_reply_err(req, errno);
-        return;
-    }
-    FileOperationsHelper::FuseReplyLimited(req, buf.get(), len, offset, size);
+    struct fuse_bufvec buf = FUSE_BUFVEC_INIT(size);
+
+    buf.buf[0].flags = static_cast<fuse_buf_flags> (FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK);
+    buf.buf[0].fd = fi->fh;
+    buf.buf[0].pos = offset;
+
+    fuse_reply_data(req, &buf, static_cast<fuse_buf_copy_flags> (0));
 }
 
 static void UpdateCloudDiskInode(shared_ptr<CloudDiskRdbStore> rdbStore, struct CloudDiskInode *inoPtr)
