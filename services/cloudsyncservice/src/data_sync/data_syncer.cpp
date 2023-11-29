@@ -299,7 +299,7 @@ static void FetchRecordsDownloadProgress(shared_ptr<DKContext> context,
                                          TotalSize total,
                                          DownloadSize download)
 {
-    LOGI("record %s %{public}s download progress", asset.recordId.c_str(), asset.fieldKey.c_str());
+    LOGD("record %s %{public}s download progress", asset.recordId.c_str(), asset.fieldKey.c_str());
     if (total == download) {
         auto ctx = static_pointer_cast<TaskContext>(context);
         auto handler = ctx->GetHandler();

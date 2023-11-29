@@ -250,7 +250,7 @@ int32_t FileDataConvertor::HandleThumbSize(DriveKit::DKRecordFieldMap &map,
     struct stat fileStat;
     int err = stat(thumbnailPath.c_str(), &fileStat);
     if (err < 0) {
-        LOGE("get thumb size failed errno :%{public}d", errno);
+        LOGD("get thumb size failed errno :%{public}d", errno);
         return E_INVAL_ARG;
     }
 
