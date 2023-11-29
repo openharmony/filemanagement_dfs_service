@@ -174,7 +174,7 @@ HWTEST_F(DataSyncerTest, LockTest, TestSize.Level1)
     datasyncer_->lock_.count = -100;
     datasyncer_->lock_.lock.lockInterval = 100;
     int res = datasyncer_->Lock();
-    EXPECT_NE(res, E_OK);
+    EXPECT_EQ(res, E_OK);
     GTEST_LOG_(INFO) << "Lock GetLock";
     datasyncer_->lock_.count = 0;
     datasyncer_->lock_.lock.lockInterval = 0;

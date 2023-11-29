@@ -68,7 +68,7 @@ void SdkHelperTest::SetUp(void)
     GTEST_LOG_(INFO) << "SetUp";
     dataSyncManager_ = make_shared<DataSyncManager>();
     int32_t userId = 100;
-    string bundleName = "com.ohos.test";
+    string bundleName = "com.ohos.photos";
     dataSyncer_ = dataSyncManager_->GetDataSyncer(bundleName, userId);
     shared_ptr<GalleryDataSyncer> galleryDataSyncer_ = static_pointer_cast<GalleryDataSyncer>(dataSyncer_);
     /* init handler */
