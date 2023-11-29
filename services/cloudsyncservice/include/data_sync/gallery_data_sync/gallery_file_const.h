@@ -156,7 +156,7 @@ const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::PhotoColumn::PHOTO_LONGITUDE,
     /* NR_LOCAL_INFO: keep local info in the end */
     Media::MediaColumn::MEDIA_ID,
-    Media::PhotoColumn::PHOTO_CLOUD_ID 
+    Media::PhotoColumn::PHOTO_CLOUD_ID
 };
 
 const std::vector<DataType> GALLERY_FILE_COLUMN_TYPES = {
