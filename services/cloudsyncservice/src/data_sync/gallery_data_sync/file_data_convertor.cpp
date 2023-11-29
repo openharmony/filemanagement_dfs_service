@@ -829,6 +829,7 @@ int32_t FileDataConvertor::ExtractCompatibleValue(const DriveKit::DKRecord &reco
     RETURN_ON_ERR(ExtractFavorite(data, valueBucket));
     RETURN_ON_ERR(ExtractDateTrashed(data, valueBucket));
     RETURN_ON_ERR(ExtractCloudId(record, valueBucket));
+    RETURN_ON_ERR(ExtractDescription(data, valueBucket));
     return E_OK;
 }
 
@@ -1065,6 +1066,22 @@ int32_t FileDataConvertor::ExtractCloudId(const DriveKit::DKRecord &record,
 {
     string cloudId = record.GetRecordId();
     valueBucket.PutString(PhotoColumn::PHOTO_CLOUD_ID, cloudId);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractDescription(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_DESCRIPTION) == data.end()) {
+        LOGI("record data cannot find FILE_DESCRIPTION");
+        return E_OK;
+    }
+    string description;
+    if (data[FILE_DESCRIPTION].GetString(description) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract description error");
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutString(PhotoColumn::PHOTO_USER_COMMENT, description);
     return E_OK;
 }
 

@@ -146,6 +146,7 @@ private:
     int32_t ExtractFavorite(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
     int32_t ExtractDateTrashed(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
     int32_t ExtractCloudId(const DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket);
+    int32_t ExtractDescription(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
 
     bool IfContainsAttributes(const DriveKit::DKRecord &record);
 
@@ -413,7 +414,13 @@ inline int32_t FileDataConvertor::HandleTimeZone(DriveKit::DKRecordFieldMap &map
 inline int32_t FileDataConvertor::HandleDescription(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-    data[FILE_DESCRIPTION] = DriveKit::DKRecordField("");
+    int32_t val;
+    int32_t ret = GetInt(Media::PhotoColumn::PHOTO_USER_COMMENT, val, resultSet);
+    if (ret != E_OK || val == 0) {
+        LOGE("Get user comment err %{public}d", ret);
+        return E_RDB;
+    }
+    data[FILE_DESCRIPTION] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 inline int32_t FileDataConvertor::HandleAlbumId(DriveKit::DKRecordData &data,
