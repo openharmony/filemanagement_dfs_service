@@ -1007,7 +1007,19 @@ int32_t FileDataConvertor::ExtractDeviceName(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::ExtractDateModified(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
-    uint64_t dateModified = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+    int64_t dateModified = 0;
+    if (data.find(FILE_ATTRIBUTES) != data.end()) {
+        DriveKit::DKRecordFieldMap attributes;
+        if (attributes.find(PhotoColumn::MEDIA_DATE_MODIFIED) != data.end()) {
+            if (attributes[PhotoColumn::MEDIA_DATE_MODIFIED].GetLong(dateModified) !=  DKLocalErrorCode::NO_ERROR) {
+                valueBucket.PutLong(PhotoColumn::MEDIA_DATE_MODIFIED, dateModified);
+                return E_OK;
+            }
+        }
+    }
+    dateModified = record.GetEditedTime() / MILLISECOND_TO_SECOND;
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_MODIFIED, dateModified);
     return E_OK;
 }
