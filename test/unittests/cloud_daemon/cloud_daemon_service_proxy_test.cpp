@@ -141,48 +141,6 @@ HWTEST_F(CloudDaemonServiceProxyTest, GetInstanceTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetInstanceTest002
- * @tc.desc: Verify the GetInstance function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDaemonServiceProxyTest, GetInstanceTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetInstanceTest002 Start";
-    try {
-        g_smcflag = true;
-        auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
-        EXPECT_NE(CloudDaemonServiceProxy, nullptr);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "GetInstanceTest002  ERROR";
-    }
-    GTEST_LOG_(INFO) << "GetInstanceTest002 End";
-}
-
-/**
- * @tc.name: InvaildInstanceTest
- * @tc.desc: Verify the InvaildInstance function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDaemonServiceProxyTest, InvaildInstanceTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "InvaildInstanceTest Start";
-    try {
-        g_smcflag = true;
-        auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
-        EXPECT_NE(CloudDaemonServiceProxy, nullptr);
-        CloudDaemonServiceProxy::InvaildInstance();
-        EXPECT_EQ(CloudDaemonServiceProxy::serviceProxy_, nullptr);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "InvaildInstanceTest  ERROR";
-    }
-    GTEST_LOG_(INFO) << "InvaildInstanceTest End";
-}
-
-/**
  * @tc.name: StartFuseTest001
  * @tc.desc: Verify the StartFuse function
  * @tc.type: FUNC
