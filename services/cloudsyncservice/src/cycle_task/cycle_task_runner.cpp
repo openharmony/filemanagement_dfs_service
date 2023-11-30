@@ -22,6 +22,7 @@
 #include "dfs_error.h"
 #include "tasks/optimize_storage_task.h"
 #include "tasks/periodic_check_task.h"
+#include "tasks/save_subscription_task.h"
 #include "utils_log.h"
 
 #include "os_account_manager.h"
@@ -78,6 +79,7 @@ void CycleTaskRunner::InitTasks()
     //push tasks here
     cycleTasks_.push_back(std::make_shared<OptimizeStorageTask>(dataSyncManager_));
     cycleTasks_.push_back(std::make_shared<PeriodicCheckTask>(dataSyncManager_));
+    cycleTasks_.push_back(std::make_shared<SaveSubscriptionTask>(dataSyncManager_));
 }
 
 void CycleTaskRunner::GetLastRunTime(std::string taskName, std::time_t &time)
