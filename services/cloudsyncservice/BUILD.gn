@@ -64,6 +64,7 @@ ohos_shared_library("cloudsync_sa") {
     "src/cycle_task/cycle_task_runner.cpp",
     "src/cycle_task/tasks/optimize_storage_task.cpp",
     "src/cycle_task/tasks/periodic_check_task.cpp",
+    "src/cycle_task/tasks/save_subscription_task.cpp",
   ]
 
   clouddisk_database = [
@@ -211,6 +212,7 @@ ohos_static_library("cloudsync_sa_static") {
     "src/cycle_task/cycle_task_runner.cpp",
     "src/cycle_task/tasks/optimize_storage_task.cpp",
     "src/cycle_task/tasks/periodic_check_task.cpp",
+    "src/cycle_task/tasks/save_subscription_task.cpp",
   ]
 
   clouddisk_database = [

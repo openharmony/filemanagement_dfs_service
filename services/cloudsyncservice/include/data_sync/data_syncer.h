@@ -77,6 +77,9 @@ public:
     virtual int32_t OptimizeStorage(const int32_t agingDays);
     virtual int32_t DownloadThumb();
 
+    void SaveSubscription();
+    void DeleteSubscription();
+    
 protected:
     /* download */
     int32_t Pull(std::shared_ptr<DataHandler> handler);
@@ -91,8 +94,6 @@ protected:
     int32_t DownloadThumbInner(std::shared_ptr<DataHandler> handler);
     void ClearCursor();
 
-    void SaveSubscription();
-    void DeleteSubscription();
     /* schedule */
     virtual void Schedule() = 0;
     virtual void ScheduleByType(SyncTriggerType syncTriggerType) = 0;
