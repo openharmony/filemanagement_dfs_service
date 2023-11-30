@@ -88,7 +88,7 @@ static bool HandleDkError(fuse_req_t req, DriveKit::DKError dkError)
     if (!dkError.HasError()) {
         return false;
     }
-    if ((dkError.serverErrorCode == (uint)DriveKit::DKServerErrorCode::NETWORK_ERROR)
+    if ((dkError.serverErrorCode == static_cast<int>(DriveKit::DKServerErrorCode::NETWORK_ERROR))
         || dkError.dkErrorCode == DriveKit::DKLocalErrorCode::DOWNLOAD_REQUEST_ERROR) {
         LOGE("network error");
         fuse_reply_err(req, ENOTCONN);
