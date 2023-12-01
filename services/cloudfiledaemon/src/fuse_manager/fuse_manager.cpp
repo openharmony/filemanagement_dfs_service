@@ -360,6 +360,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                 LOGD("open success, sessionRefCount: %d", cInode->sessionRefCount.load());
                 fuse_reply_open(req, fi);
             } else {
+                cInode->readSession = nullptr;
                 LOGE("open fali");
             }
             wSesLock.unlock();
