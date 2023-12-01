@@ -48,6 +48,13 @@ public:
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
     MOCK_METHOD3(DownloadFile,
                  int32_t(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj));
+    MOCK_METHOD5(DownloadAsset,
+                 int32_t(const uint64_t taskId,
+                         const int32_t userId,
+                         const std::string &bundleName,
+                         const std::string &networkId,
+                         AssetInfoObj &assetInfoObj));
+    MOCK_METHOD1(RegisterDownloadAssetCallback, int32_t(const sptr<IRemoteObject> &remoteObject));
     MOCK_METHOD2(DeleteAsset, int32_t(const int32_t userId, const std::string &uri));
     MOCK_METHOD1(GetSyncTimeInner, int32_t(int64_t &syncTime));
     MOCK_METHOD1(CleanCacheInner, int32_t(const std::string &uri));

@@ -721,6 +721,20 @@ int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::DownloadAsset(const uint64_t taskId,
+                                             const int32_t userId,
+                                             const std::string &bundleName,
+                                             const std::string &networkId,
+                                             AssetInfoObj &assetInfoObj)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject)
+{
+    return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::DeleteAsset(const int32_t userId, const std::string &uri)
 {
     LOGD("DeleteAsset");

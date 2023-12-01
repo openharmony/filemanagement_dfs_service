@@ -14,6 +14,7 @@
  */
 #include "ipc/cloud_sync_service.h"
 
+#include <cstdint>
 #include <memory>
 
 #include "cycle_task/cycle_task_runner.h"
@@ -22,6 +23,7 @@
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
 #include "ipc/cloud_sync_callback_manager.h"
+#include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
 #include "sandbox_helper.h"
 #include "sdk_helper.h"
@@ -391,6 +393,20 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
     // Not to pass the assetinfo.fieldkey
     DriveKit::DKDownloadAsset assetsToDownload{assetInfoObj.recordType, assetInfoObj.recordId, {}, asset, {}};
     return sdkHelper->DownloadAssets(assetsToDownload);
+}
+
+int32_t CloudSyncService::DownloadAsset(const uint64_t taskId,
+                                        const int32_t userId,
+                                        const std::string &bundleName,
+                                        const std::string &networkId,
+                                        AssetInfoObj &assetInfoObj)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncService::RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject)
+{
+    return E_OK;
 }
 
 int32_t CloudSyncService::DeleteAsset(const int32_t userId, const std::string &uri)
