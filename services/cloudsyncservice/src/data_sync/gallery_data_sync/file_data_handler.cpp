@@ -2316,7 +2316,12 @@ int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::
         return ret;
     }
     for (const auto &record : records) {
-        AppendToDownload(record, "content", outAssetsToDownload);
+        if (!record.GetRecordId().empty()) {
+            AppendToDownload(record, "content", outAssetsToDownload);
+        } else {
+            LOGE("get recordid failed,recordid is null");
+            continue;
+        }
     }
 
     return E_OK;
