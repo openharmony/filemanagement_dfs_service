@@ -23,6 +23,7 @@
 #include "common_event_support.h"
 #include "device/device_manager_agent.h"
 #include "dfs_error.h"
+#include "file_trans_listener_proxy.h"
 #include "ipc_skeleton.h"
 #include "iremote_object.h"
 #include "iservice_registry.h"
@@ -32,6 +33,7 @@
 #include "network/softbus/softbus_session_pool.h"
 #include "sandbox_helper.h"
 #include "system_ability_definition.h"
+#include "trans_mananger.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -186,7 +188,10 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
     return E_OK;
 }
 
-int32_t Daemon::PrepareSession(const std::string &srcUri, const std::string &dstUri, const std::string &srcDeviceId)
+int32_t Daemon::PrepareSession(const std::string &srcUri,
+                               const std::string &dstUri,
+                               const std::string &srcDeviceId,
+                               const sptr<IRemoteObject> &listener)
 {
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     DistributedHardware::DmDeviceInfo localDeviceInfo{};
@@ -210,16 +215,10 @@ int32_t Daemon::PrepareSession(const std::string &srcUri, const std::string &dst
     }
 
     std::string physicalPath;
-    auto ret = SandboxHelper::GetPhysicalPath(dstUri, std::to_string(hapTokenInfo.userID), physicalPath);
+    auto ret = GetRealPath(dstUri, hapTokenInfo, sessionName, physicalPath);
     if (ret != E_OK) {
-        LOGE("invalid uri, ret = %{public}d", ret);
-        RemoveSession(sessionName);
-        return E_GET_PHYSICAL_PATH_FAILED;
-    }
-    if (!SandboxHelper::CheckValidPath(physicalPath)) {
-        LOGE("invalid path, ret = %{public}d", ret);
-        RemoveSession(sessionName);
-        return E_GET_PHYSICAL_PATH_FAILED;
+        LOGE("GetRealPath failed, ret = %{public}d", ret);
+        return E_SOFTBUS_SESSION_FAILED;
     }
     SoftBusSessionPool::SessionInfo sessionInfo{.dstPath = physicalPath, .uid = IPCSkeleton::GetCallingUid()};
     SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo);
@@ -237,6 +236,11 @@ int32_t Daemon::PrepareSession(const std::string &srcUri, const std::string &dst
         return E_SOFTBUS_SESSION_FAILED;
     }
 
+    auto listenerCallback = iface_cast<IFileTransListener>(listener);
+    if (listenerCallback == nullptr) {
+        LOGE("ListenerCallback is nullptr");
+    }
+    TransManager::GetInstance().AddTransTask(sessionName, listenerCallback);
     return LoadRemoteSA(srcUri, physicalPath, localDeviceInfo.networkId, srcDeviceId, sessionName);
 }
 
@@ -278,6 +282,25 @@ void Daemon::RemoveSession(const std::string &sessionName)
 {
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
     RemoveSessionServer(IDaemon::SERVICE_NAME.c_str(), sessionName.c_str());
+}
+
+int32_t Daemon::GetRealPath(const std::string &dstUri,
+                            const HapTokenInfo &hapTokenInfo,
+                            const std::string &sessionName,
+                            std::string &physicalPath)
+{
+    auto ret = SandboxHelper::GetPhysicalPath(dstUri, std::to_string(hapTokenInfo.userID), physicalPath);
+    if (ret != E_OK) {
+        LOGE("invalid uri, ret = %{public}d", ret);
+        RemoveSession(sessionName);
+        return E_GET_PHYSICAL_PATH_FAILED;
+    }
+    if (!SandboxHelper::CheckValidPath(physicalPath)) {
+        LOGE("invalid path.");
+        RemoveSession(sessionName);
+        return E_GET_PHYSICAL_PATH_FAILED;
+    }
+    return E_OK;
 }
 } // namespace DistributedFile
 } // namespace Storage

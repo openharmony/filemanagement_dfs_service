@@ -32,7 +32,8 @@ public:
     virtual int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
     virtual int32_t PrepareSession(const std::string &srcUri,
                                    const std::string &dstUri,
-                                   const std::string &remoteDeviceId) = 0;
+                                   const std::string &srcDeviceId,
+                                   const sptr<IRemoteObject> &listener) = 0;
     virtual int32_t RequestSendFile(const std::string &srcUri,
                                     const std::string &dstPath,
                                     const std::string &remoteDeviceId,

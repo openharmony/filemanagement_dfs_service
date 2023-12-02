@@ -22,6 +22,8 @@ ohos_unittest("distributed_file_daemon_test") {
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
     "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
@@ -43,6 +45,7 @@ ohos_unittest("distributed_file_daemon_test") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${services_path}/distributedfiledaemon/include",
+    "${services_path}/distributedfiledaemon/include/ipc",
     "//third_party/libfuse/include",
     "//third_party/libfuse/lib",
   ]
@@ -91,6 +94,8 @@ ohos_unittest("distributed_file_daemon_stub_test") {
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
     "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
@@ -112,6 +117,7 @@ ohos_unittest("distributed_file_daemon_stub_test") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${services_path}/distributedfiledaemon/include",
+    "${services_path}/distributedfiledaemon/include/ipc",
     "//third_party/libfuse/include",
     "//third_party/libfuse/lib",
   ]

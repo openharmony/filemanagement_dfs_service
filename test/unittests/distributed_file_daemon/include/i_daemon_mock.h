@@ -21,9 +21,8 @@
 
 #include "dfs_error.h"
 #include "ipc/i_daemon.h"
-#include "iremote_stub.h"
 #include "iremote_broker.h"
-
+#include "iremote_stub.h"
 
 namespace OHOS::Storage::DistributedFile {
 class DaemonServiceMock : public IRemoteStub<IDaemon> {
@@ -50,10 +49,15 @@ public:
     {
         return FileManagement::E_OK;
     }
-    int32_t PrepareSession(const std::string &srcUri, const std::string &dstUri, const std::string &remoteDeviceId)
+
+    int32_t PrepareSession(const std::string &srcUri,
+                           const std::string &dstUri,
+                           const std::string &srcDeviceId,
+                           const sptr<IRemoteObject> &listener)
     {
         return FileManagement::E_OK;
     }
+
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &remoteDeviceId,

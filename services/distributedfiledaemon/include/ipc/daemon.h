@@ -20,6 +20,7 @@
 #include <mutex>
 #include <string>
 
+#include "accesstoken_kit.h"
 #include "daemon_stub.h"
 #include "dm_device_info.h"
 #include "ipc/i_daemon.h"
@@ -28,10 +29,12 @@
 #include "nocopyable.h"
 #include "refbase.h"
 #include "system_ability.h"
+#include "accesstoken_kit.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 
 class Daemon final : public SystemAbility, public DaemonStub, protected NoCopyable {
@@ -54,11 +57,17 @@ public:
     int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
-                           const std::string &srcDeviceId) override;
+                           const std::string &srcDeviceId,
+                           const sptr<IRemoteObject> &listener) override;
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &dstDeviceId,
                             const std::string &sessionName) override;
+    int32_t GetRealPath(const std::string &dstUri,
+                        const HapTokenInfo &hapTokenInfo,
+                        const std::string &sessionName,
+                        std::string &physicalPath);
+
 private:
     Daemon();
     ServiceRunningState state_ { ServiceRunningState::STATE_NOT_START };

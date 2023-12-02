@@ -407,6 +407,7 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
 {
     LOGI("OnDeviceInfoChanged begin");
     if (deviceInfo.networkType == -1) {
+        LOGI("OnDeviceInfoChanged end");
         return;
     }
     DeviceInfo info(deviceInfo);

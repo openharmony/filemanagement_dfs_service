@@ -18,6 +18,7 @@
 #include "dfs_error.h"
 #include "network/softbus/softbus_handler.h"
 #include "session.h"
+#include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 #include <cinttypes>
@@ -25,6 +26,8 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+using namespace FileManagement;
+constexpr uint32_t MAX_SIZE = 128;
 int32_t SoftBusFileReceiveListener::OnReceiveFileStarted(int sessionId, const char *files, int fileCnt)
 {
     LOGD("OnReceiveFileStarted, sessionId = %{public}d, files = %{public}s, fileCnt = %{public}d", sessionId, files,
@@ -39,7 +42,14 @@ int32_t SoftBusFileReceiveListener::OnReceiveFileProcess(int sessionId,
 {
     LOGD("OnReceiveFileProcess, sessionId = %{public}d, firstFile = %{public}s, bytesUpload = %{public}" PRIu64 ","
          "bytesTotal = %{public}" PRIu64 "", sessionId, firstFile, bytesUpload, bytesTotal);
-    return 0;
+    char sessionName[MAX_SIZE] = {};
+    auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
+    if (ret != E_OK) {
+        LOGE("GetMySessionName failed, ret = %{public}d", ret);
+        return E_OK;
+    }
+    TransManager::GetInstance().NotifyFileProgress(sessionName, bytesTotal, bytesUpload);
+    return E_OK;
 }
 
 void SoftBusFileReceiveListener::OnReceiveFileFinished(int sessionId, const char *files, int fileCnt)
@@ -47,12 +57,28 @@ void SoftBusFileReceiveListener::OnReceiveFileFinished(int sessionId, const char
     LOGD("OnReceiveFileFinished, sessionId = %{public}d, files = %{public}s, fileCnt = %{public}d", sessionId, files,
          fileCnt);
     SoftBusHandler::GetInstance().RemoveSession(sessionId, true);
+    char sessionName[MAX_SIZE] = {};
+    auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
+    if (ret != E_OK) {
+        LOGE("GetMySessionName failed, ret = %{public}d", ret);
+        return;
+    }
+    TransManager::GetInstance().NotifyFileFinished(sessionName);
+    TransManager::GetInstance().DeleteTransTask(sessionName);
 }
 
 void SoftBusFileReceiveListener::OnFileTransError(int sessionId)
 {
     LOGD("OnFileTransError, sessionId = %{public}d", sessionId);
     SoftBusHandler::GetInstance().RemoveSession(sessionId);
+    char sessionName[MAX_SIZE] = {};
+    auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
+    if (ret != E_OK) {
+        LOGE("GetMySessionName failed, ret = %{public}d", ret);
+        return;
+    }
+    TransManager::GetInstance().NotifyFileFinished(sessionName);
+    TransManager::GetInstance().DeleteTransTask(sessionName);
 }
 } // namespace DistributedFile
 } // namespace Storage

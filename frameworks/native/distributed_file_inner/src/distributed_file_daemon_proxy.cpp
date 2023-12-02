@@ -163,7 +163,8 @@ int32_t DistributedFileDaemonProxy::CloseP2PConnection(const DistributedHardware
 
 int32_t DistributedFileDaemonProxy::PrepareSession(const std::string &srcUri,
                                                    const std::string &dstUri,
-                                                   const std::string &remoteDeviceId)
+                                                   const std::string &srcDeviceId,
+                                                   const sptr<IRemoteObject> &listener)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -180,8 +181,12 @@ int32_t DistributedFileDaemonProxy::PrepareSession(const std::string &srcUri,
         LOGE("Failed to send dstUri");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
-    if (!data.WriteString(remoteDeviceId)) {
+    if (!data.WriteString(srcDeviceId)) {
         LOGE("Failed to send remoteDeviceId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteRemoteObject(listener)) {
+        LOGE("Failed to send the listener callback stub");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
     auto remote = Remote();

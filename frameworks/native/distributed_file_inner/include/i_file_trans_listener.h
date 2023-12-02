@@ -12,26 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
-#define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
 
-#include "softbus_handler.h"
-#include <vector>
+#ifndef OHOS_STORAGE_I_FILE_TRANS_LISTENER_H
+#define OHOS_STORAGE_I_FILE_TRANS_LISTENER_H
+#include <cstdint>
+
+#include "iremote_broker.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class SoftBusSessionListener {
+class IFileTransListener : public IRemoteBroker {
 public:
-    static int OnSessionOpened(int sessionId, int result);
-    static void OnSessionClosed(int sessionId);
-
-private:
-    static int32_t QueryActiveUserId();
-    static std::vector<std::string> GetFileName(const std::vector<std::string> &fileList, const std::string &path);
-    static int32_t GetRealPath(const std::string &srcUri);
+    enum {
+        File_Trans_Listener_SUCCESS = 0,
+        File_Trans_Listener_DESCRIPTOR_IS_EMPTY,
+    };
+    virtual int32_t OnFileReceive(uint64_t totalBytes, uint64_t processedBytes) = 0;
+    virtual int32_t OnFailed(const std::string &sessionName) = 0;
+    virtual int32_t OnFinished(const std::string &sessionName) = 0;
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.translistener")
 };
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
+
+#endif // OHOS_STORAGE_I_FILE_TRANS_LISTENER_H
