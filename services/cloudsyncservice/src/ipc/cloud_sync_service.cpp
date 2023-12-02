@@ -182,7 +182,6 @@ int32_t CloudSyncService::LoadRemoteSA(const std::string &deviceId)
     auto waitStatus = cloudSyncLoadCallback->proxyConVar_.wait_for(
         lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
         [cloudSyncLoadCallback]() { return cloudSyncLoadCallback->isLoadSuccess_.load(); });
-
     if (!waitStatus) {
         LOGE("Load CloudSynd SA timeout");
         return E_SA_LOAD_FAILED;
