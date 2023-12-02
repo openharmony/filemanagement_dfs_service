@@ -24,7 +24,14 @@
 namespace OHOS::FileManagement::CloudSync {
 class DownloadAssetCallbackManager final : public NoCopyable {
 public:
+    using TaskId = uint64_t;
     static DownloadAssetCallbackManager &GetInstance();
+    void AddCallback(const sptr<IDownloadAssetCallback> &callback);
+    void OnDownloadFinshed(const TaskId taskId, const std::string &uri, const int32_t result);
+
+private:
+    sptr<IDownloadAssetCallback> callbackProxy_;
+    sptr<SvcDeathRecipient> deathRecipient_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

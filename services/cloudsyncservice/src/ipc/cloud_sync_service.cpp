@@ -411,11 +411,20 @@ int32_t CloudSyncService::DownloadAsset(const uint64_t taskId,
                                         const std::string &networkId,
                                         AssetInfoObj &assetInfoObj)
 {
+    string uri = assetInfoObj.uri;
+    int32_t ret = 0;
+    DownloadAssetCallbackManager::GetInstance().OnDownloadFinshed(taskId, uri, ret);
     return E_OK;
 }
 
 int32_t CloudSyncService::RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject)
 {
+    if (remoteObject == nullptr) {
+        LOGE("remoteObject is nullptr");
+        return E_INVAL_ARG;
+    }
+    auto callback = iface_cast<IDownloadAssetCallback>(remoteObject);
+    DownloadAssetCallbackManager::GetInstance().AddCallback(callback);
     return E_OK;
 }
 

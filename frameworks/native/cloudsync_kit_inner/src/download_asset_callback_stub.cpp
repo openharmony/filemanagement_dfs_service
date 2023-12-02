@@ -22,6 +22,7 @@ using namespace std;
 
 DownloadAssetCallbackStub::DownloadAssetCallbackStub()
 {
+    opToInterfaceMap_[SERVICE_CMD_ON_DOWNLOAD_FINSHED] = &DownloadAssetCallbackStub::HandleOnFinished;
 }
 
 int32_t DownloadAssetCallbackStub::OnRemoteRequest(uint32_t code,
@@ -29,6 +30,23 @@ int32_t DownloadAssetCallbackStub::OnRemoteRequest(uint32_t code,
                                                    MessageParcel &reply,
                                                    MessageOption &option)
 {
+    if (data.ReadInterfaceToken() != GetDescriptor()) {
+        return E_SERVICE_DESCRIPTOR_IS_EMPTY;
+    }
+    auto interfaceIndex = opToInterfaceMap_.find(code);
+    if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {
+        LOGE("Cannot response request %d: unknown tranction", code);
+        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
+    return (this->*(interfaceIndex->second))(data, reply);
+}
+
+int32_t DownloadAssetCallbackStub::HandleOnFinished(MessageParcel &data, MessageParcel &reply)
+{
+    TaskId taskId = data.ReadUint64();
+    string uri = data.ReadString();
+    int32_t result = data.ReadInt32();
+    OnFinished(taskId, uri, result);
     return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync

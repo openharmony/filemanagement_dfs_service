@@ -96,6 +96,8 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/src/ipc/cloud_sync_callback_proxy.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service.cpp",
     "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_manager.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_proxy.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/net_conn_callback_observer.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",

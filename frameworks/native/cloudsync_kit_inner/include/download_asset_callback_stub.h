@@ -27,6 +27,12 @@ public:
     DownloadAssetCallbackStub();
     virtual ~DownloadAssetCallbackStub() = default;
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+
+private:
+    using ServiceInterface = int32_t (DownloadAssetCallbackStub::*)(MessageParcel &data, MessageParcel &reply);
+    std::map<uint32_t, ServiceInterface> opToInterfaceMap_;
+
+    int32_t HandleOnFinished(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::FileManagement::CloudSync
 
