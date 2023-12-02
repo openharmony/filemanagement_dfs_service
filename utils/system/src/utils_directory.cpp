@@ -15,9 +15,11 @@
 
 #include "utils_directory.h"
 
+#include <cstring>
+#include <dirent.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <system_error>
+#include <unistd.h>
 
 #include "directory_ex.h"
 
@@ -76,6 +78,69 @@ void ForceRemoveDirectory(const string &path)
     if (!OHOS::ForceRemoveDirectory(path)) {
         throw system_error(errno, system_category());
     }
+}
+
+bool IsFolder(const std::string &name)
+{
+    if (name.empty()) {
+        return false;
+    }
+    struct stat buf = {};
+    if (stat(name.c_str(), &buf) != 0) {
+        return false;
+    }
+    return S_ISDIR(buf.st_mode);
+}
+
+std::vector<std::string> GetFilePath(const std::string &name)
+{
+    std::vector<std::string> path;
+    auto dir = opendir(name.data());
+    struct dirent *ent = nullptr;
+    if (dir) {
+        while ((ent = readdir(dir)) != nullptr) {
+            auto tmpPath = std::string(name).append("/").append(ent->d_name);
+            if (strcmp(ent->d_name, "..") == 0 || strcmp(ent->d_name, ".") == 0) {
+                continue;
+            } else if (IsFolder(tmpPath)) {
+                auto dirPath = GetFilePath(tmpPath);
+                path.insert(path.end(), dirPath.begin(), dirPath.end());
+            } else if (!IsFolder(tmpPath)) {
+                path.emplace_back(tmpPath);
+            }
+        }
+        closedir(dir);
+    }
+    return path;
+}
+
+int32_t ChangeOwnerRecursive(const std::string &path, uid_t uid, gid_t gid)
+{
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        return -1;
+    }
+
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (entry->d_type == DT_DIR) {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+                continue;
+            }
+            std::string subPath = path + "/" + entry->d_name;
+            if (chown(subPath.c_str(), uid, gid) == -1) {
+                return -1;
+            }
+            return ChangeOwnerRecursive(subPath, uid, gid);
+        } else {
+            std::string filePath = path + "/" + entry->d_name;
+            if (chown(filePath.c_str(), uid, gid) == -1) {
+                return -1;
+            }
+        }
+    }
+    closedir(dir);
+    return 0;
 }
 } // namespace Utils
 } // namespace DistributedFile

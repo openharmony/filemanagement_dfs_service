@@ -50,6 +50,31 @@ int32_t DistributedFileDaemonManagerImpl::CloseP2PConnection(const DistributedHa
     }
     return distributedFileDaemonProxy->CloseP2PConnection(deviceInfo);
 }
+
+int32_t DistributedFileDaemonManagerImpl::PrepareSession(const std::string &srcUri,
+                                                         const std::string &dstUri,
+                                                         const std::string &srcDeviceId)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->PrepareSession(srcUri, dstUri, srcDeviceId);
+}
+
+int32_t DistributedFileDaemonManagerImpl::RequestSendFile(const std::string &srcUri,
+                                                          const std::string &dstPath,
+                                                          const std::string &remoteDeviceId,
+                                                          const std::string &sessionName)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->RequestSendFile(srcUri, dstPath, remoteDeviceId, sessionName);
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

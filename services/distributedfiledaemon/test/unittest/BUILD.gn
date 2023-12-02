@@ -43,8 +43,13 @@ ohos_unittest("device_manager_agent_test") {
     "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
   ]
 
   sources += [ "device/device_manager_agent_test.cpp" ]
@@ -62,6 +67,8 @@ ohos_unittest("device_manager_agent_test") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -70,6 +77,7 @@ ohos_unittest("device_manager_agent_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -93,8 +101,13 @@ ohos_unittest("os_account_observer_test") {
     "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
   ]
 
   sources += [ "multiuser/os_account_observer_test.cpp" ]
@@ -111,6 +124,8 @@ ohos_unittest("os_account_observer_test") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -119,6 +134,7 @@ ohos_unittest("os_account_observer_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -142,8 +158,13 @@ ohos_unittest("devsl_dispatcher_test") {
     "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "network/devsl_dispatcher_test.cpp",
   ]
 
@@ -159,6 +180,8 @@ ohos_unittest("devsl_dispatcher_test") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -167,6 +190,7 @@ ohos_unittest("devsl_dispatcher_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -190,8 +214,13 @@ ohos_unittest("kernel_talker_test") {
     "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "network/kernel_talker_test.cpp",
   ]
 
@@ -207,6 +236,8 @@ ohos_unittest("kernel_talker_test") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -215,6 +246,7 @@ ohos_unittest("kernel_talker_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -238,8 +270,13 @@ ohos_unittest("session_pool_test") {
     "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "network/session_pool_test.cpp",
   ]
 
@@ -255,6 +292,8 @@ ohos_unittest("session_pool_test") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -263,6 +302,7 @@ ohos_unittest("session_pool_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -286,8 +326,13 @@ ohos_unittest("softbus_agent_test") {
     "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "network/softbus_agent_test.cpp",
   ]
 
@@ -303,6 +348,8 @@ ohos_unittest("softbus_agent_test") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -311,6 +358,7 @@ ohos_unittest("softbus_agent_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -337,8 +385,13 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "network/softbus_session_dispatcher_test.cpp",
   ]
 
@@ -354,6 +407,8 @@ ohos_unittest("softbus_session_dispatcher_test") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -362,6 +417,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -385,8 +441,13 @@ ohos_unittest("softbus_session_test") {
     "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "network/softbus_session_test.cpp",
   ]
 
@@ -402,6 +463,8 @@ ohos_unittest("softbus_session_test") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -410,6 +473,7 @@ ohos_unittest("softbus_session_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

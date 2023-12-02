@@ -37,6 +37,13 @@ class MockDaemonStub : public DaemonStub {
 public:
     MOCK_METHOD1(OpenP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
     MOCK_METHOD1(CloseP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
+    MOCK_METHOD4(RequestSendFile,
+                 int32_t(const std::string &srcUri,
+                         const std::string &dstPath,
+                         const std::string &dstDeviceId,
+                         const std::string &sessionName));
+    MOCK_METHOD3(PrepareSession,
+                 int32_t(const std::string &srcUri, const std::string &dstUri, const std::string &srcDeviceId));
 };
 
 class DaemonStubTest : public testing::Test {
@@ -159,7 +166,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest004, TestSize.Level1)
         EXPECT_TRUE(data.WriteCString(deviceInfo.deviceId));
         EXPECT_TRUE(data.WriteCString(deviceInfo.deviceName));
         EXPECT_TRUE(data.WriteCString(deviceInfo.networkId));
-        
+
         int ret = daemonStub_->OnRemoteRequest(
             static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION),
             data, reply, option);

@@ -161,6 +161,86 @@ int32_t DistributedFileDaemonProxy::CloseP2PConnection(const DistributedHardware
     return reply.ReadInt32();
 }
 
+int32_t DistributedFileDaemonProxy::PrepareSession(const std::string &srcUri,
+                                                   const std::string &dstUri,
+                                                   const std::string &remoteDeviceId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(srcUri)) {
+        LOGE("Failed to send srcUri");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(dstUri)) {
+        LOGE("Failed to send dstUri");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(remoteDeviceId)) {
+        LOGE("Failed to send remoteDeviceId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret =
+        remote->SendRequest(static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION),
+                            data, reply, option);
+    if (ret != 0) {
+        LOGE("SendRequest failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
+}
+
+int32_t DistributedFileDaemonProxy::RequestSendFile(const std::string &srcUri,
+                                                    const std::string &dstPath,
+                                                    const std::string &remoteDeviceId,
+                                                    const std::string &sessionName)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(srcUri)) {
+        LOGE("Failed to send srcUri");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(dstPath)) {
+        LOGE("Failed to send dstPath");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(remoteDeviceId)) {
+        LOGE("Failed to send remoteDeviceId");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(sessionName)) {
+        LOGE("Failed to send sessionName");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE), data, reply,
+        option);
+    if (ret != 0) {
+        LOGE("SendRequest failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

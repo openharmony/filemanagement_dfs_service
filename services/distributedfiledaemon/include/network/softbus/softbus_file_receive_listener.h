@@ -13,28 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef DISTRIBUTED_FILE_DAEMON_MANAGER_H
-#define DISTRIBUTED_FILE_DAEMON_MANAGER_H
+#ifndef FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_FILE_RECEIVE_LISTENER_H
+#define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_FILE_RECEIVE_LISTENER_H
 
-#include <memory>
-
-#include "dm_device_info.h"
+#include "network/softbus/softbus_session_pool.h"
+#include <cstdint>
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class DistributedFileDaemonManager {
+class SoftBusFileReceiveListener {
 public:
-    static DistributedFileDaemonManager &GetInstance();
+    static int32_t OnReceiveFileStarted(int sessionId, const char *files, int fileCnt);
+    static int32_t
+        OnReceiveFileProcess(int sessionId, const char *firstFile, uint64_t bytesUpload, uint64_t bytesTotal);
+    static void OnReceiveFileFinished(int sessionId, const char *files, int fileCnt);
+    static void OnFileTransError(int sessionId);
 
-    virtual int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
-    virtual int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
-    virtual int32_t PrepareSession(const std::string &srcUri,
-                                   const std::string &dstUri,
-                                   const std::string &remoteDeviceId) = 0;
+private:
+    static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
 };
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-
-#endif // DISTRIBUTED_FILE_DAEMON_MANAGER_H
+#endif // FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_FILE_RECEIVE_LISTENER_H

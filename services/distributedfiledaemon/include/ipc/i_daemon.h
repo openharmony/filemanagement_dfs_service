@@ -30,6 +30,13 @@ public:
     };
     virtual int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
     virtual int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
+    virtual int32_t PrepareSession(const std::string &srcUri,
+                                   const std::string &dstUri,
+                                   const std::string &remoteDeviceId) = 0;
+    virtual int32_t RequestSendFile(const std::string &srcUri,
+                                    const std::string &dstPath,
+                                    const std::string &remoteDeviceId,
+                                    const std::string &sessionName) = 0;
     static inline const std::string SERVICE_NAME { "ohos.storage.distributedfile.daemon" };
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.daemon")
 };
