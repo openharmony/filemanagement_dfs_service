@@ -40,6 +40,7 @@ public:
     void HandleErr(NativeRdb::ResultSet &resultSet);
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valuesBucket);
     int32_t GetMetaFilePath(const std::string &cloudId, std::string &path);
+    void SetRootId(std::string rootId);
 
 private:
     int32_t FillRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
@@ -74,10 +75,12 @@ private:
     int32_t HandleEditedTime(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleAttachments(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleContent(DriveKit::DKRecordData &data, std::string &path);
+    int32_t InitRootId();
 
     int32_t userId_{0};
     std::string bundleName_;
     OperationType type_;
+    DriveKit::DKRecordId rootId_ = "";
     static std::string recordType_;
     std::function<void(NativeRdb::ResultSet &resultSet)> errHandler_;
 };

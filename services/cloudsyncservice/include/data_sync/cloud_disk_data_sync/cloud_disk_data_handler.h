@@ -57,6 +57,7 @@ public:
     int32_t CleanCache(const std::string &uri);
 private:
     static inline const int32_t LIMIT_SIZE = 5;
+    static inline const int32_t PULL_LIMIT_SIZE = 100;
     static inline const int32_t MODIFY_BATCH_NUM = 20;
     static inline const int32_t DELETE_BATCH_NUM = 20;
     DriveKit::DKRecordType recordType_ = "file";
@@ -67,12 +68,9 @@ private:
 
     int32_t userId_{0};
     std::string bundleName_;
+    DriveKit::DKRecordId rootId_;
 
-    CloudDiskDataConvertor cleanConvertor_ = { userId_, bundleName_, FILE_CLEAN };
-    int32_t ClearCloudInfo();
-    int32_t CleanNotDirtyData();
-    int32_t CleanPureCloudRecord();
-    int32_t CleanNotPureCloudRecord(const int32_t action);
+    int32_t CleanCloudRecord(const int32_t action);
     void HandleCreateConvertErr(NativeRdb::ResultSet &resultSet);
     void HandleFdirtyConvertErr(NativeRdb::ResultSet &resultSet);
     CloudDiskDataConvertor createConvertor_ = {

@@ -46,6 +46,9 @@ protected:
     virtual int32_t BatchInsert(int64_t &outRowId,
                                 const std::string &table,
                                 const std::vector<NativeRdb::ValuesBucket> &initialBatchValues);
+    virtual int32_t BatchDetete(const std::string &whichTable,
+                                const std::string &whichColumn,
+                                const std::vector<NativeRdb::ValueObject> &bindArgs);
     virtual int32_t Insert(int64_t &outRowId, const NativeRdb::ValuesBucket &initialValues);
     virtual int32_t Update(int &changedRows, const NativeRdb::ValuesBucket &values,
         const std::string &whereClause, const std::vector<std::string> &whereArgs);
@@ -66,6 +69,8 @@ protected:
     /* raw */
     virtual int32_t ExecuteSql(const std::string &sql,
         const std::vector<NativeRdb::ValueObject> &bindArgs = std::vector<NativeRdb::ValueObject>());
+
+    static const int32_t DELETE_LIMIT_SIZE = 500;
 
 private:
     std::shared_ptr<NativeRdb::RdbStore> rdb_;

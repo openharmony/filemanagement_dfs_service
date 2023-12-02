@@ -42,12 +42,13 @@ int32_t CloudDiskDataSyncer::Init(const std::string bundleName, const int32_t us
 int32_t CloudDiskDataSyncer::Clean(const int action)
 {
     LOGD("cloud disk data sycner Clean");
-    /* file */
+    BeginClean();
     int32_t ret = CleanInner(cloudDiskHandler_, action);
     if (ret != E_OK) {
         LOGE("disk data syncer file clean err %{public}d", ret);
     }
     DeleteSubscription();
+    CompleteClean();
     return ret;
 }
 

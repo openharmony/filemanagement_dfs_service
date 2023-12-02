@@ -42,7 +42,7 @@ enum CLOUD_DISK_INODE_LAYER {
 struct CloudDiskInode {
     int layer{CLOUD_DISK_INODE_ZERO_LAYER};
     struct stat stat;
-    std::string cloudId;
+    std::string cloudId{"rootId"};
     std::string bundleName;
     fuse_ino_t parent{0};
     std::atomic<int> refCount{0};
