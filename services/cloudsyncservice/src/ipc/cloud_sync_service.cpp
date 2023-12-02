@@ -39,7 +39,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 using namespace OHOS;
-
+constexpr int32_t MIN_USER_ID = 100;
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
 CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
@@ -184,6 +184,16 @@ int32_t CloudSyncService::StartSyncInner(bool forceFlag)
     }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, forceFlag,
+        SyncTriggerType::APP_TRIGGER);
+}
+
+int32_t CloudSyncService::TriggerSyncInner(const std::string &bundleName, const int32_t &userId)
+{
+    if (bundleName.empty() || userId < MIN_USER_ID) {
+        LOGE("Trigger sync parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    return dataSyncManager_->TriggerStartSync(bundleName, userId, false,
         SyncTriggerType::APP_TRIGGER);
 }
 

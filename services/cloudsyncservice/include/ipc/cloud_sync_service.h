@@ -37,6 +37,7 @@ public:
     int32_t UnRegisterCallbackInner() override;
     int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) override;
     int32_t StartSyncInner(bool forceFlag) override;
+    int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) override;
     int32_t StopSyncInner() override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
     int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;

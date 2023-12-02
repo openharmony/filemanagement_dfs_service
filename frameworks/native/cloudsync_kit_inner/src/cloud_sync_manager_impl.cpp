@@ -22,6 +22,7 @@
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
+constexpr int32_t MIN_USER_ID = 100;
 CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 {
     static CloudSyncManagerImpl instance;
@@ -111,6 +112,23 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
     }
 
     return CloudSyncServiceProxy->StartSyncInner(forceFlag);
+}
+
+int32_t CloudSyncManagerImpl::TriggerSync(const std::string &bundleName, const int32_t &userId)
+{
+    if (bundleName.empty() || userId < MIN_USER_ID) {
+        LOGE("Trigger Sync parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    if (!isFirstCall_.test_and_set()) {
+        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
+    return CloudSyncServiceProxy->TriggerSyncInner(bundleName, userId);
 }
 
 int32_t CloudSyncManagerImpl::StopSync()

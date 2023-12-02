@@ -128,6 +128,43 @@ int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag)
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::TriggerSyncInner(const std::string &bundleName, const int32_t &userId)
+{
+    LOGI("Trigger Sync");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        LOGE("Failed to send the user id");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_TRIGGER_SYNC), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the request, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("TriggerSyncInner Success");
+    return reply.ReadInt32();
+}
+
 int32_t CloudSyncServiceProxy::GetSyncTimeInner(int64_t &syncTime)
 {
     LOGI("Start GetSyncTimeInner");

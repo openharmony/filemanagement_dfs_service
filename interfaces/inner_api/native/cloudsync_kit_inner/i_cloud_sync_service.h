@@ -30,6 +30,7 @@ public:
     virtual int32_t UnRegisterCallbackInner() = 0;
     virtual int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) = 0;
     virtual int32_t StartSyncInner(bool forceFlag) = 0;
+    virtual int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) = 0;
     virtual int32_t StopSyncInner() = 0;
     virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
     virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;

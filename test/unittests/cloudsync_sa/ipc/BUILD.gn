@@ -114,6 +114,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
     "${clouddisk_database_path}/src/file_column.cpp",
     "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+    "${clouddisk_database_path}/src/clouddisk_sync_helper.cpp",
   ]
 
   sources += cloud_disk_sync

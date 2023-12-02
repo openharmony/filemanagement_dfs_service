@@ -34,7 +34,6 @@ ohos_shared_library("cloudsync_sa") {
     "include/data_sync/gallery_data_sync",
     "include/data_sync/cloud_disk_data_sync",
     "${clouddisk_database_path}/include",
-    "${innerkits_native_path}/cloudsync_kit_inner",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
@@ -71,6 +70,7 @@ ohos_shared_library("cloudsync_sa") {
     "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
     "${clouddisk_database_path}/src/file_column.cpp",
     "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+    "${clouddisk_database_path}/src/clouddisk_sync_helper.cpp",
   ]
 
   gallery_data_sync = [
@@ -130,6 +130,7 @@ ohos_shared_library("cloudsync_sa") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -184,7 +185,6 @@ ohos_static_library("cloudsync_sa_static") {
     "include/data_sync/gallery_data_sync",
     "include/data_sync/cloud_disk_data_sync",
     "${clouddisk_database_path}/include",
-    "${innerkits_native_path}/cloudsync_kit_inner",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
@@ -221,6 +221,7 @@ ohos_static_library("cloudsync_sa_static") {
     "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
     "${clouddisk_database_path}/src/file_column.cpp",
     "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
+    "${clouddisk_database_path}/src/clouddisk_sync_helper.cpp",
   ]
 
   gallery_data_sync = [
@@ -278,6 +279,7 @@ ohos_static_library("cloudsync_sa_static") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
