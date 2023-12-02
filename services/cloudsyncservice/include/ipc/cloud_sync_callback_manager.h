@@ -24,7 +24,7 @@
 #include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudSyncCallbackManager final : public RefBase, public NoCopyable {
+class CloudSyncCallbackManager final : public NoCopyable {
 public:
     static CloudSyncCallbackManager &GetInstance();
     struct CallbackInfo {

@@ -16,6 +16,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_SYNC_ASSET_MANAGER_H
 #define OHOS_FILEMGMT_CLOUD_SYNC_ASSET_MANAGER_H
 
+#include <functional>
 #include <string>
 
 namespace OHOS::FileManagement::CloudSync {
@@ -29,6 +30,7 @@ struct AssetInfo {
 
 class CloudSyncAssetManager {
 public:
+    using ResultCallback = std::function<void(const std::string &, int32_t)>;
     static CloudSyncAssetManager &GetInstance();
     /**
      * @brief 接口触发文件上传
@@ -48,6 +50,19 @@ public:
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfo &assetInfo) = 0;
+    /**
+     * @brief 接口触发文件下载
+     *
+     * @param userId 用户Id
+     * @param bundleName 应用包名
+     * @param assetInfo 下载文件信息
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t DownloadFile(const int32_t userId,
+                                 const std::string &bundleName,
+                                 const std::string &networkId,
+                                 AssetInfo &assetInfo,
+                                 ResultCallback resultCallback) = 0;
     /**
      * @brief 接口触发附件删除
      *

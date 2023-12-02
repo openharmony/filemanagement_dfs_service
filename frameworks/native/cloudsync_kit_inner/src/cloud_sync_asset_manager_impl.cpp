@@ -16,6 +16,7 @@
 #include "cloud_sync_asset_manager_impl.h"
 #include "cloud_sync_service_proxy.h"
 #include "dfs_error.h"
+#include "download_asset_callback_client.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -60,6 +61,15 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
     int32_t ret = CloudSyncServiceProxy->DownloadFile(userId, bundleName, assetInfoObj);
     LOGI("DownloadFile ret %{public}d", ret);
     return ret;
+}
+
+int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
+                                                const std::string &bundleName,
+                                                const std::string &networkId,
+                                                AssetInfo &assetInfo,
+                                                ResultCallback resultCallback)
+{
+    return E_OK;
 }
 
 int32_t CloudSyncAssetManagerImpl::DeleteAsset(const int32_t userId, const std::string &uri)
