@@ -454,7 +454,7 @@ int32_t CloudSyncServiceStub::HandleDownloadAsset(MessageParcel &data, MessagePa
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
-    int64_t taskId = data.ReadUint64();
+    uint64_t taskId = data.ReadUint64();
     int32_t userId = data.ReadInt32();
     string bundleName = data.ReadString();
     string networkId = data.ReadString();
