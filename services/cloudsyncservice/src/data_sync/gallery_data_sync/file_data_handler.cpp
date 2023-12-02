@@ -1168,11 +1168,39 @@ static bool FileIsLocal(NativeRdb::ResultSet &local)
     return !!(static_cast<uint32_t>(position) & 1);
 }
 
+static inline int GetCloudMtime(const DKRecord &record, int64_t &dateModified)
+{
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap attributes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+    if (attributes.find(PhotoColumn::MEDIA_DATE_MODIFIED) == data.end()) {
+        return E_INVAL_ARG;
+    }
+    if (attributes[PhotoColumn::MEDIA_DATE_MODIFIED].GetLong(dateModified) !=  DKLocalErrorCode::NO_ERROR) {
+        return E_INVAL_ARG;
+    }
+    return E_OK;
+}
+
 static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, bool &changed)
 {
+    int64_t localMtime = 0;
+    int64_t dateModified = 0;
+    int ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, localMtime, local);
+    if ((ret == E_OK) && (GetCloudMtime(record, dateModified) == E_OK)) {
+        LOGI("dateModified %{public}llu, localMtime %{public}llu",
+            static_cast<unsigned long long>(dateModified), static_cast<unsigned long long>(localMtime));
+        changed = !(dateModified == localMtime);
+        return E_OK;
+    }
+
     // get local mtime
     int64_t localCrtime = 0;
-    int ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_ADDED, localCrtime, local);
+    ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_ADDED, localCrtime, local);
     if (ret != E_OK) {
         LOGE("Get local ctime failed");
         return E_INVAL_ARG;
