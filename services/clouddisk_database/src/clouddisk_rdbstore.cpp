@@ -24,13 +24,11 @@
 #include "rdb_sql_utils.h"
 #include "utils_log.h"
 #include "dfs_error.h"
-#include "dk_database.h"
 #include "mimetype_utils.h"
 
 namespace OHOS::FileManagement::CloudDisk {
 using namespace std;
 using namespace OHOS::NativeRdb;
-using namespace DriveKit;
 using namespace CloudSync;
 using namespace OHOS::Media;
 

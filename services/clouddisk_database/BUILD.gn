@@ -1,0 +1,63 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+config("clouddisk_database_config") {
+  visibility = [ ":*" ]
+}
+
+ohos_shared_library("clouddisk_database") {
+  include_dirs = [
+    "include",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/utils/include",
+  ]
+
+  sources = [
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
+    "src/clouddisk_rdb_utils.cpp",
+    "src/clouddisk_rdbstore.cpp",
+    "src/clouddisk_sync_helper.cpp",
+    "src/file_column.cpp",
+  ]
+
+  configs = [ ":clouddisk_database_config" ]
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Wno-unused-but-set-variable",
+  ]
+
+  defines = [
+    "LOG_DOMAIN=0xD00430B",
+    "LOG_TAG=\"CLOUDDISK_DATABASE\"",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "relational_store:native_rdb",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
