@@ -414,9 +414,9 @@ inline int32_t FileDataConvertor::HandleTimeZone(DriveKit::DKRecordFieldMap &map
 inline int32_t FileDataConvertor::HandleDescription(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
-    int32_t val;
-    int32_t ret = GetInt(Media::PhotoColumn::PHOTO_USER_COMMENT, val, resultSet);
-    if (ret != E_OK || val == 0) {
+    std::string val;
+    int32_t ret = GetString(Media::PhotoColumn::PHOTO_USER_COMMENT, val, resultSet);
+    if (ret != E_OK) {
         LOGE("Get user comment err %{public}d", ret);
         return E_RDB;
     }

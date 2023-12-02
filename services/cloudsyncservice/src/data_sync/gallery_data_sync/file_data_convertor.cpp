@@ -143,6 +143,7 @@ int32_t FileDataConvertor::HandleCompatibleFileds(DriveKit::DKRecordData &data,
     RETURN_ON_ERR(HandleRecycled(data, resultSet));
     RETURN_ON_ERR(HandleRecycleTime(data, resultSet));
     RETURN_ON_ERR(HandleFavorite(data, resultSet));
+    RETURN_ON_ERR(HandleDescription(data, resultSet));
 
     /* gallery expand fields */
     RETURN_ON_ERR(HandleProperties(data, resultSet));
