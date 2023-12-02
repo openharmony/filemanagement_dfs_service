@@ -22,7 +22,6 @@
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 
-#include "drive_kit.h"
 #include "clouddisk_db_const.h"
 #include "file_column.h"
 #include "cloud_file_utils.h"

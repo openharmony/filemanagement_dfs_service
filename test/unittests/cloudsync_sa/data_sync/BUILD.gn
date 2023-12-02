@@ -56,17 +56,9 @@ ohos_unittest("album_data_handler_test") {
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
-  ]
-
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
   ]
 
   sources += cloud_disk_sync
-  sources += clouddisk_database
 
   include_dirs = [
     "${clouddisk_database_path}/include",
@@ -94,6 +86,7 @@ ohos_unittest("album_data_handler_test") {
   include_dirs += medialibrary_rdb_utils_include
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -166,18 +159,9 @@ ohos_unittest("data_sync_manager_test") {
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
-  ]
-
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
-    "${clouddisk_database_path}/src/clouddisk_sync_helper.cpp",
   ]
 
   sources += cloud_disk_sync
-  sources += clouddisk_database
 
   include_dirs = [
     "${clouddisk_database_path}/include",
@@ -186,6 +170,7 @@ ohos_unittest("data_sync_manager_test") {
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
@@ -204,7 +189,7 @@ ohos_unittest("data_sync_manager_test") {
   include_dirs += medialibrary_rdb_utils_include
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -276,17 +261,9 @@ ohos_unittest("data_handler_test") {
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
-  ]
-
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
   ]
 
   sources += cloud_disk_sync
-  sources += clouddisk_database
 
   include_dirs = [
     "${clouddisk_database_path}/include",
@@ -315,6 +292,7 @@ ohos_unittest("data_handler_test") {
   include_dirs += medialibrary_rdb_utils_include
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -504,17 +482,9 @@ ohos_unittest("gallery_data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
-  ]
-
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
   ]
 
   sources += cloud_disk_sync
-  sources += clouddisk_database
 
   include_dirs = [
     "${clouddisk_database_path}/include",
@@ -542,6 +512,7 @@ ohos_unittest("gallery_data_syncer_test") {
   include_dirs += medialibrary_rdb_utils_include
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -616,17 +587,9 @@ ohos_unittest("data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
-  ]
-
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
   ]
 
   sources += cloud_disk_sync
-  sources += clouddisk_database
 
   include_dirs = [
     "${clouddisk_database_path}/include",
@@ -655,6 +618,7 @@ ohos_unittest("data_syncer_test") {
   include_dirs += medialibrary_rdb_utils_include
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -721,17 +685,9 @@ ohos_unittest("file_data_convertor_test") {
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
-  ]
-
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
   ]
 
   sources += cloud_disk_sync
-  sources += clouddisk_database
 
   include_dirs = [
     "${clouddisk_database_path}/include",
@@ -759,6 +715,7 @@ ohos_unittest("file_data_convertor_test") {
   include_dirs += medialibrary_rdb_utils_include
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -834,17 +791,9 @@ ohos_unittest("sdk_helper_test") {
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
-  ]
-
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
   ]
 
   sources += cloud_disk_sync
-  sources += clouddisk_database
 
   include_dirs = [
     "${clouddisk_database_path}/include",
@@ -872,6 +821,7 @@ ohos_unittest("sdk_helper_test") {
   include_dirs += medialibrary_rdb_utils_include
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -947,18 +897,9 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
-  ]
-
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
-    "${clouddisk_database_path}/src/clouddisk_sync_helper.cpp",
   ]
 
   sources += cloud_disk_sync
-  sources += clouddisk_database
 
   include_dirs = [
     "${clouddisk_database_path}/include",
@@ -966,6 +907,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
@@ -985,7 +927,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
   include_dirs += medialibrary_rdb_utils_include
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -1097,17 +1039,9 @@ ohos_unittest("task_test") {
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
-  ]
-
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
   ]
 
   sources += cloud_disk_sync
-  sources += clouddisk_database
 
   include_dirs = [
     "${clouddisk_database_path}/include",
@@ -1135,6 +1069,7 @@ ohos_unittest("task_test") {
   include_dirs += medialibrary_rdb_utils_include
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",

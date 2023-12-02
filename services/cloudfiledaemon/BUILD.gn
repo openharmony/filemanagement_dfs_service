@@ -24,15 +24,6 @@ ohos_shared_library("cloudfiledaemon") {
     "src/cloud_disk/fuse_operations.cpp",
   ]
 
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
-    "${clouddisk_database_path}/src/clouddisk_sync_helper.cpp",
-  ]
-
-  media_library = [ "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp" ]
-
   sources = [
     "src/fuse_manager/fuse_manager.cpp",
     "src/ipc/cloud_daemon.cpp",
@@ -40,8 +31,6 @@ ohos_shared_library("cloudfiledaemon") {
   ]
 
   sources += cloud_disk
-  sources += clouddisk_database
-  sources += media_library
 
   configs = [ "${utils_path}:compiler_configs" ]
 
@@ -55,13 +44,10 @@ ohos_shared_library("cloudfiledaemon") {
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudsyncservice/include/data_sync/",
     "${clouddisk_database_path}/include",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
-    "${media_library_path}/frameworks/utils/include",
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/libfuse:libfuse",
