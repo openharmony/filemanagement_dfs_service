@@ -12,26 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
-#define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
-
-#include "softbus_handler.h"
-#include <vector>
-
+#ifndef OHOS_STORAGE_FILE_TRANS_LISTENER_INTERFACE_CODE_H
+#define OHOS_STORAGE_FILE_TRANS_LISTENER_INTERFACE_CODE_H
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class SoftBusSessionListener {
-public:
-    static int OnSessionOpened(int sessionId, int result);
-    static void OnSessionClosed(int sessionId);
-
-private:
-    static int32_t QueryActiveUserId();
-    static std::vector<std::string> GetFileName(const std::vector<std::string> &fileList, const std::string &path);
-    static int32_t GetRealPath(const std::string &srcUri);
+enum class FileTransListenerInterfaceCode {
+    FILE_TRANS_LISTENER_ON_PROGRESS = 0,
+    FILE_TRANS_LISTENER_ON_FAILED,
+    FILE_TRANS_LISTENER_ON_FINISHED,
 };
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
+
+#endif //OHOS_STORAGE_FILE_TRANS_LISTENER_INTERFACE_CODE_H

@@ -16,7 +16,10 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_shared_library("libdistributedfiledaemon") {
   include_dirs = [
     "include",
+    "include/network/softbus",
     "//third_party/json/include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
   ]
 
   sources = [
@@ -24,6 +27,8 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/device/device_manager_agent.cpp",
     "src/ipc/daemon.cpp",
     "src/ipc/daemon_stub.cpp",
+    "src/ipc/file_trans_listener_proxy.cpp",
+    "src/ipc/trans_mananger.cpp",
     "src/mountpoint/mount_manager.cpp",
     "src/mountpoint/mount_point.cpp",
     "src/multiuser/os_account_observer.cpp",
@@ -73,7 +78,11 @@ ohos_shared_library("libdistributedfiledaemon") {
 }
 
 config("public_config") {
-  include_dirs = [ "." ]
+  include_dirs = [
+    ".",
+    "${device_manager_path}/interfaces/inner_kits/native_cpp/include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+  ]
 }
 
 config("private_config") {
@@ -91,6 +100,7 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
   ]
 

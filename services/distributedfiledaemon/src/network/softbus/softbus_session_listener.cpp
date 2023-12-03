@@ -75,16 +75,12 @@ int SoftBusSessionListener::OnSessionOpened(int sessionId, int result)
         return E_SOFTBUS_SESSION_FAILED;
     }
 
+    if (GetRealPath(sessionInfo.srcUri) != E_OK) {
+        LOGE("GetRealPath failed");
+        return E_GET_PHYSICAL_PATH_FAILED;
+    }
+
     std::string physicalPath;
-    ret = SandboxHelper::GetPhysicalPath(sessionInfo.srcUri, std::to_string(QueryActiveUserId()), physicalPath);
-    if (ret != E_OK) {
-        LOGE("GetPhysicalPath failed, invalid uri. ret = %{public}d", ret);
-        return ret;
-    }
-    if (!SandboxHelper::CheckValidPath(physicalPath)) {
-        LOGE("invalid path, ret = %{public}d", ret);
-        return E_OK;
-    }
     auto fileList = OHOS::Storage::DistributedFile::Utils::GetFilePath(physicalPath);
     if (fileList.empty()) {
         LOGE("GetFilePath failed or file is empty");
@@ -117,6 +113,21 @@ int SoftBusSessionListener::OnSessionOpened(int sessionId, int result)
 void SoftBusSessionListener::OnSessionClosed(int sessionId)
 {
     LOGI("OnSessionClosed, sessionId = %{public}d", sessionId);
+}
+
+int32_t SoftBusSessionListener::GetRealPath(const std::string &srcUri)
+{
+    std::string physicalPath;
+    auto ret = SandboxHelper::GetPhysicalPath(srcUri, std::to_string(QueryActiveUserId()), physicalPath);
+    if (ret != E_OK) {
+        LOGE("GetPhysicalPath failed, invalid uri. ret = %{public}d", ret);
+        return E_GET_PHYSICAL_PATH_FAILED;
+    }
+    if (!SandboxHelper::CheckValidPath(physicalPath)) {
+        LOGE("invalid path, ret = %{public}d", ret);
+        return E_GET_PHYSICAL_PATH_FAILED;
+    }
+    return E_OK;
 }
 } // namespace DistributedFile
 } // namespace Storage

@@ -12,26 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
-#define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
+#ifndef TRANS_MANANGER_H
+#define TRANS_MANANGER_H
 
-#include "softbus_handler.h"
-#include <vector>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <mutex>
 
+#include "i_file_trans_listener.h"
+#include "refbase.h"
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-class SoftBusSessionListener {
+class TransManager {
 public:
-    static int OnSessionOpened(int sessionId, int result);
-    static void OnSessionClosed(int sessionId);
+    static TransManager &GetInstance();
+
+    void AddTransTask(const std::string &sessionName, const sptr<IFileTransListener> &listener);
+    void NotifyFileProgress(const std::string &sessionName, uint64_t total, uint64_t processed);
+    void NotifyFileFailed(const std::string &sessionName);
+    void NotifyFileFinished(const std::string &sessionName);
+    void DeleteTransTask(const std::string &sessionName);
 
 private:
-    static int32_t QueryActiveUserId();
-    static std::vector<std::string> GetFileName(const std::vector<std::string> &fileList, const std::string &path);
-    static int32_t GetRealPath(const std::string &srcUri);
+    std::mutex sessionTransMapMutex_;
+    std::map<std::string, sptr<IFileTransListener>> sessionTransMap_;
 };
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif // FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
+#endif // TRANS_MANANGER_H

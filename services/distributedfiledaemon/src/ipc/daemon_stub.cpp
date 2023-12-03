@@ -26,18 +26,15 @@ namespace DistributedFile {
 using namespace OHOS::FileManagement;
 DaemonStub::DaemonStub()
 {
-    opToInterfaceMap_[
-        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION)
-    ] = &DaemonStub::HandleOpenP2PConnection;
-    opToInterfaceMap_[
-        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION)
-    ] = &DaemonStub::HandleCloseP2PConnection;
-    opToInterfaceMap_[
-        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION)
-    ] = &DaemonStub::HandlePrepareSession;
-    opToInterfaceMap_[
-        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE)
-    ] = &DaemonStub::HandleRequestSendFile;
+    opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION)] =
+        &DaemonStub::HandleOpenP2PConnection;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION)] =
+        &DaemonStub::HandleCloseP2PConnection;
+    opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION)] =
+        &DaemonStub::HandlePrepareSession;
+    opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE)] =
+        &DaemonStub::HandleRequestSendFile;
 }
 
 int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -116,19 +113,25 @@ int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &rep
     std::string srcUri;
     if (!data.ReadString(srcUri)) {
         LOGE("read srcUri failed");
-        return -1;
+        return E_IPC_READ_FAILED;
     }
     std::string dstUri;
     if (!data.ReadString(dstUri)) {
         LOGE("read dstUri failed");
         return E_IPC_READ_FAILED;
     }
-    std::string remoteDeviceId;
-    if (!data.ReadString(remoteDeviceId)) {
-        LOGE("read remoteDeviceId failed");
+    std::string srcDeviceId;
+    if (!data.ReadString(srcDeviceId)) {
+        LOGE("read srcDeviceId failed");
         return E_IPC_READ_FAILED;
     }
-    int32_t res = PrepareSession(srcUri, dstUri, remoteDeviceId);
+    auto listener = data.ReadRemoteObject();
+    if (listener == nullptr) {
+        LOGE("read listener failed");
+        return E_IPC_READ_FAILED;
+    }
+
+    int32_t res = PrepareSession(srcUri, dstUri, srcDeviceId, listener);
     reply.WriteInt32(res);
     LOGD("End PrepareSession, ret = %{public}d.", res);
     return res;
