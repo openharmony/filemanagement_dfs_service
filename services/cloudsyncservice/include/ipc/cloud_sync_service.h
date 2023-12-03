@@ -18,8 +18,10 @@
 
 #include <map>
 
+#include "iservice_registry.h"
 #include "nocopyable.h"
 #include "system_ability.h"
+#include "system_ability_load_callback_stub.h"
 
 #include "cloud_sync_service_stub.h"
 #include "i_cloud_download_callback.h"
@@ -69,7 +71,20 @@ private:
     void PublishSA();
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     void Init();
-    void HandleStartReason(const SystemAbilityOnDemandReason& startReason);
+    void HandleStartReason(const SystemAbilityOnDemandReason &startReason);
+
+    class LoadRemoteSACallback : public SystemAbilityLoadCallbackStub {
+    public:
+        void OnLoadSACompleteForRemote(const std::string &deviceId,
+                                       int32_t systemAbilityId,
+                                       const sptr<IRemoteObject> &remoteObject);
+        std::condition_variable proxyConVar_;
+        std::atomic<bool> isLoadSuccess_{false};
+    };
+
+    int32_t LoadRemoteSA(const std::string &deviceId);
+
+    static inline std::mutex loadRemoteSAMutex_;
 
     std::shared_ptr<DataSyncManager> dataSyncManager_;
     std::shared_ptr<BatteryStatusListener> batteryStatusListener_;

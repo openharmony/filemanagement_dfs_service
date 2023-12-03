@@ -24,11 +24,13 @@ using namespace std;
 void DownloadAssetCallbackClient::OnFinished(const TaskId taskId, const std::string &uri, const int32_t result)
 {
     auto callback = GetDownloadTaskCallback(taskId);
-    if (!callback) {
+    if (callback) {
+        LOGD("callback");
         callback(uri, result);
     }
     RemoveDownloadTaskCallback(taskId);
-    LOGD("On Download finished, taskId:%{public}" PRIu64 ", uri:%{public}s, ret:%{public}d", taskId, uri.c_str(), result);
+    LOGD("On Download finished, taskId:%{public}" PRIu64 ", uri:%{public}s, ret:%{public}d", taskId, uri.c_str(),
+         result);
 }
 
 void DownloadAssetCallbackClient::AddDownloadTaskCallback(TaskId taskId, CloudSyncAssetManager::ResultCallback callback)

@@ -14,6 +14,9 @@
  */
 
 #include "cloud_sync_asset_manager_impl.h"
+
+#include <cinttypes>
+
 #include "cloud_sync_service_proxy.h"
 #include "dfs_error.h"
 #include "download_asset_callback_client.h"
@@ -86,7 +89,7 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
     downloadAssetCallback_->AddDownloadTaskCallback(taskId, resultCallback);
     AssetInfoObj assetInfoObj(assetInfo);
     int32_t ret = CloudSyncServiceProxy->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
-    LOGI("DownloadFile ret %{public}d", ret);
+    LOGI("DownloadFile ret %{public}d, taskId:%{public}" PRIu64 "", ret, taskId);
     return ret;
 }
 
