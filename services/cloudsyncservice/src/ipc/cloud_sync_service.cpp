@@ -22,10 +22,12 @@
 #include "data_sync_const.h"
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
+#include "file_transfer_manager.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
 #include "sandbox_helper.h"
+#include "session_manager.h"
 #include "sdk_helper.h"
 #include "sync_rule/battery_status.h"
 #include "sync_rule/cloud_status.h"
@@ -66,6 +68,10 @@ void CloudSyncService::Init()
     /* Get Init Charging status */
     BatteryStatus::GetInitChargingStatus();
     ScreenStatus::InitScreenStatus();
+    auto sessionManager = make_shared<SessionManager>();
+    sessionManager->Init();
+    fileTransferManager_ = make_shared<FileTransferManager>(sessionManager);
+    fileTransferManager_->Init();
 }
 
 std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userId)
@@ -454,14 +460,17 @@ int32_t CloudSyncService::DownloadAsset(const uint64_t taskId,
                                         const std::string &networkId,
                                         AssetInfoObj &assetInfoObj)
 {
+    if (networkId == "edge2cloud") {
+        LOGE("now not support");
+        return E_INVAL_ARG;
+    }
     // Load sa for remote device
     if (LoadRemoteSA(networkId) != E_OK) { // maybe need to convert deviceId
         return E_SA_LOAD_FAILED;
     }
 
     string uri = assetInfoObj.uri;
-    int32_t ret = 0;
-    DownloadAssetCallbackManager::GetInstance().OnDownloadFinshed(taskId, uri, ret);
+    fileTransferManager_->DownloadFileFromRemoteDevice(networkId, userId, taskId, uri);
     return E_OK;
 }
 

@@ -81,8 +81,9 @@ public:
     std::string GetUri();
     std::string GetSrcNetworkId();
     std::string GetDstNetworkId();
+
 private:
-    MessageHeader msgHdr_ {0};
+    MessageHeader msgHdr_{0};
     std::string srcNetworkId_;
     std::string dstNetworkId_;
     std::string uri_;
