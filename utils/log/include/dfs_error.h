@@ -65,6 +65,11 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_IPC_READ_FAILED,
     E_IPC_WRITE_FAILED,
     E_SOFTBUS_SESSION_FAILED,
+    /* session */
+    E_CREATE_SESSION,
+    E_OPEN_SESSION,
+    E_WAIT_SESSION_OPENED,
+    E_FILE_NOT_EXIST,
 };
 
 enum JsErrCode {

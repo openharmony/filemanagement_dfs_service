@@ -121,6 +121,8 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
+    "${services_path}/cloudsyncservice/include/transport",
+    "${services_path}/cloudsyncservice/include/transport/softbus",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
@@ -140,6 +142,16 @@ ohos_unittest("cloud_sync_service_test") {
   sources += medialibrary_rdb_utils_source
   include_dirs += medialibrary_rdb_utils_include
 
+  transport = [
+    "${services_path}/cloudsyncservice/src/transport/file_transfer_manager.cpp",
+    "${services_path}/cloudsyncservice/src/transport/message_handler.cpp",
+    "${services_path}/cloudsyncservice/src/transport/softbus/session_manager.cpp",
+    "${services_path}/cloudsyncservice/src/transport/softbus/softbus_adapter.cpp",
+    "${services_path}/cloudsyncservice/src/transport/softbus/softbus_session.cpp",
+  ]
+
+  sources += transport
+
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
@@ -157,6 +169,7 @@ ohos_unittest("cloud_sync_service_test") {
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
     "dfs_service:cloudsync_kit_inner",
+    "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
