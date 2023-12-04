@@ -56,7 +56,6 @@ void SoftBusFileReceiveListener::OnReceiveFileFinished(int sessionId, const char
 {
     LOGD("OnReceiveFileFinished, sessionId = %{public}d, files = %{public}s, fileCnt = %{public}d", sessionId, files,
          fileCnt);
-    SoftBusHandler::GetInstance().RemoveSession(sessionId, true);
     char sessionName[MAX_SIZE] = {};
     auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
     if (ret != E_OK) {
@@ -65,20 +64,21 @@ void SoftBusFileReceiveListener::OnReceiveFileFinished(int sessionId, const char
     }
     TransManager::GetInstance().NotifyFileFinished(sessionName);
     TransManager::GetInstance().DeleteTransTask(sessionName);
+    SoftBusHandler::GetInstance().RemoveSession(sessionId, true);
 }
 
 void SoftBusFileReceiveListener::OnFileTransError(int sessionId)
 {
     LOGD("OnFileTransError, sessionId = %{public}d", sessionId);
-    SoftBusHandler::GetInstance().RemoveSession(sessionId);
     char sessionName[MAX_SIZE] = {};
     auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
     if (ret != E_OK) {
         LOGE("GetMySessionName failed, ret = %{public}d", ret);
         return;
     }
-    TransManager::GetInstance().NotifyFileFinished(sessionName);
+    TransManager::GetInstance().NotifyFileFailed(sessionName);
     TransManager::GetInstance().DeleteTransTask(sessionName);
+    SoftBusHandler::GetInstance().RemoveSession(sessionId);
 }
 } // namespace DistributedFile
 } // namespace Storage

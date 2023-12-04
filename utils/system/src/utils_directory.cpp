@@ -95,6 +95,10 @@ bool IsFolder(const std::string &name)
 std::vector<std::string> GetFilePath(const std::string &name)
 {
     std::vector<std::string> path;
+    if (!IsFolder(name)) {
+        path.emplace_back(name);
+        return path;
+    }
     auto dir = opendir(name.data());
     struct dirent *ent = nullptr;
     if (dir) {
