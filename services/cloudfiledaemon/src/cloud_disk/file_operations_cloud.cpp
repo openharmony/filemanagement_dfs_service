@@ -21,6 +21,7 @@
 #include "cloud_disk_inode.h"
 #include "cloud_file_utils.h"
 #include "database_manager.h"
+#include "directory_ex.h"
 #include "dk_database.h"
 #include "drive_kit.h"
 #include "file_operations_helper.h"
@@ -133,25 +134,114 @@ void FileOperationsCloud::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
     fuse_reply_attr(req, &inoPtr->stat, 0);
 }
 
+static bool HandleDkError(fuse_req_t req, DriveKit::DKError dkError)
+{
+    if (!dkError.HasError()) {
+        return false;
+    }
+    if ((dkError.serverErrorCode == static_cast<int>(DriveKit::DKServerErrorCode::NETWORK_ERROR))
+        || dkError.dkErrorCode == DriveKit::DKLocalErrorCode::DOWNLOAD_REQUEST_ERROR) {
+        LOGE("network error");
+        fuse_reply_err(req, ENOTCONN);
+    } else if (dkError.isServerError) {
+        LOGE("server errorCode is: %d", dkError.serverErrorCode);
+        fuse_reply_err(req, EIO);
+    } else if (dkError.isLocalError) {
+        LOGE("local errorCode is: %d", dkError.dkErrorCode);
+        fuse_reply_err(req, EINVAL);
+    }
+    return true;
+}
+
+static shared_ptr<DriveKit::DKDatabase> GetDatabase(int32_t userId, string bundleName)
+{
+    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
+    if (driveKit == nullptr) {
+        LOGE("sdk helper get drive kit instance fail");
+        return nullptr;
+    }
+
+    auto container = driveKit->GetDefaultContainer(bundleName);
+    if (container == nullptr) {
+        LOGE("sdk helper get drive kit container fail");
+        return nullptr;
+    }
+
+    shared_ptr<DriveKit::DKDatabase> database = container->GetPrivateDatabase();
+    if (data->database == nullptr) {
+        LOGE("sdk helper get drive kit database fail");
+        return nullptr;
+    }
+    return database;
+}
+
+static void CloudOpen(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi, string path)
+{
+    audo *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    shared_ptr<DriveKit::DKDatabase> database = GetDatabase(data->userId, inoPtr->bundleName);
+    std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+
+    if (!database) {
+        fuse_reply_err(req, EPERM);
+        LOGE("database is null");
+        return;
+    }
+
+    wSesLock.lock();
+    if (!inoPtr->readSession) {
+        string cloudId = inoPtr->cloudId;
+        LOGD("cloudId: %s", cloudId.c_str());
+        inoPtr->readSession = database->NewAssetReadSession("file", cloudId, "content", path)
+        if (inoPtr->readSession) {
+            DriveKit::DKError dkError = inoPtr->readSession->InitSession();
+            if (!HandleDkError(req, dkError)) {
+                inoPtr->sessionRefCount++;
+                LOGD("open success, sessionRefCount: %d", inoPtr->sessionRefCount.load());
+                fuse_reply_open(req, fi);
+            } else {
+                inoPtr->readSession = nullptr;
+                LOGE("open fali");
+            }
+            wSesLock.unlock();
+            return;
+        }
+    }
+    if (!inoPtr->readSession) {
+        fuse_reply_err(req, EPERM);
+        LOGE("readSession is null");
+    } else {
+        inoPtr->sessionRefCount++;
+        LOGD("open success, sessionRefCount: %d", cInode->sessionRefCount.load());
+        fuse_reply_open(req, fi);
+    }
+    wSesLock.unlock();
+}
+
 void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
     string path = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
-    if ((fi->flags & O_ACCMODE) & O_WRONLY) {
-        fi->flags &= ~O_WRONLY;
-        fi->flags |= O_RDWR;
+    if (access(path.c_str(), F_OK) == 0) {
+        if ((fi->flags & O_ACCMODE) & O_WRONLY) {
+            fi->flags &= ~O_WRONLY;
+            fi->flags |= O_RDWR;
+        }
+        if (fi->flags & O_APPEND) {
+            fi->flags &= ~O_APPEND;
+        }
+        int32_t fd = open(path.c_str(), fi->flags);
+        if (fd < 0) {
+            LOGE("open file failed path:%{public}s errno:%{public}d", path.c_str(), errno);
+            return (void) fuse_reply_err(req, errno);
+        }
+        fi->fh = fd;
+        fuse_reply_open(req, fi);
+    } else {
+        path = path.substr(0, path.find_last_of("/"));
+        CloudOpen(req, ino, fi, path);
     }
-    if (fi->flags & O_APPEND) {
-        fi->flags &= ~O_APPEND;
-    }
-    int32_t fd = open(path.c_str(), fi->flags);
-    if (fd < 0) {
-        LOGE("open file failed path:%{public}s errno:%{public}d", path.c_str(), errno);
-        return (void) fuse_reply_err(req, errno);
-    }
-    fi->fh = fd;
-    fuse_reply_open(req, fi);
 }
 
 void FileOperationsCloud::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLookup)
@@ -188,28 +278,6 @@ void FileOperationsCloud::ForgetMulti(fuse_req_t req, size_t count, struct fuse_
         FileOperationsHelper::PutCloudDiskInode(data, node, forgets[i].nlookup);
     }
     fuse_reply_none(req);
-}
-
-static shared_ptr<DriveKit::DKDatabase> GetDatabase(int32_t userId, string bundleName)
-{
-    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
-    if (driveKit == nullptr) {
-        LOGE("sdk helper get drive kit instance fail");
-        return nullptr;
-    }
-
-    auto container = driveKit->GetDefaultContainer(bundleName);
-    if (container == nullptr) {
-        LOGE("sdk helper get drive kit container fail");
-        return nullptr;
-    }
-
-    shared_ptr<DriveKit::DKDatabase> database = container->GetPrivateDatabase();
-    if (database == nullptr) {
-        LOGE("sdk helper get drive kit database fail");
-        return nullptr;
-    }
-    return database;
 }
 
 static int32_t CreateLocalFile(const string &cloudId, const string &bundleName, int32_t userId, mode_t mode)
@@ -567,8 +635,25 @@ void FileOperationsCloud::Write(fuse_req_t req, fuse_ino_t ino,  const char *buf
 
 void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
-    close(fi->fh);
-    fuse_reply_err(req, 0);
+    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    if (!inoPtr->readSession) {
+        close(fi->fh);
+        fuse_reply_err(req, 0);
+    } else {
+        std::unique_lock<std::shared_mutex> wSesLock(inoPtr->sessionLock, std::defer_lock);
+
+        wSesLock.lock();
+        cInode->sessionRefCount--;
+        if (cInode->sessionRefCount == 0) {
+            bool res = cInode->readSession->Close(false);
+            if (!res) {
+                LOGE("close error");
+            }
+            cInode->readSession = nullptr;
+            LOGD("readSession released");
+        }
+        wSesLock.unlock();
+    }
 }
 
 void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
