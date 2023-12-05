@@ -158,7 +158,6 @@ int32_t SdkHelper::ChangesNotify(ChangesNotifyCallback callback)
     return E_OK;
 }
 
-void SdkHelper::ReleaseDownloader() {}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

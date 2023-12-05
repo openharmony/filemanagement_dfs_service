@@ -989,7 +989,6 @@ SyncState DataSyncer::GetSyncState() const
 int32_t DataSyncer::CompletePull()
 {
     LOGI("%{private}d %{private}s completes pull", userId_, bundleName_.c_str());
-    sdkHelper_->ReleaseDownloader();
     /* call syncer manager callback */
     auto error = GetErrorType();
     if (error) {

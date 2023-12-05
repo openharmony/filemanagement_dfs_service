@@ -189,12 +189,6 @@ int32_t SdkHelper::DownloadAssets(DriveKit::DKDownloadAsset &assetsToDownload)
     return E_OK;
 }
 
-void SdkHelper::ReleaseDownloader()
-{
-    lock_guard<mutex> lock{downloaderMutex_};
-    downloader_ = nullptr;
-}
-
 int32_t SdkHelper::CancelDownloadAssets(int32_t id)
 {
     return static_cast<int32_t>(downloader_->CancelDownloadAssets(id));
