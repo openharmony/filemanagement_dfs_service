@@ -280,6 +280,7 @@ int32_t Daemon::LoadRemoteSA(const std::string &srcUri,
 
 void Daemon::RemoveSession(const std::string &sessionName)
 {
+    TransManager::GetInstance().DeleteTransTask(sessionName);
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
     RemoveSessionServer(IDaemon::SERVICE_NAME.c_str(), sessionName.c_str());
 }

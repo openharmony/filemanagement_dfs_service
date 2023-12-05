@@ -29,7 +29,10 @@ public:
 private:
     static int32_t QueryActiveUserId();
     static std::vector<std::string> GetFileName(const std::vector<std::string> &fileList, const std::string &path);
-    static int32_t GetRealPath(const std::string &srcUri);
+    static std::string GetRealPath(const std::string &srcUri);
+    static std::string GetBundleName(const std::string &uri);
+    static std::string GetSandboxPath(const std::string &uri);
+    static std::string GetLocalUri(const std::string &uri);
 };
 } // namespace DistributedFile
 } // namespace Storage
