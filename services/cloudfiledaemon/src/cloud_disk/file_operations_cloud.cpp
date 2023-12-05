@@ -168,7 +168,7 @@ static shared_ptr<DriveKit::DKDatabase> GetDatabase(int32_t userId, string bundl
     }
 
     shared_ptr<DriveKit::DKDatabase> database = container->GetPrivateDatabase();
-    if (data->database == nullptr) {
+    if (database == nullptr) {
         LOGE("sdk helper get drive kit database fail");
         return nullptr;
     }
@@ -177,10 +177,10 @@ static shared_ptr<DriveKit::DKDatabase> GetDatabase(int32_t userId, string bundl
 
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi, string path)
 {
-    audo *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
     shared_ptr<DriveKit::DKDatabase> database = GetDatabase(data->userId, inoPtr->bundleName);
-    std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+    std::unique_lock<std::shared_mutex> wSesLock(inoPtr->sessionLock, std::defer_lock);
 
     if (!database) {
         fuse_reply_err(req, EPERM);
@@ -192,7 +192,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi,
     if (!inoPtr->readSession) {
         string cloudId = inoPtr->cloudId;
         LOGD("cloudId: %s", cloudId.c_str());
-        inoPtr->readSession = database->NewAssetReadSession("file", cloudId, "content", path)
+        inoPtr->readSession = database->NewAssetReadSession("file", cloudId, "content", path);
         if (inoPtr->readSession) {
             DriveKit::DKError dkError = inoPtr->readSession->InitSession();
             if (!HandleDkError(req, dkError)) {
@@ -212,7 +212,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi,
         LOGE("readSession is null");
     } else {
         inoPtr->sessionRefCount++;
-        LOGD("open success, sessionRefCount: %d", cInode->sessionRefCount.load());
+        LOGD("open success, sessionRefCount: %d", inoPtr->sessionRefCount.load());
         fuse_reply_open(req, fi);
     }
     wSesLock.unlock();
@@ -643,13 +643,13 @@ void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
         std::unique_lock<std::shared_mutex> wSesLock(inoPtr->sessionLock, std::defer_lock);
 
         wSesLock.lock();
-        cInode->sessionRefCount--;
-        if (cInode->sessionRefCount == 0) {
-            bool res = cInode->readSession->Close(false);
+        inoPtr->sessionRefCount--;
+        if (inoPtr->sessionRefCount == 0) {
+            bool res = inoPtr->readSession->Close(false);
             if (!res) {
                 LOGE("close error");
             }
-            cInode->readSession = nullptr;
+            inoPtr->readSession = nullptr;
             LOGD("readSession released");
         }
         wSesLock.unlock();

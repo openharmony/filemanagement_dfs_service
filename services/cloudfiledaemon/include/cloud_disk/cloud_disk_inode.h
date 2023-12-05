@@ -60,7 +60,6 @@ struct CloudDiskFuseData {
     std::shared_ptr<CloudDiskInode> rootNode{nullptr};
     std::unordered_map<std::string, std::shared_ptr<CloudDiskInode>> inodeCache;
     std::shared_mutex cacheLock;
-    shared_ptr<DriveKit::DKDatabase> database;
     struct fuse_session *se;
 };
 } // namespace CloudDisk
