@@ -210,39 +210,12 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi,
             inoPtr->readSession = nullptr;
             LOGE("open fali");
         }
-        wSesLock.unlock();
-        return;
     } else {
         fuse_reply_err(req, EPERM);
         LOGE("readSession is null");
-    }
-    if (!inoPtr->readSession) {
-        string cloudId = inoPtr->cloudId;
-        LOGD("cloudId: %s", cloudId.c_str());
-        inoPtr->readSession = database->NewAssetReadSession("file", cloudId, "content", path);
-        if (inoPtr->readSession) {
-            DriveKit::DKError dkError = inoPtr->readSession->InitSession();
-            if (!HandleDkError(req, dkError)) {
-                inoPtr->sessionRefCount++;
-                LOGD("open success, sessionRefCount: %d", inoPtr->sessionRefCount.load());
-                fuse_reply_open(req, fi);
-            } else {
-                inoPtr->readSession = nullptr;
-                LOGE("open fali");
-            }
-            wSesLock.unlock();
-            return;
-        }
-    }
-    if (!inoPtr->readSession) {
-        fuse_reply_err(req, EPERM);
-        LOGE("readSession is null");
-    } else {
-        inoPtr->sessionRefCount++;
-        LOGD("open success, sessionRefCount: %d", inoPtr->sessionRefCount.load());
-        fuse_reply_open(req, fi);
     }
     wSesLock.unlock();
+    return;
 }
 
 void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
