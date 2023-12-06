@@ -736,6 +736,12 @@ void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
         return;
     }
 
+    if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT)) {
+        LOGE("network status abnormal, abort upload");
+        SetErrorCodeMask(ErrorType::WIFI_UNAVAILABLE);
+        return;
+    }
+
     /* upload */
     auto callback = AsyncCallback(&DataSyncer::OnCreateRecords);
     if (callback == nullptr) {
@@ -768,6 +774,12 @@ void DataSyncer::DeleteRecords(shared_ptr<TaskContext> context)
 
     /* no need upload */
     if (records.size() == 0) {
+        return;
+    }
+
+    if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT)) {
+        LOGE("network status abnormal, abort upload");
+        SetErrorCodeMask(ErrorType::WIFI_UNAVAILABLE);
         return;
     }
 
@@ -806,6 +818,12 @@ void DataSyncer::ModifyMdirtyRecords(shared_ptr<TaskContext> context)
         return;
     }
 
+    if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT)) {
+        LOGE("network status abnormal, abort upload");
+        SetErrorCodeMask(ErrorType::WIFI_UNAVAILABLE);
+        return;
+    }
+
     /* upload */
     auto callback = AsyncCallback(&DataSyncer::OnModifyMdirtyRecords);
     if (callback == nullptr) {
@@ -838,6 +856,12 @@ void DataSyncer::ModifyFdirtyRecords(shared_ptr<TaskContext> context)
 
     /* no need upload */
     if (records.size() == 0) {
+        return;
+    }
+
+    if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT)) {
+        LOGE("network status abnormal, abort upload");
+        SetErrorCodeMask(ErrorType::WIFI_UNAVAILABLE);
         return;
     }
 
