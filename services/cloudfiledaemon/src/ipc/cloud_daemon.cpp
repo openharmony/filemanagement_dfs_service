@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <thread>
 #include <malloc.h>
+#include <sys/stat.h>
 
 #include "iremote_object.h"
 #include "system_ability_definition.h"
@@ -58,6 +59,8 @@ void CloudDaemon::OnStart()
     try {
         PublishSA();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+        mode_t mode = 002;
+        umask(mode);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
