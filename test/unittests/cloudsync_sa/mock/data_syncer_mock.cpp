@@ -67,7 +67,7 @@ void DataSyncer::SetErrorCodeMask(ErrorType errorType)
 {
 }
 
-int32_t DataSyncer::ActualClean(int action)
+int32_t DataSyncer::ActualClean()
 {
     return E_OK;
 }

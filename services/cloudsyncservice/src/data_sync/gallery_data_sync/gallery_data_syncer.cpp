@@ -115,14 +115,15 @@ int32_t GalleryDataSyncer::Clean(const int action)
         LOGE("gallery data syncer file cancel download err %{public}d", ret);
     }
     DeleteSubscription();
-    ret = fileHandler_->MarkClean();
+    ret = fileHandler_->MarkClean(action);
     PutHandler();
     CompleteClean();
     return ret;
 }
 
-int32_t GalleryDataSyncer::ActualClean(const int action)
+int32_t GalleryDataSyncer::ActualClean()
 {
+    int32_t action = CleanAction::RETAIN_DATA;
     int32_t ret = GetHandler();
     if (ret != E_OK) {
         return ret;

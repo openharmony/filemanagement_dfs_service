@@ -202,7 +202,7 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
 
     /* check local file conflict */
     bool comflag = false;
-    int ret = PullRecordConflict(record, comflag);
+    int32_t ret = PullRecordConflict(record, comflag);
     if (comflag) {
         LOGI("Conflict:same document no Insert");
         return E_OK;
@@ -385,6 +385,7 @@ int32_t CloudDiskDataHandler::CleanCloudRecord(const int32_t action)
             break;
         }
         while (resultSet->GoToNextRow() == 0) {
+            string cloudId;
             ret = DataConvertor::GetString(FC::CLOUD_ID, cloudId, *resultSet);
             string localPath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
             if (ret != E_OK) {

@@ -151,6 +151,10 @@ int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string &bundl
 int32_t DataSyncManager::RestoreClean(const std::string &bundleName, const int32_t userId)
 {
     auto dataSyncer = GetDataSyncer(bundleName, userId);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+        return E_INVAL_ARG;
+    }
     return dataSyncer->CancelClean();
 }
 
@@ -263,7 +267,6 @@ int32_t DataSyncManager::CleanCloudFile(const int32_t userId, const std::string 
         LOGE(" Clean Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_INVAL_ARG;
     }
-
     LOGD("bundleName:%{private}s, userId:%{private}d", dataSyncer->GetBundleName().c_str(), dataSyncer->GetUserId());
     return dataSyncer->Clean(action);
 }
@@ -343,4 +346,3 @@ int32_t DataSyncManager::CleanCache(const string &bundleName, const int32_t user
     return dataSyncer->CleanCache(uri);
 }
 } // namespace OHOS::FileManagement::CloudSync
- 

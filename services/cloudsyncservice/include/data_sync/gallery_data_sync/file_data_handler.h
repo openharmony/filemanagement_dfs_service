@@ -23,7 +23,6 @@
 #include "cloud_pref_impl.h"
 #include "rdb_data_handler.h"
 #include "file_data_convertor.h"
-#include <vector>
 
 namespace OHOS {
 namespace FileManagement {
@@ -53,7 +52,7 @@ public:
     /*clean*/
     int32_t Clean(const int action) override;
     int32_t UnMarkClean();
-    int32_t MarkClean();
+    int32_t MarkClean(const int32_t action);
 
     /* upload */
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;
@@ -143,10 +142,10 @@ private:
     /*clean*/
     FileDataConvertor cleanConvertor_ = { userId_, bundleName_, FILE_CLEAN };
     int32_t ClearCloudInfo(const std::string &cloudId);
-    int32_t CleanCloudRecord(NativeRdb::ResultSet &local, const int action, const std::string &filePath);
-    int32_t CleanNotDirtyData(const std::string &thmbDir, const std::string &assetPath, const std::string &cloudId);
-    int32_t CleanNotPureCloudRecord(NativeRdb::ResultSet &local, const int action, const std::string &filePath);
-    int32_t CleanPureCloudRecord(NativeRdb::ResultSet &local, const int action, const std::string &filePath);
+    int32_t CleanAllCloudInfo();
+    int32_t CleanNotDirtyData();
+    int32_t CleanNotPureCloudRecord();
+    int32_t CleanPureCloudRecord();
     int32_t DeleteDentryFile(void);
 
     /* err handle */

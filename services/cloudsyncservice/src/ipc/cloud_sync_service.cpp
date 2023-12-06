@@ -328,8 +328,12 @@ int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
     vector<std::string> bundleNames = {GALLERY_BUNDLE_NAME};
     for (std::string bundleName : bundleNames) {
         auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, callerUserId);
-        dataSyncer->Clean(CleanAction::CLEAR_DATA);
-        dataSyncer->ActualClean(CleanAction::CLEAR_DATA);
+        if (!dataSyncer) {
+            LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+            return E_INVAL_ARG;
+        }
+        dataSyncer->Clean(CleanAction::RETAIN_DATA);
+        dataSyncer->ActualClean();
     }
     return E_OK;
 }
