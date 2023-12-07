@@ -327,7 +327,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
             BatchInsertAssetMaps(params);
         }
     }
-    UpdateAlbumInternal();
+    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
     LOGI("after BatchInsert ret %{public}d", ret);
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
@@ -1041,7 +1041,7 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
         }
     }
 
-    UpdateAlbumInternal();
+    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
     return E_OK;
 }
 
@@ -1065,7 +1065,7 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
     }
 
     DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
-    UpdateAlbumInternal();
+    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
     MetaFileMgr::GetInstance().ClearAll();
     return E_OK;
 }
@@ -1134,12 +1134,6 @@ static bool LocalWriteOpen(const string &dfsPath)
 
     close(fd);
     return writeOpenCnt != 0;
-}
-
-void FileDataHandler::UpdateAlbumInternal()
-{
-    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
 }
 
 int FileDataHandler::SetRetry(const string &recordId)
@@ -1808,7 +1802,7 @@ int32_t FileDataHandler::Clean(const int action)
         LOGE("Clean remove dentry failed, res:%{public}d", res);
         return res;
     }
-    UpdateAlbumInternal();
+    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
@@ -1943,7 +1937,7 @@ int32_t FileDataHandler::UnMarkClean()
     int32_t ret =
         Update(changedRows, PC::PHOTOS_TABLE, values,
         PC::PHOTO_CLEAN_FLAG + " = ?", whereArgs);
-    UpdateAlbumInternal();
+    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
@@ -1965,7 +1959,7 @@ int32_t FileDataHandler::MarkClean(const int32_t action)
     }
     int32_t ret =
         Update(changedRows, PC::PHOTOS_TABLE, values, whereClause, whereArgs);
-    UpdateAlbumInternal();
+    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
