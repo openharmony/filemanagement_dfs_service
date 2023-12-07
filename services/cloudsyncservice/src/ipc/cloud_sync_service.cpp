@@ -325,13 +325,7 @@ int32_t CloudSyncService::NotifyEventChange(int32_t userId, const std::string &e
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    vector<std::string> bundleNames = {GALLERY_BUNDLE_NAME};
-    for (std::string bundleName : bundleNames) {
-        auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, callerUserId);
-        dataSyncer->Clean(CleanAction::CLEAR_DATA);
-        dataSyncer->ActualClean(CleanAction::CLEAR_DATA);
-    }
-    return E_OK;
+    return dataSyncManager_->DisableCloud(callerUserId);
 }
 
 int32_t CloudSyncService::EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData)
