@@ -152,6 +152,10 @@ int32_t DataSyncManager::RestoreClean(const std::string &bundleName, const int32
 {
     std::lock_guard<std::mutex> lck(cleanMutex_);
     auto dataSyncer = GetDataSyncer(bundleName, userId);
+    if (!dataSyncer) {
+        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+        return E_INVAL_ARG;
+    }
     return dataSyncer->CancelClean();
 }
 
@@ -373,9 +377,8 @@ int32_t DataSyncManager::DisableCloud(const int32_t userId)
         if (ret != E_OK) {
             return ret;
         }
-        dataSyncer->ActualClean(CleanAction::CLEAR_DATA);
+        dataSyncer->ActualClean();
     }
     return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync
- 

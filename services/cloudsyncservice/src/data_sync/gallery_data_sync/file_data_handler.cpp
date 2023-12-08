@@ -37,6 +37,7 @@
 #include "gallery_album_const.h"
 #include "gallery_file_const.h"
 #include "media_column.h"
+#include "medialibrary_errno.h"
 #include "medialibrary_rdb_utils.h"
 #include "meta_file.h"
 #include "thumbnail_const.h"
@@ -1784,29 +1785,6 @@ int32_t FileDataHandler::ClearCloudInfo(const string &cloudId)
     return ret;
 }
 
-int32_t FileDataHandler::CleanPureCloudRecord(NativeRdb::ResultSet &local, const int action,
-                                              const std::string &filePath)
-{
-    int res = E_OK;
-    RemoveThmParentPath(filePath);
-    int32_t deleteRows = 0;
-    string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-    string cloudId;
-    res = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, local);
-    if (res != E_OK) {
-        LOGE("Get cloud_id fail");
-        return res;
-    }
-    res = Delete(deleteRows, whereClause, {cloudId});
-    LOGD("RDB Delete result: %d, deleteRows is: %d", res, deleteRows);
-    if (res != 0) {
-        LOGE("Clean delete in rdb failed, res:%{public}d", res);
-        return E_RDB;
-    }
-    DeleteAssetInPhotoMap(deleteRows);
-    return E_OK;
-}
-
 static int32_t DeleteAsset(const string &assetPath)
 {
     int ret = E_OK;
@@ -1821,140 +1799,139 @@ static int32_t DeleteAsset(const string &assetPath)
     return ret;
 }
 
-int32_t FileDataHandler::CleanNotDirtyData(const string &thmbDir, const string &assetPath, const string &cloudId)
-{
-    int ret = E_OK;
-    ForceRemoveDirectory(thmbDir);
-    ret = DeleteAsset(assetPath);
-    if (ret != E_OK) {
-        LOGE("Clean remove assetPath failed, errno %{public}d", ret);
-        return ret;
-    }
-    int32_t deleteRows = 0;
-    std::string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-    ret = Delete(deleteRows, whereClause, {cloudId});
-    LOGD("RDB Delete result: %d, deleteRows is: %d", ret, deleteRows);
-    if (ret != 0) {
-        LOGE("Clean delete in rdb failed, ret:%{public}d", ret);
-        return ret;
-    }
-    DeleteAssetInPhotoMap(deleteRows);
-    return ret;
-}
-
-int32_t FileDataHandler::CleanNotPureCloudRecord(NativeRdb::ResultSet &local, const int action,
-                                                 const std::string &filePath)
-{
-    string cloudId;
-    int res = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, local);
-    if (res != E_OK) {
-        LOGE("Get cloud_id fail");
-        return res;
-    }
-    string lowerPath = cleanConvertor_.GetLowerPath(filePath);
-    string thmbFile = cleanConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
-    filesystem::path thmbFilePath(thmbFile.c_str());
-    filesystem::path thmbFileParentPath = thmbFilePath.parent_path();
-    LOGD("filePath: %s, thmbFile: %s, thmbFileParentPath: %s, lowerPath: %s", filePath.c_str(),
-         thmbFile.c_str(), thmbFileParentPath.string().c_str(), lowerPath.c_str());
-    int32_t ret = E_OK;
-    if (action == CleanAction::CLEAR_DATA) {
-        if (IsLocalDirty(local)) {
-            LOGD("data is dirty, action:clear");
-            ret = ClearCloudInfo(cloudId);
-            if (ret != E_OK) {
-                LOGE("Clean Update in rdb failed, ret:%{public}d", ret);
-                return ret;
-            }
-        } else {
-            LOGD("data is not dirty, action:clear.");
-            ret = CleanNotDirtyData(thmbFileParentPath.string(), lowerPath, cloudId);
-            if (ret != 0) {
-                LOGE("Clean dirty data failed.");
-                return ret;
-            }
-        }
-    } else {
-        LOGD("action:retain");
-        ret = ClearCloudInfo(cloudId);
-        if (ret != E_OK) {
-            LOGE("Clean Update in rdb failed, ret:%{public}d", ret);
-            return ret;
-        }
-    }
-    return E_OK;
-}
-
-int32_t FileDataHandler::CleanCloudRecord(NativeRdb::ResultSet &local, const int action,
-                                          const std::string &filePath)
-{
-    int res = E_OK;
-    if (!FileIsLocal(local)) {
-        LOGD("File is pure cloud data");
-        res = CleanPureCloudRecord(local, action, filePath);
-        if (res != E_OK) {
-            LOGE("Clean pure cloud record failed, res:%{public}d", res);
-            return res;
-        }
-    } else {
-        LOGD("File is not pure cloud data");
-        res = CleanNotPureCloudRecord(local, action, filePath);
-        if (res != E_OK) {
-            LOGE("Clean no pure cloud record failed, res:%{public}d", res);
-            return res;
-        }
-    }
-    return res;
-}
-
 int32_t FileDataHandler::Clean(const int action)
 {
-    LOGD("Enter function FileDataHandler::Clean");
-    int res = E_OK;
-    NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    cleanPredicates.IsNotNull(PhotoColumn::PHOTO_CLOUD_ID);
-    cleanPredicates.Limit(LIMIT_SIZE);
-    while (1) {
-        auto resultSet = Query(cleanPredicates, CLEAN_QUERY_COLUMNS);
-        if (resultSet == nullptr) {
-            LOGE("get nullptr result");
-            return E_RDB;
-        }
-        int count = 0;
-        res = resultSet->GetRowCount(count);
-        if (res != E_OK || count == 0) {
-            LOGE("get row count error or row count is 0, res: %{public}d", res);
-            break;
-        }
-        NativeRdb::ResultSet *resultSetPtr = resultSet.get();
-
-        while (resultSet->GoToNextRow() == 0) {
-            string filePath;
-            res = DataConvertor::GetString(PhotoColumn::MEDIA_FILE_PATH, filePath, *resultSetPtr);
-            if (res != E_OK) {
-                LOGE("Get path wrong");
-                return E_INVAL_ARG;
-            }
-            res = CleanCloudRecord(*resultSetPtr, action, filePath);
-            if (res != E_OK) {
-                LOGE("Clean cloud record failed, res:%{public}d", res);
-                return res;
-            }
-        }
-    }
-    res = DeleteDentryFile();
+    RETURN_ON_ERR(CleanPureCloudRecord());
+    RETURN_ON_ERR(CleanNotPureCloudRecord());
+    int32_t res = DeleteDentryFile();
     if (res != E_OK) {
         LOGE("Clean remove dentry failed, res:%{public}d", res);
         return res;
     }
-
-    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+    UpdateAlbumInternal();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
 
     return E_OK;
+}
+
+int32_t FileDataHandler::CleanPureCloudRecord()
+{
+    LOGD("Clean Pure CloudRecord");
+    int32_t ret = E_OK;
+    NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    cleanPredicates.EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
+    cleanPredicates.Limit(DELETE_LIMIT_SIZE);
+    vector<ValueObject> deleteFileId;
+    int32_t count = 0;
+    do {
+        auto result = Query(cleanPredicates, {MediaColumn::MEDIA_ID, PC::MEDIA_FILE_PATH});
+        if (result == nullptr) {
+            LOGE("get result fail");
+            return E_RDB;
+        }
+        ret = result->GetRowCount(count);
+        if (ret != E_OK || count < 0) {
+            LOGE("get row count error , res: %{public}d", ret);
+            break;
+        }
+        while (result->GoToNextRow() == 0) {
+            string filePath;
+            string fileId;
+            ret = DataConvertor::GetString(PC::MEDIA_ID, fileId, *result);
+            ret = DataConvertor::GetString(PC::MEDIA_FILE_PATH, filePath, *result);
+            if (ret != E_OK) {
+                LOGE("Get path wrong, filePath is %{public}s", filePath.c_str());
+                return E_INVAL_ARG;
+            }
+            RemoveThmParentPath(filePath);
+            deleteFileId.emplace_back(fileId);
+        }
+        BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
+        BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
+        deleteFileId.clear();
+    } while (count != 0);
+    return ret;
+}
+
+int32_t FileDataHandler::CleanNotPureCloudRecord()
+{
+    int32_t ret = E_OK;
+    int32_t action = CleanAction::RETAIN_DATA;
+    cloudPrefImpl_.GetInt("cleanAction", action);
+    LOGD("Clean not Pure CloudRecord");
+    if (action == CleanAction::CLEAR_DATA) {
+        ret = CleanNotDirtyData();
+    }
+    ret = CleanAllCloudInfo();
+    return ret;
+}
+
+int32_t FileDataHandler::CleanNotDirtyData()
+{
+    LOGD("Clean Pure CloudRecord");
+    int32_t ret = E_OK;
+    NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    cleanPredicates.EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
+    cleanPredicates.EqualTo(PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(DirtyType::TYPE_SYNCED)));
+    cleanPredicates.Limit(DELETE_LIMIT_SIZE);
+    vector<ValueObject> deleteFileId;
+    int32_t count = 0;
+    do {
+        auto result = Query(cleanPredicates, {MediaColumn::MEDIA_ID, PC::MEDIA_FILE_PATH});
+        if (result == nullptr) {
+            LOGE("get result fail");
+            return E_RDB;
+        }
+        ret = result->GetRowCount(count);
+        if (ret != E_OK || count < 0) {
+            LOGE("get row count error , ret: %{public}d", ret);
+            break;
+        }
+        while (result->GoToNextRow() == 0) {
+            string filePath;
+            string fileId;
+            ret = DataConvertor::GetString(PC::MEDIA_ID, fileId, *result);
+            ret = DataConvertor::GetString(PC::MEDIA_FILE_PATH, filePath, *result);
+            if (ret != E_OK) {
+                LOGE("Get path wrong");
+                return E_INVAL_ARG;
+            }
+            RemoveThmParentPath(filePath);
+            string lowerPath = cleanConvertor_.GetLowerPath(filePath);
+            string thmbFile = cleanConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
+            filesystem::path thmbFilePath(thmbFile.c_str());
+            filesystem::path thmbFileParentPath = thmbFilePath.parent_path();
+            ForceRemoveDirectory(thmbFileParentPath);
+            ret = DeleteAsset(lowerPath);
+            if (ret != E_OK) {
+                LOGE("clean remove asset fail, ret is %{public}d", ret);
+            }
+            deleteFileId.emplace_back(fileId);
+        }
+        BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
+        BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
+        deleteFileId.clear();
+    } while (count != 0);
+    return ret;
+}
+
+int32_t FileDataHandler::CleanAllCloudInfo()
+{
+    LOGD("Clean Pure CloudRecord");
+    ValuesBucket values;
+    values.PutNull(PhotoColumn::PHOTO_CLOUD_ID);
+    values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_NEW));
+    values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_LOCAL);
+    values.PutLong(PhotoColumn::PHOTO_CLOUD_VERSION, 0);
+    int32_t updateRows = 0;
+    std::string whereClause = "";
+    int32_t ret = Update(updateRows, values, whereClause, {});
+    if (ret != E_OK) {
+        LOGE("Update in rdb failed, ret:%{public}d", ret);
+    }
+    return ret;
 }
 
 int32_t FileDataHandler::UnMarkClean()
@@ -1973,15 +1950,21 @@ int32_t FileDataHandler::UnMarkClean()
     return ret;
 }
 
-int32_t FileDataHandler::MarkClean()
+int32_t FileDataHandler::MarkClean(const int32_t action)
 {
+    cloudPrefImpl_.SetInt("cleanAction", action);
     int32_t changedRows;
     NativeRdb::ValuesBucket values;
     values.PutInt(PC::PHOTO_CLEAN_FLAG, NEED_CLEAN);
-    vector<string> whereArgs = {to_string(POSITION_CLOUD)};
+    string whereClause = PC::PHOTO_POSITION + " = ?";
+    vector<string> whereArgs = {to_string(static_cast<int32_t>(POSITION_CLOUD))};
+    if (action == CleanAction::CLEAR_DATA) {
+        whereClause += " OR ( " + PC::PHOTO_POSITION + " = ? AND " + PC::PHOTO_DIRTY + " = ? )";
+        whereArgs.push_back(to_string(static_cast<int32_t>(POSITION_BOTH)));
+        whereArgs.push_back(to_string(static_cast<int32_t>(DirtyType::TYPE_SYNCED)));
+    }
     int32_t ret =
-        Update(changedRows, PC::PHOTOS_TABLE, values,
-        PC::PHOTO_POSITION + " = ?", whereArgs);
+        Update(changedRows, PC::PHOTOS_TABLE, values, whereClause, whereArgs);
     UpdateAlbumInternal();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);

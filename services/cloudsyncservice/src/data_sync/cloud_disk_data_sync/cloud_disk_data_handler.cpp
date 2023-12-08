@@ -202,7 +202,7 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
 
     /* check local file conflict */
     bool comflag = false;
-    int ret = PullRecordConflict(record, comflag);
+    int32_t ret = PullRecordConflict(record, comflag);
     if (comflag) {
         LOGI("Conflict:same document no Insert");
         return E_OK;

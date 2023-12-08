@@ -178,7 +178,6 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
         LOGE("asyn run pull records err %{public}d", ret);
         return ret;
     }
-
     return E_OK;
 }
 
@@ -660,7 +659,7 @@ int32_t DataSyncer::Clean(const int action)
     return E_OK;
 }
 
-int32_t DataSyncer::ActualClean(const int action)
+int32_t DataSyncer::ActualClean()
 {
     return E_OK;
 }

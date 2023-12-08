@@ -1638,11 +1638,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotDirtyData001, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
-
-        string thmbDir = "/test/not/exits";
-        string assetPath;
-        string cloudId;
-        int32_t ret = fileDataHandler->CleanNotDirtyData(thmbDir, assetPath, cloudId);
+        int32_t ret = fileDataHandler->CleanNotDirtyData();
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1650,66 +1646,6 @@ HWTEST_F(FileDataHandlerTest, CleanNotDirtyData001, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "CleanNotDirtyData001 End";
-}
-
-/**
- * @tc.name: CleanCloudRecord001
- * @tc.desc: Verify the CleanCloudRecord function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, CleanCloudRecord001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CleanCloudRecord001 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
-        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
-
-        int action = 0;
-        string filePath;
-        int32_t ret = fileDataHandler->CleanCloudRecord(*rset, action, filePath);
-        EXPECT_EQ(E_OK, ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " CleanCloudRecord001 ERROR";
-    }
-
-    GTEST_LOG_(INFO) << "CleanCloudRecord001 End";
-}
-
-/**
- * @tc.name: CleanCloudRecord002
- * @tc.desc: Verify the CleanCloudRecord function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, CleanCloudRecord002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CleanCloudRecord002 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
-        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(1), Return(0)));
-        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
-
-        int action = 0;
-        string filePath;
-        int32_t ret = fileDataHandler->CleanCloudRecord(*rset, action, filePath);
-        EXPECT_EQ(E_OK, ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " CleanCloudRecord002 ERROR";
-    }
-
-    GTEST_LOG_(INFO) << "CleanCloudRecord002 End";
 }
 
 /**
@@ -1952,8 +1888,7 @@ HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord001, TestSize.Level1)
         EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillOnce(Return(0));
 
         string filePath = "/test/pareantPath/thumbPpath";
-        int action = 1;
-        int32_t ret = fileDataHandler->CleanPureCloudRecord(*rset, action, filePath);
+        int32_t ret = fileDataHandler->CleanPureCloudRecord();
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1976,12 +1911,11 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord001, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         string filePath = "/test/pareantPath/thumbPpath";
-        int action = 1;
         std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(1));
 
-        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord();
         EXPECT_EQ(E_RDB, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2003,16 +1937,14 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord002, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-
         string filePath = "/test/pareantPath/thumbPpath";
-        int action = 0;
         std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
 
         EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
 
-        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord();
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2035,14 +1967,13 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord003, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         string filePath = "/test/pareantPath/thumbPpath";
-        int action = 0;
         std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
 
         EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
 
-        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord();
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2065,14 +1996,13 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord004, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         string filePath = "/test/pareantPath/thumbPpath";
-        int action = 1;
         std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(1));
         EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
 
-        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord();
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2095,7 +2025,6 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord005, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         string filePath = "/test/pareantPath/thumbPpath";
-        int action = 1;
         std::unique_ptr<ResultSetMock> rset = std::make_unique<ResultSetMock>();
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
@@ -2104,7 +2033,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord005, TestSize.Level1)
 
         EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
 
-        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(*rset, action, filePath);
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord();
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
