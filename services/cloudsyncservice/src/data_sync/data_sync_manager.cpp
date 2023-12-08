@@ -150,6 +150,7 @@ int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string &bundl
 
 int32_t DataSyncManager::RestoreClean(const std::string &bundleName, const int32_t userId)
 {
+    std::lock_guard<std::mutex> lck(cleanMutex_);
     auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
         LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
@@ -175,28 +176,8 @@ int32_t DataSyncManager::IsUserVerified(const int32_t userId)
 int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
 {
     std::vector<std::string> needSyncApps;
-    {
-        std::lock_guard<std::mutex> lck(dataSyncMutex_);
-        RETURN_ON_ERR(GetUserId(currentUserId_));
-        std::shared_ptr<NativeRdb::ResultSet> resultSet;
-        RETURN_ON_ERR(DataSyncerRdbStore::GetInstance().QueryDataSyncer(currentUserId_, resultSet));
-
-        while (resultSet->GoToNextRow() == E_OK) {
-            string bundleName;
-            int32_t ret = DataConvertor::GetString(BUNDLE_NAME, bundleName, *resultSet);
-            if (ret != E_OK) {
-                LOGE("get bundle name failed");
-                continue;
-            }
-            int32_t state;
-            ret = DataConvertor::GetInt(SYNC_STATE, state, *resultSet);
-            if (ret != E_OK) {
-                LOGE("get sync state failed");
-                continue;
-            }
-            needSyncApps.push_back(bundleName);
-        }
-    }
+    RETURN_ON_ERR(GetUserId(currentUserId_));
+    GetAllBundleName(currentUserId_, needSyncApps);
 
     if (needSyncApps.size() == 0) {
         LOGI("not need to trigger sync");
@@ -262,10 +243,15 @@ int32_t DataSyncManager::IsSkipSync(const std::string &bundle, const int32_t use
 int32_t DataSyncManager::CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action)
 {
     LOGD("Enter function CleanCloudFile");
+    std::lock_guard<std::mutex> lck(cleanMutex_);
     auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
         LOGE(" Clean Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
         return E_INVAL_ARG;
+    }
+    auto ret = InitSdk(userId, bundleName, dataSyncer);
+    if (ret != E_OK) {
+        return ret;
     }
     LOGD("bundleName:%{private}s, userId:%{private}d", dataSyncer->GetBundleName().c_str(), dataSyncer->GetUserId());
     return dataSyncer->Clean(action);
@@ -344,5 +330,55 @@ int32_t DataSyncManager::CleanCache(const string &bundleName, const int32_t user
     }
 
     return dataSyncer->CleanCache(uri);
+}
+
+int32_t DataSyncManager::GetAllBundleName(const int32_t userId, vector<string> &bundles)
+{
+    std::lock_guard<std::mutex> lck(dataSyncMutex_);
+    std::shared_ptr<NativeRdb::ResultSet> resultSet;
+    RETURN_ON_ERR(DataSyncerRdbStore::GetInstance().QueryDataSyncer(userId, resultSet));
+
+    while (resultSet->GoToNextRow() == E_OK) {
+        string bundleName;
+        int32_t ret = DataConvertor::GetString(BUNDLE_NAME, bundleName, *resultSet);
+        if (ret != E_OK) {
+            LOGE("get bundle name failed");
+            continue;
+        }
+        int32_t state;
+        ret = DataConvertor::GetInt(SYNC_STATE, state, *resultSet);
+        if (ret != E_OK) {
+            LOGE("get sync state failed");
+            continue;
+        }
+        bundles.push_back(bundleName);
+    }
+    return E_OK;
+}
+
+int32_t DataSyncManager::DisableCloud(const int32_t userId)
+{
+    std::lock_guard<std::mutex> lck(cleanMutex_);
+    std::vector<std::string> bundles;
+    GetAllBundleName(userId, bundles);
+    if (bundles.size() == 0) {
+        LOGI("not need to clean");
+        return E_OK;
+    }
+
+    for (const auto &bundle : bundles) {
+        auto dataSyncer = GetDataSyncer(bundle, userId);
+        if (!dataSyncer) {
+            LOGE("Get dataSyncer failed, bundleName: %{private}s", bundle.c_str());
+            return E_INVAL_ARG;
+        }
+
+        auto ret = InitSdk(userId, bundle, dataSyncer);
+        if (ret != E_OK) {
+            return ret;
+        }
+        dataSyncer->ActualClean();
+    }
+    return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync

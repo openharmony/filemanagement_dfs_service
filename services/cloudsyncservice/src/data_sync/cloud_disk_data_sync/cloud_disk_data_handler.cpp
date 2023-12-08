@@ -385,7 +385,6 @@ int32_t CloudDiskDataHandler::CleanCloudRecord(const int32_t action)
             break;
         }
         while (resultSet->GoToNextRow() == 0) {
-            string cloudId;
             ret = DataConvertor::GetString(FC::CLOUD_ID, cloudId, *resultSet);
             string localPath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
             if (ret != E_OK) {

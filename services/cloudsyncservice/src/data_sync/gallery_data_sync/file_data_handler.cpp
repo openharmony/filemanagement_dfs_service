@@ -1851,7 +1851,7 @@ int32_t FileDataHandler::CleanPureCloudRecord()
         BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
         deleteFileId.clear();
-    } while(count != 0);
+    } while (count != 0);
     return ret;
 }
 
@@ -1868,7 +1868,8 @@ int32_t FileDataHandler::CleanNotPureCloudRecord()
     return ret;
 }
 
-int32_t FileDataHandler::CleanNotDirtyData() {
+int32_t FileDataHandler::CleanNotDirtyData()
+{
     LOGD("Clean Pure CloudRecord");
     int32_t ret = E_OK;
     NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
@@ -1904,19 +1905,20 @@ int32_t FileDataHandler::CleanNotDirtyData() {
             filesystem::path thmbFileParentPath = thmbFilePath.parent_path();
             ForceRemoveDirectory(thmbFileParentPath);
             ret = DeleteAsset(lowerPath);
-            if(ret != E_OK) {
-                LOGE("clean remove asset fail, errno is %{public}d");
+            if (ret != E_OK) {
+                LOGE("clean remove asset fail, ret is %{public}d", ret);
             }
             deleteFileId.emplace_back(fileId);
         }
         BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
         deleteFileId.clear();
-    } while(count != 0);
+    } while (count != 0);
     return ret;
 }
 
-int32_t FileDataHandler::CleanAllCloudInfo() {
+int32_t FileDataHandler::CleanAllCloudInfo()
+{
     LOGD("Clean Pure CloudRecord");
     ValuesBucket values;
     values.PutNull(PhotoColumn::PHOTO_CLOUD_ID);
@@ -1956,7 +1958,7 @@ int32_t FileDataHandler::MarkClean(const int32_t action)
     values.PutInt(PC::PHOTO_CLEAN_FLAG, NEED_CLEAN);
     string whereClause = PC::PHOTO_POSITION + " = ?";
     vector<string> whereArgs = {to_string(static_cast<int32_t>(POSITION_CLOUD))};
-    if(action == CleanAction::CLEAR_DATA) {
+    if (action == CleanAction::CLEAR_DATA) {
         whereClause += " OR ( " + PC::PHOTO_POSITION + " = ? AND " + PC::PHOTO_DIRTY + " = ? )";
         whereArgs.push_back(to_string(static_cast<int32_t>(POSITION_BOTH)));
         whereArgs.push_back(to_string(static_cast<int32_t>(DirtyType::TYPE_SYNCED)));
