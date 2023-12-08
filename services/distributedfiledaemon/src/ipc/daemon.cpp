@@ -132,13 +132,7 @@ void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &d
 
 int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("Open P2P Connection");
-    std::thread([=]() {
-        int32_t ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
-        LOGI("Open P2P Connection result %d", ret);
-        return ret;
-        }).detach();
-    return 0;
+    return DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
 }
 
 int32_t Daemon::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
