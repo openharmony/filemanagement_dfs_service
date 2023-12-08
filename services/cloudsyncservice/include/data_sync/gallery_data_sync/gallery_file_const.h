@@ -224,8 +224,6 @@ const std::vector<std::string> CLOUD_SYNC_UNIQUE_COLUMNS = {
     Media::PhotoColumn::MEDIA_FILE_PATH,
     Media::PhotoColumn::MEDIA_TITLE,
     Media::PhotoColumn::MEDIA_TYPE,
-    Media::PhotoColumn::MEDIA_DATE_ADDED,
-    Media::PhotoColumn::MEDIA_DATE_MODIFIED,
     Media::PhotoColumn::MEDIA_DURATION,
     Media::PhotoColumn::MEDIA_HIDDEN,
     Media::PhotoColumn::MEDIA_RELATIVE_PATH,
@@ -245,8 +243,6 @@ const std::vector<DataType> CLOUD_SYNC_UNIQUE_COLUMN_TYPES = {
     DataType::STRING,       /* data */
     DataType::STRING,       /* title */
     DataType::INT,          /* media_type */
-    DataType::LONG,         /* date_added */
-    DataType::LONG,         /* date_modified */
     DataType::INT,          /* duration */
     DataType::INT,          /* hidden */
     DataType::STRING,       /* relative_path */

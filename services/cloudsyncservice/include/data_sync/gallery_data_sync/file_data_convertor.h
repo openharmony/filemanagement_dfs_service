@@ -76,7 +76,7 @@ private:
     int32_t HandleRecycled(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleSize(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleMimeType(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
-    int32_t HandleEditedTime(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleEditedTime(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
 
     int32_t HandleUniqueFileds(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleCompatibleFileds(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
@@ -89,6 +89,7 @@ private:
     int32_t HandleRotate(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleWidth(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandlePosition(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleDataAdded(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleDataModified(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleDetailTime(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
     int32_t HandleFileCreateTime(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
@@ -190,8 +191,8 @@ inline int32_t FileDataConvertor::HandleCreatedTime(DriveKit::DKRecordData &data
     if (ret != E_OK) {
         return ret;
     }
-    /* no overflow: 64 >> 32 + 3 */
-    data[FILE_CREATED_TIME] = DriveKit::DKRecordField(std::to_string(val * SECOND_TO_MILLISECOND));
+    /* local ms to cloud ms */
+    data[FILE_CREATED_TIME] = DriveKit::DKRecordField(std::to_string(val));
     return E_OK;
 }
 
@@ -259,7 +260,7 @@ inline int32_t FileDataConvertor::HandleRecycleTime(DriveKit::DKRecordData &data
     if (ret != E_OK) {
         return ret;
     }
-    data[FILE_RECYCLE_TIME] = DriveKit::DKRecordField(std::to_string(val * SECOND_TO_MILLISECOND));
+    data[FILE_RECYCLE_TIME] = DriveKit::DKRecordField(std::to_string(val));
     return E_OK;
 }
 
@@ -275,7 +276,7 @@ inline int32_t FileDataConvertor::HandleMimeType(DriveKit::DKRecordData &data,
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleEditedTime(DriveKit::DKRecordData &data,
+inline int32_t FileDataConvertor::HandleEditedTime(DriveKit::DKRecord &record,
     NativeRdb::ResultSet &resultSet)
 {
     int64_t val;
@@ -283,7 +284,7 @@ inline int32_t FileDataConvertor::HandleEditedTime(DriveKit::DKRecordData &data,
     if (ret != E_OK) {
         return ret;
     }
-    data[FILE_EDITED_TIME] = DriveKit::DKRecordField(std::to_string(val * SECOND_TO_MILLISECOND));
+    record.SetEditedTime(static_cast<uint64_t>(val));
     return E_OK;
 }
 
@@ -320,7 +321,8 @@ inline int32_t FileDataConvertor::HandleFirstUpdateTime(DriveKit::DKRecordFieldM
     if (ret != E_OK) {
         return ret;
     }
-    map[FILE_FIRST_UPDATE_TIME] = DriveKit::DKRecordField(std::to_string(val * SECOND_TO_MILLISECOND));
+    /* local ms to cloud ms */
+    map[FILE_FIRST_UPDATE_TIME] = DriveKit::DKRecordField(std::to_string(val));
     return E_OK;
 }
 
@@ -332,7 +334,8 @@ inline int32_t FileDataConvertor::HandleFileCreateTime(DriveKit::DKRecordFieldMa
     if (ret != E_OK) {
         return ret;
     }
-    map[FILE_FILE_CREATE_TIME] = DriveKit::DKRecordField(std::to_string(val * SECOND_TO_MILLISECOND));
+    /* local ms to cloud ms */
+    map[FILE_FILE_CREATE_TIME] = DriveKit::DKRecordField(std::to_string(val));
     return E_OK;
 }
 
@@ -392,6 +395,18 @@ inline int32_t FileDataConvertor::HandleWidth(DriveKit::DKRecordFieldMap &map,
     return E_OK;
 }
 
+inline int32_t FileDataConvertor::HandleDataAdded(DriveKit::DKRecordFieldMap &map,
+    NativeRdb::ResultSet &resultSet)
+{
+    int64_t val;
+    int32_t ret = GetLong(Media::PhotoColumn::MEDIA_DATE_ADDED, val, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    map[Media::PhotoColumn::MEDIA_DATE_ADDED] = DriveKit::DKRecordField(val / MILLISECOND_TO_SECOND);
+    return E_OK;
+}
+
 inline int32_t FileDataConvertor::HandleDataModified(DriveKit::DKRecordFieldMap &map,
     NativeRdb::ResultSet &resultSet)
 {
@@ -400,7 +415,7 @@ inline int32_t FileDataConvertor::HandleDataModified(DriveKit::DKRecordFieldMap 
     if (ret != E_OK) {
         return ret;
     }
-    map[FILE_DATA_MODIFIED] = DriveKit::DKRecordField(std::to_string(val));
+    map[Media::PhotoColumn::MEDIA_DATE_MODIFIED] = DriveKit::DKRecordField(val / MILLISECOND_TO_SECOND);
     return E_OK;
 }
 

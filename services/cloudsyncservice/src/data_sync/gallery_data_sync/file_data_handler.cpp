@@ -659,7 +659,7 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
         LOGE("Get local ctime failed");
         return E_INVAL_ARG;
     }
-    int64_t crTime = static_cast<int64_t>(record.GetCreateTime() / MILLISECOND_TO_SECOND);
+    int64_t crTime = static_cast<int64_t>(record.GetCreateTime());
     if (localIsize == isize && localCrtime == crTime) {
         LOGI("Possible duplicate files");
     } else {
@@ -1163,30 +1163,13 @@ static bool FileIsLocal(NativeRdb::ResultSet &local)
     return !!(static_cast<uint32_t>(position) & 1);
 }
 
-static inline int GetCloudMtime(const DKRecord &record, int64_t &dateModified)
-{
-    DriveKit::DKRecordData data;
-    record.GetRecordData(data);
-    if (data.find(FILE_ATTRIBUTES) == data.end()) {
-        return E_INVAL_ARG;
-    }
-    DriveKit::DKRecordFieldMap attributes;
-    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
-    if (attributes.find(PhotoColumn::MEDIA_DATE_MODIFIED) == data.end()) {
-        return E_INVAL_ARG;
-    }
-    if (attributes[PhotoColumn::MEDIA_DATE_MODIFIED].GetLong(dateModified) !=  DKLocalErrorCode::NO_ERROR) {
-        return E_INVAL_ARG;
-    }
-    return E_OK;
-}
-
 static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, bool &changed)
 {
     int64_t localMtime = 0;
     int64_t dateModified = 0;
     int ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, localMtime, local);
-    if ((ret == E_OK) && (GetCloudMtime(record, dateModified) == E_OK)) {
+    if (ret == E_OK) {
+        dateModified = record.GetEditedTime();
         LOGI("dateModified %{public}llu, localMtime %{public}llu",
             static_cast<unsigned long long>(dateModified), static_cast<unsigned long long>(localMtime));
         changed = !(dateModified == localMtime);
@@ -1202,7 +1185,7 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
     }
 
     // get record mtime
-    int64_t crTime = static_cast<int64_t>(record.GetCreateTime() / MILLISECOND_TO_SECOND);
+    int64_t crTime = static_cast<int64_t>(record.GetCreateTime());
     LOGI("cloudMtime %{public}llu, localMtime %{public}llu",
          static_cast<unsigned long long>(crTime), static_cast<unsigned long long>(localCrtime));
     changed = !(crTime == localCrtime);
@@ -1324,6 +1307,13 @@ static bool FileIsRecycled(NativeRdb::ResultSet &local)
     return localDateTrashed > 0;
 }
 
+static int64_t UTCTimeMilliSeconds()
+{
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return t.tv_sec * SECOND_TO_MILLISECOND + t.tv_nsec / SECOND_TO_MILLISECOND;
+}
+
 // if cloud delete but local exist, we would do recycle instead of delete
 int FileDataHandler::RecycleFile(const string &recordId)
 {
@@ -1333,7 +1323,7 @@ int FileDataHandler::RecycleFile(const string &recordId)
     values.PutNull(PhotoColumn::PHOTO_CLOUD_ID);
     values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_NEW));
     values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_LOCAL);
-    values.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, UTCTimeSeconds());
+    values.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, UTCTimeMilliSeconds());
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, 0);
     int32_t changedRows;
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
@@ -1466,7 +1456,7 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
     ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, localMtime, *resultSet);
     if (ret == E_OK) {
         struct utimbuf ubuf {
-            .actime = localMtime, .modtime = localMtime
+            .actime = localMtime / MILLISECOND_TO_SECOND, .modtime = localMtime / MILLISECOND_TO_SECOND
         };
         LOGI("update downloaded file mtime %{public}llu", static_cast<unsigned long long>(localMtime));
         if (utime(localPath.c_str(), &ubuf) < 0) {
@@ -2773,10 +2763,7 @@ bool FileDataHandler::IsTimeChanged(const DriveKit::DKRecord &record,
     /* get mtime or metatime */
     if (type == Media::PhotoColumn::MEDIA_DATE_MODIFIED) {
         localtime = it->second.fdirtyTime;
-        if (attributes[PhotoColumn::MEDIA_DATE_MODIFIED].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
-            LOGE("obtain MEDIA_DATE_MODIFIED error");
-            return false;
-        }
+        cloudtime = record.GetEditedTime();
     } else {
         localtime = it->second.mdirtyTime;
         if (attributes[PhotoColumn::PHOTO_META_DATE_MODIFIED].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
