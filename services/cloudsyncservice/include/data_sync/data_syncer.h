@@ -126,6 +126,8 @@ protected:
 
     uint32_t errorCode_{0};
 
+    bool isDataChanged_{false};
+
 private:
     /* download */
     void PullRecords(std::shared_ptr<TaskContext> context);

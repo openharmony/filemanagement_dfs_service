@@ -391,6 +391,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
     if (HandleOnFetchRecords(ctx, database, records, false) != E_OK) {
         LOGE("HandleOnFetchRecords failed");
     }
+    SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
 }
 
 int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
@@ -481,6 +482,7 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
         LOGE("HandleOnFetchRecords failed");
         return;
     }
+    SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
 }
 
 void DataSyncer::OnFetchCheckRecords(const shared_ptr<DKContext> context,
@@ -893,6 +895,9 @@ void DataSyncer::OnCreateRecords(shared_ptr<DKContext> context,
         LOGE("handler on create records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        SyncStateChangedNotify(CloudSyncState::UPLOADING, ErrorType::NO_ERROR);
+        isDataChanged_ = true;
     }
 
     /* push more */
@@ -919,6 +924,8 @@ void DataSyncer::OnDeleteRecords(shared_ptr<DKContext> context,
         LOGE("handler on delete records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        isDataChanged_ = true;
     }
 
     /* push more */
@@ -947,6 +954,8 @@ void DataSyncer::OnModifyMdirtyRecords(shared_ptr<DKContext> context,
         LOGE("handler on modify records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        isDataChanged_ = true;
     }
 
     /* push more */
@@ -975,6 +984,8 @@ void DataSyncer::OnModifyFdirtyRecords(shared_ptr<DKContext> context,
         LOGE("handler on modify records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        isDataChanged_ = true;
     }
 
     /* push more */
