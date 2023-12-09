@@ -79,6 +79,8 @@ public:
     int32_t UpdateAgingFile(const std::string cloudId);
     int32_t FileAgingDelete(const int64_t agingTime, const int64_t deleteSize);
 
+    void UpdateAlbumInternal();
+
     /* reset */
     void Reset();
 
