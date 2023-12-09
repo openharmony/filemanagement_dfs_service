@@ -203,7 +203,7 @@ std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRe
                 }
             }
         }
-        LOGE("not find this net in mpToNetworks, isAccountless %{public}d", isAccountless);
+        LOGE("not find this net in mpToP2PNetworks, isAccountless %{public}d", isAccountless);
     }
     return nullptr;
 }
