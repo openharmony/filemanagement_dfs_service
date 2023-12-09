@@ -180,7 +180,7 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
     }
 }
 
-bool DeviceManagerAgent::NetworkIsTrusted(std::shared_ptr<NetworkAgentTemplate> net)
+bool DeviceManagerAgent::NetworkIsTrusted(bool isAccountless, std::shared_ptr<NetworkAgentTemplate> net)
 {
     if (net != nullptr) {
         auto smp = net->GetMountPoint();
@@ -196,7 +196,7 @@ std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRe
     if (!isP2P) {
         LOGI("enter: isAccountless %{public}d", isAccountless);
         for (auto [ignore, net] : mpToNetworks_) {
-            if (NetworkIsTrusted(net)) {
+            if (NetworkIsTrusted(isAccountless, net)) {
                 return net;
             }
         }
@@ -204,7 +204,7 @@ std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRe
     } else {
         LOGI("enter: isP2PAccountless %{public}d", isAccountless);
         for (auto [ignore, net] : mpToP2PNetworks_) {
-            if (NetworkIsTrusted(net)) {
+            if (NetworkIsTrusted(isAccountless, net)) {
                 return net;
             }
         }
@@ -333,10 +333,6 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
     DeviceInfo info(deviceInfo);
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
-    openP2PSessionCount_--;
-    if (openP2PSessionCount_) {
-        return P2P_FAILED;
-    }
     auto it = cidP2PNetTypeRecord_.find(info.cid_);
     if (it == cidP2PNetTypeRecord_.end()) {
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
