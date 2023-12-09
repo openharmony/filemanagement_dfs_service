@@ -180,15 +180,15 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
     }
 }
 
-static std::shared_ptr<NetworkAgentTemplate> NetworkIsTrusted(std::shared_ptr<NetworkAgentTemplate> net)
+static bool NetworkIsTrusted(std::shared_ptr<NetworkAgentTemplate> net)
 {
     if (net != nullptr) {
         auto smp = net->GetMountPoint();
         if (smp != nullptr && smp->isAccountLess() == isAccountless) {
-            return net;
+            return true;
         }
     }
-    return nullptr;
+    return false;
 }
 
 std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRelation(bool isAccountless, bool isP2P)
@@ -196,7 +196,7 @@ std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRe
     if (!isP2P) {
         LOGI("enter: isAccountless %{public}d", isAccountless);
         for (auto [ignore, net] : mpToNetworks_) {
-            if (NetworkIsTrusted(net) != nullptr) {
+            if (NetworkIsTrusted(net)) {
                 return net;
             }
         }
@@ -204,7 +204,7 @@ std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRe
     } else {
         LOGI("enter: isP2PAccountless %{public}d", isAccountless);
         for (auto [ignore, net] : mpToP2PNetworks_) {
-            if (NetworkIsTrusted(net) != nullptr) {
+            if (NetworkIsTrusted(net)) {
                 return net;
             }
         }
