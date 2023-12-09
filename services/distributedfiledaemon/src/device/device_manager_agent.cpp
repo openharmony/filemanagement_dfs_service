@@ -180,27 +180,32 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
     }
 }
 
+static std::shared_ptr<NetworkAgentTemplate> NetworkIsTrusted(std::shared_ptr<NetworkAgentTemplate> net)
+{
+    if (net != nullptr) {
+        auto smp = net->GetMountPoint();
+        if (smp != nullptr && smp->isAccountLess() == isAccountless) {
+            return net;
+        }
+    }
+    return nullptr;
+}
+
 std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRelation(bool isAccountless, bool isP2P)
 {
     if (!isP2P) {
         LOGI("enter: isAccountless %{public}d", isAccountless);
         for (auto [ignore, net] : mpToNetworks_) {
-            if (net != nullptr) {
-                auto smp = net->GetMountPoint();
-                if (smp != nullptr && smp->isAccountLess() == isAccountless) {
-                    return net;
-                }
+            if (NetworkIsTrusted(net) != nullptr) {
+                return net;
             }
         }
         LOGE("not find this net in mpToNetworks, isAccountless %{public}d", isAccountless);
     } else {
         LOGI("enter: isP2PAccountless %{public}d", isAccountless);
         for (auto [ignore, net] : mpToP2PNetworks_) {
-            if (net != nullptr) {
-                auto smp = net->GetMountPoint();
-                if (smp != nullptr && smp->isAccountLess() == isAccountless) {
-                    return net;
-                }
+            if (NetworkIsTrusted(net) != nullptr) {
+                return net;
             }
         }
         LOGE("not find this net in mpToP2PNetworks, isAccountless %{public}d", isAccountless);
@@ -402,14 +407,13 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
     for (const auto &group : groupList) {
-        auto network = FindNetworkBaseTrustRelation(CheckIsAccountless(group));
+        auto network = FindNetworkBaseTrustRelation(CheckIsAccountless(group), isP2P);
         if (network != nullptr) {
             if (isP2P) {
                 cidP2PNetTypeRecord_.insert({ networkId, network });
             } else {
                 cidNetTypeRecord_.insert({ networkId, network });
                 cidNetworkType_.insert({ networkId, GetNetworkType(networkId) });
-
             }
         }
     }
