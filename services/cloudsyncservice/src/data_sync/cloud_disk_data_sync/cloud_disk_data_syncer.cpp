@@ -135,7 +135,9 @@ int32_t CloudDiskDataSyncer::Complete()
     LOGI("cloud disk data syncer complete all");
     Unlock();
     CompleteAll();
-    ChangesNotify();
+    if (isDataChanged_) {
+        ChangesNotify();
+    }
     return E_OK;
 }
 
