@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "cloud_disk_data_const.h"
 #include "mimetype_utils.h"
 #include "cloud_pref_impl.h"
 #include "cloud_file_utils.h"
@@ -86,6 +87,19 @@ int32_t CloudDiskDataConvertor::InitRootId()
         cloudPrefImpl.SetString("rootId", rootId_);
     }
     return E_OK;
+}
+std::string CloudDiskDataConvertor::GetParentCloudId(const DriveKit::DKRecordData &data)
+{
+    string parentFolder;
+    if (data.find(DK_PARENT_CLOUD_ID) == data.end() ||
+        data.at(DK_PARENT_CLOUD_ID).GetString(parentFolder) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract parent cloudId error");
+        return "";
+    }
+    if (parentFolder == rootId_) {
+        parentFolder = "rootId";
+    }
+    return parentFolder;
 }
 
 int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
@@ -194,14 +208,10 @@ int32_t CloudDiskDataConvertor::ExtractFileName(const DriveKit::DKRecordData &da
 int32_t CloudDiskDataConvertor::ExtractFileParentCloudId(const DriveKit::DKRecordData &data,
                                                          NativeRdb::ValuesBucket &valueBucket)
 {
-    string parentFolder;
-    if (data.find(DK_PARENT_CLOUD_ID) == data.end() ||
-        data.at(DK_PARENT_CLOUD_ID).GetString(parentFolder) != DKLocalErrorCode::NO_ERROR) {
+    string parentFolder = GetParentCloudId(data);
+    if (parentFolder.empty()) {
         LOGE("extract parent cloudId error");
         return E_INVAL_ARG;
-    }
-    if (parentFolder == rootId_) {
-        parentFolder = "rootId";
     }
     valueBucket.PutString(FileColumn::PARENT_CLOUD_ID, parentFolder);
     return E_OK;
@@ -218,6 +228,7 @@ int32_t CloudDiskDataConvertor::ExtractFileSize(const DriveKit::DKRecordData &da
     valueBucket.PutInt(FileColumn::FILE_SIZE, fileSize);
     return E_OK;
 }
+
 int32_t CloudDiskDataConvertor::ExtractSha256(const DriveKit::DKRecordData &data,
                                               NativeRdb::ValuesBucket &valueBucket)
 {

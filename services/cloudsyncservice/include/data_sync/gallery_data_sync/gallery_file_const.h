@@ -29,6 +29,18 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
+enum OperationType {
+    /* upload */
+    FILE_CREATE,
+    FILE_DELETE,
+    FILE_METADATA_MODIFY,
+    FILE_DATA_MODIFY,
+    /* download */
+    FILE_DOWNLOAD,
+    /*clean*/
+    FILE_CLEAN
+};
+
 /* thumb */
 const std::string THUMB_SUFFIX = "THM";
 const std::string LCD_SUFFIX = "LCD";
