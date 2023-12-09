@@ -157,7 +157,6 @@ HWTEST_F(AlbumDataHandlerTest, GetCreatedRecords001, TestSize.Level1)
     try {
         auto rdb = make_shared<RdbStoreMock>();
         auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
         vector<DriveKit::DKRecord> records;
         int32_t ret = albumDataHandlerMock->GetCreatedRecords(records);
         EXPECT_EQ(E_RDB, ret);
@@ -181,7 +180,6 @@ HWTEST_F(AlbumDataHandlerTest, GetDeletedRecords001, TestSize.Level1)
     try {
         auto rdb = make_shared<RdbStoreMock>();
         auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
         vector<DriveKit::DKRecord> records;
         int32_t ret = albumDataHandlerMock->GetDeletedRecords(records);
         EXPECT_EQ(E_RDB, ret);
@@ -205,7 +203,6 @@ HWTEST_F(AlbumDataHandlerTest, GetMetaModifiedRecords001, TestSize.Level1)
     try {
         auto rdb = make_shared<RdbStoreMock>();
         auto albumDataHandlerMock = make_shared<AlbumDataHandlerMock>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
         vector<DriveKit::DKRecord> records;
         int32_t ret = albumDataHandlerMock->GetMetaModifiedRecords(records);
         EXPECT_EQ(E_RDB, ret);

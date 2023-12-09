@@ -1473,7 +1473,7 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords003, TestSize.Level1)
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
         EXPECT_CALL(*rset, GoToRow(_)).WillOnce(Return(0));
         EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetLong(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(0)));

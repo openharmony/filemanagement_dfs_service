@@ -28,7 +28,7 @@ using namespace std;
 
 const int USER_ID = 100;
 const std::string BUND_NAME = "com.ohos.photos";
-const std::string BUND_NAME_TEST = "com.ohos.photos";
+const std::string BUND_NAME_TEST = "com.ohos.test";
 class DataSyncManagerTest : public testing::Test {
 public:
     enum Action {
@@ -188,7 +188,7 @@ HWTEST_F(DataSyncManagerTest, TriggerStopSyncOKTest, TestSize.Level1)
 HWTEST_F(DataSyncManagerTest, TriggerRecoveryArgFailTest, TestSize.Level1)
 {
     auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
-    EXPECT_TRUE(E_OK == ret || ret == E_OSACCOUNT);
+    EXPECT_EQ(E_OK, ret);
 }
 
 /**
@@ -201,7 +201,7 @@ HWTEST_F(DataSyncManagerTest, TriggerRecoverySizeZeroOKTest, TestSize.Level1)
 {
     auto dataSyncer = dataSyncManager_->GetDataSyncer(BUND_NAME, USER_ID);
     auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
-    EXPECT_TRUE(E_OK == ret || ret == E_OSACCOUNT);
+    EXPECT_EQ(E_OK, ret);
 }
 
 /**
@@ -215,7 +215,7 @@ HWTEST_F(DataSyncManagerTest, TriggerRecoveryOKTest, TestSize.Level1)
     string bundleName = "hdcd";
     auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, USER_ID);
     auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
-    EXPECT_TRUE(E_OK == ret || ret == E_OSACCOUNT);
+    EXPECT_EQ(E_OK, ret);
 }
 
 /**
@@ -228,7 +228,7 @@ HWTEST_F(DataSyncManagerTest, StartDownloadFileOKTest, TestSize.Level1)
 {
     string path = "/test";
     auto ret = dataSyncManager_->StartDownloadFile(BUND_NAME, USER_ID, path);
-    EXPECT_TRUE(E_OK == ret || ret == E_RDB);
+    EXPECT_EQ(E_OK, ret);
 }
 
 /**
@@ -241,7 +241,7 @@ HWTEST_F(DataSyncManagerTest, StopDownloadFileOKTest, TestSize.Level1)
 {
     string path = "/test";
     auto ret = dataSyncManager_->StopDownloadFile(BUND_NAME, USER_ID, path);
-    EXPECT_TRUE(E_OK == ret || ret == E_RDB);
+    EXPECT_EQ(E_OK, ret);
 }
 
 /**
@@ -278,6 +278,6 @@ HWTEST_F(DataSyncManagerTest, CleanCloudFileArgOKTest, TestSize.Level1)
 {
     int action = RETAIN_DATA;
     auto ret = dataSyncManager_->CleanCloudFile(USER_ID, BUND_NAME, action);
-    EXPECT_TRUE(E_OK == ret || ret == E_RDB);
+    EXPECT_EQ(E_OK, ret);
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
