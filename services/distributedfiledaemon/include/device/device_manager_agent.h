@@ -96,7 +96,7 @@ private:
 
     void QueryRelatedGroups(const std::string &udid, const std::string &networkId, bool isP2P = false);
     bool CheckIsAccountless(const GroupInfo &group);
-    bool NetworkIsTrusted(std::shared_ptr<NetworkAgentTemplate> net);
+    bool NetworkIsTrusted(bool isAccountless, std::shared_ptr<NetworkAgentTemplate> net);
     std::shared_ptr<NetworkAgentTemplate> FindNetworkBaseTrustRelation(bool isAccountless, bool isP2P = false);
     // We use a mutex instead of a shared_mutex to serialize online/offline procedures
     std::mutex mpToNetworksMutex_;
