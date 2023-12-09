@@ -140,7 +140,7 @@ int32_t CloudDiskDataConvertor::CompensateAttributes(const DriveKit::DKRecordDat
     DriveKit::DKRecordFieldMap attributes;
     if (data.find(DK_FILE_ATTRIBUTES) == data.end()) {
         fileTimeAdded = record.GetCreateTime();
-        fileTimeEdited = record.GetEditedTime();
+        fileTimeEdited = static_cast<int64_t>(record.GetEditedTime());
         metaTimeEdited = record.GetEditedTime();
     } else {
         data.at(DK_FILE_ATTRIBUTES).GetRecordMap(attributes);
@@ -266,7 +266,7 @@ int32_t CloudDiskDataConvertor::ExtractDirectlyRecycled(const DriveKit::DKRecord
 int32_t CloudDiskDataConvertor::ExtractVersion(const DriveKit::DKRecord &record,
                                                NativeRdb::ValuesBucket &valueBucket)
 {
-    int64_t version = record.GetVersion();
+    unsigned long version = record.GetVersion();
     valueBucket.PutLong(FileColumn::VERSION, version);
     return E_OK;
 }

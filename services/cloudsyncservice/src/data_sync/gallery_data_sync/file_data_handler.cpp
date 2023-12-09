@@ -103,7 +103,7 @@ static int64_t GetRoundSize(int64_t size)
     uint64_t val = 1;
     int64_t multple = UNIT;
     int64_t stdMultiple = STD_UNIT;
-    while (val * stdMultiple < size) {
+    while (static_cast<int64_t>(val) * stdMultiple < size) {
         val <<= 1;
         if (val > THRESHOLD) {
             val = 1;
@@ -111,7 +111,7 @@ static int64_t GetRoundSize(int64_t size)
             stdMultiple *= STD_UNIT;
         }
     }
-    return val * multple;
+    return static_cast<int64_t>(val) * multple;
 }
 
 constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
