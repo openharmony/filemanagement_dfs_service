@@ -180,7 +180,7 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
     }
 }
 
-static bool NetworkIsTrusted(std::shared_ptr<NetworkAgentTemplate> net)
+bool DeviceManagerAgent::NetworkIsTrusted(std::shared_ptr<NetworkAgentTemplate> net)
 {
     if (net != nullptr) {
         auto smp = net->GetMountPoint();
