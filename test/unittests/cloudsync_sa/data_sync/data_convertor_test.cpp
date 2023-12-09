@@ -246,6 +246,32 @@ HWTEST_F(DataConvertorTest, RecordToValueBucket001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RecordToValueBucket002
+ * @tc.desc: Verify the RecordToValueBucket function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(DataConvertorTest, RecordToValueBucket002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecordToValueBucket002 Begin";
+    try {
+        std::vector<DriveKit::DKRecord> records;
+        NativeRdb::ValuesBucket valueBucket;
+        std::vector<std::string> selectionArgs;
+        auto rstSet = DataConvertorTest::rdbStore_->QuerySql("SELECT * FROM test", selectionArgs);
+        int32_t ret = dataConvertor_->ResultSetToRecords(std::move(rstSet), records);
+        EXPECT_EQ(E_OK, ret);
+        EXPECT_NE(records.size(), 0);
+        ret = dataConvertor_->RecordToValueBucket(records[0], valueBucket);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " RecordToValueBucket002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RecordToValueBucket002 End";
+}
+
+/**
  * @tc.name: GetInt001
  * @tc.desc: Verify the GetInt function
  * @tc.type: FUNC

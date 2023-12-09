@@ -20,15 +20,6 @@ config("public_config") {
 }
 
 ohos_shared_library("cloud_adapter") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
   sources = [
     "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
     "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",

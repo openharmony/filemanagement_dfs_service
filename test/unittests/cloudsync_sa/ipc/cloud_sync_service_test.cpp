@@ -379,6 +379,25 @@ HWTEST_F(CloudSyncServiceTest, StartSyncInnerTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartSyncInner End";
 }
 
+/**
+ * @tc.name:DisableCloudTest
+ * @tc.desc:Verify the DisableCloud function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, DisableCloudTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DisableCloud start";
+    try {
+        std::string accountId = "testId";
+        int ret = g_servicePtr_->DisableCloud(accountId);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DisableCloud FAILED";
+    }
+    GTEST_LOG_(INFO) << "DisableCloud end";
+}
 
 /**
  * @tc.name:EnableCloudTest
@@ -437,7 +456,7 @@ HWTEST_F(CloudSyncServiceTest, StartDownloadFileTest, TestSize.Level1)
         std::string path;
         auto dataSyncManager = g_servicePtr_->dataSyncManager_;
         int ret = dataSyncManager->StartDownloadFile(bundleName, callerUserId, path);
-        EXPECT_TRUE(E_STOP == ret || ret == E_RDB);
+        EXPECT_EQ(ret, E_STOP);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartDownloadFile FAILED";
@@ -460,7 +479,7 @@ HWTEST_F(CloudSyncServiceTest, StopDownloadFileTest, TestSize.Level1)
         std::string path;
         auto dataSyncManager = g_servicePtr_->dataSyncManager_;
         int ret = dataSyncManager->StopDownloadFile(bundleName, callerUserId, path);
-        EXPECT_TRUE(E_OK == ret || ret == E_RDB);
+        EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StopDownloadFile FAILED";

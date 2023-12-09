@@ -26,15 +26,6 @@ config("optimize-size") {
   ]
 }
 ohos_shared_library("cloudsync_sa") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
   include_dirs = [
     "include",
     "include/data_sync",
@@ -190,15 +181,6 @@ ohos_shared_library("cloudsync_sa") {
 }
 
 ohos_static_library("cloudsync_sa_static") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
   include_dirs = [
     "include",
     "include/data_sync",
