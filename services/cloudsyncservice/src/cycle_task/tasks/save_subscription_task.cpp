@@ -43,6 +43,10 @@ int32_t SaveSubscriptionTask::RunTask(int32_t userId)
             continue;
         }
         auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName_, userId);
+        if (!dataSyncer) {
+            LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName_.c_str());
+            return E_INVAL_ARG;
+        }
         ret = dataSyncManager_->InitSdk(userId, bundleName_, dataSyncer);
         if (ret != E_OK) {
             return ret;

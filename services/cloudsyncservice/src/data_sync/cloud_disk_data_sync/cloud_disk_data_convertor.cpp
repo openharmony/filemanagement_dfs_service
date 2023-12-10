@@ -215,7 +215,7 @@ int32_t CloudDiskDataConvertor::ExtractFileSize(const DriveKit::DKRecordData &da
         LOGE("extract fileSize cloudId error");
         return E_INVAL_ARG;
     }
-    valueBucket.PutInt(FileColumn::FILE_SIZE, fileSize);
+    valueBucket.PutLong(FileColumn::FILE_SIZE, fileSize);
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::ExtractSha256(const DriveKit::DKRecordData &data,
