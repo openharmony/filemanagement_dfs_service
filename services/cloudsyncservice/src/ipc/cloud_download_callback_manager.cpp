@@ -159,9 +159,11 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
         }
     }
 
-    if (callback_ != nullptr && download.state == DownloadProgressObj::RUNNING) {
+    if (download.state == DownloadProgressObj::RUNNING) {
         download.state = downloadedState;
-        callback_->OnDownloadProcess(download);
+        if (callback_ != nullptr) {
+            callback_->OnDownloadProcess(download);
+        }
         if ((assetsToDownload.size() == 1) && (download.state == DownloadProgressObj::COMPLETED)) {
             (void)handler->OnDownloadSuccess(assetsToDownload[0]);
         }
