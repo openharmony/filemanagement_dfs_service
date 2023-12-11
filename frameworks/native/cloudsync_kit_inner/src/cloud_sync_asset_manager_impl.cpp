@@ -78,10 +78,18 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
         return E_SA_LOAD_FAILED;
     }
 
-    if (!isFirstCall_.test_and_set()) {
+    {
+        std::lock_guard<std::mutex> lock(callbackInitMutex_);
         if (downloadAssetCallback_ == nullptr) {
             downloadAssetCallback_ = sptr(new (std::nothrow) DownloadAssetCallbackClient());
         }
+        if (downloadAssetCallback_ == nullptr) {
+            LOGE("have no enough memory");
+            return E_MEMORY;
+        }
+    }
+
+    if (!isFirstCall_.test_and_set()) {
         CloudSyncServiceProxy->RegisterDownloadAssetCallback(downloadAssetCallback_);
         SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     }

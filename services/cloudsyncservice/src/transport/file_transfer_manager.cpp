@@ -59,9 +59,9 @@ void FileTransferManager::DownloadFileFromRemoteDevice(const std::string &networ
     }
 }
 
-void FileTransferManager::HandleDowloadFileRequest(MessageHandler &msgHandler,
-                                                   const std::string &senderNetworkId,
-                                                   int receiverSessionId)
+void FileTransferManager::HandleDownloadFileRequest(MessageHandler &msgHandler,
+                                                    const std::string &senderNetworkId,
+                                                    int receiverSessionId)
 {
     auto uri = msgHandler.GetUri();
     auto userId = msgHandler.GetUserId();
@@ -71,7 +71,7 @@ void FileTransferManager::HandleDowloadFileRequest(MessageHandler &msgHandler,
         auto result = sessionManager_->SendFile(senderNetworkId, {physicalPath}, {relativePath});
         if (result != E_OK) {
             LOGE("send file failed, relativePath:%{public}s, ret:%{public}d", relativePath.c_str(), result);
-            errorCode = result;
+            errorCode = E_SEND_FILE;
         }
     } else {
         errorCode = E_FILE_NOT_EXIST;
@@ -95,7 +95,7 @@ void FileTransferManager::HandleDowloadFileRequest(MessageHandler &msgHandler,
     LOGD("send response, sessionId:%{public}d", receiverSessionId);
 }
 
-void FileTransferManager::HandleDowloadFileResponse(MessageHandler &msgHandler)
+void FileTransferManager::HandleDownloadFileResponse(MessageHandler &msgHandler)
 {
     LOGD("recviceve response msg");
     auto errorCode = msgHandler.GetErrorCode();
@@ -117,9 +117,9 @@ void FileTransferManager::OnMessageHandle(const std::string &senderNetworkId,
     }
     auto msgType = msgHandler.GetMsgType();
     if (msgType == MSG_DOWNLOAD_FILE_REQ) {
-        HandleDowloadFileRequest(msgHandler, senderNetworkId, receiverSessionId);
+        HandleDownloadFileRequest(msgHandler, senderNetworkId, receiverSessionId);
     } else if (msgType == MSG_DOWNLOAD_FILE_RSP) {
-        HandleDowloadFileResponse(msgHandler);
+        HandleDownloadFileResponse(msgHandler);
     } else {
         LOGE("error msg type:%{public}d", msgType);
     }
