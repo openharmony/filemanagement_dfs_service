@@ -41,10 +41,10 @@ public:
                          const void *data,
                          unsigned int dataLen) override;
     void OnFileRecvHandle(const std::string &senderNetworkId, const char *filePath, int result) override;
-    void HandleDowloadFileRequest(MessageHandler &msgHandler,
+    void HandleDownloadFileRequest(MessageHandler &msgHandler,
                                   const std::string &senderNetworkId,
                                   int receiverSessionId);
-    void HandleDowloadFileResponse(MessageHandler &msgHandler);
+    void HandleDownloadFileResponse(MessageHandler &msgHandler);
 private:
     bool IsFileExists(std::string &filePath);
     std::tuple<std::string, std::string> UriToPath(const std::string &uri, const int32_t userId);

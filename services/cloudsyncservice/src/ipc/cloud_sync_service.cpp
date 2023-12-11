@@ -161,7 +161,11 @@ void CloudSyncService::LoadRemoteSACallback::OnLoadSACompleteForRemote(const std
     LOGI("Load CloudSync SA success,systemAbilityId:%{public}d, remoteObj result:%{public}s", systemAbilityId,
          (remoteObject == nullptr ? "false" : "true"));
     unique_lock<mutex> lock(loadRemoteSAMutex_);
-    isLoadSuccess_.store(true);
+    if (remoteObject == nullptr) {
+        isLoadSuccess_.store(false);
+    } else {
+        isLoadSuccess_.store(true);
+    }
     proxyConVar_.notify_one();
 }
 

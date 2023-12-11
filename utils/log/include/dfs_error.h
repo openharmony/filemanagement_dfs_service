@@ -70,6 +70,8 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_OPEN_SESSION,
     E_WAIT_SESSION_OPENED,
     E_FILE_NOT_EXIST,
+    E_SEND_FILE,
+    E_MEMORY,
 };
 
 enum JsErrCode {
