@@ -371,7 +371,7 @@ int32_t GalleryDataSyncer::Lock()
     };
 
     const uint32_t KEEP_ALIVE_PERIOD_COEF = 3;
-    uint32_t period = lock_.lock.lockInterval * SECOND_TO_MILLISECOND / KEEP_ALIVE_PERIOD_COEF;
+    uint32_t period = (uint32_t)(lock_.lock.lockInterval) * (uint32_t)(SECOND_TO_MILLISECOND) / KEEP_ALIVE_PERIOD_COEF;
     LOGD("period %{public}d", period);
     DfsuTimer::GetInstance().Register(timerCallback, lock_.timerId, period);
 

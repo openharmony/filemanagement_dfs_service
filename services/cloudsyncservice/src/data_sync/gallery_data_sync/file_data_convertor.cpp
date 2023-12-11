@@ -1021,7 +1021,7 @@ int32_t FileDataConvertor::ExtractDateModified(const DriveKit::DKRecord &record,
             }
         }
     }
-    dateModified = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    dateModified = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_MODIFIED, dateModified);
     return E_OK;
 }
