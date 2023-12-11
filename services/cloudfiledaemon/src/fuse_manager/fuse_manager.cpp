@@ -397,7 +397,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         }
         bool res = cInode->readSession->Close(needRemain);
         if (!res) {
-            LOGE("close error, needRemain: %d", needRemain);
+            LOGE("close error, needRemain: %{public}d", needRemain);
         }
         if (needRemain && res) {
             MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));

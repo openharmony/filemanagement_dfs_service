@@ -144,10 +144,10 @@ static bool HandleDkError(fuse_req_t req, DriveKit::DKError dkError)
         LOGE("network error");
         fuse_reply_err(req, ENOTCONN);
     } else if (dkError.isServerError) {
-        LOGE("server errorCode is: %d", dkError.serverErrorCode);
+        LOGE("server errorCode is: %{public}d", dkError.serverErrorCode);
         fuse_reply_err(req, EIO);
     } else if (dkError.isLocalError) {
-        LOGE("local errorCode is: %d", dkError.dkErrorCode);
+        LOGE("local errorCode is: %{public}d", dkError.dkErrorCode);
         fuse_reply_err(req, EINVAL);
     }
     return true;
