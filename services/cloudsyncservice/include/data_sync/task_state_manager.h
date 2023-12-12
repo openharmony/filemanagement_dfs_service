@@ -31,12 +31,13 @@ public:
     ~TaskStateManager() = default;
     void StartTask(std::string bundleName, TaskType task);
     void CompleteTask(std::string bundleName, TaskType task);
-    void DelayUnloadTask();
+    void StartTask();
 private:
     TaskStateManager();
     std::mutex taskMapsMutex_;
     std::unordered_map<std::string, uint64_t> taskMaps_;
     std::shared_ptr<AppExecFwk::EventHandler> unloadHandler_;
+    void DelayUnloadTask();
 };
 }
 #endif // OHOS_FILEMGMT_TASK_STATE_MANAGER_H

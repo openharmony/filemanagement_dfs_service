@@ -121,7 +121,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         LOGE("%{public}s", e.what());
     }
     LOGI("Start service successfully");
-    TaskStateManager::GetInstance().DelayUnloadTask();
+    TaskStateManager::GetInstance().StartTask();
     HandleStartReason(startReason);
 }
 
