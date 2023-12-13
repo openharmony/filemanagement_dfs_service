@@ -101,20 +101,6 @@ void DeviceManagerAgent::JoinGroup(weak_ptr<MountPoint> mp)
     }
     agent->StartActor();
     LOGI("join group end, id : %{public}d, account : %{public}s", smp->GetID(), smp->isAccountLess() ? "no" : "yes");
-
-    shared_ptr<SoftbusAgent> agentP2P = nullptr;
-    {
-        unique_lock<mutex> lock(mpToNetworksMutex_);
-        agentP2P = make_shared<SoftbusAgent>(mp);
-        auto [ignored, inserted] = mpToP2PNetworks_.insert({ smp->GetID(), agentP2P });
-        if (!inserted) {
-            stringstream ss;
-            ss << "Failed to join group: Mountpoint existed" << smp->ToString();
-            throw runtime_error(ss.str());
-        }
-    }
-    agentP2P->StartActor();
-    LOGI("join group end, id : %{public}d, account : %{public}s", smp->GetID(), smp->isAccountLess() ? "no" : "yes");
 }
 
 void DeviceManagerAgent::QuitGroup(weak_ptr<MountPoint> mp)
@@ -139,17 +125,6 @@ void DeviceManagerAgent::QuitGroup(weak_ptr<MountPoint> mp)
 
     it->second->StopActor();
     mpToNetworks_.erase(smp->GetID());
-    LOGI("quit group end, id : %{public}d, account : %{public}s", smp->GetID(), smp->isAccountLess() ? "no" : "yes");
-
-    auto itP2P = mpToP2PNetworks_.find(smp->GetID());
-    if (itP2P == mpToP2PNetworks_.end()) {
-        stringstream ss;
-        ss << "Failed to quit group: Mountpoint didn't exist " << smp->ToString();
-        throw runtime_error(ss.str());
-    }
-
-    itP2P->second->StopActor();
-    mpToP2PNetworks_.erase(smp->GetID());
     LOGI("quit group end, id : %{public}d, account : %{public}s", smp->GetID(), smp->isAccountLess() ? "no" : "yes");
 }
 
@@ -180,36 +155,18 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
     }
 }
 
-bool DeviceManagerAgent::NetworkIsTrusted(bool isAccountless, std::shared_ptr<NetworkAgentTemplate> net)
+std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRelation(bool isAccountless)
 {
-    if (net != nullptr) {
-        auto smp = net->GetMountPoint();
-        if (smp != nullptr && smp->isAccountLess() == isAccountless) {
-            return true;
-        }
-    }
-    return false;
-}
-
-std::shared_ptr<NetworkAgentTemplate> DeviceManagerAgent::FindNetworkBaseTrustRelation(bool isAccountless, bool isP2P)
-{
-    if (!isP2P) {
-        LOGI("enter: isAccountless %{public}d", isAccountless);
-        for (auto [ignore, net] : mpToNetworks_) {
-            if (NetworkIsTrusted(isAccountless, net)) {
+    LOGI("enter: isAccountless %{public}d", isAccountless);
+    for (auto [ignore, net] : mpToNetworks_) {
+        if (net != nullptr) {
+            auto smp = net->GetMountPoint();
+            if (smp != nullptr && smp->isAccountLess() == isAccountless) {
                 return net;
             }
         }
-        LOGE("not find this net in mpToNetworks, isAccountless %{public}d", isAccountless);
-    } else {
-        LOGI("enter: isP2PAccountless %{public}d", isAccountless);
-        for (auto [ignore, net] : mpToP2PNetworks_) {
-            if (NetworkIsTrusted(isAccountless, net)) {
-                return net;
-            }
-        }
-        LOGE("not find this net in mpToP2PNetworks, isAccountless %{public}d", isAccountless);
     }
+    LOGE("not find this net in mpToNetworks, isAccountless %{public}d", isAccountless);
     return nullptr;
 }
 
@@ -310,15 +267,21 @@ int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDevic
 {
     LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline begin", deviceInfo.networkId);
     DeviceInfo info(deviceInfo);
-
-    QueryRelatedGroups(info.udid_, info.cid_, true);
-
+    LOGI("[OnDeviceP2POnline] networkId %{public}s, QueryRelatedGroups begin", deviceInfo.networkId);
+    QueryRelatedGroups(info.udid_, info.cid_);
+    LOGI("[OnDeviceP2POnline] networkId %{public}s, QueryRelatedGroups end", deviceInfo.networkId);
     unique_lock<mutex> lock(mpToNetworksMutex_);
-    auto it = cidP2PNetTypeRecord_.find(info.cid_);
-    if (it == cidP2PNetTypeRecord_.end()) {
+    auto it = cidNetTypeRecord_.find(info.cid_);
+    if (it == cidNetTypeRecord_.end()) {
         LOGE("[OnDeviceP2POnline] cid %{public}s network is null!", info.cid_.c_str());
         return P2P_FAILED;
     }
+    auto type_ = cidNetworkType_.find(info.cid_);
+    if (type_ == cidNetworkType_.end()) {
+        LOGE("[OnDeviceP2POnline] cid %{public}s network type is null!", info.cid_.c_str());
+        return P2P_FAILED;
+    }
+    openP2PSessionCount_++;
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
         &NetworkAgentTemplate::ConnectDeviceByP2PAsync, info);
     cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
@@ -333,15 +296,25 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
     DeviceInfo info(deviceInfo);
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
-    auto it = cidP2PNetTypeRecord_.find(info.cid_);
-    if (it == cidP2PNetTypeRecord_.end()) {
+    openP2PSessionCount_--;
+    if (openP2PSessionCount_) {
+        return P2P_FAILED;
+    }
+    auto it = cidNetTypeRecord_.find(info.cid_);
+    if (it == cidNetTypeRecord_.end()) {
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        return P2P_FAILED;
+    }
+    auto type_ = cidNetworkType_.find(info.cid_);
+    if (type_ == cidNetworkType_.end()) {
+        LOGE("cid %{public}s network type is null!", info.cid_.c_str());
         return P2P_FAILED;
     }
     auto cmd =
         make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
     it->second->Recv(move(cmd));
-    cidP2PNetTypeRecord_.erase(info.cid_);
+    cidNetTypeRecord_.erase(info.cid_);
+    cidNetworkType_.erase(info.cid_);
     LOGI("OnDeviceP2POffline end");
     return P2P_SUCCESS;
 }
@@ -365,7 +338,7 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
     }
 }
 
-void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::string &networkId, bool isP2P)
+void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::string &networkId)
 {
     auto hichainDevGroupMgr_ = GetGmInstance();
     if (hichainDevGroupMgr_ == nullptr) {
@@ -403,14 +376,10 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
     for (const auto &group : groupList) {
-        auto network = FindNetworkBaseTrustRelation(CheckIsAccountless(group), isP2P);
+        auto network = FindNetworkBaseTrustRelation(CheckIsAccountless(group));
         if (network != nullptr) {
-            if (isP2P) {
-                cidP2PNetTypeRecord_.insert({ networkId, network });
-            } else {
-                cidNetTypeRecord_.insert({ networkId, network });
-                cidNetworkType_.insert({ networkId, GetNetworkType(networkId) });
-            }
+            cidNetTypeRecord_.insert({ networkId, network });
+            cidNetworkType_.insert({ networkId, GetNetworkType(networkId) });
         }
     }
 

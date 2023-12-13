@@ -94,20 +94,18 @@ private:
     int32_t GetNetworkType(const std::string &cid);
     bool IsWifiNetworkType(int32_t networkType);
 
-    void QueryRelatedGroups(const std::string &udid, const std::string &networkId, bool isP2P = false);
+    void QueryRelatedGroups(const std::string &udid, const std::string &networkId);
     bool CheckIsAccountless(const GroupInfo &group);
-    bool NetworkIsTrusted(bool isAccountless, std::shared_ptr<NetworkAgentTemplate> net);
-    std::shared_ptr<NetworkAgentTemplate> FindNetworkBaseTrustRelation(bool isAccountless, bool isP2P = false);
+    std::shared_ptr<NetworkAgentTemplate> FindNetworkBaseTrustRelation(bool isAccountless);
     // We use a mutex instead of a shared_mutex to serialize online/offline procedures
     std::mutex mpToNetworksMutex_;
     std::map<uintptr_t, std::shared_ptr<NetworkAgentTemplate>> mpToNetworks_;
-    std::map<uintptr_t, std::shared_ptr<NetworkAgentTemplate>> mpToP2PNetworks_;
     DeviceInfo localDeviceInfo_;
 
     // cid-->same_account/accoutless's network
     std::unordered_map<std::string, std::shared_ptr<NetworkAgentTemplate>> cidNetTypeRecord_;
     std::unordered_map<std::string, int32_t> cidNetworkType_;
-    std::unordered_map<std::string, std::shared_ptr<NetworkAgentTemplate>> cidP2PNetTypeRecord_;
+    uint8_t openP2PSessionCount_ = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage
