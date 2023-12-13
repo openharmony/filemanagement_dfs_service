@@ -74,6 +74,14 @@ void TaskStateManager::CompleteTask(string bundleName, TaskType task)
     }
 }
 
+void TaskStateManager::StartTask()
+{
+    std::lock_guard<std::mutex> lock(taskMapsMutex_);
+    if (taskMaps_.empty()) {
+        DelayUnloadTask();
+    }
+}
+
 void TaskStateManager::DelayUnloadTask()
 {
     LOGI("delay unload task begin");
