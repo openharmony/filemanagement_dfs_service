@@ -20,6 +20,7 @@
 #include <memory>
 #include <mutex>
 #include <set>
+#include <map>
 
 #include "network/base_session.h"
 #include "network/kernel_talker.h"
@@ -31,15 +32,17 @@ class SessionPool final : protected NoCopyable {
 public:
     explicit SessionPool(std::shared_ptr<KernelTalker> &talker) : talker_(talker) {}
     ~SessionPool() = default;
+    void OccupySession(int sessionId, uint8_t linkType);
     void HoldSession(std::shared_ptr<BaseSession> session);
-    void ReleaseSession(const int32_t fd);
-    void ReleaseSession(const std::string &cid);
+    uint8_t ReleaseSession(const int32_t fd);
+    void ReleaseSession(const std::string &cid, const uint8_t linkType);
     void ReleaseAllSession();
 
 private:
     std::recursive_mutex sessionPoolLock_;
     std::list<std::shared_ptr<BaseSession>> usrSpaceSessionPool_;
     std::shared_ptr<KernelTalker> &talker_;
+    std::map<int, uint8_t> occupySession_;
 
     void AddSessionToPool(std::shared_ptr<BaseSession> session);
 };
