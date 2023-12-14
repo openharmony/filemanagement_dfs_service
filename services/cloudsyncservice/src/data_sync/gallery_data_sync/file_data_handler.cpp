@@ -2125,12 +2125,12 @@ static inline int32_t GetFileIdFromRecord(DKRecord &record, int32_t &fileId)
 {
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(FILE_ATTRIBUTES) != data.end()) {
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
         LOGE("file attributes is no exit");
         return E_INVAL_ARG;
     }
     DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
-    if (attributes.find(Media::MediaColumn::MEDIA_ID) != attributes.end()) {
+    if (attributes.find(Media::MediaColumn::MEDIA_ID) == attributes.end()) {
         LOGE("media id is no exit");
         return E_INVAL_ARG;
     }
@@ -2219,8 +2219,7 @@ int32_t FileDataHandler::BindAlbums(std::vector<DriveKit::DKRecord> &records)
         int32_t fileId;
         int32_t ret = GetFileIdFromRecord(record, fileId);
         if (ret != E_OK) {
-            LOGE("get file id from record err %{public}d", ret);
-            return ret;
+            continue;
         }
         predicates.EqualTo(PM::ASSET_ID, to_string(fileId));
         /* query map */
@@ -2279,8 +2278,7 @@ int32_t FileDataHandler::BindAlbumChanges(std::vector<DriveKit::DKRecord> &recor
         int32_t fileId;
         int32_t ret = GetFileIdFromRecord(record, fileId);
         if (ret != E_OK) {
-            LOGE("get file id from record err %{public}d", ret);
-            return ret;
+            continue;
         }
         predicates.EqualTo(PM::ASSET_ID, to_string(fileId))
             ->And()
