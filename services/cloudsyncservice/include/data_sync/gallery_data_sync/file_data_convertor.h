@@ -76,7 +76,7 @@ private:
     int32_t HandleRecycled(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleSize(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleMimeType(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
-    int32_t HandleEditedTime(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
+    int32_t HandleEditedTime(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
 
     int32_t HandleUniqueFileds(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleCompatibleFileds(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
@@ -276,7 +276,7 @@ inline int32_t FileDataConvertor::HandleMimeType(DriveKit::DKRecordData &data,
     return E_OK;
 }
 
-inline int32_t FileDataConvertor::HandleEditedTime(DriveKit::DKRecord &record,
+inline int32_t FileDataConvertor::HandleEditedTime(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
     int64_t val;
@@ -284,7 +284,7 @@ inline int32_t FileDataConvertor::HandleEditedTime(DriveKit::DKRecord &record,
     if (ret != E_OK) {
         return ret;
     }
-    record.SetEditedTime(static_cast<uint64_t>(val));
+    data[FILE_EDITED_TIME] = DriveKit::DKRecordField(std::to_string(val));
     return E_OK;
 }
 
@@ -415,6 +415,7 @@ inline int32_t FileDataConvertor::HandleDataModified(DriveKit::DKRecordFieldMap 
     if (ret != E_OK) {
         return ret;
     }
+    map[FILE_EDITED_TIME_MS] = DriveKit::DKRecordField(val);
     map[Media::PhotoColumn::MEDIA_DATE_MODIFIED] = DriveKit::DKRecordField(val / MILLISECOND_TO_SECOND);
     return E_OK;
 }

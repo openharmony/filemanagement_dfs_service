@@ -53,7 +53,7 @@ const std::string FILE_DATA_MODIFIED = "data_modified";
 const std::string FILE_TIME_ZONE = "time_zone";
 const std::string FILE_THUMB_SIZE = "thumb_size";
 const std::string FILE_LCD_SIZE = "lcd_size";
-
+const std::string FILE_EDITED_TIME_MS = "editedTime_ms";
 /* properties */
 const std::string FILE_PROPERTIES = "properties";
 const std::string FILE_SOURCE_FILE_NAME = "sourceFileName";

@@ -60,7 +60,6 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
 
     /* process compatible fileds shared with gallery or gallery-specific fileds*/
     RETURN_ON_ERR(HandleCompatibleFileds(data, resultSet));
-    RETURN_ON_ERR(HandleEditedTime(record, resultSet));
     record.SetRecordData(data);
     record.SetRecordType(recordType_);
     if (type_ == FILE_CREATE) {
@@ -156,6 +155,7 @@ int32_t FileDataConvertor::HandleCompatibleFileds(DriveKit::DKRecordData &data,
 
     /* cloudsync-specific fields */
     RETURN_ON_ERR(HandleMimeType(data, resultSet));
+    RETURN_ON_ERR(HandleEditedTime(data, resultSet));
     return E_OK;
 }
 
@@ -1021,6 +1021,16 @@ int32_t FileDataConvertor::ExtractDateModified(const DriveKit::DKRecord &record,
     DriveKit::DKRecordData data;
     record.GetRecordData(data);
     int64_t dateModified = 0;
+    if (data.find(FILE_ATTRIBUTES) != data.end()) {
+        DriveKit::DKRecordFieldMap attributes;
+        data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+        if (attributes.find(FILE_EDITED_TIME_MS) != attributes.end()) {
+            if (attributes[FILE_EDITED_TIME_MS].GetLong(dateModified) == DKLocalErrorCode::NO_ERROR) {
+                valueBucket.PutLong(PhotoColumn::MEDIA_DATE_MODIFIED, dateModified);
+                return E_OK;
+            }
+        }
+    }
     dateModified = static_cast<int64_t>(record.GetEditedTime());
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_MODIFIED, dateModified);
     return E_OK;

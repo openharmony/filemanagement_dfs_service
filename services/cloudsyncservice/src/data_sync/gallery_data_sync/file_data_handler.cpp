@@ -1163,13 +1163,30 @@ static bool FileIsLocal(NativeRdb::ResultSet &local)
     return !!(static_cast<uint32_t>(position) & 1);
 }
 
+static inline int GetCloudMtime(const DKRecord &record, int64_t &dateModified)
+{
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+        return E_INVAL_ARG;
+    }
+    DriveKit::DKRecordFieldMap attributes;
+    data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+    if (attributes.find(FILE_EDITED_TIME_MS) == data.end()) {
+        return E_INVAL_ARG;
+    }
+    if (attributes[FILE_EDITED_TIME_MS].GetLong(dateModified) !=  DKLocalErrorCode::NO_ERROR) {
+        return E_INVAL_ARG;
+    }
+    return E_OK;
+}
+
 static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, bool &changed)
 {
     int64_t localMtime = 0;
     int64_t dateModified = 0;
     int ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, localMtime, local);
-    if (ret == E_OK) {
-        dateModified = record.GetEditedTime();
+    if ((ret == E_OK) && (GetCloudMtime(record, dateModified) == E_OK)) {
         LOGI("dateModified %{public}llu, localMtime %{public}llu",
             static_cast<unsigned long long>(dateModified), static_cast<unsigned long long>(localMtime));
         changed = !(dateModified == localMtime);
@@ -2763,7 +2780,10 @@ bool FileDataHandler::IsTimeChanged(const DriveKit::DKRecord &record,
     /* get mtime or metatime */
     if (type == Media::PhotoColumn::MEDIA_DATE_MODIFIED) {
         localtime = it->second.fdirtyTime;
-        cloudtime = record.GetEditedTime();
+        if (attributes[FILE_EDITED_TIME_MS].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
+            LOGE("obtain MEDIA_DATE_MODIFIED error");
+            return false;
+        }
     } else {
         localtime = it->second.mdirtyTime;
         if (attributes[PhotoColumn::PHOTO_META_DATE_MODIFIED].GetLong(cloudtime) != DKLocalErrorCode::NO_ERROR) {
