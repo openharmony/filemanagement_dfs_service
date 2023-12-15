@@ -306,7 +306,8 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
         return P2P_FAILED;
     }
     auto cmd =
-        make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDeviceByP2P, info);
+        make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>
+        (&NetworkAgentTemplate::DisconnectDeviceByP2P, info);
     it->second->Recv(move(cmd));
     cidNetTypeRecord_.erase(info.cid_);
     cidNetworkType_.erase(info.cid_);
