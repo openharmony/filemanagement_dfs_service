@@ -30,6 +30,7 @@ public:
     virtual bool IsFromServer() const = 0;
     virtual std::string GetCid() const = 0;
     virtual int32_t GetHandle() const = 0;
+    virtual int GetSessionId() const = 0;
     virtual std::array<char, KEY_SIZE_MAX> GetKey() const = 0;
     virtual void Release() const = 0;
     virtual void DisableSessionListener() const = 0;

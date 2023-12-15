@@ -91,7 +91,18 @@ void NetworkAgentTemplate::DisconnectAllDevices()
 void NetworkAgentTemplate::DisconnectDevice(const DeviceInfo info)
 {
     LOGI("DeviceOffline, cid:%{public}s", info.GetCid().c_str());
-    sessionPool_.ReleaseSession(info.GetCid());
+    sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_AP);
+}
+
+void NetworkAgentTemplate::DisconnectDeviceByP2P(const DeviceInfo info)
+{
+    LOGI("DeviceOffline, cid:%{public}s", info.GetCid().c_str());
+    sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_P2P);
+}
+
+void NetworkAgentTemplate::OccupySession(int sessionId, uint8_t linkType)
+{
+    sessionPool_.OccupySession(sessionId, linkType);
 }
 
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
@@ -128,16 +139,16 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
     string cidStr(param.remoteCid, CID_MAX_LEN);
     int fd = param.fd;
     LOGI("NOTIFY_GET_SESSION, old fd %{public}d, remote cid %{public}s", fd, cidStr.c_str());
-    sessionPool_.ReleaseSession(fd);
-    GetSession(cidStr);
+    uint8_t linkType = sessionPool_.ReleaseSession(fd);
+    GetSession(cidStr, linkType);
 }
 
-void NetworkAgentTemplate::GetSession(const string &cid)
+void NetworkAgentTemplate::GetSession(const string &cid, uint8_t linkType)
 {
     DeviceInfo deviceInfo;
     deviceInfo.SetCid(cid);
     try {
-        OpenSession(deviceInfo, LINK_TYPE_AP);
+        OpenSession(deviceInfo, linkType);
     } catch (const DfsuException &e) {
         LOGE("reget session failed, code: %{public}d", e.code());
     }

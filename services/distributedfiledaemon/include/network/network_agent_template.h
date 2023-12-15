@@ -57,6 +57,8 @@ public:
     void DisconnectAllDevices();
     void ConnectDeviceAsync(const DeviceInfo info);
     void DisconnectDevice(const DeviceInfo info);
+    void DisconnectDeviceByP2P(const DeviceInfo info);
+    void OccupySession(int sessionId, uint8_t linkType);
     void AcceptSession(std::shared_ptr<BaseSession> session);
     void ConnectDeviceByP2PAsync(const DeviceInfo info);
     std::shared_ptr<MountPoint> GetMountPoint()
@@ -77,7 +79,7 @@ private:
     void HandleAllNotify(int fd);
     void NotifyHandler(NotifyParam &param);
     void GetSessionProcess(NotifyParam &param);
-    void GetSession(const std::string &cid);
+    void GetSession(const std::string &cid, uint8_t linkType);
     void CloseSessionForOneDevice(const std::string &cid);
     void AcceptSessionInner(std::shared_ptr<BaseSession> session);
     void GetSessionProcessInner(NotifyParam param);
