@@ -104,7 +104,7 @@ static std::string ParseWordFromString(const std::string &str, int targetIndex)
     return str.substr(begin, end - begin);
 }
 
-static std::string ParseConnectionStatus(const std::string &fileName, const std::string &networkId)
+static bool ParseConnectionStatus(const std::string &fileName, const std::string &networkId)
 {
     std::map<std::string, int> keywordsIndex = {
         {"peers", 1}, {"networkId", 1}, {"connection_status", 2}, {"status", 2}};
@@ -119,7 +119,7 @@ static std::string ParseConnectionStatus(const std::string &fileName, const std:
             getline(statusFile, str);
             if (str.empty()) {
                 statusFile.close();
-                return "";
+                return false;
             }
             auto res = ParseWordFromString(str, keywordsIndex["peers"]);
             if (res == "peers") {
@@ -129,7 +129,7 @@ static std::string ParseConnectionStatus(const std::string &fileName, const std:
             getline(statusFile, str);
             if (str.empty()) {
                 statusFile.close();
-                return "";
+                return false;
             }
             auto res = ParseWordFromString(str, keywordsIndex["networkId"]);
             if (res == networkId) {
@@ -139,31 +139,27 @@ static std::string ParseConnectionStatus(const std::string &fileName, const std:
             getline(statusFile, str);
             if (str.empty()) {
                 statusFile.close();
-                return "";
+                return false;
             }
             auto res = ParseWordFromString(str, keywordsIndex["connection_status"]);
-            if (res == "connection_status") {
-                findConnectionStatus = true;
-            } else {
-                findNetworkId = false;
+            if (res != "connection_status") {
+                statusFile.close();
+                return false;
             }
+            findConnectionStatus = true;
         } else if (!findStatus) {
             getline(statusFile, str);
             if (str.empty()) {
                 statusFile.close();
-                return "";
+                return false;
             }
             auto res = ParseWordFromString(str, keywordsIndex["status"]);
-            if (res == CONNECTION_STATUS) {
-                statusFile.close();
-                return res;
-            }
-            findNetworkId = false;
-            findConnectionStatus = false;
+            statusFile.close();
+            return res == CONNECTION_STATUS;
         }
     }
     statusFile.close();
-    return "";
+    return false;
 }
 
 static int FilterFunc(const struct dirent *filename)
@@ -219,10 +215,10 @@ static bool GetConnectionStatus(const std::string &targetDir, const std::string 
         if ((pNameList->namelist[i])->d_name != targetDir) {
             continue;
         }
-        string dest = SYS_HMDFS_PATH + '/' + string((pNameList->namelist[i])->d_name);
+        string dest = SYS_HMDFS_PATH + '/' + targetDir;
         if ((pNameList->namelist[i])->d_type == DT_DIR) {
             dest = dest + '/' + CONNECTION_STATUS_FILE_NAME;
-            if (ParseConnectionStatus(dest, networkId) == CONNECTION_STATUS) {
+            if (ParseConnectionStatus(dest, networkId)) {
                 LOGI("ParseConnectionStatus success.");
                 return true;
             }
@@ -299,17 +295,18 @@ int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &
     deviceInfo.range = static_cast<int32_t>(data.ReadUint32());
     deviceInfo.authForm = static_cast<DistributedHardware::DmAuthForm>(data.ReadInt32());
     auto path = ParseHmdfsPath();
-    auto hashedPath = MocklispHash(path);
     stringstream ss;
-    ss << hashedPath;
+    ss << MocklispHash(path);
     auto targetDir = ss.str();
     auto networkId = std::string(deviceInfo.networkId);
     if (!GetConnectionStatus(targetDir, networkId)) {
+        LOGI("Get connection status not ok, try again.");
         ret = OpenP2PConnection(deviceInfo);
         if (ret != NO_ERROR) {
             LOGE("OpenP2PConnection failed, ret = %{public}d", ret);
         } else {
             ret = RepeatGetConnectionStatus(targetDir, networkId);
+            LOGI("RepeatGetConnectionStatus end, ret = %{public}d", ret);
         }
     }
     reply.WriteInt32(ret);
