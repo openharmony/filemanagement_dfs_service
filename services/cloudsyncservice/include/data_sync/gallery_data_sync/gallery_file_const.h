@@ -53,7 +53,7 @@ const std::string FILE_DATA_MODIFIED = "data_modified";
 const std::string FILE_TIME_ZONE = "time_zone";
 const std::string FILE_THUMB_SIZE = "thumb_size";
 const std::string FILE_LCD_SIZE = "lcd_size";
-
+const std::string FILE_EDITED_TIME_MS = "editedTime_ms";
 /* properties */
 const std::string FILE_PROPERTIES = "properties";
 const std::string FILE_SOURCE_FILE_NAME = "sourceFileName";
@@ -224,8 +224,6 @@ const std::vector<std::string> CLOUD_SYNC_UNIQUE_COLUMNS = {
     Media::PhotoColumn::MEDIA_FILE_PATH,
     Media::PhotoColumn::MEDIA_TITLE,
     Media::PhotoColumn::MEDIA_TYPE,
-    Media::PhotoColumn::MEDIA_DATE_ADDED,
-    Media::PhotoColumn::MEDIA_DATE_MODIFIED,
     Media::PhotoColumn::MEDIA_DURATION,
     Media::PhotoColumn::MEDIA_HIDDEN,
     Media::PhotoColumn::MEDIA_RELATIVE_PATH,
@@ -245,8 +243,6 @@ const std::vector<DataType> CLOUD_SYNC_UNIQUE_COLUMN_TYPES = {
     DataType::STRING,       /* data */
     DataType::STRING,       /* title */
     DataType::INT,          /* media_type */
-    DataType::LONG,         /* date_added */
-    DataType::LONG,         /* date_modified */
     DataType::INT,          /* duration */
     DataType::INT,          /* hidden */
     DataType::STRING,       /* relative_path */
