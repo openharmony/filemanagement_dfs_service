@@ -46,7 +46,6 @@ constexpr int32_t NO_ERROR = 0;
 constexpr int32_t INVALID_USER_ID = -1;
 constexpr int DISMATCH = 0;
 constexpr int MATCH = 1;
-constexpr int CID_MAX_LEN = 64;
 
 DaemonStub::DaemonStub()
 {
@@ -74,23 +73,7 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
     return (this->*(interfaceIndex->second))(data, reply);
 }
 
-static std::string GetLineFromFile(const std::string &fileName, int targetIndex)
-{
-    ifstream statusFile(fileName);
-    std::string str;
-    int lineIndex = 0;
-    while (lineIndex++ < targetIndex) {
-        getline(statusFile, str);
-        if (str.empty()) {
-            statusFile.close();
-            return "";
-        }
-    }
-    statusFile.close();
-    return str;
-}
-
-static std::string ParseWorkFromString(const std::string &str, int targetIndex)
+static std::string ParseWordFromString(const std::string &str, int targetIndex)
 {
     size_t begin = 0;
     size_t end = 0;
@@ -104,7 +87,7 @@ static std::string ParseWorkFromString(const std::string &str, int targetIndex)
         }
         begin = i;
         for (i = begin; i < str.size(); ++i) {
-            if (str[i] != '\t' && str[i] != ' ') {
+            if (!(str[i] != '\t' && str[i] != ' ')) {
                 break;
             }
         }
@@ -123,14 +106,64 @@ static std::string ParseWorkFromString(const std::string &str, int targetIndex)
 
 static std::string ParseConnectionStatus(const std::string &fileName, const std::string &networkId)
 {
-    auto line = GetLineFromFile(fileName, 2);
-    auto cid = ParseWorkFromString(line, 1);
-    if (cid != networkId) {
-        LOGI("parse networkId = %{public}s", cid.c_str());
-        return "";
+    std::map<std::string, int> keywordsIndex = {
+        {"peers", 1}, {"networkId", 1}, {"connection_status", 2}, {"status", 2}};
+    bool findPeers = false;
+    bool findNetworkId = false;
+    bool findConnectionStatus = false;
+    bool findStatus = false;
+    ifstream statusFile(fileName);
+    std::string str;
+    while (true) {
+        if (!findPeers) {
+            getline(statusFile, str);
+            if (str.empty()) {
+                statusFile.close();
+                return "";
+            }
+            auto res = ParseWordFromString(str, keywordsIndex["peers"]);
+            if (res == "peers") {
+                findPeers = true;
+            }
+        } else if (!findNetworkId) {
+            getline(statusFile, str);
+            if (str.empty()) {
+                statusFile.close();
+                return "";
+            }
+            auto res = ParseWordFromString(str, keywordsIndex["networkId"]);
+            if (res == networkId) {
+                findNetworkId = true;
+            }
+        } else if (!findConnectionStatus) {
+            getline(statusFile, str);
+            if (str.empty()) {
+                statusFile.close();
+                return "";
+            }
+            auto res = ParseWordFromString(str, keywordsIndex["connection_status"]);
+            if (res == "connection_status") {
+                findConnectionStatus = true;
+            } else {
+                findNetworkId = false;
+            }
+        } else if (!findStatus) {
+            getline(statusFile, str);
+            if (str.empty()) {
+                statusFile.close();
+                return "";
+            }
+            auto res = ParseWordFromString(str, keywordsIndex["status"]);
+            if (res == CONNECTION_STATUS) {
+                statusFile.close();
+                return res;
+            }
+            findNetworkId = false;
+            findConnectionStatus = false;
+        }
     }
-    line = GetLineFromFile(fileName, 4);
-    return ParseWorkFromString(line, 2);
+    statusFile.close();
+    return "";
 }
 
 static int FilterFunc(const struct dirent *filename)
@@ -142,7 +175,7 @@ static int FilterFunc(const struct dirent *filename)
 }
 
 struct NameList {
-    struct dirent **namelist = { nullptr };
+    struct dirent **namelist = {nullptr};
     int direntNum = 0;
 };
 
@@ -175,7 +208,7 @@ static bool GetConnectionStatus(const std::string &targetDir, const std::string 
     if (!CheckValidDir(SYS_HMDFS_PATH)) {
         return false;
     }
-    unique_ptr<struct NameList, decltype(Deleter) *> pNameList = { new (nothrow) struct NameList, Deleter };
+    unique_ptr<struct NameList, decltype(Deleter) *> pNameList = {new (nothrow) struct NameList, Deleter};
     if (pNameList == nullptr) {
         LOGE("Failed to request heap memory.");
         return false;
@@ -212,7 +245,7 @@ static uint64_t MocklispHash(const string &str)
 static int32_t RepeatGetConnectionStatus(const std::string &targetDir, const std::string &networkId)
 {
     int retryCount = 0;
-    while (retryCount++ < MAX_RETRY && !GetConnectionStatus(targetDir, networkId)) {
+    while (retryCount++ < MAX_RETRY - 1 && !GetConnectionStatus(targetDir, networkId)) {
         usleep(CHECK_SESSION_DELAY_TIME);
     }
     return retryCount == MAX_RETRY ? -1 : NO_ERROR;
@@ -243,19 +276,6 @@ static std::string ParseHmdfsPath()
     return path.replace(pos, CURRENT_USER_ID_FLAG.length(), std::to_string(userId));
 }
 
-static std::string GetKernelNetworkId(const std::string &networkId)
-{
-    uint8_t cid[CID_MAX_LEN];
-    if (memcpy_s(cid, CID_MAX_LEN, networkId.c_str(), CID_MAX_LEN)) {
-        return "";
-    }
-    std::ostringstream oss;
-    for (int i = 0; i < CID_MAX_LEN; ++i) {
-        oss << cid[i];
-    }
-    return oss.str();
-}
-
 int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin OpenP2PConnection");
@@ -278,18 +298,18 @@ int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &
     deviceInfo.deviceTypeId = data.ReadUint16();
     deviceInfo.range = static_cast<int32_t>(data.ReadUint32());
     deviceInfo.authForm = static_cast<DistributedHardware::DmAuthForm>(data.ReadInt32());
-    auto kernelCid = GetKernelNetworkId(std::string(deviceInfo.networkId));
     auto path = ParseHmdfsPath();
     auto hashedPath = MocklispHash(path);
     stringstream ss;
     ss << hashedPath;
     auto targetDir = ss.str();
-    if (!GetConnectionStatus(targetDir, kernelCid)) {
+    auto networkId = std::string(deviceInfo.networkId);
+    if (!GetConnectionStatus(targetDir, networkId)) {
         ret = OpenP2PConnection(deviceInfo);
         if (ret != NO_ERROR) {
             LOGE("OpenP2PConnection failed, ret = %{public}d", ret);
         } else {
-            ret = RepeatGetConnectionStatus(targetDir, kernelCid);
+            ret = RepeatGetConnectionStatus(targetDir, networkId);
         }
     }
     reply.WriteInt32(ret);
