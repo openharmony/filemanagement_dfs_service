@@ -142,6 +142,9 @@ int SessionManager::OnSessionOpened(int sesssionId, int result)
 void SessionManager::OnSessionClosed(int sessionId)
 {
     RemoveSendSession(sessionId);
+    if (dataHandler_ != nullptr) {
+        dataHandler_->OnSessionClosed();
+    }
 }
 
 void SessionManager::OnDataReceived(const std::string &senderNetworkId,

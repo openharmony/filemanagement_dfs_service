@@ -43,6 +43,7 @@ private:
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
 
     sptr<DownloadAssetCallbackClient> downloadAssetCallback_;
+    std::atomic_flag isCallbackRegistered_{false};
     std::atomic_flag isFirstCall_{false};
     sptr<SvcDeathRecipient> deathRecipient_;
     std::mutex callbackInitMutex_;

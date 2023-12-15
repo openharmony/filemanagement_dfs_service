@@ -22,7 +22,6 @@
 #include "data_sync_const.h"
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
-#include "file_transfer_manager.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
@@ -429,7 +428,11 @@ int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &r
         LOGE("uploadAsset get drive kit instance err");
         return E_CLOUD_SDK;
     }
-    return driveKit->OnUploadAsset(request, result);
+    string bundleName("distributeddata");
+    TaskStateManager::GetInstance().StartTask(bundleName, TaskType::UPLOAD_ASSET_TASK);
+    auto ret = driveKit->OnUploadAsset(request, result);
+    TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::UPLOAD_ASSET_TASK);
+    return ret;
 }
 
 int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj)
@@ -452,7 +455,10 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
 
     // Not to pass the assetinfo.fieldkey
     DriveKit::DKDownloadAsset assetsToDownload{assetInfoObj.recordType, assetInfoObj.recordId, {}, asset, {}};
-    return sdkHelper->DownloadAssets(assetsToDownload);
+    TaskStateManager::GetInstance().StartTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
+    ret = sdkHelper->DownloadAssets(assetsToDownload);
+    TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
+    return ret;
 }
 
 int32_t CloudSyncService::DownloadAsset(const uint64_t taskId,
