@@ -305,9 +305,8 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
         LOGE("cid %{public}s network type is null!", info.cid_.c_str());
         return P2P_FAILED;
     }
-    auto cmd =
-        make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>
-        (&NetworkAgentTemplate::DisconnectDeviceByP2P, info);
+    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
+        &NetworkAgentTemplate::DisconnectDeviceByP2P, info);
     it->second->Recv(move(cmd));
     cidNetTypeRecord_.erase(info.cid_);
     cidNetworkType_.erase(info.cid_);
