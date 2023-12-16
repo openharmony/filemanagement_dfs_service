@@ -425,6 +425,7 @@ void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
         if (childPtr == nullptr) {
             childPtr = GenerateCloudDiskInode(data, ino, childInfos[i]);
         }
+        InitInodeAttr(ino, childPtr.get(), childInfos[i]);
         FileOperationsHelper::AddDirEntry(req, entryData, len, childInfos[i].fileName.c_str(), childPtr);
     }
     FileOperationsHelper::FuseReplyLimited(req, entryData.c_str(), len, off, size);
