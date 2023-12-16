@@ -52,12 +52,12 @@ public:
     int32_t SetXAttr(const std::string &cloudId, const std::string &position, const std::string &value);
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
         const std::string &newParentCloudId, const std::string &newFileName);
-    int32_t Unlink(const std::string &parentCloudId, const std::string &fileName);
+    int32_t Unlink(const std::string &parentCloudId, const std::string &fileName, std::string &unlinkCloudId);
 
 private:
     void Stop();
-    int32_t UnlinkSyncedDirectory(const std::string &cloudId);
-    int32_t UnlinkLocalDirectory(const std::string &cloudId);
+    int32_t UnlinkSynced(const std::string &cloudId);
+    int32_t UnlinkLocal(const std::string &cloudId);
 
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     NativeRdb::RdbStoreConfig config_{""};
