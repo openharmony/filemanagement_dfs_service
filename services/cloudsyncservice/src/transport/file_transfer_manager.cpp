@@ -16,6 +16,7 @@
 #include "file_transfer_manager.h"
 
 #include <cinttypes>
+#include <filesystem>
 
 #include "dfs_error.h"
 #include "ipc/download_asset_callback_manager.h"
@@ -81,7 +82,7 @@ void FileTransferManager::HandleDownloadFileRequest(MessageHandler &msgHandler,
                              .dstNetworkId = senderNetworkId,
                              .uri = uri,
                              .msgType = MSG_DOWNLOAD_FILE_RSP,
-                             .errorCode = 0,
+                             .errorCode = errorCode,
                              .userId = userId,
                              .taskId = taskId};
     MessageHandler resp(info);
@@ -132,7 +133,11 @@ void FileTransferManager::OnFileRecvHandle(const std::string &senderNetworkId, c
 
 bool FileTransferManager::IsFileExists(std::string &filePath)
 {
-    return true;
+    if (filesystem::exists(filePath)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 std::tuple<std::string, std::string> FileTransferManager::UriToPath(const std::string &uri, const int32_t userId)
@@ -141,6 +146,10 @@ std::tuple<std::string, std::string> FileTransferManager::UriToPath(const std::s
     int ret = AppFileService::SandboxHelper::GetPhysicalPath(uri, std::to_string(userId), physicalPath);
     if (ret != 0) {
         LOGE("Get physical path failed with %{public}d", ret);
+        return {"", ""};
+    }
+
+    if (!this->IsFileExists(physicalPath)) {
         return {"", ""};
     }
 
