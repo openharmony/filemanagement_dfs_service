@@ -21,6 +21,7 @@
 #include "accesstoken_kit.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "connection_detector.h"
 #include "device/device_manager_agent.h"
 #include "dfs_error.h"
 #include "ipc_skeleton.h"
@@ -131,13 +132,23 @@ void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &d
 
 int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("Open P2P Connection");
-    std::thread([=]() {
-        int32_t ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
-        LOGI("Open P2P Connection result %d", ret);
-        return ret;
-        }).detach();
-    return 0;
+    auto path = ConnectionDetector::ParseHmdfsPath();
+    stringstream ss;
+    ss << ConnectionDetector::MocklispHash(path);
+    auto targetDir = ss.str();
+    auto networkId = std::string(deviceInfo.networkId);
+    int32_t ret = 0;
+    if (!ConnectionDetector::GetConnectionStatus(targetDir, networkId)) {
+        LOGI("Get connection status not ok, try again.");
+        ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
+        if (ret != NO_ERROR) {
+            LOGE("OpenP2PConnection failed, ret = %{public}d", ret);
+        } else {
+            ret = ConnectionDetector::RepeatGetConnectionStatus(targetDir, networkId);
+            LOGI("RepeatGetConnectionStatus end, ret = %{public}d", ret);
+        }
+    }
+    return ret;
 }
 
 int32_t Daemon::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
