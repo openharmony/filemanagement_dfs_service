@@ -62,7 +62,6 @@ public:
     virtual int32_t Init(const std::string bundleName, const int32_t userId);
     virtual int32_t Clean(const int action);
     virtual int32_t ActualClean();
-    virtual int32_t CancelClean();
 
     /* sdk */
     bool HasSdkHelper();
