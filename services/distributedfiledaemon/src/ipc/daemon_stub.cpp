@@ -38,7 +38,6 @@ using namespace std;
 const std::string HMDFS_PATH = "/mnt/hmdfs/<currentUserId>/account";
 const std::string SYS_HMDFS_PATH = "/sys/fs/hmdfs/";
 const std::string CONNECTION_STATUS_FILE_NAME = "status";
-const std::string CONNECTION_STATUS = "2";
 const std::string CURRENT_USER_ID_FLAG = "<currentUserId>";
 constexpr int32_t MAX_RETRY = 25;
 constexpr int32_t CHECK_SESSION_DELAY_TIME = 200000;
@@ -73,7 +72,7 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
     return (this->*(interfaceIndex->second))(data, reply);
 }
 
-static std::string ParseWordFromString(const std::string &str, int targetIndex)
+static std::string GetCellByIndex(const std::string &str, int targetIndex)
 {
     size_t begin = 0;
     size_t end = 0;
@@ -104,62 +103,43 @@ static std::string ParseWordFromString(const std::string &str, int targetIndex)
     return str.substr(begin, end - begin);
 }
 
-static bool ParseConnectionStatus(const std::string &fileName, const std::string &networkId)
+static bool MatchConnectionStatus(ifstream &inputFile)
 {
-    std::map<std::string, int> keywordsIndex = {
-        {"peers", 1}, {"networkId", 1}, {"connection_status", 2}, {"status", 2}};
-    bool findPeers = false;
-    bool findNetworkId = false;
-    bool findConnectionStatus = false;
-    bool findStatus = false;
+    string str;
+    getline(inputFile, str);
+    if (str.find("connection_status") == string::npos) {
+        return false;
+    }
+    while (getline(inputFile, str)) {
+        if (str.empty()) {
+            return false;
+        }
+        auto cellStr = GetCellByIndex(str, 3); // 3 indicates the position of connection status
+        if (cellStr == "2" || cellStr == "3") { // "2"|"3" indicates socket status is connecting|connected;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool MatchConnectionGroup(const std::string &fileName, const string &networkId)
+{
+    if (access(fileName.c_str(), F_OK) != 0) {
+        LOGE("Cannot find the status file");
+        return false;
+    }
     ifstream statusFile(fileName);
     std::string str;
-    while (true) {
-        if (!findPeers) {
-            getline(statusFile, str);
-            if (str.empty()) {
-                statusFile.close();
-                return false;
-            }
-            auto res = ParseWordFromString(str, keywordsIndex["peers"]);
-            if (res == "peers") {
-                findPeers = true;
-            }
-        } else if (!findNetworkId) {
-            getline(statusFile, str);
-            if (str.empty()) {
-                statusFile.close();
-                return false;
-            }
-            auto res = ParseWordFromString(str, keywordsIndex["networkId"]);
-            if (res == networkId) {
-                findNetworkId = true;
-            }
-        } else if (!findConnectionStatus) {
-            getline(statusFile, str);
-            if (str.empty()) {
-                statusFile.close();
-                return false;
-            }
-            auto res = ParseWordFromString(str, keywordsIndex["connection_status"]);
-            if (res != "connection_status") {
-                statusFile.close();
-                return false;
-            }
-            findConnectionStatus = true;
-        } else if (!findStatus) {
-            getline(statusFile, str);
-            if (str.empty()) {
-                statusFile.close();
-                return false;
-            }
-            auto res = ParseWordFromString(str, keywordsIndex["status"]);
-            statusFile.close();
-            return res == CONNECTION_STATUS;
+    getline(statusFile, str);
+    bool result = false;
+    while (getline(statusFile, str)) {
+        if (str.find(networkId) == 0) {
+            result = MatchConnectionStatus(statusFile);
+            break;
         }
     }
     statusFile.close();
-    return false;
+    return result;
 }
 
 static int FilterFunc(const struct dirent *filename)
@@ -217,11 +197,12 @@ static bool GetConnectionStatus(const std::string &targetDir, const std::string 
         }
         string dest = SYS_HMDFS_PATH + '/' + targetDir;
         if ((pNameList->namelist[i])->d_type == DT_DIR) {
-            dest = dest + '/' + CONNECTION_STATUS_FILE_NAME;
-            if (ParseConnectionStatus(dest, networkId)) {
-                LOGI("ParseConnectionStatus success.");
+            string statusFile = SYS_HMDFS_PATH + '/' + targetDir+ '/' + CONNECTION_STATUS_FILE_NAME;
+            if (MatchConnectionGroup(statusFile, networkId)) {
+                LOGI("Parse connection status success.");
                 return true;
             }
+            break;
         }
     }
     return false;
