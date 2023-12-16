@@ -25,9 +25,9 @@ ohos_shared_library("libdistributedfiledaemon") {
   sources = [
     "src/device/device_info.cpp",
     "src/device/device_manager_agent.cpp",
+    "src/ipc/connection_detector.cpp",
     "src/ipc/daemon.cpp",
     "src/ipc/daemon_stub.cpp",
-    "src/ipc/connection_detector.cpp",
     "src/ipc/file_trans_listener_proxy.cpp",
     "src/ipc/trans_mananger.cpp",
     "src/mountpoint/mount_manager.cpp",

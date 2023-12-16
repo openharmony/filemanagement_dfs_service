@@ -138,7 +138,7 @@ int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &devic
     ss << ConnectionDetector::MocklispHash(path);
     auto targetDir = ss.str();
     auto networkId = std::string(deviceInfo.networkId);
-    int32_t ret = -1;
+    int32_t ret = 0;
     if (!ConnectionDetector::GetConnectionStatus(targetDir, networkId)) {
         LOGI("Get connection status not ok, try again.");
         ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);

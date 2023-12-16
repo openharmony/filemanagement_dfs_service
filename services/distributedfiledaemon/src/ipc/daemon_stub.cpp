@@ -15,7 +15,6 @@
 
 #include "ipc/daemon_stub.h"
 
-#include "connection_detector.h"
 #include "dfs_error.h"
 #include "dm_device_info.h"
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
@@ -25,8 +24,6 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::FileManagement;
-using namespace std;
-
 DaemonStub::DaemonStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION)] =
@@ -75,6 +72,7 @@ int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &
     deviceInfo.deviceTypeId = data.ReadUint16();
     deviceInfo.range = static_cast<int32_t>(data.ReadUint32());
     deviceInfo.authForm = static_cast<DistributedHardware::DmAuthForm>(data.ReadInt32());
+
     int32_t res = OpenP2PConnection(deviceInfo);
     reply.WriteInt32(res);
     LOGI("End OpenP2PConnection, res = %{public}d", res);
