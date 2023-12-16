@@ -22,10 +22,7 @@
 #include <map>
 
 #include <dirent.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
 #include <sys/statvfs.h>
-#include <unistd.h>
 #include <utime.h>
 
 #include "cloud_file_utils.h"
@@ -41,7 +38,6 @@
 #include "medialibrary_rdb_utils.h"
 #include "meta_file.h"
 #include "thumbnail_const.h"
-#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -1083,10 +1079,6 @@ static bool IsLocalDirty(NativeRdb::ResultSet &local)
            (dirty == static_cast<int32_t>(DirtyType::TYPE_DELETED));
 }
 
-constexpr unsigned HMDFS_IOC = 0xf2;
-constexpr unsigned WRITEOPEN_CMD = 0x02;
-#define HMDFS_IOC_GET_WRITEOPEN_CNT _IOR(HMDFS_IOC, WRITEOPEN_CMD, uint32_t)
-
 static string GetFilePath(NativeRdb::ResultSet &local)
 {
     string filePath;
@@ -1111,29 +1103,6 @@ static string GetLocalPath(int userId, const string &filePath)
 
     string dfsPath = dfsPrefix + to_string(userId) + dfsSuffix + filePath.substr(sandboxPrefix.length());
     return dfsPath;
-}
-
-static bool LocalWriteOpen(const string &dfsPath)
-{
-    unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);
-    if (realpath(dfsPath.c_str(), absPath.get()) == nullptr) {
-        return false;
-    }
-    string realPath = absPath.get();
-    int fd = open(realPath.c_str(), O_RDONLY);
-    if (fd < 0) {
-        LOGE("open failed, errno:%{public}d", errno);
-        return false;
-    }
-    uint32_t writeOpenCnt = 0;
-    int ret = ioctl(fd, HMDFS_IOC_GET_WRITEOPEN_CNT, &writeOpenCnt);
-    if (ret < 0) {
-        LOGE("ioctl failed, errno:%{public}d", errno);
-        return false;
-    }
-
-    close(fd);
-    return writeOpenCnt != 0;
 }
 
 int FileDataHandler::SetRetry(const string &recordId)
@@ -1225,7 +1194,7 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
     if (FileIsLocal(local)) {
         string filePath = GetFilePath(local);
         string localPath = GetLocalPath(userId_, filePath);
-        if (LocalWriteOpen(localPath)) {
+        if (CloudDisk::CloudFileUtils::LocalWriteOpen(localPath)) {
             return SetRetry(record.GetRecordId());
         }
 
@@ -1407,7 +1376,7 @@ int32_t FileDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::ResultSet
         return ClearCloudInfo(record.GetRecordId());
     }
 
-    if (LocalWriteOpen(localPath)) {
+    if (CloudDisk::CloudFileUtils::LocalWriteOpen(localPath)) {
         return SetRetry(record.GetRecordId());
     }
     return RecycleFile(record.GetRecordId());

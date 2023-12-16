@@ -13,7 +13,11 @@
  * limitations under the License.
  */
 #include "cloud_file_utils.h"
+#include <fcntl.h>
 #include <sys/xattr.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include "utils_log.h"
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
@@ -26,6 +30,10 @@ namespace {
     static const uint32_t CLOUD_ID_BUCKET_MID_TIMES = 2;
     static const uint32_t CLOUD_ID_BUCKET_MAX_SIZE = 32;
 }
+
+constexpr unsigned HMDFS_IOC = 0xf2;
+constexpr unsigned WRITEOPEN_CMD = 0x02;
+#define HMDFS_IOC_GET_WRITEOPEN_CNT _IOR(HMDFS_IOC, WRITEOPEN_CMD, uint32_t)
 const string CloudFileUtils::TMP_SUFFIX = ".temp.download";
 
 static uint32_t GetBucketId(string cloudId)
@@ -102,6 +110,30 @@ bool CloudFileUtils::CheckIsHmdfsPermission(const string &key)
 {
     return key == HMDFS_PERMISSION_XATTR;
 }
+
+bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
+{
+    unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);
+    if (realpath(dfsPath.c_str(), absPath.get()) == nullptr) {
+        return false;
+    }
+    string realPath = absPath.get();
+    int fd = open(realPath.c_str(), O_RDONLY);
+    if (fd < 0) {
+        LOGE("open failed, errno:%{public}d", errno);
+        return false;
+    }
+    uint32_t writeOpenCnt = 0;
+    int ret = ioctl(fd, HMDFS_IOC_GET_WRITEOPEN_CNT, &writeOpenCnt);
+    if (ret < 0) {
+        LOGE("ioctl failed, errno:%{public}d", errno);
+        return false;
+    }
+
+    close(fd);
+    return writeOpenCnt != 0;
+}
+
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

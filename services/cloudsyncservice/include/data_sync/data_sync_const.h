@@ -28,18 +28,6 @@ enum CleanAction {
     CLEAR_DATA
 };
 
-enum OperationType {
-    /* upload */
-    FILE_CREATE,
-    FILE_DELETE,
-    FILE_METADATA_MODIFY,
-    FILE_DATA_MODIFY,
-    /* download */
-    FILE_DOWNLOAD,
-    /*clean*/
-    FILE_CLEAN
-};
-
 enum class SyncTriggerType : int32_t {
     APP_TRIGGER,
     CLOUD_TRIGGER,
@@ -48,6 +36,7 @@ enum class SyncTriggerType : int32_t {
     NETWORK_AVAIL_TRIGGER,
     TASK_TRIGGER,
 };
+
 struct LocalInfo {
     int64_t mdirtyTime;
     int64_t fdirtyTime;
