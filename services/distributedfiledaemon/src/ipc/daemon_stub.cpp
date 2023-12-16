@@ -15,19 +15,10 @@
 
 #include "ipc/daemon_stub.h"
 
-#include <dirent.h>
-#include <fstream>
-#include <iostream>
-#include <regex>
-#include <sstream>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <vector>
-
+#include "connection_detector.h"
 #include "dfs_error.h"
 #include "dm_device_info.h"
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
-#include "os_account_manager.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -35,16 +26,6 @@ namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::FileManagement;
 using namespace std;
-const std::string HMDFS_PATH = "/mnt/hmdfs/<currentUserId>/account";
-const std::string SYS_HMDFS_PATH = "/sys/fs/hmdfs/";
-const std::string CONNECTION_STATUS_FILE_NAME = "status";
-const std::string CURRENT_USER_ID_FLAG = "<currentUserId>";
-constexpr int32_t MAX_RETRY = 25;
-constexpr int32_t CHECK_SESSION_DELAY_TIME = 200000;
-constexpr int32_t NO_ERROR = 0;
-constexpr int32_t INVALID_USER_ID = -1;
-constexpr int DISMATCH = 0;
-constexpr int MATCH = 1;
 
 DaemonStub::DaemonStub()
 {
@@ -72,187 +53,6 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
     return (this->*(interfaceIndex->second))(data, reply);
 }
 
-static std::string GetCellByIndex(const std::string &str, int targetIndex)
-{
-    size_t begin = 0;
-    size_t end = 0;
-    int count = 0;
-    do {
-        size_t i;
-        for (i = begin; i < str.size(); ++i) {
-            if (str[i] != '\t' && str[i] != ' ') {
-                break;
-            }
-        }
-        begin = i;
-        for (i = begin; i < str.size(); ++i) {
-            if (!(str[i] != '\t' && str[i] != ' ')) {
-                break;
-            }
-        }
-        end = i;
-        if (end == str.size()) {
-            break;
-        }
-        ++count;
-        if (count == targetIndex) {
-            break;
-        }
-        begin = end;
-    } while (true);
-    return str.substr(begin, end - begin);
-}
-
-static bool MatchConnectionStatus(ifstream &inputFile)
-{
-    string str;
-    getline(inputFile, str);
-    if (str.find("connection_status") == string::npos) {
-        return false;
-    }
-    while (getline(inputFile, str)) {
-        if (str.empty()) {
-            return false;
-        }
-        auto cellStr = GetCellByIndex(str, 3); // 3 indicates the position of connection status
-        if (cellStr == "2" || cellStr == "3") { // "2"|"3" indicates socket status is connecting|connected;
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool MatchConnectionGroup(const std::string &fileName, const string &networkId)
-{
-    if (access(fileName.c_str(), F_OK) != 0) {
-        LOGE("Cannot find the status file");
-        return false;
-    }
-    ifstream statusFile(fileName);
-    std::string str;
-    getline(statusFile, str);
-    bool result = false;
-    while (getline(statusFile, str)) {
-        if (str.find(networkId) == 0) {
-            result = MatchConnectionStatus(statusFile);
-            break;
-        }
-    }
-    statusFile.close();
-    return result;
-}
-
-static int FilterFunc(const struct dirent *filename)
-{
-    if (string_view(filename->d_name) == "." || string_view(filename->d_name) == "..") {
-        return DISMATCH;
-    }
-    return MATCH;
-}
-
-struct NameList {
-    struct dirent **namelist = {nullptr};
-    int direntNum = 0;
-};
-
-static void Deleter(struct NameList *arg)
-{
-    for (int i = 0; i < arg->direntNum; i++) {
-        free((arg->namelist)[i]);
-        (arg->namelist)[i] = nullptr;
-    }
-    free(arg->namelist);
-}
-
-static bool CheckValidDir(const std::string &path)
-{
-    struct stat buf{};
-    auto ret = stat(path.c_str(), &buf);
-    if (ret == -1) {
-        LOGE("stat failed, errno = %{public}d", errno);
-        return false;
-    }
-    if ((buf.st_mode & S_IFMT) != S_IFDIR) {
-        LOGE("It is not a dir.");
-        return false;
-    }
-    return true;
-}
-
-static bool GetConnectionStatus(const std::string &targetDir, const std::string &networkId)
-{
-    if (!CheckValidDir(SYS_HMDFS_PATH)) {
-        return false;
-    }
-    unique_ptr<struct NameList, decltype(Deleter) *> pNameList = {new (nothrow) struct NameList, Deleter};
-    if (pNameList == nullptr) {
-        LOGE("Failed to request heap memory.");
-        return false;
-    }
-    int num = scandir(SYS_HMDFS_PATH.c_str(), &(pNameList->namelist), FilterFunc, alphasort);
-    pNameList->direntNum = num;
-    for (int i = 0; i < num; i++) {
-        if ((pNameList->namelist[i])->d_name != targetDir) {
-            continue;
-        }
-        string dest = SYS_HMDFS_PATH + '/' + targetDir;
-        if ((pNameList->namelist[i])->d_type == DT_DIR) {
-            string statusFile = SYS_HMDFS_PATH + '/' + targetDir+ '/' + CONNECTION_STATUS_FILE_NAME;
-            if (MatchConnectionGroup(statusFile, networkId)) {
-                LOGI("Parse connection status success.");
-                return true;
-            }
-            break;
-        }
-    }
-    return false;
-}
-
-static uint64_t MocklispHash(const string &str)
-{
-    uint64_t res = 0;
-    constexpr int mocklispHashPos = 5;
-    /* Mocklisp hash function. */
-    for (auto ch : str) {
-        res = (res << mocklispHashPos) - res + (uint64_t)ch;
-    }
-    return res;
-}
-
-static int32_t RepeatGetConnectionStatus(const std::string &targetDir, const std::string &networkId)
-{
-    int retryCount = 0;
-    while (retryCount++ < MAX_RETRY - 1 && !GetConnectionStatus(targetDir, networkId)) {
-        usleep(CHECK_SESSION_DELAY_TIME);
-    }
-    return retryCount == MAX_RETRY ? -1 : NO_ERROR;
-}
-
-static int32_t GetCurrentUserId()
-{
-    std::vector<int32_t> userIds{};
-    auto ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(userIds);
-    if (ret != NO_ERROR || userIds.empty()) {
-        LOGE("query active os account id failed, ret = %{public}d", ret);
-        return INVALID_USER_ID;
-    }
-    return userIds[0];
-}
-
-static std::string ParseHmdfsPath()
-{
-    auto userId = GetCurrentUserId();
-    if (userId == INVALID_USER_ID) {
-        return "";
-    }
-    std::string path = HMDFS_PATH;
-    size_t pos = path.find(CURRENT_USER_ID_FLAG);
-    if (pos == std::string::npos) {
-        return "";
-    }
-    return path.replace(pos, CURRENT_USER_ID_FLAG.length(), std::to_string(userId));
-}
-
 int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin OpenP2PConnection");
@@ -275,24 +75,10 @@ int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &
     deviceInfo.deviceTypeId = data.ReadUint16();
     deviceInfo.range = static_cast<int32_t>(data.ReadUint32());
     deviceInfo.authForm = static_cast<DistributedHardware::DmAuthForm>(data.ReadInt32());
-    auto path = ParseHmdfsPath();
-    stringstream ss;
-    ss << MocklispHash(path);
-    auto targetDir = ss.str();
-    auto networkId = std::string(deviceInfo.networkId);
-    if (!GetConnectionStatus(targetDir, networkId)) {
-        LOGI("Get connection status not ok, try again.");
-        ret = OpenP2PConnection(deviceInfo);
-        if (ret != NO_ERROR) {
-            LOGE("OpenP2PConnection failed, ret = %{public}d", ret);
-        } else {
-            ret = RepeatGetConnectionStatus(targetDir, networkId);
-            LOGI("RepeatGetConnectionStatus end, ret = %{public}d", ret);
-        }
-    }
-    reply.WriteInt32(ret);
-    LOGI("OpenP2PConnection end, ret = %{public}d.", ret);
-    return ret;
+    int32_t res = OpenP2PConnection(deviceInfo);
+    reply.WriteInt32(res);
+    LOGI("End OpenP2PConnection, res = %{public}d", res);
+    return res;
 }
 
 int32_t DaemonStub::HandleCloseP2PConnection(MessageParcel &data, MessageParcel &reply)
