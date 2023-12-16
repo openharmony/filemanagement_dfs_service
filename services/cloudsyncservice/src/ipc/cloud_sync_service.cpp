@@ -134,6 +134,10 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
 {
     string reason = startReason.GetName();
     LOGI("Begin to start service reason: %{public}s", reason.c_str());
+    int32_t userId = 0;
+    if (dataSyncManager_->GetUserId(userId) != E_OK) {
+        return;
+    }
     if (reason == "usual.event.wifi.SCAN_FINISHED") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
     } else if (reason == "usual.event.BATTERY_OKAY") {
@@ -287,7 +291,6 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
         return ret;
     }
     if (status) {
-        dataSyncManager_->RestoreClean(bundleName, callerUserId);
         return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     } else {
         return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);

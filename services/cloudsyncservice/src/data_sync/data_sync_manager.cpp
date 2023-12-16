@@ -148,17 +148,6 @@ int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string &bundl
     return E_OK;
 }
 
-int32_t DataSyncManager::RestoreClean(const std::string &bundleName, const int32_t userId)
-{
-    std::lock_guard<std::mutex> lck(cleanMutex_);
-    auto dataSyncer = GetDataSyncer(bundleName, userId);
-    if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
-        return E_INVAL_ARG;
-    }
-    return dataSyncer->CancelClean();
-}
-
 int32_t DataSyncManager::IsUserVerified(const int32_t userId)
 {
     bool isVerified = false;

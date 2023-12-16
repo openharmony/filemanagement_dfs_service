@@ -1915,7 +1915,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord001, TestSize.Level1)
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(1));
 
-        int32_t ret = fileDataHandler->CleanNotPureCloudRecord();
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(CleanAction::RETAIN_DATA);
         EXPECT_EQ(E_RDB, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1944,7 +1944,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord002, TestSize.Level1)
 
         EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
 
-        int32_t ret = fileDataHandler->CleanNotPureCloudRecord();
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(CleanAction::RETAIN_DATA);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1973,7 +1973,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord003, TestSize.Level1)
 
         EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
 
-        int32_t ret = fileDataHandler->CleanNotPureCloudRecord();
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(CleanAction::RETAIN_DATA);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2002,7 +2002,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord004, TestSize.Level1)
         EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(1));
         EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
 
-        int32_t ret = fileDataHandler->CleanNotPureCloudRecord();
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(CleanAction::RETAIN_DATA);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -2033,7 +2033,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord005, TestSize.Level1)
 
         EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
 
-        int32_t ret = fileDataHandler->CleanNotPureCloudRecord();
+        int32_t ret = fileDataHandler->CleanNotPureCloudRecord(CleanAction::RETAIN_DATA);
         EXPECT_NE(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);

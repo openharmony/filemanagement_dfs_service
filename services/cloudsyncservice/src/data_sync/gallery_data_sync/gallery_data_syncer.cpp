@@ -114,6 +114,7 @@ int32_t GalleryDataSyncer::Clean(const int action)
     if (ret != E_OK) {
         LOGE("gallery data syncer file cancel download err %{public}d", ret);
     }
+    fileHandler_->ClearCursor();
     ret = fileHandler_->MarkClean(action);
     PutHandler();
     CompleteClean();
@@ -135,17 +136,6 @@ int32_t GalleryDataSyncer::ActualClean()
     if (ret != E_OK) {
         LOGE("gallery data syncer album clean err %{public}d", ret);
     }
-    PutHandler();
-    return ret;
-}
-
-int32_t GalleryDataSyncer::CancelClean()
-{
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        return ret;
-    }
-    ret = fileHandler_->UnMarkClean();
     PutHandler();
     return ret;
 }
@@ -235,6 +225,7 @@ void GalleryDataSyncer::ScheduleByType(SyncTriggerType syncTriggerType)
     if (syncTriggerType == SyncTriggerType::TASK_TRIGGER) {
         fileHandler_->SetChecking();
     }
+    fileHandler_->UnMarkClean();
     Schedule();
 }
 

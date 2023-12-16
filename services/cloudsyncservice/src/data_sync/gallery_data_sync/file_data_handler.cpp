@@ -1772,7 +1772,6 @@ static int32_t DeleteAsset(const string &assetPath)
 int32_t FileDataHandler::Clean(const int action)
 {
     RETURN_ON_ERR(CleanPureCloudRecord());
-    RETURN_ON_ERR(CleanNotPureCloudRecord());
     int32_t res = DeleteDentryFile();
     if (res != E_OK) {
         LOGE("Clean remove dentry failed, res:%{public}d", res);
@@ -1825,11 +1824,9 @@ int32_t FileDataHandler::CleanPureCloudRecord()
     return ret;
 }
 
-int32_t FileDataHandler::CleanNotPureCloudRecord()
+int32_t FileDataHandler::CleanNotPureCloudRecord(const int32_t action)
 {
     int32_t ret = E_OK;
-    int32_t action = CleanAction::RETAIN_DATA;
-    cloudPrefImpl_.GetInt("cleanAction", action);
     LOGD("Clean not Pure CloudRecord");
     if (action == CleanAction::CLEAR_DATA) {
         ret = CleanNotDirtyData();
@@ -1896,8 +1893,9 @@ int32_t FileDataHandler::CleanAllCloudInfo()
     values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_LOCAL);
     values.PutLong(PhotoColumn::PHOTO_CLOUD_VERSION, 0);
     int32_t updateRows = 0;
-    std::string whereClause = "";
-    int32_t ret = Update(updateRows, values, whereClause, {});
+    std::string whereClause = PhotoColumn::PHOTO_POSITION + " = ?";
+    vector<string> whereArgs = {to_string(POSITION_BOTH)};
+    int32_t ret = Update(updateRows, values, whereClause, whereArgs);
     if (ret != E_OK) {
         LOGE("Update in rdb failed, ret:%{public}d", ret);
     }
@@ -1913,6 +1911,9 @@ int32_t FileDataHandler::UnMarkClean()
     int32_t ret =
         Update(changedRows, PC::PHOTOS_TABLE, values,
         PC::PHOTO_CLEAN_FLAG + " = ?", whereArgs);
+    if (ret != E_OK) {
+        LOGW("unmark clean failed, ret:%{public}d", ret);
+    }
     MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
@@ -1935,10 +1936,14 @@ int32_t FileDataHandler::MarkClean(const int32_t action)
     }
     int32_t ret =
         Update(changedRows, PC::PHOTOS_TABLE, values, whereClause, whereArgs);
+    if (ret != E_OK) {
+        LOGW("mark clean error %{public}d", ret);
+    }
     MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
+    RETURN_ON_ERR(CleanNotPureCloudRecord(action));
     return ret;
 }
 

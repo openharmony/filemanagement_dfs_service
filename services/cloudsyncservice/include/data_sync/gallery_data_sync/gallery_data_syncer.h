@@ -39,7 +39,6 @@ public:
     virtual int32_t Init(const std::string bundleName, const int32_t userId) override;
     virtual int32_t Clean(const int action) override;
     virtual int32_t ActualClean() override;
-    virtual int32_t CancelClean() override;
     virtual int32_t OptimizeStorage(const int32_t agingDays) override;
     virtual int32_t Lock() override;
     virtual void Unlock() override;
