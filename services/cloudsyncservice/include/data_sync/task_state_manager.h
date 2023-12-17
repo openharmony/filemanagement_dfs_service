@@ -24,6 +24,9 @@ enum class TaskType : uint64_t {
     SYNC_TASK = 1,
     DOWNLOAD_TASK = 1 << 1,
     CLEAN_TASK = 1 << 2,
+    UPLOAD_ASSET_TASK = 1 << 3,
+    DOWNLOAD_ASSET_TASK = 1 << 4,
+    DOWNLOAD_REMOTE_ASSET_TASK = 1 << 5,
 };
 class TaskStateManager : public NoCopyable {
 public:

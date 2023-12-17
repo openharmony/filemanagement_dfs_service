@@ -52,6 +52,7 @@ struct UserData {
 enum MsgType : uint16_t {
     MSG_DOWNLOAD_FILE_REQ = 0,
     MSG_DOWNLOAD_FILE_RSP,
+    MSG_FINISH_FILE_RECV,
 };
 
 struct MessageInputInfo {
