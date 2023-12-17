@@ -218,7 +218,10 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
         return ret;
     }
     ValuesBucket values;
-    localConvertor_.Convert(record, values);
+    ret = localConvertor_.Convert(record, values);
+    if (ret != E_OK) {
+        return ret;
+    }
     if (ret != E_OK) {
         LOGE("record to valuebucket failed, ret=%{public}d", ret);
         return ret;
@@ -370,7 +373,10 @@ int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::Resu
         return E_OK;
     }
     ValuesBucket values;
-    localConvertor_.Convert(record, values);
+    ret = localConvertor_.Convert(record, values);
+    if (ret != E_OK) {
+        return ret;
+    }
     bool isEditTimeChange = false;
     ret = IsEditTimeChange(record, local, isEditTimeChange);
     if (ret != E_OK) {

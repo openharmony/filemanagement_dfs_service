@@ -104,7 +104,7 @@ std::string CloudDiskDataConvertor::GetParentCloudId(const DriveKit::DKRecordDat
 
 int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
 {
-    InitRootId();
+    RETURN_ON_ERR(InitRootId());
     DriveKit::DKRecordData data;
     record.GetRecordData(data);
     ExtractCompatibleValue(record, data, valueBucket);
@@ -112,7 +112,7 @@ int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::V
 }
 int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet)
 {
-    InitRootId();
+    RETURN_ON_ERR(InitRootId());
     DriveKit::DKRecordData data;
     RETURN_ON_ERR(FillRecordId(record, resultSet));
     RETURN_ON_ERR(FillCreatedTime(record, resultSet));
