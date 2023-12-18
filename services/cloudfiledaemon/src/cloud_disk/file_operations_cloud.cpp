@@ -536,10 +536,19 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName,
                                                                          data->userId);
-    err = rdbStore->Unlink(parentInode->cloudId, name);
+    string unlinkCloudId = "";
+    err = rdbStore->Unlink(parentInode->cloudId, name, unlinkCloudId);
     if (err != 0) {
-        LOGE("Failed to unlink DB name:%{private}s err:%{public}d", name, err);
+        LOGE("Failed to unlink DB cloudId:%{private}s err:%{public}d", unlinkCloudId.c_str(), err);
         return ENOSYS;
+    }
+    if (unlinkCloudId.empty()) {
+        return 0;
+    }
+    err = unlink(CloudFileUtils::GetLocalFilePath(unlinkCloudId, parentInode->bundleName, data->userId).c_str());
+    if (err != 0) {
+        LOGE("Failed to unlink cloudId:%{private}s err:%{public}d", unlinkCloudId.c_str(), errno);
+        return errno;
     }
     return 0;
 }
