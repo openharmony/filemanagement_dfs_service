@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "dm_device_info.h"
-
+#include "i_file_trans_listener.h"
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
@@ -29,6 +29,10 @@ public:
 
     virtual int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
     virtual int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
+    virtual int32_t PrepareSession(const std::string &srcUri,
+                                   const std::string &dstUri,
+                                   const std::string &srcDeviceId,
+                                   const sptr<IRemoteObject> &listener) = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage

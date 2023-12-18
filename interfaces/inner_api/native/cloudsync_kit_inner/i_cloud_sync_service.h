@@ -30,6 +30,7 @@ public:
     virtual int32_t UnRegisterCallbackInner() = 0;
     virtual int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) = 0;
     virtual int32_t StartSyncInner(bool forceFlag) = 0;
+    virtual int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) = 0;
     virtual int32_t StopSyncInner() = 0;
     virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
     virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;
@@ -44,6 +45,12 @@ public:
     virtual int32_t UnregisterDownloadFileCallback() = 0;
     virtual int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) = 0;
     virtual int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj) = 0;
+    virtual int32_t DownloadAsset(const uint64_t taskId,
+                                  const int32_t userId,
+                                  const std::string &bundleName,
+                                  const std::string &networkId,
+                                  AssetInfoObj &assetInfoObj) = 0;
+    virtual int32_t RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject) = 0;
     virtual int32_t DeleteAsset(const int32_t userId, const std::string &uri) = 0;
     virtual int32_t GetSyncTimeInner(int64_t &syncTime) = 0;
     virtual int32_t CleanCacheInner(const std::string &uri) = 0;

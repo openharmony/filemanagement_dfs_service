@@ -16,8 +16,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "ipc/distributed_file_daemon_ipc_interface_code.h"
 #include "ipc/daemon_stub.h"
+#include "ipc/distributed_file_daemon_ipc_interface_code.h"
 #include "utils_log.h"
 
 namespace OHOS::Storage::DistributedFile::Test {
@@ -26,17 +26,27 @@ using namespace testing::ext;
 using namespace std;
 
 namespace {
-    DistributedHardware::DmDeviceInfo deviceInfo = {
-        .deviceId = "testdevid",
-        .deviceName = "testdevname",
-        .networkId = "testnetworkid",
-    };
+DistributedHardware::DmDeviceInfo deviceInfo = {
+    .deviceId = "testdevid",
+    .deviceName = "testdevname",
+    .networkId = "testnetworkid",
+};
 }
 
 class MockDaemonStub : public DaemonStub {
 public:
     MOCK_METHOD1(OpenP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
     MOCK_METHOD1(CloseP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
+    MOCK_METHOD4(RequestSendFile,
+                 int32_t(const std::string &srcUri,
+                         const std::string &dstPath,
+                         const std::string &remoteDeviceId,
+                         const std::string &sessionName));
+    MOCK_METHOD4(PrepareSession,
+                 int32_t(const std::string &srcUri,
+                         const std::string &dstUri,
+                         const std::string &srcDeviceId,
+                         const sptr<IRemoteObject> &listener));
 };
 
 class DaemonStubTest : public testing::Test {
@@ -83,8 +93,8 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest001, TestSize.Level1)
         MessageParcel reply;
         MessageOption option;
         int ret = daemonStub_->OnRemoteRequest(
-            static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION),
-            data, reply, option);
+            static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION), data,
+            reply, option);
         EXPECT_EQ(ret, IDaemon::DFS_DAEMON_DESCRIPTOR_IS_EMPTY);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -107,8 +117,8 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest002, TestSize.Level1)
         MessageParcel reply;
         MessageOption option;
         int ret = daemonStub_->OnRemoteRequest(
-            static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION),
-            data, reply, option);
+            static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION), data,
+            reply, option);
         EXPECT_EQ(ret, IDaemon::DFS_DAEMON_DESCRIPTOR_IS_EMPTY);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -159,10 +169,10 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest004, TestSize.Level1)
         EXPECT_TRUE(data.WriteCString(deviceInfo.deviceId));
         EXPECT_TRUE(data.WriteCString(deviceInfo.deviceName));
         EXPECT_TRUE(data.WriteCString(deviceInfo.networkId));
-        
+
         int ret = daemonStub_->OnRemoteRequest(
-            static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION),
-            data, reply, option);
+            static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION), data,
+            reply, option);
         EXPECT_EQ(ret, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -191,8 +201,8 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest005, TestSize.Level1)
         EXPECT_TRUE(data.WriteCString(deviceInfo.networkId));
 
         int ret = daemonStub_->OnRemoteRequest(
-            static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION),
-            data, reply, option);
+            static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION), data,
+            reply, option);
         EXPECT_EQ(ret, 0);
     } catch (...) {
         EXPECT_TRUE(false);

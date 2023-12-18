@@ -29,6 +29,18 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
+enum OperationType {
+    /* upload */
+    FILE_CREATE,
+    FILE_DELETE,
+    FILE_METADATA_MODIFY,
+    FILE_DATA_MODIFY,
+    /* download */
+    FILE_DOWNLOAD,
+    /*clean*/
+    FILE_CLEAN
+};
+
 /* thumb */
 const std::string THUMB_SUFFIX = "THM";
 const std::string LCD_SUFFIX = "LCD";
@@ -53,7 +65,7 @@ const std::string FILE_DATA_MODIFIED = "data_modified";
 const std::string FILE_TIME_ZONE = "time_zone";
 const std::string FILE_THUMB_SIZE = "thumb_size";
 const std::string FILE_LCD_SIZE = "lcd_size";
-
+const std::string FILE_EDITED_TIME_MS = "editedTime_ms";
 /* properties */
 const std::string FILE_PROPERTIES = "properties";
 const std::string FILE_SOURCE_FILE_NAME = "sourceFileName";
@@ -144,6 +156,7 @@ const std::vector<std::string> GALLERY_FILE_COLUMNS = {
     Media::PhotoColumn::PHOTO_HEIGHT,
     Media::PhotoColumn::PHOTO_WIDTH,
     Media::PhotoColumn::PHOTO_SUBTYPE,
+    Media::PhotoColumn::PHOTO_USER_COMMENT,
     // Media::PhotoColumn::MEDIA_OWNER_PACKAGE,
     Media::PhotoColumn::MEDIA_DEVICE_NAME,
     Media::PhotoColumn::MEDIA_DATE_TAKEN,
@@ -212,6 +225,7 @@ const std::vector<std::string> MEDIA_CLOUD_SYNC_COLUMNS = {
     Media::PhotoColumn::PHOTO_DATE_YEAR,
     Media::PhotoColumn::PHOTO_DATE_MONTH,
     Media::PhotoColumn::PHOTO_DATE_DAY,
+    Media::PhotoColumn::PHOTO_USER_COMMENT,
 
     /* keep cloud_id at the last, so RecordToValueBucket can skip it*/
     Media::MediaColumn::MEDIA_ID,
@@ -222,8 +236,6 @@ const std::vector<std::string> CLOUD_SYNC_UNIQUE_COLUMNS = {
     Media::PhotoColumn::MEDIA_FILE_PATH,
     Media::PhotoColumn::MEDIA_TITLE,
     Media::PhotoColumn::MEDIA_TYPE,
-    Media::PhotoColumn::MEDIA_DATE_ADDED,
-    Media::PhotoColumn::MEDIA_DATE_MODIFIED,
     Media::PhotoColumn::MEDIA_DURATION,
     Media::PhotoColumn::MEDIA_HIDDEN,
     Media::PhotoColumn::MEDIA_RELATIVE_PATH,
@@ -243,8 +255,6 @@ const std::vector<DataType> CLOUD_SYNC_UNIQUE_COLUMN_TYPES = {
     DataType::STRING,       /* data */
     DataType::STRING,       /* title */
     DataType::INT,          /* media_type */
-    DataType::LONG,         /* date_added */
-    DataType::LONG,         /* date_modified */
     DataType::INT,          /* duration */
     DataType::INT,          /* hidden */
     DataType::STRING,       /* relative_path */

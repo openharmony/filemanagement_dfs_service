@@ -114,7 +114,6 @@ public:
     int32_t SaveSubscription(SaveSubscriptionCallback callback);
     int32_t DeleteSubscription(DelSubscriptionCallback callback);
     int32_t ChangesNotify(ChangesNotifyCallback callback);
-    void ReleaseDownloader();
 private:
     std::shared_ptr<DriveKit::DKContainer> container_;
     std::shared_ptr<DriveKit::DKDatabase> database_;

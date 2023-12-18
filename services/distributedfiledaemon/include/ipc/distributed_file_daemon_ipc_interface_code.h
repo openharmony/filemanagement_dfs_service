@@ -20,6 +20,8 @@ namespace DistributedFile {
     enum class DistributedFileDaemonInterfaceCode {
         DISTRIBUTED_FILE_OPEN_P2P_CONNECTION = 0,
         DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION,
+        DISTRIBUTED_FILE_PREPARE_SESSION,
+        DISTRIBUTED_FILE_REQUEST_SEND_FILE,
     };
 } // namespace DistributedFile
 } // namespace Storage

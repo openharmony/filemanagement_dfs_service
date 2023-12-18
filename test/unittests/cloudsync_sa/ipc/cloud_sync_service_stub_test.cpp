@@ -33,6 +33,7 @@ public:
     MOCK_METHOD1(RegisterCallbackInner, int32_t(const sptr<IRemoteObject> &remoteObject));
     MOCK_METHOD0(UnRegisterCallbackInner, int32_t());
     MOCK_METHOD1(StartSyncInner, int32_t(bool forceFlag));
+    MOCK_METHOD2(TriggerSyncInner, int32_t(const std::string &bundleName, const int32_t &userId));
     MOCK_METHOD0(StopSyncInner, int32_t());
     MOCK_METHOD3(ChangeAppSwitch, int32_t(const std::string &accoutId, const std::string &bundleName, bool status));
     MOCK_METHOD2(Clean, int32_t(const std::string &accountId, const CleanOptions &cleanOptions));
@@ -48,6 +49,13 @@ public:
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
     MOCK_METHOD3(DownloadFile,
                  int32_t(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj));
+    MOCK_METHOD5(DownloadAsset,
+                 int32_t(const uint64_t taskId,
+                         const int32_t userId,
+                         const std::string &bundleName,
+                         const std::string &networkId,
+                         AssetInfoObj &assetInfoObj));
+    MOCK_METHOD1(RegisterDownloadAssetCallback, int32_t(const sptr<IRemoteObject> &remoteObject));
     MOCK_METHOD2(DeleteAsset, int32_t(const int32_t userId, const std::string &uri));
     MOCK_METHOD1(GetSyncTimeInner, int32_t(int64_t &syncTime));
     MOCK_METHOD1(CleanCacheInner, int32_t(const std::string &uri));

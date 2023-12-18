@@ -33,6 +33,7 @@ private:
     int32_t HandleUnRegisterCallbackInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStartSyncInner(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleTriggerSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStopSyncInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleChangeAppSwitch(MessageParcel &data, MessageParcel &reply);
     int32_t HandleClean(MessageParcel &data, MessageParcel &reply);
@@ -47,6 +48,8 @@ private:
     int32_t HandleUnregisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply);
     int32_t HandleUploadAsset(MessageParcel &data, MessageParcel &reply);
     int32_t HandleDownloadFile(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleDownloadAsset(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleRegisterDownloadAssetCallback(MessageParcel &data, MessageParcel &reply);
     int32_t HandleDeleteAsset(MessageParcel &data, MessageParcel &reply);
     int32_t HandleGetSyncTime(MessageParcel &data, MessageParcel &reply);
     int32_t HandleCleanCache(MessageParcel &data, MessageParcel &reply);

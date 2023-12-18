@@ -52,7 +52,7 @@ int32_t CloudSyncServiceProxy::UnRegisterCallbackInner()
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_CALLBACK), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("UnRegisterCallbackInner Success");
@@ -125,6 +125,43 @@ int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag)
         return E_BROKEN_IPC;
     }
     LOGI("StartSyncInner Success");
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::TriggerSyncInner(const std::string &bundleName, const int32_t &userId)
+{
+    LOGI("Trigger Sync");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        LOGE("Failed to send the user id");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_TRIGGER_SYNC), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the request, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("TriggerSyncInner Success");
     return reply.ReadInt32();
 }
 
@@ -253,7 +290,7 @@ int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId, cons
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CHANGE_APP_SWITCH), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("ChangeAppSwitch Success");
@@ -327,7 +364,7 @@ int32_t CloudSyncServiceProxy::EnableCloud(const std::string &accoutId, const Sw
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_ENABLE_CLOUD), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("EnableCloud Success");
@@ -359,7 +396,7 @@ int32_t CloudSyncServiceProxy::DisableCloud(const std::string &accoutId)
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DISABLE_CLOUD), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("DisableCloud Success");
@@ -396,7 +433,7 @@ int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, con
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_DATA_CHANGE), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("NotifyDataChange Success");
@@ -439,7 +476,7 @@ int32_t CloudSyncServiceProxy::NotifyEventChange(
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_EVENT_CHANGE), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("NotifyEventChange Success");
@@ -479,7 +516,7 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_DOWNLOAD_FILE), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("StartDownloadFile Success");
@@ -559,7 +596,7 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_DOWNLOAD_FILE), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("StopDownloadFile Success");
@@ -600,7 +637,7 @@ int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteOb
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK), data,
         reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("RegisterDownloadFileCallback Success");
@@ -631,7 +668,7 @@ int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK), data,
         reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("UnregisterDownloadFileCallback Success");
@@ -668,7 +705,7 @@ int32_t CloudSyncServiceProxy::UploadAsset(const int32_t userId, const std::stri
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UPLOAD_ASSET), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     ret = reply.ReadInt32();
@@ -714,10 +751,106 @@ int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILE), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     LOGI("DownloadFile Success");
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::DownloadAsset(const uint64_t taskId,
+                                             const int32_t userId,
+                                             const std::string &bundleName,
+                                             const std::string &networkId,
+                                             AssetInfoObj &assetInfoObj)
+{
+    LOGI("DownloadFile");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteUint64(taskId)) {
+        LOGE("Failed to send the task id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        LOGE("Failed to send the user id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(networkId)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteParcelable(&assetInfoObj)) {
+        LOGE("Failed to send the bundle assetInfo");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_ASSET), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("DownloadFile Success");
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject)
+{
+    LOGI("Start RegisterDownloadAssetCallback");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!remoteObject) {
+        LOGI("Empty callback stub");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteRemoteObject(remoteObject)) {
+        LOGE("Failed to send the callback stub");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_ASSET_CALLBACK), data,
+        reply, option);
+    if (ret != E_OK) {
+        stringstream ss;
+        ss << "Failed to send out the requeset, errno:" << ret;
+        LOGE("%{public}s", ss.str().c_str());
+        return E_BROKEN_IPC;
+    }
+    LOGI("RegisterDownloadAssetCallback Success");
     return reply.ReadInt32();
 }
 
@@ -751,7 +884,7 @@ int32_t CloudSyncServiceProxy::DeleteAsset(const int32_t userId, const std::stri
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DELETE_ASSET), data, reply, option);
     if (ret != E_OK) {
-        LOGE("Failed to send out the requeset, errno: %{pubilc}d", ret);
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
     ret = reply.ReadInt32();

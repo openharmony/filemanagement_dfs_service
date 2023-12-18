@@ -120,6 +120,7 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
              sessionId, linkType);
         ThrowException(ERR_SOFTBUS_AGENT_ON_SESSION_OPENED_FAIL, "Fail to OpenSession");
     }
+    OccupySession(sessionId, linkType);
     LOGI("Success to OpenSession, cid:%{public}s, sessionId:%{public}d, linkType:%{public}d", info.GetCid().c_str(),
          sessionId, linkType);
 }

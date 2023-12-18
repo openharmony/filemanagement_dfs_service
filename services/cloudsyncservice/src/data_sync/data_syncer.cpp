@@ -178,7 +178,6 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
         LOGE("asyn run pull records err %{public}d", ret);
         return ret;
     }
-
     return E_OK;
 }
 
@@ -303,7 +302,7 @@ static void FetchRecordsDownloadProgress(shared_ptr<DKContext> context,
                                          TotalSize total,
                                          DownloadSize download)
 {
-    LOGI("record %s %{public}s download progress", asset.recordId.c_str(), asset.fieldKey.c_str());
+    LOGD("record %s %{public}s download progress", asset.recordId.c_str(), asset.fieldKey.c_str());
     if (total == download) {
         auto ctx = static_pointer_cast<TaskContext>(context);
         auto handler = ctx->GetHandler();
@@ -391,6 +390,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
     if (HandleOnFetchRecords(ctx, database, records, false) != E_OK) {
         LOGE("HandleOnFetchRecords failed");
     }
+    SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
 }
 
 int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
@@ -481,6 +481,7 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
         LOGE("HandleOnFetchRecords failed");
         return;
     }
+    SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
 }
 
 void DataSyncer::OnFetchCheckRecords(const shared_ptr<DKContext> context,
@@ -660,12 +661,7 @@ int32_t DataSyncer::Clean(const int action)
     return E_OK;
 }
 
-int32_t DataSyncer::ActualClean(const int action)
-{
-    return E_OK;
-}
-
-int32_t DataSyncer::CancelClean()
+int32_t DataSyncer::ActualClean()
 {
     return E_OK;
 }
@@ -736,6 +732,12 @@ void DataSyncer::CreateRecords(shared_ptr<TaskContext> context)
         return;
     }
 
+    if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT)) {
+        LOGE("network status abnormal, abort upload");
+        SetErrorCodeMask(ErrorType::WIFI_UNAVAILABLE);
+        return;
+    }
+
     /* upload */
     auto callback = AsyncCallback(&DataSyncer::OnCreateRecords);
     if (callback == nullptr) {
@@ -768,6 +770,12 @@ void DataSyncer::DeleteRecords(shared_ptr<TaskContext> context)
 
     /* no need upload */
     if (records.size() == 0) {
+        return;
+    }
+
+    if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT)) {
+        LOGE("network status abnormal, abort upload");
+        SetErrorCodeMask(ErrorType::WIFI_UNAVAILABLE);
         return;
     }
 
@@ -806,6 +814,12 @@ void DataSyncer::ModifyMdirtyRecords(shared_ptr<TaskContext> context)
         return;
     }
 
+    if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT)) {
+        LOGE("network status abnormal, abort upload");
+        SetErrorCodeMask(ErrorType::WIFI_UNAVAILABLE);
+        return;
+    }
+
     /* upload */
     auto callback = AsyncCallback(&DataSyncer::OnModifyMdirtyRecords);
     if (callback == nullptr) {
@@ -841,6 +855,12 @@ void DataSyncer::ModifyFdirtyRecords(shared_ptr<TaskContext> context)
         return;
     }
 
+    if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT)) {
+        LOGE("network status abnormal, abort upload");
+        SetErrorCodeMask(ErrorType::WIFI_UNAVAILABLE);
+        return;
+    }
+
     /* upload */
     auto callback = AsyncCallback(&DataSyncer::OnModifyFdirtyRecords);
     if (callback == nullptr) {
@@ -869,6 +889,9 @@ void DataSyncer::OnCreateRecords(shared_ptr<DKContext> context,
         LOGE("handler on create records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        SyncStateChangedNotify(CloudSyncState::UPLOADING, ErrorType::NO_ERROR);
+        isDataChanged_ = true;
     }
 
     /* push more */
@@ -895,6 +918,8 @@ void DataSyncer::OnDeleteRecords(shared_ptr<DKContext> context,
         LOGE("handler on delete records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        isDataChanged_ = true;
     }
 
     /* push more */
@@ -923,6 +948,8 @@ void DataSyncer::OnModifyMdirtyRecords(shared_ptr<DKContext> context,
         LOGE("handler on modify records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        isDataChanged_ = true;
     }
 
     /* push more */
@@ -951,6 +978,8 @@ void DataSyncer::OnModifyFdirtyRecords(shared_ptr<DKContext> context,
         LOGE("handler on modify records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        isDataChanged_ = true;
     }
 
     /* push more */
@@ -989,7 +1018,6 @@ SyncState DataSyncer::GetSyncState() const
 int32_t DataSyncer::CompletePull()
 {
     LOGI("%{private}d %{private}s completes pull", userId_, bundleName_.c_str());
-    sdkHelper_->ReleaseDownloader();
     /* call syncer manager callback */
     auto error = GetErrorType();
     if (error) {

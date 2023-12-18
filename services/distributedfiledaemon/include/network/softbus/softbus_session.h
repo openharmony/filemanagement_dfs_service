@@ -33,6 +33,7 @@ public:
     bool IsFromServer() const override;
     std::string GetCid() const override;
     int32_t GetHandle() const override;
+    int GetSessionId() const override;
     std::array<char, KEY_SIZE_MAX> GetKey() const override;
     void Release() const override;
     void DisableSessionListener() const override;

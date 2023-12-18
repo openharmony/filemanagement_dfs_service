@@ -48,19 +48,22 @@ public:
     int32_t UnregisterDownloadFileCallback(const std::string &bundleName,
                                            const int32_t userId);
     int32_t CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action);
-    int32_t RestoreClean(const std::string &bundleName, const int32_t userId);
     int32_t OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays);
     int32_t DownloadThumb();
     int32_t CleanCache(const std::string &bundleName, const int32_t userId, const std::string &uri);
+    int32_t InitSdk(const int32_t userId, const std::string &bundleName, std::shared_ptr<DataSyncer> dataSyncer);
+    int32_t DisableCloud(const int32_t userId);
+
+    int32_t GetUserId(int32_t &userId);
 private:
     std::vector<std::shared_ptr<DataSyncer>> dataSyncers_;
     std::mutex dataSyncMutex_;
+    std::mutex cleanMutex_;
     int32_t currentUserId_{INVALID_USER_ID};
 
+    int32_t GetAllBundleName(const int32_t userId, std::vector<std::string> &bundles);
     int32_t IsUserVerified(const int32_t userId);
-    int32_t InitSdk(const int32_t userId, const std::string &bundleName, std::shared_ptr<DataSyncer> dataSyncer);
     void Convert2BundleName(const std::string &bundle, std::string &bundleName);
-    int32_t GetUserId(int32_t &userId);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

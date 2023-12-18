@@ -105,7 +105,6 @@ private:
     // cid-->same_account/accoutless's network
     std::unordered_map<std::string, std::shared_ptr<NetworkAgentTemplate>> cidNetTypeRecord_;
     std::unordered_map<std::string, int32_t> cidNetworkType_;
-    uint8_t openP2PSessionCount_ = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage

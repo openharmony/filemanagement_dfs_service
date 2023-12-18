@@ -39,7 +39,7 @@ int32_t RdbDataHandler::BatchDetete(const string &whichTable,
         return E_INVAL_ARG;
     }
     std::stringstream ss;
-    for (int i = 0; i < bindArgs.size(); i++) {
+    for (unsigned int i = 0; i < bindArgs.size(); i++) {
         if (ss.tellp() != 0) {
             ss << ",";
         }

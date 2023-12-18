@@ -56,7 +56,8 @@
           "samgr",
           "ability_runtime",
           "os_account",
-          "power_manager"
+          "power_manager",
+          "app_file_service"
         ],
         "third_party": [
           "e2fsprogs",
@@ -127,7 +128,8 @@
         "test": [
           "//foundation/filemanagement/dfs_service:dfs_test_moudule",
           "//foundation/filemanagement/dfs_service:cloudsync_test_module",
-          "//foundation/filemanagement/dfs_service:distributedfile_test_module"
+          "//foundation/filemanagement/dfs_service:distributedfile_test_module",
+          "//foundation/filemanagement/dfs_service/test/fuzztest:fuzztest"
         ]
       }
     }

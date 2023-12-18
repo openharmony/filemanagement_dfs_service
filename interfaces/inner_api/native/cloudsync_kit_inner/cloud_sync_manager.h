@@ -55,6 +55,14 @@ public:
      */
     virtual int32_t StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) = 0;
     /**
+     * @brief 触发同步
+     *
+     * @param bundleName 应用包名
+     * @param userId 用户ID
+     * @return int32_t 同步返回执行结果
+     */
+    virtual int32_t TriggerSync(const std::string &bundleName, const int32_t &userId) = 0;
+    /**
      * @brief 停止同步
      *
      * @return int32_t 同步返回执行结果

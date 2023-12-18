@@ -14,6 +14,7 @@
  */
 #include "ipc/cloud_sync_service.h"
 
+#include <cstdint>
 #include <memory>
 
 #include "cycle_task/cycle_task_runner.h"
@@ -22,8 +23,10 @@
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
 #include "ipc/cloud_sync_callback_manager.h"
+#include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
 #include "sandbox_helper.h"
+#include "session_manager.h"
 #include "sdk_helper.h"
 #include "sync_rule/battery_status.h"
 #include "sync_rule/cloud_status.h"
@@ -37,6 +40,8 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 using namespace OHOS;
+constexpr int32_t MIN_USER_ID = 100;
+constexpr int LOAD_SA_TIMEOUT_MS = 4000;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
@@ -62,6 +67,10 @@ void CloudSyncService::Init()
     /* Get Init Charging status */
     BatteryStatus::GetInitChargingStatus();
     ScreenStatus::InitScreenStatus();
+    auto sessionManager = make_shared<SessionManager>();
+    sessionManager->Init();
+    fileTransferManager_ = make_shared<FileTransferManager>(sessionManager);
+    fileTransferManager_->Init();
 }
 
 std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userId)
@@ -111,7 +120,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         LOGE("%{public}s", e.what());
     }
     LOGI("Start service successfully");
-    TaskStateManager::GetInstance().DelayUnloadTask();
+    TaskStateManager::GetInstance().StartTask();
     HandleStartReason(startReason);
 }
 
@@ -124,6 +133,10 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
 {
     string reason = startReason.GetName();
     LOGI("Begin to start service reason: %{public}s", reason.c_str());
+    int32_t userId = 0;
+    if (dataSyncManager_->GetUserId(userId) != E_OK) {
+        return;
+    }
     if (reason == "usual.event.wifi.SCAN_FINISHED") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
     } else if (reason == "usual.event.BATTERY_OKAY") {
@@ -142,6 +155,51 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
     LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
     batteryStatusListener_->Start();
     screenStatusListener_->Start();
+}
+
+void CloudSyncService::LoadRemoteSACallback::OnLoadSACompleteForRemote(const std::string &deviceId,
+                                                                       int32_t systemAbilityId,
+                                                                       const sptr<IRemoteObject> &remoteObject)
+{
+    LOGI("Load CloudSync SA success,systemAbilityId:%{public}d, remoteObj result:%{public}s", systemAbilityId,
+         (remoteObject == nullptr ? "false" : "true"));
+    unique_lock<mutex> lock(loadRemoteSAMutex_);
+    if (remoteObject == nullptr) {
+        isLoadSuccess_.store(false);
+    } else {
+        isLoadSuccess_.store(true);
+    }
+    proxyConVar_.notify_one();
+}
+
+int32_t CloudSyncService::LoadRemoteSA(const std::string &deviceId)
+{
+    unique_lock<mutex> lock(loadRemoteSAMutex_);
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        LOGE("Samgr is nullptr");
+        return E_SA_LOAD_FAILED;
+    }
+    sptr<LoadRemoteSACallback> cloudSyncLoadCallback = new LoadRemoteSACallback();
+    if (cloudSyncLoadCallback == nullptr) {
+        LOGE("cloudSyncLoadCallback is nullptr");
+        return E_SA_LOAD_FAILED;
+    }
+    int32_t ret = samgr->LoadSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, deviceId, cloudSyncLoadCallback);
+    if (ret != E_OK) {
+        LOGE("Failed to Load systemAbility, systemAbilityId:%{pulbic}d, ret code:%{pulbic}d",
+             FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, ret);
+        return E_SA_LOAD_FAILED;
+    }
+
+    auto waitStatus = cloudSyncLoadCallback->proxyConVar_.wait_for(
+        lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
+        [cloudSyncLoadCallback]() { return cloudSyncLoadCallback->isLoadSuccess_.load(); });
+    if (!waitStatus) {
+        LOGE("Load CloudSynd SA timeout");
+        return E_SA_LOAD_FAILED;
+    }
+    return E_OK;
 }
 
 int32_t CloudSyncService::UnRegisterCallbackInner()
@@ -185,6 +243,16 @@ int32_t CloudSyncService::StartSyncInner(bool forceFlag)
         SyncTriggerType::APP_TRIGGER);
 }
 
+int32_t CloudSyncService::TriggerSyncInner(const std::string &bundleName, const int32_t &userId)
+{
+    if (bundleName.empty() || userId < MIN_USER_ID) {
+        LOGE("Trigger sync parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    return dataSyncManager_->TriggerStartSync(bundleName, userId, false,
+        SyncTriggerType::APP_TRIGGER);
+}
+
 int32_t CloudSyncService::StopSyncInner()
 {
     string bundleName;
@@ -222,7 +290,6 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
         return ret;
     }
     if (status) {
-        dataSyncManager_->RestoreClean(bundleName, callerUserId);
         return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     } else {
         return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
@@ -264,13 +331,7 @@ int32_t CloudSyncService::NotifyEventChange(int32_t userId, const std::string &e
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    vector<std::string> bundleNames = {GALLERY_BUNDLE_NAME};
-    for (std::string bundleName : bundleNames) {
-        auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, callerUserId);
-        dataSyncer->Clean(CleanAction::CLEAR_DATA);
-        dataSyncer->ActualClean(CleanAction::CLEAR_DATA);
-    }
-    return E_OK;
+    return dataSyncManager_->DisableCloud(callerUserId);
 }
 
 int32_t CloudSyncService::EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData)
@@ -367,7 +428,11 @@ int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &r
         LOGE("uploadAsset get drive kit instance err");
         return E_CLOUD_SDK;
     }
-    return driveKit->OnUploadAsset(request, result);
+    string bundleName("distributeddata");
+    TaskStateManager::GetInstance().StartTask(bundleName, TaskType::UPLOAD_ASSET_TASK);
+    auto ret = driveKit->OnUploadAsset(request, result);
+    TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::UPLOAD_ASSET_TASK);
+    return ret;
 }
 
 int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj)
@@ -390,7 +455,41 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
 
     // Not to pass the assetinfo.fieldkey
     DriveKit::DKDownloadAsset assetsToDownload{assetInfoObj.recordType, assetInfoObj.recordId, {}, asset, {}};
-    return sdkHelper->DownloadAssets(assetsToDownload);
+    TaskStateManager::GetInstance().StartTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
+    ret = sdkHelper->DownloadAssets(assetsToDownload);
+    TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
+    return ret;
+}
+
+int32_t CloudSyncService::DownloadAsset(const uint64_t taskId,
+                                        const int32_t userId,
+                                        const std::string &bundleName,
+                                        const std::string &networkId,
+                                        AssetInfoObj &assetInfoObj)
+{
+    if (networkId == "edge2cloud") {
+        LOGE("now not support");
+        return E_INVAL_ARG;
+    }
+    // Load sa for remote device
+    if (LoadRemoteSA(networkId) != E_OK) { // maybe need to convert deviceId
+        return E_SA_LOAD_FAILED;
+    }
+
+    string uri = assetInfoObj.uri;
+    fileTransferManager_->DownloadFileFromRemoteDevice(networkId, userId, taskId, uri);
+    return E_OK;
+}
+
+int32_t CloudSyncService::RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject)
+{
+    if (remoteObject == nullptr) {
+        LOGE("remoteObject is nullptr");
+        return E_INVAL_ARG;
+    }
+    auto callback = iface_cast<IDownloadAssetCallback>(remoteObject);
+    DownloadAssetCallbackManager::GetInstance().AddCallback(callback);
+    return E_OK;
 }
 
 int32_t CloudSyncService::DeleteAsset(const int32_t userId, const std::string &uri)

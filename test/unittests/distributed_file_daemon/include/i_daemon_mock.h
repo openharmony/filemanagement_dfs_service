@@ -21,9 +21,8 @@
 
 #include "dfs_error.h"
 #include "ipc/i_daemon.h"
-#include "iremote_stub.h"
 #include "iremote_broker.h"
-
+#include "iremote_stub.h"
 
 namespace OHOS::Storage::DistributedFile {
 class DaemonServiceMock : public IRemoteStub<IDaemon> {
@@ -47,6 +46,22 @@ public:
     }
 
     int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t PrepareSession(const std::string &srcUri,
+                           const std::string &dstUri,
+                           const std::string &srcDeviceId,
+                           const sptr<IRemoteObject> &listener)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t RequestSendFile(const std::string &srcUri,
+                            const std::string &dstPath,
+                            const std::string &remoteDeviceId,
+                            const std::string &sessionName)
     {
         return FileManagement::E_OK;
     }

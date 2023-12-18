@@ -56,6 +56,11 @@ public:
         return E_OK;
     }
 
+    int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) override
+    {
+        return E_OK;
+    }
+
     int32_t StopSyncInner() override
     {
         return E_OK;
@@ -124,6 +129,19 @@ public:
         return E_OK;
     }
     int32_t CleanCacheInner(const std::string &uri)
+    {
+        return E_OK;
+    }
+
+    int32_t DownloadAsset(const uint64_t taskId,
+                          const int32_t userId,
+                          const std::string &bundleName,
+                          const std::string &networkId,
+                          AssetInfoObj &assetInfoObj)
+    {
+        return E_OK;
+    }
+    int32_t RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject)
     {
         return E_OK;
     }

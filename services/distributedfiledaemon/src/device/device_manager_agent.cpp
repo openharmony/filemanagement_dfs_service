@@ -267,9 +267,9 @@ int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDevic
 {
     LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline begin", deviceInfo.networkId);
     DeviceInfo info(deviceInfo);
-    LOGI("[OnDeviceP2POnline] networkId %{public}s, QueryRelatedGroups begin", deviceInfo.networkId);
+
     QueryRelatedGroups(info.udid_, info.cid_);
-    LOGI("[OnDeviceP2POnline] networkId %{public}s, QueryRelatedGroups end", deviceInfo.networkId);
+
     unique_lock<mutex> lock(mpToNetworksMutex_);
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
@@ -281,7 +281,6 @@ int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDevic
         LOGE("[OnDeviceP2POnline] cid %{public}s network type is null!", info.cid_.c_str());
         return P2P_FAILED;
     }
-    openP2PSessionCount_++;
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
         &NetworkAgentTemplate::ConnectDeviceByP2PAsync, info);
     cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
@@ -296,10 +295,6 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
     DeviceInfo info(deviceInfo);
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
-    openP2PSessionCount_--;
-    if (openP2PSessionCount_) {
-        return P2P_FAILED;
-    }
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
@@ -310,8 +305,8 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
         LOGE("cid %{public}s network type is null!", info.cid_.c_str());
         return P2P_FAILED;
     }
-    auto cmd =
-        make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
+    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
+        &NetworkAgentTemplate::DisconnectDeviceByP2P, info);
     it->second->Recv(move(cmd));
     cidNetTypeRecord_.erase(info.cid_);
     cidNetworkType_.erase(info.cid_);
@@ -407,6 +402,7 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
 {
     LOGI("OnDeviceInfoChanged begin");
     if (deviceInfo.networkType == -1) {
+        LOGI("OnDeviceInfoChanged end");
         return;
     }
     DeviceInfo info(deviceInfo);

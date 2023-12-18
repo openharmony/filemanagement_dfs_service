@@ -60,6 +60,7 @@ private:
     static inline const int32_t PULL_LIMIT_SIZE = 100;
     static inline const int32_t MODIFY_BATCH_NUM = 20;
     static inline const int32_t DELETE_BATCH_NUM = 20;
+    static const int32_t MAX_RENAME = 10;
     DriveKit::DKRecordType recordType_ = "file";
     DriveKit::DKFieldKeyArray desiredKeys_;
     DriveKit::DKFieldKeyArray checkedKeys_ = {"version", "id"};
@@ -102,14 +103,19 @@ private:
     int32_t PullRecordDelete(DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
     int32_t RecycleFile(const std::string &recordId);
     int32_t GetMetaFilePath(const std::string &cloudId, std::string &path);
-    int32_t PullRecordConflict(DriveKit::DKRecord &record, bool &comflag);
+    int32_t PullRecordConflict(DriveKit::DKRecord &record);
+    int32_t HandleConflict(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
+                                             std::string &fullName, const int &lastDot);
+    int32_t FindRenameFile(const std::shared_ptr<NativeRdb::ResultSet> resultSet, std::string &renameFileCloudId,
+                           std::string &fullName, const int &lastDot);
+    int32_t ConflictReName(const std::string &cloudId, std::string newFileName);
     int SetRetry(const std::string &recordId);
     void AppendFileToDownload(const std::string &cloudId,
                               const std::string &fieldKey,
                               std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
 
     CloudDiskDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
-    int64_t UTCTimeSeconds();
+    int64_t UTCTimeMilliSeconds();
     std::mutex rdbMutex_;
 };
 } // namespace CloudSync

@@ -24,6 +24,9 @@ enum class TaskType : uint64_t {
     SYNC_TASK = 1,
     DOWNLOAD_TASK = 1 << 1,
     CLEAN_TASK = 1 << 2,
+    UPLOAD_ASSET_TASK = 1 << 3,
+    DOWNLOAD_ASSET_TASK = 1 << 4,
+    DOWNLOAD_REMOTE_ASSET_TASK = 1 << 5,
 };
 class TaskStateManager : public NoCopyable {
 public:
@@ -31,12 +34,13 @@ public:
     ~TaskStateManager() = default;
     void StartTask(std::string bundleName, TaskType task);
     void CompleteTask(std::string bundleName, TaskType task);
-    void DelayUnloadTask();
+    void StartTask();
 private:
     TaskStateManager();
     std::mutex taskMapsMutex_;
     std::unordered_map<std::string, uint64_t> taskMaps_;
     std::shared_ptr<AppExecFwk::EventHandler> unloadHandler_;
+    void DelayUnloadTask();
 };
 }
 #endif // OHOS_FILEMGMT_TASK_STATE_MANAGER_H

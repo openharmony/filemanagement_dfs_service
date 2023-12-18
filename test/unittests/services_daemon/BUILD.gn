@@ -37,17 +37,7 @@ ohos_unittest("fuse_manager_test") {
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
   ]
 
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
-  ]
-
-  media_library = [ "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp" ]
-
   sources += cloud_disk
-  sources += clouddisk_database
-  sources += media_library
 
   include_dirs = [
     "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
@@ -64,6 +54,7 @@ ohos_unittest("fuse_manager_test") {
   ]
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -114,17 +105,7 @@ ohos_unittest("cloud_daemon_test") {
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
   ]
 
-  clouddisk_database = [
-    "${clouddisk_database_path}/src/clouddisk_rdbstore.cpp",
-    "${clouddisk_database_path}/src/file_column.cpp",
-    "${clouddisk_database_path}/src/clouddisk_rdb_utils.cpp",
-  ]
-
-  media_library = [ "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp" ]
-
   sources += cloud_disk
-  sources += clouddisk_database
-  sources += media_library
 
   include_dirs = [
     "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
@@ -141,6 +122,7 @@ ohos_unittest("cloud_daemon_test") {
   ]
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",

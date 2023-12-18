@@ -61,8 +61,7 @@ public:
     /*clean*/
     virtual int32_t Init(const std::string bundleName, const int32_t userId);
     virtual int32_t Clean(const int action);
-    virtual int32_t ActualClean(const int action);
-    virtual int32_t CancelClean();
+    virtual int32_t ActualClean();
 
     /* sdk */
     bool HasSdkHelper();
@@ -77,6 +76,9 @@ public:
     virtual int32_t OptimizeStorage(const int32_t agingDays);
     virtual int32_t DownloadThumb();
 
+    void SaveSubscription();
+    void DeleteSubscription();
+    
 protected:
     /* download */
     int32_t Pull(std::shared_ptr<DataHandler> handler);
@@ -91,8 +93,6 @@ protected:
     int32_t DownloadThumbInner(std::shared_ptr<DataHandler> handler);
     void ClearCursor();
 
-    void SaveSubscription();
-    void DeleteSubscription();
     /* schedule */
     virtual void Schedule() = 0;
     virtual void ScheduleByType(SyncTriggerType syncTriggerType) = 0;
@@ -124,6 +124,8 @@ protected:
     SdkLock lock_;
 
     uint32_t errorCode_{0};
+
+    bool isDataChanged_{false};
 
 private:
     /* download */

@@ -41,6 +41,7 @@ public:
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valuesBucket);
     int32_t GetMetaFilePath(const std::string &cloudId, std::string &path);
     void SetRootId(std::string rootId);
+    std::string GetParentCloudId(const DriveKit::DKRecordData &data);
 
 private:
     int32_t FillRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);

@@ -36,6 +36,14 @@ public:
 
     int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    int32_t PrepareSession(const std::string &srcUri,
+                           const std::string &dstUri,
+                           const std::string &srcDeviceId,
+                           const sptr<IRemoteObject> &listener) override;
+    int32_t RequestSendFile(const std::string &srcUri,
+                            const std::string &dstPath,
+                            const std::string &dstDeviceId,
+                            const std::string &sessionName) override;
 
 private:
     static inline std::mutex proxyMutex_;

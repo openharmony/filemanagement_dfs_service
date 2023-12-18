@@ -124,6 +124,8 @@ int32_t FileDataConvertor::HandleAttributes(DriveKit::DKRecordFieldMap &map,
             }
         }
     }
+    RETURN_ON_ERR(HandleDataAdded(map, resultSet));
+    RETURN_ON_ERR(HandleDataModified(map, resultSet));
     RETURN_ON_ERR(HandleThumbSize(map, resultSet));
     RETURN_ON_ERR(HandleLcdSize(map, resultSet));
     RETURN_ON_ERR(HandleFormattedDate(map, resultSet));
@@ -143,6 +145,7 @@ int32_t FileDataConvertor::HandleCompatibleFileds(DriveKit::DKRecordData &data,
     RETURN_ON_ERR(HandleRecycled(data, resultSet));
     RETURN_ON_ERR(HandleRecycleTime(data, resultSet));
     RETURN_ON_ERR(HandleFavorite(data, resultSet));
+    RETURN_ON_ERR(HandleDescription(data, resultSet));
 
     /* gallery expand fields */
     RETURN_ON_ERR(HandleProperties(data, resultSet));
@@ -250,7 +253,7 @@ int32_t FileDataConvertor::HandleThumbSize(DriveKit::DKRecordFieldMap &map,
     struct stat fileStat;
     int err = stat(thumbnailPath.c_str(), &fileStat);
     if (err < 0) {
-        LOGE("get thumb size failed errno :%{public}d", errno);
+        LOGD("get thumb size failed errno :%{public}d", errno);
         return E_INVAL_ARG;
     }
 
@@ -304,6 +307,7 @@ int32_t FileDataConvertor::HandleFormattedDate(DriveKit::DKRecordFieldMap &map, 
     if (year.empty() || month.empty() || day.empty()) {
         int64_t createTime = 0;
         RETURN_ON_ERR(GetLong(PhotoColumn::MEDIA_DATE_ADDED, createTime, resultSet));
+        createTime = createTime / MILLISECOND_TO_SECOND;
         year = StrCreateTime(PhotoColumn::PHOTO_DATE_YEAR_FORMAT, createTime);
         month = StrCreateTime(PhotoColumn::PHOTO_DATE_MONTH_FORMAT, createTime);
         day = StrCreateTime(PhotoColumn::PHOTO_DATE_DAY_FORMAT, createTime);
@@ -323,7 +327,7 @@ int32_t FileDataConvertor::HandleDetailTime(DriveKit::DKRecordFieldMap &map,
     if (ret != E_OK) {
         return ret;
     }
-    time_t dataAddedStamp = time_t(val);
+    time_t dataAddedStamp = time_t(val / MILLISECOND_TO_SECOND);
     struct tm timeinfo;
     char buffer[80];
     localtime_r(&dataAddedStamp, &timeinfo);
@@ -579,7 +583,6 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Values
             return ret;
         }
         RETURN_ON_ERR(CompensateTitle(data, valueBucket));
-        RETURN_ON_ERR(CompensateFormattedDate(record, valueBucket));
     }
     ExtractCompatibleValue(record, data, valueBucket);
     return E_OK;
@@ -591,7 +594,6 @@ int32_t FileDataConvertor::TryCompensateValue(const DriveKit::DKRecord &record,
     RETURN_ON_ERR(CompensateData(data, valueBucket));
     RETURN_ON_ERR(CompensateTitle(data, valueBucket));
     RETURN_ON_ERR(CompensateMediaType(data, valueBucket));
-    RETURN_ON_ERR(CompensateDataAdded(record, valueBucket));
     RETURN_ON_ERR(CompensateMetaDateModified(record, valueBucket));
     RETURN_ON_ERR(CompensateSubtype(data, valueBucket));
     RETURN_ON_ERR(CompensateDuration(data, valueBucket));
@@ -664,12 +666,19 @@ int32_t FileDataConvertor::CompensateMediaType(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::CompensateDataAdded(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
-    uint64_t dataAdded = record.GetCreateTime() / MILLISECOND_TO_SECOND;
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+    int64_t dataAdded = 0;
+    if (data.find(FILE_CREATED_TIME) != data.end()) {
+        data[FILE_CREATED_TIME].GetLong(dataAdded);
+    } else {
+        dataAdded = record.GetCreateTime();
+    }
     if (dataAdded == 0) {
         LOGE("The createTime of record is incorrect");
     }
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_ADDED, dataAdded);
-    CompensateFormattedDate(dataAdded, valueBucket);
+    CompensateFormattedDate(dataAdded / MILLISECOND_TO_SECOND, valueBucket);
     return E_OK;
 }
 
@@ -760,9 +769,9 @@ int32_t FileDataConvertor::CompensateFormattedDate(const DriveKit::DKRecord &rec
 
     LOGI("record data cannot find formatted date");
     uint64_t timeAdded = 0;
-    if (attributes.find(PhotoColumn::MEDIA_DATE_ADDED) != attributes.end()) {
+    if (data.find(FILE_CREATED_TIME) != attributes.end()) {
         int64_t sTimeAdded;
-        attributes[PhotoColumn::MEDIA_DATE_ADDED].GetLong(sTimeAdded);
+        data[FILE_CREATED_TIME].GetLong(sTimeAdded);
         timeAdded = static_cast<uint64_t>(sTimeAdded);
     } else {
         timeAdded = record.GetCreateTime();
@@ -824,11 +833,13 @@ int32_t FileDataConvertor::ExtractCompatibleValue(const DriveKit::DKRecord &reco
     RETURN_ON_ERR(ExtractDisplayName(data, valueBucket));
     RETURN_ON_ERR(ExtractMimeType(data, valueBucket));
     RETURN_ON_ERR(ExtractDeviceName(data, valueBucket));
+    RETURN_ON_ERR(CompensateDataAdded(record, valueBucket));
     RETURN_ON_ERR(ExtractDateModified(record, valueBucket));
     RETURN_ON_ERR(ExtractDateTaken(record, valueBucket));
     RETURN_ON_ERR(ExtractFavorite(data, valueBucket));
     RETURN_ON_ERR(ExtractDateTrashed(data, valueBucket));
     RETURN_ON_ERR(ExtractCloudId(record, valueBucket));
+    RETURN_ON_ERR(ExtractDescription(data, valueBucket));
     return E_OK;
 }
 
@@ -1007,7 +1018,20 @@ int32_t FileDataConvertor::ExtractDeviceName(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::ExtractDateModified(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
-    uint64_t dateModified = record.GetEditedTime() / MILLISECOND_TO_SECOND;
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+    int64_t dateModified = 0;
+    if (data.find(FILE_ATTRIBUTES) != data.end()) {
+        DriveKit::DKRecordFieldMap attributes;
+        data[FILE_ATTRIBUTES].GetRecordMap(attributes);
+        if (attributes.find(FILE_EDITED_TIME_MS) != attributes.end()) {
+            if (attributes[FILE_EDITED_TIME_MS].GetLong(dateModified) == DKLocalErrorCode::NO_ERROR) {
+                valueBucket.PutLong(PhotoColumn::MEDIA_DATE_MODIFIED, dateModified);
+                return E_OK;
+            }
+        }
+    }
+    dateModified = static_cast<int64_t>(record.GetEditedTime());
     valueBucket.PutLong(PhotoColumn::MEDIA_DATE_MODIFIED, dateModified);
     return E_OK;
 }
@@ -1053,7 +1077,7 @@ int32_t FileDataConvertor::ExtractDateTrashed(DriveKit::DKRecordData &data,
             LOGE("extract dataTrashed error");
             return E_INVAL_ARG;
         }
-        valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, dataTrashed / MILLISECOND_TO_SECOND);
+        valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, dataTrashed);
     } else {
         valueBucket.PutLong(PhotoColumn::MEDIA_DATE_TRASHED, 0);
     }
@@ -1065,6 +1089,22 @@ int32_t FileDataConvertor::ExtractCloudId(const DriveKit::DKRecord &record,
 {
     string cloudId = record.GetRecordId();
     valueBucket.PutString(PhotoColumn::PHOTO_CLOUD_ID, cloudId);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::ExtractDescription(DriveKit::DKRecordData &data,
+    NativeRdb::ValuesBucket &valueBucket)
+{
+    if (data.find(FILE_DESCRIPTION) == data.end()) {
+        LOGI("record data cannot find FILE_DESCRIPTION");
+        return E_OK;
+    }
+    string description;
+    if (data[FILE_DESCRIPTION].GetString(description) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract description error");
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutString(PhotoColumn::PHOTO_USER_COMMENT, description);
     return E_OK;
 }
 

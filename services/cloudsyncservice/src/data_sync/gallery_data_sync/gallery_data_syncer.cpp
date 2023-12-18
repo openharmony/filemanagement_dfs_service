@@ -114,15 +114,16 @@ int32_t GalleryDataSyncer::Clean(const int action)
     if (ret != E_OK) {
         LOGE("gallery data syncer file cancel download err %{public}d", ret);
     }
-    DeleteSubscription();
-    ret = fileHandler_->MarkClean();
+    fileHandler_->ClearCursor();
+    ret = fileHandler_->MarkClean(action);
     PutHandler();
     CompleteClean();
     return ret;
 }
 
-int32_t GalleryDataSyncer::ActualClean(const int action)
+int32_t GalleryDataSyncer::ActualClean()
 {
+    int32_t action = CleanAction::RETAIN_DATA;
     int32_t ret = GetHandler();
     if (ret != E_OK) {
         return ret;
@@ -135,17 +136,6 @@ int32_t GalleryDataSyncer::ActualClean(const int action)
     if (ret != E_OK) {
         LOGE("gallery data syncer album clean err %{public}d", ret);
     }
-    PutHandler();
-    return ret;
-}
-
-int32_t GalleryDataSyncer::CancelClean()
-{
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        return ret;
-    }
-    ret = fileHandler_->UnMarkClean();
     PutHandler();
     return ret;
 }
@@ -235,6 +225,7 @@ void GalleryDataSyncer::ScheduleByType(SyncTriggerType syncTriggerType)
     if (syncTriggerType == SyncTriggerType::TASK_TRIGGER) {
         fileHandler_->SetChecking();
     }
+    fileHandler_->UnMarkClean();
     Schedule();
 }
 
@@ -371,7 +362,7 @@ int32_t GalleryDataSyncer::Lock()
     };
 
     const uint32_t KEEP_ALIVE_PERIOD_COEF = 3;
-    uint32_t period = lock_.lock.lockInterval * SECOND_TO_MILLISECOND / KEEP_ALIVE_PERIOD_COEF;
+    uint32_t period = (uint32_t)(lock_.lock.lockInterval) * (uint32_t)(SECOND_TO_MILLISECOND) / KEEP_ALIVE_PERIOD_COEF;
     LOGD("period %{public}d", period);
     DfsuTimer::GetInstance().Register(timerCallback, lock_.timerId, period);
 

@@ -88,7 +88,7 @@ static bool HandleDkError(fuse_req_t req, DriveKit::DKError dkError)
     if (!dkError.HasError()) {
         return false;
     }
-    if ((dkError.serverErrorCode == (uint)DriveKit::DKServerErrorCode::NETWORK_ERROR)
+    if ((dkError.serverErrorCode == static_cast<int>(DriveKit::DKServerErrorCode::NETWORK_ERROR))
         || dkError.dkErrorCode == DriveKit::DKLocalErrorCode::DOWNLOAD_REQUEST_ERROR) {
         LOGE("network error");
         fuse_reply_err(req, ENOTCONN);
@@ -360,6 +360,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                 LOGD("open success, sessionRefCount: %d", cInode->sessionRefCount.load());
                 fuse_reply_open(req, fi);
             } else {
+                cInode->readSession = nullptr;
                 LOGE("open fali");
             }
             wSesLock.unlock();
@@ -396,7 +397,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         }
         bool res = cInode->readSession->Close(needRemain);
         if (!res) {
-            LOGE("close error, needRemain: %d", needRemain);
+            LOGE("close error, needRemain: %{public}d", needRemain);
         }
         if (needRemain && res) {
             MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));

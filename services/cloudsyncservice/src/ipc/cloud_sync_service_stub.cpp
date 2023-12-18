@@ -31,6 +31,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         &CloudSyncServiceStub::HandleRegisterCallbackInner;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_SYNC)] =
         &CloudSyncServiceStub::HandleStartSyncInner;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_TRIGGER_SYNC)] =
+        &CloudSyncServiceStub::HandleTriggerSyncInner;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_SYNC)] =
         &CloudSyncServiceStub::HandleStopSyncInner;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CHANGE_APP_SWITCH)] =
@@ -59,6 +61,11 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         &CloudSyncServiceStub::HandleUploadAsset;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILE)] =
         &CloudSyncServiceStub::HandleDownloadFile;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_ASSET)] =
+        &CloudSyncServiceStub::HandleDownloadAsset;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_ASSET_CALLBACK)] =
+        &CloudSyncServiceStub::HandleRegisterDownloadAssetCallback;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DELETE_ASSET)] =
         &CloudSyncServiceStub::HandleDeleteAsset;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_GET_SYNC_TIME)] =
@@ -75,7 +82,7 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
                                               MessageOption &option)
 {
     DfsuMemoryGuard cacheGuard;
-    TaskStateManager::GetInstance().DelayUnloadTask();
+    TaskStateManager::GetInstance().StartTask();
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return E_SERVICE_DESCRIPTOR_IS_EMPTY;
     }
@@ -138,6 +145,25 @@ int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageP
     int32_t res = StartSyncInner(forceFlag);
     reply.WriteInt32(res);
     LOGI("End StartSyncInner");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleTriggerSyncInner(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin TriggerSyncInner");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t res = TriggerSyncInner(bundleName, userId);
+    reply.WriteInt32(res);
+    LOGI("End TriggerSyncInner");
     return res;
 }
 
@@ -414,6 +440,50 @@ int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessagePar
     int32_t res = DownloadFile(userId, bundleName, *assetInfoObj);
     reply.WriteInt32(res);
     LOGI("End DownloadFile");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleDownloadAsset(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin DownloadAsset");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    uint64_t taskId = data.ReadUint64();
+    int32_t userId = data.ReadInt32();
+    string bundleName = data.ReadString();
+    string networkId = data.ReadString();
+    sptr<AssetInfoObj> assetInfoObj = data.ReadParcelable<AssetInfoObj>();
+    if (!assetInfoObj) {
+        LOGE("object of AssetInfoObj is nullptr");
+        return E_INVAL_ARG;
+    }
+    int32_t res = DownloadAsset(taskId, userId, bundleName, networkId, * assetInfoObj);
+    reply.WriteInt32(res);
+    LOGI("End DownloadAsset");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleRegisterDownloadAssetCallback(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin RegisterDownloadAssetCallback");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    auto remoteObj = data.ReadRemoteObject();
+    int32_t res = RegisterDownloadAssetCallback(remoteObj);
+    reply.WriteInt32(res);
+    LOGI("End RegisterDownloadAssetCallback");
     return res;
 }
 

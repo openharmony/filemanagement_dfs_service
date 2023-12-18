@@ -24,6 +24,7 @@
 #include "cloud_sync_common.h"
 #include "cloud_sync_manager.h"
 #include "svc_death_recipient.h"
+#include "system_ability_status_change_stub.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncManagerImpl final : public CloudSyncManager, public NoCopyable {
@@ -34,6 +35,7 @@ public:
     int32_t UnRegisterCallback() override;
     int32_t StartSync() override;
     int32_t StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) override;
+    int32_t TriggerSync(const std::string &bundleName, const int32_t &userId) override;
     int32_t StopSync() override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
     int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
@@ -48,6 +50,18 @@ public:
     int32_t UnregisterDownloadFileCallback() override;
     int32_t GetSyncTime(int64_t &syncTime) override;
     int32_t CleanCache(const std::string &uri) override;
+
+    class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
+    public:
+        SystemAbilityStatusChange(std::shared_ptr<CloudSyncCallback> callback,
+            std::shared_ptr<CloudDownloadCallback> downloadCallback)
+            : callback_(callback), downloadCallback_(downloadCallback) {};
+        void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId);
+        void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId);
+    private:
+        std::shared_ptr<CloudSyncCallback> callback_;
+        std::shared_ptr<CloudDownloadCallback> downloadCallback_;
+    };
 private:
     CloudSyncManagerImpl() = default;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
@@ -55,6 +69,10 @@ private:
     std::atomic_flag isFirstCall_{false};
     sptr<SvcDeathRecipient> deathRecipient_;
     std::shared_ptr<CloudSyncCallback> callback_;
+    std::shared_ptr<CloudDownloadCallback> downloadCallback_;
+    sptr<CloudSyncManagerImpl::SystemAbilityStatusChange> listener_;
+    std::mutex subscribeMutex_;
+    void SubscribeListener();
 };
 } // namespace OHOS::FileManagement::CloudSync
 

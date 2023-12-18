@@ -23,7 +23,7 @@
 #include "data_convertor.h"
 #include "dfs_error.h"
 #include "gallery_album_const.h"
-#include "data_sync_const.h"
+#include "gallery_file_const.h"
 #include "utils_log.h"
 
 namespace OHOS {

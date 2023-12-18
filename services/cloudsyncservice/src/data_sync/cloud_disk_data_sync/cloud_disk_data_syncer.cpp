@@ -47,7 +47,6 @@ int32_t CloudDiskDataSyncer::Clean(const int action)
     if (ret != E_OK) {
         LOGE("disk data syncer file clean err %{public}d", ret);
     }
-    DeleteSubscription();
     CompleteClean();
     return ret;
 }
@@ -135,7 +134,9 @@ int32_t CloudDiskDataSyncer::Complete()
     LOGI("cloud disk data syncer complete all");
     Unlock();
     CompleteAll();
-    ChangesNotify();
+    if (isDataChanged_) {
+        ChangesNotify();
+    }
     return E_OK;
 }
 
