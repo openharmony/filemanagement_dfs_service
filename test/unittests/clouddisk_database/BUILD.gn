@@ -1,0 +1,85 @@
+# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+ohos_unittest("clouddisk_rdb_utils_test") {
+  module_out_path = "dfs_service/tests"
+
+  sources = [
+    "${distributedfile_path}/services/clouddisk_database/src/clouddisk_rdb_utils.cpp",
+    "${distributedfile_path}/services/clouddisk_database/src/clouddisk_rdbstore.cpp",
+    "${distributedfile_path}/services/clouddisk_database/src/file_column.cpp",
+    "clouddisk_rdb_utils_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/services/clouddisk_database/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/test/unittests/cloud_disk_database/include",
+    "include",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
+    "${media_library_path}/frameworks/utils/include",
+    "${distributedfile_path}/utils/log/include",
+    "//third_party/e2fsprogs/e2fsprogs/lib",
+  ]
+
+  deps = [
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/e2fsprogs:libext2_uuid",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  cflags = [ "--coverage" ]
+
+  ldflags = [ "--coverage" ]
+
+  cflags_cc = [ "--coverage" ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DISK_DATABASE_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
+group("clouddisk_database_test") {
+  testonly = true
+  deps = [ ":clouddisk_rdb_utils_test" ]
+}
