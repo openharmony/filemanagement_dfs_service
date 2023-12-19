@@ -29,6 +29,26 @@ namespace DistributedFile {
 using namespace std;
 using namespace OHOS::Storage;
 
+void DistributedFileDaemonProxy::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
+{
+    LOGI("dfs service death");
+    unique_lock<mutex> lock(proxyMutex_);
+    daemonProxy_ = nullptr;
+}
+
+void DistributedFileDaemonProxy::DaemonDeathRecipient::SetDeathRecipient(RemoteDiedHandler handler)
+{
+    handler_ = std::move(handler);
+}
+
+void DistributedFileDaemonProxy::DaemonDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
+{
+    LOGI("start");
+    if (handler_ != nullptr) {
+        handler_(remote);
+    }
+}
+
 sptr<IDaemon> DistributedFileDaemonProxy::GetInstance()
 {
     LOGI("getinstance");
@@ -46,6 +66,19 @@ sptr<IDaemon> DistributedFileDaemonProxy::GetInstance()
     auto object = samgr->CheckSystemAbility(FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID);
     if (object == nullptr) {
         LOGE("object == nullptr");
+        return nullptr;
+    }
+
+    if (deathRecipient_ == nullptr) {
+        deathRecipient_ = new (std::nothrow) DaemonDeathRecipient();
+        if (deathRecipient_ == nullptr) {
+            LOGE("new death recipient failed");
+            return nullptr;
+        }
+    }
+    deathRecipient_->SetDeathRecipient([](const wptr<IRemoteObject> &remote) { OnRemoteSaDied(remote); });
+    if ((object->IsProxyObject()) && (!object->AddDeathRecipient(deathRecipient_))) {
+        LOGE("failed to add death recipient.");
         return nullptr;
     }
 
