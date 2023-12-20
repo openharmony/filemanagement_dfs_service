@@ -70,6 +70,15 @@ ohos_unittest("cloud_sync_callback_stub_test") {
 }
 
 ohos_unittest("cloud_sync_manager_impl_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
@@ -83,6 +92,7 @@ ohos_unittest("cloud_sync_manager_impl_test") {
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/mock/ipc",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store_mock.cpp",
   ]
 
   deps = [
@@ -414,6 +424,76 @@ ohos_unittest("cloud_sync_asset_manager_test") {
   use_exceptions = true
 }
 
+ohos_unittest("download_asset_callback_client_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "download_asset_callback_client_test.cpp" ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "dfs_service:cloudsync_kit_inner",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("download_asset_callback_stub_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/download_asset_callback_stub.cpp",
+    "../../../mock/cloud_download_uri_manager_hook.cpp",
+    "download_asset_callback_stub_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "dfs_service:cloudsync_kit_inner",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  defines = [
+    "private=public",
+    "protected=public",
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("cloudsync_impl_test") {
   testonly = true
 
@@ -426,10 +506,11 @@ group("cloudsync_impl_test") {
     ":cloud_sync_asset_manager_test",
     ":cloud_sync_callback_client_test",
     ":cloud_sync_callback_stub_test",
-    ":cloud_sync_common_test",
     ":cloud_sync_manager_impl_test",
     ":cloud_sync_manager_impl_unnomal_test",
     ":cloud_sync_manager_test",
     ":cloud_sync_service_proxy_test",
+    ":download_asset_callback_client_test",
+    ":download_asset_callback_stub_test",
   ]
 }
