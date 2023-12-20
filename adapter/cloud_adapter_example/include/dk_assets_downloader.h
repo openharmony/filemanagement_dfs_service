@@ -76,7 +76,7 @@ public:
         std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)> progressCallback);
     DKLocalErrorCode DownLoadAssets(DKDownloadAsset &assetsToDownload);
 
-    DKLocalErrorCode CancelDownloadAssets(DKDownloadId id);
+    DKLocalErrorCode CancelDownloadAssets(DKDownloadId id, bool isClearCache = false);
     DKAssetsDownloader(std::shared_ptr<DKDatabase> database)
     {
         database_ = database;

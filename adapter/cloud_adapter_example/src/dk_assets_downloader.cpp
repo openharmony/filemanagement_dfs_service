@@ -36,7 +36,7 @@ DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(DKDownloadAsset &assetsToDow
     return DKLocalErrorCode::NO_ERROR;
 }
 
-DKLocalErrorCode DKAssetsDownloader::CancelDownloadAssets(DKDownloadId id)
+DKLocalErrorCode DKAssetsDownloader::CancelDownloadAssets(DKDownloadId id, bool isClearCache)
 {
     return DKLocalErrorCode::NO_ERROR;
 }
