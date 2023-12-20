@@ -35,12 +35,19 @@ const std::string ALBUM_ID = "albumId";
 const std::string ALBUM_TYPE = "type";
 const std::string ALBUM_LOGIC_TYPE = "logicType";
 const std::string ALBUM_PATH = "localPath";
+
+/* tmp */
+const std::string TMP_ALBUM_BUNDLE_NAME = "bundle_name";
+const std::string TMP_ALBUM_LOCAL_LANGUAGE = "local_language";
+const int32_t SURCE_GENERIC = 2049;
+
 /* properties */
 const std::string ALBUM_PROPERTIES = "properties";
 
 enum AlbumType : int32_t {
     NORMAL,
     SHARE,
+    SOURCE = 2048,
 };
 
 enum LogicType : int32_t {
@@ -53,8 +60,29 @@ const std::string ALBUM_LOCAL_PATH_PREFIX = "/OH/";
 const std::vector<std::string> ALBUM_LOCAL_QUERY_COLUMNS = {
     Media::PhotoAlbumColumns::ALBUM_ID,
     Media::PhotoAlbumColumns::ALBUM_NAME,
+    Media::PhotoAlbumColumns::ALBUM_TYPE,
     Media::PhotoAlbumColumns::ALBUM_DIRTY,
-    Media::PhotoAlbumColumns::ALBUM_CLOUD_ID
+    Media::PhotoAlbumColumns::ALBUM_CLOUD_ID,
+};
+
+const std::vector<std::string> QUERY_USER_ALBUM_COLUMNS = {
+    Media::PhotoAlbumColumns::ALBUM_ID,
+    Media::PhotoAlbumColumns::ALBUM_TYPE,
+    Media::PhotoAlbumColumns::ALBUM_NAME,
+    Media::PhotoAlbumColumns::ALBUM_CLOUD_ID,
+    Media::PhotoAlbumColumns::ALBUM_SUBTYPE,
+    Media::PhotoAlbumColumns::ALBUM_DATE_MODIFIED,
+};
+
+const std::vector<std::string> QUERY_SOURCE_ALBUM_COLUMNS = {
+    Media::PhotoAlbumColumns::ALBUM_ID,
+    Media::PhotoAlbumColumns::ALBUM_TYPE,
+    Media::PhotoAlbumColumns::ALBUM_NAME,
+    Media::PhotoAlbumColumns::ALBUM_CLOUD_ID,
+    Media::PhotoAlbumColumns::ALBUM_SUBTYPE,
+    Media::PhotoAlbumColumns::ALBUM_DATE_MODIFIED,
+    TMP_ALBUM_BUNDLE_NAME,
+    TMP_ALBUM_LOCAL_LANGUAGE
 };
 
 const std::vector<std::string> GALLERY_ALBUM_COLUMNS = {
@@ -62,8 +90,6 @@ const std::vector<std::string> GALLERY_ALBUM_COLUMNS = {
     Media::PhotoAlbumColumns::ALBUM_SUBTYPE,
     Media::PhotoAlbumColumns::ALBUM_NAME,
     Media::PhotoAlbumColumns::ALBUM_DATE_MODIFIED,
-    /* put cloud id in the last, and skip it in the loop (size - 1) */
-    Media::PhotoAlbumColumns::ALBUM_CLOUD_ID
 };
 
 const std::vector<DataType> GALLERY_ALBUM_COLUMN_TYPES = {
@@ -71,7 +97,6 @@ const std::vector<DataType> GALLERY_ALBUM_COLUMN_TYPES = {
     DataType::INT,        /* album_subtype */
     DataType::STRING,        /* album_name */
     DataType::LONG,        /* date_modified */
-    DataType::STRING        /* cloud_id */
 };
 
 } // namespace CloudSync

@@ -14,6 +14,7 @@
  */
 
 #include "album_data_convertor.h"
+#include "dk_error.h"
 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -35,20 +36,26 @@ AlbumDataConvertor::AlbumDataConvertor(OperationType type) : type_(type)
 int32_t AlbumDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet)
 {
     DriveKit::DKRecordData data;
-    /* properties */
-    RETURN_ON_ERR(HandleProperties(data, resultSet));
     /* basic */
     RETURN_ON_ERR(HandleAlbumName(data, resultSet));
     RETURN_ON_ERR(HandleAlbumLogicType(data, resultSet));
-    RETURN_ON_ERR(HandleType(data, resultSet));
     RETURN_ON_ERR(HandlePath(data, resultSet));
+    RETURN_ON_ERR(HandleType(data, resultSet));
+
+    /* properties */
+    RETURN_ON_ERR(HandleProperties(data, resultSet));
 
     /* control info */
     record.SetRecordType(recordType_);
+    int32_t albumType = -1;
+    if (GetInt(Media::PhotoAlbumColumns::ALBUM_TYPE, albumType, resultSet) == E_OK &&
+        albumType == AlbumType::SOURCE) {
+        HandleSourceAlbum(data, resultSet);
+    }
     if (type_ == FILE_CREATE) {
         record.SetNewCreate(true);
         RETURN_ON_ERR(HandleAlbumId(data, resultSet));
-        record.SetRecordId(data[ALBUM_ID]);
+        RETURN_ON_ERR(HandleRecordId(record, resultSet));
     } else {
         int32_t ret = FillRecordId(record, resultSet);
         if (ret != E_OK) {
@@ -57,7 +64,6 @@ int32_t AlbumDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Resul
         }
         data[ALBUM_ID] = DriveKit::DKRecordField(record.GetRecordId());
     }
-
     /* set data */
     record.SetRecordData(data);
 
@@ -83,6 +89,7 @@ int32_t AlbumDataConvertor::HandleProperties(DriveKit::DKRecordData &data, Nativ
     DriveKit::DKRecordFieldMap map;
     /* general */
     RETURN_ON_ERR(HandleGeneral(map, resultSet));
+
     /* set map */
     data[ALBUM_PROPERTIES] = DriveKit::DKRecordField(map);
     return E_OK;
@@ -93,7 +100,7 @@ int32_t AlbumDataConvertor::HandleGeneral(DriveKit::DKRecordFieldMap &map, Nativ
 {
     auto size = GALLERY_ALBUM_COLUMNS.size();
     /* size - 1: skip cloud id */
-    for (decltype(size) i = 0; i < size - 1; i++) {
+    for (decltype(size) i = 0; i < size; i++) {
         const string &key = GALLERY_ALBUM_COLUMNS[i];
         DataType type = GALLERY_ALBUM_COLUMN_TYPES[i];
         switch (type) {
@@ -122,6 +129,69 @@ int32_t AlbumDataConvertor::HandleGeneral(DriveKit::DKRecordFieldMap &map, Nativ
     return E_OK;
 }
 
+int32_t AlbumDataConvertor::HandleRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet)
+{
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+    string recordId = "";
+    int32_t ret = GetString(PhotoAlbumColumns::ALBUM_CLOUD_ID, recordId, resultSet);
+    if (ret != 0 && !recordId.empty()) {
+        record.SetRecordId(recordId);
+        return E_OK;
+    }
+    int32_t albumType = -1;
+    std::string prefix = "album-";
+    ret = GetInt(Media::PhotoAlbumColumns::ALBUM_TYPE, albumType, resultSet);
+    if (ret == E_OK && albumType == AlbumType::SOURCE) {
+        std::string bundleName = "";
+        GetString(TMP_ALBUM_BUNDLE_NAME, bundleName, resultSet);
+        std::replace(bundleName.begin(), bundleName.end(), '.', '-');
+        record.SetRecordId(prefix + bundleName);
+        return E_OK;
+    }
+    uuid_t uuid;
+    uuid_generate(uuid);
+    char str[UUID_STR_LENGTH] = {};
+    uuid_unparse(uuid, str);
+    std::string suffix(str);
+    record.SetRecordId(prefix + suffix);
+    return E_OK;
+}
+
+int32_t AlbumDataConvertor::HandleSourceAlbum(DriveKit::DKRecordData &data, ResultSet &resultSet)
+{
+    DriveKit::DKRecordFieldMap map;
+    int32_t albumType = -1;
+    if (GetInt(Media::PhotoAlbumColumns::ALBUM_TYPE, albumType, resultSet) == E_OK &&
+        albumType == AlbumType::SOURCE) {
+        data[ALBUM_PROPERTIES].GetRecordMap(map);
+        RETURN_ON_ERR(HandleLocalLanguage(map, resultSet));
+        RETURN_ON_ERR(HandleBundleName(map, resultSet));
+    }
+    data[ALBUM_PROPERTIES] = DriveKit::DKRecordField(map);
+    return E_OK;
+}
+
+int32_t AlbumDataConvertor::ExtractBundleName(DriveKit::DKRecordFieldMap &map, NativeRdb::ValuesBucket &valueBucket)
+{
+    string bundleName = "";
+    if (map[TMP_ALBUM_BUNDLE_NAME].GetString(bundleName) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutString(TMP_ALBUM_BUNDLE_NAME, bundleName);
+    return E_OK;
+}
+
+int32_t AlbumDataConvertor::ExtractLocalLanguage(DriveKit::DKRecordFieldMap &map, NativeRdb::ValuesBucket &valueBucket)
+{
+    string localLanguage = "";
+    if (map[TMP_ALBUM_LOCAL_LANGUAGE].GetString(localLanguage) != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        return E_INVAL_ARG;
+    }
+    valueBucket.PutString(TMP_ALBUM_LOCAL_LANGUAGE, localLanguage);
+    return E_OK;
+}
+
 int32_t AlbumDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
 {
     DriveKit::DKRecordData data;
@@ -134,7 +204,7 @@ int32_t AlbumDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Value
     DriveKit::DKRecordFieldMap properties = data[ALBUM_PROPERTIES];
 
     auto size = GALLERY_ALBUM_COLUMNS.size();
-    for (decltype(size) i = 0; i < size - 1; i++) {
+    for (decltype(size) i = 0; i < size; i++) {
         auto field = GALLERY_ALBUM_COLUMNS[i];
         auto type = GALLERY_ALBUM_COLUMN_TYPES[i];
         if (properties.find(field) == properties.end()) {
@@ -147,7 +217,6 @@ int32_t AlbumDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Value
             return ret;
         }
     }
-
     return E_OK;
 }
 } // namespace CloudSync

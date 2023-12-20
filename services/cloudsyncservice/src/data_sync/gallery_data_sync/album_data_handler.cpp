@@ -23,6 +23,7 @@
 #include "dfs_error.h"
 #include "gallery_album_const.h"
 #include "utils_log.h"
+#include <algorithm>
 
 namespace OHOS {
 namespace FileManagement {
@@ -48,6 +49,18 @@ void AlbumDataHandler::GetFetchCondition(FetchCondition &cond)
     cond.fullKeys = desiredKeys_;
 }
 
+static inline int32_t GetRecordFieMapFromRecord(const DriveKit::DKRecord &record, DKRecordFieldMap &map)
+{
+    DKRecordData data;
+    DriveKit::DKRecordFieldMap properties;
+    record.GetRecordData(data);
+    if (data.find(ALBUM_PROPERTIES) == data.end()) {
+        LOGE("get ALBUM_PROPERTIES fail");
+        return E_INVAL_ARG;
+    }
+    data[ALBUM_PROPERTIES].GetRecordMap(map);
+    return E_OK;
+}
 
 tuple<shared_ptr<ResultSet>, int> AlbumDataHandler::QueryLocalMatch(const std::string &recordId)
 {
@@ -67,7 +80,7 @@ tuple<shared_ptr<ResultSet>, int> AlbumDataHandler::QueryLocalMatch(const std::s
     return { move(resultSet), rowCount };
 }
 
-bool AlbumDataHandler::IsConflict(DriveKit::DKRecord &record, int32_t &albumId)
+int32_t AlbumDataHandler::QueryConflict(DriveKit::DKRecord &record, std::shared_ptr<NativeRdb::ResultSet> &resultSet)
 {
     /* get record album name */
     DKRecordData data;
@@ -79,24 +92,54 @@ bool AlbumDataHandler::IsConflict(DriveKit::DKRecord &record, int32_t &albumId)
     string albumName;
     if (data[ALBUM_NAME].GetString(albumName) != DKLocalErrorCode::NO_ERROR) {
         LOGE("get album name err");
-        return false;
+        return E_INVAL_ARG;
     }
-
     /* query local */
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
+    string albumType = to_string(static_cast<int32_t>(AlbumType::NORMAL));
+    DKRecordFieldMap properties;
+    string bundleName = "";
+    int rowCount = 0;
+    if (GetRecordFieMapFromRecord(record, properties) == E_OK && properties.find(PAC::ALBUM_TYPE) != data.end() &&
+        properties[PAC::ALBUM_TYPE].GetString(albumType) == DKLocalErrorCode::NO_ERROR &&
+        albumType == to_string(static_cast<int32_t>(AlbumType::SOURCE)) &&
+        properties[TMP_ALBUM_BUNDLE_NAME].GetString(bundleName) == DKLocalErrorCode::NO_ERROR) {
+        NativeRdb::AbsRdbPredicates sourcePredicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
+        sourcePredicates.EqualTo(TMP_ALBUM_BUNDLE_NAME, bundleName);
+        resultSet = Query(sourcePredicates, QUERY_SOURCE_ALBUM_COLUMNS);
+        if (resultSet == nullptr || resultSet->GetRowCount(rowCount) != E_OK) {
+            LOGE("query fail");
+            return E_RDB;
+        }
+        if (rowCount >= 0) {
+            return E_OK;
+        }
+        LOGW("conflict but no colmns");
+        predicates.EqualTo(PAC::ALBUM_TYPE, albumType);
+    }
     predicates.EqualTo(PAC::ALBUM_NAME, albumName);
-    auto resultSet = Query(predicates, ALBUM_LOCAL_QUERY_COLUMNS);
+    resultSet = Query(predicates, ALBUM_LOCAL_QUERY_COLUMNS);
     if (resultSet == nullptr) {
         LOGE("get nullptr query result");
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+bool AlbumDataHandler::IsConflict(DriveKit::DKRecord &record, int32_t &albumId)
+{
+    int32_t rowCount = -1;
+    std::shared_ptr<NativeRdb::ResultSet> resultSet;
+    int32_t ret = QueryConflict(record, resultSet);
+    if (ret != E_OK) {
+        LOGE("query fail ret is %{public}d", ret);
         return false;
     }
-    int rowCount = 0;
-    int ret = resultSet->GetRowCount(rowCount);
+    ret = resultSet->GetRowCount(rowCount);
     if (ret != 0) {
         LOGE("result set get row count err %{public}d", ret);
         return false;
     }
-
     if (rowCount > 0) {
         ret = resultSet->GoToNextRow();
         if (ret != NativeRdb::E_OK) {
@@ -117,7 +160,7 @@ int32_t AlbumDataHandler::MergeAlbumOnConflict(DriveKit::DKRecord &record, int32
     values.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
     values.PutString(PAC::ALBUM_CLOUD_ID, record.GetRecordId());
     int32_t changedRows;
-    int32_t ret = Update(changedRows, values, PAC::ALBUM_ID+ " = ?", { to_string(albumId) });
+    int32_t ret = Update(changedRows, values, PAC::ALBUM_ID + " = ?", { to_string(albumId) });
     if (ret != E_OK) {
         LOGE("rdb update failed, err = %{public}d", ret);
         return E_RDB;
@@ -138,16 +181,26 @@ int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
         }
         return ret;
     }
-
     ValuesBucket values;
     int32_t ret = createConvertor_.RecordToValueBucket(record, values);
     if (ret != E_OK) {
         LOGE("record to value bucket failed, ret = %{public}d", ret);
         return ret;
     }
+    string albumType = "";
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+    DKRecordFieldMap properties;
+    if (GetRecordFieMapFromRecord(record, properties) == E_OK &&
+        properties.find(PAC::ALBUM_TYPE) != data.end() &&
+        properties[PAC::ALBUM_TYPE].GetString(albumType) == DKLocalErrorCode::NO_ERROR) {
+        if (albumType == to_string(static_cast<int32_t>(AlbumType::SOURCE))) {
+            createConvertor_.ExtractBundleName(properties, values);
+            createConvertor_.ExtractLocalLanguage(properties, values);
+        }
+    }
     values.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
     values.PutString(PAC::ALBUM_CLOUD_ID, record.GetRecordId());
-
     /* update if a album with the same name exists? */
     int64_t rowId;
     ret = Insert(rowId, values);
@@ -178,9 +231,20 @@ int32_t AlbumDataHandler::UpdateCloudAlbum(DKRecord &record)
         LOGE("record to value bucket failed, ret = %{public}d", ret);
         return ret;
     }
-    values.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
+    DriveKit::DKRecordData data;
+    DKRecordFieldMap properties;
+    record.GetRecordData(data);
+    string albumType = to_string(static_cast<int32_t>(AlbumType::NORMAL));
+    if (GetRecordFieMapFromRecord(record, properties) == E_OK &&
+        properties.find(PAC::ALBUM_TYPE) != data.end() &&
+        properties[PAC::ALBUM_TYPE].GetString(albumType) == DKLocalErrorCode::NO_ERROR) {
+        if (albumType == to_string(static_cast<int32_t>(AlbumType::SOURCE))) {
+            values.Delete(PAC::ALBUM_NAME);
+        }
+    }
 
-    ret = Update(changedRows, values, PAC::ALBUM_CLOUD_ID + " = ?", { record.GetRecordId() });
+    values.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
+    ret = Update(changedRows, values, PAC::ALBUM_CLOUD_ID + " = ?", {record.GetRecordId()});
     if (ret != E_OK) {
         LOGE("rdb update failed, err = %{public}d", ret);
         return E_RDB;
@@ -207,7 +271,7 @@ int32_t AlbumDataHandler::HandleLocalDirty(int32_t dirty, const DriveKit::DKReco
         int32_t changedRows;
         ValuesBucket values;
         values.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY));
-        int32_t ret = Update(changedRows, values, PAC::ALBUM_NAME + " = ?", { record.GetRecordId() });
+        int32_t ret = Update(changedRows, values, PAC::ALBUM_CLOUD_ID + " = ?", {record.GetRecordId()});
         if (ret != E_OK) {
             LOGE("rdb update failed, err = %{public}d", ret);
             return E_RDB;
@@ -307,90 +371,92 @@ int32_t AlbumDataHandler::Clean(const int action)
     return E_OK;
 }
 
-int32_t AlbumDataHandler::GetCreatedRecords(vector<DKRecord> &records)
+int32_t AlbumDataHandler::QueryUserAlbum(vector<DKRecord> &records, Media::DirtyType dirty,
+                                         const vector<string> &failSet, AlbumDataConvertor &convertor)
 {
+    vector<DKRecord> userRecords = {};
     /* build predicates */
     auto createPredicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
-    createPredicates.EqualTo(PAC::ALBUM_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)));
+    createPredicates.EqualTo(PAC::ALBUM_DIRTY, to_string(static_cast<int32_t>(dirty)));
     /* skip system albums */
     createPredicates.And()->EqualTo(PAC::ALBUM_SUBTYPE, to_string(Media::PhotoAlbumSubType::USER_GENERIC));
-    if (!createFailSet_.empty()) {
-        createPredicates.And()->NotIn(PAC::ALBUM_NAME, createFailSet_);
+    if (!failSet.empty()) {
+        createPredicates.And()->NotIn(PAC::ALBUM_CLOUD_ID, failSet);
     }
     createPredicates.Limit(LIMIT_SIZE);
 
     /* query */
-    auto results = Query(createPredicates, GALLERY_ALBUM_COLUMNS);
+    auto results = Query(createPredicates, QUERY_USER_ALBUM_COLUMNS);
     if (results == nullptr) {
         LOGE("get nullptr created result");
         return E_RDB;
     }
-
     /* results to records */
-    int ret = createConvertor_.ResultSetToRecords(move(results), records);
-    if (ret != 0) {
-        LOGE("result set to records err %{public}d", ret);
-        return ret;
+    convertor.ResultSetToRecords(move(results), userRecords);
+    for (auto &record : userRecords) {
+        records.emplace_back(move(record));
     }
+    return E_OK;
+}
 
+int32_t AlbumDataHandler::QuerySourceAlbum(vector<DKRecord> &records, Media::DirtyType dirty,
+                                           const vector<string> &failSet, AlbumDataConvertor &convertor)
+{
+    vector<DKRecord> suourcRecords = {};
+    /* build predicates */
+    auto createPredicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
+    createPredicates.EqualTo(PAC::ALBUM_DIRTY, to_string(static_cast<int32_t>(dirty)));
+    /* skip system albums */
+    createPredicates.And()->EqualTo(PAC::ALBUM_SUBTYPE, to_string(SURCE_GENERIC));
+    if (!failSet.empty()) {
+        createPredicates.And()->NotIn(PAC::ALBUM_CLOUD_ID, failSet);
+    }
+    createPredicates.Limit(LIMIT_SIZE);
+
+    /* query */
+    auto results = Query(createPredicates, QUERY_SOURCE_ALBUM_COLUMNS);
+    if (results == nullptr) {
+        LOGE("get nullptr created result");
+        return E_RDB;
+    }
+    /* results to records */
+    convertor.ResultSetToRecords(move(results), suourcRecords);
+    for (auto &record : suourcRecords) {
+        records.emplace_back(move(record));
+    }
+    return E_OK;
+}
+
+int32_t AlbumDataHandler::GetCreatedRecords(vector<DKRecord> &records)
+{
+    RETURN_ON_ERR(QueryUserAlbum(records, Media::DirtyType::TYPE_NEW, createFailSet_, createConvertor_));
+    RETURN_ON_ERR(QuerySourceAlbum(records, Media::DirtyType::TYPE_NEW, createFailSet_, createConvertor_));
+    int32_t changedRows = -1;
+    DKRecordData data;
+    string albumId = "";
+    for (auto &record : records) {
+        ValuesBucket values;
+        values.Put(PAC::ALBUM_CLOUD_ID, record.GetRecordId());
+        record.GetRecordData(data);
+        data[ALBUM_ID].GetString(albumId);
+        data[ALBUM_ID] = DKRecordField(record.GetRecordId());
+        record.SetRecordData(data);
+        Update(changedRows, values, PAC::ALBUM_ID + " = ?", {albumId});
+    }
     return E_OK;
 }
 
 int32_t AlbumDataHandler::GetDeletedRecords(vector<DKRecord> &records)
 {
-    /* build predicates */
-    auto createPredicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
-    createPredicates.EqualTo(PAC::ALBUM_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)));
-    /* skip system albums */
-    createPredicates.And()->EqualTo(PAC::ALBUM_SUBTYPE, to_string(Media::PhotoAlbumSubType::USER_GENERIC));
-    if (!modifyFailSet_.empty()) {
-        createPredicates.And()->NotIn(PAC::ALBUM_NAME, modifyFailSet_);
-    }
-    createPredicates.Limit(LIMIT_SIZE);
-
-    /* query */
-    auto results = Query(createPredicates, GALLERY_ALBUM_COLUMNS);
-    if (results == nullptr) {
-        LOGE("get nullptr created result");
-        return E_RDB;
-    }
-
-    /* results to records */
-    int ret = deleteConvertor_.ResultSetToRecords(move(results), records);
-    if (ret != 0) {
-        LOGE("result set to records err %{public}d", ret);
-        return ret;
-    }
-
+    RETURN_ON_ERR(QueryUserAlbum(records, Media::DirtyType::TYPE_DELETED, modifyFailSet_, deleteConvertor_));
+    RETURN_ON_ERR(QuerySourceAlbum(records, Media::DirtyType::TYPE_DELETED, modifyFailSet_, deleteConvertor_));
     return E_OK;
 }
 
 int32_t AlbumDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
 {
-    /* build predicates */
-    auto createPredicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
-    createPredicates.EqualTo(PAC::ALBUM_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)));
-    /* skip system albums */
-    createPredicates.And()->EqualTo(PAC::ALBUM_SUBTYPE, to_string(Media::PhotoAlbumSubType::USER_GENERIC));
-    if (!modifyFailSet_.empty()) {
-        createPredicates.And()->NotIn(PAC::ALBUM_NAME, modifyFailSet_);
-    }
-    createPredicates.Limit(LIMIT_SIZE);
-
-    /* query */
-    auto results = Query(createPredicates, GALLERY_ALBUM_COLUMNS);
-    if (results == nullptr) {
-        LOGE("get nullptr created result");
-        return E_RDB;
-    }
-
-    /* results to records */
-    int ret = modifyConvertor_.ResultSetToRecords(move(results), records);
-    if (ret != 0) {
-        LOGE("result set to records err %{public}d", ret);
-        return ret;
-    }
-
+    RETURN_ON_ERR(QueryUserAlbum(records, Media::DirtyType::TYPE_MDIRTY, modifyFailSet_, modifyConvertor_));
+    RETURN_ON_ERR(QuerySourceAlbum(records, Media::DirtyType::TYPE_MDIRTY, modifyFailSet_, modifyConvertor_));
     return E_OK;
 }
 
@@ -445,36 +511,17 @@ int32_t AlbumDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOp
     return ret;
 }
 
-static inline string GetAlbumNameFromRecord(const DriveKit::DKRecordOperResult &result)
-{
-    auto record = result.GetDKRecord();
-    DKRecordData data;
-    record.GetRecordData(data);
-    return data[ALBUM_NAME];
-}
-
 int32_t AlbumDataHandler::OnCreateSuccess(const pair<DriveKit::DKRecordId,
     DriveKit::DKRecordOperResult> &entry)
 {
-    ValuesBucket valuesBucket;
-    int32_t changedRows;
-    string whereClause = PAC::ALBUM_NAME + " = ?";
-    vector<string> whereArgs = { GetAlbumNameFromRecord(entry.second) };
-    valuesBucket.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
-    valuesBucket.PutString(PAC::ALBUM_CLOUD_ID, entry.first);
-    int32_t ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
-    if (ret != 0) {
-        LOGE("update local records err %{public}d", ret);
-        return ret;
-    }
-    return E_OK;
+    return OnUploadSuccess(entry);
 }
 
 int32_t AlbumDataHandler::OnUploadSuccess(const pair<DriveKit::DKRecordId,
     DriveKit::DKRecordOperResult> &entry)
 {
-    ValuesBucket valuesBucket;
     int32_t changedRows;
+    ValuesBucket valuesBucket;
     string whereClause = PAC::ALBUM_CLOUD_ID + " = ?";
     vector<string> whereArgs = { entry.first };
     valuesBucket.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
