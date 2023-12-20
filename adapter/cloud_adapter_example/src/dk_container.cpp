@@ -85,4 +85,8 @@ DKLocalErrorCode DKContainer::ChangesNotify(
 {
     return DKLocalErrorCode::NO_ERROR;
 }
+void DKContainer::Release()
+{
+    return;
+}
 } // namespace DriveKit

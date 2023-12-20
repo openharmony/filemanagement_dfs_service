@@ -247,6 +247,11 @@ int32_t SdkHelper::ChangesNotify(ChangesNotifyCallback callback)
     }
     return E_OK;
 }
+void SdkHelper::Release()
+{
+    LOGD("stop upload asset");
+    database_->Release();
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
