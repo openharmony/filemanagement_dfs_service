@@ -69,6 +69,7 @@ private:
     int32_t HandleRecycleTime(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleType(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleOperateType(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleFileSize(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleCompatibleFileds(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleAttributes(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleCreateTime(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);

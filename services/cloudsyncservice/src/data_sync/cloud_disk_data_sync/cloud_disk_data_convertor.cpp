@@ -308,6 +308,7 @@ int32_t CloudDiskDataConvertor::HandleCompatibleFileds(DriveKit::DKRecordData &d
     RETURN_ON_ERR(HandleRecycleTime(data, resultSet));
     RETURN_ON_ERR(HandleType(data, resultSet));
     RETURN_ON_ERR(HandleOperateType(data, resultSet));
+    RETURN_ON_ERR(HandleFileSize(data, resultSet));
     RETURN_ON_ERR(HandleAttachments(data, resultSet));
     return E_OK;
 }
@@ -497,6 +498,21 @@ int32_t CloudDiskDataConvertor::HandleOperateType(DriveKit::DKRecordData &data,
         return ret;
     }
     data[DK_FILE_OPERATE_TYPE] = DriveKit::DKRecordField(operateType);
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleFileSize(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    if (type_ == FILE_DELETE) {
+        return E_OK;
+    }
+    int64_t fileSize;
+    int32_t ret = GetLong(FileColumn::FILE_SIZE, fileSize, resultSet);
+    if (ret != E_OK) {
+        LOGE("handler fileSize failed, ret = %{public}d", ret);
+        return ret;
+    }
+    data[DK_FILE_SIZE] = DriveKit::DKRecordField(fileSize);
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleCreateTime(DriveKit::DKRecordFieldMap &map,
