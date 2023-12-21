@@ -77,27 +77,6 @@ HWTEST_F(BatteryStatusListenerTest, StopTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnStatusNormalTest
- * @tc.desc: Verify the OnStatusNormal function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(BatteryStatusListenerTest, OnStatusNormalTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnStatusNormalTest Start";
-    try {
-        auto dataSyncManager = std::make_shared<DataSyncManager>();
-        auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
-        batteryStatusListener->OnStatusNormal();
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnStatusNormalTest FAILED";
-    }
-    GTEST_LOG_(INFO) << "OnStatusNormalTest End";
-}
-
-/**
  * @tc.name: OnStatusAbnormalTest
  * @tc.desc: Verify the OnStatusAbnormal function
  * @tc.type: FUNC

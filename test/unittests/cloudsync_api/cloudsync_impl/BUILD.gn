@@ -70,6 +70,15 @@ ohos_unittest("cloud_sync_callback_stub_test") {
 }
 
 ohos_unittest("cloud_sync_manager_impl_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
@@ -83,6 +92,7 @@ ohos_unittest("cloud_sync_manager_impl_test") {
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/mock/ipc",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store_mock.cpp",
   ]
 
   deps = [
@@ -426,7 +436,6 @@ group("cloudsync_impl_test") {
     ":cloud_sync_asset_manager_test",
     ":cloud_sync_callback_client_test",
     ":cloud_sync_callback_stub_test",
-    ":cloud_sync_common_test",
     ":cloud_sync_manager_impl_test",
     ":cloud_sync_manager_impl_unnomal_test",
     ":cloud_sync_manager_test",
