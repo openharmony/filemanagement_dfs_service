@@ -572,7 +572,8 @@ HWTEST_F(FileDataHandlerTest, OnDownloadAssets004, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
         EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr))).WillOnce(Return(ByMove(nullptr)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr))).WillOnce(Return(ByMove(nullptr)))
+                                      .WillOnce(Return(ByMove(nullptr))).WillOnce(Return(ByMove(nullptr)));
         DriveKit::DKDownloadAsset asset1;
         DriveKit::DKDownloadAsset asset2;
         asset2.fieldKey = "thumbnail";
