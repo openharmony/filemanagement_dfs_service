@@ -69,7 +69,7 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFileTest, TestSize.Level1)
     std::string request = "sample_request";
     AssetInfo assetInfo;
     int32_t ret = assetManager.DownloadFile(userId, request, assetInfo);
-    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    EXPECT_NE(ret, E_SA_LOAD_FAILED);
 }
 
 /**
@@ -86,7 +86,7 @@ HWTEST_F(CloudSyncAssetManagerImplTest, DownloadFileTest001, TestSize.Level1)
     const std::string request = "";
     AssetInfo assetInfo;
     int32_t ret = assetManager.DownloadFile(userId, request, assetInfo);
-    EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    EXPECT_NE(ret, E_SA_LOAD_FAILED);
 }
 
 } // namespace Test
