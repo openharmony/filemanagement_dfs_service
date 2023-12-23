@@ -37,6 +37,7 @@ public:
     explicit MetaFile(uint32_t userId, const std::string &path);
 
     int32_t DoCreate(const MetaBase &base);
+    int32_t HandleFileByFd(unsigned long &endBlock, uint32_t &level);
     int32_t DoRemove(const MetaBase &base);
     int32_t DoUpdate(const MetaBase &base);
     int32_t DoRename(const MetaBase &oldBase, const std::string &newName);
