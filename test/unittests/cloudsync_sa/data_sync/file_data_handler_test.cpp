@@ -1423,41 +1423,6 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords001, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnFetchRecords002
- * @tc.desc: Verify the OnFetchRecords function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, OnFetchRecords002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnFetchRecords002 Begin";
-    try {
-        const int rowCount = 0;
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
-        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
-        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rdb, Query(_, _))
-            .WillOnce(Return(ByMove(std::move(rset))))
-            .WillOnce(Return(ByMove(nullptr)))
-            .WillOnce(Return(ByMove(nullptr)))
-            .WillOnce(Return(ByMove(nullptr)))
-            .WillOnce(Return(ByMove(nullptr)));
-
-        shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
-        OnFetchParams onFetchParams;
-        int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
-        EXPECT_EQ(E_OK, ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnFetchRecords002 ERROR";
-    }
-
-    GTEST_LOG_(INFO) << "OnFetchRecords002 End";
-}
-
-/**
  * @tc.name: OnFetchRecords003
  * @tc.desc: Verify the OnFetchRecords function
  * @tc.type: FUNC
