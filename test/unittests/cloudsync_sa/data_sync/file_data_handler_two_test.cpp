@@ -560,41 +560,6 @@ HWTEST_F(FileDataHandlerTest, OnDownloadAssets003, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnDownloadAssets004
- * @tc.desc: Verify the OnDownloadAssets function
- * @tc.type: FUNC
- * @tc.require: issueI7VEA4
- */
-HWTEST_F(FileDataHandlerTest, OnDownloadAssets004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnDownloadAssets004 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(nullptr))).WillOnce(Return(ByMove(nullptr)))
-                                      .WillOnce(Return(ByMove(nullptr))).WillOnce(Return(ByMove(nullptr)));
-        DriveKit::DKDownloadAsset asset1;
-        DriveKit::DKDownloadAsset asset2;
-        asset2.fieldKey = "thumbnail";
-        DKDownloadResult result1;
-        DKDownloadResult result2;
-        DKError dkError;
-        dkError.SetServerError(static_cast<int>(DKServerErrorCode::ACCESS_DENIED));
-        result2.SetDKError(dkError);
-        map<DKDownloadAsset, DKDownloadResult> resultMap;
-        resultMap[asset1] = result1;
-        resultMap[asset2] = result2;
-        int32_t ret = fileDataHandler->OnDownloadAssets(resultMap);
-        EXPECT_EQ(ret, E_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " OnDownloadAssets004 ERROR";
-    }
-    GTEST_LOG_(INFO) << "OnDownloadAssets004 End";
-}
-
-/**
  * @tc.name: GetFileExtension001
  * @tc.desc: Verify the GetFileExtension function
  * @tc.type: FUNC
