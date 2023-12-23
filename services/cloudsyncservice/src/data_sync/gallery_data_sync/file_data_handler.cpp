@@ -1526,7 +1526,7 @@ int32_t FileDataHandler::UpdateAssetInPhotoMap(const DKRecord &record, int32_t f
         }
         int albumId = GetAlbumIdFromCloudId(ref.recordId);
         if (albumId < 0) {
-            LOGE("bum id from album name %{public}s, ignore", ref.recordId.c_str());
+            LOGE("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
             continue;
         }
         LOGI("record get albumId %{public}d", albumId);
