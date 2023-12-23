@@ -67,6 +67,7 @@ public:
 
 private:
     static inline std::mutex proxyMutex_;
+    static inline std::mutex downloadMutex_;
     static inline sptr<ICloudSyncService> serviceProxy_;
     static inline BrokerDelegator<CloudSyncServiceProxy> delegator_;
 };
