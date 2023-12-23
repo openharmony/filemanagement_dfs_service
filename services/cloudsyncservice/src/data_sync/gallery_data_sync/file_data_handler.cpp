@@ -880,7 +880,7 @@ int32_t FileDataHandler::CreateAssetRealName(int32_t &fileId, int32_t &mediaType
 
 int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
 {
-    LOGI("judgment downlode conflict");
+    LOGD("judgment downlode conflict");
     string fullPath, relativePath;
     int64_t isize, imetaModified;
     int32_t ret = GetConflictData(record, fullPath, isize, imetaModified, relativePath);
@@ -904,7 +904,7 @@ int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
         return E_RDB;
     }
     if (rowCount == 0) {
-        LOGI("Normal download process");
+        LOGD("Normal download process");
         return E_OK;
     }
     if (rowCount == 1) {
@@ -1526,7 +1526,7 @@ int32_t FileDataHandler::UpdateAssetInPhotoMap(const DKRecord &record, int32_t f
         }
         int albumId = GetAlbumIdFromCloudId(ref.recordId);
         if (albumId < 0) {
-            LOGE("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
+            LOGE("bum id from album name %{public}s, ignore", ref.recordId.c_str());
             continue;
         }
         LOGI("record get albumId %{public}d", albumId);
@@ -1561,7 +1561,7 @@ int32_t FileDataHandler::InsertAssetToPhotoMap(const DKRecord &record, OnFetchPa
         }
         int albumId = GetAlbumIdFromCloudId(ref.recordId);
         if (albumId < 0) {
-            LOGE("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
+            LOGD("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
             continue;
         }
         LOGI("record get albumId %{public}d", albumId);
@@ -1631,7 +1631,7 @@ int32_t FileDataHandler::GetAlbumIdFromCloudId(const std::string &cloudId)
             return albumId;
         }
     }
-    LOGE("fail to get ALBUM_ID value");
+    LOGD("fail to get ALBUM_ID value");
     return -1;
 }
 

@@ -601,7 +601,7 @@ int32_t MetaFile::DoLookup(MetaBase &base)
     InitDcacheLookupCtx(&ctx, base, fd_);
     struct HmdfsDentry *de = FindDentry(&ctx);
     if (de == nullptr) {
-        LOGI("find dentry failed");
+        LOGD("find dentry failed");
         return ENOENT;
     }
 
