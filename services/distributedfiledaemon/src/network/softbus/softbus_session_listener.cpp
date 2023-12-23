@@ -53,7 +53,7 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
 {
     std::vector<std::string> tmp;
     if (!Utils::IsFolder(path)) {
-        int pos = path.rfind("/");
+        auto pos = path.rfind("/");
         tmp.push_back(path.substr(pos + 1));
     } else {
         for (const auto &it : fileList) {
@@ -127,8 +127,8 @@ void SoftBusSessionListener::OnSessionClosed(int sessionId)
 
 std::string SoftBusSessionListener::GetLocalUri(const std::string &uri)
 {
-    int pos = uri.find(NETWORK_ID);
-    if (pos <= 0) {
+    auto pos = uri.find(NETWORK_ID);
+    if (pos == std::string::npos) {
         return "";
     }
     return uri.substr(0, pos);
@@ -136,16 +136,16 @@ std::string SoftBusSessionListener::GetLocalUri(const std::string &uri)
 
 std::string SoftBusSessionListener::GetBundleName(const std::string &uri)
 {
-    int pos = uri.find(FILE_SCHEMA);
-    if (pos < 0) {
+    auto pos = uri.find(FILE_SCHEMA);
+    if (pos == std::string::npos) {
         return "";
     }
     auto tmpUri = uri.substr(pos + FILE_SCHEMA.size());
     if (tmpUri.empty()) {
         return "";
     }
-    int bundleNamePos = tmpUri.find(FILE_SEPARATOR);
-    if (bundleNamePos <= 0) {
+    auto bundleNamePos = tmpUri.find(FILE_SEPARATOR);
+    if (bundleNamePos == std::string::npos) {
         return "";
     }
     return tmpUri.substr(0, bundleNamePos);
@@ -153,8 +153,8 @@ std::string SoftBusSessionListener::GetBundleName(const std::string &uri)
 
 std::string SoftBusSessionListener::GetSandboxPath(const std::string &uri)
 {
-    int pos = uri.find(DISTRIBUTED_PATH);
-    if (pos <= 0) {
+    auto pos = uri.find(DISTRIBUTED_PATH);
+    if (pos == std::string::npos) {
         return "";
     }
     return uri.substr(pos + DISTRIBUTED_PATH.size());
