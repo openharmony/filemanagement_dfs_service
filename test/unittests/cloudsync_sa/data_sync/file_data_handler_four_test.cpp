@@ -512,3 +512,351 @@ HWTEST_F(FileDataHandlerTest, BatchInsertAssetMaps005, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "BatchInsertAssetMaps005 End";
 }
+
+/**
+ * @tc.name: CleanPureCloudRecord002
+ * @tc.desc: Verify the CleanPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
+
+        int32_t ret = fileDataHandler->CleanPureCloudRecord();
+        EXPECT_EQ(E_RDB, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanPureCloudRecord002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord002 End";
+}
+
+/**
+ * @tc.name: CleanPureCloudRecord003
+ * @tc.desc: Verify the CleanPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord003 Begin";
+    try {
+        const int32_t rowCount = 0;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(1)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t ret = fileDataHandler->CleanPureCloudRecord();
+        EXPECT_EQ(1, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanPureCloudRecord003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord003 End";
+}
+
+/**
+ * @tc.name: CleanPureCloudRecord004
+ * @tc.desc: Verify the CleanPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord004 Begin";
+    try {
+        const int32_t rowCount = -1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t ret = fileDataHandler->CleanPureCloudRecord();
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanPureCloudRecord004 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord004 End";
+}
+
+/**
+ * @tc.name: CleanPureCloudRecord005
+ * @tc.desc: Verify the CleanPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord005 Begin";
+    try {
+        const int32_t rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, ExecuteSql(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset)))).WillOnce(Return(nullptr));
+
+        int32_t ret = fileDataHandler->CleanPureCloudRecord();
+        EXPECT_EQ(E_RDB, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanPureCloudRecord005 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord005 End";
+}
+
+/**
+ * @tc.name: CleanPureCloudRecord006
+ * @tc.desc: Verify the CleanPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord006 Begin";
+    try {
+        const int32_t rowCount = 1;
+        string filePath = "/test/pareantPath/thumbPpath";
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>("1"), Return(1)))
+            .WillOnce(DoAll(SetArgReferee<1>(filePath), Return(1)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t ret = fileDataHandler->CleanPureCloudRecord();
+        EXPECT_EQ(E_INVAL_ARG, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanPureCloudRecord006 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord006 End";
+}
+
+/**
+ * @tc.name: CleanPureCloudRecord007
+ * @tc.desc: Verify the CleanPureCloudRecord function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord007 Begin";
+    try {
+        const int32_t rowCount = 0;
+        string filePath = "/test/pareantPath/thumbPpath";
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>("1"), Return(1)))
+            .WillOnce(DoAll(SetArgReferee<1>(filePath), Return(0)));
+        EXPECT_CALL(*rdb, ExecuteSql(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t ret = fileDataHandler->CleanPureCloudRecord();
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanPureCloudRecord007 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanPureCloudRecord007 End";
+}
+
+/**
+ * @tc.name: CleanNotDirtyData002
+ * @tc.desc: Verify the CleanNotDirtyData function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotDirtyData002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotDirtyData002 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
+
+        int32_t ret = fileDataHandler->CleanNotDirtyData();
+        EXPECT_EQ(E_RDB, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotDirtyData002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotDirtyData002 End";
+}
+
+/**
+ * @tc.name: CleanNotDirtyData003
+ * @tc.desc: Verify the CleanNotDirtyData function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotDirtyData003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotDirtyData003 Begin";
+    try {
+        const int32_t rowCount = 0;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(1)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t ret = fileDataHandler->CleanNotDirtyData();
+        EXPECT_EQ(1, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotDirtyData003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotDirtyData003 End";
+}
+
+/**
+ * @tc.name: CleanNotDirtyData004
+ * @tc.desc: Verify the CleanNotDirtyData function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotDirtyData004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotDirtyData004 Begin";
+    try {
+        const int32_t rowCount = -1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t ret = fileDataHandler->CleanNotDirtyData();
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotDirtyData004 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotDirtyData004 End";
+}
+
+/**
+ * @tc.name: CleanNotDirtyData005
+ * @tc.desc: Verify the CleanNotDirtyData function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotDirtyData005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotDirtyData005 Begin";
+    try {
+        const int32_t rowCount = 0;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, ExecuteSql(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t ret = fileDataHandler->CleanNotDirtyData();
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotDirtyData005 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotDirtyData005 End";
+}
+
+/**
+ * @tc.name: CleanNotDirtyData006
+ * @tc.desc: Verify the CleanNotDirtyData function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotDirtyData006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotDirtyData006 Begin";
+    try {
+        const int32_t rowCount = 0;
+        string filePath = "/test/pareantPath/thumbPpath";
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>("1"), Return(1)))
+            .WillOnce(DoAll(SetArgReferee<1>(filePath), Return(1)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t ret = fileDataHandler->CleanNotDirtyData();
+        EXPECT_EQ(E_INVAL_ARG, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotDirtyData006 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotDirtyData006 End";
+}
+
+/**
+ * @tc.name: CleanNotDirtyData007
+ * @tc.desc: Verify the CleanNotDirtyData function
+ * @tc.type: FUNC
+ * @tc.require: issuesI8R3H3
+ */
+HWTEST_F(FileDataHandlerTest, CleanNotDirtyData007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanNotDirtyData007 Begin";
+    try {
+        const int32_t rowCount = 0;
+        string filePath = "/test/pareantPath/thumbPpath";
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _))
+            .WillOnce(DoAll(SetArgReferee<1>("1"), Return(1)))
+            .WillOnce(DoAll(SetArgReferee<1>(filePath), Return(0)));
+        EXPECT_CALL(*rdb, ExecuteSql(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int32_t ret = fileDataHandler->CleanNotDirtyData();
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " CleanNotDirtyData007 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "CleanNotDirtyData007 End";
+}
