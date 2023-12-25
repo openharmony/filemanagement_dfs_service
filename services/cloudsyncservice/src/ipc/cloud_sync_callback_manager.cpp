@@ -21,6 +21,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 using namespace placeholders;
+static const string GALLERY_BUNDLE_NAME = "com.ohos.photos";
 
 CloudSyncCallbackManager &CloudSyncCallbackManager::GetInstance()
 {
@@ -28,13 +29,23 @@ CloudSyncCallbackManager &CloudSyncCallbackManager::GetInstance()
     return instance;
 }
 
+static void Convert2Bundle(const string &bundleName, string &bundle)
+{
+    string photo = ".photos";
+    if (bundleName.size() > photo.size() && (bundleName.substr(bundleName.size() - photo.size()) == photo)) {
+        bundle = GALLERY_BUNDLE_NAME;
+    }
+}
+
 void CloudSyncCallbackManager::RemoveCallback(const std::string &bundleName)
 {
     CallbackInfo cbInfo;
-    if (callbackListMap_.Find(bundleName, cbInfo)) {
+    string bundle = bundleName;
+    Convert2Bundle(bundleName, bundle);
+    if (callbackListMap_.Find(bundle, cbInfo)) {
         auto remoteObject = cbInfo.callbackProxy->AsObject();
         remoteObject->RemoveDeathRecipient(cbInfo.deathRecipient);
-        callbackListMap_.Erase(bundleName);
+        callbackListMap_.Erase(bundle);
     }
 }
 
@@ -43,15 +54,17 @@ void CloudSyncCallbackManager::AddCallback(const std::string &bundleName,
                                            const sptr<ICloudSyncCallback> &callback)
 {
     CallbackInfo callbackInfo;
-    if (callbackListMap_.Find(bundleName, callbackInfo)) {
+    string bundle = bundleName;
+    Convert2Bundle(bundleName, bundle);
+    if (callbackListMap_.Find(bundle, callbackInfo)) {
         auto remoteObject = callbackInfo.callbackProxy->AsObject();
         remoteObject->RemoveDeathRecipient(callbackInfo.deathRecipient);
     }
     callbackInfo.callbackProxy = callback;
     callbackInfo.callerUserId = userId;
-    SetDeathRecipient(bundleName, callbackInfo);
+    SetDeathRecipient(bundle, callbackInfo);
     /*Delete and then insert when the key exists, ensuring that the final value is inserted.*/
-    callbackListMap_.EnsureInsert(bundleName, callbackInfo);
+    callbackListMap_.EnsureInsert(bundle, callbackInfo);
 }
 
 void CloudSyncCallbackManager::SetDeathRecipient(const std::string &bundleName, CallbackInfo &cbInfo)
@@ -83,9 +96,15 @@ void CloudSyncCallbackManager::Notify(const std::string bundleName,
     callbackProxy->OnSyncStateChanged(state, error);
 }
 
-void CloudSyncCallbackManager::NotifySyncStateChanged(const CloudSyncState state, const ErrorType error)
+void CloudSyncCallbackManager::NotifySyncStateChanged(const std::string &bundleName,
+    const CloudSyncState state, const ErrorType error)
 {
     auto callback = bind(&CloudSyncCallbackManager::Notify, this, _1, _2, state, error);
-    callbackListMap_.Iterate(callback);
+    CallbackInfo callbackInfo;
+    if (!callbackListMap_.Find(bundleName, callbackInfo)) {
+        LOGE("not found %{private}s in callbackList", bundleName.c_str());
+        return;
+    }
+    callback(bundleName, callbackInfo);
 }
 } // namespace OHOS::FileManagement::CloudSync
