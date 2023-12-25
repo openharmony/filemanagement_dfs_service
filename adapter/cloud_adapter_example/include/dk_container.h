@@ -74,6 +74,7 @@ public:
     DKLocalErrorCode ChangesNotify(std::shared_ptr<DKContext> context,
                                    DKSubscriptionId id,
                                    ChangesNotifyCallback callback);
+    void Release();
 
 public:
     DKContainer(DKAppBundleName bundleName, DKContainerName containerName, std::shared_ptr<DriveKitNative> driveKit)

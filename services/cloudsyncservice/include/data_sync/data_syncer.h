@@ -78,7 +78,7 @@ public:
 
     void SaveSubscription();
     void DeleteSubscription();
-    
+
 protected:
     /* download */
     int32_t Pull(std::shared_ptr<DataHandler> handler);
@@ -165,6 +165,7 @@ private:
     void DeleteRecords(std::shared_ptr<TaskContext> context);
     void ModifyMdirtyRecords(std::shared_ptr<TaskContext> context);
     void ModifyFdirtyRecords(std::shared_ptr<TaskContext> context);
+    void StopUploadAssets();
 
     /* upload callback */
     void OnCreateRecords(std::shared_ptr<DriveKit::DKContext>,

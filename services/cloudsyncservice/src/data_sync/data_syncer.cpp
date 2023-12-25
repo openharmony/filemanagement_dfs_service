@@ -87,8 +87,8 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 {
     LOGI("%{private}d %{public}s stops sync, trigger stop sync, type:%{public}d",
         userId_, bundleName_.c_str(), triggerType);
-
     syncStateManager_.SetStopSyncFlag();
+    StopUploadAssets();
     Abort();
     return E_OK;
 }
@@ -1269,6 +1269,10 @@ void DataSyncer::FetchThumbDownloadCallback(shared_ptr<DKContext> context,
 int32_t DataSyncer::CleanCache(const string &uri)
 {
     return E_OK;
+}
+void DataSyncer::StopUploadAssets()
+{
+    sdkHelper_->Release();
 }
 } // namespace CloudSync
 } // namespace FileManagement
