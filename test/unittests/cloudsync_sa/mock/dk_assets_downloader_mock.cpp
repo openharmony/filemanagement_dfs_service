@@ -36,7 +36,7 @@ DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(DKDownloadAsset &assetsToDow
     return DKLocalErrorCode::IPC_CONNECT_FAILED;
 }
 
-DKLocalErrorCode DKAssetsDownloader::CancelDownloadAssets(DKDownloadId id)
+DKLocalErrorCode DKAssetsDownloader::CancelDownloadAssets(DKDownloadId id, bool isClearCache)
 {
     return DKLocalErrorCode::IPC_CONNECT_FAILED;
 }
