@@ -1232,10 +1232,176 @@ ohos_unittest("cloud_disk_data_syncer_test") {
   use_exceptions = true
 }
 
+ohos_unittest("cloud_disk_data_handler_test") {
+  module_out_path = "dfs_service"
+  data_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
+  ]
+
+  cycle_task = [
+    "${services_path}/cloudsyncservice/src/cycle_task/cycle_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/cycle_task_runner.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/optimize_storage_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/periodic_check_task.cpp",
+    "${services_path}/cloudsyncservice/src/cycle_task/tasks/save_subscription_task.cpp",
+  ]
+
+  gallery_data_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/file_data_convertor_mock.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
+  ]
+
+  transport = [
+    "${services_path}/cloudsyncservice/src/transport/file_transfer_manager.cpp",
+    "${services_path}/cloudsyncservice/src/transport/message_handler.cpp",
+    "${services_path}/cloudsyncservice/src/transport/softbus/session_manager.cpp",
+    "${services_path}/cloudsyncservice/src/transport/softbus/softbus_adapter.cpp",
+    "${services_path}/cloudsyncservice/src/transport/softbus/softbus_session.cpp",
+  ]
+
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_disk_data_convertor_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.h",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_pref_impl_mock.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_proxy.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_callback_manager.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_callback_proxy.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_manager.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_proxy.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/battery_status.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/cloud_status.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/net_conn_callback_observer.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/network_status.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/screen_status_listener.cpp",
+    "cloud_disk_data_handler_test.cpp",
+  ]
+
+  sources += data_sync
+  sources += cycle_task
+  sources += gallery_data_sync
+  sources += medialibrary_rdb_utils_source
+  sources += transport
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
+    "${services_path}/cloudsyncservice/include/cycle_task",
+    "${services_path}/cloudsyncservice/include/cycle_task/tasks",
+    "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
+    "${services_path}/cloudsyncservice/include/transport",
+    "${services_path}/cloudsyncservice/include/transport/softbus",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${clouddisk_database_path}/include",
+    "${utils_path}/cloud_disk/include",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/services/media_thumbnail/include",
+    "${media_library_path}/frameworks/utils/include",
+    "//third_party/e2fsprogs/e2fsprogs/lib",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  include_dirs += medialibrary_rdb_utils_include
+
+  resource_config_file =
+      "${distributedfile_path}/test/unittests/resource/ohos_test.xml"
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/e2fsprogs:libext2_uuid",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  ldflags = [ "--coverage" ]
+
+  cflags_cc = [ "--coverage" ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
+    "common_event_service:cesfwk_innerkits",
+    "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
+    "power_manager:powermgr_client",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "protected=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_TEST\"",
+  ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  use_exceptions = true
+}
+
 group("cloudsync_sa_data_sync_test") {
   testonly = true
   deps = [
     ":album_data_handler_test",
+    ":cloud_disk_data_handler_test",
     ":cloud_disk_data_syncer_test",
     ":data_convertor_test",
     ":data_handler_test",
