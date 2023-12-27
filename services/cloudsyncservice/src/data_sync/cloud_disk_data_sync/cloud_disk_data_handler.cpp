@@ -355,7 +355,7 @@ int32_t CloudDiskDataHandler::ConflictReName(const string &cloudId, string newFi
 static int32_t IsEditTimeChange(const DKRecord &record, NativeRdb::ResultSet &local, bool &isChange)
 {
     int64_t localEditTime = 0;
-    int64_t recordEditTime = record.GetEditedTime();
+    int64_t recordEditTime = static_cast<int64_t>(record.GetEditedTime());
     int32_t ret = DataConvertor::GetLong(FC::FILE_TIME_EDITED, localEditTime, local);
     if (ret != E_OK) {
         return ret;
