@@ -114,6 +114,10 @@ int32_t GalleryDataSyncer::Clean(const int action)
     if (ret != E_OK) {
         LOGE("gallery data syncer file cancel download err %{public}d", ret);
     }
+    ret = CleanInner(albumHandler_, CleanAction::RETAIN_DATA);
+    if (ret != E_OK) {
+        LOGE("gallery data syncer album clean err %{public}d", ret);
+    }
     fileHandler_->ClearCursor();
     ret = fileHandler_->MarkClean(action);
     PutHandler();
@@ -123,18 +127,13 @@ int32_t GalleryDataSyncer::Clean(const int action)
 
 int32_t GalleryDataSyncer::ActualClean()
 {
-    int32_t action = CleanAction::RETAIN_DATA;
     int32_t ret = GetHandler();
     if (ret != E_OK) {
         return ret;
     }
-    ret = CleanInner(fileHandler_, action);
+    ret = CleanInner(fileHandler_, CleanAction::RETAIN_DATA);
     if (ret != E_OK) {
         LOGE("gallery data syncer file clean err %{public}d", ret);
-    }
-    ret = CleanInner(albumHandler_, action);
-    if (ret != E_OK) {
-        LOGE("gallery data syncer album clean err %{public}d", ret);
     }
     PutHandler();
     return ret;
