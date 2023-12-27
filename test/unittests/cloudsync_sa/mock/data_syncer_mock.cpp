@@ -122,6 +122,7 @@ void DataSyncer::Reset()
 
 void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> &sdkHelper)
 {
+    sdkHelper_ = sdkHelper;
 }
 
 int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
