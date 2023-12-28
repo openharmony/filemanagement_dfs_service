@@ -47,6 +47,7 @@ void DownloadAssetCallbackManager::OnDownloadFinshed(const TaskId taskId, const 
     auto callback = callbackProxy_;
     if (callback == nullptr) {
         LOGE("callbackProxy_ is nullptr");
+        return;
     }
     LOGD("On Download finished, taskId:%{public}" PRIu64 ", uri:%{public}s, ret:%{public}d", taskId, uri.c_str(),
          result);

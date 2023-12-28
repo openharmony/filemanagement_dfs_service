@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "cloud_disk_data_const.h"
 #include "mimetype_utils.h"
 #include "cloud_pref_impl.h"
 #include "cloud_file_utils.h"
@@ -87,10 +88,23 @@ int32_t CloudDiskDataConvertor::InitRootId()
     }
     return E_OK;
 }
+std::string CloudDiskDataConvertor::GetParentCloudId(const DriveKit::DKRecordData &data)
+{
+    string parentFolder;
+    if (data.find(DK_PARENT_CLOUD_ID) == data.end() ||
+        data.at(DK_PARENT_CLOUD_ID).GetString(parentFolder) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract parent cloudId error");
+        return "";
+    }
+    if (parentFolder == rootId_) {
+        parentFolder = "rootId";
+    }
+    return parentFolder;
+}
 
 int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket)
 {
-    InitRootId();
+    RETURN_ON_ERR(InitRootId());
     DriveKit::DKRecordData data;
     record.GetRecordData(data);
     ExtractCompatibleValue(record, data, valueBucket);
@@ -98,7 +112,7 @@ int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::V
 }
 int32_t CloudDiskDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet)
 {
-    InitRootId();
+    RETURN_ON_ERR(InitRootId());
     DriveKit::DKRecordData data;
     RETURN_ON_ERR(FillRecordId(record, resultSet));
     RETURN_ON_ERR(FillCreatedTime(record, resultSet));
@@ -140,7 +154,7 @@ int32_t CloudDiskDataConvertor::CompensateAttributes(const DriveKit::DKRecordDat
     DriveKit::DKRecordFieldMap attributes;
     if (data.find(DK_FILE_ATTRIBUTES) == data.end()) {
         fileTimeAdded = record.GetCreateTime();
-        fileTimeEdited = record.GetEditedTime();
+        fileTimeEdited = static_cast<int64_t>(record.GetEditedTime());
         metaTimeEdited = record.GetEditedTime();
     } else {
         data.at(DK_FILE_ATTRIBUTES).GetRecordMap(attributes);
@@ -194,14 +208,10 @@ int32_t CloudDiskDataConvertor::ExtractFileName(const DriveKit::DKRecordData &da
 int32_t CloudDiskDataConvertor::ExtractFileParentCloudId(const DriveKit::DKRecordData &data,
                                                          NativeRdb::ValuesBucket &valueBucket)
 {
-    string parentFolder;
-    if (data.find(DK_PARENT_CLOUD_ID) == data.end() ||
-        data.at(DK_PARENT_CLOUD_ID).GetString(parentFolder) != DKLocalErrorCode::NO_ERROR) {
+    string parentFolder = GetParentCloudId(data);
+    if (parentFolder.empty()) {
         LOGE("extract parent cloudId error");
         return E_INVAL_ARG;
-    }
-    if (parentFolder == rootId_) {
-        parentFolder = "rootId";
     }
     valueBucket.PutString(FileColumn::PARENT_CLOUD_ID, parentFolder);
     return E_OK;
@@ -215,9 +225,10 @@ int32_t CloudDiskDataConvertor::ExtractFileSize(const DriveKit::DKRecordData &da
         LOGE("extract fileSize cloudId error");
         return E_INVAL_ARG;
     }
-    valueBucket.PutInt(FileColumn::FILE_SIZE, fileSize);
+    valueBucket.PutLong(FileColumn::FILE_SIZE, fileSize);
     return E_OK;
 }
+
 int32_t CloudDiskDataConvertor::ExtractSha256(const DriveKit::DKRecordData &data,
                                               NativeRdb::ValuesBucket &valueBucket)
 {
@@ -266,7 +277,7 @@ int32_t CloudDiskDataConvertor::ExtractDirectlyRecycled(const DriveKit::DKRecord
 int32_t CloudDiskDataConvertor::ExtractVersion(const DriveKit::DKRecord &record,
                                                NativeRdb::ValuesBucket &valueBucket)
 {
-    int64_t version = record.GetVersion();
+    unsigned long version = record.GetVersion();
     valueBucket.PutLong(FileColumn::VERSION, version);
     return E_OK;
 }
@@ -297,6 +308,7 @@ int32_t CloudDiskDataConvertor::HandleCompatibleFileds(DriveKit::DKRecordData &d
     RETURN_ON_ERR(HandleRecycleTime(data, resultSet));
     RETURN_ON_ERR(HandleType(data, resultSet));
     RETURN_ON_ERR(HandleOperateType(data, resultSet));
+    RETURN_ON_ERR(HandleFileSize(data, resultSet));
     RETURN_ON_ERR(HandleAttachments(data, resultSet));
     return E_OK;
 }
@@ -486,6 +498,21 @@ int32_t CloudDiskDataConvertor::HandleOperateType(DriveKit::DKRecordData &data,
         return ret;
     }
     data[DK_FILE_OPERATE_TYPE] = DriveKit::DKRecordField(operateType);
+    return E_OK;
+}
+int32_t CloudDiskDataConvertor::HandleFileSize(DriveKit::DKRecordData &data,
+    NativeRdb::ResultSet &resultSet)
+{
+    if (type_ == FILE_DELETE) {
+        return E_OK;
+    }
+    int64_t fileSize;
+    int32_t ret = GetLong(FileColumn::FILE_SIZE, fileSize, resultSet);
+    if (ret != E_OK) {
+        LOGE("handler fileSize failed, ret = %{public}d", ret);
+        return ret;
+    }
+    data[DK_FILE_SIZE] = DriveKit::DKRecordField(fileSize);
     return E_OK;
 }
 int32_t CloudDiskDataConvertor::HandleCreateTime(DriveKit::DKRecordFieldMap &map,

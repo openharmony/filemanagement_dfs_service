@@ -18,6 +18,7 @@ group("cloudsyncunittests") {
   deps = [
     "cloud_adapter:cloud_adapter_test",
     "cloud_daemon:cloud_daemon_test",
+    "clouddisk_database:clouddisk_database_test",
     "cloudsync_api:cloudsync_api_test",
     "cloudsync_sa:cloudsync_sa_test",
     "services_daemon:services_daemon_test",

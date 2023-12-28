@@ -46,9 +46,22 @@ public:
                             const std::string &sessionName) override;
 
 private:
+    class DaemonDeathRecipient : public IRemoteObject::DeathRecipient {
+    public:
+        DaemonDeathRecipient(){};
+        ~DaemonDeathRecipient() = default;
+        using RemoteDiedHandler = std::function<void(const wptr<IRemoteObject> &)>;
+        void SetDeathRecipient(RemoteDiedHandler handler);
+        void OnRemoteDied(const wptr<IRemoteObject> &remote) override;
+
+    private:
+        RemoteDiedHandler handler_{ nullptr };
+    };
+    static void OnRemoteSaDied(const wptr<IRemoteObject> &remote);
     static inline std::mutex proxyMutex_;
     static inline sptr<IDaemon> daemonProxy_;
     static inline BrokerDelegator<DistributedFileDaemonProxy> delegator_;
+    static inline sptr<DaemonDeathRecipient> deathRecipient_;
 };
 
 } // namespace DistributedFile

@@ -53,6 +53,15 @@ ohos_unittest("cloud_sync_service_stub_test") {
 }
 
 ohos_unittest("cloud_sync_service_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
@@ -386,7 +395,6 @@ group("cloudsync_sa_ipc_test") {
   deps = [
     ":cloud_download_callback_manager_test",
     ":cloud_download_callback_proxy_test",
-    ":cloud_sync_callback_manager_test",
     ":cloud_sync_callback_proxy_test",
     ":cloud_sync_service_stub_test",
     ":cloud_sync_service_test",

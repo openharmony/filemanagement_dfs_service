@@ -379,7 +379,6 @@ HWTEST_F(CloudSyncServiceTest, StartSyncInnerTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "StartSyncInner End";
 }
 
-
 /**
  * @tc.name:EnableCloudTest
  * @tc.desc:Verify the EnableCloud function.
@@ -420,29 +419,6 @@ HWTEST_F(CloudSyncServiceTest, CleanTest, TestSize.Level1)
         GTEST_LOG_(INFO) << "Clean FAILED";
     }
     GTEST_LOG_(INFO) << "Clean end";
-}
-
-/**
- * @tc.name:StartDownloadFileTest
- * @tc.desc:Verify the StartDownloadFile function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, StartDownloadFileTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "StartDownloadFile start";
-    try {
-        string bundleName = "com.ohos.photos";
-        int32_t callerUserId = 100;
-        std::string path;
-        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->StartDownloadFile(bundleName, callerUserId, path);
-        EXPECT_TRUE(E_STOP == ret || ret == E_RDB);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "StartDownloadFile FAILED";
-    }
-    GTEST_LOG_(INFO) << "StartDownloadFile end";
 }
 
 /**

@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_CLOUD_SYNC_ASSET_MANAGER_IMPL_H
 
 #include <atomic>
+#include <mutex>
 
 #include "cloud_sync_asset_manager.h"
 #include "download_asset_callback_client.h"
@@ -42,8 +43,10 @@ private:
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
 
     sptr<DownloadAssetCallbackClient> downloadAssetCallback_;
+    std::atomic_flag isCallbackRegistered_{false};
     std::atomic_flag isFirstCall_{false};
     sptr<SvcDeathRecipient> deathRecipient_;
+    std::mutex callbackInitMutex_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

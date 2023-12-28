@@ -78,6 +78,7 @@ public:
                                  const void *data,
                                  unsigned int dataLen) = 0;
     virtual void OnFileRecvHandle(const std::string &senderNetworkId, const char *filePath, int result) = 0;
+    virtual void OnSessionClosed();
 };
 } // namespace OHOS::FileManagement::CloudSync
 

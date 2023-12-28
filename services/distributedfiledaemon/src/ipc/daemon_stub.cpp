@@ -75,7 +75,7 @@ int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &
 
     int32_t res = OpenP2PConnection(deviceInfo);
     reply.WriteInt32(res);
-    LOGI("End OpenP2PConnection");
+    LOGI("End OpenP2PConnection, res = %{public}d", res);
     return res;
 }
 

@@ -109,7 +109,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0100, TestSize.Leve
 
     bool res = true;
     try {
-        pool->ReleaseSession("testSession");
+        pool->ReleaseSession("testSession", 1);
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());

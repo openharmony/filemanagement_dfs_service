@@ -87,8 +87,8 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 {
     LOGI("%{private}d %{public}s stops sync, trigger stop sync, type:%{public}d",
         userId_, bundleName_.c_str(), triggerType);
-
     syncStateManager_.SetStopSyncFlag();
+    StopUploadAssets();
     Abort();
     return E_OK;
 }
@@ -342,6 +342,8 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
 
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
+    } else {
+        SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
     }
     if (!checkOrRetry) {
         handler->FinishPull(context->GetBatchNo());
@@ -664,11 +666,6 @@ int32_t DataSyncer::ActualClean()
     return E_OK;
 }
 
-int32_t DataSyncer::CancelClean()
-{
-    return E_OK;
-}
-
 int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int action)
 {
     int ret = 0;
@@ -892,6 +889,9 @@ void DataSyncer::OnCreateRecords(shared_ptr<DKContext> context,
         LOGE("handler on create records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        SyncStateChangedNotify(CloudSyncState::UPLOADING, ErrorType::NO_ERROR);
+        isDataChanged_ = true;
     }
 
     /* push more */
@@ -918,6 +918,8 @@ void DataSyncer::OnDeleteRecords(shared_ptr<DKContext> context,
         LOGE("handler on delete records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        isDataChanged_ = true;
     }
 
     /* push more */
@@ -946,6 +948,8 @@ void DataSyncer::OnModifyMdirtyRecords(shared_ptr<DKContext> context,
         LOGE("handler on modify records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        isDataChanged_ = true;
     }
 
     /* push more */
@@ -974,6 +978,8 @@ void DataSyncer::OnModifyFdirtyRecords(shared_ptr<DKContext> context,
         LOGE("handler on modify records err %{public}d", ret);
         UpdateErrorCode(ret);
         return;
+    } else {
+        isDataChanged_ = true;
     }
 
     /* push more */
@@ -1123,12 +1129,12 @@ void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorT
 {
     CurrentSyncState_ = state;
     CurrentErrorType_ = error;
-    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(state, error);
+    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(bundleName_, state, error);
 }
 
 void DataSyncer::NotifyCurrentSyncState()
 {
-    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(CurrentSyncState_, CurrentErrorType_);
+    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(bundleName_, CurrentSyncState_, CurrentErrorType_);
 }
 
 void DataSyncer::UpdateErrorCode(int32_t code)
@@ -1263,6 +1269,10 @@ void DataSyncer::FetchThumbDownloadCallback(shared_ptr<DKContext> context,
 int32_t DataSyncer::CleanCache(const string &uri)
 {
     return E_OK;
+}
+void DataSyncer::StopUploadAssets()
+{
+    sdkHelper_->Release();
 }
 } // namespace CloudSync
 } // namespace FileManagement

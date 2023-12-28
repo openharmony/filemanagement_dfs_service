@@ -191,7 +191,7 @@ int32_t SdkHelper::DownloadAssets(DriveKit::DKDownloadAsset &assetsToDownload)
 
 int32_t SdkHelper::CancelDownloadAssets(int32_t id)
 {
-    return static_cast<int32_t>(downloader_->CancelDownloadAssets(id));
+    return static_cast<int32_t>(downloader_->CancelDownloadAssets(id, true));
 }
 
 int32_t SdkHelper::GetStartCursor(DriveKit::DKRecordType recordType, DriveKit::DKQueryCursor &cursor)
@@ -246,6 +246,11 @@ int32_t SdkHelper::ChangesNotify(ChangesNotifyCallback callback)
         return E_CLOUD_SDK;
     }
     return E_OK;
+}
+void SdkHelper::Release()
+{
+    LOGD("stop upload asset");
+    database_->Release();
 }
 } // namespace CloudSync
 } // namespace FileManagement

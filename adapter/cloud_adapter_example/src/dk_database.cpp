@@ -176,4 +176,8 @@ DKDatabase::DKDatabase(std::shared_ptr<DKContainer> container, DKDatabaseScope s
 void DKDatabase::Init()
 {
 }
+void DKDatabase::Release()
+{
+    return;
+}
 } // namespace DriveKit

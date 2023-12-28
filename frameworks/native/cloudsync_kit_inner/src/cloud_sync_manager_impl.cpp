@@ -18,6 +18,8 @@
 #include "cloud_sync_callback_client.h"
 #include "cloud_sync_service_proxy.h"
 #include "dfs_error.h"
+#include "system_ability_definition.h"
+#include "iservice_registry.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -40,10 +42,10 @@ int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCa
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-
     auto ret =
         CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback)));
     callback_ = callback;
+    SubscribeListener();
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     LOGI("RegisterCallback ret %{public}d", ret);
     return ret;
@@ -60,7 +62,9 @@ int32_t CloudSyncManagerImpl::UnRegisterCallback()
     auto ret = CloudSyncServiceProxy->UnRegisterCallbackInner();
     if (!ret) {
         callback_ = nullptr;
+        SubscribeListener();
     }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     LOGI("UnRegisterCallback ret %{public}d", ret);
     return ret;
 }
@@ -72,6 +76,7 @@ int32_t CloudSyncManagerImpl::StartSync()
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return CloudSyncServiceProxy->StartSyncInner(false);
 }
 
@@ -83,6 +88,7 @@ int32_t CloudSyncManagerImpl::GetSyncTime(int64_t &syncTime)
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return CloudSyncServiceProxy->GetSyncTimeInner(syncTime);
 }
 
@@ -98,7 +104,7 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
         return E_SA_LOAD_FAILED;
     }
 
-    if (!isFirstCall_.test_and_set()) {
+    if (!isFirstCall_.test()) {
         LOGI("Register callback");
         auto ret =
             CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback)));
@@ -108,6 +114,7 @@ int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<Cl
             return ret;
         }
         callback_ = callback;
+        SubscribeListener();
         SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     }
 
@@ -125,9 +132,7 @@ int32_t CloudSyncManagerImpl::TriggerSync(const std::string &bundleName, const i
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    if (!isFirstCall_.test_and_set()) {
-        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return CloudSyncServiceProxy->TriggerSyncInner(bundleName, userId);
 }
 
@@ -138,6 +143,7 @@ int32_t CloudSyncManagerImpl::StopSync()
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return CloudSyncServiceProxy->StopSyncInner();
 }
 
@@ -149,9 +155,7 @@ int32_t CloudSyncManagerImpl::ChangeAppSwitch(const std::string &accoutId, const
         return E_SA_LOAD_FAILED;
     }
 
-    if (!isFirstCall_.test_and_set()) {
-        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
 
     int32_t ret = CloudSyncServiceProxy->ChangeAppSwitch(accoutId, bundleName, status);
     LOGI("ChangeAppSwitch ret %{public}d", ret);
@@ -166,9 +170,7 @@ int32_t CloudSyncManagerImpl::NotifyDataChange(const std::string &accoutId, cons
         return E_SA_LOAD_FAILED;
     }
 
-    if (!isFirstCall_.test_and_set()) {
-        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
 
     int32_t ret = CloudSyncServiceProxy->NotifyDataChange(accoutId, bundleName);
     LOGI("NotifyDataChange ret %{public}d", ret);
@@ -184,9 +186,7 @@ int32_t CloudSyncManagerImpl::NotifyEventChange(
         return E_SA_LOAD_FAILED;
     }
 
-    if (!isFirstCall_.test_and_set()) {
-        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
    
     int32_t ret = CloudSyncServiceProxy->NotifyEventChange(userId, eventId, extraData);
     LOGI("NotifyDataChange ret %{public}d", ret);
@@ -201,6 +201,7 @@ int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri)
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->StartDownloadFile(uri);
     LOGI("StartDownloadFile ret %{public}d", ret);
     return ret;
@@ -214,9 +215,7 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::string &uri)
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    if (!isFirstCall_.test_and_set()) {
-        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->StartFileCache(uri);
     LOGI("StartDownloadCache ret %{public}d", ret);
     return ret;
@@ -230,6 +229,7 @@ int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri)
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->StopDownloadFile(uri);
     LOGI("StopDownloadFile ret %{public}d", ret);
     return ret;
@@ -247,6 +247,9 @@ int32_t CloudSyncManagerImpl::RegisterDownloadFileCallback(
     int32_t ret = CloudSyncServiceProxy->RegisterDownloadFileCallback(
         sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback)));
     LOGI("RegisterDownloadFileCallback ret %{public}d", ret);
+    downloadCallback_ = downloadCallback;
+    SubscribeListener();
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return ret;
 }
 
@@ -260,21 +263,28 @@ int32_t CloudSyncManagerImpl::UnregisterDownloadFileCallback()
     }
     int32_t ret = CloudSyncServiceProxy->UnregisterDownloadFileCallback();
     LOGI("UnregisterDownloadFileCallback ret %{public}d", ret);
+    if (ret == E_OK) {
+        downloadCallback_ = nullptr;
+        SubscribeListener();
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return ret;
 }
 void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
-    auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
-        LOGE("service died.");
-        CloudSyncServiceProxy::InvaildInstance();
-        if (callback_) {
-            callback_->OnSyncStateChanged(CloudSyncState::COMPLETED, ErrorType::NO_ERROR);
-            callback_ = nullptr;
-        }
-        isFirstCall_.clear();
-    };
-    deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));
-    remoteObject->AddDeathRecipient(deathRecipient_);
+    if (!isFirstCall_.test_and_set()) {
+        auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
+            LOGE("service died.");
+            CloudSyncServiceProxy::InvaildInstance();
+            if (callback_) {
+                callback_->OnSyncStateChanged(CloudSyncState::COMPLETED, ErrorType::NO_ERROR);
+                callback_ = nullptr;
+            }
+            isFirstCall_.clear();
+        };
+        deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));
+        remoteObject->AddDeathRecipient(deathRecipient_);
+    }
 }
 
 int32_t CloudSyncManagerImpl::EnableCloud(const std::string &accoutId,
@@ -286,9 +296,7 @@ int32_t CloudSyncManagerImpl::EnableCloud(const std::string &accoutId,
         return E_SA_LOAD_FAILED;
     }
 
-    if (!isFirstCall_.test_and_set()) {
-        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
 
     return CloudSyncServiceProxy->EnableCloud(accoutId, switchData);
 }
@@ -301,10 +309,7 @@ int32_t CloudSyncManagerImpl::DisableCloud(const std::string &accoutId)
         return E_SA_LOAD_FAILED;
     }
 
-    if (!isFirstCall_.test_and_set()) {
-        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    }
-
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return CloudSyncServiceProxy->DisableCloud(accoutId);
 }
 
@@ -316,9 +321,7 @@ int32_t CloudSyncManagerImpl::Clean(const std::string &accountId, const CleanOpt
         return E_SA_LOAD_FAILED;
     }
 
-    if (!isFirstCall_.test_and_set()) {
-        SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
 
     return CloudSyncServiceProxy->Clean(accountId, cleanOptions);
 }
@@ -331,6 +334,54 @@ int32_t CloudSyncManagerImpl::CleanCache(const std::string &uri)
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return CloudSyncServiceProxy->CleanCacheInner(uri);
+}
+
+void CloudSyncManagerImpl::SubscribeListener()
+{
+    unique_lock<mutex> lock(subscribeMutex_);
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        LOGE("Samgr is nullptr");
+        return;
+    }
+    if (listener_ != nullptr) {
+        auto ret = samgr->UnSubscribeSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, listener_);
+        LOGI("unsubscribed to systemAbility ret %{public}d", ret);
+    }
+    if (callback_ != nullptr || downloadCallback_ != nullptr) {
+        listener_ = new SystemAbilityStatusChange(callback_, downloadCallback_);
+        auto ret = samgr->SubscribeSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, listener_);
+        LOGI("subscribed to systemAbility ret %{public}d", ret);
+    } else {
+        listener_ = nullptr;
+    }
+}
+
+void CloudSyncManagerImpl::SystemAbilityStatusChange::OnAddSystemAbility(int32_t systemAbilityId,
+    const std::string &deviceId)
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return;
+    }
+    if (downloadCallback_) {
+        CloudSyncServiceProxy->RegisterDownloadFileCallback(
+            sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback_)));
+        CloudSyncManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
+    if (callback_) {
+        CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback_)));
+        CloudSyncManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    }
+    return;
+}
+
+void CloudSyncManagerImpl::SystemAbilityStatusChange::OnRemoveSystemAbility(int32_t systemAbilityId,
+    const std::string &deviceId)
+{
+    return;
 }
 } // namespace OHOS::FileManagement::CloudSync

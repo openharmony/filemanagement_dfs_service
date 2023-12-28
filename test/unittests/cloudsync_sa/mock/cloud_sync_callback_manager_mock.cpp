@@ -34,7 +34,8 @@ void CloudSyncCallbackManager::AddCallback(const std::string &bundleName,
 
 void CloudSyncCallbackManager::SetDeathRecipient(const std::string &bundleName, CallbackInfo &cbInfo) {}
 
-void CloudSyncCallbackManager::NotifySyncStateChanged(const CloudSyncState state, const ErrorType error)
+void CloudSyncCallbackManager::NotifySyncStateChanged(const std::string &bundleName,
+    const CloudSyncState state, const ErrorType error)
 {
 }
 } // namespace OHOS::FileManagement::CloudSync

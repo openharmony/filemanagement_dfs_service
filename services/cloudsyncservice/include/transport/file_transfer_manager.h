@@ -16,11 +16,12 @@
 #ifndef OHOS_FILEMGMT_FILE_TRANSFER_MANAGER_H
 #define OHOS_FILEMGMT_FILE_TRANSFER_MANAGER_H
 
+#include <cstdint>
 #include <functional>
-#include <map>
 #include <mutex>
 #include <string>
 #include <sys/stat.h>
+#include <vector>
 
 #include "message_handler.h"
 #include "session_manager.h"
@@ -41,15 +42,30 @@ public:
                          const void *data,
                          unsigned int dataLen) override;
     void OnFileRecvHandle(const std::string &senderNetworkId, const char *filePath, int result) override;
-    void HandleDowloadFileRequest(MessageHandler &msgHandler,
+    void OnSessionClosed() override;
+    void HandleDownloadFileRequest(MessageHandler &msgHandler,
                                   const std::string &senderNetworkId,
                                   int receiverSessionId);
-    void HandleDowloadFileResponse(MessageHandler &msgHandler);
+    void HandleDownloadFileResponse(MessageHandler &msgHandler);
+    void HandleRecvFileFinished();
+
 private:
+    struct TaskInfo {
+        std::string uri;
+        std::string relativePath;
+        uint64_t taskId;
+    };
     bool IsFileExists(std::string &filePath);
-    std::tuple<std::string, std::string> UriToPath(const std::string &uri, const int32_t userId);
+    std::tuple<std::string, std::string>
+        UriToPath(const std::string &uri, const int32_t userId, bool isCheckFileExists = true);
+    void AddTransTask(const std::string &uri, const int32_t userId, uint64_t taskId);
+    void FinishTransTask(const std::string &relativePath, int result);
+    void RemoveTransTask(uint64_t taskId);
+    void IncTransTaskCount();
+    void DecTransTaskCount();
     std::mutex taskMutex_;
-    std::map<std::string, uint64_t> taskIdMap_;
+    std::vector<TaskInfo> taskInfos_;
+    std::atomic<int> taskCount_{0};
 
     std::shared_ptr<SessionManager> sessionManager_;
 };

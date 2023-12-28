@@ -142,7 +142,7 @@ private:
     int32_t ClearCloudInfo(const std::string &cloudId);
     int32_t CleanAllCloudInfo();
     int32_t CleanNotDirtyData();
-    int32_t CleanNotPureCloudRecord();
+    int32_t CleanNotPureCloudRecord(const int32_t action);
     int32_t CleanPureCloudRecord();
     int32_t DeleteDentryFile(void);
 

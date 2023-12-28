@@ -72,11 +72,6 @@ int32_t DataSyncer::ActualClean()
     return E_OK;
 }
 
-int32_t DataSyncer::CancelClean()
-{
-    return E_OK;
-}
-
 int32_t DataSyncer::CancelDownload(std::shared_ptr<DataHandler> handler)
 {
     return E_OK;
@@ -127,6 +122,7 @@ void DataSyncer::Reset()
 
 void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> &sdkHelper)
 {
+    sdkHelper_ = sdkHelper;
 }
 
 int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)

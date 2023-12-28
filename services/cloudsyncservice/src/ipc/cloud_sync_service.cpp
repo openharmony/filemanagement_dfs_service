@@ -22,7 +22,6 @@
 #include "data_sync_const.h"
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
-#include "file_transfer_manager.h"
 #include "ipc/cloud_sync_callback_manager.h"
 #include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
@@ -121,7 +120,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         LOGE("%{public}s", e.what());
     }
     LOGI("Start service successfully");
-    TaskStateManager::GetInstance().DelayUnloadTask();
+    TaskStateManager::GetInstance().StartTask();
     HandleStartReason(startReason);
 }
 
@@ -134,6 +133,10 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
 {
     string reason = startReason.GetName();
     LOGI("Begin to start service reason: %{public}s", reason.c_str());
+    int32_t userId = 0;
+    if (dataSyncManager_->GetUserId(userId) != E_OK) {
+        return;
+    }
     if (reason == "usual.event.wifi.SCAN_FINISHED") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
     } else if (reason == "usual.event.BATTERY_OKAY") {
@@ -161,7 +164,11 @@ void CloudSyncService::LoadRemoteSACallback::OnLoadSACompleteForRemote(const std
     LOGI("Load CloudSync SA success,systemAbilityId:%{public}d, remoteObj result:%{public}s", systemAbilityId,
          (remoteObject == nullptr ? "false" : "true"));
     unique_lock<mutex> lock(loadRemoteSAMutex_);
-    isLoadSuccess_.store(true);
+    if (remoteObject == nullptr) {
+        isLoadSuccess_.store(false);
+    } else {
+        isLoadSuccess_.store(true);
+    }
     proxyConVar_.notify_one();
 }
 
@@ -283,7 +290,6 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
         return ret;
     }
     if (status) {
-        dataSyncManager_->RestoreClean(bundleName, callerUserId);
         return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     } else {
         return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
@@ -422,7 +428,11 @@ int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &r
         LOGE("uploadAsset get drive kit instance err");
         return E_CLOUD_SDK;
     }
-    return driveKit->OnUploadAsset(request, result);
+    string bundleName("distributeddata");
+    TaskStateManager::GetInstance().StartTask(bundleName, TaskType::UPLOAD_ASSET_TASK);
+    auto ret = driveKit->OnUploadAsset(request, result);
+    TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::UPLOAD_ASSET_TASK);
+    return ret;
 }
 
 int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj)
@@ -445,7 +455,10 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
 
     // Not to pass the assetinfo.fieldkey
     DriveKit::DKDownloadAsset assetsToDownload{assetInfoObj.recordType, assetInfoObj.recordId, {}, asset, {}};
-    return sdkHelper->DownloadAssets(assetsToDownload);
+    TaskStateManager::GetInstance().StartTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
+    ret = sdkHelper->DownloadAssets(assetsToDownload);
+    TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
+    return ret;
 }
 
 int32_t CloudSyncService::DownloadAsset(const uint64_t taskId,

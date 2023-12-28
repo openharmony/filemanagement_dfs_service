@@ -23,6 +23,7 @@
 #include "accesstoken_kit.h"
 #include "daemon_stub.h"
 #include "dm_device_info.h"
+#include "file_trans_listener_proxy.h"
 #include "ipc/i_daemon.h"
 #include "iremote_stub.h"
 #include "multiuser/os_account_observer.h"
@@ -83,6 +84,7 @@ private:
                          const std::string &remoteDeviceId,
                          const std::string &sessionName);
     void RemoveSession(const std::string &sessionName);
+    int32_t CancelWait(const std::string &sessionName, const sptr<IFileTransListener> &listenerCallback);
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <tuple>
 #include <unistd.h>
+#include "cloud_disk_data_const.h"
 #include "clouddisk_db_const.h"
 #include "cloud_file_utils.h"
 #include "data_sync_const.h"
@@ -32,7 +33,6 @@
 #include "dk_record.h"
 #include "errors.h"
 #include "file_column.h"
-#include "rdb_errno.h"
 #include "sandbox_helper.h"
 #include "utils_log.h"
 
@@ -60,13 +60,11 @@ void CloudDiskDataHandler::GetFetchCondition(FetchCondition &cond)
     }
     cond.fullKeys = desiredKeys_;
 }
-int64_t CloudDiskDataHandler::UTCTimeSeconds()
+int64_t CloudDiskDataHandler::UTCTimeMilliSeconds()
 {
-    struct timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = 0;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    return static_cast<int64_t>(ts.tv_sec);
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return t.tv_sec * SECOND_TO_MILLISECOND + t.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 
 int32_t CloudDiskDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &records)
@@ -74,7 +72,7 @@ int32_t CloudDiskDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> 
     NativeRdb::AbsRdbPredicates retryPredicates = NativeRdb::AbsRdbPredicates(FC::FILES_TABLE);
     retryPredicates.SetWhereClause(FC::DIRTY_TYPE + " = ? ");
     retryPredicates.SetWhereArgs({to_string(static_cast<int32_t>(DirtyType::TYPE_RETRY))});
-    retryPredicates.Limit(LIMIT_SIZE);
+    retryPredicates.Limit(PULL_LIMIT_SIZE);
     auto results = Query(retryPredicates, {FC::CLOUD_ID});
     if (results == nullptr) {
         LOGE("get nullptr modified result");
@@ -105,11 +103,24 @@ static bool IsLocalDirty(NativeRdb::ResultSet &local)
 }
 static bool FileIsRecycled(NativeRdb::ResultSet &local)
 {
-    return false;
+    int64_t recycledTime = 0;
+    int ret = DataConvertor::GetLong(FC::FILE_TIME_RECYCLED, recycledTime, local);
+    if (ret != E_OK) {
+        LOGE("Get local recycled failed");
+        return false;
+    }
+    return recycledTime > 0;
 }
 static bool FileIsLocal(NativeRdb::ResultSet &local)
 {
-    return false;
+    int32_t position = 0;
+    int32_t ret = DataConvertor::GetInt(FC::POSITION, position, local);
+    if (ret != E_OK) {
+        LOGE("Get local position failed");
+        return false;
+    }
+
+    return position != static_cast<int32_t>(POSITION_CLOUD);
 }
 
 void CloudDiskDataHandler::HandleCreateConvertErr(NativeRdb::ResultSet &resultSet)
@@ -201,16 +212,16 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
     LOGI("insert of record %{public}s", record.GetRecordId().c_str());
 
     /* check local file conflict */
-    bool comflag = false;
-    int32_t ret = PullRecordConflict(record, comflag);
-    if (comflag) {
-        LOGI("Conflict:same document no Insert");
-        return E_OK;
-    } else if (ret != E_OK) {
+    int32_t ret = PullRecordConflict(record);
+    if (ret != E_OK) {
         LOGE("MetaFile Conflict failed %{public}d", ret);
+        return ret;
     }
     ValuesBucket values;
-    localConvertor_.Convert(record, values);
+    ret = localConvertor_.Convert(record, values);
+    if (ret != E_OK) {
+        return ret;
+    }
     if (ret != E_OK) {
         LOGE("record to valuebucket failed, ret=%{public}d", ret);
         return ret;
@@ -223,26 +234,175 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
     return E_OK;
 }
 
-int32_t CloudDiskDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
+int32_t CloudDiskDataHandler::PullRecordConflict(DKRecord &record)
 {
+    int32_t ret = E_OK;
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(DK_FILE_NAME) == data.end() || data.find(DK_DIRECTLY_RECYCLED) == data.end()) {
+        return E_INVALID_ARGS;
+    }
+    string fullName = "";
+    int64_t recycledTime = 0;
+    string parentId = localConvertor_.GetParentCloudId(data);
+    data[DK_FILE_NAME].GetString(fullName);
+    data[DK_FILE_TIME_RECYCLED].GetLong(recycledTime);
+    if (recycledTime > 0) {
+        return E_OK;
+    }
+    size_t lastDot = fullName.rfind('.');
+    if (lastDot == std::string::npos) {
+        lastDot = fullName.length();
+    }
+    string fileName = fullName.substr(0, lastDot);
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FC::FILES_TABLE);
+    predicates.EqualTo(FC::PARENT_CLOUD_ID, parentId);
+    predicates.EqualTo(FC::FILE_TIME_RECYCLED, 0);
+    predicates.NotEqualTo(FC::CLOUD_ID, record.GetRecordId());
+    predicates.Like(FC::FILE_NAME, fileName + "%");
+    auto resultSet = Query(predicates, {FC::CLOUD_ID, FC::FILE_NAME});
+    ret = HandleConflict(resultSet, fullName, lastDot);
+    return ret;
+}
+
+int32_t CloudDiskDataHandler::HandleConflict(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
+                                             string &fullName,
+                                             const int &lastDot)
+{
+    if (resultSet == nullptr) {
+        LOGE(" resultSet is null");
+        return E_RDB;
+    }
+    int32_t count = 0;
+    int32_t ret = resultSet->GetRowCount(count);
+    if (ret != E_OK || count < 0) {
+        return E_RDB;
+    }
+    if (count == 0) {
+        return E_OK;
+    }
+    string dbFileName = "";
+    string renameFileCloudId = "";
+    ret = FindRenameFile(resultSet, renameFileCloudId, fullName, lastDot);
+    if (ret != E_OK) {
+        LOGW("try to rename too many times");
+        return E_INVAL_ARG;
+    }
+    if (!renameFileCloudId.empty()) {
+        ret = ConflictReName(renameFileCloudId, fullName);
+    } else {
+        LOGD("no same name");
+    }
+    return ret;
+}
+
+int32_t CloudDiskDataHandler::FindRenameFile(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
+                                             string &renameFileCloudId,
+                                             string &fullName,
+                                             const int &lastDot)
+{
+    string fileName = fullName.substr(0, lastDot);
+    string extension = fullName.substr(lastDot);
+    string dbFileName = "";
+    int32_t renameTimes = 0;
+    bool findSameFile = true;
+    while (findSameFile) {
+        renameTimes++;
+        findSameFile = false;
+        resultSet->GoToFirstRow();
+        string dbFileCloudId = "";
+        do {
+            DataConvertor::GetString(FC::FILE_NAME, dbFileName, *resultSet);
+            if (fullName == dbFileName) {
+                LOGD("find same name file try to rename");
+                fullName = fileName + "(" + to_string(renameTimes) + ")" + extension;
+                DataConvertor::GetString(FC::CLOUD_ID, dbFileCloudId, *resultSet);
+                findSameFile = true;
+                break;
+            }
+        } while (resultSet->GoToNextRow() == 0);
+        if (fullName == fileName + extension) {
+            renameFileCloudId = dbFileCloudId;
+        }
+        if (renameTimes >= MAX_RENAME) {
+            break;
+        }
+    }
+    if (findSameFile) {
+        LOGW("try to rename too many times");
+        return E_INVAL_ARG;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskDataHandler::ConflictReName(const string &cloudId, string newFileName)
+{
+    LOGD("do conflict rename, new fileName is %{public}s", newFileName.c_str());
+    ValuesBucket values;
+    values.PutString(FC::FILE_NAME, newFileName);
+    int32_t changedRows;
+    string whereClause = FC::CLOUD_ID + " = ?";
+    vector<string> whereArgs = {cloudId};
+    values.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
+    int32_t ret = Update(changedRows, values, whereClause, whereArgs);
+    if (ret != E_OK) {
+        LOGE("update db, rename fail");
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+static int32_t IsEditTimeChange(const DKRecord &record, NativeRdb::ResultSet &local, bool &isChange)
+{
+    int64_t localEditTime = 0;
+    int64_t recordEditTime = record.GetEditedTime();
+    int32_t ret = DataConvertor::GetLong(FC::FILE_TIME_EDITED, localEditTime, local);
+    if (ret != E_OK) {
+        return ret;
+    }
+    isChange = localEditTime != recordEditTime;
     return E_OK;
 }
 
 int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet &local, OnFetchParams &params)
 {
+    int32_t ret = E_OK;
     LOGI("update of record %s", record.GetRecordId().c_str());
     if (IsLocalDirty(local)) {
         LOGI("local record dirty, ignore cloud update");
         return E_OK;
     }
-    int ret = E_OK;
+    ValuesBucket values;
+    ret = localConvertor_.Convert(record, values);
+    if (ret != E_OK) {
+        return ret;
+    }
+    bool isEditTimeChange = false;
+    ret = IsEditTimeChange(record, local, isEditTimeChange);
+    if (ret != E_OK) {
+        return ret;
+    }
     if (FileIsLocal(local)) {
         string localPath = CloudFileUtils::GetLocalFilePath(record.GetRecordId(), bundleName_, userId_);
+        if (CloudFileUtils::LocalWriteOpen(localPath)) {
+            return SetRetry(record.GetRecordId());
+        }
+        if (isEditTimeChange) {
+            LOGD("cloud file DATA changed, %s", record.GetRecordId().c_str());
+            ret = unlink(localPath.c_str());
+            if (ret != 0) {
+                LOGE("unlink local failed, errno %{public}d", errno);
+            }
+            values.PutInt(FC::POSITION, static_cast<int32_t>(POSITION_CLOUD));
+        }
     }
-    LOGI("cloud file META changed, %s", record.GetRecordId().c_str());
+    LOGD("cloud file changed, %s", record.GetRecordId().c_str());
+    ret = PullRecordConflict(record);
+    if (ret != E_OK) {
+        LOGE("MetaFile Conflict failed %{public}d", ret);
+        return E_RDB;
+    }
     /* update rdb */
-    ValuesBucket values;
-    localConvertor_.Convert(record, values);
     values.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
     int32_t changedRows;
     string whereClause = FC::CLOUD_ID + " = ?";
@@ -251,7 +411,7 @@ int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::Resu
         LOGE("rdb update failed, err=%{public}d", ret);
         return E_RDB;
     }
-    LOGI("update of record success");
+    LOGD("update of record success, change %{pubilc}d row", changedRows);
     return E_OK;
 }
 
@@ -288,6 +448,10 @@ int32_t CloudDiskDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::Resu
             return ret;
         }
     }
+
+    if (CloudDisk::CloudFileUtils::LocalWriteOpen(path)) {
+        return SetRetry(record.GetRecordId());
+    }
     return RecycleFile(record.GetRecordId());
 }
 
@@ -296,8 +460,9 @@ int CloudDiskDataHandler::RecycleFile(const string &recordId)
     LOGI("recycle of record %s", recordId.c_str());
     ValuesBucket values;
     values.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_NEW));
+    values.PutInt(FC::OPERATE_TYPE, static_cast<int32_t>(CloudDisk::OperationType::DELETE));
     values.PutInt(FC::POSITION, POSITION_LOCAL);
-    values.PutLong(FC::FILE_TIME_RECYCLED, UTCTimeSeconds());
+    values.PutLong(FC::FILE_TIME_RECYCLED, UTCTimeMilliSeconds());
     values.PutLong(FC::VERSION, 0);
     int32_t changedRows;
     string whereClause = FC::CLOUD_ID + " = ?";

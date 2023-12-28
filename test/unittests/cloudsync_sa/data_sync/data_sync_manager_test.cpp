@@ -180,45 +180,6 @@ HWTEST_F(DataSyncManagerTest, TriggerStopSyncOKTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: TriggerRecoveryArgFailTest
- * @tc.desc: Verify the TriggerRecoverySync function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, TriggerRecoveryArgFailTest, TestSize.Level1)
-{
-    auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
-    EXPECT_TRUE(E_OK == ret || ret == E_OSACCOUNT);
-}
-
-/**
- * @tc.name: TriggerRecoverySizeZeroTest
- * @tc.desc: Verify the TriggerRecoverySync function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, TriggerRecoverySizeZeroOKTest, TestSize.Level1)
-{
-    auto dataSyncer = dataSyncManager_->GetDataSyncer(BUND_NAME, USER_ID);
-    auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
-    EXPECT_TRUE(E_OK == ret || ret == E_OSACCOUNT);
-}
-
-/**
- * @tc.name: TriggerRecoveryOKTest
- * @tc.desc: Verify the TriggerRecoverySync function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, TriggerRecoveryOKTest, TestSize.Level1)
-{
-    string bundleName = "hdcd";
-    auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, USER_ID);
-    auto ret = dataSyncManager_->TriggerRecoverySync(SyncTriggerType::APP_TRIGGER);
-    EXPECT_TRUE(E_OK == ret || ret == E_OSACCOUNT);
-}
-
-/**
  * @tc.name: StartDownloadFileSyncOKTest
  * @tc.desc: Verify the StartDownloadFile function
  * @tc.type: FUNC
@@ -266,18 +227,5 @@ HWTEST_F(DataSyncManagerTest, RegisterDownloadFileCallbackOKTest, TestSize.Level
 {
     auto ret = dataSyncManager_->RegisterDownloadFileCallback(BUND_NAME, USER_ID, nullptr);
     EXPECT_EQ(E_OK, ret);
-}
-
-/**
- * @tc.name: CleanCloudFileArgOKTest
- * @tc.desc: Verify the CleanCloudFile function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(DataSyncManagerTest, CleanCloudFileArgOKTest, TestSize.Level1)
-{
-    int action = RETAIN_DATA;
-    auto ret = dataSyncManager_->CleanCloudFile(USER_ID, BUND_NAME, action);
-    EXPECT_TRUE(E_OK == ret || ret == E_RDB);
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

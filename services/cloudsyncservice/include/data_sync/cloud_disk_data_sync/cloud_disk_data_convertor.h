@@ -41,6 +41,7 @@ public:
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valuesBucket);
     int32_t GetMetaFilePath(const std::string &cloudId, std::string &path);
     void SetRootId(std::string rootId);
+    std::string GetParentCloudId(const DriveKit::DKRecordData &data);
 
 private:
     int32_t FillRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
@@ -68,6 +69,7 @@ private:
     int32_t HandleRecycleTime(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleType(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleOperateType(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleFileSize(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleCompatibleFileds(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleAttributes(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleCreateTime(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);

@@ -62,7 +62,6 @@ public:
     virtual int32_t Init(const std::string bundleName, const int32_t userId);
     virtual int32_t Clean(const int action);
     virtual int32_t ActualClean();
-    virtual int32_t CancelClean();
 
     /* sdk */
     bool HasSdkHelper();
@@ -79,7 +78,7 @@ public:
 
     void SaveSubscription();
     void DeleteSubscription();
-    
+
 protected:
     /* download */
     int32_t Pull(std::shared_ptr<DataHandler> handler);
@@ -126,6 +125,8 @@ protected:
 
     uint32_t errorCode_{0};
 
+    bool isDataChanged_{false};
+
 private:
     /* download */
     void PullRecords(std::shared_ptr<TaskContext> context);
@@ -164,6 +165,7 @@ private:
     void DeleteRecords(std::shared_ptr<TaskContext> context);
     void ModifyMdirtyRecords(std::shared_ptr<TaskContext> context);
     void ModifyFdirtyRecords(std::shared_ptr<TaskContext> context);
+    void StopUploadAssets();
 
     /* upload callback */
     void OnCreateRecords(std::shared_ptr<DriveKit::DKContext>,

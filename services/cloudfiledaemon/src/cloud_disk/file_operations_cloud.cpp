@@ -144,10 +144,10 @@ static bool HandleDkError(fuse_req_t req, DriveKit::DKError dkError)
         LOGE("network error");
         fuse_reply_err(req, ENOTCONN);
     } else if (dkError.isServerError) {
-        LOGE("server errorCode is: %d", dkError.serverErrorCode);
+        LOGE("server errorCode is: %{public}d", dkError.serverErrorCode);
         fuse_reply_err(req, EIO);
     } else if (dkError.isLocalError) {
-        LOGE("local errorCode is: %d", dkError.dkErrorCode);
+        LOGE("local errorCode is: %{public}d", dkError.dkErrorCode);
         fuse_reply_err(req, EINVAL);
     }
     return true;
@@ -425,6 +425,7 @@ void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
         if (childPtr == nullptr) {
             childPtr = GenerateCloudDiskInode(data, ino, childInfos[i]);
         }
+        InitInodeAttr(ino, childPtr.get(), childInfos[i]);
         FileOperationsHelper::AddDirEntry(req, entryData, len, childInfos[i].fileName.c_str(), childPtr);
     }
     FileOperationsHelper::FuseReplyLimited(req, entryData.c_str(), len, off, size);
@@ -535,10 +536,19 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName,
                                                                          data->userId);
-    err = rdbStore->Unlink(parentInode->cloudId, name);
+    string unlinkCloudId = "";
+    err = rdbStore->Unlink(parentInode->cloudId, name, unlinkCloudId);
     if (err != 0) {
-        LOGE("Failed to unlink DB name:%{private}s err:%{public}d", name, err);
+        LOGE("Failed to unlink DB cloudId:%{private}s err:%{public}d", unlinkCloudId.c_str(), err);
         return ENOSYS;
+    }
+    if (unlinkCloudId.empty()) {
+        return 0;
+    }
+    err = unlink(CloudFileUtils::GetLocalFilePath(unlinkCloudId, parentInode->bundleName, data->userId).c_str());
+    if (err != 0) {
+        LOGE("Failed to unlink cloudId:%{private}s err:%{public}d", unlinkCloudId.c_str(), errno);
+        return errno;
     }
     return 0;
 }
@@ -590,13 +600,39 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
 void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
                                off_t offset, struct fuse_file_info *fi)
 {
-    struct fuse_bufvec buf = FUSE_BUFVEC_INIT(size);
+    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    if (!inoPtr->readSession) {
+        struct fuse_bufvec buf = FUSE_BUFVEC_INIT(size);
 
-    buf.buf[0].flags = static_cast<fuse_buf_flags> (FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK);
-    buf.buf[0].fd = fi->fh;
-    buf.buf[0].pos = offset;
+        buf.buf[0].flags = static_cast<fuse_buf_flags> (FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK);
+        buf.buf[0].fd = fi->fh;
+        buf.buf[0].pos = offset;
 
-    fuse_reply_data(req, &buf, static_cast<fuse_buf_copy_flags> (0));
+        fuse_reply_data(req, &buf, static_cast<fuse_buf_copy_flags> (0));
+        return;
+    }
+
+    int64_t readSize;
+    DriveKit::DKError dkError;
+    shared_ptr<char> buf = nullptr;
+
+    buf.reset(new char[size], [](char* ptr) {
+        delete[] ptr;
+    });
+
+    if (!buf) {
+        fuse_reply_err(req, ENOMEM);
+        LOGE("buffer is null");
+        return;
+    }
+
+    readSize = inoPtr->readSession->PRead(offset, size, buf.get(), dkError);
+    if (!HandleDkError(req, dkError)) {
+        LOGD("read success, %lld bytes", static_cast<long long>(readSize));
+        fuse_reply_buf(req, buf.get(), readSize);
+    } else {
+        LOGE("read fali");
+    }
 }
 
 static void UpdateCloudDiskInode(shared_ptr<CloudDiskRdbStore> rdbStore, struct CloudDiskInode *inoPtr)

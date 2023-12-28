@@ -82,7 +82,7 @@ int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
                                               MessageOption &option)
 {
     DfsuMemoryGuard cacheGuard;
-    TaskStateManager::GetInstance().DelayUnloadTask();
+    TaskStateManager::GetInstance().StartTask();
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return E_SERVICE_DESCRIPTOR_IS_EMPTY;
     }

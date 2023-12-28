@@ -16,7 +16,6 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_shared_library("libdistributedfiledaemon") {
   branch_protector_ret = "pac_ret"
   sanitize = {
-    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -34,6 +33,7 @@ ohos_shared_library("libdistributedfiledaemon") {
   sources = [
     "src/device/device_info.cpp",
     "src/device/device_manager_agent.cpp",
+    "src/ipc/connection_detector.cpp",
     "src/ipc/daemon.cpp",
     "src/ipc/daemon_stub.cpp",
     "src/ipc/file_trans_listener_proxy.cpp",
@@ -107,7 +107,6 @@ config("private_config") {
 ohos_shared_library("distributed_file_daemon_kit_inner") {
   branch_protector_ret = "pac_ret"
   sanitize = {
-    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true

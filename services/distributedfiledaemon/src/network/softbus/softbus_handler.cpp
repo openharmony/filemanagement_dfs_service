@@ -36,6 +36,7 @@ SoftBusHandler::SoftBusHandler()
     sessionListener_.OnSessionClosed = DistributedFile::SoftBusSessionListener::OnSessionClosed;
     sessionListener_.OnBytesReceived = nullptr;
     sessionListener_.OnMessageReceived = nullptr;
+    sessionListener_.OnQosEvent = nullptr;
 
     fileReceiveListener_.OnReceiveFileStarted = DistributedFile::SoftBusFileReceiveListener::OnReceiveFileStarted;
     fileReceiveListener_.OnReceiveFileProcess = DistributedFile::SoftBusFileReceiveListener::OnReceiveFileProcess;

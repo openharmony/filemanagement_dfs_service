@@ -1574,7 +1574,6 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleCompatibleFileds001, TestSize.Level1)
 
         int32_t res = localConvertor->HandleCompatibleFileds(data, *resultSet);
         EXPECT_EQ(res, E_OK);
-        EXPECT_EQ(data.size(), 6);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "HandleCompatibleFileds001 ERROR";

@@ -20,6 +20,12 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 
+void SessionPool::OccupySession(int sessionId, uint8_t linkType)
+{
+    lock_guard lock(sessionPoolLock_);
+    occupySession_.insert(std::pair<int, uint8_t>(sessionId, linkType));
+}
+
 void SessionPool::HoldSession(shared_ptr<BaseSession> session)
 {
     lock_guard lock(sessionPoolLock_);
@@ -27,30 +33,44 @@ void SessionPool::HoldSession(shared_ptr<BaseSession> session)
     AddSessionToPool(session);
 }
 
-void SessionPool::ReleaseSession(const int32_t fd)
+uint8_t SessionPool::ReleaseSession(const int32_t fd)
 {
+    uint8_t linkType = 0;
     lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
         if ((*iter)->GetHandle() == fd) {
-            (*iter)->Release();
-            iter = usrSpaceSessionPool_.erase(iter);
-        } else {
-            ++iter;
+            auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
+            if (linkTypeIter != occupySession_.end()) {
+                linkType = linkTypeIter->second;
+                occupySession_.erase(linkTypeIter);
+                (*iter)->Release();
+                iter = usrSpaceSessionPool_.erase(iter);
+                continue;
+            }
         }
+        ++iter;
     }
+    return linkType;
 }
 
-void SessionPool::ReleaseSession(const string &cid)
+void SessionPool::ReleaseSession(const string &cid, const uint8_t linkType)
 {
-    talker_->SinkOfflineCmdToKernel(cid);
+    uint8_t mlinkType = 0;
     lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
         if ((*iter)->GetCid() == cid) {
-            (*iter)->Release();
-            iter = usrSpaceSessionPool_.erase(iter);
-        } else {
-            ++iter;
+            auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
+            if (linkTypeIter != occupySession_.end()) {
+                mlinkType = linkTypeIter->second;
+            }
+            if (mlinkType == linkType) {
+                (*iter)->Release();
+                occupySession_.erase(linkTypeIter);
+                iter = usrSpaceSessionPool_.erase(iter);
+                continue;
+            }
         }
+        ++iter;
     }
 }
 
