@@ -14,6 +14,109 @@
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
+ohos_unittest("cloud_disk_data_convertor_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/battery_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_sync_callback_manager_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_status_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/sdk_helper_mock.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
+    "cloud_disk_data_convertor_test.cpp",
+  ]
+
+  cloud_disk_sync = [
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
+  ]
+
+  sources += cloud_disk_sync
+
+  include_dirs = [
+    "${clouddisk_database_path}/include",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
+    "${media_library_path}/frameworks/services/media_thumbnail/include",
+    "${media_library_path}/frameworks/utils/include",
+    "//third_party/e2fsprogs/e2fsprogs/lib",
+  ]
+
+  medialibrary_rdb_utils_source = [
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
+    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
+  ]
+
+  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
+
+  sources += medialibrary_rdb_utils_source
+  include_dirs += medialibrary_rdb_utils_include
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/e2fsprogs:libext2_uuid",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
+    "relational_store:native_rdb",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
 ohos_unittest("album_data_handler_test") {
   module_out_path = "filemanagement/dfs_service"
 
@@ -1236,6 +1339,7 @@ group("cloudsync_sa_data_sync_test") {
   testonly = true
   deps = [
     ":album_data_handler_test",
+    ":cloud_disk_data_convertor_test",
     ":cloud_disk_data_syncer_test",
     ":data_convertor_test",
     ":data_handler_test",
