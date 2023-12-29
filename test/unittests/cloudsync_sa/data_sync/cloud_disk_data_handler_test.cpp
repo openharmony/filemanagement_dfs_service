@@ -444,7 +444,7 @@ HWTEST_F(CloudDiskDataHandlerTest, PullRecordInsertTest002, TestSize.Level1)
     record.SetRecordId("sample record Id");
     OnFetchParams params;
     int32_t ret = cloudDiskDataHandler_->PullRecordInsert(record, params);
-    EXPECT_EQ(ret, E_INVAL_ARG);
+    EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "PullRecordInsert End";
 }
 

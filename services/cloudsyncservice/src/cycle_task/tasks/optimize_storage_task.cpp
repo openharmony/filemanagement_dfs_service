@@ -33,10 +33,6 @@ OptimizeStorageTask::OptimizeStorageTask(std::shared_ptr<DataSyncManager> dataSy
 
 int32_t OptimizeStorageTask::RunTask(int32_t userId)
 {
-    if (!CloudStatus::IsCloudStatusOkay(bundleName_, userId)) {
-        LOGI("CloudStatus is not ok");
-        return E_OK;
-    }
     auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
     auto dataSyncManager_ = GetDataSyncManager();
     if (driveKit == nullptr) {

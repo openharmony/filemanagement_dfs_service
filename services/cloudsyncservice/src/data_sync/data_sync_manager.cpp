@@ -306,7 +306,7 @@ int32_t DataSyncManager::GetUserId(int32_t &userId)
         return E_OSACCOUNT;
     }
     userId = activeUsers.front();
-    RETURN_ON_ERR(IsUserVerified(currentUserId_));
+    RETURN_ON_ERR(IsUserVerified(userId));
     return E_OK;
 }
 

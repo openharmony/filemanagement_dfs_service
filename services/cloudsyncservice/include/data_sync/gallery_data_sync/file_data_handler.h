@@ -48,6 +48,8 @@ public:
     virtual int32_t GetThumbToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
     int32_t GetDownloadAsset(std::string cloudId,
                              std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
+    int32_t HandleRecord(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records, OnFetchParams &params,
+        std::vector<std::string> &recordIds);
 
     /*clean*/
     int32_t Clean(const int action) override;
@@ -72,7 +74,7 @@ public:
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
-
+    
     /* optimizestorage */
     int32_t OptimizeStorage(const int32_t agingDays);
     std::shared_ptr<NativeRdb::ResultSet> GetAgingFile(const int64_t agingTime, int32_t &rowCount);
@@ -85,6 +87,7 @@ public:
 private:
     int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
         const std::unordered_map<std::string, LocalInfo> &localMap);
+    int32_t CheckRecordData(DriveKit::DKRecordData &data, std::string &path);
     int32_t OnDeleteRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry);
     int32_t OnMdirtyRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
         const std::unordered_map<std::string, LocalInfo> &localMap);
