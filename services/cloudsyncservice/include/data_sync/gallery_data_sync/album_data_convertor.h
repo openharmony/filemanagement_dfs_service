@@ -40,10 +40,13 @@ public:
 
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet) override;
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket) override;
+    int32_t ExtractBundleName(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
+    int32_t ExtractLocalLanguage(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket);
 
 private:
     /* record id */
     int32_t FillRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
+    int32_t HandleRecordId(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
 
     /* basic */
     int32_t HandleAlbumId(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
@@ -51,6 +54,9 @@ private:
     int32_t HandleType(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandleAlbumLogicType(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
     int32_t HandlePath(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleSourceAlbum(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
+    int32_t HandleBundleName(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
+    int32_t HandleLocalLanguage(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet);
 
     /* properties */
     int32_t HandleProperties(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet);
@@ -64,11 +70,12 @@ private:
 
 inline int32_t AlbumDataConvertor::HandleAlbumId(DriveKit::DKRecordData &data, NativeRdb::ResultSet &resultSet)
 {
-    uuid_t uuid;
-    uuid_generate(uuid);
-    char str[UUID_STR_LENGTH] = {};
-    uuid_unparse(uuid, str);
-    data[ALBUM_ID] = DriveKit::DKRecordField(str);
+    std::string val;
+    int32_t ret = GetString(Media::PhotoAlbumColumns::ALBUM_ID, val, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    data[ALBUM_ID] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 
@@ -103,6 +110,31 @@ inline int32_t AlbumDataConvertor::HandlePath(DriveKit::DKRecordData &data, Nati
         return ret;
     }
     data[ALBUM_PATH] = DriveKit::DKRecordField(ALBUM_LOCAL_PATH_PREFIX + val);
+    return E_OK;
+}
+
+inline int32_t AlbumDataConvertor::HandleBundleName(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet)
+{
+    std::string val;
+    int32_t ret = GetString(TMP_ALBUM_BUNDLE_NAME, val, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    if (val.empty()) {
+        return E_INVAL_ARG;
+    }
+    map[TMP_ALBUM_BUNDLE_NAME] = DriveKit::DKRecordField(val);
+    return E_OK;
+}
+
+inline int32_t AlbumDataConvertor::HandleLocalLanguage(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet)
+{
+    std::string val;
+    int32_t ret = GetString(TMP_ALBUM_LOCAL_LANGUAGE, val, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    map[TMP_ALBUM_LOCAL_LANGUAGE] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 } // namespace CloudSync
