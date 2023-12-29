@@ -267,16 +267,15 @@ static int32_t GetFileId(NativeRdb::ResultSet &local)
     return fileId;
 }
 
-int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, OnFetchParams &params)
+int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnFetchParams &params,
+    vector<string> &recordIds)
 {
-    LOGI("on fetch %{public}zu records", records->size());
     int32_t ret = E_OK;
-    auto recordIds = vector<string>();
-    for (auto &record : *records) {
-        recordIds.push_back(record.GetRecordId());
-    }
     auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
-    if (resultSet == nullptr) {return E_RDB;}
+    if (resultSet == nullptr) {
+        return E_RDB;
+    }
+
     std::lock_guard<std::mutex> lock(rdbMutex_);
     for (auto &record : *records) {
         int32_t fileId = 0;
@@ -310,6 +309,19 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
             DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
         }
     }
+    return ret;
+}
+
+int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, OnFetchParams &params)
+{
+    LOGI("on fetch %{public}zu records", records->size());
+    int32_t ret = E_OK;
+    auto recordIds = vector<string>();
+    for (auto &record : *records) {
+        recordIds.push_back(record.GetRecordId());
+    }
+    ret = FileDataHandler::HandleRecord(records, params, recordIds);
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     LOGI("before BatchInsert size len %{public}zu, map size %{public}zu", params.insertFiles.size(),
         params.recordAlbumMaps.size());
     if (!params.insertFiles.empty() || !params.recordAlbumMaps.empty()) {
@@ -2529,14 +2541,8 @@ void FileDataHandler::Reset()
     createFailSet_.clear();
 }
 
-int32_t FileDataHandler::OnCreateRecordSuccess(
-    const pair<DKRecordId, DKRecordOperResult> &entry,
-    const unordered_map<string, LocalInfo> &localMap)
+int32_t FileDataHandler::CheckRecordData(DKRecordData &data, string &path)
 {
-    auto record = entry.second.GetDKRecord();
-
-    DKRecordData data;
-    record.GetRecordData(data);
     if (data.find(FILE_ATTRIBUTES) == data.end()) {
         LOGE("record data cannot find attributes");
         return E_INVAL_ARG;
@@ -2546,10 +2552,24 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
         LOGE("record data cannot find file path");
         return E_INVAL_ARG;
     }
-    string path;
     if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
         return E_INVAL_ARG;
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::OnCreateRecordSuccess(const pair<DKRecordId, DKRecordOperResult> &entry,
+    const unordered_map<string, LocalInfo> &localMap)
+{
+    auto record = entry.second.GetDKRecord();
+    DKRecordData data;
+    record.GetRecordData(data);
+    string path;
+    int32_t checkResult = FileDataHandler::CheckRecordData(data, path);
+    if (checkResult != E_OK) {
+        return checkResult;
     }
 
     /* local file deleted */
