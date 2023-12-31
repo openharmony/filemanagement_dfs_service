@@ -50,7 +50,7 @@ void CloudDiskSyncHelper::RegisterTriggerSync(const std::string &bundleName, con
         LOGE("TriggerSync parameter is invalid");
         return;
     }
-    LOGI("begin trigger sync, bundleName = %{public}s, userId = %{public}d", bundleName.c_str(), userId);
+    LOGD("begin trigger sync, bundleName = %{public}s, userId = %{public}d", bundleName.c_str(), userId);
     UnregisterRepeatingTriggerSync(bundleName, userId);
     string keyId = to_string(userId) + bundleName;
     function<void()> callback = [this, bundleName, userId] { OnTriggerSyncCallback(bundleName, userId); };
@@ -77,13 +77,13 @@ void CloudDiskSyncHelper::UnregisterRepeatingTriggerSync(const std::string &bund
     lock_guard<mutex> lock(syncMutex_);
     auto iterator = triggerInfoMap_.find(keyId);
     if (iterator != triggerInfoMap_.end()) {
-        LOGI("bundleName: %{public}s, userId: %{public}d is exist", bundleName.c_str(), userId);
+        LOGD("bundleName: %{public}s, userId: %{public}d is exist", bundleName.c_str(), userId);
         auto triggerInfoPtr = iterator->second;
         timer_->Unregister(triggerInfoPtr->timerId);
         triggerInfoMap_.erase(keyId);
         isSuccess = true;
     }
-    LOGI("Unregister repeating trigger result is %{public}d", isSuccess);
+    LOGD("Unregister repeating trigger result is %{public}d", isSuccess);
 }
 
 void CloudDiskSyncHelper::OnTriggerSyncCallback(const std::string &bundleName, const int32_t &userId)

@@ -33,7 +33,7 @@ public:
     static void FuseReplyLimited(fuse_req_t req, const char *buf, size_t bufSize,
                                  off_t off, size_t maxSize);
     static void PutCloudDiskInode(struct CloudDiskFuseData *data,
-                                  std::shared_ptr<CloudDiskInode> inoPtr, uint64_t num);
+                                  std::shared_ptr<CloudDiskInode> inoPtr, uint64_t num, const std::string &key);
     static std::shared_ptr<CloudDiskInode> GenerateCloudDiskInode(struct CloudDiskFuseData *data,
                                                                   struct CloudDiskInode *parent,
                                                                   const std::string &fileName,

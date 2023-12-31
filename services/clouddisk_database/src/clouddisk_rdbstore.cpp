@@ -35,6 +35,8 @@ using namespace OHOS::NativeRdb;
 using namespace CloudSync;
 using namespace OHOS::Media;
 
+static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
+
 static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
 {
     size_t size = args.size();
@@ -44,7 +46,7 @@ static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &ar
     }
     int32_t userId = std::strtol(args[ARG_USER_ID].c_str(), nullptr, 0);
     string bundleName = args[ARG_BUNDLE_NAME];
-    LOGI("begin cloud sync trigger, bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+    LOGD("begin cloud sync trigger, bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
     CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName, userId);
     return "";
 }
@@ -113,15 +115,13 @@ int32_t CloudDiskRdbStore::LookUp(const std::string &parentCloudId,
         .EqualTo(FileColumn::PARENT_CLOUD_ID, parentCloudId)->And()
         ->EqualTo(FileColumn::FILE_NAME, fileName)->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0")->And()
         ->NotEqualTo(FileColumn::DIRTY_TYPE, to_string(static_cast<int32_t>(DirtyType::TYPE_DELETED)));
-    auto resultSet = rdbStore_->Query(lookUpPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
-    vector<CloudDiskFileInfo> infos;
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(move(resultSet), infos);
-    if (ret != E_OK || infos.size() != 1) {
-        LOGE("lookup file info is failed, ret %{public}d, info count %{public}d",
-            ret, static_cast<int32_t>(infos.size()));
+    lookUpPredicates.Limit(LOOKUP_QUERY_LIMIT);
+    auto resultSet = rdbStore_->QueryByStep(lookUpPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
+    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(move(resultSet), info);
+    if (ret != E_OK) {
+        LOGE("lookup file info is failed, ret %{public}d", ret);
         return E_RDB;
     }
-    info = move(infos.front());
     return E_OK;
 }
 
@@ -134,15 +134,12 @@ int32_t CloudDiskRdbStore::GetAttr(const std::string &cloudId, CloudDiskFileInfo
     }
     AbsRdbPredicates getAttrPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
     getAttrPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
-    auto resultSet = rdbStore_->Query(getAttrPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
-    vector<CloudDiskFileInfo> infos;
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(move(resultSet), infos);
-    if (ret != E_OK || infos.size() != 1) {
-        LOGE("get file attr is failed, ret %{public}d, file count %{public}d",
-            ret, static_cast<int32_t>(infos.size()));
+    auto resultSet = rdbStore_->QueryByStep(getAttrPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
+    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(move(resultSet), info);
+    if (ret != E_OK) {
+        LOGE("get file attr is failed, ret %{public}d", ret);
         return E_RDB;
     }
-    info = move(infos.front());
     return E_OK;
 }
 
@@ -154,11 +151,10 @@ int32_t CloudDiskRdbStore::ReadDir(const std::string &cloudId, vector<CloudDiskF
     readDirPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, cloudId)
         ->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0")->And()
         ->NotEqualTo(FileColumn::DIRTY_TYPE, to_string(static_cast<int32_t>(DirtyType::TYPE_DELETED)));
-    auto resultSet = rdbStore_->Query(readDirPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(move(resultSet), infos);
+    auto resultSet = rdbStore_->QueryByStep(readDirPredicates, { FileColumn::FILE_NAME, FileColumn::IS_DIRECTORY });
+    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfos(move(resultSet), infos);
     if (ret != E_OK) {
         LOGE("read directory is failed, ret %{public}d", ret);
-        infos.clear();
         return E_RDB;
     }
     return E_OK;
@@ -333,24 +329,31 @@ int32_t CloudDiskRdbStore::Write(const std::string &cloudId)
 int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || cloudId == "rootId" || key != "user.cloud.location") {
+    if (cloudId.empty() || cloudId == "rootId" || key != CLOUD_FILE_LOCATION) {
         LOGE("getxattr parameter is invalid");
         return E_INVAL_ARG;
     }
-    CloudDiskFileInfo info;
-    if (GetAttr(cloudId, info)) {
-        LOGE("get getxattr cloudId info in DB fail");
+    AbsRdbPredicates getXAttrPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    getXAttrPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(getXAttrPredicates, { FileColumn::POSITION });
+    if (resultSet == nullptr) {
+        LOGE("get nullptr getxattr result");
         return E_RDB;
     }
-    int32_t location = static_cast<int32_t>(info.location);
-    value = to_string(location);
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("getxattr result set go to next row failed");
+        return E_RDB;
+    }
+    int32_t position;
+    CloudDiskRdbUtils::GetInt(FileColumn::POSITION, position, resultSet);
+    value = to_string(position);
     return E_OK;
 }
 
 int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || cloudId == "rootId" || key != "user.cloud.location") {
+    if (cloudId.empty() || cloudId == "rootId" || key != CLOUD_FILE_LOCATION) {
         LOGE("setxattr parameter is invalid");
         return E_INVAL_ARG;
     }
@@ -467,7 +470,6 @@ int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &cloudId)
 
 int32_t CloudDiskRdbStore::Unlink(const std::string &parentCloudId, const std::string &fileName, string &unlinkCloudId)
 {
-    int32_t ret = E_OK;
     RDBPTR_IS_NULLPTR(rdbStore_);
     if (parentCloudId.empty() || fileName.empty()) {
         LOGE("Unlink parameters is invalid");
@@ -479,28 +481,22 @@ int32_t CloudDiskRdbStore::Unlink(const std::string &parentCloudId, const std::s
         ->EqualTo(FileColumn::FILE_NAME, fileName)->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0")->And()
         ->NotEqualTo(FileColumn::DIRTY_TYPE, to_string(static_cast<int32_t>(DirtyType::TYPE_DELETED)));
     auto resultSet =
-        rdbStore_->Query(unlinkPredicates, {FileColumn::CLOUD_ID, FileColumn::IS_DIRECTORY, FileColumn::POSITION});
-    CloudDiskFileInfo info;
-    int32_t rowCount = -1;
-    if (resultSet) {
-        ret = resultSet->GetRowCount(rowCount);
-    }
-    if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
-        LOGE("result set is nullptr or get result set rowCount is failed, ret %{public}d, rowCount %{public}d",
-            ret, rowCount);
+        rdbStore_->QueryByStep(unlinkPredicates,
+            {FileColumn::CLOUD_ID, FileColumn::IS_DIRECTORY, FileColumn::POSITION});
+    if (resultSet == nullptr) {
+        LOGE("unlink result set is nullptr");
         return E_RDB;
     }
-    if (rowCount == 0) {
+    if (resultSet->GoToNextRow() != E_OK) {
         LOGW("not need to unlink");
         return E_OK;
     }
-    resultSet->GoToNextRow();
-    RETURN_ON_ERR(CloudDiskRdbUtils::FillInfoCloudId(info, resultSet));
-    RETURN_ON_ERR(CloudDiskRdbUtils::FillInfoFileType(info, resultSet));
-    RETURN_ON_ERR(CloudDiskRdbUtils::FillInfoLocation(info, resultSet));
-    string cloudId = info.cloudId;
-    int32_t isDirectory = info.IsDirectory ? DIRECTORY : FILE;
-    int32_t position = static_cast<int32_t>(info.location);
+    string cloudId;
+    CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, cloudId, resultSet);
+    int32_t isDirectory;
+    CloudDiskRdbUtils::GetInt(FileColumn::IS_DIRECTORY, isDirectory, resultSet);
+    int32_t position;
+    CloudDiskRdbUtils::GetInt(FileColumn::POSITION, position, resultSet);
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(cloudId);
     if (position == CLOUD) {
@@ -589,8 +585,21 @@ int32_t CloudDiskDataCallBack::OnCreate(RdbStore &store)
     return NativeRdb::E_OK;
 }
 
+static void VersionAddParentCloudIdIndex(RdbStore &store)
+{
+    const string executeSqlStr = FileColumn::CREATE_PARENT_CLOUD_ID_INDEX;
+    int32_t ret = store.ExecuteSql(executeSqlStr);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add parent cloud id index fail, err %{public}d", ret);
+    }
+}
+
 int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
+    LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
+    if (oldVersion < VERSION_ADD_PARENT_CLOUD_ID_INDEX) {
+        VersionAddParentCloudIdIndex(store);
+    }
     return NativeRdb::E_OK;
 }
 }

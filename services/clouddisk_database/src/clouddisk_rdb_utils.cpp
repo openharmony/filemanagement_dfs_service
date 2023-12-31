@@ -76,138 +76,60 @@ int32_t CloudDiskRdbUtils::GetString(const string &key, string &val,
     return E_OK;
 }
 
-int32_t CloudDiskRdbUtils::FillInfoFileName(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
+static void FillFileInfo(const RowEntity &rowEntity, CloudDiskFileInfo &info)
 {
-    string fileName;
-    int32_t ret = GetString(FileColumn::FILE_NAME, fileName, resultSet);
-    if (ret != E_OK) {
-        LOGE("fill fileName failed, ret = %{public}d", ret);
-        return ret;
-    }
-    info.fileName = fileName;
-    return E_OK;
-}
-
-int32_t CloudDiskRdbUtils::FillInfoCloudId(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
-{
-    string cloudId;
-    int32_t ret = GetString(FileColumn::CLOUD_ID, cloudId, resultSet);
-    if (ret != E_OK) {
-        LOGE("fill cloudId failed, ret = %{public}d", ret);
-        return ret;
-    }
-    info.cloudId = cloudId;
-    return E_OK;
-}
-
-int32_t CloudDiskRdbUtils::FillInfoParentId(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
-{
-    string parentCloudId;
-    int32_t ret = GetString(FileColumn::PARENT_CLOUD_ID, parentCloudId, resultSet);
-    if (ret != E_OK) {
-        LOGE("fill parentCloudId failed, ret = %{public}d", ret);
-        return ret;
-    }
-    info.parentCloudId = parentCloudId;
-    return E_OK;
-}
-
-int32_t CloudDiskRdbUtils::FillInfoLocation(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
-{
-    int32_t location;
-    int32_t ret = GetInt(FileColumn::POSITION, location, resultSet);
-    if (ret != E_OK) {
-        LOGE("fill location failed, ret = %{public}d", ret);
-        return ret;
-    }
-    info.location = static_cast<uint32_t>(location);
-    return E_OK;
-}
-
-int32_t CloudDiskRdbUtils::FillInfoFileSize(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
-{
-    int64_t size;
-    int32_t ret = GetLong(FileColumn::FILE_SIZE, size, resultSet);
-    if (ret != E_OK) {
-        LOGE("fill size failed, ret = %{public}d", ret);
-        return ret;
-    }
-    info.size = static_cast<unsigned long long>(size);
-    return E_OK;
-}
-
-int32_t CloudDiskRdbUtils::FillInfoFileATime(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
-{
-    int64_t aTime;
-    int32_t ret = GetLong(FileColumn::FILE_TIME_VISIT, aTime, resultSet);
-    if (ret != E_OK) {
-        LOGE("fill atime failed, ret = %{public}d", ret);
-        return ret;
-    }
-    info.atime = static_cast<unsigned long long>(aTime);
-    return E_OK;
-}
-
-int32_t CloudDiskRdbUtils::FillInfoFileCTime(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
-{
-    int64_t cTime;
-    int32_t ret = GetLong(FileColumn::FILE_TIME_ADDED, cTime, resultSet);
-    if (ret != E_OK) {
-        LOGE("fill ctime failed, ret = %{public}d", ret);
-        return ret;
-    }
-    info.ctime = static_cast<unsigned long long>(cTime);
-    return E_OK;
-}
-
-int32_t CloudDiskRdbUtils::FillInfoFileMTime(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
-{
-    int64_t mTime;
-    int32_t ret = GetLong(FileColumn::FILE_TIME_EDITED, mTime, resultSet);
-    if (ret != E_OK) {
-        LOGE("fill mtime failed, ret = %{public}d", ret);
-        return ret;
-    }
-    info.mtime = static_cast<unsigned long long>(mTime);
-    return E_OK;
-}
-
-int32_t CloudDiskRdbUtils::FillInfoFileType(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
-{
-    int32_t fileType;
-    int32_t ret = GetInt(FileColumn::IS_DIRECTORY, fileType, resultSet);
-    if (ret != E_OK) {
-        LOGE("fill fileType failed, ret = %{public}d", ret);
-        return ret;
-    }
-    info.IsDirectory = (fileType == DIRECTORY);
-    return E_OK;
+    rowEntity.Get(FileColumn::FILE_NAME).GetString(info.fileName);
+    rowEntity.Get(FileColumn::CLOUD_ID).GetString(info.cloudId);
+    rowEntity.Get(FileColumn::PARENT_CLOUD_ID).GetString(info.parentCloudId);
+    int32_t int_variable;
+    rowEntity.Get(FileColumn::POSITION).GetInt(int_variable);
+    info.location = static_cast<uint32_t>(int_variable);
+    int64_t long_variable;
+    rowEntity.Get(FileColumn::FILE_SIZE).GetLong(long_variable);
+    info.size = static_cast<unsigned long long>(long_variable);
+    rowEntity.Get(FileColumn::FILE_TIME_VISIT).GetLong(long_variable);
+    info.atime = static_cast<unsigned long long>(long_variable);
+    rowEntity.Get(FileColumn::FILE_TIME_ADDED).GetLong(long_variable);
+    info.ctime = static_cast<unsigned long long>(long_variable);
+    rowEntity.Get(FileColumn::FILE_TIME_EDITED).GetLong(long_variable);
+    info.mtime = static_cast<unsigned long long>(long_variable);
+    rowEntity.Get(FileColumn::IS_DIRECTORY).GetInt(int_variable);
+    info.IsDirectory = (int_variable == DIRECTORY);
 }
 
 int32_t CloudDiskRdbUtils::ResultSetToFileInfo(const shared_ptr<ResultSet> resultSet,
-                                               vector<CloudDiskFileInfo> &infos)
+                                               CloudDiskFileInfo &info)
 {
-    int32_t rowCount = 0;
-    int32_t ret = E_OK;
-    if (resultSet) {
-        ret = resultSet->GetRowCount(rowCount);
+    if (resultSet == nullptr) {
+        LOGE("result set is nullptr");
+        return E_RDB;
     }
-    if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
-        LOGE("result set is nullptr or get result set rowCount is failed, ret %{public}d, rowCount %{public}d",
-            ret, rowCount);
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("result set to file info go to next row failed");
+        return E_RDB;
+    }
+    RowEntity rowEntity;
+    if (resultSet->GetRow(rowEntity) != E_OK) {
+        LOGE("result set to file info get row failed");
+        return E_RDB;
+    }
+    FillFileInfo(rowEntity, info);
+    return E_OK;
+}
+
+int32_t CloudDiskRdbUtils::ResultSetToFileInfos(const shared_ptr<ResultSet> resultSet,
+                                                vector<CloudDiskFileInfo> &infos)
+{
+    if (resultSet == nullptr) {
+        LOGE("result set is nullptr");
         return E_RDB;
     }
     while (resultSet->GoToNextRow() == E_OK) {
         CloudDiskFileInfo info;
-        RETURN_ON_ERR(FillInfoFileName(info, resultSet));
-        RETURN_ON_ERR(FillInfoCloudId(info, resultSet));
-        RETURN_ON_ERR(FillInfoParentId(info, resultSet));
-        RETURN_ON_ERR(FillInfoLocation(info, resultSet));
-        RETURN_ON_ERR(FillInfoFileSize(info, resultSet));
-        RETURN_ON_ERR(FillInfoFileATime(info, resultSet));
-        RETURN_ON_ERR(FillInfoFileCTime(info, resultSet));
-        RETURN_ON_ERR(FillInfoFileMTime(info, resultSet));
-        RETURN_ON_ERR(FillInfoFileType(info, resultSet));
+        GetString(FileColumn::FILE_NAME, info.fileName, resultSet);
+        int32_t isDirectory;
+        GetInt(FileColumn::IS_DIRECTORY, isDirectory, resultSet);
+        info.IsDirectory = (isDirectory == DIRECTORY);
         infos.emplace_back(info);
     }
     return E_OK;

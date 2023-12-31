@@ -52,8 +52,14 @@ public:
     // table name
     static const std::string FILES_TABLE;
 
+    // parentCloudId index
+    static const std::string PARENT_CLOUD_ID_INDEX;
+
     // create FileTable sql
     static const std::string CREATE_FILE_TABLE;
+
+    // create parentCloudId index
+    static const std::string CREATE_PARENT_CLOUD_ID_INDEX;
 
     // Query FILES_TABLE for FileSystem
     static const std::vector<std::string> FILE_SYSTEM_QUERY_COLUMNS;
