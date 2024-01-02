@@ -295,6 +295,10 @@ int32_t DataSyncManager::DownloadThumb()
         return E_INVAL_ARG;
     }
 
+    auto ret = InitSdk(currentUserId_, GALLERY_BUNDLE_NAME, dataSyncer);
+    if (ret != E_OK) {
+        return ret;
+    }
     return dataSyncer->DownloadThumb();
 }
 

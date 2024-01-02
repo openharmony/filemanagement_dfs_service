@@ -1011,14 +1011,12 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbStatus::TO_DOWNLOAD));
     values.PutString(Media::PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
+    values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_DOWNLOAD));
     bool downloadThumb = (!startCursor_.empty() || (++params.totalPullCount <= downloadThumbLimit_));
-    values.PutInt(
-        Media::PhotoColumn::PHOTO_SYNC_STATUS,
-        static_cast<int32_t>(downloadThumb? SyncStatusType::TYPE_DOWNLOAD : SyncStatusType::TYPE_VISIBLE));
     params.insertFiles.push_back(values);
+    AppendToDownload(record, "thumbnail", params.assetsToDownload);
     if (AddCloudThumbs(record) != E_OK || downloadThumb) {
         AppendToDownload(record, "lcd", params.assetsToDownload);
-        AppendToDownload(record, "thumbnail", params.assetsToDownload);
     }
     return E_OK;
 }
@@ -1034,18 +1032,6 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
             LOGE("record %s %{public}s download failed, localErr: %{public}d, serverErr: %{public}d",
                  it.first.recordId.c_str(), it.first.fieldKey.c_str(),
                  static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
-            LOGI("update sync_status to visible of record %s", it.first.recordId.c_str());
-            int updateRows;
-            ValuesBucket values;
-            values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
-
-            string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-            int32_t ret = Update(updateRows, values, whereClause, {it.first.recordId});
-            if (ret != E_OK) {
-                LOGE("update retry flag failed, ret=%{public}d", ret);
-            }
-            DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
-                                                      to_string(updateRows));
         }
     }
 
@@ -1057,19 +1043,30 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
 {
     std::lock_guard<std::mutex> lock(rdbMutex_);
     if (asset.fieldKey == "thumbnail") {
-        LOGI("update sync_status to visible of record %s", asset.recordId.c_str());
+        LOGI("update sync status to visible of record %s", asset.recordId.c_str());
         int updateRows;
         ValuesBucket values;
         values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
-        values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbStatus::DOWNLOADED));
         string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
         int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
         if (ret != E_OK) {
-            LOGE("update retry flag failed, ret=%{public}d", ret);
+            LOGE("update sync status failed, ret=%{public}d", ret);
         }
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                                   to_string(updateRows));
         DataSyncNotifier::GetInstance().FinalNotify();
+    }
+
+    if (asset.fieldKey == "lcd") {
+        LOGI("update thumb status to visible of record %s", asset.recordId.c_str());
+        int updateRows;
+        ValuesBucket values;
+        values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbStatus::DOWNLOADED));
+        string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
+        int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
+        if (ret != E_OK) {
+            LOGE("update thumb status failed, ret=%{public}d", ret);
+        }
     }
 
     DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);

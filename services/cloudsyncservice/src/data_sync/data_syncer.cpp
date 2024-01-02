@@ -1223,7 +1223,7 @@ int32_t DataSyncer::DownloadThumb()
 
 int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
 {
-    if (!BatteryStatus::IsCharging() || (NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT) ||
+    if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT) ||
         ScreenStatus::IsScreenOn()) {
         LOGI("download thumb condition is not met");
         return E_OK;

@@ -38,10 +38,6 @@
                         "conditions": [
                             {
                                 "eventId": "commonevent",
-                                "name": "usual.event.CHARGING"
-                            },
-                            {
-                                "eventId": "commonevent",
                                 "name": "usual.event.wifi.SCAN_FINISHED",
                                 "value": "1"
                             }
