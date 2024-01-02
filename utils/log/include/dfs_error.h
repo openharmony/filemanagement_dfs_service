@@ -43,6 +43,7 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_SYNC_FAILED_NETWORK_NOT_AVAILABLE,
     E_GET_NETWORK_MANAGER_FAILED,
     E_DELETE_FAILED,
+    E_NO_SUCH_FILE,
 
     /* data syncer */
     E_CLOUD_SDK,
