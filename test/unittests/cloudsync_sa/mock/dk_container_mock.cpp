@@ -97,4 +97,5 @@ DKLocalErrorCode DKContainer::DeleteSubscription(std::shared_ptr<DKContext> cont
     }
     return DKLocalErrorCode::NO_ERROR;
 }
+void DKContainer::Release() {}
 } // namespace DriveKit

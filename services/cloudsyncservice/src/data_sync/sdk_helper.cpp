@@ -45,6 +45,13 @@ int32_t SdkHelper::Init(const int32_t userId, const std::string &bundleName)
         LOGE("sdk helper get drive kit database fail");
         return E_CLOUD_SDK;
     }
+    if (!downloader_) {
+        downloader_ = database_->GetAssetsDownloader();
+        if (downloader_ == nullptr) {
+            LOGE("sdk helper get drivekit downloader_ fail");
+            return E_CLOUD_SDK;
+        }
+    }
     return E_OK;
 }
 
@@ -154,16 +161,13 @@ int32_t SdkHelper::DownloadAssets(shared_ptr<DriveKit::DKContext> context,
     std::function<void(std::shared_ptr<DriveKit::DKContext>, DriveKit::DKDownloadAsset,
                        DriveKit::TotalSize, DriveKit::DownloadSize)> progressCallback)
 {
-    lock_guard<mutex> lock{downloaderMutex_};
-    if (!downloader_) {
-        downloader_ = database_->GetAssetsDownloader();
-        if (downloader_ == nullptr) {
-            LOGE("sdk helper get drivekit downloader_ fail");
-            return E_CLOUD_SDK;
-        }
+    bool isPriority = false;
+    if (assetsToDownload.front().fieldKey == "content") {
+        isPriority = true;
     }
     auto result =
-        downloader_->DownLoadAssets(context, assetsToDownload, downLoadPath, id, resultCallback, progressCallback);
+        downloader_->DownLoadAssets(context, assetsToDownload, downLoadPath, id,
+                                    resultCallback, progressCallback, isPriority);
     if (result != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("DownLoadAssets fail");
         return E_CLOUD_SDK;
@@ -173,14 +177,6 @@ int32_t SdkHelper::DownloadAssets(shared_ptr<DriveKit::DKContext> context,
 
 int32_t SdkHelper::DownloadAssets(DriveKit::DKDownloadAsset &assetsToDownload)
 {
-    lock_guard<mutex> lock{downloaderMutex_};
-    if (!downloader_) {
-        downloader_ = database_->GetAssetsDownloader();
-        if (downloader_ == nullptr) {
-            LOGE("sdk helper get drivekit downloader_ fail");
-            return E_CLOUD_SDK;
-        }
-    }
     auto result = downloader_->DownLoadAssets(assetsToDownload);
     if (result != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("DownLoadAssets fail ret %{public}d", static_cast<int>(result));

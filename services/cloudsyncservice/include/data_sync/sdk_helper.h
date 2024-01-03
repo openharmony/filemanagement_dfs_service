@@ -119,7 +119,6 @@ private:
     std::shared_ptr<DriveKit::DKContainer> container_;
     std::shared_ptr<DriveKit::DKDatabase> database_;
     std::shared_ptr<DriveKit::DKAssetsDownloader> downloader_;
-    std::mutex downloaderMutex_;
 };
 
 struct SdkLock {
