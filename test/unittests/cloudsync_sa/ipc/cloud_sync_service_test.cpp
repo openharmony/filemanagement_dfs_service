@@ -557,6 +557,96 @@ HWTEST_F(CloudSyncServiceTest, DownloadFileTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DownloadFileTest002 end";
 }
 
+/**
+ * @tc.name:DownloadAssetTest001
+ * @tc.desc:Verify the DownloadAsset function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, DownloadAssetTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadAssetTest001 start";
+    try {
+        uint64_t taskId = 100;
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.photos";
+        std::string networkId = "0.0.0.0";
+        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
+        AssetInfoObj assetInfoObj;
+        assetInfoObj.uri = uri;
+        int ret = g_servicePtr_->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DownloadAssetTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DownloadAssetTest001 end";
+}
+
+/**
+ * @tc.name:DownloadAssetTest002
+ * @tc.desc:Verify the DownloadAsset function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, DownloadAssetTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadAssetTest002 start";
+    try {
+        uint64_t taskId = 100;
+        int32_t userId = 100;
+        std::string bundleName = "com.ohos.photos";
+        std::string networkId = "edge2cloud";
+        AssetInfoObj assetInfoObj;
+        int ret = g_servicePtr_->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DownloadAssetTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DownloadAssetTest002 end";
+}
+
+/**
+ * @tc.name:RegisterDownloadAssetCallbackTest
+ * @tc.desc:Verify the RegisterDownloadAssetCallback function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, RegisterDownloadAssetCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback start";
+    try {
+        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
+        int ret = g_servicePtr_->RegisterDownloadAssetCallback(callback);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback end";
+}
+
+/**
+ * @tc.name:RegisterDownloadAssetCallbackTest002
+ * @tc.desc:Verify theRegisterDownloadAssetCallback function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, RegisterDownloadAssetCallbackTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback error branch start";
+    try {
+        sptr<CloudSyncCallbackMock> callback = nullptr;
+        int ret = g_servicePtr_->RegisterDownloadAssetCallback(callback);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback error branch FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback error branch end";
+}
+
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

@@ -204,6 +204,46 @@ HWTEST_F(CloudSyncServiceProxyTest, DownloadFile002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: DownloadAsset001
+ * @tc.desc: Verify the DownloadAsset function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, DownloadAsset001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadAsset001 Start";
+    uint64_t taskId = 100;
+    int32_t userId = 100;
+    string bundleName = "test_bundleName";
+    string networkId = "0.0.0.0";
+    AssetInfoObj assetInfoObj;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
+    int ret = proxy_->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    GTEST_LOG_(INFO) << "DownloadAsset001 End";
+}
+
+/**
+ * @tc.name: DownloadAsset002
+ * @tc.desc: Verify the DownloadAsset function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, DownloadAsset002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DownloadAsset002 Start";
+    uint64_t taskId = 100;
+    int32_t userId = 100;
+    string bundleName = "test_bundleName";
+    string networkId = "0.0.0.0";
+    AssetInfoObj assetInfoObj;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    int ret = proxy_->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DownloadAsset002 End";
+}
+
+/**
  * @tc.name: RegisterDownloadFileCallback
  * @tc.desc: Verify the RegisterDownloadFileCallback function.
  * @tc.type: FUNC
@@ -220,6 +260,25 @@ HWTEST_F(CloudSyncServiceProxyTest, RegisterDownloadFileCallback, TestSize.Level
     result = proxy_->RegisterDownloadFileCallback(nullptr);
     EXPECT_NE(result, E_OK);
     GTEST_LOG_(INFO) << "RegisterDownloadFileCallback End";
+}
+
+/**
+ * @tc.name: RegisterDownloadAssetCallback
+ * @tc.desc: Verify the RegisterDownloadAssetCallback function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7UYAL
+ */
+HWTEST_F(CloudSyncServiceProxyTest, RegisterDownloadAssetCallback, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback Start";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _))
+            .WillOnce(Invoke(mock_.GetRefPtr(), &CloudSyncServiceMock::InvokeSendRequest));
+    int result = proxy_->RegisterDownloadAssetCallback(download_);
+    EXPECT_EQ(result, E_OK);
+
+    result = proxy_->RegisterDownloadAssetCallback(nullptr);
+    EXPECT_NE(result, E_OK);
+    GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback End";
 }
 
 } // namespace Test

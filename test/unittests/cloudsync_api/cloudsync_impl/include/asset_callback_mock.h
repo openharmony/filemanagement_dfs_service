@@ -19,17 +19,17 @@
 
 #include <gmock/gmock.h>
 
-#include "i_cloud_sync_callback.h"
+#include "i_download_asset_callback.h"
 #include "iremote_stub.h"
 #include "dfs_error.h"
 
 namespace OHOS::FileManagement::CloudSync {
 
-class CloudSyncCallbackMock : public IRemoteStub<ICloudSyncCallback> {
+class DownloadAssetCallbackMock : public IRemoteStub<IDownloadAssetCallback> {
 public:
     int code_;
-    CloudSyncCallbackMock() : code_(0) {}
-    virtual ~CloudSyncCallbackMock() {}
+    DownloadAssetCallbackMock() : code_(0) {}
+    virtual ~DownloadAssetCallbackMock() {}
 
     MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
 
@@ -39,7 +39,7 @@ public:
         return E_OK;
     }
 
-    void OnSyncStateChanged(CloudSyncState state, ErrorType error) override {}
+    void OnFinished(const TaskId taskId, const std::string &uri, const int32_t result) override {}
 };
 
 } // namespace OHOS::FileManagement::CloudSync
