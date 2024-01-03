@@ -163,11 +163,11 @@ int32_t CloudDiskDataConvertor::CompensateAttributes(const DriveKit::DKRecordDat
             fileTimeAdded = record.GetCreateTime();
         }
         if (attributes.find(DK_FILE_TIME_EDITED) == attributes.end() ||
-            attributes[DK_FILE_TIME_ADDED].GetLong(fileTimeEdited) != DKLocalErrorCode::NO_ERROR) {
+            attributes[DK_FILE_TIME_EDITED].GetLong(fileTimeEdited) != DKLocalErrorCode::NO_ERROR) {
             fileTimeEdited = record.GetEditedTime();
         }
         if (attributes.find(DK_META_TIME_EDITED) == attributes.end() ||
-            attributes[DK_FILE_TIME_ADDED].GetLong(metaTimeEdited) != DKLocalErrorCode::NO_ERROR) {
+            attributes[DK_META_TIME_EDITED].GetLong(metaTimeEdited) != DKLocalErrorCode::NO_ERROR) {
             metaTimeEdited = record.GetEditedTime();
         }
     }
