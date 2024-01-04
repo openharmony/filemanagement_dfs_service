@@ -32,8 +32,14 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudFile {
 using namespace std;
+using namespace CloudDisk;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudDaemon, FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, true);
+
+CloudDaemon::CloudDaemon(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
+{
+    accountStatusListener_ = make_shared<AccountStatusListener>();
+}
 
 void CloudDaemon::PublishSA()
 {
@@ -75,6 +81,12 @@ void CloudDaemon::OnStop()
     state_ = ServiceRunningState::STATE_NOT_START;
     registerToService_ = false;
     LOGI("Stop finished successfully");
+}
+
+void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
+{
+    LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
+    accountStatusListener_->Start();
 }
 
 int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)

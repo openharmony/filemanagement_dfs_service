@@ -27,6 +27,7 @@
 #include "file_operations_helper.h"
 #include "securec.h"
 #include "utils_log.h"
+#include "account_status.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -160,6 +161,10 @@ static shared_ptr<DriveKit::DKDatabase> GetDatabase(int32_t userId, string bundl
         return nullptr;
     }
 
+    if (AccountStatus::IsNeedCleanCache()) {
+        driveKit->CleanCloudUserInfo();
+        LOGI("execute clean cloud user info success");
+    }
     auto container = driveKit->GetDefaultContainer(bundleName);
     if (container == nullptr) {
         LOGE("sdk helper get drive kit container fail");
