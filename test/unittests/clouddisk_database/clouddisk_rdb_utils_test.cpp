@@ -326,368 +326,6 @@ HWTEST_F(CloudDiskRdbUtilsTest, GetStringTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetString End";
 }
 
-
-/**
- * @tc.name: FillInfoFileNameTest001
- * @tc.desc: Verify the FillInfoFileName function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileNameTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileName Start";
-    CloudDiskFileInfo info;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetString(_, _)).WillOnce(Return(E_OK));
-    int32_t ret = CloudDiskRdbUtils::FillInfoFileName(info, resultSet);
-    EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "FillInfoFileName End";
-}
-
-/**
- * @tc.name: FillInfoFileNameTest002
- * @tc.desc: Verify the FillInfoFileName function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileNameTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileName Start";
-    try {
-        CloudDiskFileInfo info;
-        std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-        EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
-        int32_t ret = CloudDiskRdbUtils::FillInfoFileName(info, resultSet);
-        EXPECT_EQ(ret, E_RDB);
-    } catch(...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FillInfoFileName ERROR";
-    }
-    GTEST_LOG_(INFO) << "FillInfoFileName End";
-}
-
-/**
- * @tc.name: FillInfoCloudIdTest001
- * @tc.desc: Verify the FillInfoCloudId function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoCloudIdTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoCloudId Start";
-    CloudDiskFileInfo info;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetString(_, _)).WillOnce(Return(E_OK));
-    int32_t ret = CloudDiskRdbUtils::FillInfoCloudId(info, std::move(resultSet));
-    EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "FillInfoCloudId End";
-}
-
-/**
- * @tc.name: FillInfoCloudIdTest002
- * @tc.desc: Verify the FillInfoCloudId function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoCloudIdTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoCloudId Start";
-    try {
-        CloudDiskFileInfo info;
-        std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-        EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
-        int32_t ret = CloudDiskRdbUtils::FillInfoCloudId(info, std::move(resultSet));
-        EXPECT_EQ(ret, E_RDB);
-    } catch(...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FillInfoCloudId ERROR";
-    }
-    GTEST_LOG_(INFO) << "FillInfoCloudId End";
-}
-
-/**
- * @tc.name: FillInfoParentIdTest001
- * @tc.desc: Verify the FillInfoParentId function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoParentIdTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoParentId Start";
-    CloudDiskFileInfo info;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetString(_, _)).WillOnce(Return(E_OK));
-    int32_t ret = CloudDiskRdbUtils::FillInfoParentId(info, std::move(resultSet));
-    EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "FillInfoParentId End";
-}
-
-/**
- * @tc.name: FillInfoParentIdTest002
- * @tc.desc: Verify the FillInfoParentId function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoParentIdTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoParentId Start";
-    try {
-        CloudDiskFileInfo info;
-        std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-        EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
-        int32_t ret = CloudDiskRdbUtils::FillInfoParentId(info, std::move(resultSet));
-        EXPECT_EQ(ret, E_RDB);
-    } catch(...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FillInfoParentId ERROR";
-    }
-    GTEST_LOG_(INFO) << "FillInfoParentId End";
-}
-
-/**
- * @tc.name: FillInfoLocationTest001
- * @tc.desc: Verify the FillInfoLocation function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoLocationTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoLocation Start";
-    CloudDiskFileInfo info;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetInt(_, _)).WillOnce(Return(E_OK));
-    int32_t ret = CloudDiskRdbUtils::FillInfoLocation(info, std::move(resultSet));
-    EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "FillInfoLocation End";
-}
-
-/**
- * @tc.name: FillInfoLocationTest002
- * @tc.desc: Verify the FillInfoLocation function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoLocationTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoLocation Start";
-    try {
-        CloudDiskFileInfo info;
-        std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-        EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
-        int32_t ret = CloudDiskRdbUtils::FillInfoLocation(info, std::move(resultSet));
-        EXPECT_EQ(ret, E_RDB);
-    } catch(...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FillInfoLocation ERROR";
-    }
-    GTEST_LOG_(INFO) << "FillInfoLocation End";
-}
-
-/**
- * @tc.name: FillInfoFileSizeTest001
- * @tc.desc: Verify the FillInfoFileSize function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileSizeTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileSize Start";
-    CloudDiskFileInfo info;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetLong(_, _)).WillOnce(Return(E_OK));
-    int32_t ret = CloudDiskRdbUtils::FillInfoFileSize(info, std::move(resultSet));
-    EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "FillInfoFileSize End";
-}
-
-/**
- * @tc.name: FillInfoFileSizeTest002
- * @tc.desc: Verify the FillInfoFileSize function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileSizeTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileSize Start";
-    try {
-        CloudDiskFileInfo info;
-        std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-        EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
-        int32_t ret = CloudDiskRdbUtils::FillInfoFileSize(info, std::move(resultSet));
-        EXPECT_EQ(ret, E_RDB);
-    } catch(...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FillInfoFileSize ERROR";
-    }
-    GTEST_LOG_(INFO) << "FillInfoFileSize End";
-}
-
-/**
- * @tc.name: FillInfoFileATimeTest001
- * @tc.desc: Verify the FillInfoFileATime function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileATimeTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileATime Start";
-    CloudDiskFileInfo info;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetLong(_, _)).WillOnce(Return(E_OK));
-    int32_t ret = CloudDiskRdbUtils::FillInfoFileATime(info, std::move(resultSet));
-    EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "FillInfoFileATime End";
-}
-
-/**
- * @tc.name: FillInfoFileATimeTest002
- * @tc.desc: Verify the FillInfoFileATime function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileATimeTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileATime Start";
-    try {
-        CloudDiskFileInfo info;
-        std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-        EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
-        int32_t ret = CloudDiskRdbUtils::FillInfoFileATime(info, std::move(resultSet));
-        EXPECT_EQ(ret, E_RDB);
-    } catch(...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FillInfoFileATime ERROR";
-    }
-    GTEST_LOG_(INFO) << "FillInfoFileATime End";
-}
-
-/**
- * @tc.name: FillInfoFileCTimeTest001
- * @tc.desc: Verify the FillInfoFileCTime function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileCTimeTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileCTime Start";
-    CloudDiskFileInfo info;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetLong(_, _)).WillOnce(Return(E_OK));
-    int32_t ret = CloudDiskRdbUtils::FillInfoFileCTime(info, std::move(resultSet));
-    EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "FillInfoFileCTime End";
-}
-
-/**
- * @tc.name: FillInfoFileCTimeTest002
- * @tc.desc: Verify the FillInfoFileCTime function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileCTimeTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileCTime Start";
-    try {
-        CloudDiskFileInfo info;
-        std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-        EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
-        int32_t ret = CloudDiskRdbUtils::FillInfoFileCTime(info, std::move(resultSet));
-        EXPECT_EQ(ret, E_RDB);
-    } catch(...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FillInfoFileCTime ERROR";
-    }
-    GTEST_LOG_(INFO) << "FillInfoFileCTime End";
-}
-
-/**
- * @tc.name: FillInfoFileMTimeTest001
- * @tc.desc: Verify the FillInfoFileMTime function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileMTimeTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileMTime Start";
-    CloudDiskFileInfo info;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetLong(_, _)).WillOnce(Return(E_OK));
-    int32_t ret = CloudDiskRdbUtils::FillInfoFileMTime(info, std::move(resultSet));
-    EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "FillInfoFileMTime End";
-}
-
-/**
- * @tc.name: FillInfoFileMTimeTest002
- * @tc.desc: Verify the FillInfoFileMTime function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileMTimeTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileMTime Start";
-    try {
-        CloudDiskFileInfo info;
-        std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-        EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
-        int32_t ret = CloudDiskRdbUtils::FillInfoFileMTime(info, std::move(resultSet));
-        EXPECT_EQ(ret, E_RDB);
-    } catch(...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FillInfoFileMTime ERROR";
-    }
-    GTEST_LOG_(INFO) << "FillInfoFileMTime End";
-}
-
-/**
- * @tc.name: FillInfoFileTypeTest001
- * @tc.desc: Verify the FillInfoFileType function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileTypeTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileType Start";
-    CloudDiskFileInfo info;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetInt(_, _)).WillOnce(Return(E_OK));
-    int32_t ret = CloudDiskRdbUtils::FillInfoFileType(info, std::move(resultSet));
-    EXPECT_EQ(ret, E_OK);
-    GTEST_LOG_(INFO) << "FillInfoFileType End";
-}
-
-/**
- * @tc.name: FillInfoFileTypeTest002
- * @tc.desc: Verify the FillInfoFileType function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, FillInfoFileTypeTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "FillInfoFileType Start";
-    try {
-        CloudDiskFileInfo info;
-        std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-        EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_RDB));
-        int32_t ret = CloudDiskRdbUtils::FillInfoFileType(info, std::move(resultSet));
-        EXPECT_EQ(ret, E_RDB);
-    } catch(...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "FillInfoFileType ERROR";
-    }
-    GTEST_LOG_(INFO) << "FillInfoFileType End";
-}
-
 /**
  * @tc.name: ResultSetToFileInfoTest001
  * @tc.desc: Verify the ResultSetToFileInfo function.
@@ -698,9 +336,9 @@ HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
     try {
-        vector<CloudDiskFileInfo> infos;
+        CloudDiskFileInfo info;
         std::shared_ptr<ResultSet> resultSet = nullptr;
-        int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(resultSet, infos);
+        int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(resultSet, info);
         EXPECT_EQ(ret, E_RDB);
     } catch(...) {
         EXPECT_TRUE(false);
@@ -719,10 +357,10 @@ HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
     try {
-        vector<CloudDiskFileInfo> infos;
+        CloudDiskFileInfo info;
         std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-        EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(Return(E_RDB));
-        int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
+        EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_RDB));
+        int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), info);
         EXPECT_EQ(ret, E_RDB);
     } catch(...) {
         EXPECT_TRUE(false);
@@ -741,11 +379,11 @@ HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
     try {
-        vector<CloudDiskFileInfo> infos;
+        CloudDiskFileInfo info;
         std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-        int32_t rowCount = -1;
-        EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(E_OK)));
-        int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
+        EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
+        EXPECT_CALL(*resultSet, GetRow(_)).WillOnce(Return(E_RDB));
+        int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), info);
         EXPECT_EQ(ret, E_RDB);
     } catch(...) {
         EXPECT_TRUE(false);
@@ -763,259 +401,72 @@ HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest003, TestSize.Level1)
 HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
-    vector<CloudDiskFileInfo> infos;
+    CloudDiskFileInfo info;
     std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    int32_t rowCount = 1;
-    EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(E_OK)));
-    EXPECT_CALL(*resultSet, GoToNextRow())
-        .Times(2)
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_RDB));
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).Times(9).WillRepeatedly(Return(E_OK));
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
+    EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
+    EXPECT_CALL(*resultSet, GetRow(_)).WillOnce(Return(E_OK));
+    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), info);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "ResultSetToFileInfo End";
 }
 
 /**
- * @tc.name: ResultSetToFileInfoTest005
- * @tc.desc: Verify the ResultSetToFileInfo function.
+ * @tc.name: ResultSetToFileInfosTest001
+ * @tc.desc: Verify the ResultSetToFileInfos function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest005, TestSize.Level1)
+HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfosTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
-    vector<CloudDiskFileInfo> infos;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    int32_t rowCount = 1;
-    EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(E_OK)));
-    EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
-        .Times(10)
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_RDB))
-        .WillOnce(Return(E_RDB));
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
-    EXPECT_EQ(ret, E_RDB);
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo End";
+    GTEST_LOG_(INFO) << "ResultSetToFileInfos Start";
+    try {
+        vector<CloudDiskFileInfo> infos;
+        std::shared_ptr<ResultSet> resultSet = nullptr;
+        int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfos(resultSet, infos);
+        EXPECT_EQ(ret, E_RDB);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ResultSetToFileInfos ERROR";
+    }
+    GTEST_LOG_(INFO) << "ResultSetToFileInfos End";
 }
 
 /**
- * @tc.name: ResultSetToFileInfoTest006
- * @tc.desc: Verify the ResultSetToFileInfo function.
+ * @tc.name: ResultSetToFileInfosTest002
+ * @tc.desc: Verify the ResultSetToFileInfos function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest006, TestSize.Level1)
+HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfosTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
+    GTEST_LOG_(INFO) << "ResultSetToFileInfos Start";
     vector<CloudDiskFileInfo> infos;
     std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-
-    int32_t rowCount = 1;
-    EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(E_OK)));
-    EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
-        .Times(9)
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_RDB))
-        .WillOnce(Return(E_RDB));
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
-    EXPECT_EQ(ret, E_RDB);
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo End";
+    EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_RDB));
+    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfos(std::move(resultSet), infos);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "ResultSetToFileInfos End";
 }
 
 /**
- * @tc.name: ResultSetToFileInfoTest007
- * @tc.desc: Verify the ResultSetToFileInfo function.
+ * @tc.name: ResultSetToFileInfosTest003
+ * @tc.desc: Verify the ResultSetToFileInfos function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest007, TestSize.Level1)
+HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfosTest003, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
+    GTEST_LOG_(INFO) << "ResultSetToFileInfos Start";
     vector<CloudDiskFileInfo> infos;
     std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    int32_t rowCount = 1;
-    EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(E_OK)));
-    EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
-        .Times(8)
+    EXPECT_CALL(*resultSet, GoToNextRow())
+        .Times(2)
         .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_RDB))
         .WillOnce(Return(E_RDB));
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
-    EXPECT_EQ(ret, E_RDB);
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo End";
-}
-
-/**
- * @tc.name: ResultSetToFileInfoTest008
- * @tc.desc: Verify the ResultSetToFileInfo function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest008, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
-    vector<CloudDiskFileInfo> infos;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    int32_t rowCount = 1;
-    EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(E_OK)));
-    EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
-        .Times(7)
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_RDB))
-        .WillOnce(Return(E_RDB));
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
-    EXPECT_EQ(ret, E_RDB);
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo End";
-}
-
-/**
- * @tc.name: ResultSetToFileInfoTest009
- * @tc.desc: Verify the ResultSetToFileInfo function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest009, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
-    vector<CloudDiskFileInfo> infos;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    int32_t rowCount = 1;
-    EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(E_OK)));
-    EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
-        .Times(6)
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_RDB))
-        .WillOnce(Return(E_RDB));
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
-    EXPECT_EQ(ret, E_RDB);
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo End";
-}
-
-/**
- * @tc.name: ResultSetToFileInfoTest010
- * @tc.desc: Verify the ResultSetToFileInfo function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest010, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
-    vector<CloudDiskFileInfo> infos;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    int32_t rowCount = 1;
-    EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(E_OK)));
-    EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
-        .Times(5)
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_RDB))
-        .WillOnce(Return(E_RDB));
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
-    EXPECT_EQ(ret, E_RDB);
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo End";
-}
-
-/**
- * @tc.name: ResultSetToFileInfoTest011
- * @tc.desc: Verify the ResultSetToFileInfo function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest011, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
-    vector<CloudDiskFileInfo> infos;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    int32_t rowCount = 1;
-    EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(E_OK)));
-    EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
-        .Times(4)
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_RDB))
-        .WillOnce(Return(E_RDB));
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
-    EXPECT_EQ(ret, E_RDB);
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo End";
-}
-
-/**
- * @tc.name: ResultSetToFileInfoTest012
- * @tc.desc: Verify the ResultSetToFileInfo function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest012, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
-    vector<CloudDiskFileInfo> infos;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    int32_t rowCount = 1;
-    EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(E_OK)));
-    EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _))
-        .Times(3)
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_RDB))
-        .WillOnce(Return(E_RDB));
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
-    EXPECT_EQ(ret, E_RDB);
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo End";
-}
-
-/**
- * @tc.name: ResultSetToFileInfoTest013
- * @tc.desc: Verify the ResultSetToFileInfo function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbUtilsTest, ResultSetToFileInfoTest013, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo Start";
-    vector<CloudDiskFileInfo> infos;
-    std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
-    int32_t rowCount = 1;
-    EXPECT_CALL(*resultSet, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(E_OK)));
-    EXPECT_CALL(*resultSet, GoToNextRow()).WillOnce(Return(E_OK));
-    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).Times(2).WillOnce(Return(E_RDB)).WillOnce(Return(E_RDB));
-    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfo(std::move(resultSet), infos);
-    EXPECT_EQ(ret, E_RDB);
-    GTEST_LOG_(INFO) << "ResultSetToFileInfo End";
+    EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).Times(2).WillRepeatedly(Return(E_OK));
+    int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfos(std::move(resultSet), infos);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "ResultSetToFileInfos End";
 }
 
 } // namespace Test

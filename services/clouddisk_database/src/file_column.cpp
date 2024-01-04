@@ -40,6 +40,7 @@ const std::string FileColumn::FILE_TYPE = "file_type";
 const std::string FileColumn::FILE_CATEGORY = "file_category";
 
 const std::string FileColumn::FILES_TABLE = "CloudDisk";
+const std::string FileColumn::PARENT_CLOUD_ID_INDEX = "parentCloudId_index";
 
 const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " +
     FILES_TABLE + " (" +
@@ -63,6 +64,10 @@ const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " 
     MIME_TYPE + " TEXT, " +
     FILE_TYPE + " INT, " +
     FILE_CATEGORY + " TEXT)";
+
+const std::string FileColumn::CREATE_PARENT_CLOUD_ID_INDEX = "CREATE INDEX IF NOT EXISTS" +
+    PARENT_CLOUD_ID_INDEX + " ON " + FILES_TABLE +
+    " (" + PARENT_CLOUD_ID + ")";
 
 const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
     FILE_NAME,

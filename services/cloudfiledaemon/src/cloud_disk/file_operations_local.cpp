@@ -109,7 +109,7 @@ void FileOperationsLocal::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLooku
         reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     struct CloudDiskInode *inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
     shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, inoPtr->path);
-    FileOperationsHelper::PutCloudDiskInode(data, node, nLookup);
+    FileOperationsHelper::PutCloudDiskInode(data, node, nLookup, inoPtr->path);
     fuse_reply_none(req);
 }
 
@@ -121,7 +121,7 @@ void FileOperationsLocal::ForgetMulti(fuse_req_t req, size_t count, struct fuse_
         struct CloudDiskInode *inoPtr =
             reinterpret_cast<struct CloudDiskInode *>(forgets[i].ino);
         shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, inoPtr->path);
-        FileOperationsHelper::PutCloudDiskInode(data, node, forgets[i].nlookup);
+        FileOperationsHelper::PutCloudDiskInode(data, node, forgets[i].nlookup, inoPtr->path);
     }
     fuse_reply_none(req);
 }

@@ -33,16 +33,8 @@ public:
                            const std::shared_ptr<NativeRdb::ResultSet> resultSet);
     static int32_t GetString(const std::string &key, std::string &val,
                              const std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static int32_t FillInfoFileName(CloudDiskFileInfo &info, const std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static int32_t FillInfoCloudId(CloudDiskFileInfo &info, const std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static int32_t FillInfoParentId(CloudDiskFileInfo &info, const std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static int32_t FillInfoLocation(CloudDiskFileInfo &info, const std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static int32_t FillInfoFileSize(CloudDiskFileInfo &info, const std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static int32_t FillInfoFileATime(CloudDiskFileInfo &info, const std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static int32_t FillInfoFileCTime(CloudDiskFileInfo &info, const std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static int32_t FillInfoFileMTime(CloudDiskFileInfo &info, const std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static int32_t FillInfoFileType(CloudDiskFileInfo &info, const std::shared_ptr<NativeRdb::ResultSet> resultSet);
-    static int32_t ResultSetToFileInfo(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
+    static int32_t ResultSetToFileInfo(const std::shared_ptr<NativeRdb::ResultSet> resultSet, CloudDiskFileInfo &info);
+    static int32_t ResultSetToFileInfos(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
         std::vector<CloudDiskFileInfo> &infos);
 };
 

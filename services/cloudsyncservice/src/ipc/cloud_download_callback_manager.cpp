@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <thread>
+
 #include "utils_log.h"
 #include "ipc/cloud_download_callback_manager.h"
 #include "data_sync/task_state_manager.h"
@@ -161,11 +163,12 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
 
     if (download.state == DownloadProgressObj::RUNNING) {
         download.state = downloadedState;
-        if (callback_ != nullptr) {
-            callback_->OnDownloadProcess(download);
-        }
         if ((assetsToDownload.size() == 1) && (download.state == DownloadProgressObj::COMPLETED)) {
             (void)handler->OnDownloadSuccess(assetsToDownload[0]);
+        }
+        if (callback_ != nullptr) {
+            this_thread::sleep_for(chrono::seconds(1));
+            callback_->OnDownloadProcess(download);
         }
     }
 }

@@ -343,6 +343,7 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
     } else {
+        this_thread::sleep_for(chrono::seconds(1));
         SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
     }
     if (!checkOrRetry) {
@@ -890,6 +891,7 @@ void DataSyncer::OnCreateRecords(shared_ptr<DKContext> context,
         UpdateErrorCode(ret);
         return;
     } else {
+        this_thread::sleep_for(chrono::seconds(1));
         SyncStateChangedNotify(CloudSyncState::UPLOADING, ErrorType::NO_ERROR);
         isDataChanged_ = true;
     }

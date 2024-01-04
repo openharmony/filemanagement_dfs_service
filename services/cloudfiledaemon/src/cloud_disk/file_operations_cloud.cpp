@@ -37,7 +37,7 @@ namespace {
     static const uint32_t STAT_NLINK_REG = 1;
     static const uint32_t STAT_NLINK_DIR = 2;
     static const uint32_t CLOUD_FILE_LAYER = 2;
-    static const uint32_t STAT_MODE_REG = 0770;
+    static const uint32_t STAT_MODE_REG = 0660;
     static const uint32_t STAT_MODE_DIR = 0771;
     static const uint32_t MILLISECOND_TO_SECONDS_TIMES = 1000;
 }
@@ -53,6 +53,8 @@ static void InitInodeAttr(fuse_ino_t parent, struct CloudDiskInode *childInode,
                                 childInode->stat.st_mtime;
 
     childInode->bundleName = parentInode->bundleName;
+    childInode->location = to_string(childInfo.location);
+    childInode->fileName = childInfo.fileName;
     childInode->layer = FileOperationsHelper::GetNextLayer(parent);
     childInode->parent = parent;
     childInode->cloudId = childInfo.cloudId;
@@ -72,7 +74,6 @@ static void InitInodeAttr(fuse_ino_t parent, struct CloudDiskInode *childInode,
 static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
                              struct fuse_entry_param *e)
 {
-    bool createFlag = false;
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
 
@@ -92,19 +93,15 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
         return ENOENT;
     }
 
-    shared_ptr<CloudDiskInode> child = FileOperationsHelper::FindCloudDiskInode(data, childInfo.cloudId);
+    shared_ptr<CloudDiskInode> child = FileOperationsHelper::FindCloudDiskInode(data, parentInode->cloudId + name);
     if (child == nullptr) {
         child = make_shared<CloudDiskInode>();
-        createFlag = true;
-    }
-
-    child->refCount++;
-    if (createFlag) {
-        InitInodeAttr(parent, child.get(), childInfo);
         wLock.lock();
-        data->inodeCache[childInfo.cloudId] = child;
+        data->inodeCache[parentInode->cloudId + name] = child;
         wLock.unlock();
     }
+    child->refCount++;
+    InitInodeAttr(parent, child.get(), childInfo);
     e->ino = reinterpret_cast<fuse_ino_t>(child.get());
     FileOperationsHelper::GetInodeAttr(child, &e->attr);
     return 0;
@@ -113,6 +110,8 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
 void FileOperationsCloud::Lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
     struct fuse_entry_param e;
+    e.attr_timeout = 1.0;
+    e.entry_timeout = 1.0;
 
     int32_t err = DoCloudLookup(req, parent, name, &e);
     if (err) {
@@ -252,12 +251,13 @@ void FileOperationsCloud::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLooku
         return (void) fuse_reply_none(req);
     }
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-    string key = inoPtr->cloudId;
+    auto parentPtr = reinterpret_cast<struct CloudDiskInode *>(inoPtr->parent);
+    string key = parentPtr->cloudId + inoPtr->fileName;
     if (inoPtr->layer != CLOUD_DISK_INODE_OTHER_LAYER) {
         key = inoPtr->path;
     }
     shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, key);
-    FileOperationsHelper::PutCloudDiskInode(data, node, nLookup);
+    FileOperationsHelper::PutCloudDiskInode(data, node, nLookup, key);
     fuse_reply_none(req);
 }
 
@@ -270,12 +270,13 @@ void FileOperationsCloud::ForgetMulti(fuse_req_t req, size_t count, struct fuse_
             return (void) fuse_reply_none(req);
         }
         auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(forgets[i].ino);
-        string key = inoPtr->cloudId;
+        auto parentPtr = reinterpret_cast<struct CloudDiskInode *>(inoPtr->parent);
+        string key = parentPtr->cloudId + inoPtr->fileName;
         if (inoPtr->layer != CLOUD_DISK_INODE_OTHER_LAYER) {
             key = inoPtr->path;
         }
         shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, key);
-        FileOperationsHelper::PutCloudDiskInode(data, node, forgets[i].nlookup);
+        FileOperationsHelper::PutCloudDiskInode(data, node, forgets[i].nlookup, key);
     }
     fuse_reply_none(req);
 }
@@ -389,19 +390,6 @@ void FileOperationsCloud::Create(fuse_req_t req, fuse_ino_t parent, const char *
     fuse_reply_create(req, &e, fi);
 }
 
-static shared_ptr<CloudDiskInode> GenerateCloudDiskInode(struct CloudDiskFuseData *data, fuse_ino_t parent,
-                                                         const CloudDiskFileInfo &childInfo)
-{
-    std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
-    shared_ptr<CloudDiskInode> child = make_shared<CloudDiskInode>();
-    child->refCount++;
-    InitInodeAttr(parent, child.get(), childInfo);
-    wLock.lock();
-    data->inodeCache[childInfo.cloudId] = child;
-    wLock.unlock();
-    return child;
-}
-
 void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                                   struct fuse_file_info *fi)
 {
@@ -421,11 +409,12 @@ void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
     string entryData;
     size_t len = 0;
     for (size_t i = 0; i < childInfos.size(); i++) {
-        shared_ptr<CloudDiskInode> childPtr = FileOperationsHelper::FindCloudDiskInode(data, childInfos[i].cloudId);
-        if (childPtr == nullptr) {
-            childPtr = GenerateCloudDiskInode(data, ino, childInfos[i]);
+        shared_ptr<CloudDiskInode> childPtr = make_shared<CloudDiskInode>();
+        if (childInfos[i].IsDirectory) {
+            childPtr->stat.st_mode = S_IFDIR | STAT_MODE_DIR;
+        } else {
+            childPtr->stat.st_mode = S_IFREG | STAT_MODE_REG;
         }
-        InitInodeAttr(ino, childPtr.get(), childInfos[i]);
         FileOperationsHelper::AddDirEntry(req, entryData, len, childInfos[i].fileName.c_str(), childPtr);
     }
     FileOperationsHelper::FuseReplyLimited(req, entryData.c_str(), len, off, size);
@@ -465,15 +454,7 @@ void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
     } else if (CloudFileUtils::CheckIsCloud(name)) {
         buf = inoPtr->cloudId;
     } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
-        DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-        auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-        int32_t err = rdbStore->GetXAttr(inoPtr->cloudId, CLOUD_FILE_LOCATION, buf);
-        if (err!=0) {
-            LOGE("get cloud id error %{public}d", err);
-            fuse_reply_err(req, EINVAL);
-            return;
-        }
+        buf = inoPtr->location;
     } else {
         fuse_reply_err(req, EINVAL);
         return;

@@ -140,7 +140,7 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::GenerateCloudDiskInode(struct C
 }
 
 void FileOperationsHelper::PutCloudDiskInode(struct CloudDiskFuseData *data,
-                                             shared_ptr<CloudDiskInode> inoPtr, uint64_t num)
+                                             shared_ptr<CloudDiskInode> inoPtr, uint64_t num, const string &key)
 {
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
     if (inoPtr == nullptr) {
@@ -149,9 +149,9 @@ void FileOperationsHelper::PutCloudDiskInode(struct CloudDiskFuseData *data,
     }
     inoPtr->refCount -= num;
     if (inoPtr->refCount == 0) {
-        LOGD("node released: %{public}s", inoPtr->path.c_str());
+        LOGD("node released: %{public}s", key.c_str());
         wLock.lock();
-        data->inodeCache.erase(inoPtr->path);
+        data->inodeCache.erase(key);
         wLock.unlock();
     }
 }

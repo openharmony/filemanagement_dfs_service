@@ -50,7 +50,8 @@ public:
     MOCK_METHOD2(IsColumnNull, int(int, bool &));
     MOCK_METHOD0(Close, int());
     MOCK_METHOD1(GetRow, int(RowEntity &));
-    MOCK_METHOD2(ResultSetToFileInfo, int(shared_ptr<ResultSet>, vector<CloudDiskFileInfo> &));
+    MOCK_METHOD2(ResultSetToFileInfo, int(shared_ptr<ResultSet>, CloudDiskFileInfo &));
+    MOCK_METHOD2(ResultSetToFileInfos, int(shared_ptr<ResultSet>, vector<CloudDiskFileInfo> &));
 
     MOCK_CONST_METHOD0(IsClosed, bool());
     MOCK_CONST_METHOD1(GetRowIndex, int(int &));
