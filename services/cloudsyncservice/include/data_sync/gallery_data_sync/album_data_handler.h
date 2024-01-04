@@ -68,6 +68,11 @@ private:
 
     bool IsConflict(DriveKit::DKRecord &record, int32_t &albumId);
     int32_t MergeAlbumOnConflict(DriveKit::DKRecord &record, int32_t albumId);
+    int32_t QueryUserAlbum(std::vector<DriveKit::DKRecord> &records, Media::DirtyType dirty,
+                           const std::vector<std::string> &failSet, AlbumDataConvertor &convertor);
+    int32_t QuerySourceAlbum(std::vector<DriveKit::DKRecord> &records,  Media::DirtyType dirty,
+                             const std::vector<std::string> &failSet, AlbumDataConvertor &convertor);
+    int32_t QueryConflict(DriveKit::DKRecord &record, std::shared_ptr<NativeRdb::ResultSet> &resultSet);
 
     static inline const std::string TABLE_NAME = "albums";
     static inline const int32_t LIMIT_SIZE = 5;

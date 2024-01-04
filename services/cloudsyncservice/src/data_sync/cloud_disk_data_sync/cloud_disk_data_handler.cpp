@@ -355,7 +355,20 @@ int32_t CloudDiskDataHandler::ConflictReName(const string &cloudId, string newFi
 static int32_t IsEditTimeChange(const DKRecord &record, NativeRdb::ResultSet &local, bool &isChange)
 {
     int64_t localEditTime = 0;
-    int64_t recordEditTime = static_cast<int64_t>(record.GetEditedTime());
+    int64_t recordEditTime = 0;
+    DKRecordData data;
+    record.GetRecordData(data);
+    if (data.find(DK_FILE_ATTRIBUTES) == data.end()) {
+        LOGW("record data cannot find attributes");
+        recordEditTime = static_cast<int64_t>(record.GetEditedTime());
+    } else {
+        DriveKit::DKRecordFieldMap attributes;
+        data[DK_FILE_ATTRIBUTES].GetRecordMap(attributes);
+        if (attributes[DK_FILE_TIME_EDITED].GetLong(recordEditTime) != DKLocalErrorCode::NO_ERROR) {
+            LOGW("attributes cannot find file time edited");
+            recordEditTime = static_cast<int64_t>(record.GetEditedTime());
+        }
+    }
     int32_t ret = DataConvertor::GetLong(FC::FILE_TIME_EDITED, localEditTime, local);
     if (ret != E_OK) {
         return ret;
@@ -1050,20 +1063,24 @@ int32_t CloudDiskDataHandler::CleanCache(const string &uri)
     }
     string bucketPaht = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName_, userId_) + "/" + cloudId;
     ret = unlink(bucketPaht.c_str());
-    if (ret != 0) {
+    if (ret != 0 && errno != ENOENT) {
         LOGE("Unlink failed errno %{public}d", errno);
         return E_DELETE_FAILED;
+    }
+    if (errno == ENOENT) {
+        LOGE("no such file");
+        ret = E_NO_SUCH_FILE;
     }
     ValuesBucket values;
     values.PutInt(FC::POSITION, POSITION_CLOUD);
     int32_t changedRows = 0;
     string whereClause = FC::CLOUD_ID + " = ?";
-    ret = Update(changedRows, values, whereClause, {cloudId});
-    if (ret != E_OK) {
-        LOGE("rdb update failed, err=%{public}d", ret);
+    int32_t rdbRet = Update(changedRows, values, whereClause, {cloudId});
+    if (rdbRet != E_OK) {
+        LOGE("rdb update failed, err=%{public}d", rdbRet);
         return E_RDB;
     }
-    return E_OK;
+    return ret;
 }
 } // namespace CloudSync
 } // namespace FileManagement

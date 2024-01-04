@@ -26,7 +26,8 @@ DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(
                        std::shared_ptr<const DKDatabase>,
                        const std::map<DKDownloadAsset, DKDownloadResult> &,
                        const DKError &)> resultCallback,
-    std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)> progressCallback)
+    std::function<void(std::shared_ptr<DKContext>, DKDownloadAsset, TotalSize, DownloadSize)> progressCallback,
+    bool isPriority)
 {
     return DKLocalErrorCode::NO_ERROR;
 }
@@ -36,7 +37,7 @@ DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(DKDownloadAsset &assetsToDow
     return DKLocalErrorCode::NO_ERROR;
 }
 
-DKLocalErrorCode DKAssetsDownloader::CancelDownloadAssets(DKDownloadId id)
+DKLocalErrorCode DKAssetsDownloader::CancelDownloadAssets(DKDownloadId id, bool isClearCache)
 {
     return DKLocalErrorCode::NO_ERROR;
 }

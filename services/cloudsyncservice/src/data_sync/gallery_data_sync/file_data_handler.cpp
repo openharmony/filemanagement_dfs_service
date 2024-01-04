@@ -267,16 +267,15 @@ static int32_t GetFileId(NativeRdb::ResultSet &local)
     return fileId;
 }
 
-int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, OnFetchParams &params)
+int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnFetchParams &params,
+    vector<string> &recordIds)
 {
-    LOGI("on fetch %{public}zu records", records->size());
     int32_t ret = E_OK;
-    auto recordIds = vector<string>();
-    for (auto &record : *records) {
-        recordIds.push_back(record.GetRecordId());
-    }
     auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
-    if (resultSet == nullptr) {return E_RDB;}
+    if (resultSet == nullptr) {
+        return E_RDB;
+    }
+
     std::lock_guard<std::mutex> lock(rdbMutex_);
     for (auto &record : *records) {
         int32_t fileId = 0;
@@ -310,6 +309,19 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
             DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
         }
     }
+    return ret;
+}
+
+int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, OnFetchParams &params)
+{
+    LOGI("on fetch %{public}zu records", records->size());
+    int32_t ret = E_OK;
+    auto recordIds = vector<string>();
+    for (auto &record : *records) {
+        recordIds.push_back(record.GetRecordId());
+    }
+    ret = FileDataHandler::HandleRecord(records, params, recordIds);
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     LOGI("before BatchInsert size len %{public}zu, map size %{public}zu", params.insertFiles.size(),
         params.recordAlbumMaps.size());
     if (!params.insertFiles.empty() || !params.recordAlbumMaps.empty()) {
@@ -880,7 +892,7 @@ int32_t FileDataHandler::CreateAssetRealName(int32_t &fileId, int32_t &mediaType
 
 int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
 {
-    LOGI("judgment downlode conflict");
+    LOGD("judgment downlode conflict");
     string fullPath, relativePath;
     int64_t isize, imetaModified;
     int32_t ret = GetConflictData(record, fullPath, isize, imetaModified, relativePath);
@@ -904,7 +916,7 @@ int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
         return E_RDB;
     }
     if (rowCount == 0) {
-        LOGI("Normal download process");
+        LOGD("Normal download process");
         return E_OK;
     }
     if (rowCount == 1) {
@@ -999,14 +1011,12 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbStatus::TO_DOWNLOAD));
     values.PutString(Media::PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
+    values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_DOWNLOAD));
     bool downloadThumb = (!startCursor_.empty() || (++params.totalPullCount <= downloadThumbLimit_));
-    values.PutInt(
-        Media::PhotoColumn::PHOTO_SYNC_STATUS,
-        static_cast<int32_t>(downloadThumb? SyncStatusType::TYPE_DOWNLOAD : SyncStatusType::TYPE_VISIBLE));
     params.insertFiles.push_back(values);
+    AppendToDownload(record, "thumbnail", params.assetsToDownload);
     if (AddCloudThumbs(record) != E_OK || downloadThumb) {
         AppendToDownload(record, "lcd", params.assetsToDownload);
-        AppendToDownload(record, "thumbnail", params.assetsToDownload);
     }
     return E_OK;
 }
@@ -1022,18 +1032,6 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
             LOGE("record %s %{public}s download failed, localErr: %{public}d, serverErr: %{public}d",
                  it.first.recordId.c_str(), it.first.fieldKey.c_str(),
                  static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
-            LOGI("update sync_status to visible of record %s", it.first.recordId.c_str());
-            int updateRows;
-            ValuesBucket values;
-            values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
-
-            string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-            int32_t ret = Update(updateRows, values, whereClause, {it.first.recordId});
-            if (ret != E_OK) {
-                LOGE("update retry flag failed, ret=%{public}d", ret);
-            }
-            DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
-                                                      to_string(updateRows));
         }
     }
 
@@ -1045,19 +1043,30 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
 {
     std::lock_guard<std::mutex> lock(rdbMutex_);
     if (asset.fieldKey == "thumbnail") {
-        LOGI("update sync_status to visible of record %s", asset.recordId.c_str());
+        LOGI("update sync status to visible of record %s", asset.recordId.c_str());
         int updateRows;
         ValuesBucket values;
         values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
-        values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbStatus::DOWNLOADED));
         string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
         int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
         if (ret != E_OK) {
-            LOGE("update retry flag failed, ret=%{public}d", ret);
+            LOGE("update sync status failed, ret=%{public}d", ret);
         }
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                                   to_string(updateRows));
         DataSyncNotifier::GetInstance().FinalNotify();
+    }
+
+    if (asset.fieldKey == "lcd") {
+        LOGI("update thumb status to visible of record %s", asset.recordId.c_str());
+        int updateRows;
+        ValuesBucket values;
+        values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbStatus::DOWNLOADED));
+        string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
+        int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
+        if (ret != E_OK) {
+            LOGE("update thumb status failed, ret=%{public}d", ret);
+        }
     }
 
     DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
@@ -1561,7 +1570,7 @@ int32_t FileDataHandler::InsertAssetToPhotoMap(const DKRecord &record, OnFetchPa
         }
         int albumId = GetAlbumIdFromCloudId(ref.recordId);
         if (albumId < 0) {
-            LOGE("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
+            LOGD("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
             continue;
         }
         LOGI("record get albumId %{public}d", albumId);
@@ -1631,7 +1640,7 @@ int32_t FileDataHandler::GetAlbumIdFromCloudId(const std::string &cloudId)
             return albumId;
         }
     }
-    LOGE("fail to get ALBUM_ID value");
+    LOGD("fail to get ALBUM_ID value");
     return -1;
 }
 
@@ -2529,14 +2538,8 @@ void FileDataHandler::Reset()
     createFailSet_.clear();
 }
 
-int32_t FileDataHandler::OnCreateRecordSuccess(
-    const pair<DKRecordId, DKRecordOperResult> &entry,
-    const unordered_map<string, LocalInfo> &localMap)
+int32_t FileDataHandler::CheckRecordData(DKRecordData &data, string &path)
 {
-    auto record = entry.second.GetDKRecord();
-
-    DKRecordData data;
-    record.GetRecordData(data);
     if (data.find(FILE_ATTRIBUTES) == data.end()) {
         LOGE("record data cannot find attributes");
         return E_INVAL_ARG;
@@ -2546,10 +2549,24 @@ int32_t FileDataHandler::OnCreateRecordSuccess(
         LOGE("record data cannot find file path");
         return E_INVAL_ARG;
     }
-    string path;
     if (attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(path) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
         return E_INVAL_ARG;
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::OnCreateRecordSuccess(const pair<DKRecordId, DKRecordOperResult> &entry,
+    const unordered_map<string, LocalInfo> &localMap)
+{
+    auto record = entry.second.GetDKRecord();
+    DKRecordData data;
+    record.GetRecordData(data);
+    string path;
+    int32_t checkResult = FileDataHandler::CheckRecordData(data, path);
+    if (checkResult != E_OK) {
+        return checkResult;
     }
 
     /* local file deleted */

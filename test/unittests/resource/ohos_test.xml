@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright (c) 2023 Huawei Device Co., Ltd.
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
 
-          http://www.apache.org/licenses/LICENSE-2.0
+         http://www.apache.org/licenses/LICENSE-2.0
 
      Unless required by applicable law or agreed to in writing, software
      distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,13 +13,11 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<fuzz_config>
-    <fuzztest>
-        <!-- maximum length of a test input -->
-        <max_len>1000</max_len>
-        <!-- maximum total time in seconds to run the fuzzer -->
-        <max_total_time>300</max_total_time>
-        <!-- memory usage limit in Mb -->
-        <rss_limit_mb>4096</rss_limit_mb>
-    </fuzztest>
-</fuzz_config>
+<configuration ver="2.0">
+    <target name="cloud_disk_data_handler_test">
+        <preparer>
+            <option name="push" value="cloud_disk_data_handler_test.txt -> /data/test/" src="res"/>
+            <option name="push" value="cloud_disk_data_handler_test1.txt -> /data/test/" src="res"/>
+        </preparer>
+    </target>
+</configuration>

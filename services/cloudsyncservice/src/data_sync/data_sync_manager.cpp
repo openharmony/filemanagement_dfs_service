@@ -295,6 +295,10 @@ int32_t DataSyncManager::DownloadThumb()
         return E_INVAL_ARG;
     }
 
+    auto ret = InitSdk(currentUserId_, GALLERY_BUNDLE_NAME, dataSyncer);
+    if (ret != E_OK) {
+        return ret;
+    }
     return dataSyncer->DownloadThumb();
 }
 
@@ -306,7 +310,7 @@ int32_t DataSyncManager::GetUserId(int32_t &userId)
         return E_OSACCOUNT;
     }
     userId = activeUsers.front();
-    RETURN_ON_ERR(IsUserVerified(currentUserId_));
+    RETURN_ON_ERR(IsUserVerified(userId));
     return E_OK;
 }
 

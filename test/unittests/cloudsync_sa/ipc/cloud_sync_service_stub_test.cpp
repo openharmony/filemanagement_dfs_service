@@ -504,6 +504,58 @@ HWTEST_F(CloudSyncServiceStubTest, HandleDownloadFileTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "HandleDownloadFile End";
 }
 
+/**
+ * @tc.name: HandleDownloadAssetTest
+ * @tc.desc: Verify the HandleDownloadAsset function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleDownloadAssetTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleDownloadAsset Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_EQ(E_INVAL_ARG, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_ASSET), data,
+                            reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleDownloadAsset ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleDownloadAsset End";
+}
+
+/**
+ * @tc.name: HandleRegisterDownloadAssetCallbackTest
+ * @tc.desc: Verify the HandleRegisterDownloadAssetCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleRegisterDownloadAssetCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleRegisterDownloadAssetCallback Start";
+    try {
+        MockService service;
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_EQ(E_INVAL_ARG, service.OnRemoteRequest(
+              static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_ASSET_CALLBACK),
+              data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleRegisterDownloadAssetCallback ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleRegisterDownloadAssetCallback End";
+}
+
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

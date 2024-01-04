@@ -35,7 +35,7 @@ public:
 
     void RemoveCallback(const std::string &bundleName);
     void AddCallback(const std::string &bundleName, const int32_t userId, const sptr<ICloudSyncCallback> &callback);
-    void NotifySyncStateChanged(const CloudSyncState state, const ErrorType error);
+    void NotifySyncStateChanged(const std::string &bundleName, const CloudSyncState state, const ErrorType error);
 
 private:
     CloudSyncCallbackManager() = default;

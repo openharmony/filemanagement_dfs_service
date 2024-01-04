@@ -395,6 +395,20 @@ static void UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
     }
 }
 
+int32_t MetaFile::HandleFileByFd(unsigned long &endBlock, uint32_t &level)
+{
+    struct stat fileStat;
+    int err = fstat(fd_, &fileStat);
+    if (err < 0) {
+        return EINVAL;
+    }
+    if ((endBlock > GetDentryGroupCnt(fileStat.st_size)) &&
+        ftruncate(fd_, GetDcacheFileSize(level))) {
+        return ENOENT;
+    }
+    return E_OK;
+}
+
 int32_t MetaFile::DoCreate(const MetaBase &base)
 {
     if (fd_ < 0) {
@@ -420,14 +434,9 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
         bidx = BUCKET_BLOCKS * GetBucketaddr(level, namehash % GetBucketByLevel(level));
         unsigned long endBlock = bidx + BUCKET_BLOCKS;
 
-        struct stat fileStat;
-        int err = fstat(fd_, &fileStat);
-        if (err < 0) {
-            return EINVAL;
-        }
-        if ((endBlock > GetDentryGroupCnt(fileStat.st_size)) &&
-            ftruncate(fd_, GetDcacheFileSize(level))) {
-            return ENOENT;
+        int32_t ret = MetaFile::HandleFileByFd(endBlock, level);
+        if (ret != E_OK) {
+            return ret;
         }
 
         for (; bidx < endBlock; bidx++) {
@@ -601,7 +610,7 @@ int32_t MetaFile::DoLookup(MetaBase &base)
     InitDcacheLookupCtx(&ctx, base, fd_);
     struct HmdfsDentry *de = FindDentry(&ctx);
     if (de == nullptr) {
-        LOGI("find dentry failed");
+        LOGD("find dentry failed");
         return ENOENT;
     }
 

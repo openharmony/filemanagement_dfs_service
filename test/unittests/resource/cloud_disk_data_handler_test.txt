@@ -12,10 +12,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef DFS_SERVICE_REQUESTSENDFILE_FUZZER_H
-#define DFS_SERVICE_REQUESTSENDFILE_FUZZER_H
-
-#define FUZZ_PROJECT_NAME "requestsendfile_fuzzer"
-
-#endif // DFS_SERVICE_REQUESTSENDFILE_FUZZER_H
+ cloud_disk_data_handler_test.txt

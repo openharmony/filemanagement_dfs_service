@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <list>
 
 #include "dk_asset_read_session.h"
 #include "dk_assets_downloader.h"
@@ -121,6 +122,7 @@ struct DKLock {
 using DKFieldKeyArray = std::vector<DKFieldKey>;
 using DKQueryCursor = std::string;
 class DKContainer;
+class DKAssetsUploadHelper;
 class DKDatabase : public std::enable_shared_from_this<DKDatabase> {
     friend class DKContainer;
 public:
@@ -216,11 +218,12 @@ public:
     DKError GetRootId(DKRecordId &id);
     DKError GetLock(DKLock &lock);
     void DeleteLock(DKLock lock);
+    void Release();
 
     std::shared_ptr<DKAssetsDownloader> GetAssetsDownloader();
     std::shared_ptr<DKAssetReadSession>
         NewAssetReadSession(DKRecordType recordType, DKRecordId recordId, DKFieldKey assetKey, DKAssetPath assetPath);
-
+    std::list<std::shared_ptr<DKAssetsUploadHelper>> assetUploadHplperLst_;
 protected:
     void Init();
 private:

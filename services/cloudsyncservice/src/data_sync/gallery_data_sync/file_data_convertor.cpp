@@ -749,7 +749,7 @@ int32_t FileDataConvertor::CompensateDuration(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::CompensateFormattedDate(const DriveKit::DKRecord &record,
     NativeRdb::ValuesBucket &valueBucket)
 {
-    LOGE("try to compensate formatted date");
+    LOGD("try to compensate formatted date");
     DriveKit::DKRecordData data;
     record.GetRecordData(data);
     DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
@@ -757,7 +757,7 @@ int32_t FileDataConvertor::CompensateFormattedDate(const DriveKit::DKRecord &rec
     if (attributes.find(PhotoColumn::PHOTO_DATE_YEAR) != attributes.end() &&
         attributes[PhotoColumn::PHOTO_DATE_YEAR].GetString(dateYear) == DriveKit::DKLocalErrorCode::NO_ERROR) {
         if (dateYear.length() == FORMATTED_YEAR_SIZE && dateYear != "1970") {
-            LOGI("formatted date in cloud is correct");
+            LOGD("formatted date in cloud is correct");
             return E_OK;
         } else {
             LOGE("formatted date in cloud is incorrect");
@@ -1096,7 +1096,7 @@ int32_t FileDataConvertor::ExtractDescription(DriveKit::DKRecordData &data,
     NativeRdb::ValuesBucket &valueBucket)
 {
     if (data.find(FILE_DESCRIPTION) == data.end()) {
-        LOGI("record data cannot find FILE_DESCRIPTION");
+        LOGD("record data cannot find FILE_DESCRIPTION");
         return E_OK;
     }
     string description;

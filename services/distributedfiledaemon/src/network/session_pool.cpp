@@ -45,10 +45,10 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
                 occupySession_.erase(linkTypeIter);
                 (*iter)->Release();
                 iter = usrSpaceSessionPool_.erase(iter);
+                continue;
             }
-        } else {
-            ++iter;
         }
+        ++iter;
     }
     return linkType;
 }
@@ -62,15 +62,15 @@ void SessionPool::ReleaseSession(const string &cid, const uint8_t linkType)
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
             if (linkTypeIter != occupySession_.end()) {
                 mlinkType = linkTypeIter->second;
-                occupySession_.erase(linkTypeIter);
             }
             if (mlinkType == linkType) {
                 (*iter)->Release();
+                occupySession_.erase(linkTypeIter);
                 iter = usrSpaceSessionPool_.erase(iter);
+                continue;
             }
-        } else {
-            ++iter;
         }
+        ++iter;
     }
 }
 

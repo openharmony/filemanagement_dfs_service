@@ -130,4 +130,7 @@ DKError DKDatabase::GetRootId(DKRecordId &id)
 void DKDatabase::Init()
 {
 }
+void DKDatabase::Release()
+{
+}
 } // namespace DriveKit

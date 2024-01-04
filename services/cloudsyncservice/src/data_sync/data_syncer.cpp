@@ -87,8 +87,8 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
 {
     LOGI("%{private}d %{public}s stops sync, trigger stop sync, type:%{public}d",
         userId_, bundleName_.c_str(), triggerType);
-
     syncStateManager_.SetStopSyncFlag();
+    StopUploadAssets();
     Abort();
     return E_OK;
 }
@@ -342,6 +342,8 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
 
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
+    } else {
+        SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
     }
     if (!checkOrRetry) {
         handler->FinishPull(context->GetBatchNo());
@@ -390,7 +392,6 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
     if (HandleOnFetchRecords(ctx, database, records, false) != E_OK) {
         LOGE("HandleOnFetchRecords failed");
     }
-    SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
 }
 
 int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
@@ -481,7 +482,6 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
         LOGE("HandleOnFetchRecords failed");
         return;
     }
-    SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
 }
 
 void DataSyncer::OnFetchCheckRecords(const shared_ptr<DKContext> context,
@@ -1129,12 +1129,12 @@ void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorT
 {
     CurrentSyncState_ = state;
     CurrentErrorType_ = error;
-    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(state, error);
+    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(bundleName_, state, error);
 }
 
 void DataSyncer::NotifyCurrentSyncState()
 {
-    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(CurrentSyncState_, CurrentErrorType_);
+    CloudSyncCallbackManager::GetInstance().NotifySyncStateChanged(bundleName_, CurrentSyncState_, CurrentErrorType_);
 }
 
 void DataSyncer::UpdateErrorCode(int32_t code)
@@ -1223,7 +1223,7 @@ int32_t DataSyncer::DownloadThumb()
 
 int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
 {
-    if (!BatteryStatus::IsCharging() || (NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT) ||
+    if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT) ||
         ScreenStatus::IsScreenOn()) {
         LOGI("download thumb condition is not met");
         return E_OK;
@@ -1269,6 +1269,10 @@ void DataSyncer::FetchThumbDownloadCallback(shared_ptr<DKContext> context,
 int32_t DataSyncer::CleanCache(const string &uri)
 {
     return E_OK;
+}
+void DataSyncer::StopUploadAssets()
+{
+    sdkHelper_->Release();
 }
 } // namespace CloudSync
 } // namespace FileManagement
