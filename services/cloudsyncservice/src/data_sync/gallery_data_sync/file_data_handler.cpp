@@ -1113,6 +1113,30 @@ static string GetLocalPath(int userId, const string &filePath)
     string dfsPath = dfsPrefix + to_string(userId) + dfsSuffix + filePath.substr(sandboxPrefix.length());
     return dfsPath;
 }
+int32_t FileDataHandler::SetRetry(vector<NativeRdb::ValueObject> &retryList)
+{
+    if (retryList.empty()) {
+        return E_OK;
+    }
+    LOGE("abnormal data set retry!");
+    std::stringstream ss;
+    for (unsigned int i = 0; i < retryList.size(); i++) {
+        if (ss.tellp() != 0) {
+            ss << ",";
+        }
+        ss <<" ? ";
+    }
+    string sql = "UPDATE" + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_DIRTY + " = " +
+        to_string(static_cast<int32_t>(Media::DirtyType::TYPE_RETRY)) + " WHERE " + PC::PHOTO_CLOUD_ID +
+        " IN ( " + ss.str() + " )";
+    int32_t ret = ExecuteSql(sql, retryList);
+    if (ret != E_OK) {
+        LOGE("update retry flag failed, ret=%{public}d", ret);
+        return E_RDB;
+    }
+    retryList.clear();
+    return E_OK;
+}
 
 int FileDataHandler::SetRetry(const string &recordId)
 {
@@ -1956,7 +1980,7 @@ int32_t FileDataHandler::MarkClean(const int32_t action)
     return ret;
 }
 
-void FileDataHandler::HandleCreateConvertErr(NativeRdb::ResultSet &resultSet)
+void FileDataHandler::HandleCreateConvertErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {
     string path;
     int32_t ret = createConvertor_.GetString(PC::MEDIA_FILE_PATH, path, resultSet);
@@ -1967,13 +1991,16 @@ void FileDataHandler::HandleCreateConvertErr(NativeRdb::ResultSet &resultSet)
     createFailSet_.push_back(path);
 }
 
-void FileDataHandler::HandleFdirtyConvertErr(NativeRdb::ResultSet &resultSet)
+void FileDataHandler::HandleFdirtyConvertErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {
     string cloudId;
     int32_t ret = createConvertor_.GetString(PC::PHOTO_CLOUD_ID, cloudId, resultSet);
     if (ret != E_OK) {
         LOGE("get cloud id err");
         return;
+    }
+    if (err == E_PATH) {
+        retrySet_.push_back(cloudId);
     }
     modifyFailSet_.push_back(cloudId);
 }
@@ -2373,6 +2400,7 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
             LOGE("result set to records err %{public}d", ret);
             return ret;
         }
+        SetRetry(retrySet_);
     }
 
     /* album map change */

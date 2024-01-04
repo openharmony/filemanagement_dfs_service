@@ -45,7 +45,7 @@ public:
         return E_OK;
     }
 
-    MOCK_METHOD1(HandleErr, void(NativeRdb::ResultSet &resultSet));
+    MOCK_METHOD2(HandleErr, void(int32_t, NativeRdb::ResultSet &resultSet));
     MOCK_METHOD2(ResultSetToRecords, int32_t(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
         std::vector<DriveKit::DKRecord> &records));
     MOCK_METHOD2(RecordToValueBucket, int32_t(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket));

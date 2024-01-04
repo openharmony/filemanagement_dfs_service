@@ -72,17 +72,17 @@ private:
     DriveKit::DKRecordId rootId_;
 
     int32_t CleanCloudRecord(const int32_t action);
-    void HandleCreateConvertErr(NativeRdb::ResultSet &resultSet);
-    void HandleFdirtyConvertErr(NativeRdb::ResultSet &resultSet);
+    void HandleCreateConvertErr(int32_t err, NativeRdb::ResultSet &resultSet);
+    void HandleFdirtyConvertErr(int32_t err, NativeRdb::ResultSet &resultSet);
     CloudDiskDataConvertor createConvertor_ = {
         userId_, bundleName_, FILE_CREATE,
-        std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, this, std::placeholders::_1)
+        std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, this, std::placeholders::_1, std::placeholders::_2)
     };
     CloudDiskDataConvertor deleteConvertor_ = { userId_, bundleName_, FILE_DELETE };
     CloudDiskDataConvertor mdirtyConvertor_ = { userId_, bundleName_, FILE_METADATA_MODIFY };
     CloudDiskDataConvertor fdirtyConvertor_ = {
         userId_, bundleName_, FILE_DATA_MODIFY,
-        std::bind(&CloudDiskDataHandler::HandleFdirtyConvertErr, this, std::placeholders::_1)
+        std::bind(&CloudDiskDataHandler::HandleFdirtyConvertErr, this, std::placeholders::_1, std::placeholders::_2)
     };
     int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
         const std::unordered_map<std::string, LocalInfo> &localMap);

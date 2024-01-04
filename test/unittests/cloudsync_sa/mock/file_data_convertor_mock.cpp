@@ -31,7 +31,7 @@ using namespace Media;
 using DriveKit::DKLocalErrorCode;
 
 FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type,
-    const function<void(NativeRdb::ResultSet &resultSet)> &func) : userId_(userId),
+    const function<void(int32_t, NativeRdb::ResultSet &resultSet)> &func) : userId_(userId),
     bundleName_(bundleName), type_(type), errHandler_(func)
 {
 }
@@ -41,7 +41,7 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
     return E_OK;
 }
 
-void FileDataConvertor::HandleErr(NativeRdb::ResultSet &resultSet)
+void FileDataConvertor::HandleErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {
 }
 

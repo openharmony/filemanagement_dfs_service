@@ -33,11 +33,11 @@ public:
     CloudDiskDataConvertor(int32_t userId,
                            std::string &bundleName,
                            OperationType type,
-                           const std::function<void(NativeRdb::ResultSet &resultSet)> &func = nullptr);
+                           const std::function<void(int32_t err, NativeRdb::ResultSet &resultSet)> &func = nullptr);
     ~CloudDiskDataConvertor() = default;
 
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
-    void HandleErr(NativeRdb::ResultSet &resultSet);
+    void HandleErr(int32_t err, NativeRdb::ResultSet &resultSet);
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valuesBucket);
     int32_t GetMetaFilePath(const std::string &cloudId, std::string &path);
     void SetRootId(std::string rootId);
@@ -84,7 +84,7 @@ private:
     OperationType type_;
     DriveKit::DKRecordId rootId_ = "";
     static std::string recordType_;
-    std::function<void(NativeRdb::ResultSet &resultSet)> errHandler_;
+    std::function<void(int32_t, NativeRdb::ResultSet &resultSet)> errHandler_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

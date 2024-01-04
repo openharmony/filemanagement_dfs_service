@@ -40,12 +40,12 @@ public:
     };
 
     FileDataConvertor(int32_t userId, std::string &bundleName, OperationType type, const std::function<void(
-        NativeRdb::ResultSet &resultSet)> &func = nullptr);
+        int32_t err, NativeRdb::ResultSet &resultSet)> &func = nullptr);
     ~FileDataConvertor() = default;
 
     /* resultSet -> record */
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
-    void HandleErr(NativeRdb::ResultSet &resultSet);
+    void HandleErr(int32_t err, NativeRdb::ResultSet &resultSet);
     /* record -> resultSet */
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valuesBucket);
 
@@ -168,7 +168,7 @@ private:
     static std::string tmpSuffix_;
 
     /* err */
-    std::function<void(NativeRdb::ResultSet &resultSet)> errHandler_;
+    std::function<void(int32_t, NativeRdb::ResultSet &resultSet)> errHandler_;
 };
 
 inline int32_t FileDataConvertor::HandleFileName(DriveKit::DKRecordData &data,

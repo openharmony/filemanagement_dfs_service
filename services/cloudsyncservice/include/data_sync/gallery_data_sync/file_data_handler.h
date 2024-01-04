@@ -135,6 +135,7 @@ private:
     DriveKit::DKFieldKeyArray checkedKeys_ = {"version", "id"};
     std::vector<std::string> modifyFailSet_;
     std::vector<std::string> createFailSet_;
+    std::vector<NativeRdb::ValueObject> retrySet_;
 
     /* identifier */
     int32_t userId_;
@@ -150,13 +151,13 @@ private:
     int32_t DeleteDentryFile(void);
 
     /* err handle */
-    void HandleCreateConvertErr(NativeRdb::ResultSet &resultSet);
-    void HandleFdirtyConvertErr(NativeRdb::ResultSet &resultSet);
+    void HandleCreateConvertErr(int32_t err, NativeRdb::ResultSet &resultSet);
+    void HandleFdirtyConvertErr(int32_t err, NativeRdb::ResultSet &resultSet);
 
     /* create */
     FileDataConvertor createConvertor_ = {
         userId_, bundleName_, FILE_CREATE,
-        std::bind(&FileDataHandler::HandleCreateConvertErr, this, std::placeholders::_1)
+        std::bind(&FileDataHandler::HandleCreateConvertErr, this, std::placeholders::_1, std::placeholders::_2)
     };
 
     /* delete */
@@ -166,7 +167,7 @@ private:
     FileDataConvertor mdirtyConvertor_ = { userId_, bundleName_, FILE_METADATA_MODIFY };
     FileDataConvertor fdirtyConvertor_ = {
         userId_, bundleName_, FILE_DATA_MODIFY,
-        std::bind(&FileDataHandler::HandleFdirtyConvertErr, this, std::placeholders::_1)
+        std::bind(&FileDataHandler::HandleFdirtyConvertErr, this, std::placeholders::_1, std::placeholders::_2)
     };
 
     /* file Conflict */
@@ -211,6 +212,7 @@ private:
     void RemoveThmParentPath(const std::string &filePath);
     int32_t PullRecordDelete(DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
     int32_t SetRetry(const std::string &recordId);
+    int32_t SetRetry(std::vector<NativeRdb::ValueObject> &retryList);
     int32_t RecycleFile(const std::string &recordId);
     void AppendToDownload(NativeRdb::ResultSet &local,
                           const std::string &fieldKey,
