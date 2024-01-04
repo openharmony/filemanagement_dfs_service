@@ -67,6 +67,7 @@ void SessionPool::ReleaseSession(const string &cid, const uint8_t linkType)
                 (*iter)->Release();
                 occupySession_.erase(linkTypeIter);
                 iter = usrSpaceSessionPool_.erase(iter);
+                mlinkType = 0;
                 continue;
             }
         }
