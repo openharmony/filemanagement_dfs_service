@@ -72,6 +72,7 @@ private:
     std::shared_ptr<CloudDownloadCallback> downloadCallback_;
     sptr<CloudSyncManagerImpl::SystemAbilityStatusChange> listener_;
     std::mutex subscribeMutex_;
+    std::mutex callbackMutex_;
     void SubscribeListener();
 };
 } // namespace OHOS::FileManagement::CloudSync

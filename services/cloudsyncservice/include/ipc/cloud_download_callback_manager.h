@@ -56,6 +56,7 @@ public:
 
 private:
     std::mutex downloadsMtx_;
+    std::mutex callbackMutex_;
     std::unordered_map<std::string, DownloadProgressObj> downloads_;
     sptr<ICloudDownloadCallback> callback_;
     std::string bundleName_;
