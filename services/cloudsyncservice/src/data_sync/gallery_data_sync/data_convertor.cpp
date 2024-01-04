@@ -50,7 +50,7 @@ int32_t DataConvertor::ResultSetToRecords(const shared_ptr<NativeRdb::ResultSet>
         ret = Convert(record, *resultSet);
         if (ret != E_OK) {
             LOGE("covert result to record err %{public}d", ret);
-            HandleErr(*resultSet);
+            HandleErr(ret, *resultSet);
             continue;
         }
         records.emplace_back(move(record));
@@ -59,7 +59,7 @@ int32_t DataConvertor::ResultSetToRecords(const shared_ptr<NativeRdb::ResultSet>
     return E_OK;
 }
 
-void DataConvertor::HandleErr(NativeRdb::ResultSet &resultSet)
+void DataConvertor::HandleErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {
 }
 

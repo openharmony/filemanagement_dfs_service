@@ -252,7 +252,8 @@ HWTEST_F(CloudDiskDataHandlerTest, HandleCreateConvertErrTest001, TestSize.Level
     const string cloudId = "sample_id";
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(resultSet, GetString(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(cloudId), Return(E_OK)));
-    cloudDiskDataHandler_->HandleCreateConvertErr(resultSet);
+    int32_t err = E_RDB;
+    cloudDiskDataHandler_->HandleCreateConvertErr(err, resultSet);
     EXPECT_NE(cloudDiskDataHandler_->createFailSet_.size(), length);
     GTEST_LOG_(INFO) << "HandleCreateConvertErr End";
 }
@@ -270,7 +271,8 @@ HWTEST_F(CloudDiskDataHandlerTest, HandleCreateConvertErrTest002, TestSize.Level
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(resultSet, GetString(_, _)).WillOnce(Return(E_RDB));
-    cloudDiskDataHandler_->HandleCreateConvertErr(resultSet);
+    int32_t err = E_RDB;
+    cloudDiskDataHandler_->HandleCreateConvertErr(err, resultSet);
     EXPECT_EQ(cloudDiskDataHandler_->createFailSet_.size(), length);
     GTEST_LOG_(INFO) << "HandleCreateConvertErr End";
 }
@@ -289,7 +291,8 @@ HWTEST_F(CloudDiskDataHandlerTest, HandleFdirtyConvertErrTest001, TestSize.Level
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(resultSet, GetString(_, _)).WillOnce(Return(E_OK));
-    cloudDiskDataHandler_->HandleFdirtyConvertErr(resultSet);
+    int32_t err = E_RDB;
+    cloudDiskDataHandler_->HandleFdirtyConvertErr(err, resultSet);
     EXPECT_NE(cloudDiskDataHandler_->modifyFailSet_.size(), length);
     GTEST_LOG_(INFO) << "HandleFdirtyConvertErr End";
 }
@@ -308,7 +311,8 @@ HWTEST_F(CloudDiskDataHandlerTest, HandleFdirtyConvertErrTest002, TestSize.Level
     ResultSetMock resultSet;
     EXPECT_CALL(resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(resultSet, GetString(_, _)).WillOnce(Return(E_RDB));
-    cloudDiskDataHandler_->HandleFdirtyConvertErr(resultSet);
+    int32_t err = E_RDB;
+    cloudDiskDataHandler_->HandleFdirtyConvertErr(err, resultSet);
     EXPECT_EQ(cloudDiskDataHandler_->modifyFailSet_.size(), length);
     GTEST_LOG_(INFO) << "HandleFdirtyConvertErr End";
 }

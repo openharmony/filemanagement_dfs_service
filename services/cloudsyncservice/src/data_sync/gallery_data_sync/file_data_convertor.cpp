@@ -46,7 +46,7 @@ string FileDataConvertor::tmpSuffix_ = ".temp.download";
 constexpr size_t DEFAULT_TIME_SIZE = 32;
 constexpr size_t FORMATTED_YEAR_SIZE = 4;
 FileDataConvertor::FileDataConvertor(int32_t userId, string &bundleName, OperationType type,
-    const function<void(NativeRdb::ResultSet &resultSet)> &func) : userId_(userId),
+    const function<void(int32_t, NativeRdb::ResultSet &resultSet)> &func) : userId_(userId),
     bundleName_(bundleName), type_(type), errHandler_(func)
 {
 }
@@ -74,10 +74,10 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
     return E_OK;
 }
 
-void FileDataConvertor::HandleErr(NativeRdb::ResultSet &resultSet)
+void FileDataConvertor::HandleErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {
     if (errHandler_ != nullptr) {
-        errHandler_(resultSet);
+        errHandler_(err, resultSet);
     }
 }
 

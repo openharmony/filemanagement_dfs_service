@@ -41,7 +41,7 @@ public:
 
     /* resultSet -> record */
     virtual int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet) = 0;
-    virtual void HandleErr(NativeRdb::ResultSet &resultSet);
+    virtual void HandleErr(int32_t err, NativeRdb::ResultSet &resultSet);
     /* record -> resultSet */
     virtual int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valueBucket) = 0;
 

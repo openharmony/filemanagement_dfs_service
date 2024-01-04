@@ -102,9 +102,11 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleErr001, TestSize.Level1)
         shared_ptr<CloudDiskDataHandler> cloudDiskHandler = make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb);
         shared_ptr<CloudDiskDataConvertor> createConvertor = make_shared<CloudDiskDataConvertor>(
             USER_ID, bundName, FILE_CREATE,
-            std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1));
+            std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1,
+            std::placeholders::_2));
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        createConvertor->HandleErr(*resultSet);
+        int32_t err = E_RDB;
+        createConvertor->HandleErr(err, *resultSet);
         EXPECT_EQ(cloudDiskHandler->modifyFailSet_.size(), 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -130,9 +132,11 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleErr002, TestSize.Level1)
         shared_ptr<CloudDiskDataHandler> cloudDiskHandler = make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb);
         shared_ptr<CloudDiskDataConvertor> fdirtyConvertor = make_shared<CloudDiskDataConvertor>(
             USER_ID, bundName, FILE_DATA_MODIFY,
-            std::bind(&CloudDiskDataHandler::HandleFdirtyConvertErr, cloudDiskHandler, std::placeholders::_1));
+            std::bind(&CloudDiskDataHandler::HandleFdirtyConvertErr, cloudDiskHandler, std::placeholders::_1,
+            std::placeholders::_2));
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        fdirtyConvertor->HandleErr(*resultSet);
+        int32_t err = E_RDB;
+        fdirtyConvertor->HandleErr(err, *resultSet);
         EXPECT_EQ(cloudDiskHandler->modifyFailSet_.size(), 1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -158,9 +162,11 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleErr003, TestSize.Level1)
         shared_ptr<CloudDiskDataHandler> cloudDiskHandler = make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb);
         shared_ptr<CloudDiskDataConvertor> createConvertor = make_shared<CloudDiskDataConvertor>(
             USER_ID, bundName, FILE_CREATE,
-            std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1));
+            std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1,
+            std::placeholders::_2));
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        createConvertor->HandleErr(*resultSet);
+        int32_t err = E_RDB;
+        createConvertor->HandleErr(err, *resultSet);
         EXPECT_EQ(cloudDiskHandler->createFailSet_.size(), 1);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -211,7 +217,8 @@ HWTEST_F(CloudDiskDataConvertorTest, Convert102, TestSize.Level1)
         shared_ptr<CloudDiskDataHandler> cloudDiskHandler = make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb);
         shared_ptr<CloudDiskDataConvertor> createConvertor = make_shared<CloudDiskDataConvertor>(
             USER_ID, bundName, FILE_CREATE,
-            std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1));
+            std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1,
+            std::placeholders::_2));
         DriveKit::DKRecord record;
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
         int res = createConvertor->Convert(record, *resultSet);
@@ -1742,7 +1749,8 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleAttachments001, TestSize.Level1)
         shared_ptr<CloudDiskDataHandler> cloudDiskHandler = make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb);
         shared_ptr<CloudDiskDataConvertor> createConvertor = make_shared<CloudDiskDataConvertor>(
             USER_ID, bundName, FILE_CREATE,
-            std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1));
+            std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1,
+            std::placeholders::_2));
 
         int32_t res = createConvertor->HandleAttachments(data, *resultSet);
         EXPECT_EQ(res, E_PATH);

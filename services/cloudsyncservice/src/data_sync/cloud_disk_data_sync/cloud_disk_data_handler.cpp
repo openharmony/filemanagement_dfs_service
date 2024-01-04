@@ -123,7 +123,7 @@ static bool FileIsLocal(NativeRdb::ResultSet &local)
     return position != static_cast<int32_t>(POSITION_CLOUD);
 }
 
-void CloudDiskDataHandler::HandleCreateConvertErr(NativeRdb::ResultSet &resultSet)
+void CloudDiskDataHandler::HandleCreateConvertErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {
     string cloudId;
     int32_t ret = createConvertor_.GetString(FC::CLOUD_ID, cloudId, resultSet);
@@ -134,7 +134,7 @@ void CloudDiskDataHandler::HandleCreateConvertErr(NativeRdb::ResultSet &resultSe
     createFailSet_.push_back(cloudId);
 }
 
-void CloudDiskDataHandler::HandleFdirtyConvertErr(NativeRdb::ResultSet &resultSet)
+void CloudDiskDataHandler::HandleFdirtyConvertErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {
     string cloudId;
     int32_t ret = fdirtyConvertor_.GetString(FC::CLOUD_ID, cloudId, resultSet);

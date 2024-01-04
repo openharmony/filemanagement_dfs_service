@@ -37,15 +37,15 @@ string CloudDiskDataConvertor::recordType_ = "file";
 CloudDiskDataConvertor::CloudDiskDataConvertor(int32_t userId,
                                                string &bundleName,
                                                OperationType type,
-                                               const function<void(NativeRdb::ResultSet &resultSet)> &func)
+                                               const function<void(int32_t, NativeRdb::ResultSet &resultSet)> &func)
     : userId_(userId), bundleName_(bundleName), type_(type), errHandler_(func)
 {
     Media::MimeTypeUtils::InitMimeTypeMap();
 }
-void CloudDiskDataConvertor::HandleErr(NativeRdb::ResultSet &resultSet)
+void CloudDiskDataConvertor::HandleErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {
     if (errHandler_ != nullptr) {
-        errHandler_(resultSet);
+        errHandler_(err, resultSet);
     }
 }
 
