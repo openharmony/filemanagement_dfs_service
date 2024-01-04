@@ -153,22 +153,22 @@ int32_t CloudDiskDataConvertor::CompensateAttributes(const DriveKit::DKRecordDat
     int64_t metaTimeEdited = 0;
     DriveKit::DKRecordFieldMap attributes;
     if (data.find(DK_FILE_ATTRIBUTES) == data.end()) {
-        fileTimeAdded = record.GetCreateTime();
+        fileTimeAdded = static_cast<int64_t>(record.GetCreateTime());
         fileTimeEdited = static_cast<int64_t>(record.GetEditedTime());
-        metaTimeEdited = record.GetEditedTime();
+        metaTimeEdited = static_cast<int64_t>(record.GetEditedTime());
     } else {
         data.at(DK_FILE_ATTRIBUTES).GetRecordMap(attributes);
         if (attributes.find(DK_FILE_TIME_ADDED) == attributes.end() ||
             attributes[DK_FILE_TIME_ADDED].GetLong(fileTimeAdded) != DKLocalErrorCode::NO_ERROR) {
-            fileTimeAdded = record.GetCreateTime();
+            fileTimeAdded = static_cast<int64_t>(record.GetCreateTime());
         }
         if (attributes.find(DK_FILE_TIME_EDITED) == attributes.end() ||
             attributes[DK_FILE_TIME_EDITED].GetLong(fileTimeEdited) != DKLocalErrorCode::NO_ERROR) {
-            fileTimeEdited = record.GetEditedTime();
+            fileTimeEdited = static_cast<int64_t>(record.GetEditedTime());
         }
         if (attributes.find(DK_META_TIME_EDITED) == attributes.end() ||
             attributes[DK_META_TIME_EDITED].GetLong(metaTimeEdited) != DKLocalErrorCode::NO_ERROR) {
-            metaTimeEdited = record.GetEditedTime();
+            metaTimeEdited = static_cast<int64_t>(record.GetEditedTime());
         }
     }
     valueBucket.PutLong(FileColumn::FILE_TIME_ADDED, fileTimeAdded);

@@ -672,7 +672,7 @@ int32_t FileDataConvertor::CompensateDataAdded(const DriveKit::DKRecord &record,
     if (data.find(FILE_CREATED_TIME) != data.end()) {
         data[FILE_CREATED_TIME].GetLong(dataAdded);
     } else {
-        dataAdded = record.GetCreateTime();
+        dataAdded = static_cast<int64_t>(record.GetCreateTime());
     }
     if (dataAdded == 0) {
         LOGE("The createTime of record is incorrect");

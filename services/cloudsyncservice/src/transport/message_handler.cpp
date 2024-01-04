@@ -51,7 +51,7 @@ bool MessageHandler::PackData(uint8_t *data, uint32_t totalLen)
     head->version = VERSION;
     head->msgType = htole16(msgHdr_.msgType);
     head->dataLen = htole32(totalLen - sizeof(MessageHeader));
-    head->errorCode = htole32(msgHdr_.errorCode);
+    head->errorCode = static_cast<int32_t>(htole32(msgHdr_.errorCode));
 
     ptr += sizeof(MessageHeader);
     SessionDeviceInfo *deviceInfo = reinterpret_cast<SessionDeviceInfo *>(ptr);
@@ -97,7 +97,7 @@ bool MessageHandler::UnPackData(uint8_t *data, uint32_t totalLen)
     msgHdr_.version = head->version;
     msgHdr_.msgType = le16toh(head->msgType);
     msgHdr_.dataLen = le32toh(head->dataLen);
-    msgHdr_.errorCode = le32toh(head->errorCode);
+    msgHdr_.errorCode = static_cast<int32_t>(le32toh(head->errorCode));
     if (msgHdr_.magic != MSG_MAGIC) {
         LOGE("not valid data");
         return false;
@@ -121,7 +121,7 @@ bool MessageHandler::UnPackData(uint8_t *data, uint32_t totalLen)
     ptr += sizeof(SessionDeviceInfo);
     UserData *userData = reinterpret_cast<UserData *>(ptr);
     taskId_ = le64toh(userData->taskId);
-    userId_ = le32toh(userData->userId);
+    userId_ = static_cast<int32_t>(le32toh(userData->userId));
     auto uriLen = userData->uriLen;
     if (uriLen > PATH_MAX) {
         LOGE("exception uriLen:%{public}d", uriLen);

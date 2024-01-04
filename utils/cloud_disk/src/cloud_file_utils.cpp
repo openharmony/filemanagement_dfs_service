@@ -118,7 +118,13 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
         return false;
     }
     string realPath = absPath.get();
-    int fd = open(realPath.c_str(), O_RDONLY);
+    char resolvedPath[PATH_MAX] = {'\0'};
+    char *realPaths = realpath(realPath.c_str(), resolvedPath);
+    if (realPaths == NULL) {
+        LOGE("realpath failed");
+        return false;
+    }
+    int fd = open(realPaths, O_RDONLY);
     if (fd < 0) {
         LOGE("open failed, errno:%{public}d", errno);
         return false;

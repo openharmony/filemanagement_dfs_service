@@ -360,13 +360,13 @@ static int32_t IsEditTimeChange(const DKRecord &record, NativeRdb::ResultSet &lo
     record.GetRecordData(data);
     if (data.find(DK_FILE_ATTRIBUTES) == data.end()) {
         LOGW("record data cannot find attributes");
-        recordEditTime = record.GetEditedTime();
+        recordEditTime = static_cast<int64_t>(record.GetEditedTime());
     } else {
         DriveKit::DKRecordFieldMap attributes;
         data[DK_FILE_ATTRIBUTES].GetRecordMap(attributes);
         if (attributes[DK_FILE_TIME_EDITED].GetLong(recordEditTime) != DKLocalErrorCode::NO_ERROR) {
             LOGW("attributes cannot find file time edited");
-            recordEditTime = record.GetEditedTime();
+            recordEditTime = static_cast<int64_t>(record.GetEditedTime());
         }
     }
     int32_t ret = DataConvertor::GetLong(FC::FILE_TIME_EDITED, localEditTime, local);
