@@ -27,6 +27,7 @@
 
 #include "cloud_daemon_stub.h"
 #include "i_cloud_daemon.h"
+#include "account_status_listener.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -37,7 +38,7 @@ class CloudDaemon final : public SystemAbility, public CloudDaemonStub, protecte
     DECLARE_SYSTEM_ABILITY(CloudDaemon);
 
 public:
-    explicit CloudDaemon(int32_t saID, bool runOnCreate = true) : SystemAbility(saID, runOnCreate) {};
+    explicit CloudDaemon(int32_t saID, bool runOnCreate = true);
     virtual ~CloudDaemon() = default;
 
     void OnStart() override;
@@ -55,6 +56,8 @@ private:
     static std::mutex instanceLock_;
     bool registerToService_ { false };
     void PublishSA();
+    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+    std::shared_ptr<CloudDisk::AccountStatusListener> accountStatusListener_ = nullptr;
 };
 } // namespace CloudFile
 } // namespace FileManagement

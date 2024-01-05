@@ -100,6 +100,7 @@ public:
     void ReleaseDefaultContainer(DKAppBundleName bundleName);
     void ReleaseContainer(DKAppBundleName bundleName, DKContainerName containerName);
     void ReleaseCloudUserInfo();
+    void CleanCloudUserInfo();
 private:
     DriveKitNative(int userId);
 

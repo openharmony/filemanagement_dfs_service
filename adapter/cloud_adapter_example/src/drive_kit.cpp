@@ -159,4 +159,8 @@ void DriveKitNative::ReleaseCloudUserInfo()
 {
     return;
 }
+void DriveKitNative::CleanCloudUserInfo()
+{
+    return;
+}
 } // namespace DriveKit
