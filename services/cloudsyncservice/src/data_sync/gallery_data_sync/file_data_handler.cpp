@@ -1126,7 +1126,7 @@ int32_t FileDataHandler::SetRetry(vector<NativeRdb::ValueObject> &retryList)
         }
         ss <<" ? ";
     }
-    string sql = "UPDATE" + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_DIRTY + " = " +
+    string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_DIRTY + " = " +
         to_string(static_cast<int32_t>(Media::DirtyType::TYPE_RETRY)) + " WHERE " + PC::PHOTO_CLOUD_ID +
         " IN ( " + ss.str() + " )";
     int32_t ret = ExecuteSql(sql, retryList);
