@@ -28,6 +28,7 @@
 #include "ipc/cloud_download_callback_manager.h"
 #include "i_cloud_download_callback.h"
 #include "sdk_helper.h"
+#include "sysevent.h"
 #include "task.h"
 
 namespace OHOS {
@@ -215,6 +216,9 @@ private:
 
     /* Current error type */
     ErrorType CurrentErrorType_{ErrorType::NO_ERROR};
+
+    /* sys event data */
+    std::unique_ptr<SyncData> syncData_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

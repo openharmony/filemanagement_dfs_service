@@ -170,8 +170,14 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
 
     /* Full synchronization and incremental synchronization */
     if (handler->IsPullRecords()) {
+        if (syncData_ == nullptr) {
+            syncData_ = make_unique<FullSyncData>();
+        }
         ret = AsyncRun(context, &DataSyncer::PullRecords);
     } else {
+        if (syncData_ == nullptr) {
+            syncData_ = make_unique<IncSyncData>();
+        }
         ret = AsyncRun(context, &DataSyncer::PullDatabaseChanges);
     }
     if (ret != E_OK) {
@@ -1061,6 +1067,13 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
     if (errorCode_ != E_OK) {
         syncState = SyncState::SYNC_FAILED;
     }
+
+    /* sys event report */
+    if (bundleName_ == GALLERY_BUNDLE_NAME && syncData_ != nullptr &&
+            syncData_->IsFullSync()) {
+        syncData_->Report();
+    }
+    syncData_ = nullptr;
 
     CloudSyncState notifyState = CloudSyncState::COMPLETED;
     if (syncStateManager_.GetStopSyncFlag()) {
