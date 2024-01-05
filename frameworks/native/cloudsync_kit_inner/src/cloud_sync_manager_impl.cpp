@@ -278,7 +278,6 @@ void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteOb
             CloudSyncServiceProxy::InvaildInstance();
             if (callback_) {
                 callback_->OnSyncStateChanged(CloudSyncState::COMPLETED, ErrorType::NO_ERROR);
-                callback_ = nullptr;
             }
             isFirstCall_.clear();
         };
