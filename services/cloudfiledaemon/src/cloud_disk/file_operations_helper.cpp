@@ -55,6 +55,8 @@ void FileOperationsHelper::GetInodeAttr(shared_ptr<CloudDiskInode> ino, struct s
     statBuf->st_uid = ino->stat.st_uid;
     statBuf->st_gid = ino->stat.st_gid;
     statBuf->st_mtime = ino->stat.st_mtime;
+    statBuf->st_ctime = ino->stat.st_ctime;
+    statBuf->st_atime = ino->stat.st_atime;
     statBuf->st_mode = ino->stat.st_mode;
     statBuf->st_nlink = ino->stat.st_nlink;
     if (statBuf->st_mode & S_IFREG) {

@@ -50,8 +50,7 @@ static void InitInodeAttr(fuse_ino_t parent, struct CloudDiskInode *childInode,
     childInode->stat = parentInode->stat;
     childInode->stat.st_mtime = childInfo.mtime / MILLISECOND_TO_SECONDS_TIMES;
     childInode->stat.st_ctime = childInfo.ctime / MILLISECOND_TO_SECONDS_TIMES;
-    childInode->stat.st_atime = childInfo.atime ? childInfo.atime / MILLISECOND_TO_SECONDS_TIMES :
-                                childInode->stat.st_mtime;
+    childInode->stat.st_atime = childInfo.atime / MILLISECOND_TO_SECONDS_TIMES;
 
     childInode->bundleName = parentInode->bundleName;
     childInode->location = to_string(childInfo.location);
