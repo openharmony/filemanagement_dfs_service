@@ -29,6 +29,7 @@
 #include "i_cloud_sync_callback.h"
 #include "sync_rule/battery_status_listener.h"
 #include "sync_rule/screen_status_listener.h"
+#include "svc_death_recipient.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudSyncService final : public SystemAbility, public CloudSyncServiceStub, protected NoCopyable {
@@ -64,7 +65,8 @@ public:
     int32_t DeleteAsset(const int32_t userId, const std::string &uri) override;
     int32_t GetSyncTimeInner(int64_t &syncTime) override;
     int32_t CleanCacheInner(const std::string &uri) override;
-
+    void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
+    
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
     void OnStart(const SystemAbilityOnDemandReason& startReason) override;
@@ -91,6 +93,8 @@ private:
     std::shared_ptr<BatteryStatusListener> batteryStatusListener_;
     std::shared_ptr<ScreenStatusListener> screenStatusListener_;
     std::shared_ptr<FileTransferManager> fileTransferManager_;
+    sptr<SvcDeathRecipient> deathRecipient_;
+    static inline std::map<std::string, sptr<OHOS::IRemoteObject>> remoteObjectMap_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

@@ -168,13 +168,36 @@ void CloudSyncService::LoadRemoteSACallback::OnLoadSACompleteForRemote(const std
         isLoadSuccess_.store(false);
     } else {
         isLoadSuccess_.store(true);
+        remoteObjectMap_[deviceId] = remoteObject;
     }
     proxyConVar_.notify_one();
+}
+
+void CloudSyncService::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
+{
+    LOGD("set death recipient");
+    auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
+        unique_lock<mutex> lock(loadRemoteSAMutex_);
+        for (auto it = remoteObjectMap_.begin(); it != remoteObjectMap_.end();) {
+            if (it->second.GetRefPtr() == obj.GetRefPtr()) {
+                it = remoteObjectMap_.erase(it);
+                LOGD("remote sa died");
+            } else {
+                ++it;
+            }
+        }
+    };
+    deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));
+    remoteObject->AddDeathRecipient(deathRecipient_);
 }
 
 int32_t CloudSyncService::LoadRemoteSA(const std::string &deviceId)
 {
     unique_lock<mutex> lock(loadRemoteSAMutex_);
+    auto iter = remoteObjectMap_.find(deviceId);
+    if (iter != remoteObjectMap_.end()) {
+        return E_OK;
+    }
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         LOGE("Samgr is nullptr");
@@ -199,6 +222,7 @@ int32_t CloudSyncService::LoadRemoteSA(const std::string &deviceId)
         LOGE("Load CloudSynd SA timeout");
         return E_SA_LOAD_FAILED;
     }
+    SetDeathRecipient(remoteObjectMap_[deviceId]);
     return E_OK;
 }
 
