@@ -48,6 +48,7 @@ public:
     void HandleErr(int32_t err, NativeRdb::ResultSet &resultSet);
     /* record -> resultSet */
     int32_t Convert(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &valuesBucket);
+    int32_t ConvertAsset(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet);
 
     std::string GetThumbPath(const std::string &path, const std::string &key);
     std::string GetHmdfsLocalPath(const std::string &path);
@@ -366,32 +367,6 @@ inline int32_t FileDataConvertor::HandleDuration(DriveKit::DKRecordFieldMap &map
         return ret;
     }
     map[FILE_DURATION] = DriveKit::DKRecordField(duration);
-    return E_OK;
-}
-
-inline int32_t FileDataConvertor::HandleHeight(DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    int32_t val;
-    int32_t ret = GetInt(Media::PhotoColumn::PHOTO_HEIGHT, val, resultSet);
-    if (ret != E_OK || val == 0) {
-        LOGE("Get local height err %{public}d", ret);
-        return E_RDB;
-    }
-    map[FILE_HEIGHT] = DriveKit::DKRecordField(val);
-    return E_OK;
-}
-
-inline int32_t FileDataConvertor::HandleWidth(DriveKit::DKRecordFieldMap &map,
-    NativeRdb::ResultSet &resultSet)
-{
-    int32_t val;
-    int32_t ret = GetInt(Media::PhotoColumn::PHOTO_WIDTH, val, resultSet);
-    if (ret != E_OK || val == 0) {
-        LOGE("Get local wdith err %{public}d", ret);
-        return E_RDB;
-    }
-    map[FILE_WIDTH] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 

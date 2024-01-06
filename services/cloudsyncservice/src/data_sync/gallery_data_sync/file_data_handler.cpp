@@ -2338,7 +2338,7 @@ int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::
     predicates.SetWhereClause(Media::PhotoColumn::MEDIA_FILE_PATH + " = ?");
     predicates.SetWhereArgs({cloudId});
     predicates.Limit(LIMIT_SIZE);
-    auto resultSet = Query(predicates, MEDIA_CLOUD_SYNC_COLUMNS);
+    auto resultSet = Query(predicates, {PC::PHOTO_CLOUD_ID, PC::MEDIA_FILE_PATH});
     if (resultSet == nullptr) {
         LOGE("get nullptr created result");
         return E_RDB;
@@ -2349,24 +2349,16 @@ int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::
         LOGE("result set get row count err %{public}d", ret);
         return E_RDB;
     }
-
-    ret = localConvertor_.ResultSetToRecords(move(resultSet), records);
-    if (ret != 0) {
-        LOGE("result set to records err %{public}d", ret);
-        return ret;
-    }
-    for (const auto &record : records) {
-        if (!record.GetRecordId().empty()) {
-            AppendToDownload(record, "content", outAssetsToDownload);
-        } else {
-            LOGE("get recordid failed,recordid is null");
+    while (resultSet->GoToNextRow() == 0) {
+        DKRecord record;
+        localConvertor_.ConvertAsset(record, *resultSet);
+        if (record.GetRecordId().empty()) {
             continue;
         }
+        AppendToDownload(record, "content", outAssetsToDownload);
     }
-
     return E_OK;
 }
-
 int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
 {
     while (records.size() == 0) {
