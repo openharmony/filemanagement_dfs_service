@@ -99,12 +99,14 @@ void CloudDownloadCallbackManager::RegisterCallback(const int32_t userId,
 {
     LOGI("download_file : %{public}d register download callback : %{public}d", userId,
         downloadCallback != nullptr);
+    unique_lock<mutex> lock(callbackMutex_);
     callback_ = downloadCallback;
 }
 
 void CloudDownloadCallbackManager::UnregisterCallback(const int32_t userId)
 {
     LOGI("download_file : %{public}d unregister download callback", userId);
+    unique_lock<mutex> lock(callbackMutex_);
     callback_ = nullptr;
 }
 

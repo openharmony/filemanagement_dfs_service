@@ -44,7 +44,10 @@ int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCa
     }
     auto ret =
         CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback)));
-    callback_ = callback;
+    {
+        unique_lock<mutex> lock(callbackMutex_);
+        callback_ = callback;
+    }
     SubscribeListener();
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     LOGI("RegisterCallback ret %{public}d", ret);
@@ -61,7 +64,10 @@ int32_t CloudSyncManagerImpl::UnRegisterCallback()
 
     auto ret = CloudSyncServiceProxy->UnRegisterCallbackInner();
     if (!ret) {
-        callback_ = nullptr;
+        {
+            unique_lock<mutex> lock(callbackMutex_);
+            callback_ = nullptr;
+        }
         SubscribeListener();
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
