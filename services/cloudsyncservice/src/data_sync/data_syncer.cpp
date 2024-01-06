@@ -1286,17 +1286,14 @@ void DataSyncer::StopUploadAssets()
 
 void DataSyncer::InitSysEventData(bool isFullSync)
 {
-    return;
 }
 
 void DataSyncer::FreeSysEventData()
 {
-    return;
 }
 
 void DataSyncer::ReportSysEvent(uint32_t code)
 {
-    return;
 }
 
 void DataSyncer::UpdateBasicEventStat(uint32_t code)
