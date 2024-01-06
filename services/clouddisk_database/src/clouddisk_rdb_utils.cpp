@@ -87,9 +87,9 @@ static void FillFileInfo(const RowEntity &rowEntity, CloudDiskFileInfo &info)
     int64_t long_variable;
     rowEntity.Get(FileColumn::FILE_SIZE).GetLong(long_variable);
     info.size = static_cast<unsigned long long>(long_variable);
-    rowEntity.Get(FileColumn::FILE_TIME_VISIT).GetLong(long_variable);
-    info.atime = static_cast<unsigned long long>(long_variable);
     rowEntity.Get(FileColumn::FILE_TIME_ADDED).GetLong(long_variable);
+    info.atime = static_cast<unsigned long long>(long_variable);
+    rowEntity.Get(FileColumn::META_TIME_EDITED).GetLong(long_variable);
     info.ctime = static_cast<unsigned long long>(long_variable);
     rowEntity.Get(FileColumn::FILE_TIME_EDITED).GetLong(long_variable);
     info.mtime = static_cast<unsigned long long>(long_variable);

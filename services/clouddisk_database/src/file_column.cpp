@@ -65,7 +65,7 @@ const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " 
     FILE_TYPE + " INT, " +
     FILE_CATEGORY + " TEXT)";
 
-const std::string FileColumn::CREATE_PARENT_CLOUD_ID_INDEX = "CREATE INDEX IF NOT EXISTS" +
+const std::string FileColumn::CREATE_PARENT_CLOUD_ID_INDEX = "CREATE INDEX IF NOT EXISTS " +
     PARENT_CLOUD_ID_INDEX + " ON " + FILES_TABLE +
     " (" + PARENT_CLOUD_ID + ")";
 
@@ -75,7 +75,7 @@ const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
     PARENT_CLOUD_ID,
     POSITION,
     FILE_SIZE,
-    FILE_TIME_VISIT,
+    META_TIME_EDITED,
     FILE_TIME_ADDED,
     FILE_TIME_EDITED,
     IS_DIRECTORY
