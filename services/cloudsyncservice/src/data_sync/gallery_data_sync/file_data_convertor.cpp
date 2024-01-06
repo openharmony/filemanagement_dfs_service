@@ -74,6 +74,24 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Result
     return E_OK;
 }
 
+int32_t FileDataConvertor::ConvertAsset(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet)
+{
+    DriveKit::DKRecordData data;
+    int32_t ret = FillRecordId(record, resultSet);
+    if (ret != E_OK) {
+        LOGE("fill record id err %{public}d", ret);
+        return ret;
+    }
+    string path;
+    DriveKit::DKRecordFieldMap map;
+    DataConvertor::GetString(Media::PhotoColumn::MEDIA_FILE_PATH, path, resultSet);
+    map[Media::PhotoColumn::MEDIA_FILE_PATH] = DriveKit::DKRecordField(path);
+    data[FILE_ATTRIBUTES] = DriveKit::DKRecordField(map);
+    record.SetRecordData(data);
+    record.SetRecordType(recordType_);
+    return E_OK;
+}
+
 void FileDataConvertor::HandleErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {
     if (errHandler_ != nullptr) {
@@ -179,7 +197,6 @@ int32_t FileDataConvertor::HandleProperties(DriveKit::DKRecordData &data,
     /* Resolution is combined by cloud sdk, just upload height and width */
     RETURN_ON_ERR(HandleHeight(map, resultSet));
     RETURN_ON_ERR(HandleWidth(map, resultSet));
-
     /* set map */
     data[FILE_PROPERTIES] = DriveKit::DKRecordField(map);
     return E_OK;
@@ -219,6 +236,38 @@ int32_t FileDataConvertor::HandleAttachments(DriveKit::DKRecordData &data,
         return ret;
     }
 
+    return E_OK;
+}
+
+int32_t FileDataConvertor::HandleHeight(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet)
+{
+    int32_t val = 0;
+    int32_t ret = GetInt(Media::PhotoColumn::PHOTO_HEIGHT, val, resultSet);
+    if (ret != E_OK) {
+        LOGE("Get local height err %{public}d", ret);
+        return ret;
+    }
+    if (val == 0) {
+        LOGW("Get local height is 0 ");
+        return ret;
+    }
+    map[FILE_HEIGHT] = DriveKit::DKRecordField(val);
+    return E_OK;
+}
+
+int32_t FileDataConvertor::HandleWidth(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet)
+{
+    int32_t val = 0;
+    int32_t ret = GetInt(Media::PhotoColumn::PHOTO_WIDTH, val, resultSet);
+    if (ret != E_OK) {
+        LOGE("Get local wdith err %{public}d", ret);
+        return ret;
+    }
+    if (val == 0) {
+        LOGW("Get local wdith is 0 ");
+        return ret;
+    }
+    map[FILE_WIDTH] = DriveKit::DKRecordField(val);
     return E_OK;
 }
 

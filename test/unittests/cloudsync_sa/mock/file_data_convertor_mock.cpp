@@ -45,6 +45,11 @@ void FileDataConvertor::HandleErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {
 }
 
+int32_t FileDataConvertor::ConvertAsset(DriveKit::DKRecord &record, NativeRdb::ResultSet &resultSet)
+{
+    return E_OK;
+}
+
 int32_t FileDataConvertor::HandleUniqueFileds(DriveKit::DKRecordData &data,
     NativeRdb::ResultSet &resultSet)
 {
