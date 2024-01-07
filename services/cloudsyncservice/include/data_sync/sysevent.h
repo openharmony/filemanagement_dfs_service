@@ -25,7 +25,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
-#define CloudSyncSysEvent(eventName, type, ...)    \
+#define CLOUD_SYNC_SYS_EVENT(eventName, type, ...)    \
     HiSysEventWrite(HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT, eventName,   \
                     type, ##__VA_ARGS__)    \
 
@@ -34,10 +34,18 @@ public:
     virtual void Report() = 0;
 };
 
+#define UPLOAD_META_LEN 6
+#define DOWNLOAD_META_LEN 5
+#define DOWNLOAD_THUMB_LEN 5
+#define DOWNLOAD_LCD_LEN 5
+#define UPLOAD_ALBUM_LEN 4
+#define DOWNLOAD_ALBUM_LEN 4
+
 class SyncData : public SysEventData {
 public:
-    SyncData() : upload_meta_(6, 0), download_meta_(5, 0), download_thumb_(5, 0),
-        download_lcd_(5, 0), upload_album_(4, 0), download_album_(4, 0)
+    SyncData() : upload_meta_(UPLOAD_META_LEN, 0), download_meta_(DOWNLOAD_META_LEN, 0),
+        download_thumb_(DOWNLOAD_THUMB_LEN, 0), download_lcd_(DOWNLOAD_LCD_LEN, 0),
+        upload_album_(UPLOAD_ALBUM_LEN, 0), download_album_(DOWNLOAD_ALBUM_LEN, 0)
     {
     }
 
@@ -107,7 +115,7 @@ public:
             return;
         }
 
-        int32_t ret = CloudSyncSysEvent("CLOUD_SYNC_INC_STAT",
+        int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_SYNC_INC_STAT",
             HiviewDFX::HiSysEvent::EventType::STATISTIC,
             "upload_meta", upload_meta_,
             "download_meta", download_meta_,
@@ -144,7 +152,7 @@ public:
 
     void Report() override
     {
-        int32_t ret = CloudSyncSysEvent("CLOUD_SYNC_FULL_STAT",
+        int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_SYNC_FULL_STAT",
             HiviewDFX::HiSysEvent::EventType::STATISTIC,
             "sync_reason", sync_reason_,
             "stop_reason", stop_reason_,
