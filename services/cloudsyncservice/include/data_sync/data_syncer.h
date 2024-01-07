@@ -116,6 +116,13 @@ protected:
     void SyncStateChangedNotify(const CloudSyncState state, const ErrorType error);
     void SetErrorCodeMask(ErrorType errorType);
 
+    /* sys event */
+    virtual void InitSysEventData(bool isFullSync);
+    virtual void FreeSysEventData();
+    virtual void ReportSysEvent(uint32_t code);
+
+    void UpdateBasicEventStat(uint32_t code);
+
     /* identifier */
     const std::string bundleName_;
     const int32_t userId_;
@@ -127,6 +134,12 @@ protected:
     uint32_t errorCode_{0};
 
     bool isDataChanged_{false};
+
+    uint64_t startTime_;
+    SyncTriggerType triggerType_;
+
+    /* sys event data */
+    std::unique_ptr<SyncData> syncData_;
 
 private:
     /* download */
@@ -216,9 +229,6 @@ private:
 
     /* Current error type */
     ErrorType CurrentErrorType_{ErrorType::NO_ERROR};
-
-    /* sys event data */
-    std::unique_ptr<SyncData> syncData_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

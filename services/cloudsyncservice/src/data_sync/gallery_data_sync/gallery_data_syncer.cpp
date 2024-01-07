@@ -409,6 +409,32 @@ int32_t GalleryDataSyncer::DownloadThumb()
     PutHandler();
     return ret;
 }
+
+void GalleryDataSyncer::InitSysEventData(bool isFullSync)
+{
+    if (isFullSync) {
+        syncData_ = make_unique<FullSyncData>();
+    } else {
+        /* alloc inc sync data */
+    }
+}
+
+void GalleryDataSyncer::FreeSysEventData()
+{
+    syncData_ = nullptr;
+}
+
+void GalleryDataSyncer::ReportSysEvent(uint32_t code)
+{
+    if (syncData_ == nullptr) {
+        return;
+    }
+
+    if (syncData_->IsFullSync()) {
+        UpdateBasicEventStat(code);
+        syncData_->Report();
+    }
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

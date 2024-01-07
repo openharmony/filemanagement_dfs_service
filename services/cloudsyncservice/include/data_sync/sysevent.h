@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -53,9 +53,33 @@ public:
         return isFullSync_;
     }
 
+    void SetSyncReason(uint32_t reason)
+    {
+        sync_reason_ = reason;
+    }
+
+    void SetStopReason(uint32_t reason)
+    {
+        stop_reason_ = reason;
+    }
+
+    void SetStartTime(uint64_t time)
+    {
+        start_time_ = time;
+    }
+
+    void SetDuration(uint64_t time)
+    {
+        duration_ = time - start_time_;
+    }
+
 protected:
     bool isFullSync_;
 
+    uint32_t sync_reason_;
+    uint32_t stop_reason_;
+    uint64_t start_time_;
+    uint64_t duration_;
     std::vector<uint64_t> upload_meta_;
     std::vector<uint64_t> download_meta_;
     std::vector<uint64_t> download_thumb_;
@@ -138,32 +162,6 @@ public:
             LOGE("report CLOUD_SYNC_FULL_STAT error %{public}d", ret);
         }
     }
-
-    void SetSyncReason(uint32_t reason)
-    {
-        sync_reason_ = reason;
-    }
-
-    void SetStopReason(uint32_t reason)
-    {
-        stop_reason_ = reason;
-    }
-
-    void SetStartTime(uint64_t time)
-    {
-        start_time_ = time;
-    }
-
-    void SetDuration(uint64_t time)
-    {
-        duration_ = time - start_time_;
-    }
-
-private:
-    uint32_t sync_reason_;
-    uint32_t stop_reason_;
-    uint64_t start_time_;
-    uint64_t duration_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

@@ -70,6 +70,9 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     LOGI("%{private}d %{public}s starts sync, isforceSync %{public}d, triggerType %{public}d",
         userId_, bundleName_.c_str(), forceFlag, triggerType);
 
+    triggerType_ = triggerType;
+    startTime_ = GetCurrentTimeStamp();
+
     /* only one specific data sycner running at a time */
     if (syncStateManager_.CheckAndSetPending(forceFlag, triggerType)) {
         LOGI("syncing, pending sync");
@@ -169,15 +172,11 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
     }
 
     /* Full synchronization and incremental synchronization */
-    if (handler->IsPullRecords()) {
-        if (syncData_ == nullptr) {
-            syncData_ = make_unique<FullSyncData>();
-        }
+    bool isFullSync = handler->IsPullRecords();
+    InitSysEventData(isFullSync);
+    if (isFullSync) {
         ret = AsyncRun(context, &DataSyncer::PullRecords);
     } else {
-        if (syncData_ == nullptr) {
-            syncData_ = make_unique<IncSyncData>();
-        }
         ret = AsyncRun(context, &DataSyncer::PullDatabaseChanges);
     }
     if (ret != E_OK) {
@@ -1068,12 +1067,9 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
         syncState = SyncState::SYNC_FAILED;
     }
 
-    /* sys event report */
-    if (bundleName_ == GALLERY_BUNDLE_NAME && syncData_ != nullptr &&
-            syncData_->IsFullSync()) {
-        syncData_->Report();
-    }
-    syncData_ = nullptr;
+    /* sys event report and free */
+    ReportSysEvent(errorCode_);
+    FreeSysEventData();
 
     CloudSyncState notifyState = CloudSyncState::COMPLETED;
     if (syncStateManager_.GetStopSyncFlag()) {
@@ -1286,6 +1282,29 @@ int32_t DataSyncer::CleanCache(const string &uri)
 void DataSyncer::StopUploadAssets()
 {
     sdkHelper_->Release();
+}
+
+void DataSyncer::InitSysEventData(bool isFullSync)
+{
+    return;
+}
+
+void DataSyncer::FreeSysEventData()
+{
+    return;
+}
+
+void DataSyncer::ReportSysEvent(uint32_t code)
+{
+    return;
+}
+
+void DataSyncer::UpdateBasicEventStat(uint32_t code)
+{
+    syncData_->SetSyncReason(static_cast<uint32_t>(triggerType_));
+    syncData_->SetStopReason(code);
+    syncData_->SetStartTime(startTime_);
+    syncData_->SetDuration(GetCurrentTimeStamp());
 }
 } // namespace CloudSync
 } // namespace FileManagement
