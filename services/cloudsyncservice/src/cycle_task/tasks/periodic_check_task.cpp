@@ -25,7 +25,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 PeriodicCheckTask::PeriodicCheckTask(std::shared_ptr<DataSyncManager> dataSyncManager)
-    : CycleTask("periodic_check_task", "com.ohos.photos", CycleTaskRunner::ONE_WEEK, dataSyncManager) {}
+    : CycleTask("periodic_check_task", "com.ohos.photos", CycleTaskRunner::THREE_DAY, dataSyncManager) {}
 
 int32_t PeriodicCheckTask::RunTask(int32_t userId)
 {
