@@ -1058,7 +1058,6 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
         {
             LOGE("fail to get field id from cloud id : %{public}s", asset.recordId.c_str());
         }
-        
 
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX + to_string(fieldId), ChangeType::INSERT,
                                                   to_string(updateRows));
