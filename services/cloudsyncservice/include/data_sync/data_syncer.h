@@ -28,6 +28,7 @@
 #include "ipc/cloud_download_callback_manager.h"
 #include "i_cloud_download_callback.h"
 #include "sdk_helper.h"
+#include "sysevent.h"
 #include "task.h"
 
 namespace OHOS {
@@ -115,6 +116,14 @@ protected:
     void SyncStateChangedNotify(const CloudSyncState state, const ErrorType error);
     void SetErrorCodeMask(ErrorType errorType);
 
+    /* sys event */
+    virtual void InitSysEventData();
+    virtual void FreeSysEventData();
+    virtual void ReportSysEvent(uint32_t code);
+    virtual void SetFullSyncSysEvent();
+
+    void UpdateBasicEventStat(uint32_t code);
+
     /* identifier */
     const std::string bundleName_;
     const int32_t userId_;
@@ -126,6 +135,12 @@ protected:
     uint32_t errorCode_{0};
 
     bool isDataChanged_{false};
+
+    uint64_t startTime_;
+    SyncTriggerType triggerType_;
+
+    /* sys event data */
+    std::shared_ptr<SyncData> syncData_;
 
 private:
     /* download */

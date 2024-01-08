@@ -409,6 +409,35 @@ int32_t GalleryDataSyncer::DownloadThumb()
     PutHandler();
     return ret;
 }
+
+void GalleryDataSyncer::InitSysEventData()
+{
+    syncData_ = make_unique<IncSyncData>();
+}
+
+void GalleryDataSyncer::FreeSysEventData()
+{
+    syncData_ = nullptr;
+}
+
+void GalleryDataSyncer::SetFullSyncSysEvent()
+{
+    syncData_->SetFullSync();
+}
+
+void GalleryDataSyncer::ReportSysEvent(uint32_t code)
+{
+    if (syncData_ == nullptr) {
+        return;
+    }
+
+    if (syncData_->IsFullSync()) {
+        UpdateBasicEventStat(code);
+        syncData_->Report();
+    } else {
+        /* inc sync report */
+    }
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
