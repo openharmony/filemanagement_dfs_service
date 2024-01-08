@@ -290,7 +290,7 @@ void DataSyncer::DownloadAssets(DownloadContext &ctx)
     if (ret != E_OK) {
         LOGE("sdk download assets error %{public}d", ret);
         /* post sync hook */
-        if(syncData_ != nullptr) {
+        if (syncData_ != nullptr) {
             syncData_->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, ctx.assets.size());
         }
     }
