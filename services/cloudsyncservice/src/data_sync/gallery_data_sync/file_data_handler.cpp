@@ -1052,7 +1052,15 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
         if (ret != E_OK) {
             LOGE("update sync status failed, ret=%{public}d", ret);
         }
-        DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
+
+        int32_t fieldId = GetFieldIdFromCloudId(asset.recordId);
+        if (fieldId < 0)
+        {
+            LOGE("fail to get field id from cloud id : %{public}s", asset.recordId.c_str());
+        }
+        
+
+        DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX + to_string(fieldId), ChangeType::INSERT,
                                                   to_string(updateRows));
         DataSyncNotifier::GetInstance().FinalNotify();
     }
@@ -1665,6 +1673,31 @@ int32_t FileDataHandler::GetAlbumIdFromCloudId(const std::string &cloudId)
         }
     }
     LOGD("fail to get ALBUM_ID value");
+    return -1;
+}
+
+int32_t FileDataHandler::GetFieldIdFromCloudId(const std::string &cloudId)
+{
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PhotoColumn::PHOTOS_TABLE);
+    predicates.EqualTo(PhotoColumn::PHOTO_CLOUD_ID, cloudId);
+    auto resultSet = Query(predicates, {MediaColumn::MEDIA_ID});
+    int rowCount = 0;
+    int ret = -1;
+    if (resultSet) {
+        ret = resultSet->GetRowCount(rowCount);
+    }
+    if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
+        LOGE("get nullptr result or rowcount %{public}d", rowCount);
+        return -1;
+    }
+    if (resultSet->GoToNextRow() == 0) {
+        int fieldId;
+        ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fieldId, *resultSet);
+        if (ret == E_OK) {
+            return fieldId;
+        }
+    }
+    LOGD("fail to get FIELD_ID value");
     return -1;
 }
 
