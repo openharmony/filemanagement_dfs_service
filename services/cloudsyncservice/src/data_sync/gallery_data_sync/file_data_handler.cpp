@@ -1054,8 +1054,7 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
         }
 
         int32_t fieldId = GetFieldIdFromCloudId(asset.recordId);
-        if (fieldId < 0)
-        {
+        if (fieldId < 0) {
             LOGE("fail to get field id from cloud id : %{public}s", asset.recordId.c_str());
         }
         
