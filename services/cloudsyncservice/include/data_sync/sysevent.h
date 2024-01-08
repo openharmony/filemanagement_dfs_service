@@ -34,6 +34,7 @@ public:
     virtual void Report() = 0;
 };
 
+/* stat length */
 #define UPLOAD_META_LEN 6
 #define DOWNLOAD_META_LEN 5
 #define DOWNLOAD_THUMB_LEN 5
@@ -41,11 +42,61 @@ public:
 #define UPLOAD_ALBUM_LEN 4
 #define DOWNLOAD_ALBUM_LEN 4
 
+/* stat index */
+enum MetaStatIndex {
+    /* download */
+    INDEX_DL_META_SUCCESS,
+    INDEX_DL_META_ERROR_SDK,
+    INDEX_DL_META_ERROR_DATA,
+    INDEX_DL_META_ERROR_IO,
+    INDEX_DL_META_ERROR_RDB,
+
+    /* upload */
+    INDEX_UL_META_SUCCESS,
+    INDEX_UL_META_ERROR_SDK,
+    INDEX_UL_META_ERROR_DATA,
+    INDEX_UL_META_ERROR_IO,
+    INDEX_UL_META_ERROR_ATTACHMENT,
+    INDEX_UL_META_ERROR_RDB,
+};
+
+enum AttachmentStatIndex {
+    /* thumb */
+    INDEX_THUMB_SUCCESS,
+    INDEX_THUMB_ERROR_SDK,
+    INDEX_THUMB_ERROR_DATA,
+    INDEX_THUMB_ERROR_IO,
+    INDEX_THUMB_ERROR_RDB,
+
+    /* lcd */
+    INDEX_LCD_SUCCESS,
+    INDEX_LCD_ERROR_SDK,
+    INDEX_LCD_ERROR_DATA,
+    INDEX_LCD_ERROR_IO,
+    INDEX_LCD_ERROR_RDB,
+
+    /* context */
+};
+
+enum AlbumStatIndex {
+    /* upload */
+    INDEX_UL_ALBUM_SUCCESS,
+    INDEX_UL_ALBUM_ERROR_SDK,
+    INDEX_UL_ALBUM_ERROR_DATA,
+    INDEX_UL_ALBUM_ERROR_RDB,
+
+    /* download */
+    INDEX_DL_ALBUM_SUCCESS,
+    INDEX_DL_ALBUM_ERROR_SDK,
+    INDEX_DL_ALBUM_ERROR_DATA,
+    INDEX_DL_ALBUM_ERROR_RDB,
+};
+
 class SyncData : public SysEventData {
 public:
-    SyncData() : upload_meta_(UPLOAD_META_LEN, 0), download_meta_(DOWNLOAD_META_LEN, 0),
-        download_thumb_(DOWNLOAD_THUMB_LEN, 0), download_lcd_(DOWNLOAD_LCD_LEN, 0),
-        upload_album_(UPLOAD_ALBUM_LEN, 0), download_album_(DOWNLOAD_ALBUM_LEN, 0)
+    SyncData() : uploadMeta_(UPLOAD_META_LEN, 0), downloadMeta_(DOWNLOAD_META_LEN, 0),
+        downloadThumb_(DOWNLOAD_THUMB_LEN, 0), downloadLcd_(DOWNLOAD_LCD_LEN, 0),
+        uploadAlbum_(UPLOAD_ALBUM_LEN, 0), downloadAlbum_(DOWNLOAD_ALBUM_LEN, 0)
     {
     }
 
@@ -61,84 +112,73 @@ public:
         return isFullSync_;
     }
 
+    void SetFullSync()
+    {
+        isFullSync_ = true;
+    }
+
+    void UpdateMetaStat(uint32_t index, uint64_t diff)
+    {
+        if (index < INDEX_UL_META_SUCCESS) {
+            downloadMeta_[index] += diff;
+        } else {
+            uploadMeta_[index - INDEX_UL_META_SUCCESS] += diff;
+        }
+    }
+
+    void UpdateAttachmentStat(uint32_t index, uint64_t diff)
+    {
+        if (index < INDEX_LCD_SUCCESS) {
+            downloadThumb_[index] += diff;
+        } else {
+            downloadLcd_[index - INDEX_LCD_SUCCESS] += diff;
+        }
+    }
+
+    void UpdateAlbumStat(uint32_t index, uint64_t diff)
+    {
+        if (index < INDEX_DL_ALBUM_SUCCESS) {
+            downloadAlbum_[index] += diff;
+        } else {
+            uploadAlbum_[index - INDEX_DL_ALBUM_SUCCESS] += diff;
+        }
+    }
+
     void SetSyncReason(uint32_t reason)
     {
-        sync_reason_ = reason;
+        syncReason_ = reason;
     }
 
     void SetStopReason(uint32_t reason)
     {
-        stop_reason_ = reason;
+        stopReason_ = reason;
     }
 
     void SetStartTime(uint64_t time)
     {
-        start_time_ = time;
+        startTime_ = time;
     }
 
     void SetDuration(uint64_t time)
     {
-        duration_ = time - start_time_;
+        duration_ = time - startTime_;
     }
 
 protected:
     bool isFullSync_;
 
-    uint32_t sync_reason_;
-    uint32_t stop_reason_;
-    uint64_t start_time_;
+    uint32_t syncReason_;
+    uint32_t stopReason_;
+    uint64_t startTime_;
     uint64_t duration_;
-    std::vector<uint64_t> upload_meta_;
-    std::vector<uint64_t> download_meta_;
-    std::vector<uint64_t> download_thumb_;
-    std::vector<uint64_t> download_lcd_;
-    std::vector<uint64_t> upload_album_;
-    std::vector<uint64_t> download_album_;
+    /* ATOMIC */
+    std::vector<uint64_t> uploadMeta_;
+    std::vector<uint64_t> downloadMeta_;
+    std::vector<uint64_t> downloadThumb_;
+    std::vector<uint64_t> downloadLcd_;
+    std::vector<uint64_t> uploadAlbum_;
+    std::vector<uint64_t> downloadAlbum_;
     std::string sync_info_;
-};
-
-class IncSyncData : public SyncData {
-public:
-    IncSyncData()
-    {
-        isFullSync_ = false;
-    }
-
-    ~IncSyncData()
-    {
-        Dump();
-    }
-
-    void Report() override
-    {
-        if (isFullSync_ != true) {
-            return;
-        }
-
-        int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_SYNC_INC_STAT",
-            HiviewDFX::HiSysEvent::EventType::STATISTIC,
-            "upload_meta", upload_meta_,
-            "download_meta", download_meta_,
-            "download_thumb", download_thumb_,
-            "download_lcd", download_lcd_,
-            "upload_album", upload_album_,
-            "download_album", download_album_,
-            "sync_info", sync_info_
-        );
-        if (ret != E_OK) {
-            LOGE("report CLOUD_SYNC_INC_STAT error %{public}d", ret);
-        }
-    }
-
-    /* read from disk */
-    void Load()
-    {
-    }
-
-    /* write into disk */
-    void Dump()
-    {
-    }
 };
 
 class FullSyncData : public SyncData {
@@ -154,21 +194,66 @@ public:
     {
         int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_SYNC_FULL_STAT",
             HiviewDFX::HiSysEvent::EventType::STATISTIC,
-            "sync_reason", sync_reason_,
-            "stop_reason", stop_reason_,
-            "start_time", start_time_,
+            "sync_reason", syncReason_,
+            "stop_reason", stopReason_,
+            "start_time", startTime_,
             "duration", duration_,
-            "upload_meta", upload_meta_,
-            "download_meta", download_meta_,
-            "download_thumb", download_thumb_,
-            "download_lcd", download_lcd_,
-            "upload_album", upload_album_,
-            "download_album", download_album_,
+            "uploadMeta", uploadMeta_,
+            "download_meta", downloadMeta_,
+            "download_thumb", downloadThumb_,
+            "download_lcd", downloadLcd_,
+            "upload_album", uploadAlbum_,
+            "download_album", downloadAlbum_,
             "sync_info", sync_info_
         );
         if (ret != E_OK) {
             LOGE("report CLOUD_SYNC_FULL_STAT error %{public}d", ret);
         }
+    }
+};
+
+class IncSyncData : public FullSyncData {
+public:
+    IncSyncData()
+    {
+        isFullSync_ = false;
+    }
+
+    ~IncSyncData()
+    {
+        Dump();
+    }
+
+    void Report() override
+    {
+        if (isFullSync_ == true) {
+            FullSyncData::Report();
+            return;
+        }
+
+        int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_SYNC_INC_STAT",
+            HiviewDFX::HiSysEvent::EventType::STATISTIC,
+            "uploadMeta", uploadMeta_,
+            "download_meta", downloadMeta_,
+            "download_thumb", downloadThumb_,
+            "download_lcd", downloadLcd_,
+            "upload_album", uploadAlbum_,
+            "download_album", downloadAlbum_,
+            "sync_info", sync_info_
+        );
+        if (ret != E_OK) {
+            LOGE("report CLOUD_SYNC_INC_STAT error %{public}d", ret);
+        }
+    }
+
+    /* read from disk */
+    void Load()
+    {
+    }
+
+    /* write into disk */
+    void Dump()
+    {
     }
 };
 } // namespace CloudSync

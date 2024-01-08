@@ -273,6 +273,7 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
     int32_t ret = E_OK;
     auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
     if (resultSet == nullptr) {
+        params.syncData->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, recordIds.size());
         return E_RDB;
     }
 
@@ -300,9 +301,16 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
         if (ret != E_OK) {
             LOGE("recordId %s error %{public}d", record.GetRecordId().c_str(), ret);
             if (ret == E_RDB) {
-                break;
+                params.syncData->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, 1);
+                continue;
             }
+            /* might need to specifiy which type error */
+            params.syncData->UpdateMetaStat(INDEX_DL_META_ERROR_DATA, 1);
             ret = E_OK;
+        } else {
+            if (changeType != ChangeType::INSERT && changeType != ChangeType::INVAILD) {
+                params.syncData->UpdateMetaStat(INDEX_DL_META_SUCCESS, 1);
+            }
         }
         if (changeType != ChangeType::INVAILD) {
             string notifyUri = PHOTO_URI_PREFIX + to_string(fileId);
@@ -329,9 +337,11 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
         ret = BatchInsert(rowId, TABLE_NAME, params.insertFiles);
         if (ret != E_OK) {
             LOGE("batch insert failed return %{public}d", ret);
+            params.syncData->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, params.insertFiles.size());
             ret = E_RDB;
             params.assetsToDownload.clear();
         } else {
+            params.syncData->UpdateMetaStat(INDEX_DL_META_SUCCESS, params.insertFiles.size());
             BatchInsertAssetMaps(params);
         }
     }

@@ -326,7 +326,7 @@ int32_t DataSyncer::CleanCache(const std::string &uri)
     return E_OK;
 }
 
-void DataSyncer::InitSysEventData(bool isFullSync)
+void DataSyncer::InitSysEventData()
 {
 }
 
@@ -335,6 +335,10 @@ void DataSyncer::FreeSysEventData()
 }
 
 void DataSyncer::ReportSysEvent(uint32_t code)
+{
+}
+
+void DataSyncer::SetFullSyncSysEvent()
 {
 }
 

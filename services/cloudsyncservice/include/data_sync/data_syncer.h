@@ -117,9 +117,10 @@ protected:
     void SetErrorCodeMask(ErrorType errorType);
 
     /* sys event */
-    virtual void InitSysEventData(bool isFullSync);
+    virtual void InitSysEventData();
     virtual void FreeSysEventData();
     virtual void ReportSysEvent(uint32_t code);
+    virtual void SetFullSyncSysEvent();
 
     void UpdateBasicEventStat(uint32_t code);
 
@@ -139,7 +140,7 @@ protected:
     SyncTriggerType triggerType_;
 
     /* sys event data */
-    std::unique_ptr<SyncData> syncData_;
+    std::shared_ptr<SyncData> syncData_;
 
 private:
     /* download */

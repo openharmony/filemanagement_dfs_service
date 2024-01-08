@@ -44,9 +44,10 @@ public:
     virtual void Unlock() override;
     virtual void ForceUnlock() override;
     virtual int32_t DownloadThumb() override;
-    virtual void InitSysEventData(bool isFullSync) override;
+    virtual void InitSysEventData() override;
     virtual void FreeSysEventData() override;
     virtual void ReportSysEvent(uint32_t code) override;
+    virtual void SetFullSyncSysEvent() override;
 
 private:
     enum {

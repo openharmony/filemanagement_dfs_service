@@ -410,18 +410,19 @@ int32_t GalleryDataSyncer::DownloadThumb()
     return ret;
 }
 
-void GalleryDataSyncer::InitSysEventData(bool isFullSync)
+void GalleryDataSyncer::InitSysEventData()
 {
-    if (isFullSync) {
-        syncData_ = make_unique<FullSyncData>();
-    } else {
-        /* alloc inc sync data */
-    }
+    syncData_ = make_unique<IncSyncData>();
 }
 
 void GalleryDataSyncer::FreeSysEventData()
 {
     syncData_ = nullptr;
+}
+
+void GalleryDataSyncer::SetFullSyncSysEvent()
+{
+    syncData_->SetFullSync();
 }
 
 void GalleryDataSyncer::ReportSysEvent(uint32_t code)
@@ -433,6 +434,8 @@ void GalleryDataSyncer::ReportSysEvent(uint32_t code)
     if (syncData_->IsFullSync()) {
         UpdateBasicEventStat(code);
         syncData_->Report();
+    } else {
+        /* inc sync report */
     }
 }
 } // namespace CloudSync

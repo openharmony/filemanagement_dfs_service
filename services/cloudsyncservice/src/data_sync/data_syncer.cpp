@@ -73,6 +73,8 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     triggerType_ = triggerType;
     startTime_ = GetCurrentTimeStamp();
 
+    InitSysEventData();
+
     /* only one specific data sycner running at a time */
     if (syncStateManager_.CheckAndSetPending(forceFlag, triggerType)) {
         LOGI("syncing, pending sync");
@@ -172,9 +174,8 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
     }
 
     /* Full synchronization and incremental synchronization */
-    bool isFullSync = handler->IsPullRecords();
-    InitSysEventData(isFullSync);
-    if (isFullSync) {
+    if (handler->IsPullRecords()) {
+        SetFullSyncSysEvent();
         ret = AsyncRun(context, &DataSyncer::PullRecords);
     } else {
         ret = AsyncRun(context, &DataSyncer::PullDatabaseChanges);
@@ -278,11 +279,21 @@ void DataSyncer::DownloadAssets(DownloadContext &ctx)
         LOGE("resultCallback nullptr");
         return;
     }
+
     if (ctx.progressCallback == nullptr) {
         LOGE("progressCallback nullptr");
         return;
     }
-    sdkHelper_->DownloadAssets(ctx.context, ctx.assets, {}, ctx.id, ctx.resultCallback, ctx.progressCallback);
+
+    int32_t ret = sdkHelper_->DownloadAssets(ctx.context, ctx.assets, {}, ctx.id,
+        ctx.resultCallback, ctx.progressCallback);
+    if (ret != E_OK) {
+        LOGE("sdk download assets error %{public}d", ret);
+        /* post sync hook */
+        if(syncData_ != nullptr) {
+            syncData_->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, ctx.assets.size());
+        }
+    }
 }
 
 void DataSyncer::FetchRecordsDownloadCallback(shared_ptr<DKContext> context,
@@ -335,6 +346,7 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
         onFetchParams.totalPullCount = context->GetBatchNo() * handler->GetRecordSize();
     }
 
+    onFetchParams.syncData = syncData_;
     int32_t ret = handler->OnFetchRecords(records, onFetchParams);
     if (!onFetchParams.assetsToDownload.empty()) {
         DownloadContext dctx = {.context = context,
@@ -1284,7 +1296,7 @@ void DataSyncer::StopUploadAssets()
     sdkHelper_->Release();
 }
 
-void DataSyncer::InitSysEventData(bool isFullSync)
+void DataSyncer::InitSysEventData()
 {
 }
 
@@ -1293,6 +1305,10 @@ void DataSyncer::FreeSysEventData()
 }
 
 void DataSyncer::ReportSysEvent(uint32_t code)
+{
+}
+
+void DataSyncer::SetFullSyncSysEvent()
 {
 }
 
