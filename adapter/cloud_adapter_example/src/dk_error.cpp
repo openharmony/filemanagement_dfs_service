@@ -32,4 +32,9 @@ void DKError::SetServerError(int code)
     isServerError = true;
     serverErrorCode = code;
 }
+
+DKErrorType DKError::GetErrorType() const
+{
+    return errorType;
+}
 }
