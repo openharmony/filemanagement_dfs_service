@@ -34,6 +34,7 @@
 #include "dk_error.h"
 #include "gallery_album_const.h"
 #include "gallery_file_const.h"
+#include "gallery_sysevent.h"
 #include "media_column.h"
 #include "medialibrary_errno.h"
 #include "medialibrary_rdb_utils.h"
@@ -312,6 +313,7 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
             DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
         }
     }
+
     return ret;
 }
 
@@ -1046,6 +1048,7 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
                  static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
         }
     }
+   aasyncStat_->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, ctx.assets.size());
     return E_OK;
 }
 

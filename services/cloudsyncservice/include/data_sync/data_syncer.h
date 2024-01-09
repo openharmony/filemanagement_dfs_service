@@ -122,8 +122,6 @@ protected:
     virtual void ReportSysEvent(uint32_t code);
     virtual void SetFullSyncSysEvent();
 
-    void UpdateBasicEventStat(uint32_t code);
-
     /* identifier */
     const std::string bundleName_;
     const int32_t userId_;
@@ -138,9 +136,6 @@ protected:
 
     uint64_t startTime_;
     SyncTriggerType triggerType_;
-
-    /* sys event data */
-    std::shared_ptr<SyncData> syncData_;
 
 private:
     /* download */

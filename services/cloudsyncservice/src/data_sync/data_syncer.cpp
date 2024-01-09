@@ -289,10 +289,8 @@ void DataSyncer::DownloadAssets(DownloadContext &ctx)
         ctx.resultCallback, ctx.progressCallback);
     if (ret != E_OK) {
         LOGE("sdk download assets error %{public}d", ret);
-        /* post sync hook */
-        if (syncData_ != nullptr) {
-            syncData_->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, ctx.assets.size());
-        }
+        /* invoke callback here to do some statistics in handler */
+        ctx.resultCallback(ctx.context, nullptr, {}, {});
     }
 }
 
@@ -346,7 +344,6 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
         onFetchParams.totalPullCount = context->GetBatchNo() * handler->GetRecordSize();
     }
 
-    onFetchParams.syncData = syncData_;
     int32_t ret = handler->OnFetchRecords(records, onFetchParams);
     if (!onFetchParams.assetsToDownload.empty()) {
         DownloadContext dctx = {.context = context,
@@ -1331,14 +1328,6 @@ void DataSyncer::ReportSysEvent(uint32_t code)
 
 void DataSyncer::SetFullSyncSysEvent()
 {
-}
-
-void DataSyncer::UpdateBasicEventStat(uint32_t code)
-{
-    syncData_->SetSyncReason(static_cast<uint32_t>(triggerType_));
-    syncData_->SetStopReason(code);
-    syncData_->SetStartTime(startTime_);
-    syncData_->SetDuration(GetCurrentTimeStamp());
 }
 } // namespace CloudSync
 } // namespace FileManagement

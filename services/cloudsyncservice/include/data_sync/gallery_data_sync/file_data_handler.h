@@ -21,8 +21,9 @@
 #include "medialibrary_type_const.h"
 
 #include "cloud_pref_impl.h"
-#include "rdb_data_handler.h"
 #include "file_data_convertor.h"
+#include "gallery_sysevent.h"
+#include "rdb_data_handler.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -249,6 +250,23 @@ private:
     std::vector<NativeRdb::ValueObject> thmVec_;
     std::vector<NativeRdb::ValueObject> lcdVec_;
     uint32_t timeId_;
+
+    void SetSyncStat(std::shared_ptr<SyncStat> stat)
+    {
+        syncStat_ = stat;
+    }
+
+    void PutSyncStat()
+    {
+        syncStat = nullptr;
+    }
+
+    std::shared_ptr<GalleryIncSyncStat> GetSyncStat()
+    {
+        return syncStat_;
+    }
+
+    std::shared_ptr<GalleryIncSyncStat> syncStat_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

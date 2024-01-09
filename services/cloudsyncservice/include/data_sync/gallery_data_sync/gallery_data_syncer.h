@@ -21,6 +21,7 @@
 #include "album_data_handler.h"
 #include "data_syncer.h"
 #include "file_data_handler.h"
+#include "gallery_sysevent.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -72,6 +73,9 @@ private:
     std::shared_ptr<NativeRdb::RdbStore> RdbInit(const std::string &bundleName, const int32_t userId);
     int32_t GetHandler();
     void PutHandler();
+    
+    /* sync stat */
+    void UpdateBasicEventStat(uint32_t code);
 
     /* stage */
     int32_t stage_ = BEGIN;
