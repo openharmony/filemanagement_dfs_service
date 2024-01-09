@@ -268,16 +268,10 @@ static int32_t GetFileId(NativeRdb::ResultSet &local)
 }
 
 int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnFetchParams &params,
-    vector<string> &recordIds)
+    vector<string> &recordIds, const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
+    const std::map<std::string, int> &recordIdRowIdMap)
 {
     int32_t ret = E_OK;
-    auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
-    if (resultSet == nullptr) {
-        params.syncData->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, recordIds.size());
-        return E_RDB;
-    }
-
-    std::lock_guard<std::mutex> lock(rdbMutex_);
     for (auto &record : *records) {
         int32_t fileId = 0;
         ChangeType changeType = ChangeType::INVAILD;
@@ -328,8 +322,13 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
     for (auto &record : *records) {
         recordIds.push_back(record.GetRecordId());
     }
-    ret = FileDataHandler::HandleRecord(records, params, recordIds);
+    auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
+    if (resultSet == nullptr) {
+        params.syncData->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, recordIds.size());
+        return E_RDB;
+    }
     std::lock_guard<std::mutex> lock(rdbMutex_);
+    ret = FileDataHandler::HandleRecord(records, params, recordIds, resultSet, recordIdRowIdMap);
     LOGI("before BatchInsert size len %{public}zu, map size %{public}zu", params.insertFiles.size(),
         params.recordAlbumMaps.size());
     if (!params.insertFiles.empty() || !params.recordAlbumMaps.empty()) {

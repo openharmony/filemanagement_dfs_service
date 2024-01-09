@@ -49,7 +49,8 @@ public:
     int32_t GetDownloadAsset(std::string cloudId,
                              std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
     int32_t HandleRecord(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records, OnFetchParams &params,
-        std::vector<std::string> &recordIds);
+        std::vector<std::string> &recordIds, const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
+        const std::map<std::string, int> &recordIdRowIdMap);
 
     /*clean*/
     int32_t Clean(const int action) override;
