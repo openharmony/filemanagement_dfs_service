@@ -92,6 +92,9 @@ private:
     std::shared_ptr<AlbumDataHandler> albumHandler_;
     std::mutex handleInitMutex_;
     int32_t dataHandlerRefCount_{0};
+
+    /* sync stat */
+    std::shared_ptr<GalleryIncSyncStat> syncStat_;
 };
 
 class RdbCallback : public NativeRdb::RdbOpenCallback {

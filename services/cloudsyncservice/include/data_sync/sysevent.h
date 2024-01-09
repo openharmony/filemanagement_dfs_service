@@ -98,6 +98,28 @@ protected:
     uint64_t duration_;
     std::string sync_info_;
 };
+
+template<typename T>
+class SyncStatContainer {
+public:
+    void SetSyncStat(std::shared_ptr<T> stat)
+    {
+        syncStat_ = stat;
+    }
+
+    void PutSyncStat()
+    {
+        syncStat_ = nullptr;
+    }
+
+    std::shared_ptr<T> GetSyncStat()
+    {
+        return syncStat_;
+    }
+
+private:
+    std::shared_ptr<T> syncStat_;
+};
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

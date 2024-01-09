@@ -297,15 +297,15 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
         if (ret != E_OK) {
             LOGE("recordId %s error %{public}d", record.GetRecordId().c_str(), ret);
             if (ret == E_RDB) {
-                params.syncData->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, 1);
+                GetSyncStat()->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, 1);
                 continue;
             }
             /* might need to specifiy which type error */
-            params.syncData->UpdateMetaStat(INDEX_DL_META_ERROR_DATA, 1);
+            GetSyncStat()->UpdateMetaStat(INDEX_DL_META_ERROR_DATA, 1);
             ret = E_OK;
         } else {
             if (changeType != ChangeType::INSERT && changeType != ChangeType::INVAILD) {
-                params.syncData->UpdateMetaStat(INDEX_DL_META_SUCCESS, 1);
+                GetSyncStat()->UpdateMetaStat(INDEX_DL_META_SUCCESS, 1);
             }
         }
         if (changeType != ChangeType::INVAILD) {
@@ -338,11 +338,11 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
         ret = BatchInsert(rowId, TABLE_NAME, params.insertFiles);
         if (ret != E_OK) {
             LOGE("batch insert failed return %{public}d", ret);
-            params.syncData->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, params.insertFiles.size());
+            GetSyncStat()->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, params.insertFiles.size());
             ret = E_RDB;
             params.assetsToDownload.clear();
         } else {
-            params.syncData->UpdateMetaStat(INDEX_DL_META_SUCCESS, params.insertFiles.size());
+            GetSyncStat()->UpdateMetaStat(INDEX_DL_META_SUCCESS, params.insertFiles.size());
             BatchInsertAssetMaps(params);
         }
     }
@@ -1048,7 +1048,7 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
                  static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
         }
     }
-   aasyncStat_->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, ctx.assets.size());
+    GetSyncStat()->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, resultMap.size());
     return E_OK;
 }
 

@@ -293,21 +293,6 @@ void DataHandler::GetReturn(const int32_t error, int32_t &retCode)
         retCode = error;
     }
 }
-
-void DataHandler::SetSyncData(std::shared_ptr<SyncData> data)
-{
-    syncStat_ = data;
-}
-
-shared_ptr<SyncData> DataHandler::GetSyncData()
-{
-    return syncStat_;
-}
-
-void DataHandler::PutSyncData()
-{
-    syncStat_ = nullptr;
-}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

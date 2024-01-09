@@ -29,7 +29,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
-class FileDataHandler : public RdbDataHandler {
+class FileDataHandler : public RdbDataHandler, public SyncStatContainer<GalleryIncSyncStat> {
 public:
     enum Clean {
         NOT_NEED_CLEAN = 0,
@@ -250,23 +250,6 @@ private:
     std::vector<NativeRdb::ValueObject> thmVec_;
     std::vector<NativeRdb::ValueObject> lcdVec_;
     uint32_t timeId_;
-
-    void SetSyncStat(std::shared_ptr<SyncStat> stat)
-    {
-        syncStat_ = stat;
-    }
-
-    void PutSyncStat()
-    {
-        syncStat = nullptr;
-    }
-
-    std::shared_ptr<GalleryIncSyncStat> GetSyncStat()
-    {
-        return syncStat_;
-    }
-
-    std::shared_ptr<GalleryIncSyncStat> syncStat_;
 };
 } // namespace CloudSync
 } // namespace FileManagement
