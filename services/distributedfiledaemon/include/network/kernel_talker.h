@@ -36,10 +36,6 @@ constexpr int CID_MAX_LEN = 64;
 struct NotifyParam {
     int32_t notify;
     int32_t fd;
-    uint16_t udpPort;
-    uint8_t deviceType;
-    int32_t flag;
-    int32_t reserved;
     char remoteCid[CID_MAX_LEN];
 } __attribute__((packed));
 
