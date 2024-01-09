@@ -584,7 +584,7 @@ int32_t FileDataConvertor::Convert(DriveKit::DKRecord &record, NativeRdb::Values
         }
         RETURN_ON_ERR(CompensateTitle(data, valueBucket));
     }
-    ExtractCompatibleValue(record, data, valueBucket);
+    RETURN_ON_ERR(ExtractCompatibleValue(record, data, valueBucket));
     return E_OK;
 }
 
@@ -896,7 +896,7 @@ int32_t FileDataConvertor::ExtractPosition(DriveKit::DKRecordFieldMap &map,
         latitude = match[FIRST_MATCH_PARAM];
         longitude = match[SECOND_MATCH_PARAM];
     } else {
-        LOGE("extract latitude or longitude error");
+        LOGE("position %{public}s extract latitude or longitude error", position.c_str());
         return E_INVAL_ARG;
     }
     stringstream latitudestream(latitude);
