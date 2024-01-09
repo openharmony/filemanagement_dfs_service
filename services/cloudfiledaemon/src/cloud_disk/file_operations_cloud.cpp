@@ -234,6 +234,9 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
         if (fi->flags & O_APPEND) {
             fi->flags &= ~O_APPEND;
         }
+        if (fi->flags & O_DIRECT) {
+            fi->flags &= ~O_DIRECT;
+        }
         int32_t fd = open(path.c_str(), fi->flags);
         if (fd < 0) {
             LOGE("open file failed path:%{public}s errno:%{public}d", path.c_str(), errno);
