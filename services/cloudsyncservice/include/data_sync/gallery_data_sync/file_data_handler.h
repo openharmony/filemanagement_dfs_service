@@ -75,7 +75,11 @@ public:
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
-    
+    int32_t OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
+    void PeriodicUpdataFiles();
+    void StopUpdataFiles();
+    void UpdateAllAlbums();
+
     /* optimizestorage */
     int32_t OptimizeStorage(const int32_t agingDays);
     std::shared_ptr<NativeRdb::ResultSet> GetAgingFile(const int64_t agingTime, int32_t &rowCount);
@@ -84,7 +88,6 @@ public:
 
     /* reset */
     void Reset();
-
 private:
     int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
         const std::unordered_map<std::string, LocalInfo> &localMap);
@@ -239,8 +242,13 @@ private:
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
-
+    std::mutex rdbUniqueMutex_;
     std::mutex rdbMutex_;
+    std::mutex thmMutex_;
+    std::mutex lcdMutex_;
+    std::vector<NativeRdb::ValueObject> thmVec_;
+    std::vector<NativeRdb::ValueObject> lcdVec_;
+    uint32_t timeId_;
 };
 } // namespace CloudSync
 } // namespace FileManagement
