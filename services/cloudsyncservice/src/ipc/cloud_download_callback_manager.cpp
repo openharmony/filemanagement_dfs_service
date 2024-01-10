@@ -21,6 +21,7 @@
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
+using namespace DriveKit;
 
 CloudDownloadCallbackManager::CloudDownloadCallbackManager()
 {
@@ -110,6 +111,28 @@ void CloudDownloadCallbackManager::UnregisterCallback(const int32_t userId)
     callback_ = nullptr;
 }
 
+static void OnDownloadFailed(int32_t &downloadErrorType, const DKError &dkError)
+{
+    downloadErrorType = DownloadProgressObj::UNKNOWN_ERROR;
+    if (static_cast<DKServerErrorCode>(dkError.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
+        downloadErrorType = DownloadProgressObj::NETWORK_UNAVAILABLE;
+    }
+    if (dkError.errorDetails.size() != 0) {
+        auto errorDetailCode = static_cast<DKDetailErrorCode>(dkError.errorDetails[0].detailCode);
+        if (errorDetailCode == DKDetailErrorCode::SPACE_FULL) {
+            downloadErrorType = DownloadProgressObj::LOCAL_STORAGE_FULL;
+        } else if (errorDetailCode == DKDetailErrorCode::THUMBNAIL_NOT_FOUND ||
+                   errorDetailCode == DKDetailErrorCode::ORIGINAL_NOT_EXSIT) {
+            downloadErrorType = DownloadProgressObj::CONTENT_NOT_FOUND;
+        } else if (errorDetailCode == DKDetailErrorCode::USER_REQUEST_TOO_MANY ||
+                   errorDetailCode == DKDetailErrorCode::APP_REQUEST_TOO_MANY ||
+                   errorDetailCode == DKDetailErrorCode::FLOW_CONTROL) {
+            downloadErrorType = DownloadProgressObj::FREQUENT_USER_REQUESTS;
+        }
+    }
+    LOGE("download fail, downloadErrorType %{public}d", downloadErrorType);
+}
+
 void CloudDownloadCallbackManager::OnDownloadedResult(
     const std::string path,
     std::vector<DriveKit::DKDownloadAsset> assetsToDownload,
@@ -159,6 +182,7 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
         if (!it.second.IsSuccess()) {
             LOGE("download file failed, localErr: %{public}d", it.second.GetDKError().dkErrorCode);
             downloadedState = DownloadProgressObj::FAILED;
+            OnDownloadFailed(download.downloadErrorType, it.second.GetDKError());
             break;
         }
     }
