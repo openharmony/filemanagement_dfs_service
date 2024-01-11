@@ -342,10 +342,6 @@ void DataSyncer::ReportSysEvent(uint32_t code)
 void DataSyncer::SetFullSyncSysEvent()
 {
 }
-
-void DataSyncer::UpdateBasicEventStat(uint32_t code)
-{
-}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
