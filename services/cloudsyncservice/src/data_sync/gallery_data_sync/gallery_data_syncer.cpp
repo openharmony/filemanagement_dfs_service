@@ -425,13 +425,20 @@ int32_t GalleryDataSyncer::DownloadThumb()
     return ret;
 }
 
-void GalleryDataSyncer::InitSysEventData()
+int32_t GalleryDataSyncer::InitSysEventData()
 {
     syncStat_ = make_shared<GalleryIncSyncStat>();
+
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
 
     /* bind sync data to handler */
     fileHandler_->SetSyncStat(syncStat_);
     albumHandler_->SetSyncStat(syncStat_);
+
+    return E_OK;
 }
 
 void GalleryDataSyncer::FreeSysEventData()

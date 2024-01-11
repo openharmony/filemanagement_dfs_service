@@ -73,7 +73,10 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     triggerType_ = triggerType;
     startTime_ = GetCurrentTimeStamp();
 
-    InitSysEventData();
+    int32_t ret = InitSysEventData();
+    if (ret != E_OK) {
+        return E_DATA;
+    }
 
     /* only one specific data sycner running at a time */
     if (syncStateManager_.CheckAndSetPending(forceFlag, triggerType)) {
@@ -285,11 +288,22 @@ void DataSyncer::DownloadAssets(DownloadContext &ctx)
         return;
     }
 
+    if (ctx.assets.size() == 0) {
+        LOGE("no assets to download");
+        return;
+    }
+
     int32_t ret = sdkHelper_->DownloadAssets(ctx.context, ctx.assets, {}, ctx.id,
         ctx.resultCallback, ctx.progressCallback);
     if (ret != E_OK) {
         LOGE("sdk download assets error %{public}d", ret);
-        /* invoke callback here to do some statistics in handler */
+        /*
+         * 1. remove previous added tasks
+         * 2. invoke callback here to do some statistics in handler
+         * 3. set assets back to handler for its info
+         */
+        shared_ptr<TaskContext> tctx = static_pointer_cast<TaskContext>(ctx.context);
+        tctx->SetAssets(ctx.assets);
         ctx.resultCallback(ctx.context, nullptr, {}, {});
     }
 }
@@ -308,7 +322,12 @@ void DataSyncer::FetchRecordsDownloadCallback(shared_ptr<DKContext> context,
 
     auto ctx = static_pointer_cast<TaskContext>(context);
     auto handler = ctx->GetHandler();
-    handler->OnDownloadAssets(resultMap);
+    if (resultMap.size() != 0) {
+        handler->OnDownloadAssets(resultMap);
+    } else {
+        /* error account */
+        (void)handler->OnDownloadAssetsFailure(ctx->GetAssets());
+    }
 }
 
 static void FetchRecordsDownloadProgress(shared_ptr<DKContext> context,
@@ -322,6 +341,7 @@ static void FetchRecordsDownloadProgress(shared_ptr<DKContext> context,
         auto handler = ctx->GetHandler();
         handler->OnDownloadAssets(asset);
     }
+    /* account error in result callback but not here */
 }
 
 int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
@@ -1314,8 +1334,9 @@ void DataSyncer::StopUploadAssets()
     sdkHelper_->Release();
 }
 
-void DataSyncer::InitSysEventData()
+int32_t DataSyncer::InitSysEventData()
 {
+    return E_OK;
 }
 
 void DataSyncer::FreeSysEventData()

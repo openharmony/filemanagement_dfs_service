@@ -117,7 +117,7 @@ protected:
     void SetErrorCodeMask(ErrorType errorType);
 
     /* sys event */
-    virtual void InitSysEventData();
+    virtual int32_t InitSysEventData();
     virtual void FreeSysEventData();
     virtual void ReportSysEvent(uint32_t code);
     virtual void SetFullSyncSysEvent();

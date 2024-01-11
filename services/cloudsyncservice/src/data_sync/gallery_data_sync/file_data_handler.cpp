@@ -327,7 +327,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
     }
     auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
     if (resultSet == nullptr) {
-        params.syncData->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, recordIds.size());
+        GetSyncStat()->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, recordIds.size());
         return E_RDB;
     }
     ret = FileDataHandler::HandleRecord(records, params, recordIds, resultSet, recordIdRowIdMap);
@@ -1038,17 +1038,31 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
 
 int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadResult> &resultMap)
 {
+    uint64_t thumbError = 0;
+    uint64_t lcdError = 0;
+
     for (const auto &it : resultMap) {
         if (it.second.IsSuccess()) {
             continue;
         }
-        if (it.first.fieldKey == "thumbnail") {
+        if (it.first.fieldKey == FILE_THUMBNAIL) {
             LOGE("record %s %{public}s download failed, localErr: %{public}d, serverErr: %{public}d",
                  it.first.recordId.c_str(), it.first.fieldKey.c_str(),
                  static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
+            thumbError++;
+        } else if (it.first.fieldKey == FILE_LCD) {
+            lcdError++;
         }
     }
-    GetSyncStat()->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, resultMap.size());
+
+    if (thumbError > 0) {
+        GetSyncStat()->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, thumbError);
+    }
+
+    if (lcdError > 0) {
+        GetSyncStat()->UpdateAttachmentStat(INDEX_LCD_ERROR_SDK, lcdError);
+    }
+
     return E_OK;
 }
 
@@ -1063,6 +1077,9 @@ int32_t FileDataHandler::OnTaskDownloadAssets(const DKDownloadAsset &asset)
         int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
         if (ret != E_OK) {
             LOGE("update sync status failed, ret=%{public}d", ret);
+            GetSyncStat()->UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, 1);
+        } else {
+            GetSyncStat()->UpdateAttachmentStat(INDEX_THUMB_SUCCESS, 1);
         }
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                                   to_string(updateRows));
@@ -1079,6 +1096,9 @@ int32_t FileDataHandler::OnTaskDownloadAssets(const DKDownloadAsset &asset)
         int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
         if (ret != E_OK) {
             LOGE("update thumb status failed, ret=%{public}d", ret);
+            GetSyncStat()->UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, 1);
+        } else {
+            GetSyncStat()->UpdateAttachmentStat(INDEX_LCD_SUCCESS, 1);
         }
     }
 
@@ -1099,6 +1119,32 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
     }
     DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
     MetaFileMgr::GetInstance().ClearAll();
+    return E_OK;
+}
+
+int32_t FileDataHandler::OnDownloadAssetsFailure(const std::vector<DriveKit::DKDownloadAsset> &assets)
+{
+    uint64_t thumbError = 0;
+    uint64_t lcdError = 0;
+
+    /* account first */
+    for (auto &asset : assets) {
+        if (asset.fieldKey == FILE_THUMBNAIL) {
+            thumbError++;
+        } else if (asset.fieldKey == FILE_LCD) {
+            lcdError++;
+        }
+    }
+
+    /* update atomic value at once */
+    if (thumbError > 0) {
+        GetSyncStat()->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, thumbError);
+    }
+
+    if (lcdError > 0) {
+        GetSyncStat()->UpdateAttachmentStat(INDEX_LCD_ERROR_SDK, lcdError);
+    }
+
     return E_OK;
 }
 

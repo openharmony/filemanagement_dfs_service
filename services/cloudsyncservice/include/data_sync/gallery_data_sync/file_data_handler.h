@@ -81,7 +81,9 @@ public:
     void StopUpdataFiles();
     void UpdateAllAlbums();
 
-    /* optimizestorage */
+    int32_t OnDownloadAssetsFailure(const std::vector<DriveKit::DKDownloadAsset> &assets) override;
+
+    /* optimize storage */
     int32_t OptimizeStorage(const int32_t agingDays);
     std::shared_ptr<NativeRdb::ResultSet> GetAgingFile(const int64_t agingTime, int32_t &rowCount);
     int32_t UpdateAgingFile(const std::string cloudId);
