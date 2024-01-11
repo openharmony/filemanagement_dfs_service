@@ -56,7 +56,7 @@ void DeviceInfo::SetCid(const string &cid)
 const string &DeviceInfo::GetCid() const
 {
     if (initCidFlag_ == false) {
-        ThrowException(ERR_DEVICE_CID_UN_INIT, "cid uninitialized");
+        THROW_EXCEPTION(ERR_DEVICE_CID_UN_INIT, "cid uninitialized");
     }
     return cid_;
 }

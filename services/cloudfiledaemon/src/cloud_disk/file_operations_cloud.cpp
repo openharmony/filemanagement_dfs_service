@@ -585,6 +585,7 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
 void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
                                off_t offset, struct fuse_file_info *fi)
 {
+    const size_t MAX_SIZE = 2 * 1024 * 1024;
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
     if (!inoPtr->readSession) {
         struct fuse_bufvec buf = FUSE_BUFVEC_INIT(size);
@@ -600,6 +601,11 @@ void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
     int64_t readSize;
     DriveKit::DKError dkError;
     shared_ptr<char> buf = nullptr;
+
+    if (size > MAX_SIZE) {
+        LOGE("Size too large");
+        return;
+    }
 
     buf.reset(new char[size], [](char* ptr) {
         delete[] ptr;

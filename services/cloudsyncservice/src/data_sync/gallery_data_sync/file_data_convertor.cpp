@@ -340,8 +340,13 @@ string FileDataConvertor::StrCreateTime(const string &format, int64_t time)
 {
     char strTime[DEFAULT_TIME_SIZE] = "";
     auto tm = localtime(&time);
-    (void)strftime(strTime, sizeof(strTime), format.c_str(), tm);
-    return strTime;
+    if (tm != nullptr) {
+        (void)strftime(strTime, sizeof(strTime), format.c_str(), tm);
+        return strTime;
+    } else {
+        std::cout << "Failed to convert time." << std::endl;
+        return "";
+    }
 }
 
 int32_t FileDataConvertor::HandleFormattedDate(DriveKit::DKRecordFieldMap &map, NativeRdb::ResultSet &resultSet)

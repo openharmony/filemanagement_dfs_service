@@ -76,7 +76,7 @@ private:
     void operator()(Ctx *ctx) override
     {
         if (!VirtualCmd<Ctx>::option_.tryTimes_) {
-            ThrowException(ERR_UTILS_ACTOR_INVALID_CMD, "Cannot execute a command that has 0 try times");
+            THROW_EXCEPTION(ERR_UTILS_ACTOR_INVALID_CMD, "Cannot execute a command that has 0 try times");
         }
 
         VirtualCmd<Ctx>::option_.tryTimes_--;

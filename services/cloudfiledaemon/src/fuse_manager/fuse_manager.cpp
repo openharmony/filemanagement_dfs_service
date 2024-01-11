@@ -451,11 +451,17 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                       struct fuse_file_info *fi)
 {
     int64_t readSize;
+    const size_t maxSize = 2 * 1024 * 1024;
     DriveKit::DKError dkError;
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     LOGD("%s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
+
+    if (size > maxSize) {
+        LOGE("Size too large");
+        return;
+    }
 
     buf.reset(new char[size], [](char* ptr) {
         delete[] ptr;

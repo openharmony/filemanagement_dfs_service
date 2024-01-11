@@ -27,7 +27,7 @@ public:
     CloudFileNapi(napi_env env, napi_value exports);
     ~CloudFileNapi() = default;
 
-    bool Export() override;
+    virtual bool Export() override;
     bool ToExport(std::vector<napi_property_descriptor> props);
     virtual void SetClassName(std::string classname);
     std::string GetClassName() override;
