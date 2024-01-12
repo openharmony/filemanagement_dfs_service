@@ -219,17 +219,17 @@ void FuseOperations::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
     inoPtr->ops->Read(req, ino, size, offset, fi);
 }
 
-void FuseOperations::Write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size,
-                           off_t off, struct fuse_file_info *fi)
+void FuseOperations::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_bufvec *bufv,
+                              off_t off, struct fuse_file_info *fi)
 {
     struct CloudDiskInode *inoPtr = nullptr;
     if (ino == FUSE_ROOT_ID) {
         auto opsPtr = make_shared<FileOperationsLocal>();
-        opsPtr->Write(req, ino, buf, size, off, fi);
+        opsPtr->WriteBuf(req, ino, bufv, off, fi);
         return;
     }
     inoPtr = reinterpret_cast<struct CloudDiskInode*>(ino);
-    inoPtr->ops->Write(req, ino, buf, size, off, fi);
+    inoPtr->ops->WriteBuf(req, ino, bufv, off, fi);
 }
 
 void FuseOperations::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
