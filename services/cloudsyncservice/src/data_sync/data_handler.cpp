@@ -216,6 +216,11 @@ int32_t DataHandler::OnDownloadAssets(const DriveKit::DKDownloadAsset &asset)
     return E_OK;
 }
 
+int32_t DataHandler::OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset)
+{
+    return E_OK;
+}
+
 int32_t DataHandler::Clean(const int action)
 {
     return E_OK;

@@ -15,8 +15,10 @@
 
 #include "gallery_data_syncer.h"
 
+#include "data_syncer.h"
 #include "dfs_error.h"
 #include "dfsu_timer.h"
+#include "task_state_manager.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -271,6 +273,7 @@ int32_t GalleryDataSyncer::DownloadFile()
     if (ret != E_OK) {
         LOGE("gallery data syncer pull file err %{public}d", ret);
     }
+    fileHandler_->PeriodicUpdataFiles();
     return ret;
 }
 
@@ -307,8 +310,15 @@ int32_t GalleryDataSyncer::Complete()
 {
     LOGI("gallery data syncer complete all");
     Unlock();
-    CompleteAll();
+    DataSyncer::CompleteAll();
     return E_OK;
+}
+
+void GalleryDataSyncer::CompleteAll(bool isNeedNotify)
+{
+    LOGI("gallery data syncer complete all");
+    DataSyncer::CompleteAll();
+    fileHandler_->StopUpdataFiles();
 }
 
 int32_t GalleryDataSyncer::OptimizeStorage(const int32_t agingDays)
@@ -405,7 +415,11 @@ int32_t GalleryDataSyncer::DownloadThumb()
     if (ret != E_OK) {
         return ret;
     }
+    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
     ret = DataSyncer::DownloadThumbInner(fileHandler_);
+    if (ret == E_STOP) {
+        TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
+    }
     PutHandler();
     return ret;
 }

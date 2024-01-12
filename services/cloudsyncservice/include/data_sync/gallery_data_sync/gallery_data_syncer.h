@@ -68,6 +68,7 @@ private:
     int32_t UploadAlbum();
     int32_t UploadFile();
     int32_t Complete();
+    void CompleteAll(bool isNeedNotify);
     std::shared_ptr<NativeRdb::RdbStore> RdbInit(const std::string &bundleName, const int32_t userId);
     int32_t GetHandler();
     void PutHandler();

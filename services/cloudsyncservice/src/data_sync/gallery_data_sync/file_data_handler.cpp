@@ -28,6 +28,7 @@
 #include "cloud_file_utils.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
+#include "dfsu_timer.h"
 #include "directory_ex.h"
 #include "dk_assets_downloader.h"
 #include "dk_error.h"
@@ -327,7 +328,6 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
         params.syncData->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, recordIds.size());
         return E_RDB;
     }
-    std::lock_guard<std::mutex> lock(rdbMutex_);
     ret = FileDataHandler::HandleRecord(records, params, recordIds, resultSet, recordIdRowIdMap);
     LOGI("before BatchInsert size len %{public}zu, map size %{public}zu", params.insertFiles.size(),
         params.recordAlbumMaps.size());
@@ -344,7 +344,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
             BatchInsertAssetMaps(params);
         }
     }
-    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
+    UpdateAllAlbums();
     LOGI("after BatchInsert ret %{public}d", ret);
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
@@ -774,6 +774,9 @@ int32_t FileDataHandler::CalculateFilePath(DKRecord &record, string &filePath)
         return E_INVAL_ARG;
     }
     int32_t uniqueId = GetAssetUniqueId(mediaType);
+    if (uniqueId < 0) {
+        return E_RDB;
+    }
     int32_t errCode = CreateAssetPathById(record, uniqueId, mediaType, filePath);
     return errCode;
 }
@@ -809,25 +812,26 @@ int32_t FileDataHandler::GetAssetUniqueId(int32_t &type)
             LOGE("This type %{public}d can not get unique id", type);
             return MediaType::MEDIA_TYPE_FILE;
     }
-
+    std::lock_guard<std::mutex> lock(rdbUniqueMutex_);
+    string sql = " UPDATE UniqueNumber SET unique_number = unique_number + 1  WHERE media_type = ?";
+    std::vector<NativeRdb::ValueObject> bingArgs;
+    bingArgs.emplace_back(type);
+    int32_t ret = ExecuteSql(sql, bingArgs);
+    if (ret != E_OK) {
+        LOGI("update unique number fail");
+        return -1;
+    }
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(ASSET_UNIQUE_NUMBER_TABLE);
     predicates.SetWhereClause(ASSET_MEDIA_TYPE + " = ?");
     predicates.SetWhereArgs({typeString});
-    /* In a multithreaded scenario, if a thread opens a transaction,
-       other threads' updates will be invalid.
-       We use the rdblock guarantee in OnFetchRecords */
     auto resultSet = Query(predicates, {UNIQUE_NUMBER});
     int32_t uniqueId = 0;
     if (resultSet->GoToNextRow() == 0) {
-        DataConvertor::GetInt(UNIQUE_NUMBER, uniqueId, *resultSet);
+        if (DataConvertor::GetInt(UNIQUE_NUMBER, uniqueId, *resultSet) != E_OK) {
+            LOGI("query unique number fail");
+            return -1;
+        }
     }
-    ++uniqueId;
-
-    int updateRows;
-    ValuesBucket values;
-    values.PutInt(UNIQUE_NUMBER, uniqueId);
-    string whereClause = ASSET_MEDIA_TYPE + " = ?";
-    Update(updateRows, ASSET_UNIQUE_NUMBER_TABLE, values, whereClause, {typeString});
     return uniqueId;
 }
 
@@ -1032,7 +1036,6 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
 
 int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadResult> &resultMap)
 {
-    std::lock_guard<std::mutex> lock(rdbMutex_);
     for (const auto &it : resultMap) {
         if (it.second.IsSuccess()) {
             continue;
@@ -1043,14 +1046,11 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
                  static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
         }
     }
-
-    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
     return E_OK;
 }
 
-int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
+int32_t FileDataHandler::OnTaskDownloadAssets(const DKDownloadAsset &asset)
 {
-    std::lock_guard<std::mutex> lock(rdbMutex_);
     if (asset.fieldKey == "thumbnail") {
         LOGI("update sync status to visible of record %s", asset.recordId.c_str());
         int updateRows;
@@ -1064,6 +1064,7 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                                   to_string(updateRows));
         DataSyncNotifier::GetInstance().FinalNotify();
+        UpdateAllAlbums();
     }
 
     if (asset.fieldKey == "lcd") {
@@ -1079,7 +1080,21 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
     }
 
     DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
-    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
+    MetaFileMgr::GetInstance().ClearAll();
+    return E_OK;
+}
+
+int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
+{
+    if (asset.fieldKey == "thumbnail") {
+        std::lock_guard<std::mutex> lock(thmMutex_);
+        thmVec_.emplace_back(asset.recordId);
+    }
+    if (asset.fieldKey == "lcd") {
+        std::lock_guard<std::mutex> lock(lcdMutex_);
+        lcdVec_.emplace_back(asset.recordId);
+    }
+    DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
     MetaFileMgr::GetInstance().ClearAll();
     return E_OK;
 }
@@ -1819,7 +1834,7 @@ int32_t FileDataHandler::Clean(const int action)
         LOGE("Clean remove dentry failed, res:%{public}d", res);
         return res;
     }
-    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
+    UpdateAllAlbums();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
@@ -1833,7 +1848,7 @@ int32_t FileDataHandler::CleanPureCloudRecord()
     int32_t ret = E_OK;
     NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     cleanPredicates.EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
-    cleanPredicates.Limit(DELETE_LIMIT_SIZE);
+    cleanPredicates.Limit(BATCH_LIMIT_SIZE);
     vector<ValueObject> deleteFileId;
     int32_t count = 0;
     do {
@@ -1884,7 +1899,7 @@ int32_t FileDataHandler::CleanNotDirtyData()
     NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     cleanPredicates.EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
     cleanPredicates.EqualTo(PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(DirtyType::TYPE_SYNCED)));
-    cleanPredicates.Limit(DELETE_LIMIT_SIZE);
+    cleanPredicates.Limit(BATCH_LIMIT_SIZE);
     vector<ValueObject> deleteFileId;
     int32_t count = 0;
     do {
@@ -1956,7 +1971,7 @@ int32_t FileDataHandler::UnMarkClean()
     if (ret != E_OK) {
         LOGW("unmark clean failed, ret:%{public}d", ret);
     }
-    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
+    UpdateAllAlbums();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
@@ -1981,7 +1996,7 @@ int32_t FileDataHandler::MarkClean(const int32_t action)
     if (ret != E_OK) {
         LOGW("mark clean error %{public}d", ret);
     }
-    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
+    UpdateAllAlbums();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
@@ -3043,6 +3058,53 @@ int32_t FileDataHandler::GetThumbToDownload(std::vector<DriveKit::DKDownloadAsse
         AppendToDownload(*results, "thumbnail", outAssetsToDownload);
     }
     return E_OK;
+}
+
+/*Add locks to prevent multiple threads from updating albums at the same time*/
+void FileDataHandler::UpdateAllAlbums()
+{
+    std::lock_guard<std::mutex> lock(rdbUniqueMutex_);
+    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
+}
+
+void FileDataHandler::PeriodicUpdataFiles()
+{
+    const uint32_t TIMER_INTERVAL = 2000;
+    auto timerCallBack = [this]() {
+        if (!thmVec_.empty()) {
+            string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
+                to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
+            int32_t ret = E_OK;
+            {
+                std::lock_guard<std::mutex> lock(rdbMutex_);
+                ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_);
+            }
+            if (ret != E_OK) {
+                LOGE("update thm fail");
+            }
+            DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
+            DataSyncNotifier::GetInstance().FinalNotify();
+            UpdateAllAlbums();
+        }
+        if (!lcdVec_.empty()) {
+            string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
+                to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
+            int32_t ret = E_OK;
+            {
+                std::lock_guard<std::mutex> lock(rdbMutex_);
+                ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, lcdVec_);
+            }
+            if (ret != E_OK) {
+                LOGE("update lcd fail");
+            }
+        }
+    };
+    DfsuTimer::GetInstance().Register(timerCallBack, timeId_, TIMER_INTERVAL);
+}
+
+void FileDataHandler::StopUpdataFiles()
+{
+    DfsuTimer::GetInstance().Unregister(timeId_);
 }
 } // namespace CloudSync
 } // namespace FileManagement

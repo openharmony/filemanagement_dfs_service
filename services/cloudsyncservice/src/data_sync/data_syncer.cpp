@@ -1244,21 +1244,39 @@ int32_t DataSyncer::DownloadThumb()
     return E_OK;
 }
 
+static void FetchRecordsTaskDownloadProgress(shared_ptr<DKContext> context,
+                                             DKDownloadAsset asset,
+                                             TotalSize total,
+                                             DownloadSize download)
+{
+    LOGD("record %s %{public}s download progress", asset.recordId.c_str(), asset.fieldKey.c_str());
+    if (total == download) {
+        auto ctx = static_pointer_cast<TaskContext>(context);
+        auto handler = ctx->GetHandler();
+        handler->OnTaskDownloadAssets(asset);
+    }
+}
+
 int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
 {
+    if (syncStateManager_.GetSyncState() == SyncState::SYNCING ||
+        syncStateManager_.GetSyncState() == SyncState::CLEANING) {
+        LOGI("downloading or cleaning, not to trigger thumb downloading");
+        return E_STOP;
+    }
     if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT) ||
         ScreenStatus::IsScreenOn()) {
         LOGI("download thumb condition is not met");
-        return E_OK;
+        return E_STOP;
     }
     vector<DriveKit::DKDownloadAsset> assetsToDownload;
     int32_t ret = handler->GetThumbToDownload(assetsToDownload);
     if (ret != E_OK) {
         LOGE("get assetsToDownload err %{public}d", ret);
-        return ret;
+        return E_STOP;
     }
     if (assetsToDownload.empty()) {
-        return E_OK;
+        return E_STOP;
     }
 
     LOGI("assetsToDownload count: %{public}zu", assetsToDownload.size());
@@ -1267,7 +1285,7 @@ int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
                             .assets = assetsToDownload,
                             .id = 0,
                             .resultCallback = AsyncCallback(&DataSyncer::FetchThumbDownloadCallback),
-                            .progressCallback = FetchRecordsDownloadProgress};
+                            .progressCallback = FetchRecordsTaskDownloadProgress};
     DownloadAssets(dctx);
     return E_OK;
 }
@@ -1283,6 +1301,7 @@ void DataSyncer::FetchThumbDownloadCallback(shared_ptr<DKContext> context,
     if (err.HasError()) {
         LOGE("DKAssetsDownloader err, localErr: %{public}d, serverErr: %{public}d", static_cast<int>(err.dkErrorCode),
              err.serverErrorCode);
+        TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
     } else {
         LOGI("DKAssetsDownloader ok");
         DownloadThumbInner(handler);
