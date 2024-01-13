@@ -44,6 +44,11 @@ public:
     virtual void Unlock() override;
     virtual void ForceUnlock() override;
     virtual int32_t DownloadThumb() override;
+    virtual void InitSysEventData() override;
+    virtual void FreeSysEventData() override;
+    virtual void ReportSysEvent(uint32_t code) override;
+    virtual void SetFullSyncSysEvent() override;
+
 private:
     enum {
         BEGIN,
@@ -63,6 +68,7 @@ private:
     int32_t UploadAlbum();
     int32_t UploadFile();
     int32_t Complete();
+    void CompleteAll(bool isNeedNotify);
     std::shared_ptr<NativeRdb::RdbStore> RdbInit(const std::string &bundleName, const int32_t userId);
     int32_t GetHandler();
     void PutHandler();

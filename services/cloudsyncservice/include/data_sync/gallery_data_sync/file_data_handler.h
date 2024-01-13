@@ -49,7 +49,8 @@ public:
     int32_t GetDownloadAsset(std::string cloudId,
                              std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
     int32_t HandleRecord(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records, OnFetchParams &params,
-        std::vector<std::string> &recordIds);
+        std::vector<std::string> &recordIds, const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
+        const std::map<std::string, int> &recordIdRowIdMap);
 
     /*clean*/
     int32_t Clean(const int action) override;
@@ -74,7 +75,11 @@ public:
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
-    
+    int32_t OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
+    void PeriodicUpdataFiles();
+    void StopUpdataFiles();
+    void UpdateAllAlbums();
+
     /* optimizestorage */
     int32_t OptimizeStorage(const int32_t agingDays);
     std::shared_ptr<NativeRdb::ResultSet> GetAgingFile(const int64_t agingTime, int32_t &rowCount);
@@ -83,7 +88,6 @@ public:
 
     /* reset */
     void Reset();
-
 private:
     int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
         const std::unordered_map<std::string, LocalInfo> &localMap);
@@ -232,15 +236,20 @@ private:
     int32_t InsertAssetToPhotoMap(const DriveKit::DKRecord &record, OnFetchParams &params);
     int32_t DeleteAssetInPhotoMap(int32_t fileId);
     int32_t GetAlbumIdFromCloudId(const std::string &recordId);
-    int32_t GetFieldIdFromCloudId(const std::string &recordId);
+    int32_t BatchGetFileIdFromCloudId(const std::vector<NativeRdb::ValueObject> &recordIds, std::vector<int> &fileIds);
     void QueryAndInsertMap(int32_t albumId, int32_t fileId);
     void QueryAndDeleteMap(int32_t fileId, const std::set<int> &cloudMapIds);
     int32_t BatchInsertAssetMaps(OnFetchParams &params);
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
-
+    std::mutex rdbUniqueMutex_;
     std::mutex rdbMutex_;
+    std::mutex thmMutex_;
+    std::mutex lcdMutex_;
+    std::vector<NativeRdb::ValueObject> thmVec_;
+    std::vector<NativeRdb::ValueObject> lcdVec_;
+    uint32_t timeId_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

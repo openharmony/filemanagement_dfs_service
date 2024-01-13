@@ -20,6 +20,7 @@
 
 #include "cloud_pref_impl.h"
 #include "sdk_helper.h"
+#include "sysevent.h"
 #include "values_bucket.h"
 
 namespace OHOS {
@@ -30,6 +31,7 @@ struct OnFetchParams {
     std::vector<DriveKit::DKDownloadAsset> assetsToDownload{};
     std::vector<NativeRdb::ValuesBucket> insertFiles{};
     std::map<std::string, std::set<int>> recordAlbumMaps{};
+    std::shared_ptr<SyncData> syncData;
 };
 const static std::string DOWNLOAD_THUMB_LIMIT = "download_thumb_limit";
 const static std::string BATCH_NO = "batch_no";
@@ -67,6 +69,7 @@ public:
     virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset);
     virtual int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap);
     virtual int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset);
+    virtual int32_t OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset);
 
     /*clean*/
     virtual int32_t Clean(const int action);

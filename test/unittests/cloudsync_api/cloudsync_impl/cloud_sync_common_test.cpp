@@ -533,7 +533,7 @@ HWTEST_F(CloudSyncCommonTest, to_string, TestSize.Level1)
     try {
         DownloadProgressObj downloadProgressObj;
         auto res = downloadProgressObj.to_string();
-        std::string expectStr = "DownloadProgressObj [path:  state: 0 downloaded: 0 total: 0]";
+        std::string expectStr = "DownloadProgressObj [path:  state: 0 downloaded: 0 total: 0 downloadErrorType: 0]";
         EXPECT_EQ(res, expectStr);
     } catch (...) {
         EXPECT_TRUE(false);

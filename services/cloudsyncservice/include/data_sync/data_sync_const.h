@@ -55,5 +55,11 @@ const int32_t SECOND_TO_MILLISECOND = 1000;
 const std::string GALLERY_BUNDLE_NAME = "com.ohos.photos";
 const std::string MEDIALIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
 
+static inline uint64_t GetCurrentTimeStamp()
+{
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return t.tv_sec * SECOND_TO_MILLISECOND + t.tv_nsec / SECOND_TO_MILLISECOND;
+}
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_CLOUD_SYNC_SERVICE_DATA_SYNC_CONST_H

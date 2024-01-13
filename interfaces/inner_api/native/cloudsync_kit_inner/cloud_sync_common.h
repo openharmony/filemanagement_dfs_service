@@ -30,10 +30,19 @@ struct DownloadProgressObj : public Parcelable {
         FAILED = 2,
         STOPPED = 3,
     };
+    enum DownloadErrorType : int32_t {
+        NO_ERROR = 0,
+        UNKNOWN_ERROR = 1,
+        NETWORK_UNAVAILABLE = 2,
+        LOCAL_STORAGE_FULL = 3,
+        CONTENT_NOT_FOUND = 4,
+        FREQUENT_USER_REQUESTS = 5,
+    };
     uint32_t refCount;
     std::string path;
     int64_t downloadId;
     Status state;
+    int32_t downloadErrorType;
     int64_t downloadedSize;
     int64_t totalSize;
     bool ReadFromParcel(Parcel &parcel);

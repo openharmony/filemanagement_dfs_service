@@ -59,6 +59,10 @@ bool DownloadProgressObj::Marshalling(Parcel &parcel) const
         LOGE("failed to write totalSize");
         return false;
     }
+    if (!parcel.WriteInt32(downloadErrorType)) {
+        LOGE("failed to write downloadErrorType");
+        return false;
+    }
     return true;
 }
 
@@ -190,6 +194,10 @@ bool DownloadProgressObj::ReadFromParcel(Parcel &parcel)
         LOGE("failed to write totalSize");
         return false;
     }
+    if (!parcel.ReadInt32(downloadErrorType)) {
+        LOGE("failed to write downloadErrorType");
+        return false;
+    }
     return true;
 }
 
@@ -199,7 +207,8 @@ std::string DownloadProgressObj::to_string()
     ss << "DownloadProgressObj [path: " << path;
     ss << " state: " << state;
     ss << " downloaded: " << downloadedSize;
-    ss << " total: " << totalSize << "]";
+    ss << " total: " << totalSize;
+    ss << " downloadErrorType: " << downloadErrorType << "]";
 
     return ss.str();
 }

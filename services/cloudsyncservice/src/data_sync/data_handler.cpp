@@ -216,6 +216,11 @@ int32_t DataHandler::OnDownloadAssets(const DriveKit::DKDownloadAsset &asset)
     return E_OK;
 }
 
+int32_t DataHandler::OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset)
+{
+    return E_OK;
+}
+
 int32_t DataHandler::Clean(const int action)
 {
     return E_OK;
@@ -233,17 +238,26 @@ int32_t DataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOperResu
                (static_cast<DKServerErrorCode>(serverErrorCode) == DKServerErrorCode::SWITCH_OFF)) {
         return HandleNotSupportSync();
     }
-    if (result.GetDKError().errorDetails.size() == 0) {
-        LOGE("errorDetails is empty");
+    DKErrorType errorType = result.GetDKError().errorType;
+    if (result.GetDKError().errorDetails.size() == 0 && errorType != DKErrorType::TYPE_NOT_NEED_RETRY) {
+        LOGE("errorDetails is empty and errorType is invalid");
         return E_INVAL_ARG;
-    }
-    auto errorDetailcode = static_cast<DKDetailErrorCode>(result.GetDKError().errorDetails[0].detailCode);
-    if (errorDetailcode == DKDetailErrorCode::SPACE_FULL) {
-        return HandleCloudSpaceNotEnough();
+    } else if (result.GetDKError().errorDetails.size() != 0) {
+        auto errorDetailcode = static_cast<DKDetailErrorCode>(result.GetDKError().errorDetails[0].detailCode);
+        if (errorDetailcode == DKDetailErrorCode::SPACE_FULL) {
+            return HandleCloudSpaceNotEnough();
+        }
+        if (errorType != DKErrorType::TYPE_NOT_NEED_RETRY) {
+            LOGE("unknown error code record failed, serverErrorCode = %{public}d, errorDetailcode = %{public}d",
+                serverErrorCode, errorDetailcode);
+            return HandleDetailcode(errorDetailcode);
+        }
+        LOGE("errorDetailcode = %{public}d, errorType = %{public}d, no need retry",
+            errorDetailcode, static_cast<int32_t>(errorType));
+        return E_STOP;
     } else {
-        LOGE("unknown error code record failed, serverErrorCode = %{public}d, errorDetailcode = %{public}d",
-             serverErrorCode, errorDetailcode);
-        return HandleDetailcode(errorDetailcode);
+        LOGE("errorType = %{public}d, no need retry", static_cast<int32_t>(errorType));
+        return E_STOP;
     }
     return E_OK;
 }

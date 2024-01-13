@@ -86,6 +86,7 @@ ohos_unittest("dfsu_access_token_helper_test") {
     "c_utils:utils",
     "c_utils:utilsbase",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "preferences:native_preferences",
   ]

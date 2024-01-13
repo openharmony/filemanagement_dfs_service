@@ -70,6 +70,11 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     LOGI("%{private}d %{public}s starts sync, isforceSync %{public}d, triggerType %{public}d",
         userId_, bundleName_.c_str(), forceFlag, triggerType);
 
+    triggerType_ = triggerType;
+    startTime_ = GetCurrentTimeStamp();
+
+    InitSysEventData();
+
     /* only one specific data sycner running at a time */
     if (syncStateManager_.CheckAndSetPending(forceFlag, triggerType)) {
         LOGI("syncing, pending sync");
@@ -170,6 +175,7 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
 
     /* Full synchronization and incremental synchronization */
     if (handler->IsPullRecords()) {
+        SetFullSyncSysEvent();
         ret = AsyncRun(context, &DataSyncer::PullRecords);
     } else {
         ret = AsyncRun(context, &DataSyncer::PullDatabaseChanges);
@@ -273,11 +279,21 @@ void DataSyncer::DownloadAssets(DownloadContext &ctx)
         LOGE("resultCallback nullptr");
         return;
     }
+
     if (ctx.progressCallback == nullptr) {
         LOGE("progressCallback nullptr");
         return;
     }
-    sdkHelper_->DownloadAssets(ctx.context, ctx.assets, {}, ctx.id, ctx.resultCallback, ctx.progressCallback);
+
+    int32_t ret = sdkHelper_->DownloadAssets(ctx.context, ctx.assets, {}, ctx.id,
+        ctx.resultCallback, ctx.progressCallback);
+    if (ret != E_OK) {
+        LOGE("sdk download assets error %{public}d", ret);
+        /* post sync hook */
+        if (syncData_ != nullptr) {
+            syncData_->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, ctx.assets.size());
+        }
+    }
 }
 
 void DataSyncer::FetchRecordsDownloadCallback(shared_ptr<DKContext> context,
@@ -330,6 +346,7 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
         onFetchParams.totalPullCount = context->GetBatchNo() * handler->GetRecordSize();
     }
 
+    onFetchParams.syncData = syncData_;
     int32_t ret = handler->OnFetchRecords(records, onFetchParams);
     if (!onFetchParams.assetsToDownload.empty()) {
         DownloadContext dctx = {.context = context,
@@ -1064,6 +1081,10 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
         syncState = SyncState::SYNC_FAILED;
     }
 
+    /* sys event report and free */
+    ReportSysEvent(errorCode_);
+    FreeSysEventData();
+
     CloudSyncState notifyState = CloudSyncState::COMPLETED;
     if (syncStateManager_.GetStopSyncFlag()) {
         notifyState = CloudSyncState::STOPPED;
@@ -1223,21 +1244,39 @@ int32_t DataSyncer::DownloadThumb()
     return E_OK;
 }
 
+static void FetchRecordsTaskDownloadProgress(shared_ptr<DKContext> context,
+                                             DKDownloadAsset asset,
+                                             TotalSize total,
+                                             DownloadSize download)
+{
+    LOGD("record %s %{public}s download progress", asset.recordId.c_str(), asset.fieldKey.c_str());
+    if (total == download) {
+        auto ctx = static_pointer_cast<TaskContext>(context);
+        auto handler = ctx->GetHandler();
+        handler->OnTaskDownloadAssets(asset);
+    }
+}
+
 int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
 {
+    if (syncStateManager_.GetSyncState() == SyncState::SYNCING ||
+        syncStateManager_.GetSyncState() == SyncState::CLEANING) {
+        LOGI("downloading or cleaning, not to trigger thumb downloading");
+        return E_STOP;
+    }
     if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT) ||
         ScreenStatus::IsScreenOn()) {
         LOGI("download thumb condition is not met");
-        return E_OK;
+        return E_STOP;
     }
     vector<DriveKit::DKDownloadAsset> assetsToDownload;
     int32_t ret = handler->GetThumbToDownload(assetsToDownload);
     if (ret != E_OK) {
         LOGE("get assetsToDownload err %{public}d", ret);
-        return ret;
+        return E_STOP;
     }
     if (assetsToDownload.empty()) {
-        return E_OK;
+        return E_STOP;
     }
 
     LOGI("assetsToDownload count: %{public}zu", assetsToDownload.size());
@@ -1246,7 +1285,7 @@ int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
                             .assets = assetsToDownload,
                             .id = 0,
                             .resultCallback = AsyncCallback(&DataSyncer::FetchThumbDownloadCallback),
-                            .progressCallback = FetchRecordsDownloadProgress};
+                            .progressCallback = FetchRecordsTaskDownloadProgress};
     DownloadAssets(dctx);
     return E_OK;
 }
@@ -1262,6 +1301,7 @@ void DataSyncer::FetchThumbDownloadCallback(shared_ptr<DKContext> context,
     if (err.HasError()) {
         LOGE("DKAssetsDownloader err, localErr: %{public}d, serverErr: %{public}d", static_cast<int>(err.dkErrorCode),
              err.serverErrorCode);
+        TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
     } else {
         LOGI("DKAssetsDownloader ok");
         DownloadThumbInner(handler);
@@ -1275,6 +1315,30 @@ int32_t DataSyncer::CleanCache(const string &uri)
 void DataSyncer::StopUploadAssets()
 {
     sdkHelper_->Release();
+}
+
+void DataSyncer::InitSysEventData()
+{
+}
+
+void DataSyncer::FreeSysEventData()
+{
+}
+
+void DataSyncer::ReportSysEvent(uint32_t code)
+{
+}
+
+void DataSyncer::SetFullSyncSysEvent()
+{
+}
+
+void DataSyncer::UpdateBasicEventStat(uint32_t code)
+{
+    syncData_->SetSyncReason(static_cast<uint32_t>(triggerType_));
+    syncData_->SetStopReason(code);
+    syncData_->SetStartTime(startTime_);
+    syncData_->SetDuration(GetCurrentTimeStamp());
 }
 } // namespace CloudSync
 } // namespace FileManagement
