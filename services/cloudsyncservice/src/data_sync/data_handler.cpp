@@ -264,7 +264,7 @@ int32_t DataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOperResu
         LOGE("errorType = %{public}d, no need retry", static_cast<int32_t>(errorType));
         return E_STOP;
     }
-    return E_OK;
+    return E_UNKNOWN;
 }
 
 int32_t DataHandler::HandleCloudSpaceNotEnough()
