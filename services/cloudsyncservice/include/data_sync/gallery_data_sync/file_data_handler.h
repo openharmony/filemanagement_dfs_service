@@ -29,7 +29,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
-class FileDataHandler : public RdbDataHandler, public SyncStatContainer<GalleryIncSyncStat> {
+class FileDataHandler : public RdbDataHandler, public GallerySyncStatContainer {
 public:
     enum Clean {
         NOT_NEED_CLEAN = 0,

@@ -452,7 +452,9 @@ void GalleryDataSyncer::FreeSysEventData()
 
 void GalleryDataSyncer::SetFullSyncSysEvent()
 {
-    syncStat_->SetFullSync();
+    if (syncStat_ != nullptr) {
+        syncStat_->SetFullSync();
+    }
 }
 
 void GalleryDataSyncer::ReportSysEvent(uint32_t code)

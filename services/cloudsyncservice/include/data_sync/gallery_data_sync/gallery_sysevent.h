@@ -208,6 +208,36 @@ public:
         Load();
     }
 };
+
+class GallerySyncStatContainer : public SyncStatContainer<GalleryIncSyncStat> {
+public:
+    void UpdateMetaStat(uint32_t index, uint64_t diff)
+    {
+        std::shared_ptr<GalleryIncSyncStat> stat = GetSyncStat();
+        /* for sake of no-crash, might delete later */
+        if (stat != nullptr) {
+            stat->UpdateMetaStat(index, diff);
+        }
+    }
+
+    void UpdateAttachmentStat(uint32_t index, uint64_t diff)
+    {
+        std::shared_ptr<GalleryIncSyncStat> stat = GetSyncStat();
+        /* for sake of no-crash, might delete later */
+        if (stat != nullptr) {
+            stat->UpdateAttachmentStat(index, diff);
+        }
+    }
+
+    void UpdateAlbumStat(uint32_t index, uint64_t diff)
+    {
+        std::shared_ptr<GalleryIncSyncStat> stat = GetSyncStat();
+        /* for sake of no-crash, might delete later */
+        if (stat != nullptr) {
+            stat->UpdateAlbumStat(index, diff);
+        }
+    }
+};
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

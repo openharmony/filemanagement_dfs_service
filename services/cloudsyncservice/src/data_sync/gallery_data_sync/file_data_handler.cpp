@@ -297,15 +297,15 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
         if (ret != E_OK) {
             LOGE("recordId %s error %{public}d", record.GetRecordId().c_str(), ret);
             if (ret == E_RDB) {
-                GetSyncStat()->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, 1);
+                UpdateMetaStat(INDEX_DL_META_ERROR_RDB, 1);
                 continue;
             }
             /* might need to specifiy which type error */
-            GetSyncStat()->UpdateMetaStat(INDEX_DL_META_ERROR_DATA, 1);
+            UpdateMetaStat(INDEX_DL_META_ERROR_DATA, 1);
             ret = E_OK;
         } else {
             if (changeType != ChangeType::INSERT && changeType != ChangeType::INVAILD) {
-                GetSyncStat()->UpdateMetaStat(INDEX_DL_META_SUCCESS, 1);
+                UpdateMetaStat(INDEX_DL_META_SUCCESS, 1);
             }
         }
         if (changeType != ChangeType::INVAILD) {
@@ -327,7 +327,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
     }
     auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
     if (resultSet == nullptr) {
-        GetSyncStat()->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, recordIds.size());
+        UpdateMetaStat(INDEX_DL_META_ERROR_RDB, recordIds.size());
         return E_RDB;
     }
     ret = FileDataHandler::HandleRecord(records, params, recordIds, resultSet, recordIdRowIdMap);
@@ -338,11 +338,11 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
         ret = BatchInsert(rowId, TABLE_NAME, params.insertFiles);
         if (ret != E_OK) {
             LOGE("batch insert failed return %{public}d", ret);
-            GetSyncStat()->UpdateMetaStat(INDEX_DL_META_ERROR_RDB, params.insertFiles.size());
+            UpdateMetaStat(INDEX_DL_META_ERROR_RDB, params.insertFiles.size());
             ret = E_RDB;
             params.assetsToDownload.clear();
         } else {
-            GetSyncStat()->UpdateMetaStat(INDEX_DL_META_SUCCESS, params.insertFiles.size());
+            UpdateMetaStat(INDEX_DL_META_SUCCESS, params.insertFiles.size());
             BatchInsertAssetMaps(params);
         }
     }
@@ -1056,11 +1056,11 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
     }
 
     if (thumbError > 0) {
-        GetSyncStat()->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, thumbError);
+        UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, thumbError);
     }
 
     if (lcdError > 0) {
-        GetSyncStat()->UpdateAttachmentStat(INDEX_LCD_ERROR_SDK, lcdError);
+        UpdateAttachmentStat(INDEX_LCD_ERROR_SDK, lcdError);
     }
 
     return E_OK;
@@ -1077,9 +1077,9 @@ int32_t FileDataHandler::OnTaskDownloadAssets(const DKDownloadAsset &asset)
         int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
         if (ret != E_OK) {
             LOGE("update sync status failed, ret=%{public}d", ret);
-            GetSyncStat()->UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, 1);
+            UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, 1);
         } else {
-            GetSyncStat()->UpdateAttachmentStat(INDEX_THUMB_SUCCESS, 1);
+            UpdateAttachmentStat(INDEX_THUMB_SUCCESS, 1);
         }
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                                   to_string(updateRows));
@@ -1096,9 +1096,9 @@ int32_t FileDataHandler::OnTaskDownloadAssets(const DKDownloadAsset &asset)
         int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
         if (ret != E_OK) {
             LOGE("update thumb status failed, ret=%{public}d", ret);
-            GetSyncStat()->UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, 1);
+            UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, 1);
         } else {
-            GetSyncStat()->UpdateAttachmentStat(INDEX_LCD_SUCCESS, 1);
+            UpdateAttachmentStat(INDEX_LCD_SUCCESS, 1);
         }
     }
 
@@ -1138,11 +1138,11 @@ int32_t FileDataHandler::OnDownloadAssetsFailure(const std::vector<DriveKit::DKD
 
     /* update atomic value at once */
     if (thumbError > 0) {
-        GetSyncStat()->UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, thumbError);
+        UpdateAttachmentStat(INDEX_THUMB_ERROR_SDK, thumbError);
     }
 
     if (lcdError > 0) {
-        GetSyncStat()->UpdateAttachmentStat(INDEX_LCD_ERROR_SDK, lcdError);
+        UpdateAttachmentStat(INDEX_LCD_ERROR_SDK, lcdError);
     }
 
     return E_OK;
@@ -2530,7 +2530,7 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
     int32_t ret = GetLocalInfo(map, localMap, Media::PhotoColumn::MEDIA_FILE_PATH);
     if (ret != E_OK) {
         LOGE("get local match info err %{public}d", ret);
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_DATA, map.size());
+        UpdateMetaStat(INDEX_UL_META_ERROR_DATA, map.size());
         return ret;
     }
 
@@ -2556,8 +2556,8 @@ int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResul
     }
     (void)DataSyncNotifier::GetInstance().FinalNotify();
 
-    GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_SDK, failure);
-    GetSyncStat()->UpdateMetaStat(INDEX_UL_META_SUCCESS, success);
+    UpdateMetaStat(INDEX_UL_META_ERROR_SDK, failure);
+    UpdateMetaStat(INDEX_UL_META_SUCCESS, success);
 
     return ret;
 }
@@ -2586,8 +2586,8 @@ int32_t FileDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResul
         GetReturn(err, ret);
     }
 
-    GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_SDK, failure);
-    GetSyncStat()->UpdateMetaStat(INDEX_UL_META_SUCCESS, success);
+    UpdateMetaStat(INDEX_UL_META_ERROR_SDK, failure);
+    UpdateMetaStat(INDEX_UL_META_SUCCESS, success);
 
     return ret;
 }
@@ -2601,7 +2601,7 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
     int32_t ret = GetLocalInfo(map, localMap, Media::PhotoColumn::PHOTO_CLOUD_ID);
     if (ret != E_OK) {
         LOGE("get local match info err %{public}d", ret);
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_DATA, map.size());
+        UpdateMetaStat(INDEX_UL_META_ERROR_DATA, map.size());
         return ret;
     }
 
@@ -2623,8 +2623,8 @@ int32_t FileDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOpe
         GetReturn(err, ret);
     }
 
-    GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_SDK, failure);
-    GetSyncStat()->UpdateMetaStat(INDEX_UL_META_SUCCESS, success);
+    UpdateMetaStat(INDEX_UL_META_ERROR_SDK, failure);
+    UpdateMetaStat(INDEX_UL_META_SUCCESS, success);
 
     return ret;
 }
@@ -2638,7 +2638,7 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
     int32_t ret = GetLocalInfo(map, localMap, Media::PhotoColumn::PHOTO_CLOUD_ID);
     if (ret != E_OK) {
         LOGE("get local match info err %{public}d", ret);
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_DATA, map.size());
+        UpdateMetaStat(INDEX_UL_META_ERROR_DATA, map.size());
         return ret;
     }
 
@@ -2660,8 +2660,8 @@ int32_t FileDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKRecordOpe
         GetReturn(err, ret);
     }
 
-    GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_SDK, failure);
-    GetSyncStat()->UpdateMetaStat(INDEX_UL_META_SUCCESS, success);
+    UpdateMetaStat(INDEX_UL_META_ERROR_SDK, failure);
+    UpdateMetaStat(INDEX_UL_META_SUCCESS, success);
 
     return ret;
 }
@@ -2700,7 +2700,7 @@ int32_t FileDataHandler::OnCreateRecordSuccess(const pair<DKRecordId, DKRecordOp
     string path;
     int32_t checkResult = FileDataHandler::CheckRecordData(data, path);
     if (checkResult != E_OK) {
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
         return checkResult;
     }
 
@@ -2730,7 +2730,7 @@ int32_t FileDataHandler::OnCreateRecordSuccess(const pair<DKRecordId, DKRecordOp
     int32_t ret = UpdateLocalAlbumMap(entry.first);
     if (ret != E_OK) {
         LOGE("update local album map err %{public}d", ret);
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
         return ret;
     }
 
@@ -2741,7 +2741,7 @@ int32_t FileDataHandler::OnCreateRecordSuccess(const pair<DKRecordId, DKRecordOp
     ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
     if (ret != 0) {
         LOGE("on create records update synced err %{public}d", ret);
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
         return ret;
     }
 
@@ -2764,7 +2764,7 @@ int32_t FileDataHandler::OnDeleteRecordSuccess(const std::pair<DKRecordId, DKRec
     int32_t ret = Delete(deletedRows, whereClause, { cloudId });
     if (ret != 0) {
         LOGE("on delete records update err %{public}d", ret);
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
         return ret;
     }
 
@@ -2786,26 +2786,26 @@ int32_t FileDataHandler::OnMdirtyRecordSuccess(
     int32_t ret = UpdateLocalAlbumMap(entry.first);
     if (ret != E_OK) {
         LOGE("update local album map err %{public}d", ret);
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
         return ret;
     }
 
     record.GetRecordData(data);
     if (data.find(FILE_ATTRIBUTES) == data.end()) {
         LOGE("record data cannot find attributes");
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
         return E_INVAL_ARG;
     }
     DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
     if (attributes.find(PhotoColumn::PHOTO_META_DATE_MODIFIED) == attributes.end()) {
         LOGE("record data cannot find file path");
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
         return E_INVAL_ARG;
     }
     int64_t meta_date_modified;
     if (attributes[PhotoColumn::PHOTO_META_DATE_MODIFIED].GetLong(meta_date_modified) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
         return E_INVAL_ARG;
     }
 
@@ -2824,7 +2824,7 @@ int32_t FileDataHandler::OnMdirtyRecordSuccess(
         ret = Update(changedRows, valuesBucket, PC::PHOTO_CLOUD_ID + " = ?", { cloudId });
         if (ret != E_OK) {
             LOGE("update record version err %{public}d", ret);
-            GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
+            UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
             return ret;
         }
     }
@@ -2845,26 +2845,26 @@ int32_t FileDataHandler::OnFdirtyRecordSuccess(
     int32_t ret = UpdateLocalAlbumMap(entry.first);
     if (ret != E_OK) {
         LOGE("update local album map err %{public}d", ret);
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
         return ret;
     }
 
     record.GetRecordData(data);
     if (data.find(FILE_ATTRIBUTES) == data.end()) {
         LOGE("record data cannot find attributes");
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
         return E_INVAL_ARG;
     }
     DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
     if (attributes.find(PhotoColumn::PHOTO_META_DATE_MODIFIED) == attributes.end()) {
         LOGE("record data cannot find file path");
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
         return E_INVAL_ARG;
     }
     int64_t meta_date_modified;
     if (attributes[PhotoColumn::PHOTO_META_DATE_MODIFIED].GetLong(meta_date_modified) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
-        GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
+        UpdateMetaStat(INDEX_UL_META_ERROR_DATA, 1);
         return E_INVAL_ARG;
     }
 
@@ -2886,7 +2886,7 @@ int32_t FileDataHandler::OnFdirtyRecordSuccess(
         ret = Update(changedRows, valuesBucket, PC::PHOTO_CLOUD_ID + " = ?", { cloudId });
         if (ret != E_OK) {
             LOGE("update record version err %{public}d", ret);
-            GetSyncStat()->UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
+            UpdateMetaStat(INDEX_UL_META_ERROR_RDB, 1);
             return ret;
         }
     }
@@ -3211,7 +3211,7 @@ void FileDataHandler::PeriodicUpdataFiles()
 void FileDataHandler::StopUpdataFiles()
 {
     DfsuTimer::GetInstance().Unregister(timeId_);
-g}
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
