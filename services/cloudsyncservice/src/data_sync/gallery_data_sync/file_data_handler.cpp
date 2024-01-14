@@ -3211,7 +3211,7 @@ void FileDataHandler::PeriodicUpdataFiles()
 void FileDataHandler::StopUpdataFiles()
 {
     DfsuTimer::GetInstance().Unregister(timeId_);
-}
+g}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

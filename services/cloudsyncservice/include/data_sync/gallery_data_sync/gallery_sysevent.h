@@ -99,7 +99,6 @@ public:
 
     virtual ~GallerySyncStat() {}
 
-
     void UpdateMetaStat(uint32_t index, uint64_t diff)
     {
         if (index < INDEX_UL_META_SUCCESS) {
@@ -159,8 +158,7 @@ public:
             "download_lcd", vector_atomic_to_origin<uint64_t>(downloadLcd_),
             "upload_album", vector_atomic_to_origin<uint64_t>(uploadAlbum_),
             "download_album", vector_atomic_to_origin<uint64_t>(downloadAlbum_),
-            "sync_info", sync_info_
-        );
+            "sync_info", sync_info_);
         if (ret != E_OK) {
             LOGE("report CLOUD_SYNC_FULL_STAT error %{public}d", ret);
         }
@@ -193,8 +191,7 @@ public:
             "download_lcd", vector_atomic_to_origin<uint64_t>(downloadLcd_),
             "upload_album", vector_atomic_to_origin<uint64_t>(uploadAlbum_),
             "download_album", vector_atomic_to_origin<uint64_t>(downloadAlbum_),
-            "sync_info", sync_info_
-        );
+            "sync_info", sync_info_);
         if (ret != E_OK) {
             LOGE("report CLOUD_SYNC_INC_STAT error %{public}d", ret);
         }
