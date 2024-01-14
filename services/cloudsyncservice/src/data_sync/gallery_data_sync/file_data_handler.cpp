@@ -343,6 +343,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
             params.syncData->UpdateMetaStat(INDEX_DL_META_SUCCESS, params.insertFiles.size());
             BatchInsertAssetMaps(params);
         }
+        return ret;
     }
     UpdateAllAlbums();
     LOGI("after BatchInsert ret %{public}d", ret);
@@ -812,10 +813,10 @@ int32_t FileDataHandler::GetAssetUniqueId(int32_t &type)
             LOGE("This type %{public}d can not get unique id", type);
             return MediaType::MEDIA_TYPE_FILE;
     }
-    std::lock_guard<std::mutex> lock(rdbUniqueMutex_);
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     string sql = " UPDATE UniqueNumber SET unique_number = unique_number + 1  WHERE media_type = ?";
     std::vector<NativeRdb::ValueObject> bingArgs;
-    bingArgs.emplace_back(type);
+    bingArgs.emplace_back(typeString);
     int32_t ret = ExecuteSql(sql, bingArgs);
     if (ret != E_OK) {
         LOGI("update unique number fail");
@@ -1061,10 +1062,10 @@ int32_t FileDataHandler::OnTaskDownloadAssets(const DKDownloadAsset &asset)
         if (ret != E_OK) {
             LOGE("update sync status failed, ret=%{public}d", ret);
         }
+        UpdateAllAlbums();
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                                   to_string(updateRows));
         DataSyncNotifier::GetInstance().FinalNotify();
-        UpdateAllAlbums();
     }
 
     if (asset.fieldKey == "lcd") {
@@ -3060,10 +3061,41 @@ int32_t FileDataHandler::GetThumbToDownload(std::vector<DriveKit::DKDownloadAsse
     return E_OK;
 }
 
+void FileDataHandler::UpdateVectorToDataBase()
+{
+    if (!thmVec_.empty()) {
+        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
+            to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
+        int32_t ret = E_OK;
+        {
+            std::lock_guard<std::mutex> lock(rdbMutex_);
+            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_);
+            UpdateAllAlbums();
+        }
+        if (ret != E_OK) {
+            LOGW("update thm fail");
+        }
+        DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
+        DataSyncNotifier::GetInstance().FinalNotify();
+    }
+    if (!lcdVec_.empty()) {
+        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_THUMB_STATUS + " = " +
+            to_string(static_cast<int32_t>(ThumbStatus::DOWNLOADED));
+        int32_t ret = E_OK;
+        {
+            std::lock_guard<std::mutex> lock(rdbMutex_);
+            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, lcdVec_);
+        }
+        if (ret != E_OK) {
+            LOGE("update lcd fail");
+        }
+    }
+}
+
 /*Add locks to prevent multiple threads from updating albums at the same time*/
 void FileDataHandler::UpdateAllAlbums()
 {
-    std::lock_guard<std::mutex> lock(rdbUniqueMutex_);
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
 }
 
@@ -3071,40 +3103,20 @@ void FileDataHandler::PeriodicUpdataFiles()
 {
     const uint32_t TIMER_INTERVAL = 2000;
     auto timerCallBack = [this]() {
-        if (!thmVec_.empty()) {
-            string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
-                to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
-            int32_t ret = E_OK;
-            {
-                std::lock_guard<std::mutex> lock(rdbMutex_);
-                ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_);
-            }
-            if (ret != E_OK) {
-                LOGE("update thm fail");
-            }
-            DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
-            DataSyncNotifier::GetInstance().FinalNotify();
-            UpdateAllAlbums();
-        }
-        if (!lcdVec_.empty()) {
-            string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
-                to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
-            int32_t ret = E_OK;
-            {
-                std::lock_guard<std::mutex> lock(rdbMutex_);
-                ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, lcdVec_);
-            }
-            if (ret != E_OK) {
-                LOGE("update lcd fail");
-            }
-        }
+        UpdateVectorToDataBase();
     };
     DfsuTimer::GetInstance().Register(timerCallBack, timeId_, TIMER_INTERVAL);
 }
 
 void FileDataHandler::StopUpdataFiles()
 {
+    const uint32_t MAX_TRY_TIMES = 5;
+    uint32_t tryCount = 1;
     DfsuTimer::GetInstance().Unregister(timeId_);
+    while (tryCount <= MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
+        UpdateVectorToDataBase();
+        tryCount++;
+    }
 }
 } // namespace CloudSync
 } // namespace FileManagement

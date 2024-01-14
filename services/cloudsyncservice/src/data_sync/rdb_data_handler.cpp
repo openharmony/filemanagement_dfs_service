@@ -16,6 +16,7 @@
 #include "rdb_data_handler.h"
 #include <sstream>
 #include "dfs_error.h"
+#include "unistd.h"
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
@@ -26,21 +27,23 @@ int32_t RdbDataHandler::BatchInsert(int64_t &outRowId, const string &table,
                                     const vector<ValuesBucket> &initialBatchValues)
 {
     const uint32_t TRY_TIMES = 5;
+    const uint32_t SLEEP_TIME = 200 * 1000;
     int32_t ret = E_OK;
     uint32_t tryCount = 0;
-    if (initialBatchValues.size() != 0) {
-        while (tryCount <= TRY_TIMES) {
-            {
-                std::lock_guard<std::mutex> lock(rdbMutex_);
-                ret = rdb_->BatchInsert(outRowId, table, initialBatchValues);
-            }
-            if (ret != 0) {
-                LOGW("betch insert fail try next time, retry time is tryCount %{public}d", tryCount);
-                std::this_thread::sleep_for(200ms);
-                tryCount++;
-            } else {
-                return ret;
-            }
+    if (initialBatchValues.size() == 0) {
+        return ret;
+    }
+    while (tryCount <= TRY_TIMES) {
+        usleep(SLEEP_TIME * tryCount);
+        {
+            std::lock_guard<std::mutex> lock(rdbMutex_);
+            ret = rdb_->BatchInsert(outRowId, table, initialBatchValues);
+        }
+        if (ret != 0) {
+            LOGW("betch insert fail try next time, retry time is tryCount %{public}d", tryCount);
+            tryCount++;
+        } else {
+            return ret;
         }
     }
     LOGE("betch insert fail, try too many times");
@@ -87,6 +90,9 @@ int32_t RdbDataHandler::BatchUpdate(const string &sql,
         if (ret == E_OK) {
             bindArgs.erase(bindArgs.begin(), bindArgs.begin() + size);
             LOGD("update size is %{public}d", size);
+        } else {
+            LOGW("update fail try next time, ret is %{public}d", ret);
+            return E_OK;
         }
     } while (bindArgs.size() > BATCH_LIMIT_SIZE);
     return E_OK;
@@ -156,7 +162,11 @@ int32_t RdbDataHandler::Delete(int &deletedRows, const std::string &tableName,
 
 int32_t RdbDataHandler::ExecuteSql(const std::string &sql, const std::vector<NativeRdb::ValueObject> &bindArgs)
 {
-    return rdb_->ExecuteSql(sql, bindArgs);
+    int32_t ret = rdb_->ExecuteSql(sql, bindArgs);
+    if (ret != E_OK) {
+        LOGE("err sql is %{public}s", sql.c_str());
+    }
+    return ret;
 }
 } // namespace CloudSync
 } // namespace FileManagement
