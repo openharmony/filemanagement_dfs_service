@@ -239,10 +239,10 @@ private:
     void QueryAndInsertMap(int32_t albumId, int32_t fileId);
     void QueryAndDeleteMap(int32_t fileId, const std::set<int> &cloudMapIds);
     int32_t BatchInsertAssetMaps(OnFetchParams &params);
+    void UpdateVectorToDataBase();
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
-    std::mutex rdbUniqueMutex_;
     std::mutex rdbMutex_;
     std::mutex thmMutex_;
     std::mutex lcdMutex_;
