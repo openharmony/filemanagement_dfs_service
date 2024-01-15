@@ -258,7 +258,15 @@ void FileOperationsCloud::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLooku
         return (void) fuse_reply_none(req);
     }
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    if (inoPtr == nullptr) {
+        LOGE("Forget Function get an invalid inode!");
+        return (void) fuse_reply_none(req);
+    }
     auto parentPtr = reinterpret_cast<struct CloudDiskInode *>(inoPtr->parent);
+    if (parentPtr == nullptr) {
+        LOGE("Forget Function get an invalid parent inode!");
+        return (void) fuse_reply_none(req);
+    }
     string key = parentPtr->cloudId + inoPtr->fileName;
     if (inoPtr->layer != CLOUD_DISK_INODE_OTHER_LAYER) {
         key = inoPtr->path;
@@ -277,7 +285,15 @@ void FileOperationsCloud::ForgetMulti(fuse_req_t req, size_t count, struct fuse_
             return (void) fuse_reply_none(req);
         }
         auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(forgets[i].ino);
+        if (inoPtr == nullptr) {
+            LOGE("ForgetMulti Function get an invalid inode!");
+            continue;
+        }
         auto parentPtr = reinterpret_cast<struct CloudDiskInode *>(inoPtr->parent);
+        if (parentPtr == nullptr) {
+            LOGE("ForgetMulti Function get an invalid parent inode!");
+            continue;
+        }
         string key = parentPtr->cloudId + inoPtr->fileName;
         if (inoPtr->layer != CLOUD_DISK_INODE_OTHER_LAYER) {
             key = inoPtr->path;
@@ -513,19 +529,13 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
 
 int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
-    struct fuse_entry_param e;
-    int32_t err = DoCloudLookup(req, parent, name, &e);
-    if (err != 0) {
-        return ENOENT;
-    }
-
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto parentInode = reinterpret_cast<struct CloudDiskInode *>(parent);
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName,
                                                                          data->userId);
     string unlinkCloudId = "";
-    err = rdbStore->Unlink(parentInode->cloudId, name, unlinkCloudId);
+    int32_t err = rdbStore->Unlink(parentInode->cloudId, name, unlinkCloudId);
     if (err != 0) {
         LOGE("Failed to unlink DB cloudId:%{private}s err:%{public}d", unlinkCloudId.c_str(), err);
         return ENOSYS;
