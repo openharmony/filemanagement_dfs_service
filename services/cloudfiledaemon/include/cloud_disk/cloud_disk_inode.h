@@ -55,7 +55,6 @@ struct CloudDiskInode {
     std::shared_ptr<DriveKit::DKAssetReadSession> readSession{nullptr};
     std::atomic<int> sessionRefCount{0};
     std::shared_mutex sessionLock;
-    std::shared_mutex readLock;
 };
 
 struct CloudDiskFuseData {

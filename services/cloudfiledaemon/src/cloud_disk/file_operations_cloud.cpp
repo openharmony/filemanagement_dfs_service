@@ -41,8 +41,6 @@ namespace {
     static const uint32_t STAT_MODE_REG = 0660;
     static const uint32_t STAT_MODE_DIR = 0771;
     static const uint32_t MILLISECOND_TO_SECONDS_TIMES = 1000;
-    static const uint32_t READ_TIMEOUT_MS = 4000;
-    static const uint32_t MAX_READ_SIZE = 2 * 1024 * 1024;
 }
 
 static void InitInodeAttr(fuse_ino_t parent, struct CloudDiskInode *childInode,
@@ -150,9 +148,6 @@ static bool HandleDkError(fuse_req_t req, DriveKit::DKError dkError)
     } else if (dkError.isLocalError) {
         LOGE("local errorCode is: %{public}d", dkError.dkErrorCode);
         fuse_reply_err(req, EINVAL);
-    } else {
-        LOGE("Unknow error");
-        fuse_reply_err(req, EIO);
     }
     return true;
 }
@@ -590,60 +585,6 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
     return (void) fuse_reply_err(req, 0);
 }
 
-static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t offset,
-                      struct fuse_file_info *fi)
-{
-    shared_ptr<DriveKit::DKError> dkError = make_shared<DriveKit::DKError>();
-    shared_ptr<char> buf = nullptr;
-    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-
-    if (size > MAX_READ_SIZE) {
-        fuse_reply_err(req, EINVAL);
-        return;
-    }
-    buf.reset(new char[size], [](char* ptr) {
-        delete[] ptr;
-    });
-
-    if (!buf) {
-        fuse_reply_err(req, ENOMEM);
-        LOGE("buffer is null");
-        return;
-    }
-
-    shared_ptr<int64_t> readSize = make_shared<int64_t>(-1);
-    shared_ptr<bool> readAvailable = make_shared<bool>(true);
-    condition_variable readConVar;
-    thread([=, &readConVar]() {
-        *readSize = inoPtr->readSession->PRead(offset, size, buf.get(), *dkError);
-        LOGD("read result, %lld bytes", static_cast<long long>(*readSize));
-        unique_lock<shared_mutex> wLock(inoPtr->readLock, defer_lock);
-        wLock.lock();
-        if (*readAvailable) {
-        readConVar.notify_one();
-        }
-        wLock.unlock();
-        }).detach();
-
-    mutex readMutex;
-    unique_lock<mutex> lock(readMutex);
-    auto waitStatus = readConVar.wait_for(lock, chrono::milliseconds(READ_TIMEOUT_MS));
-    if (waitStatus == cv_status::timeout) {
-        LOGE("Pread timeout");
-        unique_lock<shared_mutex> wLock(inoPtr->readLock, defer_lock);
-        wLock.lock();
-        *readAvailable = false;
-        wLock.unlock();
-        fuse_reply_err(req, ENOTCONN);
-        return;
-    }
-
-    if (!HandleDkError(req, *dkError)) {
-        LOGD("read success");
-        fuse_reply_buf(req, buf.get(), *readSize);
-    }
-}
-
 void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
                                off_t offset, struct fuse_file_info *fi)
 {
@@ -659,7 +600,27 @@ void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
         return;
     }
 
-    CloudRead(req, ino, size, offset, fi);
+    int64_t readSize;
+    DriveKit::DKError dkError;
+    shared_ptr<char> buf = nullptr;
+
+    buf.reset(new char[size], [](char* ptr) {
+        delete[] ptr;
+    });
+
+    if (!buf) {
+        fuse_reply_err(req, ENOMEM);
+        LOGE("buffer is null");
+        return;
+    }
+
+    readSize = inoPtr->readSession->PRead(offset, size, buf.get(), dkError);
+    if (!HandleDkError(req, dkError)) {
+        LOGD("read success, %lld bytes", static_cast<long long>(readSize));
+        fuse_reply_buf(req, buf.get(), readSize);
+    } else {
+        LOGE("read fali");
+    }
 }
 
 static void UpdateCloudDiskInode(shared_ptr<CloudDiskRdbStore> rdbStore, struct CloudDiskInode *inoPtr)
