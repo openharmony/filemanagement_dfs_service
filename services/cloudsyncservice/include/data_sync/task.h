@@ -37,15 +37,30 @@ namespace FileManagement {
 namespace CloudSync {
 class TaskContext : public DriveKit::DKContext {
 public:
-    TaskContext(std::shared_ptr<DataHandler> handler) : handler_(handler) {}
+    TaskContext(std::shared_ptr<DataHandler> handler) : handler_(handler),
+        assets_(0)
+    {
+    }
 
     std::shared_ptr<DataHandler> GetHandler()
     {
         return handler_;
     }
 
+    void SetAssets(std::vector<DriveKit::DKDownloadAsset> &assets)
+    {
+        assets_ = std::move(assets);
+    }
+
+    std::vector<DriveKit::DKDownloadAsset> GetAssets()
+    {
+        return std::move(assets_);
+    }
+
 private:
     std::shared_ptr<DataHandler> handler_;
+    /* not final, might put this in its derived class */
+    std::vector<DriveKit::DKDownloadAsset> assets_;
 };
 
 class DownloadTaskContext : public TaskContext {

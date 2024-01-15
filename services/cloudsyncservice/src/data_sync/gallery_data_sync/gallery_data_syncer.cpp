@@ -249,6 +249,7 @@ int32_t GalleryDataSyncer::Prepare()
         LOGE("Get handler failed, may be rdb init failed");
         return ret;
     }
+
     /* schedule to next stage */
     Schedule();
     return E_OK;
@@ -424,33 +425,58 @@ int32_t GalleryDataSyncer::DownloadThumb()
     return ret;
 }
 
-void GalleryDataSyncer::InitSysEventData()
+int32_t GalleryDataSyncer::InitSysEventData()
 {
-    syncData_ = make_unique<IncSyncData>();
+    syncStat_ = make_shared<GalleryIncSyncStat>();
+
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    /* bind sync data to handler */
+    fileHandler_->SetSyncStat(syncStat_);
+    albumHandler_->SetSyncStat(syncStat_);
+
+    return E_OK;
 }
 
 void GalleryDataSyncer::FreeSysEventData()
 {
-    syncData_ = nullptr;
+    /* dec ref to sync data */
+    fileHandler_->PutSyncStat();
+    albumHandler_->PutSyncStat();
+
+    syncStat_ = nullptr;
 }
 
 void GalleryDataSyncer::SetFullSyncSysEvent()
 {
-    syncData_->SetFullSync();
+    if (syncStat_ != nullptr) {
+        syncStat_->SetFullSync();
+    }
 }
 
 void GalleryDataSyncer::ReportSysEvent(uint32_t code)
 {
-    if (syncData_ == nullptr) {
+    if (syncStat_ == nullptr) {
         return;
     }
 
-    if (syncData_->IsFullSync()) {
+    if (syncStat_->IsFullSync()) {
         UpdateBasicEventStat(code);
-        syncData_->Report();
+        syncStat_->Report();
     } else {
         /* inc sync report */
     }
+}
+
+void GalleryDataSyncer::UpdateBasicEventStat(uint32_t code)
+{
+    syncStat_->SetSyncReason(static_cast<uint32_t>(triggerType_));
+    syncStat_->SetStopReason(code);
+    syncStat_->SetStartTime(startTime_);
+    syncStat_->SetDuration(GetCurrentTimeStamp());
 }
 } // namespace CloudSync
 } // namespace FileManagement
