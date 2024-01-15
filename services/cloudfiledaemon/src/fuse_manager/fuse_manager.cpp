@@ -477,7 +477,6 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     buf.reset(new char[size], [](char* ptr) {
         delete[] ptr;
     });
-
     if (!buf) {
         fuse_reply_err(req, ENOMEM);
         LOGE("buffer is null");
@@ -508,7 +507,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     unique_lock<mutex> lock(readMutex);
     auto waitStatus = readConVar.wait_for(lock, chrono::milliseconds(READ_TIMEOUT_MS));
     if (waitStatus == cv_status::timeout) {
-        LOGE("Pread timeout");
+        LOGD("Pread timeout, %s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
         ChangeReadAvailable(cInode, readAvailable);
         fuse_reply_err(req, ENOTCONN);
         return;
