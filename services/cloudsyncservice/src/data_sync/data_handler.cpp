@@ -221,6 +221,11 @@ int32_t DataHandler::OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset
     return E_OK;
 }
 
+int32_t DataHandler::OnDownloadAssetsFailure(const std::vector<DriveKit::DKDownloadAsset> &assets)
+{
+    return E_OK;
+}
+
 int32_t DataHandler::Clean(const int action)
 {
     return E_OK;
@@ -259,7 +264,7 @@ int32_t DataHandler::OnRecordFailed(const std::pair<DKRecordId, DKRecordOperResu
         LOGE("errorType = %{public}d, no need retry", static_cast<int32_t>(errorType));
         return E_STOP;
     }
-    return E_OK;
+    return E_UNKNOWN;
 }
 
 int32_t DataHandler::HandleCloudSpaceNotEnough()

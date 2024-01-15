@@ -258,7 +258,15 @@ void FileOperationsCloud::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLooku
         return (void) fuse_reply_none(req);
     }
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    if (inoPtr == nullptr) {
+        LOGE("Forget Function get an invalid inode!");
+        return (void) fuse_reply_none(req);
+    }
     auto parentPtr = reinterpret_cast<struct CloudDiskInode *>(inoPtr->parent);
+    if (parentPtr == nullptr) {
+        LOGE("Forget Function get an invalid parent inode!");
+        return (void) fuse_reply_none(req);
+    }
     string key = parentPtr->cloudId + inoPtr->fileName;
     if (inoPtr->layer != CLOUD_DISK_INODE_OTHER_LAYER) {
         key = inoPtr->path;
@@ -277,7 +285,15 @@ void FileOperationsCloud::ForgetMulti(fuse_req_t req, size_t count, struct fuse_
             return (void) fuse_reply_none(req);
         }
         auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(forgets[i].ino);
+        if (inoPtr == nullptr) {
+            LOGE("ForgetMulti Function get an invalid inode!");
+            continue;
+        }
         auto parentPtr = reinterpret_cast<struct CloudDiskInode *>(inoPtr->parent);
+        if (parentPtr == nullptr) {
+            LOGE("ForgetMulti Function get an invalid parent inode!");
+            continue;
+        }
         string key = parentPtr->cloudId + inoPtr->fileName;
         if (inoPtr->layer != CLOUD_DISK_INODE_OTHER_LAYER) {
             key = inoPtr->path;
@@ -513,19 +529,13 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
 
 int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
-    struct fuse_entry_param e;
-    int32_t err = DoCloudLookup(req, parent, name, &e);
-    if (err != 0) {
-        return ENOENT;
-    }
-
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto parentInode = reinterpret_cast<struct CloudDiskInode *>(parent);
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName,
                                                                          data->userId);
     string unlinkCloudId = "";
-    err = rdbStore->Unlink(parentInode->cloudId, name, unlinkCloudId);
+    int32_t err = rdbStore->Unlink(parentInode->cloudId, name, unlinkCloudId);
     if (err != 0) {
         LOGE("Failed to unlink DB cloudId:%{private}s err:%{public}d", unlinkCloudId.c_str(), err);
         return ENOSYS;
@@ -635,31 +645,39 @@ static void UpdateCloudDiskInode(shared_ptr<CloudDiskRdbStore> rdbStore, struct 
     inoPtr->stat.st_mtime = childInfo.mtime / MILLISECOND_TO_SECONDS_TIMES;
 }
 
-void FileOperationsCloud::Write(fuse_req_t req, fuse_ino_t ino,  const char *buf, size_t size,
-                                off_t off, struct fuse_file_info *fi)
+void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_bufvec *bufv,
+                                   off_t off, struct fuse_file_info *fi)
 {
-    int res = pwrite(fi->fh, buf, size, off);
+    struct fuse_bufvec out_buf = FUSE_BUFVEC_INIT(fuse_buf_size(bufv));
+
+    out_buf.buf[0].flags = (fuse_buf_flags)(FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK);
+    out_buf.buf[0].fd = fi->fh;
+    out_buf.buf[0].pos = off;
+    int res = fuse_buf_copy(&out_buf, bufv, (fuse_buf_copy_flags)(0));
     if (res < 0) {
-        fuse_reply_err(req, errno);
+        fuse_reply_err(req, -res);
     } else {
         fuse_reply_write(req, (size_t) res);
     }
-    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+}
+
+static void UpdateCloudStore(fuse_req_t req, fuse_ino_t ino)
+{
+    auto *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto *inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-    shared_ptr<CloudDiskRdbStore> rdbStore =
-        databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-    res = rdbStore->Write(inoPtr->cloudId);
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    int res = rdbStore->Write(inoPtr->cloudId);
     if (res != 0) {
         LOGE("write file fail");
     }
     UpdateCloudDiskInode(rdbStore, inoPtr);
-    return;
 }
 
 void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    UpdateCloudStore(req, ino);
     if (!inoPtr->readSession) {
         close(fi->fh);
         fuse_reply_err(req, 0);

@@ -21,14 +21,15 @@
 #include "medialibrary_type_const.h"
 
 #include "cloud_pref_impl.h"
-#include "rdb_data_handler.h"
 #include "file_data_convertor.h"
+#include "gallery_sysevent.h"
+#include "rdb_data_handler.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
-class FileDataHandler : public RdbDataHandler {
+class FileDataHandler : public RdbDataHandler, public GallerySyncStatContainer {
 public:
     enum Clean {
         NOT_NEED_CLEAN = 0,
@@ -80,7 +81,9 @@ public:
     void StopUpdataFiles();
     void UpdateAllAlbums();
 
-    /* optimizestorage */
+    int32_t OnDownloadAssetsFailure(const std::vector<DriveKit::DKDownloadAsset> &assets) override;
+
+    /* optimize storage */
     int32_t OptimizeStorage(const int32_t agingDays);
     std::shared_ptr<NativeRdb::ResultSet> GetAgingFile(const int64_t agingTime, int32_t &rowCount);
     int32_t UpdateAgingFile(const std::string cloudId);
@@ -240,10 +243,10 @@ private:
     void QueryAndInsertMap(int32_t albumId, int32_t fileId);
     void QueryAndDeleteMap(int32_t fileId, const std::set<int> &cloudMapIds);
     int32_t BatchInsertAssetMaps(OnFetchParams &params);
+    void UpdateVectorToDataBase();
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
-    std::mutex rdbUniqueMutex_;
     std::mutex rdbMutex_;
     std::mutex thmMutex_;
     std::mutex lcdMutex_;

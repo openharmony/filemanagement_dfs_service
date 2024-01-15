@@ -62,6 +62,8 @@ static const unsigned int STAT_NLINK_REG = 1;
 static const unsigned int STAT_NLINK_DIR = 2;
 static const unsigned int STAT_MODE_REG = 0770;
 static const unsigned int STAT_MODE_DIR = 0771;
+static const unsigned int READ_TIMEOUT_MS = 4000;
+static const unsigned int MAX_READ_SIZE = 2 * 1024 * 1024;
 
 struct CloudInode {
     shared_ptr<MetaBase> mBase{nullptr};
@@ -71,6 +73,7 @@ struct CloudInode {
     shared_ptr<DriveKit::DKAssetReadSession> readSession{nullptr};
     atomic<int> sessionRefCount{0};
     std::shared_mutex sessionLock;
+    std::shared_mutex readLock;
 };
 
 struct FuseData {
@@ -98,6 +101,9 @@ static bool HandleDkError(fuse_req_t req, DriveKit::DKError dkError)
     } else if (dkError.isLocalError) {
         LOGE("local errorCode is: %d", dkError.dkErrorCode);
         fuse_reply_err(req, EINVAL);
+    } else {
+        LOGE("Unknow error");
+        fuse_reply_err(req, EIO);
     }
     return true;
 }
@@ -447,16 +453,27 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
     fuse_reply_none(req);
 }
 
+static void ChangeReadAvailable(shared_ptr<CloudInode> cInode, shared_ptr<bool> readAvailable)
+{
+    unique_lock<shared_mutex> wLock(cInode->readLock, defer_lock);
+    wLock.lock();
+    *readAvailable = false;
+    wLock.unlock();
+}
+
 static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                       struct fuse_file_info *fi)
 {
-    int64_t readSize;
-    DriveKit::DKError dkError;
+    shared_ptr<DriveKit::DKError> dkError = make_shared<DriveKit::DKError>();
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     LOGD("%s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
 
+    if (size > MAX_READ_SIZE) {
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
     buf.reset(new char[size], [](char* ptr) {
         delete[] ptr;
     });
@@ -473,12 +490,33 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         return;
     }
 
-    readSize = cInode->readSession->PRead(off, size, buf.get(), dkError);
-    if (!HandleDkError(req, dkError)) {
-        LOGD("read %s success, %lld bytes", CloudPath(data, ino).c_str(), static_cast<long long>(readSize));
-        fuse_reply_buf(req, buf.get(), readSize);
-    } else {
-        LOGE("read fali");
+    shared_ptr<int64_t> readSize = make_shared<int64_t>(-1);
+    shared_ptr<bool> readAvailable = make_shared<bool>(true);
+    condition_variable readConVar;
+    thread([=, &readConVar]() {
+        *readSize = cInode->readSession->PRead(off, size, buf.get(), *dkError);
+        LOGD("read %s result, %lld bytes", CloudPath(data, ino).c_str(), static_cast<long long>(*readSize));
+        unique_lock<shared_mutex> wLock(cInode->readLock, defer_lock);
+        wLock.lock();
+        if (*readAvailable) {
+        readConVar.notify_one();
+        }
+        wLock.unlock();
+        }).detach();
+
+    mutex readMutex;
+    unique_lock<mutex> lock(readMutex);
+    auto waitStatus = readConVar.wait_for(lock, chrono::milliseconds(READ_TIMEOUT_MS));
+    if (waitStatus == cv_status::timeout) {
+        LOGE("Pread timeout");
+        ChangeReadAvailable(cInode, readAvailable);
+        fuse_reply_err(req, ENOTCONN);
+        return;
+    }
+
+    if (!HandleDkError(req, *dkError)) {
+        LOGD("read success");
+        fuse_reply_buf(req, buf.get(), *readSize);
     }
 }
 
@@ -494,13 +532,13 @@ static const struct fuse_lowlevel_ops cloudDiskFuseOps = {
     .rename             = CloudDisk::FuseOperations::Rename,
     .open               = CloudDisk::FuseOperations::Open,
     .read               = CloudDisk::FuseOperations::Read,
-    .write              = CloudDisk::FuseOperations::Write,
     .release            = CloudDisk::FuseOperations::Release,
     .readdir            = CloudDisk::FuseOperations::ReadDir,
     .setxattr           = CloudDisk::FuseOperations::SetXattr,
     .getxattr           = CloudDisk::FuseOperations::GetXattr,
     .access             = CloudDisk::FuseOperations::Access,
     .create             = CloudDisk::FuseOperations::Create,
+    .write_buf          = CloudDisk::FuseOperations::WriteBuf,
     .forget_multi       = CloudDisk::FuseOperations::ForgetMulti,
     .lseek              = CloudDisk::FuseOperations::Lseek,
 };
