@@ -635,31 +635,39 @@ static void UpdateCloudDiskInode(shared_ptr<CloudDiskRdbStore> rdbStore, struct 
     inoPtr->stat.st_mtime = childInfo.mtime / MILLISECOND_TO_SECONDS_TIMES;
 }
 
-void FileOperationsCloud::Write(fuse_req_t req, fuse_ino_t ino,  const char *buf, size_t size,
-                                off_t off, struct fuse_file_info *fi)
+void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_bufvec *bufv,
+                                   off_t off, struct fuse_file_info *fi)
 {
-    int res = pwrite(fi->fh, buf, size, off);
+    struct fuse_bufvec out_buf = FUSE_BUFVEC_INIT(fuse_buf_size(bufv));
+
+    out_buf.buf[0].flags = (fuse_buf_flags)(FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK);
+    out_buf.buf[0].fd = fi->fh;
+    out_buf.buf[0].pos = off;
+    int res = fuse_buf_copy(&out_buf, bufv, (fuse_buf_copy_flags)(0));
     if (res < 0) {
-        fuse_reply_err(req, errno);
+        fuse_reply_err(req, -res);
     } else {
         fuse_reply_write(req, (size_t) res);
     }
-    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+}
+
+static void UpdateCloudStore(fuse_req_t req, fuse_ino_t ino)
+{
+    auto *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto *inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-    shared_ptr<CloudDiskRdbStore> rdbStore =
-        databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-    res = rdbStore->Write(inoPtr->cloudId);
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    int res = rdbStore->Write(inoPtr->cloudId);
     if (res != 0) {
         LOGE("write file fail");
     }
     UpdateCloudDiskInode(rdbStore, inoPtr);
-    return;
 }
 
 void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    UpdateCloudStore(req, ino);
     if (!inoPtr->readSession) {
         close(fi->fh);
         fuse_reply_err(req, 0);
