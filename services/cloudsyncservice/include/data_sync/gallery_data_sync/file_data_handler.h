@@ -180,21 +180,19 @@ private:
                                     std::string fullPath,
                                     std::string &tmpPath,
                                     std::string &newPath);
-    int32_t ConflictRename(NativeRdb::ResultSet &resultSet, std::string &fullPath, std::string &relativePath);
+    int32_t ConflictRename(NativeRdb::ResultSet &resultSet, std::string &fullPath);
     int32_t ConflictRenamePath(NativeRdb::ResultSet &resultSet,
                                std::string &fullPath,
                                std::string &rdbPath,
                                std::string &localPath,
                                std::string &newLocalPath);
-    int32_t ConflictDataMerge(DriveKit::DKRecord &record, std::string &fullPath, bool upflag);
+    int32_t ConflictDataMerge(DriveKit::DKRecord &record, std::string &localPath, std::string &fullPath, bool upflag);
     int32_t ConflictHandler(NativeRdb::ResultSet &resultSet,
                             const DriveKit::DKRecord &record,
                             int64_t isize,
                             bool &modifyPathflag);
     int32_t ConflictDifferent(NativeRdb::ResultSet &resultSet,
-                              const DriveKit::DKRecord &record,
-                              std::string &fullPath,
-                              std::string &relativePath);
+                              std::string &fullPath);
     int32_t ConflictMerge(NativeRdb::ResultSet &resultSet,
                           DriveKit::DKRecord &record,
                           std::string &fullPath,
@@ -204,8 +202,10 @@ private:
                             std::string &fullPath,
                             int64_t &isize,
                             int64_t &imetaModified,
-                            std::string &relativePath);
+                            std::string &displayName,
+                            int64_t &dateAdded);
     int32_t PullRecordConflict(DriveKit::DKRecord &record, bool &comflag);
+    int32_t PullPathConflict(DriveKit::DKRecord &record, std::string &fullPath, bool &comflag);
 
     /* pull operations */
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, std::map<std::string, int>> QueryLocalByCloudId(

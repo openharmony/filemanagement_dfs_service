@@ -1310,8 +1310,9 @@ HWTEST_F(FileDataHandlerTest, GetConflictData001, TestSize.Level1)
         string fullPath = "";
         int64_t isize = 0;
         int64_t imetaModified = 0;
+        int64_t dateAdded = 0;
         std::string relativePath = "";
-        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath, dateAdded);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1337,8 +1338,9 @@ HWTEST_F(FileDataHandlerTest, GetConflictData002, TestSize.Level1)
         string fullPath = "";
         int64_t isize = 0;
         int64_t imetaModified = 0;
+        int64_t dateAdded = 0;
         std::string relativePath = "";
-        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath, dateAdded);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1368,8 +1370,9 @@ HWTEST_F(FileDataHandlerTest, GetConflictData003, TestSize.Level1)
         string fullPath = "";
         int64_t isize = 0;
         int64_t imetaModified = 0;
+        int64_t dateAdded = 0;
         std::string relativePath = "";
-        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath, dateAdded);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1400,8 +1403,9 @@ HWTEST_F(FileDataHandlerTest, GetConflictData004, TestSize.Level1)
         string fullPath = "";
         int64_t isize = 0;
         int64_t imetaModified = 0;
+        int64_t dateAdded = 0;
         std::string relativePath = "";
-        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath, dateAdded);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1433,8 +1437,9 @@ HWTEST_F(FileDataHandlerTest, GetConflictData005, TestSize.Level1)
         string fullPath = "";
         int64_t isize = 0;
         int64_t imetaModified = 0;
+        int64_t dateAdded = 0;
         std::string relativePath = "";
-        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath, dateAdded);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1466,8 +1471,9 @@ HWTEST_F(FileDataHandlerTest, GetConflictData006, TestSize.Level1)
         string fullPath = "";
         int64_t isize = 0;
         int64_t imetaModified = 0;
+        int64_t dateAdded = 0;
         std::string relativePath = "";
-        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath, dateAdded);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1500,8 +1506,9 @@ HWTEST_F(FileDataHandlerTest, GetConflictData007, TestSize.Level1)
         string fullPath = "";
         int64_t isize = 0;
         int64_t imetaModified = 0;
+        int64_t dateAdded = 0;
         std::string relativePath = "";
-        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath, dateAdded);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1534,8 +1541,9 @@ HWTEST_F(FileDataHandlerTest, GetConflictData008, TestSize.Level1)
         string fullPath = "";
         int64_t isize = 0;
         int64_t imetaModified = 0;
+        int64_t dateAdded = 0;
         std::string relativePath = "";
-        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath, dateAdded);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1569,8 +1577,9 @@ HWTEST_F(FileDataHandlerTest, GetConflictData009, TestSize.Level1)
         string fullPath = "";
         int64_t isize = 0;
         int64_t imetaModified = 0;
+        int64_t dateAdded = 0;
         std::string relativePath = "";
-        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath);
+        int32_t ret = fileDataHandler->GetConflictData(record, fullPath, isize, imetaModified, relativePath, dateAdded);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
