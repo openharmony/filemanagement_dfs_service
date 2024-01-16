@@ -18,6 +18,8 @@
 #include "data_syncer.h"
 #include "dfs_error.h"
 #include "dfsu_timer.h"
+#include "sync_rule/network_status.h"
+#include "sync_rule/screen_status.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
 
@@ -274,7 +276,9 @@ int32_t GalleryDataSyncer::DownloadFile()
     if (ret != E_OK) {
         LOGE("gallery data syncer pull file err %{public}d", ret);
     }
-    fileHandler_->PeriodicUpdataFiles(timeId_);
+    if (timeId_ == 0) {
+        fileHandler_->PeriodicUpdataFiles(timeId_);
+    }
     return ret;
 }
 
@@ -307,7 +311,7 @@ int32_t GalleryDataSyncer::UploadFile()
     return ret;
 }
 
-int32_t GalleryDataSyncer::Complete()
+int32_t GalleryDataSyncer::Complete(bool isNeedNotify)
 {
     LOGI("gallery data syncer complete all");
     Unlock();
@@ -316,9 +320,12 @@ int32_t GalleryDataSyncer::Complete()
         LOGE("Get handler failed, may be rdb init failed");
         return ret;
     }
-    fileHandler_->StopUpdataFiles(timeId_);
+    if (!TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK)) {
+        fileHandler_->StopUpdataFiles(timeId_);
+    }
     PutHandler();
     DataSyncer::CompleteAll();
+    DownloadThumb(DataHandler::DownloadThmType::SYNC_TRIGGER);
     return E_OK;
 }
 
@@ -410,19 +417,42 @@ void GalleryDataSyncer::ForceUnlock()
     lock_.timerId = 0;
 }
 
-int32_t GalleryDataSyncer::DownloadThumb()
+int32_t GalleryDataSyncer::DownloadThumb(int32_t type)
 {
+    LOGI("Begin download thumbnails");
     int32_t ret = GetHandler();
     if (ret != E_OK) {
         return ret;
     }
+    if (TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK)) {
+        LOGI("it's already downloading thumb");
+        return E_STOP;
+    }
+    if (type == DataHandler::DownloadThmType::SCREENOFF_TRIGGER) {
+        if (!CheckScreenAndWifi()) {
+            LOGI("download thumb condition is not met");
+            return E_STOP;
+        }
+    }
+    if (timeId_ == 0) {
+        fileHandler_->PeriodicUpdataFiles(timeId_);
+    }
     TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
+    fileHandler_->SetDownloadType(type);
     ret = DataSyncer::DownloadThumbInner(fileHandler_);
     if (ret == E_STOP) {
-        TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
+        StopDownloadThumb();
     }
     PutHandler();
     return ret;
+}
+
+void GalleryDataSyncer::StopDownloadThumb()
+{
+    TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
+    if (!TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::SYNC_TASK)) {
+        fileHandler_->StopUpdataFiles(timeId_);
+    }
 }
 
 int32_t GalleryDataSyncer::InitSysEventData()

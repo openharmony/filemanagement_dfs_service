@@ -154,7 +154,7 @@ void DataSyncer::Abort()
             LOGE("wait for tasks stop fail");
         }
         /* call the syncer manager's callback for notification */
-        CompleteAll();
+        Complete();
     }).detach();
 }
 
@@ -276,7 +276,7 @@ struct DownloadContext {
         progressCallback;
 };
 
-void DataSyncer::DownloadAssets(DownloadContext &ctx)
+void DataSyncer::DownloadAssets(DownloadContext ctx)
 {
     if (ctx.resultCallback == nullptr) {
         LOGE("resultCallback nullptr");
@@ -1059,7 +1059,7 @@ int32_t DataSyncer::CompletePull()
     if (error) {
         LOGE("pull failed, errorType:%{public}d", error);
         SyncStateChangedNotify(CloudSyncState::DOWNLOAD_FAILED, error);
-        CompleteAll(false);
+        Complete(false);
     } else {
         /* schedule to next stage */
         Schedule();
@@ -1075,7 +1075,7 @@ int32_t DataSyncer::CompletePush()
     if (error) {
         LOGE("pull failed, errorType:%{public}d", error);
         SyncStateChangedNotify(CloudSyncState::UPLOAD_FAILED, error);
-        CompleteAll(false);
+        Complete(false);
     } else {
         /* schedule to next stage */
         Schedule();
@@ -1256,36 +1256,18 @@ bool DataSyncer::HasSdkHelper()
 }
 
 // download the thumb and lcd of file when screenoff and charging
-int32_t DataSyncer::DownloadThumb()
+int32_t DataSyncer::DownloadThumb(int32_t type)
 {
     return E_OK;
 }
 
-static void FetchRecordsTaskDownloadProgress(shared_ptr<DKContext> context,
-                                             DKDownloadAsset asset,
-                                             TotalSize total,
-                                             DownloadSize download)
-{
-    LOGD("record %s %{public}s download progress", asset.recordId.c_str(), asset.fieldKey.c_str());
-    if (total == download) {
-        auto ctx = static_pointer_cast<TaskContext>(context);
-        auto handler = ctx->GetHandler();
-        handler->OnTaskDownloadAssets(asset);
-    }
-}
-
 int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
 {
-    if (handler->IsPullRecords() ||
-        syncStateManager_.GetSyncState() == SyncState::CLEANING) {
+    if (syncStateManager_.GetSyncState() == SyncState::CLEANING) {
         LOGI("downloading or cleaning, not to trigger thumb downloading");
         return E_STOP;
     }
-    if ((NetworkStatus::GetNetConnStatus() != NetworkStatus::WIFI_CONNECT) ||
-        ScreenStatus::IsScreenOn()) {
-        LOGI("download thumb condition is not met");
-        return E_STOP;
-    }
+
     vector<DriveKit::DKDownloadAsset> assetsToDownload;
     int32_t ret = handler->GetThumbToDownload(assetsToDownload);
     if (ret != E_OK) {
@@ -1298,12 +1280,18 @@ int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
 
     LOGI("assetsToDownload count: %{public}zu", assetsToDownload.size());
     auto ctx = std::make_shared<TaskContext>(handler);
+    auto callback = [this] (shared_ptr<DKContext> context,
+                            shared_ptr<const DKDatabase> database,
+                            const map<DKDownloadAsset, DKDownloadResult> &resultMap,
+                            const DKError &err) {
+        DataSyncer::FetchThumbDownloadCallback(context, database, resultMap, err);
+    };
     DownloadContext dctx = {.context = ctx,
                             .assets = assetsToDownload,
                             .id = 0,
-                            .resultCallback = AsyncCallback(&DataSyncer::FetchThumbDownloadCallback),
-                            .progressCallback = FetchRecordsTaskDownloadProgress};
-    DownloadAssets(dctx);
+                            .resultCallback = callback,
+                            .progressCallback = FetchRecordsDownloadProgress};
+    std::thread([this, dctx]() { this->DownloadAssets(dctx); }).detach();
     return E_OK;
 }
 
@@ -1318,17 +1306,40 @@ void DataSyncer::FetchThumbDownloadCallback(shared_ptr<DKContext> context,
     if (err.HasError()) {
         LOGE("DKAssetsDownloader err, localErr: %{public}d, serverErr: %{public}d", static_cast<int>(err.dkErrorCode),
              err.serverErrorCode);
-        TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
-    } else {
-        LOGI("DKAssetsDownloader ok");
-        DownloadThumbInner(handler);
+        StopDownloadThumb();
+        return;
     }
+    LOGI("DKAssetsDownloader ok");
+    if (handler->GetDownloadType() == DataHandler::DownloadThmType::SCREENOFF_TRIGGER) {
+        if (!CheckScreenAndWifi()) {
+            LOGI("download thumb condition is not met");
+            StopDownloadThumb();
+            return;
+        }
+    }
+    if (DownloadThumbInner(handler) == E_STOP) {
+        StopDownloadThumb();
+    }
+}
+
+bool DataSyncer::CheckScreenAndWifi()
+{
+    if ((NetworkStatus::GetNetConnStatus() == NetworkStatus::WIFI_CONNECT) && !ScreenStatus::IsScreenOn()) {
+        return true;
+    }
+    return false;
 }
 
 int32_t DataSyncer::CleanCache(const string &uri)
 {
     return E_OK;
 }
+
+void DataSyncer::StopDownloadThumb()
+{
+    return;
+}
+
 void DataSyncer::StopUploadAssets()
 {
     sdkHelper_->Release();

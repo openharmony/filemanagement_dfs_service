@@ -38,6 +38,10 @@ const static std::string RECORD_SIZE = "record_size";
 const static std::string CHECKING_FLAG = "checking_flag";
 class DataHandler {
 public:
+    enum DownloadThmType {
+        SYNC_TRIGGER = 1,
+        SCREENOFF_TRIGGER
+    };
     DataHandler(int32_t userId, const std::string &bundleName, const std::string &table);
     /* download */
     virtual void GetFetchCondition(FetchCondition &cond) = 0;
@@ -68,7 +72,6 @@ public:
     virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset);
     virtual int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap);
     virtual int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset);
-    virtual int32_t OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset);
     virtual int32_t OnDownloadAssetsFailure(const std::vector<DriveKit::DKDownloadAsset> &assets);
 
     /*clean*/
@@ -88,6 +91,8 @@ public:
     virtual int32_t GetRecordSize();
     virtual bool GetCheckFlag();
     virtual void SetChecking();
+    void SetDownloadType(const int32_t type);
+    int32_t GetDownloadType();
     virtual int32_t HandleDetailcode(DriveKit::DKDetailErrorCode detailCode);
 
 protected:
@@ -106,6 +111,7 @@ protected:
     std::map<int32_t, DriveKit::DKQueryCursor> cursorMap_;
     std::map<int32_t, bool> cursorFinishMap_;
     bool isChecking_{false};
+    int32_t downloadType_{0};
 
     std::mutex mutex_;
 

@@ -51,7 +51,7 @@ private:
 
     int32_t DownloadFile();
     int32_t UploadFile();
-    int32_t Complete();
+    int32_t Complete(bool isNeedNotify = true) override;
     void ChangesNotify();
 
     int32_t stage_ = BEGIN;

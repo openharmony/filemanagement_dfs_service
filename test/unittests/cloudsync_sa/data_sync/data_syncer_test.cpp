@@ -41,6 +41,7 @@ public:
     MOCK_METHOD0(Schedule, void());
     MOCK_METHOD0(Reset, void());
     MOCK_METHOD1(ScheduleByType, void(SyncTriggerType syncTriggerType));
+    MOCK_METHOD1(Complete, int(bool));
 };
 
 DataSyncerMock::DataSyncerMock(const string bundleName, const int32_t userId) : DataSyncer("com.ohos.test", 100) {}
