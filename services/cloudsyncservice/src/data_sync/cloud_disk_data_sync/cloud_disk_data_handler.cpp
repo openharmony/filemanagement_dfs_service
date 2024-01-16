@@ -551,7 +551,7 @@ int32_t CloudDiskDataHandler::CleanCloudRecord(const int32_t action)
     NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(FC::FILES_TABLE);
     cleanPredicates.EqualTo(FC::POSITION, static_cast<int32_t>(POSITION_LOCAL));
     cleanPredicates.Or()->EqualTo(FC::POSITION, static_cast<int32_t>(POSITION_BOTH));
-    cleanPredicates.Limit(DELETE_LIMIT_SIZE);
+    cleanPredicates.Limit(BATCH_LIMIT_SIZE);
     int32_t count = 0;
     vector<NativeRdb::ValueObject> deleteIds;
     string cloudId = "";

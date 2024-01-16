@@ -232,9 +232,16 @@ struct DKErrorDetail {
     int detailCode;
 };
 
+enum class DKErrorType {
+    TYPE_UNKNOWN = 0,
+    TYPE_NOT_NEED_RETRY,
+    TYPE_MAX,
+};
+
 class DKError {
 public:
     bool HasError() const;
+    DKErrorType GetErrorType() const;
     void SetLocalError(DKLocalErrorCode code);
     void SetServerError(int code);
     void ParseErrorFromJson(const Json::Value &jvError);
@@ -246,6 +253,7 @@ public:
     std::string reason;
     std::vector<DKErrorDetail> errorDetails;
     int retryAfter;
+    DKErrorType errorType = DKErrorType::TYPE_UNKNOWN;
 };
 } // namespace DriveKit
 #endif

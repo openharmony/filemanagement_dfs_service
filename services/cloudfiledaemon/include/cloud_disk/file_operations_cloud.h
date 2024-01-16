@@ -46,8 +46,8 @@ public:
                 fuse_ino_t newParent, const char *newName, unsigned int flags) override;
     void Read(fuse_req_t req, fuse_ino_t ino, size_t size,
               off_t offset, struct fuse_file_info *fi) override;
-    void Write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size,
-               off_t off, struct fuse_file_info *fi) override;
+    void WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_bufvec *bufv,
+                  off_t off, struct fuse_file_info *fi) override;
     void SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
                  int valid, struct fuse_file_info *fi) override;
     void Lseek(fuse_req_t req, fuse_ino_t ino, off_t off, int whence,

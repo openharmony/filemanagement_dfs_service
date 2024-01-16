@@ -16,6 +16,7 @@
 #include "rdb_data_handler.h"
 #include <sstream>
 #include "dfs_error.h"
+#include "unistd.h"
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
@@ -23,19 +24,37 @@ using namespace std;
 using namespace NativeRdb;
 
 int32_t RdbDataHandler::BatchInsert(int64_t &outRowId, const string &table,
-    const vector<ValuesBucket> &initialBatchValues)
+                                    const vector<ValuesBucket> &initialBatchValues)
 {
-    if (initialBatchValues.size() != 0) {
-        return rdb_->BatchInsert(outRowId, table, initialBatchValues);
+    const uint32_t TRY_TIMES = 5;
+    const uint32_t SLEEP_TIME = 200 * 1000;
+    int32_t ret = E_OK;
+    uint32_t tryCount = 0;
+    if (initialBatchValues.size() == 0) {
+        return ret;
     }
-    return E_OK;
+    while (tryCount <= TRY_TIMES) {
+        usleep(SLEEP_TIME * tryCount);
+        {
+            std::lock_guard<std::mutex> lock(rdbMutex_);
+            ret = rdb_->BatchInsert(outRowId, table, initialBatchValues);
+        }
+        if (ret != 0) {
+            LOGW("betch insert fail try next time, retry time is tryCount %{public}d", tryCount);
+            tryCount++;
+        } else {
+            return ret;
+        }
+    }
+    LOGE("betch insert fail, try too many times");
+    return ret;
 }
 
 int32_t RdbDataHandler::BatchDetete(const string &whichTable,
                                     const string &whichColumn,
                                     const std::vector<NativeRdb::ValueObject> &bindArgs)
 {
-    if (bindArgs.size() > DELETE_LIMIT_SIZE || bindArgs.size() < 0) {
+    if (bindArgs.size() > BATCH_LIMIT_SIZE || bindArgs.size() < 0) {
         return E_INVAL_ARG;
     }
     std::stringstream ss;
@@ -47,6 +66,36 @@ int32_t RdbDataHandler::BatchDetete(const string &whichTable,
     }
     string SQL = "DELETE FROM " + whichTable + " WHERE " + whichColumn + " IN (" + ss.str() + ")";
     return rdb_->ExecuteSql(SQL, bindArgs);
+}
+
+int32_t RdbDataHandler::BatchUpdate(const string &sql,
+                                    const string &whichColumn,
+                                    std::vector<NativeRdb::ValueObject> &bindArgs)
+{
+    if (bindArgs.size() < 0) {
+        return E_INVALID_ARGS;
+    }
+    do {
+        uint32_t size = bindArgs.size() > BATCH_LIMIT_SIZE ? BATCH_LIMIT_SIZE : bindArgs.size();
+        std::stringstream ss;
+        for (unsigned int i = 0; i < size; i++) {
+            if (ss.tellp() != 0) {
+                ss << " ,";
+            }
+            ss<<" ?";
+        }
+        vector<ValueObject> tmp(bindArgs.begin(), bindArgs.begin() + size);
+        string newSql = sql + " WHERE " + whichColumn + " IN (" + ss.str() + ")";
+        int32_t ret = rdb_->ExecuteSql(newSql, tmp);
+        if (ret == E_OK) {
+            bindArgs.erase(bindArgs.begin(), bindArgs.begin() + size);
+            LOGD("update size is %{public}d", size);
+        } else {
+            LOGW("update fail try next time, ret is %{public}d", ret);
+            return E_OK;
+        }
+    } while (bindArgs.size() > BATCH_LIMIT_SIZE);
+    return E_OK;
 }
 
 shared_ptr<NativeRdb::RdbStore> RdbDataHandler::GetRaw()
@@ -71,17 +120,20 @@ int32_t RdbDataHandler::Commit()
 
 int32_t RdbDataHandler::Insert(int64_t &outRowId, const ValuesBucket &initiavalues)
 {
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     return rdb_->Insert(outRowId, tableName_, initiavalues);
 }
 
 int32_t RdbDataHandler::Update(int &changedRows, const ValuesBucket &values,
     const string &whereClause, const vector<string> &whereArgs)
 {
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     return rdb_->Update(changedRows, tableName_, values, whereClause, whereArgs);
 }
 
 int32_t RdbDataHandler::Delete(int &deletedRows, const string &whereClause, const vector<string> &whereArgs)
 {
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     return rdb_->Delete(deletedRows, tableName_, whereClause, whereArgs);
 }
 
@@ -110,7 +162,11 @@ int32_t RdbDataHandler::Delete(int &deletedRows, const std::string &tableName,
 
 int32_t RdbDataHandler::ExecuteSql(const std::string &sql, const std::vector<NativeRdb::ValueObject> &bindArgs)
 {
-    return rdb_->ExecuteSql(sql, bindArgs);
+    int32_t ret = rdb_->ExecuteSql(sql, bindArgs);
+    if (ret != E_OK) {
+        LOGE("err sql is %{public}s", sql.c_str());
+    }
+    return ret;
 }
 } // namespace CloudSync
 } // namespace FileManagement

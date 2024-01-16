@@ -124,10 +124,10 @@ void FileOperationsBase::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
     fuse_reply_err(req, ENOSYS);
 }
 
-void FileOperationsBase::Write(fuse_req_t req, fuse_ino_t ino, const char *buf, size_t size,
-                               off_t off, struct fuse_file_info *fi)
+void FileOperationsBase::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_bufvec *bufv,
+                                  off_t off, struct fuse_file_info *fi)
 {
-    LOGE("Write operation is not supported!");
+    LOGE("WriteBuf operation is not supported!");
     fuse_reply_err(req, ENOSYS);
 }
 

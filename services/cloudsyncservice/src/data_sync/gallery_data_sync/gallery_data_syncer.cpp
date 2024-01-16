@@ -15,8 +15,10 @@
 
 #include "gallery_data_syncer.h"
 
+#include "data_syncer.h"
 #include "dfs_error.h"
 #include "dfsu_timer.h"
+#include "task_state_manager.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -247,6 +249,7 @@ int32_t GalleryDataSyncer::Prepare()
         LOGE("Get handler failed, may be rdb init failed");
         return ret;
     }
+
     /* schedule to next stage */
     Schedule();
     return E_OK;
@@ -271,6 +274,7 @@ int32_t GalleryDataSyncer::DownloadFile()
     if (ret != E_OK) {
         LOGE("gallery data syncer pull file err %{public}d", ret);
     }
+    fileHandler_->PeriodicUpdataFiles();
     return ret;
 }
 
@@ -307,8 +311,15 @@ int32_t GalleryDataSyncer::Complete()
 {
     LOGI("gallery data syncer complete all");
     Unlock();
-    CompleteAll();
+    DataSyncer::CompleteAll();
     return E_OK;
+}
+
+void GalleryDataSyncer::CompleteAll(bool isNeedNotify)
+{
+    LOGI("gallery data syncer complete all");
+    DataSyncer::CompleteAll();
+    fileHandler_->StopUpdataFiles();
 }
 
 int32_t GalleryDataSyncer::OptimizeStorage(const int32_t agingDays)
@@ -405,38 +416,67 @@ int32_t GalleryDataSyncer::DownloadThumb()
     if (ret != E_OK) {
         return ret;
     }
+    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
     ret = DataSyncer::DownloadThumbInner(fileHandler_);
+    if (ret == E_STOP) {
+        TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
+    }
     PutHandler();
     return ret;
 }
 
-void GalleryDataSyncer::InitSysEventData()
+int32_t GalleryDataSyncer::InitSysEventData()
 {
-    syncData_ = make_unique<IncSyncData>();
+    syncStat_ = make_shared<GalleryIncSyncStat>();
+
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    /* bind sync data to handler */
+    fileHandler_->SetSyncStat(syncStat_);
+    albumHandler_->SetSyncStat(syncStat_);
+
+    return E_OK;
 }
 
 void GalleryDataSyncer::FreeSysEventData()
 {
-    syncData_ = nullptr;
+    /* dec ref to sync data */
+    fileHandler_->PutSyncStat();
+    albumHandler_->PutSyncStat();
+
+    syncStat_ = nullptr;
 }
 
 void GalleryDataSyncer::SetFullSyncSysEvent()
 {
-    syncData_->SetFullSync();
+    if (syncStat_ != nullptr) {
+        syncStat_->SetFullSync();
+    }
 }
 
 void GalleryDataSyncer::ReportSysEvent(uint32_t code)
 {
-    if (syncData_ == nullptr) {
+    if (syncStat_ == nullptr) {
         return;
     }
 
-    if (syncData_->IsFullSync()) {
+    if (syncStat_->IsFullSync()) {
         UpdateBasicEventStat(code);
-        syncData_->Report();
+        syncStat_->Report();
     } else {
         /* inc sync report */
     }
+}
+
+void GalleryDataSyncer::UpdateBasicEventStat(uint32_t code)
+{
+    syncStat_->SetSyncReason(static_cast<uint32_t>(triggerType_));
+    syncStat_->SetStopReason(code);
+    syncStat_->SetStartTime(startTime_);
+    syncStat_->SetDuration(GetCurrentTimeStamp());
 }
 } // namespace CloudSync
 } // namespace FileManagement

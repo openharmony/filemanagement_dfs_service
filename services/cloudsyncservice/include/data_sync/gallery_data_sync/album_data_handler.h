@@ -18,12 +18,13 @@
 
 #include "album_data_convertor.h"
 #include "gallery_file_const.h"
+#include "gallery_sysevent.h"
 #include "rdb_data_handler.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-class AlbumDataHandler : public RdbDataHandler {
+class AlbumDataHandler : public RdbDataHandler, public SyncStatContainer<GalleryIncSyncStat> {
 public:
     AlbumDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<NativeRdb::RdbStore> rdb);
     virtual ~AlbumDataHandler() = default;

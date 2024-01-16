@@ -21,14 +21,15 @@
 #include "medialibrary_type_const.h"
 
 #include "cloud_pref_impl.h"
-#include "rdb_data_handler.h"
 #include "file_data_convertor.h"
+#include "gallery_sysevent.h"
+#include "rdb_data_handler.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
-class FileDataHandler : public RdbDataHandler {
+class FileDataHandler : public RdbDataHandler, public GallerySyncStatContainer {
 public:
     enum Clean {
         NOT_NEED_CLEAN = 0,
@@ -75,8 +76,14 @@ public:
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
-    
-    /* optimizestorage */
+    int32_t OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
+    void PeriodicUpdataFiles();
+    void StopUpdataFiles();
+    void UpdateAllAlbums();
+
+    int32_t OnDownloadAssetsFailure(const std::vector<DriveKit::DKDownloadAsset> &assets) override;
+
+    /* optimize storage */
     int32_t OptimizeStorage(const int32_t agingDays);
     std::shared_ptr<NativeRdb::ResultSet> GetAgingFile(const int64_t agingTime, int32_t &rowCount);
     int32_t UpdateAgingFile(const std::string cloudId);
@@ -84,7 +91,6 @@ public:
 
     /* reset */
     void Reset();
-
 private:
     int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
         const std::unordered_map<std::string, LocalInfo> &localMap);
@@ -177,21 +183,19 @@ private:
                                     std::string fullPath,
                                     std::string &tmpPath,
                                     std::string &newPath);
-    int32_t ConflictRename(NativeRdb::ResultSet &resultSet, std::string &fullPath, std::string &relativePath);
+    int32_t ConflictRename(NativeRdb::ResultSet &resultSet, std::string &fullPath);
     int32_t ConflictRenamePath(NativeRdb::ResultSet &resultSet,
                                std::string &fullPath,
                                std::string &rdbPath,
                                std::string &localPath,
                                std::string &newLocalPath);
-    int32_t ConflictDataMerge(DriveKit::DKRecord &record, std::string &fullPath, bool upflag);
+    int32_t ConflictDataMerge(DriveKit::DKRecord &record, std::string &localPath, std::string &fullPath, bool upflag);
     int32_t ConflictHandler(NativeRdb::ResultSet &resultSet,
                             const DriveKit::DKRecord &record,
                             int64_t isize,
                             bool &modifyPathflag);
     int32_t ConflictDifferent(NativeRdb::ResultSet &resultSet,
-                              const DriveKit::DKRecord &record,
-                              std::string &fullPath,
-                              std::string &relativePath);
+                              std::string &fullPath);
     int32_t ConflictMerge(NativeRdb::ResultSet &resultSet,
                           DriveKit::DKRecord &record,
                           std::string &fullPath,
@@ -201,8 +205,10 @@ private:
                             std::string &fullPath,
                             int64_t &isize,
                             int64_t &imetaModified,
-                            std::string &relativePath);
+                            std::string &displayName,
+                            int64_t &dateAdded);
     int32_t PullRecordConflict(DriveKit::DKRecord &record, bool &comflag);
+    int32_t PullPathConflict(DriveKit::DKRecord &record, std::string &fullPath, bool &comflag);
 
     /* pull operations */
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, std::map<std::string, int>> QueryLocalByCloudId(
@@ -236,11 +242,16 @@ private:
     void QueryAndInsertMap(int32_t albumId, int32_t fileId);
     void QueryAndDeleteMap(int32_t fileId, const std::set<int> &cloudMapIds);
     int32_t BatchInsertAssetMaps(OnFetchParams &params);
+    void UpdateVectorToDataBase();
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
-
     std::mutex rdbMutex_;
+    std::mutex thmMutex_;
+    std::mutex lcdMutex_;
+    std::vector<NativeRdb::ValueObject> thmVec_;
+    std::vector<NativeRdb::ValueObject> lcdVec_;
+    uint32_t timeId_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

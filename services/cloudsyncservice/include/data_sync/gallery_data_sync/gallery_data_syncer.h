@@ -21,6 +21,7 @@
 #include "album_data_handler.h"
 #include "data_syncer.h"
 #include "file_data_handler.h"
+#include "gallery_sysevent.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -44,7 +45,7 @@ public:
     virtual void Unlock() override;
     virtual void ForceUnlock() override;
     virtual int32_t DownloadThumb() override;
-    virtual void InitSysEventData() override;
+    virtual int32_t InitSysEventData() override;
     virtual void FreeSysEventData() override;
     virtual void ReportSysEvent(uint32_t code) override;
     virtual void SetFullSyncSysEvent() override;
@@ -68,9 +69,13 @@ private:
     int32_t UploadAlbum();
     int32_t UploadFile();
     int32_t Complete();
+    void CompleteAll(bool isNeedNotify);
     std::shared_ptr<NativeRdb::RdbStore> RdbInit(const std::string &bundleName, const int32_t userId);
     int32_t GetHandler();
     void PutHandler();
+    
+    /* sync stat */
+    void UpdateBasicEventStat(uint32_t code);
 
     /* stage */
     int32_t stage_ = BEGIN;
@@ -87,6 +92,9 @@ private:
     std::shared_ptr<AlbumDataHandler> albumHandler_;
     std::mutex handleInitMutex_;
     int32_t dataHandlerRefCount_{0};
+
+    /* sync stat */
+    std::shared_ptr<GalleryIncSyncStat> syncStat_;
 };
 
 class RdbCallback : public NativeRdb::RdbOpenCallback {

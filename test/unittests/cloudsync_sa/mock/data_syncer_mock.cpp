@@ -326,8 +326,9 @@ int32_t DataSyncer::CleanCache(const std::string &uri)
     return E_OK;
 }
 
-void DataSyncer::InitSysEventData()
+int32_t DataSyncer::InitSysEventData()
 {
+    return E_OK;
 }
 
 void DataSyncer::FreeSysEventData()
@@ -339,10 +340,6 @@ void DataSyncer::ReportSysEvent(uint32_t code)
 }
 
 void DataSyncer::SetFullSyncSysEvent()
-{
-}
-
-void DataSyncer::UpdateBasicEventStat(uint32_t code)
 {
 }
 } // namespace CloudSync

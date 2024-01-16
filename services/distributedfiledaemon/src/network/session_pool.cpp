@@ -45,7 +45,7 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
                 occupySession_.erase(linkTypeIter);
                 (*iter)->Release();
                 iter = usrSpaceSessionPool_.erase(iter);
-                continue;
+                break;
             }
         }
         ++iter;
