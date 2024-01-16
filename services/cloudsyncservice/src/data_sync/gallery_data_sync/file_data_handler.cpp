@@ -1114,9 +1114,7 @@ int32_t FileDataHandler::OnTaskDownloadAssets(const DKDownloadAsset &asset)
         int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
         if (ret != E_OK) {
             LOGE("update sync status failed, ret=%{public}d", ret);
-            UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, 1);
         } else {
-            UpdateAttachmentStat(INDEX_THUMB_SUCCESS, 1);
         }
         UpdateAllAlbums();
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
@@ -1133,9 +1131,7 @@ int32_t FileDataHandler::OnTaskDownloadAssets(const DKDownloadAsset &asset)
         int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
         if (ret != E_OK) {
             LOGE("update thumb status failed, ret=%{public}d", ret);
-            UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, 1);
         } else {
-            UpdateAttachmentStat(INDEX_LCD_SUCCESS, 1);
         }
     }
 
@@ -3209,6 +3205,7 @@ void FileDataHandler::UpdateVectorToDataBase()
         string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
             to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
         int32_t ret = E_OK;
+        uint64_t total = thmVec_.size();
         {
             std::lock_guard<std::mutex> lock(rdbMutex_);
             ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_);
@@ -3217,19 +3214,29 @@ void FileDataHandler::UpdateVectorToDataBase()
         if (ret != E_OK) {
             LOGW("update thm fail");
         }
+        UpdateAttachmentStat(INDEX_THUMB_SUCCESS, total - thmVec_.size());
+        if (thmVec_.size()) {
+            UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
+        }
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
         DataSyncNotifier::GetInstance().FinalNotify();
     }
+
     if (!lcdVec_.empty()) {
         string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_THUMB_STATUS + " = " +
             to_string(static_cast<int32_t>(ThumbStatus::DOWNLOADED));
         int32_t ret = E_OK;
+        uint64_t total = lcdVec_.size();
         {
             std::lock_guard<std::mutex> lock(rdbMutex_);
             ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, lcdVec_);
         }
         if (ret != E_OK) {
             LOGE("update lcd fail");
+        }
+        UpdateAttachmentStat(INDEX_THUMB_SUCCESS, total - lcdVec_.size());
+        if (thmVec_.size()) {
+            UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, lcdVec_.size());
         }
     }
 }
