@@ -311,6 +311,7 @@ int32_t GalleryDataSyncer::Complete()
 {
     LOGI("gallery data syncer complete all");
     Unlock();
+    fileHandler_->StopUpdataFiles();
     DataSyncer::CompleteAll();
     return E_OK;
 }
