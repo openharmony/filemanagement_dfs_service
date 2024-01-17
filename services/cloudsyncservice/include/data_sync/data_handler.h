@@ -95,7 +95,7 @@ protected:
     void GetReturn(const int32_t error, int32_t &retCode);
 
     /* cursor */
-    DriveKit::DKQueryCursor startCursor_;
+    DriveKit::DKQueryCursor startCursor_ = "";
     DriveKit::DKQueryCursor nextCursor_;
     DriveKit::DKQueryCursor tempStartCursor_;
     DriveKit::DKQueryCursor tempNextCursor_;

@@ -77,9 +77,8 @@ public:
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
     int32_t OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
-    void PeriodicUpdataFiles();
-    void StopUpdataFiles();
-    void UpdateAllAlbums();
+    void PeriodicUpdataFiles(uint32_t &timeId);
+    void StopUpdataFiles(uint32_t &timeId);
 
     int32_t OnDownloadAssetsFailure(const std::vector<DriveKit::DKDownloadAsset> &assets) override;
 
@@ -88,6 +87,8 @@ public:
     std::shared_ptr<NativeRdb::ResultSet> GetAgingFile(const int64_t agingTime, int32_t &rowCount);
     int32_t UpdateAgingFile(const std::string cloudId);
     int32_t FileAgingDelete(const int64_t agingTime, const int64_t deleteSize);
+
+    void UpdateAlbumInternal();
 
     /* reset */
     void Reset();
@@ -252,7 +253,6 @@ private:
     std::mutex lcdMutex_;
     std::vector<NativeRdb::ValueObject> thmVec_;
     std::vector<NativeRdb::ValueObject> lcdVec_;
-    uint32_t timeId_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

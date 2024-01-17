@@ -274,7 +274,7 @@ int32_t GalleryDataSyncer::DownloadFile()
     if (ret != E_OK) {
         LOGE("gallery data syncer pull file err %{public}d", ret);
     }
-    fileHandler_->PeriodicUpdataFiles();
+    fileHandler_->PeriodicUpdataFiles(timeId_);
     return ret;
 }
 
@@ -311,16 +311,15 @@ int32_t GalleryDataSyncer::Complete()
 {
     LOGI("gallery data syncer complete all");
     Unlock();
-    fileHandler_->StopUpdataFiles();
+    int32_t ret = GetHandler();
+    if (ret != E_OK) {
+        LOGE("Get handler failed, may be rdb init failed");
+        return ret;
+    }
+    fileHandler_->StopUpdataFiles(timeId_);
+    PutHandler();
     DataSyncer::CompleteAll();
     return E_OK;
-}
-
-void GalleryDataSyncer::CompleteAll(bool isNeedNotify)
-{
-    LOGI("gallery data syncer complete all");
-    DataSyncer::CompleteAll();
-    fileHandler_->StopUpdataFiles();
 }
 
 int32_t GalleryDataSyncer::OptimizeStorage(const int32_t agingDays)
