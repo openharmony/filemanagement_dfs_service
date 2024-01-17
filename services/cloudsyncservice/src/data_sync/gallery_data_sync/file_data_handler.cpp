@@ -1148,6 +1148,9 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
     if (asset.fieldKey == "thumbnail") {
         std::lock_guard<std::mutex> lock(thmMutex_);
         thmVec_.emplace_back(asset.recordId);
+        if (IsPullRecords()) {
+            UpdateAttachmentStat(INDEX_THUMB_SUCCESS, 1);
+        }
     }
     if (asset.fieldKey == "lcd") {
         std::lock_guard<std::mutex> lock(lcdMutex_);
@@ -1803,6 +1806,11 @@ int32_t FileDataHandler::BatchGetFileIdFromCloudId(const std::vector<NativeRdb::
         }
     }
     
+    return QueryWithBatchCloudId(fileIds, thmStrVec);
+}
+
+int32_t FileDataHandler::QueryWithBatchCloudId(std::vector<int> &fileIds, std::vector<std::string> &thmStrVec)
+{
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PhotoColumn::PHOTOS_TABLE);
     predicates.In(PhotoColumn::PHOTO_CLOUD_ID, thmStrVec);
     auto resultSet = Query(predicates, {MediaColumn::MEDIA_ID});
@@ -3281,7 +3289,7 @@ void FileDataHandler::UpdateVectorToDataBase()
                 LOGW("update thm fail");
             }
             UpdateAttachmentStat(INDEX_THUMB_SUCCESS, total - thmVec_.size());
-            if (thmVec_.size()) {
+            if (thmVec_.size() > 0) {
                 UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
             }
             UpdateAlbumInternal();
@@ -3309,7 +3317,7 @@ void FileDataHandler::UpdateVectorToDataBase()
             LOGW("update lcd fail");
         }
         UpdateAttachmentStat(INDEX_LCD_SUCCESS, total - lcdVec_.size());
-        if (lcdVec_.size()) {
+        if (lcdVec_.size() > 0) {
             UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, lcdVec_.size());
         }
     }
