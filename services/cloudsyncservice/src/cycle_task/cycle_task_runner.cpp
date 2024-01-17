@@ -62,13 +62,20 @@ void CycleTaskRunner::StartTask()
         time_t lastRunTime = DEFAULT_VALUE;
         GetLastRunTime(task_data->GetTaskName(), lastRunTime);
         if (difftime(setUpTime_, lastRunTime) > task_data->GetIntervalTime()) {
-            LOGI("run task task name is %{public}s", task_data->GetTaskName().c_str());
+            if (lastRunTime == DEFAULT_VALUE) {
+                LOGI("skip first run task, taskName is %{public}s", task_data->GetTaskName().c_str());
+                SetLastRunTime(task_data->GetTaskName(), setUpTime_);
+                continue;
+            }
+            LOGI("run task, task name is %{public}s", task_data->GetTaskName().c_str());
             int32_t ret = task_data->RunTask(userId_);
             if (ret == E_OK) {
-                LOGD("task run success, taskName is %s, ret = %d", task_data->GetTaskName().c_str(), ret);
+                LOGI("task run success, taskName is %{public}s, ret = %{public}d",
+                    task_data->GetTaskName().c_str(), ret);
                 SetLastRunTime(task_data->GetTaskName(), setUpTime_);
             } else {
-                LOGE("task run fail, taskName is %s, ret = %d", task_data->GetTaskName().c_str(), ret);
+                LOGE("task run fail, taskName is %{public}s, ret = %{public}d",
+                    task_data->GetTaskName().c_str(), ret);
             }
         }
     }

@@ -448,6 +448,7 @@ void GalleryDataSyncer::FreeSysEventData()
     albumHandler_->PutSyncStat();
 
     syncStat_ = nullptr;
+    PutHandler();
 }
 
 void GalleryDataSyncer::SetFullSyncSysEvent()

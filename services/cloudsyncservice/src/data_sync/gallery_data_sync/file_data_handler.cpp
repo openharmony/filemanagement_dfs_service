@@ -1214,6 +1214,14 @@ int32_t FileDataHandler::SetRetry(vector<NativeRdb::ValueObject> &retryList)
     return E_OK;
 }
 
+/*Add locks to prevent multiple threads from updating albums at the same time*/
+void FileDataHandler::UpdateAlbumInternal()
+{
+    std::lock_guard<std::mutex> lock(rdbMutex_);
+    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+}
+
 int FileDataHandler::SetRetry(const string &recordId)
 {
     LOGI("set retry of record %s", recordId.c_str());
@@ -3218,13 +3226,6 @@ void FileDataHandler::UpdateVectorToDataBase()
     }
 }
 
-/*Add locks to prevent multiple threads from updating albums at the same time*/
-void FileDataHandler::UpdateAlbumInternal()
-{
-    std::lock_guard<std::mutex> lock(rdbMutex_);
-    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
-}
-
 void FileDataHandler::PeriodicUpdataFiles(uint32_t &timeId)
 {
     const uint32_t TIMER_INTERVAL = 2000;
@@ -3250,6 +3251,7 @@ void FileDataHandler::StopUpdataFiles(uint32_t &timeId)
             UpdateVectorToDataBase();
             tryCount++;
         }
+        timeId = 0;
     }
 }
 } // namespace CloudSync
