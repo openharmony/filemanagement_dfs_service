@@ -340,13 +340,13 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
             UpdateMetaStat(INDEX_DL_META_ERROR_RDB, params.insertFiles.size());
             ret = E_RDB;
             params.assetsToDownload.clear();
+            return ret;
         } else {
             UpdateMetaStat(INDEX_DL_META_SUCCESS, params.insertFiles.size());
             BatchInsertAssetMaps(params);
         }
-        return ret;
     }
-    UpdateAllAlbums();
+    UpdateAlbumInternal();
     LOGI("after BatchInsert ret %{public}d", ret);
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
@@ -1063,13 +1063,16 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbStatus::TO_DOWNLOAD));
     values.PutString(Media::PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
-    values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_DOWNLOAD));
-    bool downloadThumb = (!startCursor_.empty() || (++params.totalPullCount <= downloadThumbLimit_));
+    if (IsPullRecords()) {
+        values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
+    } else {
+        values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_DOWNLOAD));
+    }
     params.insertFiles.push_back(values);
-    AppendToDownload(record, "thumbnail", params.assetsToDownload);
-    if (AddCloudThumbs(record) != E_OK || downloadThumb) {
+    if (AddCloudThumbs(record) != E_OK || !IsPullRecords()) {
         AppendToDownload(record, "lcd", params.assetsToDownload);
     }
+    AppendToDownload(record, "thumbnail", params.assetsToDownload);
     return E_OK;
 }
 
@@ -1116,7 +1119,7 @@ int32_t FileDataHandler::OnTaskDownloadAssets(const DKDownloadAsset &asset)
             LOGE("update sync status failed, ret=%{public}d", ret);
         } else {
         }
-        UpdateAllAlbums();
+        UpdateAlbumInternal();
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                                   to_string(updateRows));
         DataSyncNotifier::GetInstance().FinalNotify();
@@ -1916,7 +1919,7 @@ int32_t FileDataHandler::Clean(const int action)
         LOGE("Clean remove dentry failed, res:%{public}d", res);
         return res;
     }
-    UpdateAllAlbums();
+    UpdateAlbumInternal();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
@@ -2053,7 +2056,7 @@ int32_t FileDataHandler::UnMarkClean()
     if (ret != E_OK) {
         LOGW("unmark clean failed, ret:%{public}d", ret);
     }
-    UpdateAllAlbums();
+    UpdateAlbumInternal();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
@@ -2078,7 +2081,7 @@ int32_t FileDataHandler::MarkClean(const int32_t action)
     if (ret != E_OK) {
         LOGW("mark clean error %{public}d", ret);
     }
-    UpdateAllAlbums();
+    UpdateAlbumInternal();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
@@ -3201,25 +3204,32 @@ int32_t FileDataHandler::GetThumbToDownload(std::vector<DriveKit::DKDownloadAsse
 
 void FileDataHandler::UpdateVectorToDataBase()
 {
+    LOGI("update vector to database");
+    LOGD("thmVec_ size is %{public}zu, lcdVec_ size is %{public}zu", thmVec_.size(), lcdVec_.size());
     if (!thmVec_.empty()) {
-        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
-            to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
-        int32_t ret = E_OK;
-        uint64_t total = thmVec_.size();
-        {
-            std::lock_guard<std::mutex> lock(rdbMutex_);
-            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_);
-            UpdateAllAlbums();
+        if (!IsPullRecords()) {
+            string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
+                to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
+            int32_t ret = E_OK;
+            uint64_t total = thmVec_.size();
+            {
+                std::lock_guard<std::mutex> lock(rdbMutex_);
+                ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_);
+            }
+            if (ret != E_OK) {
+                LOGW("update thm fail");
+            }
+            UpdateAttachmentStat(INDEX_THUMB_SUCCESS, total - thmVec_.size());
+            if (thmVec_.size()) {
+                UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
+            }
+            UpdateAlbumInternal();
+            DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
+            DataSyncNotifier::GetInstance().FinalNotify();
+        } else {
+            std::lock_guard<std::mutex> lock(thmMutex_);
+            thmVec_.clear();
         }
-        if (ret != E_OK) {
-            LOGW("update thm fail");
-        }
-        UpdateAttachmentStat(INDEX_THUMB_SUCCESS, total - thmVec_.size());
-        if (thmVec_.size()) {
-            UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
-        }
-        DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
-        DataSyncNotifier::GetInstance().FinalNotify();
     }
 
     if (!lcdVec_.empty()) {
@@ -3232,39 +3242,47 @@ void FileDataHandler::UpdateVectorToDataBase()
             ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, lcdVec_);
         }
         if (ret != E_OK) {
-            LOGE("update lcd fail");
+            LOGW("update lcd fail");
         }
-        UpdateAttachmentStat(INDEX_THUMB_SUCCESS, total - lcdVec_.size());
-        if (thmVec_.size()) {
-            UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, lcdVec_.size());
+        UpdateAttachmentStat(INDEX_LCD_SUCCESS, total - lcdVec_.size());
+        if (lcdVec_.size()) {
+            UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, lcdVec_.size());
         }
     }
 }
 
 /*Add locks to prevent multiple threads from updating albums at the same time*/
-void FileDataHandler::UpdateAllAlbums()
+void FileDataHandler::UpdateAlbumInternal()
 {
     std::lock_guard<std::mutex> lock(rdbMutex_);
     MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
 }
 
-void FileDataHandler::PeriodicUpdataFiles()
+void FileDataHandler::PeriodicUpdataFiles(uint32_t &timeId)
 {
     const uint32_t TIMER_INTERVAL = 2000;
     auto timerCallBack = [this]() {
         UpdateVectorToDataBase();
     };
-    DfsuTimer::GetInstance().Register(timerCallBack, timeId_, TIMER_INTERVAL);
+    if (timeId == 0) {
+        LOGI("start update timer");
+        DfsuTimer::GetInstance().Register(timerCallBack, timeId, TIMER_INTERVAL);
+    } else {
+        LOGI("timer is running");
+    }
 }
 
-void FileDataHandler::StopUpdataFiles()
+void FileDataHandler::StopUpdataFiles(uint32_t &timeId)
 {
     const uint32_t MAX_TRY_TIMES = 5;
     uint32_t tryCount = 1;
-    DfsuTimer::GetInstance().Unregister(timeId_);
-    while (tryCount <= MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
-        UpdateVectorToDataBase();
-        tryCount++;
+    if (timeId != 0) {
+        LOGI("stop update timer");
+        DfsuTimer::GetInstance().Unregister(timeId);
+        while (tryCount <= MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
+            UpdateVectorToDataBase();
+            tryCount++;
+        }
     }
 }
 } // namespace CloudSync

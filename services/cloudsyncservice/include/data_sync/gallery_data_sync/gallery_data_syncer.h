@@ -69,11 +69,10 @@ private:
     int32_t UploadAlbum();
     int32_t UploadFile();
     int32_t Complete();
-    void CompleteAll(bool isNeedNotify);
     std::shared_ptr<NativeRdb::RdbStore> RdbInit(const std::string &bundleName, const int32_t userId);
     int32_t GetHandler();
     void PutHandler();
-    
+
     /* sync stat */
     void UpdateBasicEventStat(uint32_t code);
 
@@ -92,6 +91,7 @@ private:
     std::shared_ptr<AlbumDataHandler> albumHandler_;
     std::mutex handleInitMutex_;
     int32_t dataHandlerRefCount_{0};
+    uint32_t timeId_{0};
 
     /* sync stat */
     std::shared_ptr<GalleryIncSyncStat> syncStat_;

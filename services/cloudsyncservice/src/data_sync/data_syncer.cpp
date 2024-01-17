@@ -1276,7 +1276,7 @@ static void FetchRecordsTaskDownloadProgress(shared_ptr<DKContext> context,
 
 int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
 {
-    if (syncStateManager_.GetSyncState() == SyncState::SYNCING ||
+    if (handler->IsPullRecords() ||
         syncStateManager_.GetSyncState() == SyncState::CLEANING) {
         LOGI("downloading or cleaning, not to trigger thumb downloading");
         return E_STOP;
