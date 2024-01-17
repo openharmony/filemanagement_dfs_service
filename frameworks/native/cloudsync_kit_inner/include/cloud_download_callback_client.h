@@ -24,7 +24,7 @@ public:
     explicit CloudDownloadCallbackClient(const std::shared_ptr<CloudDownloadCallback> &callback)
         : callback_(callback) {}
 
-    void OnDownloadProcess(DownloadProgressObj& progress) override;
+    void OnDownloadProcess(const DownloadProgressObj& progress) override;
 
 private:
     std::shared_ptr<CloudDownloadCallback> callback_;

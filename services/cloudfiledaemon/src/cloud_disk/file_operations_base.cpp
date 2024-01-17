@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 #include "file_operations_base.h"
+#include "cloud_disk_inode.h"
+#include "file_operations_helper.h"
 
 #include <cerrno>
 
@@ -21,6 +23,7 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
+using namespace std;
 void FileOperationsBase::Lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
     LOGE("Lookup operation is not supported!");
@@ -51,10 +54,44 @@ void FileOperationsBase::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLookup
     fuse_reply_err(req, ENOSYS);
 }
 
+static int32_t ForgetCloudIno(struct CloudDiskInode *inoPtr, string &key)
+{
+    if (inoPtr == nullptr) {
+        LOGE("Get an invalid inode!");
+        return EINVAL;
+    }
+    if (inoPtr->layer == CLOUD_DISK_INODE_OTHER_LAYER) {
+        auto parentPtr = reinterpret_cast<struct CloudDiskInode *>(inoPtr->parent);
+        if (parentPtr == nullptr) {
+            LOGE("ForgetMulti Function get an invalid parent inode!");
+            return EINVAL;
+        }
+        key = parentPtr->cloudId + inoPtr->fileName;
+    }
+    return 0;
+}
+
 void FileOperationsBase::ForgetMulti(fuse_req_t req, size_t count, struct fuse_forget_data *forgets)
 {
-    LOGE("ForgetMulti operation is not supported!");
-    fuse_reply_err(req, ENOSYS);
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    for (size_t i = 0; i < count; i++) {
+        string key = FileOperationsHelper::GetCloudDiskRootPath(data->userId);
+        if (forgets[i].ino != FUSE_ROOT_ID) {
+            auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(forgets[i].ino);
+            if (inoPtr == nullptr) {
+                LOGE("ForgetMulti Function get an invalid inode!");
+                continue;
+            }
+            key = inoPtr->path;
+            if (ForgetCloudIno(inoPtr, key) != 0) {
+                LOGE("ForgetMulti Function failed to process a cloud ino!");
+                continue;
+            }
+        }
+        shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, key);
+        FileOperationsHelper::PutCloudDiskInode(data, node, forgets[i].nlookup, key);
+    }
+    fuse_reply_none(req);
 }
 
 void FileOperationsBase::MkNod(fuse_req_t req, fuse_ino_t parent, const char *name,

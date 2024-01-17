@@ -25,7 +25,7 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudDownloadCallback {
 public:
     virtual ~CloudDownloadCallback() = default;
-    virtual void OnDownloadProcess(DownloadProgressObj& progress) = 0;
+    virtual void OnDownloadProcess(const DownloadProgressObj& progress) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

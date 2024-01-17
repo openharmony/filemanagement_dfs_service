@@ -35,7 +35,7 @@ public:
 
 class MockCloudDownloadCallback final : public CloudDownloadCallback {
 public:
-    void OnDownloadProcess(DownloadProgressObj &progress)
+    void OnDownloadProcess(const DownloadProgressObj &progress)
     {
         return;
     }

@@ -49,7 +49,7 @@ public:
 
 class CloudDownloadCallbackDerived : public CloudDownloadCallback {
 public:
-    void OnDownloadProcess(DownloadProgressObj& progress)
+    void OnDownloadProcess(const DownloadProgressObj& progress)
     {
         std::cout << "OnDownloadProcess" << std::endl;
     }

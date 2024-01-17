@@ -104,7 +104,7 @@ const std::vector<std::string> FileColumn::LOCAL_COLUMNS = {
 
 const std::vector<std::string> FileColumn::PULL_QUERY_COLUMNS = {
     CLOUD_ID, FILE_TIME_RECYCLED, VERSION, DIRTY_TYPE, POSITION,
-    FILE_TIME_EDITED
+    FILE_TIME_EDITED, FILE_SHA256,
 };
 
 const std::vector<std::string> FileColumn::DISK_ON_UPLOAD_COLUMNS = {

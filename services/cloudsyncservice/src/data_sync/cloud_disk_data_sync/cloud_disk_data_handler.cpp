@@ -352,7 +352,7 @@ int32_t CloudDiskDataHandler::ConflictReName(const string &cloudId, string newFi
     return E_OK;
 }
 
-static int32_t IsEditTimeChange(const DKRecord &record, NativeRdb::ResultSet &local, bool &isChange)
+static int32_t IsFileContentChanged(const DKRecord &record, NativeRdb::ResultSet &local, bool &isChange)
 {
     int64_t localEditTime = 0;
     int64_t recordEditTime = 0;
@@ -373,7 +373,18 @@ static int32_t IsEditTimeChange(const DKRecord &record, NativeRdb::ResultSet &lo
     if (ret != E_OK) {
         return ret;
     }
-    isChange = localEditTime != recordEditTime;
+    string localFileSha256;
+    string recordFileSha256;
+    if (data.find(DK_FILE_SHA256) == data.end() ||
+        data.at(DK_FILE_SHA256).GetString(recordFileSha256) != DKLocalErrorCode::NO_ERROR) {
+        LOGW("record data cannot find sha256");
+        return E_INVAL_ARG;
+    }
+    ret = DataConvertor::GetString(FC::FILE_SHA256, localFileSha256, local);
+    if (ret != E_OK) {
+        return ret;
+    }
+    isChange = ((localEditTime != recordEditTime) && (localFileSha256 != recordFileSha256));
     return E_OK;
 }
 
@@ -390,8 +401,8 @@ int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::Resu
     if (ret != E_OK) {
         return ret;
     }
-    bool isEditTimeChange = false;
-    ret = IsEditTimeChange(record, local, isEditTimeChange);
+    bool isFileContentChanged = false;
+    ret = IsFileContentChanged(record, local, isFileContentChanged);
     if (ret != E_OK) {
         return ret;
     }
@@ -400,8 +411,8 @@ int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::Resu
         if (CloudFileUtils::LocalWriteOpen(localPath)) {
             return SetRetry(record.GetRecordId());
         }
-        if (isEditTimeChange) {
-            LOGD("cloud file DATA changed, %s", record.GetRecordId().c_str());
+        if (isFileContentChanged) {
+            LOGD("cloud file content changed, %s", record.GetRecordId().c_str());
             ret = unlink(localPath.c_str());
             if (ret != 0) {
                 LOGE("unlink local failed, errno %{public}d", errno);

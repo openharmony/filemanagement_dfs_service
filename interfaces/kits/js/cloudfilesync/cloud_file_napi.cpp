@@ -124,7 +124,7 @@ void CloudDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
     napi_close_handle_scope(env, scope);
 }
 
-void CloudDownloadCallbackImpl::OnDownloadProcess(DownloadProgressObj &progress)
+void CloudDownloadCallbackImpl::OnDownloadProcess(const DownloadProgressObj &progress)
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);

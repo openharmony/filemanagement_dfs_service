@@ -136,6 +136,7 @@ int32_t CloudDiskDataSyncer::Complete()
     CompleteAll();
     if (isDataChanged_) {
         ChangesNotify();
+        isDataChanged_ = false;
     }
     return E_OK;
 }

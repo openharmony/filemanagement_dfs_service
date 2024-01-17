@@ -107,22 +107,13 @@ void FileOperationsLocal::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLooku
 {
     struct CloudDiskFuseData *data =
         reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    struct CloudDiskInode *inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-    shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, inoPtr->path);
-    FileOperationsHelper::PutCloudDiskInode(data, node, nLookup, inoPtr->path);
-    fuse_reply_none(req);
-}
-
-void FileOperationsLocal::ForgetMulti(fuse_req_t req, size_t count, struct fuse_forget_data *forgets)
-{
-    struct CloudDiskFuseData *data =
-        reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    for (size_t i = 0; i < count; i++) {
-        struct CloudDiskInode *inoPtr =
-            reinterpret_cast<struct CloudDiskInode *>(forgets[i].ino);
-        shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, inoPtr->path);
-        FileOperationsHelper::PutCloudDiskInode(data, node, forgets[i].nlookup, inoPtr->path);
+    string key = FileOperationsHelper::GetCloudDiskRootPath(data->userId);
+    if (ino != FUSE_ROOT_ID) {
+        struct CloudDiskInode *inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+        key = inoPtr->path;
     }
+    shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, key);
+    FileOperationsHelper::PutCloudDiskInode(data, node, nLookup, key);
     fuse_reply_none(req);
 }
 

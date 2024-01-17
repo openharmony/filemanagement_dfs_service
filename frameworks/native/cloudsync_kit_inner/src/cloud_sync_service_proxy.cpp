@@ -486,7 +486,6 @@ int32_t CloudSyncServiceProxy::NotifyEventChange(
 int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 {
 #ifdef SUPPORT_MEDIA_LIBRARY
-    lock_guard<mutex> lock(downloadMutex_);
     LOGI("StartDownloadFile Start");
     MessageParcel data;
     MessageParcel reply;
@@ -530,7 +529,6 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 
 int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
 {
-    lock_guard<mutex> lock(downloadMutex_);
     LOGI("StartFileCache Start");
     MessageParcel data;
     MessageParcel reply;
@@ -566,7 +564,6 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
 
 int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
 {
-    lock_guard<mutex> lock(downloadMutex_);
     LOGI("StopDownloadFile Start");
     MessageParcel data;
     MessageParcel reply;
