@@ -562,7 +562,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRename001, TestSize.Level1)
 
         string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
         string relativePath = "";
-        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath);
+        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath, relativePath);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -588,7 +588,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRename002, TestSize.Level1)
 
         string fullPath = "";
         string relativePath = "";
-        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath);
+        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath, relativePath);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -614,7 +614,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRename003, TestSize.Level1)
 
         string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
         string relativePath = "relativeDir/";
-        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath);
+        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath, relativePath);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -640,7 +640,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRename004, TestSize.Level1)
 
         string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
         string relativePath = "";
-        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath);
+        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath, relativePath);
         EXPECT_EQ(ret, E_RDB);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -665,10 +665,9 @@ HWTEST_F(FileDataHandlerTest, ConflictDataMerge001, TestSize.Level1)
 
         DKRecord record;
         record.SetRecordId("1");
-        string localPath = "";
         string fullPath = "";
         bool upflag = true;
-        int32_t ret = fileDataHandler->ConflictDataMerge(record, localPath, fullPath, upflag);
+        int32_t ret = fileDataHandler->ConflictDataMerge(record, fullPath, upflag);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -693,10 +692,9 @@ HWTEST_F(FileDataHandlerTest, ConflictDataMerge002, TestSize.Level1)
 
         DKRecord record;
         record.SetRecordId("1");
-        string localPath = "";
         string fullPath = "";
         bool upflag = false;
-        int32_t ret = fileDataHandler->ConflictDataMerge(record, localPath, fullPath, upflag);
+        int32_t ret = fileDataHandler->ConflictDataMerge(record, fullPath, upflag);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -721,10 +719,9 @@ HWTEST_F(FileDataHandlerTest, ConflictDataMerge003, TestSize.Level1)
 
         DKRecord record;
         record.SetRecordId("1");
-        string localPath = "";
         string fullPath = "";
         bool upflag = true;
-        int32_t ret = fileDataHandler->ConflictDataMerge(record, localPath, fullPath, upflag);
+        int32_t ret = fileDataHandler->ConflictDataMerge(record, fullPath, upflag);
         EXPECT_EQ(ret, E_RDB);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -1110,7 +1107,7 @@ HWTEST_F(FileDataHandlerTest, ConflictDifferent001, TestSize.Level1)
         DKRecord record;
         string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
         string relativePath = "";
-        int32_t ret = fileDataHandler->ConflictDifferent(*rset, fullPath);
+        int32_t ret = fileDataHandler->ConflictDifferent(*rset, record, fullPath, relativePath);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
