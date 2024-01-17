@@ -1148,6 +1148,9 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
     if (asset.fieldKey == "thumbnail") {
         std::lock_guard<std::mutex> lock(thmMutex_);
         thmVec_.emplace_back(asset.recordId);
+        if (IsPullRecords()) {
+            UpdateAttachmentStat(INDEX_THUMB_SUCCESS, 1);
+        }
     }
     if (asset.fieldKey == "lcd") {
         std::lock_guard<std::mutex> lock(lcdMutex_);
@@ -3220,7 +3223,7 @@ void FileDataHandler::UpdateVectorToDataBase()
                 LOGW("update thm fail");
             }
             UpdateAttachmentStat(INDEX_THUMB_SUCCESS, total - thmVec_.size());
-            if (thmVec_.size()) {
+            if (thmVec_.size() > 0) {
                 UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
             }
             UpdateAlbumInternal();
@@ -3245,7 +3248,7 @@ void FileDataHandler::UpdateVectorToDataBase()
             LOGW("update lcd fail");
         }
         UpdateAttachmentStat(INDEX_LCD_SUCCESS, total - lcdVec_.size());
-        if (lcdVec_.size()) {
+        if (lcdVec_.size() > 0) {
             UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, lcdVec_.size());
         }
     }
