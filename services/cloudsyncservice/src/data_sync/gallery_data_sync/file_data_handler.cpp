@@ -216,6 +216,7 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     PhotoColumn::PHOTO_CLOUD_ID,
     PhotoColumn::PHOTO_CLOUD_VERSION,
     MediaColumn::MEDIA_ID,
+    PhotoColumn::MEDIA_RELATIVE_PATH,
     PhotoColumn::MEDIA_DATE_ADDED,
     PhotoColumn::PHOTO_META_DATE_MODIFIED,
 };
@@ -588,7 +589,7 @@ int32_t FileDataHandler::ConflictRenamePath(NativeRdb::ResultSet &resultSet,
     return E_OK;
 }
 
-int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string &fullPath)
+int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string &fullPath, string &relativePath)
 {
     string rdbPath, tmpPath, newPath, localPath, newLocalPath;
     int ret = ConflictRenamePath(resultSet, fullPath, rdbPath, tmpPath, newPath);
@@ -606,6 +607,10 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
     ValuesBucket values;
     values.PutString(PhotoColumn::MEDIA_FILE_PATH, rdbPath);
     values.PutString(PhotoColumn::MEDIA_NAME, newName);
+    if (!relativePath.empty()) {
+        string newvirPath = relativePath + newName;
+        values.PutString(PhotoColumn::MEDIA_VIRTURL_PATH, newvirPath);
+    }
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
     ret = Update(updateRows, values, whereClause, {fullPath});
     if (ret != E_OK) {
@@ -625,7 +630,7 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
     return E_OK;
 }
 
-int32_t FileDataHandler::ConflictDataMerge(DKRecord &record, string &localPath, string &fullPath, bool upflag)
+int32_t FileDataHandler::ConflictDataMerge(DKRecord &record, string &fullPath, bool upflag)
 {
     int updateRows;
     ValuesBucket values;
@@ -638,14 +643,8 @@ int32_t FileDataHandler::ConflictDataMerge(DKRecord &record, string &localPath, 
         values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
         values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     }
-
-    if (fullPath != localPath) {
-        values.Delete(PhotoColumn::MEDIA_FILE_PATH);
-        values.Delete(PhotoColumn::PHOTO_DIRTY);
-        values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
-    }
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
-    int32_t ret = Update(updateRows, values, whereClause, {localPath});
+    int32_t ret = Update(updateRows, values, whereClause, {fullPath});
     if (ret != E_OK) {
         LOGE("update retry flag failed, ret=%{public}d", ret);
         return E_RDB;
@@ -690,11 +689,13 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
 }
 
 int32_t FileDataHandler::ConflictDifferent(NativeRdb::ResultSet &resultSet,
-                                           string &fullPath)
+                                           const DKRecord &record,
+                                           string &fullPath,
+                                           string &relativePath)
 {
     LOGI("Different files with the same name");
     /* Modify path */
-    int ret = ConflictRename(resultSet, fullPath);
+    int ret = ConflictRename(resultSet, fullPath, relativePath);
     if (ret != E_OK) {
         LOGE("Conflict dataMerge rename fail");
         return ret;
@@ -720,15 +721,8 @@ int32_t FileDataHandler::ConflictMerge(NativeRdb::ResultSet &resultSet,
     if (imetaModified < localMeta) {
         upflag = true;
     }
-
-    string localPath;
-    ret = DataConvertor::GetString(PhotoColumn::MEDIA_FILE_PATH, localPath, resultSet);
-    if (ret != E_OK) {
-        LOGE("Get local meta data modified failed");
-        return E_INVAL_ARG;
-    }
     /* update database */
-    ret = ConflictDataMerge(record, localPath, fullPath, upflag);
+    ret = ConflictDataMerge(record, fullPath, upflag);
     if (ret != E_OK) {
         LOGE("Conflict dataMerge fail");
         return ret;
@@ -741,8 +735,7 @@ int32_t FileDataHandler::GetConflictData(const DKRecord &record,
                                          string &fullPath,
                                          int64_t &isize,
                                          int64_t &imetaModified,
-                                         string &displayName,
-                                         int64_t &dateAdded)
+                                         string &relativePath)
 {
     DKRecordData data;
     record.GetRecordData(data);
@@ -760,7 +753,7 @@ int32_t FileDataHandler::GetConflictData(const DKRecord &record,
         LOGE("bad file_path in attributes");
         return E_INVAL_ARG;
     }
-    if (data[FILE_FILE_NAME].GetString(displayName) != DKLocalErrorCode::NO_ERROR) {
+    if (attributes[PhotoColumn::MEDIA_RELATIVE_PATH].GetString(relativePath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad virtual_Path in attributes");
         return E_INVAL_ARG;
     }
@@ -770,12 +763,7 @@ int32_t FileDataHandler::GetConflictData(const DKRecord &record,
     }
     if (attributes[PhotoColumn::PHOTO_META_DATE_MODIFIED].GetLong(imetaModified) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad meta data modified in attributes");
-        imetaModified = 0;
-    }
-    if (data.find(FILE_CREATED_TIME) != data.end()) {
-        data[FILE_CREATED_TIME].GetLong(dateAdded);
-    } else {
-        dateAdded = static_cast<int64_t>(record.GetCreateTime());
+        return E_INVAL_ARG;
     }
     return E_OK;
 }
@@ -921,21 +909,16 @@ int32_t FileDataHandler::CreateAssetRealName(int32_t &fileId, int32_t &mediaType
 int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
 {
     LOGD("judgment downlode conflict");
-    string fullPath;
-    string displayName;
-    int64_t isize = 0;
-    int64_t imetaModified = 0;
-    int64_t dateAdded = 0;
-    int32_t ret = GetConflictData(record, fullPath, isize, imetaModified, displayName, dateAdded);
+    string fullPath, relativePath;
+    int64_t isize, imetaModified;
+    int32_t ret = GetConflictData(record, fullPath, isize, imetaModified, relativePath);
     if (ret != E_OK) {
         LOGE("Getdata fail");
         return ret;
     }
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    predicates.EqualTo(PhotoColumn::MEDIA_NAME, displayName);
-    predicates.EqualTo(PhotoColumn::MEDIA_SIZE, to_string(isize));
-    predicates.EqualTo(PhotoColumn::PHOTO_POSITION, to_string(POSITION_LOCAL));
-    predicates.EqualTo(PhotoColumn::MEDIA_DATE_ADDED, to_string(dateAdded));
+    predicates.SetWhereClause(PhotoColumn::MEDIA_FILE_PATH + " = ?");
+    predicates.SetWhereArgs({fullPath});
     predicates.Limit(LIMIT_SIZE);
     auto resultSet = Query(predicates, PULL_QUERY_COLUMNS);
     if (resultSet == nullptr) {
@@ -948,44 +931,25 @@ int32_t FileDataHandler::PullRecordConflict(DKRecord &record, bool &comflag)
         LOGE("result set get row count err %{public}d", ret);
         return E_RDB;
     }
-    if (rowCount == 1) {
-        // if the display name and size match, we consider it to be the same
-        resultSet->GoToNextRow();
-        ret = ConflictMerge(*resultSet, record, fullPath, comflag, imetaModified);
-        comflag = true;
-    } else {
-        // find out whether two different files are using the same path
-        PullPathConflict(record, fullPath, comflag);
-    }
-    return ret;
-}
-
-int32_t FileDataHandler::PullPathConflict(DKRecord &record, string &fullPath, bool &comflag)
-{
-    LOGI("judgment full path conflict");
-    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    predicates.SetWhereClause(PhotoColumn::MEDIA_FILE_PATH + " = ?");
-    predicates.SetWhereArgs({fullPath});
-    predicates.Limit(LIMIT_SIZE);
-    auto resultSet = Query(predicates, PULL_QUERY_COLUMNS);
-    if (resultSet == nullptr) {
-        LOGE("get nullptr created result");
-        return E_RDB;
-    }
-    int32_t rowCount = 0;
-    int32_t ret = resultSet->GetRowCount(rowCount);
-    if (ret != 0) {
-        LOGE("result set get row count err %{public}d", ret);
-        return E_RDB;
-    }
     if (rowCount == 0) {
-        LOGD("unique file path, Normal download process");
+        LOGD("Normal download process");
         return E_OK;
     }
     if (rowCount == 1) {
-        // two different files are using same path
         resultSet->GoToNextRow();
-        ret = ConflictDifferent(*resultSet, fullPath);
+        bool modifyPathflag = false;
+        ret = ConflictHandler(*resultSet, record, isize, modifyPathflag);
+        if (ret != E_OK) {
+            return ret;
+        }
+        if (modifyPathflag) {
+            ret = ConflictDifferent(*resultSet, record, fullPath, relativePath);
+        } else {
+            ret = ConflictMerge(*resultSet, record, fullPath, comflag, imetaModified);
+        }
+        if (comflag) {
+            UpdateAssetInPhotoMap(record, GetFileId(*resultSet));
+        }
     } else {
         LOGE("unknown error: PullRecordConflict(),same path rowCount = %{public}d", rowCount);
         ret = E_RDB;
