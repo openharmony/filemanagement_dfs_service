@@ -19,7 +19,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void CloudDownloadCallbackClient::OnDownloadProcess(DownloadProgressObj& progress)
+void CloudDownloadCallbackClient::OnDownloadProcess(const DownloadProgressObj& progress)
 {
     if (!callback_) {
         LOGE("callback_ is null, maybe not registered");

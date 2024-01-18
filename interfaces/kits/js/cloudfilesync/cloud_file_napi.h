@@ -47,7 +47,7 @@ class CloudDownloadCallbackImpl : public CloudDownloadCallback,
 public:
     CloudDownloadCallbackImpl(napi_env env, napi_value fun);
     ~CloudDownloadCallbackImpl() = default;
-    void OnDownloadProcess(DownloadProgressObj &progress) override;
+    void OnDownloadProcess(const DownloadProgressObj &progress) override;
     void DeleteReference();
 
     class UvChangeMsg {

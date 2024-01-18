@@ -31,7 +31,7 @@ using namespace std;
 class CloudDownloadCallbackStubMock : public CloudDownloadCallbackStub {
 public:
     CloudDownloadCallbackStubMock() {}
-    void OnDownloadProcess(DownloadProgressObj& progress) override
+    void OnDownloadProcess(const DownloadProgressObj& progress) override
     {}
 };
 

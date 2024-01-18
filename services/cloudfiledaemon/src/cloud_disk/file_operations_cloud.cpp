@@ -276,34 +276,6 @@ void FileOperationsCloud::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLooku
     fuse_reply_none(req);
 }
 
-void FileOperationsCloud::ForgetMulti(fuse_req_t req, size_t count, struct fuse_forget_data *forgets)
-{
-    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    for (size_t i = 0; i < count; i++) {
-        if (forgets[i].ino == FUSE_ROOT_ID) {
-            LOGD("Cloud file operation should not get a root inode");
-            return (void) fuse_reply_none(req);
-        }
-        auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(forgets[i].ino);
-        if (inoPtr == nullptr) {
-            LOGE("ForgetMulti Function get an invalid inode!");
-            continue;
-        }
-        auto parentPtr = reinterpret_cast<struct CloudDiskInode *>(inoPtr->parent);
-        if (parentPtr == nullptr) {
-            LOGE("ForgetMulti Function get an invalid parent inode!");
-            continue;
-        }
-        string key = parentPtr->cloudId + inoPtr->fileName;
-        if (inoPtr->layer != CLOUD_DISK_INODE_OTHER_LAYER) {
-            key = inoPtr->path;
-        }
-        shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, key);
-        FileOperationsHelper::PutCloudDiskInode(data, node, forgets[i].nlookup, key);
-    }
-    fuse_reply_none(req);
-}
-
 static int32_t CreateLocalFile(const string &cloudId, const string &bundleName, int32_t userId, mode_t mode)
 {
     string bucketPath = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName, userId);

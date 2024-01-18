@@ -25,7 +25,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-void CloudDownloadCallbackProxy::OnDownloadProcess(DownloadProgressObj& progress)
+void CloudDownloadCallbackProxy::OnDownloadProcess(const DownloadProgressObj& progress)
 {
     LOGI("Start");
     MessageParcel data;

@@ -38,7 +38,7 @@ public:
 
 class MockICloudDownloadCallback : public ICloudDownloadCallback {
 public:
-    void OnDownloadProcess(DownloadProgressObj& progress) {return;}
+    void OnDownloadProcess(const DownloadProgressObj& progress) {return;}
     sptr<IRemoteObject> AsObject() {return nullptr;}
 };
 

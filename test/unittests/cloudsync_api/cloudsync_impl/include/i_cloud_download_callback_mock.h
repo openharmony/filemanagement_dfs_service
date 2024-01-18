@@ -39,7 +39,7 @@ public:
         return E_OK;
     }
 
-    void OnDownloadProcess(DownloadProgressObj& progress) override
+    void OnDownloadProcess(const DownloadProgressObj& progress) override
     {}
 };
 

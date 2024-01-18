@@ -193,8 +193,10 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
             (void)handler->OnDownloadSuccess(assetsToDownload[0]);
         }
         if (callback_ != nullptr) {
-            this_thread::sleep_for(chrono::seconds(1));
-            callback_->OnDownloadProcess(download);
+            std::thread([this, download]() {
+                this_thread::sleep_for(chrono::seconds(1));
+                this->callback_->OnDownloadProcess(download);
+            }).detach();
         }
     }
 }
