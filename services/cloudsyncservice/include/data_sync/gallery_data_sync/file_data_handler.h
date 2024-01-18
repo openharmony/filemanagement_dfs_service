@@ -76,7 +76,6 @@ public:
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
-    int32_t OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
     void PeriodicUpdataFiles(uint32_t &timeId);
     void StopUpdataFiles(uint32_t &timeId);
 
@@ -138,6 +137,7 @@ private:
     static inline const int32_t LIMIT_SIZE = 5;
     static inline const int32_t MODIFY_BATCH_NUM = 20;
     static inline const int32_t DELETE_BATCH_NUM = 20;
+    static inline const int32_t DOWNLOAD_LIMIT_SIZE = 200;
     DriveKit::DKRecordType recordType_ = "media";
     DriveKit::DKFieldKeyArray desiredKeys_;
     DriveKit::DKFieldKeyArray checkedKeys_ = {"version", "id"};
@@ -242,7 +242,6 @@ private:
     int32_t GetAlbumIdFromCloudId(const std::string &recordId);
     int32_t BatchGetFileIdFromCloudId(const std::vector<NativeRdb::ValueObject> &recordIds, std::vector<int> &fileIds);
     int32_t QueryWithBatchCloudId(std::vector<int> &fileIds, std::vector<std::string> &thmStrVec);
-    int32_t GetFileIdFromCloudId(const std::string &cloudId);
     void QueryAndInsertMap(int32_t albumId, int32_t fileId);
     void QueryAndDeleteMap(int32_t fileId, const std::set<int> &cloudMapIds);
     int32_t BatchInsertAssetMaps(OnFetchParams &params);

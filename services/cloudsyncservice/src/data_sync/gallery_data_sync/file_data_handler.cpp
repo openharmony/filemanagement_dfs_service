@@ -1025,7 +1025,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
     }
     values.PutInt(Media::PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
-    values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbStatus::TO_DOWNLOAD));
+    values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbState::TO_DOWNLOAD));
     values.PutString(Media::PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
     if (IsPullRecords()) {
         values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
@@ -1035,8 +1035,11 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
     params.insertFiles.push_back(values);
     if (AddCloudThumbs(record) != E_OK || !IsPullRecords()) {
         AppendToDownload(record, "lcd", params.assetsToDownload);
+        AppendToDownload(record, "thumbnail", params.assetsToDownload);
+    } else if ((++params.totalPullCount <= downloadThumbLimit_)) {
+        // the first 500 thms when pull records.
+        AppendToDownload(record, "thumbnail", params.assetsToDownload);
     }
-    AppendToDownload(record, "thumbnail", params.assetsToDownload);
     return E_OK;
 }
 
@@ -1050,10 +1053,26 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
             continue;
         }
         if (it.first.fieldKey == FILE_THUMBNAIL) {
+            thumbError++;
+            if (IsPullRecords()) {
+                continue;
+            }
+            // set visible when download failed
             LOGE("record %s %{public}s download failed, localErr: %{public}d, serverErr: %{public}d",
                  it.first.recordId.c_str(), it.first.fieldKey.c_str(),
                  static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
-            thumbError++;
+            LOGI("update sync_status to visible of record %s", it.first.recordId.c_str());
+            int updateRows;
+            ValuesBucket values;
+            values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
+
+            string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
+            int32_t ret = Update(updateRows, values, whereClause, {it.first.recordId});
+            if (ret != E_OK) {
+                LOGE("update retry flag failed, ret=%{public}d", ret);
+            }
+            DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
+                                                      to_string(updateRows));
         } else if (it.first.fieldKey == FILE_LCD) {
             lcdError++;
         }
@@ -1067,43 +1086,6 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
         UpdateAttachmentStat(INDEX_LCD_ERROR_SDK, lcdError);
     }
 
-    return E_OK;
-}
-
-int32_t FileDataHandler::OnTaskDownloadAssets(const DKDownloadAsset &asset)
-{
-    if (asset.fieldKey == "thumbnail") {
-        LOGI("update sync status to visible of record %s", asset.recordId.c_str());
-        int updateRows;
-        ValuesBucket values;
-        values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
-        string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-        int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
-        if (ret != E_OK) {
-            LOGE("update sync status failed, ret=%{public}d", ret);
-        } else {
-        }
-        UpdateAlbumInternal();
-        DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
-                                                  to_string(updateRows));
-        DataSyncNotifier::GetInstance().FinalNotify();
-    }
-
-    if (asset.fieldKey == "lcd") {
-        LOGI("update thumb status to visible of record %s", asset.recordId.c_str());
-        int updateRows;
-        ValuesBucket values;
-        values.PutInt(Media::PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbStatus::DOWNLOADED));
-        string whereClause = Media::PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-        int32_t ret = Update(updateRows, values, whereClause, {asset.recordId});
-        if (ret != E_OK) {
-            LOGE("update thumb status failed, ret=%{public}d", ret);
-        } else {
-        }
-    }
-
-    DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
-    MetaFileMgr::GetInstance().ClearAll();
     return E_OK;
 }
 
@@ -1811,30 +1793,6 @@ int32_t FileDataHandler::QueryWithBatchCloudId(std::vector<int> &fileIds, std::v
         }
     } while (resultSet->GoToNextRow() == E_OK);
     
-    return E_OK;
-}
-
-int32_t FileDataHandler::GetFileIdFromCloudId(const std::string &cloudId)
-{
-    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PhotoColumn::PHOTOS_TABLE);
-    predicates.EqualTo(PhotoColumn::PHOTO_CLOUD_ID, cloudId);
-    auto resultSet = Query(predicates, {MediaColumn::MEDIA_ID});
-    int rowCount = 0;
-    int ret = -1;
-    if (resultSet) {
-        ret = resultSet->GetRowCount(rowCount);
-    }
-    if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
-        LOGE("get nullptr result or rowcount %{public}d", rowCount);
-        return E_RDB;
-    }
-    if (resultSet->GoToNextRow() == 0) {
-        int fileId;
-        ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, *resultSet);
-        if (ret == E_OK) {
-            return fileId;
-        }
-    }
     return E_OK;
 }
 
@@ -3247,62 +3205,74 @@ int32_t FileDataHandler::FileAgingDelete(const int64_t agingTime, const int64_t 
 int32_t FileDataHandler::GetThumbToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    predicates.EqualTo(Media::PhotoColumn::PHOTO_THUMB_STATUS,
-                       to_string(static_cast<int32_t>(ThumbStatus::TO_DOWNLOAD)));
-    predicates.Limit(LIMIT_SIZE);
-    auto results = Query(predicates, MEDIA_CLOUD_SYNC_COLUMNS);
+    predicates.EqualTo(PC::PHOTO_SYNC_STATUS, to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE)))
+        ->And()->BeginWrap()
+        ->EqualTo(PC::PHOTO_THUMB_STATUS, to_string(static_cast<int32_t>(ThumbState::TO_DOWNLOAD)))
+        ->Or()->EqualTo(PC::PHOTO_THUMB_STATUS, to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)))
+        ->Or()->EqualTo(PC::PHOTO_THUMB_STATUS, to_string(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)))
+        ->EndWrap();
+    predicates.Limit(DOWNLOAD_LIMIT_SIZE);
+    auto results = Query(predicates, { PC::MEDIA_FILE_PATH, PC::PHOTO_CLOUD_ID, PC::PHOTO_THUMB_STATUS });
     if (results == nullptr) {
         LOGE("get nullptr TYPE_DOWNLOAD result");
         return E_RDB;
     }
 
     while (results->GoToNextRow() == 0) {
-        AppendToDownload(*results, "lcd", outAssetsToDownload);
-        AppendToDownload(*results, "thumbnail", outAssetsToDownload);
+        int32_t thmState = 0;
+        int32_t ret = DataConvertor::GetInt(PC::PHOTO_THUMB_STATUS, thmState, *results);
+        if (ret != E_OK) {
+            LOGE("Get file path failed");
+            continue;
+        }
+        if (thmState == static_cast<int32_t>(ThumbState::TO_DOWNLOAD)) {
+            AppendToDownload(*results, "thumbnail", outAssetsToDownload);
+            AppendToDownload(*results, "lcd", outAssetsToDownload);
+        } else if (thmState == static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) {
+            AppendToDownload(*results, "lcd", outAssetsToDownload);
+        } else if (thmState == static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) {
+            AppendToDownload(*results, "thumbnail", outAssetsToDownload);
+        }
     }
     return E_OK;
 }
 
 void FileDataHandler::UpdateVectorToDataBase()
 {
-    LOGI("update vector to database");
     LOGD("thmVec_ size is %{public}zu, lcdVec_ size is %{public}zu", thmVec_.size(), lcdVec_.size());
     if (!thmVec_.empty()) {
-        if (!IsPullRecords()) {
-            std::vector<int> fileIds;
-            string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
-                to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
-            int32_t ret = E_OK;
-            uint64_t total = thmVec_.size();
-            {
-                std::lock_guard<std::mutex> lock(rdbMutex_);
-                fileIds.reserve(thmVec_.size());
-                BatchGetFileIdFromCloudId(thmVec_, fileIds);
-                LOGD("thmVec_ size is %{public}zu, fileIds size is %{public}zu", thmVec_.size(), fileIds.size());
-                ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_);
-            }
-            if (ret != E_OK) {
-                LOGW("update thm fail");
-            }
-            UpdateAttachmentStat(INDEX_THUMB_SUCCESS, total - thmVec_.size());
-            if (thmVec_.size() > 0) {
-                UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
-            }
-            UpdateAlbumInternal();
-            for (auto& fileId : fileIds) {
-                DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX + to_string(fileId), ChangeType::INSERT, "");
-            }
-            DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
-            DataSyncNotifier::GetInstance().FinalNotify();
-        } else {
-            std::lock_guard<std::mutex> lock(thmMutex_);
-            thmVec_.clear();
+        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_THUMB_STATUS + " = " + PC::PHOTO_THUMB_STATUS
+            + " - " + to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD));
+        int32_t ret = E_OK;
+        uint64_t total = thmVec_.size();
+        std::vector<int> fileIds;
+        {
+            std::lock_guard<std::mutex> lock(rdbMutex_);
+            fileIds.reserve(thmVec_.size());
+            BatchGetFileIdFromCloudId(thmVec_, fileIds);
+            LOGD("thmVec_ size is %{public}zu, fileIds size is %{public}zu", thmVec_.size(), fileIds.size());
+            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_);
         }
+        if (ret != E_OK) {
+            LOGW("update thm fail");
+        }
+        UpdateAttachmentStat(INDEX_THUMB_SUCCESS, total - thmVec_.size());
+        if (thmVec_.size()) {
+            UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
+        }
+        if (!IsPullRecords()) {
+            UpdateAlbumInternal();
+        }
+        for (auto& fileId : fileIds) {
+            DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX + to_string(fileId), ChangeType::INSERT, "");
+        }
+        DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
+        DataSyncNotifier::GetInstance().FinalNotify();
     }
 
     if (!lcdVec_.empty()) {
-        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_THUMB_STATUS + " = " +
-            to_string(static_cast<int32_t>(ThumbStatus::DOWNLOADED));
+        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_THUMB_STATUS + " = " + PC::PHOTO_THUMB_STATUS
+            + " - " + to_string(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD));
         int32_t ret = E_OK;
         uint64_t total = lcdVec_.size();
         {
@@ -3346,6 +3316,7 @@ void FileDataHandler::StopUpdataFiles(uint32_t &timeId)
         }
         timeId = 0;
     }
+    timeId = 0;
 }
 } // namespace CloudSync
 } // namespace FileManagement

@@ -161,6 +161,15 @@ bool DataHandler::GetCheckFlag()
     return isChecking_;
 }
 
+void DataHandler::SetDownloadType(const int32_t type)
+{
+    downloadType_ = type;
+}
+
+int32_t DataHandler::GetDownloadType()
+{
+    return downloadType_;
+}
 void DataHandler::SetChecking()
 {
     ClearCursor();
@@ -212,11 +221,6 @@ int32_t DataHandler::OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, 
 }
 
 int32_t DataHandler::OnDownloadAssets(const DriveKit::DKDownloadAsset &asset)
-{
-    return E_OK;
-}
-
-int32_t DataHandler::OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset)
 {
     return E_OK;
 }

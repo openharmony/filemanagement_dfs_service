@@ -75,7 +75,8 @@ public:
 
     /* optimizestorage */
     virtual int32_t OptimizeStorage(const int32_t agingDays);
-    virtual int32_t DownloadThumb();
+    virtual int32_t DownloadThumb(const int32_t type);
+    virtual void StopDownloadThumb();
 
     void SaveSubscription();
     void DeleteSubscription();
@@ -98,6 +99,7 @@ protected:
     virtual void Schedule() = 0;
     virtual void ScheduleByType(SyncTriggerType syncTriggerType) = 0;
     virtual void Reset() = 0;
+    virtual int32_t Complete(bool isNeedNotify = true) = 0;
     void Abort();
 
     /* download source file */
@@ -115,6 +117,9 @@ protected:
 
     void SyncStateChangedNotify(const CloudSyncState state, const ErrorType error);
     void SetErrorCodeMask(ErrorType errorType);
+
+    /* sync rule to be supplemented and imporved */
+    bool CheckScreenAndWifi();
 
     /* sys event */
     virtual int32_t InitSysEventData();
@@ -143,7 +148,7 @@ private:
     void PullDatabaseChanges(std::shared_ptr<TaskContext> context);
     void PullRecordsWithId(std::shared_ptr<TaskContext> context, const std::vector<DriveKit::DKRecordId> &records,
         bool retry);
-    void DownloadAssets(DownloadContext &ctx);
+    void DownloadAssets(DownloadContext ctx);
     void RetryDownloadRecords(std::shared_ptr<TaskContext> context);
     /* dowload callback */
     void OnFetchRecords(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,

@@ -129,11 +129,11 @@ int32_t CloudDiskDataSyncer::UploadFile()
     return ret;
 }
 
-int32_t CloudDiskDataSyncer::Complete()
+int32_t CloudDiskDataSyncer::Complete(bool isNeedNotify)
 {
     LOGI("cloud disk data syncer complete all");
     Unlock();
-    CompleteAll();
+    CompleteAll(isNeedNotify);
     if (isDataChanged_) {
         ChangesNotify();
     }

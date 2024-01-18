@@ -299,7 +299,7 @@ int32_t DataSyncManager::DownloadThumb()
     if (ret != E_OK) {
         return ret;
     }
-    return dataSyncer->DownloadThumb();
+    return dataSyncer->DownloadThumb(DataHandler::DownloadThmType::SCREENOFF_TRIGGER);
 }
 
 int32_t DataSyncManager::GetUserId(int32_t &userId)
