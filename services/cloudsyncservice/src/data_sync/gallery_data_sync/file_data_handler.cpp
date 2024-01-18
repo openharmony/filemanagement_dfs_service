@@ -1214,6 +1214,14 @@ int32_t FileDataHandler::SetRetry(vector<NativeRdb::ValueObject> &retryList)
     return E_OK;
 }
 
+/*Add locks to prevent multiple threads from updating albums at the same time*/
+void FileDataHandler::UpdateAlbumInternal()
+{
+    std::lock_guard<std::mutex> lock(rdbMutex_);
+    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+}
+
 int FileDataHandler::SetRetry(const string &recordId)
 {
     LOGI("set retry of record %s", recordId.c_str());
@@ -1806,7 +1814,7 @@ int32_t FileDataHandler::QueryWithBatchCloudId(std::vector<int> &fileIds, std::v
     return E_OK;
 }
 
-int32_t FileDataHandler::GetFieldIdFromCloudId(const std::string &cloudId)
+int32_t FileDataHandler::GetFileIdFromCloudId(const std::string &cloudId)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PhotoColumn::PHOTOS_TABLE);
     predicates.EqualTo(PhotoColumn::PHOTO_CLOUD_ID, cloudId);
@@ -1821,10 +1829,10 @@ int32_t FileDataHandler::GetFieldIdFromCloudId(const std::string &cloudId)
         return E_RDB;
     }
     if (resultSet->GoToNextRow() == 0) {
-        int fieldId;
-        ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fieldId, *resultSet);
+        int fileId;
+        ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, *resultSet);
         if (ret == E_OK) {
-            return fieldId;
+            return fileId;
         }
     }
     return E_OK;
@@ -3311,13 +3319,6 @@ void FileDataHandler::UpdateVectorToDataBase()
     }
 }
 
-/*Add locks to prevent multiple threads from updating albums at the same time*/
-void FileDataHandler::UpdateAlbumInternal()
-{
-    std::lock_guard<std::mutex> lock(rdbMutex_);
-    MediaLibraryRdbUtils::UpdateAllAlbums(GetRaw());
-}
-
 void FileDataHandler::PeriodicUpdataFiles(uint32_t &timeId)
 {
     const uint32_t TIMER_INTERVAL = 2000;
@@ -3343,6 +3344,7 @@ void FileDataHandler::StopUpdataFiles(uint32_t &timeId)
             UpdateVectorToDataBase();
             tryCount++;
         }
+        timeId = 0;
     }
 }
 } // namespace CloudSync

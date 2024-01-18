@@ -242,6 +242,7 @@ private:
     int32_t GetAlbumIdFromCloudId(const std::string &recordId);
     int32_t BatchGetFileIdFromCloudId(const std::vector<NativeRdb::ValueObject> &recordIds, std::vector<int> &fileIds);
     int32_t QueryWithBatchCloudId(std::vector<int> &fileIds, std::vector<std::string> &thmStrVec);
+    int32_t GetFileIdFromCloudId(const std::string &cloudId);
     void QueryAndInsertMap(int32_t albumId, int32_t fileId);
     void QueryAndDeleteMap(int32_t fileId, const std::set<int> &cloudMapIds);
     int32_t BatchInsertAssetMaps(OnFetchParams &params);
