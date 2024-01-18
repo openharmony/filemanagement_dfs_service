@@ -161,6 +161,11 @@ string FileDataConvertor::GetLowerPath(const string &path)
     return "";
 }
 
+string FileDataConvertor::GetThumbParentPath(const string &path)
+{
+    return "";
+}
+
 string FileDataConvertor::GetLowerTmpPath(const string &path)
 {
     return "";
