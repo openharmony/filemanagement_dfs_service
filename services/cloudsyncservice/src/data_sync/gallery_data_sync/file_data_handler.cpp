@@ -1049,18 +1049,19 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
     uint64_t lcdError = 0;
 
     for (const auto &it : resultMap) {
+        auto asset = it.first;
         if (it.second.IsSuccess()) {
+            LOGI("%{public}s %{public}s %{public}s download succeed", asset.recordId.c_str(),
+                asset.asset.assetName.c_str(), asset.fieldKey.c_str());
             continue;
         }
+
         if (it.first.fieldKey == FILE_THUMBNAIL) {
             thumbError++;
             if (IsPullRecords()) {
                 continue;
             }
             // set visible when download failed
-            LOGE("record %s %{public}s download failed, localErr: %{public}d, serverErr: %{public}d",
-                 it.first.recordId.c_str(), it.first.fieldKey.c_str(),
-                 static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
             LOGI("update sync_status to visible of record %s", it.first.recordId.c_str());
             int updateRows;
             ValuesBucket values;
@@ -1076,6 +1077,9 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
         } else if (it.first.fieldKey == FILE_LCD) {
             lcdError++;
         }
+        LOGE("%{public}s %{public}s %{public}s download fail, localErr: %{public}d, serverErr: %{public}d",
+            asset.recordId.c_str(), asset.asset.assetName.c_str(), asset.fieldKey.c_str(),
+            static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
     }
 
     if (thumbError > 0) {
