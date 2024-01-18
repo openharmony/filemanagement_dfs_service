@@ -35,6 +35,7 @@ public:
     ~TaskStateManager() = default;
     void StartTask(std::string bundleName, TaskType task);
     void CompleteTask(std::string bundleName, TaskType task);
+    bool HasTask(std::string bundleName, TaskType task);
     void StartTask();
 private:
     TaskStateManager();

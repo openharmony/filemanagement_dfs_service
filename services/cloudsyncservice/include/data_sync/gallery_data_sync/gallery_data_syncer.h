@@ -44,7 +44,8 @@ public:
     virtual int32_t Lock() override;
     virtual void Unlock() override;
     virtual void ForceUnlock() override;
-    virtual int32_t DownloadThumb() override;
+    virtual int32_t DownloadThumb(const int32_t type) override;
+    virtual void StopDownloadThumb() override;
     virtual int32_t InitSysEventData() override;
     virtual void FreeSysEventData() override;
     virtual void ReportSysEvent(uint32_t code) override;
@@ -68,7 +69,7 @@ private:
     int32_t DownloadFile();
     int32_t UploadAlbum();
     int32_t UploadFile();
-    int32_t Complete();
+    int32_t Complete(bool isNeedNotify = true) override;
     std::shared_ptr<NativeRdb::RdbStore> RdbInit(const std::string &bundleName, const int32_t userId);
     int32_t GetHandler();
     void PutHandler();

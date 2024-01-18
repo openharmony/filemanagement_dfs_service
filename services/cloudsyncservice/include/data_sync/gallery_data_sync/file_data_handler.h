@@ -76,7 +76,6 @@ public:
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
-    int32_t OnTaskDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
     void PeriodicUpdataFiles(uint32_t &timeId);
     void StopUpdataFiles(uint32_t &timeId);
 
@@ -138,6 +137,7 @@ private:
     static inline const int32_t LIMIT_SIZE = 5;
     static inline const int32_t MODIFY_BATCH_NUM = 20;
     static inline const int32_t DELETE_BATCH_NUM = 20;
+    static inline const int32_t DOWNLOAD_LIMIT_SIZE = 200;
     DriveKit::DKRecordType recordType_ = "media";
     DriveKit::DKFieldKeyArray desiredKeys_;
     DriveKit::DKFieldKeyArray checkedKeys_ = {"version", "id"};

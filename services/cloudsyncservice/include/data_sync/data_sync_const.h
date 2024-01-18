@@ -37,6 +37,13 @@ enum class SyncTriggerType : int32_t {
     TASK_TRIGGER,
 };
 
+enum class ThumbState : int32_t {
+    DOWNLOADED,
+    LCD_TO_DOWNLOAD,
+    THM_TO_DOWNLOAD,
+    TO_DOWNLOAD,
+};
+
 struct LocalInfo {
     int64_t mdirtyTime;
     int64_t fdirtyTime;

@@ -82,6 +82,18 @@ void TaskStateManager::StartTask()
     }
 }
 
+bool TaskStateManager::HasTask(const string bundleName, TaskType task)
+{
+    std::lock_guard<std::mutex> lock(taskMapsMutex_);
+    auto iterator = taskMaps_.find(bundleName);
+    if (iterator != taskMaps_.end()) {
+        if (taskMaps_[bundleName] & static_cast<uint64_t>(task)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void TaskStateManager::DelayUnloadTask()
 {
     LOGI("delay unload task begin");

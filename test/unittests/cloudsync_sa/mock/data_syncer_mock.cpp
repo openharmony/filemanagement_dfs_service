@@ -138,10 +138,6 @@ void DataSyncer::PullDatabaseChanges(shared_ptr<TaskContext> context)
 {
 }
 
-void DataSyncer::DownloadAssets(DownloadContext &ctx)
-{
-}
-
 int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int action)
 {
     return E_OK;
@@ -311,9 +307,13 @@ bool DataSyncer::HasSdkHelper()
 {
     return true;
 }
-int32_t DataSyncer::DownloadThumb()
+int32_t DataSyncer::DownloadThumb(const int32_t type)
 {
     return E_OK;
+}
+
+void DataSyncer::StopDownloadThumb()
+{
 }
 
 int32_t DataSyncer::DownloadThumbInner(shared_ptr<DataHandler> handler)
@@ -341,6 +341,11 @@ void DataSyncer::ReportSysEvent(uint32_t code)
 
 void DataSyncer::SetFullSyncSysEvent()
 {
+}
+
+bool DataSyncer::CheckScreenAndWifi()
+{
+    return true;
 }
 } // namespace CloudSync
 } // namespace FileManagement
