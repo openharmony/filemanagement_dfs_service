@@ -192,12 +192,12 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
         if ((assetsToDownload.size() == 1) && (download.state == DownloadProgressObj::COMPLETED)) {
             (void)handler->OnDownloadSuccess(assetsToDownload[0]);
         }
-        if (callback_ != nullptr) {
-            std::thread([this, download]() {
+        std::thread([=]() {
                 this_thread::sleep_for(chrono::seconds(1));
-                this->callback_->OnDownloadProcess(download);
-            }).detach();
-        }
+                if (callback_ != nullptr) {
+                    callback_->OnDownloadProcess(download);
+                } else { LOGE("async download callback is nullptr"); }
+                }).detach();
     }
 }
 
