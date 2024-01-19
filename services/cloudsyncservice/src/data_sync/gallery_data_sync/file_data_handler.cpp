@@ -1734,6 +1734,68 @@ int32_t FileDataHandler::GetAlbumIdFromCloudId(const std::string &cloudId)
     return -1;
 }
 
+int32_t FileDataHandler::BatchGetFileIdFromCloudId(const std::vector<NativeRdb::ValueObject> &recordIds,
+    std::vector<int> &fileIds)
+{
+    uint32_t size = 0;
+    if (recordIds.size() <= BATCH_LIMIT_SIZE) {
+        size = recordIds.size();
+    } else {
+        uint32_t remain = recordIds.size() % BATCH_LIMIT_SIZE;
+        if (remain == 0) {
+            size = recordIds.size() - BATCH_LIMIT_SIZE;
+        } else {
+            size = recordIds.size() - remain;
+        }
+    }
+    
+    std::vector<std::string> thmStrVec;
+    thmStrVec.reserve(size);
+    int valueErr = 0;
+    for (uint32_t recordIndex = 0; recordIndex < size; recordIndex++) {
+        std::string cloudId;
+        valueErr = recordIds[recordIndex].GetString(cloudId);
+        if (valueErr == E_OK) {
+            thmStrVec.push_back(cloudId);
+        }
+    }
+    
+    return QueryWithBatchCloudId(fileIds, thmStrVec);
+}
+
+int32_t FileDataHandler::QueryWithBatchCloudId(std::vector<int> &fileIds, std::vector<std::string> &thmStrVec)
+{
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PhotoColumn::PHOTOS_TABLE);
+    predicates.In(PhotoColumn::PHOTO_CLOUD_ID, thmStrVec);
+    auto resultSet = Query(predicates, {MediaColumn::MEDIA_ID});
+    int rowCount = 0;
+    int ret = -1;
+    if (resultSet) {
+        ret = resultSet->GetRowCount(rowCount);
+    }
+    if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
+        LOGE("get nullptr result or rowcount %{public}d", rowCount);
+        return E_RDB;
+    }
+
+    int err = 0;
+    err = resultSet->GoToFirstRow();
+    if (err != E_OK) {
+        LOGE("get first result of file id fail %{public}d", err);
+        return E_RDB;
+    }
+    
+    do {
+        int fileId;
+        ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, *resultSet);
+        if (ret == E_OK) {
+            fileIds.push_back(fileId);
+        }
+    } while (resultSet->GoToNextRow() == E_OK);
+    
+    return E_OK;
+}
+
 void FileDataHandler::QueryAndInsertMap(int32_t albumId, int32_t fileId)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PhotoMap::TABLE);
@@ -3184,8 +3246,12 @@ void FileDataHandler::UpdateVectorToDataBase()
         PC::PHOTO_THUMB_STATUS + " - " + to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD));
         int32_t ret = E_OK;
         uint64_t total = thmVec_.size();
+        std::vector<int> fileIds;
         {
             std::lock_guard<std::mutex> lock(rdbMutex_);
+            fileIds.reserve(thmVec_.size());
+            BatchGetFileIdFromCloudId(thmVec_, fileIds);
+            LOGD("thmVec_ size is %{public}zu, fileIds size is %{public}zu", thmVec_.size(), fileIds.size());
             ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_);
         }
         if (ret != E_OK) {
@@ -3197,6 +3263,9 @@ void FileDataHandler::UpdateVectorToDataBase()
         }
         if (!IsPullRecords()) {
             UpdateAlbumInternal();
+        }
+        for (auto& fileId : fileIds) {
+            DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX + to_string(fileId), ChangeType::INSERT, "");
         }
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
         DataSyncNotifier::GetInstance().FinalNotify();
