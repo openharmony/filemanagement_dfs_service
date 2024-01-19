@@ -3171,8 +3171,9 @@ void FileDataHandler::UpdateVectorToDataBase()
 {
     LOGD("thmVec_ size is %{public}zu, lcdVec_ size is %{public}zu", thmVec_.size(), lcdVec_.size());
     if (!thmVec_.empty()) {
-        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_THUMB_STATUS + " = " + PC::PHOTO_THUMB_STATUS
-            + " - " + to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD));
+        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
+        to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE)) + " , " + PC::PHOTO_THUMB_STATUS + " = " +
+        PC::PHOTO_THUMB_STATUS + " - " + to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD));
         int32_t ret = E_OK;
         uint64_t total = thmVec_.size();
         {
