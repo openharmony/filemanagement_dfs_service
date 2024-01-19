@@ -59,19 +59,24 @@ int32_t DataSyncerRdbStore::RdbInit()
 int32_t DataSyncerRdbStore::Insert(int32_t userId, const std::string &bundleName)
 {
     LOGI("datasyncer insert userId %d, bundleName %s", userId, bundleName.c_str());
+    string uniqueId = to_string(userId) + bundleName;
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(DATA_SYNCER_TABLE);
-    predicates.EqualTo(USER_ID, userId)->And()->EqualTo(BUNDLE_NAME, bundleName);
+    predicates.EqualTo(DATA_SYNCER_UNIQUE_ID, uniqueId);
     std::shared_ptr<NativeRdb::ResultSet> resultSet;
     RETURN_ON_ERR(Query(predicates, resultSet));
-    int32_t rowCount = 0;
-    if (resultSet->GetRowCount(rowCount) == E_OK && rowCount == 1) {
+    if (resultSet->GoToNextRow() == E_OK) {
         return E_OK;
     }
     int64_t rowId;
     NativeRdb::ValuesBucket values;
     values.PutInt(USER_ID, userId);
     values.PutString(BUNDLE_NAME, bundleName);
-    int32_t ret = rdb_->Insert(rowId, DATA_SYNCER_TABLE, values);
+    values.PutString(DATA_SYNCER_UNIQUE_ID, uniqueId);
+    int32_t ret = 0;
+    {
+        std::lock_guard<std::mutex> lck(rdbMutex_);
+        ret = rdb_->Insert(rowId, DATA_SYNCER_TABLE, values);
+    }
     if (ret != E_OK) {
         LOGE("fail to insert userId %d bundleName %s, ret %{public}d", userId, bundleName.c_str(), ret);
         return E_RDB;
@@ -112,14 +117,9 @@ int32_t DataSyncerRdbStore::Query(NativeRdb::AbsRdbPredicates predicates,
             return E_RDB;
         }
     }
-    resultSet = rdb_->Query(predicates, {});
-    int32_t rowCount = 0;
-    int32_t ret = E_OK;
-    if (resultSet) {
-        ret = resultSet->GetRowCount(rowCount);
-    }
-    if (resultSet == nullptr || ret != E_OK || rowCount < 0) {
-        LOGE("query sync state failed ret = %{public}d, rowcount = %{public}d", ret, rowCount);
+    resultSet = rdb_->QueryByStep(predicates, {});
+    if (resultSet == nullptr) {
+        LOGE("DataSyncerRdbStore query failed");
         return E_RDB;
     }
     return E_OK;
@@ -141,8 +141,32 @@ int32_t DataSyncerRdbCallBack::OnCreate(NativeRdb::RdbStore &store)
     return E_OK;
 }
 
+static void VersionAddDataSyncerUniqueIndex(NativeRdb::RdbStore &store)
+{
+    const string addDataSyncerUniqueIdColumn =
+        "ALTER TABLE " + DATA_SYNCER_TABLE + " ADD COLUMN " +
+        DATA_SYNCER_UNIQUE_ID + " TEXT";
+    const string initUniqueIdColumn =
+        "UPDATE " + DATA_SYNCER_TABLE + " SET " +
+        DATA_SYNCER_UNIQUE_ID + " = userId || bundleName";
+    const string addDataSyncerUniqueIndex =
+        "CREATE UNIQUE INDEX IF NOT EXISTS " + DATA_SYNCER_UNIQUE_INDEX +
+        " ON " + DATA_SYNCER_TABLE + " (" + DATA_SYNCER_UNIQUE_ID + ")";
+    const vector<string> addUniqueIndex = { addDataSyncerUniqueIdColumn, initUniqueIdColumn,
+        addDataSyncerUniqueIndex};
+    for (size_t i = 0; i < addUniqueIndex.size(); i++) {
+        if (store.ExecuteSql(addUniqueIndex[i]) != NativeRdb::E_OK) {
+            LOGE("upgrade fail idx:%{public}zu", i);
+        }
+    }
+}
+
 int32_t DataSyncerRdbCallBack::OnUpgrade(NativeRdb::RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
+    LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
+    if (oldVersion < VERSION_ADD_DATA_SYNCER_UNIQUE_INDEX) {
+        VersionAddDataSyncerUniqueIndex(store);
+    }
     return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync

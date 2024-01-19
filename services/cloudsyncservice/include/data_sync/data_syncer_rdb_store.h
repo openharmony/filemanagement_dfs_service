@@ -34,6 +34,7 @@ private:
     int32_t Query(NativeRdb::AbsRdbPredicates predicates, std::shared_ptr<NativeRdb::ResultSet> &resultSet);
     int32_t RdbInit();
     std::shared_ptr<NativeRdb::RdbStore> rdb_;
+    std::mutex rdbMutex_;
 };
 
 class DataSyncerRdbCallBack : public NativeRdb::RdbOpenCallback {
