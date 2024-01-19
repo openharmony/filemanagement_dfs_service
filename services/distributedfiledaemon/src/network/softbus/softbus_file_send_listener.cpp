@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 
+#include "dfs_error.h"
 #include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "session.h"
@@ -25,11 +26,20 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-
+constexpr uint32_t MAX_SIZE = 128;
 int32_t SoftBusFileSendListener::OnSendFileProcess(int sessionId, uint64_t bytesUpload, uint64_t bytesTotal)
 {
     LOGD("OnSendFileProcess, sessionId = %{public}d bytesUpload = %{public}" PRIu64 "bytesTotal = %{public}" PRIu64 "",
          sessionId, bytesUpload, bytesTotal);
+    if (bytesUpload == bytesTotal) {
+        char sessionName[MAX_SIZE] = {};
+        auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
+        if (ret != FileManagement::E_OK) {
+            LOGE("GetMySessionName failed, ret = %{public}d", ret);
+            return FileManagement::E_OK;
+        }
+        SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
+    }
     return 0;
 }
 
