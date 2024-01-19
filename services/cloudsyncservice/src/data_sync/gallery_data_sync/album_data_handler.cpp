@@ -281,11 +281,22 @@ int32_t AlbumDataHandler::HandleLocalDirty(int32_t dirty, const DriveKit::DKReco
     return E_OK;
 }
 
+void AlbumDataHandler::UpdateDownloadAlbumStat(uint64_t success, uint64_t rdbFail, uint64_t dataFail)
+{
+    UpdateAlbumStat(INDEX_DL_ALBUM_SUCCESS, success);
+    UpdateAlbumStat(INDEX_DL_ALBUM_ERROR_RDB, rdbFail);
+    UpdateAlbumStat(INDEX_DL_ALBUM_ERROR_DATA, dataFail);
+}
+
 int32_t AlbumDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records,
                                          OnFetchParams &params)
 {
     LOGI("on fetch %{public}zu records", records->size());
     int32_t ret = E_OK;
+    uint64_t success = 0;
+    uint64_t rdbFail = 0;
+    uint64_t dataFail = 0;
+
     for (auto &record : *records) {
         auto [resultSet, rowCount] = QueryLocalMatch(record.GetRecordId());
         if (resultSet == nullptr) {
@@ -314,22 +325,31 @@ int32_t AlbumDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records,
         } else {
             /* invalid cases */
             LOGE("recordId %s rowCount %{public}d", record.GetRecordId().c_str(), rowCount);
+            ret = E_DATA;
         }
 
         /* check ret */
         if (ret != E_OK) {
             LOGE("recordId %s error %{public}d", record.GetRecordId().c_str(), ret);
+            /* might need specific error type */
+            ret == E_RDB ? rdbFail++ : dataFail++;
             if (ret == E_STOP) {
+                UpdateDownloadAlbumStat(success, rdbFail, dataFail);
+                (void)DataSyncNotifier::GetInstance().FinalNotify();
                 return E_STOP;
             }
             continue;
         } else {
             /* notify */
+            success++;
             (void)DataSyncNotifier::GetInstance().TryNotify(ALBUM_URI_PREFIX,
                 ChangeType::UPDATE, INVALID_ASSET_ID);
         }
     }
     (void)DataSyncNotifier::GetInstance().FinalNotify();
+
+    UpdateDownloadAlbumStat(success, rdbFail, dataFail);
+
     return E_OK;
 }
 
@@ -463,6 +483,9 @@ int32_t AlbumDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
 int32_t AlbumDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     int32_t ret = E_OK;
+    uint64_t success = 0;
+    uint64_t failure = 0;
+
     for (auto &entry : map) {
         int32_t err;
         const DKRecordOperResult &result = entry.second;
@@ -471,15 +494,26 @@ int32_t AlbumDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResu
         } else {
             err = OnRecordFailed(entry);
             OnCreateFail(entry);
+            failure++;
+        }
+        if (err == E_OK) {
+            success++;
         }
         GetReturn(err, ret);
     }
+
+    UpdateAlbumStat(INDEX_UL_ALBUM_SUCCESS, success);
+    UpdateAlbumStat(INDEX_UL_ALBUM_ERROR_SDK, failure);
+
     return ret;
 }
 
 int32_t AlbumDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     int32_t ret = E_OK;
+    uint64_t success = 0;
+    uint64_t failure = 0;
+
     for (auto &entry : map) {
         int32_t err;
         const DKRecordOperResult &result = entry.second;
@@ -488,15 +522,26 @@ int32_t AlbumDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOperResu
         } else {
             err = OnRecordFailed(entry);
             OnDeleteFail(entry);
+            failure++;
+        }
+        if (err == E_OK) {
+            success++;
         }
         GetReturn(err, ret);
     }
+
+    UpdateAlbumStat(INDEX_UL_ALBUM_SUCCESS, success);
+    UpdateAlbumStat(INDEX_UL_ALBUM_ERROR_SDK, failure);
+
     return ret;
 }
 
 int32_t AlbumDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOperResult> &map)
 {
     int32_t ret = E_OK;
+    uint64_t success = 0;
+    uint64_t failure = 0;
+
     for (auto &entry : map) {
         int32_t err;
         const DKRecordOperResult &result = entry.second;
@@ -505,6 +550,10 @@ int32_t AlbumDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKRecordOp
         } else {
             err = OnRecordFailed(entry);
             OnModifyFail(entry);
+            failure++;
+        }
+        if (err == E_OK) {
+            success++;
         }
         GetReturn(err, ret);
     }
@@ -528,6 +577,7 @@ int32_t AlbumDataHandler::OnUploadSuccess(const pair<DriveKit::DKRecordId,
     int32_t ret = Update(changedRows, valuesBucket, whereClause, whereArgs);
     if (ret != 0) {
         LOGE("update local records err %{public}d", ret);
+        UpdateAlbumStat(INDEX_UL_ALBUM_ERROR_RDB, 1);
         return ret;
     }
     return E_OK;
@@ -542,6 +592,7 @@ int32_t AlbumDataHandler::OnDeleteSuccess(const pair<DriveKit::DKRecordId,
     int32_t ret = Delete(deletedRows, whereClause, whereArgs);
     if (ret != 0) {
         LOGE("delete local records err %{public}d", ret);
+        UpdateAlbumStat(INDEX_UL_ALBUM_ERROR_RDB, 1);
         return ret;
     }
     return E_OK;

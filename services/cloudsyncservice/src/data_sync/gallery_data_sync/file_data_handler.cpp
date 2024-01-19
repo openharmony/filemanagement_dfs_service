@@ -274,6 +274,10 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
     const std::map<std::string, int> &recordIdRowIdMap)
 {
     int32_t ret = E_OK;
+    uint64_t success = 0;
+    uint64_t rdbFail = 0;
+    uint64_t dataFail = 0;
+
     for (auto &record : *records) {
         int32_t fileId = 0;
         ChangeType changeType = ChangeType::INVAILD;
@@ -297,15 +301,15 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
         if (ret != E_OK) {
             LOGE("recordId %s error %{public}d", record.GetRecordId().c_str(), ret);
             if (ret == E_RDB) {
-                UpdateMetaStat(INDEX_DL_META_ERROR_RDB, 1);
+                rdbFail++;
                 continue;
             }
             /* might need to specifiy which type error */
-            UpdateMetaStat(INDEX_DL_META_ERROR_DATA, 1);
+            dataFail++;
             ret = E_OK;
         } else {
             if (changeType != ChangeType::INSERT && changeType != ChangeType::INVAILD) {
-                UpdateMetaStat(INDEX_DL_META_SUCCESS, 1);
+                success++;
             }
         }
         if (changeType != ChangeType::INVAILD) {
@@ -313,6 +317,10 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
             DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
         }
     }
+
+    UpdateMetaStat(INDEX_DL_META_SUCCESS, success);
+    UpdateMetaStat(INDEX_DL_META_ERROR_RDB, rdbFail);
+    UpdateMetaStat(INDEX_DL_META_ERROR_DATA, dataFail);
 
     return ret;
 }

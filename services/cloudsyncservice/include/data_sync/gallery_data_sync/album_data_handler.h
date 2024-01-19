@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-class AlbumDataHandler : public RdbDataHandler, public SyncStatContainer<GalleryIncSyncStat> {
+class AlbumDataHandler : public RdbDataHandler, public GallerySyncStatContainer {
 public:
     AlbumDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<NativeRdb::RdbStore> rdb);
     virtual ~AlbumDataHandler() = default;
@@ -74,6 +74,8 @@ private:
     int32_t QuerySourceAlbum(std::vector<DriveKit::DKRecord> &records,  Media::DirtyType dirty,
                              const std::vector<std::string> &failSet, AlbumDataConvertor &convertor);
     int32_t QueryConflict(DriveKit::DKRecord &record, std::shared_ptr<NativeRdb::ResultSet> &resultSet);
+
+    void UpdateDownloadAlbumStat(uint64_t success, uint64_t rdbFail, uint64_t dataFail);
 
     static inline const std::string TABLE_NAME = "albums";
     static inline const int32_t LIMIT_SIZE = 5;

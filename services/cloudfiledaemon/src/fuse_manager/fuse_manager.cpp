@@ -342,7 +342,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
     shared_ptr<DriveKit::DKDatabase> database = GetDatabase(data);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
 
-    LOGI("%d {public}s open %{public}s", req->ctx.pid, CloudPath(data, ino).c_str());
+    LOGI("%{public}d open %{public}s", req->ctx.pid, CloudPath(data, ino).c_str());
     if (!database) {
         fuse_reply_err(req, EPERM);
         LOGE("database is null");
@@ -394,8 +394,8 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
 
     wSesLock.lock();
-    LOGI("%d release %s, sessionRefCount: %d", req->ctx.pid, CloudPath(data, ino).c_str(),
-        cInode->sessionRefCount.load());
+    LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d", req->ctx.pid,
+        CloudPath(data, ino).c_str(), cInode->sessionRefCount.load());
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
         bool needRemain = false;
