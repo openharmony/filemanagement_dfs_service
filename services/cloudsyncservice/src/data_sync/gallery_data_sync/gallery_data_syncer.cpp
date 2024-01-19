@@ -234,6 +234,12 @@ void GalleryDataSyncer::ScheduleByType(SyncTriggerType syncTriggerType)
 
 void GalleryDataSyncer::Reset()
 {
+    if (fileHandler_ != nullptr) {
+        fileHandler_->Reset();
+    }
+    if (albumHandler_ != nullptr) {
+        albumHandler_->Reset();
+    }
     /* release some resources after last sycn is completed */
     if (stage_ != BEGIN) {
         /* release DataHandler */
