@@ -35,6 +35,7 @@ ohos_unittest("clouddisk_rdb_utils_test") {
     "${media_library_path}/frameworks/utils/include",
     "${distributedfile_path}/utils/log/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
+    "//third_party/libfuse/include",
   ]
 
   deps = [
@@ -43,6 +44,7 @@ ohos_unittest("clouddisk_rdb_utils_test") {
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
+    "//third_party/libfuse:libfuse",
   ]
 
   cflags = [ "--coverage" ]
@@ -153,6 +155,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${media_library_path}/frameworks/utils/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
+    "//third_party/libfuse/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/include",
   ]
 
@@ -172,6 +175,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
+    "//third_party/libfuse:libfuse",
   ]
 
   cflags = [ "--coverage" ]

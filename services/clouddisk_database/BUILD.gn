@@ -32,6 +32,7 @@ ohos_shared_library("clouddisk_database") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
+    "//third_party/libfuse/include",
   ]
 
   sources = [
@@ -57,6 +58,7 @@ ohos_shared_library("clouddisk_database") {
   deps = [
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${utils_path}:libdistributedfileutils",
+    "//third_party/libfuse:libfuse",
   ]
 
   external_deps = [

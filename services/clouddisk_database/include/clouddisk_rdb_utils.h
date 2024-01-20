@@ -36,6 +36,7 @@ public:
     static int32_t ResultSetToFileInfo(const std::shared_ptr<NativeRdb::ResultSet> resultSet, CloudDiskFileInfo &info);
     static int32_t ResultSetToFileInfos(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
         std::vector<CloudDiskFileInfo> &infos);
+    static size_t FuseDentryAlignSize(const char *name);
 };
 
 #define RETURN_ON_ERR(ret)    \

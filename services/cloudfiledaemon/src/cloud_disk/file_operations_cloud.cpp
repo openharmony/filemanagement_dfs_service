@@ -18,8 +18,10 @@
 #include <sys/types.h>
 #include <sys/xattr.h>
 
+#include "account_status.h"
 #include "cloud_disk_inode.h"
 #include "cloud_file_utils.h"
+#include "clouddisk_rdb_utils.h"
 #include "database_manager.h"
 #include "directory_ex.h"
 #include "dk_database.h"
@@ -27,7 +29,6 @@
 #include "file_operations_helper.h"
 #include "securec.h"
 #include "utils_log.h"
-#include "account_status.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -385,35 +386,91 @@ void FileOperationsCloud::Create(fuse_req_t req, fuse_ino_t parent, const char *
     fuse_reply_create(req, &e, fi);
 }
 
-void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
-                                  struct fuse_file_info *fi)
+static size_t FindNextPos(const vector<CloudDiskFileInfo> &childInfos, off_t off)
+{
+    for (size_t i = 0; i < childInfos.size(); i++) {
+        /* Find the first valid offset beyond @off */
+        if (childInfos[i].nextOff > off) {
+            return i + 1;
+        }
+    }
+    /* If @off is beyond all valid offset, then return the index after the last info */
+    if (!childInfos.empty() && childInfos.back().nextOff < off) {
+        return childInfos.size();
+    }
+    return 0;
+}
+
+static int32_t GetChildInfos(fuse_req_t req, fuse_ino_t ino, vector<CloudDiskFileInfo> &childInfos)
 {
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
     string parentCloudId = inoPtr->cloudId;
 
-    vector<CloudDiskFileInfo> childInfos;
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
     int32_t err = rdbStore->ReadDir(parentCloudId, childInfos);
     if (err != 0) {
         LOGE("Readdir failed cloudId:%{public}s err:%{public}d", parentCloudId.c_str(), err);
-        return (void) fuse_reply_err(req, err);
+        return err;
+    }
+    return 0;
+}
+
+static size_t CloudSeekDir(fuse_req_t req, fuse_ino_t ino, off_t off,
+                           const vector<CloudDiskFileInfo> &childInfos)
+{
+    if (off == 0 || childInfos.empty()) {
+        return 0;
     }
 
-    string entryData;
-    size_t len = 0;
-    for (size_t i = 0; i < childInfos.size(); i++) {
-        shared_ptr<CloudDiskInode> childPtr = make_shared<CloudDiskInode>();
-        if (childInfos[i].IsDirectory) {
-            childPtr->stat.st_mode = S_IFDIR | STAT_MODE_DIR;
-        } else {
-            childPtr->stat.st_mode = S_IFREG | STAT_MODE_REG;
+    size_t i = 0;
+    for (; i < childInfos.size(); i++) {
+        if (childInfos[i].nextOff == off) {
+            /* Start position should be the index of next entry */
+            return i + 1;
         }
-        FileOperationsHelper::AddDirEntry(req, entryData, len, childInfos[i].fileName.c_str(), childPtr);
     }
-    FileOperationsHelper::FuseReplyLimited(req, entryData.c_str(), len, off, size);
-    return;
+    if (i == childInfos.size()) {
+        /* The directory may changed recently, find the next valid index for this offset */
+        return FindNextPos(childInfos, off);
+    }
+
+    return 0;
+}
+
+void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
+                                  struct fuse_file_info *fi)
+{
+    vector<CloudDiskFileInfo> childInfos;
+    int32_t err = GetChildInfos(req, ino, childInfos);
+    if (err != 0) {
+        return (void)fuse_reply_err(req, err);
+    }
+
+    size_t startPos = CloudSeekDir(req, ino, off, childInfos);
+    string buf;
+    buf.resize(size);
+    if (childInfos.empty() || startPos == childInfos.size()) {
+        return (void)fuse_reply_buf(req, buf.c_str(), 0);
+    }
+
+    size_t nextOff = 0;
+    size_t remain = size;
+    static const struct stat STAT_INFO_DIR = { .st_mode = S_IFDIR | STAT_MODE_DIR };
+    static const struct stat STAT_INFO_REG = { .st_mode = S_IFREG | STAT_MODE_REG };
+    for (size_t i = startPos; i < childInfos.size(); i++) {
+        size_t alignSize = CloudDiskRdbUtils::FuseDentryAlignSize(childInfos[i].fileName.c_str());
+        if (alignSize > remain) {
+            break;
+        }
+        alignSize = fuse_add_direntry(req, &buf[nextOff], alignSize, childInfos[i].fileName.c_str(),
+            childInfos[i].IsDirectory ? &STAT_INFO_DIR : &STAT_INFO_REG,
+            off + static_cast<off_t>(nextOff) + static_cast<off_t>(alignSize));
+        nextOff += alignSize;
+        remain -= alignSize;
+    }
+    (void)fuse_reply_buf(req, buf.c_str(), size - remain);
 }
 
 void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
