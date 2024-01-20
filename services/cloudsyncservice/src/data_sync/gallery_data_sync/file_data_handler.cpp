@@ -274,6 +274,10 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
     const std::map<std::string, int> &recordIdRowIdMap)
 {
     int32_t ret = E_OK;
+    uint64_t success = 0;
+    uint64_t rdbFail = 0;
+    uint64_t dataFail = 0;
+
     for (auto &record : *records) {
         int32_t fileId = 0;
         ChangeType changeType = ChangeType::INVAILD;
@@ -297,15 +301,15 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
         if (ret != E_OK) {
             LOGE("recordId %s error %{public}d", record.GetRecordId().c_str(), ret);
             if (ret == E_RDB) {
-                UpdateMetaStat(INDEX_DL_META_ERROR_RDB, 1);
+                rdbFail++;
                 continue;
             }
             /* might need to specifiy which type error */
-            UpdateMetaStat(INDEX_DL_META_ERROR_DATA, 1);
+            dataFail++;
             ret = E_OK;
         } else {
             if (changeType != ChangeType::INSERT && changeType != ChangeType::INVAILD) {
-                UpdateMetaStat(INDEX_DL_META_SUCCESS, 1);
+                success++;
             }
         }
         if (changeType != ChangeType::INVAILD) {
@@ -313,6 +317,10 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
             DataSyncNotifier::GetInstance().TryNotify(notifyUri, changeType, to_string(fileId));
         }
     }
+
+    UpdateMetaStat(INDEX_DL_META_SUCCESS, success);
+    UpdateMetaStat(INDEX_DL_META_ERROR_RDB, rdbFail);
+    UpdateMetaStat(INDEX_DL_META_ERROR_DATA, dataFail);
 
     return ret;
 }
@@ -1049,18 +1057,19 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
     uint64_t lcdError = 0;
 
     for (const auto &it : resultMap) {
+        auto asset = it.first;
         if (it.second.IsSuccess()) {
+            LOGI("%{public}s %{public}s %{public}s download succeed", asset.recordId.c_str(),
+                asset.asset.assetName.c_str(), asset.fieldKey.c_str());
             continue;
         }
+
         if (it.first.fieldKey == FILE_THUMBNAIL) {
             thumbError++;
             if (IsPullRecords()) {
                 continue;
             }
             // set visible when download failed
-            LOGE("record %s %{public}s download failed, localErr: %{public}d, serverErr: %{public}d",
-                 it.first.recordId.c_str(), it.first.fieldKey.c_str(),
-                 static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
             LOGI("update sync_status to visible of record %s", it.first.recordId.c_str());
             int updateRows;
             ValuesBucket values;
@@ -1076,6 +1085,9 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
         } else if (it.first.fieldKey == FILE_LCD) {
             lcdError++;
         }
+        LOGE("%{public}s %{public}s %{public}s download fail, localErr: %{public}d, serverErr: %{public}d",
+            asset.recordId.c_str(), asset.asset.assetName.c_str(), asset.fieldKey.c_str(),
+            static_cast<int>(it.second.GetDKError().dkErrorCode), it.second.GetDKError().serverErrorCode);
     }
 
     if (thumbError > 0) {
