@@ -30,6 +30,7 @@ struct CloudDiskFileInfo {
     unsigned long long ctime{0};
     unsigned long long mtime{0};
     bool IsDirectory{false};
+    off_t nextOff{0};
 };
 
 namespace {

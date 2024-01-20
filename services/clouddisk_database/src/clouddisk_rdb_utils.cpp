@@ -12,8 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+ 
+#define FUSE_USE_VERSION 34
 
 #include "clouddisk_rdb_utils.h"
+
+#include <fuse_lowlevel.h>
 
 #include "utils_log.h"
 #include "dfs_error.h"
@@ -117,6 +121,11 @@ int32_t CloudDiskRdbUtils::ResultSetToFileInfo(const shared_ptr<ResultSet> resul
     return E_OK;
 }
 
+size_t CloudDiskRdbUtils::FuseDentryAlignSize(const char *name)
+{
+    return fuse_add_direntry({}, nullptr, 0, name, nullptr, 0);
+}
+
 int32_t CloudDiskRdbUtils::ResultSetToFileInfos(const shared_ptr<ResultSet> resultSet,
                                                 vector<CloudDiskFileInfo> &infos)
 {
@@ -124,12 +133,15 @@ int32_t CloudDiskRdbUtils::ResultSetToFileInfos(const shared_ptr<ResultSet> resu
         LOGE("result set is nullptr");
         return E_RDB;
     }
+    off_t nextOff = 0;
     while (resultSet->GoToNextRow() == E_OK) {
         CloudDiskFileInfo info;
         GetString(FileColumn::FILE_NAME, info.fileName, resultSet);
         int32_t isDirectory;
         GetInt(FileColumn::IS_DIRECTORY, isDirectory, resultSet);
         info.IsDirectory = (isDirectory == DIRECTORY);
+        nextOff += FuseDentryAlignSize(info.fileName.c_str());
+        info.nextOff = nextOff;
         infos.emplace_back(info);
     }
     return E_OK;
