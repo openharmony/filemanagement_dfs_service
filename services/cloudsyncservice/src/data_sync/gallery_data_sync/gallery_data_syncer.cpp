@@ -467,6 +467,7 @@ int32_t GalleryDataSyncer::InitSysEventData()
 
     int32_t ret = GetHandler();
     if (ret != E_OK) {
+        syncStat_ = nullptr;
         return ret;
     }
 
@@ -479,6 +480,10 @@ int32_t GalleryDataSyncer::InitSysEventData()
 
 void GalleryDataSyncer::FreeSysEventData()
 {
+    if (syncStat_ == nullptr) {
+        return;
+    }
+
     /* dec ref to sync data */
     fileHandler_->PutSyncStat();
     albumHandler_->PutSyncStat();
