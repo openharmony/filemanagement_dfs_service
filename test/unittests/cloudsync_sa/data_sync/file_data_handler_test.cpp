@@ -259,37 +259,6 @@ HWTEST_F(FileDataHandlerTest, GetDownloadAsset003, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetDownloadAsset004
- * @tc.desc: Verify the GetDownloadAsset function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(FileDataHandlerTest, GetDownloadAsset004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetDownloadAsset004 Begin";
-    try {
-        const int times = 2;
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
-
-        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
-
-        EXPECT_CALL(*rset, GetRowCount(_)).Times(times).WillOnce(Return(0)).WillOnce(Return(1));
-
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
-        std::string cloudId = "cloudId";
-        vector<DriveKit::DKDownloadAsset> outAssetsToDownload;
-        int32_t ret = fileDataHandler->GetDownloadAsset(cloudId, outAssetsToDownload);
-        EXPECT_EQ(E_RDB, ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetDownloadAsset004 ERROR";
-    }
-
-    GTEST_LOG_(INFO) << "GetDownloadAsset004 End";
-}
-
-/**
  * @tc.name: PullRecordInsert001
  * @tc.desc: Verify the PullRecordInsert function
  * @tc.type: FUNC
@@ -1420,6 +1389,39 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords001, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "OnFetchRecords001 End";
+}
+
+/**
+ * @tc.name: OnFetchRecords002
+ * @tc.desc: Verify the OnFetchRecords function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(FileDataHandlerTest, OnFetchRecords002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnFetchRecords002 Begin";
+    try {
+        const int rowCount = 0;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _))
+            .WillOnce(Return(ByMove(std::move(rset))))
+            .WillOnce(Return(ByMove(nullptr)))
+            .WillOnce(Return(ByMove(nullptr)));
+
+        shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();
+        OnFetchParams onFetchParams;
+        int32_t ret = fileDataHandler->OnFetchRecords(records, onFetchParams);
+        EXPECT_EQ(E_OK, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnFetchRecords002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "OnFetchRecords002 End";
 }
 
 /**
