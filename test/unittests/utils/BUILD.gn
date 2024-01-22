@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Copyright (C) 2023-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -82,10 +82,42 @@ ohos_unittest("utils_directory_test") {
   use_exceptions = true
 }
 
+ohos_unittest("cloud_file_utils_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "./cloud_disk/cloud_file_utils_test.cpp" ]
+
+  include_dirs = [
+    "${utils_path}/cloud_disk/include",
+    "${utils_path}/log/include",
+    "//foundation/multimedia/image_framework/mock/native/include/log/",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_SA\"",
+  ]
+  use_exceptions = true
+}
+
 group("utils_test") {
   testonly = true
 
   deps = [
+    ":cloud_file_utils_test",
     ":cloud_pref_impl_test",
     ":utils_directory_test",
   ]
