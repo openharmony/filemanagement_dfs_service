@@ -550,10 +550,10 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
     err = DoCloudLookup(req, parent, name, &e);
     if (err != 0) {
         LOGE("Faile to find dir %{private}s", name);
-        return (void) fuse_reply_err(req, err);
+        fuse_reply_err(req, err);
+    } else {
+        fuse_reply_entry(req, &e);
     }
-    fuse_reply_entry(req, &e);
-    fuse_reply_err(req, 0);
 }
 
 int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)

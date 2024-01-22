@@ -354,10 +354,19 @@ int32_t CloudDiskDataHandler::ConflictReName(const string &cloudId, string newFi
 
 static int32_t IsFileContentChanged(const DKRecord &record, NativeRdb::ResultSet &local, bool &isChange)
 {
-    int64_t localEditTime = 0;
-    int64_t recordEditTime = 0;
     DKRecordData data;
     record.GetRecordData(data);
+    string fileType;
+    if (data.find(DK_IS_DIRECTORY) == data.end() ||
+        data.at(DK_IS_DIRECTORY).GetString(fileType) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract type error");
+        return E_INVAL_ARG;
+    }
+    if (fileType == "directory") {
+        return E_OK;
+    }
+    int64_t localEditTime = 0;
+    int64_t recordEditTime = 0;
     if (data.find(DK_FILE_ATTRIBUTES) == data.end()) {
         LOGW("record data cannot find attributes");
         recordEditTime = static_cast<int64_t>(record.GetEditedTime());
