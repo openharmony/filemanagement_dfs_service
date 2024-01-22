@@ -27,8 +27,11 @@ const std::string USER_ID = "userId";
 const std::string BUNDLE_NAME = "bundleName";
 const std::string SYNC_STATE = "syncState";
 const std::string LAST_SYNC_TIME = "lastSyncTime";
+const std::string DATA_SYNCER_UNIQUE_ID = "dataSyncerUniqueId";
 
 const std::string DATA_SYNCER_TABLE = "DataSyncers";
+
+const std::string DATA_SYNCER_UNIQUE_INDEX = "DataSyncersUniqueIndex";
 
 const std::string CREATE_DATA_SYNCER_TABLE = "CREATE TABLE IF NOT EXISTS " +
     DATA_SYNCER_TABLE + " (" +
@@ -45,7 +48,10 @@ const std::set<std::string> DATA_SYNCER_COL = {
 const std::string EL1_CLOUDFILE_DIR = "/data/service/el1/public/cloudfile";
 const std::string DATA_SYNCER_DB = "DataSyncers.db";
 
-const int32_t CLOUD_DISK_RDB_VERSION = 1;
+const int32_t CLOUD_DISK_RDB_VERSION = 2;
+enum {
+    VERSION_ADD_DATA_SYNCER_UNIQUE_INDEX = 2,
+};
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

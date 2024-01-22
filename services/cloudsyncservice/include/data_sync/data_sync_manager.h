@@ -21,6 +21,7 @@
 #include <mutex>
 #include <vector>
 
+#include "safe_map.h"
 #include "i_cloud_download_callback.h"
 #include "data_sync/data_syncer.h"
 
@@ -56,7 +57,7 @@ public:
 
     int32_t GetUserId(int32_t &userId);
 private:
-    std::vector<std::shared_ptr<DataSyncer>> dataSyncers_;
+    SafeMap<const std::string, std::shared_ptr<DataSyncer>> dataSyncersMap_;
     std::mutex dataSyncMutex_;
     std::mutex cleanMutex_;
     int32_t currentUserId_{INVALID_USER_ID};

@@ -185,17 +185,15 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
 
 std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bundle, const int32_t userId)
 {
-    std::lock_guard<std::mutex> lck(dataSyncMutex_);
     currentUserId_ = userId;
     string bundleName;
     Convert2BundleName(bundle, bundleName);
-    for (auto dataSyncer : dataSyncers_) {
-        if ((dataSyncer->GetBundleName() == bundleName) && (dataSyncer->GetUserId() == userId)) {
-            return dataSyncer;
-        }
+    string key = bundleName + to_string(userId);
+    std::shared_ptr<DataSyncer> dataSyncer;
+    if (dataSyncersMap_.Find(key, dataSyncer)) {
+        return dataSyncer;
     }
 
-    std::shared_ptr<DataSyncer> dataSyncer;
     if (bundleName == GALLERY_BUNDLE_NAME) {
         dataSyncer = std::make_shared<GalleryDataSyncer>(GALLERY_BUNDLE_NAME, userId);
     } else {
@@ -205,8 +203,7 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bu
     if (ret != E_OK) {
         return nullptr;
     }
-
-    dataSyncers_.push_back(dataSyncer);
+    dataSyncersMap_.EnsureInsert(key, dataSyncer);
     DataSyncerRdbStore::GetInstance().Insert(userId, bundleName);
     return dataSyncer;
 }

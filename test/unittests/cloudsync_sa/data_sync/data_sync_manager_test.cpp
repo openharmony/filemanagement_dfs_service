@@ -90,7 +90,7 @@ HWTEST_F(DataSyncManagerTest, GetExistDataSyncerTest, TestSize.Level1)
     dataSyncer = dataSyncManager_->GetDataSyncer(BUND_NAME_TEST, USER_ID);
     EXPECT_EQ(USER_ID, dataSyncer->GetUserId());
     EXPECT_EQ(BUND_NAME_TEST, dataSyncer->GetBundleName());
-    EXPECT_EQ(dataSyncManager_->dataSyncers_.size(), 1);
+    EXPECT_EQ(dataSyncManager_->dataSyncersMap_.Size(), 1);
 }
 
 /**
@@ -110,7 +110,7 @@ HWTEST_F(DataSyncManagerTest, GetDataSyncerdifferentBundleNameTest, TestSize.Lev
     dataSyncer = dataSyncManager_->GetDataSyncer(bundleName2, USER_ID);
     EXPECT_EQ(USER_ID, dataSyncer->GetUserId());
     EXPECT_EQ(bundleName2, dataSyncer->GetBundleName());
-    EXPECT_EQ(dataSyncManager_->dataSyncers_.size(), 2);
+    EXPECT_EQ(dataSyncManager_->dataSyncersMap_.Size(), 2);
 }
 
 /**
