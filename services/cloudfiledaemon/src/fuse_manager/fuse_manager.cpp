@@ -514,7 +514,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     }
 
     if (*readSize < 0) {
-        LOGE("readSize:%ld", *readSize);
+        LOGE("readSize:%lld", *readSize);
         fuse_reply_err(req, ENOMEM);
         return;
     }
