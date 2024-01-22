@@ -57,6 +57,7 @@ constexpr uint32_t DAY_TO_SECONDS = 24 * 60 * 60;
 constexpr uint32_t TO_MILLISECONDS = 1000;
 static const string HMDFS_PATH_PREFIX = "/mnt/hmdfs/";
 static const string CLOUD_MERGE_VIEW_PATH_SUFFIX = "/account/cloud_merge_view";
+static const string TMP_SUFFIX = ".temp.download";
 static const double START_AGING_SIZE = 0.5;
 static const double STOP_AGING_SIZE = 0.6;
 static const double LOWEST_START_AGING_SIZE = 0.15;
@@ -181,7 +182,7 @@ void FileDataHandler::AppendToDownload(NativeRdb::ResultSet &local,
     downloadAsset.recordId = recordId;
 
     const string &suffix = (fieldKey == "lcd") ? LCD_SUFFIX : THUMB_SUFFIX;
-    downloadAsset.downLoadPath = createConvertor_.GetThumbPath(filePath, suffix);
+    downloadAsset.downLoadPath = createConvertor_.GetThumbPath(filePath, suffix) + TMP_SUFFIX;
     downloadAsset.asset.assetName = MetaFile::GetFileName(downloadAsset.downLoadPath);
     downloadAsset.downLoadPath = MetaFile::GetParentDir(downloadAsset.downLoadPath);
     ForceCreateDirectory(downloadAsset.downLoadPath);
@@ -484,10 +485,19 @@ int FileDataHandler::DentryRemoveThumb(const string &downloadPath)
         LOGE("split to dentry path failed, path:%s", thumbnailPath.c_str());
         return E_INVAL_ARG;
     }
-
     auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
     MetaBase mBase(fileName, "");
-    return mFile->DoRemove(mBase);
+    int ret = mFile->DoRemove(mBase);
+    if (ret != E_OK) {
+        LOGE("remove dentry failed, ret:%{public}d", ret);
+    }
+
+    string cloudMergeViewPath = GetCloudMergeViewPath(userId_, relativePath + "/" + mBase.name);
+    if (remove(cloudMergeViewPath.c_str()) != 0) {
+        LOGE("update kernel dentry cache fail, errno: %{public}d, cloudMergeViewPath: %{public}s",
+             errno, cloudMergeViewPath.c_str());
+    }
+    return E_OK;
 }
 
 int FileDataHandler::AddCloudThumbs(const DKRecord &record)
@@ -1114,7 +1124,13 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
         std::lock_guard<std::mutex> lock(lcdMutex_);
         lcdVec_.emplace_back(asset.recordId);
     }
-    DentryRemoveThumb(asset.downLoadPath + "/" + asset.asset.assetName);
+    string tempPath = asset.downLoadPath + "/" + asset.asset.assetName;
+    string localPath = CloudDisk::CloudFileUtils::GetPathWithoutTmp(tempPath);
+    DentryRemoveThumb(localPath);
+    if (rename(tempPath.c_str(), localPath.c_str()) != 0) {
+        LOGE("err rename, errno: %{public}d, tmpLocalPath: %s, localPath: %s",
+             errno, tempPath.c_str(), localPath.c_str());
+    }
     MetaFileMgr::GetInstance().ClearAll();
     return E_OK;
 }
@@ -1600,7 +1616,7 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     attributes[PhotoColumn::MEDIA_FILE_PATH].GetString(path);
     if (fieldKey != "content") {
         const string &suffix = fieldKey == "lcd" ? LCD_SUFFIX : THUMB_SUFFIX;
-        downloadAsset.downLoadPath = createConvertor_.GetThumbPath(path, suffix);
+        downloadAsset.downLoadPath = createConvertor_.GetThumbPath(path, suffix) + TMP_SUFFIX;
     } else {
         downloadAsset.downLoadPath = createConvertor_.GetLowerTmpPath(path);
     }
