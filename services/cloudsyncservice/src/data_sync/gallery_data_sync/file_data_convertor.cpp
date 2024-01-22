@@ -303,7 +303,7 @@ int32_t FileDataConvertor::HandleThumbSize(DriveKit::DKRecordFieldMap &map,
     int err = stat(thumbnailPath.c_str(), &fileStat);
     if (err < 0) {
         LOGE("get thumb size failed errno :%{public}d", errno);
-        return E_INVAL_ARG;
+        return E_PATH;
     }
 
     map[FILE_THUMB_SIZE] = DriveKit::DKRecordField(int64_t(fileStat.st_size));
@@ -329,7 +329,7 @@ int32_t FileDataConvertor::HandleLcdSize(DriveKit::DKRecordFieldMap &map,
     int err = stat(lcdPath.c_str(), &fileStat);
     if (err < 0) {
         LOGE("get lcd size failed errno :%{public}d", errno);
-        return E_INVAL_ARG;
+        return E_PATH;
     }
 
     map[FILE_LCD_SIZE] = DriveKit::DKRecordField(int64_t(fileStat.st_size));
@@ -680,8 +680,8 @@ int32_t FileDataConvertor::CompensateData(DriveKit::DKRecordData &data, NativeRd
 int32_t FileDataConvertor::CompensateTitle(DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket)
 {
     if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
-        return E_INVAL_ARG;
+        LOGW("record data cannot find properties");
+        return E_OK;
     }
     DriveKit::DKRecordFieldMap prop;
     data[FILE_PROPERTIES].GetRecordMap(prop);
@@ -756,8 +756,8 @@ int32_t FileDataConvertor::CompensateSubtype(DriveKit::DKRecordData &data,
     NativeRdb::ValuesBucket &valueBucket)
 {
     if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
-        return E_INVAL_ARG;
+        LOGW("record data cannot find properties");
+        return E_OK;
     }
     DriveKit::DKRecordFieldMap prop;
     data[FILE_PROPERTIES].GetRecordMap(prop);
@@ -787,8 +787,8 @@ int32_t FileDataConvertor::CompensateDuration(DriveKit::DKRecordData &data,
     NativeRdb::ValuesBucket &valueBucket)
 {
     if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGE("record data cannot find properties");
-        return E_INVAL_ARG;
+        LOGW("record data cannot find properties");
+        return E_OK;
     }
     DriveKit::DKRecordFieldMap prop;
     data[FILE_PROPERTIES].GetRecordMap(prop);
@@ -875,19 +875,6 @@ int32_t FileDataConvertor::ExtractAttributeValue(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::ExtractCompatibleValue(const DriveKit::DKRecord &record,
     DriveKit::DKRecordData &data, NativeRdb::ValuesBucket &valueBucket)
 {
-    if (data.find(FILE_PROPERTIES) == data.end()) {
-        LOGI("record data cannot find properties");
-        return E_OK;
-    }
-    DriveKit::DKRecordFieldMap prop;
-    data[FILE_PROPERTIES].GetRecordMap(prop);
-
-    /* extract value in properties*/
-    RETURN_ON_ERR(ExtractOrientation(prop, valueBucket));
-    RETURN_ON_ERR(ExtractPosition(prop, valueBucket));
-    RETURN_ON_ERR(ExtractHeight(prop, valueBucket));
-    RETURN_ON_ERR(ExtractWidth(prop, valueBucket));
-
     /* extract value in first level*/
     RETURN_ON_ERR(ExtractSize(data, valueBucket));
     RETURN_ON_ERR(ExtractDisplayName(data, valueBucket));
@@ -900,6 +887,19 @@ int32_t FileDataConvertor::ExtractCompatibleValue(const DriveKit::DKRecord &reco
     RETURN_ON_ERR(ExtractDateTrashed(data, valueBucket));
     RETURN_ON_ERR(ExtractCloudId(record, valueBucket));
     RETURN_ON_ERR(ExtractDescription(data, valueBucket));
+
+    if (data.find(FILE_PROPERTIES) == data.end()) {
+        LOGW("record data cannot find properties");
+        return E_OK;
+    }
+    DriveKit::DKRecordFieldMap prop;
+    data[FILE_PROPERTIES].GetRecordMap(prop);
+
+    /* extract value in properties*/
+    RETURN_ON_ERR(ExtractOrientation(prop, valueBucket));
+    RETURN_ON_ERR(ExtractPosition(prop, valueBucket));
+    RETURN_ON_ERR(ExtractHeight(prop, valueBucket));
+    RETURN_ON_ERR(ExtractWidth(prop, valueBucket));
     return E_OK;
 }
 
