@@ -110,6 +110,7 @@ private:
     int64_t UTCTimeSeconds();
 
     int32_t EraseLocalInfo(std::vector<DriveKit::DKRecord> &records);
+    int32_t UpdateMediaFilePath(DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
 
     /* data calculate*/
     int32_t CompensateFilePath(DriveKit::DKRecord &record);

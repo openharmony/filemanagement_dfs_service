@@ -52,6 +52,7 @@ public:
 
     std::string GetThumbPath(const std::string &path, const std::string &key);
     std::string GetHmdfsLocalPath(const std::string &path);
+    std::string GetThumbParentPath(const std::string &path);
     std::string GetThumbPathInCloud(const std::string &path, const std::string &key);
     std::string GetLocalPathToCloud(const std::string &path);
     /* path conversion */

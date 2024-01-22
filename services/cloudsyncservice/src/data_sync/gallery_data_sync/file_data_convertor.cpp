@@ -302,7 +302,7 @@ int32_t FileDataConvertor::HandleThumbSize(DriveKit::DKRecordFieldMap &map,
     struct stat fileStat;
     int err = stat(thumbnailPath.c_str(), &fileStat);
     if (err < 0) {
-        LOGD("get thumb size failed errno :%{public}d", errno);
+        LOGE("get thumb size failed errno :%{public}d", errno);
         return E_INVAL_ARG;
     }
 
@@ -570,6 +570,17 @@ string FileDataConvertor::GetThumbPath(const string &path, const string &key)
     /* transform sandbox path */
     return prefixLCD_ + to_string(userId_) + suffixLCD_ + "/" + Media::GetThumbnailPath(path,
         key).substr(ROOT_MEDIA_DIR.length());
+}
+
+string FileDataConvertor::GetThumbParentPath(const string &path)
+{
+    size_t pos = path.find_first_of(sandboxPrefix_);
+    if (pos == string::npos) {
+        LOGE("invalid path %{private}s", path.c_str());
+        return "";
+    }
+    /* transform sandbox path to hmdfs local path*/
+    return "/storage/cloud/" + to_string(userId_) + "/files/.thumbs" + path.substr(pos + sandboxPrefix_.size());
 }
 
 string FileDataConvertor::GetHmdfsLocalPath(const string &path)
