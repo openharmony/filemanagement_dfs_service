@@ -63,18 +63,21 @@ int32_t TaskRunner::StartTask(shared_ptr<Task> t, TaskAction action)
      * Try to execute the previous callback even in stop process.
      * Yet no new task could be added in the callback.
      */
+    LOGI("StartTask begin, Task id: %{public}d", t->GetId());
     t->SetAction(action);
     int32_t ret = commitFunc_(shared_from_this(), t);
     if (ret != E_OK) {
         LOGE("commit task err %{public}d", ret);
         return ret;
     }
+    LOGI("StartTask end, Task id: %{public}d", t->GetId());
     return E_OK;
 }
 
 int32_t TaskRunner::CommitTask(shared_ptr<Task> t)
 {
     /* add task */
+    LOGI("start CommitTask, Task id: %{public}d", t->GetId());
     int32_t ret = AddTask(t);
     if (ret != E_OK) {
         LOGE("add task err %{public}d", ret);
@@ -88,6 +91,7 @@ int32_t TaskRunner::CommitTask(shared_ptr<Task> t)
         return ret;
     }
 
+    LOGI("CommitTask success,Task id: %{public}d", t->GetId());
     return E_OK;
 }
 
@@ -104,6 +108,7 @@ void TaskRunner::CompleteTask(int32_t id)
         }
     }
 
+    LOGI("taskList size: %{public}d, Task id: %{public}d", taskList_.size(), t->GetId());
     if (taskList_.empty()) {
         if (stopFlag_) {
             /* if it has been stopped, notify the blocking caller */
@@ -205,11 +210,13 @@ void TaskManager::InitRunner(TaskRunner &runner)
 
 int32_t TaskManager::CommitTask(shared_ptr<TaskRunner> runner, shared_ptr<Task> t)
 {
+    LOGI("CommitTask begin, Task id: %{public}d", t->GetId());
     pool_.AddTask([t, runner]() {
         DfsuMemoryGuard cacheGuard;
         t->Run();
         runner->CompleteTask(t->GetId());
     });
+    LOGI("CommitTask end, Task id: %{public}d", t->GetId());
     return E_OK;
 }
 
