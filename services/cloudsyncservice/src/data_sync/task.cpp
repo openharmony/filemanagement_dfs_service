@@ -108,7 +108,7 @@ void TaskRunner::CompleteTask(int32_t id)
         }
     }
 
-    LOGI("taskList size: %{public}d, Task id: %{public}d", taskList_.size(), id);
+    LOGI("taskList size: %{public}zu, Task id: %{public}d", taskList_.size(), id);
     if (taskList_.empty()) {
         if (stopFlag_) {
             /* if it has been stopped, notify the blocking caller */
