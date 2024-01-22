@@ -219,6 +219,7 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     PhotoColumn::MEDIA_RELATIVE_PATH,
     PhotoColumn::MEDIA_DATE_ADDED,
     PhotoColumn::PHOTO_META_DATE_MODIFIED,
+    PhotoColumn::MEDIA_FILE_PATH
 };
 
 tuple<shared_ptr<NativeRdb::ResultSet>, map<string, int>> FileDataHandler::QueryLocalByCloudId(
@@ -1318,11 +1319,16 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
             DentryInsert(userId_, record);
         }
     }
-
     LOGI("cloud file META changed, %s", record.GetRecordId().c_str());
+
     /* update rdb */
     ValuesBucket values;
     createConvertor_.RecordToValueBucket(record, values);
+    ret = UpdateMediaFilePath(record, local);
+    if (ret != E_OK) {
+        LOGE("update media file path fail, ret = %{public}d", ret);
+        values.Delete(PC::MEDIA_FILE_PATH);
+    }
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     values.PutInt(PhotoMap::DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
     int32_t changedRows;
@@ -2586,6 +2592,54 @@ static string GetFilePathFromRecord(const DKRecord &record)
         return "";
     }
     return path;
+}
+
+int32_t FileDataHandler::UpdateMediaFilePath(DriveKit::DKRecord &record, NativeRdb::ResultSet &local)
+{
+    string newFileName = "";
+    string relativePath = "";
+    DKRecordData data;
+    record.GetRecordData(data);
+    string filePath = GetFilePathFromRecord(record);
+    if (filePath.empty()) {
+        return E_INVAL_ARG;
+    }
+    if (GetDentryPathName(filePath, relativePath, newFileName) != E_OK) {
+        LOGE("split filePath to dentry path failed, path:%s", filePath.c_str());
+        return E_INVAL_ARG;
+    }
+    string newThumbParentPath = createConvertor_.GetThumbParentPath(filePath);
+    bool isDataChanged = access(newThumbParentPath.c_str(), F_OK) == 0;
+    if (!isDataChanged) {
+        LOGI("media file path change");
+        string oldFilePath = "";
+        string oldFileName = "";
+        int32_t ret = DataConvertor::GetString(PC::MEDIA_FILE_PATH, oldFilePath, local);
+        if (ret != E_OK) {
+            return ret;
+        }
+        if (GetDentryPathName(oldFilePath, relativePath, oldFileName) != E_OK) {
+            LOGE("split old filePath to dentry path failed, path:%s", oldFilePath.c_str());
+            return E_INVAL_ARG;
+        }
+        LOGI("update media file path, old path is %{public}s, new path is %{public}s",
+            oldFilePath.c_str(), filePath.c_str());
+        auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
+        MetaBase mBase(oldFileName);
+        ret = mFile->DoRename(mBase, newFileName);
+        if (ret != E_OK) {
+            LOGE("rename dentry failed, ret:%{public}d", ret);
+        }
+        string oldThumbParentPath = createConvertor_.GetThumbParentPath(oldFilePath);
+        ret = rename(oldThumbParentPath.c_str(), newThumbParentPath.c_str());
+        if (ret != E_OK) {
+            MetaBase mBase(newFileName);
+            ret = mFile->DoRename(mBase, oldFileName);
+            LOGE("rename thmbPath faill, errno is %{public}d, restore dentry file ret is %{public}d", errno, ret);
+            return E_RENAME_FAIL;
+        }
+    }
+    return E_OK;
 }
 
 int32_t FileDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOperResult> &map)
