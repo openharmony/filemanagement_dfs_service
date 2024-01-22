@@ -62,7 +62,7 @@ static const unsigned int STAT_NLINK_REG = 1;
 static const unsigned int STAT_NLINK_DIR = 2;
 static const unsigned int STAT_MODE_REG = 0770;
 static const unsigned int STAT_MODE_DIR = 0771;
-static const unsigned int READ_TIMEOUT_MS = 4000;
+static const unsigned int READ_TIMEOUT_MS = 10000;
 static const unsigned int MAX_READ_SIZE = 2 * 1024 * 1024;
 
 struct CloudInode {
@@ -509,10 +509,15 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     if (waitStatus == cv_status::timeout) {
         LOGD("Pread timeout, %s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
         ChangeReadAvailable(cInode, readAvailable);
-        fuse_reply_err(req, ENOTCONN);
+        fuse_reply_err(req, ENETUNREACH);
         return;
     }
 
+    if (*readSize < 0) {
+        LOGE("readSize:%ld", *readSize);
+        fuse_reply_err(req, ENOMEM);
+        return;
+    }
     if (!HandleDkError(req, *dkError)) {
         LOGD("read success");
         fuse_reply_buf(req, buf.get(), *readSize);
