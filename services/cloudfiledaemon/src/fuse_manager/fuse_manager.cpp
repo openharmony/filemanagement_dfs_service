@@ -454,7 +454,7 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
     fuse_reply_none(req);
 }
 
-static bool PrepareForRead(shared_ptr<char> &buf, size_t size, shared_ptr<CloudInode> cInode)
+static bool PrepareForRead(fuse_req_t req, shared_ptr<char> &buf, size_t size, shared_ptr<CloudInode> cInode)
 {
     if (size > MAX_READ_SIZE) {
         fuse_reply_err(req, EINVAL);
