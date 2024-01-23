@@ -134,6 +134,18 @@ private:
     int32_t GetAlbumIdsFromResultSet(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
         std::vector<int32_t> &add, std::vector<int32_t> &rm);
 
+    /* data check */
+    int32_t CheckDataConsistency(NativeRdb::ResultSet &resultSet);
+
+    int32_t CheckAssetConsistency(NativeRdb::ResultSet &resultSet);
+    int32_t CheckContentConsistency(NativeRdb::ResultSet &resultSet);
+    int32_t CheckThumbConsistency(NativeRdb::ResultSet &resultSet, const std::string &suffix);
+
+    int32_t CheckStatusConsistency(NativeRdb::ResultSet &resultSet);
+    int32_t CheckDirtyConsistency(NativeRdb::ResultSet &resultSet);
+    int32_t CheckPositionConsistency(NativeRdb::ResultSet &resultSet);
+    int32_t CheckSyncStatusConsistency(NativeRdb::ResultSet &resultSet);
+
     static inline const std::string TABLE_NAME = Media::PhotoColumn::PHOTOS_TABLE;
     static inline const int32_t LIMIT_SIZE = 5;
     static inline const int32_t MODIFY_BATCH_NUM = 20;
