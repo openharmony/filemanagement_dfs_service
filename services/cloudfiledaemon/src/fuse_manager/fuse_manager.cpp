@@ -62,7 +62,7 @@ static const unsigned int STAT_NLINK_REG = 1;
 static const unsigned int STAT_NLINK_DIR = 2;
 static const unsigned int STAT_MODE_REG = 0770;
 static const unsigned int STAT_MODE_DIR = 0771;
-static const unsigned int READ_TIMEOUT_MS = 4000;
+static const unsigned int READ_TIMEOUT_MS = 10000;
 static const unsigned int MAX_READ_SIZE = 2 * 1024 * 1024;
 
 struct CloudInode {
