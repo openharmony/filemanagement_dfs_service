@@ -33,7 +33,9 @@ Action SyncStateManager::UpdateSyncState(SyncState newState)
 bool SyncStateManager::CheckAndSetPending(bool forceFlag, SyncTriggerType triggerType)
 {
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
-    if (state_ != SyncState::SYNCING && state_ != SyncState::CLEANING) {
+    if (state_ != SyncState::SYNCING &&
+        state_ != SyncState::CLEANING &&
+        state_ != SyncState::DISABLE_CLOUD) {
         state_ = SyncState::SYNCING;
         nextAction_ = Action::STOP;
         isForceSync_ = forceFlag;
@@ -51,6 +53,13 @@ bool SyncStateManager::CheckAndSetPending(bool forceFlag, SyncTriggerType trigge
         nextAction_ = Action::START;
     }
     return true;
+}
+
+void SyncStateManager::SetDisableCloudFlag()
+{
+    std::unique_lock<std::shared_mutex> lck(syncMutex_);
+    state_ = SyncState::DISABLE_CLOUD;
+    nextAction_ = Action::STOP;
 }
 
 void SyncStateManager::SetCleaningFlag()

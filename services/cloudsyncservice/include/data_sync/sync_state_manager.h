@@ -28,6 +28,8 @@ enum class SyncState : int32_t {
     SYNC_FAILED,
     SYNC_SUCCEED,
     CLEAN_SUCCEED,
+    DISABLE_CLOUD,
+    DISABLE_CLOUD_SUCCEED,
 };
 
 enum class Action : int32_t {
@@ -44,6 +46,7 @@ public:
     void SetCleaningFlag();
     bool GetStopSyncFlag();
     void SetStopSyncFlag();
+    void SetDisableCloudFlag();
     SyncState GetSyncState() const;
     bool GetForceFlag() const;
 
