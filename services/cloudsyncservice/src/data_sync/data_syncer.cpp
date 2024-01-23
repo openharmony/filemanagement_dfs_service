@@ -73,15 +73,15 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     triggerType_ = triggerType;
     startTime_ = GetCurrentTimeStamp();
 
-    int32_t ret = InitSysEventData();
-    if (ret != E_OK) {
-        return E_DATA;
-    }
-
     /* only one specific data sycner running at a time */
     if (syncStateManager_.CheckAndSetPending(forceFlag, triggerType)) {
         LOGI("syncing, pending sync");
         return E_PENDING;
+    }
+
+    int32_t ret = InitSysEventData();
+    if (ret != E_OK) {
+        return E_DATA;
     }
 
     TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::SYNC_TASK);

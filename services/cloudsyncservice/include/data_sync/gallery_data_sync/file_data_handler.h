@@ -243,7 +243,8 @@ private:
     void QueryAndInsertMap(int32_t albumId, int32_t fileId);
     void QueryAndDeleteMap(int32_t fileId, const std::set<int> &cloudMapIds);
     int32_t BatchInsertAssetMaps(OnFetchParams &params);
-    void UpdateVectorToDataBase();
+    void UpdateThmVec();
+    void UpdateLcdVec();
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };

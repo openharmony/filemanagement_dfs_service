@@ -426,11 +426,13 @@ int32_t GalleryDataSyncer::DownloadThumb(int32_t type)
     }
     if (TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK)) {
         LOGI("it's already downloading thumb");
+        PutHandler();
         return E_STOP;
     }
     if (type == DataHandler::DownloadThmType::SCREENOFF_TRIGGER) {
         if (!CheckScreenAndWifi()) {
             LOGI("download thumb condition is not met");
+            PutHandler();
             return E_STOP;
         }
     }
@@ -451,7 +453,12 @@ void GalleryDataSyncer::StopDownloadThumb()
 {
     TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
     if (!TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::SYNC_TASK)) {
+        int32_t ret = GetHandler();
+        if (ret != E_OK) {
+            return;
+        }
         fileHandler_->StopUpdataFiles(timeId_);
+        PutHandler();
     }
 }
 
