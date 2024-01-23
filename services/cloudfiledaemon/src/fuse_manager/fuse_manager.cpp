@@ -454,12 +454,28 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
     fuse_reply_none(req);
 }
 
-static void ChangeReadAvailable(shared_ptr<CloudInode> cInode, shared_ptr<bool> readAvailable)
+static bool PrepareForRead(shared_ptr<char> &buf, size_t size, shared_ptr<CloudInode> cInode)
 {
-    unique_lock<shared_mutex> wLock(cInode->readLock, defer_lock);
-    wLock.lock();
-    *readAvailable = false;
-    wLock.unlock();
+    if (size > MAX_READ_SIZE) {
+        fuse_reply_err(req, EINVAL);
+        return false;
+    }
+    buf.reset(new char[size], [](char* ptr) {
+        delete[] ptr;
+    });
+    if (!buf) {
+        fuse_reply_err(req, ENOMEM);
+        LOGE("buffer is null");
+        return false;
+    }
+
+    if (!cInode->readSession) {
+        fuse_reply_err(req, EPERM);
+        LOGE("read fail, readsession is null");
+        return false;
+    }
+
+    return true;
 }
 
 static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
@@ -471,27 +487,11 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     LOGD("%s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
 
-    if (size > MAX_READ_SIZE) {
-        fuse_reply_err(req, EINVAL);
-        return;
-    }
-    buf.reset(new char[size], [](char* ptr) {
-        delete[] ptr;
-    });
-
-    if (!buf) {
-        fuse_reply_err(req, ENOMEM);
-        LOGE("buffer is null");
+    if (!PrepareForRead(buf, size, cInode)) {
         return;
     }
 
-    if (!cInode->readSession) {
-        fuse_reply_err(req, EPERM);
-        LOGE("read fail, readsession is null");
-        return;
-    }
-
-    shared_ptr<int64_t> readSize = make_shared<int64_t>(-1);
+    shared_ptr<size_t> readSize = make_shared<size_t>(-1);
     shared_ptr<bool> readAvailable = make_shared<bool>(true);
     condition_variable readConVar;
     thread([=, &readConVar]() {
@@ -509,12 +509,20 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     unique_lock<mutex> lock(readMutex);
     auto waitStatus = readConVar.wait_for(lock, chrono::milliseconds(READ_TIMEOUT_MS));
     if (waitStatus == cv_status::timeout) {
-        LOGE("Pread timeout");
-        ChangeReadAvailable(cInode, readAvailable);
+        LOGE("Pread timeout %s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
+        unique_lock<shared_mutex> wLock(cInode->readLock, defer_lock);
+        wLock.lock();
+        *readAvailable = false;
+        wLock.unlock();
         fuse_reply_err(req, ENOTCONN);
         return;
     }
 
+    if (*readSize < 0) {
+        LOGE("readSize: %zd", *readSize);
+        fuse_reply_err(req, ENOMEM);
+        return;
+    }
     if (!HandleDkError(req, *dkError)) {
         LOGD("read success");
         fuse_reply_buf(req, buf.get(), *readSize);
