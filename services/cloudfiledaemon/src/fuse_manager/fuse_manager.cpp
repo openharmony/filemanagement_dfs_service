@@ -487,7 +487,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     LOGD("%s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
 
-    if (!PrepareForRead(buf, size, cInode)) {
+    if (!PrepareForRead(req, buf, size, cInode)) {
         return;
     }
 
