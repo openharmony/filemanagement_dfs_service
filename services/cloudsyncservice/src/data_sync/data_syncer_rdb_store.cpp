@@ -130,6 +130,7 @@ int32_t DataSyncerRdbCallBack::OnCreate(NativeRdb::RdbStore &store)
 {
     vector<string> executeSqlStrs = {
         CREATE_DATA_SYNCER_TABLE,
+        CREATE_DATA_SYNCER_UNIQUE_INDEX,
     };
 
     for (const string& sqlStr : executeSqlStrs) {
@@ -149,9 +150,7 @@ static void VersionAddDataSyncerUniqueIndex(NativeRdb::RdbStore &store)
     const string initUniqueIdColumn =
         "UPDATE " + DATA_SYNCER_TABLE + " SET " +
         DATA_SYNCER_UNIQUE_ID + " = userId || bundleName";
-    const string addDataSyncerUniqueIndex =
-        "CREATE UNIQUE INDEX IF NOT EXISTS " + DATA_SYNCER_UNIQUE_INDEX +
-        " ON " + DATA_SYNCER_TABLE + " (" + DATA_SYNCER_UNIQUE_ID + ")";
+    const string addDataSyncerUniqueIndex = CREATE_DATA_SYNCER_UNIQUE_INDEX;
     const vector<string> addUniqueIndex = { addDataSyncerUniqueIdColumn, initUniqueIdColumn,
         addDataSyncerUniqueIndex};
     for (size_t i = 0; i < addUniqueIndex.size(); i++) {
