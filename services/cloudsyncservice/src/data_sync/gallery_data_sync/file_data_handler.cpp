@@ -3319,13 +3319,15 @@ int32_t FileDataHandler::GetThumbToDownload(std::vector<DriveKit::DKDownloadAsse
     return E_OK;
 }
 
-void FileDataHandler::UpdateVectorToDataBase()
+void FileDataHandler::UpdateThmVec()
 {
-    LOGD("thmVec_ size is %{public}zu, lcdVec_ size is %{public}zu", thmVec_.size(), lcdVec_.size());
     if (!thmVec_.empty()) {
+        LOGI("thmVec_ size is %{public}zu", thmVec_.size());
         string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
-        to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE)) + " , " + PC::PHOTO_THUMB_STATUS + " = " +
-        PC::PHOTO_THUMB_STATUS + " - " + to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD));
+            to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE)) + " , " + PC::PHOTO_THUMB_STATUS +
+            " = CASE WHEN " + PC::PHOTO_THUMB_STATUS + " - " +
+            to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) + " < 0 THEN 0 ELSE " + PC::PHOTO_THUMB_STATUS
+            + " - " + to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) + " END ";
         int32_t ret = E_OK;
         uint64_t total = thmVec_.size();
         std::vector<int> fileIds;
@@ -3352,10 +3354,16 @@ void FileDataHandler::UpdateVectorToDataBase()
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
         DataSyncNotifier::GetInstance().FinalNotify();
     }
+}
 
+void FileDataHandler::UpdateLcdVec()
+{
     if (!lcdVec_.empty()) {
-        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_THUMB_STATUS + " = " + PC::PHOTO_THUMB_STATUS
-            + " - " + to_string(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD));
+        LOGI("lcdVec_ size is %{public}zu", lcdVec_.size());
+        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_THUMB_STATUS + " = CASE WHEN " +
+            PC::PHOTO_THUMB_STATUS + " - " + to_string(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) +
+            " < 0 THEN 0 ELSE " + PC::PHOTO_THUMB_STATUS + " - " +
+            to_string(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) + " END ";
         int32_t ret = E_OK;
         uint64_t total = lcdVec_.size();
         {
@@ -3376,7 +3384,8 @@ void FileDataHandler::PeriodicUpdataFiles(uint32_t &timeId)
 {
     const uint32_t TIMER_INTERVAL = 2000;
     auto timerCallBack = [this]() {
-        UpdateVectorToDataBase();
+        UpdateThmVec();
+        UpdateLcdVec();
     };
     if (timeId == 0) {
         LOGI("start update timer");
@@ -3394,7 +3403,8 @@ void FileDataHandler::StopUpdataFiles(uint32_t &timeId)
         LOGI("stop update timer");
         DfsuTimer::GetInstance().Unregister(timeId);
         while (tryCount <= MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
-            UpdateVectorToDataBase();
+            UpdateThmVec();
+            UpdateLcdVec();
             tryCount++;
         }
         timeId = 0;
