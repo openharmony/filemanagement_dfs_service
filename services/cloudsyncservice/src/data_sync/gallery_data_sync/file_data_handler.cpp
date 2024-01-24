@@ -1378,10 +1378,10 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
     }
 
     /* cloud */
-    string fullPath, relativePath, fileName;
-    int ret = GetDentryPathName(fullPath, relativePath, filePath);
+    string relativePath, fileName;
+    int ret = GetDentryPathName(filePath, relativePath, fileName);
     if (ret != E_OK) {
-        LOGE("split to dentry path failed, path:%s", fullPath.c_str());
+        LOGE("split to dentry path failed, path:%s", filePath.c_str());
         return ret;
     }
     auto dir = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
@@ -1393,6 +1393,7 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
 
     /* check */
     if (local && cloud) {
+        LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", filePath.c_str());
         ret = dir->DoRemove(file);
         if (ret != E_OK) {
             LOGE("remove cloud dentry fail %{public}d", ret);
@@ -1402,11 +1403,13 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
         string cloudId;
         int64_t val;
 
+        LOGE("[CHECK AND FIX] try to fill in cloud dentry %{public}s", filePath.c_str());
+
         ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, resultSet);
         if (ret != E_OK) {
             return ret;
         }
-        file.cloudId = cloudId;
+        file.cloudId = MetaFileMgr::RecordIdToCloudId(cloudId);
 
         ret = DataConvertor::GetLong(PhotoColumn::MEDIA_SIZE, val, resultSet);
         if (ret != E_OK) {
@@ -1463,6 +1466,7 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
     MetaBase file(fileName);
     bool cloud = dir->DoLookup(file) == E_OK;
     if (local && cloud) {
+        LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", thumb.c_str());
         ret = dir->DoRemove(file);
         if (ret != E_OK) {
             LOGE("dir remove file fail %{public}d", ret);
@@ -1473,12 +1477,14 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
         constexpr uint64_t THUMB_SIZE = 2 * 1024 * 1024;
         file.size = THUMB_SIZE;
 
+        LOGE("[CHECK AND FIX] try to fill in cloud dentry %{public}s", thumb.c_str());
+
         string cloudId;
         ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, resultSet);
         if (ret != E_OK) {
             return ret;
         }
-        file.cloudId = cloudId;
+        file.cloudId = MetaFileMgr::RecordIdToCloudId(cloudId);
 
         int64_t val;
         ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, val, resultSet);
@@ -1540,6 +1546,8 @@ int32_t FileDataHandler::CheckDirtyConsistency(NativeRdb::ResultSet &resultSet)
             return E_SYSCALL;
         }
         if (!local) {
+            LOGE("[CHECK AND FIX] try to set dirty as synced %{public}s", filePath.c_str());
+
             ValuesBucket values;
             values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
             int32_t changedRows;
@@ -1580,6 +1588,8 @@ int32_t FileDataHandler::CheckPositionConsistency(NativeRdb::ResultSet &resultSe
         return E_OK;
     }
 
+    LOGE("[CHECK AND FIX] try to change position %{public}s", filePath.c_str());
+
     int32_t changedRows;
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
     ret = Update(changedRows, values, whereClause, { filePath });
@@ -1618,6 +1628,8 @@ int32_t FileDataHandler::CheckSyncStatusConsistency(NativeRdb::ResultSet &result
         LOGE("fail to access %{public}d", errno);
         return E_SYSCALL;
     }
+
+    LOGE("[CHECK AND FIX] try to change sync status %{public}s", filePath.c_str());
 
     ValuesBucket values;
     if (local) {
