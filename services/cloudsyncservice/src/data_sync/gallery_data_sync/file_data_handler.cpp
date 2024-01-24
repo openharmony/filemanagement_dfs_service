@@ -1378,7 +1378,8 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
     }
 
     /* cloud */
-    string relativePath, fileName;
+    string relativePath;
+    string fileName;
     int ret = GetDentryPathName(filePath, relativePath, fileName);
     if (ret != E_OK) {
         LOGE("split to dentry path failed, path:%s", filePath.c_str());
@@ -1452,8 +1453,9 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
     }
 
     /* cloud */
+    string relativePath;
+    string fileName;
     string cloudPath = createConvertor_.GetThumbPathInCloud(filePath, suffix);
-    string relativePath, fileName;
     if (GetDentryPathName(cloudPath, relativePath, fileName) != E_OK) {
         LOGE("split to dentry path failed, path: %s", cloudPath.c_str());
         return E_INVAL_ARG;
