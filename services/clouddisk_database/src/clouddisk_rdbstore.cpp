@@ -568,6 +568,7 @@ static int32_t ExecuteSql(RdbStore &store)
         FileColumn::CREATE_FILE_TABLE,
         CreateFileTriggerSync(store),
         UpdateFileTriggerSync(store),
+        FileColumn::CREATE_PARENT_CLOUD_ID_INDEX,
     };
     for (const string& sqlStr : onCreateSqlStrs) {
         if (store.ExecuteSql(sqlStr) != NativeRdb::E_OK) {
