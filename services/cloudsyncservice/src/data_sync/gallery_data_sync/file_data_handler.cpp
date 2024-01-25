@@ -220,7 +220,9 @@ const std::vector<std::string> PULL_QUERY_COLUMNS = {
     PhotoColumn::MEDIA_RELATIVE_PATH,
     PhotoColumn::MEDIA_DATE_ADDED,
     PhotoColumn::PHOTO_META_DATE_MODIFIED,
-    PhotoColumn::MEDIA_FILE_PATH
+    PhotoColumn::MEDIA_FILE_PATH,
+    PhotoColumn::PHOTO_SYNC_STATUS,
+    PhotoColumn::PHOTO_THUMB_STATUS,
 };
 
 tuple<shared_ptr<NativeRdb::ResultSet>, map<string, int>> FileDataHandler::QueryLocalByCloudId(
@@ -1363,6 +1365,331 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
     return E_OK;
 }
 
+int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet)
+{
+    string filePath = GetFilePath(resultSet);
+    string localPath = GetLocalPath(userId_, filePath);
+
+    /* local */
+    bool local = access(localPath.c_str(), F_OK) == 0;
+    if (!local && errno != ENOENT) {
+        LOGE("fail to access %{public}d", errno);
+        return E_SYSCALL;
+    }
+
+    /* cloud */
+    string relativePath;
+    string fileName;
+    int ret = GetDentryPathName(filePath, relativePath, fileName);
+    if (ret != E_OK) {
+        LOGE("split to dentry path failed, path:%s", filePath.c_str());
+        return ret;
+    }
+    auto dir = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
+    if (dir == nullptr) {
+        return E_DATA;
+    }
+    MetaBase file(fileName);
+    bool cloud = dir->DoLookup(file) == E_OK;
+
+    /* check */
+    if (local && cloud) {
+        LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", filePath.c_str());
+        ret = dir->DoRemove(file);
+        if (ret != E_OK) {
+            LOGE("remove cloud dentry fail %{public}d", ret);
+            return ret;
+        }
+    } else if (!local && !cloud) {
+        string cloudId;
+        int64_t val;
+
+        LOGE("[CHECK AND FIX] try to fill in cloud dentry %{public}s", filePath.c_str());
+
+        ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, resultSet);
+        if (ret != E_OK) {
+            return ret;
+        }
+        file.cloudId = MetaFileMgr::RecordIdToCloudId(cloudId);
+
+        ret = DataConvertor::GetLong(PhotoColumn::MEDIA_SIZE, val, resultSet);
+        if (ret != E_OK) {
+            return ret;
+        }
+        file.size = val;
+
+        ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, val, resultSet);
+        if (ret != E_OK) {
+            return ret;
+        }
+        file.mtime = val;
+
+        ret = dir->DoCreate(file);
+        if (ret != E_OK) {
+            LOGE("create cloud dentry fail %{public}d", ret);
+            return ret;
+        }
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, const string &suffix)
+{
+    string filePath;
+    int32_t ret = DataConvertor::GetString(PhotoColumn::MEDIA_FILE_PATH, filePath, resultSet);
+    if (ret != E_OK) {
+        LOGE("Get file path failed %{public}d", ret);
+        return ret;
+    }
+    string thumb = createConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
+    string localThumb = GetLocalPath(userId_, thumb);
+
+    /* local */
+    bool local = access(localThumb.c_str(), F_OK) == 0;
+    if (!local && errno != ENOENT) {
+        LOGE("fail to access %{public}d", errno);
+        return E_SYSCALL;
+    }
+
+    /* cloud */
+    string relativePath;
+    string fileName;
+    string cloudPath = createConvertor_.GetThumbPathInCloud(filePath, suffix);
+    if (GetDentryPathName(cloudPath, relativePath, fileName) != E_OK) {
+        LOGE("split to dentry path failed, path: %s", cloudPath.c_str());
+        return E_INVAL_ARG;
+    }
+
+    auto dir = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
+    if (dir == nullptr) {
+        return E_DATA;
+    }
+    MetaBase file(fileName);
+    bool cloud = dir->DoLookup(file) == E_OK;
+    if (local && cloud) {
+        LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", thumb.c_str());
+        ret = dir->DoRemove(file);
+        if (ret != E_OK) {
+            LOGE("dir remove file fail %{public}d", ret);
+            return ret;
+        }
+    } else if (!local && !cloud) {
+        /* FIX ME: hardcode thumbnail size show as 2MB */
+        constexpr uint64_t THUMB_SIZE = 2 * 1024 * 1024;
+        file.size = THUMB_SIZE;
+
+        LOGE("[CHECK AND FIX] try to fill in cloud dentry %{public}s", thumb.c_str());
+
+        string cloudId;
+        ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, resultSet);
+        if (ret != E_OK) {
+            return ret;
+        }
+        file.cloudId = MetaFileMgr::RecordIdToCloudId(cloudId);
+
+        int64_t val;
+        ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, val, resultSet);
+        if (ret != E_OK) {
+            return ret;
+        }
+        file.mtime = val;
+
+        file.fileType = (suffix == THUMB_SUFFIX) ? FILE_TYPE_THUMBNAIL : FILE_TYPE_LCD;
+
+        ret = dir->DoCreate(file);
+        if (ret != E_OK) {
+            LOGE("dir create file error %{public}d", ret);
+            return ret;
+        }
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::CheckAssetConsistency(NativeRdb::ResultSet &resultSet)
+{
+    /* content */
+    int32_t ret = CheckContentConsistency(resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    /* thumb */
+    ret = CheckThumbConsistency(resultSet, THUMB_SUFFIX);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    /* lcd */
+    ret = CheckThumbConsistency(resultSet, LCD_SUFFIX);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::CheckDirtyConsistency(NativeRdb::ResultSet &resultSet)
+{
+    int32_t dirty;
+    int32_t ret = DataConvertor::GetInt(PhotoColumn::PHOTO_DIRTY, dirty, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    if (dirty == static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) {
+        string filePath = GetFilePath(resultSet);
+        string localPath = GetLocalPath(userId_, filePath);
+
+        bool local = access(localPath.c_str(), F_OK) == 0;
+        if (!local && errno != ENOENT) {
+            LOGE("fail to access %{public}d", errno);
+            return E_SYSCALL;
+        }
+        if (!local) {
+            LOGE("[CHECK AND FIX] try to set dirty as synced %{public}s", filePath.c_str());
+
+            ValuesBucket values;
+            values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
+            int32_t changedRows;
+            string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
+            ret = Update(changedRows, values, whereClause, { filePath });
+            if (ret != E_OK) {
+                LOGE("rdb update failed, err = %{public}d", ret);
+                return E_RDB;
+            }
+        }
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::CheckPositionConsistency(NativeRdb::ResultSet &resultSet)
+{
+    int32_t pos;
+    int32_t ret = DataConvertor::GetInt(PhotoColumn::PHOTO_POSITION, pos, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    string filePath = GetFilePath(resultSet);
+    string localPath = GetLocalPath(userId_, filePath);
+    bool local = access(localPath.c_str(), F_OK) == 0;
+    if (!local && errno != ENOENT) {
+        LOGE("fail to access %{public}d", errno);
+        return E_SYSCALL;
+    }
+
+    ValuesBucket values;
+    if (pos == POSITION_CLOUD && local) {
+        values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
+    } else if (pos == POSITION_BOTH && !local) {
+        values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
+    } else {
+        return E_OK;
+    }
+
+    LOGE("[CHECK AND FIX] try to change position %{public}s", filePath.c_str());
+
+    int32_t changedRows;
+    string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
+    ret = Update(changedRows, values, whereClause, { filePath });
+    if (ret != E_OK) {
+        LOGE("rdb update failed, err = %{public}d", ret);
+        return E_RDB;
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::CheckSyncStatusConsistency(NativeRdb::ResultSet &resultSet)
+{
+    int32_t syncStatus;
+    int32_t ret = DataConvertor::GetInt(PhotoColumn::PHOTO_SYNC_STATUS, syncStatus, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    if (syncStatus != static_cast<int32_t>(SyncStatusType::TYPE_DOWNLOAD)) {
+        return E_OK;
+    }
+
+    int32_t thumbStatus;
+    ret = DataConvertor::GetInt(PhotoColumn::PHOTO_THUMB_STATUS, thumbStatus, resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+    if (thumbStatus <= static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) {
+        return E_OK;
+    }
+
+    string filePath = GetFilePath(resultSet);
+    string thumbLocalPath = createConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
+    bool local = access(thumbLocalPath.c_str(), F_OK) == 0;
+    if (!local && errno != ENOENT) {
+        LOGE("fail to access %{public}d", errno);
+        return E_SYSCALL;
+    }
+
+    LOGE("[CHECK AND FIX] try to change sync status %{public}s", filePath.c_str());
+
+    ValuesBucket values;
+    if (local) {
+        values.PutInt(PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
+    } else {
+        values.PutInt(PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD));
+    }
+    int32_t changedRows;
+    string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
+    ret = Update(changedRows, values, whereClause, { filePath });
+    if (ret != E_OK) {
+        LOGE("rdb update failed, err = %{public}d", ret);
+        return E_RDB;
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::CheckStatusConsistency(NativeRdb::ResultSet &resultSet)
+{
+    /* dirty */
+    int32_t ret = CheckDirtyConsistency(resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    /* postion */
+    ret = CheckPositionConsistency(resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    /* sync status */
+    ret = CheckSyncStatusConsistency(resultSet);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::CheckDataConsistency(NativeRdb::ResultSet &resultSet)
+{
+    /* asset */
+    int32_t ret = CheckAssetConsistency(resultSet);
+    if (ret == E_STOP) {
+        return ret;
+    }
+
+    /* status */
+    ret = CheckStatusConsistency(resultSet);
+    if (ret == E_STOP) {
+        return ret;
+    }
+
+    return E_OK;
+}
+
 int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkRecords,
     const shared_ptr<std::vector<DriveKit::DKRecord>> &records)
 {
@@ -1378,7 +1705,19 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
         if ((recordIdRowIdMap.find(record.GetRecordId()) == recordIdRowIdMap.end()) && !record.GetIsDelete()) {
             checkRecords.push_back(record.GetRecordId());
         } else if (recordIdRowIdMap.find(record.GetRecordId()) != recordIdRowIdMap.end()) {
-            resultSet->GoToRow(recordIdRowIdMap.at(record.GetRecordId()));
+            int32_t ret = resultSet->GoToRow(recordIdRowIdMap.at(record.GetRecordId()));
+            if (ret != NativeRdb::E_OK) {
+                LOGE("got to row error %{public}d", ret);
+                continue;
+            }
+
+            ret = CheckDataConsistency(*resultSet);
+            if (ret != E_OK) {
+                LOGE("data check error");
+                /* implies continue if returning non-ok */
+                continue;
+            }
+
             int64_t version = 0;
             DataConvertor::GetLong(PhotoColumn::PHOTO_CLOUD_VERSION, version, *resultSet);
             if (record.GetVersion() != static_cast<unsigned long>(version) &&
