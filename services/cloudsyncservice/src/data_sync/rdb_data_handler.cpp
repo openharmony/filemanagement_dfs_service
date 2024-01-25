@@ -65,6 +65,7 @@ int32_t RdbDataHandler::BatchDetete(const string &whichTable,
         ss <<" ? ";
     }
     string SQL = "DELETE FROM " + whichTable + " WHERE " + whichColumn + " IN (" + ss.str() + ")";
+    std::lock_guard<std::mutex> lock(rdbMutex_);
     return rdb_->ExecuteSql(SQL, bindArgs);
 }
 

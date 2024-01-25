@@ -232,7 +232,6 @@ void GalleryDataSyncer::ScheduleByType(SyncTriggerType syncTriggerType)
     if (syncTriggerType == SyncTriggerType::TASK_TRIGGER) {
         fileHandler_->SetChecking();
     }
-    fileHandler_->UnMarkClean();
     Schedule();
 }
 
@@ -332,6 +331,11 @@ int32_t GalleryDataSyncer::Complete(bool isNeedNotify)
     }
     if (!TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK)) {
         fileHandler_->StopUpdataFiles(timeId_);
+    }
+    ret = fileHandler_->CleanRemainRecord();
+    if (ret != E_OK) {
+        LOGW("clean remain record failed");
+        return ret;
     }
     PutHandler();
     DataSyncer::CompleteAll();
