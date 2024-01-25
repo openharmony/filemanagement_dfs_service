@@ -129,17 +129,21 @@ int32_t GalleryDataSyncer::Clean(const int action)
     return ret;
 }
 
-int32_t GalleryDataSyncer::ActualClean()
+int32_t GalleryDataSyncer::DisableCloud()
 {
+    LOGD("gallery data sycner disable");
+    /* start clean */
+    BeginDisableCloud();
     int32_t ret = GetHandler();
     if (ret != E_OK) {
         return ret;
     }
     ret = CleanInner(fileHandler_, CleanAction::RETAIN_DATA);
     if (ret != E_OK) {
-        LOGE("gallery data syncer file clean err %{public}d", ret);
+        LOGE("gallery data syncer file disable cloud err %{public}d", ret);
     }
     PutHandler();
+    CompleteDisableCloud();
     return ret;
 }
 

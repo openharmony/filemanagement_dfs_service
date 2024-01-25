@@ -62,7 +62,7 @@ public:
     /*clean*/
     virtual int32_t Init(const std::string bundleName, const int32_t userId);
     virtual int32_t Clean(const int action);
-    virtual int32_t ActualClean();
+    virtual int32_t DisableCloud();
 
     /* sdk */
     bool HasSdkHelper();
@@ -114,6 +114,9 @@ protected:
 
     void BeginClean();
     void CompleteClean();
+
+    void BeginDisableCloud();
+    void CompleteDisableCloud();
 
     void SyncStateChangedNotify(const CloudSyncState state, const ErrorType error);
     void SetErrorCodeMask(ErrorType errorType);

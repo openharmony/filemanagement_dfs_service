@@ -367,7 +367,7 @@ int32_t DataSyncManager::DisableCloud(const int32_t userId)
         if (ret != E_OK) {
             return ret;
         }
-        dataSyncer->ActualClean();
+        dataSyncer->DisableCloud();
     }
     return E_OK;
 }

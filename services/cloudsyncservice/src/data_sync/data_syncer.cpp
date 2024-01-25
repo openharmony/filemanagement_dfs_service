@@ -464,7 +464,6 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
                             .progressCallback = downloadProcessCallback};
     DownloadAssets(dctx);
     downloadCallbackMgr_.StartDonwload(path, userId, dctx.id);
-
     return E_OK;
 }
 
@@ -696,7 +695,7 @@ int32_t DataSyncer::Clean(const int action)
     return E_OK;
 }
 
-int32_t DataSyncer::ActualClean()
+int32_t DataSyncer::DisableCloud()
 {
     return E_OK;
 }
@@ -1165,6 +1164,29 @@ void DataSyncer::CompleteClean()
     }
 }
 
+void DataSyncer::BeginDisableCloud()
+{
+    /* stop all the tasks and wait for tasks' termination */
+    if (!taskRunner_->StopAndWaitFor()) {
+        LOGE("wait for tasks stop fail");
+    }
+    /* set disable cloud  state */
+    (void)syncStateManager_.SetDisableCloudFlag();
+}
+
+void DataSyncer::CompleteDisableCloud()
+{
+    auto nextAction = syncStateManager_.UpdateSyncState(SyncState::DISABLE_CLOUD_SUCCEED);
+    if (nextAction != Action::STOP) {
+         /* Retrigger sync, clear errorcode */
+        if (!CloudStatus::IsCloudStatusOkay(bundleName_, userId_)) {
+            LOGE("cloud status is not OK");
+            return;
+        }
+        StartSync(false, SyncTriggerType::PENDING_TRIGGER);
+    }
+}
+
 void DataSyncer::SyncStateChangedNotify(const CloudSyncState state, const ErrorType error)
 {
     CurrentSyncState_ = state;
@@ -1263,7 +1285,8 @@ int32_t DataSyncer::DownloadThumb(int32_t type)
 
 int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
 {
-    if (syncStateManager_.GetSyncState() == SyncState::CLEANING) {
+    if (syncStateManager_.GetSyncState() == SyncState::CLEANING ||
+        syncStateManager_.GetSyncState() == SyncState::DISABLE_CLOUD) {
         LOGI("downloading or cleaning, not to trigger thumb downloading");
         return E_STOP;
     }

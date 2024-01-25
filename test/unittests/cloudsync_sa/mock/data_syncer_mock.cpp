@@ -67,7 +67,7 @@ void DataSyncer::SetErrorCodeMask(ErrorType errorType)
 {
 }
 
-int32_t DataSyncer::ActualClean()
+int32_t DataSyncer::DisableCloud()
 {
     return E_OK;
 }
@@ -152,6 +152,14 @@ void DataSyncer::BeginClean()
 }
 
 void DataSyncer::CompleteClean()
+{
+}
+
+void DataSyncer::BeginDisableCloud()
+{
+}
+
+void DataSyncer::CompleteDisableCloud()
 {
 }
 
