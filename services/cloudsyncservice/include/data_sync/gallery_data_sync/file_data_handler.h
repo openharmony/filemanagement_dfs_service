@@ -268,6 +268,9 @@ private:
     std::mutex lcdMutex_;
     std::vector<NativeRdb::ValueObject> thmVec_;
     std::vector<NativeRdb::ValueObject> lcdVec_;
+
+    /* check stat */
+    std::unique_ptr<GalleryCheckSatat> checkStat_;
 };
 } // namespace CloudSync
 } // namespace FileManagement
