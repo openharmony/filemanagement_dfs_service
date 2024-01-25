@@ -129,11 +129,7 @@ void FileDataHandler::GetFetchCondition(FetchCondition &cond)
 {
     cond.limitRes = LIMIT_SIZE;
     cond.recordType = recordType_;
-    if (isChecking_) {
-        cond.desiredKeys = checkedKeys_;
-    } else {
-        cond.desiredKeys = desiredKeys_;
-    }
+    cond.desiredKeys = desiredKeys_;
     cond.fullKeys = desiredKeys_;
 }
 
@@ -1706,8 +1702,9 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
     const shared_ptr<std::vector<DriveKit::DKRecord>> &records)
 {
     auto recordIds = vector<string>();
+    shared_ptr<std::vector<DriveKit::DKRecord>> fetchRecords = make_shared<std::vector<DriveKit::DKRecord>>();
     for (const auto &record : *records) {
-        recordIds.push_back(record.GetRecordId());
+        fetchRecords->emplace_back(record);
     }
     auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
     if (resultSet == nullptr) {
@@ -1719,7 +1716,7 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
 
     for (const auto &record : *records) {
         if ((recordIdRowIdMap.find(record.GetRecordId()) == recordIdRowIdMap.end()) && !record.GetIsDelete()) {
-            checkRecords.push_back(record.GetRecordId());
+            fetchRecords->emplace_back(record);
         } else if (recordIdRowIdMap.find(record.GetRecordId()) != recordIdRowIdMap.end()) {
             int32_t ret = resultSet->GoToRow(recordIdRowIdMap.at(record.GetRecordId()));
             if (ret != NativeRdb::E_OK) {
@@ -1738,7 +1735,7 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
             DataConvertor::GetLong(PhotoColumn::PHOTO_CLOUD_VERSION, version, *resultSet);
             if (record.GetVersion() != static_cast<unsigned long>(version) &&
                 (!IsLocalDirty(*resultSet) || record.GetIsDelete())) {
-                checkRecords.push_back(record.GetRecordId());
+                fetchRecords->emplace_back(record);
             }
         } else {
             LOGE("recordId %s has multiple file in db!", record.GetRecordId().c_str());
@@ -1748,7 +1745,8 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
     checkStat_->SetDuration(GetCurrentTimeStamp());
     checkStat_->Report();
     checkStat_ = nullptr;
-
+    OnFetchParams params;
+    OnFetchRecords(fetchRecords, params);
     return E_OK;
 }
 

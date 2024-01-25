@@ -53,11 +53,7 @@ void CloudDiskDataHandler::GetFetchCondition(FetchCondition &cond)
 {
     cond.limitRes = PULL_LIMIT_SIZE;
     cond.recordType = recordType_;
-    if (isChecking_) {
-        cond.desiredKeys = checkedKeys_;
-    } else {
-        cond.desiredKeys = desiredKeys_;
-    }
+    cond.desiredKeys = desiredKeys_;
     cond.fullKeys = desiredKeys_;
 }
 int64_t CloudDiskDataHandler::UTCTimeMilliSeconds()
@@ -526,8 +522,9 @@ int32_t CloudDiskDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &chec
                                               const shared_ptr<std::vector<DriveKit::DKRecord>> &records)
 {
     auto recordIds = vector<string>();
+    shared_ptr<std::vector<DriveKit::DKRecord>> fetchRecords = make_shared<std::vector<DriveKit::DKRecord>>();
     for (const auto &record : *records) {
-        recordIds.push_back(record.GetRecordId());
+        fetchRecords->emplace_back(record);
     }
     auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
     if (resultSet == nullptr) {
@@ -535,19 +532,21 @@ int32_t CloudDiskDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &chec
     }
     for (const auto &record : *records) {
         if ((recordIdRowIdMap.find(record.GetRecordId()) == recordIdRowIdMap.end()) && !record.GetIsDelete()) {
-            checkRecords.push_back(record.GetRecordId());
+            fetchRecords->emplace_back(record);
         } else if (recordIdRowIdMap.find(record.GetRecordId()) != recordIdRowIdMap.end()) {
             resultSet->GoToRow(recordIdRowIdMap.at(record.GetRecordId()));
             int64_t version = 0;
             DataConvertor::GetLong(FC::VERSION, version, *resultSet);
             if (record.GetVersion() != static_cast<unsigned long>(version) &&
                 (!IsLocalDirty(*resultSet) || record.GetIsDelete())) {
-                checkRecords.push_back(record.GetRecordId());
+                fetchRecords->emplace_back(record);
             }
         } else {
             LOGE("recordId %s has multiple file in db!", record.GetRecordId().c_str());
         }
     }
+    OnFetchParams params;
+    OnFetchRecords(fetchRecords, params);
     return E_OK;
 }
 
