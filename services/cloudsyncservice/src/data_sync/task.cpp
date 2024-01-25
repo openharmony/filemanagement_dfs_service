@@ -20,6 +20,7 @@
 
 #include "dfsu_memory_guard.h"
 #include "sdk_helper.h"
+#include "xcollie_helper.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -99,6 +100,8 @@ void TaskRunner::CompleteTask(int32_t id)
 {
     /* remove task */
     unique_lock<mutex> lock(mutex_);
+    const int32_t DFX_DELAY_S = 60;
+    int32_t xcollieId = XCollieHelper::SetTimer("CloudSyncService_CompleteTask", DFX_DELAY_S, nullptr, nullptr, true);
     for (auto entry = taskList_.begin(); entry != taskList_.end();) {
         if (entry->get()->GetId() == id) {
             (void)taskList_.erase(entry);
@@ -121,6 +124,7 @@ void TaskRunner::CompleteTask(int32_t id)
             callback_();
         }
     }
+    XCollieHelper::CancelTimer(xcollieId);
 }
 
 bool TaskRunner::StopAndWaitFor()

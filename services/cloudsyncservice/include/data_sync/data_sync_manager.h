@@ -60,6 +60,7 @@ private:
     SafeMap<const std::string, std::shared_ptr<DataSyncer>> dataSyncersMap_;
     std::mutex dataSyncMutex_;
     std::mutex cleanMutex_;
+    std::mutex sdkHelperMutex_;
     int32_t currentUserId_{INVALID_USER_ID};
 
     int32_t GetAllBundleName(const int32_t userId, std::vector<std::string> &bundles);

@@ -38,13 +38,9 @@ void CloudDownloadUriManager::UnsetRegisteredFlag()
 
 void CloudDownloadUriManager::AddPathToUri(const std::string& path, const std::string& uri)
 {
-    if (registered_) {
-        LOGI("download_file : add path [ %{public}s ] -> uri [ %{public}s ]", path.c_str(), uri.c_str());
-        pathMap_[path] = uri;
-        return;
-    }
-    LOGI("download_file : unregistered_ can't add path [ %{public}s ] -> uri [ %{public}s ]",
-        path.c_str(), uri.c_str());
+    LOGI("download_file : add path [ %{public}s ] -> uri [ %{public}s ]", path.c_str(), uri.c_str());
+    pathMap_[path] = uri;
+    return;
 }
 
 void CloudDownloadUriManager::RemoveUri(const std::string& path)

@@ -268,6 +268,8 @@ private:
     std::mutex lcdMutex_;
     std::vector<NativeRdb::ValueObject> thmVec_;
     std::vector<NativeRdb::ValueObject> lcdVec_;
+    int32_t waitCount_{0};
+    uint32_t timeId_;
 
     /* check stat */
     std::unique_ptr<GalleryCheckSatat> checkStat_;

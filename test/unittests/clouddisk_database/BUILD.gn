@@ -205,13 +205,15 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "LOG_TAG=\"CLOUDDISK_DATABASE_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
   use_exceptions = true
 }
 
 group("clouddisk_database_test") {
   testonly = true
-  deps = [
-    ":clouddisk_rdb_utils_test",
-    ":clouddisk_rdbstore_test",
-  ]
+  deps = [ ":clouddisk_rdb_utils_test" ]
 }
