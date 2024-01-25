@@ -68,6 +68,8 @@ void OsAccountObserver::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
         if (curUsrId != -1 && curUsrId != id) {
             // first stop curUsrId network
             RemoveMPInfo(curUsrId);
+        } else if (curUsrId != -1 && curUsrId == id) {
+            return;
         }
 
         // then start new network
