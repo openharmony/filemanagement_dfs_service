@@ -674,12 +674,11 @@ static void UpdateCloudDiskInode(shared_ptr<CloudDiskRdbStore> rdbStore, struct 
     inoPtr->stat.st_mtime = childInfo.mtime / MILLISECOND_TO_SECONDS_TIMES;
 }
 
-static void UpdateCloudStore(fuse_req_t req, fuse_ino_t ino)
+static void UpdateCloudStore(int32_t userId, fuse_ino_t ino)
 {
-    auto *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto *inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, userId);
     int res = rdbStore->Write(inoPtr->cloudId);
     if (res != 0) {
         LOGE("write file fail");
@@ -691,6 +690,7 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
                                    off_t off, struct fuse_file_info *fi)
 {
     struct fuse_bufvec out_buf = FUSE_BUFVEC_INIT(fuse_buf_size(bufv));
+    int32_t userId = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req))->userId;
 
     out_buf.buf[0].flags = (fuse_buf_flags)(FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK);
     out_buf.buf[0].fd = fi->fh;
@@ -701,7 +701,7 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
     } else {
         fuse_reply_write(req, (size_t) res);
     }
-    UpdateCloudStore(req, ino);
+    UpdateCloudStore(userId, ino);
 }
 
 void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
