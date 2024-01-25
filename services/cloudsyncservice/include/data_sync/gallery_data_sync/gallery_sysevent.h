@@ -238,6 +238,68 @@ public:
         }
     }
 };
+
+enum GalleryCheckStatIndex {
+    /* foud */
+    INDEX_CHECK_FOUND,
+    /* fixed */
+    INDEX_CHECK_FIXED,
+};
+
+#define GALLERY_CHECK_STAT_LEN 2
+
+class GalleryCheckSatat : public SyncStat {
+public:
+    GalleryCheckSatat() : file_(GALLERY_CHECK_STAT_LEN),
+        album_(GALLERY_CHECK_STAT_LEN),
+        map_(GALLERY_CHECK_STAT_LEN),
+        attachment_(GALLERY_CHECK_STAT_LEN)
+    {
+    }
+
+    void Report() override
+    {
+        int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_SYNC_CHECK",
+            HiviewDFX::HiSysEvent::EventType::STATISTIC,
+            "start_time", startTime_,
+            "duration", duration_,
+            "file", file_,
+            "album", album_,
+            "map", map_,
+            "attachment", attachment_,
+            "check_info", checkInfo_);
+        if (ret != E_OK) {
+            LOGE("report CLOUD_SYNC_CHECK error %{public}d", ret);
+        }
+    }
+
+    void UpdateFile(uint32_t index, uint64_t diff)
+    {
+        file_[index] += diff;
+    }
+
+    void UpdateAlbum(uint32_t index, uint64_t diff)
+    {
+        album_[index] += diff;
+    }
+
+    void UpdateMap(uint32_t index, uint64_t diff)
+    {
+        map_[index] += diff;
+    }
+
+    void UpdateAttachment(uint32_t index, uint64_t diff)
+    {
+        attachment_[index] += diff;
+    }
+
+private:
+    std::vector<uint64_t> file_;
+    std::vector<uint64_t> album_;
+    std::vector<uint64_t> map_;
+    std::vector<uint64_t> attachment_;
+    std::string checkInfo_;
+};
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
