@@ -1391,11 +1391,28 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
     if (local && cloud) {
         LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", filePath.c_str());
         checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
-        ret = dir->DoRemove(file);
-        if (ret != E_OK) {
-            LOGE("remove cloud dentry fail %{public}d", ret);
-            return ret;
+
+        struct stat st;
+        ret = stat(localPath.c_str(), &st);
+        if (ret != 0) {
+            LOGE("stat local file error %{public}d", errno);
+            return E_SYSCALL;
         }
+
+        if (st.st_size != static_cast<uint64_t>(file.size)) {
+            ret = unlink(localPath.c_str());
+            if (ret != 0) {
+                LOGE("unlink local file error %{public}d", errno);
+                return E_SYSCALL;
+            }
+        } else {
+            ret = dir->DoRemove(file);
+            if (ret != E_OK) {
+                LOGE("remove cloud dentry fail %{public}d", ret);
+                return ret;
+            }
+        }
+
         checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
     } else if (!local && !cloud) {
         string cloudId;
@@ -1469,11 +1486,28 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
     if (local && cloud) {
         LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", thumb.c_str());
         checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
-        ret = dir->DoRemove(file);
-        if (ret != E_OK) {
-            LOGE("dir remove file fail %{public}d", ret);
-            return ret;
+
+        struct stat st;
+        ret = stat(localThumb.c_str(), &st);
+        if (ret != 0) {
+            LOGE("stat local file error %{public}d", errno);
+            return E_SYSCALL;
         }
+
+        if (st.st_size != static_cast<uint64_t>(file.size)) {
+            ret = unlink(localThumb.c_str());
+            if (ret != 0) {
+                LOGE("unlink local file error %{public}d", errno);
+                return E_SYSCALL;
+            }
+        } else {
+            ret = dir->DoRemove(file);
+            if (ret != E_OK) {
+                LOGE("remove cloud dentry fail %{public}d", ret);
+                return ret;
+            }
+        }
+
         checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
     } else if (!local && !cloud) {
         /* FIX ME: hardcode thumbnail size show as 2MB */
