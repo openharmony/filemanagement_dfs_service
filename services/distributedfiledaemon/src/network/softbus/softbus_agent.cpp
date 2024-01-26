@@ -111,14 +111,14 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
         attr.linkType[LINK_TYPE_WIFI_IDX] = LINK_TYPE_WIFI_WLAN_2G;
     } else {
         LOGE("Fail to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
-        ThrowException(ERR_CONNECT_LINK_TYPE, "Fail to OpenSession");
+        THROW_EXCEPTION(ERR_CONNECT_LINK_TYPE, "Fail to OpenSession");
     }
     int sessionId =
         ::OpenSession(sessionName_.c_str(), sessionName_.c_str(), info.GetCid().c_str(), groupId.c_str(), &attr);
     if (sessionId < 0) {
         LOGE("Fail to OpenSession, cid:%{public}s, sessionId:%{public}d, linkType:%{public}d", info.GetCid().c_str(),
              sessionId, linkType);
-        ThrowException(ERR_SOFTBUS_AGENT_ON_SESSION_OPENED_FAIL, "Fail to OpenSession");
+        THROW_EXCEPTION(ERR_SOFTBUS_AGENT_ON_SESSION_OPENED_FAIL, "Fail to OpenSession");
     }
     OccupySession(sessionId, linkType);
     LOGI("Success to OpenSession, cid:%{public}s, sessionId:%{public}d, linkType:%{public}d", info.GetCid().c_str(),

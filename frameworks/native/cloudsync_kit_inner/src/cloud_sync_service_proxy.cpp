@@ -916,11 +916,9 @@ sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
              FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, ret);
         return nullptr;
     }
-
     auto waitStatus = cloudSyncLoadCallback->proxyConVar_.wait_for(
         lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
         [cloudSyncLoadCallback]() { return cloudSyncLoadCallback->isLoadSuccess_.load(); });
-
     if (!waitStatus) {
         LOGE("Load CloudSynd SA timeout");
         return nullptr;

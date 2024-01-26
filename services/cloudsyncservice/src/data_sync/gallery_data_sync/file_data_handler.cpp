@@ -421,7 +421,9 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
         return E_OK;
     }
 
-    string fullPath, relativePath, fileName;
+    string fullPath;
+    string relativePath;
+    string fileName;
     if (attibutes[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
         return E_INVAL_ARG;
@@ -458,7 +460,8 @@ int FileDataHandler::DentryInsertThumb(const string &fullPath,
                                        const string &type)
 {
     string thumbnailPath = createConvertor_.GetThumbPathInCloud(fullPath, type);
-    string relativePath, fileName;
+    string relativePath;
+    string fileName;
     if (GetDentryPathName(thumbnailPath, relativePath, fileName) != E_OK) {
         LOGE("split to dentry path failed, path:%s", thumbnailPath.c_str());
         return E_INVAL_ARG;
@@ -481,7 +484,8 @@ int FileDataHandler::DentryInsertThumb(const string &fullPath,
 int FileDataHandler::DentryRemoveThumb(const string &downloadPath)
 {
     string thumbnailPath = createConvertor_.GetLocalPathToCloud(downloadPath);
-    string relativePath, fileName;
+    string relativePath;
+    string fileName;
     if (GetDentryPathName(thumbnailPath, relativePath, fileName) != E_OK) {
         LOGE("split to dentry path failed, path:%s", thumbnailPath.c_str());
         return E_INVAL_ARG;
@@ -505,7 +509,8 @@ int FileDataHandler::AddCloudThumbs(const DKRecord &record)
 {
     LOGI("thumbs of %s add to cloud_view", record.GetRecordId().c_str());
     constexpr uint64_t THUMB_SIZE = 2 * 1024 * 1024; // thumbnail and lcd size show as 2MB
-    uint64_t thumbSize = THUMB_SIZE, lcdSize = THUMB_SIZE;
+    uint64_t thumbSize = THUMB_SIZE;
+    uint64_t lcdSize = THUMB_SIZE;
 
     DKRecordData data;
     DKAsset val;
@@ -610,7 +615,11 @@ int32_t FileDataHandler::ConflictRenamePath(NativeRdb::ResultSet &resultSet,
 
 int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string &fullPath, string &relativePath)
 {
-    string rdbPath, tmpPath, newPath, localPath, newLocalPath;
+    string rdbPath;
+    string tmpPath;
+    string newPath;
+    string localPath;
+    string newLocalPath;
     int ret = ConflictRenamePath(resultSet, fullPath, rdbPath, tmpPath, newPath);
     if (ret != E_OK) {
         LOGE("ConflictRenamePath failed, ret=%{public}d", ret);
@@ -1838,7 +1847,8 @@ int32_t FileDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::ResultSet
                 LOGE("unlink local failed, errno %{public}d", errno);
             }
         } else { // delete dentry
-            string relativePath, fileName;
+            string relativePath;
+            string fileName;
             if (GetDentryPathName(filePath, relativePath, fileName) != E_OK) {
                 LOGE("split to dentry path failed, path:%s", filePath.c_str());
                 return E_INVAL_ARG;

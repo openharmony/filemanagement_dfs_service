@@ -22,29 +22,29 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
-class utilsLogTest : public testing::Test {
+class UtilsLogTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
 };
-void utilsLogTest::SetUpTestCase(void)
+void UtilsLogTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
-void utilsLogTest::TearDownTestCase(void)
+void UtilsLogTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
-void utilsLogTest::SetUp(void)
+void UtilsLogTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
 }
 
-void utilsLogTest::TearDown(void)
+void UtilsLogTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
 }
@@ -55,7 +55,7 @@ void utilsLogTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: SR000HRKKA
  */
-HWTEST_F(utilsLogTest, GetFileNameFromFullPathTest, TestSize.Level1)
+HWTEST_F(UtilsLogTest, GetFileNameFromFullPathTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFileNameFromFullPathTest Start";
     try {
