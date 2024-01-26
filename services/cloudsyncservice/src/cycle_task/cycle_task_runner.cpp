@@ -51,32 +51,48 @@ CycleTaskRunner::CycleTaskRunner(std::shared_ptr<DataSyncManager> dataSyncManage
     InitTasks();
 }
 
-void CycleTaskRunner::StartTask()
+void CycleTaskRunner::StartTask(string &reason)
 {
     if (userId_ == DEFAULT_VALUE) {
         LOGI("defaukt userId skip tasks");
         cloudPrefImpl_->SetInt("userId", DEFAULT_USER_ID);
         return;
     }
+
+    if (reason == "usual.event.USER_UNLOCKED") {
+        cloudPrefImpl_->SetBool("force_periodic_check", true);
+        return;
+    }
+
     for (const auto &task_data : cycleTasks_) {
         time_t lastRunTime = DEFAULT_VALUE;
         GetLastRunTime(task_data->GetTaskName(), lastRunTime);
+
         if (difftime(setUpTime_, lastRunTime) > task_data->GetIntervalTime()) {
             if (lastRunTime == DEFAULT_VALUE) {
                 LOGI("skip first run task, taskName is %{public}s", task_data->GetTaskName().c_str());
                 SetLastRunTime(task_data->GetTaskName(), setUpTime_);
                 continue;
             }
-            LOGI("run task, task name is %{public}s", task_data->GetTaskName().c_str());
-            int32_t ret = task_data->RunTask(userId_);
-            if (ret == E_OK) {
-                LOGI("task run success, taskName is %{public}s, ret = %{public}d",
-                    task_data->GetTaskName().c_str(), ret);
-                SetLastRunTime(task_data->GetTaskName(), setUpTime_);
+        } else if (task_data->GetTaskName() == "periodic_check_task") {
+            bool force;
+            cloudPrefImpl_->GetBool("force_periodic_check", force);
+            if (!force) {
+                continue;
             } else {
-                LOGE("task run fail, taskName is %{public}s, ret = %{public}d",
-                    task_data->GetTaskName().c_str(), ret);
+                cloudPrefImpl_->SetBool("force_periodic_check", false);
             }
+        }
+
+        LOGI("run task, task name is %{public}s", task_data->GetTaskName().c_str());
+        int32_t ret = task_data->RunTask(userId_);
+        if (ret == E_OK) {
+            LOGI("task run success, taskName is %{public}s, ret = %{public}d",
+                task_data->GetTaskName().c_str(), ret);
+            SetLastRunTime(task_data->GetTaskName(), setUpTime_);
+        } else {
+            LOGE("task run fail, taskName is %{public}s, ret = %{public}d",
+                task_data->GetTaskName().c_str(), ret);
         }
     }
 }

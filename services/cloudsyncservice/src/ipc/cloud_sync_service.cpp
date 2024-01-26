@@ -146,7 +146,7 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
     }
     if (reason != "load") {
         shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
-        taskRunner->StartTask();
+        taskRunner->StartTask(reason);
     }
 }
 
