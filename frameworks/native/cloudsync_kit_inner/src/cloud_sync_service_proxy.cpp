@@ -496,8 +496,12 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
         return E_BROKEN_IPC;
     }
 
-    OHOS::Media::MediaFileUri Muri(uri);
-    string path = Muri.GetFilePath();
+    string path = uri;
+    if (uri.find("file://media") == 0) {
+        OHOS::Media::MediaFileUri mediaUri(uri);
+        path = mediaUri.GetFilePath();
+    }
+
     LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
 
     CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
