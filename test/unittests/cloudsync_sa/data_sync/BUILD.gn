@@ -115,6 +115,10 @@ ohos_unittest("cloud_disk_data_convertor_test") {
     "LOG_TAG=\"CLOUD_SYNC_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 
@@ -219,6 +223,10 @@ ohos_unittest("album_data_handler_test") {
     "LOG_TAG=\"CLOUD_SYNC_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 
@@ -319,6 +327,10 @@ ohos_unittest("data_sync_manager_test") {
 
   defines = [ "private=public" ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 
@@ -424,6 +436,10 @@ ohos_unittest("data_handler_test") {
 
   defines = [ "private=public" ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 
@@ -650,6 +666,10 @@ ohos_unittest("gallery_data_syncer_test") {
     "LOG_TAG=\"CLOUD_SYNC_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 
@@ -856,6 +876,10 @@ ohos_unittest("file_data_convertor_test") {
     "LOG_TAG=\"DATA_SYNC_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 
@@ -963,6 +987,10 @@ ohos_unittest("sdk_helper_test") {
     "LOG_TAG=\"CLOUD_SYNC_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 
@@ -1070,6 +1098,10 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "LOG_TAG=\"CLOUD_SYNC_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 
@@ -1214,6 +1246,10 @@ ohos_unittest("task_test") {
     "LOG_TAG=\"CLOUD_SYNC_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 
@@ -1348,6 +1384,10 @@ ohos_unittest("cloud_disk_data_syncer_test") {
     "LOG_TAG=\"CLOUD_SYNC_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 
@@ -1509,6 +1549,10 @@ ohos_unittest("cloud_disk_data_handler_test") {
     "LOG_TAG=\"CLOUD_SYNC_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   sanitize = {
     cfi = true
     cfi_cross_dso = true

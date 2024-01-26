@@ -185,6 +185,7 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
 
 std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bundle, const int32_t userId)
 {
+    std::lock_guard<std::mutex> lck(dataSyncMutex_);
     currentUserId_ = userId;
     string bundleName;
     Convert2BundleName(bundle, bundleName);
@@ -256,7 +257,7 @@ int32_t DataSyncManager::OptimizeStorage(const std::string &bundleName, const in
 
 int32_t DataSyncManager::InitSdk(const int32_t userId, const string &bundle, std::shared_ptr<DataSyncer> dataSyncer)
 {
-    std::lock_guard<std::mutex> lck(dataSyncMutex_);
+    std::lock_guard<std::mutex> lck(sdkHelperMutex_);
     if (dataSyncer->HasSdkHelper()) {
         return E_OK;
     }
@@ -324,7 +325,6 @@ int32_t DataSyncManager::CleanCache(const string &bundleName, const int32_t user
 
 int32_t DataSyncManager::GetAllBundleName(const int32_t userId, vector<string> &bundles)
 {
-    std::lock_guard<std::mutex> lck(dataSyncMutex_);
     std::shared_ptr<NativeRdb::ResultSet> resultSet;
     RETURN_ON_ERR(DataSyncerRdbStore::GetInstance().QueryDataSyncer(userId, resultSet));
 

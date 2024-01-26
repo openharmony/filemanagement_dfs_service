@@ -41,6 +41,7 @@
 #include "medialibrary_rdb_utils.h"
 #include "meta_file.h"
 #include "thumbnail_const.h"
+#include "task_state_manager.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -494,7 +495,7 @@ int FileDataHandler::DentryRemoveThumb(const string &downloadPath)
 
     string cloudMergeViewPath = GetCloudMergeViewPath(userId_, relativePath + "/" + mBase.name);
     if (remove(cloudMergeViewPath.c_str()) != 0) {
-        LOGE("update kernel dentry cache fail, errno: %{public}d, cloudMergeViewPath: %{public}s",
+        LOGD("update kernel dentry cache fail, errno: %{public}d, cloudMergeViewPath: %{public}s",
              errno, cloudMergeViewPath.c_str());
     }
     return E_OK;
@@ -3743,12 +3744,23 @@ void FileDataHandler::PeriodicUpdataFiles(uint32_t &timeId)
 {
     const uint32_t TIMER_INTERVAL = 2000;
     auto timerCallBack = [this]() {
+        if (thmVec_.empty() && lcdVec_.empty()) {
+            waitCount_ ++;
+            LOGI("no thumbnail is downloading, wait %{public}d times", waitCount_);
+            if (waitCount_ == 30) {
+                TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
+                StopUpdataFiles(timeId_);
+            }
+        } else {
+            waitCount_ = 0;
+        }
         UpdateThmVec();
         UpdateLcdVec();
     };
     if (timeId == 0) {
         LOGI("start update timer");
         DfsuTimer::GetInstance().Register(timerCallBack, timeId, TIMER_INTERVAL);
+        timeId_ = timeId;
     } else {
         LOGI("timer is running");
     }
@@ -3767,8 +3779,8 @@ void FileDataHandler::StopUpdataFiles(uint32_t &timeId)
             tryCount++;
         }
         timeId = 0;
+        timeId_ = 0;
     }
-    timeId = 0;
 }
 } // namespace CloudSync
 } // namespace FileManagement

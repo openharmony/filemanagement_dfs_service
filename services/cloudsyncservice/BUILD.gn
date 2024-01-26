@@ -169,6 +169,11 @@ ohos_shared_library("cloudsync_sa") {
     "samgr:samgr_proxy",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
   if (!dfs_service_feature_enable_cloud_adapter) {
     deps += [
       "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
@@ -331,6 +336,11 @@ ohos_static_library("cloudsync_sa_static") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 
   if (!dfs_service_feature_enable_cloud_adapter) {
     deps += [

@@ -1291,6 +1291,10 @@ int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
         return E_STOP;
     }
 
+    if (!TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK)) {
+        LOGI("stop download thumb");
+        return E_STOP;
+    }
     vector<DriveKit::DKDownloadAsset> assetsToDownload;
     int32_t ret = handler->GetThumbToDownload(assetsToDownload);
     if (ret != E_OK) {
