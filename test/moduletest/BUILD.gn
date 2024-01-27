@@ -77,6 +77,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
