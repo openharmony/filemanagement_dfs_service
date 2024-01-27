@@ -151,7 +151,8 @@ private:
     void PullDatabaseChanges(std::shared_ptr<TaskContext> context);
     void PullRecordsWithId(std::shared_ptr<TaskContext> context, const std::vector<DriveKit::DKRecordId> &records,
         bool retry);
-    void DownloadAssets(DownloadContext ctx);
+    void DownloadAssets(DownloadContext &ctx);
+    void DownloadThumbAssets(DownloadContext ctx);
     void RetryDownloadRecords(std::shared_ptr<TaskContext> context);
     /* dowload callback */
     void OnFetchRecords(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
