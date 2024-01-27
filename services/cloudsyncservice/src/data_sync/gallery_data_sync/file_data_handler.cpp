@@ -1399,7 +1399,9 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
     /* check */
     if (local && cloud) {
         LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", filePath.c_str());
-        checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        if (checkStat_ != nullptr) {
+            checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        }
 
         struct stat st;
         ret = stat(localPath.c_str(), &st);
@@ -1422,13 +1424,17 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
             }
         }
 
-        checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+        if (checkStat_ != nullptr) {
+            checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+        }
     } else if (!local && !cloud) {
         string cloudId;
         int64_t val;
 
         LOGE("[CHECK AND FIX] try to fill in cloud dentry %{public}s", filePath.c_str());
-        checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        if (checkStat_ != nullptr) {
+            checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        }
 
         ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, resultSet);
         if (ret != E_OK) {
@@ -1453,7 +1459,9 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
             LOGE("create cloud dentry fail %{public}d", ret);
             return ret;
         }
-        checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+        if (checkStat_ != nullptr) {
+            checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+        }
     }
 
     return E_OK;
@@ -1494,7 +1502,9 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
     bool cloud = dir->DoLookup(file) == E_OK;
     if (local && cloud) {
         LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", thumb.c_str());
-        checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        if (checkStat_ != nullptr) {
+            checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        }
 
         struct stat st;
         ret = stat(localThumb.c_str(), &st);
@@ -1517,14 +1527,18 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
             }
         }
 
-        checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+        if (checkStat_ != nullptr) {
+            checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+        }
     } else if (!local && !cloud) {
         /* FIX ME: hardcode thumbnail size show as 2MB */
         constexpr uint64_t THUMB_SIZE = 2 * 1024 * 1024;
         file.size = THUMB_SIZE;
 
         LOGE("[CHECK AND FIX] try to fill in cloud dentry %{public}s", thumb.c_str());
-        checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        if (checkStat_ != nullptr) {
+            checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        }
 
         string cloudId;
         ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, resultSet);
@@ -1547,7 +1561,9 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
             LOGE("dir create file error %{public}d", ret);
             return ret;
         }
-        checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+        if (checkStat_ != nullptr) {
+            checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+        }
     }
 
     return E_OK;
@@ -1595,7 +1611,9 @@ int32_t FileDataHandler::CheckDirtyConsistency(NativeRdb::ResultSet &resultSet)
         }
         if (!local) {
             LOGE("[CHECK AND FIX] try to set dirty as synced %{public}s", filePath.c_str());
-            checkStat_->UpdateFile(INDEX_CHECK_FOUND, 1);
+            if (checkStat_ != nullptr) {
+                checkStat_->UpdateFile(INDEX_CHECK_FOUND, 1);
+            }
 
             ValuesBucket values;
             values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
@@ -1606,7 +1624,9 @@ int32_t FileDataHandler::CheckDirtyConsistency(NativeRdb::ResultSet &resultSet)
                 LOGE("rdb update failed, err = %{public}d", ret);
                 return E_RDB;
             }
-            checkStat_->UpdateFile(INDEX_CHECK_FIXED, 1);
+            if (checkStat_ != nullptr) {
+                checkStat_->UpdateFile(INDEX_CHECK_FIXED, 1);
+            }
         }
     }
 
@@ -1639,7 +1659,9 @@ int32_t FileDataHandler::CheckPositionConsistency(NativeRdb::ResultSet &resultSe
     }
 
     LOGE("[CHECK AND FIX] try to change position %{public}s", filePath.c_str());
-    checkStat_->UpdateFile(INDEX_CHECK_FOUND, 1);
+    if (checkStat_ != nullptr) {
+        checkStat_->UpdateFile(INDEX_CHECK_FOUND, 1);
+    }
 
     int32_t changedRows;
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
@@ -1648,7 +1670,9 @@ int32_t FileDataHandler::CheckPositionConsistency(NativeRdb::ResultSet &resultSe
         LOGE("rdb update failed, err = %{public}d", ret);
         return E_RDB;
     }
-    checkStat_->UpdateFile(INDEX_CHECK_FIXED, 1);
+    if (checkStat_ != nullptr) {
+        checkStat_->UpdateFile(INDEX_CHECK_FIXED, 1);
+    }
 
     return E_OK;
 }
@@ -1682,7 +1706,9 @@ int32_t FileDataHandler::CheckSyncStatusConsistency(NativeRdb::ResultSet &result
     }
 
     LOGE("[CHECK AND FIX] try to change sync status %{public}s", filePath.c_str());
-    checkStat_->UpdateFile(INDEX_CHECK_FOUND, 1);
+    if (checkStat_ != nullptr) {
+        checkStat_->UpdateFile(INDEX_CHECK_FOUND, 1);
+    }
 
     ValuesBucket values;
     if (local) {
@@ -1697,7 +1723,10 @@ int32_t FileDataHandler::CheckSyncStatusConsistency(NativeRdb::ResultSet &result
         LOGE("rdb update failed, err = %{public}d", ret);
         return E_RDB;
     }
-    checkStat_->UpdateFile(INDEX_CHECK_FIXED, 1);
+
+    if (checkStat_ != nullptr) {
+        checkStat_->UpdateFile(INDEX_CHECK_FIXED, 1);
+    }
 
     return E_OK;
 }
@@ -1755,9 +1784,6 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
         return E_RDB;
     }
 
-    checkStat_ = make_unique<GalleryCheckSatat>();
-    checkStat_->SetStartTime(GetCurrentTimeStamp());
-
     for (const auto &record : *records) {
         if ((recordIdRowIdMap.find(record.GetRecordId()) == recordIdRowIdMap.end()) && !record.GetIsDelete()) {
             fetchRecords->emplace_back(record);
@@ -1786,11 +1812,9 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
         }
     }
 
-    checkStat_->SetDuration(GetCurrentTimeStamp());
-    checkStat_->Report();
-    checkStat_ = nullptr;
     OnFetchParams params;
     OnFetchRecords(fetchRecords, params);
+
     return E_OK;
 }
 

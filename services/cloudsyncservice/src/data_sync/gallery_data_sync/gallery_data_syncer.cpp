@@ -384,25 +384,30 @@ void GalleryDataSyncer::StopDownloadThumb()
 int32_t GalleryDataSyncer::InitSysEventData()
 {
     syncStat_ = make_shared<GalleryIncSyncStat>();
+    checkStat_ = make_shared<GalleryCheckSatat>();
 
     /* bind sync data to handler */
     fileHandler_->SetSyncStat(syncStat_);
     albumHandler_->SetSyncStat(syncStat_);
+
+    fileHandler_->SetCheckStat(checkStat_);
 
     return E_OK;
 }
 
 void GalleryDataSyncer::FreeSysEventData()
 {
-    if (syncStat_ == nullptr) {
-        return;
+    if (syncStat_ != nullptr) {
+        /* dec ref to sync data */
+        fileHandler_->PutSyncStat();
+        albumHandler_->PutSyncStat();
+        syncStat_ = nullptr;
     }
 
-    /* dec ref to sync data */
-    fileHandler_->PutSyncStat();
-    albumHandler_->PutSyncStat();
-
-    syncStat_ = nullptr;
+    if (checkStat_ != nullptr) {
+        fileHandler_->PutCheckStat();
+        checkStat_ = nullptr;
+    }
 }
 
 void GalleryDataSyncer::SetFullSyncSysEvent()
@@ -414,15 +419,19 @@ void GalleryDataSyncer::SetFullSyncSysEvent()
 
 void GalleryDataSyncer::ReportSysEvent(uint32_t code)
 {
-    if (syncStat_ == nullptr) {
-        return;
+    if (syncStat_ != nullptr) {
+        if (syncStat_->IsFullSync()) {
+            UpdateBasicEventStat(code);
+            syncStat_->Report();
+        } else {
+            /* inc sync report */
+        }
     }
 
-    if (syncStat_->IsFullSync()) {
-        UpdateBasicEventStat(code);
-        syncStat_->Report();
-    } else {
-        /* inc sync report */
+    if (checkStat_ != nullptr) {
+        if (syncStat_ != nullptr && syncStat_->IsFullSync()) {
+            checkStat_->Report();
+        }
     }
 }
 

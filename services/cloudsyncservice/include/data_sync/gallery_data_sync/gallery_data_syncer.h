@@ -91,6 +91,8 @@ private:
 
     /* sync stat */
     std::shared_ptr<GalleryIncSyncStat> syncStat_;
+    /* check stat */
+    std::shared_ptr<GalleryCheckSatat> checkStat_;
 };
 
 class RdbCallback : public NativeRdb::RdbOpenCallback {

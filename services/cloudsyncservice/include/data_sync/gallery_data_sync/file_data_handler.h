@@ -91,6 +91,17 @@ public:
 
     /* reset */
     void Reset();
+
+    void SetCheckStat(std::shared_ptr<GalleryCheckSatat> stat)
+    {
+        checkStat_ = stat;
+    }
+
+    void PutCheckStat()
+    {
+        checkStat_ = nullptr;
+    }
+
 private:
     int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
         const std::unordered_map<std::string, LocalInfo> &localMap);
@@ -272,7 +283,7 @@ private:
     uint32_t timeId_;
 
     /* check stat */
-    std::unique_ptr<GalleryCheckSatat> checkStat_;
+    std::shared_ptr<GalleryCheckSatat> checkStat_;
 };
 } // namespace CloudSync
 } // namespace FileManagement
