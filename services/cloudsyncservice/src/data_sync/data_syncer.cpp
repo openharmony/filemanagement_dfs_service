@@ -276,7 +276,7 @@ struct DownloadContext {
         progressCallback;
 };
 
-void DataSyncer::DownloadAssets(DownloadContext ctx)
+void DataSyncer::DownloadAssets(DownloadContext &ctx)
 {
     if (ctx.resultCallback == nullptr) {
         LOGE("resultCallback nullptr");
@@ -302,6 +302,33 @@ void DataSyncer::DownloadAssets(DownloadContext ctx)
          * 2. invoke callback here to do some statistics in handler
          * 3. set assets back to handler for its info
          */
+        shared_ptr<TaskContext> tctx = static_pointer_cast<TaskContext>(ctx.context);
+        tctx->SetAssets(ctx.assets);
+        ctx.resultCallback(ctx.context, nullptr, {}, {});
+    }
+}
+
+void DataSyncer::DownloadThumbAssets(DownloadContext ctx)
+{
+    if (ctx.resultCallback == nullptr) {
+        LOGE("resultCallback nullptr");
+        return;
+    }
+
+    if (ctx.progressCallback == nullptr) {
+        LOGE("progressCallback nullptr");
+        return;
+    }
+
+    if (ctx.assets.size() == 0) {
+        LOGE("no assets to download");
+        return;
+    }
+
+    int32_t ret = sdkHelper_->DownloadAssets(ctx.context, ctx.assets, {}, ctx.id,
+        ctx.resultCallback, ctx.progressCallback);
+    if (ret != E_OK) {
+        LOGE("sdk download assets error %{public}d", ret);
         shared_ptr<TaskContext> tctx = static_pointer_cast<TaskContext>(ctx.context);
         tctx->SetAssets(ctx.assets);
         ctx.resultCallback(ctx.context, nullptr, {}, {});
@@ -1318,7 +1345,7 @@ int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
                             .id = 0,
                             .resultCallback = callback,
                             .progressCallback = FetchRecordsDownloadProgress};
-    std::thread([this, dctx]() { this->DownloadAssets(dctx); }).detach();
+    std::thread([this, dctx]() { this->DownloadThumbAssets(dctx); }).detach();
     return E_OK;
 }
 
