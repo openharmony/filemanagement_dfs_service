@@ -20,6 +20,7 @@
 #include "os_account_manager.h"
 #include "sandbox_helper.h"
 #include "string"
+#include "uri.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 
@@ -30,10 +31,11 @@ constexpr size_t MAX_SIZE = 500;
 constexpr int32_t SESSION_NAME_SIZE = 128;
 constexpr int32_t DEFAULT_USER_ID = 100;
 const std::string FILE_SCHEMA = "file://";
-const std::string DOCS = "file://docs";
+const std::string DOCS = "docs";
 const std::string NETWORK_ID = "?networkid=";
 const std::string FILE_SEPARATOR = "/";
 const std::string DISTRIBUTED_PATH = "distributedfiles/.remote_share/";
+const std::string MEDIA = "media";
 using namespace OHOS::AppFileService;
 using namespace OHOS::FileManagement;
 
@@ -167,8 +169,10 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         LOGE("get local uri failed.");
         return localUri;
     }
-    if (localUri.rfind(DOCS, 0) != 0) {
-        std::string bundleName = GetBundleName(localUri);
+    Uri uri(localUri);
+    std::string bundleName = uri.GetAuthority();
+    if (bundleName != MEDIA && bundleName != DOCS) {
+        bundleName = GetBundleName(localUri);
         if (bundleName.empty()) {
             LOGI("get bundleName failed.");
             return "";
@@ -183,7 +187,7 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
     }
     std::string physicalPath;
     if (SandboxHelper::GetPhysicalPath(localUri, std::to_string(QueryActiveUserId()), physicalPath) != E_OK) {
-        LOGE("GetPhysicalPath failed, invalid uri");
+        LOGE("GetPhysicalPath failed, invalid uri, physicalPath = %{public}s", physicalPath.c_str());
         return "";
     }
     if (!SandboxHelper::CheckValidPath(physicalPath)) {
