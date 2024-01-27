@@ -47,7 +47,7 @@
                         "name": "usual.event.BATTERY_OKAY"
                     },
                     {
-                        "name": "usual.event.USER_UNLOKCED"
+                        "name": "usual.event.USER_UNLOCKED"
                     }
                 ]
             }
