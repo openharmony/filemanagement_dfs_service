@@ -72,6 +72,7 @@ ohos_unittest("device_manager_agent_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
@@ -132,6 +133,7 @@ ohos_unittest("os_account_observer_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
@@ -191,6 +193,7 @@ ohos_unittest("devsl_dispatcher_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
@@ -250,6 +253,7 @@ ohos_unittest("kernel_talker_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
@@ -309,6 +313,7 @@ ohos_unittest("session_pool_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
@@ -368,6 +373,7 @@ ohos_unittest("softbus_agent_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
@@ -430,6 +436,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
@@ -489,6 +496,7 @@ ohos_unittest("softbus_session_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
