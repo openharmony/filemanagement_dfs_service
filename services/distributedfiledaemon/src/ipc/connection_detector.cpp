@@ -69,8 +69,10 @@ bool ConnectionDetector::MatchConnectionStatus(ifstream &inputFile)
         if (str.empty()) {
             return false;
         }
-        auto cellStr = GetCellByIndex(str, 3);  // 3 indicates the position of connection status
-        if (cellStr == "2" || cellStr == "3") { // "2"|"3" indicates socket status is connecting|connected;
+        auto connectionStatus = GetCellByIndex(str, 2);  // 2 indicates the position of connection status
+        auto tcpStatus = GetCellByIndex(str, 3);  // 3 indicates the position of tcp status
+        // "2"|"3" indicates socket status is connecting|connected;
+        if (connectionStatus == "2" && (tcpStatus == "2" || tcpStatus == "3")) {
             return true;
         }
     }
