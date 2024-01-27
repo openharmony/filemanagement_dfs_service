@@ -112,7 +112,6 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
 
 void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
 {
-    Init();
     try {
         PublishSA();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
@@ -120,6 +119,8 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         LOGE("%{public}s", e.what());
     }
     LOGI("Start service successfully");
+    Init();
+    LOGI("init service successfully");
     TaskStateManager::GetInstance().StartTask();
     HandleStartReason(startReason);
 }
