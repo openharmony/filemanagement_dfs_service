@@ -264,7 +264,7 @@ int32_t GalleryDataSyncer::Complete(bool isNeedNotify)
         LOGW("clean remain record failed");
         return ret;
     }
-    DataSyncer::CompleteAll();
+    DataSyncer::CompleteAll(isNeedNotify);
     DownloadThumb(DataHandler::DownloadThmType::SYNC_TRIGGER);
     return E_OK;
 }
