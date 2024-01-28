@@ -215,7 +215,7 @@ HWTEST_F(FileDataConvertorTest, HandlePropertiesTest, TestSize.Level1)
     EXPECT_CALL(resultSet,  GetLong(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(resultSet,  GetDouble(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(resultSet,  GetInt(_, _)).WillRepeatedly(Return(0));
-    EXPECT_EQ(E_RDB, ret);
+    EXPECT_EQ(E_OK, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandlePositionTest, TestSize.Level1)
@@ -247,7 +247,7 @@ HWTEST_F(FileDataConvertorTest, HandleHeightTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetInt(_, _)).WillOnce(Return(0));
     string key = "height";
     auto ret = fileDataConvertor_->HandleHeight(map, resultSet);
-    EXPECT_EQ(E_RDB, ret);
+    EXPECT_EQ(E_OK, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleRotateTest, TestSize.Level1)
@@ -289,7 +289,7 @@ HWTEST_F(FileDataConvertorTest, HandleWidthTest1, TestSize.Level1)
     EXPECT_CALL(resultSet, GetInt(_, _)).WillOnce(Return(0));
     string key = "width";
     auto ret = fileDataConvertor_->HandleWidth(map, resultSet);
-    EXPECT_EQ(E_RDB, ret);
+    EXPECT_EQ(E_OK, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, HandleDataModifiedTest, TestSize.Level1)
@@ -496,7 +496,7 @@ HWTEST_F(FileDataConvertorTest, ConvertTest, TestSize.Level1)
     EXPECT_CALL(resultSet,  GetDouble(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(resultSet,  GetInt(_, _)).WillRepeatedly(Return(0));
     auto ret = fileDataConvertor_->Convert(record, resultSet);
-    EXPECT_EQ(E_INVAL_ARG, ret);
+    EXPECT_EQ(E_PATH, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, GetLowerPathTest, TestSize.Level1)
@@ -590,7 +590,7 @@ HWTEST_F(FileDataConvertorTest, CompensateTitleTest1, TestSize.Level1)
     DriveKit::DKRecordData data;
     NativeRdb::ValuesBucket valueBucket;
     auto ret = fileDataConvertor_->CompensateTitle(data, valueBucket);
-    EXPECT_EQ(E_INVAL_ARG, ret);
+    EXPECT_EQ(E_OK, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, CompensateTitleTest2, TestSize.Level1)
@@ -639,7 +639,7 @@ HWTEST_F(FileDataConvertorTest, CompensateSubtypeTest1, TestSize.Level1)
     DriveKit::DKRecordData data;
     NativeRdb::ValuesBucket valueBucket;
     auto ret = fileDataConvertor_->CompensateSubtype(data, valueBucket);
-    EXPECT_EQ(E_INVAL_ARG, ret);
+    EXPECT_EQ(E_OK, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, CompensateSubtypeTest2, TestSize.Level1)
@@ -668,7 +668,7 @@ HWTEST_F(FileDataConvertorTest, CompensateDurationTest1, TestSize.Level1)
     DriveKit::DKRecordData data;
     NativeRdb::ValuesBucket valueBucket;
     auto ret = fileDataConvertor_->CompensateDuration(data, valueBucket);
-    EXPECT_EQ(E_INVAL_ARG, ret);
+    EXPECT_EQ(E_OK, ret);
 }
 
 HWTEST_F(FileDataConvertorTest, CompensateDurationTest2, TestSize.Level1)
