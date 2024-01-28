@@ -49,6 +49,12 @@ int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
         return E_INVAL_ARG;
     }
 
+    if (NetworkStatus::GetNetConnStatus() == NetworkStatus::NetConnStatus::NO_NETWORK) {
+        LOGE("network is not available");
+        dataSyncer->UpdateErrorCode(E_SYNC_FAILED_NETWORK_NOT_AVAILABLE);
+        return E_SYNC_FAILED_NETWORK_NOT_AVAILABLE;
+    }
+
     auto ret = InitSdk(userId, bundleName, dataSyncer);
     if (ret != E_OK) {
         return ret;
@@ -164,20 +170,35 @@ int32_t DataSyncManager::IsUserVerified(const int32_t userId)
 
 int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
 {
-    std::vector<std::string> needSyncApps;
     RETURN_ON_ERR(GetUserId(currentUserId_));
-    GetAllBundleName(currentUserId_, needSyncApps);
+    map<string, DataSyncerInfo> dataSyncerInfoMaps;
+    GetAllDataSyncerInfo(currentUserId_, dataSyncerInfoMaps);
 
-    if (needSyncApps.size() == 0) {
+    if (dataSyncerInfoMaps.size() == 0) {
         LOGI("not need to trigger sync");
         return E_OK;
     }
 
     int32_t ret = E_OK;
-    for (const auto &app : needSyncApps) {
-        ret = TriggerStartSync(app, currentUserId_, false, triggerType);
+    for (const auto &iter : dataSyncerInfoMaps) {
+        auto &bundleName = iter.first;
+        if (triggerType == SyncTriggerType::NETWORK_AVAIL_TRIGGER) {
+            auto &dataSyncerInfo = iter.second;
+            auto dataSyncer = GetDataSyncer(bundleName, currentUserId_);
+            if (!dataSyncer) {
+                LOGE(" Clean Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
+                continue;
+            }
+            if ((dataSyncerInfo.syncState != SyncState::SYNC_FAILED) &&
+                (dataSyncer->GetErrorType() != ErrorType::NETWORK_UNAVAILABLE)) {
+                LOGI("last sync is ok, no need trigger sync, bundleName:%{public}s, syncState:%{public}d",
+                     bundleName.c_str(), static_cast<int32_t>(dataSyncerInfo.syncState));
+                continue;
+            }
+        }
+        ret = TriggerStartSync(bundleName, currentUserId_, false, triggerType);
         if (ret) {
-            LOGE("trigger sync failed, ret = %{public}d, bundleName = %{public}s", ret, app.c_str());
+            LOGE("trigger sync failed, ret = %{public}d, bundleName = %{public}s", ret, bundleName.c_str());
         }
     }
     return ret;
@@ -211,10 +232,6 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bu
 
 int32_t DataSyncManager::IsSkipSync(const std::string &bundle, const int32_t userId)
 {
-    if (NetworkStatus::GetNetConnStatus() == NetworkStatus::NetConnStatus::NO_NETWORK) {
-        LOGE("network is not available");
-        return E_SYNC_FAILED_NETWORK_NOT_AVAILABLE;
-    }
     string bundleName;
     Convert2BundleName(bundle, bundleName);
     if (!CloudStatus::IsCloudStatusOkay(bundleName, userId)) {
@@ -323,7 +340,7 @@ int32_t DataSyncManager::CleanCache(const string &bundleName, const int32_t user
     return dataSyncer->CleanCache(uri);
 }
 
-int32_t DataSyncManager::GetAllBundleName(const int32_t userId, vector<string> &bundles)
+int32_t DataSyncManager::GetAllDataSyncerInfo(const int32_t userId, map<string, DataSyncerInfo> &dataSyncerInfoMaps)
 {
     std::shared_ptr<NativeRdb::ResultSet> resultSet;
     RETURN_ON_ERR(DataSyncerRdbStore::GetInstance().QueryDataSyncer(userId, resultSet));
@@ -341,7 +358,11 @@ int32_t DataSyncManager::GetAllBundleName(const int32_t userId, vector<string> &
             LOGE("get sync state failed");
             continue;
         }
-        bundles.push_back(bundleName);
+
+        DataSyncerInfo dataSyncerInfo = {
+            .syncState = static_cast<SyncState>(state),
+        };
+        dataSyncerInfoMaps.insert({bundleName, dataSyncerInfo});
     }
     return E_OK;
 }
@@ -349,14 +370,15 @@ int32_t DataSyncManager::GetAllBundleName(const int32_t userId, vector<string> &
 int32_t DataSyncManager::DisableCloud(const int32_t userId)
 {
     std::lock_guard<std::mutex> lck(cleanMutex_);
-    std::vector<std::string> bundles;
-    GetAllBundleName(userId, bundles);
-    if (bundles.size() == 0) {
+    map<string, DataSyncerInfo> dataSyncerInfoMaps;
+    GetAllDataSyncerInfo(userId, dataSyncerInfoMaps);
+    if (dataSyncerInfoMaps.size() == 0) {
         LOGI("not need to clean");
         return E_OK;
     }
 
-    for (const auto &bundle : bundles) {
+    for (const auto &iter : dataSyncerInfoMaps) {
+        auto &bundle = iter.first;
         auto dataSyncer = GetDataSyncer(bundle, userId);
         if (!dataSyncer) {
             LOGE("Get dataSyncer failed, bundleName: %{private}s", bundle.c_str());
