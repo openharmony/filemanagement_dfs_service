@@ -1234,8 +1234,8 @@ int32_t FileDataHandler::SetRetry(vector<NativeRdb::ValueObject> &retryList)
 void FileDataHandler::UpdateAlbumInternal()
 {
     std::lock_guard<std::mutex> lock(rdbMutex_);
-    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateSystemAlbumCountInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateUserAlbumCountInternal(GetRaw());
 }
 
 int FileDataHandler::SetRetry(const string &recordId)
