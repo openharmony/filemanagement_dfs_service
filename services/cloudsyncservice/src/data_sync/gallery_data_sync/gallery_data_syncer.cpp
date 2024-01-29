@@ -383,13 +383,13 @@ void GalleryDataSyncer::StopDownloadThumb()
 
 int32_t GalleryDataSyncer::InitSysEventData()
 {
-    syncStat_ = make_shared<GalleryIncSyncStat>();
-    checkStat_ = make_shared<GalleryCheckSatat>();
-
     /* bind sync data to handler */
+    syncStat_ = make_shared<GalleryIncSyncStat>();
     fileHandler_->SetSyncStat(syncStat_);
     albumHandler_->SetSyncStat(syncStat_);
 
+    /* bind check data to handler */
+    checkStat_ = make_shared<GalleryCheckSatat>();
     fileHandler_->SetCheckStat(checkStat_);
 
     return E_OK;
