@@ -40,7 +40,7 @@ public:
     static const int32_t DEFAULT_VALUE;
     static const int32_t DEFAULT_USER_ID;
     CycleTaskRunner(std::shared_ptr<DataSyncManager> dataSyncManager);
-    void StartTask();
+    void StartTask(std::string &reason);
 
 private:
     int32_t userId_{0};
