@@ -49,6 +49,7 @@ public:
     virtual void FreeSysEventData() override;
     virtual void ReportSysEvent(uint32_t code) override;
     virtual void SetFullSyncSysEvent() override;
+    virtual void SetCheckSysEvent() override;
 
 private:
     enum {

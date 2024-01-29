@@ -351,6 +351,10 @@ void DataSyncer::SetFullSyncSysEvent()
 {
 }
 
+void DataSyncer::SetCheckSysEvent()
+{
+}
+
 bool DataSyncer::CheckScreenAndWifi()
 {
     return true;

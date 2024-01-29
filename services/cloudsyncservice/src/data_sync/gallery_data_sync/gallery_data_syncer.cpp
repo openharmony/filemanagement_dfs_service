@@ -388,10 +388,6 @@ int32_t GalleryDataSyncer::InitSysEventData()
     fileHandler_->SetSyncStat(syncStat_);
     albumHandler_->SetSyncStat(syncStat_);
 
-    /* bind check data to handler */
-    checkStat_ = make_shared<GalleryCheckSatat>();
-    fileHandler_->SetCheckStat(checkStat_);
-
     return E_OK;
 }
 
@@ -417,6 +413,15 @@ void GalleryDataSyncer::SetFullSyncSysEvent()
     }
 }
 
+void GalleryDataSyncer::SetCheckSysEvent()
+{
+    if (checkStat_ == nullptr) {
+        /* bind check data to handler */
+        checkStat_ = make_shared<GalleryCheckSatat>();
+        fileHandler_->SetCheckStat(checkStat_);
+    }
+}
+
 void GalleryDataSyncer::ReportSysEvent(uint32_t code)
 {
     if (syncStat_ != nullptr) {
@@ -429,9 +434,7 @@ void GalleryDataSyncer::ReportSysEvent(uint32_t code)
     }
 
     if (checkStat_ != nullptr) {
-        if (syncStat_ != nullptr && syncStat_->IsFullSync()) {
-            checkStat_->Report();
-        }
+        checkStat_->Report();
     }
 }
 

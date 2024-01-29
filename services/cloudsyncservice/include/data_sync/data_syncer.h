@@ -132,6 +132,7 @@ protected:
     virtual void FreeSysEventData();
     virtual void ReportSysEvent(uint32_t code);
     virtual void SetFullSyncSysEvent();
+    virtual void SetCheckSysEvent();
 
     /* identifier */
     const std::string bundleName_;
