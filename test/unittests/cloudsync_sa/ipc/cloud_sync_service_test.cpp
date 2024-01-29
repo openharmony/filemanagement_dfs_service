@@ -40,6 +40,11 @@ public:
 
 void CloudSyncServiceTest::SetUpTestCase(void)
 {
+    if (g_servicePtr_ == nullptr) {
+        int32_t saId = 5204;
+        g_servicePtr_ = std::make_shared<CloudSyncService>(saId);
+        ASSERT_TRUE(g_servicePtr_ != nullptr) << "SystemAbility failed";
+    }
     std::cout << "SetUpTestCase" << std::endl;
 }
 
@@ -50,11 +55,6 @@ void CloudSyncServiceTest::TearDownTestCase(void)
 
 void CloudSyncServiceTest::SetUp(void)
 {
-    if (g_servicePtr_ == nullptr) {
-        int32_t saId = 5204;
-        g_servicePtr_ = std::make_shared<CloudSyncService>(saId);
-        ASSERT_TRUE(g_servicePtr_ != nullptr) << "SystemAbility failed";
-    }
     std::cout << "SetUp" << std::endl;
 }
 
@@ -128,48 +128,6 @@ HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest003, TestSize.Level1)
 }
 
 /**
- * @tc.name:DeleteAssetTest001
- * @tc.desc:Verify the DeleteAsset function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, DeleteAssetTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeleteAssetTest001 start";
-    try {
-        int32_t userId = 100;
-        std::string uri = "";
-        int ret = g_servicePtr_->DeleteAsset(userId, uri);
-        EXPECT_EQ(ret, E_GET_PHYSICAL_PATH_FAILED);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "DeleteAssetTest001 FAILED";
-    }
-    GTEST_LOG_(INFO) << "DeleteAssetTest001 end";
-}
-
-/**
- * @tc.name:DeleteAssetTest002
- * @tc.desc:Verify the DeleteAsset function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, DeleteAssetTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeleteAssetTest002 start";
-    try {
-        int32_t userId = 100;
-        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
-        int ret = g_servicePtr_->DeleteAsset(userId, uri);
-        EXPECT_EQ(ret, E_DELETE_FAILED);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "DeleteAssetTest002 FAILED";
-    }
-    GTEST_LOG_(INFO) << "DeleteAssetTest002 end";
-}
-
-/**
  * @tc.name: OnStartTest
  * @tc.desc: Verify the OnStart function.
  * @tc.type: FUNC
@@ -207,12 +165,90 @@ HWTEST_F(CloudSyncServiceTest, OnStopTest, TestSize.Level1)
 }
 
 /**
- * @tc.name:RegisterCallbackInnerTest
+ * @tc.name: HandleStartReasonTest
+ * @tc.desc: Verify the HandleStartReason function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, HandleStartReasonTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleStartReason start";
+    try {
+        SystemAbilityOnDemandReason startReason;
+        g_servicePtr_->HandleStartReason(startReason);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleStartReason FAILED";
+    }
+    GTEST_LOG_(INFO) << "HandleStartReason end";
+}
+
+/**
+ * @tc.name: OnAddSystemAbilityTest
+ * @tc.desc: Verify the OnAddSystemAbility function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, OnAddSystemAbilityTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnAddSystemAbility start";
+    try {
+        int32_t systemAbilityId = 100;
+        std::string deviceId = "";
+        g_servicePtr_->OnAddSystemAbility(systemAbilityId, deviceId);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnAddSystemAbility FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnAddSystemAbility end";
+}
+
+/**
+ * @tc.name: LoadRemoteSATest
+ * @tc.desc: Verify the LoadRemoteSA function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, LoadRemoteSATest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadRemoteSA start";
+    try {
+        std::string deviceId = "";
+        int ret = g_servicePtr_->LoadRemoteSA(deviceId);
+        EXPECT_EQ(ret, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LoadRemoteSA FAILED";
+    }
+    GTEST_LOG_(INFO) << "LoadRemoteSA end";
+}
+
+/**
+ * @tc.name:UnRegisterCallbackInnerTest
+ * @tc.desc:Verify the UnRegisterCallbackInner function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, UnRegisterCallbackInnerTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterCallbackInner Start";
+    try {
+        int ret = g_servicePtr_->UnRegisterCallbackInner();
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterCallbackInner FAILED";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterCallbackInner End";
+}
+
+/**
+ * @tc.name:RegisterCallbackInnerTest001
  * @tc.desc:Verify the RegisterCallbackInner function.
  * @tc.type:FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest, TestSize.Level1)
+HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackInner start";
     try {
@@ -247,6 +283,27 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest002, TestSize.Level1)
 }
 
 /**
+ * @tc.name:TriggerSyncInnerTest
+ * @tc.desc:Verify the TriggerSyncInner function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, TriggerSyncInnerTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TriggerSyncInner start";
+    try {
+        std::string bundleName = "com.ohos.photos";
+        int32_t userId = 0;
+        int ret = g_servicePtr_->TriggerSyncInner(bundleName, userId);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TriggerSyncInner FAILED";
+    }
+    GTEST_LOG_(INFO) << "TriggerSyncInner end";
+}
+
+/**
  * @tc.name:StopSyncInnerTest
  * @tc.desc:Verify the StopSyncInner function.
  * @tc.type:FUNC
@@ -256,7 +313,7 @@ HWTEST_F(CloudSyncServiceTest, StopSyncInnerTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopSyncInner Start";
     try {
-        string bundleName = "com.ohos.photos";
+        std::string bundleName = "";
         int32_t callerUserId = 100;
         auto dataSyncManager = g_servicePtr_->dataSyncManager_;
         int ret = dataSyncManager->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::APP_TRIGGER);
@@ -269,114 +326,26 @@ HWTEST_F(CloudSyncServiceTest, StopSyncInnerTest, TestSize.Level1)
 }
 
 /**
- * @tc.name:ChangeAppSwitchTest1
- * @tc.desc:Verify the ChangeAppSwitch function.
+ * @tc.name:CleanCacheInnerTest
+ * @tc.desc:Verify the CleanCacheInner function.
  * @tc.type:FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest1, TestSize.Level1)
+HWTEST_F(CloudSyncServiceTest, CleanCacheInnerTest, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "ChangeAppSwitch Start";
+    GTEST_LOG_(INFO) << "CleanCacheInner Start";
     try {
-        std::string accountId = "testId";
+        int32_t userId = 100;
         std::string bundleName = "com.ohos.photos";
-        int32_t callerUserId = 100;
+        std::string uri = "";
         auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
+        int ret = dataSyncManager->CleanCache(bundleName, userId, uri);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ChangeAppSwitch FAILED";
+        GTEST_LOG_(INFO) << "CleanCacheInner FAILED";
     }
-    GTEST_LOG_(INFO) << "ChangeAppSwitch End";
-}
-
-/**
- * @tc.name:ChangeAppSwitchTest2
- * @tc.desc:Verify the ChangeAppSwitch function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, ChangeAppSwitchTest2, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ChangeAppSwitch Start";
-    try {
-        std::string accountId = "testId";
-        std::string bundleName = "com.ohos.photos";
-        int32_t callerUserId = 100;
-        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
-        EXPECT_EQ(ret, E_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ChangeAppSwitch FAILED";
-    }
-    GTEST_LOG_(INFO) << "ChangeAppSwitch End";
-}
-
-/**
- * @tc.name:NotifyDataChangeTest
- * @tc.desc:Verify the NotifyDataChange function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, NotifyDataChangeTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "NotifyDataChange Start";
-    try {
-        std::string accountId = "testId";
-        string bundleName = "com.ohos.photos";
-        int32_t callerUserId = 100;
-        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
-        EXPECT_EQ(ret, E_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "NotifyDataChange FAILED";
-    }
-    GTEST_LOG_(INFO) << "NotifyDataChange End";
-}
-
-/**
- * @tc.name:UnRegisterCallbackInnerTest
- * @tc.desc:Verify the UnRegisterCallbackInner function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, UnRegisterCallbackInnerTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "UnRegisterCallbackInner Start";
-    try {
-        int ret = g_servicePtr_->UnRegisterCallbackInner();
-        EXPECT_EQ(ret, E_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "UnRegisterCallbackInner FAILED";
-    }
-    GTEST_LOG_(INFO) << "UnRegisterCallbackInner End";
-}
-
-/**
- * @tc.name:StartSyncInnerTest
- * @tc.desc:Verify the StartSyncInner function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, StartSyncInnerTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "StartSyncInner Start";
-    try {
-        string bundleName = "com.ohos.photos";
-        int32_t callerUserId = 100;
-        bool forceFlag = true;
-        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->TriggerStartSync(bundleName, callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
-        EXPECT_EQ(ret, E_OK);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "StartSyncInner FAILED";
-    }
-    GTEST_LOG_(INFO) << "StartSyncInner End";
+    GTEST_LOG_(INFO) << "CleanCacheInner End";
 }
 
 /**
@@ -422,6 +391,29 @@ HWTEST_F(CloudSyncServiceTest, CleanTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name:StartDownloadFileTest
+ * @tc.desc:Verify the StartDownloadFile function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, StartDownloadFileTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartDownloadFile start";
+    try {
+        string bundleName = "";
+        int32_t callerUserId = 100;
+        string path;
+        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
+        int ret = dataSyncManager->StartDownloadFile(bundleName, callerUserId, path);
+        EXPECT_EQ(E_INVAL_ARG, ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartDownloadFile FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartDownloadFile end";
+}
+
+/**
  * @tc.name:StopDownloadFileTest
  * @tc.desc:Verify the StopDownloadFile function.
  * @tc.type:FUNC
@@ -436,7 +428,7 @@ HWTEST_F(CloudSyncServiceTest, StopDownloadFileTest, TestSize.Level1)
         std::string path;
         auto dataSyncManager = g_servicePtr_->dataSyncManager_;
         int ret = dataSyncManager->StopDownloadFile(bundleName, callerUserId, path);
-        EXPECT_TRUE(E_OK == ret || ret == E_RDB);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StopDownloadFile FAILED";
@@ -575,7 +567,7 @@ HWTEST_F(CloudSyncServiceTest, DownloadAssetTest001, TestSize.Level1)
         AssetInfoObj assetInfoObj;
         assetInfoObj.uri = uri;
         int ret = g_servicePtr_->DownloadAsset(taskId, userId, bundleName, networkId, assetInfoObj);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DownloadAssetTest001 FAILED";
@@ -647,6 +639,47 @@ HWTEST_F(CloudSyncServiceTest, RegisterDownloadAssetCallbackTest002, TestSize.Le
     GTEST_LOG_(INFO) << "RegisterDownloadAssetCallback error branch end";
 }
 
+/**
+ * @tc.name:DeleteAssetTest001
+ * @tc.desc:Verify the DeleteAsset function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, DeleteAssetTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteAssetTest001 start";
+    try {
+        int32_t userId = 100;
+        std::string uri = "";
+        int ret = g_servicePtr_->DeleteAsset(userId, uri);
+        EXPECT_EQ(ret, E_GET_PHYSICAL_PATH_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteAssetTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DeleteAssetTest001 end";
+}
+
+/**
+ * @tc.name:DeleteAssetTest002
+ * @tc.desc:Verify the DeleteAsset function.
+ * @tc.type:FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceTest, DeleteAssetTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteAssetTest002 start";
+    try {
+        int32_t userId = 100;
+        std::string uri = "file://com.hmos.notepad/data/storage/el2/distributedfiles/dir/1.txt";
+        int ret = g_servicePtr_->DeleteAsset(userId, uri);
+        EXPECT_EQ(ret, E_DELETE_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DeleteAssetTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "DeleteAssetTest002 end";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
