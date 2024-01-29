@@ -342,7 +342,7 @@ int32_t DataSyncManager::CleanCache(const string &bundleName, const int32_t user
 
 int32_t DataSyncManager::GetAllDataSyncerInfo(const int32_t userId, map<string, DataSyncerInfo> &dataSyncerInfoMaps)
 {
-    std::shared_ptr<NativeRdb::ResultSet> resultSet;
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
     RETURN_ON_ERR(DataSyncerRdbStore::GetInstance().QueryDataSyncer(userId, resultSet));
 
     while (resultSet->GoToNextRow() == E_OK) {

@@ -33,7 +33,7 @@ SaveSubscriptionTask::SaveSubscriptionTask(std::shared_ptr<DataSyncManager> data
 
 int32_t SaveSubscriptionTask::RunTask(int32_t userId)
 {
-    std::shared_ptr<NativeRdb::ResultSet> resultSet;
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
     RETURN_ON_ERR(DataSyncerRdbStore::GetInstance().QueryDataSyncer(userId, resultSet));
 
     while (resultSet->GoToNextRow() == E_OK) {
