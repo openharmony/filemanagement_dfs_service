@@ -179,6 +179,9 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
     /* Full synchronization and incremental synchronization */
     if (handler->IsPullRecords()) {
         SetFullSyncSysEvent();
+        if (handler->GetCheckFlag()) {
+            SetCheckSysEvent();
+        }
         ret = AsyncRun(context, &DataSyncer::PullRecords);
     } else {
         ret = AsyncRun(context, &DataSyncer::PullDatabaseChanges);
@@ -1413,6 +1416,10 @@ void DataSyncer::ReportSysEvent(uint32_t code)
 }
 
 void DataSyncer::SetFullSyncSysEvent()
+{
+}
+
+void DataSyncer::SetCheckSysEvent()
 {
 }
 } // namespace CloudSync

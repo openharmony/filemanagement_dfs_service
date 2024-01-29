@@ -25,6 +25,7 @@
 #include "ipc/cloud_sync_callback_manager.h"
 #include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
+#include "periodic_check_task.h"
 #include "sandbox_helper.h"
 #include "session_manager.h"
 #include "sdk_helper.h"
@@ -133,11 +134,20 @@ void CloudSyncService::OnStop()
 void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& startReason)
 {
     string reason = startReason.GetName();
-    LOGI("Begin to start service reason: %{public}s", reason.c_str());
     int32_t userId = 0;
+
+    LOGI("Begin to start service reason: %{public}s", reason.c_str());
+
+    if (reason == "usual.event.USER_UNLOCKED") {
+        shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
+        taskRunner->SetPref(ForcePeriodicCheck, true);
+        return;
+    }
+
     if (dataSyncManager_->GetUserId(userId) != E_OK) {
         return;
     }
+
     if (reason == "usual.event.wifi.SCAN_FINISHED") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
     } else if (reason == "usual.event.BATTERY_OKAY") {
@@ -145,6 +155,7 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
     } else if (reason == "usual.event.SCREEN_OFF") {
         dataSyncManager_->DownloadThumb();
     }
+
     if (reason != "load") {
         shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
         taskRunner->StartTask(reason);

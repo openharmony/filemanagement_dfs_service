@@ -71,7 +71,8 @@ int32_t RdbDataHandler::BatchDetete(const string &whichTable,
 
 int32_t RdbDataHandler::BatchUpdate(const string &sql,
                                     const string &whichColumn,
-                                    std::vector<NativeRdb::ValueObject> &bindArgs)
+                                    std::vector<NativeRdb::ValueObject> &bindArgs,
+                                    uint64_t &count)
 {
     if (bindArgs.size() < 0) {
         return E_INVALID_ARGS;
@@ -91,6 +92,7 @@ int32_t RdbDataHandler::BatchUpdate(const string &sql,
         if (ret == E_OK) {
             bindArgs.erase(bindArgs.begin(), bindArgs.begin() + size);
             LOGD("update size is %{public}d", size);
+            count = size;
         } else {
             LOGW("update fail try next time, ret is %{public}d", ret);
             return E_OK;

@@ -49,6 +49,7 @@ public:
     virtual void FreeSysEventData() override;
     virtual void ReportSysEvent(uint32_t code) override;
     virtual void SetFullSyncSysEvent() override;
+    virtual void SetCheckSysEvent() override;
 
 private:
     enum {
@@ -91,6 +92,8 @@ private:
 
     /* sync stat */
     std::shared_ptr<GalleryIncSyncStat> syncStat_;
+    /* check stat */
+    std::shared_ptr<GalleryCheckSatat> checkStat_;
 };
 
 class RdbCallback : public NativeRdb::RdbOpenCallback {
