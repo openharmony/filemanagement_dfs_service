@@ -1128,9 +1128,6 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
     if (asset.fieldKey == "thumbnail") {
         std::lock_guard<std::mutex> lock(thmMutex_);
         thmVec_.emplace_back(asset.recordId);
-        if (IsPullRecords()) {
-            UpdateAttachmentStat(INDEX_THUMB_SUCCESS, 1);
-        }
     }
     if (asset.fieldKey == "lcd") {
         std::lock_guard<std::mutex> lock(lcdMutex_);
@@ -3732,21 +3729,20 @@ void FileDataHandler::UpdateThmVec()
             to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) + " < 0 THEN 0 ELSE " + PC::PHOTO_THUMB_STATUS
             + " - " + to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) + " END ";
         int32_t ret = E_OK;
-        uint64_t total = thmVec_.size();
+        uint64_t count = 0;
         std::vector<int> fileIds;
         {
             std::lock_guard<std::mutex> lock(rdbMutex_);
             fileIds.reserve(thmVec_.size());
             BatchGetFileIdFromCloudId(thmVec_, fileIds);
             LOGD("thmVec_ size is %{public}zu, fileIds size is %{public}zu", thmVec_.size(), fileIds.size());
-            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_);
+            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_, count);
         }
         if (ret != E_OK) {
             LOGW("update thm fail");
         }
-        UpdateAttachmentStat(INDEX_THUMB_SUCCESS, total - thmVec_.size());
-        if (thmVec_.size()) {
-            UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
+        if (count != 0) {
+            UpdateAttachmentStat(INDEX_THUMB_SUCCESS, count);
         }
         if (!IsPullRecords()) {
             UpdateAlbumInternal();
@@ -3768,17 +3764,16 @@ void FileDataHandler::UpdateLcdVec()
             " < 0 THEN 0 ELSE " + PC::PHOTO_THUMB_STATUS + " - " +
             to_string(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) + " END ";
         int32_t ret = E_OK;
-        uint64_t total = lcdVec_.size();
+        uint64_t count = 0;
         {
             std::lock_guard<std::mutex> lock(rdbMutex_);
-            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, lcdVec_);
+            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, lcdVec_, count);
         }
         if (ret != E_OK) {
             LOGW("update lcd fail");
         }
-        UpdateAttachmentStat(INDEX_LCD_SUCCESS, total - lcdVec_.size());
-        if (lcdVec_.size() > 0) {
-            UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, lcdVec_.size());
+        if (count != 0) {
+            UpdateAttachmentStat(INDEX_LCD_SUCCESS, count);
         }
     }
 }
@@ -3824,6 +3819,9 @@ void FileDataHandler::StopUpdataFiles(uint32_t &timeId)
         timeId = 0;
         timeId_ = 0;
     }
+
+    UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
+    UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, lcdVec_.size());
 }
 } // namespace CloudSync
 } // namespace FileManagement
