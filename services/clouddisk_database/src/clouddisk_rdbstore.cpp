@@ -191,7 +191,7 @@ static int32_t GetFileTypeFromMimeType(const std::string &mimeType)
     return static_cast<int32_t>(FileType::FILE_TYPE_APPLICATION);
 }
 
-static int64_t Timespec2Milliseconds(struct timespec &time)
+static int64_t Timespec2Milliseconds(const struct timespec &time)
 {
     return time.tv_sec * SECOND_TO_MILLISECOND + time.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }

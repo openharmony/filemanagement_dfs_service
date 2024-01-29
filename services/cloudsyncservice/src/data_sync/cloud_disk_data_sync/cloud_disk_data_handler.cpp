@@ -216,9 +216,6 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
     ValuesBucket values;
     ret = localConvertor_.Convert(record, values);
     if (ret != E_OK) {
-        return ret;
-    }
-    if (ret != E_OK) {
         LOGE("record to valuebucket failed, ret=%{public}d", ret);
         return ret;
     }
@@ -277,7 +274,6 @@ int32_t CloudDiskDataHandler::HandleConflict(const std::shared_ptr<NativeRdb::Re
     if (count == 0) {
         return E_OK;
     }
-    string dbFileName = "";
     string renameFileCloudId = "";
     ret = FindRenameFile(resultSet, renameFileCloudId, fullName, lastDot);
     if (ret != E_OK) {

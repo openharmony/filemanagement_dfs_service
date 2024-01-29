@@ -193,9 +193,8 @@ int32_t CloudDiskDataConvertor::ExtractFileName(const DriveKit::DKRecordData &da
         return E_INVAL_ARG;
     }
     size_t pos = fileName.find_last_of('.');
-    string extension;
     if (pos != string::npos) {
-        extension = fileName.substr(fileName.find_last_of('.') + 1, fileName.length());
+        string extension = fileName.substr(fileName.find_last_of('.') + 1, fileName.length());
         auto mimeType = Media::MimeTypeUtils::GetMimeTypeFromExtension(extension);
         auto mediaType = Media::MimeTypeUtils::GetMediaTypeFromMimeType(mimeType);
         valueBucket.PutString(FileColumn::FILE_CATEGORY, extension);
