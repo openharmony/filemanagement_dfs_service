@@ -128,6 +128,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/cycle_task",
+    "${services_path}/cloudsyncservice/include/cycle_task/tasks",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
