@@ -487,7 +487,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     LOGD("%s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
-    auto dkReadSession = cInode->readSession;auto dkReadSession = cInode->readSession;
+    auto dkReadSession = cInode->readSession;
     if (!PrepareForRead(req, buf, size, cInode, dkReadSession)) {
         return;
     }
