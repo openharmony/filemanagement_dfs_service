@@ -489,7 +489,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     LOGD("%s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
 
     auto dkReadSession = cInode->readSession;auto dkReadSession = cInode->readSession;
-    if (!PrepareForRead(req, buf, size, cInode)) {
+    if (!PrepareForRead(req, buf, size, cInode, dkReadSession)) {
         return;
     }
 
