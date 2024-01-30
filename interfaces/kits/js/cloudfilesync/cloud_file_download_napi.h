@@ -24,7 +24,7 @@ public:
     CloudFileDownloadNapi(napi_env env, napi_value exports) : CloudFileNapi(env, exports) {}
     ~CloudFileDownloadNapi() = default;
 
-    bool Export() override;
+    virtual bool Export() override;
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H

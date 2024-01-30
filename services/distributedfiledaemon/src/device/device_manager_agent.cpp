@@ -458,7 +458,7 @@ void DeviceManagerAgent::InitDeviceInfos()
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     int errCode = deviceManager.GetTrustedDeviceList(pkgName, extra, deviceInfoList);
     if (errCode) {
-        ThrowException(errCode, "Failed to get info of remote devices");
+        THROW_EXCEPTION(errCode, "Failed to get info of remote devices");
     }
 
     for (const auto &deviceInfo : deviceInfoList) {
@@ -472,7 +472,7 @@ void DeviceManagerAgent::InitLocalNodeInfo()
     NodeBasicInfo tmpNodeInfo;
     int errCode = GetLocalNodeDeviceInfo(IDaemon::SERVICE_NAME.c_str(), &tmpNodeInfo);
     if (errCode != 0) {
-        ThrowException(errCode, "Failed to get info of local devices");
+        THROW_EXCEPTION(errCode, "Failed to get info of local devices");
     }
     localDeviceInfo_.SetCid(string(tmpNodeInfo.networkId));
 }
@@ -496,7 +496,7 @@ vector<DeviceInfo> DeviceManagerAgent::GetRemoteDevicesInfo()
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     int errCode = deviceManager.GetTrustedDeviceList(pkgName, extra, deviceList);
     if (errCode) {
-        ThrowException(errCode, "Failed to get info of remote devices");
+        THROW_EXCEPTION(errCode, "Failed to get info of remote devices");
     }
 
     vector<DeviceInfo> res;
@@ -512,12 +512,12 @@ void DeviceManagerAgent::RegisterToExternalDm()
     string pkgName = IDaemon::SERVICE_NAME;
     int errCode = deviceManager.InitDeviceManager(pkgName, shared_from_this());
     if (errCode != 0) {
-        ThrowException(errCode, "Failed to InitDeviceManager");
+        THROW_EXCEPTION(errCode, "Failed to InitDeviceManager");
     }
     string extra = "";
     errCode = deviceManager.RegisterDevStateCallback(pkgName, extra, shared_from_this());
     if (errCode != 0) {
-        ThrowException(errCode, "Failed to RegisterDevStateCallback");
+        THROW_EXCEPTION(errCode, "Failed to RegisterDevStateCallback");
     }
     LOGI("RegisterToExternalDm Succeed");
 }
@@ -528,11 +528,11 @@ void DeviceManagerAgent::UnregisterFromExternalDm()
     string pkgName = IDaemon::SERVICE_NAME;
     int errCode = deviceManager.UnRegisterDevStateCallback(pkgName);
     if (errCode != 0) {
-        ThrowException(errCode, "Failed to UnRegisterDevStateCallback");
+        THROW_EXCEPTION(errCode, "Failed to UnRegisterDevStateCallback");
     }
     errCode = deviceManager.UnInitDeviceManager(pkgName);
     if (errCode != 0) {
-        ThrowException(errCode, "Failed to UnInitDeviceManager");
+        THROW_EXCEPTION(errCode, "Failed to UnInitDeviceManager");
     }
     LOGI("UnregisterFromExternalDm Succeed");
 }

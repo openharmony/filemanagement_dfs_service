@@ -45,6 +45,13 @@ GalleryDataSyncer::GalleryDataSyncer(const std::string bundleName, const int32_t
 
 int32_t GalleryDataSyncer::Init(const std::string bundleName, const int32_t userId)
 {
+    auto rdb = RdbInit(bundleName_, userId_);
+    if (!rdb) {
+        return E_RDB;
+    }
+    /* init handler */
+    fileHandler_ = make_shared<FileDataHandler>(userId_, bundleName_, rdb);
+    albumHandler_ = make_shared<AlbumDataHandler>(userId_, bundleName_, rdb);
     return E_OK;
 }
 
@@ -73,48 +80,13 @@ std::shared_ptr<NativeRdb::RdbStore> GalleryDataSyncer::RdbInit(const std::strin
     return rdb;
 }
 
-int32_t GalleryDataSyncer::GetHandler()
-{
-    lock_guard<mutex> lock{handleInitMutex_};
-    if (!fileHandler_) {
-        auto rdb = RdbInit(bundleName_, userId_);
-        if (!rdb) {
-            return E_RDB;
-        }
-        /* init handler */
-        fileHandler_ = make_shared<FileDataHandler>(userId_, bundleName_, rdb);
-        albumHandler_ = make_shared<AlbumDataHandler>(userId_, bundleName_, rdb);
-    }
-    dataHandlerRefCount_++;
-    LOGD("get handler, refCount: %{public}d", dataHandlerRefCount_);
-    return E_OK;
-}
-
-void GalleryDataSyncer::PutHandler()
-{
-    lock_guard<mutex> lock{handleInitMutex_};
-    LOGD("put handler, refCount: %{public}d", dataHandlerRefCount_);
-    if (dataHandlerRefCount_ > 0) {
-        dataHandlerRefCount_--;
-    }
-    if ((fileHandler_ != nullptr) && (dataHandlerRefCount_ == 0)) {
-        fileHandler_ = nullptr;
-        albumHandler_ = nullptr;
-        LOGI("handler destroyed");
-    }
-}
-
 int32_t GalleryDataSyncer::Clean(const int action)
 {
     LOGD("gallery data sycner Clean");
     /* start clean */
     BeginClean();
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        return ret;
-    }
     /* file */
-    ret = CancelDownload(fileHandler_);
+    int32_t ret = CancelDownload(fileHandler_);
     if (ret != E_OK) {
         LOGE("gallery data syncer file cancel download err %{public}d", ret);
     }
@@ -124,7 +96,6 @@ int32_t GalleryDataSyncer::Clean(const int action)
     }
     fileHandler_->ClearCursor();
     ret = fileHandler_->MarkClean(action);
-    PutHandler();
     CompleteClean();
     return ret;
 }
@@ -134,39 +105,17 @@ int32_t GalleryDataSyncer::DisableCloud()
     LOGD("gallery data sycner disable");
     /* start clean */
     BeginDisableCloud();
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        return ret;
-    }
-    ret = CleanInner(fileHandler_, CleanAction::RETAIN_DATA);
+    int32_t ret = CleanInner(fileHandler_, CleanAction::RETAIN_DATA);
     if (ret != E_OK) {
         LOGE("gallery data syncer file disable cloud err %{public}d", ret);
     }
-    PutHandler();
     CompleteDisableCloud();
     return ret;
 }
 
 int32_t GalleryDataSyncer::StartDownloadFile(const std::string path, const int32_t userId)
 {
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        return ret;
-    }
-    ret = DownloadInner(fileHandler_, path, userId);
-    PutHandler();
-    return ret;
-}
-
-int32_t GalleryDataSyncer::StopDownloadFile(const std::string path, const int32_t userId)
-{
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        return ret;
-    }
-    ret = DataSyncer::StopDownloadFile(path, userId);
-    PutHandler();
-    return ret;
+    return DownloadInner(fileHandler_, path, userId);
 }
 
 void GalleryDataSyncer::Schedule()
@@ -224,11 +173,6 @@ void GalleryDataSyncer::ScheduleByType(SyncTriggerType syncTriggerType)
 {
     LOGI("schedule to stage %{public}d", ++stage_);
     /* call putHandler in the Reset function when sync is completed */
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        LOGE("Get handler failed, may be rdb init failed");
-        return;
-    }
     if (syncTriggerType == SyncTriggerType::TASK_TRIGGER) {
         fileHandler_->SetChecking();
     }
@@ -243,24 +187,12 @@ void GalleryDataSyncer::Reset()
     if (albumHandler_ != nullptr) {
         albumHandler_->Reset();
     }
-    /* release some resources after last sycn is completed */
-    if (stage_ != BEGIN) {
-        /* release DataHandler */
-        PutHandler();
-    }
     /* reset stage in case of stop or restart */
     stage_ = BEGIN;
 }
 
 int32_t GalleryDataSyncer::Prepare()
 {
-    /* call putHandler in the Reset function when sync is completed */
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        LOGE("Get handler failed, may be rdb init failed");
-        return ret;
-    }
-
     /* schedule to next stage */
     Schedule();
     return E_OK;
@@ -324,39 +256,24 @@ int32_t GalleryDataSyncer::Complete(bool isNeedNotify)
 {
     LOGI("gallery data syncer complete all");
     Unlock();
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        LOGE("Get handler failed, may be rdb init failed");
-        return ret;
-    }
     if (!TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK)) {
         fileHandler_->StopUpdataFiles(timeId_);
     }
-    ret = fileHandler_->CleanRemainRecord();
+    int32_t ret = fileHandler_->CleanRemainRecord();
     if (ret != E_OK) {
         LOGW("clean remain record failed");
         return ret;
     }
-    PutHandler();
-    DataSyncer::CompleteAll();
+    DataSyncer::CompleteAll(isNeedNotify);
     DownloadThumb(DataHandler::DownloadThmType::SYNC_TRIGGER);
     return E_OK;
 }
 
 int32_t GalleryDataSyncer::OptimizeStorage(const int32_t agingDays)
 {
-    LOGD("gallery data sycner FileAging");
+    LOGI("gallery data sycner FileAging");
 
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        return ret;
-    }
-
-    ret = fileHandler_->OptimizeStorage(agingDays);
-
-    PutHandler();
-
-    return ret;
+    return fileHandler_->OptimizeStorage(agingDays);
 }
 
 int32_t GalleryDataSyncer::Lock()
@@ -434,19 +351,13 @@ void GalleryDataSyncer::ForceUnlock()
 int32_t GalleryDataSyncer::DownloadThumb(int32_t type)
 {
     LOGI("Begin download thumbnails");
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        return ret;
-    }
     if (TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK)) {
         LOGI("it's already downloading thumb");
-        PutHandler();
         return E_STOP;
     }
     if (type == DataHandler::DownloadThmType::SCREENOFF_TRIGGER) {
         if (!CheckScreenAndWifi()) {
             LOGI("download thumb condition is not met");
-            PutHandler();
             return E_STOP;
         }
     }
@@ -455,11 +366,10 @@ int32_t GalleryDataSyncer::DownloadThumb(int32_t type)
     }
     TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
     fileHandler_->SetDownloadType(type);
-    ret = DataSyncer::DownloadThumbInner(fileHandler_);
+    int32_t ret = DataSyncer::DownloadThumbInner(fileHandler_);
     if (ret == E_STOP) {
         StopDownloadThumb();
     }
-    PutHandler();
     return ret;
 }
 
@@ -467,26 +377,14 @@ void GalleryDataSyncer::StopDownloadThumb()
 {
     TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
     if (!TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::SYNC_TASK)) {
-        int32_t ret = GetHandler();
-        if (ret != E_OK) {
-            return;
-        }
         fileHandler_->StopUpdataFiles(timeId_);
-        PutHandler();
     }
 }
 
 int32_t GalleryDataSyncer::InitSysEventData()
 {
-    syncStat_ = make_shared<GalleryIncSyncStat>();
-
-    int32_t ret = GetHandler();
-    if (ret != E_OK) {
-        syncStat_ = nullptr;
-        return ret;
-    }
-
     /* bind sync data to handler */
+    syncStat_ = make_shared<GalleryIncSyncStat>();
     fileHandler_->SetSyncStat(syncStat_);
     albumHandler_->SetSyncStat(syncStat_);
 
@@ -495,16 +393,17 @@ int32_t GalleryDataSyncer::InitSysEventData()
 
 void GalleryDataSyncer::FreeSysEventData()
 {
-    if (syncStat_ == nullptr) {
-        return;
+    if (syncStat_ != nullptr) {
+        /* dec ref to sync data */
+        fileHandler_->PutSyncStat();
+        albumHandler_->PutSyncStat();
+        syncStat_ = nullptr;
     }
 
-    /* dec ref to sync data */
-    fileHandler_->PutSyncStat();
-    albumHandler_->PutSyncStat();
-
-    syncStat_ = nullptr;
-    PutHandler();
+    if (checkStat_ != nullptr) {
+        fileHandler_->PutCheckStat();
+        checkStat_ = nullptr;
+    }
 }
 
 void GalleryDataSyncer::SetFullSyncSysEvent()
@@ -514,17 +413,28 @@ void GalleryDataSyncer::SetFullSyncSysEvent()
     }
 }
 
+void GalleryDataSyncer::SetCheckSysEvent()
+{
+    if (checkStat_ == nullptr) {
+        /* bind check data to handler */
+        checkStat_ = make_shared<GalleryCheckSatat>();
+        fileHandler_->SetCheckStat(checkStat_);
+    }
+}
+
 void GalleryDataSyncer::ReportSysEvent(uint32_t code)
 {
-    if (syncStat_ == nullptr) {
-        return;
+    if (syncStat_ != nullptr) {
+        if (syncStat_->IsFullSync()) {
+            UpdateBasicEventStat(code);
+            syncStat_->Report();
+        } else {
+            /* inc sync report */
+        }
     }
 
-    if (syncStat_->IsFullSync()) {
-        UpdateBasicEventStat(code);
-        syncStat_->Report();
-    } else {
-        /* inc sync report */
+    if (checkStat_ != nullptr) {
+        checkStat_->Report();
     }
 }
 

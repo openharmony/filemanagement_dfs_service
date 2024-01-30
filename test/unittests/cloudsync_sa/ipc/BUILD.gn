@@ -119,6 +119,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/cycle_task",
+    "${services_path}/cloudsyncservice/include/cycle_task/tasks",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
@@ -191,6 +192,10 @@ ohos_unittest("cloud_sync_service_test") {
     "LOG_TAG=\"CLOUDSYNC_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 
@@ -344,6 +349,10 @@ ohos_unittest("cloud_download_callback_manager_test") {
     "LOG_TAG=\"DATA_SYNC_TEST\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
   use_exceptions = true
 }
 

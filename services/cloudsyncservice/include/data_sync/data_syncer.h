@@ -80,6 +80,9 @@ public:
 
     void SaveSubscription();
     void DeleteSubscription();
+    void UpdateErrorCode(int32_t code);
+    /* cloud sync result */
+    ErrorType GetErrorType();
 
 protected:
     /* download */
@@ -129,6 +132,7 @@ protected:
     virtual void FreeSysEventData();
     virtual void ReportSysEvent(uint32_t code);
     virtual void SetFullSyncSysEvent();
+    virtual void SetCheckSysEvent();
 
     /* identifier */
     const std::string bundleName_;
@@ -215,11 +219,6 @@ private:
         void(DataSyncer::*f)(std::shared_ptr<TaskContext>));
     template<typename T, typename RET, typename... ARGS>
     std::function<RET(ARGS...)> AsyncCallback(RET(T::*f)(ARGS...));
-
-    void UpdateErrorCode(int32_t code);
-    /* cloud sync result */
-    ErrorType GetErrorType();
-
     /* state management */
     SyncStateManager syncStateManager_;
 

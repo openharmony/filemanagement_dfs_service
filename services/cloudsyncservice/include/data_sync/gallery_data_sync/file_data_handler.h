@@ -29,7 +29,8 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
-class FileDataHandler : public RdbDataHandler, public GallerySyncStatContainer {
+class FileDataHandler : public RdbDataHandler, public GallerySyncStatContainer,
+    public GalleryCheckStatContainer {
 public:
     enum Clean {
         NOT_NEED_CLEAN = 0,
@@ -91,6 +92,7 @@ public:
 
     /* reset */
     void Reset();
+
 private:
     int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
         const std::unordered_map<std::string, LocalInfo> &localMap);
@@ -268,9 +270,8 @@ private:
     std::mutex lcdMutex_;
     std::vector<NativeRdb::ValueObject> thmVec_;
     std::vector<NativeRdb::ValueObject> lcdVec_;
-
-    /* check stat */
-    std::unique_ptr<GalleryCheckSatat> checkStat_;
+    int32_t waitCount_{0};
+    uint32_t timeId_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

@@ -179,6 +179,9 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
     /* Full synchronization and incremental synchronization */
     if (handler->IsPullRecords()) {
         SetFullSyncSysEvent();
+        if (handler->GetCheckFlag()) {
+            SetCheckSysEvent();
+        }
         ret = AsyncRun(context, &DataSyncer::PullRecords);
     } else {
         ret = AsyncRun(context, &DataSyncer::PullDatabaseChanges);
@@ -1183,11 +1186,11 @@ void DataSyncer::CompleteClean()
     auto nextAction = syncStateManager_.UpdateSyncState(SyncState::CLEAN_SUCCEED);
     if (nextAction != Action::STOP) {
          /* Retrigger sync, clear errorcode */
-         if (!CloudStatus::IsCloudStatusOkay(bundleName_, userId_)) {
+        if (!CloudStatus::IsCloudStatusOkay(bundleName_, userId_)) {
             LOGE("cloud status is not OK");
             return;
-         }
-         StartSync(false, SyncTriggerType::PENDING_TRIGGER);
+        }
+        StartSync(false, SyncTriggerType::PENDING_TRIGGER);
     }
 }
 
@@ -1318,6 +1321,10 @@ int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
         return E_STOP;
     }
 
+    if (!TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK)) {
+        LOGI("stop download thumb");
+        return E_STOP;
+    }
     vector<DriveKit::DKDownloadAsset> assetsToDownload;
     int32_t ret = handler->GetThumbToDownload(assetsToDownload);
     if (ret != E_OK) {
@@ -1409,6 +1416,10 @@ void DataSyncer::ReportSysEvent(uint32_t code)
 }
 
 void DataSyncer::SetFullSyncSysEvent()
+{
+}
+
+void DataSyncer::SetCheckSysEvent()
 {
 }
 } // namespace CloudSync

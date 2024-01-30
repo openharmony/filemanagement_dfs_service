@@ -32,6 +32,7 @@
 #include <shared_mutex>
 #include <stdexcept>
 #include <string>
+#include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
 
@@ -64,6 +65,7 @@ static const unsigned int STAT_MODE_REG = 0770;
 static const unsigned int STAT_MODE_DIR = 0771;
 static const unsigned int READ_TIMEOUT_MS = 10000;
 static const unsigned int MAX_READ_SIZE = 2 * 1024 * 1024;
+static const unsigned int TWO_MB = 2 * 1024 * 1024;
 
 struct CloudInode {
     shared_ptr<MetaBase> mBase{nullptr};
@@ -85,6 +87,16 @@ struct FuseData {
     shared_ptr<DriveKit::DKDatabase> database;
     struct fuse_session *se;
 };
+
+static string GetLocalPath(int32_t userId, const string &relativePath)
+{
+    return HMDFS_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX + relativePath;
+}
+
+static string GetLocalTmpPath(int32_t userId, const string &relativePath)
+{
+    return GetLocalPath(userId, relativePath) + PATH_TEMP_SUFFIX;
+}
 
 static bool HandleDkError(fuse_req_t req, DriveKit::DKError dkError)
 {
@@ -178,7 +190,7 @@ static string CloudPath(struct FuseData *data, fuse_ino_t ino)
     return GetCloudInode(data, ino)->path;
 }
 
-static void GetMetaAttr(shared_ptr<CloudInode> ino, struct stat *stbuf)
+static void GetMetaAttr(struct FuseData *data, shared_ptr<CloudInode> ino, struct stat *stbuf)
 {
     stbuf->st_ino = reinterpret_cast<fuse_ino_t>(ino.get());
     stbuf->st_uid = OID_USER_DATA_RW;
@@ -191,6 +203,14 @@ static void GetMetaAttr(shared_ptr<CloudInode> ino, struct stat *stbuf)
     } else {
         stbuf->st_mode = S_IFREG | STAT_MODE_REG;
         stbuf->st_nlink = STAT_NLINK_REG;
+        if (ino->mBase->size == TWO_MB) {
+            string localPath = GetLocalTmpPath(data->userId, ino->path);
+            struct stat fileStat;
+            if (stat(localPath.c_str(), &fileStat) == 0) {
+                LOGI("fix file ino:%s size to %lld", ino->path.c_str(), (long long)fileStat.st_size);
+                ino->mBase->size = fileStat.st_size;
+            }
+        }
         stbuf->st_size = static_cast<decltype(stbuf->st_size)>(ino->mBase->size);
         LOGD("regular file, ino:%s, size: %lld", ino->path.c_str(), (long long)stbuf->st_size);
     }
@@ -236,7 +256,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     }
     LOGD("lookup success, child: %{private}s, refCount: %lld", child->path.c_str(),
          static_cast<long long>(child->refCount));
-    GetMetaAttr(child, &e->attr);
+    GetMetaAttr(data, child, &e->attr);
     e->ino = reinterpret_cast<fuse_ino_t>(child.get());
     return 0;
 }
@@ -286,7 +306,7 @@ static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
     (void) fi;
 
     LOGD("getattr, %s", CloudPath(data, ino).c_str());
-    GetMetaAttr(GetCloudInode(data, ino), &buf);
+    GetMetaAttr(data, GetCloudInode(data, ino), &buf);
 
     fuse_reply_attr(req, &buf, 0);
 }
@@ -304,16 +324,6 @@ static string GetAssetKey(int fileType)
             LOGE("bad fileType %{public}d", fileType);
             return "";
     }
-}
-
-static string GetLocalPath(int32_t userId, const string &relativePath)
-{
-    return HMDFS_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX + relativePath;
-}
-
-static string GetLocalTmpPath(int32_t userId, const string &relativePath)
-{
-    return GetLocalPath(userId, relativePath) + PATH_TEMP_SUFFIX;
 }
 
 static string GetCloudMergeViewPath(int32_t userId, const string &relativePath)

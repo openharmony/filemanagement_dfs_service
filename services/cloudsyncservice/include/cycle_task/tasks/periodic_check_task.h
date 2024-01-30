@@ -24,6 +24,9 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
+const std::string PeriodicCheckTaskName = "periodic_check_task";
+const std::string ForcePeriodicCheck = "force_periodic_check";
+
 class PeriodicCheckTask : public CycleTask {
 public:
     PeriodicCheckTask(std::shared_ptr<DataSyncManager> dataSyncManager);

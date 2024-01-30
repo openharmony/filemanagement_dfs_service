@@ -59,11 +59,6 @@ void CycleTaskRunner::StartTask(string &reason)
         return;
     }
 
-    if (reason == "usual.event.USER_UNLOCKED") {
-        cloudPrefImpl_->SetBool("force_periodic_check", true);
-        return;
-    }
-
     for (const auto &task_data : cycleTasks_) {
         time_t lastRunTime = DEFAULT_VALUE;
         GetLastRunTime(task_data->GetTaskName(), lastRunTime);
@@ -74,13 +69,13 @@ void CycleTaskRunner::StartTask(string &reason)
                 SetLastRunTime(task_data->GetTaskName(), setUpTime_);
                 continue;
             }
-        } else if (task_data->GetTaskName() == "periodic_check_task") {
+        } else if (task_data->GetTaskName() == PeriodicCheckTaskName) {
             bool force;
-            cloudPrefImpl_->GetBool("force_periodic_check", force);
+            cloudPrefImpl_->GetBool(ForcePeriodicCheck, force);
             if (!force) {
                 continue;
             } else {
-                cloudPrefImpl_->SetBool("force_periodic_check", false);
+                cloudPrefImpl_->SetBool(ForcePeriodicCheck, false);
             }
         }
 

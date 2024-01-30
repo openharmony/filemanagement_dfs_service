@@ -30,7 +30,7 @@ using namespace OHOS::NetManagerStandard;
 namespace OHOS::FileManagement::CloudSync {
 static constexpr const int32_t MIN_VALID_NETID = 100;
 static constexpr const int32_t WAIT_NET_SERVICE_TIME = 4;
-static const char *NET_MANAGER_ON_STATUS = "2";
+static const char *g_netManagerOnStatus = "2";
 
 int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
@@ -96,7 +96,7 @@ int32_t NetworkStatus::GetAndRegisterNetwork(std::shared_ptr<DataSyncManager> da
 
 void NetworkStatus::InitNetwork(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
-    int status = WaitParameter("startup.service.ctl.netmanager", NET_MANAGER_ON_STATUS, WAIT_NET_SERVICE_TIME);
+    int status = WaitParameter("startup.service.ctl.netmanager", g_netManagerOnStatus, WAIT_NET_SERVICE_TIME);
     if (status != 0) {
         LOGE(" wait SAMGR error, return value %{public}d.", status);
         return;

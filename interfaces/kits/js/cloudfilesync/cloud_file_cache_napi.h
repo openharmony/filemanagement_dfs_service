@@ -25,7 +25,7 @@ public:
     ~CloudFileCacheNapi() = default;
 
     static napi_value StartFileCache(napi_env env, napi_callback_info info);
-    bool Export() override;
+    virtual bool Export() override;
     static napi_value CleanCloudFileCache(napi_env env, napi_callback_info info);
 };
 } // namespace OHOS::FileManagement::CloudSync

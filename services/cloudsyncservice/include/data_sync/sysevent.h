@@ -120,6 +120,28 @@ public:
 private:
     std::shared_ptr<T> syncStat_;
 };
+
+template<typename T>
+class CheckStatContainer {
+public:
+    void SetCheckStat(std::shared_ptr<T> stat)
+    {
+        checkStat_ = stat;
+    }
+
+    void PutCheckStat()
+    {
+        checkStat_ = nullptr;
+    }
+
+    std::shared_ptr<T> GetCheckStat()
+    {
+        return checkStat_;
+    }
+
+private:
+    std::shared_ptr<T> checkStat_;
+};
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
