@@ -1369,7 +1369,7 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
 int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet)
 {
     string filePath = GetFilePath(resultSet);
-    string localPath = GetLocalPath(userId_, filePath);
+    string localPath = createConvertor_.GetLowerPath(filePath);
 
     /* local */
     bool local = access(localPath.c_str(), F_OK) == 0;
@@ -1465,10 +1465,9 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
         return ret;
     }
     string thumb = createConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
-    string localThumb = GetLocalPath(userId_, thumb);
 
     /* local */
-    bool local = access(localThumb.c_str(), F_OK) == 0;
+    bool local = access(thumb.c_str(), F_OK) == 0;
     if (!local && errno != ENOENT) {
         LOGE("fail to access %{public}d", errno);
         return E_SYSCALL;
@@ -1490,18 +1489,18 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
     MetaBase file(fileName);
     bool cloud = dir->DoLookup(file) == E_OK;
     if (local && cloud) {
-        LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", thumb.c_str());
+        LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", cloudPath.c_str());
         UpdateCheckAttachment(INDEX_CHECK_FOUND, 1);
 
         struct stat st;
-        ret = stat(localThumb.c_str(), &st);
+        ret = stat(thumb.c_str(), &st);
         if (ret != 0) {
             LOGE("stat local file error %{public}d", errno);
             return E_SYSCALL;
         }
 
         if (st.st_size != static_cast<uint64_t>(file.size)) {
-            ret = unlink(localThumb.c_str());
+            ret = unlink(thumb.c_str());
             if (ret != 0) {
                 LOGE("unlink local file error %{public}d", errno);
                 return E_SYSCALL;
@@ -1584,7 +1583,7 @@ int32_t FileDataHandler::CheckDirtyConsistency(NativeRdb::ResultSet &resultSet)
 
     if (dirty == static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) {
         string filePath = GetFilePath(resultSet);
-        string localPath = GetLocalPath(userId_, filePath);
+        string localPath = createConvertor_.GetLowerPath(filePath);
 
         bool local = access(localPath.c_str(), F_OK) == 0;
         if (!local && errno != ENOENT) {
@@ -1621,7 +1620,7 @@ int32_t FileDataHandler::CheckPositionConsistency(NativeRdb::ResultSet &resultSe
     }
 
     string filePath = GetFilePath(resultSet);
-    string localPath = GetLocalPath(userId_, filePath);
+    string localPath = createConvertor_.GetLowerPath(filePath);
     bool local = access(localPath.c_str(), F_OK) == 0;
     if (!local && errno != ENOENT) {
         LOGE("fail to access %{public}d", errno);
