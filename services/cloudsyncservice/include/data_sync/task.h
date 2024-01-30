@@ -130,7 +130,12 @@ public:
 
     /* reset and stop */
     void Reset();
-    bool StopAndWaitFor();
+    bool ReleaseTask();
+
+    bool NeedRun(std::shared_ptr<Task> t);
+
+    std::shared_ptr<bool> GetStopFlag();
+    void SetStopFlag(std::shared_ptr<bool> stopFlag);
 
 private:
     int32_t GenerateTaskId();
@@ -148,8 +153,7 @@ private:
     std::function<int32_t(std::shared_ptr<TaskRunner>, std::shared_ptr<Task>)> commitFunc_;
 
     /* stop */
-    bool stopFlag_ = false;
-    const int32_t WAIT_FOR_SECOND = 30;
+    std::shared_ptr<bool> stopFlag_ = nullptr;
 
     /* id */
     std::atomic<int32_t> currentId_ = 0;
@@ -157,7 +161,6 @@ private:
     /* task list */
     std::mutex mutex_;
     std::list<std::shared_ptr<Task>> taskList_;
-    std::condition_variable cv_;
 
     /* data syncer callback */
     std::function<void()> callback_;

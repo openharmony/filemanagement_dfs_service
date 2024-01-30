@@ -50,8 +50,8 @@ int32_t GalleryDataSyncer::Init(const std::string bundleName, const int32_t user
         return E_RDB;
     }
     /* init handler */
-    fileHandler_ = make_shared<FileDataHandler>(userId_, bundleName_, rdb);
-    albumHandler_ = make_shared<AlbumDataHandler>(userId_, bundleName_, rdb);
+    fileHandler_ = make_shared<FileDataHandler>(userId_, bundleName_, rdb, stopFlag_);
+    albumHandler_ = make_shared<AlbumDataHandler>(userId_, bundleName_, rdb, stopFlag_);
     return E_OK;
 }
 

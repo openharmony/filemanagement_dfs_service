@@ -44,6 +44,7 @@ DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
     /* alloc task runner */
     taskRunner_ = DelayedSingleton<TaskManager>::GetInstance()->AllocRunner(userId,
         bundleName, bind(&DataSyncer::Schedule, this));
+    taskRunner_->SetStopFlag(stopFlag_);
     downloadCallbackMgr_.SetBundleName(bundleName);
 }
 
@@ -149,10 +150,7 @@ void DataSyncer::Abort()
 {
     LOGI("%{private}d %{private}s aborts", userId_, bundleName_.c_str());
     thread ([this]() {
-        /* stop all the tasks and wait for tasks' termination */
-        if (!taskRunner_->StopAndWaitFor()) {
-            LOGE("wait for tasks stop fail");
-        }
+        taskRunner_->ReleaseTask();
         /* call the syncer manager's callback for notification */
         Complete();
     }).detach();
@@ -1166,11 +1164,10 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
 
 void DataSyncer::BeginClean()
 {
-    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::CLEAN_TASK);
+    *stopFlag_ = true;
     /* stop all the tasks and wait for tasks' termination */
-    if (!taskRunner_->StopAndWaitFor()) {
-        LOGE("wait for tasks stop fail");
-    }
+    taskRunner_->ReleaseTask();
+    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::CLEAN_TASK);
     /* set cleaning  state */
     (void)syncStateManager_.SetCleaningFlag();
 }
@@ -1189,20 +1186,21 @@ void DataSyncer::CompleteClean()
         }
         StartSync(false, SyncTriggerType::PENDING_TRIGGER);
     }
+    *stopFlag_ = false;
 }
 
 void DataSyncer::BeginDisableCloud()
 {
     /* stop all the tasks and wait for tasks' termination */
-    if (!taskRunner_->StopAndWaitFor()) {
-        LOGE("wait for tasks stop fail");
-    }
+    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::DISABLE_CLOUD_TASK);
     /* set disable cloud  state */
     (void)syncStateManager_.SetDisableCloudFlag();
 }
 
 void DataSyncer::CompleteDisableCloud()
 {
+    DataSyncerRdbStore::GetInstance().UpdateSyncState(userId_, bundleName_, SyncState::DISABLE_CLOUD_SUCCEED);
+    TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DISABLE_CLOUD_TASK);
     auto nextAction = syncStateManager_.UpdateSyncState(SyncState::DISABLE_CLOUD_SUCCEED);
     if (nextAction != Action::STOP) {
          /* Retrigger sync, clear errorcode */

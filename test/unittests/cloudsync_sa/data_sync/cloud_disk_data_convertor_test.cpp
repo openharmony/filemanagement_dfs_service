@@ -99,7 +99,9 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleErr001, TestSize.Level1)
         CloudDisk::CloudDiskRdbStore cloudDiskRdbStore(bundName, USER_ID);
         auto rdb = cloudDiskRdbStore.GetRaw();
         ASSERT_TRUE(rdb);
-        shared_ptr<CloudDiskDataHandler> cloudDiskHandler = make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb);
+        auto stopFlag = make_shared<bool>(false);
+        shared_ptr<CloudDiskDataHandler> cloudDiskHandler =
+            make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb, stopFlag);
         shared_ptr<CloudDiskDataConvertor> createConvertor = make_shared<CloudDiskDataConvertor>(
             USER_ID, bundName, FILE_CREATE,
             std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1,
@@ -129,7 +131,9 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleErr002, TestSize.Level1)
         CloudDisk::CloudDiskRdbStore cloudDiskRdbStore(bundName, USER_ID);
         auto rdb = cloudDiskRdbStore.GetRaw();
         ASSERT_TRUE(rdb);
-        shared_ptr<CloudDiskDataHandler> cloudDiskHandler = make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb);
+        auto stopFlag = make_shared<bool>(false);
+        shared_ptr<CloudDiskDataHandler> cloudDiskHandler =
+            make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb, stopFlag);
         shared_ptr<CloudDiskDataConvertor> fdirtyConvertor = make_shared<CloudDiskDataConvertor>(
             USER_ID, bundName, FILE_DATA_MODIFY,
             std::bind(&CloudDiskDataHandler::HandleFdirtyConvertErr, cloudDiskHandler, std::placeholders::_1,
@@ -159,7 +163,9 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleErr003, TestSize.Level1)
         CloudDisk::CloudDiskRdbStore cloudDiskRdbStore(bundName, USER_ID);
         auto rdb = cloudDiskRdbStore.GetRaw();
         ASSERT_TRUE(rdb);
-        shared_ptr<CloudDiskDataHandler> cloudDiskHandler = make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb);
+        auto stopFlag = make_shared<bool>(false);
+        shared_ptr<CloudDiskDataHandler> cloudDiskHandler =
+            make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb, stopFlag);
         shared_ptr<CloudDiskDataConvertor> createConvertor = make_shared<CloudDiskDataConvertor>(
             USER_ID, bundName, FILE_CREATE,
             std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1,
@@ -214,7 +220,9 @@ HWTEST_F(CloudDiskDataConvertorTest, Convert102, TestSize.Level1)
         CloudDisk::CloudDiskRdbStore cloudDiskRdbStore(bundName, USER_ID);
         auto rdb = cloudDiskRdbStore.GetRaw();
         ASSERT_TRUE(rdb);
-        shared_ptr<CloudDiskDataHandler> cloudDiskHandler = make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb);
+        auto stopFlag = make_shared<bool>(false);
+        shared_ptr<CloudDiskDataHandler> cloudDiskHandler =
+            make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb, stopFlag);
         shared_ptr<CloudDiskDataConvertor> createConvertor = make_shared<CloudDiskDataConvertor>(
             USER_ID, bundName, FILE_CREATE,
             std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1,
@@ -1746,7 +1754,9 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleAttachments001, TestSize.Level1)
         CloudDisk::CloudDiskRdbStore cloudDiskRdbStore(bundName, USER_ID);
         auto rdb = cloudDiskRdbStore.GetRaw();
         ASSERT_TRUE(rdb);
-        shared_ptr<CloudDiskDataHandler> cloudDiskHandler = make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb);
+        auto stopFlag = make_shared<bool>(false);
+        shared_ptr<CloudDiskDataHandler> cloudDiskHandler =
+            make_shared<CloudDiskDataHandler>(USER_ID, bundName, rdb, stopFlag);
         shared_ptr<CloudDiskDataConvertor> createConvertor = make_shared<CloudDiskDataConvertor>(
             USER_ID, bundName, FILE_CREATE,
             std::bind(&CloudDiskDataHandler::HandleCreateConvertErr, cloudDiskHandler, std::placeholders::_1,

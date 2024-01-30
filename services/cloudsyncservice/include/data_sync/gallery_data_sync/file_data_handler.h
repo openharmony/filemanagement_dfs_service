@@ -24,7 +24,6 @@
 #include "file_data_convertor.h"
 #include "gallery_sysevent.h"
 #include "rdb_data_handler.h"
-
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
@@ -35,7 +34,8 @@ public:
         NOT_NEED_CLEAN = 0,
         NEED_CLEAN,
     };
-    FileDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<NativeRdb::RdbStore> rdb);
+    FileDataHandler(int32_t userId, const std::string &bundleName,
+                    std::shared_ptr<NativeRdb::RdbStore> rdb, std::shared_ptr<bool> stopFlag);
     virtual ~FileDataHandler() = default;
 
     /* download */

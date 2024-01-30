@@ -35,7 +35,7 @@ int32_t CloudDiskDataSyncer::Init(const std::string bundleName, const int32_t us
         return E_RDB;
     }
     /* init handler */
-    cloudDiskHandler_ = make_shared<CloudDiskDataHandler>(userId_, bundleName_, rdb);
+    cloudDiskHandler_ = make_shared<CloudDiskDataHandler>(userId_, bundleName_, rdb, stopFlag_);
     return E_OK;
 }
 

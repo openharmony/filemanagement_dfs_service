@@ -55,9 +55,13 @@ int32_t TaskRunner::CommitTask(shared_ptr<Task> t)
 
 void TaskRunner::CompleteTask(int32_t id) {}
 
-bool TaskRunner::StopAndWaitFor()
+bool TaskRunner::ReleaseTask()
 {
-    return true;
+    return false;
+}
+
+void TaskRunner::SetStopFlag(std::shared_ptr<bool> stopFlag)
+{
 }
 
 void TaskRunner::Reset()

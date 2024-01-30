@@ -17,7 +17,6 @@
 
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
-
 #include "data_sync_const.h"
 #include "data_sync_notifier.h"
 #include "dfs_error.h"
@@ -36,8 +35,9 @@ using PAC = Media::PhotoAlbumColumns;
 using PM = Media::PhotoMap;
 using ChangeType = OHOS::AAFwk::ChangeInfo::ChangeType;
 
-AlbumDataHandler::AlbumDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<RdbStore> rdb)
-    : RdbDataHandler(userId, bundleName, PAC::TABLE, rdb)
+AlbumDataHandler::AlbumDataHandler(int32_t userId, const std::string &bundleName,
+                                   std::shared_ptr<RdbStore> rdb, shared_ptr<bool> stopFlag)
+    : RdbDataHandler(userId, bundleName, PAC::TABLE, rdb, stopFlag)
 {
 }
 
@@ -170,8 +170,8 @@ int32_t AlbumDataHandler::MergeAlbumOnConflict(DriveKit::DKRecord &record, int32
 
 int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
 {
+    RETURN_ON_ERR(IsStop());
     LOGI("insert of record %s", record.GetRecordId().c_str());
-
     /* merge if same album name */
     int32_t albumId;
     if (IsConflict(record, albumId)) {
@@ -224,6 +224,7 @@ int32_t AlbumDataHandler::DeleteCloudAlbum(DKRecord &record)
 
 int32_t AlbumDataHandler::UpdateCloudAlbum(DKRecord &record)
 {
+    RETURN_ON_ERR(IsStop());
     int32_t changedRows;
     ValuesBucket values;
     int32_t ret = createConvertor_.RecordToValueBucket(record, values);

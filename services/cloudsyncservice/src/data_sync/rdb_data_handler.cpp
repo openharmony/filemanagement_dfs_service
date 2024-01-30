@@ -16,6 +16,7 @@
 #include "rdb_data_handler.h"
 #include <sstream>
 #include "dfs_error.h"
+#include "data_convertor.h"
 #include "unistd.h"
 namespace OHOS {
 namespace FileManagement {
@@ -26,6 +27,7 @@ using namespace NativeRdb;
 int32_t RdbDataHandler::BatchInsert(int64_t &outRowId, const string &table,
                                     const vector<ValuesBucket> &initialBatchValues)
 {
+    RETURN_ON_ERR(IsStop());
     const uint32_t TRY_TIMES = 5;
     const uint32_t SLEEP_TIME = 200 * 1000;
     int32_t ret = E_OK;
@@ -121,6 +123,7 @@ int32_t RdbDataHandler::Commit()
 
 int32_t RdbDataHandler::Insert(int64_t &outRowId, const ValuesBucket &initiavalues)
 {
+    RETURN_ON_ERR(IsStop());
     std::lock_guard<std::mutex> lock(rdbMutex_);
     return rdb_->Insert(outRowId, tableName_, initiavalues);
 }
@@ -146,6 +149,7 @@ shared_ptr<NativeRdb::ResultSet> RdbDataHandler::Query(
 
 int32_t RdbDataHandler::Insert(int64_t &outRowId, const std::string &tableName, const ValuesBucket &initiavalues)
 {
+    RETURN_ON_ERR(IsStop());
     return rdb_->Insert(outRowId, tableName, initiavalues);
 }
 
@@ -168,6 +172,17 @@ int32_t RdbDataHandler::ExecuteSql(const std::string &sql, const std::vector<Nat
         LOGE("err sql is %{public}s", sql.c_str());
     }
     return ret;
+}
+
+int32_t RdbDataHandler::IsStop()
+{
+    if (stopFlag_ == nullptr) {
+        stopFlag_ = make_shared<bool>(false);
+    }
+    if (*stopFlag_) {
+        return E_STOP;
+    }
+    return E_OK;
 }
 } // namespace CloudSync
 } // namespace FileManagement

@@ -116,8 +116,9 @@ static int64_t GetRoundSize(int64_t size)
 }
 
 constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
-FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
-    : RdbDataHandler(userId, bundleName, TABLE_NAME, rdb), userId_(userId), bundleName_(bundleName)
+FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName,
+                                 std::shared_ptr<RdbStore> rdb, shared_ptr<bool> stopFlag)
+    : RdbDataHandler(userId, bundleName, TABLE_NAME, rdb, stopFlag), userId_(userId), bundleName_(bundleName)
 {
     cloudPrefImpl_.GetInt(DOWNLOAD_THUMB_LIMIT, downloadThumbLimit_);
     if (downloadThumbLimit_ <= 0) {
@@ -1024,8 +1025,8 @@ static bool IfContainsFullField(const DriveKit::DKRecord &record)
 
 int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &params)
 {
+    RETURN_ON_ERR(IsStop());
     LOGI("insert of record %{public}s", record.GetRecordId().c_str());
-
     /* check local file conflict */
     bool comflag = false;
     int ret = PullRecordConflict(record, comflag);
@@ -1075,6 +1076,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
 
 int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadResult> &resultMap)
 {
+    RETURN_ON_ERR(IsStop());
     uint64_t thumbError = 0;
     uint64_t lcdError = 0;
 
@@ -1125,6 +1127,7 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
 
 int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
 {
+    RETURN_ON_ERR(IsStop());
     if (asset.fieldKey == "thumbnail") {
         std::lock_guard<std::mutex> lock(thmMutex_);
         thmVec_.emplace_back(asset.recordId);
@@ -1319,6 +1322,7 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
 
 int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet &local, OnFetchParams &params)
 {
+    RETURN_ON_ERR(IsStop());
     LOGI("update of record %s", record.GetRecordId().c_str());
     if (IsLocalDirty(local)) {
         LOGI("local record dirty, ignore cloud update");
@@ -1358,7 +1362,6 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     ret = Update(changedRows, values, whereClause, {record.GetRecordId()});
     if (ret != E_OK) {
-        LOGE("rdb update failed, err=%{public}d", ret);
         return E_RDB;
     }
     if (mtimeChanged && (ThumbsAtLocal(record) || (AddCloudThumbs(record) != E_OK))) {
