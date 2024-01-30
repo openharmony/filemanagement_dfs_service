@@ -265,7 +265,6 @@ int32_t GalleryDataSyncer::Complete(bool isNeedNotify)
         return ret;
     }
     DataSyncer::CompleteAll(isNeedNotify);
-    DownloadThumb(DataHandler::DownloadThmType::SYNC_TRIGGER);
     return E_OK;
 }
 
