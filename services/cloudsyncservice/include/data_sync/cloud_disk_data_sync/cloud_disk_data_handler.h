@@ -27,7 +27,8 @@ namespace FileManagement {
 namespace CloudSync {
 class CloudDiskDataHandler : public RdbDataHandler {
 public:
-    CloudDiskDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<NativeRdb::RdbStore> rdb);
+    CloudDiskDataHandler(int32_t userId, const std::string &bundleName,
+                         std::shared_ptr<NativeRdb::RdbStore> rdb, std::shared_ptr<bool> stopFlag);
     virtual ~CloudDiskDataHandler() = default;
 
     void GetFetchCondition(FetchCondition &cond) override;

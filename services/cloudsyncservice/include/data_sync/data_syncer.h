@@ -148,6 +148,7 @@ protected:
 
     uint64_t startTime_;
     SyncTriggerType triggerType_;
+    std::shared_ptr<bool> stopFlag_ = std::make_shared<bool>(false);
 
 private:
     /* download */

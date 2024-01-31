@@ -20,9 +20,7 @@
 #include "rdb_helper.h"
 #include "result_set.h"
 #include "values_bucket.h"
-
 #include "data_handler.h"
-
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
@@ -30,8 +28,9 @@ class RdbDataHandler : public DataHandler {
 protected:
     /* init */
     RdbDataHandler(int32_t userId, const std::string &bundleName, const std::string &table,
-        std::shared_ptr<NativeRdb::RdbStore> rdb)
+        std::shared_ptr<NativeRdb::RdbStore> rdb, std::shared_ptr<bool> stopFlag)
         : DataHandler(userId, bundleName, table),
+          stopFlag_(stopFlag),
           rdb_(rdb),
           tableName_(table) {}
     virtual ~RdbDataHandler() = default;
@@ -73,8 +72,10 @@ protected:
     /* raw */
     virtual int32_t ExecuteSql(const std::string &sql,
         const std::vector<NativeRdb::ValueObject> &bindArgs = std::vector<NativeRdb::ValueObject>());
+    int32_t IsStop();
 
     static const int32_t BATCH_LIMIT_SIZE = 500;
+    std::shared_ptr<bool> stopFlag_;
 
 private:
     std::shared_ptr<NativeRdb::RdbStore> rdb_;

@@ -26,7 +26,8 @@ namespace FileManagement {
 namespace CloudSync {
 class AlbumDataHandler : public RdbDataHandler, public GallerySyncStatContainer {
 public:
-    AlbumDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<NativeRdb::RdbStore> rdb);
+    AlbumDataHandler(int32_t userId, const std::string &bundleName,
+                     std::shared_ptr<NativeRdb::RdbStore> rdb, std::shared_ptr<bool> stopFlag);
     virtual ~AlbumDataHandler() = default;
 
     /* download */

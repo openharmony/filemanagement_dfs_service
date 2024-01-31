@@ -19,12 +19,14 @@
  * @tc.type: FUNC
  * @tc.require: issueI8ARMY
  */
+
+#include <memory>
 HWTEST_F(FileDataHandlerTest, QueryAndDeleteMap001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "QueryAndDeleteMap001 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
 
         int32_t fileId = 0;
@@ -50,7 +52,7 @@ HWTEST_F(FileDataHandlerTest, QueryAndDeleteMap002, TestSize.Level1)
     try {
         const int32_t rowCount = -1;
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(1)));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
@@ -78,7 +80,7 @@ HWTEST_F(FileDataHandlerTest, QueryAndDeleteMap003, TestSize.Level1)
     try {
         const int32_t rowCount = -1;
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
@@ -106,7 +108,7 @@ HWTEST_F(FileDataHandlerTest, QueryAndDeleteMap004, TestSize.Level1)
     try {
         const int32_t rowCount = 0;
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(1));
@@ -135,7 +137,7 @@ HWTEST_F(FileDataHandlerTest, QueryAndDeleteMap005, TestSize.Level1)
     try {
         const int32_t rowCount = 1;
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(1));
@@ -164,7 +166,7 @@ HWTEST_F(FileDataHandlerTest, QueryAndDeleteMap006, TestSize.Level1)
     try {
         const int32_t rowCount = 1;
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
@@ -195,7 +197,7 @@ HWTEST_F(FileDataHandlerTest, QueryAndDeleteMap007, TestSize.Level1)
     try {
         const int32_t rowCount = 1;
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
@@ -226,7 +228,7 @@ HWTEST_F(FileDataHandlerTest, QueryAndDeleteMap008, TestSize.Level1)
     try {
         const int32_t rowCount = 1;
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
@@ -259,7 +261,7 @@ HWTEST_F(FileDataHandlerTest, QueryAndDeleteMap009, TestSize.Level1)
         const int32_t rowCount = 1;
         const int32_t localDirty = static_cast<int32_t>(Media::DirtyTypes::TYPE_SYNCED);
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
@@ -294,7 +296,7 @@ HWTEST_F(FileDataHandlerTest, QueryAndDeleteMap010, TestSize.Level1)
         const int32_t rowCount = 1;
         const int32_t localDirty = static_cast<int32_t>(Media::DirtyTypes::TYPE_SYNCED);
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
@@ -330,7 +332,7 @@ HWTEST_F(FileDataHandlerTest, QueryAndDeleteMap011, TestSize.Level1)
         const int32_t rowCount = 1;
         const int32_t localDirty = static_cast<int32_t>(Media::DirtyTypes::TYPE_SYNCED);
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
@@ -364,7 +366,7 @@ HWTEST_F(FileDataHandlerTest, BatchInsertAssetMaps001, TestSize.Level1)
     GTEST_LOG_(INFO) << "BatchInsertAssetMaps001 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
 
         OnFetchParams params;
@@ -389,7 +391,7 @@ HWTEST_F(FileDataHandlerTest, BatchInsertAssetMaps002, TestSize.Level1)
     try {
         const int32_t rowCount = 1;
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
@@ -419,7 +421,7 @@ HWTEST_F(FileDataHandlerTest, BatchInsertAssetMaps003, TestSize.Level1)
     try {
         const int32_t rowCount = 1;
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
@@ -453,7 +455,7 @@ HWTEST_F(FileDataHandlerTest, BatchInsertAssetMaps004, TestSize.Level1)
     try {
         const int32_t rowCount = 1;
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
@@ -489,7 +491,7 @@ HWTEST_F(FileDataHandlerTest, BatchInsertAssetMaps005, TestSize.Level1)
     try {
         const int32_t rowCount = 1;
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
@@ -524,7 +526,7 @@ HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord002, TestSize.Level1)
     GTEST_LOG_(INFO) << "CleanPureCloudRecord002 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
 
         int32_t ret = fileDataHandler->CleanPureCloudRecord();
@@ -550,7 +552,7 @@ HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord003, TestSize.Level1)
         const int32_t rowCount = 0;
         auto rdb = std::make_shared<RdbStoreMock>();
         auto rset = std::make_unique<AbsSharedResultSetMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(1)));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
 
@@ -577,7 +579,7 @@ HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord004, TestSize.Level1)
         const int32_t rowCount = -1;
         auto rdb = std::make_shared<RdbStoreMock>();
         auto rset = std::make_unique<AbsSharedResultSetMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
 
@@ -604,7 +606,7 @@ HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord005, TestSize.Level1)
         const int32_t rowCount = 1;
         auto rdb = std::make_shared<RdbStoreMock>();
         auto rset = std::make_unique<AbsSharedResultSetMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(1));
         EXPECT_CALL(*rdb, ExecuteSql(_, _)).WillRepeatedly(Return(0));
@@ -634,7 +636,7 @@ HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord006, TestSize.Level1)
         string filePath = "/test/pareantPath/thumbPpath";
         auto rdb = std::make_shared<RdbStoreMock>();
         auto rset = std::make_unique<AbsSharedResultSetMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
@@ -667,7 +669,7 @@ HWTEST_F(FileDataHandlerTest, CleanPureCloudRecord007, TestSize.Level1)
         string filePath = "/test/pareantPath/thumbPpath";
         auto rdb = std::make_shared<RdbStoreMock>();
         auto rset = std::make_unique<AbsSharedResultSetMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
@@ -698,7 +700,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotDirtyData002, TestSize.Level1)
     GTEST_LOG_(INFO) << "CleanNotDirtyData002 Begin";
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
 
         int32_t ret = fileDataHandler->CleanNotDirtyData();
@@ -724,7 +726,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotDirtyData003, TestSize.Level1)
         const int32_t rowCount = 0;
         auto rdb = std::make_shared<RdbStoreMock>();
         auto rset = std::make_unique<AbsSharedResultSetMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(1)));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
 
@@ -751,7 +753,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotDirtyData004, TestSize.Level1)
         const int32_t rowCount = -1;
         auto rdb = std::make_shared<RdbStoreMock>();
         auto rset = std::make_unique<AbsSharedResultSetMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
 
@@ -778,7 +780,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotDirtyData005, TestSize.Level1)
         const int32_t rowCount = 0;
         auto rdb = std::make_shared<RdbStoreMock>();
         auto rset = std::make_unique<AbsSharedResultSetMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(1));
         EXPECT_CALL(*rdb, ExecuteSql(_, _)).WillRepeatedly(Return(0));
@@ -808,7 +810,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotDirtyData006, TestSize.Level1)
         string filePath = "/test/pareantPath/thumbPpath";
         auto rdb = std::make_shared<RdbStoreMock>();
         auto rset = std::make_unique<AbsSharedResultSetMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
@@ -841,7 +843,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotDirtyData007, TestSize.Level1)
         string filePath = "/test/pareantPath/thumbPpath";
         auto rdb = std::make_shared<RdbStoreMock>();
         auto rset = std::make_unique<AbsSharedResultSetMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb);
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
         EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0)).WillOnce(Return(1));
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
