@@ -74,6 +74,7 @@ int32_t RdbDataHandler::BatchUpdate(const string &sql,
                                     std::vector<NativeRdb::ValueObject> &bindArgs,
                                     uint64_t &count)
 {
+    int32_t ret = E_OK;
     if (bindArgs.size() < 0) {
         return E_INVALID_ARGS;
     }
@@ -88,14 +89,16 @@ int32_t RdbDataHandler::BatchUpdate(const string &sql,
         }
         vector<ValueObject> tmp(bindArgs.begin(), bindArgs.begin() + size);
         string newSql = sql + " WHERE " + whichColumn + " IN (" + ss.str() + ")";
-        int32_t ret = rdb_->ExecuteSql(newSql, tmp);
+        {
+            std::lock_guard<std::mutex> lock(rdbMutex_);
+            ret = rdb_->ExecuteSql(newSql, tmp);
+        }
         if (ret == E_OK) {
             bindArgs.erase(bindArgs.begin(), bindArgs.begin() + size);
-            LOGD("update size is %{public}d", size);
-            count = size;
+            count += size;
         } else {
             LOGW("update fail try next time, ret is %{public}d", ret);
-            return E_OK;
+            return ret;
         }
     } while (bindArgs.size() > BATCH_LIMIT_SIZE);
     return E_OK;
