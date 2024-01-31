@@ -30,6 +30,7 @@
 #include "mountpoint/mount_manager.h"
 #include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_session_dispatcher.h"
+#include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "sandbox_helper.h"
 #include "system_ability_definition.h"
@@ -45,6 +46,8 @@ using namespace OHOS::FileManagement;
 using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
 using AccessTokenKit = OHOS::Security::AccessToken::AccessTokenKit;
 
+const string FILE_MANAGER_AUTHORITY = "docs";
+const string MEDIA_AUTHORITY = "media";
 constexpr int32_t LINK_TYPE_NUM = 4;
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
 
@@ -224,7 +227,6 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         LOGE("GetHapTokenInfo failed, errCode = %{public}d", result);
         return CancelWait(sessionName, listenerCallback);
     }
-
     std::string physicalPath;
     auto ret = GetRealPath(dstUri, hapTokenInfo, sessionName, physicalPath);
     if (ret != E_OK) {
@@ -297,12 +299,26 @@ int32_t Daemon::GetRealPath(const std::string &dstUri,
                             const std::string &sessionName,
                             std::string &physicalPath)
 {
-    auto ret = SandboxHelper::GetPhysicalPath(dstUri, std::to_string(hapTokenInfo.userID), physicalPath);
-    if (ret != E_OK) {
-        LOGE("invalid uri, ret = %{public}d", ret);
-        RemoveSession(sessionName);
-        return E_GET_PHYSICAL_PATH_FAILED;
+    Uri uri(dstUri);
+    auto authority = uri.GetAuthority();
+    if (authority == FILE_MANAGER_AUTHORITY || authority == MEDIA_AUTHORITY) {
+        auto ret = SandboxHelper::GetPhysicalPath(dstUri, std::to_string(hapTokenInfo.userID), physicalPath);
+        if (ret != E_OK) {
+            LOGE("invalid uri, ret = %{public}d", ret);
+            RemoveSession(sessionName);
+            return E_GET_PHYSICAL_PATH_FAILED;
+        }
+    } else {
+        auto bundleName = SoftBusSessionListener::GetBundleName(dstUri);
+        if (bundleName.empty()) {
+            LOGE("not find bundle name");
+            RemoveSession(sessionName);
+            return E_GET_PHYSICAL_PATH_FAILED;
+        }
+        physicalPath = "/data/service/el2/" + to_string(hapTokenInfo.userID) + "/hmdfs/account/data/" + bundleName;
     }
+    LOGI("physicalPath %{public}s", physicalPath.c_str());
+
     if (!SandboxHelper::CheckValidPath(physicalPath)) {
         LOGE("invalid path.");
         RemoveSession(sessionName);
