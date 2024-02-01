@@ -355,12 +355,17 @@ static int32_t IsFileContentChanged(const DKRecord &record, NativeRdb::ResultSet
     DKRecordData data;
     record.GetRecordData(data);
     string fileType;
+    int64_t fileSize = -1;
     if (data.find(DK_IS_DIRECTORY) == data.end() ||
         data.at(DK_IS_DIRECTORY).GetString(fileType) != DKLocalErrorCode::NO_ERROR) {
         LOGE("extract type error");
         return E_INVAL_ARG;
     }
-    if (fileType == "directory") {
+    if (data.find(DK_FILE_SIZE) == data.end() ||
+        data.at(DK_FILE_SIZE).GetLong(fileSize) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract fileSize error");
+    }
+    if (fileType == "directory" || fileSize == 0) {
         return E_OK;
     }
     int64_t localEditTime = 0;
@@ -888,8 +893,9 @@ int32_t CloudDiskDataHandler::OnModifyRecordSuccess(
     if (localMap.find(entry.first) == localMap.end()) {
         return E_OK;
     }
-    int32_t changedRows;
     ValuesBucket valuesBucket;
+    if (UpdateFileAsset(data, valuesBucket)) { LOGE("update file content fail"); }
+    int32_t changedRows;
     valuesBucket.PutLong(FC::VERSION, record.GetVersion());
     if (IsTimeChanged(record, localMap, entry.first, FC::FILE_TIME_EDITED)) {
         valuesBucket.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(CloudDisk::DirtyType::TYPE_FDIRTY));
@@ -958,7 +964,8 @@ int32_t CloudDiskDataHandler::GetLocalInfo(const map<DKRecordId, DKRecordOperRes
         cloudId.push_back(entry.first);
     }
     NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(FC::FILES_TABLE);
-    createPredicates.In(type, cloudId);
+    createPredicates.NotEqualTo(FC::DIRTY_TYPE, to_string(static_cast<int32_t>(CloudDisk::DirtyType::TYPE_DELETED)))
+        ->And()->In(type, cloudId);
     auto resultSet = Query(createPredicates, FileColumn::DISK_ON_UPLOAD_COLUMNS);
     if (resultSet == nullptr) {
         LOGE("query rdb err");
