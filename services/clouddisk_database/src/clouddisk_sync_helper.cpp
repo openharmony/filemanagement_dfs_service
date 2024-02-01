@@ -62,7 +62,7 @@ void CloudDiskSyncHelper::RegisterTriggerSync(const std::string &bundleName, con
     shared_ptr<TriggerInfo> triggerInfoPtr = make_shared<TriggerInfo>();
     triggerInfoPtr->timerId = timerId;
     triggerInfoPtr->callback = callback;
-    lock_guard<mutex> lock(syncMutex_);
+    lock_guard<mutex> lock(registerMutex_);
     triggerInfoMap_.emplace(keyId, triggerInfoPtr);
 }
 
@@ -74,7 +74,7 @@ void CloudDiskSyncHelper::UnregisterRepeatingTriggerSync(const std::string &bund
     }
     string keyId = to_string(userId) + bundleName;
     bool isSuccess = false;
-    lock_guard<mutex> lock(syncMutex_);
+    lock_guard<mutex> lock(unregisterMutex_);
     auto iterator = triggerInfoMap_.find(keyId);
     if (iterator != triggerInfoMap_.end()) {
         LOGD("bundleName: %{public}s, userId: %{public}d is exist", bundleName.c_str(), userId);
@@ -90,7 +90,7 @@ void CloudDiskSyncHelper::OnTriggerSyncCallback(const std::string &bundleName, c
 {
     string keyId = to_string(userId) + bundleName;
     {
-        lock_guard<mutex> lock(syncMutex_);
+        lock_guard<mutex> lock(callbackMutex_);
         triggerInfoMap_.erase(keyId);
     }
     LOGI("cloud sync manager trigger sync, bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);

@@ -555,11 +555,36 @@ static const std::string &UpdateFileTriggerSync(RdbStore &store)
     GenCloudSyncTriggerFuncParams(store, userId, bundleName);
     static const string CREATE_FILES_UPDATE_CLOUD_SYNC =
         "CREATE TRIGGER files_update_cloud_sync_trigger AFTER UPDATE ON " + FileColumn::FILES_TABLE +
-        " FOR EACH ROW WHEN OLD.dirty_type == " +
-        std::to_string(static_cast<int32_t>(DirtyType::TYPE_SYNCED)) +
-        " AND new.dirty_type IN (2,3,4)" +
+        " FOR EACH ROW WHEN OLD.dirty_type IN (0,1,2,3) AND new.dirty_type IN (2,3)" +
         " BEGIN SELECT cloud_sync_func(" + "'" + userId + "', " + "'" + bundleName + "'); END;";
     return CREATE_FILES_UPDATE_CLOUD_SYNC;
+}
+
+static const std::string &DeleteFileTriggerSync(RdbStore &store)
+{
+    string userId;
+    string bundleName;
+    GenCloudSyncTriggerFuncParams(store, userId, bundleName);
+    static const string CREATE_FILES_DELETE_CLOUD_SYNC =
+        "CREATE TRIGGER files_delete_cloud_sync_trigger AFTER UPDATE ON " + FileColumn::FILES_TABLE +
+        " FOR EACH ROW WHEN OLD.dirty_type IN (0,2,3) AND new.dirty_type == " +
+        std::to_string(static_cast<int32_t>(DirtyType::TYPE_DELETED)) +
+        " BEGIN SELECT cloud_sync_func(" + "'" + userId + "', " + "'" + bundleName + "'); END;";
+    return CREATE_FILES_DELETE_CLOUD_SYNC;
+}
+
+static const std::string &LocalFileTriggerSync(RdbStore &store)
+{
+    string userId;
+    string bundleName;
+    GenCloudSyncTriggerFuncParams(store, userId, bundleName);
+    static const string CREATE_FILES_LOCAL_CLOUD_SYNC =
+        "CREATE TRIGGER files_local_cloud_sync_trigger AFTER UPDATE ON " + FileColumn::FILES_TABLE +
+        " FOR EACH ROW WHEN OLD.dirty_type == " +
+        std::to_string(static_cast<int32_t>(DirtyType::TYPE_NEW)) +
+        " AND new.dirty_type == OLD.dirty_type AND new.meta_time_edited != OLD.meta_time_edited" +
+        " BEGIN SELECT cloud_sync_func(" + "'" + userId + "', " + "'" + bundleName + "'); END;";
+    return CREATE_FILES_LOCAL_CLOUD_SYNC;
 }
 
 static int32_t ExecuteSql(RdbStore &store)
@@ -569,6 +594,8 @@ static int32_t ExecuteSql(RdbStore &store)
         CreateFileTriggerSync(store),
         UpdateFileTriggerSync(store),
         FileColumn::CREATE_PARENT_CLOUD_ID_INDEX,
+        DeleteFileTriggerSync(store),
+        LocalFileTriggerSync(store),
     };
     for (const string& sqlStr : onCreateSqlStrs) {
         if (store.ExecuteSql(sqlStr) != NativeRdb::E_OK) {
@@ -595,11 +622,37 @@ static void VersionAddParentCloudIdIndex(RdbStore &store)
     }
 }
 
+static void VersionFixFileTrigger(RdbStore &store)
+{
+    const string dropFilesUpdateTrigger = "DROP TRIGGER IF EXISTS files_update_cloud_sync_trigger";
+    if (store.ExecuteSql(dropFilesUpdateTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_update_cloud_sync_trigger fail");
+    }
+    const string addUpdateFileTrigger = UpdateFileTriggerSync(store);
+    int32_t ret = store.ExecuteSql(addUpdateFileTrigger);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add update file trigger fail, err %{public}d", ret);
+    }
+    const string addDeleteFileTrigger = DeleteFileTriggerSync(store);
+    ret = store.ExecuteSql(addDeleteFileTrigger);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add delete file trigger fail, err %{public}d", ret);
+    }
+    const string addLocalFileTrigger = LocalFileTriggerSync(store);
+    ret = store.ExecuteSql(addLocalFileTrigger);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add local file trigger fail, err %{public}d", ret);
+    }
+}
+
 int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
     if (oldVersion < VERSION_ADD_PARENT_CLOUD_ID_INDEX) {
         VersionAddParentCloudIdIndex(store);
+    }
+    if (oldVersion < VERSION_FIX_FILE_TRIGGER) {
+        VersionFixFileTrigger(store);
     }
     return NativeRdb::E_OK;
 }
