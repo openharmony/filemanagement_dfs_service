@@ -2392,6 +2392,7 @@ int32_t FileDataHandler::CleanPureCloudRecord()
     cleanPredicates.Limit(BATCH_LIMIT_SIZE);
     vector<ValueObject> deleteFileId;
     int32_t count = 0;
+    int32_t removeCount = 0;
     do {
         auto result = Query(cleanPredicates, {MediaColumn::MEDIA_ID, PC::MEDIA_FILE_PATH});
         if (result == nullptr) {
@@ -2418,11 +2419,13 @@ int32_t FileDataHandler::CleanPureCloudRecord()
         ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         ret = BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
         if (ret != E_OK) {
-            LOGW("BatchDetete fail");
+            LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
             return ret;
         }
+        removeCount += deleteFileId.size();
         deleteFileId.clear();
     } while (count != 0);
+    LOGI("remove count is %{public}d", removeCount);
     return ret;
 }
 
@@ -2460,6 +2463,7 @@ int32_t FileDataHandler::CleanNotDirtyData()
     cleanPredicates.Limit(BATCH_LIMIT_SIZE);
     vector<ValueObject> deleteFileId;
     int32_t count = 0;
+    int32_t removeCount = 0;
     do {
         auto result = Query(cleanPredicates, {MediaColumn::MEDIA_ID, PC::MEDIA_FILE_PATH});
         if (result == nullptr) {
@@ -2484,20 +2488,19 @@ int32_t FileDataHandler::CleanNotDirtyData()
             string lowerPath = cleanConvertor_.GetLowerPath(filePath);
             string thmbFileParentPath = cleanConvertor_.GetThumbParentPath(filePath);
             ForceRemoveDirectory(thmbFileParentPath);
-            ret = DeleteAsset(lowerPath);
-            if (ret != E_OK) {
-                LOGE("clean remove asset fail, ret is %{public}d", ret);
-            }
+            DeleteAsset(lowerPath);
             deleteFileId.emplace_back(fileId);
         }
         ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         ret = BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
         if (ret != E_OK) {
-            LOGW("BatchDetete fail");
+            LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
             return ret;
         }
+        removeCount += deleteFileId.size();
         deleteFileId.clear();
     } while (count != 0);
+    LOGI("remove count is %{public}d", removeCount);
     return ret;
 }
 
@@ -2525,6 +2528,7 @@ int32_t FileDataHandler::MarkClean(const int32_t action)
     int32_t changedRows;
     NativeRdb::ValuesBucket values;
     values.PutInt(PC::PHOTO_CLEAN_FLAG, NEED_CLEAN);
+    values.PutInt(PC::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     string whereClause = PC::PHOTO_POSITION + " = ?";
     vector<string> whereArgs = {to_string(static_cast<int32_t>(POSITION_CLOUD))};
     if (action == CleanAction::CLEAR_DATA) {
@@ -3733,16 +3737,23 @@ void FileDataHandler::UpdateThmVec()
             + " - " + to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) + " END ";
         int32_t ret = E_OK;
         uint64_t count = 0;
-        std::vector<int> fileIds;
+        uint32_t size = 0;
+        vector<ValueObject> tmp;
         {
-            std::lock_guard<std::mutex> lock(rdbMutex_);
-            fileIds.reserve(thmVec_.size());
-            BatchGetFileIdFromCloudId(thmVec_, fileIds);
-            LOGD("thmVec_ size is %{public}zu, fileIds size is %{public}zu", thmVec_.size(), fileIds.size());
-            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_, count);
+            std::lock_guard<std::mutex> lock(thmMutex_);
+            size = thmVec_.size();
+            tmp.assign(thmVec_.begin(), thmVec_.begin() + size);
+            thmVec_.erase(thmVec_.begin(), thmVec_.begin() + size);
         }
+        vector<int> fileIds = vector<int>(size);
+        BatchGetFileIdFromCloudId(tmp, fileIds);
+        ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, tmp, count);
+        LOGI("update size is %{public}zu, success count is %{public}lld, fail count is %{public}zu",
+            size, count, tmp.size());
         if (ret != E_OK) {
             LOGW("update thm fail");
+            std::lock_guard<std::mutex> lock(thmMutex_);
+            thmVec_.insert(thmVec_.end(), tmp.begin(), tmp.end());
         }
         if (count != 0) {
             UpdateAttachmentStat(INDEX_THUMB_SUCCESS, count);
@@ -3750,7 +3761,7 @@ void FileDataHandler::UpdateThmVec()
         if (!IsPullRecords()) {
             UpdateAlbumInternal();
         }
-        for (auto& fileId : fileIds) {
+        for (auto &fileId : fileIds) {
             DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX + to_string(fileId), ChangeType::INSERT, "");
         }
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
@@ -3768,12 +3779,21 @@ void FileDataHandler::UpdateLcdVec()
             to_string(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) + " END ";
         int32_t ret = E_OK;
         uint64_t count = 0;
+        uint32_t size = 0;
+        vector<ValueObject> tmp;
         {
-            std::lock_guard<std::mutex> lock(rdbMutex_);
-            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, lcdVec_, count);
+            std::lock_guard<std::mutex> lock(lcdMutex_);
+            size = lcdVec_.size();
+            tmp.assign(lcdVec_.begin(), lcdVec_.begin() + size);
+            lcdVec_.erase(lcdVec_.begin(), lcdVec_.begin() + size);
         }
+        ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, tmp, count);
+        LOGI("update size is %{public}zu, success count is %{public}lld, fail count is %{public}zu",
+            size, count, tmp.size());
         if (ret != E_OK) {
-            LOGW("update lcd fail");
+            LOGW("update thm fail");
+            std::lock_guard<std::mutex> lock(lcdMutex_);
+            lcdVec_.insert(lcdVec_.end(), tmp.begin(), tmp.end());
         }
         if (count != 0) {
             UpdateAttachmentStat(INDEX_LCD_SUCCESS, count);
