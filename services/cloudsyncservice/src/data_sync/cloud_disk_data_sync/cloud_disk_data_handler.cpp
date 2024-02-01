@@ -45,8 +45,9 @@ using namespace DriveKit;
 using namespace CloudDisk;
 using namespace Media;
 using FC = CloudDisk::FileColumn;
-CloudDiskDataHandler::CloudDiskDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
-    : RdbDataHandler(userId, bundleName, FC::FILES_TABLE, rdb), userId_(userId), bundleName_(bundleName)
+CloudDiskDataHandler::CloudDiskDataHandler(int32_t userId, const string &bundleName,
+                                           std::shared_ptr<RdbStore> rdb, shared_ptr<bool> stopFlag)
+    : RdbDataHandler(userId, bundleName, FC::FILES_TABLE, rdb, stopFlag), userId_(userId), bundleName_(bundleName)
 {
 }
 void CloudDiskDataHandler::GetFetchCondition(FetchCondition &cond)
@@ -205,6 +206,7 @@ int32_t CloudDiskDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &recor
 
 int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &params)
 {
+    RETURN_ON_ERR(IsStop());
     LOGI("insert of record %{public}s", record.GetRecordId().c_str());
 
     /* check local file conflict */
@@ -395,6 +397,7 @@ static int32_t IsFileContentChanged(const DKRecord &record, NativeRdb::ResultSet
 
 int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet &local, OnFetchParams &params)
 {
+    RETURN_ON_ERR(IsStop());
     int32_t ret = E_OK;
     LOGI("update of record %s", record.GetRecordId().c_str());
     if (IsLocalDirty(local)) {
