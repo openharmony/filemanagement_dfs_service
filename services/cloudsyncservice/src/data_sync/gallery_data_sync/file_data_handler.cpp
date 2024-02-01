@@ -2186,10 +2186,9 @@ int32_t FileDataHandler::BatchGetFileIdFromCloudId(const std::vector<NativeRdb::
 
     std::vector<std::string> thmStrVec;
     thmStrVec.reserve(size);
-    int valueErr = 0;
     for (uint32_t recordIndex = 0; recordIndex < size; recordIndex++) {
         std::string cloudId;
-        valueErr = recordIds[recordIndex].GetString(cloudId);
+        int valueErr = recordIds[recordIndex].GetString(cloudId);
         if (valueErr == E_OK) {
             thmStrVec.push_back(cloudId);
         }
@@ -2901,7 +2900,6 @@ int32_t FileDataHandler::BindAlbumChanges(std::vector<DriveKit::DKRecord> &recor
 
 int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
 {
-    vector<DKRecord> records;
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     predicates.SetWhereClause(Media::PhotoColumn::MEDIA_FILE_PATH + " = ?");
     predicates.SetWhereArgs({cloudId});

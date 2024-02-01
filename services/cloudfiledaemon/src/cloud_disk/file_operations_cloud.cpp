@@ -246,7 +246,7 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
         fi->fh = fd;
         fuse_reply_open(req, fi);
     } else {
-        path = path.substr(0, path.find_last_of("/"));
+        path.resize(path.find_last_of("/"));
         CloudOpen(req, ino, fi, path);
     }
 }

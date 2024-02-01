@@ -99,11 +99,11 @@ int32_t AlbumDataHandler::QueryConflict(DriveKit::DKRecord &record, std::shared_
     string albumType = to_string(static_cast<int32_t>(AlbumType::NORMAL));
     DKRecordFieldMap properties;
     string bundleName = "";
-    int rowCount = 0;
     if (GetRecordFieMapFromRecord(record, properties) == E_OK && properties.find(PAC::ALBUM_TYPE) != data.end() &&
         properties[PAC::ALBUM_TYPE].GetString(albumType) == DKLocalErrorCode::NO_ERROR &&
         albumType == to_string(static_cast<int32_t>(AlbumType::SOURCE)) &&
         properties[TMP_ALBUM_BUNDLE_NAME].GetString(bundleName) == DKLocalErrorCode::NO_ERROR) {
+        int rowCount = 0;
         NativeRdb::AbsRdbPredicates sourcePredicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
         sourcePredicates.EqualTo(TMP_ALBUM_BUNDLE_NAME, bundleName);
         resultSet = Query(sourcePredicates, QUERY_SOURCE_ALBUM_COLUMNS);
@@ -129,7 +129,7 @@ int32_t AlbumDataHandler::QueryConflict(DriveKit::DKRecord &record, std::shared_
 bool AlbumDataHandler::IsConflict(DriveKit::DKRecord &record, int32_t &albumId)
 {
     int32_t rowCount = -1;
-    std::shared_ptr<NativeRdb::ResultSet> resultSet;
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
     int32_t ret = QueryConflict(record, resultSet);
     if (ret != E_OK) {
         LOGE("query fail ret is %{public}d", ret);

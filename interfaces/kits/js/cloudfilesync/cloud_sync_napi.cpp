@@ -254,7 +254,7 @@ napi_value CloudSyncNapi::Stop(napi_env env, napi_callback_info info)
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
-void CloudSyncNapi::SetClassName(std::string classname)
+void CloudSyncNapi::SetClassName(const std::string classname)
 {
     className_ = classname;
 }

@@ -25,7 +25,7 @@ const int32_t ARGS_ONE = 1;
 class CloudSyncCallbackImpl;
 class CloudSyncNapi : public LibN::NExporter {
 public:
-    void SetClassName(std::string classname);
+    void SetClassName(const std::string classname);
     std::string GetClassName() override;
     bool Export() override;
     bool ToExport(std::vector<napi_property_descriptor> props);
