@@ -19,6 +19,7 @@
 #include "nocopyable.h"
 
 #include <map>
+#include <mutex>
 
 namespace OHOS::FileManagement::CloudSync {
 class CloudDownloadUriManager : public NoCopyable {
@@ -27,13 +28,14 @@ public:
 
     void SetRegisteredFlag();
     void UnsetRegisteredFlag();
-    void AddPathToUri(const std::string& path, const std::string& uri);
+    int32_t AddPathToUri(const std::string& path, const std::string& uri);
     std::string GetUri(const std::string& path);
     void RemoveUri(const std::string& path);
 
 private:
     CloudDownloadUriManager() = default;
     bool registered_{false};
+    std::mutex mutex_;
     std::map<std::string, std::string> pathMap_;
 };
 } // namespace OHOS::FileManagement::CloudSync
