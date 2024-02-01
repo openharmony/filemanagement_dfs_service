@@ -94,11 +94,11 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
         return ENOENT;
     }
 
-    shared_ptr<CloudDiskInode> child = FileOperationsHelper::FindCloudDiskInode(data, parentInode->cloudId + name);
+    shared_ptr<CloudDiskInode> child = FileOperationsHelper::FindCloudDiskInode(data, childInfo.cloudId);
     if (child == nullptr) {
         child = make_shared<CloudDiskInode>();
         wLock.lock();
-        data->inodeCache[parentInode->cloudId + name] = child;
+        data->inodeCache[childInfo.cloudId] = child;
         wLock.unlock();
     }
     child->refCount++;
@@ -268,7 +268,7 @@ void FileOperationsCloud::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLooku
         LOGE("Forget Function get an invalid parent inode!");
         return (void) fuse_reply_none(req);
     }
-    string key = parentPtr->cloudId + inoPtr->fileName;
+    string key = inoPtr->cloudId;
     if (inoPtr->layer != CLOUD_DISK_INODE_OTHER_LAYER) {
         key = inoPtr->path;
     }

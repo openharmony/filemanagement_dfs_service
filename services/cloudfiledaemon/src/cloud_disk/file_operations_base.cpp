@@ -66,7 +66,7 @@ static int32_t ForgetCloudIno(struct CloudDiskInode *inoPtr, string &key)
             LOGE("ForgetMulti Function get an invalid parent inode!");
             return EINVAL;
         }
-        key = parentPtr->cloudId + inoPtr->fileName;
+        key = inoPtr->cloudId;
     }
     return 0;
 }
