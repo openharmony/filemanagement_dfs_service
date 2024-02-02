@@ -98,7 +98,7 @@ static string GetLocalTmpPath(int32_t userId, const string &relativePath)
     return GetLocalPath(userId, relativePath) + PATH_TEMP_SUFFIX;
 }
 
-static bool HandleDkError(fuse_req_t req, DriveKit::DKError dkError)
+static bool HandleDkError(fuse_req_t req, DriveKit::DKError &dkError)
 {
     if (!dkError.HasError()) {
         return false;
@@ -496,7 +496,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
-    LOGD("%s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
+    LOGI("%{public}s, size=%{public}zd, off=%{public}lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
     auto dkReadSession = cInode->readSession;
     if (!PrepareForRead(req, buf, size, cInode, dkReadSession)) {
         return;
@@ -507,7 +507,8 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     condition_variable readConVar;
     thread([=, &readConVar]() {
         *readSize = dkReadSession->PRead(off, size, buf.get(), *dkError);
-        LOGD("read %s result, %lld bytes", CloudPath(data, ino).c_str(), static_cast<long long>(*readSize));
+        LOGI("read %{public}s result, %{public}lld bytes", CloudPath(data, ino).c_str(),
+            static_cast<long long>(*readSize));
         unique_lock<shared_mutex> wLock(cInode->readLock, defer_lock);
         wLock.lock();
         if (*readAvailable) {
@@ -520,7 +521,8 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     unique_lock<mutex> lock(readMutex);
     auto waitStatus = readConVar.wait_for(lock, chrono::milliseconds(READ_TIMEOUT_MS));
     if (waitStatus == cv_status::timeout) {
-        LOGE("Pread timeout %s, size=%zd, off=%lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
+        LOGE("Pread timeout %{public}s, size=%{public}zd, off=%{public}lu", CloudPath(data, ino).c_str(), size,
+            (unsigned long)off);
         unique_lock<shared_mutex> wLock(cInode->readLock, defer_lock);
         wLock.lock();
         *readAvailable = false;
@@ -528,7 +530,6 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         fuse_reply_err(req, ENOTCONN);
         return;
     }
-
     if (*readSize < 0) {
         LOGE("readSize: %zd", *readSize);
         fuse_reply_err(req, ENOMEM);
