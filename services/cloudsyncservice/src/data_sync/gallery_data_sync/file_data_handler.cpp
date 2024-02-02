@@ -1897,8 +1897,8 @@ static inline int32_t GetFileIdFromRecord(DKRecord &record, int32_t &fileId)
     DKRecordData data;
     record.GetRecordData(data);
     if (data.find(FILE_ATTRIBUTES) == data.end()) {
-    LOGE("file attributes is no exit");
-    return E_INVAL_ARG;
+        LOGE("file attributes is no exit");
+        return E_INVAL_ARG;
     }
     DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
     if (attributes.find(Media::MediaColumn::MEDIA_ID) == attributes.end()) {
@@ -2008,7 +2008,7 @@ int32_t FileDataHandler::BindAlbums(std::vector<DriveKit::DKRecord> &records)
         }
         /* query album */
         vector<string> cloudIds;
-         ret = GetAlbumCloudIds(albumIds, cloudIds);
+        ret = GetAlbumCloudIds(albumIds, cloudIds);
         if (ret != E_OK) {
             LOGE("get album cloud id err %{public}d", ret);
             return ret;
