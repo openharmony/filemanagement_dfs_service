@@ -92,6 +92,21 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::FindCloudDiskInode(struct Cloud
     return ret;
 }
 
+shared_ptr<CloudDiskFile> FileOperationsHelper::FindCloudDiskFile(struct CloudDiskFuseData *data,
+                                                                  const string &key)
+{
+    shared_ptr<CloudDiskFile> ret;
+    shared_lock<shared_mutex> rLock(data->fileLock, std::defer_lock);
+    rLock.lock();
+    if (data->fileCache.find(key) != data->fileCache.end()) {
+        ret = data->fileCache[key];
+    } else {
+        ret = nullptr;
+    }
+    rLock.unlock();
+    return ret;
+}
+
 void FileOperationsHelper::AddDirEntry(fuse_req_t req, std::string &buf, size_t &size, const char *name,
                                        std::shared_ptr<CloudDiskInode> ino)
 {
@@ -154,6 +169,22 @@ void FileOperationsHelper::PutCloudDiskInode(struct CloudDiskFuseData *data,
         LOGD("node released: %{public}s", key.c_str());
         wLock.lock();
         data->inodeCache.erase(key);
+        wLock.unlock();
+    }
+}
+
+void FileOperationsHelper::PutCloudDiskFile(struct CloudDiskFuseData *data,
+                                            shared_ptr<CloudDiskFile> filePtr, const string &key)
+{
+    std::unique_lock<std::shared_mutex> wLock(data->fileLock, std::defer_lock);
+    if (filePtr == nullptr) {
+        LOGD("Get an invalid file!");
+        return;
+    }
+    if (filePtr->refCount == 0) {
+        LOGD("file released: %{public}s", key.c_str());
+        wLock.lock();
+        data->fileCache.erase(key);
         wLock.unlock();
     }
 }
