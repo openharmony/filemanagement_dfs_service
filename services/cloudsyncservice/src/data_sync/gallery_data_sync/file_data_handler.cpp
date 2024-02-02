@@ -1901,7 +1901,7 @@ static inline int32_t GetFileIdFromRecord(DKRecord &record, int32_t &fileId)
     return E_INVAL_ARG;
     }
     DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
-    if (attributes.find(Media::MediaColumn::MEDIA_ID) != attributes.end()) {
+    if (attributes.find(Media::MediaColumn::MEDIA_ID) == attributes.end()) {
         LOGE("media id is no exit");
         return E_INVAL_ARG;
     }
