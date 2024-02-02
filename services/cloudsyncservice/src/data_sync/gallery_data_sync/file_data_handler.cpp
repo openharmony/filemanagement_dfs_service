@@ -1892,12 +1892,21 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
     return E_OK;
 }
 
-static inline int32_t GetFileIdFromRecord(DKRecord &record)
+static inline int32_t GetFileIdFromRecord(DKRecord &record, int32_t &fileId)
 {
     DKRecordData data;
     record.GetRecordData(data);
+    if (data.find(FILE_ATTRIBUTES) == data.end()) {
+    LOGE("file attributes is no exit");
+    return E_INVAL_ARG;
+    }
     DriveKit::DKRecordFieldMap attributes = data[FILE_ATTRIBUTES];
-    return attributes[Media::MediaColumn::MEDIA_ID];
+    if (attributes.find(Media::MediaColumn::MEDIA_ID) != attributes.end()) {
+        LOGE("media id is no exit");
+        return E_INVAL_ARG;
+    }
+    fileId = attributes[Media::MediaColumn::MEDIA_ID];
+    return E_OK;
 }
 
 static inline void InsertAlbumIds(DKRecord &record, vector<string> &cloudIds)
@@ -1978,7 +1987,13 @@ int32_t FileDataHandler::BindAlbums(std::vector<DriveKit::DKRecord> &records)
     for (auto &record : records) {
         NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PM::TABLE);
         /* map exceed limit? */
-        predicates.EqualTo(PM::ASSET_ID, to_string(GetFileIdFromRecord(record)));
+        int32_t fileId;
+        int32_t ret = GetFileIdFromRecord(record, fileId);
+        if (ret != E_OK) {
+            LOGE("get file id from record err %{public}d", ret);
+            return ret;
+        }
+        predicates.EqualTo(PM::ASSET_ID, to_string(fileId));
         /* query map */
         auto results = Query(predicates, {});
         if (results == nullptr) {
@@ -1986,14 +2001,14 @@ int32_t FileDataHandler::BindAlbums(std::vector<DriveKit::DKRecord> &records)
             return E_RDB;
         }
         vector<int32_t> albumIds;
-        int32_t ret = GetAlbumIdsFromResultSet(results, albumIds);
+        ret = GetAlbumIdsFromResultSet(results, albumIds);
         if (ret != E_OK) {
             LOGE("get album ids from result set err %{public}d", ret);
             return ret;
         }
         /* query album */
         vector<string> cloudIds;
-        ret = GetAlbumCloudIds(albumIds, cloudIds);
+         ret = GetAlbumCloudIds(albumIds, cloudIds);
         if (ret != E_OK) {
             LOGE("get album cloud id err %{public}d", ret);
             return ret;
@@ -2032,7 +2047,13 @@ int32_t FileDataHandler::BindAlbumChanges(std::vector<DriveKit::DKRecord> &recor
     for (auto &record : records) {
         NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PM::TABLE);
         /* map exceed limit? */
-        predicates.EqualTo(PM::ASSET_ID, to_string(GetFileIdFromRecord(record)))
+        int32_t fileId;
+        int32_t ret = GetFileIdFromRecord(record, fileId);
+        if (ret != E_OK) {
+            LOGE("get file id from record err %{public}d", ret);
+            return ret;
+        }
+        predicates.EqualTo(PM::ASSET_ID, to_string(fileId))
             ->And()
             ->NotEqualTo(PM::DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED)));
         /* query map */
@@ -2043,7 +2064,7 @@ int32_t FileDataHandler::BindAlbumChanges(std::vector<DriveKit::DKRecord> &recor
         }
         /* new or delete */
         vector<int32_t> add, remove;
-        int32_t ret = GetAlbumIdsFromResultSet(results, add, remove);
+        ret = GetAlbumIdsFromResultSet(results, add, remove);
         if (ret != E_OK) {
             LOGE("get album ids from result set err %{public}d", ret);
             return ret;
