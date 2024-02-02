@@ -57,11 +57,18 @@ struct CloudDiskInode {
     std::shared_mutex sessionLock;
 };
 
+struct CloudDiskFile {
+    bool isDirty{false};
+    std::atomic<int> refCount{0};
+};
+
 struct CloudDiskFuseData {
     int userId;
     std::shared_ptr<CloudDiskInode> rootNode{nullptr};
     std::unordered_map<std::string, std::shared_ptr<CloudDiskInode>> inodeCache;
+    std::unordered_map<std::string, std::shared_ptr<CloudDiskFile>> fileCache;
     std::shared_mutex cacheLock;
+    std::shared_mutex fileLock;
     struct fuse_session *se;
 };
 } // namespace CloudDisk

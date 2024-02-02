@@ -72,6 +72,19 @@ static void InitInodeAttr(fuse_ino_t parent, struct CloudDiskInode *childInode,
     }
 }
 
+static void InitFileAttr(struct CloudDiskFuseData *data, struct fuse_file_info *fi)
+{
+    std::unique_lock<std::shared_mutex> wLock(data->fileLock, std::defer_lock);
+    shared_ptr<CloudDiskFile> file = FileOperationsHelper::FindCloudDiskFile(data, to_string(fi->fh));
+    if (file == nullptr) {
+        file = make_shared<CloudDiskFile>();
+        wLock.lock();
+        data->fileCache[to_string(fi->fh)] = file;
+        wLock.unlock();
+    }
+    file->refCount++;
+}
+
 static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
                              struct fuse_entry_param *e)
 {
@@ -244,6 +257,7 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
             return (void) fuse_reply_err(req, errno);
         }
         fi->fh = fd;
+        InitFileAttr(data, fi);
         fuse_reply_open(req, fi);
     } else {
         path.resize(path.find_last_of("/"));
@@ -376,6 +390,7 @@ void FileOperationsCloud::MkNod(fuse_req_t req, fuse_ino_t parent, const char *n
 void FileOperationsCloud::Create(fuse_req_t req, fuse_ino_t parent, const char *name,
                                  mode_t mode, struct fuse_file_info *fi)
 {
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     struct fuse_entry_param e;
     int32_t err = DoCreatFile(req, parent, name, mode, e);
     if (err < 0) {
@@ -383,6 +398,7 @@ void FileOperationsCloud::Create(fuse_req_t req, fuse_ino_t parent, const char *
         return;
     }
     fi->fh = err;
+    InitFileAttr(data, fi);
     fuse_reply_create(req, &e, fi);
 }
 
@@ -680,9 +696,8 @@ static void UpdateCloudDiskInode(shared_ptr<CloudDiskRdbStore> rdbStore, struct 
     inoPtr->stat.st_mtime = childInfo.mtime / MILLISECOND_TO_SECONDS_TIMES;
 }
 
-static void UpdateCloudStore(int32_t userId, fuse_ino_t ino)
+static void UpdateCloudStore(int32_t userId, struct CloudDiskInode *inoPtr)
 {
-    auto *inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, userId);
     int res = rdbStore->Write(inoPtr->cloudId);
@@ -696,7 +711,7 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
                                    off_t off, struct fuse_file_info *fi)
 {
     struct fuse_bufvec out_buf = FUSE_BUFVEC_INIT(fuse_buf_size(bufv));
-    int32_t userId = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req))->userId;
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
 
     out_buf.buf[0].flags = (fuse_buf_flags)(FUSE_BUF_IS_FD | FUSE_BUF_FD_SEEK);
     out_buf.buf[0].fd = fi->fh;
@@ -705,16 +720,26 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
     if (res < 0) {
         fuse_reply_err(req, -res);
     } else {
+        shared_ptr<CloudDiskFile> filePtr = FileOperationsHelper::FindCloudDiskFile(data, to_string(fi->fh));
+        if (filePtr != nullptr) { filePtr->isDirty = true; }
         fuse_reply_write(req, (size_t) res);
     }
-    UpdateCloudStore(userId, ino);
 }
 
 void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-    if (!inoPtr->readSession) {
-        close(fi->fh);
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    shared_ptr<CloudDiskFile> filePtr = FileOperationsHelper::FindCloudDiskFile(data, to_string(fi->fh));
+    if (!inoPtr->readSession && filePtr != nullptr) {
+        filePtr->refCount--;
+        if (filePtr->refCount == 0) {
+            close(fi->fh);
+            if (filePtr->isDirty) {
+                UpdateCloudStore(data->userId, inoPtr);
+            }
+            FileOperationsHelper::PutCloudDiskFile(data, filePtr, to_string(fi->fh));
+        }
         fuse_reply_err(req, 0);
     } else {
         std::unique_lock<std::shared_mutex> wSesLock(inoPtr->sessionLock, std::defer_lock);
