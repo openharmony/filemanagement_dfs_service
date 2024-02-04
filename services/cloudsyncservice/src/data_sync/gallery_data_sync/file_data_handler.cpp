@@ -1467,7 +1467,7 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
         LOGE("Get file path failed %{public}d", ret);
         return ret;
     }
-    string thumb = createConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
+    string thumb = createConvertor_.GetThumbPath(filePath, suffix);
 
     /* local */
     bool local = access(thumb.c_str(), F_OK) == 0;
