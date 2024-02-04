@@ -19,6 +19,7 @@
 #include "dfs_error.h"
 #include "ipc/daemon.h"
 #include "iremote_object.h"
+#include "i_daemon_mock.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -157,5 +158,28 @@ HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_0200, TestSize.Level1)
         EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "DaemonTest_OnRemoveSystemAbility_0200 end";
+}
+
+/**
+ * @tc.name: DaemonTest_PrepareSession_0100
+ * @tc.desc: Verify the PrepareSession function.
+ * @tc.type: FUNC
+ * @tc.require: issueI90MOB
+ */
+HWTEST_F(DaemonTest, DaemonTest_PrepareSession_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_0100 start";
+    try {
+        const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkid=xxxxx";
+        const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
+        const std::string srcDeviceId = "testSrcDeviceId";
+        const sptr<IRemoteObject> listener = sptr(new DaemonServiceMock());
+        daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener);
+        EXPECT_TRUE(true);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_0100 end";
 }
 } // namespace OHOS::Storage::DistributedFile::Test

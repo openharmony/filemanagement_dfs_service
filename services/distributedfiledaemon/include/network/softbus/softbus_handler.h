@@ -33,7 +33,8 @@ public:
                                    const std::string &sessionName,
                                    const std::string &dstPath);
     int32_t SetFileSendListener(const std::string &packageName, const std::string &sessionName);
-    void RemoveSession(int sessionId, bool isChangeOwner = false);
+    void ChangeOwnerIfNeeded(int sessionId);
+    void CloseSession(int sessionId);
 
 private:
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
