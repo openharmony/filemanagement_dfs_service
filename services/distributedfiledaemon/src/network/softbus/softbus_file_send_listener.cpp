@@ -46,14 +46,14 @@ int32_t SoftBusFileSendListener::OnSendFileProcess(int sessionId, uint64_t bytes
 int32_t SoftBusFileSendListener::OnSendFileFinished(int sessionId, const char *firstFile)
 {
     LOGD("OnSendFileFinished, sessionId = %{public}d, firstFile = %{public}s", sessionId, firstFile);
-    SoftBusHandler::GetInstance().RemoveSession(sessionId);
+    SoftBusHandler::GetInstance().CloseSession(sessionId);
     return 0;
 }
 
 void SoftBusFileSendListener::OnFileTransError(int sessionId)
 {
     LOGD("SoftBusFileSendListener::OnFileTransError, sessionId = %{public}d", sessionId);
-    SoftBusHandler::GetInstance().RemoveSession(sessionId);
+    SoftBusHandler::GetInstance().CloseSession(sessionId);
 }
 } // namespace DistributedFile
 } // namespace Storage

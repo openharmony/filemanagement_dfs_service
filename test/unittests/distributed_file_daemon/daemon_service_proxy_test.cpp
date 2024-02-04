@@ -35,6 +35,10 @@ namespace {
     };
 }
 
+const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkid=xxxxx";
+const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
+const std::string srcDeviceId = "testSrcDeviceId";
+
 class DistributedDaemonProxyTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -99,4 +103,19 @@ HWTEST_F(DistributedDaemonProxyTest, CloseP2PConnectionTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "CloseP2PConnectionTest End";
 }
 
+/**
+ * @tc.name: PrepareSessionTest
+ * @tc.desc: Verify the PrepareSession function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonProxyTest, PrepareSessionTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PrepareSessionTest Start";
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    auto listener = sptr(new DaemonServiceMock());
+    int ret = proxy_->PrepareSession(srcUri, dstUri, srcDeviceId, listener);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "PrepareSessionTest End";
+}
 } // namespace OHOS::Storage::DistributedFile::Test

@@ -18,6 +18,7 @@
 
 #include "ipc/daemon_stub.h"
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
+#include "i_daemon_mock.h"
 #include "utils_log.h"
 
 namespace OHOS::Storage::DistributedFile::Test {
@@ -32,6 +33,11 @@ DistributedHardware::DmDeviceInfo deviceInfo = {
     .networkId = "testnetworkid",
 };
 }
+
+const std::string srcUri = "file://docs/storage/Users/currentUser/""Documents?networkid=xxxxx";
+const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
+const std::string srcDeviceId = "testSrcDeviceId";
+const sptr<IRemoteObject> listener = sptr(new DaemonServiceMock());
 
 class MockDaemonStub : public DaemonStub {
 public:
@@ -209,5 +215,34 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest005, TestSize.Level1)
         GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest005  ERROR";
     }
     GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest005 End";
+}
+
+/**
+ * @tc.name: DaemonStubOnRemoteRequestTest006
+ * @tc.desc: Verify the DaemonStubOnRemoteRequest function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest006 Start";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        EXPECT_TRUE(data.WriteString(srcUri));
+        EXPECT_TRUE(data.WriteString(dstUri));
+        EXPECT_TRUE(data.WriteString(srcDeviceId));
+        EXPECT_TRUE(data.WriteRemoteObject(listener));
+        int ret = daemonStub_->OnRemoteRequest(
+            static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION), data,
+            reply, option);
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest006  ERROR";
+    }
+    GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest006 End";
 }
 } // namespace OHOS::Storage::DistributedFile::Test
