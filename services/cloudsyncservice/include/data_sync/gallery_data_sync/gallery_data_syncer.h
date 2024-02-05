@@ -36,7 +36,6 @@ public:
     virtual void Reset() override;
 
     virtual int32_t StartDownloadFile(const std::string path, const int32_t userId) override;
-    virtual int32_t StopDownloadFile(const std::string path, const int32_t userId) override;
     virtual int32_t Init(const std::string bundleName, const int32_t userId) override;
     virtual int32_t Clean(const int action) override;
     virtual int32_t DisableCloud() override;
@@ -50,6 +49,7 @@ public:
     virtual void FreeSysEventData() override;
     virtual void ReportSysEvent(uint32_t code) override;
     virtual void SetFullSyncSysEvent() override;
+    virtual void SetCheckSysEvent() override;
 
 private:
     enum {
@@ -71,8 +71,6 @@ private:
     int32_t UploadFile();
     int32_t Complete(bool isNeedNotify = true) override;
     std::shared_ptr<NativeRdb::RdbStore> RdbInit(const std::string &bundleName, const int32_t userId);
-    int32_t GetHandler();
-    void PutHandler();
 
     /* sync stat */
     void UpdateBasicEventStat(uint32_t code);
@@ -90,12 +88,12 @@ private:
     /* handler */
     std::shared_ptr<FileDataHandler> fileHandler_;
     std::shared_ptr<AlbumDataHandler> albumHandler_;
-    std::mutex handleInitMutex_;
-    int32_t dataHandlerRefCount_{0};
     uint32_t timeId_{0};
 
     /* sync stat */
     std::shared_ptr<GalleryIncSyncStat> syncStat_;
+    /* check stat */
+    std::shared_ptr<GalleryCheckSatat> checkStat_;
 };
 
 class RdbCallback : public NativeRdb::RdbOpenCallback {

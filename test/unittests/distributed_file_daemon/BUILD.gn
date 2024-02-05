@@ -62,6 +62,7 @@ ohos_unittest("distributed_file_daemon_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
@@ -135,6 +136,7 @@ ohos_unittest("distributed_file_daemon_stub_test") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
@@ -258,6 +260,7 @@ ohos_unittest("daemon_service_proxy_test") {
   ]
 
   external_deps = [
+    "ability_base:zuri",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_core",

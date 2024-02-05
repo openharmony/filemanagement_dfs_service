@@ -300,6 +300,41 @@ private:
     std::vector<uint64_t> attachment_;
     std::string checkInfo_;
 };
+
+class GalleryCheckStatContainer : public CheckStatContainer<GalleryCheckSatat> {
+public:
+    void UpdateCheckFile(uint32_t index, uint64_t diff)
+    {
+        std::shared_ptr<GalleryCheckSatat> stat = GetCheckStat();
+        if (stat != nullptr) {
+            stat->UpdateFile(index, diff);
+        }
+    }
+
+    void UpdateCheckAlbum(uint32_t index, uint64_t diff)
+    {
+        std::shared_ptr<GalleryCheckSatat> stat = GetCheckStat();
+        if (stat != nullptr) {
+            stat->UpdateAlbum(index, diff);
+        }
+    }
+
+    void UpdateCheckMap(uint32_t index, uint64_t diff)
+    {
+        std::shared_ptr<GalleryCheckSatat> stat = GetCheckStat();
+        if (stat != nullptr) {
+            stat->UpdateMap(index, diff);
+        }
+    }
+
+    void UpdateCheckAttachment(uint32_t index, uint64_t diff)
+    {
+        std::shared_ptr<GalleryCheckSatat> stat = GetCheckStat();
+        if (stat != nullptr) {
+            stat->UpdateAttachment(index, diff);
+        }
+    }
+};
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS

@@ -96,10 +96,10 @@ HWTEST_F(TaskTest, AddTask, TestSize.Level1)
         auto task = make_shared<Task>(context, action);
         std::function<void()> callBack = CallBack;
         TaskRunner taskRunner(callBack);
-        taskRunner.stopFlag_ = true;
+        taskRunner.stopFlag_ = make_shared<bool>(true);
         auto ret = taskRunner.AddTask(task);
         EXPECT_EQ(E_STOP, ret);
-        taskRunner.stopFlag_ = false;
+        *taskRunner.stopFlag_ = false;
         ret = taskRunner.AddTask(task);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
@@ -126,7 +126,7 @@ HWTEST_F(TaskTest, StartTask001, TestSize.Level1)
         auto task = make_shared<Task>(context, action);
         std::function<void()> callBack = CallBack;
         auto taskRunner = make_shared<TaskRunner>(callBack);
-        taskRunner->stopFlag_ = false;
+        taskRunner->stopFlag_ = make_shared<bool>(false);
         taskRunner->SetCommitFunc(CommitFuncSuccess);
         auto ret = taskRunner->StartTask(task, action);
         EXPECT_EQ(E_OK, ret);
@@ -154,7 +154,7 @@ HWTEST_F(TaskTest, StartTask002, TestSize.Level1)
         auto task = make_shared<Task>(context, action);
         std::function<void()> callBack = CallBack;
         auto taskRunner = make_shared<TaskRunner>(callBack);
-        taskRunner->stopFlag_ = false;
+        taskRunner->stopFlag_ = make_shared<bool>(false);
         taskRunner->SetCommitFunc(CommitFuncFail);
         auto ret = taskRunner->StartTask(task, action);
         EXPECT_EQ(1, ret);
@@ -182,10 +182,9 @@ HWTEST_F(TaskTest, CommitTask001, TestSize.Level1)
         auto task = make_shared<Task>(context, action);
         std::function<void()> callBack = CallBack;
         auto taskRunner = make_shared<TaskRunner>(callBack);
-        taskRunner->stopFlag_ = true;
         taskRunner->AddTask(task);
         auto ret = taskRunner->CommitTask(task);
-        EXPECT_EQ(E_STOP, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CommitTask001 ERROR";
@@ -210,7 +209,7 @@ HWTEST_F(TaskTest, CommitTask002, TestSize.Level1)
         auto task = make_shared<Task>(context, action);
         std::function<void()> callBack = CallBack;
         auto taskRunner = make_shared<TaskRunner>(callBack);
-        taskRunner->stopFlag_ = false;
+        taskRunner->stopFlag_ = make_shared<bool>(false);
         taskRunner->AddTask(task);
         taskRunner->SetCommitFunc(CommitFuncFail);
         auto ret = taskRunner->CommitTask(task);
@@ -239,7 +238,7 @@ HWTEST_F(TaskTest, CommitTask003, TestSize.Level1)
         auto task = make_shared<Task>(context, action);
         std::function<void()> callBack = CallBack;
         auto taskRunner = make_shared<TaskRunner>(callBack);
-        taskRunner->stopFlag_ = false;
+        taskRunner->stopFlag_ = make_shared<bool>(false);
         taskRunner->AddTask(task);
         taskRunner->SetCommitFunc(CommitFuncSuccess);
         auto ret = taskRunner->CommitTask(task);
@@ -270,11 +269,10 @@ HWTEST_F(TaskTest, CompleteTask, TestSize.Level1)
 
         std::function<void()> callBack = CallBack;
         TaskRunner taskRunner(callBack);
-
-        taskRunner.stopFlag_ = true;
+        taskRunner.stopFlag_ = make_shared<bool>(true);
         taskRunner.CompleteTask(0);
         EXPECT_TRUE(true);
-        taskRunner.stopFlag_ = false;
+        *taskRunner.stopFlag_ = false;
         taskRunner.CompleteTask(0);
         EXPECT_TRUE(true);
         taskRunner.taskList_.push_back(task);
@@ -291,14 +289,14 @@ HWTEST_F(TaskTest, CompleteTask, TestSize.Level1)
 }
 
 /**
- * @tc.name: StopAndWaitFor
- * @tc.desc: Verify the StopAndWaitFor function
+ * @tc.name: ReleaseTask
+ * @tc.desc: Verify the ReleaseTask function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(TaskTest, StopAndWaitFor, TestSize.Level1)
+HWTEST_F(TaskTest, ReleaseTask, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "StopAndWaitFor Begin";
+    GTEST_LOG_(INFO) << "ReleaseTask Begin";
     try {
         auto handler = std::make_shared<DataHandlerMock>(USER_ID, BUND_NAME, TABLE_NAME);
         auto context = std::make_shared<TaskContext>(handler);
@@ -307,17 +305,17 @@ HWTEST_F(TaskTest, StopAndWaitFor, TestSize.Level1)
 
         std::function<void()> callBack = CallBack;
         TaskRunner taskRunner(callBack);
-        auto ret = taskRunner.StopAndWaitFor();
+        auto ret = taskRunner.ReleaseTask();
         EXPECT_TRUE(ret);
         taskRunner.taskList_.push_back(task);
-        ret = taskRunner.StopAndWaitFor();
+        ret = taskRunner.ReleaseTask();
         EXPECT_TRUE(ret == false);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " StopAndWaitFor ERROR";
+        GTEST_LOG_(INFO) << " ReleaseTask ERROR";
     }
 
-    GTEST_LOG_(INFO) << "StopAndWaitFor End";
+    GTEST_LOG_(INFO) << "ReleaseTask End";
 }
 
 /**

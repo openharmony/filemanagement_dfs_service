@@ -62,12 +62,11 @@ int32_t DataSyncerRdbStore::Insert(int32_t userId, const std::string &bundleName
     string uniqueId = to_string(userId) + bundleName;
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(DATA_SYNCER_TABLE);
     predicates.EqualTo(DATA_SYNCER_UNIQUE_ID, uniqueId);
-    std::shared_ptr<NativeRdb::ResultSet> resultSet;
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
     RETURN_ON_ERR(Query(predicates, resultSet));
     if (resultSet->GoToNextRow() == E_OK) {
         return E_OK;
     }
-    int64_t rowId;
     NativeRdb::ValuesBucket values;
     values.PutInt(USER_ID, userId);
     values.PutString(BUNDLE_NAME, bundleName);
@@ -75,6 +74,7 @@ int32_t DataSyncerRdbStore::Insert(int32_t userId, const std::string &bundleName
     int32_t ret = 0;
     {
         std::lock_guard<std::mutex> lck(rdbMutex_);
+        int64_t rowId;
         ret = rdb_->Insert(rowId, DATA_SYNCER_TABLE, values);
     }
     if (ret != E_OK) {
@@ -111,7 +111,7 @@ int32_t DataSyncerRdbStore::QueryDataSyncer(int32_t userId, std::shared_ptr<Nati
 int32_t DataSyncerRdbStore::Query(NativeRdb::AbsRdbPredicates predicates,
     std::shared_ptr<NativeRdb::ResultSet> &resultSet)
 {
-    if (rdb_ == nullptr) {
+    while (rdb_ == nullptr) {
         if (RdbInit() != E_OK) {
             LOGE("Data Syner init rdb failed");
             return E_RDB;

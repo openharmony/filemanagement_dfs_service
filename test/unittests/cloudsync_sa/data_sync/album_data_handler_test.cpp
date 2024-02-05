@@ -35,7 +35,7 @@ const std::string BUND_NAME = "com.ohos.photos";
 class AlbumDataHandlerMock : public AlbumDataHandler {
 public:
     explicit AlbumDataHandlerMock(int32_t userId, const std::string &bundleName, std::shared_ptr<RdbStoreMock> rdb)
-        : AlbumDataHandler(userId, bundleName, rdb)
+        : AlbumDataHandler(userId, bundleName, rdb, make_shared<bool>(false))
     {
     }
     MOCK_METHOD2(GetDownloadAsset, int32_t(string cloudId,

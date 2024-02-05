@@ -24,18 +24,19 @@
 #include "file_data_convertor.h"
 #include "gallery_sysevent.h"
 #include "rdb_data_handler.h"
-
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
-class FileDataHandler : public RdbDataHandler, public GallerySyncStatContainer {
+class FileDataHandler : public RdbDataHandler, public GallerySyncStatContainer,
+    public GalleryCheckStatContainer {
 public:
     enum Clean {
         NOT_NEED_CLEAN = 0,
         NEED_CLEAN,
     };
-    FileDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<NativeRdb::RdbStore> rdb);
+    FileDataHandler(int32_t userId, const std::string &bundleName,
+                    std::shared_ptr<NativeRdb::RdbStore> rdb, std::shared_ptr<bool> stopFlag);
     virtual ~FileDataHandler() = default;
 
     /* download */
@@ -91,6 +92,7 @@ public:
 
     /* reset */
     void Reset();
+
 private:
     int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
         const std::unordered_map<std::string, LocalInfo> &localMap);
@@ -270,9 +272,6 @@ private:
     std::vector<NativeRdb::ValueObject> lcdVec_;
     int32_t waitCount_{0};
     uint32_t timeId_;
-
-    /* check stat */
-    std::unique_ptr<GalleryCheckSatat> checkStat_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

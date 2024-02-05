@@ -44,6 +44,7 @@ DataSyncer::DataSyncer(const std::string bundleName, const int32_t userId)
     /* alloc task runner */
     taskRunner_ = DelayedSingleton<TaskManager>::GetInstance()->AllocRunner(userId,
         bundleName, bind(&DataSyncer::Schedule, this));
+    taskRunner_->SetStopFlag(stopFlag_);
     downloadCallbackMgr_.SetBundleName(bundleName);
 }
 
@@ -149,10 +150,7 @@ void DataSyncer::Abort()
 {
     LOGI("%{private}d %{private}s aborts", userId_, bundleName_.c_str());
     thread ([this]() {
-        /* stop all the tasks and wait for tasks' termination */
-        if (!taskRunner_->StopAndWaitFor()) {
-            LOGE("wait for tasks stop fail");
-        }
+        taskRunner_->ReleaseTask();
         /* call the syncer manager's callback for notification */
         Complete();
     }).detach();
@@ -179,6 +177,9 @@ int32_t DataSyncer::Pull(shared_ptr<DataHandler> handler)
     /* Full synchronization and incremental synchronization */
     if (handler->IsPullRecords()) {
         SetFullSyncSysEvent();
+        if (handler->GetCheckFlag()) {
+            SetCheckSysEvent();
+        }
         ret = AsyncRun(context, &DataSyncer::PullRecords);
     } else {
         ret = AsyncRun(context, &DataSyncer::PullDatabaseChanges);
@@ -276,7 +277,7 @@ struct DownloadContext {
         progressCallback;
 };
 
-void DataSyncer::DownloadAssets(DownloadContext ctx)
+void DataSyncer::DownloadAssets(DownloadContext &ctx)
 {
     if (ctx.resultCallback == nullptr) {
         LOGE("resultCallback nullptr");
@@ -302,6 +303,33 @@ void DataSyncer::DownloadAssets(DownloadContext ctx)
          * 2. invoke callback here to do some statistics in handler
          * 3. set assets back to handler for its info
          */
+        shared_ptr<TaskContext> tctx = static_pointer_cast<TaskContext>(ctx.context);
+        tctx->SetAssets(ctx.assets);
+        ctx.resultCallback(ctx.context, nullptr, {}, {});
+    }
+}
+
+void DataSyncer::DownloadThumbAssets(DownloadContext ctx)
+{
+    if (ctx.resultCallback == nullptr) {
+        LOGE("resultCallback nullptr");
+        return;
+    }
+
+    if (ctx.progressCallback == nullptr) {
+        LOGE("progressCallback nullptr");
+        return;
+    }
+
+    if (ctx.assets.size() == 0) {
+        LOGE("no assets to download");
+        return;
+    }
+
+    int32_t ret = sdkHelper_->DownloadAssets(ctx.context, ctx.assets, {}, ctx.id,
+        ctx.resultCallback, ctx.progressCallback);
+    if (ret != E_OK) {
+        LOGE("sdk download assets error %{public}d", ret);
         shared_ptr<TaskContext> tctx = static_pointer_cast<TaskContext>(ctx.context);
         tctx->SetAssets(ctx.assets);
         ctx.resultCallback(ctx.context, nullptr, {}, {});
@@ -1139,11 +1167,10 @@ void DataSyncer::CompleteAll(bool isNeedNotify)
 
 void DataSyncer::BeginClean()
 {
-    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::CLEAN_TASK);
+    *stopFlag_ = true;
     /* stop all the tasks and wait for tasks' termination */
-    if (!taskRunner_->StopAndWaitFor()) {
-        LOGE("wait for tasks stop fail");
-    }
+    taskRunner_->ReleaseTask();
+    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::CLEAN_TASK);
     /* set cleaning  state */
     (void)syncStateManager_.SetCleaningFlag();
 }
@@ -1162,20 +1189,21 @@ void DataSyncer::CompleteClean()
         }
         StartSync(false, SyncTriggerType::PENDING_TRIGGER);
     }
+    *stopFlag_ = false;
 }
 
 void DataSyncer::BeginDisableCloud()
 {
     /* stop all the tasks and wait for tasks' termination */
-    if (!taskRunner_->StopAndWaitFor()) {
-        LOGE("wait for tasks stop fail");
-    }
+    TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::DISABLE_CLOUD_TASK);
     /* set disable cloud  state */
     (void)syncStateManager_.SetDisableCloudFlag();
 }
 
 void DataSyncer::CompleteDisableCloud()
 {
+    DataSyncerRdbStore::GetInstance().UpdateSyncState(userId_, bundleName_, SyncState::DISABLE_CLOUD_SUCCEED);
+    TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DISABLE_CLOUD_TASK);
     auto nextAction = syncStateManager_.UpdateSyncState(SyncState::DISABLE_CLOUD_SUCCEED);
     if (nextAction != Action::STOP) {
          /* Retrigger sync, clear errorcode */
@@ -1318,7 +1346,7 @@ int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
                             .id = 0,
                             .resultCallback = callback,
                             .progressCallback = FetchRecordsDownloadProgress};
-    std::thread([this, dctx]() { this->DownloadAssets(dctx); }).detach();
+    std::thread([this, dctx]() { this->DownloadThumbAssets(dctx); }).detach();
     return E_OK;
 }
 
@@ -1351,7 +1379,7 @@ void DataSyncer::FetchThumbDownloadCallback(shared_ptr<DKContext> context,
 
 bool DataSyncer::CheckScreenAndWifi()
 {
-    if ((NetworkStatus::GetNetConnStatus() == NetworkStatus::WIFI_CONNECT) && !ScreenStatus::IsScreenOn()) {
+    if (NetworkStatus::GetNetConnStatus() == NetworkStatus::WIFI_CONNECT) {
         return true;
     }
     return false;
@@ -1386,6 +1414,10 @@ void DataSyncer::ReportSysEvent(uint32_t code)
 }
 
 void DataSyncer::SetFullSyncSysEvent()
+{
+}
+
+void DataSyncer::SetCheckSysEvent()
 {
 }
 } // namespace CloudSync

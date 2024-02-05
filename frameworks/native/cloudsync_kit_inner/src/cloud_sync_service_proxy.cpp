@@ -496,12 +496,18 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
         return E_BROKEN_IPC;
     }
 
-    OHOS::Media::MediaFileUri Muri(uri);
-    string path = Muri.GetFilePath();
+    string path = uri;
+    if (uri.find("file://media") == 0) {
+        OHOS::Media::MediaFileUri mediaUri(uri);
+        path = mediaUri.GetFilePath();
+    }
+
     LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
 
     CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-    uriMgr.AddPathToUri(path, uri);
+    if (uriMgr.AddPathToUri(path, uri) == E_STOP) {
+        return E_OK;
+    }
 
     if (!data.WriteString(path)) {
         LOGE("Failed to send the cloud id");
@@ -545,8 +551,9 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
     }
 
     CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-    uriMgr.AddPathToUri(uri, uri);
-
+    if (uriMgr.AddPathToUri(uri, uri) == E_STOP) {
+        return E_OK;
+    }
     auto remote = Remote();
     if (!remote) {
         LOGE("remote is nullptr");

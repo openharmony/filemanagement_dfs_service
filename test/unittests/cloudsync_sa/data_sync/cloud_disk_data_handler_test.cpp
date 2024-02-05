@@ -15,6 +15,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <memory>
 
 #include "cloud_disk_data_syncer.h"
 #include "data_convertor_mock.h"
@@ -52,7 +53,7 @@ public:
 class CloudDiskDataHandlerMock final : public CloudDiskDataHandler {
 public:
     CloudDiskDataHandlerMock(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
-        : CloudDiskDataHandler(userId, bundleName, rdb)
+        : CloudDiskDataHandler(userId, bundleName, rdb, std::make_shared<bool>(false))
     {
     }
 
@@ -129,7 +130,7 @@ void CloudDiskDataHandlerTest::SetUp(void)
     const int32_t userId = 100;
     string bundleName = "com.ohos.test";
     auto rdb = make_shared<RdbStoreMock>();
-    cloudDiskDataHandler_ = make_shared<CloudDiskDataHandlerMock>(userId, bundleName, rdb);
+    CloudDiskDataHandlerMock cloudDiskDataHandlerMock(userId, bundleName, rdb);
 }
 
 void CloudDiskDataHandlerTest::TearDown(void)
@@ -150,7 +151,8 @@ HWTEST_F(CloudDiskDataHandlerTest, CloudDiskDataHandlerTest001, TestSize.Level1)
     int32_t userId = 100;
     string bundleName = "com.ohos.test";
     auto rdb = make_shared<RdbStoreMock>();
-    shared_ptr<CloudDiskDataHandler> dataHandler = make_shared<CloudDiskDataHandler>(userId, bundleName, rdb);
+    auto stopFlag = make_shared<bool>(false);
+    shared_ptr<CloudDiskDataHandler> dataHandler = make_shared<CloudDiskDataHandler>(userId, bundleName, rdb, stopFlag);
     EXPECT_NE(dataHandler, nullptr);
     GTEST_LOG_(INFO) << "CloudDiskDataHandler End";
 }

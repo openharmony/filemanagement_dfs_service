@@ -28,13 +28,9 @@ namespace CloudSync {
 using namespace std;
 
 /* task runner */
-TaskRunner::TaskRunner(function<void()> callback) : callback_(callback)
-{
-}
+TaskRunner::TaskRunner(function<void()> callback) : callback_(callback) {}
 
-TaskRunner::~TaskRunner()
-{
-}
+TaskRunner::~TaskRunner() {}
 
 int32_t TaskRunner::GenerateTaskId()
 {
@@ -44,12 +40,6 @@ int32_t TaskRunner::GenerateTaskId()
 int32_t TaskRunner::AddTask(shared_ptr<Task> t)
 {
     unique_lock<mutex> lock(mutex_);
-
-    /* If stopped, no more tasks can be added */
-    if (stopFlag_) {
-        LOGI("add task fail since stop");
-        return E_STOP;
-    }
 
     /* insert task */
     t->SetId(GenerateTaskId());
@@ -100,8 +90,6 @@ void TaskRunner::CompleteTask(int32_t id)
 {
     /* remove task */
     unique_lock<mutex> lock(mutex_);
-    const int32_t DFX_DELAY_S = 60;
-    int32_t xcollieId = XCollieHelper::SetTimer("CloudSyncService_CompleteTask", DFX_DELAY_S, nullptr, nullptr, true);
     for (auto entry = taskList_.begin(); entry != taskList_.end();) {
         if (entry->get()->GetId() == id) {
             (void)taskList_.erase(entry);
@@ -113,32 +101,24 @@ void TaskRunner::CompleteTask(int32_t id)
 
     LOGI("taskList size: %{public}zu, Task id: %{public}d", taskList_.size(), id);
     if (taskList_.empty()) {
-        if (stopFlag_) {
-            /* if it has been stopped, notify the blocking caller */
-            stopFlag_ = false;
-            cv_.notify_all();
-        } else {
+        if (!(*stopFlag_)) {
+            const int32_t DFX_DELAY_S = 60;
+            int32_t xcollieId = XCollieHelper::SetTimer("CloudSyncService_CompleteTask",
+                DFX_DELAY_S, nullptr, nullptr, true);
             lock.unlock();
-            Reset();
+            XCollieHelper::CancelTimer(xcollieId);
             /* otherwise just run its callback */
             callback_();
         }
     }
-    XCollieHelper::CancelTimer(xcollieId);
 }
 
-bool TaskRunner::StopAndWaitFor()
+bool TaskRunner::ReleaseTask()
 {
     unique_lock<mutex> lock(mutex_);
     LOGI("task manager stop");
-    if (taskList_.empty()) {
-        return true;
-    }
-
-    stopFlag_ = true;
-    return cv_.wait_for(lock, chrono::seconds(WAIT_FOR_SECOND), [this] {
-        return taskList_.empty();
-    });
+    taskList_.clear();
+    return taskList_.empty();
 }
 
 void TaskRunner::Reset()
@@ -165,6 +145,29 @@ void TaskRunner::CompleteDummyTask()
     CompleteTask(INVALID_ID);
 }
 
+std::shared_ptr<bool> TaskRunner::GetStopFlag()
+{
+    return stopFlag_;
+}
+
+void TaskRunner::SetStopFlag(std::shared_ptr<bool> stopFlag)
+{
+    stopFlag_ = stopFlag;
+}
+
+bool TaskRunner::NeedRun(shared_ptr<Task> t)
+{
+    unique_lock<mutex> lock(mutex_);
+    for (auto it = taskList_.begin(); it != taskList_.end();) {
+        if (it->get()->GetId() == t->GetId()) {
+            return true;
+        } else {
+            it++;
+        }
+    }
+    return false;
+}
+
 /* TaskManager */
 TaskManager::TaskManager()
 {
@@ -178,7 +181,7 @@ TaskManager::~TaskManager()
 }
 
 shared_ptr<TaskRunner> TaskManager::AllocRunner(int32_t userId, const std::string &bundleName,
-    function<void()> callback)
+                                                function<void()> callback)
 {
     string key = GetKey(userId, bundleName);
     unique_lock wlock(mapMutex_);
@@ -212,21 +215,24 @@ void TaskManager::InitRunner(TaskRunner &runner)
     runner.SetCommitFunc(bind(&TaskManager::CommitTask, this, placeholders::_1, placeholders::_2));
 }
 
-int32_t TaskManager::CommitTask(shared_ptr<TaskRunner> runner, shared_ptr<Task> t)
-{
-    LOGI("CommitTask begin, Task id: %{public}d", t->GetId());
-    pool_.AddTask([t, runner]() {
-        DfsuMemoryGuard cacheGuard;
-        t->Run();
-        runner->CompleteTask(t->GetId());
-    });
-    LOGI("CommitTask end, Task id: %{public}d", t->GetId());
-    return E_OK;
-}
-
 string TaskManager::GetKey(int32_t userId, const string &bundleName)
 {
     return to_string(userId) + bundleName;
+}
+
+int32_t TaskManager::CommitTask(shared_ptr<TaskRunner> runner, shared_ptr<Task> t)
+{
+    LOGI("CommitTask begin, Task id: %{public}d", t->GetId());
+    if (runner->NeedRun(t)) {
+        LOGI("task need run");
+        pool_.AddTask([t, runner]() {
+            DfsuMemoryGuard cacheGuard;
+            t->Run();
+            runner->CompleteTask(t->GetId());
+        });
+    }
+    LOGI("CommitTask end, Task id: %{public}d", t->GetId());
+    return E_OK;
 }
 } // namespace CloudSync
 } // namespace FileManagement

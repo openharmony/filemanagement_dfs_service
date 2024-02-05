@@ -45,8 +45,9 @@ using namespace DriveKit;
 using namespace CloudDisk;
 using namespace Media;
 using FC = CloudDisk::FileColumn;
-CloudDiskDataHandler::CloudDiskDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
-    : RdbDataHandler(userId, bundleName, FC::FILES_TABLE, rdb), userId_(userId), bundleName_(bundleName)
+CloudDiskDataHandler::CloudDiskDataHandler(int32_t userId, const string &bundleName,
+                                           std::shared_ptr<RdbStore> rdb, shared_ptr<bool> stopFlag)
+    : RdbDataHandler(userId, bundleName, FC::FILES_TABLE, rdb, stopFlag), userId_(userId), bundleName_(bundleName)
 {
 }
 void CloudDiskDataHandler::GetFetchCondition(FetchCondition &cond)
@@ -205,6 +206,7 @@ int32_t CloudDiskDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &recor
 
 int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &params)
 {
+    RETURN_ON_ERR(IsStop());
     LOGI("insert of record %{public}s", record.GetRecordId().c_str());
 
     /* check local file conflict */
@@ -215,9 +217,6 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
     }
     ValuesBucket values;
     ret = localConvertor_.Convert(record, values);
-    if (ret != E_OK) {
-        return ret;
-    }
     if (ret != E_OK) {
         LOGE("record to valuebucket failed, ret=%{public}d", ret);
         return ret;
@@ -277,7 +276,6 @@ int32_t CloudDiskDataHandler::HandleConflict(const std::shared_ptr<NativeRdb::Re
     if (count == 0) {
         return E_OK;
     }
-    string dbFileName = "";
     string renameFileCloudId = "";
     ret = FindRenameFile(resultSet, renameFileCloudId, fullName, lastDot);
     if (ret != E_OK) {
@@ -353,12 +351,17 @@ static int32_t IsFileContentChanged(const DKRecord &record, NativeRdb::ResultSet
     DKRecordData data;
     record.GetRecordData(data);
     string fileType;
+    int64_t fileSize = -1;
     if (data.find(DK_IS_DIRECTORY) == data.end() ||
         data.at(DK_IS_DIRECTORY).GetString(fileType) != DKLocalErrorCode::NO_ERROR) {
         LOGE("extract type error");
         return E_INVAL_ARG;
     }
-    if (fileType == "directory") {
+    if (data.find(DK_FILE_SIZE) == data.end() ||
+        data.at(DK_FILE_SIZE).GetLong(fileSize) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract fileSize error");
+    }
+    if (fileType == "directory" || fileSize == 0) {
         return E_OK;
     }
     int64_t localEditTime = 0;
@@ -395,6 +398,7 @@ static int32_t IsFileContentChanged(const DKRecord &record, NativeRdb::ResultSet
 
 int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet &local, OnFetchParams &params)
 {
+    RETURN_ON_ERR(IsStop());
     int32_t ret = E_OK;
     LOGI("update of record %s", record.GetRecordId().c_str());
     if (IsLocalDirty(local)) {
@@ -885,8 +889,9 @@ int32_t CloudDiskDataHandler::OnModifyRecordSuccess(
     if (localMap.find(entry.first) == localMap.end()) {
         return E_OK;
     }
-    int32_t changedRows;
     ValuesBucket valuesBucket;
+    if (UpdateFileAsset(data, valuesBucket)) { LOGE("update file content fail"); }
+    int32_t changedRows;
     valuesBucket.PutLong(FC::VERSION, record.GetVersion());
     if (IsTimeChanged(record, localMap, entry.first, FC::FILE_TIME_EDITED)) {
         valuesBucket.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(CloudDisk::DirtyType::TYPE_FDIRTY));
@@ -955,7 +960,8 @@ int32_t CloudDiskDataHandler::GetLocalInfo(const map<DKRecordId, DKRecordOperRes
         cloudId.push_back(entry.first);
     }
     NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(FC::FILES_TABLE);
-    createPredicates.In(type, cloudId);
+    createPredicates.NotEqualTo(FC::DIRTY_TYPE, to_string(static_cast<int32_t>(CloudDisk::DirtyType::TYPE_DELETED)))
+        ->And()->In(type, cloudId);
     auto resultSet = Query(createPredicates, FileColumn::DISK_ON_UPLOAD_COLUMNS);
     if (resultSet == nullptr) {
         LOGE("query rdb err");

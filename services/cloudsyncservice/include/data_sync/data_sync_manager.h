@@ -62,8 +62,10 @@ private:
     std::mutex cleanMutex_;
     std::mutex sdkHelperMutex_;
     int32_t currentUserId_{INVALID_USER_ID};
-
-    int32_t GetAllBundleName(const int32_t userId, std::vector<std::string> &bundles);
+    struct DataSyncerInfo {
+        SyncState syncState;
+    };
+    int32_t GetAllDataSyncerInfo(const int32_t userId, std::map<std::string, DataSyncerInfo> &dataSyncerInfo);
     int32_t IsUserVerified(const int32_t userId);
     void Convert2BundleName(const std::string &bundle, std::string &bundleName);
 };

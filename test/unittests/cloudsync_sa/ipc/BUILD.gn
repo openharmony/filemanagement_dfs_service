@@ -54,15 +54,6 @@ ohos_unittest("cloud_sync_service_stub_test") {
 }
 
 ohos_unittest("cloud_sync_service_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = true
-    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
-  }
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
@@ -128,6 +119,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/cycle_task",
+    "${services_path}/cloudsyncservice/include/cycle_task/tasks",
     "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
     "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",

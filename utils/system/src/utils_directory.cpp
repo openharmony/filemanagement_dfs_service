@@ -109,7 +109,7 @@ std::vector<std::string> GetFilePath(const std::string &name)
             } else if (IsFolder(tmpPath)) {
                 auto dirPath = GetFilePath(tmpPath);
                 path.insert(path.end(), dirPath.begin(), dirPath.end());
-            } else if (!IsFolder(tmpPath)) {
+            } else {
                 path.emplace_back(tmpPath);
             }
         }

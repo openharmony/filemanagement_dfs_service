@@ -42,6 +42,11 @@ public:
     CycleTaskRunner(std::shared_ptr<DataSyncManager> dataSyncManager);
     void StartTask(std::string &reason);
 
+    void SetPref(const std::string &key, bool val)
+    {
+        cloudPrefImpl_->SetBool(key, val);
+    }
+
 private:
     int32_t userId_{0};
     std::time_t setUpTime_{0};

@@ -80,6 +80,9 @@ public:
 
     void SaveSubscription();
     void DeleteSubscription();
+    void UpdateErrorCode(int32_t code);
+    /* cloud sync result */
+    ErrorType GetErrorType();
 
 protected:
     /* download */
@@ -129,6 +132,7 @@ protected:
     virtual void FreeSysEventData();
     virtual void ReportSysEvent(uint32_t code);
     virtual void SetFullSyncSysEvent();
+    virtual void SetCheckSysEvent();
 
     /* identifier */
     const std::string bundleName_;
@@ -144,6 +148,7 @@ protected:
 
     uint64_t startTime_;
     SyncTriggerType triggerType_;
+    std::shared_ptr<bool> stopFlag_ = std::make_shared<bool>(false);
 
 private:
     /* download */
@@ -151,7 +156,8 @@ private:
     void PullDatabaseChanges(std::shared_ptr<TaskContext> context);
     void PullRecordsWithId(std::shared_ptr<TaskContext> context, const std::vector<DriveKit::DKRecordId> &records,
         bool retry);
-    void DownloadAssets(DownloadContext ctx);
+    void DownloadAssets(DownloadContext &ctx);
+    void DownloadThumbAssets(DownloadContext ctx);
     void RetryDownloadRecords(std::shared_ptr<TaskContext> context);
     /* dowload callback */
     void OnFetchRecords(const std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<const DriveKit::DKDatabase>,
@@ -214,11 +220,6 @@ private:
         void(DataSyncer::*f)(std::shared_ptr<TaskContext>));
     template<typename T, typename RET, typename... ARGS>
     std::function<RET(ARGS...)> AsyncCallback(RET(T::*f)(ARGS...));
-
-    void UpdateErrorCode(int32_t code);
-    /* cloud sync result */
-    ErrorType GetErrorType();
-
     /* state management */
     SyncStateManager syncStateManager_;
 

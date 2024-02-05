@@ -116,8 +116,9 @@ static int64_t GetRoundSize(int64_t size)
 }
 
 constexpr int DEFAULT_DOWNLOAD_THUMB_LIMIT = 500;
-FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName, std::shared_ptr<RdbStore> rdb)
-    : RdbDataHandler(userId, bundleName, TABLE_NAME, rdb), userId_(userId), bundleName_(bundleName)
+FileDataHandler::FileDataHandler(int32_t userId, const string &bundleName,
+                                 std::shared_ptr<RdbStore> rdb, shared_ptr<bool> stopFlag)
+    : RdbDataHandler(userId, bundleName, TABLE_NAME, rdb, stopFlag), userId_(userId), bundleName_(bundleName)
 {
     cloudPrefImpl_.GetInt(DOWNLOAD_THUMB_LIMIT, downloadThumbLimit_);
     if (downloadThumbLimit_ <= 0) {
@@ -1024,8 +1025,8 @@ static bool IfContainsFullField(const DriveKit::DKRecord &record)
 
 int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &params)
 {
+    RETURN_ON_ERR(IsStop());
     LOGI("insert of record %{public}s", record.GetRecordId().c_str());
-
     /* check local file conflict */
     bool comflag = false;
     int ret = PullRecordConflict(record, comflag);
@@ -1075,6 +1076,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
 
 int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadResult> &resultMap)
 {
+    RETURN_ON_ERR(IsStop());
     uint64_t thumbError = 0;
     uint64_t lcdError = 0;
 
@@ -1125,12 +1127,10 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
 
 int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
 {
+    RETURN_ON_ERR(IsStop());
     if (asset.fieldKey == "thumbnail") {
         std::lock_guard<std::mutex> lock(thmMutex_);
         thmVec_.emplace_back(asset.recordId);
-        if (IsPullRecords()) {
-            UpdateAttachmentStat(INDEX_THUMB_SUCCESS, 1);
-        }
     }
     if (asset.fieldKey == "lcd") {
         std::lock_guard<std::mutex> lock(lcdMutex_);
@@ -1319,6 +1319,7 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
 
 int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet &local, OnFetchParams &params)
 {
+    RETURN_ON_ERR(IsStop());
     LOGI("update of record %s", record.GetRecordId().c_str());
     if (IsLocalDirty(local)) {
         LOGI("local record dirty, ignore cloud update");
@@ -1358,7 +1359,6 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
     ret = Update(changedRows, values, whereClause, {record.GetRecordId()});
     if (ret != E_OK) {
-        LOGE("rdb update failed, err=%{public}d", ret);
         return E_RDB;
     }
     if (mtimeChanged && (ThumbsAtLocal(record) || (AddCloudThumbs(record) != E_OK))) {
@@ -1372,7 +1372,7 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
 int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet)
 {
     string filePath = GetFilePath(resultSet);
-    string localPath = GetLocalPath(userId_, filePath);
+    string localPath = createConvertor_.GetLowerPath(filePath);
 
     /* local */
     bool local = access(localPath.c_str(), F_OK) == 0;
@@ -1399,7 +1399,7 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
     /* check */
     if (local && cloud) {
         LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", filePath.c_str());
-        checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        UpdateCheckAttachment(INDEX_CHECK_FOUND, 1);
 
         struct stat st;
         ret = stat(localPath.c_str(), &st);
@@ -1422,20 +1422,19 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
             }
         }
 
-        checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+        UpdateCheckAttachment(INDEX_CHECK_FIXED, 1);
     } else if (!local && !cloud) {
-        string cloudId;
-        int64_t val;
-
         LOGE("[CHECK AND FIX] try to fill in cloud dentry %{public}s", filePath.c_str());
-        checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        UpdateCheckAttachment(INDEX_CHECK_FOUND, 1);
 
+        string cloudId;
         ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, resultSet);
         if (ret != E_OK) {
             return ret;
         }
         file.cloudId = MetaFileMgr::RecordIdToCloudId(cloudId);
 
+        int64_t val;
         ret = DataConvertor::GetLong(PhotoColumn::MEDIA_SIZE, val, resultSet);
         if (ret != E_OK) {
             return ret;
@@ -1453,7 +1452,8 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
             LOGE("create cloud dentry fail %{public}d", ret);
             return ret;
         }
-        checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+
+        UpdateCheckAttachment(INDEX_CHECK_FIXED, 1);
     }
 
     return E_OK;
@@ -1467,11 +1467,10 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
         LOGE("Get file path failed %{public}d", ret);
         return ret;
     }
-    string thumb = createConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
-    string localThumb = GetLocalPath(userId_, thumb);
+    string thumb = createConvertor_.GetThumbPath(filePath, suffix);
 
     /* local */
-    bool local = access(localThumb.c_str(), F_OK) == 0;
+    bool local = access(thumb.c_str(), F_OK) == 0;
     if (!local && errno != ENOENT) {
         LOGE("fail to access %{public}d", errno);
         return E_SYSCALL;
@@ -1493,18 +1492,18 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
     MetaBase file(fileName);
     bool cloud = dir->DoLookup(file) == E_OK;
     if (local && cloud) {
-        LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", thumb.c_str());
-        checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        LOGE("[CHECK AND FIX] try to delete cloud dentry %{public}s", cloudPath.c_str());
+        UpdateCheckAttachment(INDEX_CHECK_FOUND, 1);
 
         struct stat st;
-        ret = stat(localThumb.c_str(), &st);
+        ret = stat(thumb.c_str(), &st);
         if (ret != 0) {
             LOGE("stat local file error %{public}d", errno);
             return E_SYSCALL;
         }
 
         if (st.st_size != static_cast<uint64_t>(file.size)) {
-            ret = unlink(localThumb.c_str());
+            ret = unlink(thumb.c_str());
             if (ret != 0) {
                 LOGE("unlink local file error %{public}d", errno);
                 return E_SYSCALL;
@@ -1517,14 +1516,14 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
             }
         }
 
-        checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+        UpdateCheckAttachment(INDEX_CHECK_FIXED, 1);
     } else if (!local && !cloud) {
         /* FIX ME: hardcode thumbnail size show as 2MB */
         constexpr uint64_t THUMB_SIZE = 2 * 1024 * 1024;
         file.size = THUMB_SIZE;
 
         LOGE("[CHECK AND FIX] try to fill in cloud dentry %{public}s", thumb.c_str());
-        checkStat_->UpdateAttachment(INDEX_CHECK_FOUND, 1);
+        UpdateCheckAttachment(INDEX_CHECK_FOUND, 1);
 
         string cloudId;
         ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, resultSet);
@@ -1547,7 +1546,8 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
             LOGE("dir create file error %{public}d", ret);
             return ret;
         }
-        checkStat_->UpdateAttachment(INDEX_CHECK_FIXED, 1);
+
+        UpdateCheckAttachment(INDEX_CHECK_FIXED, 1);
     }
 
     return E_OK;
@@ -1586,7 +1586,7 @@ int32_t FileDataHandler::CheckDirtyConsistency(NativeRdb::ResultSet &resultSet)
 
     if (dirty == static_cast<int32_t>(DirtyType::TYPE_FDIRTY)) {
         string filePath = GetFilePath(resultSet);
-        string localPath = GetLocalPath(userId_, filePath);
+        string localPath = createConvertor_.GetLowerPath(filePath);
 
         bool local = access(localPath.c_str(), F_OK) == 0;
         if (!local && errno != ENOENT) {
@@ -1595,7 +1595,7 @@ int32_t FileDataHandler::CheckDirtyConsistency(NativeRdb::ResultSet &resultSet)
         }
         if (!local) {
             LOGE("[CHECK AND FIX] try to set dirty as synced %{public}s", filePath.c_str());
-            checkStat_->UpdateFile(INDEX_CHECK_FOUND, 1);
+            UpdateCheckFile(INDEX_CHECK_FOUND, 1);
 
             ValuesBucket values;
             values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
@@ -1606,7 +1606,8 @@ int32_t FileDataHandler::CheckDirtyConsistency(NativeRdb::ResultSet &resultSet)
                 LOGE("rdb update failed, err = %{public}d", ret);
                 return E_RDB;
             }
-            checkStat_->UpdateFile(INDEX_CHECK_FIXED, 1);
+
+            UpdateCheckFile(INDEX_CHECK_FIXED, 1);
         }
     }
 
@@ -1622,7 +1623,7 @@ int32_t FileDataHandler::CheckPositionConsistency(NativeRdb::ResultSet &resultSe
     }
 
     string filePath = GetFilePath(resultSet);
-    string localPath = GetLocalPath(userId_, filePath);
+    string localPath = createConvertor_.GetLowerPath(filePath);
     bool local = access(localPath.c_str(), F_OK) == 0;
     if (!local && errno != ENOENT) {
         LOGE("fail to access %{public}d", errno);
@@ -1639,7 +1640,7 @@ int32_t FileDataHandler::CheckPositionConsistency(NativeRdb::ResultSet &resultSe
     }
 
     LOGE("[CHECK AND FIX] try to change position %{public}s", filePath.c_str());
-    checkStat_->UpdateFile(INDEX_CHECK_FOUND, 1);
+    UpdateCheckFile(INDEX_CHECK_FOUND, 1);
 
     int32_t changedRows;
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
@@ -1648,7 +1649,8 @@ int32_t FileDataHandler::CheckPositionConsistency(NativeRdb::ResultSet &resultSe
         LOGE("rdb update failed, err = %{public}d", ret);
         return E_RDB;
     }
-    checkStat_->UpdateFile(INDEX_CHECK_FIXED, 1);
+
+    UpdateCheckFile(INDEX_CHECK_FIXED, 1);
 
     return E_OK;
 }
@@ -1682,7 +1684,7 @@ int32_t FileDataHandler::CheckSyncStatusConsistency(NativeRdb::ResultSet &result
     }
 
     LOGE("[CHECK AND FIX] try to change sync status %{public}s", filePath.c_str());
-    checkStat_->UpdateFile(INDEX_CHECK_FOUND, 1);
+    UpdateCheckFile(INDEX_CHECK_FOUND, 1);
 
     ValuesBucket values;
     if (local) {
@@ -1697,7 +1699,8 @@ int32_t FileDataHandler::CheckSyncStatusConsistency(NativeRdb::ResultSet &result
         LOGE("rdb update failed, err = %{public}d", ret);
         return E_RDB;
     }
-    checkStat_->UpdateFile(INDEX_CHECK_FIXED, 1);
+
+    UpdateCheckFile(INDEX_CHECK_FIXED, 1);
 
     return E_OK;
 }
@@ -1755,9 +1758,6 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
         return E_RDB;
     }
 
-    checkStat_ = make_unique<GalleryCheckSatat>();
-    checkStat_->SetStartTime(GetCurrentTimeStamp());
-
     for (const auto &record : *records) {
         if ((recordIdRowIdMap.find(record.GetRecordId()) == recordIdRowIdMap.end()) && !record.GetIsDelete()) {
             fetchRecords->emplace_back(record);
@@ -1786,11 +1786,9 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
         }
     }
 
-    checkStat_->SetDuration(GetCurrentTimeStamp());
-    checkStat_->Report();
-    checkStat_ = nullptr;
     OnFetchParams params;
     OnFetchRecords(fetchRecords, params);
+
     return E_OK;
 }
 
@@ -2188,10 +2186,9 @@ int32_t FileDataHandler::BatchGetFileIdFromCloudId(const std::vector<NativeRdb::
 
     std::vector<std::string> thmStrVec;
     thmStrVec.reserve(size);
-    int valueErr = 0;
     for (uint32_t recordIndex = 0; recordIndex < size; recordIndex++) {
         std::string cloudId;
-        valueErr = recordIds[recordIndex].GetString(cloudId);
+        int valueErr = recordIds[recordIndex].GetString(cloudId);
         if (valueErr == E_OK) {
             thmStrVec.push_back(cloudId);
         }
@@ -2393,6 +2390,7 @@ int32_t FileDataHandler::CleanPureCloudRecord()
     cleanPredicates.Limit(BATCH_LIMIT_SIZE);
     vector<ValueObject> deleteFileId;
     int32_t count = 0;
+    int32_t removeCount = 0;
     do {
         auto result = Query(cleanPredicates, {MediaColumn::MEDIA_ID, PC::MEDIA_FILE_PATH});
         if (result == nullptr) {
@@ -2419,11 +2417,13 @@ int32_t FileDataHandler::CleanPureCloudRecord()
         ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         ret = BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
         if (ret != E_OK) {
-            LOGW("BatchDetete fail");
+            LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
             return ret;
         }
+        removeCount += deleteFileId.size();
         deleteFileId.clear();
     } while (count != 0);
+    LOGI("remove count is %{public}d", removeCount);
     return ret;
 }
 
@@ -2461,6 +2461,7 @@ int32_t FileDataHandler::CleanNotDirtyData()
     cleanPredicates.Limit(BATCH_LIMIT_SIZE);
     vector<ValueObject> deleteFileId;
     int32_t count = 0;
+    int32_t removeCount = 0;
     do {
         auto result = Query(cleanPredicates, {MediaColumn::MEDIA_ID, PC::MEDIA_FILE_PATH});
         if (result == nullptr) {
@@ -2485,20 +2486,19 @@ int32_t FileDataHandler::CleanNotDirtyData()
             string lowerPath = cleanConvertor_.GetLowerPath(filePath);
             string thmbFileParentPath = cleanConvertor_.GetThumbParentPath(filePath);
             ForceRemoveDirectory(thmbFileParentPath);
-            ret = DeleteAsset(lowerPath);
-            if (ret != E_OK) {
-                LOGE("clean remove asset fail, ret is %{public}d", ret);
-            }
+            DeleteAsset(lowerPath);
             deleteFileId.emplace_back(fileId);
         }
         ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         ret = BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
         if (ret != E_OK) {
-            LOGW("BatchDetete fail");
+            LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
             return ret;
         }
+        removeCount += deleteFileId.size();
         deleteFileId.clear();
     } while (count != 0);
+    LOGI("remove count is %{public}d", removeCount);
     return ret;
 }
 
@@ -2526,6 +2526,7 @@ int32_t FileDataHandler::MarkClean(const int32_t action)
     int32_t changedRows;
     NativeRdb::ValuesBucket values;
     values.PutInt(PC::PHOTO_CLEAN_FLAG, NEED_CLEAN);
+    values.PutInt(PC::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     string whereClause = PC::PHOTO_POSITION + " = ?";
     vector<string> whereArgs = {to_string(static_cast<int32_t>(POSITION_CLOUD))};
     if (action == CleanAction::CLEAR_DATA) {
@@ -2899,7 +2900,6 @@ int32_t FileDataHandler::BindAlbumChanges(std::vector<DriveKit::DKRecord> &recor
 
 int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
 {
-    vector<DKRecord> records;
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     predicates.SetWhereClause(Media::PhotoColumn::MEDIA_FILE_PATH + " = ?");
     predicates.SetWhereArgs({cloudId});
@@ -3733,26 +3733,32 @@ void FileDataHandler::UpdateThmVec()
             to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) + " < 0 THEN 0 ELSE " + PC::PHOTO_THUMB_STATUS
             + " - " + to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) + " END ";
         int32_t ret = E_OK;
-        uint64_t total = thmVec_.size();
-        std::vector<int> fileIds;
+        uint64_t count = 0;
+        uint32_t size = 0;
+        vector<ValueObject> tmp;
         {
-            std::lock_guard<std::mutex> lock(rdbMutex_);
-            fileIds.reserve(thmVec_.size());
-            BatchGetFileIdFromCloudId(thmVec_, fileIds);
-            LOGD("thmVec_ size is %{public}zu, fileIds size is %{public}zu", thmVec_.size(), fileIds.size());
-            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, thmVec_);
+            std::lock_guard<std::mutex> lock(thmMutex_);
+            size = thmVec_.size();
+            tmp.assign(thmVec_.begin(), thmVec_.begin() + size);
+            thmVec_.erase(thmVec_.begin(), thmVec_.begin() + size);
         }
+        vector<int> fileIds = vector<int>(size);
+        BatchGetFileIdFromCloudId(tmp, fileIds);
+        ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, tmp, count);
+        LOGI("update size is %{public}zu, success count is %{public}lld, fail count is %{public}zu",
+            size, count, tmp.size());
         if (ret != E_OK) {
             LOGW("update thm fail");
+            std::lock_guard<std::mutex> lock(thmMutex_);
+            thmVec_.insert(thmVec_.end(), tmp.begin(), tmp.end());
         }
-        UpdateAttachmentStat(INDEX_THUMB_SUCCESS, total - thmVec_.size());
-        if (thmVec_.size()) {
-            UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
+        if (count != 0) {
+            UpdateAttachmentStat(INDEX_THUMB_SUCCESS, count);
         }
         if (!IsPullRecords()) {
             UpdateAlbumInternal();
         }
-        for (auto& fileId : fileIds) {
+        for (auto &fileId : fileIds) {
             DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX + to_string(fileId), ChangeType::INSERT, "");
         }
         DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
@@ -3769,17 +3775,25 @@ void FileDataHandler::UpdateLcdVec()
             " < 0 THEN 0 ELSE " + PC::PHOTO_THUMB_STATUS + " - " +
             to_string(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) + " END ";
         int32_t ret = E_OK;
-        uint64_t total = lcdVec_.size();
+        uint64_t count = 0;
+        uint32_t size = 0;
+        vector<ValueObject> tmp;
         {
-            std::lock_guard<std::mutex> lock(rdbMutex_);
-            ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, lcdVec_);
+            std::lock_guard<std::mutex> lock(lcdMutex_);
+            size = lcdVec_.size();
+            tmp.assign(lcdVec_.begin(), lcdVec_.begin() + size);
+            lcdVec_.erase(lcdVec_.begin(), lcdVec_.begin() + size);
         }
+        ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, tmp, count);
+        LOGI("update size is %{public}zu, success count is %{public}lld, fail count is %{public}zu",
+            size, count, tmp.size());
         if (ret != E_OK) {
-            LOGW("update lcd fail");
+            LOGW("update thm fail");
+            std::lock_guard<std::mutex> lock(lcdMutex_);
+            lcdVec_.insert(lcdVec_.end(), tmp.begin(), tmp.end());
         }
-        UpdateAttachmentStat(INDEX_LCD_SUCCESS, total - lcdVec_.size());
-        if (lcdVec_.size() > 0) {
-            UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, lcdVec_.size());
+        if (count != 0) {
+            UpdateAttachmentStat(INDEX_LCD_SUCCESS, count);
         }
     }
 }
@@ -3825,6 +3839,9 @@ void FileDataHandler::StopUpdataFiles(uint32_t &timeId)
         timeId = 0;
         timeId_ = 0;
     }
+
+    UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
+    UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, lcdVec_.size());
 }
 } // namespace CloudSync
 } // namespace FileManagement

@@ -351,9 +351,23 @@ void DataSyncer::SetFullSyncSysEvent()
 {
 }
 
+void DataSyncer::SetCheckSysEvent()
+{
+}
+
 bool DataSyncer::CheckScreenAndWifi()
 {
     return true;
+}
+
+void DataSyncer::UpdateErrorCode(int32_t code)
+{
+    return;
+}
+/* cloud sync result */
+ErrorType GetErrorType()
+{
+    return ErrorType::NO_ERROR;
 }
 } // namespace CloudSync
 } // namespace FileManagement

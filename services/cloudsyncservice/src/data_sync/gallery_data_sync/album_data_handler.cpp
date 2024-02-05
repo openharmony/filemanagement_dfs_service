@@ -17,7 +17,6 @@
 
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
-
 #include "data_sync_const.h"
 #include "data_sync_notifier.h"
 #include "dfs_error.h"
@@ -36,8 +35,9 @@ using PAC = Media::PhotoAlbumColumns;
 using PM = Media::PhotoMap;
 using ChangeType = OHOS::AAFwk::ChangeInfo::ChangeType;
 
-AlbumDataHandler::AlbumDataHandler(int32_t userId, const std::string &bundleName, std::shared_ptr<RdbStore> rdb)
-    : RdbDataHandler(userId, bundleName, PAC::TABLE, rdb)
+AlbumDataHandler::AlbumDataHandler(int32_t userId, const std::string &bundleName,
+                                   std::shared_ptr<RdbStore> rdb, shared_ptr<bool> stopFlag)
+    : RdbDataHandler(userId, bundleName, PAC::TABLE, rdb, stopFlag)
 {
 }
 
@@ -99,11 +99,11 @@ int32_t AlbumDataHandler::QueryConflict(DriveKit::DKRecord &record, std::shared_
     string albumType = to_string(static_cast<int32_t>(AlbumType::NORMAL));
     DKRecordFieldMap properties;
     string bundleName = "";
-    int rowCount = 0;
     if (GetRecordFieMapFromRecord(record, properties) == E_OK && properties.find(PAC::ALBUM_TYPE) != data.end() &&
         properties[PAC::ALBUM_TYPE].GetString(albumType) == DKLocalErrorCode::NO_ERROR &&
         albumType == to_string(static_cast<int32_t>(AlbumType::SOURCE)) &&
         properties[TMP_ALBUM_BUNDLE_NAME].GetString(bundleName) == DKLocalErrorCode::NO_ERROR) {
+        int rowCount = 0;
         NativeRdb::AbsRdbPredicates sourcePredicates = NativeRdb::AbsRdbPredicates(PAC::TABLE);
         sourcePredicates.EqualTo(TMP_ALBUM_BUNDLE_NAME, bundleName);
         resultSet = Query(sourcePredicates, QUERY_SOURCE_ALBUM_COLUMNS);
@@ -129,7 +129,7 @@ int32_t AlbumDataHandler::QueryConflict(DriveKit::DKRecord &record, std::shared_
 bool AlbumDataHandler::IsConflict(DriveKit::DKRecord &record, int32_t &albumId)
 {
     int32_t rowCount = -1;
-    std::shared_ptr<NativeRdb::ResultSet> resultSet;
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
     int32_t ret = QueryConflict(record, resultSet);
     if (ret != E_OK) {
         LOGE("query fail ret is %{public}d", ret);
@@ -170,8 +170,8 @@ int32_t AlbumDataHandler::MergeAlbumOnConflict(DriveKit::DKRecord &record, int32
 
 int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
 {
+    RETURN_ON_ERR(IsStop());
     LOGI("insert of record %s", record.GetRecordId().c_str());
-
     /* merge if same album name */
     int32_t albumId;
     if (IsConflict(record, albumId)) {
@@ -224,6 +224,7 @@ int32_t AlbumDataHandler::DeleteCloudAlbum(DKRecord &record)
 
 int32_t AlbumDataHandler::UpdateCloudAlbum(DKRecord &record)
 {
+    RETURN_ON_ERR(IsStop());
     int32_t changedRows;
     ValuesBucket values;
     int32_t ret = createConvertor_.RecordToValueBucket(record, values);

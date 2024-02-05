@@ -14,6 +14,7 @@
  */
 
 #include "cloud_download_uri_manager.h"
+#include "dfs_error.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -36,15 +37,22 @@ void CloudDownloadUriManager::UnsetRegisteredFlag()
     registered_ = false;
 }
 
-void CloudDownloadUriManager::AddPathToUri(const std::string& path, const std::string& uri)
+int32_t CloudDownloadUriManager::AddPathToUri(const std::string& path, const std::string& uri)
 {
     LOGI("download_file : add path [ %{public}s ] -> uri [ %{public}s ]", path.c_str(), uri.c_str());
-    pathMap_[path] = uri;
-    return;
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (pathMap_.find(path) == pathMap_.end()) {
+        LOGI("download_file : remove path [ %{public}s ] success", path.c_str());
+        pathMap_[path] = uri;
+        return E_OK;
+    }
+    LOGE("file is already trigger downloading");
+    return E_STOP;
 }
 
 void CloudDownloadUriManager::RemoveUri(const std::string& path)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (pathMap_.find(path) != pathMap_.end()) {
         LOGI("download_file : remove path [ %{public}s ] success", path.c_str());
         pathMap_.erase(path);
@@ -53,6 +61,7 @@ void CloudDownloadUriManager::RemoveUri(const std::string& path)
 
 std::string CloudDownloadUriManager::GetUri(const std::string& path)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (pathMap_.find(path) != pathMap_.end()) {
         LOGI("download_file : get path [ %{public}s ] success", path.c_str());
         return pathMap_[path];

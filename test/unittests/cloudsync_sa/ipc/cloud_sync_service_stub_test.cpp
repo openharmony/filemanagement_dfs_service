@@ -182,6 +182,33 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartSyncInnerTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: HandleTriggerSyncInnerTest
+ * @tc.desc: Verify the HandleStartSyncInner function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleTriggerSyncInnerTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleTriggerSyncInner Start";
+    try {
+        MockService service;
+        EXPECT_CALL(service, TriggerSyncInner(_, _)).WillOnce(Return(E_OK));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_TRIGGER_SYNC), data,
+                            reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleTriggerSyncInner ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleTriggerSyncInner End";
+}
+
+/**
  * @tc.name: HandleStopSyncInnerTest
  * @tc.desc: Verify the HandleStopSyncInner function.
  * @tc.type: FUNC
@@ -289,6 +316,33 @@ HWTEST_F(CloudSyncServiceStubTest, HandleNotifyDataChangeTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: HandleNotifyEventChangeTest
+ * @tc.desc: Verify the HandleNotifyEventChange function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleNotifyEventChangeTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleNotifyEventChange Start";
+    try {
+        MockService service;
+        EXPECT_CALL(service, NotifyEventChange(_, _, _)).WillOnce(Return(E_OK));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_EVENT_CHANGE),
+                            data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleNotifyEventChange ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleNotifyEventChange End";
+}
+
+/**
  * @tc.name: HandleDisableCloudTest
  * @tc.desc: Verify the HandleDisableCloud function.
  * @tc.type: FUNC
@@ -366,6 +420,33 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartDownloadFileTest, TestSize.Level1)
         GTEST_LOG_(INFO) << " HandleStartDownloadFile ERROR";
     }
     GTEST_LOG_(INFO) << "HandleStartDownloadFile End";
+}
+
+/**
+ * @tc.name: HandleStartFileCacheTest
+ * @tc.desc: Verify the HandleStartFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleStartFileCacheTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleStartFileCache Start";
+    try {
+        MockService service;
+        EXPECT_CALL(service, StartDownloadFile(_)).WillOnce(Return(E_OK));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_CACHE),
+                            data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " HandleStartFileCache ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleStartFileCache End";
 }
 
 /**
@@ -556,6 +637,86 @@ HWTEST_F(CloudSyncServiceStubTest, HandleRegisterDownloadAssetCallbackTest, Test
     GTEST_LOG_(INFO) << "HandleRegisterDownloadAssetCallback End";
 }
 
+/**
+ * @tc.name: HandleDeleteAssetTest
+ * @tc.desc: Verify the HandleDeleteAsset function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleDeleteAssetTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleDeleteAsset Start";
+    try {
+        MockService service;
+        EXPECT_CALL(service, DeleteAsset(_, _)).WillOnce(Return(E_OK));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+              static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DELETE_ASSET),
+              data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleDeleteAsset ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleDeleteAsset End";
+}
+
+/**
+ * @tc.name: HandleGetSyncTimeTest
+ * @tc.desc: Verify the HandleGetSyncTime function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleGetSyncTimeTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleGetSyncTime Start";
+    try {
+        MockService service;
+        EXPECT_CALL(service, GetSyncTimeInner(_)).WillOnce(Return(E_OK));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+              static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_GET_SYNC_TIME),
+              data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleGetSyncTime ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleGetSyncTime End";
+}
+
+/**
+ * @tc.name: HandleCleanCacheTest
+ * @tc.desc: Verify the HandleCleanCache function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceStubTest, HandleCleanCacheTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCleanCache Start";
+    try {
+        MockService service;
+        EXPECT_CALL(service, CleanCacheInner(_)).WillOnce(Return(E_OK));
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
+              static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CLEAN_CACHE),
+              data, reply, option));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCleanCache ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleCleanCache End";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
