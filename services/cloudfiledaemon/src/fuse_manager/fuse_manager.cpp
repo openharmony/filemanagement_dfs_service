@@ -64,8 +64,9 @@ static const unsigned int STAT_NLINK_DIR = 2;
 static const unsigned int STAT_MODE_REG = 0770;
 static const unsigned int STAT_MODE_DIR = 0771;
 static const unsigned int READ_TIMEOUT_MS = 20000;
-static const unsigned int MAX_READ_SIZE = 2 * 1024 * 1024;
+static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
 static const unsigned int TWO_MB = 2 * 1024 * 1024;
+static const unsigned int KEY_FRAME_SIZE = 8192;
 
 struct CloudInode {
     shared_ptr<MetaBase> mBase{nullptr};
@@ -76,6 +77,7 @@ struct CloudInode {
     atomic<int> sessionRefCount{0};
     std::shared_mutex sessionLock;
     std::shared_mutex readLock;
+    off_t offset{0xffffffff};
 };
 
 struct FuseData {
@@ -498,6 +500,13 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     LOGI("%{public}s, size=%{public}zd, off=%{public}lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
     auto dkReadSession = cInode->readSession;
+    size_t oldSize = size;
+    if (size == KEY_FRAME_SIZE) {
+        if (off <= cInode->offset || off >= cInode->offset + MAX_READ_SIZE - size) {
+            size = MAX_READ_SIZE;
+            cInode->offset = off;
+        }
+    }
     if (!PrepareForRead(req, buf, size, cInode, dkReadSession)) {
         return;
     }
@@ -537,7 +546,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     }
     if (!HandleDkError(req, *dkError)) {
         LOGD("read success");
-        fuse_reply_buf(req, buf.get(), *readSize);
+        fuse_reply_buf(req, buf.get(), min(oldSize, *readSize));
     }
 }
 
