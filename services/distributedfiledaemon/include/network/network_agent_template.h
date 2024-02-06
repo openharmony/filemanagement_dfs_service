@@ -59,6 +59,7 @@ public:
     void DisconnectDevice(const DeviceInfo info);
     void DisconnectDeviceByP2P(const DeviceInfo info);
     void OccupySession(int sessionId, uint8_t linkType);
+    bool FindSession(int sessionId);
     void AcceptSession(std::shared_ptr<BaseSession> session);
     void ConnectDeviceByP2PAsync(const DeviceInfo info);
     std::shared_ptr<MountPoint> GetMountPoint()
