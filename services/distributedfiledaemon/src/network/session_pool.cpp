@@ -26,6 +26,17 @@ void SessionPool::OccupySession(int sessionId, uint8_t linkType)
     occupySession_.insert(std::pair<int, uint8_t>(sessionId, linkType));
 }
 
+bool SessionPool::FindSession(int sessionId)
+{
+    lock_guard lock(sessionPoolLock_);
+    auto linkTypeIter = occupySession_.find(sessionId);
+    if (linkTypeIter != occupySession_.end()) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 void SessionPool::HoldSession(shared_ptr<BaseSession> session)
 {
     lock_guard lock(sessionPoolLock_);
@@ -61,7 +72,7 @@ void SessionPool::ReleaseSession(const string &cid, const uint8_t linkType)
         if ((*iter)->GetCid() == cid) {
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
             if (linkTypeIter != occupySession_.end()) {
-                mlinkType = linkTypeIter->second;
+                mlinkType = (linkTypeIter->second == 0) ? linkType : linkTypeIter->second;
             }
             if (mlinkType == linkType) {
                 (*iter)->Release();
