@@ -15,7 +15,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("clouddisk_rdb_utils_test") {
-  module_out_path = "dfs_service/tests"
+  module_out_path = "filemanagement/dfs_service/tests"
 
   sources = [
     "${distributedfile_path}/services/clouddisk_database/src/clouddisk_rdb_utils.cpp",
