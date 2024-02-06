@@ -1236,12 +1236,28 @@ int32_t FileDataHandler::SetRetry(vector<NativeRdb::ValueObject> &retryList)
     return E_OK;
 }
 
-/*Add locks to prevent multiple threads from updating albums at the same time*/
+/**
+ * Add locks to prevent multiple threads from updating albums at the same time.
+ * Only set a flag in media library while using this function.
+ * When data number is large, use this function.
+ */
 void FileDataHandler::UpdateAlbumInternal()
 {
     std::lock_guard<std::mutex> lock(rdbMutex_);
     MediaLibraryRdbUtils::UpdateSystemAlbumCountInternal(GetRaw());
     MediaLibraryRdbUtils::UpdateUserAlbumCountInternal(GetRaw());
+}
+
+/**
+ * Add locks to prevent multiple threads from updating albums at the same time.
+ * Check Photos table to update all photo albums (system and user) in a synchronous operation.
+ * When clean user data, use this function
+ */
+void FileDataHandler::UpdateAllAlbums()
+{
+    std::lock_guard<std::mutex> lock(rdbMutex_);
+    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
 }
 
 int FileDataHandler::SetRetry(const string &recordId)
@@ -2372,7 +2388,7 @@ int32_t FileDataHandler::Clean(const int action)
         LOGE("Clean remove dentry failed, res:%{public}d", res);
         return res;
     }
-    UpdateAlbumInternal();
+    UpdateAllAlbums();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
@@ -2539,7 +2555,7 @@ int32_t FileDataHandler::MarkClean(const int32_t action)
     if (ret != E_OK) {
         LOGW("mark clean error %{public}d", ret);
     }
-    UpdateAlbumInternal();
+    UpdateAllAlbums();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
