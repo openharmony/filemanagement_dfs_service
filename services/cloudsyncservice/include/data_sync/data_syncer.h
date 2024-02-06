@@ -111,7 +111,7 @@ protected:
                           const int32_t userId);
 
     /* notify */
-    int32_t CompletePull();
+    virtual int32_t CompletePull();
     int32_t CompletePush();
     void CompleteAll(bool isNeedNotify = true);
 

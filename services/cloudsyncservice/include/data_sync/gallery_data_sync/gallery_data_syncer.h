@@ -22,6 +22,7 @@
 #include "data_syncer.h"
 #include "file_data_handler.h"
 #include "gallery_sysevent.h"
+#include "rdb_data_handler.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -50,6 +51,7 @@ public:
     virtual void ReportSysEvent(uint32_t code) override;
     virtual void SetFullSyncSysEvent() override;
     virtual void SetCheckSysEvent() override;
+    virtual int32_t CompletePull() override;
 
 private:
     enum {
