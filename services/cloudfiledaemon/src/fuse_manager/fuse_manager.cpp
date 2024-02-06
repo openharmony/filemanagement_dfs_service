@@ -511,7 +511,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         return;
     }
 
-    shared_ptr<size_t> readSize = make_shared<size_t>(-1);
+    shared_ptr<int64_t> readSize = make_shared<int64_t>(-1);
     shared_ptr<bool> readAvailable = make_shared<bool>(true);
     condition_variable readConVar;
     thread([=, &readConVar]() {
@@ -540,13 +540,13 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         return;
     }
     if (*readSize < 0) {
-        LOGE("readSize: %zd", *readSize);
+        LOGE("readSize: %lld", static_cast<long long>(*readSize));
         fuse_reply_err(req, ENOMEM);
         return;
     }
     if (!HandleDkError(req, *dkError)) {
         LOGD("read success");
-        fuse_reply_buf(req, buf.get(), min(oldSize, *readSize));
+        fuse_reply_buf(req, buf.get(), min(oldSize, static_cast<size_t>(*readSize)));
     }
 }
 
