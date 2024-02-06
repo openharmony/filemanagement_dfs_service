@@ -183,6 +183,10 @@ int SoftbusAgent::OnSessionOpened(const int sessionId, const int result)
         sessionId, (session->IsFromServer() == true) ? "Server" : "Client", socket_fd, cid.c_str(), result);
     session->DisableSessionListener();
     AcceptSession(session);
+
+    if (!FindSession(sessionId)) {
+        OccupySession(sessionId, 0);
+    }
     return 0;
 }
 

@@ -105,6 +105,11 @@ void NetworkAgentTemplate::OccupySession(int sessionId, uint8_t linkType)
     sessionPool_.OccupySession(sessionId, linkType);
 }
 
+bool NetworkAgentTemplate::FindSession(int sessionId)
+{
+    return sessionPool_.FindSession(sessionId);
+}
+
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 {
     (void)cid;

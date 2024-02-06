@@ -305,10 +305,6 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
         LOGE("cid %{public}s network type is null!", info.cid_.c_str());
         return P2P_FAILED;
     }
-    if (cidNetworkType_[info.cid_] != LINK_TYPE_P2P) {
-        LOGE("OnDeviceP2POffline failed LINK_TYPE = %{public}d", cidNetworkType_[info.cid_]);
-        return P2P_FAILED;
-    }
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
         &NetworkAgentTemplate::DisconnectDeviceByP2P, info);
     it->second->Recv(move(cmd));
