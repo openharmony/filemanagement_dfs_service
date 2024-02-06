@@ -947,7 +947,11 @@ void CloudSyncServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess
     LOGI("Load CloudSync SA success,systemAbilityId:%{public}d, remoteObj result:%{private}s", systemAbilityId,
          (remoteObject == nullptr ? "false" : "true"));
     unique_lock<mutex> lock(proxyMutex_);
-    serviceProxy_ = iface_cast<ICloudSyncService>(remoteObject);
+    if (serviceProxy_ != nullptr) {
+        LOGE("CloudSync SA proxy has been loaded");
+    } else {
+        serviceProxy_ = iface_cast<ICloudSyncService>(remoteObject);
+    }
     isLoadSuccess_.store(true);
     proxyConVar_.notify_one();
 }
