@@ -77,6 +77,8 @@ void CycleTaskRunner::StartTask(string &reason)
             } else {
                 cloudPrefImpl_->SetBool(ForcePeriodicCheck, false);
             }
+        } else {
+            continue;
         }
 
         LOGI("run task, task name is %{public}s", task_data->GetTaskName().c_str());
