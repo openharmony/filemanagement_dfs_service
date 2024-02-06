@@ -33,6 +33,7 @@ public:
     explicit SessionPool(std::shared_ptr<KernelTalker> &talker) : talker_(talker) {}
     ~SessionPool() = default;
     void OccupySession(int sessionId, uint8_t linkType);
+    bool FindSession(int sessionId);
     void HoldSession(std::shared_ptr<BaseSession> session);
     uint8_t ReleaseSession(const int32_t fd);
     void ReleaseSession(const std::string &cid, const uint8_t linkType);
