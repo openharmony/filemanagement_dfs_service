@@ -68,10 +68,6 @@ void CloudSyncService::Init()
     /* Get Init Charging status */
     BatteryStatus::GetInitChargingStatus();
     ScreenStatus::InitScreenStatus();
-    auto sessionManager = make_shared<SessionManager>();
-    sessionManager->Init();
-    fileTransferManager_ = make_shared<FileTransferManager>(sessionManager);
-    fileTransferManager_->Init();
 }
 
 std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userId)
@@ -116,6 +112,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     try {
         PublishSA();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+        AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
@@ -165,8 +162,17 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
 void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
-    batteryStatusListener_->Start();
-    screenStatusListener_->Start();
+    if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
+        batteryStatusListener_->Start();
+        screenStatusListener_->Start();
+    } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
+        auto sessionManager = make_shared<SessionManager>();
+        sessionManager->Init();
+        fileTransferManager_ = make_shared<FileTransferManager>(sessionManager);
+        fileTransferManager_->Init();
+    } else {
+        LOGE("unexpected");
+    }
 }
 
 void CloudSyncService::LoadRemoteSACallback::OnLoadSACompleteForRemote(const std::string &deviceId,
