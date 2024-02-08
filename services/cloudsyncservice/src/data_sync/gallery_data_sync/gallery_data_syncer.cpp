@@ -18,6 +18,7 @@
 #include "data_syncer.h"
 #include "dfs_error.h"
 #include "dfsu_timer.h"
+#include "medialibrary_rdb_utils.h"
 #include "sync_rule/network_status.h"
 #include "sync_rule/screen_status.h"
 #include "task_state_manager.h"
@@ -419,6 +420,13 @@ void GalleryDataSyncer::SetCheckSysEvent()
         checkStat_ = make_shared<GalleryCheckSatat>();
         fileHandler_->SetCheckStat(checkStat_);
     }
+}
+
+int32_t GalleryDataSyncer::CompletePull()
+{
+    Media::MediaLibraryRdbUtils::UpdateSystemAlbumCountInternal(fileHandler_->GetRaw());
+    Media::MediaLibraryRdbUtils::UpdateUserAlbumCountInternal(fileHandler_->GetRaw());
+    return DataSyncer::CompletePull();
 }
 
 void GalleryDataSyncer::ReportSysEvent(uint32_t code)

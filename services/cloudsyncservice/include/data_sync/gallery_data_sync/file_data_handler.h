@@ -31,6 +31,7 @@ namespace CloudSync {
 class FileDataHandler : public RdbDataHandler, public GallerySyncStatContainer,
     public GalleryCheckStatContainer {
 public:
+    friend class GalleryDataSyncer;
     enum Clean {
         NOT_NEED_CLEAN = 0,
         NEED_CLEAN,
@@ -89,6 +90,7 @@ public:
     int32_t FileAgingDelete(const int64_t agingTime, const int64_t deleteSize);
 
     void UpdateAlbumInternal();
+    void UpdateAllAlbums();
 
     /* reset */
     void Reset();
