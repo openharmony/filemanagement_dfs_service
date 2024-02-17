@@ -44,6 +44,11 @@ DistributedHardware::DmDeviceInfo deviceInfo = {
 };
 }
 
+const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkid=xxxxx";
+const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
+const std::string srcDeviceId = "testSrcDeviceId";
+const sptr<IRemoteObject> listener = sptr(new DaemonServiceMock());
+
 class DistributedDaemonManagerImplTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -136,6 +141,27 @@ HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionTest, TestSize.Leve
         GTEST_LOG_(INFO) << "CloseP2PConnectionTest  ERROR";
     }
     GTEST_LOG_(INFO) << "CloseP2PConnectionTest End";
+}
+
+/**
+ * @tc.name: PrepareSessionTest
+ * @tc.desc: Verify the PrepareSession function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, PrepareSessionTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PrepareSessionTest Start";
+    try {
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        auto res = distributedDaemonManagerImpl_->PrepareSession(srcUri, dstUri, srcDeviceId, listener);
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PrepareSessionTest  ERROR";
+    }
+    GTEST_LOG_(INFO) << "PrepareSessionTest End";
 }
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile

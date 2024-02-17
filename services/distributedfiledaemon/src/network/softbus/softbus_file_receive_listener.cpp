@@ -64,7 +64,8 @@ void SoftBusFileReceiveListener::OnReceiveFileFinished(int sessionId, const char
     }
     TransManager::GetInstance().NotifyFileFinished(sessionName);
     TransManager::GetInstance().DeleteTransTask(sessionName);
-    SoftBusHandler::GetInstance().RemoveSession(sessionId, true);
+    SoftBusHandler::GetInstance().ChangeOwnerIfNeeded(sessionId);
+    SoftBusHandler::GetInstance().CloseSession(sessionId);
 }
 
 void SoftBusFileReceiveListener::OnFileTransError(int sessionId)
@@ -78,7 +79,7 @@ void SoftBusFileReceiveListener::OnFileTransError(int sessionId)
     }
     TransManager::GetInstance().NotifyFileFailed(sessionName);
     TransManager::GetInstance().DeleteTransTask(sessionName);
-    SoftBusHandler::GetInstance().RemoveSession(sessionId);
+    SoftBusHandler::GetInstance().CloseSession(sessionId);
 }
 } // namespace DistributedFile
 } // namespace Storage
