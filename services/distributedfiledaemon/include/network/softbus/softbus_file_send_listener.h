@@ -27,7 +27,6 @@ public:
     static int32_t OnSendFileProcess(int sessionId, uint64_t bytesUpload, uint64_t bytesTotal);
     static int32_t OnSendFileFinished(int sessionId, const char *firstFile);
     static void OnFileTransError(int sessionId);
-    static void RemoveSession(int sessionId);
 
 private:
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};

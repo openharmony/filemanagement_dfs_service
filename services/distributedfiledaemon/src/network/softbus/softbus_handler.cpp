@@ -74,7 +74,7 @@ int32_t SoftBusHandler::SetFileSendListener(const std::string &packageName, cons
     return ::SetFileSendListener(packageName.c_str(), sessionName.c_str(), &fileSendListener_);
 }
 
-void SoftBusHandler::RemoveSession(int sessionId, bool isChangeOwner)
+void SoftBusHandler::ChangeOwnerIfNeeded(int sessionId)
 {
     char sessionName[MAX_SIZE] = {};
     auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
@@ -88,13 +88,21 @@ void SoftBusHandler::RemoveSession(int sessionId, bool isChangeOwner)
         LOGE("GetSessionInfo failed");
         return;
     }
-    if (isChangeOwner) {
-        if (DistributedFile::Utils::ChangeOwnerRecursive(sessionInfo.dstPath, sessionInfo.uid, sessionInfo.uid) != 0) {
-            LOGE("ChangeOwnerRecursive failed");
-        }
+    if (DistributedFile::Utils::ChangeOwnerRecursive(sessionInfo.dstPath, sessionInfo.uid, sessionInfo.uid) != 0) {
+        LOGE("ChangeOwnerRecursive failed");
     }
+}
+
+void SoftBusHandler::CloseSession(int sessionId)
+{
+    char sessionName[MAX_SIZE] = {};
+    auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
+    if (ret != E_OK) {
+        LOGE("GetMySessionName failed, ret = %{public}d", ret);
+        return;
+    }
+    ::CloseSession(sessionId);
     RemoveSessionServer(SERVICE_NAME.c_str(), sessionName);
-    CloseSession(sessionId);
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
 }
 } // namespace DistributedFile
