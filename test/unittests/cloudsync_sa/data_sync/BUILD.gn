@@ -1392,7 +1392,7 @@ ohos_unittest("cloud_disk_data_syncer_test") {
 }
 
 ohos_unittest("cloud_disk_data_handler_test") {
-  module_out_path = "dfs_service"
+  module_out_path = "filemanagement/dfs_service"
   data_sync = [
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",

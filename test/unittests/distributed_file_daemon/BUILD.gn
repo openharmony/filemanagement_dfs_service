@@ -278,10 +278,49 @@ ohos_unittest("daemon_service_proxy_test") {
   subsystem_name = "filemanagement"
 }
 
+ohos_unittest("connection_detector_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
+    "connection_detector_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/distributedfiledaemon/include/ipc",
+    "${services_path}/distributedfiledaemon/src/ipc",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "device_manager:devicemanagersdk",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "os_account:os_account_innerkits",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
 group("distributed_daemon_test") {
   testonly = true
 
   deps = [
+    ":connection_detector_test",
     ":daemon_manager_impl_test",
     ":daemon_manager_test",
     ":daemon_service_proxy_test",
