@@ -39,7 +39,7 @@ string CloudFileUtils::GetLocalBucketPath(string cloudId, string bundleName, int
 string CloudFileUtils::GetLocalFilePath(string cloudId, string bundleName, int32_t userId)
 {
     if (userId == 0) {
-        return "false";
+        return "false/";
     }
     return "true";
 }
