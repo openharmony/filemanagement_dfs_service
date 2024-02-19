@@ -17,9 +17,10 @@
 #include <gtest/gtest.h>
 
 #include "dfs_error.h"
+#include "i_daemon_mock.h"
+#include "i_file_trans_listener.h"
 #include "ipc/daemon.h"
 #include "iremote_object.h"
-#include "i_daemon_mock.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -35,6 +36,13 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<Daemon> daemon_;
+};
+
+class MockFileTransListener : public IRemoteStub<IFileTransListener> {
+public:
+    MOCK_METHOD2(OnFileReceive, int32_t(uint64_t totalBytes, uint64_t processedBytes));
+    MOCK_METHOD1(OnFailed, int32_t(const std::string &sessionName));
+    MOCK_METHOD1(OnFinished, int32_t(const std::string &sessionName));
 };
 
 void DaemonTest::SetUpTestCase(void)
@@ -173,9 +181,9 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_0100, TestSize.Level1)
         const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkid=xxxxx";
         const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
         const std::string srcDeviceId = "testSrcDeviceId";
-        const sptr<IRemoteObject> listener = sptr(new DaemonServiceMock());
-        daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener);
-        EXPECT_TRUE(true);
+        auto listener = sptr<IRemoteObject>(new MockFileTransListener());
+        EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener),
+                  FileManagement::E_SOFTBUS_SESSION_FAILED);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
         EXPECT_TRUE(false);
