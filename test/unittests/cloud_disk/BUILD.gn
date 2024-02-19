@@ -49,8 +49,67 @@ ohos_unittest("account_status_listener_test") {
   use_exceptions = true
 }
 
+ohos_unittest("file_operations_cloud_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  include_dirs = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
+    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
+    "${media_library_path}/frameworks/utils/include",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${services_path}/clouddisk_database/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "mock",
+  ]
+
+  sources = [
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/dk_database_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/drive_kit_mock.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/database_manager.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_cloud.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
+    "file_operations_cloud_test.cpp",
+    "mock/clouddisk_rdbstore_mock.cpp",
+    "mock/libfuse_mock.cpp",
+    "mock/system_function_mock.cpp",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+    "//third_party/libfuse:libfuse",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+    "relational_store:native_rdb",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("cloud_disk_test") {
   testonly = true
 
-  deps = [ ":account_status_listener_test" ]
+  deps = [
+    ":account_status_listener_test",
+    ":file_operations_cloud_test",
+  ]
 }
