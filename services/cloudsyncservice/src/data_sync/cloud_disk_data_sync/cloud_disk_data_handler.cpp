@@ -444,7 +444,7 @@ int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::Resu
         LOGE("rdb update failed, err=%{public}d", ret);
         return E_RDB;
     }
-    LOGD("update of record success, change %{pubilc}d row", changedRows);
+    LOGD("update of record success, change %{public}d row", changedRows);
     return E_OK;
 }
 
