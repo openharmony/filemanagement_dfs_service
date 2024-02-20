@@ -375,7 +375,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
             DriveKit::DKError dkError = cInode->readSession->InitSession();
             if (!HandleDkError(req, dkError)) {
                 cInode->sessionRefCount++;
-                LOGD("open success, sessionRefCount: %d", cInode->sessionRefCount.load());
+                LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
                 fuse_reply_open(req, fi);
             } else {
                 cInode->readSession = nullptr;
@@ -390,7 +390,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
         LOGE("readSession is null");
     } else {
         cInode->sessionRefCount++;
-        LOGD("open success, sessionRefCount: %d", cInode->sessionRefCount.load());
+        LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
         fuse_reply_open(req, fi);
     }
     wSesLock.unlock();
@@ -405,9 +405,9 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     string localPath = GetLocalPath(data->userId, cInode->path);
     string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
 
-    wSesLock.lock();
     LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d", req->ctx.pid,
         CloudPath(data, ino).c_str(), cInode->sessionRefCount.load());
+    wSesLock.lock();
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
         bool needRemain = false;
@@ -442,6 +442,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     }
     wSesLock.unlock();
 
+    LOGI("release end");
     fuse_reply_err(req, 0);
 }
 
