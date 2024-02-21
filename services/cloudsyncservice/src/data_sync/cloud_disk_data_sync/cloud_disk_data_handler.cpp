@@ -346,22 +346,37 @@ int32_t CloudDiskDataHandler::ConflictReName(const string &cloudId, string newFi
     return E_OK;
 }
 
+static bool IsFileContentNull(const DKRecordData &data, NativeRdb::ResultSet &local)
+{
+    int64_t recordFileSize = -1;
+    int64_t localFileSize = -1;
+    if (data.find(DK_FILE_SIZE) == data.end() ||
+        data.at(DK_FILE_SIZE).GetLong(recordFileSize) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("extract recordFileSize error");
+        return false;
+    }
+    int32_t ret = DataConvertor::GetLong(FC::FILE_SIZE, localFileSize, local);
+    if (ret != E_OK) {
+        LOGE("extract localFileSize error");
+        return false;
+    }
+    return (localFileSize == 0 && recordFileSize == 0);
+}
+
 static int32_t IsFileContentChanged(const DKRecord &record, NativeRdb::ResultSet &local, bool &isChange)
 {
     DKRecordData data;
     record.GetRecordData(data);
     string fileType;
-    int64_t fileSize = -1;
     if (data.find(DK_IS_DIRECTORY) == data.end() ||
         data.at(DK_IS_DIRECTORY).GetString(fileType) != DKLocalErrorCode::NO_ERROR) {
         LOGE("extract type error");
         return E_INVAL_ARG;
     }
-    if (data.find(DK_FILE_SIZE) == data.end() ||
-        data.at(DK_FILE_SIZE).GetLong(fileSize) != DKLocalErrorCode::NO_ERROR) {
-        LOGE("extract fileSize error");
+    if (fileType == "directory") {
+        return E_OK;
     }
-    if (fileType == "directory" || fileSize == 0) {
+    if (IsFileContentNull(data, local)) {
         return E_OK;
     }
     int64_t localEditTime = 0;

@@ -42,6 +42,7 @@ namespace {
     static const uint32_t STAT_MODE_REG = 0660;
     static const uint32_t STAT_MODE_DIR = 0771;
     static const uint32_t MILLISECOND_TO_SECONDS_TIMES = 1000;
+    static const string FILE_LOCAL = "1";
 }
 
 static void InitInodeAttr(fuse_ino_t parent, struct CloudDiskInode *childInode,
@@ -399,6 +400,8 @@ void FileOperationsCloud::Create(fuse_req_t req, fuse_ino_t parent, const char *
     }
     fi->fh = err;
     InitFileAttr(data, fi);
+    shared_ptr<CloudDiskFile> filePtr = FileOperationsHelper::FindCloudDiskFile(data, to_string(fi->fh));
+    if (filePtr != nullptr) { filePtr->fileDirty = CLOUD_DISK_FILE_CREATE; }
     fuse_reply_create(req, &e, fi);
 }
 
@@ -721,8 +724,25 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
         fuse_reply_err(req, -res);
     } else {
         shared_ptr<CloudDiskFile> filePtr = FileOperationsHelper::FindCloudDiskFile(data, to_string(fi->fh));
-        if (filePtr != nullptr) { filePtr->isDirty = true; }
+        if (filePtr != nullptr) { filePtr->fileDirty = CLOUD_DISK_FILE_WRITE; }
         fuse_reply_write(req, (size_t) res);
+    }
+}
+
+static void UploadLocalFile(int32_t userId, struct CloudDiskInode *inoPtr)
+{
+    string location;
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, userId);
+    int res = rdbStore->GetXAttr(inoPtr->cloudId, CLOUD_FILE_LOCATION, location);
+    if (res != 0) {
+        LOGE("local file get location fail");
+    } else if (location == FILE_LOCAL) {
+        res = rdbStore->Write(inoPtr->cloudId);
+        if (res != 0) {
+            LOGE("write file fail");
+        }
+        UpdateCloudDiskInode(rdbStore, inoPtr);
     }
 }
 
@@ -735,8 +755,10 @@ void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
         filePtr->refCount--;
         if (filePtr->refCount == 0) {
             close(fi->fh);
-            if (filePtr->isDirty) {
+            if (filePtr->fileDirty != CLOUD_DISK_FILE_UNKNOWN) {
                 UpdateCloudStore(data->userId, inoPtr);
+            } else if (inoPtr->location == FILE_LOCAL) {
+                UploadLocalFile(data->userId, inoPtr);
             }
             FileOperationsHelper::PutCloudDiskFile(data, filePtr, to_string(fi->fh));
         }
