@@ -39,6 +39,12 @@ enum CLOUD_DISK_INODE_LAYER {
     CLOUD_DISK_INODE_OTHER_LAYER     // others
 };
 
+enum CLOUD_DISK_FILE_DIRTY {
+    CLOUD_DISK_FILE_UNKNOWN = 0,
+    CLOUD_DISK_FILE_CREATE,
+    CLOUD_DISK_FILE_WRITE
+};
+
 struct CloudDiskInode {
     int layer{CLOUD_DISK_INODE_ZERO_LAYER};
     struct stat stat;
@@ -58,7 +64,7 @@ struct CloudDiskInode {
 };
 
 struct CloudDiskFile {
-    bool isDirty{false};
+    int fileDirty{CLOUD_DISK_FILE_UNKNOWN};
     std::atomic<int> refCount{0};
 };
 
