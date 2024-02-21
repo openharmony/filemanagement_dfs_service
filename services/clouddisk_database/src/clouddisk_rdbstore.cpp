@@ -244,6 +244,7 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
     fileInfo.PutString(FileColumn::FILE_NAME, fileName);
     fileInfo.PutLong(FileColumn::FILE_TIME_ADDED, UTCTimeMilliSeconds());
     fileInfo.PutString(FileColumn::PARENT_CLOUD_ID, parentCloudId);
+    fileInfo.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD));
     fileInfo.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::NEW));
     string filePath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
     if (CreateFile(fileName, filePath, fileInfo)) {
@@ -313,6 +314,8 @@ int32_t CloudDiskRdbStore::Write(const std::string &cloudId)
     if (position != LOCAL) {
         write.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_FDIRTY));
         write.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::UPDATE));
+    } else {
+        write.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_NEW));
     }
     int32_t changedRows = -1;
     vector<ValueObject> bindArgs;
@@ -535,17 +538,17 @@ static void GenCloudSyncTriggerFuncParams(RdbStore &store, std::string &userId, 
     return;
 }
 
-static const std::string &CreateFileTriggerSync(RdbStore &store)
+static const std::string &CreateFolderTriggerSync(RdbStore &store)
 {
     string userId;
     string bundleName;
     GenCloudSyncTriggerFuncParams(store, userId, bundleName);
-    static const string CREATE_FILES_NEW_CLOUD_SYNC =
-        "CREATE TRIGGER files_new_cloud_sync_trigger AFTER INSERT ON " + FileColumn::FILES_TABLE +
-        " FOR EACH ROW WHEN new.dirty_type == " +
+    static const string CREATE_FOLDERS_NEW_CLOUD_SYNC =
+        "CREATE TRIGGER folders_new_cloud_sync_trigger AFTER INSERT ON " + FileColumn::FILES_TABLE +
+        " FOR EACH ROW WHEN new.isDirectory == 1 AND new.dirty_type == " +
         std::to_string(static_cast<int32_t>(DirtyType::TYPE_NEW)) +
         " BEGIN SELECT cloud_sync_func(" + "'" + userId + "', " + "'" + bundleName + "'); END;";
-    return CREATE_FILES_NEW_CLOUD_SYNC;
+    return CREATE_FOLDERS_NEW_CLOUD_SYNC;
 }
 
 static const std::string &UpdateFileTriggerSync(RdbStore &store)
@@ -580,9 +583,8 @@ static const std::string &LocalFileTriggerSync(RdbStore &store)
     GenCloudSyncTriggerFuncParams(store, userId, bundleName);
     static const string CREATE_FILES_LOCAL_CLOUD_SYNC =
         "CREATE TRIGGER files_local_cloud_sync_trigger AFTER UPDATE ON " + FileColumn::FILES_TABLE +
-        " FOR EACH ROW WHEN OLD.dirty_type == " +
+        " FOR EACH ROW WHEN OLD.dirty_type IN (1,6) AND new.dirty_type == " +
         std::to_string(static_cast<int32_t>(DirtyType::TYPE_NEW)) +
-        " AND new.dirty_type == OLD.dirty_type AND new.meta_time_edited != OLD.meta_time_edited" +
         " BEGIN SELECT cloud_sync_func(" + "'" + userId + "', " + "'" + bundleName + "'); END;";
     return CREATE_FILES_LOCAL_CLOUD_SYNC;
 }
@@ -591,7 +593,7 @@ static int32_t ExecuteSql(RdbStore &store)
 {
     static const vector<string> onCreateSqlStrs = {
         FileColumn::CREATE_FILE_TABLE,
-        CreateFileTriggerSync(store),
+        CreateFolderTriggerSync(store),
         UpdateFileTriggerSync(store),
         FileColumn::CREATE_PARENT_CLOUD_ID_INDEX,
         DeleteFileTriggerSync(store),
@@ -645,6 +647,28 @@ static void VersionFixFileTrigger(RdbStore &store)
     }
 }
 
+static void VersionFixCreateAndLocalTrigger(RdbStore &store)
+{
+    const string dropFilesCreateTrigger = "DROP TRIGGER IF EXISTS files_new_cloud_sync_trigger";
+    if (store.ExecuteSql(dropFilesCreateTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_new_cloud_sync_trigger fail");
+    }
+    const string dropFilesLocalTrigger = "DROP TRIGGER IF EXISTS files_local_cloud_sync_trigger";
+    if (store.ExecuteSql(dropFilesLocalTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_local_cloud_sync_trigger fail");
+    }
+    const string addLocalFileTrigger = LocalFileTriggerSync(store);
+    int32_t ret = store.ExecuteSql(addLocalFileTrigger);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add local file trigger fail, err %{public}d", ret);
+    }
+    const string addCreateFolderTrigger = CreateFolderTriggerSync(store);
+    ret = store.ExecuteSql(addCreateFolderTrigger);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add create folder trigger fail, err %{public}d", ret);
+    }
+}
+
 int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
@@ -653,6 +677,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     }
     if (oldVersion < VERSION_FIX_FILE_TRIGGER) {
         VersionFixFileTrigger(store);
+    }
+    if (oldVersion < VERSION_FIX_CREATE_AND_LOCAL_TRIGGER) {
+        VersionFixCreateAndLocalTrigger(store);
     }
     return NativeRdb::E_OK;
 }
