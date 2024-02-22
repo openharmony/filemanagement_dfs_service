@@ -41,6 +41,58 @@ public:
 };
 
 /**
+ * @tc.name: SessionPoolTest_OccupySession_0100
+ * @tc.desc: Verify the OccupySession by Cid function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(SessionPoolTest, SessionPoolTest_OccupySession_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SessionPoolTest_OccupySession_0100 start";
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    weak_ptr<MountPoint> wmp = smp;
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+
+    bool res = true;
+    try {
+        pool->OccupySession(TEST_SESSION_ID, 1);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "SessionPoolTest_OccupySession_0100 end";
+}
+
+/**
+ * @tc.name: SessionPoolTest_FindSession_0100
+ * @tc.desc: Verify the FindSession by Cid function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(SessionPoolTest, SessionPoolTest_FindSession_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SessionPoolTest_FindSession_0100 start";
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    weak_ptr<MountPoint> wmp = smp;
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+
+    bool res = true;
+    try {
+        pool->FindSession(TEST_SESSION_ID);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "SessionPoolTest_FindSession_0100 end";
+}
+
+/**
  * @tc.name: SessionPoolTest_HoldSession_0100
  * @tc.desc: Verify the HoldSession function.
  * @tc.type: FUNC
@@ -143,6 +195,33 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseAllSession_0100, TestSize.Level
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseAllSession_0100 end";
+}
+
+/**
+ * @tc.name: SessionPoolTest_AddSessionToPool_0100
+ * @tc.desc: Verify the AddSessionToPool function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(SessionPoolTest, SessionPoolTest_AddSessionToPool_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SessionPoolTest_AddSessionToPool_0100 start";
+    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID);
+    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
+    weak_ptr<MountPoint> wmp = smp;
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
+
+    bool res = true;
+    try {
+        pool->AddSessionToPool(session);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "SessionPoolTest_AddSessionToPool_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile

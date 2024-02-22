@@ -166,6 +166,26 @@ HWTEST_F(KernelTalkerTest, KernelTalkerTest_WaitForPollThreadExited_0100, TestSi
 }
 
 /**
+ * @tc.name: KernelTalkerTest_PollRun_0100
+ * @tc.desc: Verify the PollRun function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(KernelTalkerTest, KernelTalkerTest_PollRun_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "KernelTalkerTest_PollRun_0100 start";
+    int res = true;
+    try {
+        g_talker->PollRun();
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "KernelTalkerTest_PollRun_0100 end";
+}
+
+/**
  * @tc.name: KernelTalkerTest_HandleAllNotify_0100
  * @tc.desc: Verify the HandleAllNotify function.
  * @tc.type: FUNC
