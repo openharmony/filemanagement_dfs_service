@@ -169,7 +169,8 @@ void KernelTalker::PollRun()
     }
     string ctrlPath = spt->GetMountArgument().GetCtrlPath();
     LOGI("Open node file ctrl path %{public}s", ctrlPath.c_str());
-    char *realPath = realpath(ctrlPath.c_str(), nullptr);
+    char resolvedPath[PATH_MAX] = {'\0'};
+    char *realPath = realpath(ctrlPath.c_str(), resolvedPath);
     if (realPath == nullptr) {
         return;
     }
