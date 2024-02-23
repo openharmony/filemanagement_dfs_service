@@ -1424,7 +1424,7 @@ int32_t FileDataHandler::CheckContentConsistency(NativeRdb::ResultSet &resultSet
             return E_SYSCALL;
         }
 
-        if (st.st_size != static_cast<uint64_t>(file.size)) {
+        if (st.st_size != static_cast<long>(file.size)) {
             ret = unlink(localPath.c_str());
             if (ret != 0) {
                 LOGE("unlink local file error %{public}d", errno);
@@ -1518,7 +1518,7 @@ int32_t FileDataHandler::CheckThumbConsistency(NativeRdb::ResultSet &resultSet, 
             return E_SYSCALL;
         }
 
-        if (st.st_size != static_cast<uint64_t>(file.size)) {
+        if (st.st_size != static_cast<long>(file.size)) {
             ret = unlink(thumb.c_str());
             if (ret != 0) {
                 LOGE("unlink local file error %{public}d", errno);
