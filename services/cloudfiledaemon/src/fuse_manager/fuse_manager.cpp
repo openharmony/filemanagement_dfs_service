@@ -328,6 +328,29 @@ static string GetAssetKey(int fileType)
     }
 }
 
+static int32_t FixDentrySize(shared_ptr<CloudInode> ino, FuseData *data)
+{
+    if (ino->mBase->fileType == FILE_TYPE_CONTENT || ino->mBase->size != TWO_MB) {
+        return 0;
+    }
+    string localPath = GetLocalTmpPath(data->userId, ino->path);
+    struct stat fileStat;
+    if (stat(localPath.c_str(), &fileStat) == 0) {
+        LOGI("fix file ino:%s size to %lld", ino->path.c_str(), (long long)fileStat.st_size);
+        ino->mBase->size = fileStat.st_size;
+        auto metaFile = MetaFileMgr::GetInstance().GetMetaFile(data->userId, GetCloudInode(data, ino->parent)->path);
+        auto mateBase = MetaBase(ino->mBase->name, ino->mBase->cloudId);
+        auto ret = metaFile->DoUpdate(mateBase);
+        if (ret != 0) {
+            LOGE("update dentry fail, ret is %{public}d", ret);
+            return ret;
+        } else {
+            LOGI("update dentry success, fix size success");
+        }
+    }
+    return 0;
+}
+
 static string GetCloudMergeViewPath(int32_t userId, const string &relativePath)
 {
     return HMDFS_PATH_PREFIX + to_string(userId) + CLOUD_MERGE_VIEW_PATH_SUFFIX + relativePath;
@@ -374,6 +397,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
         if (cInode->readSession) {
             DriveKit::DKError dkError = cInode->readSession->InitSession();
             if (!HandleDkError(req, dkError)) {
+                FixDentrySize(cInode, data);
                 cInode->sessionRefCount++;
                 LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
                 fuse_reply_open(req, fi);
@@ -389,6 +413,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
         fuse_reply_err(req, EPERM);
         LOGE("readSession is null");
     } else {
+        FixDentrySize(cInode, data);
         cInode->sessionRefCount++;
         LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
         fuse_reply_open(req, fi);
