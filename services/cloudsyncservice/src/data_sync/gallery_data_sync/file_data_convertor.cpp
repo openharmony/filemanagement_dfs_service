@@ -486,9 +486,16 @@ int32_t FileDataConvertor::HandleContent(DriveKit::DKRecordData &data,
     string &path)
 {
     string lowerPath = GetLowerPath(path);
-    if (access(lowerPath.c_str(), F_OK)) {
-        LOGE("content %{private}s doesn't exist", lowerPath.c_str());
+    struct stat fileStat;
+    int err = stat(lowerPath.c_str(), &fileStat);
+    if (err < 0) {
+        LOGE("get content size failed errno :%{public}d", errno);
         return E_PATH;
+    }
+
+    if (fileStat.st_size <= 0) {
+        LOGE("content size err");
+        return E_INVAL_ARG;
     }
 
     /* asset */
