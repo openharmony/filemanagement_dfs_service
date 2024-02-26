@@ -117,12 +117,13 @@ static void OnDownloadFailed(int32_t &downloadErrorType, const DKError &dkError)
     if (static_cast<DKServerErrorCode>(dkError.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
         downloadErrorType = DownloadProgressObj::NETWORK_UNAVAILABLE;
     }
+    if (dkError.dkErrorCode == DKLocalErrorCode::LOCAL_SPACE_FULL) {
+        downloadErrorType = DownloadProgressObj::LOCAL_STORAGE_FULL;
+    }
     if (dkError.errorDetails.size() != 0) {
         auto errorDetailCode = static_cast<DKDetailErrorCode>(dkError.errorDetails[0].detailCode);
-        if (errorDetailCode == DKDetailErrorCode::SPACE_FULL) {
-            downloadErrorType = DownloadProgressObj::LOCAL_STORAGE_FULL;
-        } else if (errorDetailCode == DKDetailErrorCode::THUMBNAIL_NOT_FOUND ||
-                   errorDetailCode == DKDetailErrorCode::ORIGINAL_NOT_EXSIT) {
+        if (errorDetailCode == DKDetailErrorCode::THUMBNAIL_NOT_FOUND ||
+            errorDetailCode == DKDetailErrorCode::ORIGINAL_NOT_EXSIT) {
             downloadErrorType = DownloadProgressObj::CONTENT_NOT_FOUND;
         } else if (errorDetailCode == DKDetailErrorCode::USER_REQUEST_TOO_MANY ||
                    errorDetailCode == DKDetailErrorCode::APP_REQUEST_TOO_MANY ||
