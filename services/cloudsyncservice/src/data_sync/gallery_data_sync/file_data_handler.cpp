@@ -309,7 +309,9 @@ static int32_t DentryInsert(int userId, const DKRecord &record)
         return E_OK;
     }
 
-    string fullPath, relativePath, fileName;
+    string fullPath;
+    string relativePath;
+    string fileName;
     if (attibutes[PhotoColumn::MEDIA_FILE_PATH].GetString(fullPath) != DKLocalErrorCode::NO_ERROR) {
         LOGE("bad file_path in props");
         return E_INVAL_ARG;
@@ -346,7 +348,8 @@ int FileDataHandler::DentryInsertThumb(const string &fullPath,
                                        const string &type)
 {
     string thumbnailPath = createConvertor_.GetThumbPathInCloud(fullPath, type);
-    string relativePath, fileName;
+    string relativePath;
+    string fileName;
     if (GetDentryPathName(thumbnailPath, relativePath, fileName) != E_OK) {
         LOGE("split to dentry path failed, path:%s", thumbnailPath.c_str());
         return E_INVAL_ARG;
@@ -369,7 +372,8 @@ int FileDataHandler::DentryInsertThumb(const string &fullPath,
 int FileDataHandler::DentryRemoveThumb(const string &downloadPath)
 {
     string thumbnailPath = createConvertor_.GetLocalPathToCloud(downloadPath);
-    string relativePath, fileName;
+    string relativePath;
+    string fileName;;
     if (GetDentryPathName(thumbnailPath, relativePath, fileName) != E_OK) {
         LOGE("split to dentry path failed, path:%s", thumbnailPath.c_str());
         return E_INVAL_ARG;
@@ -1215,7 +1219,8 @@ int32_t FileDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::ResultSet
                 LOGE("unlink local failed, errno %{public}d", errno);
             }
         } else { // delete dentry
-            string relativePath, fileName;
+                string relativePath;
+                string fileName;
             if (GetDentryPathName(filePath, relativePath, fileName) != E_OK) {
                 LOGE("split to dentry path failed, path:%s", filePath.c_str());
                 return E_INVAL_ARG;
@@ -1259,7 +1264,8 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
     int ret = E_OK;
 
     // delete dentry
-    string relativePath, fileName;
+    string relativePath;
+    string fileName;;
     if (GetDentryPathName(filePath, relativePath, fileName) != E_OK) {
         LOGE("split to dentry path failed, path:%s", filePath.c_str());
         return E_INVAL_ARG;

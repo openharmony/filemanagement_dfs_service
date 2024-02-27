@@ -274,7 +274,8 @@ static uint32_t DentryHash(const std::string &name)
 
     constexpr int inLen = 8;      /* hash input buf size 8 */
     constexpr int bufLen = 4;     /* hash output buf size 4 */
-    uint32_t in[inLen], buf[bufLen];
+    uint32_t in[inLen];
+    uint32_t buf[bufLen];
     auto len = name.length();
     constexpr decltype(len) hashWidth = 16; /* hash operation width 4 */
     const char *p = name.c_str();
@@ -389,9 +390,10 @@ static void UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
     de = &d.nsl[bitPos];
     de->hash = nameHash;
     de->namelen = name.length();
-    if (memcpy_s(d.fileName[bitPos], slots * DENTRY_NAME_LEN, name.c_str(), name.length())) {
-        LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", slots * DENTRY_NAME_LEN, name.length());
-    }
+    errno_t ret = memcpy_s(d.fileName[bitPos], slots * DENTRY_NAME_LEN, name.c_str(), name.length());
+    if (ret != EOK) {
+        return;
+    } else {
     de->mtime = base.mtime;
     de->fileType = base.fileType;
     de->size = base.size;
@@ -417,7 +419,8 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
 
     off_t pos = 0;
     uint32_t level = 0;
-    uint32_t bitPos, namehash;
+    uint32_t bitPos;
+    uint32_t namehash;
     unsigned long bidx;
     HmdfsDentryGroup dentryBlk = {0};
 
