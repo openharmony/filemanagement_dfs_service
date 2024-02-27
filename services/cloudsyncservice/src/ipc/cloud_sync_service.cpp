@@ -51,6 +51,7 @@ CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbili
     dataSyncManager_ = make_shared<DataSyncManager>();
     batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
     screenStatusListener_ = make_shared<ScreenStatusListener>();
+    userStatusListener_ = make_shared<UserStatusListener>();
 }
 
 void CloudSyncService::PublishSA()
@@ -163,11 +164,13 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
 {
     LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
     if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
+        userStatusListener_->Start();
         batteryStatusListener_->Start();
         screenStatusListener_->Start();
     } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
         auto sessionManager = make_shared<SessionManager>();
         sessionManager->Init();
+        userStatusListener_->AddObserver(sessionManager);
         fileTransferManager_ = make_shared<FileTransferManager>(sessionManager);
         fileTransferManager_->Init();
     } else {

@@ -182,7 +182,7 @@ void SoftbusAdapter::OnFileTransError(int sessionId)
     LOGD("OnFileTransError sessionId=%{public}d", sessionId);
 }
 
-void SoftbusAdapter::SetFileReceiveListener(const char *packageName, const char *sessionName)
+int SoftbusAdapter::SetFileReceiveListener(const char *packageName, const char *sessionName)
 {
     const char *rootDir = "/mnt/hmdfs/100/account/device_view/local/data";
     IFileReceiveListener fileReceiveListener = {
@@ -195,9 +195,9 @@ void SoftbusAdapter::SetFileReceiveListener(const char *packageName, const char 
     int ret = ::SetFileReceiveListener(packageName, sessionName, &fileReceiveListener, rootDir);
     if (ret != 0) {
         LOGE("Failed to SetFileReceiveListener ret:%{public}d, sessionName:%{public}s", ret, sessionName);
-        return;
     }
     LOGD("Succeed to SetFileReceiveListener, sessionName:%{public}s", sessionName);
+    return ret;
 }
 
 int SoftbusAdapter::OpenSession(const char *sessionName,
