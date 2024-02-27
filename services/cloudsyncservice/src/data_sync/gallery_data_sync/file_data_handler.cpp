@@ -1219,8 +1219,8 @@ int32_t FileDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::ResultSet
                 LOGE("unlink local failed, errno %{public}d", errno);
             }
         } else { // delete dentry
-                string relativePath;
-                string fileName;
+            string relativePath;
+            string fileName;
             if (GetDentryPathName(filePath, relativePath, fileName) != E_OK) {
                 LOGE("split to dentry path failed, path:%s", filePath.c_str());
                 return E_INVAL_ARG;

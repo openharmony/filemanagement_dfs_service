@@ -394,6 +394,8 @@ static void UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
     if (ret != EOK) {
         return;
     } else {
+        LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", slots * DENTRY_NAME_LEN, name.length());
+    }
     de->mtime = base.mtime;
     de->fileType = base.fileType;
     de->size = base.size;
