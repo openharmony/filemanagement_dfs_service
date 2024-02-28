@@ -421,8 +421,7 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
 
     off_t pos = 0;
     uint32_t level = 0;
-    uint32_t bitPos;
-    uint32_t namehash;
+    uint32_t bitPos, namehash;
     unsigned long bidx;
     HmdfsDentryGroup dentryBlk = {0};
 
