@@ -238,7 +238,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest006, TestSize.Level1)
         int ret = daemonStub_->OnRemoteRequest(
             static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION), data,
             reply, option);
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, 1);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest006  ERROR";

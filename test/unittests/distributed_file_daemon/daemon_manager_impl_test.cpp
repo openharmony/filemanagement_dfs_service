@@ -44,11 +44,6 @@ DistributedHardware::DmDeviceInfo deviceInfo = {
 };
 }
 
-const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkid=xxxxx";
-const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
-const std::string srcDeviceId = "testSrcDeviceId";
-const sptr<IRemoteObject> listener = sptr(new DaemonServiceMock());
-
 class DistributedDaemonManagerImplTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -151,6 +146,10 @@ HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionTest, TestSize.Leve
  */
 HWTEST_F(DistributedDaemonManagerImplTest, PrepareSessionTest, TestSize.Level1)
 {
+    const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkid=xxxxx";
+    const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
+    const std::string srcDeviceId = "testSrcDeviceId";
+    const sptr<IRemoteObject> listener = sptr(new DaemonServiceMock());
     GTEST_LOG_(INFO) << "PrepareSessionTest Start";
     try {
         auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
