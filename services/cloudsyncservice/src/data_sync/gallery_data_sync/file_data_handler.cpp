@@ -373,7 +373,7 @@ int FileDataHandler::DentryRemoveThumb(const string &downloadPath)
 {
     string thumbnailPath = createConvertor_.GetLocalPathToCloud(downloadPath);
     string relativePath;
-    string fileName;;
+    string fileName;
     if (GetDentryPathName(thumbnailPath, relativePath, fileName) != E_OK) {
         LOGE("split to dentry path failed, path:%s", thumbnailPath.c_str());
         return E_INVAL_ARG;
@@ -1265,7 +1265,7 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
 
     // delete dentry
     string relativePath;
-    string fileName;;
+    string fileName;
     if (GetDentryPathName(filePath, relativePath, fileName) != E_OK) {
         LOGE("split to dentry path failed, path:%s", filePath.c_str());
         return E_INVAL_ARG;
