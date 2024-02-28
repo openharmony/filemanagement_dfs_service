@@ -175,7 +175,6 @@ void KernelTalker::PollRun()
         return;
     }
     cmdFd = open(realPath, O_RDWR);
-    free(realPath);
     if (cmdFd < 0) {
         LOGE("Open node file error %{public}d, ctrl path %{public}s", errno, ctrlPath.c_str());
         return;
