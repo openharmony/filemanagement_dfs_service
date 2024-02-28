@@ -119,7 +119,6 @@ ohos_shared_library("cloudsync_sa") {
     "src/ipc/cloud_sync_service_stub.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
-    "src/sync_rule/user_status_listener.cpp",
     "src/sync_rule/battery_status.cpp",
     "src/sync_rule/battery_status_listener.cpp",
     "src/sync_rule/cloud_status.cpp",
@@ -127,6 +126,7 @@ ohos_shared_library("cloudsync_sa") {
     "src/sync_rule/network_status.cpp",
     "src/sync_rule/screen_status.cpp",
     "src/sync_rule/screen_status_listener.cpp",
+    "src/sync_rule/user_status_listener.cpp",
   ]
 
   sources += data_sync
@@ -290,13 +290,13 @@ ohos_static_library("cloudsync_sa_static") {
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
     "src/sync_rule/battery_status.cpp",
-    "src/sync_rule/user_status_listener.cpp",
     "src/sync_rule/battery_status_listener.cpp",
     "src/sync_rule/cloud_status.cpp",
     "src/sync_rule/net_conn_callback_observer.cpp",
     "src/sync_rule/network_status.cpp",
     "src/sync_rule/screen_status.cpp",
     "src/sync_rule/screen_status_listener.cpp",
+    "src/sync_rule/user_status_listener.cpp",
   ]
 
   sources += data_sync

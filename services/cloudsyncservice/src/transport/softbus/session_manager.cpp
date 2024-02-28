@@ -47,8 +47,8 @@ void SessionManager::CreateServer()
         return;
     }
 
-    auto ret = SoftbusAdapter::GetInstance().SetFileReceiveListener(SERVICE_NAME.c_str(), SESSION_NAME.c_str());
-    if (ret != E_OK) {
+    auto res = SoftbusAdapter::GetInstance().SetFileReceiveListener(SERVICE_NAME.c_str(), SESSION_NAME.c_str());
+    if (res != E_OK) {
         SetFileRecvListenerFlag_ = false;
     } else {
         SetFileRecvListenerFlag_ = true;

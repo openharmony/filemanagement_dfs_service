@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-#include "sync_rule/user_status_listener.h"
+ #include "sync_rule/user_status_listener.h"
 
-#include "common_event_manager.h"
-#include "common_event_support.h"
-#include "utils_log.h"
+ #include "common_event_manager.h"
+ #include "common_event_support.h"
+ #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 
 UserStatusSubscriber::UserStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
-    std::shared_ptr<UserStatusListener> listener)
-    : EventFwk::CommonEventSubscriber(subscribeInfo), listener_(listener)
+                                               std::shared_ptr<UserStatusListener> listener)
+        : EventFwk::CommonEventSubscriber(subscribeInfo), listener_(listener)
 {
 }
 
-void   UserStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
+void UserStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
 {
     auto action = eventData.GetWant().GetAction();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
@@ -39,19 +39,19 @@ void   UserStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eve
 
 UserStatusListener::~UserStatusListener()
 {
-    stop();
+    Stop();
 }
 
-void UserStatusListener::AddObserver(std::shared_ptr<UserStatusObserver> observer)
+void UserStatusListener::AddObserver(std::shared_ptr<IUserStatusObserver> observer)
 {
     std::lock_guard<std::mutex> lck(obsVecMutex_);
-    observer_.push_back(observer);
+    observers_.push_back(observer);
 }
 
 void UserStatusListener::NotifyUserUnlocked()
 {
     std::lock_guard<std::mutex> lck(obsVecMutex_);
-    for (auto &observer : observer_) {
+    for (auto &observer : observers_) {
         observer->OnUserUnlocked();
     }
 }
@@ -70,7 +70,7 @@ void UserStatusListener::Start()
 void UserStatusListener::Stop()
 {
     if (commonEventSubscriber_ != nullptr) {
-        EventFwk::CommonEventManager::UnsubscribeCommonEvent(commonEventSubscriber_);
+        EventFwk::CommonEventManager::UnSubscribeCommonEvent(commonEventSubscriber_);
         commonEventSubscriber_ = nullptr;
     }
 }

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 Huawei Device Co., Ltd.
+* Copyright (c) 2024 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -13,14 +13,14 @@
 * limitations under the License.
 */
 
-#ifdef I_USER_STATUS_OBSERVER_H
+#ifndef I_USER_STATUS_OBSERVER_H
 #define I_USER_STATUS_OBSERVER_H
 
 namespace OHOS::FileManagement::CloudSync {
 class IUserStatusObserver {
 public:
     IUserStatusObserver() = default;
-    virtual ~IUserStatusObserver() = = default;
+    virtual ~IUserStatusObserver() = default;
     virtual void OnUserUnlocked() = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
