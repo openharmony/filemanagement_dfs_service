@@ -13,17 +13,16 @@
  * limitations under the License.
  */
 
- #include "sync_rule/user_status_listener.h"
+#include "sync_rule/user_status_listener.h"
 
- #include "common_event_manager.h"
- #include "common_event_support.h"
- #include "utils_log.h"
+#include "common_event_manager.h"
+#include "common_event_support.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 
 UserStatusSubscriber::UserStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
-                                               std::shared_ptr<UserStatusListener> listener)
-        : EventFwk::CommonEventSubscriber(subscribeInfo), listener_(listener)
+    std::shared_ptr<UserStatusListener> listener) : EventFwk::CommonEventSubscriber(subscribeInfo), listener_(listener)
 {
 }
 
