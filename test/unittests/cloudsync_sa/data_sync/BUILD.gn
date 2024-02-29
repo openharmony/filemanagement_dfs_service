@@ -1470,6 +1470,7 @@ ohos_unittest("cloud_disk_data_handler_test") {
     "${services_path}/cloudsyncservice/src/sync_rule/network_status.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/screen_status_listener.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/user_status_listener.cpp",
     "cloud_disk_data_handler_test.cpp",
   ]
 
