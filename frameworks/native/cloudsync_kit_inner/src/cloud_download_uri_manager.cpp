@@ -25,18 +25,6 @@ CloudDownloadUriManager& CloudDownloadUriManager::GetInstance()
     return mgr;
 }
 
-void CloudDownloadUriManager::SetRegisteredFlag()
-{
-    LOGI("download_file : SetRegisteredFlag");
-    registered_ = true;
-}
-
-void CloudDownloadUriManager::UnsetRegisteredFlag()
-{
-    LOGI("download_file : UnsetRegisteredFlag");
-    registered_ = false;
-}
-
 int32_t CloudDownloadUriManager::AddPathToUri(const std::string& path, const std::string& uri)
 {
     LOGI("download_file : add path [ %{public}s ] -> uri [ %{public}s ]", path.c_str(), uri.c_str());

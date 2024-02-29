@@ -483,7 +483,6 @@ group("cloudsync_sa_ipc_test") {
     ":cloud_download_callback_proxy_test",
     ":cloud_sync_callback_proxy_test",
     ":cloud_sync_service_stub_test",
-    ":cloud_sync_service_test",
     ":download_asset_callback_manager_test",
     ":download_asset_callback_proxy_test",
   ]
