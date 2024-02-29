@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef IPC_DISTRIBUTED_FILE_DAEMON_IPC_INTERFACE_CODE_H
+#define IPC_DISTRIBUTED_FILE_DAEMON_IPC_INTERFACE_CODE_H
 
 /* SAID:5201 */
 namespace OHOS {
@@ -24,3 +26,4 @@ namespace DistributedFile {
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
+#endif

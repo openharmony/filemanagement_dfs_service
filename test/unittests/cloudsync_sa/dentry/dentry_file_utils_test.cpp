@@ -66,7 +66,7 @@ HWTEST_F(FileUtilsTest, ReadFileTest001, TestSize.Level1)
         int fd = -1;
         off_t offset = 0;
         size_t size = 1024;
-        void *data = {0};
+        void *data = nullptr;
         int ret = FileUtils::ReadFile(fd, offset, size, data);
         EXPECT_EQ(ret, -1);
     } catch (...) {
@@ -112,7 +112,7 @@ HWTEST_F(FileUtilsTest, WriteFileTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "WriteFileTest001 Begin";
     try {
         int fd = -1;
-        void *data = {0};
+        void *data = nullptr;
         off_t offset = 0;
         size_t size = 1024;
         int ret = FileUtils::WriteFile(fd, data, offset, size);
