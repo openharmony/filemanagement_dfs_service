@@ -2348,7 +2348,7 @@ int32_t FileDataHandler::DeleteDentryFile(void)
         "/data/service/el2/" + std::to_string(userId_) + "/hmdfs/cache/account_cache/dentry_cache/cloud/";
     LOGD("cacheDir: %s", cacheDir.c_str());
     ForceRemoveDirectory(cacheDir);
-
+    MetaFileMgr::GetInstance().ClearAll();
     return E_OK;
 }
 
