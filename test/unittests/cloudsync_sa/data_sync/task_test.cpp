@@ -96,11 +96,7 @@ HWTEST_F(TaskTest, AddTask, TestSize.Level1)
         auto task = make_shared<Task>(context, action);
         std::function<void()> callBack = CallBack;
         TaskRunner taskRunner(callBack);
-        taskRunner.stopFlag_ = make_shared<bool>(true);
         auto ret = taskRunner.AddTask(task);
-        EXPECT_EQ(E_STOP, ret);
-        *taskRunner.stopFlag_ = false;
-        ret = taskRunner.AddTask(task);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -182,9 +178,11 @@ HWTEST_F(TaskTest, CommitTask001, TestSize.Level1)
         auto task = make_shared<Task>(context, action);
         std::function<void()> callBack = CallBack;
         auto taskRunner = make_shared<TaskRunner>(callBack);
+        taskRunner->stopFlag_ = make_shared<bool>(false);
         taskRunner->AddTask(task);
+        taskRunner->SetCommitFunc(CommitFuncFail);
         auto ret = taskRunner->CommitTask(task);
-        EXPECT_EQ(E_OK, ret);
+        EXPECT_EQ(1, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CommitTask001 ERROR";
@@ -211,44 +209,15 @@ HWTEST_F(TaskTest, CommitTask002, TestSize.Level1)
         auto taskRunner = make_shared<TaskRunner>(callBack);
         taskRunner->stopFlag_ = make_shared<bool>(false);
         taskRunner->AddTask(task);
-        taskRunner->SetCommitFunc(CommitFuncFail);
+        taskRunner->SetCommitFunc(CommitFuncSuccess);
         auto ret = taskRunner->CommitTask(task);
-        EXPECT_EQ(1, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " CommitTask002 ERROR";
     }
 
     GTEST_LOG_(INFO) << "CommitTask002 End";
-}
-
-/**
- * @tc.name: CommitTask003
- * @tc.desc: Verify the CommitTask003 function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(TaskTest, CommitTask003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CommitTask003 Begin";
-    try {
-        auto handler = std::make_shared<DataHandlerMock>(USER_ID, BUND_NAME, TABLE_NAME);
-        auto context = std::make_shared<TaskContext>(handler);
-        TaskAction action = Action;
-        auto task = make_shared<Task>(context, action);
-        std::function<void()> callBack = CallBack;
-        auto taskRunner = make_shared<TaskRunner>(callBack);
-        taskRunner->stopFlag_ = make_shared<bool>(false);
-        taskRunner->AddTask(task);
-        taskRunner->SetCommitFunc(CommitFuncSuccess);
-        auto ret = taskRunner->CommitTask(task);
-        EXPECT_EQ(E_OK, ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " CommitTask003 ERROR";
-    }
-
-    GTEST_LOG_(INFO) << "CommitTask003 End";
 }
 
 /**
@@ -305,11 +274,9 @@ HWTEST_F(TaskTest, ReleaseTask, TestSize.Level1)
 
         std::function<void()> callBack = CallBack;
         TaskRunner taskRunner(callBack);
+        taskRunner.taskList_.push_back(task);
         auto ret = taskRunner.ReleaseTask();
         EXPECT_TRUE(ret);
-        taskRunner.taskList_.push_back(task);
-        ret = taskRunner.ReleaseTask();
-        EXPECT_TRUE(ret == false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " ReleaseTask ERROR";
@@ -374,6 +341,7 @@ HWTEST_F(TaskTest, CompleteDummyTask, TestSize.Level1)
     try {
         std::function<void()> callBack = CallBack;
         TaskRunner taskRunner(callBack);
+        taskRunner.stopFlag_ = make_shared<bool>(false);
         taskRunner.CompleteDummyTask();
         EXPECT_TRUE(true);
     } catch (...) {

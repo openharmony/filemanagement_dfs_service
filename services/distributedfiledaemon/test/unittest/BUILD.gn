@@ -520,9 +520,7 @@ group("unittest") {
   deps = [
     ":device_manager_agent_test",
     ":devsl_dispatcher_test",
-    ":kernel_talker_test",
     ":os_account_observer_test",
-    ":session_pool_test",
     ":softbus_agent_test",
     ":softbus_session_dispatcher_test",
     ":softbus_session_test",

@@ -26,15 +26,12 @@ class CloudDownloadUriManager : public NoCopyable {
 public:
     static CloudDownloadUriManager &GetInstance();
 
-    void SetRegisteredFlag();
-    void UnsetRegisteredFlag();
     int32_t AddPathToUri(const std::string& path, const std::string& uri);
     std::string GetUri(const std::string& path);
     void RemoveUri(const std::string& path);
 
 private:
     CloudDownloadUriManager() = default;
-    bool registered_{false};
     std::mutex mutex_;
     std::map<std::string, std::string> pathMap_;
 };

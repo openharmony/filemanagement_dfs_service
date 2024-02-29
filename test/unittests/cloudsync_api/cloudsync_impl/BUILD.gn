@@ -275,7 +275,10 @@ ohos_unittest("cloud_download_callback_stub_test") {
 ohos_unittest("cloud_download_uri_manager_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "cloud_download_uri_manager_test.cpp" ]
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_uri_manager.cpp",
+    "cloud_download_uri_manager_test.cpp",
+  ]
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include/ipc",

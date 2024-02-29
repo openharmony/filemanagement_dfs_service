@@ -70,32 +70,6 @@ HWTEST_F(CloudDownloadUriManagerTest, GetInstanceTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: SetRegisteredFlagTest
- * @tc.desc: Verify the SetRegisteredFlag function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDownloadUriManagerTest, SetRegisteredFlagTest, TestSize.Level1)
-{
-    CloudDownloadUriManager mUriMgr;
-    mUriMgr.SetRegisteredFlag();
-    EXPECT_EQ(mUriMgr.registered_, true);
-}
-
-/**
- * @tc.name: UnsetRegisteredFlagTest
- * @tc.desc: Verify the UnsetRegisteredFlag function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDownloadUriManagerTest, UnsetRegisteredFlagTest, TestSize.Level1)
-{
-    CloudDownloadUriManager mUriMgr;
-    mUriMgr.UnsetRegisteredFlag();
-    EXPECT_EQ(mUriMgr.registered_, false);
-}
-
-/**
  * @tc.name: AddPathToUriTest001
  * @tc.desc: Verify the AddPathToUri function.
  * @tc.type: FUNC
@@ -106,8 +80,6 @@ HWTEST_F(CloudDownloadUriManagerTest, AddPathToUriTest001, TestSize.Level1)
     const std::string path = "file://data/file";
     const std::string uri = "file://data/file/test";
     CloudDownloadUriManager mUriMgr;
-    mUriMgr.SetRegisteredFlag();
-    EXPECT_EQ(mUriMgr.registered_, true);
     mUriMgr.AddPathToUri(path, uri);
     EXPECT_EQ(mUriMgr.pathMap_[path], uri);
 }
@@ -123,11 +95,9 @@ HWTEST_F(CloudDownloadUriManagerTest, AddPathToUriTest002, TestSize.Level1)
     const std::string path = "file://data/file";
     const std::string uri = "file://data/file/test";
     CloudDownloadUriManager mUriMgr;
-    mUriMgr.UnsetRegisteredFlag();
-    EXPECT_EQ(mUriMgr.registered_, false);
-    mUriMgr.AddPathToUri(path, uri);
-    auto ret = mUriMgr.pathMap_.find(path);
-    EXPECT_EQ(ret, mUriMgr.pathMap_.end());
+    mUriMgr.pathMap_[path] = uri;
+    auto ret = mUriMgr.AddPathToUri(path, uri);
+    EXPECT_EQ(ret, E_STOP);
 }
 
 /**
@@ -141,8 +111,6 @@ HWTEST_F(CloudDownloadUriManagerTest, RemoveUriTest001, TestSize.Level1)
     const std::string path = "file://data/file";
     const std::string uri = "file://data/file/test1";
     CloudDownloadUriManager mUriMgr;
-    mUriMgr.SetRegisteredFlag();
-    EXPECT_EQ(mUriMgr.registered_, true);
     mUriMgr.AddPathToUri(path, uri);
     EXPECT_EQ(mUriMgr.pathMap_[path], uri);
     mUriMgr.RemoveUri(path);
@@ -191,8 +159,6 @@ HWTEST_F(CloudDownloadUriManagerTest, GetUriTest002, TestSize.Level1)
     const std::string path = "file://data/file";
     const std::string uri = "file://data/file/test2";
     CloudDownloadUriManager mUriMgr;
-    mUriMgr.SetRegisteredFlag();
-    EXPECT_EQ(mUriMgr.registered_, true);
     mUriMgr.AddPathToUri(path, uri);
     EXPECT_EQ(mUriMgr.pathMap_[path], uri);
     string uriStr = mUriMgr.GetUri(path);

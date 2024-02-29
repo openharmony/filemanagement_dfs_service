@@ -632,9 +632,6 @@ int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteOb
         return E_INVAL_ARG;
     }
 
-    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-    uriMgr.SetRegisteredFlag();
-
     auto remote = Remote();
     if (!remote) {
         LOGE("remote is nullptr");
@@ -662,9 +659,6 @@ int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
         LOGE("Failed to write interface token");
         return E_BROKEN_IPC;
     }
-
-    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-    uriMgr.UnsetRegisteredFlag();
 
     auto remote = Remote();
     if (!remote) {

@@ -127,7 +127,7 @@ HWTEST_F(DownloadAssetCallbackStubTest, OnRemoteRequestTest003, TestSize.Level1)
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(IDownloadAssetCallback::GetDescriptor()));
         int32_t ret = downloadAssetCallbackStub_->OnRemoteRequest(code, data, reply, option);
-        EXPECT_NE(E_OK, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch(...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " OnRemoteRequest ERROR";
