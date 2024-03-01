@@ -47,8 +47,27 @@ void SessionManager::CreateServer()
         return;
     }
 
-    SoftbusAdapter::GetInstance().SetFileReceiveListener(SERVICE_NAME.c_str(), SESSION_NAME.c_str());
+    auto res = SoftbusAdapter::GetInstance().SetFileReceiveListener(SERVICE_NAME.c_str(), SESSION_NAME.c_str());
+    if (res != E_OK) {
+        SetFileRecvListenerFlag_ = false;
+    } else {
+        SetFileRecvListenerFlag_ = true;
+    }
     SoftbusAdapter::GetInstance().RegisterSessionListener(SESSION_NAME.c_str(), shared_from_this());
+}
+
+void SessionManager::OnUserUnlocked()
+{
+    if (SetFileRecvListenerFlag_) {
+        LOGI("file recive listener has been successfully set up");
+        return;
+    }
+    /* setfileReceiveListener again when user unlocked to avoid register fall when user locked */
+    LOGI("UserUnlocked, SetFileReceiveListener again");
+    auto ret = SoftbusAdapter::GetInstance().SetFileReceiveListener(SERVICE_NAME.c_str(), SESSION_NAME.c_str());
+    if (ret == E_OK) {
+        LOGI("SetFileReceiveListener success");
+    }
 }
 
 void SessionManager::RemoveServer()

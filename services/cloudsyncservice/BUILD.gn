@@ -126,6 +126,7 @@ ohos_shared_library("cloudsync_sa") {
     "src/sync_rule/network_status.cpp",
     "src/sync_rule/screen_status.cpp",
     "src/sync_rule/screen_status_listener.cpp",
+    "src/sync_rule/user_status_listener.cpp",
   ]
 
   sources += data_sync
@@ -295,6 +296,7 @@ ohos_static_library("cloudsync_sa_static") {
     "src/sync_rule/network_status.cpp",
     "src/sync_rule/screen_status.cpp",
     "src/sync_rule/screen_status_listener.cpp",
+    "src/sync_rule/user_status_listener.cpp",
   ]
 
   sources += data_sync

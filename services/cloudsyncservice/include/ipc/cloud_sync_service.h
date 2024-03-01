@@ -27,6 +27,7 @@
 #include "file_transfer_manager.h"
 #include "i_cloud_download_callback.h"
 #include "i_cloud_sync_callback.h"
+#include "sync_rule/user_status_listener.h"
 #include "sync_rule/battery_status_listener.h"
 #include "sync_rule/screen_status_listener.h"
 #include "svc_death_recipient.h"
@@ -90,6 +91,7 @@ private:
     static inline std::mutex loadRemoteSAMutex_;
 
     std::shared_ptr<DataSyncManager> dataSyncManager_;
+    std::shared_ptr<UserStatusListener> userStatusListener_;
     std::shared_ptr<BatteryStatusListener> batteryStatusListener_;
     std::shared_ptr<ScreenStatusListener> screenStatusListener_;
     std::shared_ptr<FileTransferManager> fileTransferManager_;

@@ -25,10 +25,12 @@
 #include <vector>
 
 #include "i_softbus_listener.h"
+#include "sync_rule/i_user_status_observer.h"
 #include "softbus_session.h"
 namespace OHOS::FileManagement::CloudSync {
 class RecieveDataHandler;
-class SessionManager : public ISoftbusListener, public std::enable_shared_from_this<SessionManager> {
+class SessionManager : public ISoftbusListener, public std::enable_shared_from_this<SessionManager>,
+    public IUserStatusObserver {
 public:
     SessionManager() = default;
     ~SessionManager();
@@ -52,6 +54,7 @@ public:
     void OnFileReceived(const std::string &senderNetworkId, const char *filePath, int result) override;
 
     void RegisterDataHandler(std::shared_ptr<RecieveDataHandler> handler);
+    void OnUserUnlocked() override;
 
 private:
     void CreateServer();
@@ -68,6 +71,7 @@ private:
     std::mutex sessionVecMutex_;
     std::vector<std::shared_ptr<SoftbusSession>> sendSessionVec_;
     std::shared_ptr<RecieveDataHandler> dataHandler_;
+    bool SetFileRecvListenerFlag_{true};
 };
 
 class RecieveDataHandler {

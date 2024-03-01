@@ -103,6 +103,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/src/sync_rule/net_conn_callback_observer.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/screen_status_listener.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/user_status_listener.cpp",
     "cloud_sync_service_test.cpp",
   ]
 

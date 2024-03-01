@@ -34,7 +34,7 @@ public:
 
     int32_t CreateSessionServer(const char *packageName, const char *sessionName);
     int32_t RemoveSessionServer(const char *packageName, const char *sessionName);
-    void SetFileReceiveListener(const char *packageName, const char *sessionName);
+    int SetFileReceiveListener(const char *packageName, const char *sessionName);
 
     int OpenSession(const char *sessionName,
                     const char *peerDeviceId,
