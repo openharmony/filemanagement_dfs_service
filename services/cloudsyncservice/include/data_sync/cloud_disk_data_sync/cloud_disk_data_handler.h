@@ -58,6 +58,7 @@ public:
     int32_t CleanCache(const std::string &uri);
 private:
     static inline const int32_t LIMIT_SIZE = 5;
+    static inline const int32_t CREATE_LIMIT_SIZE = 20;
     static inline const int32_t PULL_LIMIT_SIZE = 100;
     static inline const int32_t MODIFY_BATCH_NUM = 20;
     static inline const int32_t DELETE_BATCH_NUM = 20;

@@ -638,7 +638,7 @@ int32_t CloudDiskDataHandler::GetCreatedRecords(vector<DKRecord> &records)
         createPredicates.OrderByDesc(FC::IS_DIRECTORY);
         createPredicates.OrderByAsc(FC::FILE_TIME_ADDED);
         createPredicates.OrderByAsc(FC::FILE_SIZE);
-        createPredicates.Limit(LIMIT_SIZE);
+        createPredicates.Limit(CREATE_LIMIT_SIZE);
         auto results = Query(createPredicates, FileColumn::DISK_CLOUD_SYNC_COLUMNS);
         if (results == nullptr) {
             LOGE("get nullptr created result");
