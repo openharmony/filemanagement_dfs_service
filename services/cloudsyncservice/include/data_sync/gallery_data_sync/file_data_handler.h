@@ -115,6 +115,7 @@ private:
 
     int32_t EraseLocalInfo(std::vector<DriveKit::DKRecord> &records);
     int32_t UpdateMediaFilePath(DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
+    int32_t UpdateRecordToDatabase(DriveKit::DKRecord &record, NativeRdb::ResultSet &local, int32_t &changeRows);
 
     /* data calculate*/
     int32_t CompensateFilePath(DriveKit::DKRecord &record);

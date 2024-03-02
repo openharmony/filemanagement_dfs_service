@@ -421,30 +421,16 @@ int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::Resu
         return E_OK;
     }
     ValuesBucket values;
-    ret = localConvertor_.Convert(record, values);
-    if (ret != E_OK) {
-        return ret;
-    }
     bool isFileContentChanged = false;
-    ret = IsFileContentChanged(record, local, isFileContentChanged);
-    if (ret != E_OK) {
-        return ret;
-    }
+    RETURN_ON_ERR(localConvertor_.Convert(record, values));
+    RETURN_ON_ERR(IsFileContentChanged(record, local, isFileContentChanged));
     if (FileIsLocal(local)) {
         string localPath = CloudFileUtils::GetLocalFilePath(record.GetRecordId(), bundleName_, userId_);
         if (CloudFileUtils::LocalWriteOpen(localPath)) {
             return SetRetry(record.GetRecordId());
         }
-        if (isFileContentChanged) {
-            LOGD("cloud file content changed, %s", record.GetRecordId().c_str());
-            ret = unlink(localPath.c_str());
-            if (ret != 0) {
-                LOGE("unlink local failed, errno %{public}d", errno);
-            }
-            values.PutInt(FC::POSITION, static_cast<int32_t>(POSITION_CLOUD));
-        }
     }
-    LOGD("cloud file changed, %s", record.GetRecordId().c_str());
+    LOGI("cloud file changed, %s", record.GetRecordId().c_str());
     ret = PullRecordConflict(record);
     if (ret != E_OK) {
         LOGE("MetaFile Conflict failed %{public}d", ret);
@@ -452,14 +438,23 @@ int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::Resu
     }
     /* update rdb */
     values.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
-    int32_t changedRows;
-    string whereClause = FC::CLOUD_ID + " = ?";
-    ret = Update(changedRows, values, whereClause, {record.GetRecordId()});
+    int32_t changedRows = 0;
+    string whereClause = FC::CLOUD_ID + " = ? AND " + FC::DIRTY_TYPE + " = ?";
+    vector<string> whereArgs = {record.GetRecordId(), to_string(static_cast<int32_t>(DirtyType::TYPE_SYNCED))};
+    ret = Update(changedRows, values, whereClause, whereArgs);
     if (ret != E_OK) {
         LOGE("rdb update failed, err=%{public}d", ret);
         return E_RDB;
     }
-    LOGD("update of record success, change %{pubilc}d row", changedRows);
+    LOGI("update of record success, change %{public}d row", changedRows);
+    if (FileIsLocal(local) && isFileContentChanged && changedRows != 0) {
+        LOGI("cloud file content changed, %s", record.GetRecordId().c_str());
+        ret = unlink(CloudFileUtils::GetLocalFilePath(record.GetRecordId(), bundleName_, userId_).c_str());
+        if (ret != 0) {
+            LOGE("unlink local failed, errno %{public}d", errno);
+        }
+        values.PutInt(FC::POSITION, static_cast<int32_t>(POSITION_CLOUD));
+    }
     return E_OK;
 }
 
