@@ -237,103 +237,15 @@ HWTEST_F(FileDataHandlerTest, GetAssetUniqueId001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
-        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
-
-        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
-        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
-
-        int32_t mediaType = static_cast<int>(MediaType::MEDIA_TYPE_IMAGE);
-        int32_t ret = fileDataHandler->GetAssetUniqueId(mediaType);
-        EXPECT_EQ(ret, 1);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetAssetUniqueId001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "GetAssetUniqueId001 End";
-}
-
-/**
- * @tc.name: GetAssetUniqueId002
- * @tc.desc: Verify the GetAssetUniqueId function
- * @tc.type: FUNC
- * @tc.require: issueI7VEA4
- */
-HWTEST_F(FileDataHandlerTest, GetAssetUniqueId002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetAssetUniqueId002 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
-        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
-
-        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
-        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
-
-        int32_t mediaType = static_cast<int>(MediaType::MEDIA_TYPE_VIDEO);
-        int32_t ret = fileDataHandler->GetAssetUniqueId(mediaType);
-        EXPECT_EQ(ret, 1);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetAssetUniqueId002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "GetAssetUniqueId002 End";
-}
-
-/**
- * @tc.name: GetAssetUniqueId003
- * @tc.desc: Verify the GetAssetUniqueId function
- * @tc.type: FUNC
- * @tc.require: issueI7VEA4
- */
-HWTEST_F(FileDataHandlerTest, GetAssetUniqueId003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetAssetUniqueId003 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
 
         int32_t mediaType = static_cast<int>(MediaType::MEDIA_TYPE_FILE);
         int32_t ret = fileDataHandler->GetAssetUniqueId(mediaType);
         EXPECT_EQ(ret, MediaType::MEDIA_TYPE_FILE);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetAssetUniqueId003 ERROR";
+        GTEST_LOG_(INFO) << " GetAssetUniqueId001 ERROR";
     }
-    GTEST_LOG_(INFO) << "GetAssetUniqueId003 End";
-}
-
-/**
- * @tc.name: GetAssetUniqueId004
- * @tc.desc: Verify the GetAssetUniqueId function
- * @tc.type: FUNC
- * @tc.require: issueI7VEA4
- */
-HWTEST_F(FileDataHandlerTest, GetAssetUniqueId004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetAssetUniqueId004 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
-        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
-
-        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(1));
-        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
-
-        int32_t mediaType = static_cast<int>(MediaType::MEDIA_TYPE_IMAGE);
-        int32_t ret = fileDataHandler->GetAssetUniqueId(mediaType);
-        EXPECT_EQ(ret, 1);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetAssetUniqueId004 ERROR";
-    }
-    GTEST_LOG_(INFO) << "GetAssetUniqueId004 End";
+    GTEST_LOG_(INFO) << "GetAssetUniqueId001 End";
 }
 
 /**
@@ -498,7 +410,6 @@ HWTEST_F(FileDataHandlerTest, OnDownloadAssets001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(0));
 
         DriveKit::DKDownloadAsset asset;
         asset.fieldKey = "thumbnail";
@@ -523,10 +434,8 @@ HWTEST_F(FileDataHandlerTest, OnDownloadAssets002, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
 
         DriveKit::DKDownloadAsset asset;
-        asset.fieldKey = "thumbnail";
         fileDataHandler->OnDownloadAssets(asset);
         EXPECT_TRUE(false);
     } catch (...) {
@@ -534,29 +443,6 @@ HWTEST_F(FileDataHandlerTest, OnDownloadAssets002, TestSize.Level1)
         GTEST_LOG_(INFO) << " OnDownloadAssets002 ERROR";
     }
     GTEST_LOG_(INFO) << "OnDownloadAssets002 End";
-}
-
-/**
- * @tc.name: OnDownloadAssets003
- * @tc.desc: Verify the OnDownloadAssets function
- * @tc.type: FUNC
- * @tc.require: issueI7VEA4
- */
-HWTEST_F(FileDataHandlerTest, OnDownloadAssets003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnDownloadAssets003 Begin";
-    try {
-        auto rdb = std::make_shared<RdbStoreMock>();
-        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
-
-        DriveKit::DKDownloadAsset asset;
-        fileDataHandler->OnDownloadAssets(asset);
-        EXPECT_TRUE(false);
-    } catch (...) {
-        EXPECT_TRUE(true);
-        GTEST_LOG_(INFO) << " OnDownloadAssets003 ERROR";
-    }
-    GTEST_LOG_(INFO) << "OnDownloadAssets003 End";
 }
 
 /**

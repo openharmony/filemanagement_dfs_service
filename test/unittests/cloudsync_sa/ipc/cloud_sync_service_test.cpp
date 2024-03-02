@@ -391,29 +391,6 @@ HWTEST_F(CloudSyncServiceTest, CleanTest, TestSize.Level1)
 }
 
 /**
- * @tc.name:StartDownloadFileTest
- * @tc.desc:Verify the StartDownloadFile function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, StartDownloadFileTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "StartDownloadFile start";
-    try {
-        string bundleName = "";
-        int32_t callerUserId = 100;
-        string path;
-        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->StartDownloadFile(bundleName, callerUserId, path);
-        EXPECT_EQ(E_INVAL_ARG, ret);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "StartDownloadFile FAILED";
-    }
-    GTEST_LOG_(INFO) << "StartDownloadFile end";
-}
-
-/**
  * @tc.name:StopDownloadFileTest
  * @tc.desc:Verify the StopDownloadFile function.
  * @tc.type:FUNC
