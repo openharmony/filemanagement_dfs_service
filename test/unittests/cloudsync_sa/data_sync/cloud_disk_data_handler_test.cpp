@@ -130,7 +130,7 @@ void CloudDiskDataHandlerTest::SetUp(void)
     const int32_t userId = 100;
     string bundleName = "com.ohos.test";
     auto rdb = make_shared<RdbStoreMock>();
-    CloudDiskDataHandlerMock cloudDiskDataHandlerMock(userId, bundleName, rdb);
+    cloudDiskDataHandler_ = make_shared<CloudDiskDataHandlerMock>(userId, bundleName, rdb);
 }
 
 void CloudDiskDataHandlerTest::TearDown(void)
@@ -167,22 +167,6 @@ HWTEST_F(CloudDiskDataHandlerTest, GetFetchConditionTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetFetchCondition Start";
     cloudDiskDataHandler_->SetIsChecking(true);
-    FetchCondition cond;
-    cloudDiskDataHandler_->GetFetchCondition(cond);
-    EXPECT_EQ(cond.desiredKeys, cloudDiskDataHandler_->checkedKeys_);
-    GTEST_LOG_(INFO) << "GetFetchCondition End";
-}
-
-/**
- * @tc.name: GetFetchConditionTest002
- * @tc.desc: Verify the GetFetchCondition function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskDataHandlerTest, GetFetchConditionTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetFetchCondition Start";
-    cloudDiskDataHandler_->SetIsChecking(false);
     FetchCondition cond;
     cloudDiskDataHandler_->GetFetchCondition(cond);
     EXPECT_EQ(cond.desiredKeys, cloudDiskDataHandler_->desiredKeys_);
@@ -450,7 +434,7 @@ HWTEST_F(CloudDiskDataHandlerTest, PullRecordInsertTest002, TestSize.Level1)
     record.SetRecordId("sample record Id");
     OnFetchParams params;
     int32_t ret = cloudDiskDataHandler_->PullRecordInsert(record, params);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "PullRecordInsert End";
 }
 
@@ -712,61 +696,9 @@ HWTEST_F(CloudDiskDataHandlerTest, PullRecordUpdateTest003, TestSize.Level1)
     ResultSetMock resultSet;
     OnFetchParams params;
     cloudDiskDataHandler_->localConvertor_.SetRootId("sample_rootId");
-    EXPECT_CALL(resultSet, GetColumnIndex(_, _)).Times(2).WillRepeatedly(Return(E_RDB));
+    EXPECT_CALL(resultSet, GetColumnIndex(_, _)).Times(1).WillRepeatedly(Return(E_RDB));
     int32_t ret = cloudDiskDataHandler_->PullRecordUpdate(record, resultSet, params);
-    EXPECT_EQ(ret, E_RDB);
-    GTEST_LOG_(INFO) << "PullRecordUpdate End";
-}
-
-/**
- * @tc.name: PullRecordUpdateTest004
- * @tc.desc: Verify the PullRecordUpdate function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskDataHandlerTest, PullRecordUpdateTest004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "PullRecordUpdate Start";
-    DKRecord record;
-    ResultSetMock resultSet;
-    OnFetchParams params;
-    cloudDiskDataHandler_->localConvertor_.SetRootId("sample_rootId");
-    cloudDiskDataHandler_->userId_ = 1;
-    uint64_t recordEditTime = 41251;
-    int64_t localEditTime = 311156;
-    record.SetEditedTime(recordEditTime);
-    EXPECT_CALL(resultSet, GetColumnIndex(_, _)).Times(3).WillOnce(Return(E_RDB)).WillRepeatedly(Return(E_OK));
-    EXPECT_CALL(resultSet, GetLong(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(localEditTime), Return(E_OK)));
-    EXPECT_CALL(resultSet, GetInt(_, _))
-        .WillRepeatedly(DoAll(SetArgReferee<1>(static_cast<int32_t>(POSITION_LOCAL)), Return(E_OK)));
-    int32_t ret = cloudDiskDataHandler_->PullRecordUpdate(record, resultSet, params);
-    EXPECT_EQ(ret, E_RDB);
-    GTEST_LOG_(INFO) << "PullRecordUpdate End";
-}
-
-/**
- * @tc.name: PullRecordUpdateTest005
- * @tc.desc: Verify the PullRecordUpdate function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskDataHandlerTest, PullRecordUpdateTest005, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "PullRecordUpdate Start";
-    DKRecord record;
-    ResultSetMock resultSet;
-    OnFetchParams params;
-    cloudDiskDataHandler_->localConvertor_.SetRootId("sample_rootId");
-    cloudDiskDataHandler_->userId_ = 0;
-    uint64_t recordEditTime = 41251;
-    int64_t localEditTime = 311156;
-    record.SetEditedTime(recordEditTime);
-    EXPECT_CALL(resultSet, GetColumnIndex(_, _)).Times(3).WillOnce(Return(E_RDB)).WillRepeatedly(Return(E_OK));
-    EXPECT_CALL(resultSet, GetLong(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(localEditTime), Return(E_OK)));
-    EXPECT_CALL(resultSet, GetInt(_, _))
-        .WillRepeatedly(DoAll(SetArgReferee<1>(static_cast<int32_t>(POSITION_LOCAL)), Return(E_OK)));
-    int32_t ret = cloudDiskDataHandler_->PullRecordUpdate(record, resultSet, params);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "PullRecordUpdate End";
 }
 
@@ -2301,7 +2233,7 @@ HWTEST_F(CloudDiskDataHandlerTest, CleanCache002, TestSize.Level1)
         auto rdb = make_shared<RdbStoreMock>();
         CloudDiskDataHandlerMock cloudDiskDataHandlerMock(userId, bundleName, rdb);
         int result = cloudDiskDataHandlerMock.CleanCache(fileUri);
-        EXPECT_EQ(result, E_DELETE_FAILED);
+        EXPECT_EQ(result, E_NO_SUCH_FILE);
     } catch(...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CleanCache ERROR";

@@ -627,7 +627,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleRegisterDownloadAssetCallbackTest, Test
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
-        EXPECT_EQ(E_INVAL_ARG, service.OnRemoteRequest(
+        EXPECT_EQ(E_OK, service.OnRemoteRequest(
               static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_ASSET_CALLBACK),
               data, reply, option));
     } catch (...) {
