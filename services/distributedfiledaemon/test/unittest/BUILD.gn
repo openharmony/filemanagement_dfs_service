@@ -272,6 +272,66 @@ ohos_unittest("kernel_talker_test") {
   defines = [ "private=public" ]
 }
 
+ohos_unittest("network_agent_template_test") {
+  module_out_path = module_output_path
+
+  sources = [
+    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
+    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
+    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
+    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
+    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
+    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
+    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+    "network/network_agent_template_test.cpp",
+  ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
+    "common_event_service:cesfwk_innerkits",
+    "dataclassification:data_transit_mgr",
+    "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [ "private=public" ]
+}
+
 ohos_unittest("session_pool_test") {
   module_out_path = module_output_path
 
@@ -358,7 +418,7 @@ ohos_unittest("softbus_agent_test") {
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "network/softbus_agent_test.cpp",
+    "network/softbus/softbus_agent_test.cpp",
   ]
 
   configs = [
@@ -421,7 +481,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "network/softbus_session_dispatcher_test.cpp",
+    "network/softbus/softbus_session_dispatcher_test.cpp",
   ]
 
   configs = [
@@ -481,7 +541,7 @@ ohos_unittest("softbus_session_test") {
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
-    "network/softbus_session_test.cpp",
+    "network/softbus/softbus_session_test.cpp",
   ]
 
   configs = [

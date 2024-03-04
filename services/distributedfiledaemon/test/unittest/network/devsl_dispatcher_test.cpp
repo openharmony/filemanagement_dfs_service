@@ -58,6 +58,50 @@ HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_Start_Stop_0100, TestSize.Leve
 }
 
 /**
+ * @tc.name: DevslDispatcherTest_MakeDevslQueryParams_0100
+ * @tc.desc: Verify the MakeDevslQueryParams function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_MakeDevslQueryParams_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DevslDispatcherTest_MakeDevslQueryParams_0100 start";
+    bool res = true;
+    string udid = "0123";
+    try {
+        DEVSLQueryParams queryParam = DevslDispatcher::MakeDevslQueryParams(udid);
+        EXPECT_TRUE(queryParam.udidLen == udid.size());
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DevslDispatcherTest_MakeDevslQueryParams_0100 end";
+}
+
+/**
+ * @tc.name: DevslDispatcherTest_DevslGottonCallbackAsync_0100
+ * @tc.desc: Verify the DevslGottonCallbackAsync function.
+ * @tc.type: FUNC
+ * @tc.require: SR000H0387
+ */
+HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_DevslGottonCallbackAsync_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DevslDispatcherTest_DevslGottonCallbackAsync_0100 start";
+    bool res = true;
+    string udid = "0";
+    uint32_t devsl = 1;
+    try {
+        DevslDispatcher::DevslGottonCallbackAsync(udid, devsl);
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DevslDispatcherTest_DevslGottonCallbackAsync_0100 end";
+}
+
+/**
  * @tc.name: DevslDispatcherTest_DevslGottonCallback_0100
  * @tc.desc: Verify the DevslGottonCallback function.
  * @tc.type: FUNC
