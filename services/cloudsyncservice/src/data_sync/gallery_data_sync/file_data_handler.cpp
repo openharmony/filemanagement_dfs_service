@@ -1346,42 +1346,55 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
         return E_INVAL_ARG;
     }
     if (FileIsLocal(local)) {
-        string filePath = GetFilePath(local);
-        string localPath = GetLocalPath(userId_, filePath);
-        if (CloudDisk::CloudFileUtils::LocalWriteOpen(localPath)) {
+        if (CloudDisk::CloudFileUtils::LocalWriteOpen(GetLocalPath(userId_, GetFilePath(local)))) {
             return SetRetry(record.GetRecordId());
         }
-        if (mtimeChanged) {
-            LOGI("cloud file DATA changed, %s", record.GetRecordId().c_str());
-            int ret = unlink(localPath.c_str());
-            if (ret != 0) {
-                LOGE("unlink local failed, errno %{public}d", errno);
-            }
-            DentryInsert(userId_, record);
-        }
     }
-    LOGI("cloud file META changed, %s", record.GetRecordId().c_str());
+    int32_t changedRows = 0;
+    RETURN_ON_ERR(UpdateRecordToDatabase(record, local, changedRows));
+    if (FileIsLocal(local) && mtimeChanged && changedRows != 0) {
+        LOGI("cloud file DATA changed, %s", record.GetRecordId().c_str());
+        int ret = unlink(GetLocalPath(userId_, GetFilePath(local)).c_str());
+        if (ret != 0) {
+            LOGE("unlink local failed, errno %{public}d", errno);
+        }
+        DentryInsert(userId_, record);
+    }
+    if (mtimeChanged && (ThumbsAtLocal(record) || (AddCloudThumbs(record) != E_OK)) && changedRows != 0) {
+        AppendToDownload(record, "lcd", params.assetsToDownload);
+        AppendToDownload(record, "thumbnail", params.assetsToDownload);
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::UpdateRecordToDatabase(DriveKit::DKRecord &record,
+                                                NativeRdb::ResultSet &local,
+                                                int32_t &changeRows)
+{
+    int64_t localMtime = 0;
     ValuesBucket values;
     createConvertor_.RecordToValueBucket(record, values);
-    int ret = UpdateMediaFilePath(record, local);
+    int32_t ret = UpdateMediaFilePath(record, local);
     if (ret != E_OK) {
         LOGE("update media file path fail, ret = %{public}d", ret);
         values.Delete(PC::MEDIA_FILE_PATH);
     }
+    ret = DataConvertor::GetLong(PhotoColumn::MEDIA_DATE_MODIFIED, localMtime, local);
+    if (ret != E_OK) {
+        return ret;
+    }
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     values.PutInt(PhotoMap::DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
     values.PutInt(PC::PHOTO_CLEAN_FLAG, static_cast<int32_t>(NOT_NEED_CLEAN));
-    int32_t changedRows;
-    string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
-    ret = Update(changedRows, values, whereClause, {record.GetRecordId()});
+    string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ? AND " + PC::PHOTO_DIRTY + " = ?";
+    vector<std::string> whereArgs = {record.GetRecordId(),
+        to_string(static_cast<int32_t>(DirtyType::TYPE_SYNCED))};
+    ret = Update(changeRows, values, whereClause, whereArgs);
     if (ret != E_OK) {
+        LOGE("RDB error, update fail ret is %{public}d", ret);
         return E_RDB;
     }
-    if (mtimeChanged && (ThumbsAtLocal(record) || (AddCloudThumbs(record) != E_OK))) {
-        AppendToDownload(record, "lcd", params.assetsToDownload);
-        AppendToDownload(record, "thumbnail", params.assetsToDownload);
-    }
-    LOGI("update of record success");
+    LOGI("update of record success, change %{public}d row", changeRows);
     return E_OK;
 }
 

@@ -1178,16 +1178,18 @@ void DataSyncer::BeginClean()
 void DataSyncer::CompleteClean()
 {
     DeleteSubscription();
-    DataSyncerRdbStore::GetInstance().UpdateSyncState(userId_, bundleName_, SyncState::CLEAN_SUCCEED);
     TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::CLEAN_TASK);
-    auto nextAction = syncStateManager_.UpdateSyncState(SyncState::CLEAN_SUCCEED);
-    if (nextAction != Action::STOP) {
-         /* Retrigger sync, clear errorcode */
-        if (!CloudStatus::IsCloudStatusOkay(bundleName_, userId_)) {
-            LOGE("cloud status is not OK");
-            return;
+    if (syncStateManager_.GetSyncState() != SyncState::DISABLE_CLOUD) {
+        DataSyncerRdbStore::GetInstance().UpdateSyncState(userId_, bundleName_, SyncState::CLEAN_SUCCEED);
+        auto nextAction = syncStateManager_.UpdateSyncState(SyncState::CLEAN_SUCCEED);
+        if (nextAction != Action::STOP) {
+            /* Retrigger sync, clear errorcode */
+            if (!CloudStatus::IsCloudStatusOkay(bundleName_, userId_)) {
+                LOGE("cloud status is not OK");
+                return;
+            }
+            StartSync(false, SyncTriggerType::PENDING_TRIGGER);
         }
-        StartSync(false, SyncTriggerType::PENDING_TRIGGER);
     }
     *stopFlag_ = false;
 }
