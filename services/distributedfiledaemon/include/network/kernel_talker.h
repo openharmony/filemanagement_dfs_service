@@ -76,7 +76,6 @@ private:
         }
 
         int file = open(realPath, O_RDWR);
-        free(realPath);
         if (file < 0) {
             LOGE("Open node file error. %{public}d", errno);
             return;
