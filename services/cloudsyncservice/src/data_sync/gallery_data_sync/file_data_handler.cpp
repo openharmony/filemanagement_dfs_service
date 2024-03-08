@@ -3683,17 +3683,17 @@ int32_t FileDataHandler::FileAgingDelete(const int64_t agingTime, const int64_t 
         string path;
         int64_t size;
         string cloudId;
-        int ret = DataConvertor::GetString(MEDIA_DATA_DB_FILE_PATH, path, *results);
+        int ret = DataConvertor::GetString(PhotoColumn::MEDIA_FILE_PATH, path, *results);
         if (ret != E_OK) {
             LOGE("get path error");
             continue;
         }
-        ret = DataConvertor::GetString(MEDIA_DATA_DB_CLOUD_ID, cloudId, *results);
+        ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, *results);
         if (ret != E_OK) {
             LOGE("get cloudId error");
             continue;
         }
-        ret = DataConvertor::GetLong(MEDIA_DATA_DB_SIZE, size, *results);
+        ret = DataConvertor::GetLong(PhotoColumn::MEDIA_SIZE, size, *results);
         if (ret != E_OK) {
             LOGE("get size error");
             continue;
