@@ -57,8 +57,7 @@
           "samgr",
           "ability_runtime",
           "os_account",
-          "power_manager",
-          "app_file_service"
+          "power_manager"
         ],
         "third_party": [
           "e2fsprogs",
