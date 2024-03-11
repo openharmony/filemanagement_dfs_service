@@ -30,17 +30,17 @@ namespace OHOS {
 #define LOG_TAG "distributedfile"
 #endif
 
-static constexpr HiviewDFX::HiLogLabel APP_LABEL = {LOG_CORE, LOG_DOMAIN, LOG_TAG};
-
 std::string GetFileNameFromFullPath(const char *str);
-#define PRINT_LOG(Level, fmt, ...)                                                 \
-    HiviewDFX::HiLog::Level(APP_LABEL, "[%{public}s:%{public}d->%{public}s] " fmt, \
-                            GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
-#define LOGD(fmt, ...) PRINT_LOG(Debug, fmt, ##__VA_ARGS__)
-#define LOGI(fmt, ...) PRINT_LOG(Info, fmt, ##__VA_ARGS__)
-#define LOGW(fmt, ...) PRINT_LOG(Warn, fmt, ##__VA_ARGS__)
-#define LOGE(fmt, ...) PRINT_LOG(Error, fmt, ##__VA_ARGS__)
-#define LOGF(fmt, ...) PRINT_LOG(Fatal, fmt, ##__VA_ARGS__)
+#define LOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, "[%{public}s:%{public}d->%{public}s] " fmt, \
+                            GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define LOGI(fmt, ...) HILOG_INFO(LOG_CORE, "[%{public}s:%{public}d->%{public}s] " fmt, \
+                            GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__,  ##__VA_ARGS__)
+#define LOGW(fmt, ...) HILOG_WARN(LOG_CORE, "[%{public}s:%{public}d->%{public}s] " fmt, \
+                            GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define LOGE(fmt, ...) HILOG_ERROR(LOG_CORE, "[%{public}s:%{public}d->%{public}s] " fmt, \
+                            GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__,  ##__VA_ARGS__)
+#define LOGF(fmt, ...) HILOG_FATAL(LOG_CORE, "[%{public}s:%{public}d->%{public}s] " fmt, \
+                            GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__,  ##__VA_ARGS__)
 } // namespace OHOS
 #endif // UTILS_LOG_H
