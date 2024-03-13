@@ -51,6 +51,11 @@ public:
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
         const std::string &newParentCloudId, const std::string &newFileName);
     int32_t Unlink(const std::string &parentCloudId, const std::string &fileName, std::string &unlinkCloudId);
+    int32_t RecycleSetXattr(const std::string &cloudId, const std::string &value);
+    int32_t LocationSetXattr(const std::string &cloudId, const std::string &value);
+    int32_t FavoriteSetXattr(const std::string &cloudId, const std::string &value);
+    int32_t LocationGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
+    int32_t FavoriteGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
 
 private:
     void Stop();

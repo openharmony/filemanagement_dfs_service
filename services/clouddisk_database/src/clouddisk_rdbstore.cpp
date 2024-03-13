@@ -35,7 +35,15 @@ using namespace OHOS::NativeRdb;
 using namespace CloudSync;
 using namespace OHOS::Media;
 
+enum XATTR_CODE {
+    ERROR_CODE = -1,
+    CLOUD_LOCATION = 1,
+    CLOUD_RECYCLE,
+    IS_FAVORITE
+};
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
+static const uint32_t SET_STATE = 1;
+static const uint32_t CANCEL_STATE = 0;
 
 static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
 {
@@ -329,7 +337,96 @@ int32_t CloudDiskRdbStore::Write(const std::string &cloudId)
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value)
+int32_t CloudDiskRdbStore::LocationSetXattr(const std::string &cloudId, const std::string &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    int32_t val = -1;
+    istringstream transfer(value);
+    transfer >> val;
+    if (val != LOCAL && val != CLOUD && val != LOCAL_AND_CLOUD) {
+        LOGE("setxattr unknown value");
+        return E_INVAL_ARG;
+    }
+    ValuesBucket setXAttr;
+    setXAttr.PutInt(FileColumn::POSITION, val);
+    int32_t changedRows = -1;
+    vector<ValueObject> bindArgs;
+    bindArgs.emplace_back(cloudId);
+    int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setXAttr,
+        FileColumn::CLOUD_ID + " = ?", bindArgs);
+    if (ret != E_OK) {
+        LOGE("set xAttr location fail, ret %{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &cloudId, const std::string &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    int32_t val = std::stoi(value);
+    LOGE("recycleSetXattr, val %{public}d", val);
+    ValuesBucket setXAttr;
+    if (val == 0) {
+        setXAttr.PutLong(FileColumn::FILE_TIME_RECYCLED, CANCEL_STATE);
+        setXAttr.PutInt(FileColumn::DIRECTLY_RECYCLED, CANCEL_STATE);
+    } else if (val == 1) {
+        setXAttr.PutLong(FileColumn::FILE_TIME_RECYCLED, UTCTimeMilliSeconds());
+        setXAttr.PutInt(FileColumn::DIRECTLY_RECYCLED, SET_STATE);
+    } else {
+        return E_RDB;
+    }
+    int32_t changedRows = -1;
+    vector<ValueObject> bindArgs;
+    bindArgs.emplace_back(cloudId);
+    int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setXAttr,
+        FileColumn::CLOUD_ID + " = ?", bindArgs);
+    if (ret != E_OK) {
+        LOGE("set xAttr location fail, ret %{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::FavoriteSetXattr(const std::string &cloudId, const std::string &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    int32_t val = std::stoi(value);
+    LOGE("favoriteSetXattr, val %{public}d", val);
+    ValuesBucket setXAttr;
+    if (val == 0) {
+        setXAttr.PutInt(FileColumn::IS_FAVORITE, CANCEL_STATE);
+    } else if (val == 1) {
+        setXAttr.PutInt(FileColumn::IS_FAVORITE, SET_STATE);
+    } else {
+        return E_RDB;
+    }
+    int32_t changedRows = -1;
+    vector<ValueObject> bindArgs;
+    bindArgs.emplace_back(cloudId);
+    int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setXAttr,
+        FileColumn::CLOUD_ID + " = ?", bindArgs);
+    if (ret != E_OK) {
+        LOGE("set xAttr location fail, ret %{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t CheckXattr(const std::string &key)
+{
+    if (key == CLOUD_FILE_LOCATION) {
+        return CLOUD_LOCATION;
+    } else if (key == CLOUD_CLOUD_RECYCLE_XATTR) {
+        return CLOUD_RECYCLE;
+    } else if (key == IS_FAVORITE_XATTR) {
+        return IS_FAVORITE;
+    } else {
+        return ERROR_CODE;
+    }
+}
+
+int32_t CloudDiskRdbStore::LocationGetXattr(const std::string &cloudId, const std::string &key, std::string &value)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     if (cloudId.empty() || cloudId == "rootId" || key != CLOUD_FILE_LOCATION) {
@@ -353,32 +450,68 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value)
+int32_t CloudDiskRdbStore::FavoriteGetXattr(const std::string &cloudId, const std::string &key, std::string &value)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || cloudId == "rootId" || key != CLOUD_FILE_LOCATION) {
-        LOGE("setxattr parameter is invalid");
+    if (cloudId.empty() || cloudId == "rootId" || key != IS_FAVORITE_XATTR) {
+        LOGE("getxattr parameter is invalid");
         return E_INVAL_ARG;
     }
-    int32_t val = -1;
-    istringstream transfer(value);
-    transfer >> val;
-    if (val != LOCAL && val != CLOUD && val != LOCAL_AND_CLOUD) {
-        LOGE("setxattr unknown value");
-        return E_INVAL_ARG;
-    }
-    ValuesBucket setXAttr;
-    setXAttr.PutInt(FileColumn::POSITION, val);
-    int32_t changedRows = -1;
-    vector<ValueObject> bindArgs;
-    bindArgs.emplace_back(cloudId);
-    int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setXAttr,
-        FileColumn::CLOUD_ID + " = ?", bindArgs);
-    if (ret != E_OK) {
-        LOGE("set xAttr location fail, ret %{public}d", ret);
+    AbsRdbPredicates getXAttrPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    getXAttrPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(getXAttrPredicates, { FileColumn::IS_FAVORITE });
+    if (resultSet == nullptr) {
+        LOGE("get nullptr getxattr result");
         return E_RDB;
     }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("getxattr result set go to next row failed");
+        return E_RDB;
+    }
+    int32_t isFavorite;
+    CloudDiskRdbUtils::GetInt(FileColumn::IS_FAVORITE, isFavorite, resultSet);
+    value = to_string(isFavorite);
     return E_OK;
+}
+
+int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value)
+{
+    int32_t num = CheckXattr(key);
+    switch (num) {
+        case CLOUD_LOCATION:
+            return LocationGetXattr(cloudId, key, value);
+            break;
+        case IS_FAVORITE:
+            return FavoriteGetXattr(cloudId, key, value);
+            break;
+    }
+    if (cloudId.empty() || cloudId == "rootId") {
+        LOGE("getxattr parameter is invalid");
+        return E_INVAL_ARG;
+    } else {
+        return E_OK;
+    }
+}
+
+int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value)
+{
+    int32_t num = CheckXattr(key);
+    switch (num) {
+        case CLOUD_LOCATION:
+            return LocationSetXattr(cloudId, value);
+            break;
+        case CLOUD_RECYCLE:
+            return RecycleSetXattr(cloudId, value);
+            break;
+        case IS_FAVORITE:
+            return FavoriteSetXattr(cloudId, value);
+    }
+    if (cloudId.empty() || cloudId == "rootId") {
+        LOGE("setxattr parameter is invalid");
+        return E_INVAL_ARG;
+    } else {
+        return E_OK;
+    }
 }
 
 static void FileRename(ValuesBucket &values, const int32_t &position, const std::string &newFileName)
@@ -669,6 +802,15 @@ static void VersionFixCreateAndLocalTrigger(RdbStore &store)
     }
 }
 
+static void VersionAddFileStatusAndErrorCode(RdbStore &store)
+{
+    const string addIsFavorite = FileColumn::ADD_IS_FAVORITE;
+    int32_t ret = store.ExecuteSql(addIsFavorite);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add is_favorite fail, err %{public}d", ret);
+    }
+}
+
 int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
@@ -680,6 +822,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     }
     if (oldVersion < VERSION_FIX_CREATE_AND_LOCAL_TRIGGER) {
         VersionFixCreateAndLocalTrigger(store);
+    }
+    if (oldVersion < VERSION_ADD_STATUS_ERROR_FAVORITE) {
+        VersionAddFileStatusAndErrorCode(store);
     }
     return NativeRdb::E_OK;
 }

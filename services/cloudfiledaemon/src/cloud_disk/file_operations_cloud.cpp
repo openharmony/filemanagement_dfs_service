@@ -35,6 +35,13 @@ namespace FileManagement {
 namespace CloudDisk {
 using namespace std;
 using namespace DriveKit;
+enum XATTR_CODE {
+    ERROR_CODE = -1,
+    HMDFS_PERMISSION,
+    CLOUD_LOCATION,
+    CLOUD_RECYCLE,
+    IS_FAVORITE
+};
 namespace {
     static const uint32_t STAT_NLINK_REG = 1;
     static const uint32_t STAT_NLINK_DIR = 2;
@@ -492,27 +499,106 @@ void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
     (void)fuse_reply_buf(req, buf.c_str(), size - remain);
 }
 
+int32_t CheckXattr(const char *name)
+{
+    LOGD("start CheckXattr name is:%{public}s", name);
+    if (CloudFileUtils::CheckIsHmdfsPermission(name)) {
+        return HMDFS_PERMISSION;
+    } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
+        return CLOUD_LOCATION;
+    } else if (CloudFileUtils::CheckIsCloudRecycle(name)) {
+        return CLOUD_RECYCLE;
+    } else if (CloudFileUtils::CheckIsFavorite(name)) {
+        return IS_FAVORITE;
+    } else {
+    LOGD("no definition Xattr name:%{public}s", name);
+        return ERROR_CODE;
+    }
+}
+
+void HandleCloudLocation(fuse_req_t req, fuse_ino_t ino, const char *name,
+                         const char *value)
+{
+    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, CLOUD_FILE_LOCATION, value);
+    if (err != 0) {
+        LOGE("set cloud id fail %{public}d", err);
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    fuse_reply_err(req, 0);
+}
+
+void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
+                        const char *value)
+{
+    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, CLOUD_CLOUD_RECYCLE_XATTR, value);
+    if (err != 0) {
+        LOGE("set cloud id fail %{public}d", err);
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    fuse_reply_err(req, 0);
+}
+
+void HandleFavorite(fuse_req_t req, fuse_ino_t ino, const char *name,
+                    const char *value)
+{
+    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, IS_FAVORITE_XATTR, value);
+    if (err != 0) {
+        LOGE("set cloud id fail %{public}d", err);
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    fuse_reply_err(req, 0);
+}
+
 void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    const char *value, size_t size, int flags)
 {
     LOGD("Setxattr begin name:%{public}s", name);
-    if (CloudFileUtils::CheckIsHmdfsPermission(name)) {
-        fuse_reply_err(req, 0);
-    } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
-        auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-        DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-        auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-        int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, CLOUD_FILE_LOCATION, value);
-        if (err != 0) {
-            LOGE("set cloud id fail %{public}d", err);
+    int32_t checknum = CheckXattr(name);
+    switch (checknum) {
+        case HMDFS_PERMISSION:
+            fuse_reply_err(req, 0);
+            break;
+        case CLOUD_LOCATION:
+            HandleCloudLocation(req, ino, name, value);
+            break;
+        case CLOUD_RECYCLE:
+            HandleCloudRecycle(req, ino, name, value);
+            break;
+        case IS_FAVORITE:
+            HandleFavorite(req, ino, name, value);
+        default:
             fuse_reply_err(req, EINVAL);
-            return;
-        }
-        fuse_reply_err(req, 0);
-    } else {
-        fuse_reply_err(req, EINVAL);
+            break;
     }
+}
+
+string GetIsFavorite(fuse_req_t req, struct CloudDiskInode *inoPtr)
+{
+    string favorite;
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    int res = rdbStore->GetXAttr(inoPtr->cloudId, IS_FAVORITE_XATTR, favorite);
+    if (res != 0) {
+        LOGE("local file get location fail");
+        return "";
+    }
+    return favorite;
 }
 
 void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
@@ -526,6 +612,8 @@ void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
         buf = inoPtr->cloudId;
     } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
         buf = inoPtr->location;
+    } else if (CloudFileUtils::CheckIsFavorite(name)) {
+        buf = GetIsFavorite(req, inoPtr);
     } else {
         fuse_reply_err(req, EINVAL);
         return;
