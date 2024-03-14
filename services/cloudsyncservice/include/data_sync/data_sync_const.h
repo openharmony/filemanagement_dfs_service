@@ -28,6 +28,11 @@ enum CleanAction {
     CLEAR_DATA
 };
 
+enum AlbumSource {
+    ALBUM_FROM_LOCAL = 1,
+    ALBUM_FROM_CLOUD = 2
+};
+
 enum class SyncTriggerType : int32_t {
     APP_TRIGGER,
     CLOUD_TRIGGER,
