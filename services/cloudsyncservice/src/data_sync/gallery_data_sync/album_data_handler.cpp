@@ -387,7 +387,7 @@ int32_t AlbumDataHandler::Clean(const int action)
         return ret;
     }
 
-    string albumCloudSql = " FROM " + PAC::TABLE + " WHERE " + PAC::ALBUM_IMAGE_COUNT + " = 0 AND " + PAC::ALBUM_IS_LOCAL + " = " + ALBUM_FROM_CLOUD;
+    string albumCloudSql = " FROM " + PAC::TABLE + " WHERE " + PAC::ALBUM_IMAGE_COUNT + " = 0 AND " + PAC::ALBUM_IS_LOCAL + " = " + to_string(ALBUM_FROM_CLOUD);
 
     mapSql = "DELETE FROM " + PM::TABLE + " WHERE " + PM::ALBUM_ID + " = ( SELECT " + PAC::ALBUM_ID + albumCloudSql + ")";
     ret = ExecuteSql(mapSql);
