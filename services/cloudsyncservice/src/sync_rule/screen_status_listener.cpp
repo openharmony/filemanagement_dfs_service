@@ -25,7 +25,7 @@ namespace FileManagement {
 namespace CloudSync {
 ScreenStatusSubscriber::ScreenStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
                                                std::shared_ptr<ScreenStatusListener> listener)
-    : EventFwk::CommonEventSubscriber(subscribeInfo)
+    : EventFwk::CommonEventSubscriber(subscribeInfo), listener_(listener)
 {
 }
 void ScreenStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
