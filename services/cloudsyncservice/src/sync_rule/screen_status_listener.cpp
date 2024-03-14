@@ -23,8 +23,9 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-ScreenStatusSubscriber::ScreenStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
-    : EventFwk::CommonEventSubscriber(subscribeInfo)
+ScreenStatusSubscriber::ScreenStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
+                                               std::shared_ptr<ScreenStatusListener> listener)
+    : EventFwk::CommonEventSubscriber(subscribeInfo), listener_(listener)
 {
 }
 void ScreenStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
@@ -36,12 +37,23 @@ void ScreenStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eve
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF) {
         LOGI("Screen Off!");
         ScreenStatus::SetScreenState(ScreenStatus::ScreenState::SCREEN_OFF);
+        listener_->ScreenOff();
     }
+}
+
+ScreenStatusListener::ScreenStatusListener(std::shared_ptr<DataSyncManager> dataSyncManager)
+{
+    dataSyncManager_ = dataSyncManager;
 }
 
 ScreenStatusListener::~ScreenStatusListener()
 {
     Stop();
+}
+
+void ScreenStatusListener::ScreenOff()
+{
+    dataSyncManager_->DownloadThumb();
 }
 
 void ScreenStatusListener::Start()
@@ -51,7 +63,7 @@ void ScreenStatusListener::Start()
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF);
     EventFwk::CommonEventSubscribeInfo info(matchingSkills);
-    commonEventSubscriber_ = std::make_shared<ScreenStatusSubscriber>(info);
+    commonEventSubscriber_ = std::make_shared<ScreenStatusSubscriber>(info, shared_from_this());
     auto subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(commonEventSubscriber_);
     LOGI("Subscriber end, SubscribeResult = %{public}d", subRet);
 }

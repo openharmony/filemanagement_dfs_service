@@ -50,7 +50,7 @@ CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbili
 {
     dataSyncManager_ = make_shared<DataSyncManager>();
     batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
-    screenStatusListener_ = make_shared<ScreenStatusListener>();
+    screenStatusListener_ = make_shared<ScreenStatusListener>(dataSyncManager_);
 }
 
 void CloudSyncService::PublishSA()
