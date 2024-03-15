@@ -17,26 +17,32 @@
 #define OHOS_FILEMGMT_SCREEN_STATUS_LISTENER_H
 
 #include "common_event_subscriber.h"
+#include "data_sync_manager.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-class ScreenStatusListener {
+class ScreenStatusListener : public std::enable_shared_from_this<ScreenStatusListener> {
 public:
-    explicit ScreenStatusListener() = default;
+    explicit ScreenStatusListener(std::shared_ptr<DataSyncManager> dataSyncManager);
     ~ScreenStatusListener();
     void Start();
     void Stop();
+    void ScreenOff();
 
 private:
+    std::shared_ptr<DataSyncManager> dataSyncManager_;
     std::shared_ptr<EventFwk::CommonEventSubscriber> commonEventSubscriber_ = nullptr;
 };
 
 class ScreenStatusSubscriber : public EventFwk::CommonEventSubscriber {
 public:
-    ScreenStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
+    ScreenStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
+                           std::shared_ptr<ScreenStatusListener> listener);
     ~ScreenStatusSubscriber() override {}
     void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override;
+private:
+    std::shared_ptr<ScreenStatusListener> listener_;
 };
 } // namespace CloudSync
 } // namespace FileManagement
