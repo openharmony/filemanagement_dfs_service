@@ -201,6 +201,7 @@ int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
     }
     values.PutInt(PAC::ALBUM_DIRTY, static_cast<int32_t>(Media::DirtyType::TYPE_SYNCED));
     values.PutString(PAC::ALBUM_CLOUD_ID, record.GetRecordId());
+    values.PutInt(PAC::ALBUM_IS_LOCAL, ALBUM_FROM_CLOUD);
     /* update if a album with the same name exists? */
     int64_t rowId;
     ret = Insert(rowId, values);
@@ -383,6 +384,24 @@ int32_t AlbumDataHandler::Clean(const int action)
     ret = ExecuteSql(mapSql);
     if (ret != NativeRdb::E_OK) {
         LOGE("delete album maps err %{public}d", ret);
+        return ret;
+    }
+
+    string albumCloudSql = " FROM " + PAC::TABLE + " WHERE " + PAC::ALBUM_IMAGE_COUNT + " = 0 AND " +
+        PAC::ALBUM_IS_LOCAL + " = " + to_string(ALBUM_FROM_CLOUD);
+
+    mapSql = "DELETE FROM " + PM::TABLE + " WHERE " + PM::ALBUM_ID + " = ( SELECT " +
+        PAC::ALBUM_ID + albumCloudSql + ")";
+    ret = ExecuteSql(mapSql);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("delete album maps err %{public}d", ret);
+        return ret;
+    }
+
+    mapSql = "DELETE" + albumCloudSql;
+    ret = ExecuteSql(mapSql);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("delete album from cloud err %{public}d", ret);
         return ret;
     }
     /* notify */
