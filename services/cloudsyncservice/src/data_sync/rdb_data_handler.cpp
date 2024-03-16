@@ -24,6 +24,23 @@ namespace CloudSync {
 using namespace std;
 using namespace NativeRdb;
 
+static int32_t Retry(std::function<int32_t()> func)
+{
+    const uint32_t TRY_TIMES = 5;
+    const uint32_t SLEEP_TIME = 1;
+    int32_t ret = E_OK;
+    for (uint32_t i = 0; i < TRY_TIMES; i++) {
+        ret = func();
+        if (ret == E_OK) {
+            return ret;
+        }
+        sleep(SLEEP_TIME);
+        LOGW("retry time is %{public}d", i);
+    }
+    LOGE("func execute fail, try too many times");
+    return ret;
+}
+
 int32_t RdbDataHandler::BatchInsert(int64_t &outRowId, const string &table,
                                     const vector<ValuesBucket> &initialBatchValues)
 {
@@ -42,13 +59,13 @@ int32_t RdbDataHandler::BatchInsert(int64_t &outRowId, const string &table,
             ret = rdb_->BatchInsert(outRowId, table, initialBatchValues);
         }
         if (ret != 0) {
-            LOGW("betch insert fail try next time, retry time is tryCount %{public}d", tryCount);
+            LOGW("batch insert fail try next time, retry time is tryCount %{public}d", tryCount);
             tryCount++;
         } else {
             return ret;
         }
     }
-    LOGE("betch insert fail, try too many times");
+    LOGE("batch insert fail, try too many times");
     return ret;
 }
 
@@ -66,9 +83,10 @@ int32_t RdbDataHandler::BatchDetete(const string &whichTable,
         }
         ss <<" ? ";
     }
-    string SQL = "DELETE FROM " + whichTable + " WHERE " + whichColumn + " IN (" + ss.str() + ")";
+    string sql = "DELETE FROM " + whichTable + " WHERE " + whichColumn + " IN (" + ss.str() + ")";
     std::lock_guard<std::mutex> lock(rdbMutex_);
-    return rdb_->ExecuteSql(SQL, bindArgs);
+    std::function<int32_t()> func = [this, sql, &bindArgs] { return rdb_->ExecuteSql(sql, bindArgs); };
+    return Retry(func);
 }
 
 int32_t RdbDataHandler::BatchUpdate(const string &sql,
@@ -130,20 +148,29 @@ int32_t RdbDataHandler::Insert(int64_t &outRowId, const ValuesBucket &initiavalu
 {
     RETURN_ON_ERR(IsStop());
     std::lock_guard<std::mutex> lock(rdbMutex_);
-    return rdb_->Insert(outRowId, tableName_, initiavalues);
+    std::function<int32_t()> func = [this, &outRowId, &initiavalues] {
+        return rdb_->Insert(outRowId, this->tableName_, initiavalues);
+    };
+    return Retry(func);
 }
 
 int32_t RdbDataHandler::Update(int &changedRows, const ValuesBucket &values,
     const string &whereClause, const vector<string> &whereArgs)
 {
     std::lock_guard<std::mutex> lock(rdbMutex_);
-    return rdb_->Update(changedRows, tableName_, values, whereClause, whereArgs);
+    std::function<int32_t()> func = [this, &changedRows, &values, &whereClause, &whereArgs] {
+        return rdb_->Update(changedRows, this->tableName_, values, whereClause, whereArgs);
+    };
+    return Retry(func);
 }
 
 int32_t RdbDataHandler::Delete(int &deletedRows, const string &whereClause, const vector<string> &whereArgs)
 {
     std::lock_guard<std::mutex> lock(rdbMutex_);
-    return rdb_->Delete(deletedRows, tableName_, whereClause, whereArgs);
+    std::function<int32_t()> func = [this, &deletedRows, &whereClause, &whereArgs] {
+        return rdb_->Delete(deletedRows, this->tableName_, whereClause, whereArgs);
+    };
+    return Retry(func);
 }
 
 shared_ptr<NativeRdb::ResultSet> RdbDataHandler::Query(
@@ -155,28 +182,34 @@ shared_ptr<NativeRdb::ResultSet> RdbDataHandler::Query(
 int32_t RdbDataHandler::Insert(int64_t &outRowId, const std::string &tableName, const ValuesBucket &initiavalues)
 {
     RETURN_ON_ERR(IsStop());
-    return rdb_->Insert(outRowId, tableName, initiavalues);
+    std::function<int32_t()> func = [this, &outRowId, &tableName, &initiavalues] {
+        return rdb_->Insert(outRowId, tableName, initiavalues);
+    };
+    return Retry(func);
 }
 
 int32_t RdbDataHandler::Update(int &changedRows, const std::string &tableName, const ValuesBucket &values,
     const string &whereClause, const vector<string> &whereArgs)
 {
-    return rdb_->Update(changedRows, tableName, values, whereClause, whereArgs);
+    std::function<int32_t()> func = [this, &changedRows, &tableName, &values, &whereClause, &whereArgs] {
+        return rdb_->Update(changedRows, tableName, values, whereClause, whereArgs);
+    };
+    return Retry(func);
 }
 
 int32_t RdbDataHandler::Delete(int &deletedRows, const std::string &tableName,
     const string &whereClause, const vector<string> &whereArgs)
 {
-    return rdb_->Delete(deletedRows, tableName, whereClause, whereArgs);
+    std::function<int32_t()> func = [this, &deletedRows, &tableName, &whereClause, &whereArgs] {
+        return rdb_->Delete(deletedRows, tableName, whereClause, whereArgs);
+    };
+    return Retry(func);
 }
 
 int32_t RdbDataHandler::ExecuteSql(const std::string &sql, const std::vector<NativeRdb::ValueObject> &bindArgs)
 {
-    int32_t ret = rdb_->ExecuteSql(sql, bindArgs);
-    if (ret != E_OK) {
-        LOGE("err sql is %{public}s", sql.c_str());
-    }
-    return ret;
+    std::function<int32_t()> func = [this, &sql, &bindArgs] { return rdb_->ExecuteSql(sql, bindArgs); };
+    return Retry(func);
 }
 
 int32_t RdbDataHandler::IsStop()
