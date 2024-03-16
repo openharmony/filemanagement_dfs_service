@@ -67,6 +67,7 @@ static const unsigned int READ_TIMEOUT_MS = 20000;
 static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
 static const unsigned int TWO_MB = 2 * 1024 * 1024;
 static const unsigned int KEY_FRAME_SIZE = 8192;
+static const unsigned int MAX_IDLE_THREADS = 10;
 
 struct CloudInode {
     shared_ptr<MetaBase> mBase{nullptr};
@@ -649,7 +650,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     se->mountpoint = strdup(path.c_str());
 
     fuse_daemonize(true);
-    config.max_idle_threads = 1;
+    config.max_idle_threads = MAX_IDLE_THREADS;
     ret = fuse_session_loop_mt(se, &config);
 
     fuse_session_unmount(se);
