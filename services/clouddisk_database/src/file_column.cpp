@@ -38,6 +38,7 @@ const std::string FileColumn::DIRTY_TYPE = "dirty_type";
 const std::string FileColumn::MIME_TYPE = "mimetype";
 const std::string FileColumn::FILE_TYPE = "file_type";
 const std::string FileColumn::FILE_CATEGORY = "file_category";
+const std::string FileColumn::IS_FAVORITE = "isFavorite";
 
 const std::string FileColumn::FILES_TABLE = "CloudDisk";
 const std::string FileColumn::PARENT_CLOUD_ID_INDEX = "parentCloudId_index";
@@ -63,11 +64,15 @@ const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " 
     DIRTY_TYPE + " INT DEFAULT 1, " +
     MIME_TYPE + " TEXT, " +
     FILE_TYPE + " INT, " +
-    FILE_CATEGORY + " TEXT)";
+    FILE_CATEGORY + " TEXT, " +
+    IS_FAVORITE + " INT DEFAULT 0)";
 
 const std::string FileColumn::CREATE_PARENT_CLOUD_ID_INDEX = "CREATE INDEX IF NOT EXISTS " +
     PARENT_CLOUD_ID_INDEX + " ON " + FILES_TABLE +
     " (" + PARENT_CLOUD_ID + ")";
+
+const std::string FileColumn::ADD_IS_FAVORITE = "ALTER Table " + FILES_TABLE +
+    " ADD COLUMN " + IS_FAVORITE + " INT DEFAULT 0";
 
 const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
     FILE_NAME,

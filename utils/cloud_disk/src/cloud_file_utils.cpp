@@ -111,6 +111,16 @@ bool CloudFileUtils::CheckIsHmdfsPermission(const string &key)
     return key == HMDFS_PERMISSION_XATTR;
 }
 
+bool CloudFileUtils::CheckIsCloudRecycle(const string &key)
+{
+    return key == CLOUD_CLOUD_RECYCLE_XATTR;
+}
+
+bool CloudFileUtils::CheckIsFavorite(const string &key)
+{
+    return key == IS_FAVORITE_XATTR;
+}
+
 bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
 {
     unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);

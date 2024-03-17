@@ -48,6 +48,7 @@ public:
     static const std::string MIME_TYPE;
     static const std::string FILE_TYPE;
     static const std::string FILE_CATEGORY;
+    static const std::string IS_FAVORITE;
 
     // table name
     static const std::string FILES_TABLE;
@@ -60,6 +61,9 @@ public:
 
     // create parentCloudId index
     static const std::string CREATE_PARENT_CLOUD_ID_INDEX;
+
+    //create IsFavorite
+    static const std::string ADD_IS_FAVORITE;
 
     // Query FILES_TABLE for FileSystem
     static const std::vector<std::string> FILE_SYSTEM_QUERY_COLUMNS;

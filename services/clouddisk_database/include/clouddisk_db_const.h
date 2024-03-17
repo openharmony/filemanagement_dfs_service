@@ -26,11 +26,12 @@ namespace CloudDisk {
 const std::string DATA_SERVICE_EL1_PUBLIC_CLOUDFILE = "/data/service/el1/public/cloudfile/";
 const std::string CLOUD_DISK_DATABASE_NAME = "clouddisk.db";
 //rdb version
-const int32_t CLOUD_DISK_RDB_VERSION = 4;
+const int32_t CLOUD_DISK_RDB_VERSION = 5;
 enum {
     VERSION_ADD_PARENT_CLOUD_ID_INDEX = 2,
     VERSION_FIX_FILE_TRIGGER = 3,
     VERSION_FIX_CREATE_AND_LOCAL_TRIGGER = 4,
+    VERSION_ADD_STATUS_ERROR_FAVORITE = 5,
 };
 } // namespace CloudDisk
 } // namespace FileManagement
