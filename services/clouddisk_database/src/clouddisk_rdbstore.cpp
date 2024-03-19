@@ -22,6 +22,7 @@
 #include "clouddisk_sync_helper.h"
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_type_const.h"
+#include "data_sync_const.h"
 #include "file_column.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
@@ -235,6 +236,25 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutLong(FileColumn::FILE_SIZE, statInfo.st_size);
     fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     fileInfo.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
+    fileInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
+    LOGI("CreateFile : filePath is %{public}s --liu", filePath.c_str());
+    LOGI("CreateFile : fileName is %{public}s --liu", fileName.c_str());
+    std::string fathPath = filePath.substr(0, filePath.find_last_of("/"));
+    if (!CloudFileUtils::IsDir(fathPath)) {
+        LOGI("parent dir is not exist --liu");
+        return E_DIR_NOT_EXIST;
+    }
+    for (char c : fileName) {
+        if (c == '<' || c == '>' || c == '|' || c == ":" || c == '?' || c == '/' || c == '\\') {
+            LOGI("fileName contains some not permission --liu");
+            return E_ILLEGALS_FILE_NAME;
+        }
+    }
+    std::string name = fileName.substr(0, fileName.find_last_of('.'));
+    if (name == ".." || name == "." || (fileName.find("emoji") != std::string::npos) || fileName.length() > 255) {
+        LOGI("fileName is .. or . or contains emoji or length is not permission --liu");
+        return E_ILLEGALS_FILE_NAME;
+    }
     FillFileType(fileName, fileInfo);
     return E_OK;
 }
@@ -319,6 +339,7 @@ int32_t CloudDiskRdbStore::Write(const std::string &cloudId)
     write.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     write.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     write.PutLong(FileColumn::FILE_TIME_VISIT, Timespec2Milliseconds(statInfo.st_atim));
+    Write.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
     if (position != LOCAL) {
         write.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_FDIRTY));
         write.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::UPDATE));
@@ -521,6 +542,7 @@ static void FileRename(ValuesBucket &values, const int32_t &position, const std:
     if (position != LOCAL) {
         values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::RENAME));
+        values.PutInt(FileColumn::File_Status, FileStatus::WAITING_UPLOAD);
     }
 }
 
@@ -530,6 +552,7 @@ static void FileMove(ValuesBucket &values, const int32_t &position, const std::s
     if (position != LOCAL) {
         values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::MOVE));
+        values.PutInt(FileColumn::File_Status, FileStatus::WAITING_UPLOAD);
     }
 }
 
@@ -811,6 +834,15 @@ static void VersionAddFileStatusAndErrorCode(RdbStore &store)
     }
 }
 
+static void VersionAddFileStatus(RdbStore &store)
+{
+    const string addFileStatus = FileColumn::ADD_FILE_STATUS;
+    int32_t ret = store.ExecuteSql(addFileStatus);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add file_status fail, err %{public}d", ret);
+    }
+}
+
 int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
@@ -825,6 +857,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     }
     if (oldVersion < VERSION_ADD_STATUS_ERROR_FAVORITE) {
         VersionAddFileStatusAndErrorCode(store);
+    }
+    if (oldVersion < VERSION_ADD_FILE_STATUS) {
+        VersionAddFileStatus(store);
     }
     return NativeRdb::E_OK;
 }

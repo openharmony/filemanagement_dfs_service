@@ -28,6 +28,13 @@ enum CleanAction {
     CLEAR_DATA
 };
 
+enum FileStatus {
+    WAITING_UPLOAD = 0,
+    FILE_UPLOADING = 1,
+    UPLOAD_FAIL = 2,
+    UPLOAD_SUCCESS = 3
+};
+
 enum AlbumSource {
     ALBUM_FROM_LOCAL = 1,
     ALBUM_FROM_CLOUD = 2

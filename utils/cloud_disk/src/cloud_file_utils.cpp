@@ -14,6 +14,7 @@
  */
 #include "cloud_file_utils.h"
 #include <fcntl.h>
+#include <filesystem>
 #include <sys/xattr.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -148,6 +149,12 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
 
     close(fd);
     return writeOpenCnt != 0;
+}
+
+bool CloudFileUtils::IsDir(const std::string& path)
+{
+    std::filesystem::path p(path);
+    return std::filesystem::is_directory(p);
 }
 
 } // namespace CloudDisk

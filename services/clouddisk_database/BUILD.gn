@@ -33,6 +33,7 @@ ohos_shared_library("clouddisk_database") {
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
     "//third_party/libfuse/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
   ]
 
   sources = [

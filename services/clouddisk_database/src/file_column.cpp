@@ -39,6 +39,7 @@ const std::string FileColumn::MIME_TYPE = "mimetype";
 const std::string FileColumn::FILE_TYPE = "file_type";
 const std::string FileColumn::FILE_CATEGORY = "file_category";
 const std::string FileColumn::IS_FAVORITE = "isFavorite";
+const std::string FileColumn::IS_FAVORITE = "file_status";
 
 const std::string FileColumn::FILES_TABLE = "CloudDisk";
 const std::string FileColumn::PARENT_CLOUD_ID_INDEX = "parentCloudId_index";
@@ -65,7 +66,8 @@ const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " 
     MIME_TYPE + " TEXT, " +
     FILE_TYPE + " INT, " +
     FILE_CATEGORY + " TEXT, " +
-    IS_FAVORITE + " INT DEFAULT 0)";
+    IS_FAVORITE + " INT DEFAULT 0, " +
+    FILE_STATUS + " INT)";
 
 const std::string FileColumn::CREATE_PARENT_CLOUD_ID_INDEX = "CREATE INDEX IF NOT EXISTS " +
     PARENT_CLOUD_ID_INDEX + " ON " + FILES_TABLE +
@@ -73,6 +75,10 @@ const std::string FileColumn::CREATE_PARENT_CLOUD_ID_INDEX = "CREATE INDEX IF NO
 
 const std::string FileColumn::ADD_IS_FAVORITE = "ALTER Table " + FILES_TABLE +
     " ADD COLUMN " + IS_FAVORITE + " INT DEFAULT 0";
+
+const std::string FileColumn::ADD_FILE_STATUS = "ALTER Table " + FILES_TABLE +
+    " ADD COLUMN " + FILE_STATUS + " INT";
+
 
 const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
     FILE_NAME,

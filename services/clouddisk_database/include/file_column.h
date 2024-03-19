@@ -39,6 +39,7 @@ public:
     static const std::string DIRECTLY_RECYCLED;
     static const std::string VERSION;
     static const std::string OPERATE_TYPE;
+    static const std::string FILE_STATUS;
 
     // Only Local
     static const std::string FILE_TIME_VISIT;
@@ -64,6 +65,9 @@ public:
 
     //create IsFavorite
     static const std::string ADD_IS_FAVORITE;
+
+    //create FileStatus
+    static const std::string ADD_FILE_STATUS;
 
     // Query FILES_TABLE for FileSystem
     static const std::vector<std::string> FILE_SYSTEM_QUERY_COLUMNS;
