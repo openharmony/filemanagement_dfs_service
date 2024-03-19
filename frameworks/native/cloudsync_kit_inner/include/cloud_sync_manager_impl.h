@@ -51,6 +51,7 @@ private:
     std::atomic_flag isFirstCall_{false};
     sptr<SvcDeathRecipient> deathRecipient_;
     std::shared_ptr<CloudSyncCallback> callback_;
+    std::mutex callbackMutex_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
