@@ -79,7 +79,6 @@ const std::string FileColumn::ADD_IS_FAVORITE = "ALTER Table " + FILES_TABLE +
 const std::string FileColumn::ADD_FILE_STATUS = "ALTER Table " + FILES_TABLE +
     " ADD COLUMN " + FILE_STATUS + " INT";
 
-
 const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
     FILE_NAME,
     CLOUD_ID,
