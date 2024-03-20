@@ -128,7 +128,8 @@
         "test": [
           "//foundation/filemanagement/dfs_service:dfs_test_moudule",
           "//foundation/filemanagement/dfs_service:cloudsync_test_module",
-          "//foundation/filemanagement/dfs_service:distributedfile_test_module"
+          "//foundation/filemanagement/dfs_service:distributedfile_test_module",
+          "//foundation/filemanagement/dfs_service/test/fuzztest:fuzztest"
         ]
       }
     }

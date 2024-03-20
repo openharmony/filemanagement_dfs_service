@@ -1,0 +1,77 @@
+# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+##############################fuzztest##########################################
+ohos_fuzztest("DaemonStubFuzzTest") {
+  module_out_path = "dfs_service/dfs_service"
+
+  fuzz_config_file = "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer"
+
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
+    "${distributedfile_path}/services/distributedfiledaemon/include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+
+  sources = [ "daemonstub_fuzzer.cpp" ]
+
+  deps = [
+    "${distributedfile_path}/services/distributedfiledaemon:libdistributedfiledaemon",
+    "${distributedfile_path}/utils:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtoken_setproc",
+    "access_token:libtokenid_sdk",
+    "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "dataclassification:data_transit_mgr",
+    "device_auth:deviceauth_sdk",
+    "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
+    "graphic_2d:surface",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "ipc:ipc_single",
+    "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "window_manager:libwm",
+  ]
+}
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [ ":DaemonStubFuzzTest" ]
+}
+###############################################################################
