@@ -39,7 +39,7 @@ const std::string FileColumn::MIME_TYPE = "mimetype";
 const std::string FileColumn::FILE_TYPE = "file_type";
 const std::string FileColumn::FILE_CATEGORY = "file_category";
 const std::string FileColumn::IS_FAVORITE = "isFavorite";
-const std::string FileColumn::IS_FAVORITE = "file_status";
+const std::string FileColumn::FILE_STATUS = "file_status";
 
 const std::string FileColumn::FILES_TABLE = "CloudDisk";
 const std::string FileColumn::PARENT_CLOUD_ID_INDEX = "parentCloudId_index";

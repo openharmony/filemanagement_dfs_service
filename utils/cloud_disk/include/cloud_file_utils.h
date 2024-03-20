@@ -39,6 +39,7 @@ namespace {
     static const std::string HMDFS_PERMISSION_XATTR = "user.hmdfs.perm";
     static const std::string CLOUD_CLOUD_RECYCLE_XATTR = "user.cloud.recycle";
     static const std::string IS_FAVORITE_XATTR = "user.cloud.favorite";
+    static const std::string IS_FILE_STATUS_XATTR = "user.cloud.filestatus";
 }
 
 class CloudFileUtils final {

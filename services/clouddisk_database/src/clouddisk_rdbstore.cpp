@@ -40,7 +40,8 @@ enum XATTR_CODE {
     ERROR_CODE = -1,
     CLOUD_LOCATION = 1,
     CLOUD_RECYCLE,
-    IS_FAVORITE
+    IS_FAVORITE,
+    FILE_STATUS
 };
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static const uint32_t SET_STATE = 1;
@@ -239,13 +240,13 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
     LOGI("CreateFile : filePath is %{public}s --liu", filePath.c_str());
     LOGI("CreateFile : fileName is %{public}s --liu", fileName.c_str());
-    std::string fathPath = filePath.substr(0, filePath.find_last_of("/"));
-    if (!CloudFileUtils::IsDir(fathPath)) {
+    std::string fatherPath = filePath.substr(0, filePath.find_last_of('/'));
+    if (!CloudFileUtils::IsDir(fatherPath)) {
         LOGI("parent dir is not exist --liu");
         return E_DIR_NOT_EXIST;
     }
     for (char c : fileName) {
-        if (c == '<' || c == '>' || c == '|' || c == ":" || c == '?' || c == '/' || c == '\\') {
+        if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\') {
             LOGI("fileName contains some not permission --liu");
             return E_ILLEGALS_FILE_NAME;
         }
@@ -339,7 +340,7 @@ int32_t CloudDiskRdbStore::Write(const std::string &cloudId)
     write.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     write.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     write.PutLong(FileColumn::FILE_TIME_VISIT, Timespec2Milliseconds(statInfo.st_atim));
-    Write.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
+    write.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
     if (position != LOCAL) {
         write.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_FDIRTY));
         write.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::UPDATE));
@@ -442,9 +443,12 @@ int32_t CheckXattr(const std::string &key)
         return CLOUD_RECYCLE;
     } else if (key == IS_FAVORITE_XATTR) {
         return IS_FAVORITE;
+    } else if (key == IS_FILE_STATUS_XATTR) {
+        return FILE_STATUS;
     } else {
         return ERROR_CODE;
     }
+    
 }
 
 int32_t CloudDiskRdbStore::LocationGetXattr(const std::string &cloudId, const std::string &key, std::string &value)
@@ -495,6 +499,30 @@ int32_t CloudDiskRdbStore::FavoriteGetXattr(const std::string &cloudId, const st
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::FileStatusGetXattr(const std::string &cloudId, const std::string &key, std::string &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (cloudId.empty() || cloudId == "rootId" || key != IS_FILE_STATUS_XATTR) {
+        LOGE("getxattr parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    AbsRdbPredicates getXAttrPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    getXAttrPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(getXAttrPredicates, { FileColumn::FILE_STATUS });
+    if (resultSet == nullptr) {
+        LOGE("get nullptr getxattr result");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("getxattr result set go to next row failed");
+        return E_RDB;
+    }
+    int32_t fileStatus;
+    CloudDiskRdbUtils::GetInt(FileColumn::FILE_STATUS, fileStatus, resultSet);
+    value = to_string(fileStatus);
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value)
 {
     int32_t num = CheckXattr(key);
@@ -504,6 +532,9 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
             break;
         case IS_FAVORITE:
             return FavoriteGetXattr(cloudId, key, value);
+            break;
+        case FILE_STATUS:
+            return FileStatusGetXattr(cloudId, key, value);
             break;
     }
     if (cloudId.empty() || cloudId == "rootId") {
@@ -542,7 +573,7 @@ static void FileRename(ValuesBucket &values, const int32_t &position, const std:
     if (position != LOCAL) {
         values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::RENAME));
-        values.PutInt(FileColumn::File_Status, FileStatus::WAITING_UPLOAD);
+        values.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
     }
 }
 
@@ -552,7 +583,7 @@ static void FileMove(ValuesBucket &values, const int32_t &position, const std::s
     if (position != LOCAL) {
         values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::MOVE));
-        values.PutInt(FileColumn::File_Status, FileStatus::WAITING_UPLOAD);
+        values.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
     }
 }
 
