@@ -557,6 +557,7 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
             break;
         case IS_FAVORITE:
             return FavoriteSetXattr(cloudId, value);
+            break;
     }
     if (cloudId.empty() || cloudId == "rootId") {
         LOGE("setxattr parameter is invalid");

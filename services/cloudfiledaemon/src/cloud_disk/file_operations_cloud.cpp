@@ -630,9 +630,7 @@ void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
         buf = GetIsFavorite(req, inoPtr);
     } else if (CloudFileUtils::CheckFileStatus(name)) {
         buf = GetFileStatus(req, inoPtr);
-    }
-     
-    else {
+    } else {
         fuse_reply_err(req, EINVAL);
         return;
     }
