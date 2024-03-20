@@ -49,6 +49,7 @@ public:
     static bool CheckIsHmdfsPermission(const std::string &key);
     static bool CheckIsCloudRecycle(const std::string &key);
     static bool CheckIsFavorite(const std::string &key);
+    static bool CheckFileStatus(const std::string &key);
     static std::string GetLocalBucketPath(std::string cloudId, std::string bundleName,
                                           int32_t userId);
     static std::string GetLocalFilePath(std::string cloudId, std::string bundleName,

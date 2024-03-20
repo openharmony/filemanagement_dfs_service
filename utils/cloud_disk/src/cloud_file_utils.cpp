@@ -122,6 +122,11 @@ bool CloudFileUtils::CheckIsFavorite(const string &key)
     return key == IS_FAVORITE_XATTR;
 }
 
+bool CloudFileUtils::CheckFileStatus(const string &key)
+{
+    return key == IS_FILE_STATUS_XATTR;
+}
+
 bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
 {
     unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);
