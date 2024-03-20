@@ -238,22 +238,17 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     fileInfo.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     fileInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
-    LOGI("CreateFile : filePath is %{public}s --liu", filePath.c_str());
-    LOGI("CreateFile : fileName is %{public}s --liu", fileName.c_str());
     std::string fatherPath = filePath.substr(0, filePath.find_last_of('/'));
     if (!CloudFileUtils::IsDir(fatherPath)) {
-        LOGI("parent dir is not exist --liu");
         return E_DIR_NOT_EXIST;
     }
     for (char c : fileName) {
         if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\') {
-            LOGI("fileName contains some not permission --liu");
             return E_ILLEGALS_FILE_NAME;
         }
     }
     std::string name = fileName.substr(0, fileName.find_last_of('.'));
     if (name == ".." || name == "." || (fileName.find("emoji") != std::string::npos) || fileName.length() > 255) {
-        LOGI("fileName is .. or . or contains emoji or length is not permission --liu");
         return E_ILLEGALS_FILE_NAME;
     }
     FillFileType(fileName, fileInfo);
