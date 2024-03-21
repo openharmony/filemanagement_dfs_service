@@ -51,6 +51,7 @@ enum ErrorType {
     BATTERY_LEVEL_WARNING,
     CLOUD_STORAGE_FULL,
     LOCAL_STORAGE_FULL,
+    PERMISSION_NOT_ALLOW,
 };
 
 enum State {

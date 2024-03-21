@@ -247,8 +247,8 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
             return E_ILLEGALS_FILE_NAME;
         }
     }
-    std::string name = fileName.substr(0, fileName.find_last_of('.'));
-    if (name == ".." || name == "." || (fileName.find("emoji") != std::string::npos) || fileName.length() > 255) {
+    std::string realFileName = fileName.substr(0, fileName.find_last_of('.'));
+    if (realFileName == ".." || realFileName == "." || (fileName.find("emoji") != std::string::npos) || fileName.length() > 255) {
         return E_ILLEGALS_FILE_NAME;
     }
     FillFileType(fileName, fileInfo);
@@ -442,8 +442,7 @@ int32_t CheckXattr(const std::string &key)
         return FILE_STATUS;
     } else {
         return ERROR_CODE;
-    }
-    
+    } 
 }
 
 int32_t CloudDiskRdbStore::LocationGetXattr(const std::string &cloudId, const std::string &key, std::string &value)

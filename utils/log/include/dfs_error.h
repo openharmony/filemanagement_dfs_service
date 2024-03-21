@@ -33,7 +33,7 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_BROKEN_IPC,
     E_SA_LOAD_FAILED,
     E_SERVICE_DESCRIPTOR_IS_EMPTY,
-    E_PERMISSION_DENIED = 4946,
+    E_PERMISSION_DENIED,
     E_PERMISSION_SYSTEM,
     E_GET_PHYSICAL_PATH_FAILED,
     E_GET_TOKEN_INFO_ERROR,
@@ -74,8 +74,8 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_FILE_NOT_EXIST,
     E_SEND_FILE,
     E_MEMORY,
-    E_DIR_NOT_EXIST = 4009,
-    E_ILLEGALS_FILE_NAME = 4002,
+    E_DIR_NOT_EXIST,
+    E_ILLEGALS_FILE_NAME,
 };
 
 enum JsErrCode {
