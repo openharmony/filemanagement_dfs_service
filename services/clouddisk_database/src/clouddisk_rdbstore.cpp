@@ -22,7 +22,7 @@
 #include "clouddisk_sync_helper.h"
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_type_const.h"
-#include "data_sync_const.h"
+#include "clouddisk_db_const.h"
 #include "file_column.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"

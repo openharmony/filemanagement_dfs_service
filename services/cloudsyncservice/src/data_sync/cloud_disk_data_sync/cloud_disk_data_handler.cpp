@@ -651,7 +651,6 @@ int32_t CloudDiskDataHandler::GetCreatedRecords(vector<DKRecord> &records)
         if (ret != E_OK) {
             return ret;
         }
-        
     }
     return E_OK;
 }

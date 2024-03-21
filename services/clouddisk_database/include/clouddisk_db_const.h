@@ -34,6 +34,14 @@ enum {
     VERSION_ADD_STATUS_ERROR_FAVORITE = 5,
     VERSION_ADD_FILE_STATUS = 6,
 };
+
+enum FileStatus {
+    WAITING_UPLOAD = 0,
+    FILE_UPLOADING = 1,
+    UPLOAD_FAIL = 2,
+    UPLOAD_SUCCESS = 3
+};
+
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namaspace OHOS

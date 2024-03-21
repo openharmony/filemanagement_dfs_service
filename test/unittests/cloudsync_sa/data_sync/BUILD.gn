@@ -1337,7 +1337,6 @@ ohos_unittest("cloud_disk_data_syncer_test") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
     "//third_party/libfuse/include",
-    "${services_path}/cloudsyncservice/include/data_sync",
   ]
 
   medialibrary_rdb_utils_source = [
