@@ -647,22 +647,28 @@ int32_t CloudDiskDataHandler::GetCreatedRecords(vector<DKRecord> &records)
             LOGE("result set to records err %{public}d", ret);
             return ret;
         }
-        for (auto &record : records) {
-            ValuesBucket values;
-            values.PutInt(FC::FILE_STATUS, FileStatus::FILE_UPLOADING);
-            std::string whereClause = FC::CLOUD_ID + " = ?";
-            std::vector<std::string> whereArgs;
-            whereArgs.push_back(record.GetRecordId());
-            int changedRows = 0;
-            int32_t ret = Update(changedRows, FC::FILES_TABLE, values, whereClause, whereArgs);
-            if (ret != E_OK) {
-                LOGE("update status err %{public}d", ret);
-                return ret;
-            }
-        }
+        PushFileStatus(records);
     }
     return E_OK;
 }
+
+void CloudDiskDataHandler::PushFileStatus(vector<DKRecord> &records)
+{
+    for (auto &record : records) {
+        ValuesBucket values;
+        values.PutInt(FC::FILE_STATUS, FileStatus::FILE_UPLOADING);
+        std::string whereClause = FC::CLOUD_ID + " = ?";
+        std::vector<std::string> whereArgs;
+        whereArgs.push_back(record.GetRecordId());
+        int changedRows = 0;
+        int32_t ret = Update(changedRows, FC::FILES_TABLE, values, whereClause, whereArgs);
+        if (ret != E_OK) {
+            LOGE("update status err %{public}d", ret);
+            return ret;
+        }
+    }
+}
+
 int32_t CloudDiskDataHandler::GetDeletedRecords(vector<DKRecord> &records)
 {
     NativeRdb::AbsRdbPredicates deletePredicates = NativeRdb::AbsRdbPredicates(FC::FILES_TABLE);
@@ -682,19 +688,7 @@ int32_t CloudDiskDataHandler::GetDeletedRecords(vector<DKRecord> &records)
         LOGE("result set to records err %{public}d", ret);
         return ret;
     }
-    for (auto &record : records) {
-        ValuesBucket values;
-        values.PutInt(FC::FILE_STATUS, FileStatus::FILE_UPLOADING);
-        std::string whereClause = FC::CLOUD_ID + " = ?";
-        std::vector<std::string> whereArgs;
-        whereArgs.push_back(record.GetRecordId());
-        int changedRows = 0;
-        int32_t ret = Update(changedRows, FC::FILES_TABLE, values, whereClause, whereArgs);
-        if (ret != E_OK) {
-            LOGE("update status err %{public}d", ret);
-            return ret;
-        }
-    }
+    PushFileStatus(records);
     return E_OK;
 }
 int32_t CloudDiskDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
@@ -716,19 +710,7 @@ int32_t CloudDiskDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
         LOGE("meta modified result set to records err %{public}d", ret);
         return ret;
     }
-    for (auto &record : records) {
-        ValuesBucket values;
-        values.PutInt(FC::FILE_STATUS, FileStatus::FILE_UPLOADING);
-        std::string whereClause = FC::CLOUD_ID + " = ?";
-        std::vector<std::string> whereArgs;
-        whereArgs.push_back(record.GetRecordId());
-        int changedRows = 0;
-        int32_t ret = Update(changedRows, FC::FILES_TABLE, values, whereClause, whereArgs);
-        if (ret != E_OK) {
-            LOGE("update status err %{public}d", ret);
-            return ret;
-        }
-    }
+    PushFileStatus(records);
     return E_OK;
 }
 int32_t CloudDiskDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
@@ -755,19 +737,7 @@ int32_t CloudDiskDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
             LOGE("file modified result set to records err %{public}d", ret);
             return ret;
         }
-        for (auto &record : records) {
-            ValuesBucket values;
-            values.PutInt(FC::FILE_STATUS, FileStatus::FILE_UPLOADING);
-            std::string whereClause = FC::CLOUD_ID + " = ?";
-            std::vector<std::string> whereArgs;
-            whereArgs.push_back(record.GetRecordId());
-            int changedRows = 0;
-            int32_t ret = Update(changedRows, FC::FILES_TABLE, values, whereClause, whereArgs);
-            if (ret != E_OK) {
-                LOGE("update status err %{public}d", ret);
-                return ret;
-            }
-        }
+        PushFileStatus(records);
     }
     return E_OK;
 }
