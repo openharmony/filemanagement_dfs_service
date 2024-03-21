@@ -15,6 +15,14 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_unittest("distributed_file_daemon_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
@@ -90,6 +98,14 @@ ohos_unittest("distributed_file_daemon_test") {
 }
 
 ohos_unittest("distributed_file_daemon_stub_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
@@ -165,6 +181,14 @@ ohos_unittest("distributed_file_daemon_stub_test") {
 }
 
 ohos_unittest("daemon_manager_impl_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
@@ -204,6 +228,14 @@ ohos_unittest("daemon_manager_impl_test") {
 }
 
 ohos_unittest("daemon_manager_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
@@ -279,6 +311,14 @@ ohos_unittest("daemon_service_proxy_test") {
 }
 
 ohos_unittest("connection_detector_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
@@ -317,6 +357,14 @@ ohos_unittest("connection_detector_test") {
 }
 
 ohos_unittest("trans_mananger_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
