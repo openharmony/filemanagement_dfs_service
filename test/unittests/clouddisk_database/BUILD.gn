@@ -36,6 +36,7 @@ ohos_unittest("clouddisk_rdb_utils_test") {
     "${distributedfile_path}/utils/log/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
     "//third_party/libfuse/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
   ]
 
   deps = [
@@ -157,6 +158,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "//third_party/e2fsprogs/e2fsprogs/lib",
     "//third_party/libfuse/include",
     "${distributedfile_path}/test/unittests/clouddisk_database/include",
+    "${services_path}/cloudsyncservice/include/data_sync",
   ]
 
   medialibrary_rdb_utils_source = [

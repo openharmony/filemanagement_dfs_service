@@ -117,6 +117,7 @@ ohos_unittest("database_manager_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include/",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include/",
     "${media_library_path}/frameworks/utils/include/",
+    "${services_path}/cloudsyncservice/include/data_sync",
   ]
 
   sources = [

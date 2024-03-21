@@ -561,10 +561,11 @@ void DataSyncer::OnFetchCheckRecords(const shared_ptr<DKContext> context,
              err.dkErrorCode);
         if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
             SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
-        } else if (static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) == DKDetailErrorCode::FORBIDDEN_USER) {
+        } else if (static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) ==
+                   DKDetailErrorCode::FORBIDDEN_USER) {
             SetErrorCodeMask(ErrorType::PERMISSION_NOT_ALLOW);
         }
-        
+
         return;
     }
     LOGI("%{private}d %{private}s on fetch records", userId_, bundleName_.c_str());

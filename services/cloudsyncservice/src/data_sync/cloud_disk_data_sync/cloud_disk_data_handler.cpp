@@ -655,7 +655,6 @@ int32_t CloudDiskDataHandler::GetCreatedRecords(vector<DKRecord> &records)
     }
     return E_OK;
 }
-
 int32_t CloudDiskDataHandler::PushFileStatus(vector<DKRecord> &records)
 {
     for (auto &record : records) {
