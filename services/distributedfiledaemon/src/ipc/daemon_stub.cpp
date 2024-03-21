@@ -16,6 +16,7 @@
 #include "ipc/daemon_stub.h"
 
 #include "dfs_error.h"
+#include "dfsu_access_token_helper.h"
 #include "dm_device_info.h"
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
 #include "utils_log.h"
@@ -114,6 +115,10 @@ int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &rep
     if (!data.ReadString(srcUri)) {
         LOGE("read srcUri failed");
         return E_IPC_READ_FAILED;
+    }
+    if (!DfsuAccessTokenHelper::CheckUriPermission(srcUri)) {
+        LOGE("permission verify failed");
+        return E_PERMISSION_DENIED;
     }
     std::string dstUri;
     if (!data.ReadString(dstUri)) {
