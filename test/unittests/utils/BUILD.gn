@@ -52,6 +52,14 @@ ohos_unittest("cloud_pref_impl_test") {
 }
 
 ohos_unittest("utils_directory_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = "filemanagement/dfs_service"
 
   sources = [ "./system/utils_directory_test.cpp" ]

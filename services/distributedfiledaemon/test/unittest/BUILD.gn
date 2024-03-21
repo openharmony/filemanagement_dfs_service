@@ -27,6 +27,14 @@ config("module_private_config") {
 }
 
 ohos_unittest("device_manager_agent_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = module_output_path
 
   sources = [
@@ -92,6 +100,14 @@ ohos_unittest("device_manager_agent_test") {
 }
 
 ohos_unittest("os_account_observer_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = module_output_path
 
   sources = [
@@ -153,6 +169,14 @@ ohos_unittest("os_account_observer_test") {
 }
 
 ohos_unittest("devsl_dispatcher_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = module_output_path
 
   sources = [
@@ -213,6 +237,14 @@ ohos_unittest("devsl_dispatcher_test") {
 }
 
 ohos_unittest("kernel_talker_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = module_output_path
 
   sources = [
@@ -273,6 +305,14 @@ ohos_unittest("kernel_talker_test") {
 }
 
 ohos_unittest("network_agent_template_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = module_output_path
 
   sources = [
@@ -333,6 +373,14 @@ ohos_unittest("network_agent_template_test") {
 }
 
 ohos_unittest("session_pool_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = module_output_path
 
   sources = [
@@ -393,6 +441,14 @@ ohos_unittest("session_pool_test") {
 }
 
 ohos_unittest("softbus_agent_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = module_output_path
 
   sources = [
@@ -456,6 +512,14 @@ ohos_unittest("softbus_agent_test") {
 }
 
 ohos_unittest("softbus_session_dispatcher_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = module_output_path
 
   sources = [
@@ -516,6 +580,14 @@ ohos_unittest("softbus_session_dispatcher_test") {
 }
 
 ohos_unittest("softbus_session_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   module_out_path = module_output_path
 
   sources = [
