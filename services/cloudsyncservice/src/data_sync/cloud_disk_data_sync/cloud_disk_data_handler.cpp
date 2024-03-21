@@ -647,12 +647,16 @@ int32_t CloudDiskDataHandler::GetCreatedRecords(vector<DKRecord> &records)
             LOGE("result set to records err %{public}d", ret);
             return ret;
         }
-        PushFileStatus(records);
+        ret = PushFileStatus(records);
+        if (ret != E_OK) {
+            return ret;
+        }
+        
     }
     return E_OK;
 }
 
-void CloudDiskDataHandler::PushFileStatus(vector<DKRecord> &records)
+int32_t CloudDiskDataHandler::PushFileStatus(vector<DKRecord> &records)
 {
     for (auto &record : records) {
         ValuesBucket values;
@@ -667,6 +671,7 @@ void CloudDiskDataHandler::PushFileStatus(vector<DKRecord> &records)
             return ret;
         }
     }
+    return E_OK;
 }
 
 int32_t CloudDiskDataHandler::GetDeletedRecords(vector<DKRecord> &records)
@@ -688,7 +693,10 @@ int32_t CloudDiskDataHandler::GetDeletedRecords(vector<DKRecord> &records)
         LOGE("result set to records err %{public}d", ret);
         return ret;
     }
-    PushFileStatus(records);
+    ret = PushFileStatus(records);
+    if (ret != E_OK) {
+        return ret;
+    }
     return E_OK;
 }
 int32_t CloudDiskDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
@@ -710,7 +718,10 @@ int32_t CloudDiskDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
         LOGE("meta modified result set to records err %{public}d", ret);
         return ret;
     }
-    PushFileStatus(records);
+    ret = PushFileStatus(records);
+    if (ret != E_OK) {
+        return ret;
+    }
     return E_OK;
 }
 int32_t CloudDiskDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
@@ -737,7 +748,10 @@ int32_t CloudDiskDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
             LOGE("file modified result set to records err %{public}d", ret);
             return ret;
         }
-        PushFileStatus(records);
+        ret = PushFileStatus(records);
+        if (ret != E_OK) {
+            return ret;
+        }
     }
     return E_OK;
 }

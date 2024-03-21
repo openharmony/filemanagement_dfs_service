@@ -46,6 +46,7 @@ enum XATTR_CODE {
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static const uint32_t SET_STATE = 1;
 static const uint32_t CANCEL_STATE = 0;
+static const uint32_t MAX_FILE_NAME_SIZE = 0;
 
 static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
 {
@@ -248,7 +249,8 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
         }
     }
     std::string realFileName = fileName.substr(0, fileName.find_last_of('.'));
-    if (realFileName == ".." || realFileName == "." || (fileName.find("emoji") != std::string::npos) || fileName.length() > 255) {
+    if (realFileName == ".." || realFileName == "." || (fileName.find("emoji") != std::string::npos) ||
+        fileName.length() > MAX_FILE_NAME_SIZE) {
         return E_ILLEGALS_FILE_NAME;
     }
     FillFileType(fileName, fileInfo);
@@ -442,7 +444,7 @@ int32_t CheckXattr(const std::string &key)
         return FILE_STATUS;
     } else {
         return ERROR_CODE;
-    } 
+    }
 }
 
 int32_t CloudDiskRdbStore::LocationGetXattr(const std::string &cloudId, const std::string &key, std::string &value)
