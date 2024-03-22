@@ -71,8 +71,12 @@ int32_t DfsuAccessTokenHelper::GetBundleNameByToken(uint32_t tokenId, std::strin
         case TOKEN_HAP: {
             HapTokenInfo hapInfo;
             if (AccessTokenKit::GetHapTokenInfo(tokenId, hapInfo) != 0) {
-                LOGE("get hap token info fail");
+                LOGE("[Permission Check] get hap token info fail");
                 return E_GET_TOKEN_INFO_ERROR;
+            }
+            if (hapInfo.instIndex != 0) {
+                LOGE("[Permission Check] APP twin is not supported.");
+                break;
             }
             bundleName = hapInfo.bundleName;
             break;
@@ -82,19 +86,19 @@ int32_t DfsuAccessTokenHelper::GetBundleNameByToken(uint32_t tokenId, std::strin
         case TOKEN_SHELL: {
             NativeTokenInfo tokenInfo;
             if (AccessTokenKit::GetNativeTokenInfo(tokenId, tokenInfo) != 0) {
-                LOGE("get native token info fail");
+                LOGE("[Permission Check] get native token info fail");
                 return E_GET_TOKEN_INFO_ERROR;
             }
             bundleName = tokenInfo.processName;
             break;
         }
         default: {
-            LOGE("token type not match");
+            LOGE("[Permission Check] token type not match");
             return E_GET_TOKEN_INFO_ERROR;
         }
     }
     if (bundleName.empty()) {
-        LOGE("package name is empty");
+        LOGE("[Permission Check] package name is empty");
         return E_INVAL_ARG;
     }
     return E_OK;
