@@ -209,7 +209,11 @@ int32_t RdbDataHandler::Delete(int &deletedRows, const std::string &tableName,
 int32_t RdbDataHandler::ExecuteSql(const std::string &sql, const std::vector<NativeRdb::ValueObject> &bindArgs)
 {
     std::function<int32_t()> func = [this, &sql, &bindArgs] { return rdb_->ExecuteSql(sql, bindArgs); };
-    return Execute(func);
+    int32_t ret = Execute(func);
+    if (ret != E_OK) {
+        LOGE("err sql is %{public}s", sql.c_str());
+    }
+    return ret;
 }
 
 int32_t RdbDataHandler::IsStop()
