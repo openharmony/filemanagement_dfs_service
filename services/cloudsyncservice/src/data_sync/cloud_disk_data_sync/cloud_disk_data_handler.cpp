@@ -46,7 +46,7 @@ using namespace CloudDisk;
 using namespace Media;
 using FC = CloudDisk::FileColumn;
 CloudDiskDataHandler::CloudDiskDataHandler(int32_t userId, const string &bundleName,
-                                           std::shared_ptr<RdbStore> rdb, shared_ptr<bool> stopFlag)
+                                            std::shared_ptr<RdbStore> rdb, shared_ptr<bool> stopFlag)
     : RdbDataHandler(userId, bundleName, FC::FILES_TABLE, rdb, stopFlag), userId_(userId), bundleName_(bundleName)
 {
 }
