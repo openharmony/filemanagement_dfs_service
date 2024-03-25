@@ -77,7 +77,7 @@ struct CloudInode {
     shared_ptr<DriveKit::DKAssetReadSession> readSession{nullptr};
     atomic<int> sessionRefCount{0};
     std::shared_mutex sessionLock;
-    std::shared_mutex readLock;
+    std::mutex readLock;
     off_t offset{0xffffffff};
 };
 
@@ -539,31 +539,27 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     }
 
     shared_ptr<int64_t> readSize = make_shared<int64_t>(-1);
-    shared_ptr<bool> readAvailable = make_shared<bool>(true);
-    condition_variable readConVar;
-    thread([=, &readConVar]() {
+    shared_ptr<bool> readFinish = make_shared<bool>(false);
+    shared_ptr<condition_variable> readConVar = make_shared<condition_variable>();
+    thread([=]() {
         *readSize = dkReadSession->PRead(off, size, buf.get(), *dkError);
-        LOGI("read %{public}s result, %{public}lld bytes", CloudPath(data, ino).c_str(),
+        LOGD("read %{public}s result, %{public}lld bytes", CloudPath(data, ino).c_str(),
             static_cast<long long>(*readSize));
-        unique_lock<shared_mutex> wLock(cInode->readLock, defer_lock);
-        wLock.lock();
-        if (*readAvailable) {
-        readConVar.notify_one();
+        {
+            std::unique_lock<std::mutex> lock(cInode->readLock);
+            *readFinish = true;
         }
-        wLock.unlock();
+        readConVar->notify_one();
         }).detach();
 
-    mutex readMutex;
-    unique_lock<mutex> lock(readMutex);
-    auto waitStatus = readConVar.wait_for(lock, chrono::milliseconds(READ_TIMEOUT_MS));
-    if (waitStatus == cv_status::timeout) {
+    std::unique_lock<std::mutex> lock(cInode->readLock);
+    auto waitStatus = readConVar->wait_for(lock, chrono::milliseconds(READ_TIMEOUT_MS), [readFinish] {
+        return *readFinish;
+        });
+    if (!waitStatus) {
         LOGE("Pread timeout %{public}s, size=%{public}zd, off=%{public}lu", CloudPath(data, ino).c_str(), size,
             (unsigned long)off);
-        unique_lock<shared_mutex> wLock(cInode->readLock, defer_lock);
-        wLock.lock();
-        *readAvailable = false;
-        wLock.unlock();
-        fuse_reply_err(req, ENOTCONN);
+        fuse_reply_err(req, ENETUNREACH);
         return;
     }
     if (*readSize < 0) {
