@@ -3774,8 +3774,8 @@ void FileDataHandler::UpdateThmVec()
         vector<int> fileIds = vector<int>(size);
         BatchGetFileIdFromCloudId(tmp, fileIds);
         ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, tmp, count);
-        LOGI("update size is %{public}zu, success count is %{public}lld, fail count is %{public}zu",
-            size, count, tmp.size());
+        LOGI("update size is %{public}zu, success count is %{public}llu, fail count is %{public}zu",
+              static_cast<size_t>size, static_cast<unsigned long long>(count), tmp.size());
         if (ret != E_OK) {
             LOGW("update thm fail");
             std::lock_guard<std::mutex> lock(thmMutex_);
@@ -3814,8 +3814,8 @@ void FileDataHandler::UpdateLcdVec()
             lcdVec_.erase(lcdVec_.begin(), lcdVec_.begin() + size);
         }
         ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, tmp, count);
-        LOGI("update size is %{public}zu, success count is %{public}lld, fail count is %{public}zu",
-            size, count, tmp.size());
+        LOGI("update size is %{public}zu, success count is %{public}llu, fail count is %{public}zu",
+              static_cast<size_t>size, static_cast<unsigned long long>(count), tmp.size());
         if (ret != E_OK) {
             LOGW("update thm fail");
             std::lock_guard<std::mutex> lock(lcdMutex_);
