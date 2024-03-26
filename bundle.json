@@ -30,6 +30,7 @@
       "deps": {
         "components": [
           "ability_base",
+          "ability_runtime",
           "access_token",
           "app_file_service",
           "battery_manager",
