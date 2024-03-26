@@ -896,7 +896,7 @@ int32_t CloudSyncServiceProxy::DeleteAsset(const int32_t userId, const std::stri
 sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 {
     LOGI("getinstance");
-    unique_lock<mutex> lock(proxyMutex_);
+    unique_lock<mutex> lock(instanceMutex_);
     if (serviceProxy_ != nullptr) {
         return serviceProxy_;
     }
@@ -917,8 +917,9 @@ sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
              FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, ret);
         return nullptr;
     }
+    unique_lock<mutex> proxyLock(proxyMutex_);
     auto waitStatus = cloudSyncLoadCallback->proxyConVar_.wait_for(
-        lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
+        proxyLock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
         [cloudSyncLoadCallback]() { return cloudSyncLoadCallback->isLoadSuccess_.load(); });
     if (!waitStatus) {
         LOGE("Load CloudSynd SA timeout");
@@ -930,7 +931,7 @@ sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 void CloudSyncServiceProxy::InvaildInstance()
 {
     LOGI("invalid instance");
-    unique_lock<mutex> lock(proxyMutex_);
+    unique_lock<mutex> lock(instanceMutex_);
     serviceProxy_ = nullptr;
 }
 
