@@ -364,6 +364,10 @@ int32_t CloudDiskRdbStore::LocationSetXattr(const std::string &cloudId, const st
 int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &cloudId, const std::string &value)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
+    bool isNum = std::all_of(value.begin(), value.end(), ::isdigit);
+    if (!isNum) {
+        return E_RDB;
+    }
     int32_t val = std::stoi(value);
     LOGE("recycleSetXattr, val %{public}d", val);
     ValuesBucket setXAttr;
@@ -391,8 +395,12 @@ int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &cloudId, const std
 int32_t CloudDiskRdbStore::FavoriteSetXattr(const std::string &cloudId, const std::string &value)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
+    bool isNum = std::all_of(value.begin(), value.end(), ::isdigit);
+    if (!isNum) {
+        return E_RDB;
+    }
     int32_t val = std::stoi(value);
-    LOGE("favoriteSetXattr, val %{public}d", val);
+    LOGD("favoriteSetXattr, val %{public}d", val);
     ValuesBucket setXAttr;
     if (val == 0) {
         setXAttr.PutInt(FileColumn::IS_FAVORITE, CANCEL_STATE);
