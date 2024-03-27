@@ -226,7 +226,7 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
     values.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     params.insertFiles.push_back(values);
     ret = Insert(rowId, FC::FILES_TABLE, values);
-    return E_OK;
+    return ret;
 }
 
 int32_t CloudDiskDataHandler::PullRecordConflict(DKRecord &record)
@@ -250,11 +250,18 @@ int32_t CloudDiskDataHandler::PullRecordConflict(DKRecord &record)
         lastDot = fullName.length();
     }
     string fileName = fullName.substr(0, lastDot);
+    string extension = fullName.substr(lastDot);
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FC::FILES_TABLE);
     predicates.EqualTo(FC::PARENT_CLOUD_ID, parentId);
     predicates.EqualTo(FC::FILE_TIME_RECYCLED, 0);
     predicates.NotEqualTo(FC::CLOUD_ID, record.GetRecordId());
-    predicates.Like(FC::FILE_NAME, fileName + "%");
+    predicates.BeginWrap()
+              ->EqualTo(FC::FILE_NAME, fullName)
+              ->Or()
+              ->EqualTo(FC::FILE_NAME, fileName + "(10)" + extension)
+              ->Or()
+              ->Glob(FC::FILE_NAME, fileName + "([1-9])" + extension)
+              ->EndWrap();
     auto resultSet = Query(predicates, {FC::CLOUD_ID, FC::FILE_NAME});
     ret = HandleConflict(resultSet, fullName, lastDot);
     return ret;
@@ -271,6 +278,7 @@ int32_t CloudDiskDataHandler::HandleConflict(const std::shared_ptr<NativeRdb::Re
     int32_t count = 0;
     int32_t ret = resultSet->GetRowCount(count);
     if (ret != E_OK || count < 0) {
+        LOGE("resultSet GetRowCount failed, ret = %{public}d, count = %{public}d", ret, count);
         return E_RDB;
     }
     if (count == 0) {
@@ -311,13 +319,11 @@ int32_t CloudDiskDataHandler::FindRenameFile(const std::shared_ptr<NativeRdb::Re
                 LOGD("find same name file try to rename");
                 fullName = fileName + "(" + to_string(renameTimes) + ")" + extension;
                 DataConvertor::GetString(FC::CLOUD_ID, dbFileCloudId, *resultSet);
+                renameFileCloudId = dbFileCloudId;
                 findSameFile = true;
                 break;
             }
         } while (resultSet->GoToNextRow() == 0);
-        if (fullName == fileName + extension) {
-            renameFileCloudId = dbFileCloudId;
-        }
         if (renameTimes >= MAX_RENAME) {
             break;
         }

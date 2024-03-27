@@ -251,7 +251,7 @@ int32_t CloudDiskDataConvertor::ExtractFileTimeRecycled(const DriveKit::DKRecord
         return E_INVAL_ARG;
     }
     if (isRecyled) {
-        if (data.find(DK_FILE_TIME_RECYCLED) == data.end() ||
+        if (data.find(DK_FILE_TIME_RECYCLED) != data.end() &&
             data.at(DK_FILE_TIME_RECYCLED).GetLong(fileTimeRecycled) != DKLocalErrorCode::NO_ERROR) {
             LOGE("extract fileTimeRecycled error");
             return E_INVAL_ARG;
