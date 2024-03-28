@@ -53,7 +53,8 @@ public:
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
-                           const sptr<IRemoteObject> &listener)
+                           const sptr<IRemoteObject> &listener,
+                           const std::string &copyPath)
     {
         return FileManagement::E_OK;
     }
@@ -65,8 +66,12 @@ public:
     {
         return FileManagement::E_OK;
     }
-};
 
+    int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir)
+    {
+        return FileManagement::E_OK;
+    }
+};
 } // namespace OHOS::Storage::DistributedFile
 
 #endif // MOCK_I_DAEMON_H

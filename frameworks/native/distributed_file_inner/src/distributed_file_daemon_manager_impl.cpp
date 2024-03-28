@@ -54,14 +54,15 @@ int32_t DistributedFileDaemonManagerImpl::CloseP2PConnection(const DistributedHa
 int32_t DistributedFileDaemonManagerImpl::PrepareSession(const std::string &srcUri,
                                                          const std::string &dstUri,
                                                          const std::string &srcDeviceId,
-                                                         const sptr<IRemoteObject> &listener)
+                                                         const sptr<IRemoteObject> &listener,
+                                                         const std::string &copyPath)
 {
     auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
-    return distributedFileDaemonProxy->PrepareSession(srcUri, dstUri, srcDeviceId, listener);
+    return distributedFileDaemonProxy->PrepareSession(srcUri, dstUri, srcDeviceId, listener, copyPath);
 }
 
 int32_t DistributedFileDaemonManagerImpl::RequestSendFile(const std::string &srcUri,
@@ -75,6 +76,16 @@ int32_t DistributedFileDaemonManagerImpl::RequestSendFile(const std::string &src
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
     return distributedFileDaemonProxy->RequestSendFile(srcUri, dstPath, remoteDeviceId, sessionName);
+}
+
+int32_t DistributedFileDaemonManagerImpl::GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->GetRemoteCopyInfo(srcUri, isFile, isDir);
 }
 } // namespace DistributedFile
 } // namespace Storage

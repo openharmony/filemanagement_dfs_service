@@ -32,12 +32,13 @@ public:
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
-                           const sptr<IRemoteObject> &listener) override;
+                           const sptr<IRemoteObject> &listener,
+                           const std::string &copyPath) override;
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &remoteDeviceId,
                             const std::string &sessionName);
-
+    int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir);
 private:
     DistributedFileDaemonManagerImpl() = default;
 };

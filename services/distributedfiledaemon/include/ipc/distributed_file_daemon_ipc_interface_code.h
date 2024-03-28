@@ -24,6 +24,7 @@ namespace DistributedFile {
         DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION,
         DISTRIBUTED_FILE_PREPARE_SESSION,
         DISTRIBUTED_FILE_REQUEST_SEND_FILE,
+        DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO,
     };
 } // namespace DistributedFile
 } // namespace Storage
