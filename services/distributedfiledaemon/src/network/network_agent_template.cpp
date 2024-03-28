@@ -75,11 +75,6 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
                  1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI);
             continue;
         }
-
-        auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
-            &NetworkAgentTemplate::ConnectDeviceAsync, info);
-        cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
-        Recv(move(cmd));
     }
 }
 
