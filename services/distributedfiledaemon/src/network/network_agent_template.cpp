@@ -24,7 +24,6 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 namespace {
-constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 } // namespace
 
