@@ -244,7 +244,7 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
         LOGI("parent dir is not exits");
         return ENOENT;
     }
-    ret = CheckName(fileName, filePath);
+    ret = CheckName(fileName);
     if (ret != 0) {
         return ret;
     }
@@ -252,7 +252,7 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::CheckName(const std::string &fileName)
+static int32_t CheckName(const std::string &fileName)
 {
     for (char c : fileName) {
         if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\' || c == '"' || c == '%' ||
@@ -322,7 +322,7 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
         LOGE("insert new directory record in DB is failed, ret = %{public}d", ret);
         return ret;
     }
-    ret = CheckName(fileName, filePath);
+    ret = CheckName(directoryName);
     if (ret != 0) {
         return ret;
     }

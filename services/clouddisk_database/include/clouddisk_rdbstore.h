@@ -57,7 +57,6 @@ public:
     int32_t LocationGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t FavoriteGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t FileStatusGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
-    int32_t CheckName(const std::string &fileName);
 
 private:
     void Stop();
