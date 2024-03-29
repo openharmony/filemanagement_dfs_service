@@ -1295,7 +1295,6 @@ ohos_unittest("cloud_disk_data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
   ]
 
   cloudsync_kit_inner = [
