@@ -36,9 +36,9 @@ enum {
 };
 
 enum FileStatus {
-    WAITING_UPLOAD = 0,
-    FILE_UPLOADING = 1,
-    UPLOAD_FAIL = 2,
+    TO_BE_UPLOADED = 0,
+    UPLOADING = 1,
+    UPLOAD_FAILURE = 2,
     UPLOAD_SUCCESS = 3
 };
 

@@ -658,7 +658,7 @@ int32_t CloudDiskDataHandler::PushFileStatus(vector<DKRecord> &records)
 {
     for (auto &record : records) {
         ValuesBucket values;
-        values.PutInt(FC::FILE_STATUS, FileStatus::FILE_UPLOADING);
+        values.PutInt(FC::FILE_STATUS, FileStatus::UPLOADING);
         std::string whereClause = FC::CLOUD_ID + " = ?";
         std::vector<std::string> whereArgs;
         whereArgs.push_back(record.GetRecordId());
@@ -773,7 +773,7 @@ int32_t CloudDiskDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOper
         if (err != E_OK) {
             createFailSet_.push_back(entry.first);
             ValuesBucket valuesBucket;
-            valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAIL);
+            valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAILURE);
             int32_t changedRows;
             int32_t ret = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
             if (ret != E_OK) {
@@ -800,7 +800,7 @@ int32_t CloudDiskDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOper
         if (err != E_OK) {
             modifyFailSet_.push_back(entry.first);
             ValuesBucket valuesBucket;
-            valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAIL);
+            valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAILURE);
             int32_t changedRows;
             int32_t ret = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
             if (ret != E_OK) {
@@ -832,7 +832,7 @@ int32_t CloudDiskDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKReco
         if (err != E_OK) {
             modifyFailSet_.push_back(entry.first);
             ValuesBucket valuesBucket;
-            valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAIL);
+            valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAILURE);
             int32_t changedRows;
             int32_t ret = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
             if (ret != E_OK) {
@@ -864,7 +864,7 @@ int32_t CloudDiskDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKReco
         if (err != E_OK) {
             modifyFailSet_.push_back(entry.first);
             ValuesBucket valuesBucket;
-            valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAIL);
+            valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAILURE);
             int32_t changedRows;
             int32_t ret = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
             if (ret != E_OK) {

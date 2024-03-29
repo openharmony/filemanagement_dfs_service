@@ -238,7 +238,7 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutLong(FileColumn::FILE_SIZE, statInfo.st_size);
     fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     fileInfo.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
-    fileInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
+    fileInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     std::string fatherPath = filePath.substr(0, filePath.find_last_of('/'));
     if (!CloudFileUtils::IsDir(fatherPath)) {
         return ENOENT;
@@ -338,7 +338,7 @@ int32_t CloudDiskRdbStore::Write(const std::string &cloudId)
     write.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     write.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     write.PutLong(FileColumn::FILE_TIME_VISIT, Timespec2Milliseconds(statInfo.st_atim));
-    write.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
+    write.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     if (position != LOCAL) {
         write.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_FDIRTY));
         write.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::UPDATE));
@@ -575,7 +575,7 @@ static void FileRename(ValuesBucket &values, const int32_t &position, const std:
     if (position != LOCAL) {
         values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::RENAME));
-        values.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
+        values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     }
 }
 
@@ -585,7 +585,7 @@ static void FileMove(ValuesBucket &values, const int32_t &position, const std::s
     if (position != LOCAL) {
         values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::MOVE));
-        values.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
+        values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     }
 }
 
