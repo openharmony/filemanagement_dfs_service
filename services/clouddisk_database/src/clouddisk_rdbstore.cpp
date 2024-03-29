@@ -27,13 +27,11 @@
 #include "rdb_sql_utils.h"
 #include "utils_log.h"
 #include "dfs_error.h"
-#include "mimetype_utils.h"
 
 namespace OHOS::FileManagement::CloudDisk {
 using namespace std;
 using namespace OHOS::NativeRdb;
 using namespace CloudSync;
-using namespace OHOS::Media;
 
 enum XATTR_CODE {
     ERROR_CODE = -1,
@@ -63,7 +61,6 @@ CloudDiskRdbStore::CloudDiskRdbStore(const std::string &bundleName, const int32_
     : bundleName_(bundleName), userId_(userId)
 {
     RdbInit();
-    MimeTypeUtils::InitMimeTypeMap();
 }
 
 CloudDiskRdbStore::~CloudDiskRdbStore()
@@ -179,26 +176,6 @@ static int32_t GetFileExtension(const std::string &fileName, std::string &extens
     return E_INVAL_ARG;
 }
 
-static int32_t GetFileTypeFromMimeType(const std::string &mimeType)
-{
-    size_t pos = mimeType.find_first_of("/");
-    if (pos == string::npos) {
-        LOGE("Invalid mime type: %{public}s", mimeType.c_str());
-        return E_INVAL_ARG;
-    }
-    string prefix = mimeType.substr(0, pos);
-    if (prefix == "audio") {
-        return static_cast<int32_t>(FileType::FILE_TYPE_AUDIO);
-    } else if (prefix == "image") {
-        return static_cast<int32_t>(FileType::FILE_TYPE_IMAGE);
-    } else if (prefix == "video") {
-        return static_cast<int32_t>(FileType::FILE_TYPE_VIDEO);
-    } else if (prefix == "text") {
-        return static_cast<int32_t>(FileType::FILE_TYPE_TEXT);
-    }
-    return static_cast<int32_t>(FileType::FILE_TYPE_APPLICATION);
-}
-
 static int64_t Timespec2Milliseconds(const struct timespec &time)
 {
     return time.tv_sec * SECOND_TO_MILLISECOND + time.tv_nsec / MILLISECOND_TO_NANOSECOND;
@@ -209,10 +186,6 @@ static void FillFileType(const std::string &fileName, ValuesBucket &fileInfo)
     string extension;
     if (!GetFileExtension(fileName, extension)) {
         fileInfo.PutString(FileColumn::FILE_CATEGORY, extension);
-        string mimeType = MimeTypeUtils::GetMimeTypeFromExtension(extension);
-        fileInfo.PutString(FileColumn::MIME_TYPE, mimeType);
-        int32_t fileType = GetFileTypeFromMimeType(mimeType);
-        fileInfo.PutInt(FileColumn::FILE_TYPE, fileType);
     }
 }
 

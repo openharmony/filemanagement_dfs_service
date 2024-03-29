@@ -36,7 +36,6 @@ ohos_shared_library("clouddisk_database") {
   ]
 
   sources = [
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/mimetype_utils.cpp",
     "src/clouddisk_rdb_utils.cpp",
     "src/clouddisk_rdbstore.cpp",
     "src/clouddisk_sync_helper.cpp",

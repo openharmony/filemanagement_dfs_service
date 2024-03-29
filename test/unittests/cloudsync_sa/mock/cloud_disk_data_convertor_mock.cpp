@@ -20,7 +20,6 @@
 #include <unistd.h>
 
 #include "cloud_disk_data_const.h"
-#include "mimetype_utils.h"
 #include "cloud_pref_impl.h"
 #include "cloud_file_utils.h"
 
@@ -40,7 +39,6 @@ CloudDiskDataConvertor::CloudDiskDataConvertor(int32_t userId,
                                                const function<void(int32_t, NativeRdb::ResultSet &resultSet)> &func)
     : userId_(userId), bundleName_(bundleName), type_(type), errHandler_(func)
 {
-    Media::MimeTypeUtils::InitMimeTypeMap();
 }
 void CloudDiskDataConvertor::HandleErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {

@@ -20,7 +20,6 @@
 #include <unistd.h>
 
 #include "cloud_disk_data_const.h"
-#include "mimetype_utils.h"
 #include "cloud_pref_impl.h"
 #include "cloud_file_utils.h"
 
@@ -40,7 +39,6 @@ CloudDiskDataConvertor::CloudDiskDataConvertor(int32_t userId,
                                                const function<void(int32_t, NativeRdb::ResultSet &resultSet)> &func)
     : userId_(userId), bundleName_(bundleName), type_(type), errHandler_(func)
 {
-    Media::MimeTypeUtils::InitMimeTypeMap();
 }
 void CloudDiskDataConvertor::HandleErr(int32_t err, NativeRdb::ResultSet &resultSet)
 {
@@ -195,11 +193,7 @@ int32_t CloudDiskDataConvertor::ExtractFileName(const DriveKit::DKRecordData &da
     size_t pos = fileName.find_last_of('.');
     if (pos != string::npos) {
         string extension = fileName.substr(fileName.find_last_of('.') + 1, fileName.length());
-        auto mimeType = Media::MimeTypeUtils::GetMimeTypeFromExtension(extension);
-        auto mediaType = Media::MimeTypeUtils::GetMediaTypeFromMimeType(mimeType);
         valueBucket.PutString(FileColumn::FILE_CATEGORY, extension);
-        valueBucket.PutString(FileColumn::MIME_TYPE, mimeType);
-        valueBucket.PutInt(FileColumn::FILE_TYPE, static_cast<int32_t>(mediaType));
     }
     valueBucket.PutString(FileColumn::FILE_NAME, fileName);
     return E_OK;
