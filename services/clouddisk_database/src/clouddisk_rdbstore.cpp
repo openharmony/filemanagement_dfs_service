@@ -226,6 +226,24 @@ static int64_t UTCTimeMilliSeconds()
     return t.tv_sec * SECOND_TO_MILLISECOND + t.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 
+static int32_t CheckName(const std::string &fileName)
+{
+    for (char c : fileName) {
+        if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\' || c == '"' || c == '%' ||
+            c == '&' || c == '#' || c == ';' || c == '!'
+        ) {
+            LOGI("Illegal name");
+            return EINVAL;
+        }
+    }
+    std::string realFileName = fileName.substr(0, fileName.find_last_of('.'));
+    if (realFileName == "." || fileName.find("..") != std::string::npos ||
+        ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji") ||
+        fileName.length() > MAX_FILE_NAME_SIZE) {
+        return EINVAL;
+    }
+}
+
 static int32_t CreateFile(const std::string &fileName, const std::string &filePath, ValuesBucket &fileInfo)
 {
     struct stat statInfo {};
@@ -250,24 +268,6 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     }
     FillFileType(fileName, fileInfo);
     return E_OK;
-}
-
-static int32_t CheckName(const std::string &fileName)
-{
-    for (char c : fileName) {
-        if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\' || c == '"' || c == '%' ||
-            c == '&' || c == '#' || c == ';' || c == '!'
-        ) {
-            LOGI("Illegal name");
-            return EINVAL;
-        }
-    }
-    std::string realFileName = fileName.substr(0, fileName.find_last_of('.'));
-    if (realFileName == "." || fileName.find("..") != std::string::npos ||
-        ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji") ||
-        fileName.length() > MAX_FILE_NAME_SIZE) {
-        return EINVAL;
-    }
 }
 
 int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string &parentCloudId,
