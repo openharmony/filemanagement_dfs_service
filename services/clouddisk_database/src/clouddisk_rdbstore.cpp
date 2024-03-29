@@ -46,7 +46,7 @@ enum XATTR_CODE {
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static const uint32_t SET_STATE = 1;
 static const uint32_t CANCEL_STATE = 0;
-static const uint32_t MAX_FILE_NAME_SIZE = 255;
+static const uint32_t MAX_FILE_NAME_SIZE = 246;
 
 static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
 {
@@ -241,21 +241,33 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     std::string fatherPath = filePath.substr(0, filePath.find_last_of('/'));
     if (!CloudFileUtils::IsDir(fatherPath)) {
+        LOGI("parent dir is not exits");
         return ENOENT;
     }
+    ret = CheckName(fileName, filePath);
+    if (ret != 0) {
+        return ret;
+    }
+    FillFileType(fileName, fileInfo);
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::CheckName(const std::string &fileName)
+{
     for (char c : fileName) {
-        if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\') {
+        if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\' || c == '"' || c == '%' ||
+            c == '&' || c == '#' || c == ';' || c == '!'
+        ) {
+            LOGI("Illegal name");
             return EINVAL;
         }
     }
     std::string realFileName = fileName.substr(0, fileName.find_last_of('.'));
-    if (realFileName == ".." || realFileName == "." ||
+    if (realFileName == "." || fileName.find("..") != std::string::npos ||
         ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji") ||
         fileName.length() > MAX_FILE_NAME_SIZE) {
         return EINVAL;
     }
-    FillFileType(fileName, fileInfo);
-    return E_OK;
 }
 
 int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string &parentCloudId,
@@ -308,6 +320,10 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
     int32_t ret = rdbStore_->Insert(outRowId, FileColumn::FILES_TABLE, dirInfo);
     if (ret != E_OK) {
         LOGE("insert new directory record in DB is failed, ret = %{public}d", ret);
+        return ret;
+    }
+    ret = CheckName(fileName, filePath);
+    if (ret != 0) {
         return ret;
     }
     return E_OK;
@@ -571,21 +587,21 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
 static void FileRename(ValuesBucket &values, const int32_t &position, const std::string &newFileName)
 {
     values.PutString(FileColumn::FILE_NAME, newFileName);
+    values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     FillFileType(newFileName, values);
     if (position != LOCAL) {
         values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::RENAME));
-        values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     }
 }
 
 static void FileMove(ValuesBucket &values, const int32_t &position, const std::string &newParentCloudId)
 {
     values.PutString(FileColumn::PARENT_CLOUD_ID, newParentCloudId);
+    values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     if (position != LOCAL) {
         values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::MOVE));
-        values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     }
 }
 

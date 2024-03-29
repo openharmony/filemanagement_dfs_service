@@ -158,8 +158,8 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
 
 bool CloudFileUtils::IsDir(const std::string& path)
 {
-    std::filesystem::path p(path);
-    return std::filesystem::is_directory(p);
+    std::filesystem::path dirPath(path);
+    return std::filesystem::is_directory(dirPath);
 }
 
 } // namespace CloudDisk
