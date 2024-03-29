@@ -242,6 +242,7 @@ static int32_t CheckName(const std::string &fileName)
         fileName.length() > MAX_FILE_NAME_SIZE) {
         return EINVAL;
     }
+    return 0;
 }
 
 static int32_t CreateFile(const std::string &fileName, const std::string &filePath, ValuesBucket &fileInfo)
