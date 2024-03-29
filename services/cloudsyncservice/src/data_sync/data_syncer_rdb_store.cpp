@@ -85,18 +85,47 @@ int32_t DataSyncerRdbStore::Insert(int32_t userId, const std::string &bundleName
     return E_OK;
 }
 
+static int64_t UTCTimeMilliSeconds()
+{
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return t.tv_sec * SECOND_TO_MILLISECOND + t.tv_nsec / MILLISECOND_TO_NANOSECOND;
+}
+
 int32_t DataSyncerRdbStore::UpdateSyncState(int32_t userId, const string &bundleName, SyncState syncState)
 {
     LOGI("update syncstate %{public}d", syncState);
     int updateRows;
     NativeRdb::ValuesBucket values;
     values.PutInt(SYNC_STATE, static_cast<int32_t>(syncState));
+    if (syncState == SyncState::SYNC_SUCCEED) {
+        values.PutLong(LAST_SYNC_TIME, UTCTimeMilliSeconds());
+    }
     string whereClause = USER_ID + " = ? AND " + BUNDLE_NAME + " = ?";
     vector<string> whereArgs = { to_string(userId), bundleName };
     int32_t ret = rdb_->Update(updateRows, DATA_SYNCER_TABLE, values, whereClause, whereArgs);
     if (ret != E_OK) {
         LOGE("update sync state failed: %{public}d", ret);
         return E_OK;
+    }
+    return E_OK;
+}
+
+int32_t DataSyncerRdbStore::GetLastSyncTime(int32_t userId, const string &bundleName, int64_t &time)
+{
+    LOGI("get sync time uid: %{public}d, name: %{public}s", userId, bundleName.c_str());
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(DATA_SYNCER_TABLE);
+    predicates.EqualTo(USER_ID, userId)->EqualTo(BUNDLE_NAME, bundleName);
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
+
+    RETURN_ON_ERR(Query(predicates, resultSet));
+    if (resultSet->GoToNextRow() != E_OK) {
+        return E_INVAL_ARG;
+    }
+    int32_t ret = DataConvertor::GetLong(LAST_SYNC_TIME, time, *resultSet);
+    if (ret != E_OK) {
+        LOGE("get last sync time failed");
+        return ret;
     }
     return E_OK;
 }

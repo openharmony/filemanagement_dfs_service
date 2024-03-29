@@ -32,7 +32,7 @@ using namespace std;
 
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
 
-int32_t CloudSyncServiceProxy::UnRegisterCallbackInner()
+int32_t CloudSyncServiceProxy::UnRegisterCallbackInner(const std::string &bundleName)
 {
     LOGI("Start UnRegisterCallbackInner");
     MessageParcel data;
@@ -49,6 +49,12 @@ int32_t CloudSyncServiceProxy::UnRegisterCallbackInner()
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_CALLBACK), data, reply, option);
     if (ret != E_OK) {
@@ -59,7 +65,8 @@ int32_t CloudSyncServiceProxy::UnRegisterCallbackInner()
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject)
+int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject,
+                                                     const std::string &bundleName)
 {
     LOGI("Start RegisterCallbackInner");
     MessageParcel data;
@@ -81,6 +88,11 @@ int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &
         return E_INVAL_ARG;
     }
 
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
     auto remote = Remote();
     if (!remote) {
         LOGE("remote is nullptr");
@@ -96,7 +108,7 @@ int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag)
+int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag, const std::string &bundleName)
 {
     LOGI("Start Sync");
     MessageParcel data;
@@ -110,6 +122,11 @@ int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag)
 
     if (!data.WriteBool(forceFlag)) {
         LOGE("Failed to send the force flag");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
         return E_INVAL_ARG;
     }
 
@@ -165,7 +182,7 @@ int32_t CloudSyncServiceProxy::TriggerSyncInner(const std::string &bundleName, c
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::GetSyncTimeInner(int64_t &syncTime)
+int32_t CloudSyncServiceProxy::GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName)
 {
     LOGI("Start GetSyncTimeInner");
     LOGI("Start Sync");
@@ -182,6 +199,11 @@ int32_t CloudSyncServiceProxy::GetSyncTimeInner(int64_t &syncTime)
     if (!remote) {
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
     }
 
     int32_t ret = remote->SendRequest(
@@ -228,7 +250,7 @@ int32_t CloudSyncServiceProxy::CleanCacheInner(const std::string &uri)
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::StopSyncInner()
+int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName)
 {
     LOGI("StopSync");
     MessageParcel data;
@@ -245,6 +267,12 @@ int32_t CloudSyncServiceProxy::StopSyncInner()
         LOGE("remote is nullptr");
         return E_BROKEN_IPC;
     }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
     int32_t ret = remote->SendRequest(static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_SYNC),
                                       data, reply, option);
     if (ret != E_OK) {

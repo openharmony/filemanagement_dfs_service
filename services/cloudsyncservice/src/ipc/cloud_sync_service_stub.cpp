@@ -106,7 +106,8 @@ int32_t CloudSyncServiceStub::HandleUnRegisterCallbackInner(MessageParcel &data,
         return E_PERMISSION_SYSTEM;
     }
 
-    int32_t res = UnRegisterCallbackInner();
+    string bundleName = data.ReadString();
+    int32_t res = UnRegisterCallbackInner(bundleName);
     reply.WriteInt32(res);
     LOGI("End UnRegisterCallbackInner");
     return res;
@@ -124,7 +125,8 @@ int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, M
         return E_PERMISSION_SYSTEM;
     }
     auto remoteObj = data.ReadRemoteObject();
-    int32_t res = RegisterCallbackInner(remoteObj);
+    string bundleName = data.ReadString();
+    int32_t res = RegisterCallbackInner(remoteObj, bundleName);
     reply.WriteInt32(res);
     LOGI("End RegisterCallbackInner");
     return res;
@@ -142,7 +144,8 @@ int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageP
         return E_PERMISSION_SYSTEM;
     }
     auto forceFlag = data.ReadBool();
-    int32_t res = StartSyncInner(forceFlag);
+    string bundleName = data.ReadString();
+    int32_t res = StartSyncInner(forceFlag, bundleName);
     reply.WriteInt32(res);
     LOGI("End StartSyncInner");
     return res;
@@ -178,7 +181,9 @@ int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessagePa
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
-    int32_t res = StopSyncInner();
+
+    string bundleName = data.ReadString();
+    int32_t res = StopSyncInner(bundleName);
     reply.WriteInt32(res);
     LOGI("End StopSyncInner");
     return res;
@@ -520,7 +525,8 @@ int32_t CloudSyncServiceStub::HandleGetSyncTime(MessageParcel &data, MessageParc
     }
 	
     int64_t syncTime = 0;
-    int32_t res = GetSyncTimeInner(syncTime);
+    string bundleName = data.ReadString();
+    int32_t res = GetSyncTimeInner(syncTime, bundleName);
     reply.WriteInt64(syncTime);
     reply.WriteInt32(res);
     return res;

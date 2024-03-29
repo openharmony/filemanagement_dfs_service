@@ -31,12 +31,13 @@ class CloudSyncManagerImpl final : public CloudSyncManager, public NoCopyable {
 public:
     static CloudSyncManagerImpl &GetInstance();
 
-    int32_t RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback) override;
-    int32_t UnRegisterCallback() override;
-    int32_t StartSync() override;
+    int32_t RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback,
+                             const std::string &bundleName = "") override;
+    int32_t UnRegisterCallback(const std::string &bundleName = "") override;
+    int32_t StartSync(const std::string &bundleName = "") override;
     int32_t StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) override;
     int32_t TriggerSync(const std::string &bundleName, const int32_t &userId) override;
-    int32_t StopSync() override;
+    int32_t StopSync(const std::string &bundleName = "") override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
     int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
@@ -48,7 +49,7 @@ public:
     int32_t StopDownloadFile(const std::string &uri) override;
     int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) override;
     int32_t UnregisterDownloadFileCallback() override;
-    int32_t GetSyncTime(int64_t &syncTime) override;
+    int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") override;
     int32_t CleanCache(const std::string &uri) override;
 
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {

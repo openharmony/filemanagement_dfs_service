@@ -26,17 +26,18 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject)
+int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject,
+                                                     const std::string &bundleName)
 {
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag)
+int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag, const std::string &bundleName)
 {
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StopSyncInner()
+int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName)
 {
     return E_OK;
 }

@@ -30,11 +30,12 @@ using namespace std;
 
 class MockService final : public CloudSyncServiceStub {
 public:
-    MOCK_METHOD1(RegisterCallbackInner, int32_t(const sptr<IRemoteObject> &remoteObject));
-    MOCK_METHOD0(UnRegisterCallbackInner, int32_t());
-    MOCK_METHOD1(StartSyncInner, int32_t(bool forceFlag));
+    MOCK_METHOD2(RegisterCallbackInner,
+                 int32_t(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName));
+    MOCK_METHOD1(UnRegisterCallbackInner, int32_t(const std::string &bundleName));
+    MOCK_METHOD2(StartSyncInner, int32_t(bool forceFlag, const std::string &bundleName));
     MOCK_METHOD2(TriggerSyncInner, int32_t(const std::string &bundleName, const int32_t &userId));
-    MOCK_METHOD0(StopSyncInner, int32_t());
+    MOCK_METHOD1(StopSyncInner, int32_t(const std::string &bundleName));
     MOCK_METHOD3(ChangeAppSwitch, int32_t(const std::string &accoutId, const std::string &bundleName, bool status));
     MOCK_METHOD2(Clean, int32_t(const std::string &accountId, const CleanOptions &cleanOptions));
     MOCK_METHOD2(NotifyDataChange, int32_t(const std::string &accoutId, const std::string &bundleName));
@@ -57,7 +58,7 @@ public:
                          AssetInfoObj &assetInfoObj));
     MOCK_METHOD1(RegisterDownloadAssetCallback, int32_t(const sptr<IRemoteObject> &remoteObject));
     MOCK_METHOD2(DeleteAsset, int32_t(const int32_t userId, const std::string &uri));
-    MOCK_METHOD1(GetSyncTimeInner, int32_t(int64_t &syncTime));
+    MOCK_METHOD2(GetSyncTimeInner, int32_t(int64_t &syncTime, const std::string &bundleName));
     MOCK_METHOD1(CleanCacheInner, int32_t(const std::string &uri));
 };
 
@@ -99,8 +100,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleUnRegisterCallbackInnerTest, TestSize.L
 {
     GTEST_LOG_(INFO) << "HandleUnRegisterCallbackInner Start";
     try {
+        string bundleName = "";
         MockService service;
-        EXPECT_CALL(service, UnRegisterCallbackInner()).WillOnce(Return(E_OK));
+        EXPECT_CALL(service, UnRegisterCallbackInner(bundleName)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -108,6 +110,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleUnRegisterCallbackInnerTest, TestSize.L
 
         sptr<CloudSyncCallbackMock> remote = sptr(new CloudSyncCallbackMock());
         EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
+
+        EXPECT_TRUE(data.WriteString(bundleName));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
                             static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_CALLBACK),
@@ -130,8 +134,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleRegisterCallbackInnerTest, TestSize.Lev
 {
     GTEST_LOG_(INFO) << "HandleRegisterCallbackInner Start";
     try {
+        string bundleName = "";
         MockService service;
-        EXPECT_CALL(service, RegisterCallbackInner(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(service, RegisterCallbackInner(_, bundleName)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -139,6 +144,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleRegisterCallbackInnerTest, TestSize.Lev
 
         sptr<CloudSyncCallbackMock> remote = sptr(new CloudSyncCallbackMock());
         EXPECT_TRUE(data.WriteRemoteObject(remote->AsObject().GetRefPtr()));
+
+        EXPECT_TRUE(data.WriteString(bundleName));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
                             static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_CALLBACK),
@@ -161,8 +168,9 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartSyncInnerTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "HandleStartSyncInner Start";
     try {
+        string bundleName = "";
         MockService service;
-        EXPECT_CALL(service, StartSyncInner(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(service, StartSyncInner(_, bundleName)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
@@ -170,6 +178,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartSyncInnerTest, TestSize.Level1)
 
         bool forceFlag = true;
         EXPECT_TRUE(data.WriteBool(forceFlag));
+
+        EXPECT_TRUE(data.WriteString(bundleName));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
                             static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_SYNC), data,
@@ -218,12 +228,15 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopSyncInnerTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "HandleStopSyncInner Start";
     try {
+        string bundleName = "";
         MockService service;
-        EXPECT_CALL(service, StopSyncInner()).WillOnce(Return(E_OK));
+        EXPECT_CALL(service, StopSyncInner(bundleName)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_TRUE(data.WriteString(bundleName));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
                             static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_SYNC), data,
@@ -674,12 +687,15 @@ HWTEST_F(CloudSyncServiceStubTest, HandleGetSyncTimeTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "HandleGetSyncTime Start";
     try {
+        string bundleName = "";
         MockService service;
-        EXPECT_CALL(service, GetSyncTimeInner(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(service, GetSyncTimeInner(_, bundleName)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
+
+        EXPECT_TRUE(data.WriteString(bundleName));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
               static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_GET_SYNC_TIME),

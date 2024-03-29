@@ -48,8 +48,9 @@ napi_value FileSyncNapi::GetLastSyncTime(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto cbExec = [arg]() -> NError {
-        int32_t ret = CloudSyncManager::GetInstance().GetSyncTime(arg->time);
+    string bundleName = GetBundleName(env, funcArg);
+    auto cbExec = [arg, bundleName]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().GetSyncTime(arg->time, bundleName);
         if (ret != E_OK) {
             LOGE("GetLastSyncTime error, result: %{public}d", ret);
             return NError(Convert2JsErrNum(ret));

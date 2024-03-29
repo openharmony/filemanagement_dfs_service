@@ -27,11 +27,12 @@ class ICloudSyncService : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Filemanagement.Dfs.ICloudSyncService")
 
-    virtual int32_t UnRegisterCallbackInner() = 0;
-    virtual int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) = 0;
-    virtual int32_t StartSyncInner(bool forceFlag) = 0;
+    virtual int32_t UnRegisterCallbackInner(const std::string &bundleName = "") = 0;
+    virtual int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject,
+                                          const std::string &bundleName = "") = 0;
+    virtual int32_t StartSyncInner(bool forceFlag, const std::string &bundleName = "") = 0;
     virtual int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) = 0;
-    virtual int32_t StopSyncInner() = 0;
+    virtual int32_t StopSyncInner(const std::string &bundleName = "") = 0;
     virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
     virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;
     virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
@@ -52,7 +53,7 @@ public:
                                   AssetInfoObj &assetInfoObj) = 0;
     virtual int32_t RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject) = 0;
     virtual int32_t DeleteAsset(const int32_t userId, const std::string &uri) = 0;
-    virtual int32_t GetSyncTimeInner(int64_t &syncTime) = 0;
+    virtual int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") = 0;
     virtual int32_t CleanCacheInner(const std::string &uri) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync

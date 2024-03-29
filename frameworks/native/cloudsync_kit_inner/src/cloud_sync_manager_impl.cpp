@@ -31,7 +31,8 @@ CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
     return instance;
 }
 
-int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback)
+int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback,
+                                               const std::string &bundleName)
 {
     if (!callback) {
         LOGE("callback is null");
@@ -42,8 +43,8 @@ int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCa
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    auto ret =
-        CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback)));
+    auto ret = CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback)),
+                                                            bundleName);
     {
         unique_lock<mutex> lock(callbackMutex_);
         callback_ = callback;
@@ -54,7 +55,7 @@ int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCa
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::UnRegisterCallback()
+int32_t CloudSyncManagerImpl::UnRegisterCallback(const std::string &bundleName)
 {
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
@@ -62,7 +63,7 @@ int32_t CloudSyncManagerImpl::UnRegisterCallback()
         return E_SA_LOAD_FAILED;
     }
 
-    auto ret = CloudSyncServiceProxy->UnRegisterCallbackInner();
+    auto ret = CloudSyncServiceProxy->UnRegisterCallbackInner(bundleName);
     if (!ret) {
         {
             unique_lock<mutex> lock(callbackMutex_);
@@ -75,7 +76,7 @@ int32_t CloudSyncManagerImpl::UnRegisterCallback()
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::StartSync()
+int32_t CloudSyncManagerImpl::StartSync(const std::string &bundleName)
 {
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
@@ -83,10 +84,10 @@ int32_t CloudSyncManagerImpl::StartSync()
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return CloudSyncServiceProxy->StartSyncInner(false);
+    return CloudSyncServiceProxy->StartSyncInner(false, bundleName);
 }
 
-int32_t CloudSyncManagerImpl::GetSyncTime(int64_t &syncTime)
+int32_t CloudSyncManagerImpl::GetSyncTime(int64_t &syncTime, const std::string &bundleName)
 {
     LOGI("GetSyncTime Start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
@@ -95,7 +96,7 @@ int32_t CloudSyncManagerImpl::GetSyncTime(int64_t &syncTime)
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return CloudSyncServiceProxy->GetSyncTimeInner(syncTime);
+    return CloudSyncServiceProxy->GetSyncTimeInner(syncTime, bundleName);
 }
 
 int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)
@@ -142,7 +143,7 @@ int32_t CloudSyncManagerImpl::TriggerSync(const std::string &bundleName, const i
     return CloudSyncServiceProxy->TriggerSyncInner(bundleName, userId);
 }
 
-int32_t CloudSyncManagerImpl::StopSync()
+int32_t CloudSyncManagerImpl::StopSync(const std::string &bundleName)
 {
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
@@ -150,7 +151,7 @@ int32_t CloudSyncManagerImpl::StopSync()
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return CloudSyncServiceProxy->StopSyncInner();
+    return CloudSyncServiceProxy->StopSyncInner(bundleName);
 }
 
 int32_t CloudSyncManagerImpl::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)

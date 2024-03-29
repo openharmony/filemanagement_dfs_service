@@ -63,6 +63,7 @@ const int32_t DIRECTORY = 1;
 
 const int32_t MILLISECOND_TO_SECOND = 1000;
 const int32_t SECOND_TO_MILLISECOND = 1000;
+const int64_t MILLISECOND_TO_NANOSECOND = 1e6;
 
 const std::string GALLERY_BUNDLE_NAME = "com.ohos.photos";
 const std::string MEDIALIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";

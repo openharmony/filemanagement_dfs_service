@@ -28,6 +28,7 @@ public:
 
     int32_t Insert(int32_t userId, const std::string &bundleName);
     int32_t UpdateSyncState(int32_t userId, const std::string &bundleName, SyncState syncState);
+    int32_t GetLastSyncTime(int32_t userId, const std::string &bundleName, int64_t &time);
     int32_t QueryDataSyncer(int32_t userId, std::shared_ptr<NativeRdb::ResultSet> &resultSet);
 private:
     DataSyncerRdbStore() = default;

@@ -32,20 +32,21 @@ public:
      * @param callback 注册同步回调
      * @return int32_t 同步返回执行结果
      */
-    virtual int32_t RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback) = 0;
+    virtual int32_t RegisterCallback(const std::shared_ptr<CloudSyncCallback> callback,
+                                     const std::string &bundleName = "") = 0;
     /**
      * @brief 注册
      *
      * @param callback 卸载同步回调
      * @return int32_t 返回执行结果
      */
-    virtual int32_t UnRegisterCallback() = 0;
+    virtual int32_t UnRegisterCallback(const std::string &bundleName = "") = 0;
     /**
      * @brief 启动同步
      *
      * @return int32_t 同步返回执行结果
      */
-    virtual int32_t StartSync() = 0;
+    virtual int32_t StartSync(const std::string &bundleName = "") = 0;
     /**
      * @brief 启动同步
      *
@@ -67,7 +68,7 @@ public:
      *
      * @return int32_t 同步返回执行结果
      */
-    virtual int32_t StopSync() = 0;
+    virtual int32_t StopSync(const std::string &bundleName = "") = 0;
     /**
      * @brief 切换应用云同步开关
      *
@@ -101,7 +102,7 @@ public:
     virtual int32_t StopDownloadFile(const std::string &path) = 0;
     virtual int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) = 0;
     virtual int32_t UnregisterDownloadFileCallback() = 0;
-    virtual int32_t GetSyncTime(int64_t &syncTime) = 0;
+    virtual int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") = 0;
     virtual int32_t CleanCache(const std::string &uri) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
