@@ -601,7 +601,7 @@ string GetIsFavorite(fuse_req_t req, struct CloudDiskInode *inoPtr)
     return favorite;
 }
 
-static GetFileStatus(fuse_req_t req, struct CloudDiskInode *inoPtr)
+string GetFileStatus(fuse_req_t req, struct CloudDiskInode *inoPtr)
 {
     string fileStatus;
     if (inoPtr == nullptr) {
