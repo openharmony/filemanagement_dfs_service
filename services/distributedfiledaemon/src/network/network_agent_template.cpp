@@ -24,7 +24,6 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 namespace {
-constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 } // namespace
 
@@ -75,11 +74,6 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
                  1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI);
             continue;
         }
-
-        auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
-            &NetworkAgentTemplate::ConnectDeviceAsync, info);
-        cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
-        Recv(move(cmd));
     }
 }
 
