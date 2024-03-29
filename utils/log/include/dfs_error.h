@@ -74,8 +74,6 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_FILE_NOT_EXIST,
     E_SEND_FILE,
     E_MEMORY,
-    E_DIR_NOT_EXIST,
-    E_ILLEGALS_FILE_NAME,
 };
 
 enum JsErrCode {

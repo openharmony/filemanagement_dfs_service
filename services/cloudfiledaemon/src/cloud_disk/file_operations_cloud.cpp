@@ -601,9 +601,13 @@ string GetIsFavorite(fuse_req_t req, struct CloudDiskInode *inoPtr)
     return favorite;
 }
 
-string GetFileStatus(fuse_req_t req, struct CloudDiskInode *inoPtr)
+static GetFileStatus(fuse_req_t req, struct CloudDiskInode *inoPtr)
 {
     string fileStatus;
+    if (inoPtr == nullptr) {
+        LOGE("inoPtr is null");
+        return "";
+    }
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);

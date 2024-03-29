@@ -19,10 +19,10 @@
 #include <sys/stat.h>
 #include <sstream>
 
+#include "clouddisk_db_const.h"
 #include "clouddisk_sync_helper.h"
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_type_const.h"
-#include "clouddisk_db_const.h"
 #include "file_column.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
@@ -41,7 +41,7 @@ enum XATTR_CODE {
     CLOUD_LOCATION = 1,
     CLOUD_RECYCLE,
     IS_FAVORITE,
-    FILE_STATUS
+    FILE_SYNC_STATUS
 };
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static const uint32_t SET_STATE = 1;
@@ -241,17 +241,18 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::WAITING_UPLOAD);
     std::string fatherPath = filePath.substr(0, filePath.find_last_of('/'));
     if (!CloudFileUtils::IsDir(fatherPath)) {
-        return E_DIR_NOT_EXIST;
+        return ENOENT;
     }
     for (char c : fileName) {
         if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\') {
-            return E_ILLEGALS_FILE_NAME;
+            return EINVAL;
         }
     }
     std::string realFileName = fileName.substr(0, fileName.find_last_of('.'));
-    if (realFileName == ".." || realFileName == "." || (fileName.find("emoji") != std::string::npos) ||
+    if (realFileName == ".." || realFileName == "." ||
+        ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji") ||
         fileName.length() > MAX_FILE_NAME_SIZE) {
-        return E_ILLEGALS_FILE_NAME;
+        return EINVAL;
     }
     FillFileType(fileName, fileInfo);
     return E_OK;
@@ -441,7 +442,7 @@ int32_t CheckXattr(const std::string &key)
     } else if (key == IS_FAVORITE_XATTR) {
         return IS_FAVORITE;
     } else if (key == IS_FILE_STATUS_XATTR) {
-        return FILE_STATUS;
+        return FILE_SYNC_STATUS;
     } else {
         return ERROR_CODE;
     }
@@ -514,7 +515,11 @@ int32_t CloudDiskRdbStore::FileStatusGetXattr(const std::string &cloudId, const 
         return E_RDB;
     }
     int32_t fileStatus;
-    CloudDiskRdbUtils::GetInt(FileColumn::FILE_STATUS, fileStatus, resultSet);
+    int32_t ret = CloudDiskRdbUtils::GetInt(FileColumn::FILE_STATUS, fileStatus, resultSet);
+    if (ret != E_OK) {
+        LOGE("get file status failed");
+        return ret;
+    }
     value = to_string(fileStatus);
     return E_OK;
 }
@@ -529,7 +534,7 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
         case IS_FAVORITE:
             return FavoriteGetXattr(cloudId, key, value);
             break;
-        case FILE_STATUS:
+        case FILE_SYNC_STATUS:
             return FileStatusGetXattr(cloudId, key, value);
             break;
     }
