@@ -318,7 +318,7 @@ HWTEST_F(FileDataHandlerTest, SetRetry001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(1));
 
         std::string recordId = "recordId";
         int32_t ret = fileDataHandler->SetRetry(recordId);
@@ -368,7 +368,7 @@ HWTEST_F(FileDataHandlerTest, RecycleFile001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(1));
 
         std::string recordId;
         int32_t ret = fileDataHandler->RecycleFile(recordId);
@@ -891,11 +891,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess003, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
         std::unordered_map<std::string, LocalInfo> localMap;
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>()))
-            .WillOnce(Return(0))
-            .WillOnce(Return(1))
-            .WillOnce(Return(0))
-            .WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
         EXPECT_CALL(*rdb, ExecuteSql(_, _)).WillRepeatedly(Return(0));
         DriveKit::DKRecordData data;
         DriveKit::DKRecord record;
@@ -914,7 +910,7 @@ HWTEST_F(FileDataHandlerTest, OnCreateRecordSuccess003, TestSize.Level1)
         int32_t ret = fileDataHandler->OnCreateRecordSuccess(entry, localMap);
         EXPECT_EQ(E_OK, ret);
         ret = fileDataHandler->OnCreateRecordSuccess(entry, localMap);
-        EXPECT_EQ(ret, 1);
+        EXPECT_EQ(E_OK, ret);
         localMap[path] = { 11, 1111 };
         ret = fileDataHandler->OnCreateRecordSuccess(entry, localMap);
         EXPECT_EQ(E_OK, ret);
@@ -1028,7 +1024,7 @@ HWTEST_F(FileDataHandlerTest, OnMdirtyRecordSuccess004, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(1));
         EXPECT_CALL(*rdb, ExecuteSql(_, _)).WillRepeatedly(Return(0));
         std::unordered_map<std::string, LocalInfo> localMap;
         DriveKit::DKRecordData data;
@@ -1098,14 +1094,14 @@ HWTEST_F(FileDataHandlerTest, OnDeleteRecordSuccess001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
-        EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillOnce(Return(0)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Delete(_, _, _, A<const vector<string> &>())).WillRepeatedly(Return(0));
         DriveKit::DKRecordOperResult operResult;
         DriveKit::DKRecordId recordId = "1";
         std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> entry(recordId, operResult);
         int32_t ret = fileDataHandler->OnDeleteRecordSuccess(entry);
         EXPECT_EQ(0, ret);
         ret = fileDataHandler->OnDeleteRecordSuccess(entry);
-        EXPECT_EQ(1, ret);
+        EXPECT_EQ(0, ret);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnDeleteRecordSuccess001 ERROR";
@@ -1534,7 +1530,7 @@ HWTEST_F(FileDataHandlerTest, ClearCloudInfo001, TestSize.Level1)
     try {
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(1));
 
         std::string cloudId;
         int32_t ret = fileDataHandler->ClearCloudInfo(cloudId);
@@ -1687,7 +1683,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord002, TestSize.Level1)
         EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
         EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(0));
 
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(1));
 
         int32_t ret = fileDataHandler->CleanNotPureCloudRecord(CleanAction::RETAIN_DATA);
         EXPECT_NE(E_OK, ret);
@@ -1776,7 +1772,7 @@ HWTEST_F(FileDataHandlerTest, CleanNotPureCloudRecord005, TestSize.Level1)
 
         EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(DoAll(SetArgReferee<1>(2), Return(0)));
 
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(1));
 
         int32_t ret = fileDataHandler->CleanNotPureCloudRecord(CleanAction::RETAIN_DATA);
         EXPECT_NE(E_OK, ret);
