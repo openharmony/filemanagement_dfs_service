@@ -50,6 +50,13 @@ enum class OperationType : int64_t {
     OPEN
 };
 
+enum FileStatus {
+    TO_BE_UPLOADED = 0,
+    UPLOADING = 1,
+    UPLOAD_FAILURE = 2,
+    UPLOAD_SUCCESS = 3
+};
+
 constexpr int64_t SECOND_TO_MILLISECOND = 1e3;
 constexpr int64_t MILLISECOND_TO_NANOSECOND = 1e6;
 constexpr int32_t LOCAL = 1;

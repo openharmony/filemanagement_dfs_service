@@ -14,6 +14,7 @@
  */
 #include "cloud_file_utils.h"
 #include <fcntl.h>
+#include <filesystem>
 #include <sys/xattr.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -121,6 +122,11 @@ bool CloudFileUtils::CheckIsFavorite(const string &key)
     return key == IS_FAVORITE_XATTR;
 }
 
+bool CloudFileUtils::CheckFileStatus(const string &key)
+{
+    return key == IS_FILE_STATUS_XATTR;
+}
+
 bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
 {
     unique_ptr<char[]> absPath = make_unique<char[]>(PATH_MAX + 1);
@@ -149,7 +155,6 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
     close(fd);
     return writeOpenCnt != 0;
 }
-
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

@@ -39,6 +39,7 @@ namespace {
     static const std::string HMDFS_PERMISSION_XATTR = "user.hmdfs.perm";
     static const std::string CLOUD_CLOUD_RECYCLE_XATTR = "user.cloud.recycle";
     static const std::string IS_FAVORITE_XATTR = "user.cloud.favorite";
+    static const std::string IS_FILE_STATUS_XATTR = "user.cloud.filestatus";
 }
 
 class CloudFileUtils final {
@@ -48,6 +49,7 @@ public:
     static bool CheckIsHmdfsPermission(const std::string &key);
     static bool CheckIsCloudRecycle(const std::string &key);
     static bool CheckIsFavorite(const std::string &key);
+    static bool CheckFileStatus(const std::string &key);
     static std::string GetLocalBucketPath(std::string cloudId, std::string bundleName,
                                           int32_t userId);
     static std::string GetLocalFilePath(std::string cloudId, std::string bundleName,

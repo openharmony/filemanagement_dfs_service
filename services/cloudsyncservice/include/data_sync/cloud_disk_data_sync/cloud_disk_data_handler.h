@@ -115,6 +115,7 @@ private:
     void AppendFileToDownload(const std::string &cloudId,
                               const std::string &fieldKey,
                               std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
+    int32_t PushFileStatus(std::vector<DriveKit::DKRecord> &records);
 
     CloudDiskDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
     int64_t UTCTimeMilliSeconds();

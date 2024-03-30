@@ -37,11 +37,13 @@ enum XATTR_CODE {
     ERROR_CODE = -1,
     CLOUD_LOCATION = 1,
     CLOUD_RECYCLE,
-    IS_FAVORITE
+    IS_FAVORITE,
+    FILE_SYNC_STATUS
 };
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static const uint32_t SET_STATE = 1;
 static const uint32_t CANCEL_STATE = 0;
+static const uint32_t MAX_FILE_NAME_SIZE = 246;
 
 static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
 {
@@ -196,6 +198,24 @@ static int64_t UTCTimeMilliSeconds()
     return t.tv_sec * SECOND_TO_MILLISECOND + t.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 
+static int32_t CheckName(const std::string &fileName)
+{
+    for (char c : fileName) {
+        if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\' ||
+            c == '"' || c == '%' || c == '&' || c == '#' || c == ';' || c == '!' || c == ' ') {
+            LOGI("Illegal name");
+            return EINVAL;
+        }
+    }
+    std::string realFileName = fileName.substr(0, fileName.find_last_of('.'));
+    if (realFileName.find(".") != std::string::npos || realFileName.find("..") != std::string::npos ||
+        ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji") ||
+        fileName.length() > MAX_FILE_NAME_SIZE) {
+        return EINVAL;
+    }
+    return 0;
+}
+
 static int32_t CreateFile(const std::string &fileName, const std::string &filePath, ValuesBucket &fileInfo)
 {
     struct stat statInfo {};
@@ -208,6 +228,10 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutLong(FileColumn::FILE_SIZE, statInfo.st_size);
     fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     fileInfo.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
+    ret = CheckName(fileName);
+    if (ret != 0) {
+        return ret;
+    }
     FillFileType(fileName, fileInfo);
     return E_OK;
 }
@@ -264,6 +288,10 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
         LOGE("insert new directory record in DB is failed, ret = %{public}d", ret);
         return ret;
     }
+    ret = CheckName(directoryName);
+    if (ret != 0) {
+        return ret;
+    }
     return E_OK;
 }
 
@@ -292,6 +320,7 @@ int32_t CloudDiskRdbStore::Write(const std::string &cloudId)
     write.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     write.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     write.PutLong(FileColumn::FILE_TIME_VISIT, Timespec2Milliseconds(statInfo.st_atim));
+    write.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     if (position != LOCAL) {
         write.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_FDIRTY));
         write.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::UPDATE));
@@ -402,6 +431,8 @@ int32_t CheckXattr(const std::string &key)
         return CLOUD_RECYCLE;
     } else if (key == IS_FAVORITE_XATTR) {
         return IS_FAVORITE;
+    } else if (key == IS_FILE_STATUS_XATTR) {
+        return FILE_SYNC_STATUS;
     } else {
         return ERROR_CODE;
     }
@@ -455,6 +486,34 @@ int32_t CloudDiskRdbStore::FavoriteGetXattr(const std::string &cloudId, const st
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::FileStatusGetXattr(const std::string &cloudId, const std::string &key, std::string &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (cloudId.empty() || cloudId == "rootId" || key != IS_FILE_STATUS_XATTR) {
+        LOGE("getxattr parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    AbsRdbPredicates getXAttrPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    getXAttrPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(getXAttrPredicates, { FileColumn::FILE_STATUS });
+    if (resultSet == nullptr) {
+        LOGE("get nullptr getxattr result");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("getxattr result set go to next row failed");
+        return E_RDB;
+    }
+    int32_t fileStatus;
+    int32_t ret = CloudDiskRdbUtils::GetInt(FileColumn::FILE_STATUS, fileStatus, resultSet);
+    if (ret != E_OK) {
+        LOGE("get file status failed");
+        return ret;
+    }
+    value = to_string(fileStatus);
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value)
 {
     int32_t num = CheckXattr(key);
@@ -464,6 +523,9 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
             break;
         case IS_FAVORITE:
             return FavoriteGetXattr(cloudId, key, value);
+            break;
+        case FILE_SYNC_STATUS:
+            return FileStatusGetXattr(cloudId, key, value);
             break;
     }
     if (cloudId.empty() || cloudId == "rootId") {
@@ -486,6 +548,7 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
             break;
         case IS_FAVORITE:
             return FavoriteSetXattr(cloudId, value);
+            break;
     }
     if (cloudId.empty() || cloudId == "rootId") {
         LOGE("setxattr parameter is invalid");
@@ -498,6 +561,7 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
 static void FileRename(ValuesBucket &values, const int32_t &position, const std::string &newFileName)
 {
     values.PutString(FileColumn::FILE_NAME, newFileName);
+    values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     FillFileType(newFileName, values);
     if (position != LOCAL) {
         values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
@@ -508,6 +572,7 @@ static void FileRename(ValuesBucket &values, const int32_t &position, const std:
 static void FileMove(ValuesBucket &values, const int32_t &position, const std::string &newParentCloudId)
 {
     values.PutString(FileColumn::PARENT_CLOUD_ID, newParentCloudId);
+    values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     if (position != LOCAL) {
         values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
         values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::MOVE));
@@ -792,6 +857,15 @@ static void VersionAddFileStatusAndErrorCode(RdbStore &store)
     }
 }
 
+static void VersionAddFileStatus(RdbStore &store)
+{
+    const string addFileStatus = FileColumn::ADD_FILE_STATUS;
+    int32_t ret = store.ExecuteSql(addFileStatus);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add file_status fail, err %{public}d", ret);
+    }
+}
+
 int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
@@ -806,6 +880,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     }
     if (oldVersion < VERSION_ADD_STATUS_ERROR_FAVORITE) {
         VersionAddFileStatusAndErrorCode(store);
+    }
+    if (oldVersion < VERSION_ADD_FILE_STATUS) {
+        VersionAddFileStatus(store);
     }
     return NativeRdb::E_OK;
 }
