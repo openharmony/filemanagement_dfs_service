@@ -58,7 +58,6 @@ public:
     static std::string GetCloudId(const std::string &path);
     static bool LocalWriteOpen(const std::string &dfsPath);
     static const std::string TMP_SUFFIX;
-    static bool IsDir(const std::string& path);
 private:
     static bool EndsWith(const std::string &fullString, const std::string &ending);
 };

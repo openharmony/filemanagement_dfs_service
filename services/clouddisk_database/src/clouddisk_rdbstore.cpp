@@ -258,11 +258,6 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     fileInfo.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     fileInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
-    std::string fatherPath = filePath.substr(0, filePath.find_last_of('/'));
-    if (!CloudFileUtils::IsDir(fatherPath)) {
-        LOGI("parent dir is not exits");
-        return ENOENT;
-    }
     ret = CheckName(fileName);
     if (ret != 0) {
         return ret;

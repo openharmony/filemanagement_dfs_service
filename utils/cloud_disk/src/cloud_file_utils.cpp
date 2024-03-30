@@ -155,13 +155,6 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
     close(fd);
     return writeOpenCnt != 0;
 }
-
-bool CloudFileUtils::IsDir(const std::string& path)
-{
-    std::filesystem::path dirPath(path);
-    return std::filesystem::is_directory(dirPath);
-}
-
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS
