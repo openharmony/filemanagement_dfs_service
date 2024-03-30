@@ -229,7 +229,7 @@ static int32_t CheckName(const std::string &fileName)
 {
     for (char c : fileName) {
         if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\' ||
-            c == '"' || c == '%' || c == '&' || c == '#' || c == ';' || c == '!' || c == ) {
+            c == '"' || c == '%' || c == '&' || c == '#' || c == ';' || c == '!') {
             LOGI("Illegal name");
             return EINVAL;
         }
