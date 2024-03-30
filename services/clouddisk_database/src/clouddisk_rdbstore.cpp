@@ -19,7 +19,6 @@
 #include <sys/stat.h>
 #include <sstream>
 
-#include "clouddisk_db_const.h"
 #include "clouddisk_sync_helper.h"
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_type_const.h"
@@ -229,15 +228,14 @@ static int64_t UTCTimeMilliSeconds()
 static int32_t CheckName(const std::string &fileName)
 {
     for (char c : fileName) {
-        if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\' || c == '"' || c == '%' ||
-            c == '&' || c == '#' || c == ';' || c == '!'
-        ) {
+        if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\' ||
+            c == '"' || c == '%' || c == '&' || c == '#' || c == ';' || c == '!' || c == ) {
             LOGI("Illegal name");
             return EINVAL;
         }
     }
     std::string realFileName = fileName.substr(0, fileName.find_last_of('.'));
-    if (realFileName == "." || fileName.find("..") != std::string::npos ||
+    if (realFileName.find(".") != std::string::npos || realFileName.find("..") != std::string::npos ||
         ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji") ||
         fileName.length() > MAX_FILE_NAME_SIZE) {
         return EINVAL;
@@ -257,7 +255,6 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutLong(FileColumn::FILE_SIZE, statInfo.st_size);
     fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     fileInfo.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
-    fileInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     ret = CheckName(fileName);
     if (ret != 0) {
         return ret;
