@@ -20,6 +20,7 @@
 #include "cycle_task/cycle_task_runner.h"
 #include "dfs_error.h"
 #include "data_sync_const.h"
+#include "data_syncer_rdb_store.h"
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
 #include "ipc/cloud_sync_callback_manager.h"
@@ -247,44 +248,66 @@ int32_t CloudSyncService::LoadRemoteSA(const std::string &deviceId)
     return E_OK;
 }
 
-int32_t CloudSyncService::UnRegisterCallbackInner()
+static int32_t GetTargetBundleName(string &targetBundleName)
 {
-    string bundleName;
-    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+    string callerBundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(callerBundleName)) {
         return E_INVAL_ARG;
     }
-
-    CloudSyncCallbackManager::GetInstance().RemoveCallback(bundleName);
+    if (targetBundleName == "") {
+        targetBundleName = callerBundleName;
+    }
+    if (targetBundleName != callerBundleName &&
+        !DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC_MANAGER)) {
+        LOGE("permission denied: cloudfile_sync_manager");
+        return E_PERMISSION_DENIED;
+    }
     return E_OK;
 }
 
-int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject)
+int32_t CloudSyncService::UnRegisterCallbackInner(const string &bundleName)
+{
+    string targetBundleName = bundleName;
+    int32_t ret = GetTargetBundleName(targetBundleName);
+    if (ret != E_OK) {
+        LOGE("get bundle name failed: %{public}d", ret);
+        return ret;
+    }
+    CloudSyncCallbackManager::GetInstance().RemoveCallback(targetBundleName);
+    return E_OK;
+}
+
+int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const string &bundleName)
 {
     if (remoteObject == nullptr) {
         LOGE("remoteObject is nullptr");
         return E_INVAL_ARG;
     }
 
-    string bundleName;
-    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
-        return E_INVAL_ARG;
+    string targetBundleName = bundleName;
+    int32_t ret = GetTargetBundleName(targetBundleName);
+    if (ret != E_OK) {
+        LOGE("get bundle name failed: %{public}d", ret);
+        return ret;
     }
 
     auto callback = iface_cast<ICloudSyncCallback>(remoteObject);
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    CloudSyncCallbackManager::GetInstance().AddCallback(bundleName, callerUserId, callback);
-    dataSyncManager_->RegisterCloudSyncCallback(bundleName, callerUserId);
+    CloudSyncCallbackManager::GetInstance().AddCallback(targetBundleName, callerUserId, callback);
+    dataSyncManager_->RegisterCloudSyncCallback(targetBundleName, callerUserId);
     return E_OK;
 }
 
-int32_t CloudSyncService::StartSyncInner(bool forceFlag)
+int32_t CloudSyncService::StartSyncInner(bool forceFlag, const string &bundleName)
 {
-    string bundleName;
-    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
-        return E_INVAL_ARG;
+    string targetBundleName = bundleName;
+    int32_t ret = GetTargetBundleName(targetBundleName);
+    if (ret != E_OK) {
+        LOGE("get bundle name failed: %{public}d", ret);
+        return ret;
     }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, forceFlag,
+    return dataSyncManager_->TriggerStartSync(targetBundleName, callerUserId, forceFlag,
         SyncTriggerType::APP_TRIGGER);
 }
 
@@ -298,21 +321,28 @@ int32_t CloudSyncService::TriggerSyncInner(const std::string &bundleName, const 
         SyncTriggerType::APP_TRIGGER);
 }
 
-int32_t CloudSyncService::StopSyncInner()
+int32_t CloudSyncService::StopSyncInner(const string &bundleName)
 {
-    string bundleName;
-    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
-        return E_INVAL_ARG;
+    string targetBundleName = bundleName;
+    int32_t ret = GetTargetBundleName(targetBundleName);
+    if (ret != E_OK) {
+        LOGE("get bundle name failed: %{public}d", ret);
+        return ret;
     }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::APP_TRIGGER);
+    return dataSyncManager_->TriggerStopSync(targetBundleName, callerUserId, SyncTriggerType::APP_TRIGGER);
 }
 
-int32_t CloudSyncService::GetSyncTimeInner(int64_t &syncTime)
+int32_t CloudSyncService::GetSyncTimeInner(int64_t &syncTime, const string &bundleName)
 {
-    syncTime = 0;
-    LOGI("GetLasySyncTime(service) is ok");
-    return E_OK;
+    string targetBundleName = bundleName;
+    int32_t ret = GetTargetBundleName(targetBundleName);
+    if (ret != E_OK) {
+        LOGE("get bundle name failed: %{public}d", ret);
+        return ret;
+    }
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    return DataSyncerRdbStore::GetInstance().GetLastSyncTime(callerUserId, targetBundleName, syncTime);
 }
 
 int32_t CloudSyncService::CleanCacheInner(const std::string &uri)

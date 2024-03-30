@@ -114,15 +114,44 @@ void CloudSyncCallbackImpl::OnSyncStateChanged(SyncType type, SyncPromptState st
     return;
 }
 
+string CloudSyncNapi::GetBundleName(const napi_env &env, const NFuncArg &funcArg)
+{
+    string bundleName;
+    auto bundleEntity = NClass::GetEntityOf<BundleEntity>(env, funcArg.GetThisVar());
+    if (bundleEntity) {
+        bundleName = bundleEntity->bundleName_;
+    }
+    return bundleName;
+}
+
 napi_value CloudSyncNapi::Constructor(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+    if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
         NError(E_PARAMS).ThrowErr(env, "Number of arguments unmatched");
         return nullptr;
     }
-
-    return funcArg.GetThisVar();
+    if (funcArg.GetArgc() == NARG_CNT::ZERO) {
+        LOGD("init without bundleName");
+        return funcArg.GetThisVar();
+    }
+    if (funcArg.GetArgc() == NARG_CNT::ONE) {
+        auto [succ, bundleName, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+        if (!succ || bundleName.get() == string("")) {
+            LOGE("Failed to get bundle name");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
+        auto bundleEntity = make_unique<BundleEntity>(bundleName.get());
+        if (!NClass::SetEntityFor<BundleEntity>(env, funcArg.GetThisVar(), move(bundleEntity))) {
+            LOGE("Failed to set file entity");
+            NError(EIO).ThrowErr(env);
+            return nullptr;
+        }
+        LOGI("init with bundleName");
+        return funcArg.GetThisVar();
+    }
+    return nullptr;
 }
 
 napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
@@ -151,8 +180,9 @@ napi_value CloudSyncNapi::OnCallback(napi_env env, napi_callback_info info)
         return NVal::CreateUndefined(env).val_;
     }
 
+    string bundleName = GetBundleName(env, funcArg);
     callback_ = make_shared<CloudSyncCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
-    int32_t ret = CloudSyncManager::GetInstance().RegisterCallback(callback_);
+    int32_t ret = CloudSyncManager::GetInstance().RegisterCallback(callback_, bundleName);
     if (ret != E_OK) {
         LOGE("OnCallback Register error, result: %{public}d", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
@@ -183,7 +213,8 @@ napi_value CloudSyncNapi::OffCallback(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    int32_t ret = CloudSyncManager::GetInstance().UnRegisterCallback();
+    string bundleName = GetBundleName(env, funcArg);
+    int32_t ret = CloudSyncManager::GetInstance().UnRegisterCallback(bundleName);
     if (ret != E_OK) {
         LOGE("OffCallback UnRegister error, result: %{public}d", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
@@ -204,8 +235,9 @@ napi_value CloudSyncNapi::Start(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
     }
 
-    auto cbExec = []() -> NError {
-        int32_t ret = CloudSyncManager::GetInstance().StartSync();
+    string bundleName = GetBundleName(env, funcArg);
+    auto cbExec = [bundleName]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().StartSync(bundleName);
         if (ret != E_OK) {
             LOGE("Start Sync error, result: %{public}d", ret);
             return NError(Convert2JsErrNum(ret));
@@ -233,8 +265,9 @@ napi_value CloudSyncNapi::Stop(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto cbExec = []() -> NError {
-        int32_t ret = CloudSyncManager::GetInstance().StopSync();
+    string bundleName = GetBundleName(env, funcArg);
+    auto cbExec = [bundleName]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().StopSync(bundleName);
         if (ret != E_OK) {
             LOGE("Stop Sync error, result: %{public}d", ret);
             return NError(Convert2JsErrNum(ret));

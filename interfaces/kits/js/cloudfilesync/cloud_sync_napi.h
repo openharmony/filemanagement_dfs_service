@@ -22,6 +22,11 @@
 namespace OHOS::FileManagement::CloudSync {
 const int32_t ARGS_ONE = 1;
 
+struct BundleEntity {
+    std::string bundleName_;
+    explicit BundleEntity(const std::string bundleName): bundleName_(bundleName){};
+};
+
 class CloudSyncCallbackImpl;
 class CloudSyncNapi : public LibN::NExporter {
 public:
@@ -36,6 +41,7 @@ public:
     static napi_value OnCallback(napi_env env, napi_callback_info info);
     static napi_value OffCallback(napi_env env, napi_callback_info info);
 
+    static std::string GetBundleName(const napi_env &env, const LibN::NFuncArg &funcArg);
     CloudSyncNapi(napi_env env, napi_value exports) : NExporter(env, exports) {};
     ~CloudSyncNapi() = default;
 

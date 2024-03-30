@@ -47,6 +47,11 @@ int32_t DataSyncerRdbStore::UpdateSyncState(int32_t userId, const string &bundle
     return E_OK;
 }
 
+int32_t DataSyncerRdbStore::GetLastSyncTime(int32_t userId, const string &bundleName, int64_t &time)
+{
+    return E_OK;
+}
+
 int32_t DataSyncerRdbStore::QueryDataSyncer(int32_t userId, std::shared_ptr<NativeRdb::ResultSet> &resultSet)
 {
     return E_OK;

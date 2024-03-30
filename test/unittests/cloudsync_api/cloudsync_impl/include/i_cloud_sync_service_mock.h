@@ -41,17 +41,17 @@ public:
         return E_OK;
     }
 
-    int32_t UnRegisterCallbackInner() override
+    int32_t UnRegisterCallbackInner(const std::string &bundleName = "") override
     {
         return E_OK;
     }
 
-    int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) override
+    int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override
     {
         return E_OK;
     }
 
-    int32_t StartSyncInner(bool forceFlag) override
+    int32_t StartSyncInner(bool forceFlag, const std::string &bundleName = "") override
     {
         return E_OK;
     }
@@ -61,7 +61,7 @@ public:
         return E_OK;
     }
 
-    int32_t StopSyncInner() override
+    int32_t StopSyncInner(const std::string &bundleName = "") override
     {
         return E_OK;
     }
@@ -124,7 +124,7 @@ public:
     {
         return E_OK;
     }
-    int32_t GetSyncTimeInner(int64_t &syncTime)
+    int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "")
     {
         return E_OK;
     }

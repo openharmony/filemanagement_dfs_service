@@ -29,11 +29,11 @@ public:
 
     static sptr<ICloudSyncService> GetInstance();
     static void InvaildInstance();
-    int32_t UnRegisterCallbackInner() override;
-    int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject) override;
-    int32_t StartSyncInner(bool forceFlag) override;
+    int32_t UnRegisterCallbackInner(const std::string &bundleName = "") override;
+    int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override;
+    int32_t StartSyncInner(bool forceFlag, const std::string &bundleName = "") override;
     int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) override;
-    int32_t StopSyncInner() override;
+    int32_t StopSyncInner(const std::string &bundleName = "") override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
     int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
@@ -53,7 +53,7 @@ public:
                           AssetInfoObj &assetInfoObj) override;
     int32_t RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject) override;
     int32_t DeleteAsset(const int32_t userId, const std::string &uri) override;
-    int32_t GetSyncTimeInner(int64_t &syncTime) override;
+    int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") override;
     int32_t CleanCacheInner(const std::string &uri) override;
 
     class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
