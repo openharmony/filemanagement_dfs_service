@@ -464,7 +464,7 @@ HWTEST_F(FileDataHandlerTest, BatchInsertAssetMaps004, TestSize.Level1)
         EXPECT_CALL(*rset, GoToRow(_)).WillOnce(Return(0));
         EXPECT_CALL(*rset, GetInt(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
-        EXPECT_CALL(*rdb, Insert(_, _, _)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Insert(_, _, _)).WillRepeatedly(Return(1));
 
         std::set<int> albumIds;
         albumIds.insert(1);
@@ -1007,7 +1007,7 @@ HWTEST_F(FileDataHandlerTest, UpdateAgingFileTest002, TestSize.Level1)
         auto rdb = std::make_shared<RdbStoreMock>();
         auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
 
-        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Update(_, _, _, _, A<const vector<string> &>())).WillRepeatedly(Return(1));;
         int32_t ret = fileDataHandler->UpdateAgingFile(cloudId);
         EXPECT_EQ(ret, E_RDB);
     } catch (...) {
