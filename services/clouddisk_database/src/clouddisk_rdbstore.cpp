@@ -336,9 +336,13 @@ int32_t CloudDiskRdbStore::LocationSetXattr(const std::string &cloudId, const st
 
 int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &cloudId, const std::string &value)
 {
+    LOGD("recycleSetXattr, value %{public}s", value.c_str());
     RDBPTR_IS_NULLPTR(rdbStore_);
+    bool isNum = std::all_of(value.begin(), value.end(), ::isdigit);
+    if (!isNum) {
+        return EINVAL;
+    }
     int32_t val = std::stoi(value);
-    LOGE("recycleSetXattr, val %{public}d", val);
     ValuesBucket setXAttr;
     if (val == 0) {
         setXAttr.PutLong(FileColumn::FILE_TIME_RECYCLED, CANCEL_STATE);
@@ -363,9 +367,13 @@ int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &cloudId, const std
 
 int32_t CloudDiskRdbStore::FavoriteSetXattr(const std::string &cloudId, const std::string &value)
 {
+    LOGD("favoriteSetXattr, value %{public}s", value.c_str());
     RDBPTR_IS_NULLPTR(rdbStore_);
+    bool isNum = std::all_of(value.begin(), value.end(), ::isdigit);
+    if (!isNum) {
+        return EINVAL;
+    }
     int32_t val = std::stoi(value);
-    LOGE("favoriteSetXattr, val %{public}d", val);
     ValuesBucket setXAttr;
     if (val == 0) {
         setXAttr.PutInt(FileColumn::IS_FAVORITE, CANCEL_STATE);
