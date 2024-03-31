@@ -246,8 +246,7 @@ int32_t DataSyncManager::IsSkipSync(const std::string &bundle, const int32_t use
 
 int32_t DataSyncManager::CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action)
 {
-    LOGD("Enter function CleanCloudFile");
-    std::lock_guard<std::mutex> lck(cleanMutex_);
+    LOGI("Enter function CleanCloudFile");
     auto dataSyncer = GetDataSyncer(bundleName, userId);
     if (!dataSyncer) {
         LOGE(" Clean Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
@@ -255,9 +254,9 @@ int32_t DataSyncManager::CleanCloudFile(const int32_t userId, const std::string 
     }
     auto ret = InitSdk(userId, bundleName, dataSyncer);
     if (ret != E_OK) {
-        return ret;
+        LOGW("sdk init fail");
     }
-    LOGD("bundleName:%{private}s, userId:%{private}d", dataSyncer->GetBundleName().c_str(), dataSyncer->GetUserId());
+    LOGI("bundleName:%{private}s, userId:%{private}d", dataSyncer->GetBundleName().c_str(), dataSyncer->GetUserId());
     return dataSyncer->Clean(action);
 }
 
@@ -369,7 +368,6 @@ int32_t DataSyncManager::GetAllDataSyncerInfo(const int32_t userId, map<string, 
 
 int32_t DataSyncManager::DisableCloud(const int32_t userId)
 {
-    std::lock_guard<std::mutex> lck(cleanMutex_);
     map<string, DataSyncerInfo> dataSyncerInfoMaps;
     GetAllDataSyncerInfo(userId, dataSyncerInfoMaps);
     if (dataSyncerInfoMaps.size() == 0) {
@@ -385,10 +383,6 @@ int32_t DataSyncManager::DisableCloud(const int32_t userId)
             return E_INVAL_ARG;
         }
 
-        auto ret = InitSdk(userId, bundle, dataSyncer);
-        if (ret != E_OK) {
-            return ret;
-        }
         dataSyncer->DisableCloud();
     }
     return E_OK;

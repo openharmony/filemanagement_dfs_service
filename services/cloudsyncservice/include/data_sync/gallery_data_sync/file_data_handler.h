@@ -171,10 +171,15 @@ private:
     FileDataConvertor cleanConvertor_ = { userId_, bundleName_, FILE_CLEAN };
     int32_t ClearCloudInfo(const std::string &cloudId);
     int32_t CleanAllCloudInfo();
-    int32_t CleanNotDirtyData();
+    int32_t CleanNotDirtyData(bool isReamin = false);
     int32_t CleanNotPureCloudRecord(const int32_t action);
-    int32_t CleanPureCloudRecord();
+    int32_t CleanPureCloudRecord(bool isReamin = false);
     int32_t DeleteDentryFile(void);
+    int32_t GetFilePathAndId(NativeRdb::AbsRdbPredicates cleanPredicates,
+                             std::vector<NativeRdb::ValueObject> &deleteFileId,
+                             std::vector<std::string> &filePaths);
+    void RemoveCloudRecord(std::shared_ptr<std::vector<std::string>> filePaths);
+    void RemoveBothRecord(std::shared_ptr<std::vector<std::string>> filePaths);
 
     /* err handle */
     void HandleCreateConvertErr(int32_t err, NativeRdb::ResultSet &resultSet);
@@ -271,6 +276,7 @@ private:
     std::mutex rdbMutex_;
     std::mutex thmMutex_;
     std::mutex lcdMutex_;
+    std::mutex cleanMutex_;
     std::vector<NativeRdb::ValueObject> thmVec_;
     std::vector<NativeRdb::ValueObject> lcdVec_;
     int32_t waitCount_{0};

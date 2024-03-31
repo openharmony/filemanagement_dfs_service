@@ -43,7 +43,11 @@ int32_t CloudDiskDataSyncer::Clean(const int action)
 {
     LOGD("cloud disk data sycner Clean");
     BeginClean();
-    int32_t ret = CleanInner(cloudDiskHandler_, action);
+    int32_t ret = CancelDownload(cloudDiskHandler_);
+    if (ret != E_OK) {
+        LOGE("CloudDisk data syncer file cancel download err %{public}d", ret);
+    }
+    ret = CleanInner(cloudDiskHandler_, action);
     if (ret != E_OK) {
         LOGE("disk data syncer file clean err %{public}d", ret);
     }

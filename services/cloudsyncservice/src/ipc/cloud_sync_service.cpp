@@ -416,14 +416,14 @@ int32_t CloudSyncService::EnableCloud(const std::string &accoutId, const SwitchD
 
 int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions &cleanOptions)
 {
-    LOGD("Clean accountId is: %{public}s", accountId.c_str());
+    LOGI("Clean accountId is: %{public}s", accountId.c_str());
     for (auto &iter : cleanOptions.appActionsData) {
         LOGD("Clean key is: %s, value is: %d", iter.first.c_str(), iter.second);
     }
 
     MetaFileMgr::GetInstance().ClearAll();
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    LOGD("Clean callerUserId is: %{public}d", callerUserId);
+    LOGI("Clean callerUserId is: %{public}d", callerUserId);
     for (auto iter = cleanOptions.appActionsData.begin(); iter != cleanOptions.appActionsData.end(); ++iter) {
         dataSyncManager_->CleanCloudFile(callerUserId, iter->first, iter->second);
     }
