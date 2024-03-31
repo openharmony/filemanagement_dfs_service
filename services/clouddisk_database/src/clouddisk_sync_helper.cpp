@@ -22,7 +22,6 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
 using namespace std;
-using namespace CloudSync;
 constexpr int32_t MIN_USER_ID = 100;
 
 CloudDiskSyncHelper& CloudDiskSyncHelper::GetInstance()
@@ -94,7 +93,7 @@ void CloudDiskSyncHelper::OnTriggerSyncCallback(const std::string &bundleName, c
         triggerInfoMap_.erase(keyId);
     }
     LOGI("cloud sync manager trigger sync, bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
-    int32_t ret = CloudSyncManager::GetInstance().TriggerSync(bundleName, userId);
+    int32_t ret = CloudSync::CloudSyncManagerLite::GetInstance().TriggerSync(bundleName, userId);
     if (ret != 0) {
         LOGE("cloud sync manager trigger sync err %{public}d", ret);
     }

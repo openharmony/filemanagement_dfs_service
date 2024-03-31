@@ -29,9 +29,9 @@ ohos_shared_library("clouddisk_database") {
   }
   include_dirs = [
     "include",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
-    "${media_library_path}/frameworks/utils/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
+    "${utils_path}/cloud_disk/include",
+    "${utils_path}/log/include",
     "//third_party/libfuse/include",
   ]
 
@@ -55,8 +55,8 @@ ohos_shared_library("clouddisk_database") {
   ]
 
   deps = [
-    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
-    "${utils_path}:libdistributedfileutils",
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/libfuse:libfuse",
   ]
 

@@ -22,7 +22,7 @@
 #include <unordered_map>
 #include <functional>
 
-#include "cloud_sync_manager.h"
+#include "cloud_sync_manager_lite.h"
 
 namespace OHOS {
 namespace FileManagement {

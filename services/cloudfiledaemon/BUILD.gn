@@ -50,6 +50,10 @@ ohos_shared_library("cloudfiledaemon") {
     "include",
     "//third_party/libfuse/include",
     "//third_party/libfuse/lib",
+    "${utils_path}/cloud_disk/include",
+    "${utils_path}/dentry/include",
+    "${utils_path}/log/include",
+    "${utils_path}/system/include",
     "${innerkits_native_path}/cloud_daemon_kit_inner",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudsyncservice/include/data_sync/",
@@ -58,8 +62,7 @@ ohos_shared_library("cloudfiledaemon") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${utils_path}:libdistributedfiledentry",
-    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/libfuse:libfuse",
   ]
 
