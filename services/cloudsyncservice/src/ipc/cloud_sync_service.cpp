@@ -138,8 +138,6 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
     LOGI("Begin to start service reason: %{public}s", reason.c_str());
 
     if (reason == "usual.event.USER_UNLOCKED") {
-        shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
-        taskRunner->SetPref(ForcePeriodicCheck, true);
         return;
     }
 
@@ -157,7 +155,7 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
 
     if (reason != "load") {
         shared_ptr<CycleTaskRunner> taskRunner = make_shared<CycleTaskRunner>(dataSyncManager_);
-        taskRunner->StartTask(reason);
+        taskRunner->StartTask();
     }
 }
 

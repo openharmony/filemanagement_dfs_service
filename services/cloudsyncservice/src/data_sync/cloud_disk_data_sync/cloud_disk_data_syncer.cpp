@@ -47,6 +47,7 @@ int32_t CloudDiskDataSyncer::Clean(const int action)
     if (ret != E_OK) {
         LOGE("disk data syncer file clean err %{public}d", ret);
     }
+    RemoveCycleTaskFile();
     CompleteClean();
     return ret;
 }

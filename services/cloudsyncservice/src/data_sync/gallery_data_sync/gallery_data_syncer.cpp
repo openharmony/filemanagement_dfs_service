@@ -101,6 +101,7 @@ int32_t GalleryDataSyncer::Clean(const int action)
     }
     fileHandler_->ClearCursor();
     albumHandler_->ClearCursor();
+    RemoveCycleTaskFile();
     CompleteClean();
     return ret;
 }
