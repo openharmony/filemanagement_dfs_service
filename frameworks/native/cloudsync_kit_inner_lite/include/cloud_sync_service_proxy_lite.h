@@ -43,6 +43,7 @@ public:
     };
 private:
     static inline std::mutex proxyMutex_;
+    static inline std::mutex instanceMutex_;
     static inline sptr<ICloudSyncServiceLite> serviceProxy_;
     static inline BrokerDelegator<CloudSyncServiceProxyLite> delegator_;
 };
