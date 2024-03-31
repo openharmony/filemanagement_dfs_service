@@ -164,3 +164,61 @@ ohos_shared_library("libdistributedfiledentry") {
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
 }
+
+ohos_shared_library("libdistributedfileutils_lite") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  include_dirs = [
+    "cloud_disk/include",
+    "dentry/include",
+    "dfx/include",
+    "log/include",
+    "system/include",
+  ]
+  sources = [
+    "cloud_disk/src/cloud_file_utils.cpp",
+    "dentry/src/file_utils.cpp",
+    "dentry/src/meta_file.cpp",
+    "dfx/src/xcollie_helper.cpp",
+    "log/src/dfs_error.cpp",
+    "log/src/utils_log.cpp",
+    "system/src/dfsu_memory_guard.cpp",
+    "system/src/utils_directory.cpp",
+  ]
+
+  configs = [ "//build/config/compiler:exceptions" ]
+
+  defines = [
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CloudFileDaemon\"",
+  ]
+
+  deps = []
+
+  external_deps = [
+    "c_utils:utils",
+    "c_utils:utilsbase",
+    "hilog:libhilog",
+  ]
+
+  if (use_musl) {
+    if (use_jemalloc && use_jemalloc_dfx_intf) {
+      defines += [ "CONFIG_USE_JEMALLOC_DFX_INTF" ]
+    }
+  }
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  part_name = "dfs_service"
+  innerapi_tags = [ "platformsdk" ]
+  subsystem_name = "filemanagement"
+}

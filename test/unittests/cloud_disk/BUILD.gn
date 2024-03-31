@@ -112,6 +112,7 @@ ohos_unittest("database_manager_test") {
     "${distributedfile_path}/utils/log/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner/",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include/",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include/",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/clouddisk_database/include/",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include/",
@@ -129,6 +130,7 @@ ohos_unittest("database_manager_test") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",

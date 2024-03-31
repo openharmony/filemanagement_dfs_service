@@ -1307,6 +1307,9 @@ ohos_unittest("cloud_disk_data_syncer_test") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_service_proxy.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_service_proxy_lite.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_lite.cpp",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",
   ]
 
   clouddisk_database = [
@@ -1334,6 +1337,7 @@ ohos_unittest("cloud_disk_data_syncer_test") {
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "${media_library_path}/frameworks/utils/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
     "//third_party/libfuse/include",
   ]

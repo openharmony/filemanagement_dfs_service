@@ -87,7 +87,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "dsoftbus:softbus_client",
     "hilog:libhilog",
     "init:libbegetutil",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

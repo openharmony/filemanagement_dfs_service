@@ -24,14 +24,35 @@ namespace OHOS::FileManagement::CloudSync {
 constexpr int32_t MIN_USER_ID = 100;
 CloudSyncManagerImplLite &CloudSyncManagerImplLite::GetInstance()
 {
+    static CloudSyncManagerImplLite instance;
+    return instance;
 }
 
 int32_t CloudSyncManagerImplLite::TriggerSync(const std::string &bundleName, const int32_t &userId)
 {
-    return 0;
+    if (bundleName.empty() || userId < MIN_USER_ID) {
+        LOGE("Trigger Sync parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    auto cloudSyncServiceProxyLite = CloudSyncServiceProxyLite::GetInstance();
+    if (!cloudSyncServiceProxyLite) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(cloudSyncServiceProxyLite->AsObject());
+    return cloudSyncServiceProxyLite->TriggerSyncInner(bundleName, userId);
 }
 
 void CloudSyncManagerImplLite::SetDeathRecipient(const sptr<IRemoteObject> &remoteObject)
 {
+    if (!isFirstCall_.test_and_set()) {
+        auto deathCallback = [this](const wptr<IRemoteObject> &obj) {
+            LOGE("service dead");
+            CloudSyncServiceProxyLite::InvalidInstance();
+            isFirstCall_.clear();
+        };
+        deathRecipient_ = sptr(new SvcDeathRecipientLite(deathCallback));
+        remoteObject->AddDeathRecipient(deathRecipient_);
+    }
 }
 } // namespace OHOS::FileManagement::CloudSync
