@@ -25,7 +25,6 @@ ohos_shared_library("libdistributedfiledaemon") {
   include_dirs = [
     "include",
     "include/network/softbus",
-    "//third_party/json/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
   ]
@@ -75,6 +74,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -90,7 +90,6 @@ ohos_shared_library("libdistributedfiledaemon") {
 config("public_config") {
   include_dirs = [
     ".",
-    "${device_manager_path}/interfaces/inner_kits/native_cpp/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
   ]
 }
@@ -100,7 +99,6 @@ config("private_config") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/utils/log/include",
     "${media_library_path}/frameworks/utils/include",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${services_path}/distributedfiledaemon/include",
   ]
 }
@@ -130,12 +128,14 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
 
   external_deps = [
     "c_utils:utils",
-    "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "media_library:media_library",
+    "media_library:media_library_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  public_external_deps = [ "device_manager:devicemanagersdk" ]
 
   use_exceptions = true
   innerapi_tags = [ "platformsdk" ]
