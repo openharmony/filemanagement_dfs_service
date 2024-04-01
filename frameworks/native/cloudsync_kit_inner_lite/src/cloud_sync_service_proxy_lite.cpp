@@ -68,7 +68,7 @@ int32_t CloudSyncServiceProxyLite::TriggerSyncInner(const std::string &bundleNam
 sptr<ICloudSyncServiceLite> CloudSyncServiceProxyLite::GetInstance()
 {
     LOGI("GetInstance");
-    std::unique_lock<std::mutex> lock(proxyMutex_);
+    std::unique_lock<std::mutex> lock(instanceMutex_);
     if (serviceProxy_ != nullptr) {
         return serviceProxy_;
     }
@@ -79,8 +79,8 @@ sptr<ICloudSyncServiceLite> CloudSyncServiceProxyLite::GetInstance()
         return nullptr;
     }
     sptr<ServiceProxyLoadCallbackLite> cloudSyncLoadCallback = new ServiceProxyLoadCallbackLite();
-    if (cloudSyncLoadCallback != nullptr) {
-        LOGE("Samgr is nullptr");
+    if (cloudSyncLoadCallback == nullptr) {
+        LOGE("cloudSyncLoadCallback is nullptr");
         return nullptr;
     }
     int32_t ret = samgr->LoadSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, cloudSyncLoadCallback);
@@ -89,9 +89,9 @@ sptr<ICloudSyncServiceLite> CloudSyncServiceProxyLite::GetInstance()
             FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, ret);
         return nullptr;
     }
-
+    std::unique_lock<std::mutex> proxyLock(proxyMutex_);
     auto waitStatus = cloudSyncLoadCallback->proxyConVar_.wait_for(
-        lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
+        proxyLock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
         [cloudSyncLoadCallback]() { return cloudSyncLoadCallback->isLoadSuccess_.load(); });
     if (!waitStatus) {
         LOGE("Load CloudSync SA timeout");
@@ -103,7 +103,7 @@ sptr<ICloudSyncServiceLite> CloudSyncServiceProxyLite::GetInstance()
 void CloudSyncServiceProxyLite::InvalidInstance()
 {
     LOGI("Invalid Instance");
-    std::unique_lock<std::mutex> lock(proxyMutex_);
+    std::unique_lock<std::mutex> lock(instanceMutex_);
     serviceProxy_ = nullptr;
 }
 
