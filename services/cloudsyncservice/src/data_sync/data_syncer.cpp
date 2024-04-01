@@ -1391,7 +1391,8 @@ void DataSyncer::FetchThumbDownloadCallback(shared_ptr<DKContext> context,
 
 bool DataSyncer::CheckScreenAndWifi()
 {
-    if (NetworkStatus::GetNetConnStatus() == NetworkStatus::WIFI_CONNECT) {
+    if (NetworkStatus::GetNetConnStatus() == NetworkStatus::WIFI_CONNECT
+        && !ScreenStatus::IsScreenOn()) {
         return true;
     }
     return false;
