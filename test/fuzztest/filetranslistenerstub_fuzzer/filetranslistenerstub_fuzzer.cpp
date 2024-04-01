@@ -33,6 +33,8 @@ namespace Storage {
 namespace DistributedFile {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
+constexpr uint8_t MAX_CALL_TRANSACTION = 32;
+
 
 std::shared_ptr<Storage::DistributedFile::FileTransListenerStub> FileTransListenerStubPtr =
     std::make_shared<Storage::DistributedFile::FileTransListenerStub>();
@@ -44,8 +46,9 @@ uint32_t GetU32Data(const char *ptr) {
 
 bool FileTransListenerStubFuzzTest(std::unique_ptr<char[]> data, size_t size)
 {
-    uint32_t code = static_cast<int32_t>(FileTransListenerInterfaceCode::FILE_TRANS_LISTENER_ON_PROGRESS);
-    if (code == 0) {
+    uint32_t code = GetU32Data(data.get());
+    if (code == 0
+        ||code % MAX_CALL_TRANSACTION == static_cast<int32_t>(FileTransListenerInterfaceCode::FILE_TRANS_LISTENER_ON_FAILED)) {
         return true;
     }
     MessageParcel datas;
