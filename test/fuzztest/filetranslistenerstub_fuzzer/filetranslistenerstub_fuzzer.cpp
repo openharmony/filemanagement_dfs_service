@@ -21,6 +21,7 @@
 #include "message_option.h"
 #include "message_parcel.h"
 #include "file_trans_listener_stub.h"
+#include "trans_listener.h"
 #include "file_trans_listener_interface_code.h"
 #include "ipc/distributed_file_daemon_manager.h"
 #include "distributed_file_daemon_manager_impl.h"
@@ -29,17 +30,17 @@
 using namespace OHOS::Storage::DistributedFile;
 
 namespace OHOS {
-namespace Storage {
-namespace DistributedFile {
+
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr uint8_t MAX_CALL_TRANSACTION = 32;
 
 
-std::shared_ptr<Storage::DistributedFile::FileTransListenerStub> FileTransListenerStubPtr =
-    std::make_shared<Storage::DistributedFile::FileTransListenerStub>();
+std::shared_ptr<FileManagement::ModuleFileIO::TransListener> transListenerStubPtr =
+    std::make_shared<FileManagement::ModuleFileIO::TransListener>();
 
-uint32_t GetU32Data(const char *ptr) {
+uint32_t GetU32Data(const char *ptr)
+{
     // 将第0个数字左移24位，将第1个数字左移16位，将第2个数字左移8位，第3个数字不左移
     return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | (ptr[3]);
 }
@@ -47,8 +48,7 @@ uint32_t GetU32Data(const char *ptr) {
 bool FileTransListenerStubFuzzTest(std::unique_ptr<char[]> data, size_t size)
 {
     uint32_t code = GetU32Data(data.get());
-    if (code == 0
-        ||code % MAX_CALL_TRANSACTION == static_cast<int32_t>(FileTransListenerInterfaceCode::FILE_TRANS_LISTENER_ON_FAILED)) {
+    if (code == 0) {
         return true;
     }
     MessageParcel datas;
@@ -57,7 +57,7 @@ bool FileTransListenerStubFuzzTest(std::unique_ptr<char[]> data, size_t size)
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    FileTransListenerStubPtr->OnRemoteRequest(code, datas, reply, option);
+    transListenerStubPtr->OnRemoteRequest(code, datas, reply, option);
 
     return true;
 }
@@ -72,7 +72,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     /* Validate the length of size */
-    if (size < OHOS::Storage::DistributedFile::U32_AT_SIZE || size > OHOS::Storage::DistributedFile::FOO_MAX_LEN) {
+    if (size < OHOS::U32_AT_SIZE || size > OHOS::FOO_MAX_LEN) {
         return 0;
     }
 
@@ -81,6 +81,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (memcpy_s(str.get(), size, data, size) != EOK) {
         return 0;
     }
-    OHOS::Storage::DistributedFile::FileTransListenerStubFuzzTest(move(str), size);
+    OHOS::FileTransListenerStubFuzzTest(move(str), size);
     return 0;
 }
