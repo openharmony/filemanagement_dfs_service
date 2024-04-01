@@ -428,8 +428,7 @@ void GalleryDataSyncer::SetCheckSysEvent()
 
 int32_t GalleryDataSyncer::CompletePull()
 {
-    Media::MediaLibraryRdbUtils::UpdateSystemAlbumCountInternal(fileHandler_->GetRaw());
-    Media::MediaLibraryRdbUtils::UpdateUserAlbumCountInternal(fileHandler_->GetRaw());
+    fileHandler_->UpdateAllAlbums();
     return DataSyncer::CompletePull();
 }
 
