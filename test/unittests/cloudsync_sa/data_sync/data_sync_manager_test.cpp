@@ -122,7 +122,7 @@ HWTEST_F(DataSyncManagerTest, GetDataSyncerdifferentBundleNameTest, TestSize.Lev
 HWTEST_F(DataSyncManagerTest, IsSkipSyncOnBatteryNoOkTest, TestSize.Level1)
 {
     BatteryStatus::level_ = BatteryStatus::CapacityLevel::LEVEL_TOO_LOW;
-    auto ret = dataSyncManager_->IsSkipSync(BUND_NAME_TEST, USER_ID);
+    auto ret = dataSyncManager_->IsSkipSync(BUND_NAME_TEST, USER_ID, false);
     BatteryStatus::level_ = BatteryStatus::CapacityLevel::LEVEL_NORMAL;
     EXPECT_EQ(E_SYNC_FAILED_BATTERY_TOO_LOW, ret);
 }
@@ -135,7 +135,7 @@ HWTEST_F(DataSyncManagerTest, IsSkipSyncOnBatteryNoOkTest, TestSize.Level1)
  */
 HWTEST_F(DataSyncManagerTest, IsSkipSyncOKTest, TestSize.Level1)
 {
-    auto ret = dataSyncManager_->IsSkipSync(BUND_NAME_TEST, USER_ID);
+    auto ret = dataSyncManager_->IsSkipSync(BUND_NAME_TEST, USER_ID, false);
     EXPECT_EQ(E_OK, ret);
 }
 

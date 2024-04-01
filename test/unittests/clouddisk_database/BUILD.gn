@@ -221,6 +221,11 @@ ohos_unittest("clouddisk_rdbstore_test") {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
+  if (cloudsync_service_resource_schedule) {
+    external_deps += [ "resource_schedule_service:ressched_client" ]
+    defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
+  }
+
   use_exceptions = true
 }
 
