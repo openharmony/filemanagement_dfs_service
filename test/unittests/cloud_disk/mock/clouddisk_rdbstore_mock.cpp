@@ -52,6 +52,11 @@ int32_t CloudDiskRdbStore::GetAttr(const std::string &cloudId, CloudDiskFileInfo
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::SetAttr(const std::string &cloudId, const unsigned long long &size)
+{
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::ReadDir(const std::string &cloudId, vector<CloudDiskFileInfo> &infos)
 {
     return E_OK;
