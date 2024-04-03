@@ -1100,6 +1100,8 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
     uint64_t thumbError = 0;
     uint64_t lcdError = 0;
 
+    UpdateThmVec();
+    UpdateLcdVec();
     for (const auto &it : resultMap) {
         auto asset = it.first;
         if (it.second.IsSuccess()) {

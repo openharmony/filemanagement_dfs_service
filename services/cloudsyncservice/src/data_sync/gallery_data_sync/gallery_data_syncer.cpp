@@ -365,9 +365,6 @@ int32_t GalleryDataSyncer::DownloadThumb(int32_t type)
             return E_STOP;
         }
     }
-    if (timeId_ == 0) {
-        fileHandler_->PeriodicUpdataFiles(timeId_);
-    }
     TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
     fileHandler_->SetDownloadType(type);
     int32_t ret = DataSyncer::DownloadThumbInner(fileHandler_);
