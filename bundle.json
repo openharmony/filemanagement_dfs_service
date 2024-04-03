@@ -49,6 +49,7 @@
           "hitrace",
           "init",
           "ipc",
+          "json",
           "napi",
           "preferences",
           "media_library",
