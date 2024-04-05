@@ -2452,11 +2452,6 @@ static int32_t DeleteAsset(const string &assetPath)
 int32_t FileDataHandler::Clean(const int action)
 {
     RETURN_ON_ERR(CleanPureCloudRecord());
-    int32_t res = DeleteDentryFile();
-    if (res != E_OK) {
-        LOGE("Clean remove dentry failed, res:%{public}d", res);
-        return res;
-    }
     UpdateAllAlbums();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
@@ -2532,6 +2527,16 @@ int32_t FileDataHandler::CleanRemainRecord()
     ret = CleanNotDirtyData();
     if (ret != E_OK) {
         LOGW("Clean not dirty data fail, try next time");
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::DeleteCloudPhotoDir()
+{
+    std::string dirPath = "/mnt/hmdfs/" + to_string(userId_) + "/account/device_view/cloud/files/Photo";
+    if (!ForceRemoveDirectory(dirPath)) {
+        LOGE("remove dir fail, err: %{public}d", errno);
+        return errno;
     }
     return E_OK;
 }

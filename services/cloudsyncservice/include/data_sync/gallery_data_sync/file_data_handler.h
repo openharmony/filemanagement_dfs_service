@@ -59,6 +59,7 @@ public:
     int32_t Clean(const int action) override;
     int32_t MarkClean(const int32_t action);
     int32_t CleanRemainRecord();
+    int32_t DeleteCloudPhotoDir();
 
     /* upload */
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;

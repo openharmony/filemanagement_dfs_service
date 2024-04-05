@@ -91,6 +91,10 @@ int32_t GalleryDataSyncer::Clean(const int action)
     if (ret != E_OK) {
         LOGE("gallery data syncer file cancel download err %{public}d", ret);
     }
+    ret = fileHandler_->DeleteCloudPhotoDir();
+    if (ret != E_OK) {
+        LOGE("clean cloud photo dir err: %{public}d", ret);
+    }
     ret = fileHandler_->MarkClean(action);
     if (ret != E_OK) {
         LOGE("gallery photos clean err %{public}d", ret);
