@@ -17,20 +17,17 @@
 #define OHOS_CLOUD_SYNC_SERVICE_FULL_AUDIT_TASK_H
 #include "cloud_pref_impl.h"
 #include "cycle_task.h"
-#include "rdb_data_handler.h"
-#include <memory>
-#include <string>
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 
 const std::string PeriodicCheckTaskName = "periodic_check_task";
-const std::string ForcePeriodicCheck = "force_periodic_check";
 
 class PeriodicCheckTask : public CycleTask {
 public:
     PeriodicCheckTask(std::shared_ptr<DataSyncManager> dataSyncManager);
-    int32_t RunTask(int32_t userId) override;
+    int32_t RunTaskForBundle(int32_t userId, std::string bundleName) override;
 };
 } // namespace CloudSync
 } // namespace FileManagement

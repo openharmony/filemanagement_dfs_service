@@ -1229,3 +1229,221 @@ HWTEST_F(FileDataHandlerTest, GetThumbToDownloadTest003, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "GetThumbToDownload End";
 }
+
+/**
+ * @tc.name: BatchInsertAssetAnalysisMaps001
+ * @tc.desc: Verify the BatchInsertAssetAnalysisMaps001 function
+ * @tc.type: FUNC
+ * @tc.require: issueI8ARMY
+ */
+HWTEST_F(FileDataHandlerTest, BatchInsertAssetAnalysisMaps001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchInsertAssetAnalysisMaps001 Begin";
+    try {
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(nullptr));
+
+        OnFetchParams params;
+        int32_t ret = fileDataHandler->BatchInsertAssetAnalysisMaps(params);
+        EXPECT_EQ(ret, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BatchInsertAssetAnalysisMaps001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BatchInsertAssetAnalysisMaps001 End";
+}
+
+/**
+ * @tc.name: BatchInsertAssetAnalysisMaps002
+ * @tc.desc: Verify the BatchInsertAssetAnalysisMaps002 function
+ * @tc.type: FUNC
+ * @tc.require: issueI8ARMY
+ */
+HWTEST_F(FileDataHandlerTest, BatchInsertAssetAnalysisMaps002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchInsertAssetAnalysisMaps002 Begin";
+    try {
+        const int32_t rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(0)));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        OnFetchParams params;
+        int32_t ret = fileDataHandler->BatchInsertAssetAnalysisMaps(params);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BatchInsertAssetAnalysisMaps002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BatchInsertAssetAnalysisMaps002 End";
+}
+
+/**
+ * @tc.name: BatchInsertAssetAnalysisMaps003
+ * @tc.desc: Verify the BatchInsertAssetAnalysisMaps003 function
+ * @tc.type: FUNC
+ * @tc.require: issueI8ARMY
+ */
+HWTEST_F(FileDataHandlerTest, BatchInsertAssetAnalysisMaps003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchInsertAssetAnalysisMaps003 Begin";
+    try {
+        const int32_t rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(0)));
+        EXPECT_CALL(*rset, GoToRow(_)).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _)).WillOnce(Return(1));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+
+        int albumIds = 1;
+        OnFetchParams params;
+        params.recordAnalysisAlbumMaps.insert(make_pair("1", std::move(albumIds)));
+        int32_t ret = fileDataHandler->BatchInsertAssetAnalysisMaps(params);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BatchInsertAssetAnalysisMaps003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BatchInsertAssetAnalysisMaps003 End";
+}
+
+/**
+ * @tc.name: BatchInsertAssetAnalysisMaps004
+ * @tc.desc: Verify the BatchInsertAssetAnalysisMaps004 function
+ * @tc.type: FUNC
+ * @tc.require: issueI8ARMY
+ */
+HWTEST_F(FileDataHandlerTest, BatchInsertAssetAnalysisMaps004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchInsertAssetAnalysisMaps004 Begin";
+    try {
+        const int32_t rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(0)));
+        EXPECT_CALL(*rset, GoToRow(_)).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        EXPECT_CALL(*rdb, Insert(_, _, _)).WillOnce(Return(1));
+
+        int albumIds = 1;
+        OnFetchParams params;
+        params.recordAnalysisAlbumMaps.insert(make_pair("1", std::move(albumIds)));
+        int32_t ret = fileDataHandler->BatchInsertAssetAnalysisMaps(params);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BatchInsertAssetAnalysisMaps004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BatchInsertAssetAnalysisMaps004 End";
+}
+
+/**
+ * @tc.name: BatchInsertAssetAnalysisMaps005
+ * @tc.desc: Verify the BatchInsertAssetAnalysisMaps005 function
+ * @tc.type: FUNC
+ * @tc.require: issueI8ARMY
+ */
+HWTEST_F(FileDataHandlerTest, BatchInsertAssetAnalysisMaps005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchInsertAssetAnalysisMaps005 Begin";
+    try {
+        const int32_t rowCount = 1;
+        auto rdb = std::make_shared<RdbStoreMock>();
+        auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
+        std::unique_ptr<AbsSharedResultSetMock> rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetRowCount(_)).WillOnce(DoAll(SetArgReferee<0>(rowCount), Return(0)));
+        EXPECT_CALL(*rset, GetColumnIndex(_, _)).WillRepeatedly(Return(0));
+        EXPECT_CALL(*rset, GoToNextRow()).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetString(_, _)).WillOnce(DoAll(SetArgReferee<1>("1"), Return(0)));
+        EXPECT_CALL(*rset, GoToRow(_)).WillOnce(Return(0));
+        EXPECT_CALL(*rset, GetInt(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
+        EXPECT_CALL(*rdb, Insert(_, _, _)).WillOnce(Return(0));
+
+        int albumIds = 1;
+        OnFetchParams params;
+        params.recordAnalysisAlbumMaps.insert(make_pair("1", std::move(albumIds)));
+        int32_t ret = fileDataHandler->BatchInsertAssetAnalysisMaps(params);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " BatchInsertAssetAnalysisMaps005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "BatchInsertAssetAnalysisMaps005 End";
+}
+
+/**
+ * @tc.name: HandleShootingMode001
+ * @tc.desc: Verify the HandleShootingMode function
+ * @tc.type: FUNC
+ * @tc.require: issueI8ARMY
+ */
+HWTEST_F(FileDataHandlerTest, HandleShootingMode001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleShootingMode001 Begin";
+    ValuesBucket valuebucket;
+    DKRecord record;
+    OnFetchParams params;
+    auto rdb = std::make_shared<RdbStoreMock>();
+    auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
+    fileDataHandler->HandleShootingMode(record, valuebucket, params);
+    EXPECT_EQ(params.recordAnalysisAlbumMaps.size(), 0);
+    GTEST_LOG_(INFO) << "HandleShootingMode001 End";
+}
+
+/**
+ * @tc.name: HandleShootingMode002
+ * @tc.desc: Verify the HandleShootingMode function
+ * @tc.type: FUNC
+ * @tc.require: issueI8ARMY
+ */
+HWTEST_F(FileDataHandlerTest, HandleShootingMode002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleShootingMode002 Begin";
+    ValuesBucket valuebucket;
+    valuebucket.PutString(Media::PhotoColumn::PHOTO_SHOOTING_MODE, "");
+    DKRecord record;
+    OnFetchParams params;
+    auto rdb = std::make_shared<RdbStoreMock>();
+    auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
+    fileDataHandler->HandleShootingMode(record, valuebucket, params);
+    EXPECT_EQ(params.recordAnalysisAlbumMaps.size(), 0);
+    GTEST_LOG_(INFO) << "HandleShootingMode002 End";
+}
+
+/**
+ * @tc.name: HandleShootingMode003
+ * @tc.desc: Verify the HandleShootingMode function
+ * @tc.type: FUNC
+ * @tc.require: issueI8ARMY
+ */
+HWTEST_F(FileDataHandlerTest, HandleShootingMode003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleShootingMode003 Begin";
+    ValuesBucket valuebucket;
+    valuebucket.PutString(Media::PhotoColumn::PHOTO_SHOOTING_MODE, "1");
+    DKRecord record;
+    record.SetRecordId("10");
+    OnFetchParams params;
+    auto rdb = std::make_shared<RdbStoreMock>();
+    auto fileDataHandler = make_shared<FileDataHandler>(USER_ID, BUND_NAME, rdb, std::make_shared<bool>(false));
+    fileDataHandler->HandleShootingMode(record, valuebucket, params);
+    EXPECT_EQ(params.recordAnalysisAlbumMaps.size(), 1);
+    GTEST_LOG_(INFO) << "HandleShootingMode003 End";
+}

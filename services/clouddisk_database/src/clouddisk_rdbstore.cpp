@@ -150,6 +150,32 @@ int32_t CloudDiskRdbStore::GetAttr(const std::string &cloudId, CloudDiskFileInfo
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::SetAttr(const std::string &cloudId, const unsigned long long &size)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (cloudId.empty()) {
+        LOGE("cloudId is empty");
+        return E_INVAL_ARG;
+    }
+    if (cloudId == "rootId") {
+        LOGE("cloudId is rootId");
+        return E_INVAL_ARG;
+    }
+
+    ValuesBucket setAttr;
+    setAttr.PutLong(FileColumn::FILE_SIZE, static_cast<int64_t>(size));
+    vector<ValueObject> bindArgs;
+    bindArgs.emplace_back(cloudId);
+    int32_t changedRows = -1;
+    int32_t ret =
+        rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setAttr, FileColumn::CLOUD_ID + " = ?", bindArgs);
+    if (ret != E_OK) {
+        LOGE("setAttr size fail, ret: %{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::ReadDir(const std::string &cloudId, vector<CloudDiskFileInfo> &infos)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);

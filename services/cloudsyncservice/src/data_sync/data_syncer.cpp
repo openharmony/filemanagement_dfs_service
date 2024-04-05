@@ -16,6 +16,7 @@
 #include "data_syncer.h"
 
 #include <functional>
+#include <memory>
 
 #include "data_sync_const.h"
 #include "data_sync_notifier.h"
@@ -1343,7 +1344,6 @@ int32_t DataSyncer::DownloadThumbInner(std::shared_ptr<DataHandler> handler)
     if (assetsToDownload.empty()) {
         return E_STOP;
     }
-
     LOGI("assetsToDownload count: %{public}zu", assetsToDownload.size());
     auto ctx = std::make_shared<TaskContext>(handler);
     auto callback = [this] (shared_ptr<DKContext> context,
@@ -1390,7 +1390,8 @@ void DataSyncer::FetchThumbDownloadCallback(shared_ptr<DKContext> context,
 
 bool DataSyncer::CheckScreenAndWifi()
 {
-    if (NetworkStatus::GetNetConnStatus() == NetworkStatus::WIFI_CONNECT) {
+    if (NetworkStatus::GetNetConnStatus() == NetworkStatus::WIFI_CONNECT
+        && !ScreenStatus::IsScreenOn()) {
         return true;
     }
     return false;
@@ -1430,6 +1431,15 @@ void DataSyncer::SetFullSyncSysEvent()
 
 void DataSyncer::SetCheckSysEvent()
 {
+}
+
+void DataSyncer::RemoveCycleTaskFile()
+{
+    string fullPath = CLOUDFILE_DIR + to_string(userId_) + "/" + bundleName_ + "/CycleTask";
+    int32_t ret = unlink(fullPath.c_str());
+    if (ret != E_OK) {
+        LOGI("unlink cycle Task file fail, errno is %{public}d", errno);
+    }
 }
 } // namespace CloudSync
 } // namespace FileManagement

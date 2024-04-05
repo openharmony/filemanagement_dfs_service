@@ -16,9 +16,7 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_CYCLE_TASK_RUNNER_H
 #define OHOS_CLOUD_SYNC_SERVICE_CYCLE_TASK_RUNNER_H
 
-#include <memory>
-#include <mutex>
-#include <vector>
+#include <set>
 #include <chrono>
 #include <ctime>
 #include "cloud_pref_impl.h"
@@ -29,34 +27,20 @@ namespace FileManagement {
 namespace CloudSync {
 class CycleTaskRunner {
 public:
-    enum IntervalTime {
-        ONE_DAY = 24 * 60 * 60,
-        TWO_DAY = ONE_DAY * 2,
-        THREE_DAY = ONE_DAY * 3,
-        ONE_WEEK = ONE_DAY * 7,
-    };
-
     static const std::string FILE_PATH;
     static const int32_t DEFAULT_VALUE;
     static const int32_t DEFAULT_USER_ID;
     CycleTaskRunner(std::shared_ptr<DataSyncManager> dataSyncManager);
-    void StartTask(std::string &reason);
-
-    void SetPref(const std::string &key, bool val)
-    {
-        cloudPrefImpl_->SetBool(key, val);
-    }
+    void StartTask();
 
 private:
+    void InitTasks();
+    void SetRunableBundleNames();
+
     int32_t userId_{0};
     std::time_t setUpTime_{0};
-    std::unique_ptr<CloudPrefImpl> cloudPrefImpl_;
     std::shared_ptr<DataSyncManager> dataSyncManager_;
     std::vector<std::shared_ptr<CycleTask>> cycleTasks_ {};
-
-    void InitTasks();
-    void GetLastRunTime(std::string taskName, std::time_t &time);
-    void SetLastRunTime(std::string taskName, std::time_t time);
 };
 
 } // namespace CloudSync

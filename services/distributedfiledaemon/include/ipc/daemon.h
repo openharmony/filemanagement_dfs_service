@@ -59,15 +59,13 @@ public:
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
-                           const sptr<IRemoteObject> &listener) override;
+                           const sptr<IRemoteObject> &listener,
+                           const std::string &copyPath) override;
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &dstDeviceId,
                             const std::string &sessionName) override;
-    int32_t GetRealPath(const std::string &dstUri,
-                        const HapTokenInfo &hapTokenInfo,
-                        const std::string &sessionName,
-                        std::string &physicalPath);
+    int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) override;
 
 private:
     Daemon();
@@ -78,13 +76,20 @@ private:
     std::shared_ptr<OsAccountObserver> subScriber_;
     void PublishSA();
     void RegisterOsAccount();
-    int32_t LoadRemoteSA(const std::string &srcUri,
-                         const std::string &dstPath,
-                         const std::string &localDeviceId,
-                         const std::string &remoteDeviceId,
-                         const std::string &sessionName);
-    void RemoveSession(const std::string &sessionName);
-    int32_t CancelWait(const std::string &sessionName, const sptr<IFileTransListener> &listenerCallback);
+    sptr<IDaemon> GetRemoteSA(const std::string &remoteDeviceId);
+    void StoreSessionAndListener(const std::string &physicalPath,
+                                 const std::string &sessionName,
+                                 const sptr<IFileTransListener> &listener);
+    int32_t GetRealPath(const std::string &srcUri,
+                        const std::string &dstUri,
+                        std::string &physicalPath,
+                        const std::string &copyPath,
+                        const sptr<IDaemon> &daemon);
+    int32_t Copy(const std::string &srcUri,
+                 const std::string &dstPath,
+                 const sptr<IDaemon> &daemon,
+                 const std::string &sessionName);
+    void DeleteSessionAndListener(const std::string &sessionName);
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -34,10 +34,11 @@ DistributedHardware::DmDeviceInfo deviceInfo = {
 };
 }
 
-const std::string srcUri = "file://docs/storage/Users/currentUser/""Documents?networkid=xxxxx";
-const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
-const std::string srcDeviceId = "testSrcDeviceId";
-const sptr<IRemoteObject> listener = sptr(new DaemonServiceMock());
+const std::string SRC_URI = "file://docs/storage/Users/currentUser/""Documents?networkid=xxxxx";
+const std::string DST_URI = "file://docs/storage/Users/currentUser/Documents";
+const std::string SRC_DEVICE_ID = "testSrcDeviceId";
+const sptr<IRemoteObject> LISTENER = sptr(new DaemonServiceMock());
+const std::string COPY_PATH = "tmpDir";
 
 class MockDaemonStub : public DaemonStub {
 public:
@@ -48,11 +49,13 @@ public:
                          const std::string &dstPath,
                          const std::string &remoteDeviceId,
                          const std::string &sessionName));
-    MOCK_METHOD4(PrepareSession,
+    MOCK_METHOD5(PrepareSession,
                  int32_t(const std::string &srcUri,
                          const std::string &dstUri,
                          const std::string &srcDeviceId,
-                         const sptr<IRemoteObject> &listener));
+                         const sptr<IRemoteObject> &listener,
+                         const std::string &copyPath));
+    MOCK_METHOD3(GetRemoteCopyInfo, int32_t(const std::string &srcUri, bool &isFile, bool &isDir));
 };
 
 class DaemonStubTest : public testing::Test {
@@ -231,10 +234,11 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest006, TestSize.Level1)
         MessageParcel reply;
         MessageOption option;
 
-        EXPECT_TRUE(data.WriteString(srcUri));
-        EXPECT_TRUE(data.WriteString(dstUri));
-        EXPECT_TRUE(data.WriteString(srcDeviceId));
-        EXPECT_TRUE(data.WriteRemoteObject(listener));
+        EXPECT_TRUE(data.WriteString(SRC_URI));
+        EXPECT_TRUE(data.WriteString(DST_URI));
+        EXPECT_TRUE(data.WriteString(SRC_DEVICE_ID));
+        EXPECT_TRUE(data.WriteRemoteObject(LISTENER));
+        EXPECT_TRUE(data.WriteString(COPY_PATH));
         int ret = daemonStub_->OnRemoteRequest(
             static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION), data,
             reply, option);

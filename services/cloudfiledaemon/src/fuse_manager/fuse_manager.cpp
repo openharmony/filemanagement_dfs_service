@@ -206,14 +206,6 @@ static void GetMetaAttr(struct FuseData *data, shared_ptr<CloudInode> ino, struc
     } else {
         stbuf->st_mode = S_IFREG | STAT_MODE_REG;
         stbuf->st_nlink = STAT_NLINK_REG;
-        if (ino->mBase->size == TWO_MB) {
-            string localPath = GetLocalTmpPath(data->userId, ino->path);
-            struct stat fileStat;
-            if (stat(localPath.c_str(), &fileStat) == 0) {
-                LOGI("fix file ino:%s size to %lld", ino->path.c_str(), (long long)fileStat.st_size);
-                ino->mBase->size = fileStat.st_size;
-            }
-        }
         stbuf->st_size = static_cast<decltype(stbuf->st_size)>(ino->mBase->size);
         LOGD("regular file, ino:%s, size: %lld", ino->path.c_str(), (long long)stbuf->st_size);
     }
@@ -336,20 +328,26 @@ static int32_t FixDentrySize(shared_ptr<CloudInode> ino, FuseData *data)
     }
     string localPath = GetLocalTmpPath(data->userId, ino->path);
     struct stat fileStat;
-    if (stat(localPath.c_str(), &fileStat) == 0) {
-        LOGI("fix file ino:%s size to %lld", ino->path.c_str(), (long long)fileStat.st_size);
+    int32_t ret = stat(localPath.c_str(), &fileStat);
+    if (ret == 0) {
+        LOGI("fix file ino:%{public}s size to %{public}lld", ino->path.c_str(), (long long)fileStat.st_size);
         ino->mBase->size = fileStat.st_size;
         auto metaFile = MetaFileMgr::GetInstance().GetMetaFile(data->userId, GetCloudInode(data, ino->parent)->path);
         auto mateBase = MetaBase(ino->mBase->name, ino->mBase->cloudId);
-        auto ret = metaFile->DoUpdate(mateBase);
+        mateBase.fileType = ino->mBase->fileType;
+        mateBase.mode = ino->mBase->mode;
+        mateBase.mtime = ino->mBase->mtime;
+        mateBase.size = ino->mBase->size;
+        ret = metaFile->DoUpdate(mateBase);
         if (ret != 0) {
             LOGE("update dentry fail, ret is %{public}d", ret);
-            return ret;
         } else {
             LOGI("update dentry success, fix size success");
         }
+    } else {
+        LOGW("stat fail, errno is %{public}d", errno);
     }
-    return 0;
+    return ret;
 }
 
 static string GetCloudMergeViewPath(int32_t userId, const string &relativePath)
@@ -397,24 +395,25 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                                                             GetAssetPath(cInode, data));
         if (cInode->readSession) {
             DriveKit::DKError dkError = cInode->readSession->InitSession();
-            if (!HandleDkError(req, dkError)) {
-                FixDentrySize(cInode, data);
+            if (HandleDkError(req, dkError)) {
+                cInode->readSession = nullptr;
+                LOGE("open fali");
+            } else if (FixDentrySize(cInode, data) != 0) {
+                LOGE("fix dentry size fail");
+                fuse_reply_err(req, EPERM);
+            } else {
                 cInode->sessionRefCount++;
                 LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
                 fuse_reply_open(req, fi);
-            } else {
-                cInode->readSession = nullptr;
-                LOGE("open fali");
             }
             wSesLock.unlock();
             return;
         }
     }
-    if (!cInode->readSession) {
+    if (!cInode->readSession || FixDentrySize(cInode, data) != 0) {
         fuse_reply_err(req, EPERM);
-        LOGE("readSession is null");
+        LOGE("readSession is null or fix size fail");
     } else {
-        FixDentrySize(cInode, data);
         cInode->sessionRefCount++;
         LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
         fuse_reply_open(req, fi);

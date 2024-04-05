@@ -891,8 +891,45 @@ void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
 void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
                                   int valid, struct fuse_file_info *fi)
 {
-    LOGI("SetAttr operation begin");
-    fuse_reply_err(req, 0);
+    auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
+    if (inoPtr == nullptr) {
+        LOGE("get an invalid inode!");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+
+    if (valid & FUSE_SET_ATTR_SIZE) {
+        auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+        DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+
+        int res = rdbStore->SetAttr(inoPtr->cloudId, attr->st_size);
+        if (res != 0) {
+            LOGE("update rdb size failed, res: %{public}d", res);
+            fuse_reply_err(req, ENOSYS);
+            return;
+        }
+
+        if (fi) {
+            res = ftruncate(fi->fh, attr->st_size);
+        } else {
+            string path = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
+            res = truncate(path.c_str(), attr->st_size);
+        }
+        if (res == -1) {
+            LOGE("truncate failed, err: %{public}d", errno);
+            res = rdbStore->SetAttr(inoPtr->cloudId, inoPtr->stat.st_size);
+            if (res != 0) {
+                LOGE("update rdb size failed, res: %{public}d", res);
+                fuse_reply_err(req, ENOSYS);
+            } else {
+                fuse_reply_err(req, errno);
+            }
+            return;
+        }
+        UpdateCloudDiskInode(rdbStore, inoPtr);
+    }
+    fuse_reply_attr(req, &inoPtr->stat, 0);
 }
 
 void FileOperationsCloud::Lseek(fuse_req_t req, fuse_ino_t ino, off_t off, int whence,

@@ -17,9 +17,6 @@
 #define OHOS_CLOUD_SYNC_SERVICE_SAVE_SUBSCRIPTION_TASK_H
 #include "cloud_pref_impl.h"
 #include "cycle_task.h"
-#include "rdb_data_handler.h"
-#include <memory>
-#include <string>
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
@@ -27,7 +24,7 @@ namespace CloudSync {
 class SaveSubscriptionTask : public CycleTask {
 public:
     SaveSubscriptionTask(std::shared_ptr<DataSyncManager> dataSyncManager);
-    int32_t RunTask(int32_t userId) override;
+    int32_t RunTaskForBundle(int32_t userId, std::string bundleName) override;
 };
 } // namespace CloudSync
 } // namespace FileManagement

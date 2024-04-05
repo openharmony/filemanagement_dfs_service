@@ -146,15 +146,16 @@ HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionTest, TestSize.Leve
  */
 HWTEST_F(DistributedDaemonManagerImplTest, PrepareSessionTest, TestSize.Level1)
 {
-    const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkid=xxxxx";
+    const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkId=xxxxx";
     const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
     const std::string srcDeviceId = "testSrcDeviceId";
     const sptr<IRemoteObject> listener = sptr(new DaemonServiceMock());
+    const std::string copyPath = "tmpDir";
     GTEST_LOG_(INFO) << "PrepareSessionTest Start";
     try {
         auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
-        auto res = distributedDaemonManagerImpl_->PrepareSession(srcUri, dstUri, srcDeviceId, listener);
+        auto res = distributedDaemonManagerImpl_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, copyPath);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);

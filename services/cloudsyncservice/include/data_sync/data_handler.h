@@ -31,6 +31,7 @@ struct OnFetchParams {
     std::vector<DriveKit::DKDownloadAsset> assetsToDownload{};
     std::vector<NativeRdb::ValuesBucket> insertFiles{};
     std::map<std::string, std::set<int>> recordAlbumMaps{};
+    std::map<std::string, int> recordAnalysisAlbumMaps{};
 };
 const static std::string DOWNLOAD_THUMB_LIMIT = "download_thumb_limit";
 const static std::string BATCH_NO = "batch_no";

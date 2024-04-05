@@ -30,7 +30,8 @@ void BatteryStatus::GetInitChargingStatus()
 #ifdef SUPPORT_POWER
     auto &batterySrvClient = PowerMgr::BatterySrvClient::GetInstance();
     auto chargingStatus = batterySrvClient.GetChargingStatus();
-    isCharging_ = (chargingStatus == PowerMgr::BatteryChargeState::CHARGE_STATE_ENABLE);
+    isCharging_ = (chargingStatus == PowerMgr::BatteryChargeState::CHARGE_STATE_ENABLE ||
+                   chargingStatus == PowerMgr::BatteryChargeState::CHARGE_STATE_FULL);
 #endif
 }
 

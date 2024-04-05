@@ -91,6 +91,10 @@ int32_t GalleryDataSyncer::Clean(const int action)
     if (ret != E_OK) {
         LOGE("gallery data syncer file cancel download err %{public}d", ret);
     }
+    ret = fileHandler_->DeleteCloudPhotoDir();
+    if (ret != E_OK) {
+        LOGE("clean cloud photo dir err: %{public}d", ret);
+    }
     ret = fileHandler_->MarkClean(action);
     if (ret != E_OK) {
         LOGE("gallery photos clean err %{public}d", ret);
@@ -101,6 +105,7 @@ int32_t GalleryDataSyncer::Clean(const int action)
     }
     fileHandler_->ClearCursor();
     albumHandler_->ClearCursor();
+    RemoveCycleTaskFile();
     CompleteClean();
     return ret;
 }
@@ -365,9 +370,6 @@ int32_t GalleryDataSyncer::DownloadThumb(int32_t type)
             return E_STOP;
         }
     }
-    if (timeId_ == 0) {
-        fileHandler_->PeriodicUpdataFiles(timeId_);
-    }
     TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
     fileHandler_->SetDownloadType(type);
     int32_t ret = DataSyncer::DownloadThumbInner(fileHandler_);
@@ -428,8 +430,7 @@ void GalleryDataSyncer::SetCheckSysEvent()
 
 int32_t GalleryDataSyncer::CompletePull()
 {
-    Media::MediaLibraryRdbUtils::UpdateSystemAlbumCountInternal(fileHandler_->GetRaw());
-    Media::MediaLibraryRdbUtils::UpdateUserAlbumCountInternal(fileHandler_->GetRaw());
+    fileHandler_->UpdateAllAlbums();
     return DataSyncer::CompletePull();
 }
 

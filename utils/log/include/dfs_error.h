@@ -67,6 +67,9 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_IPC_READ_FAILED,
     E_IPC_WRITE_FAILED,
     E_SOFTBUS_SESSION_FAILED,
+    E_GET_DEVICE_ID,
+    E_GET_USER_ID,
+    E_NULLPTR,
     /* session */
     E_CREATE_SESSION,
     E_OPEN_SESSION,

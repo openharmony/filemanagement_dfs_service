@@ -40,8 +40,10 @@
 #include "medialibrary_rdb_utils.h"
 #include "medialibrary_type_const.h"
 #include "meta_file.h"
+#include "shooting_mode_column.h"
 #include "thumbnail_const.h"
 #include "task_state_manager.h"
+#include "vision_column.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -345,7 +347,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
     ret = FileDataHandler::HandleRecord(records, params, recordIds, resultSet, recordIdRowIdMap);
     LOGI("before BatchInsert size len %{public}zu, map size %{public}zu", params.insertFiles.size(),
         params.recordAlbumMaps.size());
-    if (!params.insertFiles.empty() || !params.recordAlbumMaps.empty()) {
+    if (!params.insertFiles.empty() || !params.recordAlbumMaps.empty() || !params.recordAnalysisAlbumMaps.empty()) {
         int64_t rowId;
         ret = BatchInsert(rowId, TABLE_NAME, params.insertFiles);
         if (ret != E_OK) {
@@ -357,6 +359,7 @@ int32_t FileDataHandler::OnFetchRecords(shared_ptr<vector<DKRecord>> &records, O
         } else {
             UpdateMetaStat(INDEX_DL_META_SUCCESS, params.insertFiles.size());
             BatchInsertAssetMaps(params);
+            BatchInsertAssetAnalysisMaps(params);
         }
     }
     UpdateAlbumInternal();
@@ -660,10 +663,24 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
     return E_OK;
 }
 
+void FileDataHandler::HandleShootingMode(const DriveKit::DKRecord &record, const NativeRdb::ValuesBucket &valuebucket,
+    OnFetchParams &params)
+{
+    string shootingMode = "";
+    ValueObject valueObject;
+    if (valuebucket.GetObject(Media::PhotoColumn::PHOTO_SHOOTING_MODE, valueObject)) {
+        valueObject.GetString(shootingMode);
+    }
+    if (!shootingMode.empty()) {
+        params.recordAnalysisAlbumMaps[record.GetRecordId()] = stoi(shootingMode);
+    }
+}
+
 int32_t FileDataHandler::ConflictDataMerge(DKRecord &record, string &fullPath, bool upflag)
 {
     int updateRows;
     ValuesBucket values;
+    OnFetchParams params;
     values.PutString(PhotoColumn::PHOTO_CLOUD_ID, record.GetRecordId());
     values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
     values.PutInt(PC::PHOTO_CLEAN_FLAG, NOT_NEED_CLEAN);
@@ -674,12 +691,14 @@ int32_t FileDataHandler::ConflictDataMerge(DKRecord &record, string &fullPath, b
         values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
         values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     }
+    HandleShootingMode(record, values, params);
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
     int32_t ret = Update(updateRows, values, whereClause, {fullPath});
     if (ret != E_OK) {
         LOGE("update retry flag failed, ret=%{public}d", ret);
         return E_RDB;
     }
+    BatchInsertAssetAnalysisMaps(params);
     return E_OK;
 }
 
@@ -1064,6 +1083,7 @@ int32_t FileDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &param
     } else {
         values.PutInt(Media::PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_DOWNLOAD));
     }
+    HandleShootingMode(record, values, params);
     params.insertFiles.push_back(values);
     if (AddCloudThumbs(record) != E_OK || !IsPullRecords()) {
         AppendToDownload(record, "lcd", params.assetsToDownload);
@@ -1081,6 +1101,8 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
     uint64_t thumbError = 0;
     uint64_t lcdError = 0;
 
+    UpdateThmVec();
+    UpdateLcdVec();
     for (const auto &it : resultMap) {
         auto asset = it.first;
         if (it.second.IsSuccess()) {
@@ -1245,8 +1267,7 @@ int32_t FileDataHandler::SetRetry(vector<NativeRdb::ValueObject> &retryList)
 void FileDataHandler::UpdateAlbumInternal()
 {
     std::lock_guard<std::mutex> lock(rdbMutex_);
-    MediaLibraryRdbUtils::UpdateSystemAlbumCountInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumCountInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateAllAlbumsCountForCloud(GetRaw());
 }
 
 /**
@@ -1257,8 +1278,7 @@ void FileDataHandler::UpdateAlbumInternal()
 void FileDataHandler::UpdateAllAlbums()
 {
     std::lock_guard<std::mutex> lock(rdbMutex_);
-    MediaLibraryRdbUtils::UpdateSystemAlbumInternal(GetRaw());
-    MediaLibraryRdbUtils::UpdateUserAlbumInternal(GetRaw());
+    MediaLibraryRdbUtils::UpdateAllAlbumsForCloud(GetRaw());
 }
 
 int FileDataHandler::SetRetry(const string &recordId)
@@ -1352,7 +1372,7 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
         }
     }
     int32_t changedRows = 0;
-    RETURN_ON_ERR(UpdateRecordToDatabase(record, local, changedRows));
+    RETURN_ON_ERR(UpdateRecordToDatabase(record, local, changedRows, params));
     if (FileIsLocal(local) && mtimeChanged && changedRows != 0) {
         LOGI("cloud file DATA changed, %s", record.GetRecordId().c_str());
         int ret = unlink(GetLocalPath(userId_, GetFilePath(local)).c_str());
@@ -1370,7 +1390,7 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
 
 int32_t FileDataHandler::UpdateRecordToDatabase(DriveKit::DKRecord &record,
                                                 NativeRdb::ResultSet &local,
-                                                int32_t &changeRows)
+                                                int32_t &changeRows, OnFetchParams &params)
 {
     int64_t localMtime = 0;
     ValuesBucket values;
@@ -1390,6 +1410,7 @@ int32_t FileDataHandler::UpdateRecordToDatabase(DriveKit::DKRecord &record,
     string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ? AND " + PC::PHOTO_DIRTY + " = ?";
     vector<std::string> whereArgs = {record.GetRecordId(),
         to_string(static_cast<int32_t>(DirtyType::TYPE_SYNCED))};
+    HandleShootingMode(record, values, params);
     ret = Update(changeRows, values, whereClause, whereArgs);
     if (ret != E_OK) {
         LOGE("RDB error, update fail ret is %{public}d", ret);
@@ -2174,6 +2195,41 @@ int32_t FileDataHandler::BatchInsertAssetMaps(OnFetchParams &params)
     return E_OK;
 }
 
+int32_t FileDataHandler::BatchInsertAssetAnalysisMaps(OnFetchParams &params)
+{
+    auto recordIds = vector<string>();
+    for (const auto &it : params.recordAnalysisAlbumMaps) {
+        recordIds.push_back(it.first);
+    }
+    auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
+    if (resultSet == nullptr) {return E_RDB;}
+    for (const auto &it : params.recordAnalysisAlbumMaps) {
+        if (recordIdRowIdMap.find(it.first) == recordIdRowIdMap.end()) {
+            continue;
+        }
+        resultSet->GoToRow(recordIdRowIdMap.at(it.first));
+        int fileId = 0;
+        int ret = DataConvertor::GetInt(MediaColumn::MEDIA_ID, fileId, *resultSet);
+        if (ret != E_OK) {
+            LOGE("Get media id failed");
+            continue;
+        }
+
+        int64_t rowId;
+        ValuesBucket values;
+        values.PutInt(PhotoMap::ALBUM_ID, it.second);
+        values.PutInt(PhotoMap::ASSET_ID, fileId);
+        ret = Insert(rowId, ANALYSIS_PHOTO_MAP_TABLE, values);
+        if (ret != E_OK) {
+            LOGE("fail to insert albumId %{public}d - fileId %{public}d mapping, ret %{public}d",
+                it.second, fileId, ret);
+            continue;
+        }
+        LOGI("albumId %{public}d - fileId %{public}d add mapping success", it.second, fileId);
+    }
+    return E_OK;
+}
+
 int32_t FileDataHandler::GetAlbumIdFromCloudId(const std::string &cloudId)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(PhotoAlbumColumns::TABLE);
@@ -2398,11 +2454,6 @@ int32_t FileDataHandler::Clean(const int action)
 {
     std::lock_guard<std::mutex> lck(cleanMutex_);
     RETURN_ON_ERR(CleanPureCloudRecord());
-    int32_t res = DeleteDentryFile();
-    if (res != E_OK) {
-        LOGE("Clean remove dentry failed, res:%{public}d", res);
-        return res;
-    }
     UpdateAllAlbums();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
@@ -2465,6 +2516,16 @@ int32_t FileDataHandler::CleanRemainRecord()
         if (ret != E_OK) {
             LOGW("Clean not dirty data fail, try next time");
         }
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::DeleteCloudPhotoDir()
+{
+    std::string dirPath = "/mnt/hmdfs/" + to_string(userId_) + "/account/device_view/cloud/files/Photo";
+    if (!ForceRemoveDirectory(dirPath)) {
+        LOGE("remove dir fail, err: %{public}d", errno);
+        return errno;
     }
     return E_OK;
 }
