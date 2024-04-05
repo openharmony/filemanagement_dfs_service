@@ -35,6 +35,7 @@
 #include "sandbox_helper.h"
 #include "system_ability_definition.h"
 #include "trans_mananger.h"
+#include "utils_directory.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -43,6 +44,7 @@ namespace DistributedFile {
 using namespace std;
 using namespace OHOS::AppFileService;
 using namespace OHOS::FileManagement;
+using namespace OHOS::Storage::DistributedFile;
 using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
 using AccessTokenKit = OHOS::Security::AccessToken::AccessTokenKit;
 
@@ -170,13 +172,13 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &dstDeviceId,
                                 const std::string &sessionName)
 {
-    auto ret = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME.c_str(), sessionName.c_str());
+    auto ret = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName);
     if (ret != E_OK) {
         LOGE("CreateSessionServer failed, ret = %{public}d", ret);
         return E_SOFTBUS_SESSION_FAILED;
     }
 
-    ret = SoftBusHandler::GetInstance().SetFileSendListener(IDaemon::SERVICE_NAME.c_str(), sessionName.c_str());
+    ret = SoftBusHandler::GetInstance().SetFileSendListener(IDaemon::SERVICE_NAME, sessionName);
     if (ret != E_OK) {
         LOGE("SetFileSendListener failed, ret = %{public}d", ret);
         RemoveSessionServer(IDaemon::SERVICE_NAME.c_str(), sessionName.c_str());
@@ -204,133 +206,177 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
 int32_t Daemon::PrepareSession(const std::string &srcUri,
                                const std::string &dstUri,
                                const std::string &srcDeviceId,
-                               const sptr<IRemoteObject> &listener)
+                               const sptr<IRemoteObject> &listener,
+                               const std::string &copyPath)
 {
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
-    auto sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName();
-    if (sessionName.empty() || listenerCallback == nullptr) {
-        LOGI("SessionServer exceed max or ListenerCallback is nullptr");
-        return CancelWait(sessionName, listenerCallback);
+    if (listenerCallback == nullptr) {
+        LOGE("ListenerCallback is nullptr");
+        return E_NULLPTR;
     }
 
-    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
-    DistributedHardware::DmDeviceInfo localDeviceInfo{};
-    int errCode = deviceManager.GetLocalDeviceInfo(IDaemon::SERVICE_NAME, localDeviceInfo);
-    if (errCode != E_OK) {
-        LOGI("GetLocalDeviceInfo failed, errCode = %{public}d", errCode);
-        return CancelWait(sessionName, listenerCallback);
+    auto daemon = GetRemoteSA(srcDeviceId);
+    if (daemon == nullptr) {
+        LOGE("Daemon is nullptr");
+        return E_SA_LOAD_FAILED;
+    }
+
+    std::string physicalPath;
+    auto ret = GetRealPath(srcUri, dstUri, physicalPath, copyPath, daemon);
+    if (ret != E_OK) {
+        LOGE("GetRealPath failed, ret = %{public}d", ret);
+        return ret;
+    }
+
+    auto sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName();
+    if (sessionName.empty()) {
+        LOGE("SessionServer exceed max");
+        return E_SOFTBUS_SESSION_FAILED;
+    }
+
+    StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
+    ret = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName);
+    if (ret != E_OK) {
+        LOGE("CreateSessionServer failed, ret = %{public}d", ret);
+        DeleteSessionAndListener(sessionName);
+        return E_SOFTBUS_SESSION_FAILED;
+    }
+    ret = SoftBusHandler::GetInstance().SetFileReceiveListener(IDaemon::SERVICE_NAME, sessionName, physicalPath);
+    if (ret != E_OK) {
+        LOGE("SetFileReceiveListener failed, ret = %{public}d", ret);
+        DeleteSessionAndListener(sessionName);
+        return E_SOFTBUS_SESSION_FAILED;
+    }
+
+    ret = Copy(srcUri, physicalPath, daemon, sessionName);
+    if (ret != E_OK) {
+        LOGE("Remote copy failed,ret = %{public}d", ret);
+        DeleteSessionAndListener(sessionName);
+        return ret;
+    }
+    return ret;
+}
+
+void Daemon::StoreSessionAndListener(const std::string &physicalPath,
+                                     const std::string &sessionName,
+                                     const sptr<IFileTransListener> &listener)
+{
+    SoftBusSessionPool::SessionInfo sessionInfo{.dstPath = physicalPath, .uid = IPCSkeleton::GetCallingUid()};
+    SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo);
+    TransManager::GetInstance().AddTransTask(sessionName, listener);
+}
+
+int32_t Daemon::GetRealPath(const std::string &srcUri,
+                            const std::string &dstUri,
+                            std::string &physicalPath,
+                            const std::string &copyPath,
+                            const sptr<IDaemon> &daemon)
+{
+    bool isSrcFile = false;
+    bool isSrcDir = false;
+    auto ret = daemon->GetRemoteCopyInfo(srcUri, isSrcFile, isSrcDir);
+    if (ret != E_OK) {
+        LOGE("GetRemoteCopyInfo failed, ret = %{public}d", ret);
+        return E_SOFTBUS_SESSION_FAILED;
     }
 
     HapTokenInfo hapTokenInfo;
     int result = AccessTokenKit::GetHapTokenInfo(IPCSkeleton::GetCallingTokenID(), hapTokenInfo);
     if (result != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOGE("GetHapTokenInfo failed, errCode = %{public}d", result);
-        return CancelWait(sessionName, listenerCallback);
+        return E_GET_USER_ID;
     }
-    std::string physicalPath;
-    auto ret = GetRealPath(dstUri, hapTokenInfo, sessionName, physicalPath);
+    ret = SandboxHelper::GetPhysicalPath(dstUri, std::to_string(hapTokenInfo.userID), physicalPath);
     if (ret != E_OK) {
-        LOGE("GetRealPath failed, ret = %{public}d", ret);
-        return CancelWait(sessionName, listenerCallback);
+        LOGE("invalid uri, ret = %{public}d", ret);
+        return E_GET_PHYSICAL_PATH_FAILED;
     }
-    SoftBusSessionPool::SessionInfo sessionInfo{.dstPath = physicalPath, .uid = IPCSkeleton::GetCallingUid()};
-    SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo);
-    ret = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName);
-    if (ret != E_OK) {
-        LOGE("CreateSessionServer failed, ret = %{public}d", ret);
-        RemoveSession(sessionName);
-        return CancelWait(sessionName, listenerCallback);
+    LOGI("physicalPath %{public}s", physicalPath.c_str());
+    if (isSrcFile && !Utils::IsFolder(physicalPath)) {
+        auto pos = physicalPath.rfind('/');
+        if (pos == std::string::npos) {
+            LOGE("invalid file path");
+            return E_GET_PHYSICAL_PATH_FAILED;
+        }
+        physicalPath = physicalPath.substr(0, pos);
+    }
+    if (!SandboxHelper::CheckValidPath(physicalPath)) {
+        LOGE("invalid path.");
+        return E_GET_PHYSICAL_PATH_FAILED;
     }
 
-    ret = SoftBusHandler::GetInstance().SetFileReceiveListener(IDaemon::SERVICE_NAME, sessionName, physicalPath);
-    if (ret != E_OK) {
-        LOGE("SetFileReceiveListener failed, ret = %{public}d", ret);
-        RemoveSession(sessionName);
-        return CancelWait(sessionName, listenerCallback);
+    Uri uri(dstUri);
+    auto authority = uri.GetAuthority();
+    if (authority != FILE_MANAGER_AUTHORITY && authority != MEDIA_AUTHORITY) {
+        auto bundleName = SoftBusSessionListener::GetBundleName(dstUri);
+        physicalPath = "/data/service/el2/" + to_string(hapTokenInfo.userID) + "/hmdfs/account/data/" + bundleName +
+                       "/" + copyPath;
+        if (!SandboxHelper::CheckValidPath(physicalPath)) {
+            LOGE("invalid path.");
+            return E_GET_PHYSICAL_PATH_FAILED;
+        }
     }
-    TransManager::GetInstance().AddTransTask(sessionName, listenerCallback);
-    return LoadRemoteSA(srcUri, physicalPath, localDeviceInfo.networkId, srcDeviceId, sessionName);
+    return E_OK;
 }
 
-int32_t Daemon::LoadRemoteSA(const std::string &srcUri,
-                             const std::string &dstPath,
-                             const std::string &localDeviceId,
-                             const std::string &remoteDeviceId,
-                             const std::string &sessionName)
+int32_t Daemon::GetRemoteCopyInfo(const std::string &srcUri, bool &isSrcFile, bool &srcIsDir)
+{
+    auto physicalPath = SoftBusSessionListener::GetRealPath(srcUri);
+    if (physicalPath.empty()) {
+        return E_SOFTBUS_SESSION_FAILED;
+    }
+    isSrcFile = Utils::IsFile(physicalPath);
+    srcIsDir = Utils::IsFolder(physicalPath);
+    return E_OK;
+}
+
+sptr<IDaemon> Daemon::GetRemoteSA(const std::string &remoteDeviceId)
 {
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sam == nullptr) {
-        LOGE("Samgr is nullptr");
-        RemoveSession(sessionName);
-        return E_SA_LOAD_FAILED;
+        LOGE("Sam is nullptr");
+        return nullptr;
     }
 
     auto object = sam->GetSystemAbility(FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, remoteDeviceId);
     if (object == nullptr) {
         LOGE("GetSystemAbility failed");
-        RemoveSession(sessionName);
-        return E_SA_LOAD_FAILED;
+        return nullptr;
     }
-    auto daemon = iface_cast<OHOS::Storage::DistributedFile::IDaemon>(object);
+    auto daemon = iface_cast<IDaemon>(object);
     if (daemon == nullptr) {
         LOGE("Connect service nullptr");
-        RemoveSession(sessionName);
-        return E_SA_LOAD_FAILED;
+        return nullptr;
+    }
+    return daemon;
+}
+
+int32_t Daemon::Copy(const std::string &srcUri,
+                     const std::string &dstPath,
+                     const sptr<IDaemon> &daemon,
+                     const std::string &sessionName)
+{
+    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
+    DistributedHardware::DmDeviceInfo localDeviceInfo{};
+    int errCode = deviceManager.GetLocalDeviceInfo(IDaemon::SERVICE_NAME, localDeviceInfo);
+    if (errCode != E_OK) {
+        LOGE("GetLocalDeviceInfo failed, errCode = %{public}d", errCode);
+        return E_GET_DEVICE_ID;
     }
 
-    auto ret = daemon->RequestSendFile(srcUri, dstPath, localDeviceId, sessionName);
+    auto ret = daemon->RequestSendFile(srcUri, dstPath, localDeviceInfo.networkId, sessionName);
     if (ret != E_OK) {
         LOGE("RequestSendFile failed, ret = %{public}d", ret);
-        RemoveSession(sessionName);
         return E_SA_LOAD_FAILED;
-    }
-    return ret;
-}
-
-void Daemon::RemoveSession(const std::string &sessionName)
-{
-    TransManager::GetInstance().DeleteTransTask(sessionName);
-    SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
-    RemoveSessionServer(IDaemon::SERVICE_NAME.c_str(), sessionName.c_str());
-}
-
-int32_t Daemon::GetRealPath(const std::string &dstUri,
-                            const HapTokenInfo &hapTokenInfo,
-                            const std::string &sessionName,
-                            std::string &physicalPath)
-{
-    Uri uri(dstUri);
-    auto authority = uri.GetAuthority();
-    if (authority == FILE_MANAGER_AUTHORITY || authority == MEDIA_AUTHORITY) {
-        auto ret = SandboxHelper::GetPhysicalPath(dstUri, std::to_string(hapTokenInfo.userID), physicalPath);
-        if (ret != E_OK) {
-            LOGE("invalid uri, ret = %{public}d", ret);
-            RemoveSession(sessionName);
-            return E_GET_PHYSICAL_PATH_FAILED;
-        }
-    } else {
-        auto bundleName = SoftBusSessionListener::GetBundleName(dstUri);
-        if (bundleName.empty()) {
-            LOGE("not find bundle name");
-            RemoveSession(sessionName);
-            return E_GET_PHYSICAL_PATH_FAILED;
-        }
-        physicalPath = "/data/service/el2/" + to_string(hapTokenInfo.userID) + "/hmdfs/account/data/" + bundleName;
-    }
-    LOGI("physicalPath %{public}s", physicalPath.c_str());
-
-    if (!SandboxHelper::CheckValidPath(physicalPath)) {
-        LOGE("invalid path.");
-        RemoveSession(sessionName);
-        return E_GET_PHYSICAL_PATH_FAILED;
     }
     return E_OK;
 }
 
-int32_t Daemon::CancelWait(const std::string &sessionName, const sptr<IFileTransListener> &listenerCallback)
+void Daemon::DeleteSessionAndListener(const std::string &sessionName)
 {
-    listenerCallback->OnFailed(sessionName);
-    return E_SOFTBUS_SESSION_FAILED;
+    SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
+    TransManager::GetInstance().DeleteTransTask(sessionName);
+    RemoveSessionServer(IDaemon::SERVICE_NAME.c_str(), sessionName.c_str());
 }
 } // namespace DistributedFile
 } // namespace Storage

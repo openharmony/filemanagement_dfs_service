@@ -33,12 +33,14 @@ public:
     virtual int32_t PrepareSession(const std::string &srcUri,
                                    const std::string &dstUri,
                                    const std::string &srcDeviceId,
-                                   const sptr<IRemoteObject> &listener) = 0;
+                                   const sptr<IRemoteObject> &listener,
+                                   const std::string &copyPath) = 0;
     virtual int32_t RequestSendFile(const std::string &srcUri,
                                     const std::string &dstPath,
                                     const std::string &remoteDeviceId,
                                     const std::string &sessionName) = 0;
     static inline const std::string SERVICE_NAME { "ohos.storage.distributedfile.daemon" };
+    virtual int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) = 0;
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.daemon")
 };
 } // namespace DistributedFile

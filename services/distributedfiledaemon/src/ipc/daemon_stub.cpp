@@ -19,12 +19,14 @@
 #include "dfsu_access_token_helper.h"
 #include "dm_device_info.h"
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
+#include "ipc_skeleton.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::FileManagement;
+const int32_t UID = 1009;
 DaemonStub::DaemonStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION)] =
@@ -36,6 +38,9 @@ DaemonStub::DaemonStub()
         &DaemonStub::HandlePrepareSession;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE)] =
         &DaemonStub::HandleRequestSendFile;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO)] =
+        &DaemonStub::HandleGetRemoteCopyInfo;
 }
 
 int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -135,8 +140,12 @@ int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &rep
         LOGE("read listener failed");
         return E_IPC_READ_FAILED;
     }
-
-    int32_t res = PrepareSession(srcUri, dstUri, srcDeviceId, listener);
+    std::string copyPath;
+    if (!data.ReadString(copyPath)) {
+        LOGE("read copyPath failed");
+        return E_IPC_READ_FAILED;
+    }
+    int32_t res = PrepareSession(srcUri, dstUri, srcDeviceId, listener, copyPath);
     reply.WriteInt32(res);
     LOGD("End PrepareSession, ret = %{public}d.", res);
     return res;
@@ -144,6 +153,11 @@ int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &rep
 
 int32_t DaemonStub::HandleRequestSendFile(MessageParcel &data, MessageParcel &reply)
 {
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != UID) {
+        LOGE("Permission denied, caller is not dfs!");
+        return E_PERMISSION_DENIED;
+    }
     std::string srcUri;
     if (!data.ReadString(srcUri)) {
         LOGE("read srcUri failed");
@@ -167,6 +181,41 @@ int32_t DaemonStub::HandleRequestSendFile(MessageParcel &data, MessageParcel &re
     auto res = RequestSendFile(srcUri, dstPath, dstDeviceId, sessionName);
     reply.WriteInt32(res);
     LOGD("End RequestSendFile, ret = %{public}d.", res);
+    return res;
+}
+
+int32_t DaemonStub::HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &reply)
+{
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != UID) {
+        LOGE("Permission denied, caller is not dfs!");
+        return E_PERMISSION_DENIED;
+    }
+    std::string srcUri;
+    if (!data.ReadString(srcUri)) {
+        LOGE("read srcUri failed");
+        return E_IPC_READ_FAILED;
+    }
+    bool isFile = false;
+    bool isDir = false;
+    auto res = GetRemoteCopyInfo(srcUri, isFile, isDir);
+    if (res != E_OK) {
+        LOGE("GetRemoteCopyInfo failed");
+        return E_IPC_READ_FAILED;
+    }
+    if (!reply.WriteBool(isFile)) {
+        LOGE("Write isFile failed");
+        return E_IPC_READ_FAILED;
+    }
+    if (!reply.WriteBool(isDir)) {
+        LOGE("Write isDir failed");
+        return E_IPC_READ_FAILED;
+    }
+    if (!reply.WriteInt32(res)) {
+        LOGE("Write res failed");
+        return E_IPC_READ_FAILED;
+    }
+    LOGD("End GetRemoteCopyInfo, ret = %{public}d.", res);
     return res;
 }
 } // namespace DistributedFile

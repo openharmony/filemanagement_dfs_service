@@ -32,7 +32,8 @@ public:
     virtual int32_t PrepareSession(const std::string &srcUri,
                                    const std::string &dstUri,
                                    const std::string &srcDeviceId,
-                                   const sptr<IRemoteObject> &listener) = 0;
+                                   const sptr<IRemoteObject> &listener,
+                                   const std::string &copyPath) = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage

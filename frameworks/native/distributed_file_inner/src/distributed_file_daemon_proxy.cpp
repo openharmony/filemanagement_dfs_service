@@ -197,7 +197,8 @@ int32_t DistributedFileDaemonProxy::CloseP2PConnection(const DistributedHardware
 int32_t DistributedFileDaemonProxy::PrepareSession(const std::string &srcUri,
                                                    const std::string &dstUri,
                                                    const std::string &srcDeviceId,
-                                                   const sptr<IRemoteObject> &listener)
+                                                   const sptr<IRemoteObject> &listener,
+                                                   const std::string &copyPath)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -220,6 +221,10 @@ int32_t DistributedFileDaemonProxy::PrepareSession(const std::string &srcUri,
     }
     if (!data.WriteRemoteObject(listener)) {
         LOGE("Failed to send the listener callback stub");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteString(copyPath)) {
+        LOGE("Failed to send copyPath");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
     auto remote = Remote();
@@ -278,6 +283,46 @@ int32_t DistributedFileDaemonProxy::RequestSendFile(const std::string &srcUri,
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
     return reply.ReadInt32();
+}
+
+int32_t DistributedFileDaemonProxy::GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(srcUri)) {
+        LOGE("Failed to send srcUri");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    auto ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO), data, reply,
+        option);
+    if (ret != 0) {
+        LOGE("SendRequest failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!reply.ReadBool(isFile)) {
+        LOGE("read isFile failed");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!reply.ReadBool(isDir)) {
+        LOGE("read isDir failed");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!reply.ReadInt32(ret)) {
+        LOGE("read res failed");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    return ret;
 }
 } // namespace DistributedFile
 } // namespace Storage

@@ -22,6 +22,7 @@
 #include <unistd.h>
 
 #include "directory_ex.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
@@ -80,6 +81,19 @@ void ForceRemoveDirectory(const string &path)
     }
 }
 
+bool IsFile(const std::string &path)
+{
+    if (path.empty()) {
+        return false;
+    }
+    struct stat buf = {};
+    if (stat(path.c_str(), &buf) != 0) {
+        LOGE("stat failed, errno = %{public}d", errno);
+        return false;
+    }
+    return S_ISREG(buf.st_mode);
+}
+
 bool IsFolder(const std::string &name)
 {
     if (name.empty()) {
@@ -87,6 +101,7 @@ bool IsFolder(const std::string &name)
     }
     struct stat buf = {};
     if (stat(name.c_str(), &buf) != 0) {
+        LOGE("stat failed, errno = %{public}d", errno);
         return false;
     }
     return S_ISDIR(buf.st_mode);

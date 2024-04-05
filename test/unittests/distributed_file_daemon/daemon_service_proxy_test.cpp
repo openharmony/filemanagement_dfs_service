@@ -110,10 +110,11 @@ HWTEST_F(DistributedDaemonProxyTest, PrepareSessionTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "PrepareSessionTest Start";
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
     auto listener = sptr(new DaemonServiceMock());
-    const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkid=xxxxx";
+    const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkId=xxxxx";
     const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
     const std::string srcDeviceId = "testSrcDeviceId";
-    int ret = proxy_->PrepareSession(srcUri, dstUri, srcDeviceId, listener);
+    const std::string copyPath = "tmpDir";
+    int ret = proxy_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, copyPath);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "PrepareSessionTest End";
 }
