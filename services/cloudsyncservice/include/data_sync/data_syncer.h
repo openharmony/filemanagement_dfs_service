@@ -97,6 +97,7 @@ protected:
 
     int32_t DownloadThumbInner(std::shared_ptr<DataHandler> handler);
     void ClearCursor();
+    void RemoveCycleTaskFile();
 
     /* schedule */
     virtual void Schedule() = 0;

@@ -147,6 +147,10 @@ void DataSyncer::ClearCursor()
 {
 }
 
+void DataSyncer::RemoveCycleTaskFile()
+{
+}
+
 void DataSyncer::BeginClean()
 {
 }

@@ -14,83 +14,41 @@
  */
 
 #include "cycle_task_runner.h"
-#include <cstdint>
-#include <iomanip>
-#include <sstream>
-#include "cloud_pref_impl.h"
 #include "cycle_task.h"
-#include "dfs_error.h"
+#include "data_convertor.h"
+#include "data_syncer_rdb_col.h"
+#include "data_syncer_rdb_store.h"
 #include "tasks/optimize_storage_task.h"
 #include "tasks/periodic_check_task.h"
 #include "tasks/save_subscription_task.h"
+#include "sync_rule/cloud_status.h"
 #include "utils_log.h"
-
 #include "os_account_manager.h"
+#include <memory>
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 using namespace std;
 
-const std::string CycleTaskRunner::FILE_PATH = CLOUDFILE_DIR + "/cycletask";
-const int32_t CycleTaskRunner::DEFAULT_VALUE = 0;
-const int32_t CycleTaskRunner::DEFAULT_USER_ID = 100;
-
 CycleTaskRunner::CycleTaskRunner(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
     dataSyncManager_ = dataSyncManager;
-    cloudPrefImpl_ = std::make_unique<CloudPrefImpl>(FILE_PATH);
     vector<int32_t> activeUsers;
     if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeUsers) != E_OK || activeUsers.empty()) {
         LOGE("query active user failed");
         return;
     }
-
     userId_ = activeUsers.front();
     setUpTime_ = std::time(nullptr);
     InitTasks();
+    SetRunableBundleNames();
 }
 
-void CycleTaskRunner::StartTask(string &reason)
+void CycleTaskRunner::StartTask()
 {
-    if (userId_ == DEFAULT_VALUE) {
-        LOGI("defaukt userId skip tasks");
-        cloudPrefImpl_->SetInt("userId", DEFAULT_USER_ID);
-        return;
-    }
-
     for (const auto &task_data : cycleTasks_) {
-        time_t lastRunTime = DEFAULT_VALUE;
-        GetLastRunTime(task_data->GetTaskName(), lastRunTime);
-
-        if (difftime(setUpTime_, lastRunTime) > task_data->GetIntervalTime()) {
-            if (lastRunTime == DEFAULT_VALUE) {
-                LOGI("skip first run task, taskName is %{public}s", task_data->GetTaskName().c_str());
-                SetLastRunTime(task_data->GetTaskName(), setUpTime_);
-                continue;
-            }
-        } else if (task_data->GetTaskName() == PeriodicCheckTaskName) {
-            bool force;
-            cloudPrefImpl_->GetBool(ForcePeriodicCheck, force);
-            if (!force) {
-                continue;
-            } else {
-                cloudPrefImpl_->SetBool(ForcePeriodicCheck, false);
-            }
-        } else {
-            continue;
-        }
-
-        LOGI("run task, task name is %{public}s", task_data->GetTaskName().c_str());
-        int32_t ret = task_data->RunTask(userId_);
-        if (ret == E_OK) {
-            LOGI("task run success, taskName is %{public}s, ret = %{public}d",
-                task_data->GetTaskName().c_str(), ret);
-            SetLastRunTime(task_data->GetTaskName(), setUpTime_);
-        } else {
-            LOGE("task run fail, taskName is %{public}s, ret = %{public}d",
-                task_data->GetTaskName().c_str(), ret);
-        }
+        task_data->RunTask(userId_);
     }
 }
 
@@ -98,20 +56,47 @@ void CycleTaskRunner::InitTasks()
 {
     //push tasks here
     cycleTasks_.push_back(std::make_shared<OptimizeStorageTask>(dataSyncManager_));
-    cycleTasks_.push_back(std::make_shared<PeriodicCheckTask>(dataSyncManager_));
     cycleTasks_.push_back(std::make_shared<SaveSubscriptionTask>(dataSyncManager_));
+    cycleTasks_.push_back(std::make_shared<PeriodicCheckTask>(dataSyncManager_));
 }
 
-void CycleTaskRunner::GetLastRunTime(std::string taskName, std::time_t &time)
+void CycleTaskRunner::SetRunableBundleNames()
 {
-    cloudPrefImpl_->GetLong("lastRunTime-" + taskName, time);
-}
+    std::shared_ptr<std::set<std::string>> runnableBundleNames = make_shared<std::set<std::string>>();
+    std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
+    int32_t ret = DataSyncerRdbStore::GetInstance().QueryDataSyncer(userId_, resultSet);
+    if (ret != 0) {
+        return;
+    }
+    while (resultSet->GoToNextRow() == E_OK) {
+        string bundleName;
+        int32_t ret = DataConvertor::GetString(BUNDLE_NAME, bundleName, *resultSet);
+        if (ret != E_OK) {
+            LOGE("get bundle name failed");
+            continue;
+        }
+        std::time_t currentTime = std::time(nullptr);
+        std::unique_ptr<CloudPrefImpl> cloudPrefImpl =
+            std::make_unique<CloudPrefImpl>(userId_, bundleName,  CycleTask::FILE_PATH);
+        std::time_t lastCheckTime;
+        cloudPrefImpl->GetLong("lastCheckTime", lastCheckTime);
+        if (lastCheckTime != 0 && difftime(currentTime, lastCheckTime) < CycleTask::ONE_DAY) {
+            continue;
+        }
+        bool cloudStatus = CloudStatus::IsCloudStatusOkay(bundleName, userId_);
+        if (!cloudStatus) {
+            LOGI(" %{public}s cloud status is not ok, skip task, ret is %{public}d", bundleName.c_str(), ret);
+            cloudPrefImpl->SetLong("lastCheckTime", currentTime);
+            continue;
+        }
+        cloudPrefImpl->Delete("lastCheckTime");
+        runnableBundleNames->insert(bundleName);
+    }
 
-void CycleTaskRunner::SetLastRunTime(std::string taskName, std::time_t time)
-{
-    cloudPrefImpl_->SetLong("lastRunTime-" + taskName, time);
-}
-
+    for (auto task_data  : cycleTasks_) {
+            task_data->SetRunnableBundleNames(runnableBundleNames);
+        }
+    }
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
