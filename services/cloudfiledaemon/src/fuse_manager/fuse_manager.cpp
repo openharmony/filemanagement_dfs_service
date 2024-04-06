@@ -58,6 +58,7 @@ static const string LOCAL_PATH_SUFFIX = "/account/device_view/local";
 static const string CLOUD_MERGE_VIEW_PATH_SUFFIX = "/account/cloud_merge_view";
 static const string PATH_TEMP_SUFFIX = ".temp.fuse";
 static const string PHOTOS_BUNDLE_NAME = "com.ohos.photos";
+static const string EMPTY_PATH = " ";
 static const unsigned int OID_USER_DATA_RW = 1008;
 static const unsigned int STAT_NLINK_REG = 1;
 static const unsigned int STAT_NLINK_DIR = 2;
@@ -190,6 +191,10 @@ static shared_ptr<CloudInode> GetCloudInode(struct FuseData *data, fuse_ino_t in
 
 static string CloudPath(struct FuseData *data, fuse_ino_t ino)
 {
+    if (!GetCloudInode(data, ino)) {
+        LOGE("find node is nullptr");
+        return EMPTY_PATH;
+    }
     return GetCloudInode(data, ino)->path;
 }
 
@@ -218,6 +223,10 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     shared_ptr<CloudInode> child;
     bool create = false;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    if (CloudPath(data, parent) == EMPTY_PATH) {
+        LOGE("parent path is empty");
+        return EPERM;
+    }
     string childName = (parent == FUSE_ROOT_ID) ? CloudPath(data, parent) + name :
                                                   CloudPath(data, parent) + "/" + name;
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
