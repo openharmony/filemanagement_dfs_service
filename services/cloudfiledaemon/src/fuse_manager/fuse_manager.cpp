@@ -225,7 +225,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     string parentName = CloudPath(data, parent);
     if (parentName == "") {
         LOGE("parent name is empty");
-        return EPERM;
+        return ENOENT;
     }
     string childName = (parent == FUSE_ROOT_ID) ? parentName + name :
                                                   parentName + "/" + name;
