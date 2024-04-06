@@ -222,15 +222,16 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     shared_ptr<CloudInode> child;
     bool create = false;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
-    if (CloudPath(data, parent) == "") {
-        LOGE("parent path is empty");
+    string parentName = CloudPath(data, parent);
+    if (parentName == "") {
+        LOGE("parent name is empty");
         return EPERM;
     }
-    string childName = (parent == FUSE_ROOT_ID) ? CloudPath(data, parent) + name :
-                                                  CloudPath(data, parent) + "/" + name;
+    string childName = (parent == FUSE_ROOT_ID) ? parentName + name :
+                                                  parentName + "/" + name;
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
 
-    LOGD("parent: %{private}s, name: %s", CloudPath(data, parent).c_str(), name);
+    LOGD("parent: %{private}s, name: %s", parentName.c_str(), name);
 
     child = FindNode(data, childName);
     if (!child) {
