@@ -596,7 +596,7 @@ string GetIsFavorite(fuse_req_t req, struct CloudDiskInode *inoPtr)
     int res = rdbStore->GetXAttr(inoPtr->cloudId, IS_FAVORITE_XATTR, favorite);
     if (res != 0) {
         LOGE("local file get location fail");
-        return "";
+        return "null";
     }
     return favorite;
 }
@@ -606,7 +606,7 @@ static string GetFileStatus(fuse_req_t req, struct CloudDiskInode *inoPtr)
     string fileStatus;
     if (inoPtr == nullptr) {
         LOGE("inoPtr is null");
-        return "";
+        return "null";
     }
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
@@ -614,7 +614,7 @@ static string GetFileStatus(fuse_req_t req, struct CloudDiskInode *inoPtr)
     int res = rdbStore->GetXAttr(inoPtr->cloudId, IS_FILE_STATUS_XATTR, fileStatus);
     if (res != 0) {
         LOGE("local file get file_status fail");
-        return "";
+        return "null";
     }
     return fileStatus;
 }
@@ -636,6 +636,10 @@ void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
         buf = GetFileStatus(req, inoPtr);
     } else {
         fuse_reply_err(req, EINVAL);
+        return;
+    }
+    if (buf == "null") {
+        fuse_reply_err(req, ENODATA);
         return;
     }
     if (size == 0) {
