@@ -190,7 +190,13 @@ static shared_ptr<CloudInode> GetCloudInode(struct FuseData *data, fuse_ino_t in
 
 static string CloudPath(struct FuseData *data, fuse_ino_t ino)
 {
-    return GetCloudInode(data, ino)->path;
+    auto inode = GetCloudInode(data, ino);
+    if (inode) {
+        return inode->path;
+    } else {
+        LOGE("find node is nullptr");
+        return "";
+    }
 }
 
 static void GetMetaAttr(struct FuseData *data, shared_ptr<CloudInode> ino, struct stat *stbuf)
@@ -218,11 +224,16 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     shared_ptr<CloudInode> child;
     bool create = false;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
-    string childName = (parent == FUSE_ROOT_ID) ? CloudPath(data, parent) + name :
-                                                  CloudPath(data, parent) + "/" + name;
+    string parentName = CloudPath(data, parent);
+    if (parentName == "") {
+        LOGE("parent name is empty");
+        return ENOENT;
+    }
+    string childName = (parent == FUSE_ROOT_ID) ? parentName + name :
+                                                  parentName + "/" + name;
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
 
-    LOGD("parent: %{private}s, name: %s", CloudPath(data, parent).c_str(), name);
+    LOGD("parent: %{private}s, name: %s", parentName.c_str(), name);
 
     child = FindNode(data, childName);
     if (!child) {
