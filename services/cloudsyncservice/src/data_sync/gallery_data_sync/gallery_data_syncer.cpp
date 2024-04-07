@@ -19,6 +19,7 @@
 #include "dfs_error.h"
 #include "dfsu_timer.h"
 #include "medialibrary_rdb_utils.h"
+#include "parameters.h"
 #include "sync_rule/network_status.h"
 #include "sync_rule/screen_status.h"
 #include "task_state_manager.h"
@@ -28,6 +29,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 using namespace std;
+const std::string MEDIA_LIBRARY_STARTUP_PARAM_PREFIX = "multimedia.medialibrary.startup.";
 
 const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
 {
@@ -58,6 +60,13 @@ int32_t GalleryDataSyncer::Init(const std::string bundleName, const int32_t user
 
 std::shared_ptr<NativeRdb::RdbStore> GalleryDataSyncer::RdbInit(const std::string &bundleName, const int32_t userId)
 {
+    std::string startupParam = MEDIA_LIBRARY_STARTUP_PARAM_PREFIX + to_string(userId);
+    auto rdbInitFlag = system::GetBoolParameter(startupParam, false);
+    if (!rdbInitFlag) {
+        LOGE("media library db upgrade not completed, startupParam:%{public}s", startupParam.c_str());
+        return nullptr;
+    }
+    LOGI("media library db upgrade completed");
     /* rdb config */
     NativeRdb::RdbStoreConfig config(DATABASE_NAME);
     config.SetPath(DATA_APP_EL2 + to_string(userId) + DATABASE_DIR + DATABASE_NAME);
