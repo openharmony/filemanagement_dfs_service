@@ -190,11 +190,13 @@ static shared_ptr<CloudInode> GetCloudInode(struct FuseData *data, fuse_ino_t in
 
 static string CloudPath(struct FuseData *data, fuse_ino_t ino)
 {
-    if (!GetCloudInode(data, ino)) {
+    auto inode = GetCloudInode(data, ino);
+    if (inode) {
+        return inode->path;
+    } else {
         LOGE("find node is nullptr");
         return "";
     }
-    return GetCloudInode(data, ino)->path;
 }
 
 static void GetMetaAttr(struct FuseData *data, shared_ptr<CloudInode> ino, struct stat *stbuf)
