@@ -41,6 +41,10 @@ CycleTaskRunner::CycleTaskRunner(std::shared_ptr<DataSyncManager> dataSyncManage
     }
     userId_ = activeUsers.front();
     setUpTime_ = std::time(nullptr);
+    if (dataSyncManager_ == nullptr) {
+        LOGI("dataSyncManager is nullptr");
+        return;
+    }
     InitTasks();
     SetRunableBundleNames();
 }
@@ -65,12 +69,13 @@ void CycleTaskRunner::SetRunableBundleNames()
     std::shared_ptr<std::set<std::string>> runnableBundleNames = make_shared<std::set<std::string>>();
     std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
     int32_t ret = DataSyncerRdbStore::GetInstance().QueryDataSyncer(userId_, resultSet);
-    if (ret != 0) {
+    if (ret != 0 || resultSet == nullptr) {
+        LOGE("query data syncer fail %{public}d", ret);
         return;
     }
     while (resultSet->GoToNextRow() == E_OK) {
         string bundleName;
-        int32_t ret = DataConvertor::GetString(BUNDLE_NAME, bundleName, *resultSet);
+        ret = DataConvertor::GetString(BUNDLE_NAME, bundleName, *resultSet);
         if (ret != E_OK) {
             LOGE("get bundle name failed");
             continue;
@@ -79,6 +84,10 @@ void CycleTaskRunner::SetRunableBundleNames()
         std::unique_ptr<CloudPrefImpl> cloudPrefImpl =
             std::make_unique<CloudPrefImpl>(userId_, bundleName,  CycleTask::FILE_PATH);
         std::time_t lastCheckTime;
+        if (cloudPrefImpl == nullptr) {
+            LOGE("cloudPrefImpl is nullptr");
+            continue;
+        }
         cloudPrefImpl->GetLong("lastCheckTime", lastCheckTime);
         if (lastCheckTime != 0 && difftime(currentTime, lastCheckTime) < CycleTask::ONE_DAY) {
             continue;

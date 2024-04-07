@@ -47,11 +47,20 @@ std::string CycleTask::GetTaskName() const
 
 void CycleTask::SetLastRunTime(std::time_t time)
 {
+    if (cloudPrefImpl_ == nullptr) {
+        LOGE(" cloudPrefImpl_ is nullptr");
+        return;
+    }
     cloudPrefImpl_->SetLong("lastRunTime-" + taskName_, time);
 }
 
 void CycleTask::GetLastRunTime(std::time_t &time)
 {
+    if (cloudPrefImpl_ == nullptr) {
+        LOGE(" cloudPrefImpl_ is nullptr");
+        time = std::time(nullptr);
+        return;
+    }
     cloudPrefImpl_->GetLong("lastRunTime-" + taskName_, time);
 }
 
@@ -89,7 +98,6 @@ void CycleTask::RunTask(int32_t userId)
         }
     }
 }
-
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
