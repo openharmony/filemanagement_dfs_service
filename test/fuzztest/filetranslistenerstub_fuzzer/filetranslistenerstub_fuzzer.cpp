@@ -21,13 +21,7 @@
 #include "message_option.h"
 #include "message_parcel.h"
 #include "file_trans_listener_stub.h"
-#include "trans_listener.h"
-#include "file_trans_listener_interface_code.h"
-#include "ipc/distributed_file_daemon_manager.h"
-#include "distributed_file_daemon_manager_impl.h"
-
-
-using namespace OHOS::Storage::DistributedFile;
+#include "securec.h"
 
 namespace OHOS {
 
@@ -35,9 +29,31 @@ constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr uint8_t MAX_CALL_TRANSACTION = 32;
 
+using namespace OHOS::Storage::DistributedFile;
 
-std::shared_ptr<FileManagement::ModuleFileIO::TransListener> transListenerStubPtr =
-    std::make_shared<FileManagement::ModuleFileIO::TransListener>();
+
+namespace Storage::DistributedFile{
+class FileTransListenerStubImpl : public FileTransListenerStub {
+public:
+    FileTransListenerStubImpl() = default;
+    virtual ~FileTransListenerStubImpl() override {}
+    int32_t OnFileReceive(uint64_t totalBytes, uint64_t processedBytes) override;
+    int32_t OnFailed(const std::string &sessionName) override;
+    int32_t OnFinished(const std::string &sessionName) override;
+};
+}
+
+int32_t FileTransListenerStubImpl::OnFileReceive(uint64_t totalBytes, uint64_t processedBytes)
+{
+    return 0;
+}
+
+int32_t FileTransListenerStubImpl::OnFailed(const std::string &sessionName){
+    return 0;
+}
+int32_t FileTransListenerStubImpl::OnFinished(const std::string &sessionName){
+    return 0;
+}
 
 uint32_t GetU32Data(const char *ptr)
 {
@@ -45,7 +61,8 @@ uint32_t GetU32Data(const char *ptr)
     return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | (ptr[3]);
 }
 
-bool FileTransListenerStubFuzzTest(std::unique_ptr<char[]> data, size_t size)
+bool FileTransListenerStubFuzzTest(std::shared_ptr<Storage::DistributedFile::FileTransListenerStub> transListenerStubPtr,
+                                   std::unique_ptr<char[]> data, size_t size)
 {
     uint32_t code = GetU32Data(data.get());
     if (code == 0) {
@@ -81,6 +98,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (memcpy_s(str.get(), size, data, size) != EOK) {
         return 0;
     }
-    OHOS::FileTransListenerStubFuzzTest(move(str), size);
+
+    auto transListenerStubPtr = std::make_shared<OHOS::Storage::DistributedFile::FileTransListenerStubImpl>();
+    OHOS::FileTransListenerStubFuzzTest(transListenerStubPtr, move(str), size);
     return 0;
 }
