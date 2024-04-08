@@ -32,11 +32,11 @@ constexpr uint8_t MAX_CALL_TRANSACTION = 32;
 using namespace OHOS::Storage::DistributedFile;
 
 
-namespace Storage::DistributedFile{
+namespace Storage::DistributedFile {
 class FileTransListenerStubImpl : public FileTransListenerStub {
 public:
     FileTransListenerStubImpl() = default;
-    virtual ~FileTransListenerStubImpl() override {}
+    ~FileTransListenerStubImpl() override {}
     int32_t OnFileReceive(uint64_t totalBytes, uint64_t processedBytes) override;
     int32_t OnFailed(const std::string &sessionName) override;
     int32_t OnFinished(const std::string &sessionName) override;
@@ -48,10 +48,13 @@ int32_t FileTransListenerStubImpl::OnFileReceive(uint64_t totalBytes, uint64_t p
     return 0;
 }
 
-int32_t FileTransListenerStubImpl::OnFailed(const std::string &sessionName){
+int32_t FileTransListenerStubImpl::OnFailed(const std::string &sessionName)
+{
     return 0;
 }
-int32_t FileTransListenerStubImpl::OnFinished(const std::string &sessionName){
+
+int32_t FileTransListenerStubImpl::OnFinished(const std::string &sessionName)
+{
     return 0;
 }
 
@@ -61,7 +64,8 @@ uint32_t GetU32Data(const char *ptr)
     return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | (ptr[3]);
 }
 
-bool FileTransListenerStubFuzzTest(std::shared_ptr<Storage::DistributedFile::FileTransListenerStub> transListenerStubPtr,
+bool FileTransListenerStubFuzzTest(
+std::shared_ptr<Storage::DistributedFile::FileTransListenerStub> transListenerStubPtr,
 std::unique_ptr<char[]> data, size_t size)
 {
     uint32_t code = GetU32Data(data.get());
