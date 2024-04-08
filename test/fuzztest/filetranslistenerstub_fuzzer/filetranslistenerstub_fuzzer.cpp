@@ -32,17 +32,19 @@ constexpr uint8_t MAX_CALL_TRANSACTION = 32;
 using namespace OHOS::Storage::DistributedFile;
 
 
-namespace Storage::DistributedFile {
-class FileTransListenerStubImpl : public FileTransListenerStub {
-public:
-    FileTransListenerStubImpl() = default;
-    ~FileTransListenerStubImpl() override {}
-    int32_t OnFileReceive(uint64_t totalBytes, uint64_t processedBytes) override;
-    int32_t OnFailed(const std::string &sessionName) override;
-    int32_t OnFinished(const std::string &sessionName) override;
-};
-}
+namespace Storage {
+namespace DistributedFile {
+    class FileTransListenerStubImpl : public FileTransListenerStub {
+    public:
+        FileTransListenerStubImpl() = default;
+        ~FileTransListenerStubImpl() override {}
 
+        int32_t OnFileReceive(uint64_t totalBytes, uint64_t processedBytes) override;
+        int32_t OnFailed(const std::string &sessionName) override;
+        int32_t OnFinished(const std::string &sessionName) override;
+    };
+}
+}
 int32_t FileTransListenerStubImpl::OnFileReceive(uint64_t totalBytes, uint64_t processedBytes)
 {
     return 0;
