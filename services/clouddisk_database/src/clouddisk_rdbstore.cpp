@@ -84,6 +84,7 @@ int32_t CloudDiskRdbStore::RdbInit()
     }
     config_.SetName(move(name));
     config_.SetPath(move(databasePath));
+    config_.SetReadConSize(CONNECT_SIZE);
     config_.SetScalarFunction("cloud_sync_func", ARGS_SIZE, CloudSyncTriggerFunc);
     errCode = 0;
     CloudDiskDataCallBack rdbDataCallBack;
