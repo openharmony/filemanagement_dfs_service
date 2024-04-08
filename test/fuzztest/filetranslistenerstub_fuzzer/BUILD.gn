@@ -26,6 +26,8 @@ ohos_fuzztest("FileTransListenerStubFuzzTest") {
     "//third_party/json/include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
+    "${fileapi_path}/interfaces/kits/js/src/mod_fs/properties",
+    "${fileapi_path}/interfaces/kits/js/src/mod_fs/properties/copy_listener",
   ]
   cflags = [
     "-g",
@@ -55,7 +57,6 @@ ohos_fuzztest("FileTransListenerStubFuzzTest") {
     "init:libbegetutil",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
-    "file_api:fs",
   ]
 }
 
