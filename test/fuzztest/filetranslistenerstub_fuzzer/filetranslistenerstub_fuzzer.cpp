@@ -34,15 +34,14 @@ using namespace OHOS::Storage::DistributedFile;
 
 namespace Storage {
 namespace DistributedFile {
-    class FileTransListenerStubImpl : public FileTransListenerStub {
-    public:
-        FileTransListenerStubImpl() = default;
-        ~FileTransListenerStubImpl() override {}
-
-        int32_t OnFileReceive(uint64_t totalBytes, uint64_t processedBytes) override;
-        int32_t OnFailed(const std::string &sessionName) override;
-        int32_t OnFinished(const std::string &sessionName) override;
-    };
+class FileTransListenerStubImpl : public FileTransListenerStub {
+public:
+    FileTransListenerStubImpl() = default;
+    ~FileTransListenerStubImpl() override {}
+    int32_t OnFileReceive(uint64_t totalBytes, uint64_t processedBytes) override;
+    int32_t OnFailed(const std::string &sessionName) override;
+    int32_t OnFinished(const std::string &sessionName) override;
+};
 }
 }
 
@@ -51,15 +50,16 @@ int32_t FileTransListenerStubImpl::OnFileReceive(uint64_t totalBytes, uint64_t p
     return 0;
 }
 
-int32_t FileTransListenerStubImpl::OnFailed(const std::string &sessionName)
+int32_t FileTransListenerStubImpl::OnFailed(const std::string & sessionName)
 {
     return 0;
 }
 
-int32_t FileTransListenerStubImpl::OnFinished(const std::string &sessionName)
+int32_t FileTransListenerStubImpl::OnFinished(const std::string & sessionName)
 {
     return 0;
 }
+
 
 uint32_t GetU32Data(const char *ptr)
 {
