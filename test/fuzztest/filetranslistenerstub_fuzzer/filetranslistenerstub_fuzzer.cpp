@@ -45,6 +45,7 @@ namespace DistributedFile {
     };
 }
 }
+
 int32_t FileTransListenerStubImpl::OnFileReceive(uint64_t totalBytes, uint64_t processedBytes)
 {
     return 0;
