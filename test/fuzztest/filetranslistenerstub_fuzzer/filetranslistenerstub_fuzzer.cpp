@@ -67,8 +67,8 @@ uint32_t GetU32Data(const char *ptr)
 }
 
 bool FileTransListenerStubFuzzTest(
-                                std::shared_ptr<Storage::DistributedFile::FileTransListenerStub> transListenerStubPtr,
-                                std::unique_ptr<char[]> data, size_t size)
+    std::shared_ptr<Storage::DistributedFile::FileTransListenerStub> transListenerStubPtr,
+    std::unique_ptr<char[]> data, size_t size)
 {
     uint32_t code = GetU32Data(data.get());
     if (code == 0) {
