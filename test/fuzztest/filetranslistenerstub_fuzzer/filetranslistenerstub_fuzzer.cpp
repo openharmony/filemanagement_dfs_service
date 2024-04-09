@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,12 +49,12 @@ int32_t FileTransListenerStubImpl::OnFileReceive(uint64_t totalBytes, uint64_t p
     return 0;
 }
 
-int32_t FileTransListenerStubImpl::OnFailed(const std::string & sessionName)
+int32_t FileTransListenerStubImpl::OnFailed(const std::string &sessionName)
 {
     return 0;
 }
 
-int32_t FileTransListenerStubImpl::OnFinished(const std::string & sessionName)
+int32_t FileTransListenerStubImpl::OnFinished(const std::string &sessionName)
 {
     return 0;
 }
@@ -100,7 +100,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     auto str = std::make_unique<char[]>(size + 1);
-    (void)memset_s(str.get(), size + 1, 0x00, size + 1);
     if (memcpy_s(str.get(), size, data, size) != EOK) {
         return 0;
     }
