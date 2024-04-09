@@ -651,7 +651,7 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
     }
     ret = rename(tmpPath.c_str(), newPath.c_str());
     if (ret != 0) {
-        LOGE("err rename localPath to newLocalPath, ret = %{public}d, path :%{public}s", ret, tmpPath.c_str());
+        LOGE("err rename localPath to newLocalPath, errno %{public}d, path :%{public}s", errno, tmpPath.c_str());
         return E_INVAL_ARG;
     }
     ret = rename(localPath.c_str(), newLocalPath.c_str());
