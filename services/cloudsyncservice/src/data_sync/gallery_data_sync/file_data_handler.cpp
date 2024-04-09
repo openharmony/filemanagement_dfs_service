@@ -511,7 +511,7 @@ int FileDataHandler::DentryRemoveThumb(const string &downloadPath)
 
 int FileDataHandler::AddCloudThumbs(const DKRecord &record)
 {
-    LOGI("thumbs of %s add to cloud_view", record.GetRecordId().c_str());
+    LOGD("thumbs of %s add to cloud_view", record.GetRecordId().c_str());
     constexpr uint64_t THUMB_SIZE = 2 * 1024 * 1024; // thumbnail and lcd size show as 2MB
     uint64_t thumbSize = THUMB_SIZE;
     uint64_t lcdSize = THUMB_SIZE;
@@ -651,7 +651,7 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
     }
     ret = rename(tmpPath.c_str(), newPath.c_str());
     if (ret != 0) {
-        LOGE("err rename localPath to newLocalPath, ret = %{public}d", ret);
+        LOGE("err rename localPath to newLocalPath, ret = %{public}d, path :%{public}s", ret, tmpPath.c_str());
         return E_INVAL_ARG;
     }
     ret = rename(localPath.c_str(), newLocalPath.c_str());
@@ -730,7 +730,7 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
     }
     int64_t crTime = static_cast<int64_t>(record.GetCreateTime());
     if (localIsize == isize && localCrtime == crTime) {
-        LOGI("Possible duplicate files");
+        LOGD("Possible duplicate files");
     } else {
         modifyPathflag = true;
     }
@@ -742,11 +742,11 @@ int32_t FileDataHandler::ConflictDifferent(NativeRdb::ResultSet &resultSet,
                                            string &fullPath,
                                            string &relativePath)
 {
-    LOGI("Different files with the same name");
+    LOGD("Different files with the same name");
     /* Modify path */
     int ret = ConflictRename(resultSet, fullPath, relativePath);
     if (ret != E_OK) {
-        LOGE("Conflict dataMerge rename fail");
+        LOGE("Conflict dataMerge rename fail, path :%{public}s", fullPath.c_str());
         return ret;
     }
     return E_OK;
@@ -1356,7 +1356,7 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
 int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet &local, OnFetchParams &params)
 {
     RETURN_ON_ERR(IsStop());
-    LOGI("update of record %s", record.GetRecordId().c_str());
+    LOGD("update of record %s", record.GetRecordId().c_str());
     if (IsLocalDirty(local)) {
         LOGI("local record dirty, ignore cloud update");
         return E_OK;
@@ -1415,7 +1415,6 @@ int32_t FileDataHandler::UpdateRecordToDatabase(DriveKit::DKRecord &record,
         LOGE("RDB error, update fail ret is %{public}d", ret);
         return E_RDB;
     }
-    LOGI("update of record success, change %{public}d row", changeRows);
     return E_OK;
 }
 
@@ -2110,7 +2109,7 @@ int32_t FileDataHandler::UpdateAssetInPhotoMap(const DKRecord &record, int32_t f
         }
         int albumId = GetAlbumIdFromCloudId(ref.recordId);
         if (albumId < 0) {
-            LOGE("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
+            LOGD("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
             continue;
         }
         LOGI("record get albumId %{public}d", albumId);
