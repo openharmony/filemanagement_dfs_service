@@ -19,7 +19,8 @@
 #include <array>
 #include <cstdint>
 #include <string>
-
+#include "transport/socket.h"
+#include "transport/trans_type.h"
 #include "network/base_session.h"
 
 namespace OHOS {
@@ -28,7 +29,7 @@ namespace DistributedFile {
 constexpr int32_t INVALID_SOCKET_FD = -1;
 class SoftbusSession final : public BaseSession {
 public:
-    explicit SoftbusSession(int sessionId);
+    explicit SoftbusSession(int32_t sessionId, std::string peerDeviceId);
     ~SoftbusSession() = default;
     bool IsFromServer() const override;
     std::string GetCid() const override;
@@ -39,11 +40,11 @@ public:
     void DisableSessionListener() const override;
 
 private:
-    int sessionId_;
+    int32_t sessionId_;
     std::string cid_;
     int32_t socketFd_ {INVALID_SOCKET_FD};
     std::array<char, KEY_SIZE_MAX> key_;
-    bool IsServerSide_;
+    bool IsServerSide_ = false;
 };
 } // namespace DistributedFile
 } // namespace Storage

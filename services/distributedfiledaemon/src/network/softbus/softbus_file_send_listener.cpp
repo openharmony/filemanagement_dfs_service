@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,40 +20,76 @@
 #include "dfs_error.h"
 #include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_session_pool.h"
-#include "session.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-constexpr uint32_t MAX_SIZE = 128;
-int32_t SoftBusFileSendListener::OnSendFileProcess(int sessionId, uint64_t bytesUpload, uint64_t bytesTotal)
+void SoftBusFileSendListener::OnFile(int32_t socket, FileEvent* event)
+{
+    switch (event->type) {
+        case FILE_EVENT_SEND_PROCESS:
+            OnSendFileProcess(socket, event->bytesProcessed, event->bytesTotal);
+            break;
+        case FILE_EVENT_SEND_FINISH:
+            OnSendFileFinished(socket);
+            break;
+        case FILE_EVENT_SEND_ERROR:
+            OnFileTransError(socket);
+            break;
+        default:
+            LOGI("Other situations");
+            break;
+    }
+}
+
+std::string SoftBusFileSendListener::GetLocalSessionName(int32_t sessionId)
+{
+    std::string sessionName = "";
+    std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
+    auto iter = SoftBusHandler::clientSessNameMap_.find(sessionId);
+    if (iter != SoftBusHandler::clientSessNameMap_.end()) {
+        sessionName = iter->second;
+        return sessionName;
+    }
+    LOGE("sessionName not registered");
+    return sessionName;
+}
+
+void SoftBusFileSendListener::OnSendFileProcess(int32_t sessionId, uint64_t bytesUpload, uint64_t bytesTotal)
 {
     LOGD("OnSendFileProcess, sessionId = %{public}d bytesUpload = %{public}" PRIu64 "bytesTotal = %{public}" PRIu64 "",
          sessionId, bytesUpload, bytesTotal);
+    std::string sessionName = GetLocalSessionName(sessionId);
+    if (sessionName.empty()) {
+        LOGE("sessionName is empty");
+        return;
+    }
     if (bytesUpload == bytesTotal) {
-        char sessionName[MAX_SIZE] = {};
-        auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
-        if (ret != FileManagement::E_OK) {
-            LOGE("GetMySessionName failed, ret = %{public}d", ret);
-            return FileManagement::E_OK;
-        }
         SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
     }
-    return 0;
 }
 
-int32_t SoftBusFileSendListener::OnSendFileFinished(int sessionId, const char *firstFile)
+void SoftBusFileSendListener::OnSendFileFinished(int32_t sessionId)
 {
-    LOGD("OnSendFileFinished, sessionId = %{public}d, firstFile = %{public}s", sessionId, firstFile);
-    SoftBusHandler::GetInstance().CloseSession(sessionId);
-    return 0;
+    LOGD("OnSendFileFinished, sessionId = %{public}d", sessionId);
+    std::string sessionName = GetLocalSessionName(sessionId);
+    if (sessionName.empty()) {
+        LOGE("sessionName is empty");
+        return;
+    }
+    SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
 }
 
-void SoftBusFileSendListener::OnFileTransError(int sessionId)
+void SoftBusFileSendListener::OnFileTransError(int32_t sessionId)
 {
     LOGD("SoftBusFileSendListener::OnFileTransError, sessionId = %{public}d", sessionId);
-    SoftBusHandler::GetInstance().CloseSession(sessionId);
+    std::string sessionName = GetLocalSessionName(sessionId);
+    if (sessionName.empty()) {
+        LOGE("sessionName is empty");
+        return;
+    }
+    SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
 }
 } // namespace DistributedFile
 } // namespace Storage

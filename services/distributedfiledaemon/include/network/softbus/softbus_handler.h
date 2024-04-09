@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,31 +16,38 @@
 #ifndef FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_HANDLER_H
 #define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_HANDLER_H
 
-#include "session.h"
+#include "transport/socket.h"
+#include "transport/trans_type.h"
 #include <map>
 #include <string>
+#include <mutex>
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+typedef enum {
+    DFS_CHANNLE_ROLE_SOURCE = 0,
+    DFS_CHANNLE_ROLE_SINK = 1,
+} DFS_CHANNEL_ROLE;
 class SoftBusHandler {
 public:
     SoftBusHandler();
     ~SoftBusHandler();
     static SoftBusHandler &GetInstance();
-    int32_t CreateSessionServer(const std::string &packageName, const std::string &sessionName);
-    int32_t SetFileReceiveListener(const std::string &packageName,
-                                   const std::string &sessionName,
-                                   const std::string &dstPath);
-    int32_t SetFileSendListener(const std::string &packageName, const std::string &sessionName);
-    void ChangeOwnerIfNeeded(int sessionId);
-    void CloseSession(int sessionId);
+    int32_t CreateSessionServer(const std::string &packageName, const std::string &sessionName,
+        DFS_CHANNEL_ROLE role, const std::string physicalPath);
+    int32_t OpenSession(const std::string &mySessionName, const std::string &peerSessionName,
+        const std::string &peerDevId, DFS_CHANNEL_ROLE role);
+    void ChangeOwnerIfNeeded(int32_t sessionId, const std::string sessionName);
+    void CloseSession(int32_t sessionId, const std::string sessionName);
+    static std::mutex clientSessNameMapMutex_;
+    static std::map<int32_t, std::string> clientSessNameMap_;
 
 private:
+    std::mutex serverIdMapMutex_;
+    std::map<std::string, int32_t> serverIdMap_;
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
-    ISessionListener sessionListener_;
-    IFileReceiveListener fileReceiveListener_;
-    IFileSendListener fileSendListener_;
+    std::map<DFS_CHANNEL_ROLE, ISocketListener> sessionListener_;
 };
 } // namespace DistributedFile
 } // namespace Storage

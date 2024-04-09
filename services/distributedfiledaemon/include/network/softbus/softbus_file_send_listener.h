@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,15 +18,19 @@
 
 #include <stdint.h>
 #include <string>
+#include "transport/socket.h"
+#include "transport/trans_type.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 class SoftBusFileSendListener {
 public:
-    static int32_t OnSendFileProcess(int sessionId, uint64_t bytesUpload, uint64_t bytesTotal);
-    static int32_t OnSendFileFinished(int sessionId, const char *firstFile);
-    static void OnFileTransError(int sessionId);
+    static void OnFile(int32_t socket, FileEvent* event);
+    static void OnSendFileProcess(int32_t sessionId, uint64_t bytesUpload, uint64_t bytesTotal);
+    static void OnSendFileFinished(int32_t sessionId);
+    static void OnFileTransError(int32_t sessionId);
+    static std::string GetLocalSessionName(int32_t sessionId);
 
 private:
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};

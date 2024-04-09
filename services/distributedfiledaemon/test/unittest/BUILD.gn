@@ -647,6 +647,45 @@ ohos_unittest("softbus_session_test") {
   defines = [ "private=public" ]
 }
 
+ohos_unittest("softbus_handler_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  sources = [
+    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+  ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "dsoftbus:softbus_client",
+    "hilog:libhilog",
+  ]
+
+  defines = [ "private=public" ]
+}
+
 group("unittest") {
   testonly = true
   deps = [
@@ -656,6 +695,7 @@ group("unittest") {
     ":os_account_observer_test",
     ":session_pool_test",
     ":softbus_agent_test",
+    ":softbus_handler_test",
     ":softbus_session_dispatcher_test",
     ":softbus_session_test",
   ]

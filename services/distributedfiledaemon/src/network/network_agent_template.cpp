@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@ constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 
 void NetworkAgentTemplate::Start()
 {
+    LOGI("Start Enter");
     JoinDomain();
     kernerlTalker_->CreatePollThread();
     ConnectOnlineDevices();
@@ -36,6 +37,7 @@ void NetworkAgentTemplate::Start()
 
 void NetworkAgentTemplate::Stop()
 {
+    LOGI("Stop Enter");
     StopTopHalf();
     StopBottomHalf();
     kernerlTalker_->WaitForPollThreadExited();
@@ -43,6 +45,7 @@ void NetworkAgentTemplate::Stop()
 
 void NetworkAgentTemplate::ConnectDeviceAsync(const DeviceInfo info)
 {
+    LOGI("ConnectDeviceAsync Enter");
     std::this_thread::sleep_for(std::chrono::milliseconds(
         OPEN_SESSSION_DELAY_TIME)); // Temporary workaround for time sequence issues(offline-onSessionOpened)
     OpenSession(info, LINK_TYPE_AP);
@@ -50,6 +53,7 @@ void NetworkAgentTemplate::ConnectDeviceAsync(const DeviceInfo info)
 
 void NetworkAgentTemplate::ConnectDeviceByP2PAsync(const DeviceInfo info)
 {
+    LOGI("ConnectDeviceByP2PAsync Enter");
     std::this_thread::sleep_for(std::chrono::milliseconds(OPEN_SESSSION_DELAY_TIME));
     OpenSession(info, LINK_TYPE_P2P);
 }
@@ -94,12 +98,12 @@ void NetworkAgentTemplate::DisconnectDeviceByP2P(const DeviceInfo info)
     sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_P2P);
 }
 
-void NetworkAgentTemplate::OccupySession(int sessionId, uint8_t linkType)
+void NetworkAgentTemplate::OccupySession(int32_t sessionId, uint8_t linkType)
 {
     sessionPool_.OccupySession(sessionId, linkType);
 }
 
-bool NetworkAgentTemplate::FindSession(int sessionId)
+bool NetworkAgentTemplate::FindSession(int32_t sessionId)
 {
     return sessionPool_.FindSession(sessionId);
 }
@@ -110,19 +114,20 @@ void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
     LOGI("session closed!");
 }
 
-void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session)
+void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const std::string backStage)
 {
-    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, shared_ptr<BaseSession>>>(
-        &NetworkAgentTemplate::AcceptSessionInner, session);
+    LOGI("AcceptSession Enter");
+    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, shared_ptr<BaseSession>, const std::string>>(
+        &NetworkAgentTemplate::AcceptSessionInner, session, backStage);
     cmd->UpdateOption({.tryTimes_ = 1});
     Recv(move(cmd));
 }
 
-void NetworkAgentTemplate::AcceptSessionInner(shared_ptr<BaseSession> session)
+void NetworkAgentTemplate::AcceptSessionInner(shared_ptr<BaseSession> session, const std::string backStage)
 {
     auto cid = session->GetCid();
     LOGI("AcceptSesion, cid:%{public}s", cid.c_str());
-    sessionPool_.HoldSession(session);
+    sessionPool_.HoldSession(session, backStage);
 }
 
 void NetworkAgentTemplate::GetSessionProcess(NotifyParam &param)

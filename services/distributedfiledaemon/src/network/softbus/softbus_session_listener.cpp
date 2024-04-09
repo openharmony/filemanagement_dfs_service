@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,6 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 constexpr size_t MAX_SIZE = 500;
-constexpr int32_t SESSION_NAME_SIZE = 128;
 constexpr int32_t DEFAULT_USER_ID = 100;
 const std::string FILE_SCHEMA = "file://";
 const std::string DOCS = "docs";
@@ -65,38 +64,27 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
     return tmp;
 }
 
-int SoftBusSessionListener::OnSessionOpened(int sessionId, int result)
+void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
-    int side = GetSessionSide(sessionId);
-    if (side != 1) {
-        LOGI("GetSessionSide, sessionId = %{public}d,  side = %{public}d", sessionId, side);
-        return E_OK;
-    }
-
-    char sessionName[SESSION_NAME_SIZE] = {};
-    auto ret = ::GetMySessionName(sessionId, sessionName, SESSION_NAME_SIZE);
-    if (ret != E_OK) {
-        LOGE("GetMySessionName failed, ret = %{public}d", ret);
-        return E_SOFTBUS_SESSION_FAILED;
-    }
-
+    LOGI("OnSessionOpened.");
+    std::string sessionName = info.name;
     SoftBusSessionPool::SessionInfo sessionInfo;
-    ret = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
+    auto ret = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
     if (!ret) {
         LOGE("GetSessionInfo failed");
-        return E_SOFTBUS_SESSION_FAILED;
+        return;
     }
 
     std::string physicalPath = GetRealPath(sessionInfo.srcUri);
     if (physicalPath.empty()) {
         LOGE("GetRealPath failed");
-        return E_GET_PHYSICAL_PATH_FAILED;
+        return;
     }
 
     auto fileList = OHOS::Storage::DistributedFile::Utils::GetFilePath(physicalPath);
     if (fileList.empty()) {
         LOGE("GetFilePath failed or file is empty");
-        return E_OK;
+        return;
     }
 
     const char *src[MAX_SIZE] = {};
@@ -107,23 +95,23 @@ int SoftBusSessionListener::OnSessionOpened(int sessionId, int result)
     auto fileNameList = GetFileName(fileList, physicalPath);
     if (fileNameList.empty()) {
         LOGE("GetFileName failed or file is empty");
-        return E_OK;
+        return;
     }
     const char *dst[MAX_SIZE] = {};
     for (size_t i = 0; i < fileNameList.size() && fileList.size() < MAX_SIZE; i++) {
         dst[i] = fileNameList.at(i).c_str();
     }
-
+    LOGI("Enter SendFile.");
     ret = ::SendFile(sessionId, src, dst, static_cast<uint32_t>(fileList.size()));
     if (ret != E_OK) {
         LOGE("SendFile failed, sessionId = %{public}d", sessionId);
         SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
     }
-    return ret;
 }
 
-void SoftBusSessionListener::OnSessionClosed(int sessionId)
+void SoftBusSessionListener::OnSessionClosed(int32_t sessionId, ShutdownReason reason)
 {
+    (void)reason;
     LOGI("OnSessionClosed, sessionId = %{public}d", sessionId);
 }
 

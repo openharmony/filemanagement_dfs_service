@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,20 +18,26 @@
 
 #include "network/softbus/softbus_session_pool.h"
 #include <cstdint>
+#include "transport/socket.h"
+#include "transport/trans_type.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 class SoftBusFileReceiveListener {
 public:
-    static int32_t OnReceiveFileStarted(int sessionId, const char *files, int fileCnt);
-    static int32_t
-        OnReceiveFileProcess(int sessionId, const char *firstFile, uint64_t bytesUpload, uint64_t bytesTotal);
-    static void OnReceiveFileFinished(int sessionId, const char *files, int fileCnt);
-    static void OnFileTransError(int sessionId);
+    static void OnFile(int32_t socket, FileEvent* event);
+    static void OnReceiveFileStarted(int32_t sessionId, int32_t fileCnt);
+    static void OnReceiveFileProcess(int32_t sessionId, uint64_t bytesUpload, uint64_t bytesTotal);
+    static void OnReceiveFileFinished(int32_t sessionId, int32_t fileCnt);
+    static void OnFileTransError(int32_t sessionId);
+    static std::string GetLocalSessionName(int32_t socket);
+    static void SetRecvPath(const std::string physicalPath);
+    static const char* GetRecvPath();
 
 private:
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
+    static std::string path_;
 };
 } // namespace DistributedFile
 } // namespace Storage

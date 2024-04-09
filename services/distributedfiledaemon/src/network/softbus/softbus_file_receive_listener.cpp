@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,6 @@
 
 #include "dfs_error.h"
 #include "network/softbus/softbus_handler.h"
-#include "session.h"
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
@@ -27,59 +26,103 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace FileManagement;
-constexpr uint32_t MAX_SIZE = 128;
-int32_t SoftBusFileReceiveListener::OnReceiveFileStarted(int sessionId, const char *files, int fileCnt)
+std::string SoftBusFileReceiveListener::path_ = "";
+void SoftBusFileReceiveListener::OnFile(int32_t socket, FileEvent* event)
 {
-    LOGD("OnReceiveFileStarted, sessionId = %{public}d, files = %{public}s, fileCnt = %{public}d", sessionId, files,
-         fileCnt);
-    return 0;
+    switch (event->type) {
+        case FILE_EVENT_RECV_START:
+            OnReceiveFileStarted(socket, event->fileCnt);
+            break;
+        case FILE_EVENT_RECV_PROCESS:
+            OnReceiveFileProcess(socket, event->bytesProcessed, event->bytesTotal);
+            break;
+        case FILE_EVENT_RECV_FINISH:
+            OnReceiveFileFinished(socket, event->fileCnt);
+            break;
+        case FILE_EVENT_RECV_ERROR:
+            OnFileTransError(socket);
+            break;
+        case FILE_EVENT_RECV_UPDATE_PATH:
+            event->UpdateRecvPath = GetRecvPath;
+            break;
+        default:
+            LOGI("Other situations");
+            break;
+    }
 }
 
-int32_t SoftBusFileReceiveListener::OnReceiveFileProcess(int sessionId,
-                                                         const char *firstFile,
-                                                         uint64_t bytesUpload,
-                                                         uint64_t bytesTotal)
+const char* SoftBusFileReceiveListener::GetRecvPath()
 {
-    LOGD("OnReceiveFileProcess, sessionId = %{public}d, firstFile = %{public}s, bytesUpload = %{public}" PRIu64 ","
-         "bytesTotal = %{public}" PRIu64 "", sessionId, firstFile, bytesUpload, bytesTotal);
-    char sessionName[MAX_SIZE] = {};
-    auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
-    if (ret != E_OK) {
-        LOGE("GetMySessionName failed, ret = %{public}d", ret);
-        return E_OK;
+    const char* path = path_.c_str();
+    LOGI("path: %{public}s", path);
+    return path;
+}
+
+void SoftBusFileReceiveListener::SetRecvPath(const std::string physicalPath)
+{
+    if (physicalPath.empty()) {
+        LOGI("SetRecvPath physicalPath is empty.");
+        return;
+    }
+    LOGI("SetRecvPath physicalPath: %{public}s", physicalPath.c_str());
+    path_ = physicalPath;
+}
+
+std::string SoftBusFileReceiveListener::GetLocalSessionName(int32_t sessionId)
+{
+    std::string sessionName = "";
+    std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
+    auto iter = SoftBusHandler::clientSessNameMap_.find(sessionId);
+    if (iter != SoftBusHandler::clientSessNameMap_.end()) {
+        sessionName = iter->second;
+        return sessionName;
+    }
+    LOGE("sessionName not registered");
+    return sessionName;
+}
+
+void SoftBusFileReceiveListener::OnReceiveFileStarted(int32_t sessionId, int32_t fileCnt)
+{
+    LOGD("OnReceiveFileStarted, sessionId = %{public}d, fileCnt = %{public}d", sessionId, fileCnt);
+}
+
+void SoftBusFileReceiveListener::OnReceiveFileProcess(int32_t sessionId, uint64_t bytesUpload, uint64_t bytesTotal)
+{
+    LOGD("OnReceiveFileProcess, sessionId = %{public}d, bytesUpload = %{public}" PRIu64 ","
+         "bytesTotal = %{public}" PRIu64 "", sessionId, bytesUpload, bytesTotal);
+    std::string sessionName = GetLocalSessionName(sessionId);
+    if (sessionName.empty()) {
+        LOGE("sessionName is empty");
+        return;
     }
     TransManager::GetInstance().NotifyFileProgress(sessionName, bytesTotal, bytesUpload);
-    return E_OK;
 }
 
-void SoftBusFileReceiveListener::OnReceiveFileFinished(int sessionId, const char *files, int fileCnt)
+void SoftBusFileReceiveListener::OnReceiveFileFinished(int32_t sessionId, int32_t fileCnt)
 {
-    LOGD("OnReceiveFileFinished, sessionId = %{public}d, files = %{public}s, fileCnt = %{public}d", sessionId, files,
-         fileCnt);
-    char sessionName[MAX_SIZE] = {};
-    auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
-    if (ret != E_OK) {
-        LOGE("GetMySessionName failed, ret = %{public}d", ret);
+    LOGD("OnReceiveFileFinished, sessionId = %{public}d, fileCnt = %{public}d", sessionId, fileCnt);
+    std::string sessionName = GetLocalSessionName(sessionId);
+    if (sessionName.empty()) {
+        LOGE("sessionName is empty");
         return;
     }
     TransManager::GetInstance().NotifyFileFinished(sessionName);
     TransManager::GetInstance().DeleteTransTask(sessionName);
-    SoftBusHandler::GetInstance().ChangeOwnerIfNeeded(sessionId);
-    SoftBusHandler::GetInstance().CloseSession(sessionId);
+    SoftBusHandler::GetInstance().ChangeOwnerIfNeeded(sessionId, sessionName);
+    SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
 }
 
-void SoftBusFileReceiveListener::OnFileTransError(int sessionId)
+void SoftBusFileReceiveListener::OnFileTransError(int32_t sessionId)
 {
     LOGD("OnFileTransError, sessionId = %{public}d", sessionId);
-    char sessionName[MAX_SIZE] = {};
-    auto ret = ::GetMySessionName(sessionId, sessionName, MAX_SIZE);
-    if (ret != E_OK) {
-        LOGE("GetMySessionName failed, ret = %{public}d", ret);
+    std::string sessionName = GetLocalSessionName(sessionId);
+    if (sessionName.empty()) {
+        LOGE("sessionName is empty");
         return;
     }
     TransManager::GetInstance().NotifyFileFailed(sessionName);
     TransManager::GetInstance().DeleteTransTask(sessionName);
-    SoftBusHandler::GetInstance().CloseSession(sessionId);
+    SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
 }
 } // namespace DistributedFile
 } // namespace Storage

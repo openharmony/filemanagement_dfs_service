@@ -41,7 +41,8 @@ public:
 void SoftbusSessionTest::SetUpTestCase(void)
 {
     // input testsuit setup step，setup invoked before all testcases
-    g_session = make_shared<SoftbusSession>(TEST_SESSION_ID);
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    g_session = make_shared<SoftbusSession>(TEST_SESSION_ID, peerDeviceId);
 }
 
 void SoftbusSessionTest::TearDownTestCase(void)

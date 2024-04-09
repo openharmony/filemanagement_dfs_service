@@ -27,11 +27,14 @@ namespace DistributedFile {
 namespace Test {
 using namespace testing::ext;
 using namespace std;
+    namespace {
+    const std::string PEER_SESSION_NAME = "peersessionname";
+    const std::string REMOTE_DEV_ID = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    const std::string PKG_NAME_TEST = "pkgname";
+}
 
 constexpr int TEST_SESSION_ID = 10;
 constexpr int TEST_INVALID_SESSION_ID = -1;
-constexpr int E_OK = 0;
-constexpr int E_UNKNOWN = -1;
 static const string SAME_ACCOUNT = "account";
 
 class SoftbusSessionDispatcherTest : public testing::Test {
@@ -162,8 +165,9 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_UnregisterSe
 HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_GetAgent_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_GetAgent_0100 start";
+    std::string peerSessionName = "peerSessionName";
     try {
-        weak_ptr<SoftbusAgent> wp = SoftbusSessionDispatcher::GetAgent(TEST_SESSION_ID);
+        weak_ptr<SoftbusAgent> wp = SoftbusSessionDispatcher::GetAgent(TEST_SESSION_ID, peerSessionName);
         EXPECT_TRUE(wp.expired() == true);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
@@ -180,8 +184,9 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_GetAgent_010
 HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_GetAgent_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_GetAgent_0200 start";
+    std::string peerSessionName = "peerSessionName";
     try {
-        weak_ptr<SoftbusAgent> wp = SoftbusSessionDispatcher::GetAgent(TEST_INVALID_SESSION_ID);
+        weak_ptr<SoftbusAgent> wp = SoftbusSessionDispatcher::GetAgent(TEST_INVALID_SESSION_ID, peerSessionName);
         auto ptr = wp.lock();
         EXPECT_EQ(ptr, nullptr);
     } catch (const exception &e) {
@@ -211,7 +216,8 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_GetAgent_030
     try {
         SoftbusSessionDispatcher::RegisterSessionListener(busName, wsba);
         SoftbusSessionDispatcher::busNameToAgent_.erase(busName);
-        weak_ptr<SoftbusAgent> wp = SoftbusSessionDispatcher::GetAgent(TEST_SESSION_ID);
+        std::string peerSessionName = "peerSessionName";
+        weak_ptr<SoftbusAgent> wp = SoftbusSessionDispatcher::GetAgent(TEST_SESSION_ID, peerSessionName);
         auto ptr = wp.lock();
         EXPECT_EQ(ptr, nullptr);
     } catch (const exception &e) {
@@ -231,9 +237,14 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpe
 {
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0100 start";
     bool res = true;
-
+    PeerSocketInfo peerSocketInfo = {
+        .name = const_cast<char*>(PEER_SESSION_NAME.c_str()),
+        .networkId = const_cast<char*>(REMOTE_DEV_ID.c_str()),
+        .pkgName = const_cast<char*>(PKG_NAME_TEST.c_str()),
+        .dataType = DATA_TYPE_BYTES
+    };
     try {
-        SoftbusSessionDispatcher::OnSessionOpened(TEST_SESSION_ID, E_OK);
+        SoftbusSessionDispatcher::OnSessionOpened(TEST_SESSION_ID, peerSocketInfo);
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());
@@ -253,9 +264,14 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionOpe
 {
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionOpened_0200 start";
     bool res = true;
-
+    PeerSocketInfo peerSocketInfo = {
+        .name = const_cast<char*>(PEER_SESSION_NAME.c_str()),
+        .networkId = const_cast<char*>(REMOTE_DEV_ID.c_str()),
+        .pkgName = const_cast<char*>(PKG_NAME_TEST.c_str()),
+        .dataType = DATA_TYPE_BYTES
+    };
     try {
-        SoftbusSessionDispatcher::OnSessionOpened(TEST_SESSION_ID, E_UNKNOWN);
+        SoftbusSessionDispatcher::OnSessionOpened(TEST_SESSION_ID, peerSocketInfo);
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());
@@ -275,9 +291,9 @@ HWTEST_F(SoftbusSessionDispatcherTest, SoftbusSessionDispatcherTest_OnSessionClo
 {
     GTEST_LOG_(INFO) << "SoftbusSessionDispatcherTest_OnSessionClosed_0100 start";
     bool res = true;
-
+    ShutdownReason reason = SHUTDOWN_REASON_UNKNOWN;
     try {
-        SoftbusSessionDispatcher::OnSessionClosed(TEST_SESSION_ID);
+        SoftbusSessionDispatcher::OnSessionClosed(TEST_SESSION_ID, reason);
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());
