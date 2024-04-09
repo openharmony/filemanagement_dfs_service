@@ -13,7 +13,7 @@
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 group("dfs_service_fuzztest") {
-  testonly = true
+  testonly = true1
 
   deps = [ "${distributedfile_path}/test/fuzztest/filetranslistenerstub_fuzzer:FileTransListenerStubFuzzTest" ]
 }

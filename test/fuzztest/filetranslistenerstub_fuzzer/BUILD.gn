@@ -19,7 +19,7 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_fuzztest("FileTransListenerStubFuzzTest") {
   module_out_path = "dfs_service/dfs_service"
   fuzz_config_file =
-  "${distributedfile_path}/test/fuzztest/filetranslistenerstub_fuzzer"
+      "${distributedfile_path}/test/fuzztest/filetranslistenerstub_fuzzer"
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/utils/log/include",
