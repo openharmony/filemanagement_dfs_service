@@ -422,7 +422,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
         LOGE("OnFetchRecords server err %{public}d and dk errcor %{public}d", err.serverErrorCode, err.dkErrorCode);
         if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
             SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
-        } else if (static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) ==
+        } else if (!err.errorDetails.empty() && static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) ==
                    DKDetailErrorCode::FORBIDDEN_USER) {
             SetErrorCodeMask(ErrorType::PERMISSION_NOT_ALLOW);
         }
@@ -518,11 +518,11 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
             err.dkErrorCode);
         if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
             SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
-        } else if (static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) ==
-                   DKDetailErrorCode::FORBIDDEN_USER) {
-            SetErrorCodeMask(ErrorType::PERMISSION_NOT_ALLOW);
         } else if (!err.errorDetails.empty()) {
             DKDetailErrorCode detailCode = static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode);
+            if (detailCode == DKDetailErrorCode::FORBIDDEN_USER) {
+                SetErrorCodeMask(ErrorType::PERMISSION_NOT_ALLOW);
+            }
             if (detailCode == DKDetailErrorCode::PARAM_INVALID || detailCode == DKDetailErrorCode::CURSOR_EXPIRED) {
                 handler->SetChecking();
                 Pull(handler);
@@ -562,7 +562,7 @@ void DataSyncer::OnFetchCheckRecords(const shared_ptr<DKContext> context,
              err.dkErrorCode);
         if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
             SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
-        } else if (static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) ==
+        } else if (!err.errorDetails.empty() && static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) ==
                    DKDetailErrorCode::FORBIDDEN_USER) {
             SetErrorCodeMask(ErrorType::PERMISSION_NOT_ALLOW);
         }
