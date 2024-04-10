@@ -15,6 +15,7 @@
 
 #include "meta_file.h"
 
+#include <ctime>
 #include <fcntl.h>
 #include <iomanip>
 #include <sstream>
@@ -182,7 +183,7 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
     if ((parentMetaFile_ == nullptr) || (dirName == "")) {
         return;
     }
-    MetaBase m(dirName, std::to_string(PathHash(path, false)));
+    MetaBase m(dirName, std::to_string(PathHash(path, false)) + std::to_string(std::time(nullptr)));
     ret = parentMetaFile_->DoLookup(m);
     if (ret != E_OK) {
         m.mode = S_IFDIR;
