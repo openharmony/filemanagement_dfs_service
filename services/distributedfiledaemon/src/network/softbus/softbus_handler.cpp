@@ -95,8 +95,8 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
         return E_SOFTBUS_SESSION_FAILED;
     }
     QosTV qos[] = {
-        {.qos = QOS_TYPE_MIN_BW,        .value = 80 * 1024 * 1024},
-        {.qos = QOS_TYPE_MAX_LATENCY,        .value = 8000},
+        {.qos = QOS_TYPE_MIN_BW,        .value = 90 * 1024 * 1024},
+        {.qos = QOS_TYPE_MAX_LATENCY,        .value = 10000},
         {.qos = QOS_TYPE_MIN_LATENCY,        .value = 2000},
     };
 
@@ -124,8 +124,8 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     }
     LOGI("OpenSession Enter.");
     QosTV qos[] = {
-        {.qos = QOS_TYPE_MIN_BW,        .value = 80 * 1024 * 1024},
-        {.qos = QOS_TYPE_MAX_LATENCY,        .value = 8000},
+        {.qos = QOS_TYPE_MIN_BW,        .value = 90 * 1024 * 1024},
+        {.qos = QOS_TYPE_MAX_LATENCY,        .value = 10000},
         {.qos = QOS_TYPE_MIN_LATENCY,        .value = 2000},
     };
     SocketInfo clientInfo = {

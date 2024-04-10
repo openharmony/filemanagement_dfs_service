@@ -71,8 +71,8 @@ void SoftbusAgent::JoinDomain()
         return;
     }
     QosTV qos[] = {
-        {.qos = QOS_TYPE_MIN_BW,        .value = 80 * 1024 * 1024},
-        {.qos = QOS_TYPE_MAX_LATENCY,        .value = 8000},
+        {.qos = QOS_TYPE_MIN_BW,        .value = 90 * 1024 * 1024},
+        {.qos = QOS_TYPE_MAX_LATENCY,        .value = 10000},
         {.qos = QOS_TYPE_MIN_LATENCY,        .value = 2000},
     };
 
@@ -125,8 +125,8 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
         .OnStream = nullptr,
     };
     QosTV qos[] = {
-        {.qos = QOS_TYPE_MIN_BW,        .value = 80 * 1024 * 1024},
-        {.qos = QOS_TYPE_MAX_LATENCY,        .value = 8000},
+        {.qos = QOS_TYPE_MIN_BW,        .value = 90 * 1024 * 1024},
+        {.qos = QOS_TYPE_MAX_LATENCY,        .value = 10000},
         {.qos = QOS_TYPE_MIN_LATENCY,        .value = 2000},
     };
     SocketInfo clientInfo = {
