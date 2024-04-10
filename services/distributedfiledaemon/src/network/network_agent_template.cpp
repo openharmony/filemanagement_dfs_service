@@ -69,7 +69,7 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
             LOGE("failed to get network type by network id errCode = %{public}d", errCode);
             continue;
         }
-        if (!(networkType & (1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI))) {
+        if (!(static_cast<uint32_t>(networkType) & (1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI))) {
             LOGI("not wifi network networkType = %{public}d == %{public}d", networkType,
                  1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI);
             continue;

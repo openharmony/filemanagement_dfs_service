@@ -31,11 +31,13 @@ public:
     static bool IsAccountIdChanged(const std::string &accountId);
 
 private:
-    static inline DriveKit::DKUserInfo userInfo_{.accountId = "",
-                                                 .cloudStatus = DriveKit::DKCloudStatus::DK_CLOUD_STATUS_LOGOUT,
-                                                 .spaceStatus = DriveKit::DKSpaceStatus::DK_SPACE_STATUS_ALREADY_FULL,
-                                                 .totalSpace = 0,
-                                                 .remainSpace = 0};
+    static inline DriveKit::DKUserInfo userInfo_{
+        .accountId = "",
+        .cloudStatus = DriveKit::DKCloudStatus::DK_CLOUD_STATUS_LOGOUT,
+        .spaceStatus = DriveKit::DKSpaceStatus::DK_SPACE_STATUS_ALREADY_FULL,
+        .totalSpace = 0,
+        .remainSpace = 0
+    };
     static inline std::map<std::string, bool> appSwitches_;
     static inline int32_t userId_{-1};
     static inline std::mutex mutex_;
