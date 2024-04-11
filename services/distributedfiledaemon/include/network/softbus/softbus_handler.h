@@ -40,10 +40,12 @@ public:
         const std::string &peerDevId, DFS_CHANNEL_ROLE role);
     void ChangeOwnerIfNeeded(int32_t sessionId, const std::string sessionName);
     void CloseSession(int32_t sessionId, const std::string sessionName);
-    static std::mutex clientSessNameMapMutex_;
-    static std::map<int32_t, std::string> clientSessNameMap_;
+    static std::string GetSessionName(int32_t sessionId);
+    static void OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info);
 
 private:
+    static std::mutex clientSessNameMapMutex_;
+    static std::map<int32_t, std::string> clientSessNameMap_;
     std::mutex serverIdMapMutex_;
     std::map<std::string, int32_t> serverIdMap_;
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};

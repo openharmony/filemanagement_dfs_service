@@ -71,13 +71,7 @@ void SoftBusFileReceiveListener::SetRecvPath(const std::string physicalPath)
 std::string SoftBusFileReceiveListener::GetLocalSessionName(int32_t sessionId)
 {
     std::string sessionName = "";
-    std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
-    auto iter = SoftBusHandler::clientSessNameMap_.find(sessionId);
-    if (iter != SoftBusHandler::clientSessNameMap_.end()) {
-        sessionName = iter->second;
-        return sessionName;
-    }
-    LOGE("sessionName not registered");
+    sessionName = SoftBusHandler::GetSessionName(sessionId);
     return sessionName;
 }
 

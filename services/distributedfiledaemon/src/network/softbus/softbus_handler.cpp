@@ -30,11 +30,24 @@ using namespace OHOS::FileManagement;
 std::mutex SoftBusHandler::clientSessNameMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
 
-static void OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
+void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     std::string name = info.name;
     std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
     SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, name));
+}
+
+std::string SoftBusHandler::GetSessionName(int32_t sessionId)
+{
+    std::string sessionName = "";
+    std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
+    auto iter = clientSessNameMap_.find(sessionId);
+    if (iter != clientSessNameMap_.end()) {
+        sessionName = iter->second;
+        return sessionName;
+    }
+    LOGE("sessionName not registered");
+    return sessionName;
 }
 
 SoftBusHandler::SoftBusHandler()
