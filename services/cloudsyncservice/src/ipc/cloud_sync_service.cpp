@@ -122,7 +122,10 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     Init();
     LOGI("init service successfully");
     TaskStateManager::GetInstance().StartTask();
-    HandleStartReason(startReason);
+    // 跟随进程生命周期
+    std::thread([startReason, this]() {
+        this->HandleStartReason(startReason);
+        }).detach();
 }
 
 void CloudSyncService::OnStop()

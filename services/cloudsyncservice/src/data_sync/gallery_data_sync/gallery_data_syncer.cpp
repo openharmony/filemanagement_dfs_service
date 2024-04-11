@@ -236,9 +236,6 @@ int32_t GalleryDataSyncer::DownloadFile()
     if (ret != E_OK) {
         LOGE("gallery data syncer pull file err %{public}d", ret);
     }
-    if (timeId_ == 0) {
-        fileHandler_->PeriodicUpdataFiles(timeId_);
-    }
     return ret;
 }
 
@@ -276,7 +273,7 @@ int32_t GalleryDataSyncer::Complete(bool isNeedNotify)
     LOGI("gallery data syncer complete all");
     Unlock();
     if (!TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK)) {
-        fileHandler_->StopUpdataFiles(timeId_);
+        fileHandler_->StopUpdataFiles();
     }
     int32_t ret = fileHandler_->CleanRemainRecord();
     if (ret != E_OK) {
@@ -392,7 +389,7 @@ void GalleryDataSyncer::StopDownloadThumb()
 {
     TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
     if (!TaskStateManager::GetInstance().HasTask(bundleName_, TaskType::SYNC_TASK)) {
-        fileHandler_->StopUpdataFiles(timeId_);
+        fileHandler_->StopUpdataFiles();
     }
 }
 
