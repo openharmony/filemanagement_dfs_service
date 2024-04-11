@@ -98,7 +98,7 @@ public:
     MOCK_METHOD3(ExecuteForChangedRowCount,
                  int(int64_t &outValue, const std::string &sql, const std::vector<ValueObject> &bindArgs));
 
-    MOCK_METHOD2(Backup, int(const std::string databasePath, const std::vector<uint8_t> destEncryptKey));
+    MOCK_METHOD2(Backup, int(const std::string &databasePath, const std::vector<uint8_t> &destEncryptKey));
 
     MOCK_METHOD3(Attach,
                  int(const std::string &alias, const std::string &pathName, const std::vector<uint8_t> destEncryptKey));
@@ -170,7 +170,8 @@ public:
     MOCK_CONST_METHOD0(IsOpen, bool());
     MOCK_CONST_METHOD0(IsReadOnly, bool());
     MOCK_CONST_METHOD0(IsMemoryRdb, bool());
-    MOCK_METHOD2(Restore, int(const std::string backupPath, const std::vector<uint8_t> &newKey));
+    MOCK_METHOD2(Restore, int(const std::string &backupPath, const std::vector<uint8_t> &newKey));
+    MOCK_METHOD1(GetRebuilt, int(RebuiltType &rebuilt));
 };
 } // namespace OHOS::FileManagement::CloudSync::Test
 #endif
