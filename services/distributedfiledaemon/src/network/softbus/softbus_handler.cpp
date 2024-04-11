@@ -62,7 +62,7 @@ SoftBusHandler::SoftBusHandler()
     sessionListener_[DFS_CHANNLE_ROLE_SOURCE] = fileSendListener;
 
     ISocketListener fileReceiveListener;
-    fileReceiveListener.OnBind = OnSinkSessionOpened;
+    fileReceiveListener.OnBind = SoftBusHandler::OnSinkSessionOpened;
     fileReceiveListener.OnShutdown = DistributedFile::SoftBusSessionListener::OnSessionClosed;
     fileReceiveListener.OnFile = DistributedFile::SoftBusFileReceiveListener::OnFile;
     fileReceiveListener.OnBytes = nullptr;
