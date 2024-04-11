@@ -1158,6 +1158,12 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
         std::lock_guard<std::mutex> lock(lcdMutex_);
         lcdVec_.emplace_back(asset.recordId);
     }
+    if (thmVec_.size() >= UPDATE_VEC_SIZE) {
+        UpdateThmVec();
+    }
+    if (lcdVec_.size() >= UPDATE_VEC_SIZE) {
+        UpdateLcdVec();
+    }
     string tempPath = asset.downLoadPath + "/" + asset.asset.assetName;
     string localPath = CloudDisk::CloudFileUtils::GetPathWithoutTmp(tempPath);
     DentryRemoveThumb(localPath);
@@ -3890,51 +3896,25 @@ void FileDataHandler::UpdateLcdVec()
         if (count != 0) {
             UpdateAttachmentStat(INDEX_LCD_SUCCESS, count);
         }
-    }
-}
-
-void FileDataHandler::PeriodicUpdataFiles(uint32_t &timeId)
-{
-    const uint32_t TIMER_INTERVAL = 2000;
-    auto timerCallBack = [this]() {
-        if (thmVec_.empty() && lcdVec_.empty()) {
-            waitCount_ ++;
-            LOGI("no thumbnail is downloading, wait %{public}d times", waitCount_);
-            if (waitCount_ == 30) {
-                TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
-                StopUpdataFiles(timeId_);
-            }
-        } else {
-            waitCount_ = 0;
+        if (!IsPullRecords()) {
+            UpdateAlbumInternal();
         }
-        UpdateThmVec();
-        UpdateLcdVec();
-    };
-    if (timeId == 0) {
-        LOGI("start update timer");
-        DfsuTimer::GetInstance().Register(timerCallBack, timeId, TIMER_INTERVAL);
-        timeId_ = timeId;
-    } else {
-        LOGI("timer is running");
     }
 }
 
-void FileDataHandler::StopUpdataFiles(uint32_t &timeId)
+
+void FileDataHandler::StopUpdataFiles()
 {
     const uint32_t MAX_TRY_TIMES = 5;
     uint32_t tryCount = 1;
-    if (timeId != 0) {
-        LOGI("stop update timer");
-        DfsuTimer::GetInstance().Unregister(timeId);
-        while (tryCount <= MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
-            UpdateThmVec();
-            UpdateLcdVec();
-            tryCount++;
-        }
-        timeId = 0;
-        timeId_ = 0;
+    while (tryCount <= MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
+        UpdateThmVec();
+        UpdateLcdVec();
+        tryCount++;
     }
-
+    if (tryCount > MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
+        LOGE("StopUpdataFiles update failed!");
+    }
     UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
     UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, lcdVec_.size());
 }
