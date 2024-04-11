@@ -223,7 +223,7 @@ int32_t TaskManager::CommitTask(shared_ptr<TaskRunner> runner, shared_ptr<Task> 
 {
     LOGI("CommitTask begin, Task id: %{public}d", t->GetId());
     if (runner->NeedRun(t)) {
-        LOGI("task need run");
+        LOGD("task need run");
         pool_.AddTask([t, runner]() {
             DfsuMemoryGuard cacheGuard;
             t->Run();
