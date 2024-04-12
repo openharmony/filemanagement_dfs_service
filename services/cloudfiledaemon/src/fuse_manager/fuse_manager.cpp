@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
 #include <atomic>
 #include <cassert>
 #include <cerrno>
+#include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -43,6 +44,7 @@
 #include "dk_database.h"
 #include "dk_asset_read_session.h"
 #include "drive_kit.h"
+#include "ffrt_inner.h"
 #include "fuse_operations.h"
 #include "meta_file.h"
 #include "sdk_helper.h"
@@ -63,11 +65,11 @@ static const unsigned int STAT_NLINK_REG = 1;
 static const unsigned int STAT_NLINK_DIR = 2;
 static const unsigned int STAT_MODE_REG = 0770;
 static const unsigned int STAT_MODE_DIR = 0771;
-static const unsigned int READ_TIMEOUT_MS = 20000;
 static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
 static const unsigned int TWO_MB = 2 * 1024 * 1024;
 static const unsigned int KEY_FRAME_SIZE = 8192;
 static const unsigned int MAX_IDLE_THREADS = 10;
+static const std::chrono::seconds READ_TIMEOUT_S = 20s;
 
 struct CloudInode {
     shared_ptr<MetaBase> mBase{nullptr};
@@ -77,7 +79,7 @@ struct CloudInode {
     shared_ptr<DriveKit::DKAssetReadSession> readSession{nullptr};
     atomic<int> sessionRefCount{0};
     std::shared_mutex sessionLock;
-    std::mutex readLock;
+    ffrt::mutex readLock;
     off_t offset{0xffffffff};
 };
 
@@ -89,6 +91,23 @@ struct FuseData {
     std::shared_mutex cacheLock;
     shared_ptr<DriveKit::DKDatabase> database;
     struct fuse_session *se;
+};
+
+struct ReadArguments {
+    size_t size{0};
+    off_t offset{0};
+    shared_ptr<int64_t> readResult{nullptr};
+    shared_ptr<bool> readFinish{nullptr};
+    shared_ptr<DriveKit::DKError> dkError{nullptr};
+    shared_ptr<ffrt::condition_variable> cond{nullptr};
+
+    ReadArguments(size_t readSize, off_t readOffset) : size(readSize), offset(readOffset)
+    {
+        readResult = make_shared<int64_t>(-1);
+        readFinish = make_shared<bool>(false);
+        dkError = make_shared<DriveKit::DKError>();
+        cond = make_shared<ffrt::condition_variable>();
+    }
 };
 
 static string GetLocalPath(int32_t userId, const string &relativePath)
@@ -528,10 +547,21 @@ static bool PrepareForRead(fuse_req_t req, shared_ptr<char> &buf, size_t size, s
     return true;
 }
 
+static void CloudReadOnCloudFile(shared_ptr<ReadArguments> readArgs, shared_ptr<char> buf,
+    shared_ptr<CloudInode> cInode, shared_ptr<DriveKit::DKAssetReadSession> dkReadSession)
+{
+    *readArgs->readResult = dkReadSession->PRead(readArgs->offset, readArgs->size, buf.get(), *readArgs->dkError);
+    {
+        unique_lock lck(cInode->readLock);
+        *readArgs->readFinish = true;
+    }
+    readArgs->cond->notify_one();
+    return;
+}
+
 static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                       struct fuse_file_info *fi)
 {
-    shared_ptr<DriveKit::DKError> dkError = make_shared<DriveKit::DKError>();
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
@@ -547,39 +577,26 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     if (!PrepareForRead(req, buf, size, cInode, dkReadSession)) {
         return;
     }
-
-    shared_ptr<int64_t> readSize = make_shared<int64_t>(-1);
-    shared_ptr<bool> readFinish = make_shared<bool>(false);
-    shared_ptr<condition_variable> readConVar = make_shared<condition_variable>();
-    thread([=]() {
-        *readSize = dkReadSession->PRead(off, size, buf.get(), *dkError);
-        LOGD("read %{public}s result, %{public}lld bytes", CloudPath(data, ino).c_str(),
-            static_cast<long long>(*readSize));
-        {
-            std::unique_lock<std::mutex> lock(cInode->readLock);
-            *readFinish = true;
-        }
-        readConVar->notify_one();
-        }).detach();
-
-    std::unique_lock<std::mutex> lock(cInode->readLock);
-    auto waitStatus = readConVar->wait_for(lock, chrono::milliseconds(READ_TIMEOUT_MS), [readFinish] {
-        return *readFinish;
-        });
+    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(oldSize, off);
+    ffrt::thread(CloudReadOnCloudFile, ref(readArgs), ref(buf), ref(cInode), ref(dkReadSession)).detach();
+    unique_lock lck(cInode->readLock);
+    auto waitStatus = readArgs->cond->wait_for(lck, READ_TIMEOUT_S, [readArgs] {
+        return *readArgs->readFinish;
+    });
     if (!waitStatus) {
         LOGE("Pread timeout %{public}s, size=%{public}zd, off=%{public}lu", CloudPath(data, ino).c_str(), size,
             (unsigned long)off);
         fuse_reply_err(req, ENETUNREACH);
         return;
     }
-    if (*readSize < 0) {
-        LOGE("readSize: %lld", static_cast<long long>(*readSize));
+    if (*readArgs->readResult < 0) {
+        LOGE("readSize: %{public}lld", static_cast<long long>(*readArgs->readResult));
         fuse_reply_err(req, ENOMEM);
         return;
     }
-    if (!HandleDkError(req, *dkError)) {
+    if (!HandleDkError(req, *readArgs->dkError)) {
         LOGD("read success");
-        fuse_reply_buf(req, buf.get(), min(oldSize, static_cast<size_t>(*readSize)));
+        fuse_reply_buf(req, buf.get(), min(oldSize, static_cast<size_t>(*readArgs->readResult)));
     }
 }
 

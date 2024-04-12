@@ -42,6 +42,7 @@
           "drivekit_native",
           "dsoftbus",
           "eventhandler",
+          "ffrt",
           "file_api",
           "hicollie",
           "hilog",
