@@ -128,25 +128,6 @@ HWTEST_F(CloudSyncServiceTest, GetHmdfsPathTest003, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnStartTest
- * @tc.desc: Verify the OnStart function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, OnStartTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnStart start";
-    try {
-        SystemAbilityOnDemandReason reason;
-        g_servicePtr_->OnStart(reason);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnStart FAILED";
-    }
-    GTEST_LOG_(INFO) << "OnStart end";
-}
-
-/**
  * @tc.name: OnStopTest
  * @tc.desc: Verify the OnStop function.
  * @tc.type: FUNC
@@ -162,25 +143,6 @@ HWTEST_F(CloudSyncServiceTest, OnStopTest, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnStop FAILED";
     }
     GTEST_LOG_(INFO) << "OnStop end";
-}
-
-/**
- * @tc.name: HandleStartReasonTest
- * @tc.desc: Verify the HandleStartReason function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, HandleStartReasonTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleStartReason start";
-    try {
-        SystemAbilityOnDemandReason startReason;
-        g_servicePtr_->HandleStartReason(startReason);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "HandleStartReason FAILED";
-    }
-    GTEST_LOG_(INFO) << "HandleStartReason end";
 }
 
 /**

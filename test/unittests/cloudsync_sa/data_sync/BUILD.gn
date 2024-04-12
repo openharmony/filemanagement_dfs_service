@@ -1408,6 +1408,15 @@ ohos_unittest("cloud_disk_data_syncer_test") {
 }
 
 ohos_unittest("cloud_disk_data_handler_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
   module_out_path = "filemanagement/dfs_service"
   data_sync = [
     "${services_path}/cloudsyncservice/src/data_sync/data_syncer.cpp",
@@ -1526,11 +1535,6 @@ ohos_unittest("cloud_disk_data_handler_test") {
   if (cloudsync_service_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
-  }
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
   }
 
   use_exceptions = true
