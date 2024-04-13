@@ -15,7 +15,6 @@
 
 #include "network/softbus/softbus_file_receive_listener.h"
 
-
 #include <cinttypes>
 
 #include "dfs_error.h"
