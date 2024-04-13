@@ -84,11 +84,9 @@ void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo
     std::string peerDevId = info.networkId;
     if (!idMap_.empty()) {
         std::lock_guard<std::mutex> lock(idMapMutex_);
-        for (auto it = idMap_.begin(); it != idMap_.end(); it++) {
-            if (it->first == sessionId) {
-                idMap_.insert(std::make_pair(sessionId, std::make_pair(peerDevId, peerSessionName)));
-                break;
-            }
+        auto it = idMap_.find(sessionId);
+        if (it != idMap_.end()) {
+            it->second = std::make_pair(peerDevId, peerSessionName);
         }
     }
     auto agent = GetAgent(sessionId, peerSessionName);

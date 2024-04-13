@@ -196,13 +196,15 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
     }
     if (!serverIdMap_.empty()) {
         std::lock_guard<std::mutex> lock(serverIdMapMutex_);
-        for (auto it = serverIdMap_.begin(); it != serverIdMap_.end(); it++) {
+        for (auto it = serverIdMap_.begin(); it != serverIdMap_.end();) {
             if ((it->first).find(sessionName) != std::string::npos) {
                 int32_t serverId = serverIdMap_[sessionName];
                 serverIdMap_.erase(it->first);
                 Shutdown(serverId);
                 LOGI("RemoveSessionServer success.");
                 break;
+            } else {
+                ++it;
             }
         }
     }
