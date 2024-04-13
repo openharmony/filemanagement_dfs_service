@@ -196,7 +196,7 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
         std::lock_guard<std::mutex> lock(serverIdMapMutex_);
         auto it = serverIdMap_.find(sessionName);
         if (it != serverIdMap_.end()) {
-            int32_t serverId = serverIdMap_[sessionName];
+            int32_t serverId = it->second;
             serverIdMap_.erase(it);
             Shutdown(serverId);
             LOGI("RemoveSessionServer success.");
