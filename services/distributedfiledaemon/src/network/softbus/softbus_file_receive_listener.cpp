@@ -32,6 +32,10 @@ using namespace FileManagement;
 std::string SoftBusFileReceiveListener::path_ = "";
 void SoftBusFileReceiveListener::OnFile(int32_t socket, FileEvent *event)
 {
+    if (event == nullptr) {
+        LOGE("invaild parameter");
+        return;
+    }
     switch (event->type) {
         case FILE_EVENT_RECV_START:
             OnReceiveFileStarted(socket, event->fileCnt);

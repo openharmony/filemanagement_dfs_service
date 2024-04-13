@@ -34,6 +34,9 @@ namespace {
     constexpr int MAX_RETRY_COUNT = 7;
 }
 using namespace std;
+const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
+const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
+const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
 SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTemplate(mountPoint)
 {
     auto spt = mountPoint.lock();
@@ -71,9 +74,9 @@ void SoftbusAgent::JoinDomain()
         return;
     }
     QosTV qos[] = {
-        {.qos = QOS_TYPE_MIN_BW,        .value = 90 * 1024 * 1024},
-        {.qos = QOS_TYPE_MAX_LATENCY,        .value = 10000},
-        {.qos = QOS_TYPE_MIN_LATENCY,        .value = 2000},
+        {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
+        {.qos = QOS_TYPE_MAX_LATENCY,        .value = DFS_QOS_TYPE_MAX_LATENCY},
+        {.qos = QOS_TYPE_MIN_LATENCY,        .value = DFS_QOS_TYPE_MIN_LATENCY},
     };
 
     int32_t ret = Listen(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener);
@@ -125,9 +128,9 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
         .OnStream = nullptr,
     };
     QosTV qos[] = {
-        {.qos = QOS_TYPE_MIN_BW,        .value = 90 * 1024 * 1024},
-        {.qos = QOS_TYPE_MAX_LATENCY,        .value = 10000},
-        {.qos = QOS_TYPE_MIN_LATENCY,        .value = 2000},
+        {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
+        {.qos = QOS_TYPE_MAX_LATENCY,        .value = DFS_QOS_TYPE_MAX_LATENCY},
+        {.qos = QOS_TYPE_MIN_LATENCY,        .value = DFS_QOS_TYPE_MIN_LATENCY},
     };
     SocketInfo clientInfo = {
         .name = const_cast<char*>((sessionName_.c_str())),
