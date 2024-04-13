@@ -93,11 +93,9 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
     LOGI("CreateSessionServer Enter.");
     {
         std::lock_guard<std::mutex> lock(serverIdMapMutex_);
-        for (auto it = serverIdMap_.begin(); it != serverIdMap_.end(); it++) {
-            if ((it->first).find(sessionName) != std::string::npos) {
-                LOGI("%s: Session already create.", sessionName.c_str());
-                return E_OK;
-            }
+        if (serverIdMap_.find(sessionName) != serverIdMap_.end()) {
+            LOGI("%s: Session already create.", sessionName.c_str());
+            return E_OK;
         }
     }
     SocketInfo serverInfo = {
@@ -196,16 +194,12 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
     }
     if (!serverIdMap_.empty()) {
         std::lock_guard<std::mutex> lock(serverIdMapMutex_);
-        for (auto it = serverIdMap_.begin(); it != serverIdMap_.end();) {
-            if ((it->first).find(sessionName) != std::string::npos) {
-                int32_t serverId = serverIdMap_[sessionName];
-                serverIdMap_.erase(it->first);
-                Shutdown(serverId);
-                LOGI("RemoveSessionServer success.");
-                break;
-            } else {
-                ++it;
-            }
+        auto it = serverIdMap_.find(sessionName);
+        if (it != serverIdMap_.end()) {
+            int32_t serverId = serverIdMap_[sessionName];
+            serverIdMap_.erase(it);
+            Shutdown(serverId);
+            LOGI("RemoveSessionServer success.");
         }
     }
     Shutdown(sessionId);
