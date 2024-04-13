@@ -25,8 +25,12 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-void SoftBusFileSendListener::OnFile(int32_t socket, FileEvent* event)
+void SoftBusFileSendListener::OnFile(int32_t socket, FileEvent *event)
 {
+    if (event == nullptr) {
+        LOGE("invalid paramter");
+        return;
+    }
     switch (event->type) {
         case FILE_EVENT_SEND_PROCESS:
             OnSendFileProcess(socket, event->bytesProcessed, event->bytesTotal);

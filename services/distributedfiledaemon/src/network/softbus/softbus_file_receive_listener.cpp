@@ -15,19 +15,22 @@
 
 #include "network/softbus/softbus_file_receive_listener.h"
 
+
+#include <cinttypes>
+
 #include "dfs_error.h"
 #include "network/softbus/softbus_handler.h"
+#include "sandbox_helper.h"
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
-#include <cinttypes>
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace FileManagement;
 std::string SoftBusFileReceiveListener::path_ = "";
-void SoftBusFileReceiveListener::OnFile(int32_t socket, FileEvent* event)
+void SoftBusFileReceiveListener::OnFile(int32_t socket, FileEvent *event)
 {
     switch (event->type) {
         case FILE_EVENT_RECV_START:
@@ -54,17 +57,21 @@ void SoftBusFileReceiveListener::OnFile(int32_t socket, FileEvent* event)
 const char* SoftBusFileReceiveListener::GetRecvPath()
 {
     const char* path = path_.c_str();
-    LOGI("path: %{public}s", path);
+    LOGI("path: %s", path);
     return path;
 }
 
-void SoftBusFileReceiveListener::SetRecvPath(const std::string physicalPath)
+void SoftBusFileReceiveListener::SetRecvPath(const std::string &physicalPath)
 {
     if (physicalPath.empty()) {
         LOGI("SetRecvPath physicalPath is empty.");
         return;
     }
-    LOGI("SetRecvPath physicalPath: %{public}s", physicalPath.c_str());
+    LOGI("SetRecvPath physicalPath: %s", physicalPath.c_str());
+    if (!AppFileService::SandboxHelper::CheckValidPath(physicalPath)) {
+        LOGE("invalid path.");
+        return;
+    }
     path_ = physicalPath;
 }
 

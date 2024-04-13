@@ -26,7 +26,7 @@ namespace Storage {
 namespace DistributedFile {
 class SoftBusFileSendListener {
 public:
-    static void OnFile(int32_t socket, FileEvent* event);
+    static void OnFile(int32_t socket, FileEvent *event);
     static void OnSendFileProcess(int32_t sessionId, uint64_t bytesUpload, uint64_t bytesTotal);
     static void OnSendFileFinished(int32_t sessionId);
     static void OnFileTransError(int32_t sessionId);

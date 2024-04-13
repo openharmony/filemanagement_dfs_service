@@ -107,12 +107,14 @@ void SoftbusSessionDispatcher::OnSessionClosed(int32_t sessionId, ShutdownReason
     std::string peerDevId = "";
     {
         std::lock_guard<std::mutex> lock(idMapMutex_);
-        for (auto it = idMap_.begin(); it != idMap_.end(); it++) {
+        for (auto it = idMap_.begin(); it != idMap_.end();) {
             if (it->first == sessionId) {
                 peerDevId = it->second.first;
                 peerSessionName = it->second.second;
                 idMap_.erase(it->first);
                 break;
+            } else {
+                ++it;
             }
         }
     }
