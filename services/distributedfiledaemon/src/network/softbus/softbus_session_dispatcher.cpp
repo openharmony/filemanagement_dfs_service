@@ -94,7 +94,7 @@ void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo
         spt->OnSessionOpened(sessionId, info);
     } else {
         LOGE("session not exist!, session id is %{public}d", sessionId);
-        return ;
+        return;
     }
 }
 void SoftbusSessionDispatcher::OnSessionClosed(int32_t sessionId, ShutdownReason reason)
