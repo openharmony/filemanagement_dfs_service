@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,8 +17,11 @@
 #define SOFTBUS_AGENT_H
 
 #include <map>
+#include <mutex>
 
 #include "network/network_agent_template.h"
+#include "transport/socket.h"
+#include "transport/trans_type.h"
 
 namespace OHOS {
 namespace Storage {
@@ -27,8 +30,8 @@ class SoftbusAgent final : public NetworkAgentTemplate, public std::enable_share
 public:
     explicit SoftbusAgent(std::weak_ptr<MountPoint> mountPoint);
     ~SoftbusAgent() = default;
-    int OnSessionOpened(const int sessionId, const int result);
-    void OnSessionClosed(int sessionId);
+    void OnSessionOpened(const int32_t sessionId, PeerSocketInfo info);
+    void OnSessionClosed(int32_t sessionId, const std::string peerDeviceId);
 
 protected:
     void JoinDomain() override;
@@ -39,8 +42,10 @@ protected:
     void CloseSession(std::shared_ptr<BaseSession> session) override;
 
 private:
+    std::mutex serverIdMapMutex_;
+    std::map<std::string, int32_t> serverIdMap_;
     bool IsContinueRetry(const std::string &cid);
-    std::map<std::string, int> OpenSessionRetriedTimesMap_;
+    std::map<std::string, int32_t> OpenSessionRetriedTimesMap_;
 
     std::string sessionName_;
 };

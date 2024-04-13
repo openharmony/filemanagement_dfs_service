@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -74,9 +74,10 @@ HWTEST_F(KernelTalkerTest, KernelTalkerTest_SinkSessionTokernel_0100, TestSize.L
 {
     GTEST_LOG_(INFO) << "KernelTalkerTest_SinkSessionTokernel_0100 start";
     bool res = true;
-    std::shared_ptr<SoftbusSession> session = make_shared<SoftbusSession>(TEST_SESSION_ID);
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    std::shared_ptr<SoftbusSession> session = make_shared<SoftbusSession>(TEST_SESSION_ID, peerDeviceId);
     try {
-        g_talker->SinkSessionTokernel(session);
+        g_talker->SinkSessionTokernel(session, "Server");
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());

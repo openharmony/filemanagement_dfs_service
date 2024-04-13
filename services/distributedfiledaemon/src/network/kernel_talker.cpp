@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -70,7 +70,7 @@ enum Notify {
     NOTIFY_CNT,
 };
 
-void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session)
+void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session, const std::string backStage)
 {
     int socketFd = session->GetHandle();
     auto masterkey = session->GetKey();
@@ -78,7 +78,7 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session)
     LOGD("sink session to kernel success, cid:%{public}s, socketFd:%{public}d, key[0]:%{public}x", cid.c_str(),
          socketFd, *(uint32_t *)masterkey.data());
 
-    uint8_t status = (session->IsFromServer() ? SOCKET_STAT_ACCEPT : SOCKET_STAT_OPEN);
+    uint8_t status = (backStage == "Server" ? SOCKET_STAT_ACCEPT : SOCKET_STAT_OPEN);
 
     UpdateSocketParam cmd = {
         .cmd = CMD_UPDATE_SOCKET,

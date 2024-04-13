@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,9 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
+#include "transport/socket.h"
+#include "transport/trans_type.h"
 
 namespace OHOS {
 namespace Storage {
@@ -31,11 +34,13 @@ public:
     ~SoftbusSessionDispatcher() = delete;
     static void RegisterSessionListener(const std::string busName, std::weak_ptr<SoftbusAgent>);
     static void UnregisterSessionListener(const std::string busName);
-    static std::weak_ptr<SoftbusAgent> GetAgent(int sessionId);
-    static int OnSessionOpened(int sessionId, int result);
-    static void OnSessionClosed(int sessionId);
+    static std::weak_ptr<SoftbusAgent> GetAgent(int32_t sessionId, std::string peerSessionName);
+    static void OnSessionOpened(int32_t sessionId, PeerSocketInfo info);
+    static void OnSessionClosed(int32_t sessionId, ShutdownReason reason);
 
 private:
+    static std::mutex idMapMutex_;
+    static std::map<int32_t, std::pair<std::string, std::string>> idMap_;
     static std::mutex softbusAgentMutex_;
     static std::map<std::string, std::weak_ptr<SoftbusAgent>> busNameToAgent_;
 };

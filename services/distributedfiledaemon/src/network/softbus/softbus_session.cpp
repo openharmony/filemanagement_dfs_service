@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +16,6 @@
 #include "network/softbus/softbus_session.h"
 
 #include "dfs_session.h"
-#include "session.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -25,22 +24,11 @@ namespace DistributedFile {
 using namespace std;
 
 constexpr int32_t SOFTBUS_OK = 0;
-constexpr int32_t DEVICE_ID_SIZE_MAX = 65;
-constexpr int32_t IS_SERVER = 0;
 
-SoftbusSession::SoftbusSession(int sessionId) : sessionId_(sessionId)
+SoftbusSession::SoftbusSession(int32_t sessionId, std::string peerDeviceId) : sessionId_(sessionId), cid_(peerDeviceId)
 {
-    char perDevId[DEVICE_ID_SIZE_MAX] = "";
-    int ret = ::GetPeerDeviceId(sessionId_, perDevId, sizeof(perDevId));
-    if (ret != SOFTBUS_OK) {
-        LOGE("get my peer device id failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);
-        cid_ = "";
-    } else {
-        cid_ = string(perDevId);
-    }
-
     int32_t socket_fd;
-    ret = ::GetSessionHandle(sessionId_, &socket_fd);
+    int32_t ret = ::GetSessionHandle(sessionId_, &socket_fd);
     if (ret != SOFTBUS_OK) {
         LOGE("get session socket fd failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);
         socketFd_ = INVALID_SOCKET_FD;
@@ -56,8 +44,6 @@ SoftbusSession::SoftbusSession(int sessionId) : sessionId_(sessionId)
     } else {
         key_ = key;
     }
-
-    IsServerSide_ = (::GetSessionSide(sessionId_) == IS_SERVER) ? true : false;
 }
 
 bool SoftbusSession::IsFromServer() const
@@ -87,12 +73,13 @@ array<char, KEY_SIZE_MAX> SoftbusSession::GetKey() const
 
 void SoftbusSession::Release() const
 {
-    ::CloseSession(sessionId_);
+    Shutdown(sessionId_);
     LOGI("session closed, sessionId:%{public}d", sessionId_);
 }
 
 void SoftbusSession::DisableSessionListener() const
 {
+    LOGI("DisableSessionListener Enter.");
     int32_t ret = ::DisableSessionListener(sessionId_);
     if (ret != SOFTBUS_OK) {
         LOGE("disableSessionlistener failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);

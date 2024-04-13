@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,9 +32,9 @@ class SessionPool final : protected NoCopyable {
 public:
     explicit SessionPool(std::shared_ptr<KernelTalker> &talker) : talker_(talker) {}
     ~SessionPool() = default;
-    void OccupySession(int sessionId, uint8_t linkType);
-    bool FindSession(int sessionId);
-    void HoldSession(std::shared_ptr<BaseSession> session);
+    void OccupySession(int32_t sessionId, uint8_t linkType);
+    bool FindSession(int32_t sessionId);
+    void HoldSession(std::shared_ptr<BaseSession> session, const std::string backStage);
     uint8_t ReleaseSession(const int32_t fd);
     void ReleaseSession(const std::string &cid, const uint8_t linkType);
     void ReleaseAllSession();
@@ -43,7 +43,7 @@ private:
     std::recursive_mutex sessionPoolLock_;
     std::list<std::shared_ptr<BaseSession>> usrSpaceSessionPool_;
     std::shared_ptr<KernelTalker> &talker_;
-    std::map<int, uint8_t> occupySession_;
+    std::map<int32_t, uint8_t> occupySession_;
 
     void AddSessionToPool(std::shared_ptr<BaseSession> session);
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,8 @@
 #define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_SESSION_LISTENER_H
 
 #include "softbus_handler.h"
+#include "transport/socket.h"
+#include "transport/trans_type.h"
 #include <vector>
 
 namespace OHOS {
@@ -23,8 +25,8 @@ namespace Storage {
 namespace DistributedFile {
 class SoftBusSessionListener {
 public:
-    static int OnSessionOpened(int sessionId, int result);
-    static void OnSessionClosed(int sessionId);
+    static void OnSessionOpened(int32_t sessionId, PeerSocketInfo info);
+    static void OnSessionClosed(int32_t sessionId, ShutdownReason reason);
     static std::string GetBundleName(const std::string &uri);
     static std::string GetRealPath(const std::string &srcUri);
 private:

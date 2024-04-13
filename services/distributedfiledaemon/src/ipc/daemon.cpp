@@ -50,7 +50,6 @@ using AccessTokenKit = OHOS::Security::AccessToken::AccessTokenKit;
 
 const string FILE_MANAGER_AUTHORITY = "docs";
 const string MEDIA_AUTHORITY = "media";
-constexpr int32_t LINK_TYPE_NUM = 4;
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
 
 void Daemon::PublishSA()
@@ -172,34 +171,18 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &dstDeviceId,
                                 const std::string &sessionName)
 {
-    auto ret = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName);
-    if (ret != E_OK) {
-        LOGE("CreateSessionServer failed, ret = %{public}d", ret);
-        return E_SOFTBUS_SESSION_FAILED;
-    }
-
-    ret = SoftBusHandler::GetInstance().SetFileSendListener(IDaemon::SERVICE_NAME, sessionName);
-    if (ret != E_OK) {
-        LOGE("SetFileSendListener failed, ret = %{public}d", ret);
-        RemoveSessionServer(IDaemon::SERVICE_NAME.c_str(), sessionName.c_str());
-        return E_SOFTBUS_SESSION_FAILED;
-    }
-
-    SessionAttribute attr{
-        .dataType = TYPE_FILE,
-        .linkTypeNum = LINK_TYPE_NUM,
-        .linkType{LINK_TYPE_WIFI_P2P, LINK_TYPE_WIFI_WLAN_5G, LINK_TYPE_WIFI_WLAN_2G, LINK_TYPE_BR},
-        .fastTransData = nullptr,
-        .fastTransDataSize = 0,
-    };
-    auto sessionId = ::OpenSession(sessionName.c_str(), sessionName.c_str(), dstDeviceId.c_str(), "groupId", &attr);
+    auto sessionId = SoftBusHandler::GetInstance().OpenSession(sessionName.c_str(), sessionName.c_str(),
+        dstDeviceId.c_str(), DFS_CHANNLE_ROLE_SOURCE);
     if (sessionId <= 0) {
         LOGE("OpenSession failed");
         return E_SOFTBUS_SESSION_FAILED;
     }
-
+    LOGI("RequestSendFile OpenSession success");
     SoftBusSessionPool::SessionInfo sessionInfo{.sessionId = sessionId, .srcUri = srcUri, .dstPath = dstPath};
     SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo);
+    PeerSocketInfo info;
+    info.name = const_cast<char*>(sessionName.c_str());
+    DistributedFile::SoftBusSessionListener::OnSessionOpened(sessionId, info);
     return E_OK;
 }
 
@@ -235,15 +218,10 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
 
     StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
-    ret = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName);
+    ret = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName,
+        DFS_CHANNLE_ROLE_SINK, physicalPath);
     if (ret != E_OK) {
         LOGE("CreateSessionServer failed, ret = %{public}d", ret);
-        DeleteSessionAndListener(sessionName);
-        return E_SOFTBUS_SESSION_FAILED;
-    }
-    ret = SoftBusHandler::GetInstance().SetFileReceiveListener(IDaemon::SERVICE_NAME, sessionName, physicalPath);
-    if (ret != E_OK) {
-        LOGE("SetFileReceiveListener failed, ret = %{public}d", ret);
         DeleteSessionAndListener(sessionName);
         return E_SOFTBUS_SESSION_FAILED;
     }
@@ -376,7 +354,6 @@ void Daemon::DeleteSessionAndListener(const std::string &sessionName)
 {
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
     TransManager::GetInstance().DeleteTransTask(sessionName);
-    RemoveSessionServer(IDaemon::SERVICE_NAME.c_str(), sessionName.c_str());
 }
 } // namespace DistributedFile
 } // namespace Storage
