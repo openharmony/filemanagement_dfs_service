@@ -36,6 +36,7 @@
 #include "sync_rule/network_status.h"
 #include "system_ability_definition.h"
 #include "sync_rule/screen_status.h"
+#include "sync_rule/system_load.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
 
@@ -115,6 +116,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
         PublishSA();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
         AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
+        AddSystemAbilityListener(RES_SCHED_SYS_ABILITY_ID);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
@@ -175,6 +177,8 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
         userStatusListener_->AddObserver(sessionManager);
         fileTransferManager_ = make_shared<FileTransferManager>(sessionManager);
         fileTransferManager_->Init();
+    } else if (systemAbilityId == RES_SCHED_SYS_ABILITY_ID) {
+        SystemLoadStatus::InitSystemload();
     } else {
         LOGE("unexpected");
     }

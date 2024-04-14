@@ -104,6 +104,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/src/sync_rule/net_conn_callback_observer.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/screen_status_listener.cpp",
+    "${services_path}/cloudsyncservice/src/sync_rule/system_load.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/user_status_listener.cpp",
     "cloud_sync_service_test.cpp",
   ]
@@ -127,6 +128,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${services_path}/cloudsyncservice/include/transport",
     "${services_path}/cloudsyncservice/include/transport/softbus",
+    "${services_path}/cloudsyncservice/include/sync_rule",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
@@ -197,6 +199,10 @@ ohos_unittest("cloud_sync_service_test") {
   if (cloudsync_service_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
+  }
+  if (cloudsync_service_resource_schedule) {
+    external_deps += [ "resource_schedule_service:ressched_client" ]
+    defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
   }
   use_exceptions = true
 }

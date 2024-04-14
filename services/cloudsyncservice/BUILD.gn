@@ -127,6 +127,7 @@ ohos_shared_library("cloudsync_sa") {
     "src/sync_rule/network_status.cpp",
     "src/sync_rule/screen_status.cpp",
     "src/sync_rule/screen_status_listener.cpp",
+    "src/sync_rule/system_load.cpp",
     "src/sync_rule/user_status_listener.cpp",
   ]
 
@@ -182,6 +183,11 @@ ohos_shared_library("cloudsync_sa") {
     ]
   } else {
     external_deps += [ "drivekit_native:drivekit" ]
+  }
+
+  if (cloudsync_service_resource_schedule) {
+    external_deps += [ "resource_schedule_service:ressched_client" ]
+    defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
   }
 
   if (cloudsync_service_power) {
@@ -352,6 +358,11 @@ ohos_static_library("cloudsync_sa_static") {
     ]
   } else {
     external_deps += [ "drivekit_native:drivekit" ]
+  }
+
+  if (cloudsync_service_resource_schedule) {
+    external_deps += [ "resource_schedule_service:ressched_client" ]
+    defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
   }
 
   if (cloudsync_service_power) {
