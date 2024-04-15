@@ -581,6 +581,7 @@ void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
             break;
         case IS_FAVORITE:
             HandleFavorite(req, ino, name, value);
+            break;
         default:
             fuse_reply_err(req, EINVAL);
             break;
@@ -902,7 +903,7 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
         return;
     }
 
-    if (valid & FUSE_SET_ATTR_SIZE) {
+    if (static_cast<unsigned int>(valid) & FUSE_SET_ATTR_SIZE) {
         auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
         DatabaseManager &databaseManager = DatabaseManager::GetInstance();
         auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);

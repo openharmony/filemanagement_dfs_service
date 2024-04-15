@@ -16,9 +16,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#define private public
 #include "connection_detector.h"
-#undef private
 
 namespace OHOS::Storage::DistributedFile::Test {
 using namespace testing;

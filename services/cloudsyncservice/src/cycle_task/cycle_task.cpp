@@ -24,7 +24,8 @@ CycleTask::CycleTask(std::string taskName,
                      std::set<std::string> bundleNames,
                      int32_t intervalTime,
                      std::shared_ptr<DataSyncManager> dataSyncManager)
-    : taskName_(taskName), bundleNames_(bundleNames), intervalTime_(intervalTime), dataSyncManager_(dataSyncManager)
+    : userId_(-1), taskName_(taskName), bundleNames_(bundleNames), intervalTime_(intervalTime),
+    dataSyncManager_(dataSyncManager)
 {
 }
 

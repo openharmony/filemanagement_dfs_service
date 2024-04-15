@@ -147,7 +147,7 @@ protected:
 
     bool isDataChanged_{false};
 
-    uint64_t startTime_;
+    uint64_t startTime_{0};
     SyncTriggerType triggerType_;
     std::shared_ptr<bool> stopFlag_ = std::make_shared<bool>(false);
 
