@@ -92,7 +92,7 @@ std::shared_ptr<NativeRdb::RdbStore> GalleryDataSyncer::RdbInit(const std::strin
 
 int32_t GalleryDataSyncer::Clean(const int action)
 {
-    LOGD("gallery data sycner Clean");
+    LOGI("gallery data sycner Clean");
     /* start clean */
     BeginClean();
     /* file */
@@ -121,7 +121,7 @@ int32_t GalleryDataSyncer::Clean(const int action)
 
 int32_t GalleryDataSyncer::DisableCloud()
 {
-    LOGD("gallery data sycner disable");
+    LOGI("gallery data sycner disable");
     /* start clean */
     BeginDisableCloud();
     int32_t ret = CleanInner(fileHandler_, CleanAction::RETAIN_DATA);

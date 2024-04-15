@@ -763,16 +763,6 @@ int32_t DataSyncer::CleanInner(std::shared_ptr<DataHandler> handler, const int a
         LOGE("Clean file failed res:%{public}d", ret);
         return ret;
     }
-
-    std::vector<int64_t> downloadIds = downloadCallbackMgr_.StopAllDownloads(userId_);
-    for (const auto &id : downloadIds) {
-        ret = sdkHelper_->CancelDownloadAssets(id);
-        if (ret != NO_ERROR) {
-            LOGE("CancelDownloadAssets fail %{public}d", ret);
-            return ret;
-        }
-    }
-
     return ret;
 }
 
@@ -780,6 +770,10 @@ int32_t DataSyncer::CancelDownload(std::shared_ptr<DataHandler> handler)
 {
     int32_t ret = 0;
     std::vector<int64_t> downloadIds = downloadCallbackMgr_.StopAllDownloads(userId_);
+    if (!HasSdkHelper()) {
+        LOGW(" sdk helper is null skip cancel download");
+        return ret;
+    }
     for (const auto &id : downloadIds) {
         ret = sdkHelper_->CancelDownloadAssets(id);
         if (ret != NO_ERROR) {
@@ -1311,6 +1305,11 @@ void DataSyncer::SaveSubscription()
 
 void DataSyncer::DeleteSubscription()
 {
+    if (!HasSdkHelper()) {
+        LOGW(" sdk helper is null skip delete subscription");
+        return;
+    }
+
     sdkHelper_->DeleteSubscription([] (auto, DriveKit::DKError err) {
         if (err.HasError()) {
             LOGE("drivekit delete subscription server err %{public}d and dk errcor %{public}d", err.serverErrorCode,
