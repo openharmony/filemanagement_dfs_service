@@ -16,14 +16,14 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
-ohos_fuzztest("CloudSyncServiceStubFuzzTest") {
+ohos_fuzztest("CloudDaemonStubFuzzTest") {
   module_out_path = "dfs_service/dfs_service"
   fuzz_config_file =
-      "${distributedfile_path}/test/fuzztest/cloudsyncservicestub_fuzzer"
+      "${distributedfile_path}/test/fuzztest/clouddaemonstub_fuzzer"
   include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
+    "${services_path}/cloudfiledaemon/include/ipc",
     "${utils_path}/log/include",
-    "${innerkits_native_path}/cloudsync_kit_inner",
+    "${innerkits_native_path}/cloud_daemon_kit_inner",
   ]
   cflags = [
     "-g",
@@ -31,9 +31,9 @@ ohos_fuzztest("CloudSyncServiceStubFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "${distributedfile_path}/test/fuzztest/cloudsyncservicestub_fuzzer/cloudsyncservicestub_fuzzer.cpp" ]
+  sources = [ "${distributedfile_path}/test/fuzztest/clouddaemonstub_fuzzer/clouddaemonstub_fuzzer.cpp" ]
 
-  deps = [ "${services_path}/cloudsyncservice:cloudsync_sa" ]
+  deps = [ "${services_path}/cloudfiledaemon:cloudfiledaemon" ]
 
   external_deps = [
     "c_utils:utils",
@@ -47,5 +47,5 @@ ohos_fuzztest("CloudSyncServiceStubFuzzTest") {
 
 group("fuzztest") {
   testonly = true
-  deps = [ ":CloudSyncServiceStubFuzzTest" ]
+  deps = [ ":CloudDaemonStubFuzzTest" ]
 }

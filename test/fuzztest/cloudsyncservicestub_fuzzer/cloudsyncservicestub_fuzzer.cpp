@@ -139,8 +139,8 @@ public:
     }
 };
 
-bool HandleChangeAppSwitchFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleChangeAppSwitchFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_CHANGE_APP_SWITCH
@@ -153,12 +153,10 @@ bool HandleChangeAppSwitchFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleCleanFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleCleanFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_CLEAN
@@ -171,12 +169,10 @@ bool HandleCleanFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleDeleteAssetFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleDeleteAssetFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_DELETE_ASSET
@@ -189,12 +185,10 @@ bool HandleDeleteAssetFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleDisableCloudFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleDisableCloudFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_DISABLE_CLOUD
@@ -207,12 +201,10 @@ bool HandleDisableCloudFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleDownloadFileFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleDownloadFileFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_DOWNLOAD_FILE
@@ -225,12 +217,10 @@ bool HandleDownloadFileFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleEnableCloudFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleEnableCloudFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_ENABLE_CLOUD
@@ -243,12 +233,10 @@ bool HandleEnableCloudFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleNotifyDataChangeFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleNotifyDataChangeFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_NOTIFY_DATA_CHANGE
@@ -261,12 +249,10 @@ bool HandleNotifyDataChangeFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleRegisterCallbackInnerFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleRegisterCallbackInnerFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_REGISTER_CALLBACK
@@ -279,12 +265,10 @@ bool HandleRegisterCallbackInnerFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleRegisterDownloadFileCallbackFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleRegisterDownloadFileCallbackFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK
@@ -298,12 +282,10 @@ bool HandleRegisterDownloadFileCallbackFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleStartDownloadFileFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleStartDownloadFileFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_START_DOWNLOAD_FILE
@@ -316,12 +298,10 @@ bool HandleStartDownloadFileFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleStartSyncInnerFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleStartSyncInnerFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_START_SYNC
@@ -334,12 +314,10 @@ bool HandleStartSyncInnerFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleStopDownloadFileFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleStopDownloadFileFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_STOP_DOWNLOAD_FILE
@@ -352,12 +330,10 @@ bool HandleStopDownloadFileFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleStopSyncInnerFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleStopSyncInnerFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_STOP_SYNC
@@ -370,12 +346,10 @@ bool HandleStopSyncInnerFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleUnRegisterCallbackInnerFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleUnRegisterCallbackInnerFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_UNREGISTER_CALLBACK
@@ -388,12 +362,10 @@ bool HandleUnRegisterCallbackInnerFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleUnRegisterDownloadFileCallbackFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleUnRegisterDownloadFileCallbackFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK
@@ -407,12 +379,10 @@ bool HandleUnRegisterDownloadFileCallbackFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
-bool HandleUploadAssetFuzzTest(
-    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr, 
+void HandleUploadAssetFuzzTest(
+    std::shared_ptr<CloudSyncServiceStub> cloudSyncServiceStubStr,
     std::unique_ptr<char[]> data, size_t size)
 {
     // SERVICE_CMD_UPLOAD_ASSET
@@ -425,8 +395,6 @@ bool HandleUploadAssetFuzzTest(
     MessageOption option;
 
     cloudSyncServiceStubStr->OnRemoteRequest(code, datas, reply, option);
-
-    return true;
 }
 
 } // namespace OHOS
