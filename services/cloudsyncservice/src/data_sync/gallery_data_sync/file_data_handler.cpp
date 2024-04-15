@@ -2459,6 +2459,10 @@ int32_t FileDataHandler::Clean(const int action)
 {
     std::lock_guard<std::mutex> lck(cleanMutex_);
     RETURN_ON_ERR(CleanPureCloudRecord());
+    int32_t ret = DeleteCloudPhotoDir();
+    if (ret != E_OK) {
+        LOGE("clean cloud photo dir err: %{public}d", ret);
+    }
     UpdateAllAlbums();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
@@ -2527,10 +2531,13 @@ int32_t FileDataHandler::CleanRemainRecord()
 
 int32_t FileDataHandler::DeleteCloudPhotoDir()
 {
-    std::string dirPath = "/mnt/hmdfs/" + to_string(userId_) + "/account/device_view/cloud/files/Photo";
-    if (!ForceRemoveDirectory(dirPath)) {
-        LOGE("remove dir fail, err: %{public}d", errno);
-        return errno;
+    std::string photoDir = "/mnt/hmdfs/" + to_string(userId_) + "/account/device_view/cloud/files/Photo";
+    std::string thumbsDir = "/mnt/hmdfs/" + to_string(userId_) + "/account/device_view/cloud/files/.thumbs/Photo";
+    if (!ForceRemoveDirectory(photoDir)) {
+        LOGE("remove photo dir fail, err: %{public}d", errno);
+    }
+    if (!ForceRemoveDirectory(thumbsDir)) {
+        LOGE("remove thumbs dir fail, err: %{public}d", errno);
     }
     return E_OK;
 }
