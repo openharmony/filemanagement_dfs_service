@@ -302,7 +302,7 @@ int32_t FileDataConvertor::HandleThumbSize(DriveKit::DKRecordFieldMap &map,
     struct stat fileStat;
     int err = stat(thumbnailPath.c_str(), &fileStat);
     if (err < 0) {
-        LOGE("get thumb size failed errno :%{public}d", errno);
+        LOGE("get thumb size failed errno :%{public}d, path :%{public}s", errno, thumbnailPath.c_str());
         return E_PATH;
     }
 
@@ -328,7 +328,7 @@ int32_t FileDataConvertor::HandleLcdSize(DriveKit::DKRecordFieldMap &map,
     struct stat fileStat;
     int err = stat(lcdPath.c_str(), &fileStat);
     if (err < 0) {
-        LOGE("get lcd size failed errno :%{public}d", errno);
+        LOGE("get lcd size failed errno :%{public}d, path :%{public}s", errno, lcdPath.c_str());
         return E_PATH;
     }
 
@@ -1059,7 +1059,7 @@ int32_t FileDataConvertor::ExtractMimeType(DriveKit::DKRecordData &data,
     NativeRdb::ValuesBucket &valueBucket)
 {
     if (data.find(FILE_MIME_TYPE) == data.end()) {
-        LOGI("record data cannot find FILE_MIME_TYPE");
+        LOGD("record data cannot find FILE_MIME_TYPE");
         return E_OK;
     }
     string mimeType;

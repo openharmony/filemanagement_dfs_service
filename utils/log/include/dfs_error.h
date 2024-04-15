@@ -45,6 +45,7 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_DELETE_FAILED,
     E_NO_SUCH_FILE,
     E_RENAME_FAIL,
+    E_SYSTEM_LOAD_OVER,
 
     /* data syncer */
     E_CLOUD_SDK,

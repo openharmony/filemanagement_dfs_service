@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,16 +18,14 @@
 #include <sstream>
 
 #include "network/softbus/softbus_agent.h"
-#include "session.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace std;
-
-constexpr int32_t SESSION_NAME_SIZE_MAX = 256;
-
+mutex SoftbusSessionDispatcher::idMapMutex_;
+map<int32_t, std::pair<std::string, std::string>> SoftbusSessionDispatcher::idMap_;
 mutex SoftbusSessionDispatcher::softbusAgentMutex_;
 map<string, weak_ptr<SoftbusAgent>> SoftbusSessionDispatcher::busNameToAgent_;
 
@@ -49,7 +47,7 @@ void SoftbusSessionDispatcher::RegisterSessionListener(const string busName, wea
     } else {
         busNameToAgent_.insert(make_pair(busName, softbusAgent));
     }
-    LOGD("RegisterSessionListener SUCCESS, busName:%{public}s", busName.c_str());
+    LOGD("RegisterSessionListener Success, busName:%{public}s", busName.c_str());
 }
 void SoftbusSessionDispatcher::UnregisterSessionListener(const string busName)
 {
@@ -63,40 +61,61 @@ void SoftbusSessionDispatcher::UnregisterSessionListener(const string busName)
         LOGE("%{public}s", ss.str().c_str());
         throw runtime_error(ss.str());
     }
-    LOGD("UnregisterSessionListener SUCCESS, busName:%{public}s", busName.c_str());
+    LOGD("UnregisterSessionListener Success, busName:%{public}s", busName.c_str());
 }
-weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int sessionId)
+weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std::string peerSessionName)
 {
-    char peeSessionName[SESSION_NAME_SIZE_MAX];
-    int ret = GetPeerSessionName(sessionId, peeSessionName, sizeof(peeSessionName));
-    if (ret != 0) {
-        LOGE("Get my peer session name failed, session id is %{public}d.", sessionId);
+    if (peerSessionName.empty()) {
         return {};
     }
     lock_guard<mutex> lock(softbusAgentMutex_);
-    auto agent = busNameToAgent_.find(string(peeSessionName));
+    auto agent = busNameToAgent_.find(string(peerSessionName));
     if (agent != busNameToAgent_.end()) {
-        LOGD("Get softbus Agent Success, busName:%{public}s", peeSessionName);
+        LOGD("Get softbus Agent Success, busName:%{public}s", peerSessionName.c_str());
         return agent->second;
     }
-    LOGE("Get Session Agent fail, not exist! sessionId:%{public}d, busName:%{public}s", sessionId, peeSessionName);
+    LOGE("Get Session Agent fail, not exist! sessionId:%{public}d", sessionId);
     return {};
 }
-int SoftbusSessionDispatcher::OnSessionOpened(int sessionId, int result)
+void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
-    auto agent = GetAgent(sessionId);
+    LOGI("OnSessionOpened Enter.");
+    std::string peerSessionName(info.name);
+    std::string peerDevId = info.networkId;
+    if (!idMap_.empty()) {
+        std::lock_guard<std::mutex> lock(idMapMutex_);
+        auto it = idMap_.find(sessionId);
+        if (it != idMap_.end()) {
+            it->second = std::make_pair(peerDevId, peerSessionName);
+        }
+    }
+    auto agent = GetAgent(sessionId, peerSessionName);
     if (auto spt = agent.lock()) {
-        return spt->OnSessionOpened(sessionId, result);
+        spt->OnSessionOpened(sessionId, info);
     } else {
         LOGE("session not exist!, session id is %{public}d", sessionId);
-        return -1;
+        return;
     }
 }
-void SoftbusSessionDispatcher::OnSessionClosed(int sessionId)
+void SoftbusSessionDispatcher::OnSessionClosed(int32_t sessionId, ShutdownReason reason)
 {
-    auto agent = GetAgent(sessionId);
+    LOGI("OnSessionClosed Enter.");
+    (void)reason;
+    std::string peerSessionName = "";
+    std::string peerDevId = "";
+    {
+        std::lock_guard<std::mutex> lock(idMapMutex_);
+        auto it = idMap_.find(sessionId);
+        if (it != idMap_.end()) {
+            peerDevId = it->second.first;
+            peerSessionName = it->second.second;
+            idMap_.erase(it);
+        }
+    }
+    
+    auto agent = GetAgent(sessionId, peerSessionName);
     if (auto spt = agent.lock()) {
-        spt->OnSessionClosed(sessionId);
+        spt->OnSessionClosed(sessionId, peerDevId);
     } else {
         LOGE("session not exist!, session id is %{public}d", sessionId);
     }

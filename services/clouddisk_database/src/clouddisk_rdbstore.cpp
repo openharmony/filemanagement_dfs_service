@@ -84,6 +84,7 @@ int32_t CloudDiskRdbStore::RdbInit()
     }
     config_.SetName(move(name));
     config_.SetPath(move(databasePath));
+    config_.SetReadConSize(CONNECT_SIZE);
     config_.SetScalarFunction("cloud_sync_func", ARGS_SIZE, CloudSyncTriggerFunc);
     errCode = 0;
     CloudDiskDataCallBack rdbDataCallBack;
@@ -228,7 +229,7 @@ static int32_t CheckName(const std::string &fileName)
 {
     for (char c : fileName) {
         if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\' ||
-            c == '"' || c == '%' || c == '&' || c == '#' || c == ';' || c == '!' || c == ' ') {
+            c == '"' || c == '%' || c == '&' || c == '#' || c == ';' || c == '!' || c == ' ' || c == '\'') {
             LOGI("Illegal name");
             return EINVAL;
         }
@@ -237,6 +238,7 @@ static int32_t CheckName(const std::string &fileName)
     if (realFileName.find(".") != std::string::npos || realFileName.find("..") != std::string::npos ||
         ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji") ||
         fileName.length() > MAX_FILE_NAME_SIZE) {
+        LOGI("Illegal name");
         return EINVAL;
     }
     return 0;
@@ -308,6 +310,7 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
     dirInfo.PutInt(FileColumn::IS_DIRECTORY, DIRECTORY);
     dirInfo.PutString(FileColumn::PARENT_CLOUD_ID, parentCloudId);
     dirInfo.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::NEW));
+    dirInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     int64_t outRowId = 0;
     int32_t ret = rdbStore_->Insert(outRowId, FileColumn::FILES_TABLE, dirInfo);
     if (ret != E_OK) {

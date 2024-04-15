@@ -512,7 +512,7 @@ int FileDataHandler::DentryRemoveThumb(const string &downloadPath)
 
 int FileDataHandler::AddCloudThumbs(const DKRecord &record)
 {
-    LOGI("thumbs of %s add to cloud_view", record.GetRecordId().c_str());
+    LOGD("thumbs of %s add to cloud_view", record.GetRecordId().c_str());
     constexpr uint64_t THUMB_SIZE = 2 * 1024 * 1024; // thumbnail and lcd size show as 2MB
     uint64_t thumbSize = THUMB_SIZE;
     uint64_t lcdSize = THUMB_SIZE;
@@ -652,7 +652,7 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
     }
     ret = rename(tmpPath.c_str(), newPath.c_str());
     if (ret != 0) {
-        LOGE("err rename localPath to newLocalPath, ret = %{public}d", ret);
+        LOGE("err rename localPath to newLocalPath, errno %{public}d, path :%{public}s", errno, tmpPath.c_str());
         return E_INVAL_ARG;
     }
     ret = rename(localPath.c_str(), newLocalPath.c_str());
@@ -731,7 +731,7 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
     }
     int64_t crTime = static_cast<int64_t>(record.GetCreateTime());
     if (localIsize == isize && localCrtime == crTime) {
-        LOGI("Possible duplicate files");
+        LOGD("Possible duplicate files");
     } else {
         modifyPathflag = true;
     }
@@ -743,11 +743,11 @@ int32_t FileDataHandler::ConflictDifferent(NativeRdb::ResultSet &resultSet,
                                            string &fullPath,
                                            string &relativePath)
 {
-    LOGI("Different files with the same name");
+    LOGD("Different files with the same name");
     /* Modify path */
     int ret = ConflictRename(resultSet, fullPath, relativePath);
     if (ret != E_OK) {
-        LOGE("Conflict dataMerge rename fail");
+        LOGE("Conflict dataMerge rename fail, path :%{public}s", fullPath.c_str());
         return ret;
     }
     return E_OK;
@@ -1159,6 +1159,12 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
         std::lock_guard<std::mutex> lock(lcdMutex_);
         lcdVec_.emplace_back(asset.recordId);
     }
+    if (thmVec_.size() >= UPDATE_VEC_SIZE) {
+        UpdateThmVec();
+    }
+    if (lcdVec_.size() >= UPDATE_VEC_SIZE) {
+        UpdateLcdVec();
+    }
     string tempPath = asset.downLoadPath + "/" + asset.asset.assetName;
     string localPath = CloudDisk::CloudFileUtils::GetPathWithoutTmp(tempPath);
     DentryRemoveThumb(localPath);
@@ -1357,7 +1363,7 @@ static int IsMtimeChanged(const DKRecord &record, NativeRdb::ResultSet &local, b
 int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet &local, OnFetchParams &params)
 {
     RETURN_ON_ERR(IsStop());
-    LOGI("update of record %s", record.GetRecordId().c_str());
+    LOGD("update of record %s", record.GetRecordId().c_str());
     if (IsLocalDirty(local)) {
         LOGI("local record dirty, ignore cloud update");
         return E_OK;
@@ -1416,7 +1422,6 @@ int32_t FileDataHandler::UpdateRecordToDatabase(DriveKit::DKRecord &record,
         LOGE("RDB error, update fail ret is %{public}d", ret);
         return E_RDB;
     }
-    LOGI("update of record success, change %{public}d row", changeRows);
     return E_OK;
 }
 
@@ -2111,7 +2116,7 @@ int32_t FileDataHandler::UpdateAssetInPhotoMap(const DKRecord &record, int32_t f
         }
         int albumId = GetAlbumIdFromCloudId(ref.recordId);
         if (albumId < 0) {
-            LOGE("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
+            LOGD("cannot get album id from album name %{public}s, ignore", ref.recordId.c_str());
             continue;
         }
         LOGI("record get albumId %{public}d", albumId);
@@ -3910,52 +3915,25 @@ void FileDataHandler::UpdateLcdVec()
         if (count != 0) {
             UpdateAttachmentStat(INDEX_LCD_SUCCESS, count);
         }
-    }
-}
-
-void FileDataHandler::PeriodicUpdataFiles(uint32_t &timeId)
-{
-    const uint32_t TIMER_INTERVAL = 2000;
-    auto timerCallBack = [this]() {
-        if (thmVec_.empty() && lcdVec_.empty()) {
-            waitCount_ ++;
-            LOGI("no thumbnail is downloading, wait %{public}d times", waitCount_);
-            if (waitCount_ >= 30) {
-                TaskStateManager::GetInstance().CompleteTask(bundleName_, TaskType::DOWNLOAD_THUMB_TASK);
-                StopUpdataFiles(timeId_);
-                waitCount_ = 0;
-            }
-        } else {
-            waitCount_ = 0;
+        if (!IsPullRecords()) {
+            UpdateAlbumInternal();
         }
-        UpdateThmVec();
-        UpdateLcdVec();
-    };
-    if (timeId == 0) {
-        LOGI("start update timer");
-        DfsuTimer::GetInstance().Register(timerCallBack, timeId, TIMER_INTERVAL);
-        timeId_ = timeId;
-    } else {
-        LOGI("timer is running");
     }
 }
 
-void FileDataHandler::StopUpdataFiles(uint32_t &timeId)
+
+void FileDataHandler::StopUpdataFiles()
 {
     const uint32_t MAX_TRY_TIMES = 5;
     uint32_t tryCount = 1;
-    if (timeId != 0) {
-        LOGI("stop update timer");
-        DfsuTimer::GetInstance().Unregister(timeId);
-        while (tryCount <= MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
-            UpdateThmVec();
-            UpdateLcdVec();
-            tryCount++;
-        }
-        timeId = 0;
-        timeId_ = 0;
+    while (tryCount <= MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
+        UpdateThmVec();
+        UpdateLcdVec();
+        tryCount++;
     }
-
+    if (tryCount > MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
+        LOGE("StopUpdataFiles update failed!");
+    }
     UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
     UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, lcdVec_.size());
 }

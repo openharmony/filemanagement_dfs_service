@@ -90,7 +90,6 @@ private:
     /* handler */
     std::shared_ptr<FileDataHandler> fileHandler_;
     std::shared_ptr<AlbumDataHandler> albumHandler_;
-    uint32_t timeId_{0};
 
     /* sync stat */
     std::shared_ptr<GalleryIncSyncStat> syncStat_;

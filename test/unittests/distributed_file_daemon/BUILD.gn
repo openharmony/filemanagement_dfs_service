@@ -279,6 +279,7 @@ ohos_unittest("daemon_service_proxy_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
   module_out_path = "filemanagement/dfs_service"

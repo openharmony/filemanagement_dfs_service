@@ -84,7 +84,7 @@ int32_t CloudSyncManagerImpl::StartSync(const std::string &bundleName)
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return CloudSyncServiceProxy->StartSyncInner(false, bundleName);
+    return CloudSyncServiceProxy->StartSyncInner(true, bundleName);
 }
 
 int32_t CloudSyncManagerImpl::GetSyncTime(int64_t &syncTime, const std::string &bundleName)

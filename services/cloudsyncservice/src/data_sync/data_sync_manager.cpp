@@ -30,6 +30,7 @@
 #include "sync_rule/battery_status.h"
 #include "sync_rule/cloud_status.h"
 #include "sync_rule/network_status.h"
+#include "sync_rule/system_load.h"
 #include "utils_log.h"
 #include "os_account_manager.h"
 #include "rdb_sql_utils.h"
@@ -59,7 +60,7 @@ int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
     if (ret != E_OK) {
         return ret;
     }
-    ret = IsSkipSync(bundleName, userId);
+    ret = IsSkipSync(bundleName, userId, forceFlag);
     if (ret != E_OK) {
         return ret;
     }
@@ -230,7 +231,7 @@ std::shared_ptr<DataSyncer> DataSyncManager::GetDataSyncer(const std::string &bu
     return dataSyncer;
 }
 
-int32_t DataSyncManager::IsSkipSync(const std::string &bundle, const int32_t userId)
+int32_t DataSyncManager::IsSkipSync(const std::string &bundle, const int32_t userId, bool forceFlag)
 {
     string bundleName;
     Convert2BundleName(bundle, bundleName);
@@ -240,6 +241,9 @@ int32_t DataSyncManager::IsSkipSync(const std::string &bundle, const int32_t use
     }
     if (!BatteryStatus::IsBatteryCapcityOkay()) {
         return E_SYNC_FAILED_BATTERY_TOO_LOW;
+    }
+    if (!forceFlag && !SystemLoadStatus::IsLoadStatusOkay()) {
+        return E_SYSTEM_LOAD_OVER;
     }
     return E_OK;
 }

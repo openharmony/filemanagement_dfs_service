@@ -42,6 +42,14 @@ declare_args() {
   } else {
     cloudsync_service_media_library = false
   }
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.resourceschedule_resource_schedule_service)) {
+    cloudsync_service_resource_schedule = true
+  } else {
+    cloudsync_service_resource_schedule = false
+  }
+
   if (defined(global_parts_info) &&
       defined(global_parts_info.hiviewdfx_hicollie)) {
     cloudsync_service_hicollie_enable = true

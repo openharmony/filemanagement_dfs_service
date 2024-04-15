@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,9 +58,9 @@ public:
     void ConnectDeviceAsync(const DeviceInfo info);
     void DisconnectDevice(const DeviceInfo info);
     void DisconnectDeviceByP2P(const DeviceInfo info);
-    void OccupySession(int sessionId, uint8_t linkType);
-    bool FindSession(int sessionId);
-    void AcceptSession(std::shared_ptr<BaseSession> session);
+    void OccupySession(int32_t sessionId, uint8_t linkType);
+    bool FindSession(int32_t sessionId);
+    void AcceptSession(std::shared_ptr<BaseSession> session, const std::string backStage);
     void ConnectDeviceByP2PAsync(const DeviceInfo info);
     std::shared_ptr<MountPoint> GetMountPoint()
     {
@@ -82,7 +82,7 @@ private:
     void GetSessionProcess(NotifyParam &param);
     void GetSession(const std::string &cid, uint8_t linkType);
     void CloseSessionForOneDevice(const std::string &cid);
-    void AcceptSessionInner(std::shared_ptr<BaseSession> session);
+    void AcceptSessionInner(std::shared_ptr<BaseSession> session, const std::string backStage);
     void GetSessionProcessInner(NotifyParam param);
 
     std::mutex taskMut_;

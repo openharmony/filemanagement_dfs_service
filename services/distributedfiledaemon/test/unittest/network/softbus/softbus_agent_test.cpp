@@ -27,8 +27,6 @@ namespace DistributedFile {
 namespace Test {
 using namespace testing::ext;
 using namespace std;
-
-constexpr int E_OK = 0;
 constexpr int USER_ID = 100;
 constexpr int MAX_RETRY_COUNT = 7;
 static const string SAME_ACCOUNT = "account";
@@ -40,88 +38,6 @@ public:
     void SetUp() {};
     void TearDown() {};
 };
-
-/**
- * @tc.name: SoftbusAgentTest_OnSessionOpened_0100
- * @tc.desc: Verify the OnSessionOpened function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0100 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
-    shared_ptr<MountPoint> smp = move(mp);
-    weak_ptr<MountPoint> wmp(smp);
-    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-
-    auto execFun = [](std::shared_ptr<SoftbusAgent> ag) {
-        const int sessionId = 1;
-        const int result = E_OK;
-        int ret = ag->OnSessionOpened(sessionId, result);
-        EXPECT_TRUE(ret == E_OK);
-    };
-
-    std::thread execThread(execFun, agent);
-    sleep(1);
-    execThread.join();
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0100 end";
-}
-
-/**
- * @tc.name: SoftbusAgentTest_OnSessionOpened_0200
- * @tc.desc: Verify the OnSessionOpened function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0200 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
-    shared_ptr<MountPoint> smp = move(mp);
-    weak_ptr<MountPoint> wmp(smp);
-    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-
-    auto execFun = [](std::shared_ptr<SoftbusAgent> ag) {
-        const int sessionId = 1;
-        const int result = -1;
-        int ret = ag->OnSessionOpened(sessionId, result);
-        EXPECT_TRUE(ret == result);
-    };
-
-    std::thread execThread(execFun, agent);
-    sleep(1);
-    execThread.join();
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0200 end";
-}
-
-/**
- * @tc.name: SoftbusAgentTest_OnSessionOpened_0300
- * @tc.desc: Verify the OnSessionOpened function.
- * @tc.type: FUNC
- * @tc.require: issueI7SP3A
- */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionOpened_0300, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0300 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
-    shared_ptr<MountPoint> smp = move(mp);
-    weak_ptr<MountPoint> wmp(smp);
-    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-
-    auto execFun = [](std::shared_ptr<SoftbusAgent> ag) {
-        const int sessionId = 1;
-        const int result = E_OK;
-        ag->OpenSessionRetriedTimesMap_.clear();
-        int ret = ag->OnSessionOpened(sessionId, result);
-        EXPECT_TRUE(ret == E_OK);
-    };
-
-    std::thread execThread(execFun, agent);
-    sleep(1);
-    execThread.join();
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_OnSessionOpened_0300 end";
-}
 
 /**
  * @tc.name: SoftbusAgentTest_OnSessionClosed_0100
@@ -138,8 +54,9 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionClosed_0100, TestSize.Level
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
     const int sessionId = 1;
     bool res = true;
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
     try {
-        agent->OnSessionClosed(sessionId);
+        agent->OnSessionClosed(sessionId, peerDeviceId);
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());
@@ -320,10 +237,11 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_AcceptSession_0100, TestSize.Level1)
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
     const int testSessionId = 99;
-    auto session = make_shared<SoftbusSession>(testSessionId);
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    auto session = make_shared<SoftbusSession>(testSessionId, peerDeviceId);
     bool res = true;
     try {
-        agent->AcceptSession(session);
+        agent->AcceptSession(session, "Server");
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());

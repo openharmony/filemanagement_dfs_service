@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -101,7 +101,8 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_FindSession_0100, TestSize.Level1)
 HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SessionPoolTest_HoldSession_0100 start";
-    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID);
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
     auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
@@ -109,7 +110,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0100, TestSize.Level1)
 
     bool res = true;
     try {
-        pool->HoldSession(session);
+        pool->HoldSession(session, "Server");
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());
@@ -206,7 +207,8 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseAllSession_0100, TestSize.Level
 HWTEST_F(SessionPoolTest, SessionPoolTest_AddSessionToPool_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SessionPoolTest_AddSessionToPool_0100 start";
-    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID);
+    std::string peerDeviceId = "f6d4c0864707aefte7a78f09473aa122ff57fc8";
+    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID, peerDeviceId);
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
     auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});

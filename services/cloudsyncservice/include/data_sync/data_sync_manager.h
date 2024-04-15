@@ -40,7 +40,7 @@ public:
     int32_t TriggerRecoverySync(SyncTriggerType triggerType);
     void RegisterCloudSyncCallback(const std::string &bundleName, const int32_t userId);
     std::shared_ptr<DataSyncer> GetDataSyncer(const std::string &bundleName, const int32_t userId);
-    int32_t IsSkipSync(const std::string &bundleName, const int32_t userId);
+    int32_t IsSkipSync(const std::string &bundleName, const int32_t userId, bool forceFlag);
     int32_t StartDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path);
     int32_t StopDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path);
     int32_t RegisterDownloadFileCallback(const std::string &bundleName,

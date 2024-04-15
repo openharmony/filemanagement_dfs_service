@@ -28,6 +28,7 @@
 #include "sync_rule/network_status.h"
 #include "sync_rule/screen_status.h"
 #include "sync_rule/cloud_status.h"
+#include "sync_rule/system_load.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
 
@@ -58,13 +59,19 @@ DataSyncer::~DataSyncer()
 int32_t DataSyncer::AsyncRun(std::shared_ptr<TaskContext> context,
     void(DataSyncer::*f)(std::shared_ptr<TaskContext>))
 {
-    return taskRunner_->AsyncRun<DataSyncer>(context, f, this);
+    if (forceFlag_ || SystemLoadStatus::IsLoadStatusOkay()) {
+        return taskRunner_->AsyncRun<DataSyncer>(context, f, this);
+    }
+    return E_SYSTEM_LOAD_OVER;
 }
 
 template<typename T, typename RET, typename... ARGS>
 function<RET(ARGS...)> DataSyncer::AsyncCallback(RET(T::*f)(ARGS...))
 {
-    return taskRunner_->AsyncCallback<DataSyncer>(f, this);
+    if (forceFlag_ || SystemLoadStatus::IsLoadStatusOkay()) {
+        return taskRunner_->AsyncCallback<DataSyncer>(f, this);
+    }
+    return nullptr;
 }
 
 int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
@@ -72,6 +79,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     LOGI("%{private}d %{public}s starts sync, isforceSync %{public}d, triggerType %{public}d",
         userId_, bundleName_.c_str(), forceFlag, triggerType);
 
+    forceFlag_ = forceFlag;
     triggerType_ = triggerType;
     startTime_ = GetCurrentTimeStamp();
 
@@ -395,12 +403,15 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
 
     int32_t ret = handler->OnFetchRecords(records, onFetchParams);
     if (!onFetchParams.assetsToDownload.empty()) {
-        DownloadContext dctx = {.context = context,
-                                .assets = onFetchParams.assetsToDownload,
-                                .id = 0,
-                                .resultCallback = AsyncCallback(&DataSyncer::FetchRecordsDownloadCallback),
-                                .progressCallback = FetchRecordsDownloadProgress};
-        DownloadAssets(dctx);
+        auto resultCallback = AsyncCallback(&DataSyncer::FetchRecordsDownloadCallback);
+        if (resultCallback != nullptr) {
+            DownloadContext dctx = {.context = context,
+                                    .assets = onFetchParams.assetsToDownload,
+                                    .id = 0,
+                                    .resultCallback = AsyncCallback(&DataSyncer::FetchRecordsDownloadCallback),
+                                    .progressCallback = FetchRecordsDownloadProgress};
+            DownloadAssets(dctx);
+        }
     }
 
     if (ret != E_OK) {
@@ -422,7 +433,7 @@ void DataSyncer::OnFetchRecords(const std::shared_ptr<DKContext> context, std::s
         LOGE("OnFetchRecords server err %{public}d and dk errcor %{public}d", err.serverErrorCode, err.dkErrorCode);
         if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
             SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
-        } else if (static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) ==
+        } else if (!err.errorDetails.empty() && static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) ==
                    DKDetailErrorCode::FORBIDDEN_USER) {
             SetErrorCodeMask(ErrorType::PERMISSION_NOT_ALLOW);
         }
@@ -518,11 +529,11 @@ void DataSyncer::OnFetchDatabaseChanges(const std::shared_ptr<DKContext> context
             err.dkErrorCode);
         if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
             SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
-        } else if (static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) ==
-                   DKDetailErrorCode::FORBIDDEN_USER) {
-            SetErrorCodeMask(ErrorType::PERMISSION_NOT_ALLOW);
         } else if (!err.errorDetails.empty()) {
             DKDetailErrorCode detailCode = static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode);
+            if (detailCode == DKDetailErrorCode::FORBIDDEN_USER) {
+                SetErrorCodeMask(ErrorType::PERMISSION_NOT_ALLOW);
+            }
             if (detailCode == DKDetailErrorCode::PARAM_INVALID || detailCode == DKDetailErrorCode::CURSOR_EXPIRED) {
                 handler->SetChecking();
                 Pull(handler);
@@ -562,7 +573,7 @@ void DataSyncer::OnFetchCheckRecords(const shared_ptr<DKContext> context,
              err.dkErrorCode);
         if (static_cast<DKServerErrorCode>(err.serverErrorCode) == DKServerErrorCode::NETWORK_ERROR) {
             SetErrorCodeMask(ErrorType::NETWORK_UNAVAILABLE);
-        } else if (static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) ==
+        } else if (!err.errorDetails.empty() && static_cast<DKDetailErrorCode>(err.errorDetails[0].detailCode) ==
                    DKDetailErrorCode::FORBIDDEN_USER) {
             SetErrorCodeMask(ErrorType::PERMISSION_NOT_ALLOW);
         }
@@ -671,12 +682,15 @@ void DataSyncer::RetryDownloadRecords(shared_ptr<TaskContext> context)
     }
 
     LOGI("assetsToDownload count: %{public}zu", assetsToDownload.size());
-    DownloadContext dctx = {.context = ctx,
-                            .assets = assetsToDownload,
-                            .id = 0,
-                            .resultCallback = AsyncCallback(&DataSyncer::FetchRecordsDownloadCallback),
-                            .progressCallback = FetchRecordsDownloadProgress};
-    DownloadAssets(dctx);
+        auto resultCallback = AsyncCallback(&DataSyncer::FetchRecordsDownloadCallback);
+        if (resultCallback != nullptr) {
+            DownloadContext dctx = {.context = ctx,
+                                    .assets = assetsToDownload,
+                                    .id = 0,
+                                    .resultCallback = AsyncCallback(&DataSyncer::FetchRecordsDownloadCallback),
+                                    .progressCallback = FetchRecordsDownloadProgress};
+            DownloadAssets(dctx);
+        }
 }
 
 int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)

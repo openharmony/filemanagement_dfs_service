@@ -66,6 +66,7 @@ private:
 
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     NativeRdb::RdbStoreConfig config_{""};
+    const int32_t CONNECT_SIZE = 8;
     std::string bundleName_;
     int32_t userId_{0};
 };

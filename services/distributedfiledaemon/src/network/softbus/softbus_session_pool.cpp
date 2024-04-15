@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 #include "network/softbus/softbus_session_pool.h"
-
-#include "session.h"
+#include "utils_log.h"
 #include <algorithm>
 
 namespace OHOS {
@@ -54,6 +53,7 @@ void SoftBusSessionPool::DeleteSessionInfo(const std::string &sessionName)
 
 bool SoftBusSessionPool::GetSessionInfo(const std::string &sessionName, SessionInfo &sessionInfo)
 {
+    std::lock_guard<std::mutex> createSessionMutex(sessionMutex_);
     for (const auto &it : sessionMap_) {
         if (it.first == sessionName) {
             sessionInfo = it.second;

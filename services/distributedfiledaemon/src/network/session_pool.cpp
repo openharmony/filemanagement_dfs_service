@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,13 +20,13 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 
-void SessionPool::OccupySession(int sessionId, uint8_t linkType)
+void SessionPool::OccupySession(int32_t sessionId, uint8_t linkType)
 {
     lock_guard lock(sessionPoolLock_);
-    occupySession_.insert(std::pair<int, uint8_t>(sessionId, linkType));
+    occupySession_.insert(std::pair<int32_t, uint8_t>(sessionId, linkType));
 }
 
-bool SessionPool::FindSession(int sessionId)
+bool SessionPool::FindSession(int32_t sessionId)
 {
     lock_guard lock(sessionPoolLock_);
     auto linkTypeIter = occupySession_.find(sessionId);
@@ -37,10 +37,10 @@ bool SessionPool::FindSession(int sessionId)
     }
 }
 
-void SessionPool::HoldSession(shared_ptr<BaseSession> session)
+void SessionPool::HoldSession(shared_ptr<BaseSession> session, const std::string backStage)
 {
     lock_guard lock(sessionPoolLock_);
-    talker_->SinkSessionTokernel(session);
+    talker_->SinkSessionTokernel(session, backStage);
     AddSessionToPool(session);
 }
 

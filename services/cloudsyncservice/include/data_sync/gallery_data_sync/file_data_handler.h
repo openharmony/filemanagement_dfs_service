@@ -79,8 +79,7 @@ public:
     int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
-    void PeriodicUpdataFiles(uint32_t &timeId);
-    void StopUpdataFiles(uint32_t &timeId);
+    void StopUpdataFiles();
 
     int32_t OnDownloadAssetsFailure(const std::vector<DriveKit::DKDownloadAsset> &assets) override;
 
@@ -158,6 +157,7 @@ private:
     static inline const int32_t MODIFY_BATCH_NUM = 20;
     static inline const int32_t DELETE_BATCH_NUM = 20;
     static inline const int32_t DOWNLOAD_LIMIT_SIZE = 200;
+    static inline const int32_t UPDATE_VEC_SIZE = 20;
     DriveKit::DKRecordType recordType_ = "media";
     DriveKit::DKFieldKeyArray desiredKeys_;
     DriveKit::DKFieldKeyArray checkedKeys_ = {"version", "id"};
@@ -284,8 +284,6 @@ private:
     std::mutex cleanMutex_;
     std::vector<NativeRdb::ValueObject> thmVec_;
     std::vector<NativeRdb::ValueObject> lcdVec_;
-    int32_t waitCount_{0};
-    uint32_t timeId_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

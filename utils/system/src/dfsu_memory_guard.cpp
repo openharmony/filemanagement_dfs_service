@@ -24,7 +24,7 @@ DfsuMemoryGuard::DfsuMemoryGuard()
 #ifdef CONFIG_USE_JEMALLOC_DFX_INTF
     int setCacheRet = mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_DISABLE);
     int setFreeRet = mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
-    if (setCacheRet != 0 || setFreeRet != 0) {
+    if (setCacheRet != 1 || setFreeRet != 1) {
         LOGE("dfs disable tcache and delay free, result[%{public}d, %{public}d]", setCacheRet, setFreeRet);
     }
 #endif
@@ -34,7 +34,7 @@ DfsuMemoryGuard::~DfsuMemoryGuard()
 {
 #ifdef CONFIG_USE_JEMALLOC_DFX_INTF
     int err = mallopt(M_FLUSH_THREAD_CACHE, 0);
-    if (err != 0) {
+    if (err != 1) {
         LOGE("dfs flush cache, result: %{public}d", err);
     }
 #endif
