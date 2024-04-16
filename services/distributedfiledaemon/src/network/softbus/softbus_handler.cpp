@@ -177,7 +177,7 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         return E_OPEN_SESSION;
     }
     LOGI("OpenSession Enter.");
-    bool tmp = IsSameAccount(mySessionName, peerDevId);
+    bool tmp = IsSameAccount(peerDevId);
     if (tmp != true) {
         LOGI("Is non_account");
         return E_OPEN_SESSION;
