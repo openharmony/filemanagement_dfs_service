@@ -626,20 +626,56 @@ void DataSyncer::PullRecordsWithId(shared_ptr<TaskContext> context, const std::v
     FetchCondition cond;
     handler->GetFetchCondition(cond);
     LOGI("retry records count: %{public}u", static_cast<uint32_t>(records.size()));
-    for (auto it : records) {
-        auto callback = AsyncCallback(&DataSyncer::OnFetchRecordWithId);
-        if (callback == nullptr) {
-            LOGE("wrap on fetch records fail");
-            continue;
-        }
-        int32_t ret = sdkHelper_->FetchRecordWithId(context, cond, it, callback);
-        if (ret != E_OK) {
-            LOGE("sdk fetch records err %{public}d", ret);
-        }
+
+    auto callback = AsyncCallback(&DataSyncer::OnFetchRecordWithIds);
+    if (callback == nullptr) {
+        LOGE("wrap on fetch batch records fail");
+        return;
+    }
+    std::vector<DKRecord> recordsToFetch;
+    for (const auto& it : records) {
+        DKRecord record;
+        record.SetRecordId(it);
+        record.SetRecordType(cond.recordType);
+        recordsToFetch.push_back(record);
+    }
+    int32_t ret = sdkHelper_->FetchRecordWithIds(context, cond, std::move(recordsToFetch), callback);
+    if (ret != E_OK) {
+        LOGE("sdk fetch batch records err %{public}d", ret);
     }
     if (!retry) {
         handler->FinishPull(ctx->GetBatchNo());
     }
+}
+
+void DataSyncer::OnFetchRecordWithIds(shared_ptr<DKContext> context, shared_ptr<DKDatabase> database,
+    shared_ptr<map<DKRecordId, DKRecordOperResult>> recordMap, const DKError &error)
+{
+    if (error.HasError()) {
+        LOGE("OnFetchRecordWithIds err, localErr: %{public}d, serverErr: %{public}d",
+            static_cast<int>(error.dkErrorCode), error.serverErrorCode);
+    } else {
+        LOGI("OnFetchRecordWithIds ok");
+    }
+    auto records = make_shared<std::vector<DKRecord>>();
+    for (const auto &it : *recordMap) {
+        auto recordId = it.first;
+        if (!it.second.IsSuccess()) {
+            LOGE("has error, recordId:%s", recordId.c_str());
+            LOGI("convert to delete record");
+            DKRecord deleteRecord;
+            deleteRecord.SetRecordId(recordId);
+            deleteRecord.SetDelete(true);
+            records->push_back(deleteRecord);
+        } else {
+            LOGI("handle retry record : %s", recordId.c_str());
+            auto record = it.second.GetDKRecord();
+            records->push_back(record);
+        }
+    }
+
+    auto ctx = static_pointer_cast<DownloadTaskContext>(context);
+    HandleOnFetchRecords(ctx, database, records, true);
 }
 
 void DataSyncer::OnFetchRecordWithId(shared_ptr<DKContext> context, shared_ptr<DKDatabase> database,

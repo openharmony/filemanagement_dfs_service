@@ -165,12 +165,19 @@ public:
                                                    DKRecordId,
                                                    DKRecord &,
                                                    const DKError &)>;
+    using FetchRecordIdsCallback = std::function<void(std::shared_ptr<DKContext>,
+                                                   std::shared_ptr<DKDatabase>,
+                                                   std::shared_ptr<std::map<DKRecordId, DKRecordOperResult>>,
+                                                   const DKError &)>;
     DKLocalErrorCode FetchRecordWithId(std::shared_ptr<DKContext> context,
                                        DKRecordType recordType,
                                        DKRecordId recordId,
                                        DKFieldKeyArray &desiredKeys,
                                        FetchRecordCallback callback);
-
+    DKLocalErrorCode FetchRecordWithIds(std::shared_ptr<DKContext> context,
+                                        std::vector<DKRecord> &&records,
+                                        DKFieldKeyArray &desiredKeys,
+                                        FetchRecordIdsCallback callback);
     using DeleteRecordsCallback = std::function<void(std::shared_ptr<DKContext>,
                                                      std::shared_ptr<DKDatabase>,
                                                      std::shared_ptr<std::map<DKRecordId, DKRecordOperResult>>,

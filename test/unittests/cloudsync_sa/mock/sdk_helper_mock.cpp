@@ -64,6 +64,14 @@ int32_t SdkHelper::FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> contex
     return E_OK;
 }
 
+int32_t SdkHelper::FetchRecordWithIds(std::shared_ptr<DriveKit::DKContext> context,
+                                      FetchCondition &cond,
+                                      std::vector<DriveKit::DKRecord> &&records,
+                                      FetchRecordIdsCallback callback)
+{
+    return E_OK;
+}
+
 int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context,
                                         FetchCondition &cond,
                                         DriveKit::DKQueryCursor cursor,

@@ -96,6 +96,17 @@ int32_t SdkHelper::FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> contex
     return E_OK;
 }
 
+int32_t SdkHelper::FetchRecordWithIds(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
+    std::vector<DriveKit::DKRecord> &&records, FetchRecordIdsCallback callback)
+{
+    auto err = database_->FetchRecordWithIds(context, std::move(records), cond.desiredKeys, callback);
+    if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("drivekit fetch patch records err %{public}d", err);
+        return E_CLOUD_SDK;
+    }
+    return E_OK;
+}
+
 int32_t SdkHelper::FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
     DriveKit::DKQueryCursor cursor, FetchDatabaseChangesCallback callback)
 {
