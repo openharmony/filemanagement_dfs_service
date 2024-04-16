@@ -25,7 +25,6 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace std;
-const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 mutex SoftbusSessionDispatcher::idMapMutex_;
 map<int32_t, std::pair<std::string, std::string>> SoftbusSessionDispatcher::idMap_;
 mutex SoftbusSessionDispatcher::softbusAgentMutex_;
@@ -82,7 +81,7 @@ weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std
 void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     LOGI("OnSessionOpened Enter.");
-    bool tmp = SoftBusHandler::IsSameAccount(info.networkId);
+    bool tmp = SoftbusAgent::IsSameAccount(info.networkId);
     if (tmp != true) {
         LOGI("Is non_account");
         Shutdown(sessionId);
