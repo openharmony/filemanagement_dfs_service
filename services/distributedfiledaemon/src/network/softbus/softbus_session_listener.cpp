@@ -67,6 +67,12 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
 void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     LOGI("OnSessionOpened.");
+    bool tmp = SoftBusHandler::IsSameAccount(info.networkId);
+    if (tmp != true) {
+        LOGI("Is non_account");
+        Shutdown(sessionId);
+        return;
+    }
     std::string sessionName = info.name;
     SoftBusSessionPool::SessionInfo sessionInfo;
     auto ret = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
