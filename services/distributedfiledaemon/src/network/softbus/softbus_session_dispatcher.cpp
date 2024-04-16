@@ -17,6 +17,7 @@
 
 #include <sstream>
 
+#include "dm_device_info.h"
 #include "network/softbus/softbus_agent.h"
 #include "utils_log.h"
 
@@ -24,6 +25,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace std;
+const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 mutex SoftbusSessionDispatcher::idMapMutex_;
 map<int32_t, std::pair<std::string, std::string>> SoftbusSessionDispatcher::idMap_;
 mutex SoftbusSessionDispatcher::softbusAgentMutex_;
@@ -80,6 +82,24 @@ weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std
 void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     LOGI("OnSessionOpened Enter.");
+    DistributedHardware::DmAuthForm authForm = DistributedHardware::DmAuthForm::INVALID_TYPE;
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemonSERVICE_NAME, "", deviceList);
+    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
+        LOGE("DeviceList size is invalid!");
+        return;
+    }
+    for (const auto &deviceInfo : deviceList) {
+        if (std::string(deviceInfo.networkId) == peerDeviceId) {
+            authForm = deviceInfo.authForm;
+            break;
+        }
+    }
+    if (authForm != DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT) {
+        LOGI("Not Support non_account");
+        return;
+    }
+
     std::string peerSessionName(info.name);
     std::string peerDevId = info.networkId;
     if (!idMap_.empty()) {
@@ -91,15 +111,7 @@ void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo
     }
     auto agent = GetAgent(sessionId, peerSessionName);
     if (auto spt = agent.lock()) {
-        bool ret = spt->IsSameAccount(peerSessionName, peerDevId);
-        if (ret != true) {
-            LOGI("Is non_account");
-            Shutdown(sessionId);
-            spt->StopTopHalf();
-        } else {
-            spt->OnSessionOpened(sessionId, info);
-        }
-        
+        spt->OnSessionOpened(sessionId, info);  
     } else {
         LOGE("session not exist!, session id is %{public}d", sessionId);
         return;

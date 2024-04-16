@@ -32,13 +32,16 @@ using namespace OHOS::FileManagement;
 const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
+const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 std::mutex SoftBusHandler::clientSessNameMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
+std::mutex SoftBusHandler::serverIdMapMutex_;
+std::map<std::string, int32_t> SoftBusHandler::serverIdMap_;
 
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     std::string name = info.name;
-    bool ret = SoftBusHandler::IsSameAccount(name, info.networkId);
+    bool ret = SoftBusHandler::IsSameAccount(info.networkId);
     if (ret != true) {
         if (!serverIdMap_.empty()) {
             std::lock_guard<std::mutex> lock(serverIdMapMutex_);
@@ -50,11 +53,32 @@ void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
                 LOGI("RemoveSessionServer success.");
             }
         }
-        LOGI("Is non_account");
         Shutdown(sessionId);
     }
     std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
     SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, name));
+}
+
+bool SoftBusHandler::IsSameAccount(const std::string peerDeviceId)
+{
+    DistributedHardware::DmAuthForm authForm = DistributedHardware::DmAuthForm::INVALID_TYPE;
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
+    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
+        LOGE("DeviceList size is invalid!");
+        return false;
+    }
+    for (const auto &deviceInfo : deviceList) {
+        if (std::string(deviceInfo.networkId) == peerDeviceId) {
+            authForm = deviceInfo.authForm;
+            break;
+        }
+    }
+    if (authForm != DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT) {
+        LOGI("Is non_account");
+        return false;
+    }
+    return true;
 }
 
 std::string SoftBusHandler::GetSessionName(int32_t sessionId)
@@ -154,10 +178,10 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         return E_OPEN_SESSION;
     }
     LOGI("OpenSession Enter.");
-    bool ret = IsSameAccount(mySessionName, peerDevId);
-    if (ret != true) {
+    bool tmp = IsSameAccount(mySessionName, peerDevId);
+    if (tmp != true) {
         LOGI("Is non_account");
-        return;
+        return E_OPEN_SESSION;
     }
     QosTV qos[] = {
         {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
@@ -226,26 +250,6 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
     }
     Shutdown(sessionId);
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
-}
-bool SoftBusHandler::IsSameAccount(const std::string sessionName, const std::string peerDeviceId)
-{
-    DistributedHardware::DmAuthForm authForm = DistributedHardware::DmAuthForm::INVALID_TYPE;
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(sessionName, "", deviceList);
-    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
-        DHLOGE("DeviceList size is invalid!");
-        return false;
-    }
-    for (const auto &deviceInfo : deviceList) {
-        if (std::string(deviceInfo.networkId) == peerDeviceId) {
-            authForm = deviceInfo.authForm;
-            break;
-        }
-    }
-    if (authForm != DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT) {
-        return false;
-    }
-    return true;
 }
 } // namespace DistributedFile
 } // namespace Storage

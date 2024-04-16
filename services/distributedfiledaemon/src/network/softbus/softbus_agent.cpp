@@ -54,13 +54,13 @@ SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTempla
     sessionName_ = sessionName.ToString();
 }
 
-bool SoftbusAgent::IsSameAccount(const std::string sessionName, const std::string peerDeviceId)
+bool SoftbusAgent::IsSameAccount(const std::string peerDeviceId)
 {
     DistributedHardware::DmAuthForm authForm = DistributedHardware::DmAuthForm::INVALID_TYPE;
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(sessionName, "", deviceList);
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
     if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
-        DHLOGE("DeviceList size is invalid!");
+        LOGE("DeviceList size is invalid!");
         return false;
     }
     for (const auto &deviceInfo : deviceList) {
@@ -144,8 +144,8 @@ void SoftbusAgent::StopBottomHalf() {}
 void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
     LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
-    bool ret = IsSameAccount(sessionName_, info.GetCid());
-    if (ret != true) {
+    bool tmp = IsSameAccount(sessionName_, info.GetCid());
+    if (tmp != true) {
         LOGI("Is non_account");
         return;
     }
