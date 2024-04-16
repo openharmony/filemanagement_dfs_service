@@ -2488,7 +2488,7 @@ int32_t FileDataHandler::CleanPureCloudRecord(bool isReamin)
     do {
         deleteFileId.clear();
         filePaths->clear();
-        GetFilePathAndId(cleanPredicates, deleteFileId, *filePaths);
+        RETURN_ON_ERR(GetFilePathAndId(cleanPredicates, deleteFileId, *filePaths));
         RemoveCloudRecord(filePaths);
         ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         ret = BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
@@ -2559,7 +2559,7 @@ int32_t FileDataHandler::CleanNotDirtyData(bool isReamin)
     do {
         deleteFileId.clear();
         filePaths->clear();
-        GetFilePathAndId(cleanPredicates, deleteFileId, *filePaths);
+        RETURN_ON_ERR(GetFilePathAndId(cleanPredicates, deleteFileId, *filePaths));
         RemoveBothRecord(filePaths);
         ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         ret = BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
@@ -2595,21 +2595,25 @@ int32_t FileDataHandler::GetFilePathAndId(NativeRdb::AbsRdbPredicates cleanPredi
                                           vector<ValueObject> &deleteFileId,
                                           vector<string> &filePaths)
 {
-    int32_t count = 0;
     auto result = Query(cleanPredicates, {MediaColumn::MEDIA_ID, PC::MEDIA_FILE_PATH});
     if (result == nullptr) {
         LOGE("get result fail");
         return E_RDB;
     }
+    int32_t count = 0;
     int32_t ret = result->GetRowCount(count);
     if (ret != E_OK || count < 0) {
         LOGE("get row count error , ret: %{public}d", ret);
         return E_RDB;
     }
     while (result->GoToNextRow() == 0) {
-        string filePath;
         string fileId;
         ret = DataConvertor::GetString(PC::MEDIA_ID, fileId, *result);
+        string filePath;
+        if (ret != E_OK) {
+            LOGE("Get file_id wrong");
+            return E_INVAL_ARG;
+        }
         ret = DataConvertor::GetString(PC::MEDIA_FILE_PATH, filePath, *result);
         if (ret != E_OK) {
             LOGE("Get path wrong");
@@ -2623,6 +2627,10 @@ int32_t FileDataHandler::GetFilePathAndId(NativeRdb::AbsRdbPredicates cleanPredi
 
 void FileDataHandler::RemoveCloudRecord(shared_ptr<vector<string>> filePaths)
 {
+    if (filePaths == nullptr) {
+        LOGE("filePaths is nullptr");
+        return;
+    }
     for (auto &filePath : *filePaths) {
         RemoveThmParentPath(filePath);
     }
@@ -2631,6 +2639,10 @@ void FileDataHandler::RemoveCloudRecord(shared_ptr<vector<string>> filePaths)
 
 void FileDataHandler::RemoveBothRecord(shared_ptr<vector<string>> filePaths)
 {
+    if (filePaths == nullptr) {
+        LOGE("filePaths is nullptr");
+        return;
+    }
     for (auto &filePath : *filePaths) {
         RemoveThmParentPath(filePath);
         string lowerPath = cleanConvertor_.GetLowerPath(filePath);
