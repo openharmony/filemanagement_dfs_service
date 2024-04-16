@@ -1406,6 +1406,7 @@ HWTEST_F(FileDataHandlerTest, OnFetchRecords002, TestSize.Level1)
         EXPECT_CALL(*rdb, Query(_, _))
             .WillOnce(Return(ByMove(std::move(rset))))
             .WillOnce(Return(ByMove(nullptr)))
+            .WillOnce(Return(ByMove(nullptr)))
             .WillOnce(Return(ByMove(nullptr)));
 
         shared_ptr<vector<DKRecord>> records = make_shared<vector<DKRecord>>();

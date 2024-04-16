@@ -201,6 +201,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "app_file_service:sandbox_helper_native",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -231,5 +232,8 @@ ohos_unittest("clouddisk_rdbstore_test") {
 
 group("clouddisk_database_test") {
   testonly = true
-  deps = [ ":clouddisk_rdb_utils_test" ]
+  deps = [
+    ":clouddisk_rdb_utils_test",
+    ":clouddisk_rdbstore_test",
+  ]
 }
