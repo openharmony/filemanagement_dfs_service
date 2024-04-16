@@ -91,7 +91,15 @@ void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo
     }
     auto agent = GetAgent(sessionId, peerSessionName);
     if (auto spt = agent.lock()) {
-        spt->OnSessionOpened(sessionId, info);
+        bool ret = spt->IsSameAccount(peerSessionName, peerDevId);
+        if (ret != true) {
+            LOGI("Is non_account");
+            Shutdown(sessionId);
+            spt->StopTopHalf();
+        } else {
+            spt->OnSessionOpened(sessionId, info);
+        }
+        
     } else {
         LOGE("session not exist!, session id is %{public}d", sessionId);
         return;

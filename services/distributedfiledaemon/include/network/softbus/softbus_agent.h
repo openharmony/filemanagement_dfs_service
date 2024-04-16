@@ -32,7 +32,7 @@ public:
     ~SoftbusAgent() = default;
     void OnSessionOpened(const int32_t sessionId, PeerSocketInfo info);
     void OnSessionClosed(int32_t sessionId, const std::string peerDeviceId);
-
+    bool IsSameAccount(const std::string sessionName, const std::string peerDeviceId);
 protected:
     void JoinDomain() override;
     void QuitDomain() override;

@@ -15,13 +15,15 @@
 
 #include "network/softbus/softbus_handler.h"
 
+#include "device_manager.h"
 #include "dfs_error.h"
+#include "dm_device_info.h"
 #include "network/softbus/softbus_file_receive_listener.h"
 #include "network/softbus/softbus_file_send_listener.h"
 #include "network/softbus/softbus_session_listener.h"
+#include "utils_directory.h"
 #include "utils_log.h"
 #include <utility>
-#include "utils_directory.h"
 
 namespace OHOS {
 namespace Storage {
@@ -36,6 +38,21 @@ std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     std::string name = info.name;
+    bool ret = SoftBusHandler::IsSameAccount(name, info.networkId);
+    if (ret != true) {
+        if (!serverIdMap_.empty()) {
+            std::lock_guard<std::mutex> lock(serverIdMapMutex_);
+            auto it = serverIdMap_.find(name);
+            if (it != serverIdMap_.end()) {
+                int32_t serverId = it->second;
+                serverIdMap_.erase(it);
+                Shutdown(serverId);
+                LOGI("RemoveSessionServer success.");
+            }
+        }
+        LOGI("Is non_account");
+        Shutdown(sessionId);
+    }
     std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
     SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, name));
 }
@@ -137,6 +154,11 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         return E_OPEN_SESSION;
     }
     LOGI("OpenSession Enter.");
+    bool ret = IsSameAccount(mySessionName, peerDevId);
+    if (ret != true) {
+        LOGI("Is non_account");
+        return;
+    }
     QosTV qos[] = {
         {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
         {.qos = QOS_TYPE_MAX_LATENCY,        .value = DFS_QOS_TYPE_MAX_LATENCY},
@@ -204,6 +226,26 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
     }
     Shutdown(sessionId);
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
+}
+bool SoftBusHandler::IsSameAccount(const std::string sessionName, const std::string peerDeviceId)
+{
+    DistributedHardware::DmAuthForm authForm = DistributedHardware::DmAuthForm::INVALID_TYPE;
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(sessionName, "", deviceList);
+    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
+        DHLOGE("DeviceList size is invalid!");
+        return false;
+    }
+    for (const auto &deviceInfo : deviceList) {
+        if (std::string(deviceInfo.networkId) == peerDeviceId) {
+            authForm = deviceInfo.authForm;
+            break;
+        }
+    }
+    if (authForm != DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT) {
+        return false;
+    }
+    return true;
 }
 } // namespace DistributedFile
 } // namespace Storage
