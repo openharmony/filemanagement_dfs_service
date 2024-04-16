@@ -151,6 +151,8 @@ private:
     int32_t CheckDirtyConsistency(NativeRdb::ResultSet &resultSet);
     int32_t CheckPositionConsistency(NativeRdb::ResultSet &resultSet);
     int32_t CheckSyncStatusConsistency(NativeRdb::ResultSet &resultSet);
+    int32_t SetSyncStatusConsistency(std::string &filePath, bool thumbLocal,
+        bool lcdLocal, int32_t thumbStatus, int32_t syncStatus);
 
     static inline const std::string TABLE_NAME = Media::PhotoColumn::PHOTOS_TABLE;
     static inline const int32_t LIMIT_SIZE = 5;

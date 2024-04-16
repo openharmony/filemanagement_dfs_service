@@ -56,11 +56,16 @@ public:
     using FetchRecordCallback = std::function<void(std::shared_ptr<DriveKit::DKContext>,
         std::shared_ptr<DriveKit::DKDatabase>, DriveKit::DKRecordId, DriveKit::DKRecord &,
         const DriveKit::DKError &)>;
+    using FetchRecordIdsCallback = std::function<void(std::shared_ptr<DriveKit::DKContext>,
+        std::shared_ptr<DriveKit::DKDatabase>, std::shared_ptr<std::map<DriveKit::DKRecordId,
+        DriveKit::DKRecordOperResult>>, const DriveKit::DKError &)>;
 
     int32_t FetchRecords(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond, DriveKit::DKQueryCursor,
         FetchRecordsCallback callback);
     int32_t FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
         DriveKit::DKRecordId recordId, FetchRecordCallback callback);
+    int32_t FetchRecordWithIds(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
+        std::vector<DriveKit::DKRecord> &&records, FetchRecordIdsCallback callback);
     int32_t FetchDatabaseChanges(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
         DriveKit::DKQueryCursor cursor, FetchDatabaseChangesCallback callback);
 

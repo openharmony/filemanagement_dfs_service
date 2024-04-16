@@ -169,6 +169,9 @@ private:
         const DriveKit::DKError &);
     void OnFetchRecordWithId(std::shared_ptr<DriveKit::DKContext>, std::shared_ptr<DriveKit::DKDatabase>,
         DriveKit::DKRecordId, const DriveKit::DKRecord &, const DriveKit::DKError &);
+    void OnFetchRecordWithIds(std::shared_ptr<DriveKit::DKContext> context,
+        std::shared_ptr<DriveKit::DKDatabase> database, std::shared_ptr<std::map<DriveKit::DKRecordId,
+        DriveKit::DKRecordOperResult>> recordMap, const DriveKit::DKError &error);
     int HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
         std::shared_ptr<const DriveKit::DKDatabase> database,
         std::shared_ptr<std::vector<DriveKit::DKRecord>> records, bool checkOrRetry);

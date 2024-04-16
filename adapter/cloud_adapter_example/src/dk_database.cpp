@@ -72,6 +72,14 @@ DKLocalErrorCode DKDatabase::FetchRecordWithId(std::shared_ptr<DKContext> contex
     return DKLocalErrorCode::NO_ERROR;
 }
 
+DKLocalErrorCode DKDatabase::FetchRecordWithIds(std::shared_ptr<DKContext> context,
+                                                std::vector<DKRecord> &&records,
+                                                DKFieldKeyArray &desiredKeys,
+                                                FetchRecordIdsCallback callback)
+{
+    return DKLocalErrorCode::NO_ERROR;
+}
+
 DKLocalErrorCode DKDatabase::DeleteRecords(std::shared_ptr<DKContext> context,
                                            std::vector<DKRecord> &&records,
                                            DKSavePolicy policy,

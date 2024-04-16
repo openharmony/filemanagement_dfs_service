@@ -133,8 +133,12 @@ void FileDataHandler::GetFetchCondition(FetchCondition &cond)
 {
     cond.limitRes = LIMIT_SIZE;
     cond.recordType = recordType_;
-    cond.desiredKeys = desiredKeys_;
     cond.fullKeys = desiredKeys_;
+    if (GetCheckFlag()) {
+        cond.desiredKeys = checkedKeys_;
+    } else {
+        cond.desiredKeys = desiredKeys_;
+    }
 }
 
 int32_t FileDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &records)
@@ -1711,6 +1715,45 @@ int32_t FileDataHandler::CheckPositionConsistency(NativeRdb::ResultSet &resultSe
     return E_OK;
 }
 
+int32_t FileDataHandler::SetSyncStatusConsistency(string &filePath, bool thumbLocal, bool lcdLocal,
+    int32_t thumbStatus, int32_t syncStatus)
+{
+    int32_t expectedThumbStatus = static_cast<int32_t>(ThumbState::DOWNLOADED);
+    if (!thumbLocal) {
+        expectedThumbStatus |= static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD);
+    }
+    if (!lcdLocal) {
+        expectedThumbStatus |= static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD);
+    }
+ 
+    ValuesBucket values;
+    bool modFlag = false;
+    if (thumbLocal && syncStatus != static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE)) {
+        modFlag = true;
+        values.PutInt(PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
+    }
+
+    if (expectedThumbStatus != thumbStatus) {
+        modFlag = true;
+        values.PutInt(PhotoColumn::PHOTO_THUMB_STATUS, expectedThumbStatus);
+    }
+
+    if (modFlag) {
+        LOGE("[CHECK AND FIX] try to change sync status %{public}s", filePath.c_str());
+        UpdateCheckFile(INDEX_CHECK_FOUND, 1);
+        int32_t changedRows;
+        string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
+        int32_t ret = Update(changedRows, values, whereClause, { filePath });
+        if (ret != E_OK) {
+            LOGE("rdb update failed, err = %{public}d", ret);
+            return E_RDB;
+        }
+        UpdateCheckFile(INDEX_CHECK_FIXED, 1);
+    }
+
+    return E_OK;
+}
+
 int32_t FileDataHandler::CheckSyncStatusConsistency(NativeRdb::ResultSet &resultSet)
 {
     int32_t syncStatus;
@@ -1718,47 +1761,28 @@ int32_t FileDataHandler::CheckSyncStatusConsistency(NativeRdb::ResultSet &result
     if (ret != E_OK) {
         return ret;
     }
-    if (syncStatus != static_cast<int32_t>(SyncStatusType::TYPE_DOWNLOAD)) {
-        return E_OK;
-    }
 
     int32_t thumbStatus;
     ret = DataConvertor::GetInt(PhotoColumn::PHOTO_THUMB_STATUS, thumbStatus, resultSet);
     if (ret != E_OK) {
         return ret;
     }
-    if (thumbStatus <= static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) {
-        return E_OK;
-    }
-
+    
     string filePath = GetFilePath(resultSet);
     string thumbLocalPath = createConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
-    bool local = access(thumbLocalPath.c_str(), F_OK) == 0;
-    if (!local && errno != ENOENT) {
-        LOGE("fail to access %{public}d", errno);
+    bool thumbLocal = access(thumbLocalPath.c_str(), F_OK) == 0;
+    if (!thumbLocal && errno != ENOENT) {
+        LOGE("fail to access thumb %{public}d", errno);
+        return E_SYSCALL;
+    }
+    string lcdLocalPath = createConvertor_.GetThumbPath(filePath, LCD_SUFFIX);
+    bool lcdLocal = access(lcdLocalPath.c_str(), F_OK) == 0;
+    if (!lcdLocal && errno != ENOENT) {
+        LOGE("fail to access lcd %{public}d", errno);
         return E_SYSCALL;
     }
 
-    LOGE("[CHECK AND FIX] try to change sync status %{public}s", filePath.c_str());
-    UpdateCheckFile(INDEX_CHECK_FOUND, 1);
-
-    ValuesBucket values;
-    if (local) {
-        values.PutInt(PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
-    } else {
-        values.PutInt(PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD));
-    }
-    int32_t changedRows;
-    string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
-    ret = Update(changedRows, values, whereClause, { filePath });
-    if (ret != E_OK) {
-        LOGE("rdb update failed, err = %{public}d", ret);
-        return E_RDB;
-    }
-
-    UpdateCheckFile(INDEX_CHECK_FIXED, 1);
-
-    return E_OK;
+    return SetSyncStatusConsistency(filePath, thumbLocal, lcdLocal, thumbStatus, syncStatus);
 }
 
 int32_t FileDataHandler::CheckStatusConsistency(NativeRdb::ResultSet &resultSet)
@@ -1805,9 +1829,8 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
     const shared_ptr<std::vector<DriveKit::DKRecord>> &records)
 {
     auto recordIds = vector<string>();
-    shared_ptr<std::vector<DriveKit::DKRecord>> fetchRecords = make_shared<std::vector<DriveKit::DKRecord>>();
     for (const auto &record : *records) {
-        fetchRecords->emplace_back(record);
+        recordIds.emplace_back(record.GetRecordId());
     }
     auto [resultSet, recordIdRowIdMap] = QueryLocalByCloudId(recordIds);
     if (resultSet == nullptr) {
@@ -1816,7 +1839,7 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
 
     for (const auto &record : *records) {
         if ((recordIdRowIdMap.find(record.GetRecordId()) == recordIdRowIdMap.end()) && !record.GetIsDelete()) {
-            fetchRecords->emplace_back(record);
+            checkRecords.emplace_back(record.GetRecordId());
         } else if (recordIdRowIdMap.find(record.GetRecordId()) != recordIdRowIdMap.end()) {
             int32_t ret = resultSet->GoToRow(recordIdRowIdMap.at(record.GetRecordId()));
             if (ret != NativeRdb::E_OK) {
@@ -1835,15 +1858,12 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
             DataConvertor::GetLong(PhotoColumn::PHOTO_CLOUD_VERSION, version, *resultSet);
             if (record.GetVersion() != static_cast<unsigned long>(version) &&
                 (!IsLocalDirty(*resultSet) || record.GetIsDelete())) {
-                fetchRecords->emplace_back(record);
+                checkRecords.emplace_back(record.GetRecordId());
             }
         } else {
             LOGE("recordId %s has multiple file in db!", record.GetRecordId().c_str());
         }
     }
-
-    OnFetchParams params;
-    OnFetchRecords(fetchRecords, params);
 
     return E_OK;
 }
