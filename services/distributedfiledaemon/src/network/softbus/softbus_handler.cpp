@@ -75,7 +75,6 @@ bool SoftBusHandler::IsSameAccount(const std::string peerDeviceId)
         }
     }
     if (authForm != DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT) {
-        LOGI("Is non_account");
         return false;
     }
     return true;

@@ -144,7 +144,7 @@ void SoftbusAgent::StopBottomHalf() {}
 void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
     LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
-    bool tmp = IsSameAccount(sessionName_, info.GetCid());
+    bool tmp = IsSameAccount(info.GetCid());
     if (tmp != true) {
         LOGI("Is non_account");
         return;

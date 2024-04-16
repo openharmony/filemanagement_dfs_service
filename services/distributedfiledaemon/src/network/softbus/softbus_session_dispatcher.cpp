@@ -84,13 +84,13 @@ void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo
     LOGI("OnSessionOpened Enter.");
     DistributedHardware::DmAuthForm authForm = DistributedHardware::DmAuthForm::INVALID_TYPE;
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemonSERVICE_NAME, "", deviceList);
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
     if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
         LOGE("DeviceList size is invalid!");
         return;
     }
     for (const auto &deviceInfo : deviceList) {
-        if (std::string(deviceInfo.networkId) == peerDeviceId) {
+        if (std::string(deviceInfo.networkId) == info.networkId) {
             authForm = deviceInfo.authForm;
             break;
         }
@@ -111,7 +111,7 @@ void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo
     }
     auto agent = GetAgent(sessionId, peerSessionName);
     if (auto spt = agent.lock()) {
-        spt->OnSessionOpened(sessionId, info);  
+        spt->OnSessionOpened(sessionId, info);
     } else {
         LOGE("session not exist!, session id is %{public}d", sessionId);
         return;
