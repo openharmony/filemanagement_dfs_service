@@ -82,21 +82,10 @@ weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std
 void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     LOGI("OnSessionOpened Enter.");
-    DistributedHardware::DmAuthForm authForm = DistributedHardware::DmAuthForm::INVALID_TYPE;
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
-    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
-        LOGE("DeviceList size is invalid!");
-        return;
-    }
-    for (const auto &deviceInfo : deviceList) {
-        if (std::string(deviceInfo.networkId) == info.networkId) {
-            authForm = deviceInfo.authForm;
-            break;
-        }
-    }
-    if (authForm != DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT) {
-        LOGI("Not Support non_account");
+    bool tmp = SoftBusHandler::IsSameAccount(info.networkId);
+    if (tmp != true) {
+        LOGI("Is non_account");
+        Shutdown(sessionId);
         return;
     }
 
