@@ -41,7 +41,7 @@ std::map<std::string, int32_t> SoftBusHandler::serverIdMap_;
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     if (!SoftBusHandler::IsSameAccount(info.networkId)) {
-        std::lock_guardstd::mutex lock(serverIdMapMutex_);
+        std::lock_guardstd<std::mutex> lock(serverIdMapMutex_);
         auto it = serverIdMap_.find(info.name);
         if (it != serverIdMap_.end()) {
             Shutdown(it->second);
@@ -51,13 +51,13 @@ void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
         Shutdown(sessionId);
     }
     std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
-    SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, name));
+    SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, info.name));
 }
 
 bool SoftBusHandler::IsSameAccount(const std::string networkId)
 {
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
     if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
         LOGE("trust device list size is invalid, size=%zu", deviceList.size());
         return false;
@@ -167,9 +167,9 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         return E_OPEN_SESSION;
     }
     LOGI("OpenSession Enter.");
-    if (!IsSameAccount(info.GetCid())) {
+    if (!IsSameAccount(peerDevId)) {
         LOGI("The source and sink device is not same account, not support.");
-        return;
+        return E_OPEN_SESSION;
     }
     QosTV qos[] = {
         {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
