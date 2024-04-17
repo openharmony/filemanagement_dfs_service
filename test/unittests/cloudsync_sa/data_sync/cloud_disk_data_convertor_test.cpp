@@ -982,7 +982,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileTimeRecycled003, TestSize.Level1
         NativeRdb::ValuesBucket values;
         shared_ptr<CloudDiskDataConvertor> localConvertor =
             make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
-        data.emplace(DK_IS_RECYCLED, DriveKit::DKRecordField(true));
+        data.emplace(DK_FILE_TIME_RECYCLED, DriveKit::DKRecordField(false));
         int32_t res = localConvertor->ExtractFileTimeRecycled(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {

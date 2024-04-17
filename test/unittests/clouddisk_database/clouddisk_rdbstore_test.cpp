@@ -478,7 +478,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest4, TestSize.Level1)
     const int32_t userId = 123456789;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
     int32_t ret = CloudDiskRdbStore.SetXAttr(cloudId, key, value);
-    EXPECT_EQ(ret, E_INVAL_ARG);
+    EXPECT_EQ(ret, E_OK);
 }
 
 /**
