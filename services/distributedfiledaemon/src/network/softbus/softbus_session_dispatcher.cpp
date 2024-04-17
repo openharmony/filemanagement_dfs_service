@@ -81,13 +81,11 @@ weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std
 void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     LOGI("OnSessionOpened Enter.");
-    bool tmp = SoftbusAgent::IsSameAccount(info.networkId);
-    if (tmp != true) {
-        LOGI("Is non_account");
+    if (!IsSameAccount(info.GetCid())) {
+        LOGI("The source and sink device is not same account, not support.");
         Shutdown(sessionId);
         return;
     }
-
     std::string peerSessionName(info.name);
     std::string peerDevId = info.networkId;
     if (!idMap_.empty()) {

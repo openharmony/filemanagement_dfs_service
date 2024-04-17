@@ -42,7 +42,7 @@ public:
     void CloseSession(int32_t sessionId, const std::string sessionName);
     static std::string GetSessionName(int32_t sessionId);
     static void OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info);
-    static bool IsSameAccount(const std::string peerDeviceId);
+    static bool IsSameAccount(const std::string networkId);
 
 private:
     static std::mutex clientSessNameMapMutex_;

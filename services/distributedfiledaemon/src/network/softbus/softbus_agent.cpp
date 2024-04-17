@@ -54,25 +54,20 @@ SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTempla
     sessionName_ = sessionName.ToString();
 }
 
-bool SoftbusAgent::IsSameAccount(const std::string peerDeviceId)
+bool SoftbusAgent::IsSameAccount(const std::string networkId)
 {
-    DistributedHardware::DmAuthForm authForm = DistributedHardware::DmAuthForm::INVALID_TYPE;
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
     DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
     if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
-        LOGE("DeviceList size is invalid!");
+        LOGE("trust device list size is invalid, size=%zu", deviceList.size());
         return false;
     }
     for (const auto &deviceInfo : deviceList) {
-        if (std::string(deviceInfo.networkId) == peerDeviceId) {
-            authForm = deviceInfo.authForm;
-            break;
+        if (std::string(deviceInfo.networkId) == networkId) {
+            return (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
         }
     }
-    if (authForm != DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT) {
-        return false;
-    }
-    return true;
+    return false;
 }
 
 void SoftbusAgent::JoinDomain()
@@ -144,9 +139,8 @@ void SoftbusAgent::StopBottomHalf() {}
 void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
     LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
-    bool tmp = IsSameAccount(info.GetCid());
-    if (tmp != true) {
-        LOGI("Is non_account");
+    if (!IsSameAccount(info.GetCid())) {
+        LOGI("The source and sink device is not same account, not support.");
         return;
     }
     ISocketListener sessionListener = {
