@@ -41,7 +41,7 @@ std::map<std::string, int32_t> SoftBusHandler::serverIdMap_;
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     if (!SoftBusHandler::IsSameAccount(info.networkId)) {
-        std::lock_guardstd<std::mutex> lock(serverIdMapMutex_);
+        std::lock_guard<std::mutex> lock(serverIdMapMutex_);
         auto it = serverIdMap_.find(info.name);
         if (it != serverIdMap_.end()) {
             Shutdown(it->second);
