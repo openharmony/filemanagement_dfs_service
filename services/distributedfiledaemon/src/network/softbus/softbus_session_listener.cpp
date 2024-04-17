@@ -67,9 +67,8 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
 void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     LOGI("OnSessionOpened.");
-    bool tmp = SoftBusHandler::IsSameAccount(info.networkId);
-    if (tmp != true) {
-        LOGI("Is non_account");
+    if (!IsSameAccount(info.GetCid())) {
+        LOGI("The source and sink device is not same account, not support.");
         Shutdown(sessionId);
         return;
     }
