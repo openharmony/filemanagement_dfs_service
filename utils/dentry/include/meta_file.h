@@ -98,6 +98,7 @@ struct MetaBase {
     uint32_t fileType{FILE_TYPE_CONTENT};
     std::string name{};
     std::string cloudId{};
+    bool hasDownloaded{false};
 };
 
 struct BitOps {

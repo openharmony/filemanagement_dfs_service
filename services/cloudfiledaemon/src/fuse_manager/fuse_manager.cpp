@@ -397,6 +397,54 @@ static string GetAssetPath(shared_ptr<CloudInode> cInode, struct FuseData *data)
     return path;
 }
 
+static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
+{
+    MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
+    string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
+    if (remove(cloudMergeViewPath.c_str()) < 0) {
+        LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
+        return -errno;
+    }
+    string localPath = GetLocalPath(data->userId, cInode->path);
+    string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
+    filesystem::path parentPath = filesystem::path(localPath).parent_path();
+    ForceCreateDirectory(parentPath.string());
+    if (rename(tmpPath.c_str(), localPath.c_str()) < 0) {
+        LOGE("Failed to rename tmpPath to localPath, errno: %{public}d", errno);
+        return -errno;
+    }
+    cInode->mBase->hasDownloaded = true;
+    auto fd = open(localPath.c_str(), fi->flags);
+    if (fd < 0) {
+        LOGE("Failed to open local file, errno: %{public}d", errno);
+        return -errno;
+    }
+    fi->fh = fd;
+    return 0;
+}
+
+static void HandleOpenResult(fuse_req_t req, DriveKit::DKError dkError, struct FuseData *data,
+    shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
+{
+    if (HandleDkError(req, dkError)) {
+        cInode->readSession = nullptr;
+        LOGE("open fali");
+        return;
+    }
+    if (CloudOpenOnLocal(data, cInode, fi) < 0) {
+        return;
+    }
+    if (FixDentrySize(cInode, data) != 0) {
+        LOGE("fix dentry size fail");
+        fuse_reply_err(req, EPERM);
+        return;
+    }
+    cInode->sessionRefCount++;
+    LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
+    fuse_reply_open(req, fi);
+    return;
+}
+
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                       struct fuse_file_info *fi)
 {
@@ -425,17 +473,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                                                             GetAssetPath(cInode, data));
         if (cInode->readSession) {
             DriveKit::DKError dkError = cInode->readSession->InitSession();
-            if (HandleDkError(req, dkError)) {
-                cInode->readSession = nullptr;
-                LOGE("open fali");
-            } else if (FixDentrySize(cInode, data) != 0) {
-                LOGE("fix dentry size fail");
-                fuse_reply_err(req, EPERM);
-            } else {
-                cInode->sessionRefCount++;
-                LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
-                fuse_reply_open(req, fi);
-            }
+            HandleOpenResult(req, dkError, data, cInode, fi);
             wSesLock.unlock();
             return;
         }
@@ -456,41 +494,16 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
-    string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
-    string localPath = GetLocalPath(data->userId, cInode->path);
-    string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
-
     LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d", req->ctx.pid,
         CloudPath(data, ino).c_str(), cInode->sessionRefCount.load());
     wSesLock.lock();
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
-        bool needRemain = false;
-        if (cInode->mBase->fileType != FILE_TYPE_CONTENT) {
-            needRemain = true;
+        if (close(fi->fh) < 0) {
+            LOGE("Failed to close fd, errno: %{public}d", errno);
         }
-        bool res = cInode->readSession->Close(needRemain);
-        if (!res) {
-            LOGE("close error, needRemain: %{public}d", needRemain);
-        }
-        if (needRemain && res) {
-            MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
-            LOGD("remove from dentryfile");
-
-            /*
-             * after removing file item from dentryfile, we should delete file
-             * of cloud merge view to update kernel dentry cache.
-             */
-            if (remove(cloudMergeViewPath.c_str()) != 0) {
-                LOGE("update kernel dentry cache fail, errno: %{public}d, cloudMergeViewPath: %{public}s",
-                     errno, cloudMergeViewPath.c_str());
-            }
-
-            filesystem::path parentPath = filesystem::path(localPath).parent_path();
-            ForceCreateDirectory(parentPath.string());
-            if (rename(tmpPath.c_str(), localPath.c_str()) != 0) {
-                LOGE("err rename tmpPath to localPath, errno: %{public}d", errno);
-            }
+        if (!cInode->readSession->Close(cInode->mBase->fileType != FILE_TYPE_CONTENT)) {
+            LOGE("Failed to close readSession");
         }
         cInode->readSession = nullptr;
         LOGD("readSession released");
@@ -559,6 +572,19 @@ static void CloudReadOnCloudFile(shared_ptr<ReadArguments> readArgs, shared_ptr<
     return;
 }
 
+static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t oldSize,
+    off_t off, struct fuse_file_info *fi)
+{
+    auto readSize = pread(fi->fh, buf.get(), oldSize, off);
+    if (readSize < 0) {
+        LOGE("Failed to read local file, errno: %{public}d", errno);
+        fuse_reply_err(req, errno);
+        return;
+    }
+    fuse_reply_buf(req, buf.get(), min(oldSize, static_cast<size_t>(readSize)));
+    return;
+}
+
 static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                       struct fuse_file_info *fi)
 {
@@ -575,6 +601,10 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         }
     }
     if (!PrepareForRead(req, buf, size, cInode, dkReadSession)) {
+        return;
+    }
+    if (cInode->mBase->hasDownloaded) {
+        CloudReadOnLocalFile(req, buf, oldSize, off, fi);
         return;
     }
     shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(oldSize, off);
