@@ -69,6 +69,7 @@ private:
     const int32_t CONNECT_SIZE = 8;
     std::string bundleName_;
     int32_t userId_{0};
+    static std::map<char, bool> illegalCharacter;
 };
 
 class CloudDiskDataCallBack : public NativeRdb::RdbOpenCallback {

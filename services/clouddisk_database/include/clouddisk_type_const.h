@@ -54,7 +54,8 @@ enum FileStatus {
     TO_BE_UPLOADED = 0,
     UPLOADING = 1,
     UPLOAD_FAILURE = 2,
-    UPLOAD_SUCCESS = 3
+    UPLOAD_SUCCESS = 3,
+    UNKNOW = 4
 };
 
 constexpr int64_t SECOND_TO_MILLISECOND = 1e3;
