@@ -1718,12 +1718,12 @@ int32_t FileDataHandler::CheckPositionConsistency(NativeRdb::ResultSet &resultSe
 int32_t FileDataHandler::SetSyncStatusConsistency(string &filePath, bool thumbLocal, bool lcdLocal,
     int32_t thumbStatus, int32_t syncStatus)
 {
-    int32_t expectedThumbStatus = static_cast<int32_t>(ThumbState::DOWNLOADED);
+    uint32_t expectedThumbStatus = static_cast<uint32_t>(ThumbState::DOWNLOADED);
     if (!thumbLocal) {
-        expectedThumbStatus |= static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD);
+        expectedThumbStatus |= static_cast<uint32_t>(ThumbState::THM_TO_DOWNLOAD);
     }
     if (!lcdLocal) {
-        expectedThumbStatus |= static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD);
+        expectedThumbStatus |= static_cast<uint32_t>(ThumbState::LCD_TO_DOWNLOAD);
     }
  
     ValuesBucket values;
@@ -1733,9 +1733,9 @@ int32_t FileDataHandler::SetSyncStatusConsistency(string &filePath, bool thumbLo
         values.PutInt(PhotoColumn::PHOTO_SYNC_STATUS, static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE));
     }
 
-    if (expectedThumbStatus != thumbStatus) {
+    if (static_cast<int32_t>(expectedThumbStatus) != thumbStatus) {
         modFlag = true;
-        values.PutInt(PhotoColumn::PHOTO_THUMB_STATUS, expectedThumbStatus);
+        values.PutInt(PhotoColumn::PHOTO_THUMB_STATUS, static_cast<int32_t>(expectedThumbStatus));
     }
 
     if (modFlag) {
