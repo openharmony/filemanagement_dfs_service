@@ -15,13 +15,15 @@
 
 #include "network/softbus/softbus_handler.h"
 
+#include "device_manager.h"
 #include "dfs_error.h"
+#include "dm_device_info.h"
 #include "network/softbus/softbus_file_receive_listener.h"
 #include "network/softbus/softbus_file_send_listener.h"
 #include "network/softbus/softbus_session_listener.h"
+#include "utils_directory.h"
 #include "utils_log.h"
 #include <utility>
-#include "utils_directory.h"
 
 namespace OHOS {
 namespace Storage {
@@ -30,14 +32,42 @@ using namespace OHOS::FileManagement;
 const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
+const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 std::mutex SoftBusHandler::clientSessNameMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
+std::mutex SoftBusHandler::serverIdMapMutex_;
+std::map<std::string, int32_t> SoftBusHandler::serverIdMap_;
 
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
-    std::string name = info.name;
+    if (!SoftBusHandler::IsSameAccount(info.networkId)) {
+        std::lock_guard<std::mutex> lock(serverIdMapMutex_);
+        auto it = serverIdMap_.find(info.name);
+        if (it != serverIdMap_.end()) {
+            Shutdown(it->second);
+            serverIdMap_.erase(it);
+            LOGI("RemoveSessionServer success.");
+        }
+        Shutdown(sessionId);
+    }
     std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
-    SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, name));
+    SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, info.name));
+}
+
+bool SoftBusHandler::IsSameAccount(const std::string networkId)
+{
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
+    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
+        LOGE("trust device list size is invalid, size=%zu", deviceList.size());
+        return false;
+    }
+    for (const auto &deviceInfo : deviceList) {
+        if (std::string(deviceInfo.networkId) == networkId) {
+            return (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
+        }
+    }
+    return false;
 }
 
 std::string SoftBusHandler::GetSessionName(int32_t sessionId)
@@ -137,6 +167,10 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         return E_OPEN_SESSION;
     }
     LOGI("OpenSession Enter.");
+    if (!IsSameAccount(peerDevId)) {
+        LOGI("The source and sink device is not same account, not support.");
+        return E_OPEN_SESSION;
+    }
     QosTV qos[] = {
         {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
         {.qos = QOS_TYPE_MAX_LATENCY,        .value = DFS_QOS_TYPE_MAX_LATENCY},

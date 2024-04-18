@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,6 @@ namespace DistributedFile {
 using namespace std;
 namespace {
 static const std::string SAME_ACCOUNT = "account";
-static const std::string ACCOUNT_LESS = "non_account";
 static constexpr int DEFAULT_ACCOUNT = 100;
 } // namespace
 
@@ -38,7 +37,6 @@ OsAccountObserver::OsAccountObserver(const EventFwk::CommonEventSubscribeInfo &s
     lock_guard<mutex> lock(serializer_);
     curUsrId = DEFAULT_ACCOUNT;
     AddMPInfo(curUsrId, SAME_ACCOUNT);
-    AddMPInfo(curUsrId, ACCOUNT_LESS);
     auto dm = DeviceManagerAgent::GetInstance();
     dm->Recv(make_unique<DfsuCmd<DeviceManagerAgent>>(&DeviceManagerAgent::InitDeviceInfos));
     LOGI("init first to create network of user %{public}d, done", DEFAULT_ACCOUNT);
@@ -75,7 +73,6 @@ void OsAccountObserver::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
         // then start new network
         curUsrId = id;
         AddMPInfo(id, SAME_ACCOUNT);
-        AddMPInfo(id, ACCOUNT_LESS);
         LOGI("user id %{public}d, add network done", curUsrId);
     }
 }

@@ -17,8 +17,10 @@
 
 #include <sstream>
 
+#include "device_manager.h"
 #include "dfs_error.h"
 #include "dfsu_exception.h"
+#include "dm_device_info.h"
 #include "ipc_skeleton.h"
 #include "ipc/i_daemon.h"
 #include "network/softbus/softbus_session_dispatcher.h"
@@ -37,6 +39,7 @@ using namespace std;
 const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
+const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTemplate(mountPoint)
 {
     auto spt = mountPoint.lock();
@@ -49,6 +52,22 @@ SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTempla
     string path = spt->GetMountArgument().GetFullDst();
     SoftbusSessionName sessionName(path);
     sessionName_ = sessionName.ToString();
+}
+
+bool SoftbusAgent::IsSameAccount(const std::string networkId)
+{
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
+    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
+        LOGE("trust device list size is invalid, size=%zu", deviceList.size());
+        return false;
+    }
+    for (const auto &deviceInfo : deviceList) {
+        if (std::string(deviceInfo.networkId) == networkId) {
+            return (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
+        }
+    }
+    return false;
 }
 
 void SoftbusAgent::JoinDomain()
@@ -120,6 +139,10 @@ void SoftbusAgent::StopBottomHalf() {}
 void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
     LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
+    if (!IsSameAccount(info.GetCid())) {
+        LOGI("The source and sink device is not same account, not support.");
+        return;
+    }
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
         .OnShutdown = SoftbusSessionDispatcher::OnSessionClosed,
