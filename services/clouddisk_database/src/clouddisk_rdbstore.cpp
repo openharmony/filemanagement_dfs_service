@@ -234,7 +234,7 @@ static int32_t CheckNameForSpace(const std::string& fileName, const int32_t isDi
         LOGI("Illegal name");
         return EINVAL;
     }
-    if (isDir == 1) {
+    if (isDir == DIRECTORY) {
         if (fileName[fileName.length() - 1] == ' ') {
             LOGI("Illegal name");
             return EINVAL;
@@ -277,7 +277,7 @@ static int32_t CheckName(const std::string &fileName)
     std::string realFileName = fileName.substr(0, lastDot);
     if (realFileName.find(".") != std::string::npos ||
         ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji") ||
-            fileName.length() > MAX_FILE_NAME_SIZE) {
+        fileName.length() > MAX_FILE_NAME_SIZE) {
         LOGI("Illegal name");
         return EINVAL;
     }
@@ -679,7 +679,7 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         LOGI("the rename parameter is same as old");
         return E_OK;
     }
-    int32_t IsDir = info.IsDirectory;
+    int32_t isDir = info.IsDirectory;
     ret = CheckNameForSpace(newFileName, isDir);
     if (ret != E_OK) {
         return ret;
