@@ -35,6 +35,11 @@ namespace CloudSync {
 #define DOWNLOAD_LCD_LEN 5
 #define UPLOAD_ALBUM_LEN 4
 #define DOWNLOAD_ALBUM_LEN 4
+#define META_LEN 5
+#define FILE_POSITION_LEN 3
+#define CLOUD_THM_STAT_LEN 4
+#define DIRTY_TYPE_LEN 5
+#define UPLOAD_META_ERR_LEN 8
 
 /* stat index */
 enum MetaStatIndex {
@@ -86,6 +91,17 @@ enum AlbumStatIndex {
     INDEX_DL_ALBUM_ERROR_RDB,
 };
 
+enum UploadMetaErrIndex {
+    INDEX_UL_META_ERR_SUCCESS,
+    INDEX_UL_META_ERR_PERMISSION,
+    INDEX_UL_META_ERR_STORAGE,
+    INDEX_UL_META_ERR_NETWORK,
+    INDEX_UL_META_ERR_ERR1,
+    INDEX_UL_META_ERR_ERR2,
+    INDEX_UL_META_ERR_ERR3,
+    INDEX_UL_META_ERR_OTHER,
+};
+
 class GallerySyncStat : public SyncStat {
 public:
     GallerySyncStat() : uploadMeta_(UPLOAD_META_LEN),
@@ -93,7 +109,8 @@ public:
         downloadThumb_(DOWNLOAD_THUMB_LEN),
         downloadLcd_(DOWNLOAD_LCD_LEN),
         uploadAlbum_(UPLOAD_ALBUM_LEN),
-        downloadAlbum_(DOWNLOAD_ALBUM_LEN)
+        downloadAlbum_(DOWNLOAD_ALBUM_LEN),
+        uploadMetaErr_(UPLOAD_META_ERR_LEN)
     {
     }
 
@@ -126,6 +143,11 @@ public:
         }
     }
 
+    void UpdateUploadMetaErr(uint32_t index, uint64_t diff)
+    {
+        uploadMetaErr_[index] += diff;
+    }
+
 protected:
     std::vector<std::atomic<uint64_t>> uploadMeta_;
     std::vector<std::atomic<uint64_t>> downloadMeta_;
@@ -133,6 +155,7 @@ protected:
     std::vector<std::atomic<uint64_t>> downloadLcd_;
     std::vector<std::atomic<uint64_t>> uploadAlbum_;
     std::vector<std::atomic<uint64_t>> downloadAlbum_;
+    std::vector<std::atomic<uint64_t>> uploadMetaErr_;
 };
 
 class GalleryFullSyncStat : public GallerySyncStat {
@@ -158,6 +181,7 @@ public:
             "download_lcd", vector_atomic_to_origin<uint64_t>(downloadLcd_),
             "upload_album", vector_atomic_to_origin<uint64_t>(uploadAlbum_),
             "download_album", vector_atomic_to_origin<uint64_t>(downloadAlbum_),
+            "upload_meta_err", vector_atomic_to_origin<uint64_t>(uploadMetaErr_),
             "sync_info", sync_info_);
         if (ret != E_OK) {
             LOGE("report CLOUD_SYNC_FULL_STAT error %{public}d", ret);
@@ -246,6 +270,36 @@ enum GalleryCheckStatIndex {
     INDEX_CHECK_FIXED,
 };
 
+enum FilePositionIndex {
+    LOCAL,
+    CLOUD,
+    BOTH,
+};
+
+enum MetaIndex {
+    TOTAL,
+    LOCAL_EMPTY,
+    CLOUD_EMPTY,
+    LOCAL_CLOUD,
+    DIFF,
+    FIX,
+};
+
+enum CloudThmStatIndex {
+    DOWNLOADED,
+    LCD_TO_DOWNLOAD,
+    THM_TO_DOWNLOAD,
+    TO_DOWNLOAD,
+};
+
+enum DirtyTypeIndex {
+    SYNCED,
+    NEW,
+    MDIRTY,
+    FDIRTY,
+    DELETED,
+};
+
 #define GALLERY_CHECK_STAT_LEN 2
 
 class GalleryCheckSatat : public SyncStat {
@@ -253,7 +307,11 @@ public:
     GalleryCheckSatat() : file_(GALLERY_CHECK_STAT_LEN),
         album_(GALLERY_CHECK_STAT_LEN),
         map_(GALLERY_CHECK_STAT_LEN),
-        attachment_(GALLERY_CHECK_STAT_LEN)
+        attachment_(GALLERY_CHECK_STAT_LEN),
+        filePos_(FILE_POSITION_LEN),
+        meta_(META_LEN),
+        cloudThmStat_(CLOUD_THM_STAT_LEN),
+        dirtyType_(DIRTY_TYPE_LEN)
     {
     }
 
@@ -267,6 +325,10 @@ public:
             "album", album_,
             "map", map_,
             "attachment", attachment_,
+            "file_position", filePos_,
+            "meta", meta_,
+            "cloud_thm_status", cloudThmStat_,
+            "dirty_type", dirtyType_,
             "check_info", checkInfo_);
         if (ret != E_OK) {
             LOGE("report CLOUD_SYNC_CHECK error %{public}d", ret);
@@ -293,12 +355,36 @@ public:
         attachment_[index] += diff;
     }
 
+    void UpdateFilePos(uint32_t index, uint64_t diff)
+    {
+        filePos_[index] += diff;
+    }
+
+    void UpdateMeta(uint32_t index, uint64_t diff)
+    {
+        meta_[index] += diff;
+    }
+
+    void UpdateCloudThmStat(uint32_t index, uint64_t diff)
+    {
+        cloudThmStat_[index] += diff;
+    }
+
+    void UpdateDirtyType(uint32_t index, uint64_t diff)
+    {
+        dirtyType_[index] += diff;
+    }
+
 private:
     std::vector<uint64_t> file_;
     std::vector<uint64_t> album_;
     std::vector<uint64_t> map_;
     std::vector<uint64_t> attachment_;
     std::string checkInfo_;
+    std::vector<uint64_t> filePos_;
+    std::vector<uint64_t> meta_;
+    std::vector<uint64_t> cloudThmStat_;
+    std::vector<uint64_t> dirtyType_;
 };
 
 class GalleryCheckStatContainer : public CheckStatContainer<GalleryCheckSatat> {
@@ -332,6 +418,38 @@ public:
         std::shared_ptr<GalleryCheckSatat> stat = GetCheckStat();
         if (stat != nullptr) {
             stat->UpdateAttachment(index, diff);
+        }
+    }
+
+    void UpdateCheckFilePos(uint32_t index, uint64_t diff)
+    {
+        std::shared_ptr<GalleryCheckSatat> stat = GetCheckStat();
+        if (stat != nullptr) {
+            stat->UpdateFilePos(index, diff);
+        }
+    }
+
+    void UpdateCheckMeta(uint32_t index, uint64_t diff)
+    {
+        std::shared_ptr<GalleryCheckSatat> stat = GetCheckStat();
+        if (stat != nullptr) {
+            stat->UpdateMeta(index, diff);
+        }
+    }
+
+    void UpdateCheckCloudThmStat(uint32_t index, uint64_t diff)
+    {
+        std::shared_ptr<GalleryCheckSatat> stat = GetCheckStat();
+        if (stat != nullptr) {
+            stat->UpdateCloudThmStat(index, diff);
+        }
+    }
+
+    void UpdateCheckDirtyType(uint32_t index, uint64_t diff)
+    {
+        std::shared_ptr<GalleryCheckSatat> stat = GetCheckStat();
+        if (stat != nullptr) {
+            stat->UpdateDirtyType(index, diff);
         }
     }
 };
