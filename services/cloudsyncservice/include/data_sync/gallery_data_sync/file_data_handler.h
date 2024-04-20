@@ -95,6 +95,9 @@ public:
     /* reset */
     void Reset();
 
+    /* check */
+    void SetCheckReportStatus();
+
 private:
     int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
         const std::unordered_map<std::string, LocalInfo> &localMap);
@@ -153,6 +156,19 @@ private:
     int32_t CheckSyncStatusConsistency(NativeRdb::ResultSet &resultSet);
     int32_t SetSyncStatusConsistency(std::string &filePath, bool thumbLocal,
         bool lcdLocal, int32_t thumbStatus, int32_t syncStatus);
+    
+    /* report check */
+    int32_t GetFilePosStat(std::vector<uint64_t> &filePosStat);
+    int32_t GetCloudThmStat(std::vector<uint64_t> &cloudThmStat);
+    int32_t GetDirtyTypeStat(std::vector<uint64_t> &dirtyTypeStat);
+    int32_t QueryDataStat(const NativeRdb::AbsRdbPredicates &predicates, const std::string &queryData,
+        const int32_t &value, int &num);
+    int32_t QueryFilePosStat(const int32_t &position, int &num);
+    int32_t QueryCloudThmStat(const int32_t &cloudThmStat, int &num);
+    int32_t QueryDirtyTypeStat(const int32_t &dirtyType, int &num);
+    void ReportFilePosStat();
+    void ReportCloudThmStat();
+    void ReportDirtyTypeStat();
 
     static inline const std::string TABLE_NAME = Media::PhotoColumn::PHOTOS_TABLE;
     static inline const int32_t LIMIT_SIZE = 5;

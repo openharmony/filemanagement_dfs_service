@@ -3728,6 +3728,184 @@ int64_t FileDataHandler::UTCTimeSeconds()
     return static_cast<int64_t>(ts.tv_sec);
 }
 
+
+int32_t FileDataHandler::GetFilePosStat(std::vector<uint64_t> &filePosStat)
+{
+    if (filePosStat.size() != FILE_POSITION_LEN) {
+        LOGE("file position stat size is wrong with %{public}zu", filePosStat.size());
+        return E_DATA;
+    }
+
+    /* get local file status */
+    int num = 0;
+    QueryFilePosStat(POSITION_LOCAL, num);
+    filePosStat[FilePositionIndex::LOCAL] = num;
+
+    /* get cloud file status */
+    QueryFilePosStat(POSITION_CLOUD, num);
+    filePosStat[FilePositionIndex::CLOUD] = num;
+
+    /* get both file status */
+    QueryFilePosStat(POSITION_BOTH, num);
+    filePosStat[FilePositionIndex::BOTH] = num;
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetCloudThmStat(std::vector<uint64_t> &cloudThmStat)
+{
+    if (cloudThmStat.size() != CLOUD_THM_STAT_LEN) {
+        LOGE("cloud thm stat size is wrong with %{public}zu", cloudThmStat.size());
+        return E_DATA;
+    }
+
+    /* get DOWNLOADED thm status */
+    int num = 0;
+    QueryCloudThmStat(static_cast<int32_t>(ThumbState::DOWNLOADED), num);
+    cloudThmStat[CloudThmStatIndex::DOWNLOADED] = num;
+
+    /* get LCD_TO_DOWNLOAD thm status */
+    QueryCloudThmStat(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD), num);
+    cloudThmStat[CloudThmStatIndex::LCD_TO_DOWNLOAD] = num;
+
+    /* get THM_TO_DOWNLOAD thm status */
+    QueryCloudThmStat(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD), num);
+    cloudThmStat[CloudThmStatIndex::THM_TO_DOWNLOAD] = num;
+
+    /* get TO_DOWNLOAD thm status */
+    QueryCloudThmStat(static_cast<int32_t>(ThumbState::TO_DOWNLOAD), num);
+    cloudThmStat[CloudThmStatIndex::TO_DOWNLOAD] = num;
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::GetDirtyTypeStat(std::vector<uint64_t> &dirtyTypeStat)
+{
+    if (dirtyTypeStat.size() != DIRTY_TYPE_LEN) {
+        LOGE("dirty type size is wrong with %{public}zu", dirtyTypeStat.size());
+        return E_DATA;
+    }
+
+    /* get synced dirty type status */
+    int num = 0;
+    QueryDirtyTypeStat(static_cast<int32_t>(DirtyType::TYPE_SYNCED), num);
+    dirtyTypeStat[DirtyTypeIndex::SYNCED] = num;
+
+    /* get new dirty type status */
+    QueryDirtyTypeStat(static_cast<int32_t>(DirtyType::TYPE_NEW), num);
+    dirtyTypeStat[DirtyTypeIndex::NEW] = num;
+
+    /* get mdirty dirty type status */
+    QueryDirtyTypeStat(static_cast<int32_t>(DirtyType::TYPE_MDIRTY), num);
+    dirtyTypeStat[DirtyTypeIndex::MDIRTY] = num;
+
+    /* get fdirty dirty type status */
+    QueryDirtyTypeStat(static_cast<int32_t>(DirtyType::TYPE_FDIRTY), num);
+    dirtyTypeStat[DirtyTypeIndex::FDIRTY] = num;
+
+    /* get deleted dirty type status */
+    QueryDirtyTypeStat(static_cast<int32_t>(DirtyType::TYPE_DELETED), num);
+    dirtyTypeStat[DirtyTypeIndex::DELETED] = num;
+
+    return E_OK;
+}
+
+int32_t FileDataHandler::QueryDataStat(const NativeRdb::AbsRdbPredicates &predicates,
+    const std::string &queryData, const int32_t &value, int &num)
+{
+    auto results = Query(predicates, { queryData });
+    if (results == nullptr) {
+        LOGE("get nullptr, query %{public}s value:%{public}d failed!", queryData.c_str(), value);
+        return E_RDB;
+    }
+
+    int32_t ret = results->GetRowCount(num);
+    if (ret != 0) {
+        LOGE("get row count failed ret is %{public}d", ret);
+        return E_RDB;
+    }
+
+    LOGI("query data status success type:%{public}s value:%{public}d num:%{public}d",
+        queryData.c_str(), value, num);
+    return E_OK;
+}
+
+int32_t FileDataHandler::QueryFilePosStat(const int32_t &position, int &num)
+{
+    num = 0;
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    predicates.EqualTo(PhotoColumn::PHOTO_POSITION, position);
+    return QueryDataStat(predicates, PhotoColumn::PHOTO_POSITION, position, num);
+}
+
+int32_t FileDataHandler::QueryCloudThmStat(const int32_t &cloudThmStat, int &num)
+{
+    num = 0;
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    predicates.EqualTo(PhotoColumn::PHOTO_THUMB_STATUS, cloudThmStat)
+              ->And()
+              ->BeginWrap()
+              ->EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_CLOUD)
+              ->Or()
+              ->EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_BOTH)
+              ->EndWrap();
+    return QueryDataStat(predicates, PhotoColumn::PHOTO_THUMB_STATUS, cloudThmStat, num);
+}
+
+int32_t FileDataHandler::QueryDirtyTypeStat(const int32_t &dirtyType, int &num)
+{
+    num = 0;
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
+    predicates.EqualTo(PhotoColumn::PHOTO_DIRTY, dirtyType);
+    return QueryDataStat(predicates, PhotoColumn::PHOTO_DIRTY, dirtyType, num);
+}
+
+void FileDataHandler::ReportFilePosStat()
+{
+    std::vector<uint64_t> filePosStat(FILE_POSITION_LEN);
+    GetFilePosStat(filePosStat);
+    UpdateCheckFilePos(FilePositionIndex::LOCAL, filePosStat[FilePositionIndex::LOCAL]);
+    UpdateCheckFilePos(FilePositionIndex::CLOUD, filePosStat[FilePositionIndex::CLOUD]);
+    UpdateCheckFilePos(FilePositionIndex::BOTH, filePosStat[FilePositionIndex::BOTH]);
+}
+
+void FileDataHandler::ReportCloudThmStat()
+{
+    std::vector<uint64_t> dirtyTypeStat(CLOUD_THM_STAT_LEN);
+    GetCloudThmStat(dirtyTypeStat);
+    UpdateCheckCloudThmStat(CloudThmStatIndex::DOWNLOADED,
+        dirtyTypeStat[CloudThmStatIndex::DOWNLOADED]);
+    UpdateCheckCloudThmStat(CloudThmStatIndex::LCD_TO_DOWNLOAD,
+        dirtyTypeStat[CloudThmStatIndex::LCD_TO_DOWNLOAD]);
+    UpdateCheckCloudThmStat(CloudThmStatIndex::THM_TO_DOWNLOAD,
+        dirtyTypeStat[CloudThmStatIndex::THM_TO_DOWNLOAD]);
+    UpdateCheckCloudThmStat(CloudThmStatIndex::TO_DOWNLOAD,
+        dirtyTypeStat[CloudThmStatIndex::TO_DOWNLOAD]);
+}
+
+void FileDataHandler::ReportDirtyTypeStat()
+{
+    std::vector<uint64_t> dirtyTypeStat(DIRTY_TYPE_LEN);
+    GetDirtyTypeStat(dirtyTypeStat);
+    UpdateCheckDirtyType(DirtyTypeIndex::SYNCED, dirtyTypeStat[DirtyTypeIndex::SYNCED]);
+    UpdateCheckDirtyType(DirtyTypeIndex::NEW, dirtyTypeStat[DirtyTypeIndex::NEW]);
+    UpdateCheckDirtyType(DirtyTypeIndex::MDIRTY, dirtyTypeStat[DirtyTypeIndex::MDIRTY]);
+    UpdateCheckDirtyType(DirtyTypeIndex::FDIRTY, dirtyTypeStat[DirtyTypeIndex::FDIRTY]);
+    UpdateCheckDirtyType(DirtyTypeIndex::DELETED, dirtyTypeStat[DirtyTypeIndex::DELETED]);
+}
+
+void FileDataHandler::SetCheckReportStatus()
+{
+    /* set report file position status */
+    ReportFilePosStat();
+
+    /* set report dirty type status */
+    ReportDirtyTypeStat();
+
+    /* set report cloud thm status */
+    ReportCloudThmStat();
+}
+
 int32_t FileDataHandler::OptimizeStorage(const int32_t agingDays)
 {
     int64_t totalSize = GetTotalSize();

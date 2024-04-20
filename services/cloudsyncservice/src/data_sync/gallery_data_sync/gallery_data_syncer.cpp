@@ -276,6 +276,11 @@ int32_t GalleryDataSyncer::Complete(bool isNeedNotify)
         LOGW("clean remain record failed");
         return ret;
     }
+
+    if (checkStat_ != nullptr) {
+        fileHandler_->SetCheckReportStatus();
+    }
+
     DataSyncer::CompleteAll(isNeedNotify);
     return E_OK;
 }
