@@ -30,11 +30,12 @@ int32_t CloudDownloadUriManager::AddPathToUri(const std::string& path, const std
     LOGI("download_file : add path [ %{public}s ] -> uri [ %{public}s ]", path.c_str(), uri.c_str());
     std::lock_guard<std::mutex> lock(mutex_);
     if (pathMap_.find(path) == pathMap_.end()) {
-        LOGI("download_file : remove path [ %{public}s ] success", path.c_str());
         pathMap_[path] = uri;
+        LOGI("download_file : add path [ %{public}s ] success, pathMap size is %{public}d",
+            path.c_str(), pathMap_.size());
         return E_OK;
     }
-    LOGE("file is already trigger downloading");
+    LOGE("file is already trigger downloading, pathMap size is %{public}d", pathMap_.size());
     return E_STOP;
 }
 
@@ -42,7 +43,8 @@ void CloudDownloadUriManager::RemoveUri(const std::string& path)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (pathMap_.find(path) != pathMap_.end()) {
-        LOGI("download_file : remove path [ %{public}s ] success", path.c_str());
+        LOGI("download_file : remove path [ %{public}s ] success, pathMap size is %{public}d",
+            path.c_str(), pathMap_.size());
         pathMap_.erase(path);
     }
 }
@@ -51,11 +53,13 @@ std::string CloudDownloadUriManager::GetUri(const std::string& path)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (pathMap_.find(path) != pathMap_.end()) {
-        LOGI("download_file : get path [ %{public}s ] success", path.c_str());
+        LOGI("download_file : get path [ %{public}s ] success, pathMap size is %{public}d",
+            path.c_str(), pathMap_.size());
         return pathMap_[path];
     }
 
-    LOGE("download_file : get path [ %{public}s ] fail", path.c_str());
+    LOGE("download_file : get path [ %{public}s ] fail, pathMap size is %{public}d",
+        path.c_str(), pathMap_.size());
     return "";
 }
 
