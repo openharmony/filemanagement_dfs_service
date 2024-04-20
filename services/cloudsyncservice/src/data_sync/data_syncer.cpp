@@ -408,7 +408,7 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
             DownloadContext dctx = {.context = context,
                                     .assets = onFetchParams.assetsToDownload,
                                     .id = 0,
-                                    .resultCallback = AsyncCallback(&DataSyncer::FetchRecordsDownloadCallback),
+                                    .resultCallback = resultCallback,
                                     .progressCallback = FetchRecordsDownloadProgress};
             DownloadAssets(dctx);
         }
@@ -723,7 +723,7 @@ void DataSyncer::RetryDownloadRecords(shared_ptr<TaskContext> context)
             DownloadContext dctx = {.context = ctx,
                                     .assets = assetsToDownload,
                                     .id = 0,
-                                    .resultCallback = AsyncCallback(&DataSyncer::FetchRecordsDownloadCallback),
+                                    .resultCallback = resultCallback,
                                     .progressCallback = FetchRecordsDownloadProgress};
             DownloadAssets(dctx);
         }
