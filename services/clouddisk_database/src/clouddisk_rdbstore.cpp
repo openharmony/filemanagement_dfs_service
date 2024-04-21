@@ -225,23 +225,63 @@ static int64_t UTCTimeMilliSeconds()
     return t.tv_sec * SECOND_TO_MILLISECOND + t.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 
-static int32_t CheckName(const std::string &fileName)
+static int32_t CheckNameForSpace(const std::string& fileName, const int32_t isDir)
 {
-    for (char c : fileName) {
-        if (c == '<' || c == '>' || c == '|' || c == ':' || c == '?' || c == '/' || c == '\\' ||
-            c == '"' || c == '%' || c == '&' || c == '#' || c == ';' || c == '!' || c == ' ' || c == '\'') {
+    if (fileName.empty()) {
+        return EINVAL;
+    }
+    if (fileName[0] == ' ') {
+        LOGI("Illegal name");
+        return EINVAL;
+    }
+    if (isDir == DIRECTORY) {
+        if (fileName[fileName.length() - 1] == ' ') {
             LOGI("Illegal name");
             return EINVAL;
         }
     }
-    std::string realFileName = fileName.substr(0, fileName.find_last_of('.'));
-    if (realFileName.find(".") != std::string::npos || realFileName.find("..") != std::string::npos ||
+    return E_OK;
+}
+
+static int32_t CheckName(const std::string &fileName)
+{
+    if (fileName.empty()) {
+        return EINVAL;
+    }
+    std::map<char, bool> illegalCharacter = {
+        {'<', true},
+        {'>', true},
+        {'|', true},
+        {':', true},
+        {'?', true},
+        {'/', true},
+        {'\\', true},
+        {'"', true},
+        {'%', true},
+        {'&', true},
+        {'#', true},
+        {';', true},
+        {'!', true},
+        {'\'', true}
+    };
+    for (char c : fileName) {
+        if (illegalCharacter.find(c) != illegalCharacter.end()) {
+            LOGI("Illegal name");
+            return EINVAL;
+        }
+    }
+    size_t lastDot = fileName.rfind('.');
+    if (lastDot == std::string::npos) {
+        lastDot = fileName.length();
+    }
+    std::string realFileName = fileName.substr(0, lastDot);
+    if (realFileName.find(".") != std::string::npos ||
         ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji") ||
         fileName.length() > MAX_FILE_NAME_SIZE) {
         LOGI("Illegal name");
         return EINVAL;
     }
-    return 0;
+    return E_OK;
 }
 
 static int32_t CreateFile(const std::string &fileName, const std::string &filePath, ValuesBucket &fileInfo)
@@ -256,10 +296,6 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutLong(FileColumn::FILE_SIZE, statInfo.st_size);
     fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
     fileInfo.PutLong(FileColumn::META_TIME_EDITED, Timespec2Milliseconds(statInfo.st_mtim));
-    ret = CheckName(fileName);
-    if (ret != 0) {
-        return ret;
-    }
     FillFileType(fileName, fileInfo);
     return E_OK;
 }
@@ -267,6 +303,14 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
 int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string &parentCloudId,
     const std::string &fileName)
 {
+    int32_t ret = CheckName(fileName);
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = CheckNameForSpace(fileName, FILE);
+    if (ret != E_OK) {
+        return ret;
+    }
     RDBPTR_IS_NULLPTR(rdbStore_);
     ValuesBucket fileInfo;
     if (cloudId.empty() || parentCloudId.empty() || fileName.empty()) {
@@ -285,7 +329,7 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
         return E_PATH;
     }
     int64_t outRowId = 0;
-    int32_t ret = rdbStore_->Insert(outRowId, FileColumn::FILES_TABLE, fileInfo);
+    ret = rdbStore_->Insert(outRowId, FileColumn::FILES_TABLE, fileInfo);
     if (ret != E_OK) {
         LOGE("insert new file record in DB is failed, ret = %{public}d", ret);
         return ret;
@@ -296,6 +340,14 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
 int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &parentCloudId,
     const std::string &directoryName)
 {
+    int32_t ret = CheckName(directoryName);
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = CheckNameForSpace(directoryName, DIRECTORY);
+    if (ret != E_OK) {
+        return ret;
+    }
     RDBPTR_IS_NULLPTR(rdbStore_);
     ValuesBucket dirInfo;
     if (cloudId.empty() || parentCloudId.empty() || directoryName.empty()) {
@@ -312,13 +364,9 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
     dirInfo.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::NEW));
     dirInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     int64_t outRowId = 0;
-    int32_t ret = rdbStore_->Insert(outRowId, FileColumn::FILES_TABLE, dirInfo);
+    ret = rdbStore_->Insert(outRowId, FileColumn::FILES_TABLE, dirInfo);
     if (ret != E_OK) {
         LOGE("insert new directory record in DB is failed, ret = %{public}d", ret);
-        return ret;
-    }
-    ret = CheckName(directoryName);
-    if (ret != 0) {
         return ret;
     }
     return E_OK;
@@ -611,6 +659,10 @@ static void FileMove(ValuesBucket &values, const int32_t &position, const std::s
 int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
     const std::string &newParentCloudId, const std::string &newFileName)
 {
+    int32_t ret = CheckName(newFileName);
+    if (ret != E_OK) {
+        return ret;
+    }
     RDBPTR_IS_NULLPTR(rdbStore_);
     if (oldParentCloudId.empty() || oldFileName.empty() || newParentCloudId.empty() || newFileName.empty()) {
         LOGE("rename parameters is invalid");
@@ -627,6 +679,11 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         LOGI("the rename parameter is same as old");
         return E_OK;
     }
+    int32_t isDir = info.IsDirectory;
+    ret = CheckNameForSpace(newFileName, isDir);
+    if (ret != E_OK) {
+        return ret;
+    }
     ValuesBucket rename;
     rename.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
     if (oldFileName != newFileName && oldParentCloudId == newParentCloudId) {
@@ -638,7 +695,7 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
     int32_t changedRows = -1;
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(cloudId);
-    int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, rename,
+    ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, rename,
         FileColumn::CLOUD_ID + " = ?", bindArgs);
     if (ret != E_OK) {
         LOGE("rename file fail, ret %{public}d", ret);
@@ -895,6 +952,15 @@ static void VersionAddFileStatus(RdbStore &store)
     }
 }
 
+static void VersionSetFileStatusDefault(RdbStore &store)
+{
+    const string setFileStatus = FileColumn::SET_FILE_STATUS_DEFAULT;
+    int32_t ret = store.ExecuteSql(setFileStatus);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("set file_status fail, err %{public}d", ret);
+    }
+}
+
 int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
@@ -912,6 +978,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     }
     if (oldVersion < VERSION_ADD_FILE_STATUS) {
         VersionAddFileStatus(store);
+    }
+    if (oldVersion < VERSION_SET_FILE_STATUS_DEFAULT) {
+        VersionSetFileStatusDefault(store);
     }
     return NativeRdb::E_OK;
 }

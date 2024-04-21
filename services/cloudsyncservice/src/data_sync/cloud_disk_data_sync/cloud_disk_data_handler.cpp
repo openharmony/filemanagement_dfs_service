@@ -697,10 +697,6 @@ int32_t CloudDiskDataHandler::GetDeletedRecords(vector<DKRecord> &records)
         LOGE("result set to records err %{public}d", ret);
         return ret;
     }
-    ret = PushFileStatus(records);
-    if (ret != E_OK) {
-        return ret;
-    }
     return E_OK;
 }
 int32_t CloudDiskDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
@@ -806,7 +802,6 @@ int32_t CloudDiskDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOper
         if (err != E_OK) {
             modifyFailSet_.push_back(entry.first);
             ValuesBucket valuesBucket;
-            valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAILURE);
             int32_t changedRows;
             int32_t ret = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
             if (ret != E_OK) {

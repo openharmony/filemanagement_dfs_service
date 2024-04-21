@@ -69,6 +69,9 @@ public:
     //create FileStatus
     static const std::string ADD_FILE_STATUS;
 
+    //set FileStatus
+    static const std::string SET_FILE_STATUS_DEFAULT;
+
     // Query FILES_TABLE for FileSystem
     static const std::vector<std::string> FILE_SYSTEM_QUERY_COLUMNS;
 
