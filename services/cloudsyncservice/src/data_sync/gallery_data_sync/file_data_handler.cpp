@@ -3789,23 +3789,23 @@ int32_t FileDataHandler::GetDirtyTypeStat(std::vector<uint64_t> &dirtyTypeStat)
     /* get synced dirty type status */
     int num = 0;
     QueryDirtyTypeStat(static_cast<int32_t>(DirtyType::TYPE_SYNCED), num);
-    dirtyTypeStat[DirtyTypeIndex::SYNCED] = num;
+    dirtyTypeStat[DirtyTypeIndex::SYNCED] = static_cast<uint64_t>(num);
 
     /* get new dirty type status */
     QueryDirtyTypeStat(static_cast<int32_t>(DirtyType::TYPE_NEW), num);
-    dirtyTypeStat[DirtyTypeIndex::NEW] = num;
+    dirtyTypeStat[DirtyTypeIndex::NEW] = static_cast<uint64_t>(num);
 
     /* get mdirty dirty type status */
     QueryDirtyTypeStat(static_cast<int32_t>(DirtyType::TYPE_MDIRTY), num);
-    dirtyTypeStat[DirtyTypeIndex::MDIRTY] = num;
+    dirtyTypeStat[DirtyTypeIndex::MDIRTY] = static_cast<uint64_t>(num);
 
     /* get fdirty dirty type status */
     QueryDirtyTypeStat(static_cast<int32_t>(DirtyType::TYPE_FDIRTY), num);
-    dirtyTypeStat[DirtyTypeIndex::FDIRTY] = num;
+    dirtyTypeStat[DirtyTypeIndex::FDIRTY] = static_cast<uint64_t>(num);
 
     /* get deleted dirty type status */
     QueryDirtyTypeStat(static_cast<int32_t>(DirtyType::TYPE_DELETED), num);
-    dirtyTypeStat[DirtyTypeIndex::DELETED] = num;
+    dirtyTypeStat[DirtyTypeIndex::DELETED] = static_cast<uint64_t>(num);
 
     return E_OK;
 }
