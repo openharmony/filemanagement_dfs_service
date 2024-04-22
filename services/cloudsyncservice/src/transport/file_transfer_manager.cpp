@@ -16,7 +16,6 @@
 #include "file_transfer_manager.h"
 
 #include <cinttypes>
-#include <filesystem>
 
 #include "dfs_error.h"
 #include "ipc/download_asset_callback_manager.h"
@@ -175,13 +174,13 @@ void FileTransferManager::OnSessionClosed() // avoid sa cannot unload when sessi
     TaskStateManager::GetInstance().CompleteTask(CALLER_NAME, TaskType::DOWNLOAD_REMOTE_ASSET_TASK);
 }
 
-bool FileTransferManager::IsFileExists(std::string &filePath)
+bool FileTransferManager::IsFileExists(const std::string &filePath)
 {
-    if (filesystem::exists(filePath)) {
-        return true;
-    } else {
+    if (access(filePath.c_str(), F_OK) != E_OK) {
+        LOGE("file is not exist, path:%{public}s, error:%{public}s", filePath.c_str(), strerror(errno));
         return false;
     }
+    return true;
 }
 
 std::tuple<std::string, std::string> FileTransferManager::UriToPath(const std::string &uri,
