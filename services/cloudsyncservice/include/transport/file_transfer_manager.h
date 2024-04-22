@@ -55,7 +55,7 @@ private:
         std::string relativePath;
         uint64_t taskId;
     };
-    bool IsFileExists(std::string &filePath);
+    bool IsFileExists(const std::string &filePath);
     std::tuple<std::string, std::string>
         UriToPath(const std::string &uri, const int32_t userId, bool isCheckFileExists = true);
     void AddTransTask(const std::string &uri, const int32_t userId, uint64_t taskId);
