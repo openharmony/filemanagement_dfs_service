@@ -135,30 +135,32 @@ std::vector<std::string> GetFilePath(const std::string &name)
 
 int32_t ChangeOwnerRecursive(const std::string &path, uid_t uid, gid_t gid)
 {
-    DIR *dir = opendir(path.c_str());
+    std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(path.c_str()), &closedir);
     if (dir == nullptr) {
+        LOGE("Directory is null");
         return -1;
     }
 
     struct dirent *entry = nullptr;
-    while ((entry = readdir(dir)) != nullptr) {
+    while ((entry = readdir(dir.get())) != nullptr) {
         if (entry->d_type == DT_DIR) {
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
                 continue;
             }
             std::string subPath = path + "/" + entry->d_name;
             if (chown(subPath.c_str(), uid, gid) == -1) {
+                LOGE("Change owner recursive failed");
                 return -1;
             }
             return ChangeOwnerRecursive(subPath, uid, gid);
         } else {
             std::string filePath = path + "/" + entry->d_name;
             if (chown(filePath.c_str(), uid, gid) == -1) {
+                LOGE("Change owner recursive failed");
                 return -1;
             }
         }
     }
-    closedir(dir);
     return 0;
 }
 } // namespace Utils
