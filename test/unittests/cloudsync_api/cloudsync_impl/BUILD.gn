@@ -22,15 +22,16 @@ ohos_unittest("cloud_sync_callback_client_test") {
     "${services_path}/cloudsyncservice/include/ipc",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/utils/log/include",
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_single",
@@ -50,15 +51,16 @@ ohos_unittest("cloud_sync_callback_stub_test") {
     "${services_path}/cloudsyncservice/include/ipc",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/utils/log/include",
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_single",
@@ -70,15 +72,6 @@ ohos_unittest("cloud_sync_callback_stub_test") {
 }
 
 ohos_unittest("cloud_sync_manager_impl_test") {
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    ubsan = true
-    boundary_sanitize = true
-    cfi = true
-    cfi_cross_dso = true
-    debug = true
-    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
-  }
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
@@ -93,16 +86,17 @@ ohos_unittest("cloud_sync_manager_impl_test") {
     "${distributedfile_path}/test/mock/ipc",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store_mock.cpp",
+    "${distributedfile_path}/utils/log/include",
   ]
 
   deps = [
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
-    "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_single",
@@ -127,16 +121,17 @@ ohos_unittest("cloud_sync_manager_impl_unnomal_test") {
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/test/mock/ipc",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
   ]
 
   deps = [
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
-    "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_single",
@@ -183,15 +178,16 @@ ohos_unittest("cloud_sync_service_proxy_test") {
     "${services_path}/cloudsyncservice/include/ipc",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/utils/log/include",
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_single",
@@ -212,15 +208,16 @@ ohos_unittest("cloud_download_callback_client_test") {
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_single",
@@ -248,15 +245,16 @@ ohos_unittest("cloud_download_callback_stub_test") {
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
+    "${distributedfile_path}/utils/log/include",
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_single",
@@ -347,15 +345,16 @@ ohos_unittest("cloud_sync_asset_manager_impl_test") {
     "${services_path}/cloudsyncservice/include/ipc",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
+    "${distributedfile_path}/utils/log/include",
   ]
 
   deps = [
-    "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_single",
