@@ -49,6 +49,7 @@
 #include "meta_file.h"
 #include "sdk_helper.h"
 #include "utils_log.h"
+#include "hitrace_meter.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -289,6 +290,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
 static void CloudLookup(fuse_req_t req, fuse_ino_t parent,
                         const char *name)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     struct fuse_entry_param e;
     int err;
 
@@ -326,6 +328,7 @@ static void CloudForget(fuse_req_t req, fuse_ino_t ino,
 static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
                          struct fuse_file_info *fi)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     struct stat buf;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     (void) fi;
@@ -448,6 +451,7 @@ static void HandleOpenResult(fuse_req_t req, DriveKit::DKError dkError, struct F
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                       struct fuse_file_info *fi)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId);
@@ -563,6 +567,7 @@ static bool PrepareForRead(fuse_req_t req, shared_ptr<char> &buf, size_t size, s
 static void CloudReadOnCloudFile(shared_ptr<ReadArguments> readArgs, shared_ptr<char> buf,
     shared_ptr<CloudInode> cInode, shared_ptr<DriveKit::DKAssetReadSession> dkReadSession)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     *readArgs->readResult = dkReadSession->PRead(readArgs->offset, readArgs->size, buf.get(), *readArgs->dkError);
     {
         unique_lock lck(cInode->readLock);
@@ -588,6 +593,7 @@ static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t o
 static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                       struct fuse_file_info *fi)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
