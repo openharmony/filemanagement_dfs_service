@@ -419,7 +419,7 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
         LOGE("Failed to open local file, errno: %{public}d", errno);
         return -errno;
     }
-    fi->fh = fd;
+    fi->fh = static_cast<uint64_t>(fd);
     return 0;
 }
 
