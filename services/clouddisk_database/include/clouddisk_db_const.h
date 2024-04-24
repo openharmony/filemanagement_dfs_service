@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,23 @@ enum {
     VERSION_ADD_STATUS_ERROR_FAVORITE = 5,
     VERSION_ADD_FILE_STATUS = 6,
     VERSION_SET_FILE_STATUS_DEFAULT = 7,
+};
+// drive kit
+const std::string DK_FILE_NAME = "fileName";
+const std::string DK_PARENT_CLOUD_ID = "parentFolder";
+const std::string DK_IS_DIRECTORY = "type";
+
+struct NotifyData {
+    std::string uri;
+    bool isDir;
+    NotifyType type = NotifyType::NOTIFY_NONE;
+};
+
+struct CacheNode {
+    std::string cloudId;
+    std::string parentCloudId;
+    std::string fileName;
+    std::string isDir;
 };
 
 } // namespace CloudDisk

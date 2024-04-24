@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,6 +56,14 @@ enum FileStatus {
     UPLOAD_FAILURE = 2,
     UPLOAD_SUCCESS = 3,
     UNKNOW = 4
+};
+
+enum class NotifyType : uint32_t {
+    NOTIFY_ADDED = 0,
+    NOTIFY_MODIFIED,
+    NOTIFY_DELETED,
+    NOTIFY_RENAMED,
+    NOTIFY_NONE,
 };
 
 constexpr int64_t SECOND_TO_MILLISECOND = 1e3;
