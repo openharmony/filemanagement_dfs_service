@@ -113,6 +113,13 @@ public:
     {
         return E_OK;
     }
+    int32_t DownloadFiles(const int32_t userId,
+                          const std::string &bundleName,
+                          std::vector<AssetInfoObj> &assetInfoObj,
+                          std::vector<bool> &assetResultMap) override
+    {
+        return E_OK;
+    }
     int32_t DownloadAsset(const uint64_t taskId,
                          const int32_t userId,
                          const std::string &bundleName,

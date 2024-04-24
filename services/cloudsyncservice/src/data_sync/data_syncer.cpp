@@ -96,6 +96,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
 
     TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::SYNC_TASK);
     /* start data sync */
+    errorCode_ = E_OK;
     ScheduleByType(triggerType);
 
     return E_OK;
@@ -661,8 +662,7 @@ void DataSyncer::OnFetchRecordWithIds(shared_ptr<DKContext> context, shared_ptr<
     for (const auto &it : *recordMap) {
         auto recordId = it.first;
         if (!it.second.IsSuccess()) {
-            LOGE("has error, recordId:%s", recordId.c_str());
-            LOGI("convert to delete record");
+            LOGE("has error, recordId:%s, convert to delete record", recordId.c_str());
             DKRecord deleteRecord;
             deleteRecord.SetRecordId(recordId);
             deleteRecord.SetDelete(true);

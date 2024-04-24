@@ -57,6 +57,10 @@ public:
     int32_t UnregisterDownloadFileCallback() override;
     int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) override;
     int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj) override;
+    int32_t DownloadFiles(const int32_t userId,
+                          const std::string &bundleName,
+                          std::vector<AssetInfoObj> &assetInfoObj,
+                          std::vector<bool> &assetResultMap) override;
     int32_t DownloadAsset(const uint64_t taskId,
                           const int32_t userId,
                           const std::string &bundleName,

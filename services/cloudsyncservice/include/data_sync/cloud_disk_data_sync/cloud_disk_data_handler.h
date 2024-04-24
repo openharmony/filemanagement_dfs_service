@@ -59,7 +59,7 @@ public:
 private:
     static inline const int32_t LIMIT_SIZE = 5;
     static inline const int32_t CREATE_LIMIT_SIZE = 20;
-    static inline const int32_t PULL_LIMIT_SIZE = 100;
+    static inline const int32_t PULL_LIMIT_SIZE = 200;
     static inline const int32_t MODIFY_BATCH_NUM = 20;
     static inline const int32_t DELETE_BATCH_NUM = 20;
     static const int32_t MAX_RENAME = 10;

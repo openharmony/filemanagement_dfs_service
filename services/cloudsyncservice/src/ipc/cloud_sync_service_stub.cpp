@@ -61,6 +61,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         &CloudSyncServiceStub::HandleUploadAsset;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILE)] =
         &CloudSyncServiceStub::HandleDownloadFile;
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILES)] =
+        &CloudSyncServiceStub::HandleDownloadFiles;
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_ASSET)] =
         &CloudSyncServiceStub::HandleDownloadAsset;
     opToInterfaceMap_[static_cast<uint32_t>(
@@ -445,6 +447,38 @@ int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessagePar
     int32_t res = DownloadFile(userId, bundleName, *assetInfoObj);
     reply.WriteInt32(res);
     LOGI("End DownloadFile");
+    return res;
+}
+
+int32_t CloudSyncServiceStub::HandleDownloadFiles(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin DownloadFile");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    int32_t userId = data.ReadInt32();
+    string bundleName = data.ReadString();
+    int32_t size = data.ReadInt32();
+    std::vector<AssetInfoObj> assetInfoObj;
+    for (int i = 0; i < size; i++) {
+        sptr<AssetInfoObj> obj = data.ReadParcelable<AssetInfoObj>();
+        if (!obj) {
+            LOGE("object of obj is nullptr");
+            return E_INVAL_ARG;
+        }
+        assetInfoObj.emplace_back(*obj);
+    }
+
+    std::vector<bool> assetResultMap;
+    int32_t res = DownloadFiles(userId, bundleName, assetInfoObj, assetResultMap);
+    reply.WriteBoolVector(assetResultMap);
+    reply.WriteInt32(res);
+    LOGI("End DownloadFiles");
     return res;
 }
 

@@ -48,6 +48,7 @@ private:
     int32_t HandleUnregisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply);
     int32_t HandleUploadAsset(MessageParcel &data, MessageParcel &reply);
     int32_t HandleDownloadFile(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleDownloadFiles(MessageParcel &data, MessageParcel &reply);
     int32_t HandleDownloadAsset(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRegisterDownloadAssetCallback(MessageParcel &data, MessageParcel &reply);
     int32_t HandleDeleteAsset(MessageParcel &data, MessageParcel &reply);

@@ -50,6 +50,11 @@ public:
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
     MOCK_METHOD3(DownloadFile,
                  int32_t(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj));
+    MOCK_METHOD4(DownloadFiles,
+                 int32_t(const int32_t userId,
+                         const std::string &bundleName,
+                         std::vector<AssetInfoObj> &assetInfoObj,
+                         std::vector<bool> &assetResultMap));
     MOCK_METHOD5(DownloadAsset,
                  int32_t(const uint64_t taskId,
                          const int32_t userId,
