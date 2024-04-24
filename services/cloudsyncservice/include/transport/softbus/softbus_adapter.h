@@ -55,6 +55,7 @@ public:
     int SendBytes(int sessionId, const void *data, unsigned int dataLen);
     int SendFile(int sessionId, const std::vector<std::string> &sFileList, const std::vector<std::string> &dFileList);
     std::string GetSessionNameById(int sessionId);
+    std::string GetSessionNameFromMap(int sessionId);
     std::string GetPeerNetworkId(int sessionId);
     bool IsFromServer(int sessionId);
 
@@ -63,7 +64,7 @@ public:
 
     std::shared_ptr<ISoftbusListener> GetListener(std::string sessionName);
     bool IsSessionOpened(int sessionId);
-    void AcceptSesion(int sessionId);
+    void AcceptSesion(int sessionId, const std::string &sessionName);
     void RemoveSesion(int sessionId);
 
 private:
@@ -72,7 +73,8 @@ private:
     std::shared_mutex listenerMutex_;
 
     std::mutex sessionMutex_;
-    std::unordered_map<int32_t, bool> SessionOpenedMap_;
+    std::unordered_map<int32_t, bool> sessionOpenedMap_;
+    std::unordered_map<int32_t, std::string> sessionNameMap_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

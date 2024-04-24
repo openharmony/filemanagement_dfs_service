@@ -86,7 +86,7 @@ int SoftbusAdapter::OnSessionOpened(int sessionId, int result)
         return ret;
     }
 
-    SoftbusAdapter::GetInstance().AcceptSesion(sessionId);
+    SoftbusAdapter::GetInstance().AcceptSesion(sessionId, sessionName);
 
     return E_OK;
 }
@@ -94,7 +94,7 @@ int SoftbusAdapter::OnSessionOpened(int sessionId, int result)
 void SoftbusAdapter::OnSessionClosed(int sessionId)
 {
     LOGD("Session OnSessionClosed, sessionId:%{public}d", sessionId);
-    string sessionName = SoftbusAdapter::GetInstance().GetSessionNameById(sessionId);
+    string sessionName = SoftbusAdapter::GetInstance().GetSessionNameFromMap(sessionId);
     if (sessionName.empty()) {
         LOGE("get session name failed");
         return;
@@ -267,6 +267,17 @@ std::string SoftbusAdapter::GetSessionNameById(int sessionId)
     return string(buff);
 }
 
+/* should use this interface when session closed */
+std::string SoftbusAdapter::GetSessionNameFromMap(int sessionId)
+{
+    lock_guard<mutex> lock(sessionMutex_);
+    auto iter = sessionNameMap_.find(sessionId);
+    if (iter != sessionNameMap_.end()) {
+        return iter->second;
+    }
+    return "";
+}
+
 std::string SoftbusAdapter::GetPeerNetworkId(int sessionId)
 {
     char buff[NETWORK_ID_SIZE_MAX] = "";
@@ -310,28 +321,38 @@ std::shared_ptr<ISoftbusListener> SoftbusAdapter::GetListener(std::string sessio
 bool SoftbusAdapter::IsSessionOpened(int sessionId)
 {
     lock_guard<mutex> lock(sessionMutex_);
-    auto iter = SessionOpenedMap_.find(sessionId);
-    if (iter == SessionOpenedMap_.end()) {
+    auto iter = sessionOpenedMap_.find(sessionId);
+    if (iter == sessionOpenedMap_.end()) {
         return false;
     }
     return iter->second;
 }
 
-void SoftbusAdapter::AcceptSesion(int sessionId)
+void SoftbusAdapter::AcceptSesion(int sessionId, const std::string &sessionName)
 {
     lock_guard<mutex> lock(sessionMutex_);
-    auto iter = SessionOpenedMap_.find(sessionId);
-    if (iter == SessionOpenedMap_.end()) {
-        SessionOpenedMap_.insert({sessionId, true});
+    auto iter = sessionOpenedMap_.find(sessionId);
+    if (iter == sessionOpenedMap_.end()) {
+        sessionOpenedMap_.insert({sessionId, true});
+    }
+
+    auto sessionNameMap = sessionNameMap_.find(sessionId);
+    if (sessionNameMap == sessionNameMap_.end()) {
+        sessionNameMap_.insert({sessionId, sessionName});
     }
 }
 
 void SoftbusAdapter::RemoveSesion(int sessionId)
 {
     lock_guard<mutex> lock(sessionMutex_);
-    auto iter = SessionOpenedMap_.find(sessionId);
-    if (iter != SessionOpenedMap_.end()) {
-        SessionOpenedMap_.erase(iter);
+    auto iter = sessionOpenedMap_.find(sessionId);
+    if (iter != sessionOpenedMap_.end()) {
+        sessionOpenedMap_.erase(iter);
+    }
+
+    auto sessionNameMap = sessionNameMap_.find(sessionId);
+    if (sessionNameMap != sessionNameMap_.end()) {
+        sessionNameMap_.erase(sessionNameMap);
     }
 }
 } // namespace OHOS::FileManagement::CloudSync
