@@ -64,6 +64,19 @@ public:
                                  AssetInfo &assetInfo,
                                  ResultCallback resultCallback) = 0;
     /**
+     * @brief 接口触发批量文件下载
+     *
+     * @param userId 用户Id
+     * @param bundleName 应用包名
+     * @param assetInfo 下载批量文件信息
+     * @param assetResultMap 同步返回执行结果
+     * @return int32_t 同步返回执行总结果
+     */
+    virtual int32_t DownloadFiles(const int32_t userId,
+                                  const std::string &bundleName,
+                                  std::vector<AssetInfo> &assetInfo,
+                                  std::vector<bool> &assetResultMap) = 0;
+    /**
      * @brief 接口触发附件删除
      *
      * @param userId 用户Id

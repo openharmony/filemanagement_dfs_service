@@ -196,6 +196,21 @@ int32_t SdkHelper::DownloadAssets(DriveKit::DKDownloadAsset &assetsToDownload)
     return E_OK;
 }
 
+int32_t SdkHelper::DownloadAssets(std::vector<DriveKit::DKDownloadAsset> &assetsToDownload,
+                                  std::vector<bool> &assetResultMap)
+{
+    std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> result;
+    auto ret = downloader_->DownLoadAssets(assetsToDownload, result);
+    for (const auto &it : result) {
+        assetResultMap.emplace_back(it.second.IsSuccess());
+    }
+    if (ret != DriveKit::DKLocalErrorCode::NO_ERROR) {
+        LOGE("DownLoadAssets fail ret %{public}d", static_cast<int>(ret));
+        return E_CLOUD_SDK;
+    }
+    return E_OK;
+}
+
 int32_t SdkHelper::CancelDownloadAssets(int32_t id)
 {
     return static_cast<int32_t>(downloader_->CancelDownloadAssets(id, true));

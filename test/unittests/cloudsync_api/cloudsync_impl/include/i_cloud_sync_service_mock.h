@@ -120,6 +120,13 @@ public:
     {
         return E_OK;
     }
+    int32_t DownloadFiles(const int32_t userId,
+                          const std::string &bundleName,
+                          std::vector<AssetInfoObj> &assetInfoObj,
+                          std::vector<bool> &assetResultMap)
+    {
+        return E_OK;
+    }
     int32_t DeleteAsset(const int32_t userId, const std::string &uri)
     {
         return E_OK;

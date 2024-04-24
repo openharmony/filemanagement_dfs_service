@@ -541,6 +541,35 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
     return ret;
 }
 
+int32_t CloudSyncService::DownloadFiles(const int32_t userId, const std::string &bundleName,
+    std::vector<AssetInfoObj> &assetInfoObj, std::vector<bool> &assetResultMap)
+{
+    auto sdkHelper = std::make_shared<SdkHelper>();
+    auto ret = sdkHelper->Init(userId, bundleName);
+    if (ret != E_OK) {
+        LOGE("get sdk helper err %{public}d", ret);
+        return ret;
+    }
+
+    std::vector<DriveKit::DKDownloadAsset> assetsToDownload;
+    for (const auto &obj: assetInfoObj) {
+        DriveKit::DKAsset asset;
+        asset.assetName = obj.assetName;
+        asset.uri = GetHmdfsPath(obj.uri, userId);
+        if (asset.uri.empty()) {
+            LOGE("fail to get download path from %{private}s", obj.uri.c_str());
+            return E_INVAL_ARG;
+        }
+        DriveKit::DKDownloadAsset assetToDownload{obj.recordType, obj.recordId, {}, asset, {}};
+        assetsToDownload.emplace_back(assetToDownload);
+    }
+
+    TaskStateManager::GetInstance().StartTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
+    ret = sdkHelper->DownloadAssets(assetsToDownload, assetResultMap);
+    TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
+    return ret;
+}
+
 int32_t CloudSyncService::DownloadAsset(const uint64_t taskId,
                                         const int32_t userId,
                                         const std::string &bundleName,

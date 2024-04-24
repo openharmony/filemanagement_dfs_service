@@ -62,6 +62,28 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
     return ret;
 }
 
+int32_t CloudSyncAssetManagerImpl::DownloadFiles(const int32_t userId,
+                                                 const std::string &bundleName,
+                                                 std::vector<AssetInfo> &assetInfo,
+                                                 std::vector<bool> &assetResultMap)
+{
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    std::vector<AssetInfoObj> assetInfoObj;
+    for (const auto &info : assetInfo) {
+        AssetInfoObj obj(info);
+        assetInfoObj.emplace_back(obj);
+    }
+    int32_t ret = CloudSyncServiceProxy->DownloadFiles(userId, bundleName, assetInfoObj, assetResultMap);
+    LOGI("DownloadFile ret %{public}d", ret);
+    return ret;
+}
+
 int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
                                                 const std::string &bundleName,
                                                 const std::string &networkId,

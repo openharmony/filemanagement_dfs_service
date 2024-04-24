@@ -37,6 +37,12 @@ DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(DKDownloadAsset &assetsToDow
     return DKLocalErrorCode::NO_ERROR;
 }
 
+DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(std::vector<DriveKit::DKDownloadAsset> &assetsToDownload,
+    std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &assetResultMap)
+{
+    return DKLocalErrorCode::NO_ERROR;
+}
+
 DKLocalErrorCode DKAssetsDownloader::CancelDownloadAssets(DKDownloadId id, bool isClearCache)
 {
     return DKLocalErrorCode::NO_ERROR;

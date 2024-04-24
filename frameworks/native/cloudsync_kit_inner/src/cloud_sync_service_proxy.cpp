@@ -787,6 +787,65 @@ int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::DownloadFiles(const int32_t userId,
+                                             const std::string &bundleName,
+                                             std::vector<AssetInfoObj> &assetInfoObj,
+                                             std::vector<bool> &assetResultMap)
+{
+    LOGI("DownloadFiles");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        LOGE("Failed to send the user id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    if (assetInfoObj.size() > INT_MAX ||
+        assetInfoObj.size() == 0 ||
+        !data.WriteInt32(assetInfoObj.size())) {
+        LOGE("Failed to send the vector size");
+        return E_INVAL_ARG;
+    }
+
+    for (const auto &obj : assetInfoObj) {
+        if (!data.WriteParcelable(&obj)) {
+            LOGE("Failed to send the assetInfoObj");
+            return E_INVAL_ARG;
+        }
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILES), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("DownloadFile Success");
+    bool readParcel = reply.ReadBoolVector(&assetResultMap);
+    if (readParcel != E_OK) {
+        LOGE("Failed to ReadBoolVector");
+        return E_INVAL_ARG;
+    }
+    return reply.ReadInt32();
+}
+
 int32_t CloudSyncServiceProxy::DownloadAsset(const uint64_t taskId,
                                              const int32_t userId,
                                              const std::string &bundleName,

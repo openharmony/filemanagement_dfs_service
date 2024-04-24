@@ -622,6 +622,17 @@ int32_t FileDataHandler::ConflictRenamePath(NativeRdb::ResultSet &resultSet,
     return E_OK;
 }
 
+static int renameFilePath(const std::string &oldPath, const std::string &newPath)
+{
+    int ret = rename(oldPath.c_str(), newPath.c_str());
+    if (ret != 0) {
+        LOGE("err rename localPath to newPath, ret=%{public}d, errno=%{public}d, path=%{private}s",
+             ret, errno, oldPath.c_str());
+        return E_INVAL_ARG;
+    }
+    return ret;
+}
+
 int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string &fullPath, string &relativePath)
 {
     string rdbPath;
@@ -635,12 +646,18 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
         return E_INVAL_ARG;
     }
     /* thumb new path and new name */
+    (void)renameFilePath(tmpPath, newPath);
+    ret = renameFilePath(localPath, newLocalPath);
+    if (ret != 0) {
+        (void)renameFilePath(newPath, tmpPath);
+    }
+
     string newName = ConflictRenameThumb(resultSet, fullPath, localPath, newLocalPath);
     if (newName == "") {
         LOGE("err Rename Thumb path");
         return E_INVAL_ARG;
     }
-    int updateRows;
+
     ValuesBucket values;
     values.PutString(PhotoColumn::MEDIA_FILE_PATH, rdbPath);
     values.PutString(PhotoColumn::MEDIA_NAME, newName);
@@ -649,20 +666,13 @@ int32_t FileDataHandler::ConflictRename(NativeRdb::ResultSet &resultSet, string 
         values.PutString(PhotoColumn::MEDIA_VIRTURL_PATH, newvirPath);
     }
     string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
+    int updateRows = -1;
     ret = Update(updateRows, values, whereClause, {fullPath});
-    if (ret != E_OK) {
-        LOGE("update retry flag failed, ret=%{public}d", ret);
+    if (updateRows <= 0  || ret != E_OK) {
+        (void)renameFilePath(newPath, tmpPath);
+        (void)renameFilePath(newLocalPath, localPath);
+        LOGE("update retry flag failed, updateRows=%{public}d, ret=%{public}d", updateRows, ret);
         return E_RDB;
-    }
-    ret = rename(tmpPath.c_str(), newPath.c_str());
-    if (ret != 0) {
-        LOGE("err rename localPath to newLocalPath, errno %{public}d, path :%{public}s", errno, tmpPath.c_str());
-        return E_INVAL_ARG;
-    }
-    ret = rename(localPath.c_str(), newLocalPath.c_str());
-    if (ret != 0) {
-        LOGE("err rename tmpPath to newPath, ret = %{public}d", ret);
-        return E_INVAL_ARG;
     }
     return E_OK;
 }
@@ -717,7 +727,7 @@ int32_t FileDataHandler::ConflictHandler(NativeRdb::ResultSet &resultSet,
         LOGE("Get cloud id failed");
         return E_INVAL_ARG;
     }
-    if (ret == E_OK && !localId.empty()) {
+    if (ret == E_OK && !localId.empty() && localId != record.GetRecordId()) {
         LOGI("clould id not NULL %{public}s", localId.c_str());
         modifyPathflag = true;
     }
@@ -2509,13 +2519,17 @@ int32_t FileDataHandler::CleanPureCloudRecord(bool isReamin)
         deleteFileId.clear();
         filePaths->clear();
         RETURN_ON_ERR(GetFilePathAndId(cleanPredicates, deleteFileId, *filePaths));
-        RemoveCloudRecord(filePaths);
-        ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         ret = BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
         if (ret != E_OK) {
             LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
             return ret;
         }
+        ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
+        if (ret != E_OK) {
+            LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
+            return ret;
+        }
+        RemoveCloudRecord(filePaths);
         removeCount += deleteFileId.size();
     } while (deleteFileId.size() != 0);
     LOGI("end clean pure cloud record, remove count is %{public}d", removeCount);
@@ -2580,13 +2594,17 @@ int32_t FileDataHandler::CleanNotDirtyData(bool isReamin)
         deleteFileId.clear();
         filePaths->clear();
         RETURN_ON_ERR(GetFilePathAndId(cleanPredicates, deleteFileId, *filePaths));
-        RemoveBothRecord(filePaths);
-        ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         ret = BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
         if (ret != E_OK) {
             LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
             return ret;
         }
+        ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
+        if (ret != E_OK) {
+            LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
+            return ret;
+        }
+        RemoveBothRecord(filePaths);
         removeCount += deleteFileId.size();
     } while (deleteFileId.size() != 0);
     LOGI("end clean not dirty data, remove count is %{public}d", removeCount);
