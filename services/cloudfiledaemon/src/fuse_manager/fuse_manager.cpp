@@ -400,13 +400,13 @@ static string GetAssetPath(shared_ptr<CloudInode> cInode, struct FuseData *data)
     return path;
 }
 
-static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
+static void CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
 {
     MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
     string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
     if (remove(cloudMergeViewPath.c_str()) < 0) {
         LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
-        return -errno;
+        return;
     }
     string localPath = GetLocalPath(data->userId, cInode->path);
     string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
@@ -414,16 +414,16 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
     ForceCreateDirectory(parentPath.string());
     if (rename(tmpPath.c_str(), localPath.c_str()) < 0) {
         LOGE("Failed to rename tmpPath to localPath, errno: %{public}d", errno);
-        return -errno;
+        return;
     }
     cInode->mBase->hasDownloaded = true;
     auto fd = open(localPath.c_str(), fi->flags);
     if (fd < 0) {
         LOGE("Failed to open local file, errno: %{public}d", errno);
-        return -errno;
+        return;
     }
     fi->fh = static_cast<uint64_t>(fd);
-    return 0;
+    return;
 }
 
 static void HandleOpenResult(fuse_req_t req, DriveKit::DKError dkError, struct FuseData *data,
@@ -434,8 +434,8 @@ static void HandleOpenResult(fuse_req_t req, DriveKit::DKError dkError, struct F
         LOGE("open fali");
         return;
     }
-    if (CloudOpenOnLocal(data, cInode, fi) < 0) {
-        return;
+    if (cInode->mBase->fileType != FILE_TYPE_CONTENT) {
+        CloudOpenOnLocal(data, cInode, fi);
     }
     if (FixDentrySize(cInode, data) != 0) {
         LOGE("fix dentry size fail");
