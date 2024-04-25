@@ -32,6 +32,11 @@ void AccountStatus::SetAccountState(AccountState accountState)
     preAccountState_ = accountState_;
     accountState_ = accountState;
 }
+
+AccountStatus::AccountState AccountStatus::GetAccountState()
+{
+    return accountState_;
+}
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS
