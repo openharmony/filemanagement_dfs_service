@@ -679,8 +679,85 @@ ohos_unittest("softbus_handler_test") {
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
+    "os_account:os_account_innerkits",
+  ]
+
+  defines = [ "private=public" ]
+}
+
+ohos_unittest("softbus_session_pool_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  include_dirs = [ "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus" ]
+
+  sources = [
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+    "network/softbus/softbus_session_pool_test.cpp",
+  ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "dsoftbus:softbus_client",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("softbus_session_listener_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  include_dirs = [ "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus" ]
+
+  sources = [
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "network/softbus/softbus_session_listener_test.cpp",
+  ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
+    "dsoftbus:softbus_client",
+    "hilog:libhilog",
+    "os_account:os_account_innerkits",
   ]
 
   defines = [ "private=public" ]
@@ -697,6 +774,8 @@ group("unittest") {
     ":softbus_agent_test",
     ":softbus_handler_test",
     ":softbus_session_dispatcher_test",
+    ":softbus_session_listener_test",
+    ":softbus_session_pool_test",
     ":softbus_session_test",
   ]
 }
