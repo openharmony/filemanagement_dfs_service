@@ -232,7 +232,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest3, TestSize.Level1)
     const int32_t userId = 123456789;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
     int32_t ret = CloudDiskRdbStore.Create(cloudId, parentCloudId, fileName);
-    EXPECT_EQ(ret, E_INVAL_ARG);
+    EXPECT_EQ(ret, EINVAL);
 }
 
 /**
@@ -305,7 +305,7 @@ HWTEST_F(CloudDiskRdbStoreTest, MkDirTest3, TestSize.Level1)
     const int32_t userId = 123456789;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
     int32_t ret = CloudDiskRdbStore.MkDir(cloudId, parentCloudId, directoryName);
-    EXPECT_EQ(ret, E_INVAL_ARG);
+    EXPECT_EQ(ret, EINVAL);
 }
 
 /**
@@ -490,9 +490,66 @@ HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest4, TestSize.Level1)
 HWTEST_F(CloudDiskRdbStoreTest, RenameTest1, TestSize.Level1)
 {
     const std::string oldParentCloudId = "";
-    const std::string oldFileName = "";
+    const std::string oldFileName = "test.txt";
+    const std::string newParentCloudId = "4461356";
+    const std::string newFileName = "test1.txt";
+    const std::string bundleName = "WriteTest";
+    const int32_t userId = 123456789;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+}
+
+/**
+ * @tc.name: Rename
+ * @tc.desc: Verify the CloudDiskRdbStore::Rename function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, RenameTest2, TestSize.Level1)
+{
+    const std::string oldParentCloudId = "123456";
+    const std::string oldFileName = "test.txt";
+    const std::string newParentCloudId = "";
+    const std::string newFileName = "test1.txt";
+    const std::string bundleName = "WriteTest";
+    const int32_t userId = 123456789;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+}
+
+/**
+ * @tc.name: Rename
+ * @tc.desc: Verify the CloudDiskRdbStore::Rename function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, RenameTest3, TestSize.Level1)
+{
+    const std::string oldParentCloudId = "123456";
+    const std::string oldFileName = "test.txt";
     const std::string newParentCloudId = "4461356";
     const std::string newFileName = "";
+    const std::string bundleName = "WriteTest";
+    const int32_t userId = 123456789;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.Rename(oldParentCloudId, oldFileName, newParentCloudId, newFileName);
+    EXPECT_EQ(ret, EINVAL);
+}
+
+/**
+ * @tc.name: Rename
+ * @tc.desc: Verify the CloudDiskRdbStore::Rename function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, RenameTest4, TestSize.Level1)
+{
+    const std::string oldParentCloudId = "123456";
+    const std::string oldFileName = "";
+    const std::string newParentCloudId = "4461356";
+    const std::string newFileName = "test1.txt";
     const std::string bundleName = "WriteTest";
     const int32_t userId = 123456789;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
