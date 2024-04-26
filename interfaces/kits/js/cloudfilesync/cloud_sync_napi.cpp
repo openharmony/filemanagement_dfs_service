@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,15 +17,98 @@
 
 #include <sys/types.h>
 
+#include "async_work.h"
 #include "cloud_sync_manager.h"
 #include "dfs_error.h"
+#include "dfsu_access_token_helper.h"
+#include "securec.h"
+#include "uri.h"
 #include "utils_log.h"
-#include "async_work.h"
-#include "uv.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
+const int32_t PARAM0 = 0;
+const string FILE_SCHEME = "file";
+thread_local unique_ptr<ChangeListenerNapi> g_listObj = nullptr;
+mutex CloudSyncNapi::sOnOffMutex_;
+static mutex obsMutex_;
+
+class ObserverImpl : public AAFwk::DataAbilityObserverStub {
+public:
+    explicit ObserverImpl(const shared_ptr<CloudNotifyObserver> cloudNotifyObserver)
+        : cloudNotifyObserver_(cloudNotifyObserver){};
+    void OnChange();
+    void OnChangeExt(const AAFwk::ChangeInfo &info);
+    static sptr<ObserverImpl> GetObserver(const Uri &uri, const shared_ptr<CloudNotifyObserver> &observer);
+    static bool FindObserver(const Uri &uri, const shared_ptr<CloudNotifyObserver> &observer);
+    static bool DeleteObserver(const Uri &uri, const shared_ptr<CloudNotifyObserver> &observer);
+
+private:
+    struct ObserverParam {
+        sptr<ObserverImpl> obs_;
+        list<Uri> uris_;
+    };
+    shared_ptr<CloudNotifyObserver> cloudNotifyObserver_;
+    static ConcurrentMap<CloudNotifyObserver *, ObserverParam> observers_;
+};
+
+ConcurrentMap<CloudNotifyObserver *, ObserverImpl::ObserverParam> ObserverImpl::observers_;
+
+void ObserverImpl::OnChange() {}
+
+void ObserverImpl::OnChangeExt(const AAFwk::ChangeInfo &info)
+{
+    if (cloudNotifyObserver_ == nullptr) {
+        LOGE("cloudNotifyObserver_ is null!");
+        return;
+    }
+    cloudNotifyObserver_->OnchangeExt(info);
+}
+
+sptr<ObserverImpl> ObserverImpl::GetObserver(const Uri &uri, const shared_ptr<CloudNotifyObserver> &observer)
+{
+    lock_guard<mutex> lock(obsMutex_);
+    sptr<ObserverImpl> result = nullptr;
+    observers_.Compute(observer.get(), [&result, &uri, &observer](const auto &key, auto &value) {
+        if (value.obs_ == nullptr) {
+            value.obs_ = new (nothrow) ObserverImpl(observer);
+            value.uris_.push_back(uri);
+        } else {
+            auto it = find(value.uris_.begin(), value.uris_.end(), uri);
+            if (it == value.uris_.end()) {
+                value.uris_.push_back(uri);
+            }
+        }
+
+        result = value.obs_;
+        return result != nullptr;
+    });
+
+    return result;
+}
+
+bool ObserverImpl::FindObserver(const Uri &uri, const shared_ptr<CloudNotifyObserver> &observer)
+{
+    lock_guard<mutex> lock(obsMutex_);
+    auto result = observers_.Find(observer.get());
+    if (result.first) {
+        auto it = std::find(result.second.uris_.begin(), result.second.uris_.end(), uri);
+        if (it == result.second.uris_.end()) {
+            return false;
+        }
+    }
+    return result.first;
+}
+
+bool ObserverImpl::DeleteObserver(const Uri &uri, const shared_ptr<CloudNotifyObserver> &observer)
+{
+    lock_guard<mutex> lock(obsMutex_);
+    return observers_.ComputeIfPresent(observer.get(), [&uri](auto &key, auto &value) {
+        value.uris_.remove_if([&uri](const auto &value) { return uri == value; });
+        return !value.uris_.empty();
+    });
+}
 
 CloudSyncCallbackImpl::CloudSyncCallbackImpl(napi_env env, napi_value fun) : env_(env)
 {
@@ -343,6 +426,192 @@ bool CloudSyncNapi::Export()
     }
 
     return exports_.AddProp(className, classValue);
+}
+
+void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref cbRef)
+{
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (loop == nullptr) {
+        return;
+    }
+
+    uv_work_t *work = new (nothrow) uv_work_t;
+    if (work == nullptr) {
+        return;
+    }
+
+    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(env_, cbRef, listener.changeInfo, listener.strUri);
+    if (msg == nullptr) {
+        delete work;
+        return;
+    }
+    if (!listener.changeInfo.uris_.empty()) {
+        if (static_cast<NotifyType>(listener.changeInfo.changeType_) == NotifyType::NOTIFY_NONE) {
+            LOGE("changeInfo.changeType_ is other");
+            return;
+        }
+        if (msg->changeInfo_.size_ > 0) {
+            msg->data_ = (uint8_t *)malloc(msg->changeInfo_.size_);
+            if (msg->data_ == nullptr) {
+                LOGE("new msg->data failed");
+                return;
+            }
+            int copyRet = memcpy_s(msg->data_, msg->changeInfo_.size_, msg->changeInfo_.data_, msg->changeInfo_.size_);
+            if (copyRet != 0) {
+                LOGE("Parcel data copy failed, err = %{public}d", copyRet);
+            }
+        }
+    }
+    work->data = reinterpret_cast<void *>(msg);
+
+    int ret = UvQueueWork(loop, work);
+    if (ret != 0) {
+        LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
+        delete msg;
+        delete work;
+    }
+}
+
+int32_t ChangeListenerNapi::UvQueueWork(uv_loop_s *loop, uv_work_t *work)
+{
+    return uv_queue_work(
+        loop, work, [](uv_work_t *w) {},
+        [](uv_work_t *w, int s) {
+            // js thread
+            if (w == nullptr) {
+                return;
+            }
+
+            UvChangeMsg *msg = reinterpret_cast<UvChangeMsg *>(w->data);
+            do {
+                if (msg == nullptr) {
+                    LOGE("UvChangeMsg is null");
+                    break;
+                }
+                napi_env env = msg->env_;
+                napi_handle_scope scope = nullptr;
+                napi_open_handle_scope(env, &scope);
+
+                napi_value jsCallback = nullptr;
+                napi_status status = napi_get_reference_value(env, msg->ref_, &jsCallback);
+                if (status != napi_ok) {
+                    LOGE("Create reference fail, status: %{public}d", status);
+                    break;
+                }
+                napi_value retVal = nullptr;
+                napi_value result[ARGS_ONE];
+                result[PARAM0] = ChangeListenerNapi::SolveOnChange(env, msg);
+                if (result[PARAM0] == nullptr) {
+                    break;
+                }
+                napi_call_function(env, nullptr, jsCallback, ARGS_ONE, result, &retVal);
+                if (status != napi_ok) {
+                    LOGE("CallJs napi_call_function fail, status: %{public}d", status);
+                    break;
+                }
+            } while (0);
+            delete msg;
+            delete w;
+        });
+}
+
+static napi_status SetValueArray(const napi_env &env, const char *fieldStr, const std::list<Uri> listValue,
+    napi_value &result)
+{
+    napi_value value = nullptr;
+    napi_status status = napi_create_array_with_length(env, listValue.size(), &value);
+    if (status != napi_ok) {
+        LOGE("Create array error! field: %{public}s", fieldStr);
+        return status;
+    }
+    int elementIndex = 0;
+    for (auto uri : listValue) {
+        napi_value uriRet = nullptr;
+        napi_create_string_utf8(env, uri.ToString().c_str(), NAPI_AUTO_LENGTH, &uriRet);
+        status = napi_set_element(env, value, elementIndex++, uriRet);
+        if (status != napi_ok) {
+            LOGE("Set lite item failed, error: %d", status);
+        }
+    }
+    status = napi_set_named_property(env, result, fieldStr, value);
+    if (status != napi_ok) {
+        LOGE("Set array named property error! field: %{public}s", fieldStr);
+    }
+
+    return status;
+}
+
+static napi_status SetValueInt32(const napi_env &env, const char *fieldStr, const int intValue, napi_value &result)
+{
+    napi_value value;
+    napi_status status = napi_create_int32(env, intValue, &value);
+    if (status != napi_ok) {
+        LOGE("Set value create int32 error! field: %{public}s", fieldStr);
+        return status;
+    }
+    status = napi_set_named_property(env, result, fieldStr, value);
+    if (status != napi_ok) {
+        LOGE("Set int32 named property error! field: %{public}s", fieldStr);
+    }
+    return status;
+}
+
+static napi_status SetIsDir(const napi_env &env, const shared_ptr<MessageParcel> parcel, napi_value &result)
+{
+    uint32_t len = 0;
+    napi_status status = napi_invalid_arg;
+    if (!parcel->ReadUint32(len)) {
+        LOGE("Failed to read sub uri list length");
+        return status;
+    }
+    napi_value isDirArray = nullptr;
+    napi_create_array_with_length(env, len, &isDirArray);
+    int elementIndex = 0;
+    for (uint32_t i = 0; i < len; i++) {
+        bool isDir = parcel->ReadBool();
+        napi_value isDirRet = nullptr;
+        napi_get_boolean(env, isDir, &isDirRet);
+        napi_set_element(env, isDirArray, elementIndex++, isDirRet);
+    }
+    status = napi_set_named_property(env, result, "isDirectory", isDirArray);
+    if (status != napi_ok) {
+        LOGE("Set subUri named property error!");
+    }
+    return status;
+}
+
+napi_value ChangeListenerNapi::SolveOnChange(napi_env env, UvChangeMsg *msg)
+{
+    static napi_value result;
+    if (msg->changeInfo_.uris_.empty()) {
+        napi_get_undefined(env, &result);
+        return result;
+    }
+    napi_create_object(env, &result);
+    SetValueArray(env, "uris", msg->changeInfo_.uris_, result);
+    if (msg->data_ != nullptr && msg->changeInfo_.size_ > 0) {
+        shared_ptr<MessageParcel> parcel = make_shared<MessageParcel>();
+        if (parcel->ParseFrom(reinterpret_cast<uintptr_t>(msg->data_), msg->changeInfo_.size_)) {
+            napi_status status = SetIsDir(env, parcel, result);
+            if (status != napi_ok) {
+                LOGE("Set subArray named property error! field: subUris");
+                return nullptr;
+            }
+        }
+    }
+    SetValueInt32(env, "type", (int)msg->changeInfo_.changeType_, result);
+    return result;
+}
+
+void CloudNotifyObserver::OnChange() {}
+
+void CloudNotifyObserver::OnchangeExt(const AAFwk::ChangeInfo &changeInfo)
+{
+    CloudChangeListener listener;
+    listener.changeInfo = changeInfo;
+    listener.strUri = uri_;
+    listObj_.OnChange(listener, ref_);
 }
 
 } // namespace OHOS::FileManagement::CloudSync
