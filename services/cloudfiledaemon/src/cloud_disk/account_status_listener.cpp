@@ -15,6 +15,8 @@
 
 #include "account_status_listener.h"
 
+#include <fcntl.h>
+
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "account_status.h"
@@ -23,6 +25,21 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
+
+static void SwapMemory()
+{
+    auto fd = open("/proc/self/reclaim", O_WRONLY);
+    if (fd < 0) {
+        LOGE("Failed to open reclaim, errno:{public}d", errno);
+        return;
+    }
+    std::string content = "1";
+    if (write(fd, content.c_str(), content.size()) < 0) {
+        LOGE("Failed to write reclaim, errno:{public}d", errno);
+    }
+    close(fd);
+    return;
+}
 
 AccountStatusSubscriber::AccountStatusSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
     : EventFwk::CommonEventSubscriber(subscribeInfo)
@@ -38,6 +55,11 @@ void AccountStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT) {
         LOGI("Account Logout!");
         AccountStatus::SetAccountState(AccountStatus::AccountState::ACCOUNT_LOGOUT);
+        SwapMemory();
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF &&
+        AccountStatus::GetAccountState() == AccountStatus::AccountState::ACCOUNT_LOGIN) {
+        LOGI("Screen Off and Swap Memory!");
+        SwapMemory();
     }
 }
 
@@ -52,6 +74,7 @@ void AccountStatusListener::Start()
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGIN);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF);
     EventFwk::CommonEventSubscribeInfo info(matchingSkills);
     commonEventSubscriber_ = std::make_shared<AccountStatusSubscriber>(info);
     auto subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(commonEventSubscriber_);

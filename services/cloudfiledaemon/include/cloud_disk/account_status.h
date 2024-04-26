@@ -27,6 +27,7 @@ public:
     };
     static bool IsNeedCleanCache();
     static void SetAccountState(AccountState accountState);
+    static AccountStatus::AccountState GetAccountState();
 
 private:
     static inline AccountState preAccountState_{AccountState::ACCOUNT_LOGIN};

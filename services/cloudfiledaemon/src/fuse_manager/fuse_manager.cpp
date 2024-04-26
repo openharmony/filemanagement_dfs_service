@@ -493,6 +493,13 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
     wSesLock.unlock();
 }
 
+static void fuse_inval(fuse_session *se, fuse_ino_t parentIno, fuse_ino_t childIno, const string &childName)
+{
+    if (fuse_lowlevel_notify_inval_entry(se, parentIno, childName.c_str(), childName.size())) {
+        fuse_lowlevel_notify_inval_inode(se, childIno, 0, 0);
+    }
+}
+
 static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
@@ -515,6 +522,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     wSesLock.unlock();
 
     LOGI("release end");
+    fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
     fuse_reply_err(req, 0);
 }
 
