@@ -437,7 +437,7 @@ void GalleryDataSyncer::SetCheckSysEvent()
 
 int32_t GalleryDataSyncer::CompletePull()
 {
-    fileHandler_->UpdateAllAlbums();
+    fileHandler_->UpdateAlbumInternal();
     return DataSyncer::CompletePull();
 }
 
