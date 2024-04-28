@@ -39,6 +39,8 @@ const string TEST_NETWORKID_THREE = "45656596896323233";
 constexpr int SESSION_ID_ONE = 1;
 constexpr int UID_ONE = 1;
 
+namespace OHOS {
+namespace DistributedHardware {
 int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName, const std::string &extra,
                                                 std::vector<DmDeviceInfo> &deviceList)
 {
@@ -58,6 +60,8 @@ int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName, cons
     testInfo1.authForm = DmAuthForm::PEER_TO_PEER;
     deviceList.push_back(testInfo1);
     return DM_OK;
+}
+}
 }
 
 namespace OHOS {

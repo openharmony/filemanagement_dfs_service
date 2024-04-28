@@ -33,6 +33,8 @@ const string TEST_MEDIA_URI = "file://media/data/test/el2/base/files/test.txt";
 const string TEST_PATH = "/data/test/";
 const string TEST_ERR_PATH = "/data/test2/";
 
+namespace OHOS {
+namespace AppFileService {
 int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::string &userId,
                                        std::string &physicalPath)
 {
@@ -57,13 +59,14 @@ bool SandboxHelper::CheckValidPath(const std::string &filePath)
 
     return true;
 }
+}
+}
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace Test {
 using namespace testing::ext;
-
 
 class SoftBusSessionListenerTest : public testing::Test {
 public:

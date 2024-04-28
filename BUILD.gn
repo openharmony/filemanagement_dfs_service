@@ -62,6 +62,8 @@ group("dfs_test_moudule") {
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_listener_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_pool_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_test",
+    "${services_path}/distributedfiledaemon/test/unittest/mountpoint:mount_manager_test",
+    "${services_path}/distributedfiledaemon/test/unittest/mountpoint:mount_point_test",
     "test/moduletest:DistributedFileDaemonServiceTest",
   ]
 }

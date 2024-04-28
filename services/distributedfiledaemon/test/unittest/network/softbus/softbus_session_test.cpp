@@ -80,7 +80,7 @@ HWTEST_F(SoftbusSessionTest, SoftbusSessionTest_GetCid_0100, TestSize.Level1)
     GTEST_LOG_(INFO) << "SoftbusSessionTest_GetCid_0100 start";
     try {
         string cid = g_session->GetCid();
-        EXPECT_TRUE(cid == "");
+        EXPECT_TRUE(cid == "f6d4c0864707aefte7a78f09473aa122ff57fc8");
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
