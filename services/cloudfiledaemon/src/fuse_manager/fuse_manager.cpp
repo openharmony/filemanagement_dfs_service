@@ -417,6 +417,12 @@ static void CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInod
         return;
     }
     cInode->mBase->hasDownloaded = true;
+    char resolvedPath[PATH_MAX] = {'\0'};
+    char *realPath = realpath(localPath.c_str(), resolvedPath);
+    if (realPath == nullptr) {
+        LOGE("realpath failed");
+        return;
+    }
     auto fd = open(localPath.c_str(), fi->flags);
     if (fd < 0) {
         LOGE("Failed to open local file, errno: %{public}d", errno);

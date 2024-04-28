@@ -777,10 +777,10 @@ int32_t CloudDiskDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOper
             ValuesBucket valuesBucket;
             valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAILURE);
             int32_t changedRows;
-            int32_t ret = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
-            if (ret != E_OK) {
+            int32_t updateRet = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
+            if (updateRet != E_OK) {
                 LOGE("on create records update synced err %{public}d, cloudId %{public}s", ret, entry.first.c_str());
-                return ret;
+                return updateRet;
             }
             LOGE("create record fail, cloud id: %{private}s", entry.first.c_str());
         }
@@ -803,10 +803,10 @@ int32_t CloudDiskDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOper
             modifyFailSet_.push_back(entry.first);
             ValuesBucket valuesBucket;
             int32_t changedRows;
-            int32_t ret = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
-            if (ret != E_OK) {
+            int32_t updateRet = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
+            if (updateRet != E_OK) {
                 LOGE("on create records update synced err %{public}d, cloudId %{public}s", ret, entry.first.c_str());
-                return ret;
+                return updateRet;
             }
             LOGE("delete record fail, cloud id: %{private}s", entry.first.c_str());
         }
@@ -835,10 +835,10 @@ int32_t CloudDiskDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKReco
             ValuesBucket valuesBucket;
             valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAILURE);
             int32_t changedRows;
-            int32_t ret = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
-            if (ret != E_OK) {
+            int32_t updateRet = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
+            if (updateRet != E_OK) {
                 LOGE("on create records update synced err %{public}d, cloudId %{public}s", ret, entry.first.c_str());
-                return ret;
+                return updateRet;
             }
             LOGE("modify mdirty record fail, cloud id: %{private}s", entry.first.c_str());
         }
@@ -867,10 +867,10 @@ int32_t CloudDiskDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKReco
             ValuesBucket valuesBucket;
             valuesBucket.PutInt(FC::FILE_STATUS, FileStatus::UPLOAD_FAILURE);
             int32_t changedRows;
-            int32_t ret = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
-            if (ret != E_OK) {
+            int32_t updateRet = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
+            if (updateRet != E_OK) {
                 LOGE("on create records update synced err %{public}d, cloudId %{public}s", ret, entry.first.c_str());
-                return ret;
+                return updateRet;
             }
             LOGE("modify fdirty record fail, cloud id: %{private}s", entry.first.c_str());
         }

@@ -3757,7 +3757,7 @@ int32_t FileDataHandler::GetFilePosStat(std::vector<uint64_t> &filePosStat)
     /* get local file status */
     int num = 0;
     QueryFilePosStat(POSITION_LOCAL, num);
-    filePosStat[FilePositionIndex::LOCAL] = num;
+    filePosStat[FilePositionIndex::LOCAL] = static_cast<uint64_t>(num);
 
     /* get cloud file status */
     QueryFilePosStat(POSITION_CLOUD, num);
@@ -3780,7 +3780,7 @@ int32_t FileDataHandler::GetCloudThmStat(std::vector<uint64_t> &cloudThmStat)
     /* get DOWNLOADED thm status */
     int num = 0;
     QueryCloudThmStat(static_cast<int32_t>(ThumbState::DOWNLOADED), num);
-    cloudThmStat[CloudThmStatIndex::DOWNLOADED] = num;
+    cloudThmStat[CloudThmStatIndex::DOWNLOADED] = static_cast<uint64_t>(num);
 
     /* get LCD_TO_DOWNLOAD thm status */
     QueryCloudThmStat(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD), num);
