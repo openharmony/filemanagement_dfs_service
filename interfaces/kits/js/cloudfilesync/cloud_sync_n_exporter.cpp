@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -54,6 +54,8 @@ napi_value CloudSyncExport(napi_env env, napi_value exports)
     InitErrorType(env, exports);
     InitState(env, exports);
     InitFileSyncState(env, exports);
+    InitNotifyType(env, exports);
+    InitCloudSyncFuncs(env, exports);
 
     std::vector<std::unique_ptr<NExporter>> products;
     products.emplace_back(std::make_unique<CloudFileCacheNapi>(env, exports));
@@ -120,6 +122,30 @@ void InitErrorType(napi_env env, napi_value exports)
     napi_create_object(env, &obj);
     napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
     napi_set_named_property(env, exports, propertyName, obj);
+}
+
+void InitNotifyType(napi_env env, napi_value exports)
+{
+    const char propertyName[] = "NotifyType";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("NOTIFY_ADDED", NVal::CreateInt32(env, NotifyType::NOTIFY_ADDED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("NOTIFY_MODIFIED", NVal::CreateInt32(env, NotifyType::NOTIFY_MODIFIED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("NOTIFY_DELETED", NVal::CreateInt32(env, NotifyType::NOTIFY_DELETED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("NOTIFY_RENAMED", NVal::CreateInt32(env, NotifyType::NOTIFY_RENAMED).val_),
+    };
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
+
+void InitCloudSyncFuncs(napi_env env, napi_value exports)
+{
+    static napi_property_descriptor desc[] = {
+        DECLARE_NAPI_FUNCTION("registerChange", CloudSyncNapi::RegisterChange),
+        DECLARE_NAPI_FUNCTION("unregisterChange", CloudSyncNapi::UnregisterChange),
+    };
+    napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
 }
 
 static napi_module _module = {
