@@ -156,10 +156,18 @@ void NetworkAgentTemplate::GetSession(const string &cid, uint8_t linkType)
 {
     DeviceInfo deviceInfo;
     deviceInfo.SetCid(cid);
-    try {
-        OpenSession(deviceInfo, linkType);
-    } catch (const DfsuException &e) {
-        LOGE("reget session failed, code: %{public}d", e.code());
+    if (linkType == LINK_TYPE_AP) {
+        try {
+            OpenApSession(deviceInfo, LINK_TYPE_AP);
+        } catch (const DfsuException &e) {
+            LOGE("reget session failed, code: %{public}d", e.code());
+        }
+    } else if (linkType == LINK_TYPE_P2P) {
+        try {
+            OpenSession(deviceInfo, LINK_TYPE_P2P);
+        } catch (const DfsuException &e) {
+            LOGE("reget session failed, code: %{public}d", e.code());
+        }
     }
 }
 } // namespace DistributedFile
