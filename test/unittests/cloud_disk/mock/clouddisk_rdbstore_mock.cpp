@@ -110,6 +110,11 @@ int32_t CloudDiskRdbStore::Unlink(const std::string &parentCloudId, const std::s
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::GetHasChild(const std::string &cloudId, bool &hasChild)
+{
+    return E_OK;
+}
+
 int32_t CloudDiskDataCallBack::OnCreate(RdbStore &store)
 {
     return NativeRdb::E_OK;
