@@ -180,9 +180,10 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
     LOGI("RequestSendFile OpenSession success");
     SoftBusSessionPool::SessionInfo sessionInfo{.sessionId = sessionId, .srcUri = srcUri, .dstPath = dstPath};
     SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo);
-    PeerSocketInfo info;
-    info.name = const_cast<char*>(sessionName.c_str());
-    info.networkId = const_cast<char*>(dstDeviceId.c_str()),
+    PeerSocketInfo info = {
+        .name = const_cast<char*>(sessionName.c_str()),
+        .networkId = const_cast<char*>(dstDeviceId.c_str()),
+    };
     DistributedFile::SoftBusSessionListener::OnSessionOpened(sessionId, info);
     return E_OK;
 }
