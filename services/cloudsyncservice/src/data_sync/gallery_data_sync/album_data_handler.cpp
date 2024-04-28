@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <fstream>
 #include "album_data_handler.h"
 
 #include "medialibrary_db_const.h"
@@ -34,11 +34,69 @@ using namespace Media;
 using PAC = Media::PhotoAlbumColumns;
 using PM = Media::PhotoMap;
 using ChangeType = OHOS::AAFwk::ChangeInfo::ChangeType;
+const int CONFIG_PARAM_NUM = 2;
+static const std::string CONFIG_PATH = "/system/etc/dfs_service/path2bundle";
+
+std::vector<std::string> SplitLine(std::string &line, std::string &token)
+{
+    std::vector<std::string> result;
+    std::string::size_type first;
+    std::string::size_type last;
+
+    first = 0;
+    last = line.find(token);
+    while (std::string::npos != last) {
+        result.push_back(line.substr(first, last - first));
+        first = last + token.size();
+        last = line.find(token, first);
+    }
+
+    if (first != line.length()) {
+        result.push_back(line.substr(first));
+    }
+
+    return result;
+}
+
+static bool GetPath2BundleMap(std::unordered_map<std::string, std::string> &localPathtoBundle)
+{
+    std::ifstream infile;
+    infile.open(CONFIG_PATH);
+    if (!infile) {
+        LOGE("Cannot open config");
+        return false;
+    }
+
+    while (infile) {
+        std::string line;
+        std::getline(infile, line);
+        if (line.empty()) {
+            LOGI("Param config complete");
+            break;
+        }
+
+        std::string token = " ";
+        auto split = SplitLine(line, token);
+        if (split.size() != CONFIG_PARAM_NUM) {
+            LOGE("Invalids config line: number of parameters is incorrect");
+            continue;
+        }
+
+        auto it = split.begin();
+        auto path = *(it++);
+        auto bundleName = *(it);
+        localPathtoBundle.emplace(path, bundleName);
+    }
+
+    infile.close();
+    return true;
+}
 
 AlbumDataHandler::AlbumDataHandler(int32_t userId, const std::string &bundleName,
                                    std::shared_ptr<RdbStore> rdb, shared_ptr<bool> stopFlag)
     : RdbDataHandler(userId, bundleName, PAC::TABLE, rdb, stopFlag)
 {
+    GetPath2BundleMap(localPathtoBundle_);
 }
 
 void AlbumDataHandler::GetFetchCondition(FetchCondition &cond)
@@ -78,6 +136,42 @@ tuple<shared_ptr<ResultSet>, int> AlbumDataHandler::QueryLocalMatch(const std::s
         return {nullptr, 0};
     }
     return { move(resultSet), rowCount };
+}
+
+int32_t AlbumDataHandler::ModRecordIfFromDual(DKRecordData &data)
+{
+    string album_name;
+    DriveKit::DKRecordFieldMap properties;
+    if (data.find(ALBUM_PROPERTIES) == data.end() || data.find(ALBUM_NAME) == data.end() ||
+        data[ALBUM_NAME].GetString(album_name) != DKLocalErrorCode::NO_ERROR ||
+        data[ALBUM_PROPERTIES].GetRecordMap(properties) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("record data do not have properties set/name");
+        return E_INVAL_ARG;
+    }
+
+    if (data.find(ALBUM_PATH) == data.end()) {
+        return E_OK;
+    }
+    LOGI("record from dual first time to come, album name = %{public}s", album_name.c_str());
+    properties[PAC::ALBUM_NAME] = DriveKit::DKRecordField(data[ALBUM_NAME]);
+    properties[PAC::ALBUM_TYPE] = DriveKit::DKRecordField(to_string(static_cast<int32_t>(AlbumType::SOURCE)));
+    properties[PAC::ALBUM_SUBTYPE] = DriveKit::DKRecordField(Media::PhotoAlbumSubType::USER_GENERIC);
+    properties[PAC::ALBUM_DATE_MODIFIED] = DriveKit::DKRecordField(0);
+
+    string local_path;
+    if (data[ALBUM_PATH].GetString(local_path) != DKLocalErrorCode::NO_ERROR) {
+        LOGE("record from dual get local_path failed");
+    }
+    for (auto &it : localPathtoBundle_) {
+        if (local_path == it.first) {
+            properties[TMP_ALBUM_BUNDLE_NAME] = DriveKit::DKRecordField(it.second);
+            LOGI("album %{public}s has changed its localPath", album_name.c_str());
+            break;
+        }
+    }
+
+    data[ALBUM_PROPERTIES] = DriveKit::DKRecordField(properties);
+    return E_OK;
 }
 
 int32_t AlbumDataHandler::QueryConflict(DriveKit::DKRecord &record, std::shared_ptr<NativeRdb::ResultSet> &resultSet)
@@ -172,6 +266,11 @@ int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
 {
     RETURN_ON_ERR(IsStop());
     LOGI("insert of record %s", record.GetRecordId().c_str());
+    /* mod properties if it's from dual */
+    DriveKit::DKRecordData data;
+    record.GetRecordData(data);
+    ModRecordIfFromDual(data);
+    record.SetRecordData(data);
     /* merge if same album name */
     int32_t albumId;
     if (IsConflict(record, albumId)) {
@@ -188,8 +287,6 @@ int32_t AlbumDataHandler::InsertCloudAlbum(DKRecord &record)
         return ret;
     }
     string albumType = "";
-    DriveKit::DKRecordData data;
-    record.GetRecordData(data);
     DKRecordFieldMap properties;
     if (GetRecordFieMapFromRecord(record, properties) == E_OK &&
         properties.find(PAC::ALBUM_TYPE) != data.end() &&
