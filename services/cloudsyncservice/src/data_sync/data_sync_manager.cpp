@@ -171,9 +171,10 @@ int32_t DataSyncManager::IsUserVerified(const int32_t userId)
 
 int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
 {
-    RETURN_ON_ERR(GetUserId(currentUserId_));
+    int32_t userId = 0;
+    RETURN_ON_ERR(GetUserId(userId));
     map<string, DataSyncerInfo> dataSyncerInfoMaps;
-    GetAllDataSyncerInfo(currentUserId_, dataSyncerInfoMaps);
+    GetAllDataSyncerInfo(userId, dataSyncerInfoMaps);
 
     if (dataSyncerInfoMaps.size() == 0) {
         LOGI("not need to trigger sync");
@@ -185,7 +186,7 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
         auto &bundleName = iter.first;
         if (triggerType == SyncTriggerType::NETWORK_AVAIL_TRIGGER) {
             auto &dataSyncerInfo = iter.second;
-            auto dataSyncer = GetDataSyncer(bundleName, currentUserId_);
+            auto dataSyncer = GetDataSyncer(bundleName, userId);
             if (!dataSyncer) {
                 LOGE(" Clean Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
                 continue;
@@ -197,7 +198,7 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
                 continue;
             }
         }
-        ret = TriggerStartSync(bundleName, currentUserId_, false, triggerType);
+        ret = TriggerStartSync(bundleName, userId, false, triggerType);
         if (ret) {
             LOGE("trigger sync failed, ret = %{public}d, bundleName = %{public}s", ret, bundleName.c_str());
         }
@@ -306,14 +307,15 @@ void DataSyncManager::Convert2BundleName(const string &bundle, string &bundleNam
 
 int32_t DataSyncManager::DownloadThumb()
 {
-    RETURN_ON_ERR(GetUserId(currentUserId_));
-    auto dataSyncer = GetDataSyncer(GALLERY_BUNDLE_NAME, currentUserId_);
+    int32_t userId = 0;
+    RETURN_ON_ERR(GetUserId(userId));
+    auto dataSyncer = GetDataSyncer(GALLERY_BUNDLE_NAME, userId);
     if (!dataSyncer) {
         LOGE("Get dataSyncer failed, bundleName: %{private}s", GALLERY_BUNDLE_NAME.c_str());
         return E_INVAL_ARG;
     }
 
-    auto ret = InitSdk(currentUserId_, GALLERY_BUNDLE_NAME, dataSyncer);
+    auto ret = InitSdk(userId, GALLERY_BUNDLE_NAME, dataSyncer);
     if (ret != E_OK) {
         return ret;
     }
