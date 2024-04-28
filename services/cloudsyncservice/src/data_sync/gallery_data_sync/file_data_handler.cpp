@@ -2293,6 +2293,9 @@ int32_t FileDataHandler::GetAlbumIdFromCloudId(const std::string &cloudId)
 int32_t FileDataHandler::BatchGetFileIdFromCloudId(const std::vector<NativeRdb::ValueObject> &recordIds,
     std::vector<int> &fileIds)
 {
+    if (recordIds.size() == 0) {
+        return E_OK;
+    }
     uint32_t size = 0;
     if (recordIds.size() <= BATCH_LIMIT_SIZE) {
         size = recordIds.size();
@@ -4097,7 +4100,7 @@ void FileDataHandler::UpdateThmVec()
             tmp.assign(thmVec_.begin(), thmVec_.begin() + size);
             thmVec_.erase(thmVec_.begin(), thmVec_.begin() + size);
         }
-        vector<int> fileIds = vector<int>(size);
+        vector<int> fileIds;
         BatchGetFileIdFromCloudId(tmp, fileIds);
         ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, tmp, count);
         LOGI("update size is %{public}u, success count is %{public}" PRIu64 ", fail count is %{public}zu",
@@ -4106,6 +4109,7 @@ void FileDataHandler::UpdateThmVec()
             LOGW("update thm fail");
             std::lock_guard<std::mutex> lock(thmMutex_);
             thmVec_.insert(thmVec_.end(), tmp.begin(), tmp.end());
+            fileIds.clear();
         }
         if (count != 0) {
             UpdateAttachmentStat(INDEX_THUMB_SUCCESS, count);
