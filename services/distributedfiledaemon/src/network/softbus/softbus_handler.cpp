@@ -15,6 +15,8 @@
 
 #include "network/softbus/softbus_handler.h"
 
+#include <utility>
+
 #include "device_manager.h"
 #include "dfs_error.h"
 #include "dm_device_info.h"
@@ -23,7 +25,6 @@
 #include "network/softbus/softbus_session_listener.h"
 #include "utils_directory.h"
 #include "utils_log.h"
-#include <utility>
 
 namespace OHOS {
 namespace Storage {

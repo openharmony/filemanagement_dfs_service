@@ -72,6 +72,7 @@ protected:
     virtual void StopTopHalf() = 0;
     virtual void StopBottomHalf() = 0;
     virtual void OpenSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
+    virtual void OpenApSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
     virtual void CloseSession(std::shared_ptr<BaseSession> session) = 0;
 
     std::weak_ptr<MountPoint> mountPoint_;
