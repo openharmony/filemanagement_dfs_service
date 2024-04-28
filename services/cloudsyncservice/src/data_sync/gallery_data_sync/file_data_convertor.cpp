@@ -574,6 +574,11 @@ string FileDataConvertor::GetSandboxPath(const string &path)
     return sandboxPrefix_ + path.substr(pos + localPrefix.size());
 }
 
+string FileDataConvertor::GetCloudPath(const std::string &path)
+{
+    return prefixCloud_ + to_string(userId_) + "/" + path.substr(prefixCloud_.size());
+}
+
 string FileDataConvertor::GetThumbPath(const string &path, const string &key)
 {
     if (path.length() < ROOT_MEDIA_DIR.length()) {

@@ -58,8 +58,9 @@ protected:
     virtual int32_t Delete(int &deletedRows, const std::string &whereClause,
         const std::vector<std::string> &whereArgs);
     virtual std::shared_ptr<NativeRdb::ResultSet> Query(const NativeRdb::AbsRdbPredicates &predicates,
-        const std::vector<std::string> &columns);
-
+                                                        const std::vector<std::string> &columns);
+    virtual std::shared_ptr<NativeRdb::ResultSet> QueryByStep(const NativeRdb::AbsRdbPredicates &predicates,
+                                                              const std::vector<std::string> &columns);
     /* insert, delete, update with tableName */
     virtual int32_t Insert(int64_t &outRowId, const std::string &tableName,
         const NativeRdb::ValuesBucket &initialValues);

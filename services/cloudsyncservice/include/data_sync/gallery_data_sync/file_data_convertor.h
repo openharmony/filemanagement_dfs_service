@@ -59,6 +59,7 @@ public:
     std::string GetLowerPath(const std::string &path);
     std::string GetLowerTmpPath(const std::string &path);
     std::string GetSandboxPath(const std::string &path);
+    std::string GetCloudPath(const std::string &path);
     std::string GetPathWithoutTmp(const std::string &path);
 
 private:
