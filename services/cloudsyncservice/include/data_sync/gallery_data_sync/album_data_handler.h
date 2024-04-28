@@ -75,6 +75,7 @@ private:
     int32_t QuerySourceAlbum(std::vector<DriveKit::DKRecord> &records,  Media::DirtyType dirty,
                              const std::vector<std::string> &failSet, AlbumDataConvertor &convertor);
     int32_t QueryConflict(DriveKit::DKRecord &record, std::shared_ptr<NativeRdb::ResultSet> &resultSet);
+    int32_t ModRecordIfFromDual(DriveKit::DKRecordData &data);
 
     void UpdateDownloadAlbumStat(uint64_t success, uint64_t rdbFail, uint64_t dataFail);
 
@@ -91,7 +92,9 @@ private:
     AlbumDataConvertor createConvertor_ = { FILE_CREATE };
     AlbumDataConvertor deleteConvertor_ = { FILE_DELETE };
     AlbumDataConvertor modifyConvertor_ = { FILE_METADATA_MODIFY };
+    std::unordered_map<std::string, std::string> localPathtoBundle_;
 };
+
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
