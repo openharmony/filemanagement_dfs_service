@@ -713,6 +713,27 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::GetHasChild(const std::string &cloudId, bool &hasChild)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    CLOUDID_IS_NULL(cloudId);
+    AbsRdbPredicates readDirPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    readDirPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, cloudId)
+        ->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0")->And()
+        ->NotEqualTo(FileColumn::DIRTY_TYPE, to_string(static_cast<int32_t>(DirtyType::TYPE_DELETED)));
+    auto resultSet = rdbStore_->QueryByStep(readDirPredicates, {FileColumn::FILE_NAME});
+    if (resultSet == nullptr) {
+        LOGE("get nullptr result set");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() == E_OK) {
+        hasChild = true;
+    } else {
+        hasChild = false;
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &cloudId)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
