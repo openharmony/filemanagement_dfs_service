@@ -42,8 +42,6 @@ ohos_unittest("fuse_manager_test") {
   include_dirs = [
     "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
     "${distributedfile_path}/services/cloudfiledaemon/include",
-    "//third_party/libfuse/include",
-    "//third_party/libfuse/lib",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudsyncservice/include/data_sync/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
@@ -60,14 +58,16 @@ ohos_unittest("fuse_manager_test") {
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
-    "//third_party/libfuse:libfuse",
   ]
 
   external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_single",
+    "libfuse:libfuse",
     "relational_store:native_rdb",
   ]
 
@@ -112,8 +112,6 @@ ohos_unittest("cloud_daemon_test") {
   include_dirs = [
     "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
     "${distributedfile_path}/services/cloudfiledaemon/include",
-    "//third_party/libfuse/include",
-    "//third_party/libfuse/lib",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudsyncservice/include/data_sync/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
@@ -130,14 +128,16 @@ ohos_unittest("cloud_daemon_test") {
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
-    "//third_party/libfuse:libfuse",
   ]
 
   external_deps = [
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_single",
+    "libfuse:libfuse",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -171,8 +171,6 @@ ohos_unittest("cloud_daemon_stub_test") {
 
   include_dirs = [
     "${distributedfile_path}/services/cloudfiledaemon/include",
-    "//third_party/libfuse/include",
-    "//third_party/libfuse/lib",
     "${services_path}/cloudsyncservice/include/data_sync/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
   ]
@@ -183,12 +181,12 @@ ohos_unittest("cloud_daemon_stub_test") {
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
-    "//third_party/libfuse:libfuse",
   ]
 
   external_deps = [
     "hilog:libhilog",
     "ipc:ipc_single",
+    "libfuse:libfuse",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@
 #include "cloud_disk_inode.h"
 #include "cloud_file_utils.h"
 #include "clouddisk_rdb_utils.h"
+#include "clouddisk_notify.h"
 #include "database_manager.h"
 #include "directory_ex.h"
 #include "dk_database.h"
@@ -529,6 +530,7 @@ void HandleCloudLocation(fuse_req_t req, fuse_ino_t ino, const char *name,
         fuse_reply_err(req, EINVAL);
         return;
     }
+    CloudDiskNotify::GetInstance().TryNotify({NotifyOpsType::DAEMON_SETXATTR, inoPtr});
     fuse_reply_err(req, 0);
 }
 
@@ -545,6 +547,7 @@ void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
         fuse_reply_err(req, EINVAL);
         return;
     }
+    CloudDiskNotify::GetInstance().TryNotify({NotifyOpsType::DAEMON_SETXATTR, inoPtr});
     fuse_reply_err(req, 0);
 }
 
@@ -561,6 +564,7 @@ void HandleFavorite(fuse_req_t req, fuse_ino_t ino, const char *name,
         fuse_reply_err(req, EINVAL);
         return;
     }
+    CloudDiskNotify::GetInstance().TryNotify({NotifyOpsType::DAEMON_SETXATTR, inoPtr});
     fuse_reply_err(req, 0);
 }
 
@@ -686,6 +690,7 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
     } else {
         fuse_reply_entry(req, &e);
     }
+    CloudDiskNotify::GetInstance().TryNotify({NotifyOpsType::DAEMON_MKDIR, parentInode, parent, name});
 }
 
 int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
@@ -719,6 +724,7 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
         fuse_reply_err(req, err);
         return;
     }
+    CloudDiskNotify::GetInstance().TryNotify({NotifyOpsType::DAEMON_RMDIR, nullptr, parent, name});
     return (void) fuse_reply_err(req, 0);
 }
 
@@ -729,6 +735,7 @@ void FileOperationsCloud::Unlink(fuse_req_t req, fuse_ino_t parent, const char *
         fuse_reply_err(req, err);
         return;
     }
+    CloudDiskNotify::GetInstance().TryNotify({NotifyOpsType::DAEMON_UNLINK, nullptr, parent, name});
     return (void) fuse_reply_err(req, 0);
 }
 
@@ -753,6 +760,13 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
         LOGE("Failed to Rename DB name:%{private}s err:%{public}d", name, err);
         return;
     }
+    int32_t isDir;
+    err = rdbStore->GetIsDirectory(newParentInode->cloudId, newName, isDir);
+    if (err != 0) {
+        LOGE("get isDir fail, err: %{public}d", err);
+    }
+    CloudDiskNotify::GetInstance().TryNotify({NotifyOpsType::DAEMON_RENAME, nullptr, parent, name, newParent, newName},
+                                             {FileStatus::UNKNOW, isDir});
     return (void) fuse_reply_err(req, 0);
 }
 
@@ -816,10 +830,16 @@ static void UpdateCloudStore(int32_t userId, struct CloudDiskInode *inoPtr)
 {
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, userId);
-    int res = rdbStore->Write(inoPtr->cloudId);
+    int32_t dirtyType;
+    int res = rdbStore->GetDirtyType(inoPtr->cloudId, dirtyType);
+    if (res != 0) {
+        LOGE("get file status fail, err: %{public}d", res);
+    }
+    res = rdbStore->Write(inoPtr->cloudId);
     if (res != 0) {
         LOGE("write file fail");
     }
+    CloudDiskNotify::GetInstance().TryNotify({NotifyOpsType::DAEMON_WRITE, inoPtr}, {dirtyType});
     UpdateCloudDiskInode(rdbStore, inoPtr);
 }
 
@@ -851,10 +871,16 @@ static void UploadLocalFile(int32_t userId, struct CloudDiskInode *inoPtr)
     if (res != 0) {
         LOGE("local file get location fail");
     } else if (location == FILE_LOCAL) {
+        int32_t dirtyType;
+        res = rdbStore->GetDirtyType(inoPtr->cloudId, dirtyType);
+        if (res != 0) {
+            LOGE("get file status fail, err: %{public}d", res);
+        }
         res = rdbStore->Write(inoPtr->cloudId);
         if (res != 0) {
             LOGE("write file fail");
         }
+        CloudDiskNotify::GetInstance().TryNotify({NotifyOpsType::DAEMON_WRITE, inoPtr}, {dirtyType});
         UpdateCloudDiskInode(rdbStore, inoPtr);
     }
 }
@@ -934,6 +960,7 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
         }
         UpdateCloudDiskInode(rdbStore, inoPtr);
     }
+    CloudDiskNotify::GetInstance().TryNotify({NotifyOpsType::DAEMON_SETATTR, inoPtr});
     fuse_reply_attr(req, &inoPtr->stat, 0);
 }
 

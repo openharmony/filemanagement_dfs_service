@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,10 +17,10 @@
 #define OHOS_CLOUD_SYNC_SERVICE_CLOUD_DISK_DATA_HANDLER_H
 
 #include "cloud_disk_data_convertor.h"
+#include "clouddisk_type_const.h"
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
 #include "rdb_data_handler.h"
-#include "clouddisk_type_const.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -106,11 +106,13 @@ private:
     int32_t RecycleFile(const std::string &recordId);
     int32_t GetMetaFilePath(const std::string &cloudId, std::string &path);
     int32_t PullRecordConflict(DriveKit::DKRecord &record);
-    int32_t HandleConflict(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
-                                             std::string &fullName, const int &lastDot);
+    int32_t HandleConflict(const std::shared_ptr<NativeRdb::ResultSet> resultSet, std::string &fullName,
+        const int &lastDot, const DriveKit::DKRecord &record);
     int32_t FindRenameFile(const std::shared_ptr<NativeRdb::ResultSet> resultSet, std::string &renameFileCloudId,
                            std::string &fullName, const int &lastDot);
-    int32_t ConflictReName(const std::string &cloudId, std::string newFileName);
+    int32_t ConflictReName(const std::string &cloudId, std::string newFileName, const DriveKit::DKRecord &record);
+    int32_t PullUpdateDb(NativeRdb::ValuesBucket &values, DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
+        bool isFileContentChanged);
     int SetRetry(const std::string &recordId);
     void AppendFileToDownload(const std::string &cloudId,
                               const std::string &fieldKey,

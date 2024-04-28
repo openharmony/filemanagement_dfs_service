@@ -296,7 +296,7 @@ void CloudDiskNotify::AddNotify(NotifyData notifyData)
         return;
     }
 
-    if (notifyCount_ > MAX_NOTIFY_LIST_SIZE || nfList_.empty()) {
+    if (notifyCount_ >= MAX_NOTIFY_LIST_SIZE || nfList_.empty()) {
         notifyCount_ = 0;
         timer_->Shutdown();
         NotifyChangeOuter();
@@ -353,13 +353,13 @@ void CloudDiskNotify::NotifyChangeOuter()
         int32_t ret = memcpy_s(uBuf, parcel.GetDataSize(), reinterpret_cast<uint8_t *>(buf), parcel.GetDataSize());
         if (ret != 0) {
             LOGE("Parcel Data copy failed, err: %{public}d", ret);
-            delete uBuf;
+            delete[] uBuf;
             return;
         }
         ChangeInfo changeInfo({static_cast<ChangeInfo::ChangeType>(cacheNode->notifyType), cacheNode->uriList, uBuf,
                                parcel.GetDataSize()});
         obsMgrClient->NotifyChangeExt(changeInfo);
-        delete uBuf;
+        delete[] uBuf;
     }
 }
 } // namespace OHOS::FileManagement::CloudDisk

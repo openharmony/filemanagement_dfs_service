@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,17 +19,22 @@
 #include <sys/stat.h>
 #include <sstream>
 
-#include "clouddisk_sync_helper.h"
+#include "cloud_pref_impl.h"
+#include "clouddisk_db_const.h"
+#include "clouddisk_notify.h"
+#include "clouddisk_notify_utils.h"
 #include "clouddisk_rdb_utils.h"
+#include "clouddisk_sync_helper.h"
 #include "clouddisk_type_const.h"
+#include "dfs_error.h"
 #include "file_column.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
 #include "utils_log.h"
-#include "dfs_error.h"
 
 namespace OHOS::FileManagement::CloudDisk {
 using namespace std;
+using namespace DriveKit;
 using namespace OHOS::NativeRdb;
 using namespace CloudSync;
 
@@ -44,6 +49,10 @@ static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static const uint32_t SET_STATE = 1;
 static const uint32_t CANCEL_STATE = 0;
 static const uint32_t MAX_FILE_NAME_SIZE = 246;
+static const uint32_t MAX_QUERY_TIMES = 1024;
+const string BUNDLENAME_FLAG = "<BundleName>";
+const string CLOUDDISK_URI_PREFIX = "file://<BundleName>/data/storage/el2/cloud";
+const string BACKFLASH = "/";
 
 static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
 {
@@ -778,6 +787,213 @@ int32_t CloudDiskRdbStore::Unlink(const std::string &parentCloudId, const std::s
     if (isDirectory == FILE) {
         unlinkCloudId = cloudId;
     }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::GetDirtyType(const std::string &cloudId, int32_t &dirtyType)
+{
+    AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::DIRTY_TYPE});
+    if (resultSet == nullptr) {
+        LOGE("get null result");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get current node resultSet fail");
+        return E_RDB;
+    }
+
+    int32_t ret = CloudDiskRdbUtils::GetInt(FileColumn::DIRTY_TYPE, dirtyType, resultSet);
+    if (ret != E_OK) {
+        LOGE("get file status fail");
+        return ret;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::GetIsDirectory(const std::string &parentCloudId, const std::string &fileName, int32_t &isDir)
+{
+    if (parentCloudId.empty() || fileName.empty()) {
+        return E_INVAL_ARG;
+    }
+    AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::PARENT_CLOUD_ID, parentCloudId)->And()->EqualTo(FileColumn::FILE_NAME, fileName);
+    auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::IS_DIRECTORY});
+    if (resultSet == nullptr) {
+        LOGE("get null result");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get current node resultSet fail");
+        return E_RDB;
+    }
+
+    int32_t ret = CloudDiskRdbUtils::GetInt(FileColumn::IS_DIRECTORY, isDir, resultSet);
+    if (ret != E_OK) {
+        LOGE("get is dir fail");
+        return ret;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::GetCurNode(const std::string &cloudId, CacheNode &curNode)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (cloudId.empty() || cloudId == "rootId") {
+        LOGE("parameter invalid");
+        return E_INVAL_ARG;
+    }
+    AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(
+        predicates, {FileColumn::PARENT_CLOUD_ID, FileColumn::IS_DIRECTORY, FileColumn::FILE_NAME});
+    if (resultSet == nullptr) {
+        LOGE("get null result");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get current node resultSet fail");
+        return E_RDB;
+    }
+    RowEntity rowEntity;
+    if (resultSet->GetRow(rowEntity) != E_OK) {
+        LOGE("result set to file info get row failed");
+        return E_RDB;
+    }
+
+    int32_t isDirectory;
+    rowEntity.Get(FileColumn::PARENT_CLOUD_ID).GetString(curNode.parentCloudId);
+    rowEntity.Get(FileColumn::FILE_NAME).GetString(curNode.fileName);
+    rowEntity.Get(FileColumn::IS_DIRECTORY).GetInt(isDirectory);
+    curNode.isDir = isDirectory ? "directory" : "file";
+
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::GetParentNode(const std::string parentCloudId, std::string &nextCloudId,
+    std::string &fileName)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (parentCloudId.empty()) {
+        LOGE("parameter invalid");
+        return E_INVAL_ARG;
+    }
+    AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, parentCloudId);
+    auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::PARENT_CLOUD_ID, FileColumn::FILE_NAME});
+    if (resultSet == nullptr) {
+        LOGE("get null result");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get current node resultSet fail");
+        return E_RDB;
+    }
+    RowEntity rowEntity;
+    if (resultSet->GetRow(rowEntity) != E_OK) {
+        LOGE("result set to file info get row failed");
+        return E_RDB;
+    }
+    rowEntity.Get(FileColumn::PARENT_CLOUD_ID).GetString(nextCloudId);
+    rowEntity.Get(FileColumn::FILE_NAME).GetString(fileName);
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::GetUriFromDB(const std::string &parentCloudId, std::string &uri)
+{
+    string realPrefix = CLOUDDISK_URI_PREFIX;
+    realPrefix.replace(realPrefix.find(BUNDLENAME_FLAG), BUNDLENAME_FLAG.length(), bundleName_);
+    if (parentCloudId.empty() || parentCloudId == rootId_ || parentCloudId == "rootId") {
+        uri = realPrefix + BACKFLASH + uri;
+        return E_OK;
+    }
+
+    string nextCloudId;
+    string fileName;
+    int32_t ret = GetParentNode(parentCloudId, nextCloudId, fileName);
+    if (ret != E_OK) {
+        LOGI("get parentnode fail, parentCloudId: %{public}s", parentCloudId.c_str());
+        return ret;
+    }
+    uri = fileName + BACKFLASH + uri;
+    uint32_t queryTimes = 0;
+    while (nextCloudId != "rootId") {
+        ret = GetParentNode(nextCloudId, nextCloudId, fileName);
+        if (ret != E_OK) {
+            return E_OK;
+        }
+        uri = fileName + BACKFLASH + uri;
+        queryTimes++;
+        if (uri.length() > PATH_MAX || queryTimes > MAX_QUERY_TIMES) {
+            return E_INVAL_ARG;
+        }
+    }
+    uri = realPrefix + BACKFLASH + uri;
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::GetNotifyUri(const CacheNode &cacheNode, std::string &uri)
+{
+    int32_t ret = CheckRootIdValid();
+    if (ret != E_OK) {
+        LOGE("rootId is invalid");
+        return ret;
+    }
+    ret = CloudDiskNotifyUtils::GetUriFromCache(bundleName_, rootId_, cacheNode, uri);
+    if (ret == E_OK) {
+        return ret;
+    }
+    LOGD("get uri from cache fail, name: %{public}s", cacheNode.fileName.c_str());
+    uri = cacheNode.fileName;
+    ret = GetUriFromDB(cacheNode.parentCloudId, uri);
+    if (ret == E_OK) {
+        return ret;
+    }
+    LOGI("get uri from db fail, name: %{public}s", cacheNode.fileName.c_str());
+    return ret;
+}
+
+int32_t CloudDiskRdbStore::GetNotifyData(const DriveKit::DKRecord &record, NotifyData &notifyData)
+{
+    CacheNode cacheNode;
+    DKRecordData data;
+    record.GetRecordData(data);
+    cacheNode.cloudId = record.GetRecordId();
+    if (data.find(DK_PARENT_CLOUD_ID) != data.end()) {
+        data.at(DK_PARENT_CLOUD_ID).GetString(cacheNode.parentCloudId);
+    }
+    if (data.find(DK_FILE_NAME) != data.end()) {
+        data.at(DK_FILE_NAME).GetString(cacheNode.fileName);
+    }
+    if (data.find(DK_IS_DIRECTORY) != data.end()) {
+        data.at(DK_IS_DIRECTORY).GetString(cacheNode.isDir);
+    }
+    if (cacheNode.parentCloudId.empty() || cacheNode.fileName.empty() || cacheNode.isDir.empty()) {
+        LOGE("get field from data fail, parent: %{public}s, fileName: %{public}s, isDir: %{public}s",
+             cacheNode.parentCloudId.c_str(), cacheNode.fileName.c_str(), cacheNode.isDir.c_str());
+        return E_INVAL_ARG;
+    }
+
+    int32_t ret = GetNotifyUri(cacheNode, notifyData.uri);
+    if (ret == E_OK) {
+        notifyData.isDir = cacheNode.isDir == "directory";
+    }
+    return ret;
+}
+
+int32_t CloudDiskRdbStore::CheckRootIdValid()
+{
+    if (!rootId_.empty()) {
+        return E_OK;
+    }
+    CloudPrefImpl cloudPrefImpl(userId_, bundleName_, FileColumn::FILES_TABLE);
+    cloudPrefImpl.GetString("rootId", rootId_);
+    if (rootId_.empty()) {
+        LOGE("get rootId fail");
+        return E_INVAL_ARG;
+    }
+    LOGI("load rootis succ, rootId: %{public}s", rootId_.c_str());
     return E_OK;
 }
 

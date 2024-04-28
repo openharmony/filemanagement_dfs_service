@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,9 +22,10 @@
 #include "rdb_store.h"
 #include "rdb_store_config.h"
 
-#include "clouddisk_db_const.h"
-#include "file_column.h"
 #include "cloud_file_utils.h"
+#include "clouddisk_db_const.h"
+#include "dk_record.h"
+#include "file_column.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -59,6 +60,18 @@ public:
     int32_t FavoriteGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t FileStatusGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
 
+    /* clouddisk syncer */
+    int32_t GetDirtyType(const std::string &cloudId, int32_t &fileStatus);
+    int32_t GetIsDirectory(const std::string &parentCloudId, const std::string &fileName, int32_t &isDir);
+    int32_t GetCurNode(const std::string &cloudId, CacheNode &curNode);
+    int32_t GetParentNode(const std::string parentCloudId, std::string &nextCloudId, std::string &fileName);
+    int32_t GetUriFromDB(const std::string &parentCloudId, std::string &uri);
+    int32_t GetNotifyUri(const CacheNode &cacheNode, std::string &uri);
+    int32_t GetNotifyData(const DriveKit::DKRecord &record, NotifyData &notifyData);
+    int32_t CheckRootIdValid();
+
+    static const int32_t BATCH_LIMIT_SIZE = 500;
+
 private:
     void Stop();
     int32_t UnlinkSynced(const std::string &cloudId);
@@ -69,6 +82,9 @@ private:
     const int32_t CONNECT_SIZE = 8;
     std::string bundleName_;
     int32_t userId_{0};
+    std::string tableName_ = FileColumn::FILES_TABLE;
+    std::mutex rdbMutex_;
+    std::string rootId_;
     static std::map<char, bool> illegalCharacter;
 };
 

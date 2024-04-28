@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd. All rights reserved.
+ * Copyright (C) 2024 Huawei Device Co., Ltd. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,9 +17,11 @@
 #include <gtest/gtest.h>
 #include <memory>
 
+#include "album_data_handler.h"
 #include "cloud_disk_data_syncer.h"
-#include "data_convertor_mock.h"
 #include "cloud_file_utils_mock.h"
+#include "clouddisk_rdbstore.h"
+#include "data_convertor_mock.h"
 #include "dfs_error.h"
 #include "dk_database.h"
 #include "dk_record_mock.h"
@@ -27,8 +29,6 @@
 #include "file_data_handler.h"
 #include "rdb_store_mock.h"
 #include "result_set_mock.h"
-#include "clouddisk_rdbstore.h"
-#include "album_data_handler.h"
 
 namespace OHOS {
 namespace FileManagement::CloudSync {
@@ -530,7 +530,8 @@ HWTEST_F(CloudDiskDataHandlerTest, HandleConflictTest001, TestSize.Level1)
 {
     string fullName = "fullName";
     const int lastDot = 0;
-    int32_t ret = cloudDiskDataHandler_->HandleConflict(nullptr, fullName, lastDot);
+    DKRecord record;
+    int32_t ret = cloudDiskDataHandler_->HandleConflict(nullptr, fullName, lastDot, record);
     EXPECT_EQ(ret, E_RDB);
     GTEST_LOG_(INFO) << "HandleConflict End";
 }
@@ -547,7 +548,8 @@ HWTEST_F(CloudDiskDataHandlerTest, HandleConflictTest002, TestSize.Level1)
     const int lastDot = 0;
     std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*resultSet, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(0), Return(E_RDB)));
-    int32_t ret = cloudDiskDataHandler_->HandleConflict(resultSet, fullName, lastDot);
+    DKRecord record;
+    int32_t ret = cloudDiskDataHandler_->HandleConflict(resultSet, fullName, lastDot, record);
     EXPECT_EQ(ret, E_RDB);
     GTEST_LOG_(INFO) << "HandleConflict End";
 }
@@ -564,7 +566,8 @@ HWTEST_F(CloudDiskDataHandlerTest, HandleConflictTest003, TestSize.Level1)
     const int lastDot = 0;
     std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*resultSet, GetRowCount(_)).WillRepeatedly(DoAll(SetArgReferee<0>(0), Return(E_OK)));
-    int32_t ret = cloudDiskDataHandler_->HandleConflict(resultSet, fullName, lastDot);
+    DKRecord record;
+    int32_t ret = cloudDiskDataHandler_->HandleConflict(resultSet, fullName, lastDot, record);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "HandleConflict End";
 }
@@ -624,7 +627,8 @@ HWTEST_F(CloudDiskDataHandlerTest, ConflictReNameTest001, TestSize.Level1)
 {
     std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*cloudDiskDataHandler_, Update(_, _, _, _)).WillOnce(Return(E_OK));
-    int32_t ret = cloudDiskDataHandler_->ConflictReName("cloudId", "newFileName");
+    DKRecord record;
+    int32_t ret = cloudDiskDataHandler_->ConflictReName("cloudId", "newFileName", record);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "ConflictReName End";
 }
@@ -639,7 +643,8 @@ HWTEST_F(CloudDiskDataHandlerTest, ConflictReNameTest002, TestSize.Level1)
 {
     std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*cloudDiskDataHandler_, Update(_, _, _, _)).WillOnce(Return(-1));
-    int32_t ret = cloudDiskDataHandler_->ConflictReName("cloudId", "newFileName");
+    DKRecord record;
+    int32_t ret = cloudDiskDataHandler_->ConflictReName("cloudId", "newFileName", record);
     EXPECT_EQ(ret, E_RDB);
     GTEST_LOG_(INFO) << "ConflictReName End";
 }
