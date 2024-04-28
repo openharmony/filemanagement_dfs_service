@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Copyright (C) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -45,6 +45,7 @@ ohos_shared_library("cloudsync_sa") {
     "include/transport",
     "include/transport/softbus",
     "${clouddisk_database_path}/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
@@ -165,6 +166,7 @@ ohos_shared_library("cloudsync_sa") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "libfuse:libfuse",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
     "power_manager:powermgr_client",
@@ -223,6 +225,7 @@ ohos_static_library("cloudsync_sa_static") {
     "include/transport",
     "include/transport/softbus",
     "${clouddisk_database_path}/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
@@ -341,6 +344,7 @@ ohos_static_library("cloudsync_sa_static") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "libfuse:libfuse",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
     "power_manager:powermgr_client",

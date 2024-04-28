@@ -49,7 +49,7 @@ int32_t CloudDiskNotify::GetDeleteNotifyData(const vector<NativeRdb::ValueObject
                                              vector<NotifyData> &notifyDataList,
                                              const ParamServiceOther &paramOthers)
 {
-    return E_OK;
+    return 0;
 }
 
 void CloudDiskNotify::AddNotify(NotifyData notifyData) {}

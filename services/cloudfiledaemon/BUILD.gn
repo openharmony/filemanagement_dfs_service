@@ -49,8 +49,6 @@ ohos_shared_library("cloudfiledaemon") {
 
   include_dirs = [
     "include",
-    "//third_party/libfuse/include",
-    "//third_party/libfuse/lib",
     "${utils_path}/cloud_disk/include",
     "${utils_path}/dentry/include",
     "${utils_path}/log/include",
@@ -64,16 +62,17 @@ ohos_shared_library("cloudfiledaemon") {
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfileutils_lite",
-    "//third_party/libfuse:libfuse",
   ]
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:dataobs_manager",
     "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_single",
+    "libfuse:libfuse",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

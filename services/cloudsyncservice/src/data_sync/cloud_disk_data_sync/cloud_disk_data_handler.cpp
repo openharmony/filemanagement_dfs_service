@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,9 +24,11 @@
 #include <sys/stat.h>
 #include <tuple>
 #include <unistd.h>
+
 #include "cloud_disk_data_const.h"
-#include "clouddisk_db_const.h"
 #include "cloud_file_utils.h"
+#include "clouddisk_db_const.h"
+#include "clouddisk_notify.h"
 #include "data_sync_const.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
@@ -226,6 +228,10 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
     values.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     params.insertFiles.push_back(values);
     ret = Insert(rowId, FC::FILES_TABLE, values);
+    if (ret == E_OK) {
+        CloudDiskNotify::GetInstance().TryNotifyService(
+            {NotifyOpsType::SERVICE_INSERT, "", NotifyType::NOTIFY_ADDED, record}, {userId_, bundleName_});
+    }
     return ret;
 }
 
@@ -263,13 +269,14 @@ int32_t CloudDiskDataHandler::PullRecordConflict(DKRecord &record)
               ->Glob(FC::FILE_NAME, fileName + "([1-9])" + extension)
               ->EndWrap();
     auto resultSet = Query(predicates, {FC::CLOUD_ID, FC::FILE_NAME});
-    ret = HandleConflict(resultSet, fullName, lastDot);
+    ret = HandleConflict(resultSet, fullName, lastDot, record);
     return ret;
 }
 
 int32_t CloudDiskDataHandler::HandleConflict(const std::shared_ptr<NativeRdb::ResultSet> resultSet,
                                              string &fullName,
-                                             const int &lastDot)
+                                             const int &lastDot,
+                                             const DriveKit::DKRecord &record)
 {
     if (resultSet == nullptr) {
         LOGE(" resultSet is null");
@@ -291,7 +298,7 @@ int32_t CloudDiskDataHandler::HandleConflict(const std::shared_ptr<NativeRdb::Re
         return E_INVAL_ARG;
     }
     if (!renameFileCloudId.empty()) {
-        ret = ConflictReName(renameFileCloudId, fullName);
+        ret = ConflictReName(renameFileCloudId, fullName, record);
     } else {
         LOGD("no same name");
     }
@@ -335,7 +342,8 @@ int32_t CloudDiskDataHandler::FindRenameFile(const std::shared_ptr<NativeRdb::Re
     return E_OK;
 }
 
-int32_t CloudDiskDataHandler::ConflictReName(const string &cloudId, string newFileName)
+int32_t CloudDiskDataHandler::ConflictReName(const string &cloudId, string newFileName,
+    const DriveKit::DKRecord &record)
 {
     LOGD("do conflict rename, new fileName is %{public}s", newFileName.c_str());
     ValuesBucket values;
@@ -349,6 +357,8 @@ int32_t CloudDiskDataHandler::ConflictReName(const string &cloudId, string newFi
         LOGE("update db, rename fail");
         return E_RDB;
     }
+    CloudDiskNotify::GetInstance().TryNotifyService(
+        {NotifyOpsType::SERVICE_UPDATE, cloudId, NotifyType::NOTIFY_NONE, record}, {userId_, bundleName_});
     return E_OK;
 }
 
@@ -443,15 +453,25 @@ int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::Resu
         return E_RDB;
     }
     /* update rdb */
+    return PullUpdateDb(values, record, local, isFileContentChanged);
+}
+
+int32_t CloudDiskDataHandler::PullUpdateDb(ValuesBucket &values,
+                                           DKRecord &record,
+                                           NativeRdb::ResultSet &local,
+                                           bool isFileContentChanged)
+{
     values.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
     int32_t changedRows = 0;
     string whereClause = FC::CLOUD_ID + " = ? AND " + FC::DIRTY_TYPE + " = ?";
     vector<string> whereArgs = {record.GetRecordId(), to_string(static_cast<int32_t>(DirtyType::TYPE_SYNCED))};
-    ret = Update(changedRows, values, whereClause, whereArgs);
+    int32_t ret = Update(changedRows, values, whereClause, whereArgs);
     if (ret != E_OK) {
         LOGE("rdb update failed, err=%{public}d", ret);
         return E_RDB;
     }
+    CloudDiskNotify::GetInstance().TryNotifyService(
+        {NotifyOpsType::SERVICE_UPDATE, record.GetRecordId(), NotifyType::NOTIFY_NONE, record}, {userId_, bundleName_});
     LOGI("update of record success, change %{public}d row", changedRows);
     if (FileIsLocal(local) && isFileContentChanged && changedRows != 0) {
         LOGI("cloud file content changed, %s", record.GetRecordId().c_str());
@@ -460,6 +480,12 @@ int32_t CloudDiskDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::Resu
             LOGE("unlink local failed, errno %{public}d", errno);
         }
         values.PutInt(FC::POSITION, static_cast<int32_t>(POSITION_CLOUD));
+        ret = Update(changedRows, values, whereClause, whereArgs);
+        if (ret == E_OK) {
+            CloudDiskNotify::GetInstance().TryNotifyService(
+                {NotifyOpsType::SERVICE_UPDATE, record.GetRecordId(), NotifyType::NOTIFY_NONE, record},
+                {userId_, bundleName_});
+        }
     }
     return E_OK;
 }
@@ -477,12 +503,17 @@ int32_t CloudDiskDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::Resu
                 LOGE("unlink local failed, errno %{public}d", errno);
             }
         }
+        vector<NotifyData> notifyDataList;
+        CloudDiskNotify::GetInstance().GetDeleteNotifyData({record.GetRecordId()}, notifyDataList,
+                                                           {userId_, bundleName_});
         int32_t deletedRows;
         int32_t ret = Delete(deletedRows, FC::CLOUD_ID + " = ?", {record.GetRecordId()});
         if (ret != E_OK) {
             LOGE("delete in rdb failed, ret:%{public}d", ret);
             return E_INVAL_ARG;
         }
+        CloudDiskNotify::GetInstance().TryNotifyService({NotifyOpsType::SERVICE_DELETE, record.GetRecordId()},
+                                                        {userId_, bundleName_, notifyDataList});
         return E_OK;
     }
     if (IsLocalDirty(local)) {
@@ -496,6 +527,8 @@ int32_t CloudDiskDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::Resu
             LOGE("Update in rdb failed, ret:%{public}d", ret);
             return ret;
         }
+        CloudDiskNotify::GetInstance().TryNotifyService(
+            {NotifyOpsType::SERVICE_UPDATE, record.GetRecordId(), NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
     }
 
     if (CloudDisk::CloudFileUtils::LocalWriteOpen(path)) {
@@ -520,6 +553,8 @@ int CloudDiskDataHandler::RecycleFile(const string &recordId)
         LOGE("rdb update failed, err=%{public}d", ret);
         return E_RDB;
     }
+    CloudDiskNotify::GetInstance().TryNotifyService(
+        {NotifyOpsType::SERVICE_UPDATE, recordId, NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
     return E_OK;
 }
 
@@ -535,6 +570,8 @@ int CloudDiskDataHandler::SetRetry(const string &recordId)
         LOGE("update retry flag failed, ret=%{public}d", ret);
         return E_RDB;
     }
+    CloudDiskNotify::GetInstance().TryNotifyService(
+        {NotifyOpsType::SERVICE_UPDATE, recordId, NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
     return E_OK;
 }
 
@@ -613,11 +650,19 @@ int32_t CloudDiskDataHandler::CleanCloudRecord(const int32_t action)
             }
             deleteIds.emplace_back(cloudId);
         }
+        vector<NotifyData> notifyDataList;
+        CloudDiskNotify::GetInstance().GetDeleteNotifyData(deleteIds, notifyDataList, {userId_, bundleName_});
         BatchDetete(FC::FILES_TABLE, FC::CLOUD_ID, deleteIds);
+        CloudDiskNotify::GetInstance().TryNotifyService({NotifyOpsType::SERVICE_DELETE_BATCH},
+                                                        {userId_, bundleName_, notifyDataList});
         deleteIds.clear();
     } while (count != 0);
     int32_t deletedRows;
     ret = Delete(deletedRows, "", {});
+    if (ret == E_OK) {
+        CloudDiskNotify::GetInstance().TryNotifyService({NotifyOpsType::SERVICE_DELETE, "", NotifyType::NOTIFY_DELETED},
+                                                        {userId_, bundleName_});
+    }
     return ret;
 }
 
@@ -674,6 +719,8 @@ int32_t CloudDiskDataHandler::PushFileStatus(vector<DKRecord> &records)
             LOGE("update status err %{public}d", ret);
             return ret;
         }
+        CloudDiskNotify::GetInstance().TryNotifyService(
+            {NotifyOpsType::SERVICE_UPDATE, record.GetRecordId(), NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
     }
     return E_OK;
 }
@@ -783,6 +830,8 @@ int32_t CloudDiskDataHandler::OnCreateRecords(const map<DKRecordId, DKRecordOper
                 return updateRet;
             }
             LOGE("create record fail, cloud id: %{private}s", entry.first.c_str());
+            CloudDiskNotify::GetInstance().TryNotifyService(
+                {NotifyOpsType::SERVICE_UPDATE, entry.first, NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
         }
         GetReturn(err, ret);
     }
@@ -801,13 +850,6 @@ int32_t CloudDiskDataHandler::OnDeleteRecords(const map<DKRecordId, DKRecordOper
         }
         if (err != E_OK) {
             modifyFailSet_.push_back(entry.first);
-            ValuesBucket valuesBucket;
-            int32_t changedRows;
-            int32_t updateRet = Update(changedRows, valuesBucket, FC::CLOUD_ID + " = ?", { entry.first });
-            if (updateRet != E_OK) {
-                LOGE("on create records update synced err %{public}d, cloudId %{public}s", ret, entry.first.c_str());
-                return updateRet;
-            }
             LOGE("delete record fail, cloud id: %{private}s", entry.first.c_str());
         }
         GetReturn(err, ret);
@@ -841,6 +883,8 @@ int32_t CloudDiskDataHandler::OnModifyMdirtyRecords(const map<DKRecordId, DKReco
                 return updateRet;
             }
             LOGE("modify mdirty record fail, cloud id: %{private}s", entry.first.c_str());
+            CloudDiskNotify::GetInstance().TryNotifyService(
+                {NotifyOpsType::SERVICE_UPDATE, entry.first, NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
         }
         GetReturn(err, ret);
     }
@@ -873,6 +917,8 @@ int32_t CloudDiskDataHandler::OnModifyFdirtyRecords(const map<DKRecordId, DKReco
                 return updateRet;
             }
             LOGE("modify fdirty record fail, cloud id: %{private}s", entry.first.c_str());
+            CloudDiskNotify::GetInstance().TryNotifyService(
+                {NotifyOpsType::SERVICE_UPDATE, entry.first, NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
         }
         GetReturn(err, ret);
     }
@@ -930,6 +976,8 @@ int32_t CloudDiskDataHandler::OnCreateRecordSuccess(
         LOGE("on create records update synced err %{public}d, cloudId %{public}s", ret, entry.first.c_str());
         return ret;
     }
+    CloudDiskNotify::GetInstance().TryNotifyService(
+        {NotifyOpsType::SERVICE_UPDATE, entry.first, NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
     return E_OK;
 }
 int32_t CloudDiskDataHandler::OnDeleteRecordSuccess(const std::pair<DKRecordId, DKRecordOperResult> &entry)
@@ -990,6 +1038,8 @@ int32_t CloudDiskDataHandler::OnModifyRecordSuccess(
             return ret;
         }
     }
+    CloudDiskNotify::GetInstance().TryNotifyService(
+        {NotifyOpsType::SERVICE_UPDATE, entry.first, NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
     return E_OK;
 }
 bool CloudDiskDataHandler::IsTimeChanged(const DriveKit::DKRecord &record,
@@ -1149,6 +1199,8 @@ int32_t CloudDiskDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset 
     if (ret != E_OK) {
         LOGE("on download file from cloud err %{public}d", ret);
     }
+    CloudDiskNotify::GetInstance().TryNotifyService(
+        {NotifyOpsType::SERVICE_UPDATE, cloudId, NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
     return ret;
 }
 
@@ -1184,6 +1236,8 @@ int32_t CloudDiskDataHandler::CleanCache(const string &uri)
         LOGE("rdb update failed, err=%{public}d", rdbRet);
         return E_RDB;
     }
+    CloudDiskNotify::GetInstance().TryNotifyService(
+        {NotifyOpsType::SERVICE_UPDATE, cloudId, NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
     return ret;
 }
 } // namespace CloudSync

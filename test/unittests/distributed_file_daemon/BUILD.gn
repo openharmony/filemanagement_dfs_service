@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Copyright (C) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -56,8 +56,6 @@ ohos_unittest("distributed_file_daemon_test") {
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
-    "//third_party/libfuse/include",
-    "//third_party/libfuse/lib",
   ]
 
   deps = [
@@ -66,7 +64,6 @@ ohos_unittest("distributed_file_daemon_test") {
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
-    "//third_party/libfuse:libfuse",
   ]
 
   external_deps = [
@@ -82,6 +79,7 @@ ohos_unittest("distributed_file_daemon_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "libfuse:libfuse",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -139,8 +137,6 @@ ohos_unittest("distributed_file_daemon_stub_test") {
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
-    "//third_party/libfuse/include",
-    "//third_party/libfuse/lib",
   ]
 
   deps = [
@@ -149,7 +145,6 @@ ohos_unittest("distributed_file_daemon_stub_test") {
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
-    "//third_party/libfuse:libfuse",
   ]
 
   external_deps = [
@@ -165,6 +160,7 @@ ohos_unittest("distributed_file_daemon_stub_test") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "libfuse:libfuse",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -200,8 +196,6 @@ ohos_unittest("daemon_manager_impl_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "${services_path}/distributedfiledaemon/include",
-    "//third_party/libfuse/include",
-    "//third_party/libfuse/lib",
   ]
 
   deps = [
@@ -215,6 +209,7 @@ ohos_unittest("daemon_manager_impl_test") {
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "libfuse:libfuse",
   ]
 
   defines = [

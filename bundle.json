@@ -62,11 +62,11 @@
           "os_account",
           "power_manager",
           "app_file_service",
-          "resource_schedule_service"
+          "resource_schedule_service",
+          "libfuse"
         ],
         "third_party": [
-          "e2fsprogs",
-          "libfuse"
+          "e2fsprogs"
         ]
       },
       "build": {
