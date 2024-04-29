@@ -54,7 +54,7 @@ SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTempla
     sessionName_ = sessionName.ToString();
 }
 
-bool SoftbusAgent::IsSameAccount(const std::string networkId)
+bool SoftbusAgent::IsSameAccount(const std::string &networkId)
 {
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
     DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
@@ -180,6 +180,47 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
     };
     SoftbusSessionDispatcher::OnSessionOpened(socketId, peerSocketInfo);
     LOGI("Success to OpenSession, socketId:%{public}d, linkType:%{public}d", socketId, linkType);
+}
+
+void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType)
+{
+    LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
+    if (!IsSameAccount(info.GetCid())) {
+        LOGI("The source and sink device is not same account, not support.");
+        return;
+    }
+    ISocketListener sessionListener = {
+        .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
+        .OnShutdown = SoftbusSessionDispatcher::OnSessionClosed,
+        .OnBytes = nullptr,
+        .OnMessage = nullptr,
+        .OnStream = nullptr,
+    };
+    SocketInfo clientInfo = {
+        .name = const_cast<char*>((sessionName_.c_str())),
+        .peerName = const_cast<char*>(sessionName_.c_str()),
+        .peerNetworkId = const_cast<char*>(info.GetCid().c_str()),
+        .pkgName = const_cast<char*>(IDaemon::SERVICE_NAME.c_str()),
+        .dataType = DATA_TYPE_BYTES,
+    };
+    int32_t socketId = Socket(clientInfo);
+    if (socketId < FileManagement::E_OK) {
+        LOGE("Create OpenApSoftbusChannel Socket error");
+        return;
+    }
+    int32_t ret = DfsBind(socketId, &sessionListener);
+    if (ret != FileManagement::E_OK) {
+        LOGE("Bind SocketClient error");
+        Shutdown(socketId);
+        return;
+    }
+    OccupySession(socketId, linkType);
+    PeerSocketInfo peerSocketInfo = {
+        .name = const_cast<char*>(sessionName_.c_str()),
+        .networkId = const_cast<char*>(info.GetCid().c_str()),
+    };
+    SoftbusSessionDispatcher::OnSessionOpened(socketId, peerSocketInfo);
+    LOGI("Success to OpenApSession, socketId:%{public}d, linkType:%{public}d", socketId, linkType);
 }
 
 void SoftbusAgent::CloseSession(shared_ptr<BaseSession> session)

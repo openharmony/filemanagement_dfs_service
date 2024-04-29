@@ -24,6 +24,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 namespace {
+constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 } // namespace
 
@@ -48,7 +49,7 @@ void NetworkAgentTemplate::ConnectDeviceAsync(const DeviceInfo info)
     LOGI("ConnectDeviceAsync Enter");
     std::this_thread::sleep_for(std::chrono::milliseconds(
         OPEN_SESSSION_DELAY_TIME)); // Temporary workaround for time sequence issues(offline-onSessionOpened)
-    OpenSession(info, LINK_TYPE_AP);
+    OpenApSession(info, LINK_TYPE_AP);
 }
 
 void NetworkAgentTemplate::ConnectDeviceByP2PAsync(const DeviceInfo info)
@@ -78,6 +79,10 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
                  1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI);
             continue;
         }
+        auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
+            &NetworkAgentTemplate::ConnectDeviceAsync, info);
+        cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
+        Recv(move(cmd));
     }
 }
 
@@ -151,10 +156,18 @@ void NetworkAgentTemplate::GetSession(const string &cid, uint8_t linkType)
 {
     DeviceInfo deviceInfo;
     deviceInfo.SetCid(cid);
-    try {
-        OpenSession(deviceInfo, linkType);
-    } catch (const DfsuException &e) {
-        LOGE("reget session failed, code: %{public}d", e.code());
+    if (linkType == LINK_TYPE_AP) {
+        try {
+            OpenApSession(deviceInfo, LINK_TYPE_AP);
+        } catch (const DfsuException &e) {
+            LOGE("reget session failed, code: %{public}d", e.code());
+        }
+    } else if (linkType == LINK_TYPE_P2P) {
+        try {
+            OpenSession(deviceInfo, LINK_TYPE_P2P);
+        } catch (const DfsuException &e) {
+            LOGE("reget session failed, code: %{public}d", e.code());
+        }
     }
 }
 } // namespace DistributedFile

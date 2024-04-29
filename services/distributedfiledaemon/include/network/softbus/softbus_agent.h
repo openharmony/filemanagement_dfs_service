@@ -19,6 +19,7 @@
 #include <map>
 #include <mutex>
 
+#include "inner_socket.h"
 #include "network/network_agent_template.h"
 #include "transport/socket.h"
 #include "transport/trans_type.h"
@@ -32,13 +33,14 @@ public:
     ~SoftbusAgent() = default;
     void OnSessionOpened(const int32_t sessionId, PeerSocketInfo info);
     void OnSessionClosed(int32_t sessionId, const std::string peerDeviceId);
-    static bool IsSameAccount(const std::string networkId);
+    static bool IsSameAccount(const std::string &networkId);
 protected:
     void JoinDomain() override;
     void QuitDomain() override;
     void StopTopHalf() override;
     void StopBottomHalf() override;
     void OpenSession(const DeviceInfo &info, const uint8_t &linkType) override;
+    void OpenApSession(const DeviceInfo &info, const uint8_t &linkType) override;
     void CloseSession(std::shared_ptr<BaseSession> session) override;
 
 private:

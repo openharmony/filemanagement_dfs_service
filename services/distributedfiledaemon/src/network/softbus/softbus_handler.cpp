@@ -15,6 +15,8 @@
 
 #include "network/softbus/softbus_handler.h"
 
+#include <utility>
+
 #include "device_manager.h"
 #include "dfs_error.h"
 #include "dm_device_info.h"
@@ -23,7 +25,6 @@
 #include "network/softbus/softbus_session_listener.h"
 #include "utils_directory.h"
 #include "utils_log.h"
-#include <utility>
 
 namespace OHOS {
 namespace Storage {
@@ -54,7 +55,7 @@ void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
     SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, info.name));
 }
 
-bool SoftBusHandler::IsSameAccount(const std::string networkId)
+bool SoftBusHandler::IsSameAccount(const std::string &networkId)
 {
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
     DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
