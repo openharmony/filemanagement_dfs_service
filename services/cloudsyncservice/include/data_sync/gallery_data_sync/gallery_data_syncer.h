@@ -86,6 +86,7 @@ private:
     const std::string DATABASE_NAME = "media_library.db";
     const std::string BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
     const int32_t CONNECT_SIZE = 10;
+    const int32_t EL2_PATH = 1;
 
     /* handler */
     std::shared_ptr<FileDataHandler> fileHandler_;

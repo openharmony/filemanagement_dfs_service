@@ -29,6 +29,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 using namespace std;
+using ChangeType = AAFwk::ChangeInfo::ChangeType;
 const std::string MEDIA_LIBRARY_STARTUP_PARAM_PREFIX = "multimedia.medialibrary.startup.";
 
 const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
@@ -75,6 +76,7 @@ std::shared_ptr<NativeRdb::RdbStore> GalleryDataSyncer::RdbInit(const std::strin
     config.SetSecurityLevel(NativeRdb::SecurityLevel::S3);
     config.SetScalarFunction("cloud_sync_func", 0, CloudSyncTriggerFunc);
     config.SetScalarFunction("is_caller_self_func", 0, IsCallerSelfFunc);
+    config.SetArea(EL2_PATH);
 
     /*
      * Just pass in any value but zero for parameter @version in GetRdbStore,
@@ -438,6 +440,8 @@ void GalleryDataSyncer::SetCheckSysEvent()
 int32_t GalleryDataSyncer::CompletePull()
 {
     fileHandler_->UpdateAlbumInternal();
+    DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT, "");
+    DataSyncNotifier::GetInstance().FinalNotify();
     return DataSyncer::CompletePull();
 }
 
