@@ -54,7 +54,7 @@ SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTempla
     sessionName_ = sessionName.ToString();
 }
 
-bool SoftbusAgent::IsSameAccount(const std::string networkId)
+bool SoftbusAgent::IsSameAccount(const std::string &networkId)
 {
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
     DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);

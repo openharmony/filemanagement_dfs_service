@@ -55,7 +55,7 @@ void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
     SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, info.name));
 }
 
-bool SoftBusHandler::IsSameAccount(const std::string networkId)
+bool SoftBusHandler::IsSameAccount(const std::string &networkId)
 {
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
     DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(SERVICE_NAME, "", deviceList);
