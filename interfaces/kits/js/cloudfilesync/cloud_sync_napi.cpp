@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -368,6 +368,246 @@ napi_value CloudSyncNapi::Stop(napi_env env, napi_callback_info info)
     std::string procedureName = "Stop";
     auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
+}
+
+bool CloudSyncNapi::CheckRef(napi_env env, napi_ref ref, ChangeListenerNapi &listObj, const string &uri)
+{
+    napi_value offCallback = nullptr;
+    napi_status status = napi_get_reference_value(env, ref, &offCallback);
+    if (status != napi_ok) {
+        LOGE("Create reference fail, status: %{public}d", status);
+        return false;
+    }
+    bool isSame = false;
+    shared_ptr<CloudNotifyObserver> obs;
+    string obsUri;
+    {
+        lock_guard<mutex> lock(sOnOffMutex_);
+        for (auto it = listObj.observers_.begin(); it < listObj.observers_.end(); it++) {
+            napi_value onCallback = nullptr;
+            status = napi_get_reference_value(env, (*it)->ref_, &onCallback);
+            if (status != napi_ok) {
+                LOGE("Create reference fail, status: %{public}d", status);
+                return false;
+            }
+            napi_strict_equals(env, offCallback, onCallback, &isSame);
+            if (isSame) {
+                obsUri = (*it)->uri_;
+                if (uri.compare(obsUri) != 0) {
+                    return true;
+                }
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+static bool CheckIsValidUri(Uri uri)
+{
+    string scheme = uri.GetScheme();
+    if (scheme != FILE_SCHEME) {
+        return false;
+    }
+    string sandboxPath = uri.GetPath();
+    char realPath[PATH_MAX + 1]{'\0'};
+    if (realpath(sandboxPath.c_str(), realPath) == nullptr) {
+        LOGE("realpath failed with %{public}d", errno);
+        return false;
+    }
+    if (strncmp(realPath, sandboxPath.c_str(), sandboxPath.size()) != 0) {
+        LOGE("sandboxPath is not equal to realPath");
+        return false;
+    }
+    if (sandboxPath.find("/data/storage/el2/cloud") != 0) {
+        LOGE("not surported uri");
+        return false;
+    }
+    return true;
+}
+
+static int32_t GetRegisterParams(napi_env env, napi_callback_info info, RegisterParams &registerParams)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::THREE)) {
+        LOGE("Arguments number mismatch");
+        return E_PARAMS;
+    }
+
+    auto [succUri, uri, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+    if (!succUri) {
+        LOGE("get arg uri fail");
+        return E_PARAMS;
+    }
+    registerParams.uri = string(uri.get());
+    if (!CheckIsValidUri(Uri(registerParams.uri))) {
+        LOGE("RegisterChange uri parameter format error!");
+        return E_PARAMS;
+    }
+
+    auto [succRecursion, recursion] = NVal(env, funcArg[(int)NARG_POS::SECOND]).ToBool();
+    if (!succRecursion) {
+        LOGE("get arg recursion fail");
+        return E_PARAMS;
+    }
+    registerParams.recursion = recursion;
+
+    if (!NVal(env, funcArg[(int)NARG_POS::THIRD]).TypeIs(napi_function)) {
+        LOGE("Argument type mismatch");
+        return E_PARAMS;
+    }
+    napi_status status =
+        napi_create_reference(env, NVal(env, funcArg[(int)NARG_POS::THIRD]).val_, 1, &registerParams.cbOnRef);
+    if (status != napi_ok) {
+        LOGE("Create reference fail, status: %{public}d", status);
+        return E_PARAMS;
+    }
+
+    return ERR_OK;
+}
+
+int32_t CloudSyncNapi::RegisterToObs(napi_env env, const RegisterParams &registerParams)
+{
+    auto observer = make_shared<CloudNotifyObserver>(*g_listObj, registerParams.uri, registerParams.cbOnRef);
+    Uri uri(registerParams.uri);
+    auto obsMgrClient = AAFwk::DataObsMgrClient::GetInstance();
+    if (obsMgrClient == nullptr) {
+        LOGE("get DataObsMgrClient failed");
+        return E_SA_LOAD_FAILED;
+    }
+    sptr<ObserverImpl> obs = ObserverImpl::GetObserver(uri, observer);
+    if (obs == nullptr) {
+        LOGE("new ObserverImpl failed");
+        return E_INVAL_ARG;
+    }
+    ErrCode ret = obsMgrClient->RegisterObserverExt(uri, obs, registerParams.recursion);
+    if (ret != E_OK) {
+        LOGE("ObsMgr register fail");
+        ObserverImpl::DeleteObserver(uri, observer);
+        return E_INVAL_ARG;
+    }
+    lock_guard<mutex> lock(CloudSyncNapi::sOnOffMutex_);
+    g_listObj->observers_.push_back(observer);
+    return E_OK;
+}
+
+napi_value CloudSyncNapi::RegisterChange(napi_env env, napi_callback_info info)
+{
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        NError(E_PERMISSION_DENIED).ThrowErr(env);
+        return nullptr;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        NError(E_PERMISSION_SYSTEM).ThrowErr(env);
+        return nullptr;
+    }
+
+    if (g_listObj == nullptr) {
+        g_listObj = make_unique<ChangeListenerNapi>(env);
+    }
+
+    RegisterParams registerParams;
+    int32_t ret = GetRegisterParams(env, info, registerParams);
+    if (ret != ERR_OK) {
+        LOGE("Get Params fail");
+        NError(ret).ThrowErr(env);
+        return nullptr;
+    }
+
+    if (CheckRef(env, registerParams.cbOnRef, *g_listObj, registerParams.uri)) {
+        ret = RegisterToObs(env, registerParams);
+        if (ret != E_OK) {
+            LOGE("Get Params fail");
+            NError(ret).ThrowErr(env);
+            return nullptr;
+        }
+    } else {
+        LOGE("Check Ref fail");
+        NError(E_PARAMS).ThrowErr(env);
+        napi_delete_reference(env, registerParams.cbOnRef);
+        return nullptr;
+    }
+    return NVal::CreateUndefined(env).val_;
+}
+
+napi_value CloudSyncNapi::UnregisterFromObs(napi_env env, const string &uri)
+{
+    auto obsMgrClient = AAFwk::DataObsMgrClient::GetInstance();
+    if (obsMgrClient == nullptr) {
+        LOGE("get DataObsMgrClient failed");
+        NError(E_SA_LOAD_FAILED).ThrowErr(env);
+        return nullptr;
+    }
+    std::vector<std::shared_ptr<CloudNotifyObserver>> offObservers;
+    {
+        lock_guard<mutex> lock(sOnOffMutex_);
+        for (auto iter = g_listObj->observers_.begin(); iter != g_listObj->observers_.end();) {
+            if (uri == (*iter)->uri_) {
+                offObservers.push_back(*iter);
+                vector<shared_ptr<CloudNotifyObserver>>::iterator tmp = iter;
+                iter = g_listObj->observers_.erase(tmp);
+            } else {
+                iter++;
+            }
+        }
+    }
+    for (auto observer : offObservers) {
+        if (!ObserverImpl::FindObserver(Uri(uri), observer)) {
+            LOGE("observer not exist");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
+        sptr<ObserverImpl> obs = ObserverImpl::GetObserver(Uri(uri), observer);
+        if (obs == nullptr) {
+            LOGE("new observerimpl failed");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
+        ErrCode ret = obsMgrClient->UnregisterObserverExt(Uri(uri), obs);
+        if (ret != ERR_OK) {
+            LOGE("call obs unregister fail");
+            NError(E_PARAMS).ThrowErr(env);
+            return nullptr;
+        }
+        ObserverImpl::DeleteObserver(Uri(uri), observer);
+    }
+    return NVal::CreateUndefined(env).val_;
+}
+
+napi_value CloudSyncNapi::UnregisterChange(napi_env env, napi_callback_info info)
+{
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        NError(E_PERMISSION_DENIED).ThrowErr(env);
+        return nullptr;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        NError(E_PERMISSION_SYSTEM).ThrowErr(env);
+        return nullptr;
+    }
+
+    if (g_listObj == nullptr || g_listObj->observers_.empty()) {
+        LOGI("no obs to unregister");
+        return nullptr;
+    }
+
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        LOGE("params number mismatch");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+    auto [succUri, uri, ignore] = NVal(env, funcArg[(int)NARG_POS::FIRST]).ToUTF8String();
+    if (!succUri || !CheckIsValidUri(Uri(uri.get()))) {
+        LOGE("get uri fail");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    return UnregisterFromObs(env, uri.get());
 }
 
 void CloudSyncNapi::SetClassName(const std::string classname)
