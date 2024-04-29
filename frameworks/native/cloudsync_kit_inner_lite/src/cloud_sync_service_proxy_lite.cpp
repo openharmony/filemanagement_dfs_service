@@ -109,7 +109,7 @@ void CloudSyncServiceProxyLite::InvalidInstance()
 
 void CloudSyncServiceProxyLite::ServiceProxyLoadCallbackLite::OnLoadSystemAbilitySuccess(
     int32_t systemAbilityId,
-    const sptr<IRemoteObject> &remoteObject)
+    const sptr<IRemoteObject> &remoteObject) __attribute__((no_sanitize("cfi")))
 {
     LOGI("Load CloudSync SA success, systemAbilityId: %{public}d, remote Obj result: %{private}s",
         systemAbilityId, (remoteObject == nullptr ? "false" : "true"));
