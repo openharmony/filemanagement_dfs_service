@@ -32,19 +32,22 @@
 using namespace OHOS::DistributedHardware;
 using namespace OHOS::FileManagement;
 using namespace std;
+
+namespace {
 bool g_mockGetTrustedDeviceList = true;
 const string TEST_NETWORKID = "45656596896323231";
 const string TEST_NETWORKID_TWO = "45656596896323232";
 const string TEST_NETWORKID_THREE = "45656596896323233";
 constexpr int SESSION_ID_ONE = 1;
 constexpr int UID_ONE = 1;
+}
 
 namespace OHOS {
 namespace DistributedHardware {
 int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName, const std::string &extra,
                                                 std::vector<DmDeviceInfo> &deviceList)
 {
-    if (false == g_mockGetTrustedDeviceList) {
+    if (!g_mockGetTrustedDeviceList) {
         return ERR_DM_INPUT_PARA_INVALID;
     }
 

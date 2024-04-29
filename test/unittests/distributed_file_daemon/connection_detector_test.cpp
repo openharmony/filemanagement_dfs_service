@@ -12,11 +12,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "connection_detector.h"
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "connection_detector.h"
+#include <file_ex.h>
+
+namespace {
+bool g_mockQueryActiveOsAccountIds = true;
+bool g_mockQueryActiveOsAccountIdsEmpty = true;
+constexpr int32_t TEST_USERID = 100;
+constexpr int32_t INVALID_USER_ID = -1;
+}
+namespace OHOS {
+namespace AccountSA {
+ErrCode OsAccountManager::QueryActiveOsAccountIds(std::vector<int32_t>& ids)
+{
+    if (g_mockQueryActiveOsAccountIds) {
+        if (!g_mockQueryActiveOsAccountIdsEmpty) {
+            ids.push_back(TEST_USERID);
+        }
+
+        return NO_ERROR;
+    }
+
+    return INVALID_USER_ID;
+}
+}
+}
 
 namespace OHOS::Storage::DistributedFile::Test {
 using namespace testing;
@@ -24,7 +53,7 @@ using namespace testing::ext;
 using namespace std;
 
 constexpr int32_t E_OK = 0;
-constexpr int32_t E_Hash_Value = 3556498;
+constexpr int32_t E_HASH_VALUE = 3556498;
 constexpr int32_t E_ERR = -1;
 
 class ConnectionDetectorTest : public testing::Test {
@@ -89,14 +118,25 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MocklispHash_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_MocklispHash_002_Start";
     string str = "test";
     uint64_t ret = ConnectionDetector::MocklispHash(str);
-    EXPECT_EQ(ret, E_Hash_Value);
+    EXPECT_EQ(ret, E_HASH_VALUE);
     GTEST_LOG_(INFO) << "DfsService_MocklispHash_002_End";
 }
 
 HWTEST_F(ConnectionDetectorTest, DfsService_ParseHmdfsPath_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DfsService_ParseHmdfsPath_001_Start";
-    EXPECT_EQ("/mnt/hmdfs/100/account", ConnectionDetector::ParseHmdfsPath());
+    g_mockQueryActiveOsAccountIds = false;
+    string realPath = ConnectionDetector::ParseHmdfsPath();
+    EXPECT_EQ(realPath, "");
+
+    g_mockQueryActiveOsAccountIds = true;
+    g_mockQueryActiveOsAccountIdsEmpty = true;
+    realPath = ConnectionDetector::ParseHmdfsPath();
+    EXPECT_EQ(realPath, "");
+
+    g_mockQueryActiveOsAccountIdsEmpty = false;
+    realPath = ConnectionDetector::ParseHmdfsPath();
+    EXPECT_EQ(realPath, "/mnt/hmdfs/100/account");
     GTEST_LOG_(INFO) << "DfsService_ParseHmdfsPath_001_End";
 }
 
@@ -206,6 +246,144 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_002, TestSize.L
     GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_002_End";
 }
 
+/**
+ * @tc.name: DfsService_MatchConnectionGroup_003
+ * @tc.desc: Verify the MatchConnectionGroup func.
+ * @tc.type: FUNC
+ * @tc.require: I9KNY6
+ */
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_003 start";
+    // file not exist
+    string testPath = "/data/test/1.txt";
+    string networkId = "abc";
+    bool flag = ConnectionDetector::MatchConnectionGroup(testPath, networkId);
+    EXPECT_EQ(flag, false);
+
+    int fd = open(testPath.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) << "Failed to open file in DfsService_MatchConnectionGroup_003! " << errno;
+    close(fd);
+
+    // file exist but content is null
+    flag = ConnectionDetector::MatchConnectionGroup(testPath, networkId);
+    EXPECT_EQ(flag, false);
+
+    int ret = unlink(testPath.c_str());
+    ASSERT_TRUE(ret != -1) <<
+        "Failed to delete file in DfsService_MatchConnectionGroup_003! " << errno;
+
+    GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_003 end";
+}
+
+/**
+ * @tc.name: DfsService_MatchConnectionGroup_004
+ * @tc.desc: Verify the MatchConnectionGroup func.
+ * @tc.type: FUNC
+ * @tc.require: I9KNY6
+ */
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_004 start";
+    string testPath = "/data/test/1.txt";
+    string networkId = "abc";
+    int fd = open(testPath.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) << "Failed to open file in DfsService_MatchConnectionGroup_004! " << errno;
+    close(fd);
+
+    string content = "\ntest\nconnection_status\n1 2 3";
+    bool contentCreate = SaveStringToFile(testPath, content, false);
+    ASSERT_TRUE(contentCreate) <<
+        "Failed to SaveStringToFile 1 in DfsService_MatchConnectionGroup_004! " << errno;
+    bool flag = ConnectionDetector::MatchConnectionGroup(testPath, networkId);
+    EXPECT_EQ(flag, false);
+
+    content.clear();
+    content = "\nabc\ntest\n1 2 3";
+    contentCreate = SaveStringToFile(testPath, content, false);
+    ASSERT_TRUE(contentCreate) <<
+        "Failed to SaveStringToFile 2 in DfsService_MatchConnectionGroup_004! " << errno;
+    flag = ConnectionDetector::MatchConnectionGroup(testPath, networkId);
+    EXPECT_EQ(flag, false);
+
+    int ret = unlink(testPath.c_str());
+    ASSERT_TRUE(ret != -1) <<
+        "Failed to delete file in DfsService_MatchConnectionGroup_004! " << errno;
+    GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_004 end";
+}
+
+/**
+ * @tc.name: DfsService_MatchConnectionGroup_005
+ * @tc.desc: Verify the MatchConnectionGroup.
+ * @tc.type: FUNC
+ * @tc.require: I9KNY6
+ */
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_005 start";
+    string testPath = "/data/test/1.txt";
+    string networkId = "abc";
+    int fd = open(testPath.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) << "Failed to open file in DfsService_MatchConnectionGroup_004! " << errno;
+    close(fd);
+
+    string content = "\nabc\nconnection_status\n1 2 3";
+    bool contentCreate = SaveStringToFile(testPath, content, true);
+    ASSERT_TRUE(contentCreate) <<
+        "Failed to SaveStringToFile 1 in DfsService_MatchConnectionGroup_005! " << errno;
+    bool flag = ConnectionDetector::MatchConnectionGroup(testPath, networkId);
+    EXPECT_EQ(flag, true);
+
+    content.clear();
+    content = "\nabc\nconnection_status\n1 2 2";
+    contentCreate = SaveStringToFile(testPath, content, true);
+    ASSERT_TRUE(contentCreate) <<
+        "Failed to SaveStringToFile 2  in DfsService_MatchConnectionGroup_005! " << errno;
+    flag = ConnectionDetector::MatchConnectionGroup(testPath, networkId);
+    EXPECT_EQ(flag, true);
+
+    int ret = unlink(testPath.c_str());
+    ASSERT_TRUE(ret != -1) <<
+        "Failed to delete file in DfsService_MatchConnectionGroup_005! " << errno;
+    GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_005 end";
+}
+
+/**
+ * @tc.name: DfsService_MatchConnectionGroup_006
+ * @tc.desc: Verify the MatchConnectionGroup.
+ * @tc.type: FUNC
+ * @tc.require: I9KNY6
+ */
+HWTEST_F(ConnectionDetectorTest, DfsService_MatchConnectionGroup_006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_006 start";
+    string testPath = "/data/test/1.txt";
+    string networkId = "abc";
+    int fd = open(testPath.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) << "Failed to open file in DfsService_MatchConnectionGroup_006! " << errno;
+    close(fd);
+
+    string content = "\nabc\nconnection_status\n1 1 3";
+    bool contentCreate = SaveStringToFile(testPath, content, true);
+    ASSERT_TRUE(contentCreate) <<
+        "Failed to SaveStringToFile 1 in DfsService_MatchConnectionGroup_006! " << errno;
+    bool flag = ConnectionDetector::MatchConnectionGroup(testPath, networkId);
+    EXPECT_EQ(flag, false);
+
+    content.clear();
+    content = "\nabc\nconnection_status\n1 2 1";
+    contentCreate = SaveStringToFile(testPath, content, true);
+    ASSERT_TRUE(contentCreate) <<
+        "Failed to SaveStringToFile 2  in DfsService_MatchConnectionGroup_006! " << errno;
+    flag = ConnectionDetector::MatchConnectionGroup(testPath, networkId);
+    EXPECT_EQ(flag, false);
+
+    int ret = unlink(testPath.c_str());
+    ASSERT_TRUE(ret != -1) <<
+        "Failed to delete file in DfsService_MatchConnectionGroup_005! " << errno;
+    GTEST_LOG_(INFO) << "DfsService_MatchConnectionGroup_005 end";
+}
+
 HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DfsService_CheckValidDir_001_Start";
@@ -224,6 +402,31 @@ HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_002, TestSize.Level1)
     bool ret = connectionDetector.CheckValidDir(path);
     EXPECT_EQ(ret, false);
     GTEST_LOG_(INFO) << "DfsService_CheckValidDir_002_End";
+}
+
+/**
+ * @tc.name: DfsService_CheckValidDir_003
+ * @tc.desc: Verify the CheckValidDir func.
+ * @tc.type: FUNC
+ * @tc.require: I9KNY6
+ */
+HWTEST_F(ConnectionDetectorTest, DfsService_CheckValidDir_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ConnectionDetectorTest_CheckValidDir_0100 start";
+    bool flag = ConnectionDetector::CheckValidDir("/data/test");
+    EXPECT_EQ(flag, true);
+    flag = ConnectionDetector::CheckValidDir("/data/test2");
+    EXPECT_EQ(flag, false);
+    string testFile = "/data/test/test.txt";
+    int32_t fd = open(testFile.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) << "DfsService_CheckValidDir_003 Create File Failed!";
+    close(fd);
+    flag = ConnectionDetector::CheckValidDir(testFile);
+    EXPECT_EQ(flag, false);
+
+    int32_t ret = unlink(testFile.c_str());
+    ASSERT_TRUE(ret != -1) << "Failed to delete file in DfsService_CheckValidDir_003! " << errno;
+    GTEST_LOG_(INFO) << "DfsService_CheckValidDir_003 end";
 }
 
 HWTEST_F(ConnectionDetectorTest, DfsService_GetCurrentUserId_001, TestSize.Level1)
