@@ -449,7 +449,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRenameThumb001, TestSize.Level1)
         string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
         string tmpPath;
         string newPath;
-        string ret = fileDataHandler->ConflictRenameThumb(*rset, fullPath, tmpPath, newPath);
+        string ret = fileDataHandler->ConflictRenameThumb(fullPath, tmpPath, newPath);
         GTEST_LOG_(INFO) << ret;
         GTEST_LOG_(INFO) << tmpPath;
         GTEST_LOG_(INFO) << newPath;
@@ -478,7 +478,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRenameThumb002, TestSize.Level1)
         string fullPath = "";
         string tmpPath;
         string newPath;
-        string ret = fileDataHandler->ConflictRenameThumb(*rset, fullPath, tmpPath, newPath);
+        string ret = fileDataHandler->ConflictRenameThumb(fullPath, tmpPath, newPath);
         GTEST_LOG_(INFO) << ret;
         EXPECT_EQ(ret, "");
     } catch (...) {
@@ -506,7 +506,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRenamePath001, TestSize.Level1)
         string rdbPath;
         string localPath;
         string newLocalPath;
-        int32_t ret = fileDataHandler->ConflictRenamePath(*rset, fullPath, rdbPath, localPath, newLocalPath);
+        int32_t ret = fileDataHandler->ConflictRenamePath(fullPath, rdbPath, localPath, newLocalPath);
         GTEST_LOG_(INFO) << rdbPath;
         GTEST_LOG_(INFO) << localPath;
         GTEST_LOG_(INFO) << newLocalPath;
@@ -536,7 +536,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRenamePath002, TestSize.Level1)
         string rdbPath;
         string localPath;
         string newLocalPath;
-        int32_t ret = fileDataHandler->ConflictRenamePath(*rset, fullPath, rdbPath, localPath, newLocalPath);
+        int32_t ret = fileDataHandler->ConflictRenamePath(fullPath, rdbPath, localPath, newLocalPath);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -562,7 +562,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRename001, TestSize.Level1)
 
         string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
         string relativePath = "";
-        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath, relativePath);
+        int32_t ret = fileDataHandler->ConflictRename(fullPath, relativePath);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -588,7 +588,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRename002, TestSize.Level1)
 
         string fullPath = "";
         string relativePath = "";
-        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath, relativePath);
+        int32_t ret = fileDataHandler->ConflictRename(fullPath, relativePath);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -614,7 +614,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRename003, TestSize.Level1)
 
         string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
         string relativePath = "relativeDir/";
-        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath, relativePath);
+        int32_t ret = fileDataHandler->ConflictRename(fullPath, relativePath);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -640,7 +640,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRename004, TestSize.Level1)
 
         string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
         string relativePath = "";
-        int32_t ret = fileDataHandler->ConflictRename(*rset, fullPath, relativePath);
+        int32_t ret = fileDataHandler->ConflictRename(fullPath, relativePath);
         EXPECT_EQ(ret, E_RDB);
     } catch (...) {
         EXPECT_TRUE(false);

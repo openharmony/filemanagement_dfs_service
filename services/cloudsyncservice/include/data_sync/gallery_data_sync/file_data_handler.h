@@ -99,6 +99,12 @@ public:
     void SetCheckReportStatus();
 
 private:
+    struct KeyData {
+        std::string displayName;
+        std::string filePath;
+        int64_t isize;
+        int64_t createTime;
+    };
     int32_t OnCreateRecordSuccess(const std::pair<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &entry,
         const std::unordered_map<std::string, LocalInfo> &localMap);
     int32_t CheckRecordData(DriveKit::DKRecordData &data, std::string &path);
@@ -156,7 +162,7 @@ private:
     int32_t CheckSyncStatusConsistency(NativeRdb::ResultSet &resultSet);
     int32_t SetSyncStatusConsistency(std::string &filePath, bool thumbLocal,
         bool lcdLocal, int32_t thumbStatus, int32_t syncStatus);
-    
+
     /* report check */
     int32_t GetFilePosStat(std::vector<uint64_t> &filePosStat);
     int32_t GetCloudThmStat(std::vector<uint64_t> &cloudThmStat);
@@ -223,13 +229,9 @@ private:
 
     /* file Conflict */
     static inline const std::string CON_SUFFIX = "_1";
-    std::string ConflictRenameThumb(NativeRdb::ResultSet &resultSet,
-                                    std::string fullPath,
-                                    std::string &tmpPath,
-                                    std::string &newPath);
-    int32_t ConflictRename(NativeRdb::ResultSet &resultSet, std::string &fullPath, std::string &relativePath);
-    int32_t ConflictRenamePath(NativeRdb::ResultSet &resultSet,
-                               std::string &fullPath,
+    std::string ConflictRenameThumb(std::string fullPath, std::string &tmpPath, std::string &newPath);
+    int32_t ConflictRename(std::string &fullPath, std::string &relativePath);
+    int32_t ConflictRenamePath(std::string &fullPath,
                                std::string &rdbPath,
                                std::string &localPath,
                                std::string &newLocalPath);
@@ -257,6 +259,23 @@ private:
     /* pull operations */
     std::tuple<std::shared_ptr<NativeRdb::ResultSet>, std::map<std::string, int>> QueryLocalByCloudId(
         const std::vector<std::string> &recordIds);
+    void PullRecordsInsert(std::vector<DriveKit::DKRecord> &records, OnFetchParams &params);
+    int32_t GetInsertParams(DriveKit::DKRecord &record, OnFetchParams &params);
+    int32_t PullRecordsConflictProc(std::vector<DriveKit::DKRecord> &records);
+    std::tuple<std::shared_ptr<NativeRdb::ResultSet>, int32_t>
+        BatchQueryLocal(std::vector<DriveKit::DKRecord> &records);
+    int32_t GetLocalKeyData(NativeRdb::ResultSet &resultSet, KeyData &keyData);
+    int32_t GetCloudKeyData(const DriveKit::DKRecord &record, KeyData &keyData);
+    std::tuple<bool, bool> JudgeConflict(const KeyData &localKeyData, const KeyData &cloudKeyData);
+    int32_t MergeRename(const std::string &localFilePath, const std::string &cloudFilePath);
+    int32_t DoDataMerge(DriveKit::DKRecord &record,
+                        std::string &localFilePath,
+                        const std::string &cloudFilePath,
+                        bool isSamePath);
+    int32_t MergeRenamePath(const std::string &localFilePath, const std::string &cloudFilePath);
+    std::string GetThumbDir(const std::string &filePath);
+    int32_t MergeRenameThumb(const std::string &localFilePath, const std::string &cloudFilePath);
+    int32_t PathConflictProc(const DriveKit::DKRecord &record);
     int32_t PullRecordInsert(DriveKit::DKRecord &record, OnFetchParams &params);
     int32_t PullRecordUpdate(DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
                              OnFetchParams &params);

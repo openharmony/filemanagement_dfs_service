@@ -179,10 +179,17 @@ shared_ptr<NativeRdb::ResultSet> RdbDataHandler::Query(
     return rdb_->Query(predicates, columns);
 }
 
+shared_ptr<NativeRdb::ResultSet> RdbDataHandler::QueryByStep(const NativeRdb::AbsRdbPredicates &predicates,
+                                                             const std::vector<std::string> &columns)
+{
+    return rdb_->QueryByStep(predicates, columns);
+}
+
 int32_t RdbDataHandler::Insert(int64_t &outRowId, const std::string &tableName, const ValuesBucket &initiavalues)
 {
     RETURN_ON_ERR(IsStop());
     std::function<int32_t()> func = [this, &outRowId, &tableName, &initiavalues] {
+        std::lock_guard<std::mutex> lock(rdbMutex_);
         return rdb_->Insert(outRowId, tableName, initiavalues);
     };
     return Execute(func);
