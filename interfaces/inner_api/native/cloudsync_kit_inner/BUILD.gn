@@ -30,7 +30,6 @@ config("private_config") {
 ohos_shared_library("cloudsync_kit_inner") {
   branch_protector_ret = "pac_ret"
   sanitize = {
-    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -83,7 +82,6 @@ ohos_shared_library("cloudsync_kit_inner") {
 ohos_shared_library("cloudsync_asset_kit_inner") {
   branch_protector_ret = "pac_ret"
   sanitize = {
-    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -127,7 +125,6 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
 ohos_shared_library("cloudsync_kit_inner_lite") {
   branch_protector_ret = "pac_ret"
   sanitize = {
-    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
