@@ -40,7 +40,7 @@ public:
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
                            const sptr<IRemoteObject> &listener,
-                           const std::string &copyPath) override;
+                           HmdfsInfo &info) override;
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &dstDeviceId,

@@ -18,6 +18,7 @@
 
 #include "dm_device_info.h"
 #include "iremote_broker.h"
+#include "hmdfs_info.h"
 
 namespace OHOS {
 namespace Storage {
@@ -34,7 +35,7 @@ public:
                                    const std::string &dstUri,
                                    const std::string &srcDeviceId,
                                    const sptr<IRemoteObject> &listener,
-                                   const std::string &copyPath) = 0;
+                                   HmdfsInfo &info) = 0;
     virtual int32_t RequestSendFile(const std::string &srcUri,
                                     const std::string &dstPath,
                                     const std::string &remoteDeviceId,

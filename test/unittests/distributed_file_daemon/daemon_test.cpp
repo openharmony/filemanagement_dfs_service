@@ -181,9 +181,13 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_0100, TestSize.Level1)
         const std::string srcUri = "file://docs/storage/Users/currentUser/Documents?networkid=xxxxx";
         const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
         const std::string srcDeviceId = "testSrcDeviceId";
-        const std::string copyPath = "tmpDir";
         auto listener = sptr<IRemoteObject>(new MockFileTransListener());
-        EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, copyPath),
+        const std::string copyPath = "tmpDir";
+        HmdfsInfo fileInfo = {
+            .copyPath = copyPath,
+            .dirExistFlag = false,
+        };
+        EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfo),
                   FileManagement::E_SA_LOAD_FAILED);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());

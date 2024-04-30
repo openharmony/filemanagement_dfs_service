@@ -21,6 +21,7 @@
 #include "dfs_error.h"
 #include "distributed_file_daemon_manager_impl.h"
 #include "distributed_file_daemon_proxy.h"
+#include "ipc/hmdfs_info.h"
 #include "i_daemon_mock.h"
 #include "utils_log.h"
 
@@ -151,11 +152,15 @@ HWTEST_F(DistributedDaemonManagerImplTest, PrepareSessionTest, TestSize.Level1)
     const std::string srcDeviceId = "testSrcDeviceId";
     const sptr<IRemoteObject> listener = sptr(new DaemonServiceMock());
     const std::string copyPath = "tmpDir";
+    HmdfsInfo fileInfo = {
+        .copyPath = copyPath,
+        .dirExistFlag = false,
+    };
     GTEST_LOG_(INFO) << "PrepareSessionTest Start";
     try {
         auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
         EXPECT_NE(distributedFileDaemonProxy, nullptr);
-        auto res = distributedDaemonManagerImpl_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, copyPath);
+        auto res = distributedDaemonManagerImpl_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfo);
         EXPECT_NE(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);

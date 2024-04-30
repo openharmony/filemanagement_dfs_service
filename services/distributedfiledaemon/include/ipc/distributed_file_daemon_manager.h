@@ -19,7 +19,9 @@
 #include <memory>
 
 #include "dm_device_info.h"
+#include "hmdfs_info.h"
 #include "i_file_trans_listener.h"
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
@@ -33,7 +35,7 @@ public:
                                    const std::string &dstUri,
                                    const std::string &srcDeviceId,
                                    const sptr<IRemoteObject> &listener,
-                                   const std::string &copyPath) = 0;
+                                   HmdfsInfo &info) = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage

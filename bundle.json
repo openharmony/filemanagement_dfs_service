@@ -124,6 +124,7 @@
             "header": {
               "header_files": [
                 "distributed_file_daemon_manager.h",
+                "hmdfs_info.h",
                 "i_daemon.h"
               ],
               "header_base": "//foundation/filemanagement/dfs_service/services/distributedfiledaemon/include/ipc"

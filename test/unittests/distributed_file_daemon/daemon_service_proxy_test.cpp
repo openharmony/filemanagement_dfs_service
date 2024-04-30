@@ -18,6 +18,7 @@
 
 #include "dfs_error.h"
 #include "distributed_file_daemon_proxy.h"
+#include "ipc/hmdfs_info.h"
 #include "i_daemon_mock.h"
 #include "utils_log.h"
 
@@ -114,7 +115,11 @@ HWTEST_F(DistributedDaemonProxyTest, PrepareSessionTest, TestSize.Level1)
     const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
     const std::string srcDeviceId = "testSrcDeviceId";
     const std::string copyPath = "tmpDir";
-    int ret = proxy_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, copyPath);
+    HmdfsInfo fileInfo = {
+        .copyPath = copyPath,
+        .dirExistFlag = false,
+    };
+    int ret = proxy_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfo);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "PrepareSessionTest End";
 }

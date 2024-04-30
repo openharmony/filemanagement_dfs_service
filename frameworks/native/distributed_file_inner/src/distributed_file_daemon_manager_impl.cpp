@@ -55,14 +55,14 @@ int32_t DistributedFileDaemonManagerImpl::PrepareSession(const std::string &srcU
                                                          const std::string &dstUri,
                                                          const std::string &srcDeviceId,
                                                          const sptr<IRemoteObject> &listener,
-                                                         const std::string &copyPath)
+                                                         HmdfsInfo &info)
 {
     auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
-    return distributedFileDaemonProxy->PrepareSession(srcUri, dstUri, srcDeviceId, listener, copyPath);
+    return distributedFileDaemonProxy->PrepareSession(srcUri, dstUri, srcDeviceId, listener, info);
 }
 
 int32_t DistributedFileDaemonManagerImpl::RequestSendFile(const std::string &srcUri,
