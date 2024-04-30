@@ -26,12 +26,13 @@
 using namespace OHOS::AppFileService;
 using namespace OHOS::FileManagement;
 using namespace std;
-
+namespace {
 const string TEST_URI = "file://com.demo.a/data/test/el2/base/files/test.txt";
 const string TEST_ERR_URI = "file://com.demo.a/data/test/el2/base/files/test2.txt";
 const string TEST_MEDIA_URI = "file://media/data/test/el2/base/files/test.txt";
 const string TEST_PATH = "/data/test/";
 const string TEST_ERR_PATH = "/data/test2/";
+}
 
 namespace OHOS {
 namespace AppFileService {
