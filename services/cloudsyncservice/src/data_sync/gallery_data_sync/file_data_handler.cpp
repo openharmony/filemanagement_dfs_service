@@ -1764,20 +1764,31 @@ int32_t FileDataHandler::PullRecordUpdate(DKRecord &record, NativeRdb::ResultSet
     if (IsMtimeChanged(record, local, mtimeChanged) != E_OK) {
         return E_INVAL_ARG;
     }
-    if (FileIsLocal(local)) {
+    bool isLocal = FileIsLocal(local);
+    if (isLocal) {
         if (CloudDisk::CloudFileUtils::LocalWriteOpen(GetLocalPath(userId_, GetFilePath(local)))) {
             return SetRetry(record.GetRecordId());
         }
     }
     int32_t changedRows = 0;
     RETURN_ON_ERR(UpdateRecordToDatabase(record, local, changedRows, params));
-    if (FileIsLocal(local) && mtimeChanged && changedRows != 0) {
+    if (isLocal && mtimeChanged && changedRows != 0) {
         LOGI("cloud file DATA changed, %s", record.GetRecordId().c_str());
         int ret = unlink(GetLocalPath(userId_, GetFilePath(local)).c_str());
         if (ret != 0) {
             LOGE("unlink local failed, errno %{public}d", errno);
         }
         DentryInsert(userId_, record);
+        int32_t changePositionRows = -1;
+        ValuesBucket values;
+        values.PutInt(PC::PHOTO_POSITION, static_cast<int32_t>(POSITION_CLOUD));
+        string whereClause = PC::PHOTO_CLOUD_ID + " = ?";
+        vector<string> whereArgs = {record.GetRecordId()};
+        ret = Update(changePositionRows, values, whereClause, whereArgs);
+        if (ret != E_OK || changePositionRows != 1) {
+            LOGE("RDB error, update fail ret is %{public}d, changeRows is %{public}d", ret, changePositionRows);
+            AppendToDownload(record, "content", params.assetsToDownload);
+        }
     }
     if (mtimeChanged && (ThumbsAtLocal(record) || (AddCloudThumbs(record) != E_OK)) && changedRows != 0) {
         AppendToDownload(record, "lcd", params.assetsToDownload);
@@ -2113,7 +2124,7 @@ int32_t FileDataHandler::SetSyncStatusConsistency(string &filePath, bool thumbLo
     if (!lcdLocal) {
         expectedThumbStatus |= static_cast<uint32_t>(ThumbState::LCD_TO_DOWNLOAD);
     }
- 
+
     ValuesBucket values;
     bool modFlag = false;
     if (thumbLocal && syncStatus != static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE)) {
@@ -2155,7 +2166,7 @@ int32_t FileDataHandler::CheckSyncStatusConsistency(NativeRdb::ResultSet &result
     if (ret != E_OK) {
         return ret;
     }
-    
+
     string filePath = GetFilePath(resultSet);
     string thumbLocalPath = createConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
     bool thumbLocal = access(thumbLocalPath.c_str(), F_OK) == 0;
