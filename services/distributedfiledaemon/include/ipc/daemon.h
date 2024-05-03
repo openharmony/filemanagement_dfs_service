@@ -24,6 +24,7 @@
 #include "daemon_stub.h"
 #include "dm_device_info.h"
 #include "file_trans_listener_proxy.h"
+#include "hmdfs_info.h"
 #include "ipc/i_daemon.h"
 #include "iremote_stub.h"
 #include "multiuser/os_account_observer.h"
@@ -60,7 +61,7 @@ public:
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
                            const sptr<IRemoteObject> &listener,
-                           const std::string &copyPath) override;
+                           HmdfsInfo &info) override;
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &dstDeviceId,
@@ -83,8 +84,13 @@ private:
     int32_t GetRealPath(const std::string &srcUri,
                         const std::string &dstUri,
                         std::string &physicalPath,
-                        const std::string &copyPath,
+                        HmdfsInfo &info,
                         const sptr<IDaemon> &daemon);
+    int32_t CheckCopyRule(std::string &physicalPath,
+                          const std::string &dstUri,
+                          HapTokenInfo &hapTokenInfo,
+                          const bool &isSrcFile,
+                          HmdfsInfo &info);
     int32_t Copy(const std::string &srcUri,
                  const std::string &dstPath,
                  const sptr<IDaemon> &daemon,

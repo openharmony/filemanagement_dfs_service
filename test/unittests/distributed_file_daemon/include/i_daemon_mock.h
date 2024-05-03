@@ -54,7 +54,7 @@ public:
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
                            const sptr<IRemoteObject> &listener,
-                           const std::string &copyPath)
+                           HmdfsInfo &fileInfo)
     {
         return FileManagement::E_OK;
     }

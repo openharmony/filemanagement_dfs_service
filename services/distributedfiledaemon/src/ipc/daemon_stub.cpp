@@ -140,12 +140,16 @@ int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &rep
         LOGE("read listener failed");
         return E_IPC_READ_FAILED;
     }
-    std::string copyPath;
-    if (!data.ReadString(copyPath)) {
-        LOGE("read copyPath failed");
+    HmdfsInfo info{};
+    if (!data.ReadString(info.copyPath)) {
+        LOGE("read info.copyPath failed");
         return E_IPC_READ_FAILED;
     }
-    int32_t res = PrepareSession(srcUri, dstUri, srcDeviceId, listener, copyPath);
+    if (!data.ReadBool(info.dirExistFlag)) {
+        LOGE("read info.dirExistFlag failed");
+        return E_IPC_READ_FAILED;
+    }
+    int32_t res = PrepareSession(srcUri, dstUri, srcDeviceId, listener, info);
     reply.WriteInt32(res);
     LOGD("End PrepareSession, ret = %{public}d.", res);
     return res;

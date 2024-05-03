@@ -198,7 +198,7 @@ int32_t DistributedFileDaemonProxy::PrepareSession(const std::string &srcUri,
                                                    const std::string &dstUri,
                                                    const std::string &srcDeviceId,
                                                    const sptr<IRemoteObject> &listener,
-                                                   const std::string &copyPath)
+                                                   HmdfsInfo &info)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -223,8 +223,12 @@ int32_t DistributedFileDaemonProxy::PrepareSession(const std::string &srcUri,
         LOGE("Failed to send the listener callback stub");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
-    if (!data.WriteString(copyPath)) {
-        LOGE("Failed to send copyPath");
+    if (!data.WriteString(info.copyPath)) {
+        LOGE("Failed to send info.copyPath");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteBool(info.dirExistFlag)) {
+        LOGE("Failed to send info.dirExistFlag");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
     auto remote = Remote();

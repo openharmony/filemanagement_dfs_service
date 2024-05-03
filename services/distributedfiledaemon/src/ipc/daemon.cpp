@@ -192,7 +192,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
                                const std::string &dstUri,
                                const std::string &srcDeviceId,
                                const sptr<IRemoteObject> &listener,
-                               const std::string &copyPath)
+                               HmdfsInfo &info)
 {
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
@@ -207,7 +207,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
 
     std::string physicalPath;
-    auto ret = GetRealPath(srcUri, dstUri, physicalPath, copyPath, daemon);
+    auto ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
     if (ret != E_OK) {
         LOGE("GetRealPath failed, ret = %{public}d", ret);
         return ret;
@@ -249,7 +249,7 @@ void Daemon::StoreSessionAndListener(const std::string &physicalPath,
 int32_t Daemon::GetRealPath(const std::string &srcUri,
                             const std::string &dstUri,
                             std::string &physicalPath,
-                            const std::string &copyPath,
+                            HmdfsInfo &info,
                             const sptr<IDaemon> &daemon)
 {
     bool isSrcFile = false;
@@ -271,7 +271,22 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         LOGE("invalid uri, ret = %{public}d", ret);
         return E_GET_PHYSICAL_PATH_FAILED;
     }
+
     LOGI("physicalPath %{public}s", physicalPath.c_str());
+    ret = CheckCopyRule(physicalPath, dstUri, hapTokenInfo, isSrcFile, info);
+    if (ret != E_OK) {
+        LOGE("CheckCopyRule failed, ret = %{public}d", ret);
+        return E_GET_PHYSICAL_PATH_FAILED;
+    }
+    return E_OK;
+}
+
+int32_t Daemon::CheckCopyRule(std::string &physicalPath,
+                              const std::string &dstUri,
+                              HapTokenInfo &hapTokenInfo,
+                              const bool &isSrcFile,
+                              HmdfsInfo &info)
+{
     if (isSrcFile && !Utils::IsFolder(physicalPath)) {
         auto pos = physicalPath.rfind('/');
         if (pos == std::string::npos) {
@@ -280,9 +295,15 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         }
         physicalPath = physicalPath.substr(0, pos);
     }
-    if (!SandboxHelper::CheckValidPath(physicalPath)) {
-        LOGE("invalid path.");
-        return E_GET_PHYSICAL_PATH_FAILED;
+
+    std::error_code errCode;
+    if (!std::filesystem::exists(physicalPath, errCode) && info.dirExistFlag) {
+        LOGI("Not CheckValidPath, physicalPath %{public}s", physicalPath.c_str());
+    } else {
+        if (!SandboxHelper::CheckValidPath(physicalPath)) {
+            LOGE("invalid path.");
+            return E_GET_PHYSICAL_PATH_FAILED;
+        }
     }
 
     Uri uri(dstUri);
@@ -290,7 +311,7 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     if (authority != FILE_MANAGER_AUTHORITY && authority != MEDIA_AUTHORITY) {
         auto bundleName = SoftBusSessionListener::GetBundleName(dstUri);
         physicalPath = "/data/service/el2/" + to_string(hapTokenInfo.userID) + "/hmdfs/account/data/" + bundleName +
-                       "/" + copyPath;
+                       "/" + info.copyPath;
         if (!SandboxHelper::CheckValidPath(physicalPath)) {
             LOGE("invalid path.");
             return E_GET_PHYSICAL_PATH_FAILED;

@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include "ipc/daemon_stub.h"
+#include "ipc/hmdfs_info.h"
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
 #include "i_daemon_mock.h"
 #include "utils_log.h"
@@ -40,6 +41,10 @@ const std::string SRC_DEVICE_ID = "testSrcDeviceId";
 const sptr<IRemoteObject> LISTENER = sptr(new DaemonServiceMock());
 const std::string COPY_PATH = "tmpDir";
 
+HmdfsInfo fileInfo = {
+    .copyPath = COPY_PATH,
+    .dirExistFlag = false,
+};
 class MockDaemonStub : public DaemonStub {
 public:
     MOCK_METHOD1(OpenP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
@@ -54,7 +59,7 @@ public:
                          const std::string &dstUri,
                          const std::string &srcDeviceId,
                          const sptr<IRemoteObject> &listener,
-                         const std::string &copyPath));
+                         HmdfsInfo &fileInfo));
     MOCK_METHOD3(GetRemoteCopyInfo, int32_t(const std::string &srcUri, bool &isFile, bool &isDir));
 };
 
