@@ -185,6 +185,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
     "cloud_disk/src/cloud_file_utils.cpp",
     "dentry/src/file_utils.cpp",
     "dentry/src/meta_file.cpp",
+    "dentry/src/meta_file_clouddisk.cpp",
     "dfx/src/xcollie_helper.cpp",
     "log/src/dfs_error.cpp",
     "log/src/utils_log.cpp",
