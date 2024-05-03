@@ -17,6 +17,7 @@
 #define OHOS_FILEMGMT_DENTRY_META_FILE_H
 
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <map>
@@ -34,13 +35,17 @@ class MetaFile {
 public:
     MetaFile() = delete;
     ~MetaFile();
+    using CloudDiskMetaFileCallBack = std::function<void(MetaBase &)>;
     explicit MetaFile(uint32_t userId, const std::string &path);
-
+    explicit MetaFile(uint32_t userId, const std::string &bundleName, const std::string &parentCloudId);
+    int32_t DoLookupAndUpdate(const std::string &name, CloudDiskMetaFileCallBack updateFunc);
+    int32_t DoLookupAndRemove(MetaBase &metaBase);
     int32_t DoCreate(const MetaBase &base);
     int32_t HandleFileByFd(unsigned long &endBlock, uint32_t &level);
     int32_t DoRemove(const MetaBase &base);
     int32_t DoUpdate(const MetaBase &base);
     int32_t DoRename(const MetaBase &oldBase, const std::string &newName);
+    int32_t DoRename(MetaBase &metaBase, const std::string &newName, std::shared_ptr<MetaFile> newMetaFile);
     int32_t DoLookup(MetaBase &base);
     int32_t LoadChildren(std::vector<MetaBase> &bases);
 
@@ -51,7 +56,41 @@ private:
     std::mutex mtx_{};
     std::string path_{};
     std::string cacheFile_{};
+    std::string bundleName_{};
+    std::string cloudId_{};
+    std::string name_{};
     UniqueFd fd_{};
+    uint32_t userId_{};
+    uint64_t dentryCount_{0};
+    std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
+};
+
+class CloudDiskMetaFile {
+public:
+    CloudDiskMetaFile() = delete;
+    ~CloudDiskMetaFile();
+    using CloudDiskMetaFileCallBack = std::function<void(MetaBase &)>;
+    explicit CloudDiskMetaFile(uint32_t userId, const std::string &bundleName, const std::string &cloudId);
+
+    int32_t DoLookupAndUpdate(const std::string &name, CloudDiskMetaFileCallBack updateFunc);
+    int32_t DoLookupAndRemove(MetaBase &metaBase);
+    int32_t DoCreate(const MetaBase &base);
+    int32_t HandleFileByFd(unsigned long &endBlock, uint32_t &level);
+    int32_t DoRemove(const MetaBase &base);
+    int32_t DoUpdate(const MetaBase &base);
+    int32_t DoRename(MetaBase &metaBase, const std::string &newName,
+        std::shared_ptr<CloudDiskMetaFile> newMetaFile);
+    int32_t DoLookup(MetaBase &base);
+
+private:
+    std::mutex mtx_{};
+    std::string path_{};
+    std::string cacheFile_{};
+    std::string bundleName_{};
+    std::string cloudId_{};
+    std::string name_{};
+    UniqueFd fd_{};
+    uint32_t userId_{};
     uint64_t dentryCount_{0};
     std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
 };
@@ -62,6 +101,13 @@ enum {
     FILE_TYPE_LCD,
 };
 
+enum {
+    POSITION_UNKNOWN = 0,
+    POSITION_LOCAL,
+    POSITION_CLOUD,
+    POSITION_LOCAL_AND_CLOUD,
+};
+
 class MetaFileMgr {
 public:
     static MetaFileMgr& GetInstance();
@@ -69,7 +115,13 @@ public:
     static std::string RecordIdToCloudId(const std::string hexStr);
     static std::string CloudIdToRecordId(const std::string cloudId);
     std::shared_ptr<MetaFile> GetMetaFile(uint32_t userId, const std::string &path);
+    std::shared_ptr<CloudDiskMetaFile> GetCloudDiskMetaFile(uint32_t userId, const std::string &bundleName,
+        const std::string &cloudId);
     void ClearAll();
+    int32_t MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName,
+        const std::string &name, const std::string &parentCloudId, int64_t rowId);
+    int32_t RemoveFromRecycleDentryfile(uint32_t userId, const std::string &bundleName,
+        const std::string &name, const std::string &parentCloudId, int64_t rowId);
 private:
     MetaFileMgr() = default;
     ~MetaFileMgr() = default;
@@ -77,7 +129,9 @@ private:
     const MetaFileMgr &operator=(const MetaFileMgr &m) = delete;
 
     std::recursive_mutex mtx_{};
+    std::mutex mutex_{};
     std::map<std::pair<uint32_t, std::string>, std::shared_ptr<MetaFile>> metaFiles_;
+    std::unordered_map<std::string, std::shared_ptr<CloudDiskMetaFile>> cloudDiskMetaFile_;
 };
 
 struct MetaBase {
@@ -92,10 +146,12 @@ struct MetaBase {
     {
         return other.cloudId == cloudId && other.name == name && other.size == size;
     }
+    uint64_t atime{0};
     uint64_t mtime{0};
     uint64_t size{0};
     uint32_t mode{S_IFREG};
-    uint32_t fileType{FILE_TYPE_CONTENT};
+    uint8_t position{POSITION_LOCAL};
+    uint8_t fileType{FILE_TYPE_CONTENT};
     std::string name{};
     std::string cloudId{};
     bool hasDownloaded{false};
@@ -141,6 +197,12 @@ struct BitOps {
     }
 };
 
+struct MetaHelper {
+    static void SetFileType(struct HmdfsDentry *de, uint8_t fileType);
+    static void SetPosition(struct HmdfsDentry *de, uint8_t position);
+    static uint8_t GetFileType(const struct HmdfsDentry *de);
+    static uint8_t GetPosition(const struct HmdfsDentry *de);
+};
 } // namespace FileManagement
 } // namespace OHOS
 
