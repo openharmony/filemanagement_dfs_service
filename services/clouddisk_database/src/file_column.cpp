@@ -40,6 +40,7 @@ const std::string FileColumn::FILE_TYPE = "file_type";
 const std::string FileColumn::FILE_CATEGORY = "file_category";
 const std::string FileColumn::IS_FAVORITE = "isFavorite";
 const std::string FileColumn::FILE_STATUS = "file_status";
+const std::string FileColumn::ROW_ID = "rowid";
 
 const std::string FileColumn::FILES_TABLE = "CloudDisk";
 const std::string FileColumn::PARENT_CLOUD_ID_INDEX = "parentCloudId_index";
@@ -91,7 +92,8 @@ const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
     META_TIME_EDITED,
     FILE_TIME_ADDED,
     FILE_TIME_EDITED,
-    IS_DIRECTORY
+    IS_DIRECTORY,
+    ROW_ID
 };
 
 const std::vector<std::string> FileColumn::DISK_CLOUD_SYNC_COLUMNS = {

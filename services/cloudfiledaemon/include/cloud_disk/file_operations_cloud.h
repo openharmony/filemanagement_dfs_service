@@ -26,7 +26,6 @@ public:
     void Access(fuse_req_t req, fuse_ino_t ino, int mask) override;
     void GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) override;
     void Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi) override;
-    void Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLookup) override;
     void MkDir(fuse_req_t req, fuse_ino_t parent, const char *name, mode_t mode) override;
     void RmDir(fuse_req_t req, fuse_ino_t parent, const char *name) override;
     void Unlink(fuse_req_t req, fuse_ino_t parent, const char *name) override;

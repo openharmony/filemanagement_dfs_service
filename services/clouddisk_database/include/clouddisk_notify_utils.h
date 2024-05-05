@@ -28,17 +28,22 @@ using namespace DriveKit;
 
 class CloudDiskNotifyUtils final {
 public:
+    using FindCloudDiskInodeFunc = std::function<std::shared_ptr<CloudDiskInode>(CloudDiskFuseData*, int64_t)>;
     /* cloud disk */
-    static int32_t GetNotifyData(const fuse_ino_t &ino, NotifyData &notifyData);
-    static int32_t GetNotifyData(const fuse_ino_t &parent, const string &name, NotifyData &notifyData);
-    static int32_t GetNotifyData(const CloudDiskInode *inoPtr, NotifyData &notifyData);
-    static int32_t GetNotifyData(const CloudDiskInode *inoPtr, const string &name, NotifyData &notifyData);
+    static int32_t GetNotifyData(CloudDiskFuseData* data, FindCloudDiskInodeFunc func, const fuse_ino_t &ino,
+        NotifyData &notifyData);
+    static int32_t GetNotifyData(CloudDiskFuseData* data, FindCloudDiskInodeFunc func, const fuse_ino_t &parent,
+        const string &name,
+        NotifyData &notifyData);
+    static int32_t GetNotifyData(CloudDiskFuseData* data, FindCloudDiskInodeFunc func,
+        shared_ptr<CloudDiskInode> inoPtr, NotifyData &notifyData);
+    static int32_t GetNotifyData(CloudDiskFuseData* data, FindCloudDiskInodeFunc func,
+        shared_ptr<CloudDiskInode> inoPtr, const string &name, NotifyData &notifyData);
     /* cloud disk syncer */
     static int32_t GetCacheNode(const string &cloudId, CacheNode &cacheNode);
     static void PutCacheNode(const string &cloudId, const CacheNode &cacheNode);
     static int32_t
         GetUriFromCache(const string &bundleName, const string &rootId, const CacheNode &cacheNode, string &uri);
-
 private:
     static const int32_t maxCacheCnt_ = 50;
     static list<pair<string, CacheNode>> cacheList_;

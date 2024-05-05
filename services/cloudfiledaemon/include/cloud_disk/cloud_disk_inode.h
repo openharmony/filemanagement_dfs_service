@@ -39,10 +39,23 @@ enum CLOUD_DISK_INODE_LAYER {
     CLOUD_DISK_INODE_OTHER_LAYER     // others
 };
 
+enum CLOUD_DISK_INODE_LAYER_LOCALID {
+    CLOUD_DISK_INODE_LAYER_LOCALID_UNKNOWN = 0, // placeholder
+    CLOUD_DISK_INODE_ROOT_LAYER_LOCALID,        // /
+    CLOUD_DISK_INODE_ZERO_LAYER_LOCALID,        // data
+    CLOUD_DISK_INODE_FIRST_LAYER_LOCALID        // bundleName
+};
+
 enum CLOUD_DISK_FILE_DIRTY {
     CLOUD_DISK_FILE_UNKNOWN = 0,
     CLOUD_DISK_FILE_CREATE,
     CLOUD_DISK_FILE_WRITE
+};
+
+enum CLOUD_DISK_FILE_TYPE {
+    CLOUD_DISK_FILE_TYPE_UNKNOWN = 0,
+    CLOUD_DISK_FILE_TYPE_LOCAL,
+    CLOUD_DISK_FILE_TYPE_CLOUD
 };
 
 struct CloudDiskInode {
@@ -50,7 +63,6 @@ struct CloudDiskInode {
     struct stat stat;
     std::string cloudId{"rootId"};
     std::string bundleName;
-    std::string location;
     std::string fileName;
     fuse_ino_t parent{0};
     std::atomic<int> refCount{0};
@@ -58,23 +70,27 @@ struct CloudDiskInode {
 
     /* ops means file operation that uses local or database */
     std::shared_ptr<FileOperationsBase> ops{nullptr};
-    std::shared_ptr<DriveKit::DKAssetReadSession> readSession{nullptr};
-    std::atomic<int> sessionRefCount{0};
-    std::shared_mutex sessionLock;
 };
 
 struct CloudDiskFile {
+    int type{CLOUD_DISK_FILE_TYPE_UNKNOWN};
     int fileDirty{CLOUD_DISK_FILE_UNKNOWN};
+    int32_t fd{-1};
     std::atomic<int> refCount{0};
+    std::shared_ptr<DriveKit::DKAssetReadSession> readSession{nullptr};
 };
 
 struct CloudDiskFuseData {
     int userId;
+    std::atomic<int64_t> bundleNameId{1};
+    std::atomic<int64_t> fileId{0};
     std::shared_ptr<CloudDiskInode> rootNode{nullptr};
-    std::unordered_map<std::string, std::shared_ptr<CloudDiskInode>> inodeCache;
-    std::unordered_map<std::string, std::shared_ptr<CloudDiskFile>> fileCache;
+    std::unordered_map<int64_t, std::shared_ptr<CloudDiskInode>> inodeCache;
+    std::unordered_map<int64_t, std::shared_ptr<CloudDiskFile>> fileCache;
+    std::unordered_map<std::string, int64_t> localIdCache;
     std::shared_mutex cacheLock;
     std::shared_mutex fileLock;
+    std::shared_mutex localIdLock;
     struct fuse_session *se;
 };
 } // namespace CloudDisk

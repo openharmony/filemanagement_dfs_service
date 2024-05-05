@@ -57,9 +57,11 @@ static int32_t GetDataInner(const NotifyParamDisk &paramDisk, NotifyData &notify
 {
     int32_t ret;
     if (paramDisk.inoPtr != nullptr) {
-        ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.inoPtr, notifyData);
+        ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func,
+            paramDisk.inoPtr, notifyData);
     } else {
-        ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.ino, notifyData);
+        ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func,
+            paramDisk.ino, notifyData);
     }
     return ret;
 }
@@ -71,9 +73,11 @@ static int32_t GetDataInnerWithName(const NotifyParamDisk &paramDisk, NotifyData
     }
     int32_t ret;
     if (paramDisk.inoPtr != nullptr) {
-        ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.inoPtr, paramDisk.name, notifyData);
+        ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func,
+            paramDisk.inoPtr, paramDisk.name, notifyData);
     } else {
-        ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.ino, paramDisk.name, notifyData);
+        ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func,
+            paramDisk.ino, paramDisk.name, notifyData);
     }
     return ret;
 }
@@ -127,12 +131,14 @@ static void HandleRename(const NotifyParamDisk &paramDisk, const ParamDiskOthers
 {
     NotifyData notifyData;
     NotifyData newNotifyData;
-    int32_t ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.ino, paramDisk.name, notifyData);
+    int32_t ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func, paramDisk.ino,
+        paramDisk.name, notifyData);
     if (ret != E_OK) {
         LOGE("get notify data fail, name: %{public}s", paramDisk.name.c_str());
         return;
     }
-    ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.newIno, paramDisk.newName, newNotifyData);
+    ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func, paramDisk.newIno,
+        paramDisk.newName, newNotifyData);
     if (ret != E_OK) {
         LOGE("get new notify data fail, name: %{public}s", paramDisk.newName.c_str());
         return;

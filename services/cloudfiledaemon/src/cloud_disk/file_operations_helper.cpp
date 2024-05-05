@@ -29,6 +29,8 @@ namespace {
     static const string LOCAL_PATH_DATA_SERVICE_EL2 = "/data/service/el2/";
     static const string LOCAL_PATH_HMDFS_CLOUD_DATA = "/hmdfs/cloud/data/";
     static const string LOCAL_PATH_HMDFS_CLOUD = "/hmdfs/cloud/";
+    static const int32_t BUNDLE_NAME_OFFSET = 1000000000;
+    static const int32_t STAT_MODE_DIR = 0771;
 }
 
 string FileOperationsHelper::GetCloudDiskRootPath(int32_t userId)
@@ -51,7 +53,7 @@ string FileOperationsHelper::GetCloudDiskLocalPath(int32_t userId, string fileNa
 
 void FileOperationsHelper::GetInodeAttr(shared_ptr<CloudDiskInode> ino, struct stat *statBuf)
 {
-    statBuf->st_ino = reinterpret_cast<fuse_ino_t>(ino.get());
+    statBuf->st_ino = ino->stat.st_ino;
     statBuf->st_uid = ino->stat.st_uid;
     statBuf->st_gid = ino->stat.st_gid;
     statBuf->st_mtime = ino->stat.st_mtime;
@@ -64,12 +66,11 @@ void FileOperationsHelper::GetInodeAttr(shared_ptr<CloudDiskInode> ino, struct s
     }
 }
 
-int32_t FileOperationsHelper::GetNextLayer(fuse_ino_t ino)
+int32_t FileOperationsHelper::GetNextLayer(std::shared_ptr<CloudDiskInode> inoPtr, fuse_ino_t ino)
 {
     if (ino == FUSE_ROOT_ID) {
         return CLOUD_DISK_INODE_ZERO_LAYER;
     }
-    struct CloudDiskInode *inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
     if (inoPtr->layer >= CLOUD_DISK_INODE_OTHER_LAYER) {
         return CLOUD_DISK_INODE_OTHER_LAYER;
     } else {
@@ -77,14 +78,25 @@ int32_t FileOperationsHelper::GetNextLayer(fuse_ino_t ino)
     }
 }
 
+int32_t FileOperationsHelper::GetFixedLayerRootId(int32_t layer)
+{
+    if (layer == CLOUD_DISK_INODE_ZERO_LAYER) {
+        return CLOUD_DISK_INODE_ZERO_LAYER_LOCALID;
+    } else if (layer == CLOUD_DISK_INODE_FIRST_LAYER) {
+        return CLOUD_DISK_INODE_FIRST_LAYER_LOCALID;
+    }
+    return CLOUD_DISK_INODE_LAYER_LOCALID_UNKNOWN;
+}
+
 shared_ptr<CloudDiskInode> FileOperationsHelper::FindCloudDiskInode(struct CloudDiskFuseData *data,
-                                                                    const string &key)
+                                                                    int64_t key)
 {
     shared_ptr<CloudDiskInode> ret;
     shared_lock<shared_mutex> rLock(data->cacheLock, std::defer_lock);
     rLock.lock();
-    if (data->inodeCache.find(key) != data->inodeCache.end()) {
-        ret = data->inodeCache[key];
+    auto it = data->inodeCache.find(key);
+    if (it != data->inodeCache.end()) {
+        ret = it->second;
     } else {
         ret = nullptr;
     }
@@ -93,15 +105,31 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::FindCloudDiskInode(struct Cloud
 }
 
 shared_ptr<CloudDiskFile> FileOperationsHelper::FindCloudDiskFile(struct CloudDiskFuseData *data,
-                                                                  const string &key)
+                                                                  int64_t key)
 {
     shared_ptr<CloudDiskFile> ret;
     shared_lock<shared_mutex> rLock(data->fileLock, std::defer_lock);
     rLock.lock();
-    if (data->fileCache.find(key) != data->fileCache.end()) {
-        ret = data->fileCache[key];
+    auto it = data->fileCache.find(key);
+    if (it != data->fileCache.end()) {
+        ret = it->second;
     } else {
         ret = nullptr;
+    }
+    rLock.unlock();
+    return ret;
+}
+
+int64_t FileOperationsHelper::FindLocalId(struct CloudDiskFuseData *data, const std::string &key)
+{
+    int64_t ret = -1;
+    shared_lock<shared_mutex> rLock(data->localIdLock, std::defer_lock);
+    rLock.lock();
+    auto it = data->localIdCache.find(key);
+    if (it != data->localIdCache.end()) {
+        ret = it->second;
+    } else {
+        ret = -1;
     }
     rLock.unlock();
     return ret;
@@ -128,27 +156,41 @@ void FileOperationsHelper::FuseReplyLimited(fuse_req_t req, const char *buf, siz
 }
 
 shared_ptr<CloudDiskInode> FileOperationsHelper::GenerateCloudDiskInode(struct CloudDiskFuseData *data,
-                                                                        struct CloudDiskInode *parent,
+                                                                        fuse_ino_t parent,
                                                                         const string &fileName,
                                                                         const string &path)
 {
-    std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
+    std::unique_lock<std::shared_mutex> cWLock(data->cacheLock, std::defer_lock);
+    std::unique_lock<std::shared_mutex> lWLock(data->localIdLock, std::defer_lock);
     shared_ptr<CloudDiskInode> child = make_shared<CloudDiskInode>();
     int32_t err = stat(path.c_str(), &child->stat);
     if (err != 0) {
         LOGE("GenerateCloudDiskInode %{public}s error, err: %{public}d", path.c_str(), errno);
         return nullptr;
     }
-
+    child->stat.st_mode |= STAT_MODE_DIR;
+    auto parentInode = FindCloudDiskInode(data, parent);
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        return nullptr;
+    }
     child->refCount++;
-    child->parent = reinterpret_cast<fuse_ino_t>(parent);
+    child->parent = parent;
     child->path = path;
-    child->layer = GetNextLayer(child->parent);
-    child->stat.st_ino = reinterpret_cast<fuse_ino_t>(child.get());
+    child->layer = GetNextLayer(parentInode, parent);
+    int64_t localId = GetFixedLayerRootId(child->layer);
+    if (child->layer >= CLOUD_DISK_INODE_FIRST_LAYER) {
+        data->bundleNameId++;
+        localId = data->bundleNameId + BUNDLE_NAME_OFFSET;
+    }
+    child->stat.st_ino = localId;
     child->ops = make_shared<FileOperationsLocal>();
-    wLock.lock();
-    data->inodeCache[path] = child;
-    wLock.unlock();
+    cWLock.lock();
+    data->inodeCache[localId] = child;
+    cWLock.unlock();
+    lWLock.lock();
+    data->localIdCache[path] = localId;
+    lWLock.unlock();
     if (child->layer == CLOUD_DISK_INODE_FIRST_LAYER) {
         child->bundleName = fileName;
         child->ops = make_shared<FileOperationsCloud>();
@@ -157,7 +199,7 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::GenerateCloudDiskInode(struct C
 }
 
 void FileOperationsHelper::PutCloudDiskInode(struct CloudDiskFuseData *data,
-                                             shared_ptr<CloudDiskInode> inoPtr, uint64_t num, const string &key)
+                                             shared_ptr<CloudDiskInode> inoPtr, uint64_t num, int64_t key)
 {
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
     if (inoPtr == nullptr) {
@@ -166,7 +208,7 @@ void FileOperationsHelper::PutCloudDiskInode(struct CloudDiskFuseData *data,
     }
     inoPtr->refCount -= num;
     if (inoPtr->refCount == 0) {
-        LOGD("node released: %{public}s", key.c_str());
+        LOGD("node released: %{public}lld", key);
         wLock.lock();
         data->inodeCache.erase(key);
         wLock.unlock();
@@ -174,7 +216,7 @@ void FileOperationsHelper::PutCloudDiskInode(struct CloudDiskFuseData *data,
 }
 
 void FileOperationsHelper::PutCloudDiskFile(struct CloudDiskFuseData *data,
-                                            shared_ptr<CloudDiskFile> filePtr, const string &key)
+                                            shared_ptr<CloudDiskFile> filePtr, int64_t key)
 {
     std::unique_lock<std::shared_mutex> wLock(data->fileLock, std::defer_lock);
     if (filePtr == nullptr) {
@@ -182,9 +224,27 @@ void FileOperationsHelper::PutCloudDiskFile(struct CloudDiskFuseData *data,
         return;
     }
     if (filePtr->refCount == 0) {
-        LOGD("file released: %{public}s", key.c_str());
+        LOGD("file released: %{public}lld", key);
         wLock.lock();
         data->fileCache.erase(key);
+        wLock.unlock();
+    }
+}
+
+void FileOperationsHelper::PutLocalId(struct CloudDiskFuseData *data,
+                                      std::shared_ptr<CloudDiskInode> inoPtr,
+                                      uint64_t num, const std::string &key)
+{
+    std::unique_lock<std::shared_mutex> wLock(data->localIdLock, std::defer_lock);
+    if (inoPtr == nullptr) {
+        LOGD("Get an invalid inode!");
+        return;
+    }
+    inoPtr->refCount -= num;
+    if (inoPtr->refCount == 0) {
+        LOGD("node released: %{public}s", key.c_str());
+        wLock.lock();
+        data->localIdCache.erase(key);
         wLock.unlock();
     }
 }

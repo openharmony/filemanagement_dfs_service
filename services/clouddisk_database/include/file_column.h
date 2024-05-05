@@ -40,6 +40,7 @@ public:
     static const std::string VERSION;
     static const std::string OPERATE_TYPE;
     static const std::string FILE_STATUS;
+    static const std::string ROW_ID;
 
     // Only Local
     static const std::string FILE_TIME_VISIT;

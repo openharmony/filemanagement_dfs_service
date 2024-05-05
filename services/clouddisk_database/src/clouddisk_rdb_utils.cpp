@@ -29,6 +29,8 @@ namespace OHOS::FileManagement::CloudDisk {
 using namespace std;
 using namespace NativeRdb;
 
+static const int32_t LOCAL_ID_OFFSET = 100;
+
 int32_t CloudDiskRdbUtils::GetInt(const string &key, int32_t &val,
                                   const shared_ptr<ResultSet> resultSet)
 {
@@ -99,6 +101,8 @@ static void FillFileInfo(const RowEntity &rowEntity, CloudDiskFileInfo &info)
     info.mtime = static_cast<unsigned long long>(long_variable);
     rowEntity.Get(FileColumn::IS_DIRECTORY).GetInt(int_variable);
     info.IsDirectory = (int_variable == DIRECTORY);
+    rowEntity.Get(FileColumn::ROW_ID).GetLong(long_variable);
+    info.localId = static_cast<unsigned long long>(long_variable) + LOCAL_ID_OFFSET;
 }
 
 int32_t CloudDiskRdbUtils::ResultSetToFileInfo(const shared_ptr<ResultSet> resultSet,

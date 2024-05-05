@@ -25,6 +25,7 @@ struct CloudDiskFileInfo {
     std::string cloudId;
     std::string parentCloudId;
     uint32_t location{1};
+    int64_t localId{0};
     unsigned long long size{0};
     unsigned long long atime{0};
     unsigned long long ctime{0};
