@@ -624,7 +624,7 @@ static int renameFilePath(const std::string &oldPath, const std::string &newPath
 {
     int ret = rename(oldPath.c_str(), newPath.c_str());
     if (ret != 0) {
-        LOGE("err rename localPath to newPath, ret=%{public}d, errno=%{public}d, path=%{private}s",
+        LOGE("err rename localPath to newPath, ret=%{public}d, errno=%{public}d, path=%{public}s",
              ret, errno, oldPath.c_str());
         return E_INVAL_ARG;
     }
@@ -643,17 +643,21 @@ int32_t FileDataHandler::ConflictRename(string &fullPath, string &relativePath)
         LOGE("ConflictRenamePath failed, ret=%{public}d", ret);
         return E_INVAL_ARG;
     }
-    /* thumb new path and new name */
-    (void)renameFilePath(tmpPath, newPath);
-    ret = renameFilePath(localPath, newLocalPath);
-    if (ret != 0) {
-        (void)renameFilePath(newPath, tmpPath);
-    }
 
     string newName = ConflictRenameThumb(fullPath, localPath, newLocalPath);
     if (newName == "") {
         LOGE("err Rename Thumb path");
         return E_INVAL_ARG;
+    }
+
+    /* thumb new path and new name */
+    ret = renameFilePath(tmpPath, newPath);
+    if (ret != E_OK) {
+        return ret;
+    }
+    ret = renameFilePath(localPath, newLocalPath);
+    if (ret != 0) {
+        (void)renameFilePath(newPath, tmpPath);
     }
 
     ValuesBucket values;
@@ -1082,7 +1086,7 @@ tuple<shared_ptr<ResultSet>, int32_t> FileDataHandler::BatchQueryLocal(vector<DK
     }
 
     auto vecSize = displayNames.size();
-    LOGD("batch query num %{publics}zu", vecSize);
+    LOGD("batch query num %{public}zu", vecSize);
     if (vecSize == 0) {
         LOGE("record not include displayname");
         return {nullptr, 0};
@@ -1340,20 +1344,25 @@ int32_t FileDataHandler::PathConflictProc(const DriveKit::DKRecord &record)
         return E_INVAL_ARG;
     }
 
-    string cloudPath = localConvertor_.GetCloudPath(filePath);
+    /* local new path */
+    string localPath = cleanConvertor_.GetHmdfsLocalPath(filePath);
+    if (localPath == "") {
+        LOGE("err local Path for GetHmdfsLocalPath");
+        return E_INVAL_ARG;
+    }
 
-    bool local = access(cloudPath.c_str(), F_OK) == 0;
+    bool local = access(localPath.c_str(), F_OK) == 0;
     if (!local && errno != ENOENT) {
         LOGE("fail to access %{public}d", errno);
         return E_SYSCALL;
     }
 
-    if (errno == ENOENT) {
-        LOGD("fail to access path %{public}s", cloudPath.c_str());
+    if (!local && errno == ENOENT) {
+        LOGD("fail to access path %{public}s", localPath.c_str());
         return E_OK;
     }
 
-    LOGE("filePath:%{public}s, errno:%{publid}d", filePath.c_str(), errno);
+    LOGE("Conflict filePath:%{public}s, errno:%{public}d", filePath.c_str(), errno);
     string relativePath("");
     return ConflictRename(filePath, relativePath);
 }
