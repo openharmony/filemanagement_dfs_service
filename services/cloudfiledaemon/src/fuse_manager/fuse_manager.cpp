@@ -354,35 +354,6 @@ static string GetAssetKey(int fileType)
     }
 }
 
-static int32_t FixDentrySize(shared_ptr<CloudInode> ino, FuseData *data)
-{
-    if (ino->mBase->fileType == FILE_TYPE_CONTENT || ino->mBase->size != TWO_MB) {
-        return 0;
-    }
-    string localPath = GetLocalTmpPath(data->userId, ino->path);
-    struct stat fileStat;
-    int32_t ret = stat(localPath.c_str(), &fileStat);
-    if (ret == 0) {
-        LOGI("fix file ino:%{public}s size to %{public}lld", ino->path.c_str(), (long long)fileStat.st_size);
-        ino->mBase->size = fileStat.st_size;
-        auto metaFile = MetaFileMgr::GetInstance().GetMetaFile(data->userId, GetCloudInode(data, ino->parent)->path);
-        auto mateBase = MetaBase(ino->mBase->name, ino->mBase->cloudId);
-        mateBase.fileType = ino->mBase->fileType;
-        mateBase.mode = ino->mBase->mode;
-        mateBase.mtime = ino->mBase->mtime;
-        mateBase.size = ino->mBase->size;
-        ret = metaFile->DoUpdate(mateBase);
-        if (ret != 0) {
-            LOGE("update dentry fail, ret is %{public}d", ret);
-        } else {
-            LOGI("update dentry success, fix size success");
-        }
-    } else {
-        LOGW("stat fail, errno is %{public}d", errno);
-    }
-    return ret;
-}
-
 static string GetCloudMergeViewPath(int32_t userId, const string &relativePath)
 {
     return HMDFS_PATH_PREFIX + to_string(userId) + CLOUD_MERGE_VIEW_PATH_SUFFIX + relativePath;
@@ -443,11 +414,6 @@ static void HandleOpenResult(fuse_req_t req, DriveKit::DKError dkError, struct F
     if (cInode->mBase->fileType != FILE_TYPE_CONTENT) {
         CloudOpenOnLocal(data, cInode, fi);
     }
-    if (FixDentrySize(cInode, data) != 0) {
-        LOGE("fix dentry size fail");
-        fuse_reply_err(req, EPERM);
-        return;
-    }
     cInode->sessionRefCount++;
     LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
     fuse_reply_open(req, fi);
@@ -488,7 +454,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
             return;
         }
     }
-    if (!cInode->readSession || FixDentrySize(cInode, data) != 0) {
+    if (!cInode->readSession) {
         fuse_reply_err(req, EPERM);
         LOGE("readSession is null or fix size fail");
     } else {
