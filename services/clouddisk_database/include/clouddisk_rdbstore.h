@@ -26,6 +26,7 @@
 #include "clouddisk_db_const.h"
 #include "dk_record.h"
 #include "file_column.h"
+#include "meta_file.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -41,20 +42,25 @@ public:
 
     int32_t LookUp(const std::string &parentCloudId, const std::string &fileName, CloudDiskFileInfo &info);
     int32_t GetAttr(const std::string &cloudId, CloudDiskFileInfo &info);
-    int32_t SetAttr(const std::string &cloudId, const unsigned long long &size);
+    int32_t SetAttr(const std::string &fileName, const std::string &parentCloudId, const std::string &cloudId,
+        const unsigned long long &size);
     int32_t ReadDir(const std::string &cloudId, std::vector<CloudDiskFileInfo> &infos);
     int32_t MkDir(const std::string &cloudId, const std::string &parentCloudId,
         const std::string &directoryName);
     int32_t Create(const std::string &cloudId, const std::string &parentCloudId,
         const std::string &fileName);
-    int32_t Write(const std::string &cloudId);
+    int32_t Write(const std::string &fileName, const std::string &parentCloudId, const std::string &cloudId);
     int32_t GetXAttr(const std::string &cloudId, const std::string &key, std::string &value);
-    int32_t SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value);
+    int32_t SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
+        const std::string &name = "", const std::string &parentCloudId = "", int64_t rowId = 0);
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
         const std::string &newParentCloudId, const std::string &newFileName);
-    int32_t Unlink(const std::string &parentCloudId, const std::string &fileName, std::string &unlinkCloudId);
-    int32_t RecycleSetXattr(const std::string &cloudId, const std::string &value);
-    int32_t LocationSetXattr(const std::string &cloudId, const std::string &value);
+        int32_t Unlink(const std::string &parentCloudId, const std::string &fileName, std::string &unlinkCloudId,
+        std::function<int32_t()> &revokeCallBack);
+    int32_t RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
+        const std::string &cloudId, const std::string &value, int64_t rowId);
+    int32_t LocationSetXattr(const std::string &name, const std::string &parentCloudId,
+        const std::string &cloudId, const std::string &value);
     int32_t FavoriteSetXattr(const std::string &cloudId, const std::string &value);
     int32_t LocationGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t FavoriteGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
@@ -75,8 +81,10 @@ public:
 
 private:
     void Stop();
-    int32_t UnlinkSynced(const std::string &cloudId);
-    int32_t UnlinkLocal(const std::string &cloudId);
+    int32_t UnlinkSynced(const std::string &parentCloudId, const std::string &cloudId,
+        MetaBase &metaBase, std::function<int32_t()> &revokeCallBack);
+    int32_t UnlinkLocal(const std::string &parentCloudId, const std::string &cloudId,
+        MetaBase &metaBase, std::function<int32_t()> &revokeCallBack);
 
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     NativeRdb::RdbStoreConfig config_{""};

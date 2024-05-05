@@ -52,7 +52,8 @@ int32_t CloudDiskRdbStore::GetAttr(const std::string &cloudId, CloudDiskFileInfo
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::SetAttr(const std::string &cloudId, const unsigned long long &size)
+int32_t CloudDiskRdbStore::SetAttr(const std::string &fileName, const std::string &parentCloudId,
+    const std::string &cloudId, const unsigned long long &size)
 {
     return E_OK;
 }
@@ -74,7 +75,8 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::Write(const std::string &cloudId)
+int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string &parentCloudId,
+    const std::string &cloudId)
 {
     return E_OK;
 }
@@ -84,7 +86,8 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value)
+int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
+    const std::string &name, const std::string &parentCloudId, int64_t rowId)
 {
     return E_OK;
 }
@@ -95,17 +98,20 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &cloudId)
+int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &parentCloudId, const std::string &cloudId,
+    MetaBase &metaBase, std::function<int32_t()> &revokeCallBack)
 {
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &cloudId)
+int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &parentCloudId, const std::string &cloudId,
+    MetaBase &metaBase, std::function<int32_t()> &revokeCallBack)
 {
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::Unlink(const std::string &parentCloudId, const std::string &fileName, string &unlinkCloudId)
+int32_t CloudDiskRdbStore::Unlink(const std::string &parentCloudId, const std::string &fileName, string &unlinkCloudId,
+    std::function<int32_t()> &revokeCallBack)
 {
     return E_OK;
 }

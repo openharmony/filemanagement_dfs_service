@@ -91,6 +91,7 @@ ohos_unittest("cloud_disk_data_convertor_test") {
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -208,6 +209,7 @@ ohos_unittest("album_data_handler_test") {
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -325,6 +327,7 @@ ohos_unittest("data_sync_manager_test") {
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -440,6 +443,7 @@ ohos_unittest("data_handler_test") {
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -509,6 +513,7 @@ ohos_unittest("data_convertor_test") {
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -580,6 +585,7 @@ ohos_unittest("file_data_handler_test") {
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -676,6 +682,7 @@ ohos_unittest("gallery_data_syncer_test") {
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -796,6 +803,7 @@ ohos_unittest("data_syncer_test") {
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -901,6 +909,7 @@ ohos_unittest("file_data_convertor_test") {
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -1019,6 +1028,7 @@ ohos_unittest("sdk_helper_test") {
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -1137,6 +1147,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -1194,6 +1205,7 @@ ohos_unittest("sync_state_manager_test") {
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -1292,6 +1304,7 @@ ohos_unittest("task_test") {
     "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -1398,6 +1411,7 @@ ohos_unittest("cloud_disk_data_syncer_test") {
     "${clouddisk_database_path}/src/clouddisk_sync_helper.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify_utils.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_rdb_transaction.cpp",
   ]
 
   sources += cloud_disk_sync
@@ -1434,8 +1448,10 @@ ohos_unittest("cloud_disk_data_syncer_test") {
   include_dirs += medialibrary_rdb_utils_include
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -1579,7 +1595,9 @@ ohos_unittest("cloud_disk_data_handler_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
+    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]

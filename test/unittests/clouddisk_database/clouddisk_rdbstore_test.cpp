@@ -318,9 +318,11 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest1, TestSize.Level1)
 {
     const std::string cloudId = "nullptr";
     const std::string bundleName = "WriteTest";
+    const std::string fileName = "file";
+    const std::string parentCloudId = "rootId";
     const int32_t userId = 123456789;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.Write(cloudId);
+    int32_t ret = CloudDiskRdbStore.Write(fileName, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_PATH);
 }
 
@@ -334,9 +336,11 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest2, TestSize.Level1)
 {
     const std::string cloudId = "";
     const std::string bundleName = "WriteTest";
+    const std::string fileName = "file";
+    const std::string parentCloudId = "rootId";
     const int32_t userId = 123456789;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.Write(cloudId);
+    int32_t ret = CloudDiskRdbStore.Write(fileName, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -351,8 +355,10 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest3, TestSize.Level1)
     const std::string cloudId = "rootId";
     const std::string bundleName = "WriteTest";
     const int32_t userId = 123456789;
+    const std::string fileName = "file";
+    const std::string parentCloudId = "rootId";
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.Write(cloudId);
+    int32_t ret = CloudDiskRdbStore.Write(fileName, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -367,9 +373,11 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest4, TestSize.Level1)
     const std::string cloudId = "123123";
     const std::string filePath = "/data/test";
     const std::string bundleName = "MkDirTest";
+    const std::string fileName = "test";
+    const std::string parentCloudId = "rootId";
     const int32_t userId = 123456789;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.Write(cloudId);
+    int32_t ret = CloudDiskRdbStore.Write(fileName, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_PATH);
 }
 
@@ -570,8 +578,9 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest1, TestSize.Level1)
     string unlinkCloudId = "213546";
     const std::string bundleName = "InitRootIdTest";
     const int32_t userId = 123456789;
+    std::function<int32_t()> revokeCallBack;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.Unlink(parentCloudId, fileName, unlinkCloudId);
+    int32_t ret = CloudDiskRdbStore.Unlink(parentCloudId, fileName, unlinkCloudId, revokeCallBack);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
