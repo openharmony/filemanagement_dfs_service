@@ -18,6 +18,7 @@ ohos_unittest("clouddisk_rdb_utils_test") {
   module_out_path = "filemanagement/dfs_service/tests"
 
   sources = [
+    "${distributedfile_path}/services/clouddisk_database/src/clouddisk_rdb_transaction.cpp",
     "${distributedfile_path}/services/clouddisk_database/src/clouddisk_rdb_utils.cpp",
     "${distributedfile_path}/services/clouddisk_database/src/clouddisk_rdbstore.cpp",
     "${distributedfile_path}/services/clouddisk_database/src/file_column.cpp",
@@ -41,7 +42,9 @@ ohos_unittest("clouddisk_rdb_utils_test") {
 
   deps = [
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -138,6 +141,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${services_path}/clouddisk_database/src/clouddisk_sync_helper.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify_utils.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_rdb_transaction.cpp",
   ]
 
   sources += cloud_disk_sync
@@ -185,6 +189,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
   deps = [
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",

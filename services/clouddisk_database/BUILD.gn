@@ -32,6 +32,7 @@ ohos_shared_library("clouddisk_database") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${utils_path}/cloud_disk/include",
+    "${utils_path}/dentry/include",
     "${utils_path}/preference/include",
     "${utils_path}/log/include",
   ]
@@ -39,6 +40,7 @@ ohos_shared_library("clouddisk_database") {
   sources = [
     "src/clouddisk_notify.cpp",
     "src/clouddisk_notify_utils.cpp",
+    "src/clouddisk_rdb_transaction.cpp",
     "src/clouddisk_rdb_utils.cpp",
     "src/clouddisk_rdbstore.cpp",
     "src/clouddisk_sync_helper.cpp",

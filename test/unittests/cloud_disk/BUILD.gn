@@ -29,7 +29,10 @@ ohos_unittest("account_status_listener_test") {
   ]
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -85,7 +88,9 @@ ohos_unittest("file_operations_cloud_test") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
+    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -125,6 +130,7 @@ ohos_unittest("database_manager_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_manager.cpp",
+    "${services_path}/clouddisk_database/src/clouddisk_rdb_transaction.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_rdbstore.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_sync_helper.cpp",
     "${services_path}/clouddisk_database/src/file_column.cpp",
@@ -135,7 +141,9 @@ ohos_unittest("database_manager_test") {
   deps = [
     "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite",
+    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
