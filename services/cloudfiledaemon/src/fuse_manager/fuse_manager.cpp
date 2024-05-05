@@ -628,7 +628,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         return;
     }
     shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(oldSize, off);
-    ffrt::thread(CloudReadOnCloudFile, ref(readArgs), ref(buf), ref(cInode), ref(dkReadSession)).detach();
+    ffrt::thread(CloudReadOnCloudFile, readArgs, buf, cInode, dkReadSession).detach();
     unique_lock lck(cInode->readLock);
     auto waitStatus = readArgs->cond->wait_for(lck, READ_TIMEOUT_S, [readArgs] {
         return *readArgs->readFinish;
