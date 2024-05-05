@@ -350,7 +350,9 @@ inline int32_t FileDataConvertor::HandleSourcePath(DriveKit::DKRecordFieldMap &m
     if (ret != E_OK) {
         return ret;
     }
-    map[FILE_SOURCE_PATH] = DriveKit::DKRecordField("/storage/emulated/0/Pictures/cloud/Imports/" + displayName);
+    if (type_ == FILE_CREATE) {
+        map[FILE_SOURCE_PATH] = DriveKit::DKRecordField("/storage/emulated/0/Pictures/cloud/Imports/" + displayName);
+    }
     return E_OK;
 }
 
