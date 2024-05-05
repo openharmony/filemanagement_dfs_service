@@ -50,46 +50,31 @@ void FileOperationsBase::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_i
 
 void FileOperationsBase::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLookup)
 {
-    LOGE("Forget operation is not supported!");
-    fuse_reply_err(req, ENOSYS);
-}
-
-static int32_t ForgetCloudIno(struct CloudDiskInode *inoPtr, string &key)
-{
-    if (inoPtr == nullptr) {
-        LOGE("Get an invalid inode!");
-        return EINVAL;
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto node = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+    if (node == nullptr) {
+        LOGE("Forget an invalid inode");
+        return (void) fuse_reply_none(req);
     }
-    if (inoPtr->layer == CLOUD_DISK_INODE_OTHER_LAYER) {
-        auto parentPtr = reinterpret_cast<struct CloudDiskInode *>(inoPtr->parent);
-        if (parentPtr == nullptr) {
-            LOGE("ForgetMulti Function get an invalid parent inode!");
-            return EINVAL;
-        }
-        key = inoPtr->cloudId;
-    }
-    return 0;
+    string localIdKey = std::to_string(node->parent) + node->fileName;
+    int64_t key = static_cast<int64_t>(ino);
+    FileOperationsHelper::PutCloudDiskInode(data, node, nLookup, key);
+    FileOperationsHelper::PutLocalId(data, node, nLookup, localIdKey);
+    fuse_reply_none(req);
 }
 
 void FileOperationsBase::ForgetMulti(fuse_req_t req, size_t count, struct fuse_forget_data *forgets)
 {
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     for (size_t i = 0; i < count; i++) {
-        string key = FileOperationsHelper::GetCloudDiskRootPath(data->userId);
-        if (forgets[i].ino != FUSE_ROOT_ID) {
-            auto inoPtr = reinterpret_cast<struct CloudDiskInode *>(forgets[i].ino);
-            if (inoPtr == nullptr) {
-                LOGE("ForgetMulti Function get an invalid inode!");
-                continue;
-            }
-            key = inoPtr->path;
-            if (ForgetCloudIno(inoPtr, key) != 0) {
-                LOGE("ForgetMulti Function failed to process a cloud ino!");
-                continue;
-            }
+        auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(forgets[i].ino));
+        if (inoPtr == nullptr) {
+            LOGE("ForgetMulti got an invalid inode");
+            continue;
         }
-        shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, key);
-        FileOperationsHelper::PutCloudDiskInode(data, node, forgets[i].nlookup, key);
+        string localIdKey = std::to_string(inoPtr->parent) + inoPtr->fileName;
+        FileOperationsHelper::PutCloudDiskInode(data, inoPtr, forgets[i].nlookup, forgets[i].ino);
+        FileOperationsHelper::PutLocalId(data, inoPtr, forgets[i].nlookup, localIdKey);
     }
     fuse_reply_none(req);
 }

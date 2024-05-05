@@ -405,7 +405,6 @@ HWTEST_F(FileOperationsCloudTest, ReleaseTest001, TestSize.Level1)
         EXPECT_TRUE(true);
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        ino.readSession = make_shared<DriveKit::DKAssetReadSession>();
         fileOperationsCloud_->Release(req, reinterpret_cast<fuse_ino_t>(&ino), &fi);
         EXPECT_TRUE(true);
     } catch (...) {

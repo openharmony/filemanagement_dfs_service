@@ -38,9 +38,12 @@ enum class NotifyOpsType : uint32_t {
     OPS_NONE,
 };
 
+using FindCloudDiskInodeFunc = std::function<std::shared_ptr<CloudDiskInode>(CloudDiskFuseData*, int64_t)>;
 struct NotifyParamDisk {
+    CloudDiskFuseData *data = nullptr;
+    FindCloudDiskInodeFunc func;
     NotifyOpsType opsType = NotifyOpsType::OPS_NONE;
-    struct CloudDiskInode *inoPtr = nullptr;
+    std::shared_ptr<CloudDiskInode> inoPtr = nullptr;
     fuse_ino_t ino = 0;
     std::string name = "";
     fuse_ino_t newIno = 0;

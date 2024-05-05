@@ -25,46 +25,57 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
 using namespace std;
+static const int32_t BUNDLE_NAME_OFFSET = 1000000000;
+static const int32_t STAT_MODE_DIR = 0771;
 
 static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
                              struct fuse_entry_param *e)
 {
     int32_t err = 0;
     bool createFlag = false;
-    shared_ptr<CloudDiskInode> child;
     struct CloudDiskFuseData *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     string path = FileOperationsHelper::GetCloudDiskLocalPath(data->userId, name);
-    std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
-
-    child = FileOperationsHelper::FindCloudDiskInode(data, path);
+    std::unique_lock<std::shared_mutex> cWLock(data->cacheLock, std::defer_lock);
+    string key = path;
+    int64_t localId = FileOperationsHelper::FindLocalId(data, key);
+    auto child = FileOperationsHelper::FindCloudDiskInode(data, localId);
     if (child == nullptr) {
         child = make_shared<CloudDiskInode>();
         createFlag = true;
         LOGD("new child %{public}s", name);
     }
-
-    err = stat(path.c_str(), &child->stat);
-    if (err != 0) {
-        LOGE("lookup %{public}s error, err: %{public}d", path.c_str(), errno);
-        return errno;
-    }
-
+    std::unique_lock<std::shared_mutex> lWLock(data->localIdLock, std::defer_lock);
     child->refCount++;
     if (createFlag) {
+        err = stat(path.c_str(), &child->stat);
+        if (err != 0) {
+            LOGE("lookup %{public}s error, err: %{public}d", path.c_str(), errno);
+            return errno;
+        }
+        child->stat.st_mode |= STAT_MODE_DIR;
         child->parent = parent;
         child->path = path;
-        child->layer = FileOperationsHelper::GetNextLayer(parent);
-        child->stat.st_ino = reinterpret_cast<fuse_ino_t>(child.get());
+        auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parent));
+        child->layer = FileOperationsHelper::GetNextLayer(parentInode, parent);
+        localId = FileOperationsHelper::GetFixedLayerRootId(child->layer);
+        if (child->layer >= CLOUD_DISK_INODE_FIRST_LAYER) {
+            data->bundleNameId++;
+            localId = data->bundleNameId + BUNDLE_NAME_OFFSET;
+        }
+        child->stat.st_ino = localId;
         child->ops = make_shared<FileOperationsLocal>();
-        wLock.lock();
-        data->inodeCache[path] = child;
-        wLock.unlock();
+        cWLock.lock();
+        data->inodeCache[localId] = child;
+        cWLock.unlock();
+        lWLock.lock();
+        data->localIdCache[key] = localId;
+        lWLock.unlock();
     }
     if (child->layer >= CLOUD_DISK_INODE_FIRST_LAYER) {
         child->bundleName = name;
         child->ops = make_shared<FileOperationsCloud>();
     }
-    e->ino = reinterpret_cast<fuse_ino_t>(child.get());
+    e->ino = static_cast<fuse_ino_t>(localId);
     FileOperationsHelper::GetInodeAttr(child, &e->attr);
     return 0;
 }
@@ -84,9 +95,8 @@ void FileOperationsLocal::Lookup(fuse_req_t req, fuse_ino_t parent, const char *
 
 void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
+    struct CloudDiskFuseData *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     if (ino == FUSE_ROOT_ID) {
-        struct CloudDiskFuseData *data =
-            reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
         string path = FileOperationsHelper::GetCloudDiskRootPath(data->userId);
 
         struct stat statBuf;
@@ -99,22 +109,13 @@ void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
         fuse_reply_attr(req, &statBuf, 0);
         return;
     }
-    struct CloudDiskInode *inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-    fuse_reply_attr(req, &inoPtr->stat, 0);
-}
-
-void FileOperationsLocal::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLookup)
-{
-    struct CloudDiskFuseData *data =
-        reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    string key = FileOperationsHelper::GetCloudDiskRootPath(data->userId);
-    if (ino != FUSE_ROOT_ID) {
-        struct CloudDiskInode *inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
-        key = inoPtr->path;
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+    if (inoPtr == nullptr) {
+        fuse_reply_err(req, EINVAL);
+        LOGE("inode not found");
+        return;
     }
-    shared_ptr<CloudDiskInode> node = FileOperationsHelper::FindCloudDiskInode(data, key);
-    FileOperationsHelper::PutCloudDiskInode(data, node, nLookup, key);
-    fuse_reply_none(req);
+    fuse_reply_attr(req, &inoPtr->stat, 0);
 }
 
 void FileOperationsLocal::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
@@ -122,13 +123,17 @@ void FileOperationsLocal::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
 {
     (void) fi;
     string path;
-    struct CloudDiskInode *inoPtr = reinterpret_cast<struct CloudDiskInode *>(ino);
     struct CloudDiskFuseData *data =
         reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    shared_ptr<CloudDiskInode> child;
     if (ino == FUSE_ROOT_ID) {
         path = FileOperationsHelper::GetCloudDiskRootPath(data->userId);
     } else {
+        auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+        if (inoPtr == nullptr) {
+            fuse_reply_err(req, EINVAL);
+            LOGE("inode not found");
+            return;
+        }
         path = inoPtr->path;
     }
     DIR* dir = opendir(path.c_str());
@@ -145,11 +150,13 @@ void FileOperationsLocal::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
             continue;
         }
 
-        string childPath = FileOperationsHelper::GetCloudDiskLocalPath(data->userId, entry->d_name);
-        shared_ptr<CloudDiskInode> childPtr = FileOperationsHelper::FindCloudDiskInode(
-            data, childPath.c_str());
+        string childPath = FileOperationsHelper::GetCloudDiskLocalPath(data->userId,
+            entry->d_name);
+        int64_t key = FileOperationsHelper::FindLocalId(data, std::to_string(ino) +
+            entry->d_name);
+        auto childPtr = FileOperationsHelper::FindCloudDiskInode(data, key);
         if (childPtr == nullptr) {
-            childPtr = FileOperationsHelper::GenerateCloudDiskInode(data, inoPtr,
+            childPtr = FileOperationsHelper::GenerateCloudDiskInode(data, ino,
                 entry->d_name, childPath.c_str());
         }
         if (childPtr == nullptr) {

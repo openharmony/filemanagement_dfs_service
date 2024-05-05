@@ -35,14 +35,15 @@ static bool isRoot(const fuse_ino_t &ino)
     return ino == FUSE_ROOT_ID;
 }
 
-static int32_t GetUriRecursively(const CloudDiskInode *inoPtr, string &uri)
+static int32_t GetUriRecursively(CloudDiskFuseData* data, FindCloudDiskInodeFunc func,
+    shared_ptr<CloudDiskInode> inoPtr, string &uri)
 {
     string bundleName = inoPtr->bundleName;
     string realPrefix = CLOUDDISK_URI_PREFIX;
     realPrefix.replace(realPrefix.find(BUNDLENAME_FLAG), BUNDLENAME_FLAG.length(), bundleName);
     uint32_t queryTimes = 0;
     while (!isRoot(inoPtr->parent)) {
-        inoPtr = reinterpret_cast<CloudDiskInode *>(inoPtr->parent);
+        inoPtr = func(data, inoPtr->parent);
         if (inoPtr->fileName.empty()) {
             continue;
         }
@@ -57,41 +58,61 @@ static int32_t GetUriRecursively(const CloudDiskInode *inoPtr, string &uri)
     return E_OK;
 }
 
-int32_t CloudDiskNotifyUtils::GetNotifyData(const fuse_ino_t &ino, NotifyData &notifyData)
+int32_t CloudDiskNotifyUtils::GetNotifyData(CloudDiskFuseData* data, FindCloudDiskInodeFunc func,
+    const fuse_ino_t &ino, NotifyData &notifyData)
 {
     if (isRoot(ino)) {
         return E_INVAL_ARG;
     }
-    CloudDiskInode *inoPtr = reinterpret_cast<CloudDiskInode *>(ino);
+    auto inoPtr = func(data, ino);
+    if (inoPtr == nullptr) {
+        LOGE("inode not found");
+        return E_INVAL_ARG;
+    }
     notifyData.uri = inoPtr->fileName;
     notifyData.isDir = inoPtr->stat.st_mode & S_IFDIR;
-    return GetUriRecursively(inoPtr, notifyData.uri);
+    return GetUriRecursively(data, func, inoPtr, notifyData.uri);
 }
 
-int32_t CloudDiskNotifyUtils::GetNotifyData(const fuse_ino_t &parent, const string &name, NotifyData &notifyData)
+int32_t CloudDiskNotifyUtils::GetNotifyData(CloudDiskFuseData* data, FindCloudDiskInodeFunc func,
+    const fuse_ino_t &parent, const string &name, NotifyData &notifyData)
 {
-    CloudDiskInode *inoPtr = reinterpret_cast<CloudDiskInode *>(parent);
+    auto inoPtr = func(data, parent);
+    if (inoPtr == nullptr) {
+        LOGE("inode not found");
+        return E_INVAL_ARG;
+    }
     notifyData.uri = name;
     if (!inoPtr->fileName.empty()) {
         notifyData.uri = inoPtr->fileName + BACKFLASH + notifyData.uri;
     }
-    return GetUriRecursively(inoPtr, notifyData.uri);
+    return GetUriRecursively(data, func, inoPtr, notifyData.uri);
 }
 
-int32_t CloudDiskNotifyUtils::GetNotifyData(const CloudDiskInode *inoPtr, NotifyData &notifyData)
+int32_t CloudDiskNotifyUtils::GetNotifyData(CloudDiskFuseData* data, FindCloudDiskInodeFunc func,
+    shared_ptr<CloudDiskInode> inoPtr, NotifyData &notifyData)
 {
+    if (inoPtr == nullptr) {
+        LOGE("inode not found");
+        return E_INVAL_ARG;
+    }
     notifyData.uri = inoPtr->fileName;
     notifyData.isDir = inoPtr->stat.st_mode & S_IFDIR;
-    return GetUriRecursively(inoPtr, notifyData.uri);
+    return GetUriRecursively(data, func, inoPtr, notifyData.uri);
 }
 
-int32_t CloudDiskNotifyUtils::GetNotifyData(const CloudDiskInode *pInoPtr, const string &name, NotifyData &notifyData)
+int32_t CloudDiskNotifyUtils::GetNotifyData(CloudDiskFuseData* data, FindCloudDiskInodeFunc func,
+    shared_ptr<CloudDiskInode> pInoPtr, const string &name, NotifyData &notifyData)
 {
+    if (pInoPtr == nullptr) {
+        LOGE("inode not found");
+        return E_INVAL_ARG;
+    }
     notifyData.uri = name;
     if (!pInoPtr->fileName.empty()) {
         notifyData.uri = pInoPtr->fileName + BACKFLASH + notifyData.uri;
     }
-    return GetUriRecursively(pInoPtr, notifyData.uri);
+    return GetUriRecursively(data, func, pInoPtr, notifyData.uri);
 }
 
 int32_t CloudDiskNotifyUtils::GetCacheNode(const string &cloudId, CacheNode &cacheNode)
