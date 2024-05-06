@@ -50,7 +50,6 @@ using namespace DriveKit;
 using namespace CloudDisk;
 using namespace Media;
 using FC = CloudDisk::FileColumn;
-static const string RECYCLE_CLOUD_ID = ".trash";
 
 CloudDiskDataHandler::CloudDiskDataHandler(int32_t userId, const string &bundleName,
                                            std::shared_ptr<RdbStore> rdb, shared_ptr<bool> stopFlag)
