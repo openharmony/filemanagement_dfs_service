@@ -50,7 +50,8 @@ public:
     virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
     virtual int32_t GetThumbToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
     int32_t GetDownloadAsset(std::string cloudId,
-                             std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
+                             std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
+                             std::shared_ptr<DentryContext> dentryContext = nullptr) override;
     int32_t HandleRecord(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records, OnFetchParams &params,
         std::vector<std::string> &recordIds, const std::shared_ptr<NativeRdb::ResultSet> &resultSet,
         const std::map<std::string, int> &recordIdRowIdMap);
@@ -76,7 +77,8 @@ public:
         DriveKit::DKRecordOperResult> &map) override;
     int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
-    int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
+    int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset,
+                              std::shared_ptr<DriveKit::DKContext> context = nullptr) override;
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
     void StopUpdataFiles();

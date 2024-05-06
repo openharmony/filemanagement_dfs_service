@@ -418,7 +418,6 @@ int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> 
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
     } else {
-        this_thread::sleep_for(chrono::seconds(1));
         SyncStateChangedNotify(CloudSyncState::DOWNLOADING, ErrorType::NO_ERROR);
     }
     if (!checkOrRetry) {
@@ -477,9 +476,9 @@ int32_t DataSyncer::DownloadInner(std::shared_ptr<DataHandler> handler,
                                   const std::string path,
                                   const int32_t userId)
 {
-    auto ctx = std::make_shared<TaskContext>(handler);
+    auto ctx = std::make_shared<DentryContext>();
     std::vector<DKDownloadAsset> assetsToDownload;
-    int32_t ret = handler->GetDownloadAsset(path, assetsToDownload);
+    int32_t ret = handler->GetDownloadAsset(path, assetsToDownload, ctx);
     if (ret != E_OK) {
         LOGE("handler on fetch records err %{public}d", ret);
         return ret;

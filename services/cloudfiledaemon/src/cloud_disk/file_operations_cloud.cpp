@@ -239,6 +239,7 @@ void FileOperationsCloud::Lookup(fuse_req_t req, fuse_ino_t parent, const char *
 
 void FileOperationsCloud::Access(fuse_req_t req, fuse_ino_t ino, int mask)
 {
+    LOGI("Access operation is not supported!");
     fuse_reply_err(req, ENOSYS);
 }
 
@@ -626,6 +627,7 @@ void HandleCloudLocation(fuse_req_t req, fuse_ino_t ino, const char *name,
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (inoPtr == nullptr) {
+        fuse_reply_err(req, EINVAL);
         LOGE("inode not found");
         return;
     }
@@ -671,11 +673,13 @@ void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (inoPtr == nullptr) {
+        fuse_reply_err(req, EINVAL);
         LOGE("inode not found");
         return;
     }
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inoPtr->parent));
     if (parentInode == nullptr) {
+        fuse_reply_err(req, EINVAL);
         LOGE("parent inode not found");
         return;
     }
@@ -705,6 +709,7 @@ void HandleFavorite(fuse_req_t req, fuse_ino_t ino, const char *name,
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (inoPtr == nullptr) {
+        fuse_reply_err(req, EINVAL);
         LOGE("inode not found");
         return;
     }
@@ -724,6 +729,7 @@ void HandleFavorite(fuse_req_t req, fuse_ino_t ino, const char *name,
 void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    const char *value, size_t size, int flags)
 {
+    LOGD("Setxattr begin name:%{public}s", name);
     int32_t checknum = CheckXattr(name);
     switch (checknum) {
         case HMDFS_PERMISSION:
@@ -944,16 +950,16 @@ void FileOperationsCloud::Unlink(fuse_req_t req, fuse_ino_t parent, const char *
 void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *name,
                                  fuse_ino_t newParent, const char *newName, unsigned int flags)
 {
+    if (flags) {
+        LOGE("Fuse failed to support flag");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parent));
     auto newParentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(newParent));
     if (!parentInode || !newParentInode) {
         LOGE("rename old or new parent not found");
-        fuse_reply_err(req, EINVAL);
-        return;
-    }
-    if (flags) {
-        LOGE("Fuse failed to support flag");
         fuse_reply_err(req, EINVAL);
         return;
     }

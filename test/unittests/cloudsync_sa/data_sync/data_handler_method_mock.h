@@ -39,8 +39,9 @@ public:
                          const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records));
     MOCK_METHOD1(GetAssetsToDownload, int32_t(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload));
 
-    MOCK_METHOD2(GetDownloadAsset,
-                 int32_t(std::string cloudId, std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload));
+    MOCK_METHOD3(GetDownloadAsset,
+                 int32_t(std::string cloudId, std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
+                 std::shared_ptr<DentryContext> dentryContext));
     /* upload */
     MOCK_METHOD1(GetCreatedRecords, int32_t(std::vector<DriveKit::DKRecord> &records));
     MOCK_METHOD1(GetDeletedRecords, int32_t(std::vector<DriveKit::DKRecord> &records));
@@ -54,7 +55,8 @@ public:
                  int32_t(const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &map));
     MOCK_METHOD1(OnModifyFdirtyRecords,
                  int32_t(const std::map<DriveKit::DKRecordId, DriveKit::DKRecordOperResult> &map));
-    MOCK_METHOD1(OnDownloadSuccess, int32_t(const DriveKit::DKDownloadAsset &asset));
+    MOCK_METHOD2(OnDownloadSuccess, int32_t(const DriveKit::DKDownloadAsset &asset,
+                 std::shared_ptr<DriveKit::DKContext> context));
     MOCK_METHOD1(OnDownloadThumb,
                  int32_t(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap));
     MOCK_METHOD1(OnDownloadThumb, int32_t(const DriveKit::DKDownloadAsset &asset));

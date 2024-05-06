@@ -191,7 +191,7 @@ void CloudDownloadCallbackManager::OnDownloadedResult(
     if (download.state == DownloadProgressObj::RUNNING) {
         download.state = downloadedState;
         if ((assetsToDownload.size() == 1) && (download.state == DownloadProgressObj::COMPLETED)) {
-            (void)handler->OnDownloadSuccess(assetsToDownload[0]);
+            (void)handler->OnDownloadSuccess(assetsToDownload[0], context);
         }
         std::thread([=]() {
                 this_thread::sleep_for(chrono::seconds(1));

@@ -205,12 +205,13 @@ int32_t DataHandler::GetThumbToDownload(std::vector<DriveKit::DKDownloadAsset> &
 }
 
 int32_t DataHandler::GetDownloadAsset(string cloudId,
-    vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
+    vector<DriveKit::DKDownloadAsset> &outAssetsToDownload, std::shared_ptr<DentryContext> dentryContext)
 {
     return E_OK;
 }
 
-int32_t DataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
+int32_t DataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset,
+    std::shared_ptr<DriveKit::DKContext> context)
 {
     return E_OK;
 }

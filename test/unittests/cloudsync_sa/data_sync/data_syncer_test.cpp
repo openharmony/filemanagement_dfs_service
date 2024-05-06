@@ -663,10 +663,10 @@ HWTEST_F(DataSyncerTest, DownloadInnerTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "DownloadInnerTest Start";
     try {
         int32_t userId = 100;
-        EXPECT_CALL(*dataHandler_, GetDownloadAsset(_, _)).Times(1).WillOnce(Return(1));
+        EXPECT_CALL(*dataHandler_, GetDownloadAsset(_, _, _)).Times(1).WillOnce(Return(1));
         auto ret = datasyncer_->DownloadInner(dataHandler_, "test", userId);
         EXPECT_NE(ret, E_OK);
-        EXPECT_CALL(*dataHandler_, GetDownloadAsset(_, _)).Times(1).WillOnce(Return(0));
+        EXPECT_CALL(*dataHandler_, GetDownloadAsset(_, _, _)).Times(1).WillOnce(Return(0));
         auto res = datasyncer_->DownloadInner(dataHandler_, "test", userId);
         EXPECT_EQ(res, E_OK);
     } catch (...) {

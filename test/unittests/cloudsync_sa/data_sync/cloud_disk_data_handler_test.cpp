@@ -751,7 +751,10 @@ HWTEST_F(CloudDiskDataHandlerTest, RecycleFileTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RecycleFile Start";
     string recordId = "sample_id";
-    auto ret = cloudDiskDataHandler_->RecycleFile(recordId);
+    string parentCloudId = "rootId";
+    string name = "123";
+    ResultSetMock resultSet;
+    auto ret = cloudDiskDataHandler_->RecycleFile(recordId, parentCloudId, name, resultSet);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "RecycleFile End";
 }
@@ -765,7 +768,10 @@ HWTEST_F(CloudDiskDataHandlerTest, RecycleFileTest001, TestSize.Level1)
 HWTEST_F(CloudDiskDataHandlerTest, RecycleFileTest002, TestSize.Level1)
 {
     string recordId = "";
-    auto ret = cloudDiskDataHandler_->RecycleFile(recordId);
+    ResultSetMock resultSet;
+    string parentCloudId = "rootId";
+    string name = "123";
+    auto ret = cloudDiskDataHandler_->RecycleFile(recordId, parentCloudId, name, resultSet);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "RecycleFile End";
 }
@@ -780,8 +786,11 @@ HWTEST_F(CloudDiskDataHandlerTest, RecycleFileTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RecycleFile Start";
     string recordId = "sample_id";
+    string parentCloudId = "rootId";
+    string name = "123";
+    ResultSetMock resultSet;
     EXPECT_CALL(*cloudDiskDataHandler_, Update(_, _, _, _)).WillOnce(Return(E_RDB));
-    auto ret = cloudDiskDataHandler_->RecycleFile(recordId);
+    auto ret = cloudDiskDataHandler_->RecycleFile(recordId, parentCloudId, name, resultSet);
     EXPECT_EQ(ret, E_RDB);
     GTEST_LOG_(INFO) << "RecycleFile End";
 }
