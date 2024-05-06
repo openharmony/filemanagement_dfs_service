@@ -18,6 +18,7 @@
 #include <ctime>
 #include <sys/stat.h>
 #include <sstream>
+#include <functional>
 
 #include "cloud_pref_impl.h"
 #include "clouddisk_db_const.h"
@@ -29,6 +30,7 @@
 #include "clouddisk_type_const.h"
 #include "dfs_error.h"
 #include "file_column.h"
+#include "ffrt_inner.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
 #include "utils_log.h"
@@ -55,7 +57,6 @@ static const uint32_t STAT_MODE_DIR = 0771;
 const string BUNDLENAME_FLAG = "<BundleName>";
 const string CLOUDDISK_URI_PREFIX = "file://<BundleName>/data/storage/el2/cloud";
 const string BACKFLASH = "/";
-static const string RECYCLE_CLOUD_ID = ".trash";
 static const string RECYCLE_FILE_NAME = ".trash";
 
 static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
@@ -866,26 +867,24 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
     if (oldFileName == newFileName && oldParentCloudId != newParentCloudId) {
         FileMove(rename, metaBase.position, newParentCloudId);
     }
-    auto newMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, newParentCloudId);
-    int32_t changedRows = -1;
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(metaBase.cloudId);
-    TransactionOperations rdbTransaction(rdbStore_);
-    if (rdbTransaction.Start() != E_OK) {
-        return E_RDB;
-    }
-    ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, rename, FileColumn::CLOUD_ID + " = ?", bindArgs);
-    if (ret != E_OK) {
-        LOGE("rename file fail, ret %{public}d", ret);
-        return E_RDB;
-    }
+    auto newMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, newParentCloudId);
     ret = oldMetaFile->DoRename(metaBase, newFileName, newMetaFile);
     if (ret != E_OK) {
         LOGE("rename dentry failed, ret = %{public}d", ret);
         return EINVAL;
     }
-    rdbTransaction.Finish();
-    return ret;
+    function<void()> rdbUpdate = [this, rename, bindArgs] {
+        int32_t changedRows = -1;
+        int32_t ret = rdbStore_ ->Update(changedRows, FileColumn::FILES_TABLE, rename,
+                                         FileColumn::CLOUD_ID + " = ?", bindArgs);
+        if (ret != E_OK) {
+            LOGE("rename file fail, ret %{public}d", ret);
+        }
+    };
+    ffrt::thread(rdbUpdate).detach();
+    return E_OK;
 }
 
 int32_t CloudDiskRdbStore::GetHasChild(const std::string &cloudId, bool &hasChild)
@@ -909,8 +908,7 @@ int32_t CloudDiskRdbStore::GetHasChild(const std::string &cloudId, bool &hasChil
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &parentCloudId, const std::string &cloudId,
-    MetaBase &metaBase, std::function<int32_t()> &revokeCallBack)
+int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &cloudId)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     CLOUDID_IS_NULL(cloudId);
@@ -918,84 +916,40 @@ int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &parentCloudId, const 
     ValuesBucket updateValue;
     vector<string> whereArgs = {cloudId};
     updateValue.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_DELETED));
-    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
-    int32_t ret = metaFile->DoRemove(metaBase);
-    if (ret != E_OK) {
-        LOGE("remove dentry failed, ret = %{public}d", ret);
-        return ret;
-    }
-    ret = rdbStore_
-        ->Update(changedRows, FileColumn::FILES_TABLE, updateValue, FileColumn::CLOUD_ID + " = ?", whereArgs);
+    int32_t ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, updateValue, FileColumn::CLOUD_ID + " = ?",
+        whereArgs);
     if (ret != E_OK) {
         LOGE("unlink synced directory fail, ret %{public}d", ret);
-        ret = metaFile->DoCreate(metaBase);
-        if (ret != E_OK) {
-            LOGE("revoke removing dentry failed, ret = %{public}d", ret);
-            return ret;
-        }
         return E_RDB;
     }
-    revokeCallBack = [metaBase, metaFile] {
-        return metaFile->DoCreate(metaBase);
-    };
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &parentCloudId, const std::string &cloudId,
-    MetaBase &metaBase, std::function<int32_t()> &revokeCallBack)
+int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &cloudId)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     CLOUDID_IS_NULL(cloudId);
     int32_t changedRows = -1;
     vector<string> whereArgs = {cloudId};
-    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
-    int32_t ret = metaFile->DoRemove(metaBase);
-    if (ret != E_OK) {
-        LOGE("remove dentry failed, ret = %{public}d", ret);
-        return ret;
-    }
-    ret = rdbStore_
-        ->Delete(changedRows, FileColumn::FILES_TABLE, FileColumn::CLOUD_ID + " = ?", whereArgs);
+    int32_t ret = rdbStore_->Delete(changedRows, FileColumn::FILES_TABLE, FileColumn::CLOUD_ID + " = ?", whereArgs);
     if (ret != E_OK) {
         LOGE("unlink local directory fail, ret %{public}d", ret);
         return E_RDB;
     }
-    revokeCallBack = [metaBase, metaFile] {
-        return metaFile->DoCreate(metaBase);
-    };
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::Unlink(const std::string &parentCloudId, const std::string &fileName, string &unlinkCloudId,
-    std::function<int32_t()> &revokeCallBack)
+int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &position)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (parentCloudId.empty() || fileName.empty()) {
+    if (cloudId.empty() || cloudId == "rootId") {
         LOGE("Unlink parameters is invalid");
         return E_INVAL_ARG;
     }
-
-    MetaBase metaBase(fileName);
-    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
-    int32_t ret = metaFile->DoLookup(metaBase);
-    if (ret != E_OK) {
-        LOGE("lookup dentry failed, name:%{public}s", fileName.c_str());
-        return EINVAL;
-    }
-    string cloudId = metaBase.cloudId;
-    int32_t isDirectory = S_ISDIR(metaBase.mode);
-    int32_t position = metaBase.position;
-
-    if (position == CLOUD) {
-        RETURN_ON_ERR(UnlinkSynced(parentCloudId, cloudId, metaBase, revokeCallBack));
-        return E_OK;
-    } else if (position == LOCAL) {
-        RETURN_ON_ERR(UnlinkLocal(parentCloudId, cloudId, metaBase, revokeCallBack));
+    if (position == LOCAL) {
+        RETURN_ON_ERR(UnlinkLocal(cloudId));
     } else {
-        RETURN_ON_ERR(UnlinkSynced(parentCloudId, cloudId, metaBase, revokeCallBack));
-    }
-    if (isDirectory == FILE) {
-        unlinkCloudId = cloudId;
+        RETURN_ON_ERR(UnlinkSynced(cloudId));
     }
     return E_OK;
 }

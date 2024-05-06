@@ -98,20 +98,17 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &parentCloudId, const std::string &cloudId,
-    MetaBase &metaBase, std::function<int32_t()> &revokeCallBack)
+int32_t CloudDiskRdbStore::UnlinkSynced(const std::string &cloudId)
 {
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &parentCloudId, const std::string &cloudId,
-    MetaBase &metaBase, std::function<int32_t()> &revokeCallBack)
+int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &cloudId)
 {
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::Unlink(const std::string &parentCloudId, const std::string &fileName, string &unlinkCloudId,
-    std::function<int32_t()> &revokeCallBack)
+int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &position)
 {
     return E_OK;
 }

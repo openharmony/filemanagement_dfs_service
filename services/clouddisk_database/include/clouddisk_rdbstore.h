@@ -55,8 +55,7 @@ public:
         const std::string &name = "", const std::string &parentCloudId = "", int64_t rowId = 0);
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
         const std::string &newParentCloudId, const std::string &newFileName);
-        int32_t Unlink(const std::string &parentCloudId, const std::string &fileName, std::string &unlinkCloudId,
-        std::function<int32_t()> &revokeCallBack);
+    int32_t Unlink(const std::string &cloudId, const int32_t &position);
     int32_t RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value, int64_t rowId);
     int32_t LocationSetXattr(const std::string &name, const std::string &parentCloudId,
@@ -81,10 +80,8 @@ public:
 
 private:
     void Stop();
-    int32_t UnlinkSynced(const std::string &parentCloudId, const std::string &cloudId,
-        MetaBase &metaBase, std::function<int32_t()> &revokeCallBack);
-    int32_t UnlinkLocal(const std::string &parentCloudId, const std::string &cloudId,
-        MetaBase &metaBase, std::function<int32_t()> &revokeCallBack);
+    int32_t UnlinkSynced(const std::string &cloudId);
+    int32_t UnlinkLocal(const std::string &cloudId);
 
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     NativeRdb::RdbStoreConfig config_{""};

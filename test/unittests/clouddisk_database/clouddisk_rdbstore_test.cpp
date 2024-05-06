@@ -573,14 +573,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RenameTest4, TestSize.Level1)
  */
 HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest1, TestSize.Level1)
 {
-    const std::string parentCloudId = "";
-    const std::string fileName = "";
     string unlinkCloudId = "213546";
     const std::string bundleName = "InitRootIdTest";
     const int32_t userId = 123456789;
-    std::function<int32_t()> revokeCallBack;
+    int32_t position = LOCAL;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.Unlink(parentCloudId, fileName, unlinkCloudId, revokeCallBack);
+    int32_t ret = CloudDiskRdbStore.Unlink(unlinkCloudId, position);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 

@@ -1006,7 +1006,6 @@ void DataSyncer::OnCreateRecords(shared_ptr<DKContext> context,
         UpdateErrorCode(ret);
         return;
     } else {
-        this_thread::sleep_for(chrono::seconds(1));
         SyncStateChangedNotify(CloudSyncState::UPLOADING, ErrorType::NO_ERROR);
         isDataChanged_ = true;
     }

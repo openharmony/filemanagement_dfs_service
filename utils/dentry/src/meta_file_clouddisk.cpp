@@ -49,7 +49,6 @@ constexpr uint32_t CLOUD_ID_BUCKET_MAX_SIZE = 32;
 constexpr uint32_t CLOUD_ID_BUCKET_MID_TIMES = 2;
 constexpr uint32_t CLOUD_ID_MIN_SIZE = 3;
 constexpr uint32_t FILE_TYPE_OFFSET = 2;
-static const std::string RECYCLE_CLOUD_ID = ".trash";
 
 #pragma pack(push, 1)
 struct HmdfsDentry {

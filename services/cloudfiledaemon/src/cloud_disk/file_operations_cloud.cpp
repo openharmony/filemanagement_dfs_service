@@ -18,6 +18,7 @@
 #include <sstream>
 #include <sys/types.h>
 #include <sys/xattr.h>
+#include <functional>
 
 #include "account_status.h"
 #include "cloud_disk_inode.h"
@@ -29,6 +30,7 @@
 #include "directory_ex.h"
 #include "dk_database.h"
 #include "drive_kit.h"
+#include "ffrt_inner.h"
 #include "file_operations_helper.h"
 #include "securec.h"
 #include "utils_log.h"
@@ -55,36 +57,116 @@ namespace {
     static const uint32_t MILLISECOND_TO_SECONDS_TIMES = 1000;
     static const uint32_t RECYCLE_LOCAL_ID = 4;
     static const string FILE_LOCAL = "1";
-    static const string RECYCLE_CLOUD_ID = ".trash";
     static const string ROOT_CLOUD_ID = "rootId";
     static const string RECYCLE_NAME = ".trash";
+    static const uint64_t DELTA_DISK = 0x9E3779B9;
+    static const uint64_t HMDFS_HASH_COL_BIT_DISK = (0x1ULL) << 63;
     static const float LOOKUP_TIMEOUT = 60.0;
+    static const int32_t LEFT_SHIFT = 4;
+    static const int32_t RIGHT_SHIFT = 5;
 }
 
 static void InitInodeAttr(struct CloudDiskFuseData *data, shared_ptr<CloudDiskInode> parentInode,
-    struct CloudDiskInode *childInode, const CloudDiskFileInfo &childInfo)
+    struct CloudDiskInode *childInode, const MetaBase &metaBase, const int64_t &inodeId)
 {
     childInode->stat = parentInode->stat;
-    childInode->stat.st_ino = childInfo.localId;
-    childInode->stat.st_mtime = childInfo.mtime / MILLISECOND_TO_SECONDS_TIMES;
-    childInode->stat.st_ctime = childInfo.ctime / MILLISECOND_TO_SECONDS_TIMES;
-    childInode->stat.st_atime = childInfo.atime / MILLISECOND_TO_SECONDS_TIMES;
+    childInode->stat.st_ino = inodeId;
+    childInode->stat.st_mtime = metaBase.mtime / MILLISECOND_TO_SECONDS_TIMES;
+    childInode->stat.st_atime = metaBase.atime / MILLISECOND_TO_SECONDS_TIMES;
 
     childInode->bundleName = parentInode->bundleName;
-    childInode->fileName = childInfo.fileName;
+    childInode->fileName = metaBase.name;
     childInode->layer = FileOperationsHelper::GetNextLayer(parentInode, parentInode->parent);
     childInode->parent = parentInode->parent;
-    childInode->cloudId = childInfo.cloudId;
+    childInode->cloudId = metaBase.cloudId;
     childInode->ops = make_shared<FileOperationsCloud>();
 
-    if (childInfo.IsDirectory) {
+    if (S_ISDIR(metaBase.mode)) {
         childInode->stat.st_mode = S_IFDIR | STAT_MODE_DIR;
         childInode->stat.st_nlink = STAT_NLINK_DIR;
     } else {
         childInode->stat.st_mode = S_IFREG | STAT_MODE_REG;
         childInode->stat.st_nlink = STAT_NLINK_REG;
-        childInode->stat.st_size = childInfo.size;
+        childInode->stat.st_size = metaBase.size;
     }
+}
+
+static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
+{
+    const int32_t shift8 = 8;
+    const int32_t shift16 = 16;
+    const int32_t three = 3;
+    const int32_t mod = 4;
+    uint32_t pad = static_cast<uint32_t>(len) | (static_cast<uint32_t>(len) << shift8);
+    pad |= pad << shift16;
+
+    uint32_t val = pad;
+    len = std::min(len, static_cast<size_t>(num * sizeof(int)));
+    for (uint32_t i = 0; i < len; i++) {
+        if ((i % sizeof(int)) == 0) {
+            val = pad;
+        }
+        uint8_t c = static_cast<uint8_t>(tolower(msg[i]));
+        val = c + (val << shift8);
+        if ((i % mod) == three) {
+            *buf++ = val;
+            val = pad;
+            num--;
+        }
+    }
+    if (--num >= 0) {
+        *buf++ = val;
+    }
+    while (--num >= 0) {
+        *buf++ = pad;
+    }
+}
+
+static void TeaTransform(uint32_t buf[4], uint32_t const in[])
+{
+    int n = 16;
+    uint32_t a = in[0];
+    uint32_t b = in[1];
+    uint32_t c = in[2];
+    uint32_t d = in[3];
+    uint32_t b0 = buf[0];
+    uint32_t b1 = buf[1];
+    uint32_t sum = 0;
+
+    do {
+        sum += DELTA_DISK;
+        b0 += ((b1 << LEFT_SHIFT) + a) ^ (b1 + sum) ^ ((b1 >> RIGHT_SHIFT) + b);
+        b1 += ((b0 << LEFT_SHIFT) + c) ^ (b0 + sum) ^ ((b0 >> RIGHT_SHIFT) + d);
+    } while (--n);
+
+    buf[0] += b0;
+    buf[1] += b1;
+}
+
+static uint32_t DentryHash(const std::string &cloudId)
+{
+    constexpr int inLen = 8;
+    constexpr int bufLen = 4;
+    uint32_t in[inLen];
+    uint32_t buf[bufLen] = {0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476};
+    auto len = cloudId.length();
+    constexpr decltype(len) hashWidth = 16;
+    const char *p = cloudId.c_str();
+
+    bool loopFlag = true;
+    while (loopFlag) {
+        Str2HashBuf(p, len, in, bufLen);
+        TeaTransform(buf, in);
+
+        if (len <= hashWidth) {
+            break;
+        }
+        p += hashWidth;
+        len -= hashWidth;
+    };
+    uint32_t hash = buf[0];
+    uint32_t hmdfsHash = hash & ~HMDFS_HASH_COL_BIT_DISK;
+    return hmdfsHash;
 }
 
 static shared_ptr<CloudDiskFile> InitFileAttr(struct CloudDiskFuseData *data, struct fuse_file_info *fi)
@@ -204,22 +286,22 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
         }
         return 0;
     }
-    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-    shared_ptr<CloudDiskRdbStore> rdbStore =
-        databaseManager.GetRdbStore(parentInode->bundleName, data->userId);
-    CloudDiskFileInfo childInfo;
-    int32_t err = rdbStore->LookUp(parentInode->cloudId, name, childInfo);
-    if (err != 0) {
-        LOGE("file %{public}s not exist, err: %{public}d", name, err);
-        return ENOENT;
+    MetaBase metaBase(name);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId, parentInode->bundleName,
+        parentInode->cloudId);
+    int32_t ret = metaFile->DoLookup(metaBase);
+    if (ret != 0) {
+        LOGE("lookup dnetry failed, ret = %{public}d", ret);
+        return EINVAL;
     }
     string key = std::to_string(parent) + name;
-    auto child = FileOperationsHelper::FindCloudDiskInode(data, childInfo.localId);
-    UpdateChildCache(data, childInfo.localId, child);
+    uint32_t inodeId = DentryHash(metaBase.cloudId);
+    auto child = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inodeId));
+    UpdateChildCache(data, static_cast<int64_t>(inodeId), child);
     child->refCount++;
-    InitInodeAttr(data, parentInode, child.get(), childInfo);
-    InitLocalIdCache(data, key, childInfo.localId);
-    e->ino = static_cast<fuse_ino_t>(childInfo.localId);
+    InitInodeAttr(data, parentInode, child.get(), metaBase, static_cast<int64_t>(inodeId));
+    InitLocalIdCache(data, key, static_cast<int64_t>(inodeId));
+    e->ino = static_cast<fuse_ino_t>(static_cast<int64_t>(inodeId));
     FileOperationsHelper::GetInodeAttr(child, &e->attr);
     return 0;
 }
@@ -871,36 +953,44 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName,
                                                                          data->userId);
-    string unlinkCloudId = "";
-    std::function<int32_t()> revokeCallback;
-    TransactionOperations rdbTransaction(rdbStore->GetRaw());
-    int32_t ret = rdbTransaction.Start();
-    if (ret != NativeRdb::E_OK) {
-        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
+    MetaBase metaBase(name);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
+        parentInode->bundleName, parentInode->cloudId);
+    int32_t ret = metaFile->DoLookup(metaBase);
+    if (ret != 0) {
+        LOGE("lookup denty failed, name:%{public}s", name);
+        return EINVAL;
+    }
+    string cloudId = metaBase.cloudId;
+    int32_t isDirectory = S_ISDIR(metaBase.mode);
+    int32_t position = metaBase.position;
+    ret = metaFile->DoRemove(metaBase);
+    if (ret != 0) {
+        LOGE("remove dentry failed, ret = %{public}d", ret);
         return ret;
     }
-    int32_t err = rdbStore->Unlink(parentInode->cloudId, name, unlinkCloudId, revokeCallback);
-    if (err != 0) {
-        LOGE("Failed to unlink DB cloudId:%{private}s err:%{public}d", unlinkCloudId.c_str(), err);
-        return ENOSYS;
-    }
-    if (unlinkCloudId.empty()) {
-        rdbTransaction.Finish();
-        return 0;
-    }
-    string localPath = CloudFileUtils::GetLocalFilePath(unlinkCloudId, parentInode->bundleName, data->userId);
-    err = unlink(localPath.c_str());
-    if (err != 0) {
-        LOGE("Failed to unlink cloudId:%{private}s, err:%{public}d", unlinkCloudId.c_str(),
-            errno);
-        ret = revokeCallback();
-        if (ret != NativeRdb::E_OK) {
-            LOGE("revoke dentryfile failed, ret = %{public}d", ret);
-            return ret;
+    if (isDirectory == FILE && position != CLOUD) {
+        string localPath = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
+        LOGI("DURANT: unlink %{public}s", localPath.c_str());
+        ret = unlink(localPath.c_str());
+        if (ret != 0) {
+            LOGE("Failed to unlink cloudId:%{private}s, errno:%{public}d", cloudId.c_str(), errno);
+            ret = metaFile->DoCreate(metaBase);
+            if (ret != 0) {
+                LOGE("DURANT:revoke dentryfile failed, ret = %{public}d", ret);
+                return ret;
+            }
+            return errno;
         }
         return errno;
     }
-    rdbTransaction.Finish();
+    function<void()> rdbUnlink = [rdbStore, cloudId, position] {
+        int32_t err = rdbStore->Unlink(cloudId, position);
+        if (err != 0) {
+            LOGE("Failed to unlink DB cloudId:%{private}s err:%{public}d", cloudId.c_str(), err);
+        }
+    };
+    ffrt::thread(rdbUnlink).detach();
     return 0;
 }
 

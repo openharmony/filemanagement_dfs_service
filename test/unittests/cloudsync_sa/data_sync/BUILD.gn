@@ -1464,6 +1464,7 @@ ohos_unittest("cloud_disk_data_syncer_test") {
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
     "eventhandler:libeventhandler",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",

@@ -30,6 +30,8 @@
 namespace OHOS {
 namespace FileManagement {
 
+const std::string RECYCLE_CLOUD_ID = ".trash";
+
 struct MetaBase;
 class MetaFile {
 public:
