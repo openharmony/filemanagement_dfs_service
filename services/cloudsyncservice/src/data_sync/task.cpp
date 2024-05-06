@@ -68,13 +68,13 @@ int32_t TaskRunner::StartTask(shared_ptr<Task> t, TaskAction action)
 int32_t TaskRunner::CommitTask(shared_ptr<Task> t)
 {
     /* add task */
-    LOGI("start CommitTask, Task id: %{public}d", t->GetId());
     int32_t ret = AddTask(t);
     if (ret != E_OK) {
         LOGE("add task err %{public}d", ret);
         return ret;
     }
 
+    LOGI("start CommitTask, Task id: %{public}d", t->GetId());
     /* launch */
     ret = commitFunc_(shared_from_this(), t);
     if (ret != E_OK) {

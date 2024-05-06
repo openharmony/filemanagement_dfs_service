@@ -41,7 +41,7 @@ int32_t CloudSyncAssetManagerImpl::UploadAsset(const int32_t userId,
 
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->UploadAsset(userId, request, result);
-    LOGI("UploadAsset ret %{public}d", ret);
+    LOGD("UploadAsset ret %{public}d", ret);
     return ret;
 }
 

@@ -819,7 +819,7 @@ int32_t FileDataHandler::GetConflictData(const DKRecord &record,
         return E_INVAL_ARG;
     }
     if (attributes[PhotoColumn::MEDIA_RELATIVE_PATH].GetString(relativePath) != DKLocalErrorCode::NO_ERROR) {
-        LOGE("bad virtual_Path in attributes");
+        LOGD("bad virtual_Path in attributes");
         return E_INVAL_ARG;
     }
     if (DataConvertor::GetLongComp(data[PhotoColumn::MEDIA_SIZE], isize) != E_OK) {

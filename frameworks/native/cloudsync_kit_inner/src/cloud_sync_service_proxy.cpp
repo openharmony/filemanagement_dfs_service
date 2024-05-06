@@ -706,7 +706,7 @@ int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
 
 int32_t CloudSyncServiceProxy::UploadAsset(const int32_t userId, const std::string &request, std::string &result)
 {
-    LOGI("UploadAsset");
+    LOGD("UploadAsset");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -739,7 +739,7 @@ int32_t CloudSyncServiceProxy::UploadAsset(const int32_t userId, const std::stri
     }
     ret = reply.ReadInt32();
     result = reply.ReadString();
-    LOGI("UploadAsset Success");
+    LOGD("UploadAsset Success");
     return ret;
 }
 
@@ -982,7 +982,7 @@ int32_t CloudSyncServiceProxy::DeleteAsset(const int32_t userId, const std::stri
 
 sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 {
-    LOGI("getinstance");
+    LOGD("getinstance");
     unique_lock<mutex> lock(instanceMutex_);
     if (serviceProxy_ != nullptr) {
         return serviceProxy_;
