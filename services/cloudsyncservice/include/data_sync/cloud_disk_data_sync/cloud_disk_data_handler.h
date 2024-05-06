@@ -20,11 +20,21 @@
 #include "clouddisk_type_const.h"
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
+#include "meta_file.h"
 #include "rdb_data_handler.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+struct ContextData {
+    std::string parentCloudId;
+    std::string fileName;
+    ContextData(const std::string &parentCloudId, const std::string &fileName)
+    {
+        this->fileName = fileName;
+        this->parentCloudId = parentCloudId;
+    }
+};
 class CloudDiskDataHandler : public RdbDataHandler {
 public:
     CloudDiskDataHandler(int32_t userId, const std::string &bundleName,
@@ -37,7 +47,8 @@ public:
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
     virtual int32_t GetCheckRecords(std::vector<DriveKit::DKRecordId> &checkRecords,
                                     const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records) override;
-    int32_t GetDownloadAsset(std::string cloudId, std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) override;
+    int32_t GetDownloadAsset(std::string cloudId, std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
+        std::shared_ptr<DentryContext> dentryContext = nullptr) override;
     int32_t Clean(const int32_t action) override;
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) override;
     int32_t GetDeletedRecords(std::vector<DriveKit::DKRecord> &records) override;
@@ -51,7 +62,8 @@ public:
         DriveKit::DKRecordOperResult> &map) override;
     int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) override;
-    int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) override;
+    int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset,
+        std::shared_ptr<DriveKit::DKContext> context = nullptr) override;
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap) override;
     int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset) override;
     void Reset();
@@ -103,7 +115,8 @@ private:
     int32_t PullRecordUpdate(DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
                              OnFetchParams &params);
     int32_t PullRecordDelete(DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
-    int32_t RecycleFile(const std::string &recordId);
+    int32_t RecycleFile(const std::string &recordId, const std::string &parentCloudId, const std::string &name,
+        NativeRdb::ResultSet &local);
     int32_t GetMetaFilePath(const std::string &cloudId, std::string &path);
     int32_t PullRecordConflict(DriveKit::DKRecord &record);
     int32_t HandleConflict(const std::shared_ptr<NativeRdb::ResultSet> resultSet, std::string &fullName,
@@ -111,13 +124,20 @@ private:
     int32_t FindRenameFile(const std::shared_ptr<NativeRdb::ResultSet> resultSet, std::string &renameFileCloudId,
                            std::string &fullName, const int &lastDot);
     int32_t ConflictReName(const std::string &cloudId, std::string newFileName, const DriveKit::DKRecord &record);
-    int32_t PullUpdateDb(NativeRdb::ValuesBucket &values, DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
-        bool isFileContentChanged);
     int SetRetry(const std::string &recordId);
     void AppendFileToDownload(const std::string &cloudId,
                               const std::string &fieldKey,
                               std::vector<DriveKit::DKDownloadAsset> &assetsToDownload);
     int32_t PushFileStatus(std::vector<DriveKit::DKRecord> &records);
+    int32_t InsertRDBAndDentryFile(DriveKit::DKRecord &record, NativeRdb::ValuesBucket &values);
+    int32_t UpdateRDBAndDentryFile(DriveKit::DKRecord &record, MetaBase &metaBase, const std::string &oldFileName,
+        const std::string &oldParentCloudId, std::function<int32_t()> updateRDBCallback);
+    int32_t DeleteRDBAndDentryFile(MetaBase &metaBase, std::string &parentCloudId, std::string &name,
+        DriveKit::DKRecord &record);
+    int32_t UpdateDBDentryAndUnlink(DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
+        NativeRdb::ValuesBucket &values, const std::string &oldFileName, const std::string &oldParentCloudId);
+    int32_t GetParentCloudId(std::shared_ptr<NativeRdb::RdbStore> rdbStore, const std::string &cloudId,
+        std::string &parentCloudId);
 
     CloudDiskDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
     int64_t UTCTimeMilliSeconds();

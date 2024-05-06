@@ -2430,7 +2430,8 @@ static int32_t DeleteMetaFile(const string &sboxPath, const int32_t &userId)
     return E_OK;
 }
 
-int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset)
+int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset,
+    std::shared_ptr<DriveKit::DKContext> context)
 {
     string tmpLocalPath = asset.downLoadPath + "/" + asset.asset.assetName;
     string localPath = CloudDisk::CloudFileUtils::GetPathWithoutTmp(tmpLocalPath);
@@ -3476,7 +3477,8 @@ int32_t FileDataHandler::BindAlbumChanges(std::vector<DriveKit::DKRecord> &recor
     return E_OK;
 }
 
-int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::DKDownloadAsset> &outAssetsToDownload)
+int32_t FileDataHandler::GetDownloadAsset(std::string cloudId, vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
+    std::shared_ptr<DentryContext> dentryContext)
 {
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     predicates.SetWhereClause(Media::PhotoColumn::MEDIA_FILE_PATH + " = ?");

@@ -140,6 +140,7 @@ ohos_shared_library("libdistributedfiledentry") {
   sources = [
     "dentry/src/file_utils.cpp",
     "dentry/src/meta_file.cpp",
+    "dentry/src/meta_file_clouddisk.cpp",
   ]
 
   public_configs = [ ":dentry_public_config" ]

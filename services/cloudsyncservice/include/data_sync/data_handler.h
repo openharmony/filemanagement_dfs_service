@@ -19,6 +19,7 @@
 #include <mutex>
 
 #include "cloud_pref_impl.h"
+#include "dk_context.h"
 #include "sdk_helper.h"
 #include "sysevent.h"
 #include "values_bucket.h"
@@ -37,6 +38,7 @@ const static std::string DOWNLOAD_THUMB_LIMIT = "download_thumb_limit";
 const static std::string BATCH_NO = "batch_no";
 const static std::string RECORD_SIZE = "record_size";
 const static std::string CHECKING_FLAG = "checking_flag";
+class DentryContext;
 class DataHandler {
 public:
     enum DownloadThmType {
@@ -54,7 +56,8 @@ public:
     virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload);
     virtual int32_t GetThumbToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload);
     virtual int32_t GetDownloadAsset(std::string cloudId,
-                                     std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload);
+                                     std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
+                                     std::shared_ptr<DentryContext> dentryContext = nullptr);
     /* upload */
     virtual int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) = 0;
     virtual int32_t GetDeletedRecords(std::vector<DriveKit::DKRecord> &records) = 0;
@@ -70,7 +73,8 @@ public:
         DriveKit::DKRecordOperResult> &map) = 0;
     virtual int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map);
-    virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset);
+    virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset,
+                                      std::shared_ptr<DriveKit::DKContext> context = nullptr);
     virtual int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap);
     virtual int32_t OnDownloadAssets(const DriveKit::DKDownloadAsset &asset);
     virtual int32_t OnDownloadAssetsFailure(const std::vector<DriveKit::DKDownloadAsset> &assets);
@@ -123,6 +127,39 @@ private:
     int32_t HandleCloudSpaceNotEnough();
     int32_t HandleNotSupportSync();
     int32_t HandleNetworkErr();
+};
+
+class DentryContext : public DriveKit::DKContext {
+public:
+    DentryContext() {}
+    DentryContext(const std::string &parentCloudId, const
+    std::string &fileName) : parentCloudId_(parentCloudId),
+        fileName_(fileName)
+    {
+    }
+
+    void SetParentCloudId(const std::string &parentCloudId)
+    {
+        parentCloudId_ = parentCloudId;
+    }
+
+    void SetFileName(const std::string &fileName)
+    {
+        fileName_ = fileName;
+    }
+
+    std::string GetParentCloudId()
+    {
+        return parentCloudId_;
+    }
+
+    std::string GetFileName()
+    {
+        return fileName_;
+    }
+private:
+    std::string parentCloudId_{};
+    std::string fileName_{};
 };
 } // namespace CloudSync
 } // namespace FileManagement

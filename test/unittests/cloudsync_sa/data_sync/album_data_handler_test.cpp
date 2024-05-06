@@ -38,9 +38,11 @@ public:
         : AlbumDataHandler(userId, bundleName, rdb, make_shared<bool>(false))
     {
     }
-    MOCK_METHOD2(GetDownloadAsset, int32_t(string cloudId,
-                                           vector<DriveKit::DKDownloadAsset> &outAssetsToDownload));
-    MOCK_METHOD1(OnDownloadSuccess, int32_t(const DriveKit::DKDownloadAsset &asset));
+    MOCK_METHOD3(GetDownloadAsset, int32_t(string cloudId,
+                                           vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
+                                           std::shared_ptr<DentryContext> dentryContext));
+    MOCK_METHOD2(OnDownloadSuccess, int32_t(const DriveKit::DKDownloadAsset &asset,
+                                            std::shared_ptr<DriveKit::DKContext> context));
     MOCK_METHOD1(OnDownloadAssets,
                  int32_t(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap));
     MOCK_METHOD1(OnDownloadAssets, int32_t(const DKDownloadAsset &asset));

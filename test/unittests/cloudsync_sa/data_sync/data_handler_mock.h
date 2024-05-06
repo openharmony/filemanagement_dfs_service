@@ -38,7 +38,8 @@ public:
     int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) {return 0;}
 
     int32_t GetDownloadAsset(std::string cloudId,
-                                       std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) {return 0;}
+                             std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
+                             std::shared_ptr<DentryContext> dentryContext) {return 0;}
     int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload) {return 0;}
     /* upload */
     int32_t GetCreatedRecords(std::vector<DriveKit::DKRecord> &records) {return 0;}
@@ -55,7 +56,8 @@ public:
         DriveKit::DKRecordOperResult> &map) {return 0;}
     int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map) {return 0;}
-    int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset) {return 0;}
+    int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset,
+                              std::shared_ptr<DriveKit::DKContext> context) {return 0;}
     int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap)
     {
         return 0;
