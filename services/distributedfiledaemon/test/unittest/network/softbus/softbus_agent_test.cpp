@@ -12,21 +12,77 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "network/softbus/softbus_agent.h"
 
 #include <memory>
 #include <unistd.h>
 
 #include "gtest/gtest.h"
-#include "network/softbus/softbus_agent.h"
+
+#include "device_manager_impl.h"
+#include "dm_constants.h"
+
+#include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session.h"
 #include "utils_log.h"
 
+using namespace std;
+namespace {
+bool g_mockGetTrustedDeviceList = true;
+bool g_mockGetNetworkTypeByNetworkId = true;
+bool g_mockNetworkTypWIFI = true;
+const string NETWORKID_ONE = "45656596896323231";
+const string NETWORKID_TWO = "45656596896323232";
+const string NETWORKID_THREE = "45656596896323233";
+constexpr int32_t NETWORKTYPE_WITH_WIFI = 2;
+constexpr int32_t NETWORKTYPE_NONE_WIFI = 4;
+}
+
+namespace OHOS {
+namespace DistributedHardware {
+int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName, const std::string &extra,
+                                                std::vector<DmDeviceInfo> &deviceList)
+{
+    if (!g_mockGetTrustedDeviceList) {
+        return ERR_DM_INPUT_PARA_INVALID;
+    }
+
+    DmDeviceInfo testInfo;
+    (void)memcpy_s(testInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
+                   NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
+    testInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
+    deviceList.push_back(testInfo);
+
+    DmDeviceInfo testInfo1;
+    (void)memcpy_s(testInfo1.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
+                   NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
+    testInfo1.authForm = DmAuthForm::PEER_TO_PEER;
+    deviceList.push_back(testInfo1);
+    return DM_OK;
+}
+
+int32_t DeviceManagerImpl::GetNetworkTypeByNetworkId(const std::string &pkgName, const std::string &netWorkId,
+                                                     int32_t &netWorkType)
+{
+    if (!g_mockGetNetworkTypeByNetworkId) {
+        return ERR_DM_INPUT_PARA_INVALID;
+    }
+
+    if (g_mockNetworkTypWIFI) {
+        netWorkType = NETWORKTYPE_WITH_WIFI;
+        return DM_OK;
+    }
+
+    netWorkType = NETWORKTYPE_NONE_WIFI;
+    return DM_OK;
+}
+}
+}
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace Test {
 using namespace testing::ext;
-using namespace std;
 constexpr int USER_ID = 100;
 constexpr int MAX_RETRY_COUNT = 7;
 static const string SAME_ACCOUNT = "account";
@@ -38,6 +94,140 @@ public:
     void SetUp() {};
     void TearDown() {};
 };
+
+/**
+ * @tc.name: SoftbusAgentTest_SoftbusAgent_0100
+ * @tc.desc: Verify the SoftbusAgent function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_SoftbusAgent_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_SoftbusAgent_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    EXPECT_EQ(agent->sessionName_, "DistributedFileService/mnt/hmdfs/100/account");
+
+    weak_ptr<MountPoint> nullwmp;
+    std::shared_ptr<SoftbusAgent> agent2 = std::make_shared<SoftbusAgent>(nullwmp);
+    EXPECT_EQ(agent2->sessionName_, "");
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_SoftbusAgent_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_IsSameAccount_0100
+ * @tc.desc: Verify the IsSameAccount.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_IsSameAccount_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_IsSameAccount_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    bool flag = agent->IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(flag, true);
+    flag = agent->IsSameAccount(NETWORKID_TWO);
+    EXPECT_EQ(flag, false);
+    flag = agent->IsSameAccount(NETWORKID_THREE);
+    EXPECT_EQ(flag, false);
+    g_mockGetTrustedDeviceList = false;
+    flag = agent->IsSameAccount(NETWORKID_ONE);
+    EXPECT_EQ(flag, false);
+    g_mockGetTrustedDeviceList = true;
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_IsSameAccount_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_QuitDomain_0100
+ * @tc.desc: Verify the QuitDomain.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_QuitDomain_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_QuitDomain_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    bool res = true;
+    try {
+        agent->QuitDomain();
+    } catch (const exception &e) {
+        res = false;
+        GTEST_LOG_(INFO) << e.what();
+    }
+    EXPECT_TRUE(res == false);
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_QuitDomain_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_QuitDomain_0200
+ * @tc.desc: Verify the QuitDomain.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_QuitDomain_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_QuitDomain_0200 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    weak_ptr<SoftbusAgent> wsba(agent);
+    string busName = "test";
+    bool res = true;
+    try {
+        agent->serverIdMap_.insert(std::make_pair(busName, 1));
+        agent->QuitDomain();
+        agent->serverIdMap_.erase(busName);
+    } catch (const exception &e) {
+        res = false;
+        GTEST_LOG_(INFO) << e.what();
+    }
+    EXPECT_TRUE(res == false);
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_QuitDomain_0200 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_QuitDomain_0300
+ * @tc.desc: Verify the QuitDomain.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_QuitDomain_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_QuitDomain_0300 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    bool res = true;
+    weak_ptr<SoftbusAgent> wsba(agent);
+    string busName = agent->sessionName_;
+    try {
+        SoftbusSessionDispatcher::RegisterSessionListener(busName, wsba);
+        agent->serverIdMap_.insert(std::make_pair(busName, 1));
+        agent->QuitDomain();
+        auto agentRlt = SoftbusSessionDispatcher::busNameToAgent_.find(busName);
+        if (agentRlt != SoftbusSessionDispatcher::busNameToAgent_.end()) {
+            EXPECT_TRUE(false);
+        } else {
+            EXPECT_TRUE(true);
+        }
+        agent->serverIdMap_.erase(busName);
+    } catch (const exception &e) {
+        res = false;
+        GTEST_LOG_(INFO) << e.what();
+    }
+    EXPECT_TRUE(res);
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_QuitDomain_0300 end";
+}
 
 /**
  * @tc.name: SoftbusAgentTest_OnSessionClosed_0100
@@ -66,27 +256,27 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OnSessionClosed_0100, TestSize.Level
 }
 
 /**
- * @tc.name: SoftbusAgentTest_Start_0100
+ * @tc.name: SoftbusAgentTest_JoinDomain_0100
  * @tc.desc: Verify the Start function.
  * @tc.type: FUNC
- * @tc.require: SR000H0387
+ * @tc.require: I9JXPR
  */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_Start_0100, TestSize.Level1)
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_JoinDomain_0100, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_Start_0100 start";
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_JoinDomain_0100 start";
     auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
     shared_ptr<MountPoint> smp = move(mp);
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
     bool res = true;
     try {
-        agent->Start();
+        agent->JoinDomain();
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());
     }
-    EXPECT_TRUE(res == false);
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_Start_0100 end";
+    EXPECT_TRUE(res);
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_JoinDomain_0100 end";
 }
 
 /**
@@ -109,7 +299,7 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_Stop_0100, TestSize.Level1)
         res = false;
         LOGE("%{public}s", e.what());
     }
-    EXPECT_TRUE(res == false);
+    EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_Stop_0100 end";
 }
 
@@ -127,6 +317,87 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectOnlineDevices_0100, TestSize.
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
     bool res = true;
+    g_mockGetTrustedDeviceList = true;
+    g_mockGetNetworkTypeByNetworkId = false;
+    try {
+        agent->ConnectOnlineDevices();
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res);
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_ConnectOnlineDevices_0200
+ * @tc.desc: Verify the ConnectOnlineDevices function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectOnlineDevices_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0200 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    bool res = true;
+    g_mockGetTrustedDeviceList = true;
+    g_mockGetNetworkTypeByNetworkId = true;
+    g_mockNetworkTypWIFI = true;
+    try {
+        agent->ConnectOnlineDevices();
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res);
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0200 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_ConnectOnlineDevices_0300
+ * @tc.desc: Verify the ConnectOnlineDevices function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectOnlineDevices_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0300 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    bool res = true;
+    g_mockGetTrustedDeviceList = true;
+    g_mockGetNetworkTypeByNetworkId = true;
+    g_mockNetworkTypWIFI = false;
+    try {
+        agent->ConnectOnlineDevices();
+    } catch (const exception &e) {
+        res = false;
+        LOGE("%{public}s", e.what());
+    }
+    EXPECT_TRUE(res);
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_ConnectOnlineDevices_0400
+ * @tc.desc: Verify the ConnectOnlineDevices function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectOnlineDevices_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0400 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    bool res = true;
+    g_mockGetTrustedDeviceList = false;
     try {
         agent->ConnectOnlineDevices();
     } catch (const exception &e) {
@@ -134,7 +405,7 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectOnlineDevices_0100, TestSize.
         LOGE("%{public}s", e.what());
     }
     EXPECT_TRUE(res == false);
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0100 end";
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectOnlineDevices_0400 end";
 }
 
 /**
@@ -188,7 +459,7 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectDeviceAsync_0100, TestSize.Le
         res = false;
         LOGE("%{public}s", e.what());
     }
-    EXPECT_TRUE(res == false);
+    EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectDeviceAsync_0100 end";
 }
 
@@ -246,7 +517,7 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_AcceptSession_0100, TestSize.Level1)
         res = false;
         LOGE("%{public}s", e.what());
     }
-    EXPECT_TRUE(res == true);
+    EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_AcceptSession_0100 end";
 }
 
@@ -270,7 +541,7 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_GetMountPoint_0100, TestSize.Level1)
         res = false;
         LOGE("%{public}s", e.what());
     }
-    EXPECT_TRUE(res == true);
+    EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_GetMountPoint_0100 end";
 }
 
@@ -301,7 +572,7 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectDeviceByP2PAsync_0100, TestSi
         res = false;
         LOGE("%{public}s", e.what());
     }
-    EXPECT_TRUE(res == false);
+    EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectDeviceByP2PAsync_0100 end";
 }
 
@@ -356,7 +627,6 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_IsContinueRetry_0100, TestSize.Level
     }
     GTEST_LOG_(INFO) << "SoftbusAgentTest_IsContinueRetry_0100 end";
 }
-
 } // namespace Test
 } // namespace DistributedFile
 } // namespace Storage
