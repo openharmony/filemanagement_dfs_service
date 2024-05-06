@@ -27,6 +27,7 @@ namespace CloudDisk {
 using namespace std;
 static const int32_t BUNDLE_NAME_OFFSET = 1000000000;
 static const int32_t STAT_MODE_DIR = 0771;
+static const float LOOKUP_TIMEOUT = 60.0;
 
 static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
                              struct fuse_entry_param *e)
@@ -84,7 +85,8 @@ void FileOperationsLocal::Lookup(fuse_req_t req, fuse_ino_t parent, const char *
 {
     struct fuse_entry_param e;
     int32_t err;
-
+    e.attr_timeout = LOOKUP_TIMEOUT;
+    e.entry_timeout = LOOKUP_TIMEOUT;
     err = DoLocalLookup(req, parent, name, &e);
     if (err) {
         fuse_reply_err(req, err);
