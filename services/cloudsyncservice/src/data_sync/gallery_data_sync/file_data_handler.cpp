@@ -2252,7 +2252,7 @@ int32_t FileDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkReco
             LOGE("recordId %s has multiple file in db!", record.GetRecordId().c_str());
         }
     }
-
+    MetaFileMgr::GetInstance().ClearAll();
     return E_OK;
 }
 
