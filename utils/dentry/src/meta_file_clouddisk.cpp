@@ -145,6 +145,11 @@ CloudDiskMetaFile::CloudDiskMetaFile(uint32_t userId, const std::string &bundleN
     dentryCount_ = header.dentryCount;
 }
 
+uint64_t CloudDiskMetaFile::GetDentryCount()
+{
+    return dentryCount_;
+}
+
 int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskMetaFileCallBack callback)
 {
     MetaBase m(name);

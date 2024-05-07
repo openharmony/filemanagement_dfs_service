@@ -83,6 +83,7 @@ public:
     int32_t DoRename(MetaBase &metaBase, const std::string &newName,
         std::shared_ptr<CloudDiskMetaFile> newMetaFile);
     int32_t DoLookup(MetaBase &base);
+    uint64_t GetDentryCount();
 
 private:
     std::mutex mtx_{};
