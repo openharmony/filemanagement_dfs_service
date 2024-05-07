@@ -35,7 +35,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace {
-constexpr int32_t DEVICE_OS_TYPE_OH = 10;    
+constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int PEER_TO_PEER_GROUP = 256;
 constexpr int ACROSS_ACCOUNT_AUTHORIZE_GROUP = 1282;
@@ -476,7 +476,7 @@ void DeviceManagerAgent::InitDeviceInfos()
         }
         if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
             LOGE("%{private}s  not the required type phone: %{private}d", devicedInfo.deviceName,
-                GetDeviceProfile.GetOsType());
+                outDeviceProfile.GetOsType());
             continue;
         }
         DeviceInfo info(deviceInfo);

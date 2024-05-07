@@ -147,7 +147,6 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
         LOGE("Fail to OpenSession linkType:%{public}d", linkType);
         THROW_EXCEPTION(ERR_CONNECT_LINK_TYPE, "Fail to OpenSession");
     }
-    
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
         .OnShutdown = SoftbusSessionDispatcher::OnSessionClosed,
@@ -196,7 +195,7 @@ void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType
     }
     if (linkType != LINK_TYPE_AP) {
         LOGE("Fail to OpenSession linkType:%{public}d", linkType);
-        THROW_EXCEPTION(ERR_CONNECT_LINK_TYPE, "Fail to OpenSession");
+        THROW_EXCEPTION(ERR_CONNECT_LINK_TYPE, "Fail to OpenApSession");
     }
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,

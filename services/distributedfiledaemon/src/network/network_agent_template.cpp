@@ -84,7 +84,7 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
             continue;
         }
         if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
-            LOGE("not the required type phone: %{private}d", GetDeviceProfile.GetOsType());
+            LOGE("not the required type phone: %{private}d", outDeviceProfile.GetOsType());
             continue;
         }
 
