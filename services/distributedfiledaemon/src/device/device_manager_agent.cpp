@@ -475,7 +475,7 @@ void DeviceManagerAgent::InitDeviceInfos()
             continue;
         }
         if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
-            LOGE("%{private}s  not the required type phone: %{private}d", devicedInfo.deviceName,
+            LOGE("%{private}s  not the required type phone: %{private}d", deviceInfo.deviceName,
                 outDeviceProfile.GetOsType());
             continue;
         }
