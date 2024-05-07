@@ -110,7 +110,6 @@ void TaskStateManager::DelayUnloadTask()
             return;
         }
     };
-    LOGI("delay unload task post task");
     unloadHandler_->RemoveTask(TASK_ID);
     unloadHandler_->PostTask(task, TASK_ID, DELAY_TIME);
 }
