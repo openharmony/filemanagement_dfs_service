@@ -839,7 +839,7 @@ int32_t CloudSyncServiceProxy::DownloadFiles(const int32_t userId,
     }
     LOGI("DownloadFile Success");
     bool readParcel = reply.ReadBoolVector(&assetResultMap);
-    if (readParcel != E_OK) {
+    if (readParcel != true) {
         LOGE("Failed to ReadBoolVector");
         return E_INVAL_ARG;
     }
