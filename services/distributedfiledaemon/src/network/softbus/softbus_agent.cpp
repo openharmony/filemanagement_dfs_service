@@ -143,8 +143,7 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
         LOGI("The source and sink device is not same account, not support.");
         return;
     }
-    if (linkType != LINK_TYPE_P2P)
-    {
+    if (linkType != LINK_TYPE_P2P) {
         LOGE("Fail to OpenSession linkType:%{public}d", linkType);
         THROW_EXCEPTION(ERR_CONNECT_LINK_TYPE, "Fail to OpenSession");
     }
@@ -195,8 +194,7 @@ void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType
         LOGI("The source and sink device is not same account, not support.");
         return;
     }
-    if (linkType != LINK_TYPE_AP)
-    {
+    if (linkType != LINK_TYPE_AP) {
         LOGE("Fail to OpenSession linkType:%{public}d", linkType);
         THROW_EXCEPTION(ERR_CONNECT_LINK_TYPE, "Fail to OpenSession");
     }

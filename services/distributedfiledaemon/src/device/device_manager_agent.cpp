@@ -469,14 +469,14 @@ void DeviceManagerAgent::InitDeviceInfos()
         }
         DistributedDeviceProfile::DeviceProfile outDeviceProfile;
         int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
-            GetDeviceProvice(udid, outDeviceProfile);
+            GetDeviceProfile(udid, outDeviceProfile);
         if (ret != FileManagement::E_OK) {
-            LOGE("GetDeviceProvice failed, errorCode: %{public}d", ret);
+            LOGE("GetDeviceProfile failed, errorCode: %{public}d", ret);
             continue;
         }
         if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
-            LOGE("%{public}s  not the required type phone: %{private}d", devicedInfo.deviceName,
-                outDeviceProvice.GetOsType());
+            LOGE("%{private}s  not the required type phone: %{private}d", devicedInfo.deviceName,
+                GetDeviceProfile.GetOsType());
             continue;
         }
         DeviceInfo info(deviceInfo);

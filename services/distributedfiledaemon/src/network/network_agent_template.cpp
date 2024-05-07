@@ -78,13 +78,13 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
         }
         DistributedDeviceProfile::DeviceProfile outDeviceProfile;
         int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
-            GetDeviceProvice(udid, outDeviceProfile);
+            GetDeviceProfile(udid, outDeviceProfile);
         if (ret != FileManagement::E_OK) {
-            LOGE("GetDeviceProvice failed, errorCode: %{public}d", ret);
+            LOGE("GetDeviceProfile failed, errorCode: %{public}d", ret);
             continue;
         }
         if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
-            LOGE("not the required type phone: %{private}d", outDeviceProvice.GetOsType());
+            LOGE("not the required type phone: %{private}d", GetDeviceProfile.GetOsType());
             continue;
         }
 
