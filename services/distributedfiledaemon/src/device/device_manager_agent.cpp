@@ -20,7 +20,9 @@
 #include <string>
 
 #include "device_auth.h"
+#include "dfs_error.h"
 #include "dfsu_exception.h"
+#include "distributed_device_profile_client.h"
 #include "ipc/i_daemon.h"
 #include "mountpoint/mount_manager.h"
 #include "network/devsl_dispatcher.h"
@@ -33,6 +35,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace {
+constexpr int32_t DEVICE_OS_TYPE_OH = 10;    
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int PEER_TO_PEER_GROUP = 256;
 constexpr int ACROSS_ACCOUNT_AUTHORIZE_GROUP = 1282;
@@ -458,6 +461,24 @@ void DeviceManagerAgent::InitDeviceInfos()
     }
 
     for (const auto &deviceInfo : deviceInfoList) {
+        std::string udid = "";
+        if (DistributedHardware::DeviceManager::GetInstance().
+            GetUdidByNetworkId(pkgName, deviceInfo.networkId, udid) != 0) {
+            LOGE("GetUdidByNetworkId failed");
+            return;
+        }
+        DistributedDeviceProfile::DeviceProfile outDeviceProfile;
+        int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
+            GetDeviceProvice(udid, outDeviceProfile);
+        if (ret != FileManagement::E_OK) {
+            LOGE("GetDeviceProvice failed, errorCode: %{public}d", ret);
+            continue;
+        }
+        if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
+            LOGE("%{public}s  not the required type phone: %{private}d", devicedInfo.deviceName,
+                outDeviceProvice.GetOsType());
+            continue;
+        }
         DeviceInfo info(deviceInfo);
         QueryRelatedGroups(info.udid_, info.cid_);
     }

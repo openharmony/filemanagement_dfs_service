@@ -16,7 +16,9 @@
 #include "network/network_agent_template.h"
 
 #include "device/device_manager_agent.h"
+#include "dfs_error.h"
 #include "dfsu_exception.h"
+#include "distributed_device_profile_client.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -24,6 +26,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 namespace {
+constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 } // namespace
@@ -68,6 +71,23 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
     auto infos = dma->GetRemoteDevicesInfo();
     LOGI("Have %{public}zu devices Online", infos.size());
     for (const auto &info : infos) {
+        std::string udid = "";
+        if (DistributedHardware::DeviceManager::GetInstance().GetUdidByNetworkId(pkgName, info.GetCid(), udid) != 0) {
+            LOGE("GetUdidByNetworkId failed");
+            return;
+        }
+        DistributedDeviceProfile::DeviceProfile outDeviceProfile;
+        int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
+            GetDeviceProvice(udid, outDeviceProfile);
+        if (ret != FileManagement::E_OK) {
+            LOGE("GetDeviceProvice failed, errorCode: %{public}d", ret);
+            continue;
+        }
+        if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
+            LOGE("not the required type phone: %{private}d", outDeviceProvice.GetOsType());
+            continue;
+        }
+
         int32_t networkType;
         int errCode = deviceManager.GetNetworkTypeByNetworkId(pkgName, info.GetCid(), networkType);
         if (errCode) {
