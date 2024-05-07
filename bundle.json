@@ -38,6 +38,7 @@
           "common_event_service",
           "dataclassification",
           "device_auth",
+          "device_info_manager",
           "device_manager",
           "drivekit_native",
           "dsoftbus",
