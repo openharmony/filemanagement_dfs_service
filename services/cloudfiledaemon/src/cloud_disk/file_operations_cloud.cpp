@@ -243,7 +243,8 @@ static int32_t LookupRecycledFile(struct CloudDiskFuseData *data, const char *na
     return 0;
 }
 
-static void UpdateChildCache(struct CloudDiskFuseData *data, int64_t localId, shared_ptr<CloudDiskInode> child)
+static shared_ptr<CloudDiskInode> UpdateChildCache(struct CloudDiskFuseData *data, int64_t localId,
+    shared_ptr<CloudDiskInode> child)
 {
     std::unique_lock<std::shared_mutex> cacheWLock(data->cacheLock, std::defer_lock);
     std::unique_lock<std::shared_mutex> localIdWLock(data->localIdLock, std::defer_lock);
@@ -258,6 +259,7 @@ static void UpdateChildCache(struct CloudDiskFuseData *data, int64_t localId, sh
         data->localIdCache.erase(old_key);
         localIdWLock.unlock();
     }
+    return child;
 }
 
 static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
@@ -295,13 +297,13 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
         return EINVAL;
     }
     string key = std::to_string(parent) + name;
-    uint32_t inodeId = DentryHash(metaBase.cloudId);
-    auto child = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inodeId));
-    UpdateChildCache(data, static_cast<int64_t>(inodeId), child);
+    int64_t inodeId = static_cast<int64_t>(DentryHash(metaBase.cloudId));
+    auto child = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
+    child = UpdateChildCache(data, inodeId, child);
     child->refCount++;
-    InitInodeAttr(data, parentInode, child.get(), metaBase, static_cast<int64_t>(inodeId));
-    InitLocalIdCache(data, key, static_cast<int64_t>(inodeId));
-    e->ino = static_cast<fuse_ino_t>(static_cast<int64_t>(inodeId));
+    InitInodeAttr(data, parentInode, child.get(), metaBase, inodeId);
+    InitLocalIdCache(data, key, inodeId);
+    e->ino = static_cast<fuse_ino_t>(inodeId);
     FileOperationsHelper::GetInodeAttr(child, &e->attr);
     return 0;
 }
@@ -603,26 +605,6 @@ static int32_t GetChildInfos(fuse_req_t req, fuse_ino_t ino, vector<CloudDiskFil
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
     int32_t err = rdbStore->ReadDir(parentCloudId, childInfos);
-    if (err != 0) {
-        LOGE("Readdir failed cloudId:%{public}s err:%{public}d", parentCloudId.c_str(), err);
-        return err;
-    }
-    return 0;
-}
-
-static int32_t GetHasChild(fuse_req_t req, fuse_ino_t ino, bool &hasChild)
-{
-    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
-    if (inoPtr == nullptr) {
-        LOGE("inode not found");
-        return EINVAL;
-    }
-    string parentCloudId = inoPtr->cloudId;
-
-    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-    shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
-    int32_t err = rdbStore->GetHasChild(parentCloudId, hasChild);
     if (err != 0) {
         LOGE("Readdir failed cloudId:%{public}s err:%{public}d", parentCloudId.c_str(), err);
         return err;
@@ -998,21 +980,18 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
 {
     int32_t err = -1;
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    bool open = false;
-    if (open) {
-        string key = std::to_string(parent) + name;
-        int64_t localId = FileOperationsHelper::FindLocalId(data, key);
-        bool hasChild = false;
-        err = GetHasChild(req, static_cast<fuse_ino_t>(localId), hasChild);
-        if (err != 0) {
-            fuse_reply_err(req, err);
-            return;
-        }
-        if (hasChild) {
-            LOGE("Directory not empty");
-            fuse_reply_err(req, EPERM);
-            return;
-        }
+    auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parent));
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
+        parentInode->bundleName, parentInode->cloudId);
+    if (metaFile->GetDentryCount() != 0) {
+        LOGE("Directory not empty");
+        fuse_reply_err(req, EPERM);
+        return;
     }
     err = DoCloudUnlink(req, parent, name);
     if (err != 0) {
