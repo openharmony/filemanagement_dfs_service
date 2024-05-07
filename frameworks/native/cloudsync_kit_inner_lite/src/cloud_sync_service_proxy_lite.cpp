@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "cloud_sync_service_proxy_lite.h"
+#include "cloud_sync_service_proxy.h"
 
 #include <sstream>
 
@@ -26,7 +26,7 @@ namespace OHOS::FileManagement::CloudSync {
 
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
 
-int32_t CloudSyncServiceProxyLite::TriggerSyncInner(const std::string &bundleName, const int32_t &userId)
+int32_t CloudSyncServiceProxy::TriggerSyncInner(const std::string &bundleName, const int32_t &userId)
 {
     LOGI("Trigger Sync");
     MessageParcel data;
@@ -65,7 +65,7 @@ int32_t CloudSyncServiceProxyLite::TriggerSyncInner(const std::string &bundleNam
     return reply.ReadInt32();
 }
 
-sptr<ICloudSyncServiceLite> CloudSyncServiceProxyLite::GetInstance()
+sptr<ICloudSyncService> CloudSyncServiceProxy::GetInstance()
 {
     LOGI("GetInstance");
     std::unique_lock<std::mutex> lock(instanceMutex_);
@@ -78,7 +78,7 @@ sptr<ICloudSyncServiceLite> CloudSyncServiceProxyLite::GetInstance()
         LOGE("Samgr is nullptr");
         return nullptr;
     }
-    sptr<ServiceProxyLoadCallbackLite> cloudSyncLoadCallback = new ServiceProxyLoadCallbackLite();
+    sptr<ServiceProxyLoadCallback> cloudSyncLoadCallback = new ServiceProxyLoadCallback();
     if (cloudSyncLoadCallback == nullptr) {
         LOGE("cloudSyncLoadCallback is nullptr");
         return nullptr;
@@ -100,16 +100,16 @@ sptr<ICloudSyncServiceLite> CloudSyncServiceProxyLite::GetInstance()
     return serviceProxy_;
 }
 
-void CloudSyncServiceProxyLite::InvalidInstance()
+void CloudSyncServiceProxy::InvaildInstance()
 {
     LOGI("Invalid Instance");
     std::unique_lock<std::mutex> lock(instanceMutex_);
     serviceProxy_ = nullptr;
 }
 
-void CloudSyncServiceProxyLite::ServiceProxyLoadCallbackLite::OnLoadSystemAbilitySuccess(
+void CloudSyncServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(
     int32_t systemAbilityId,
-    const sptr<IRemoteObject> &remoteObject) __attribute__((no_sanitize("cfi")))
+    const sptr<IRemoteObject> &remoteObject)
 {
     LOGI("Load CloudSync SA success, systemAbilityId: %{public}d, remote Obj result: %{private}s",
         systemAbilityId, (remoteObject == nullptr ? "false" : "true"));
@@ -117,13 +117,13 @@ void CloudSyncServiceProxyLite::ServiceProxyLoadCallbackLite::OnLoadSystemAbilit
     if (serviceProxy_ != nullptr) {
         LOGE("CloudSync SA proxy has been loaded");
     } else {
-        serviceProxy_ = iface_cast<ICloudSyncServiceLite>(remoteObject);
+        serviceProxy_ = iface_cast<ICloudSyncService>(remoteObject);
     }
     isLoadSuccess_.store(true);
     proxyConVar_.notify_one();
 }
 
-void CloudSyncServiceProxyLite::ServiceProxyLoadCallbackLite::OnLoadSystemAbilityFail(
+void CloudSyncServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilityFail(
     int32_t systemAbilityId)
 {
     LOGI("Load CloudSync SA failed, systemAbilityId: %{public}d", systemAbilityId);
@@ -131,5 +131,133 @@ void CloudSyncServiceProxyLite::ServiceProxyLoadCallbackLite::OnLoadSystemAbilit
     serviceProxy_ = nullptr;
     isLoadSuccess_.store(false);
     proxyConVar_.notify_one();
+}
+
+int32_t CloudSyncServiceProxy::UnRegisterCallbackInner(const std::string &bundleName)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject,
+                                                     const std::string &bundleName)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag, const std::string &bundleName)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::CleanCacheInner(const std::string &uri)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId,
+                                               const std::string &bundleName,
+                                               bool status)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::Clean(const std::string &accountId, const CleanOptions &cleanOptions)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::DisableCloud(const std::string &accoutId)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::NotifyEventChange(
+    int32_t userId, const std::string &eventId, const std::string &extraData)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::UploadAsset(const int32_t userId, const std::string &request, std::string &result)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
+                                            const std::string &bundleName,
+                                            AssetInfoObj &assetInfoObj)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::DownloadFiles(const int32_t userId,
+                                             const std::string &bundleName,
+                                             std::vector<AssetInfoObj> &assetInfoObj,
+                                             std::vector<bool> &assetResultMap)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::DownloadAsset(const uint64_t taskId,
+                                             const int32_t userId,
+                                             const std::string &bundleName,
+                                             const std::string &networkId,
+                                             AssetInfoObj &assetInfoObj)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::DeleteAsset(const int32_t userId, const std::string &uri)
+{
+    return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync
