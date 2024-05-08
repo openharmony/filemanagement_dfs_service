@@ -239,6 +239,10 @@ int32_t DistributedFileDaemonProxy::PrepareSession(const std::string &srcUri,
     int32_t ret =
         remote->SendRequest(static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION),
                             data, reply, option);
+    if (!reply.ReadString(info.sessionName)) {
+        LOGE("Failed to receive info.sessionName");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
     if (ret != 0) {
         LOGE("SendRequest failed, ret = %{public}d", ret);
         return OHOS::FileManagement::E_BROKEN_IPC;
@@ -327,6 +331,34 @@ int32_t DistributedFileDaemonProxy::GetRemoteCopyInfo(const std::string &srcUri,
         return OHOS::FileManagement::E_INVAL_ARG;
     }
     return ret;
+}
+
+int32_t DistributedFileDaemonProxy::CancelCopyTask(int32_t sessionId, const std::string sessionName)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(sessionName)) {
+        LOGE("Failed to send sessionName");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret =
+            remote->SendRequest(static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK),
+                                data, reply, option);
+    if (ret != 0) {
+        LOGE("SendRequest failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
 }
 } // namespace DistributedFile
 } // namespace Storage

@@ -91,6 +91,7 @@ config("public_config") {
   include_dirs = [
     ".",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
   ]
 }
 

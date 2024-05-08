@@ -25,6 +25,7 @@ namespace DistributedFile {
         DISTRIBUTED_FILE_PREPARE_SESSION,
         DISTRIBUTED_FILE_REQUEST_SEND_FILE,
         DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO,
+        DISTRIBUTED_FILE_CANCEL_COPY_TASK,
     };
 } // namespace DistributedFile
 } // namespace Storage

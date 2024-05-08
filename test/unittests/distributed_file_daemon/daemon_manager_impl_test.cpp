@@ -152,9 +152,11 @@ HWTEST_F(DistributedDaemonManagerImplTest, PrepareSessionTest, TestSize.Level1)
     const std::string srcDeviceId = "testSrcDeviceId";
     const sptr<IRemoteObject> listener = sptr(new DaemonServiceMock());
     const std::string copyPath = "tmpDir";
+    const std::string sessionName = "DistributedDevice0";
     HmdfsInfo fileInfo = {
         .copyPath = copyPath,
         .dirExistFlag = false,
+        .sessionName = sessionName,
     };
     GTEST_LOG_(INFO) << "PrepareSessionTest Start";
     try {
