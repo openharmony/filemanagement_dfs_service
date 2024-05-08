@@ -20,10 +20,11 @@
 #include <thread>
 #include <malloc.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 
 #include "iremote_object.h"
 #include "system_ability_definition.h"
-
+#include "parameters.h"
 #include "dfs_error.h"
 #include "fuse_manager/fuse_manager.h"
 #include "utils_log.h"
@@ -54,6 +55,30 @@ void CloudDaemon::PublishSA()
     LOGI("Init finished successfully");
 }
 
+static bool CheckDeviceInLinux()
+{
+    struct utsname uts;
+    if (uname(&uts) == -1) {
+        LOGE("uname get failed.");
+        return false;
+    }
+    if (strcmp(uts.sysname, "Linux") == 0) {
+        LOGI("uname system is linux.");
+        return true;
+    }
+    return false;
+}
+
+static void ModSysParam()
+{
+    if (CheckDeviceInLinux()) {
+        const string photos = "persist.kernel.bundle_name.photos";
+        const string clouddrive = "persist.kernel.bundle_name.clouddrive";
+        system::SetParameter(photos, "");
+        system::SetParameter(clouddrive, "");
+    }
+}
+
 void CloudDaemon::OnStart()
 {
     LOGI("Begin to start service");
@@ -67,6 +92,7 @@ void CloudDaemon::OnStart()
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
         mode_t mode = 002;
         umask(mode);
+        ModSysParam();
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
