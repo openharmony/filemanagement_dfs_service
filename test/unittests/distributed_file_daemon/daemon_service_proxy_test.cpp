@@ -115,11 +115,9 @@ HWTEST_F(DistributedDaemonProxyTest, PrepareSessionTest, TestSize.Level1)
     const std::string dstUri = "file://docs/storage/Users/currentUser/Documents";
     const std::string srcDeviceId = "testSrcDeviceId";
     const std::string copyPath = "tmpDir";
-    const std::string sessionName = "DistributedDevice0";
     HmdfsInfo fileInfo = {
         .copyPath = copyPath,
         .dirExistFlag = false,
-        .sessionName = sessionName,
     };
     int ret = proxy_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfo);
     EXPECT_EQ(ret, E_OK);

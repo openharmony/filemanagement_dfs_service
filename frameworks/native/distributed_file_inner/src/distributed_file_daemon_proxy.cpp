@@ -351,8 +351,9 @@ int32_t DistributedFileDaemonProxy::CancelCopyTask(const std::string &sessionNam
         LOGE("remote is nullptr");
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
-    int32_t ret =remote->SendRequest(
-            static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK), data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK), data, reply,
+        option);
     if (ret != 0) {
         LOGE("SendRequest failed, ret = %{public}d", ret);
         return OHOS::FileManagement::E_BROKEN_IPC;
