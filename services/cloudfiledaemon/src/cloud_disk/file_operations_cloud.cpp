@@ -429,7 +429,7 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
 {
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     data->fileId++;
-    fi->fh = data->fileId.load();
+    fi->fh = static_cast<uint64_t>(data->fileId.load());
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (inoPtr == nullptr) {
         LOGE("inode not found");
@@ -570,7 +570,7 @@ void FileOperationsCloud::Create(fuse_req_t req, fuse_ino_t parent, const char *
     }
     auto filePtr = InitFileAttr(data, fi);
     data->fileId++;
-    fi->fh = data->fileId;
+    fi->fh = static_cast<uint64_t>(data->fileId);
     filePtr->fd = err;
     filePtr->type = CLOUD_DISK_FILE_TYPE_LOCAL;
     filePtr->fileDirty = CLOUD_DISK_FILE_CREATE;

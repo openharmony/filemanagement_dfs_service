@@ -136,7 +136,13 @@ CloudDiskMetaFile::CloudDiskMetaFile(uint32_t userId, const std::string &bundleN
     bundleName_ = bundleName;
     cloudId_ = cloudId;
     cacheFile_ = GetCloudDiskDentryFileByPath(userId_, bundleName_, cloudId_);
-    fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
+    char resolvedPath[PATH_MAX] = {'\0'};
+    char *realPath = realpath(cacheFile_.c_str(), resolvedPath);
+    if (realPath == nullptr) {
+        LOGE("realpath failed");
+        return;
+    }
+    fd_ = UniqueFd{open(realPath, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
     LOGD("CloudDiskMetaFile cloudId=%{public}s, path=%{public}s", cloudId_.c_str(), cacheFile_.c_str());
     LOGD("CloudDiskMetaFile fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
 
@@ -355,7 +361,7 @@ static uint32_t RoomForFilename(const uint8_t bitmap[], size_t slots, uint32_t m
         }
 
         uint32_t zeroEnd = BitOps::FindNextBit(bitmap, maxSlots, zeroStart);
-        if (zeroEnd - zeroStart >= slots) {
+        if (zeroEnd - zeroStart >= 0 && zeroEnd - zeroStart >= slots) {
             return zeroStart;
         }
 

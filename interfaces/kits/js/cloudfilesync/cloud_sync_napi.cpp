@@ -746,6 +746,7 @@ int32_t ChangeListenerNapi::UvQueueWork(uv_loop_s *loop, uv_work_t *work)
                     break;
                 }
                 napi_call_function(env, nullptr, jsCallback, ARGS_ONE, result, &retVal);
+                napi_close_handle_scope(env, scope);
                 if (status != napi_ok) {
                     LOGE("CallJs napi_call_function fail, status: %{public}d", status);
                     break;

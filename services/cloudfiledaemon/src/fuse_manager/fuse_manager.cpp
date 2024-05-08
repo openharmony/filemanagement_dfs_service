@@ -394,10 +394,11 @@ static void CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInod
         LOGE("realpath failed");
         return;
     }
-    if (fi->flags & O_DIRECT) {
-        fi->flags &= ~O_DIRECT;
+    unsigned int flags = static_cast<unsigned int>(fi->flags);
+    if (flags & O_DIRECT) {
+        flags &= ~O_DIRECT;
     }
-    auto fd = open(localPath.c_str(), fi->flags);
+    auto fd = open(realPath, fi->flags);
     if (fd < 0) {
         LOGE("Failed to open local file, errno: %{public}d", errno);
         return;
