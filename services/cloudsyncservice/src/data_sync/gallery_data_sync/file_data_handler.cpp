@@ -2062,11 +2062,11 @@ int32_t FileDataHandler::CheckDirtyConsistency(NativeRdb::ResultSet &resultSet)
             return E_SYSCALL;
         }
         if (!local) {
-            LOGE("[CHECK AND FIX] try to set dirty as synced %{public}s", filePath.c_str());
+            LOGE("[CHECK AND FIX] try to set dirty as mdirty %{public}s", filePath.c_str());
             UpdateCheckFile(INDEX_CHECK_FOUND, 1);
 
             ValuesBucket values;
-            values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
+            values.PutInt(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_MDIRTY));
             int32_t changedRows;
             string whereClause = PhotoColumn::MEDIA_FILE_PATH + " = ?";
             ret = Update(changedRows, values, whereClause, { filePath });
@@ -2103,6 +2103,9 @@ int32_t FileDataHandler::CheckPositionConsistency(NativeRdb::ResultSet &resultSe
         values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
     } else if (pos == POSITION_BOTH && !local) {
         values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
+    } else if (pos == POSITION_LOCAL && !local) {
+        LOGE("position is local but local file not exist!");
+        return E_OK;
     } else {
         return E_OK;
     }
