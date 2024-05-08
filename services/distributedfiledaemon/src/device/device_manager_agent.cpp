@@ -196,7 +196,7 @@ bool DeviceManagerAgent::IsWifiNetworkType(int32_t networkType)
     return true;
 }
 
-void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
+void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("networkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
 
