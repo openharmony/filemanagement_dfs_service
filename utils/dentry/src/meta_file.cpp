@@ -233,7 +233,7 @@ static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
     }
 }
 
-static void TeaTransform(uint32_t buf[4], uint32_t const in[])
+static void TeaTransform(uint32_t buf[4], uint32_t const in[]) __attribute__((no_sanitize("unsigned-integer-overflow")))
 {
     int n = 16;           /* transform total rounds 16 */
     uint32_t a = in[0];   /* transform input pos 0 */
@@ -531,6 +531,7 @@ static HmdfsDentry *FindInBlock(HmdfsDentryGroup &dentryBlk, uint32_t namehash, 
 }
 
 static HmdfsDentry *InLevel(uint32_t level, DcacheLookupCtx *ctx)
+                            __attribute__((no_sanitize("unsigned-integer-overflow")))
 {
     HmdfsDentry *de = nullptr;
 

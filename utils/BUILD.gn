@@ -59,6 +59,7 @@ config("utils_public_config") {
 ohos_shared_library("libdistributedfileutils") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -127,6 +128,7 @@ config("dentry_public_config") {
 ohos_shared_library("libdistributedfiledentry") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -169,6 +171,7 @@ ohos_shared_library("libdistributedfiledentry") {
 ohos_shared_library("libdistributedfileutils_lite") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
