@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -119,7 +119,7 @@ const std::vector<std::string> FileColumn::LOCAL_COLUMNS = {
 
 const std::vector<std::string> FileColumn::PULL_QUERY_COLUMNS = {
     CLOUD_ID, FILE_TIME_RECYCLED, VERSION, DIRTY_TYPE, POSITION,
-    FILE_TIME_EDITED, FILE_SHA256, FILE_SIZE,
+    FILE_TIME_EDITED, FILE_SHA256, FILE_SIZE, FILE_NAME, PARENT_CLOUD_ID, ROW_ID,
 };
 
 const std::vector<std::string> FileColumn::DISK_ON_UPLOAD_COLUMNS = {

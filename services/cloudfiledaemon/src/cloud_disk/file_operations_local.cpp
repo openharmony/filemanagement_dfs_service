@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,7 @@ static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name
     struct CloudDiskFuseData *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     string path = FileOperationsHelper::GetCloudDiskLocalPath(data->userId, name);
     std::unique_lock<std::shared_mutex> cWLock(data->cacheLock, std::defer_lock);
-    string key = path;
+    string key = std::to_string(parent) + name;
     int64_t localId = FileOperationsHelper::FindLocalId(data, key);
     auto child = FileOperationsHelper::FindCloudDiskInode(data, localId);
     if (child == nullptr) {
@@ -63,7 +63,7 @@ static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name
             data->bundleNameId++;
             localId = data->bundleNameId + BUNDLE_NAME_OFFSET;
         }
-        child->stat.st_ino = localId;
+        child->stat.st_ino = static_cast<uint64_t>(localId);
         child->ops = make_shared<FileOperationsLocal>();
         cWLock.lock();
         data->inodeCache[localId] = child;
