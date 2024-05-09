@@ -522,11 +522,18 @@ ohos_unittest("softbus_file_receive_listener_test") {
 
   module_out_path = module_output_path
 
-  include_dirs = [ "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus" ]
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
+    "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+  ]
 
   sources = [
+    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "network/softbus/softbus_file_receive_listener_test.cpp",
   ]
 
@@ -545,6 +552,54 @@ ohos_unittest("softbus_file_receive_listener_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
+    "os_account:os_account_innerkits",
+  ]
+
+  defines = [ "private=public" ]
+}
+
+ohos_unittest("softbus_file_send_listener_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
+    "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+  ]
+
+  sources = [
+    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+    "network/softbus/softbus_file_send_listener_test.cpp",
+  ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "app_file_service:sandbox_helper_native",
+    "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
+    "hilog:libhilog",
+    "os_account:os_account_innerkits",
   ]
 
   defines = [ "private=public" ]
@@ -816,6 +871,7 @@ group("unittest") {
     ":session_pool_test",
     ":softbus_agent_test",
     ":softbus_file_receive_listener_test",
+    ":softbus_file_send_listener_test",
     ":softbus_handler_test",
     ":softbus_session_dispatcher_test",
     ":softbus_session_listener_test",
