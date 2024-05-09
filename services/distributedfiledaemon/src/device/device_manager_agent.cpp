@@ -199,7 +199,13 @@ bool DeviceManagerAgent::IsWifiNetworkType(int32_t networkType)
 void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("networkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
-
+    int32_t ret = IsSupportDevice(deviceInfo);
+    if (ret != FileManagement::ERR_OK)
+    {
+        LOGI("is not support device");
+        return;
+    }
+    
     // online first query this dev's trust info
     DeviceInfo info(deviceInfo);
     QueryRelatedGroups(info.udid_, info.cid_);
@@ -407,6 +413,13 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
         LOGI("OnDeviceInfoChanged end");
         return;
     }
+    int32_t ret = IsSupportDevice(deviceInfo);
+    if (ret != FileManagement::ERR_OK)
+    {
+        LOGI("is not support device");
+        return;
+    }
+
     DeviceInfo info(deviceInfo);
     unique_lock<mutex> lock(mpToNetworksMutex_);
 
@@ -461,27 +474,40 @@ void DeviceManagerAgent::InitDeviceInfos()
     }
 
     for (const auto &deviceInfo : deviceInfoList) {
-        std::string udid = "";
-        if (DistributedHardware::DeviceManager::GetInstance().
-            GetUdidByNetworkId(pkgName, deviceInfo.networkId, udid) != 0) {
-            LOGE("GetUdidByNetworkId failed");
-            return;
-        }
-        DistributedDeviceProfile::DeviceProfile outDeviceProfile;
-        int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
-            GetDeviceProfile(udid, outDeviceProfile);
-        if (ret != FileManagement::E_OK) {
-            LOGE("GetDeviceProfile failed, errorCode: %{public}d", ret);
-            continue;
-        }
-        if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
-            LOGE("%{private}s  not the required type phone: %{private}d", deviceInfo.deviceName,
-                outDeviceProfile.GetOsType());
+        int32_t ret = IsSupportDevice(deviceInfo);
+        if (ret != FileManagement::ERR_OK)
+        {
+            LOGI("is not support device");
             continue;
         }
         DeviceInfo info(deviceInfo);
         QueryRelatedGroups(info.udid_, info.cid_);
     }
+}
+
+int32_t IsSupportDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
+{
+
+    std::string udid = "";
+    string pkgName = IDaemon::SERVICE_NAME;
+    if (DistributedHardware::DeviceManager::GetInstance().
+        GetUdidByNetworkId(pkgName, deviceInfo.networkId, udid) != 0) {
+        LOGE("GetUdidByNetworkId failed");
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    DistributedDeviceProfile::DeviceProfile outDeviceProfile;
+    int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
+        GetDeviceProfile(udid, outDeviceProfile);
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetDeviceProfile failed, errorCode: %{public}d", ret);
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
+        LOGE("%{private}s  not the required type phone: %{private}d", deviceInfo.deviceName,
+            outDeviceProfile.GetOsType());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    return FileManagement::ERR_OK;
 }
 
 void DeviceManagerAgent::InitLocalNodeInfo()
