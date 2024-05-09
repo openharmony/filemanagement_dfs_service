@@ -530,7 +530,8 @@ static HmdfsDentry *FindInBlock(HmdfsDentryGroup &dentryBlk, uint32_t namehash, 
     return nullptr;
 }
 
-static HmdfsDentry *InLevel(uint32_t level, DcacheLookupCtx *ctx) __attribute__((no_sanitize("unsigned-integer-overflow")))
+static HmdfsDentry *InLevel(uint32_t level, DcacheLookupCtx *ctx) 
+                            __attribute__((no_sanitize("unsigned-integer-overflow")))
 {
     HmdfsDentry *de = nullptr;
 
