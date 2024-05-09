@@ -26,6 +26,7 @@ struct HmdfsInfo {
     bool dirExistFlag = false;
     std::string authority;
     std::string sandboxPath;
+    std::string sessionName;
 };
 }
 }

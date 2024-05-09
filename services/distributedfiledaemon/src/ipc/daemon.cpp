@@ -218,7 +218,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         LOGE("SessionServer exceed max");
         return E_SOFTBUS_SESSION_FAILED;
     }
-
+    info.sessionName = sessionName;
     StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
     ret = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName,
         DFS_CHANNLE_ROLE_SINK, physicalPath);
@@ -370,6 +370,13 @@ int32_t Daemon::Copy(const std::string &srcUri,
         LOGE("RequestSendFile failed, ret = %{public}d", ret);
         return E_SA_LOAD_FAILED;
     }
+    return E_OK;
+}
+
+int32_t Daemon::CancelCopyTask(const std::string &sessionName)
+{
+    LOGD("Cancel copy task in. sessionName = %{public}s", sessionName.c_str());
+    SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
     return E_OK;
 }
 

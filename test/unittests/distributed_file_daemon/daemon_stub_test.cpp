@@ -40,10 +40,12 @@ const std::string DST_URI = "file://docs/storage/Users/currentUser/Documents";
 const std::string SRC_DEVICE_ID = "testSrcDeviceId";
 const sptr<IRemoteObject> LISTENER = sptr(new DaemonServiceMock());
 const std::string COPY_PATH = "tmpDir";
+const std::string sessionName = "DistributedDevice0";
 
 HmdfsInfo fileInfo = {
     .copyPath = COPY_PATH,
     .dirExistFlag = false,
+    .sessionName = sessionName,
 };
 class MockDaemonStub : public DaemonStub {
 public:
@@ -60,6 +62,7 @@ public:
                          const std::string &srcDeviceId,
                          const sptr<IRemoteObject> &listener,
                          HmdfsInfo &fileInfo));
+    MOCK_METHOD1(CancelCopyTask, int32_t(const std::string &sessionName));
     MOCK_METHOD3(GetRemoteCopyInfo, int32_t(const std::string &srcUri, bool &isFile, bool &isDir));
 };
 

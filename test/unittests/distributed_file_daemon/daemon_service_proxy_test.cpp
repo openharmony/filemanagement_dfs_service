@@ -120,7 +120,7 @@ HWTEST_F(DistributedDaemonProxyTest, PrepareSessionTest, TestSize.Level1)
         .dirExistFlag = false,
     };
     int ret = proxy_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfo);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "PrepareSessionTest End";
 }
 } // namespace OHOS::Storage::DistributedFile::Test

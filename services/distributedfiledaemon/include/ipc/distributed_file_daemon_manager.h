@@ -36,6 +36,7 @@ public:
                                    const std::string &srcDeviceId,
                                    const sptr<IRemoteObject> &listener,
                                    HmdfsInfo &info) = 0;
+    virtual int32_t CancelCopyTask(const std::string &sessionName) = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage

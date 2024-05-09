@@ -40,6 +40,7 @@ public:
         const std::string &peerDevId, DFS_CHANNEL_ROLE role);
     void ChangeOwnerIfNeeded(int32_t sessionId, const std::string sessionName);
     void CloseSession(int32_t sessionId, const std::string sessionName);
+    void CloseSessionWithSessionName(const std::string sessionName);
     static std::string GetSessionName(int32_t sessionId);
     static void OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info);
     static bool IsSameAccount(const std::string &networkId);

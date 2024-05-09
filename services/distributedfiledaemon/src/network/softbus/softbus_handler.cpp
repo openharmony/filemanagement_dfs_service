@@ -23,6 +23,7 @@
 #include "network/softbus/softbus_file_receive_listener.h"
 #include "network/softbus/softbus_file_send_listener.h"
 #include "network/softbus/softbus_session_listener.h"
+#include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 
@@ -33,6 +34,7 @@ using namespace OHOS::FileManagement;
 const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
+const int32_t INVALID_SESSION_ID = -1;
 const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 std::mutex SoftBusHandler::clientSessNameMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
@@ -237,8 +239,38 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
             LOGI("RemoveSessionServer success.");
         }
     }
+    if (!clientSessNameMap_.empty()) {
+        std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
+        auto it = clientSessNameMap_.find(sessionId);
+        if (it != clientSessNameMap_.end()) {
+            clientSessNameMap_.erase(it->first);
+        }
+    }
     Shutdown(sessionId);
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
+}
+
+void SoftBusHandler::CloseSessionWithSessionName(const std::string sessionName)
+{
+    LOGI("CloseSessionWithSessionName Enter.");
+    if (sessionName.empty()) {
+        LOGI("sessionName is empty");
+        return;
+    }
+    int32_t sessionId = INVALID_SESSION_ID;
+    if (!clientSessNameMap_.empty()) {
+        std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
+        for (auto it : SoftBusHandler::clientSessNameMap_) {
+            if (it.second == sessionName) {
+                sessionId = it.first;
+                clientSessNameMap_.erase(it.first);
+                break;
+            }
+        }
+    }
+    TransManager::GetInstance().NotifyFileFailed(sessionName);
+    TransManager::GetInstance().DeleteTransTask(sessionName);
+    CloseSession(sessionId, sessionName);
 }
 } // namespace DistributedFile
 } // namespace Storage
