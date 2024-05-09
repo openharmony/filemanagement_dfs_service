@@ -121,26 +121,26 @@ static string GetLocalTmpPath(int32_t userId, const string &relativePath)
     return GetLocalPath(userId, relativePath) + PATH_TEMP_SUFFIX;
 }
 
-static bool HandleDkError(fuse_req_t req, DriveKit::DKError &dkError)
+static int HandleDkError(fuse_req_t req, DriveKit::DKError &dkError)
 {
     if (!dkError.HasError()) {
-        return false;
+        return 0;
     }
     if ((dkError.serverErrorCode == static_cast<int>(DriveKit::DKServerErrorCode::NETWORK_ERROR))
         || dkError.dkErrorCode == DriveKit::DKLocalErrorCode::DOWNLOAD_REQUEST_ERROR) {
         LOGE("network error");
-        fuse_reply_err(req, ENOTCONN);
+        return -ENOTCONN;
     } else if (dkError.isServerError) {
         LOGE("server errorCode is: %d", dkError.serverErrorCode);
-        fuse_reply_err(req, EIO);
+        return -EIO;
     } else if (dkError.isLocalError) {
         LOGE("local errorCode is: %d", dkError.dkErrorCode);
-        fuse_reply_err(req, EINVAL);
+        return -EINVAL;
     } else {
-        LOGE("Unknow error");
-        fuse_reply_err(req, EIO);
+        LOGE("Unknown error");
+        return -EIO;
     }
-    return true;
+    return -1;
 }
 
 static shared_ptr<DriveKit::DKDatabase> GetDatabase(struct FuseData *data)
@@ -371,56 +371,76 @@ static string GetAssetPath(shared_ptr<CloudInode> cInode, struct FuseData *data)
     return path;
 }
 
-static void CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
+static void fuse_inval(fuse_session *se, fuse_ino_t parentIno, fuse_ino_t childIno, const string &childName)
 {
-    MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
-    string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
-    if (remove(cloudMergeViewPath.c_str()) < 0) {
-        LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
-        return;
+    if (fuse_lowlevel_notify_inval_entry(se, parentIno, childName.c_str(), childName.size())) {
+        fuse_lowlevel_notify_inval_inode(se, childIno, 0, 0);
     }
+}
+
+static int RestoreTmpFile(const string &localPath, const string &tmpPath)
+{
+    if (rename(localPath.c_str(), tmpPath.c_str()) < 0) {
+        LOGE("Failed to restore tmppath, errno: %{public}d", errno);
+        return -errno;
+    }
+    return 0;
+}
+
+static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
+{
     string localPath = GetLocalPath(data->userId, cInode->path);
     string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
     filesystem::path parentPath = filesystem::path(localPath).parent_path();
     ForceCreateDirectory(parentPath.string());
     if (rename(tmpPath.c_str(), localPath.c_str()) < 0) {
         LOGE("Failed to rename tmpPath to localPath, errno: %{public}d", errno);
-        return;
+        return 0;
     }
-    cInode->mBase->hasDownloaded = true;
     char resolvedPath[PATH_MAX] = {'\0'};
     char *realPath = realpath(localPath.c_str(), resolvedPath);
     if (realPath == nullptr) {
-        LOGE("realpath failed");
-        return;
+        LOGE("Failed to realpath, errno: %{public}d", errno);
+        return RestoreTmpFile(localPath, tmpPath);
     }
     if (fi->flags & O_DIRECT) {
         fi->flags &= ~O_DIRECT;
     }
-    auto fd = open(localPath.c_str(), fi->flags);
+    auto fd = open(realPath, fi->flags);
     if (fd < 0) {
         LOGE("Failed to open local file, errno: %{public}d", errno);
-        return;
+        return RestoreTmpFile(localPath, tmpPath);
     }
     fi->fh = static_cast<uint64_t>(fd);
-    return;
+    string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
+    if (remove(cloudMergeViewPath.c_str()) < 0) {
+        LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
+        close(fd);
+        return RestoreTmpFile(localPath, tmpPath);
+    }
+    MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
+    cInode->mBase->hasDownloaded = true;
+    return 0;
 }
 
-static void HandleOpenResult(fuse_req_t req, DriveKit::DKError dkError, struct FuseData *data,
+static int HandleOpenResult(fuse_req_t req, DriveKit::DKError dkError, struct FuseData *data,
     shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
 {
-    if (HandleDkError(req, dkError)) {
+    auto ret = HandleDkError(req, dkError);
+    if (ret < 0) {
         cInode->readSession = nullptr;
         LOGE("open fali");
-        return;
+        return ret;
     }
     if (cInode->mBase->fileType != FILE_TYPE_CONTENT) {
-        CloudOpenOnLocal(data, cInode, fi);
+        ret = CloudOpenOnLocal(data, cInode, fi);
+        if (ret < 0) {
+            return ret;
+        }
     }
     cInode->sessionRefCount++;
     LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
-    fuse_reply_open(req, fi);
-    return;
+    return 0;
 }
 
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
@@ -435,8 +455,9 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
 
     LOGI("%{public}d open %{public}s", req->ctx.pid, CloudPath(data, ino).c_str());
     if (!database) {
-        fuse_reply_err(req, EPERM);
         LOGE("database is null");
+        fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
+        fuse_reply_err(req, EPERM);
         return;
     }
     wSesLock.lock();
@@ -452,27 +473,27 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                                                             GetAssetPath(cInode, data));
         if (cInode->readSession) {
             DriveKit::DKError dkError = cInode->readSession->InitSession();
-            HandleOpenResult(req, dkError, data, cInode, fi);
+            auto ret = HandleOpenResult(req, dkError, data, cInode, fi);
+            if (ret < 0) {
+                fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
+                fuse_reply_err(req, -ret);
+            } else {
+                fuse_reply_open(req, fi);
+            }
             wSesLock.unlock();
             return;
         }
     }
     if (!cInode->readSession) {
-        fuse_reply_err(req, EPERM);
         LOGE("readSession is null or fix size fail");
+        fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
+        fuse_reply_err(req, EPERM);
     } else {
         cInode->sessionRefCount++;
         LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
         fuse_reply_open(req, fi);
     }
     wSesLock.unlock();
-}
-
-static void fuse_inval(fuse_session *se, fuse_ino_t parentIno, fuse_ino_t childIno, const string &childName)
-{
-    if (fuse_lowlevel_notify_inval_entry(se, parentIno, childName.c_str(), childName.size())) {
-        fuse_lowlevel_notify_inval_inode(se, childIno, 0, 0);
-    }
 }
 
 static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
@@ -485,10 +506,9 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     wSesLock.lock();
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
-        if (close(fi->fh) < 0) {
-            LOGE("Failed to close fd, errno: %{public}d", errno);
-        }
-        if (!cInode->readSession->Close(cInode->mBase->fileType != FILE_TYPE_CONTENT)) {
+        close(fi->fh);
+        if (cInode->mBase->fileType != FILE_TYPE_THUMBNAIL &&
+            (!cInode->readSession->Close(cInode->mBase->fileType != FILE_TYPE_CONTENT))) {
             LOGE("Failed to close readSession");
         }
         cInode->readSession = nullptr;
@@ -613,10 +633,13 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         fuse_reply_err(req, ENOMEM);
         return;
     }
-    if (!HandleDkError(req, *readArgs->dkError)) {
-        LOGD("read success");
-        fuse_reply_buf(req, buf.get(), min(oldSize, static_cast<size_t>(*readArgs->readResult)));
+    auto ret = HandleDkError(req, *readArgs->dkError);
+    if (ret < 0) {
+        fuse_reply_err(req, -ret);
+        return;
     }
+    LOGD("read success");
+    fuse_reply_buf(req, buf.get(), min(oldSize, static_cast<size_t>(*readArgs->readResult)));
 }
 
 static const struct fuse_lowlevel_ops cloudDiskFuseOps = {
