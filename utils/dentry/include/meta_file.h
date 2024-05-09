@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -106,9 +106,9 @@ enum {
 
 enum {
     POSITION_UNKNOWN = 0,
-    POSITION_LOCAL,
-    POSITION_CLOUD,
-    POSITION_LOCAL_AND_CLOUD,
+    POSITION_LOCAL = 0x01,
+    POSITION_CLOUD = 0x02,
+    POSITION_LOCAL_AND_CLOUD = POSITION_LOCAL | POSITION_CLOUD,
 };
 
 class MetaFileMgr {
@@ -132,7 +132,7 @@ private:
     const MetaFileMgr &operator=(const MetaFileMgr &m) = delete;
 
     std::recursive_mutex mtx_{};
-    std::mutex mutex_{};
+    std::mutex cloudDiskMutex_{};
     std::map<std::pair<uint32_t, std::string>, std::shared_ptr<MetaFile>> metaFiles_;
     std::unordered_map<std::string, std::shared_ptr<CloudDiskMetaFile>> cloudDiskMetaFile_;
 };

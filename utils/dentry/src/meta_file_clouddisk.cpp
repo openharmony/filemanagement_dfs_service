@@ -156,7 +156,6 @@ int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskM
     /* lookup and create in parent */
     int32_t ret = DoLookup(m);
     if (ret != E_OK) {
-        LOGE("lookup dentry file failed, create dentry");
         callback(m);
         ret = DoCreate(m);
         if (ret != E_OK) {
@@ -166,7 +165,6 @@ int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskM
         return ret;
     } else {
         callback(m);
-        LOGD("lookup dentry file succeeded, update dentry");
         ret = DoUpdate(m);
         if (ret != E_OK) {
             LOGE("update dentry file failed, ret %{public}d", ret);
@@ -188,8 +186,7 @@ int32_t CloudDiskMetaFile::DoLookupAndRemove(MetaBase &metaBase)
         }
         return E_OK;
     }
-    LOGE("lookup dentry file failed");
-    return ret;
+    return E_OK;
 }
 
 CloudDiskMetaFile::~CloudDiskMetaFile()
@@ -671,15 +668,19 @@ int32_t CloudDiskMetaFile::DoUpdate(const MetaBase &base)
 int32_t CloudDiskMetaFile::DoRename(MetaBase &metaBase, const std::string &newName,
     std::shared_ptr<CloudDiskMetaFile> newMetaFile)
 {
-    int32_t ret = DoRemove(metaBase);
-    if (ret != E_OK) {
-        LOGE("remove dentry failed, ret = %{public}d", ret);
-        return ret;
-    }
+    std::string oldName = metaBase.name;
     metaBase.name = newName;
-    ret = newMetaFile->DoCreate(metaBase);
+    int32_t ret = newMetaFile->DoCreate(metaBase);
     if (ret != E_OK) {
         LOGE("create dentry failed, ret = %{public}d", ret);
+        return ret;
+    }
+    metaBase.name = oldName;
+    ret = DoRemove(metaBase);
+    if (ret != E_OK) {
+        LOGE("remove dentry failed, ret = %{public}d", ret);
+        metaBase.name = newName;
+        (void)newMetaFile->DoRemove(metaBase);
         return ret;
     }
     return E_OK;
@@ -689,7 +690,7 @@ std::shared_ptr<CloudDiskMetaFile> MetaFileMgr::GetCloudDiskMetaFile(uint32_t us
     const std::string &cloudId)
 {
     std::shared_ptr<CloudDiskMetaFile> mFile = nullptr;
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(cloudDiskMutex_);
     if (cloudDiskMetaFile_.find(cloudId) != cloudDiskMetaFile_.end()) {
         mFile = cloudDiskMetaFile_[cloudId];
     } else {
@@ -705,24 +706,24 @@ int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::strin
     MetaBase metaBase(name);
     auto srcMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, parentCloudId);
     auto dstMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, RECYCLE_CLOUD_ID);
-    int32_t ret = srcMetaFile->DoLookupAndRemove(metaBase);
+    std::string uniqueName = name + "_" + std::to_string(rowId);
+    int32_t ret = srcMetaFile->DoLookup(metaBase);
+    if (ret != E_OK) {
+        LOGE("lookup src metafile failed, ret = %{public}d", ret);
+        return ret;
+    }
+    metaBase.name = uniqueName;
+    ret = dstMetaFile->DoCreate(metaBase);
     if (ret != E_OK) {
         LOGE("lookup and remove dentry failed, ret = %{public}d", ret);
         return ret;
     }
-    auto callback = [&metaBase] (MetaBase &m) {
-        m.cloudId = metaBase.cloudId;
-        m.atime = metaBase.atime;
-        m.mtime = metaBase.mtime;
-        m.size = metaBase.size;
-        m.mode = metaBase.mode;
-        m.position = metaBase.position;
-        m.fileType = metaBase.fileType;
-    };
-    std::string uniqueName = name + "_" + std::to_string(rowId);
-    ret = dstMetaFile->DoLookupAndUpdate(uniqueName, callback);
+    metaBase.name = name;
+    ret = srcMetaFile->DoLookupAndRemove(metaBase);
     if (ret != E_OK) {
-        LOGE("lookup and update dentry failed, ret = %{public}d", ret);
+        LOGE("lookup and remove dentry failed, ret = %{public}d", ret);
+        metaBase.name = uniqueName;
+        (void)dstMetaFile->DoLookupAndRemove(metaBase);
         return ret;
     }
     return E_OK;
@@ -731,27 +732,27 @@ int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::strin
 int32_t MetaFileMgr::RemoveFromRecycleDentryfile(uint32_t userId, const std::string &bundleName,
     const std::string &name, const std::string &parentCloudId, int64_t rowId)
 {
-    std::string uniqueName = name + "_" + std::to_string(rowId);
-    MetaBase metaBase(uniqueName);
     auto srcMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, RECYCLE_CLOUD_ID);
     auto dstMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, parentCloudId);
-    int32_t ret = srcMetaFile->DoLookupAndRemove(metaBase);
+    std::string uniqueName = name + "_" + std::to_string(rowId);
+    MetaBase metaBase(uniqueName);
+    int32_t ret = srcMetaFile->DoLookup(metaBase);
+    if (ret != E_OK) {
+        LOGE("lookup and update dentry failed, ret = %{public}d", ret);
+        return ret;
+    }
+    metaBase.name = name;
+    ret = dstMetaFile->DoCreate(metaBase);
     if (ret != E_OK) {
         LOGE("lookup and remove dentry failed, ret = %{public}d", ret);
         return ret;
     }
-    auto callback = [&metaBase] (MetaBase &m) {
-        m.cloudId = metaBase.cloudId;
-        m.atime = metaBase.atime;
-        m.mtime = metaBase.mtime;
-        m.size = metaBase.size;
-        m.mode = metaBase.mode;
-        m.position = metaBase.position;
-        m.fileType = metaBase.fileType;
-    };
-    ret = dstMetaFile->DoLookupAndUpdate(name, callback);
+    metaBase.name = uniqueName;
+    ret = srcMetaFile->DoLookupAndRemove(metaBase);
     if (ret != E_OK) {
-        LOGE("lookup and update dentry failed, ret = %{public}d", ret);
+        LOGE("lookup and remove dentry failed, ret = %{public}d", ret);
+        metaBase.name = name;
+        (void)dstMetaFile->DoLookupAndRemove(metaBase);
         return ret;
     }
     return E_OK;
