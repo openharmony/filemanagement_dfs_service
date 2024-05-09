@@ -205,7 +205,7 @@ void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &
         LOGI("is not support device");
         return;
     }
-    
+ 
     // online first query this dev's trust info
     DeviceInfo info(deviceInfo);
     QueryRelatedGroups(info.udid_, info.cid_);
@@ -485,9 +485,8 @@ void DeviceManagerAgent::InitDeviceInfos()
     }
 }
 
-int32_t IsSupportDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
+int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-
     std::string udid = "";
     string pkgName = IDaemon::SERVICE_NAME;
     if (DistributedHardware::DeviceManager::GetInstance().
