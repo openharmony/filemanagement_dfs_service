@@ -200,8 +200,7 @@ void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &
 {
     LOGI("networkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
     int32_t ret = IsSupportDevice(deviceInfo);
-    if (ret != FileManagement::ERR_OK)
-    {
+    if (ret != FileManagement::ERR_OK) {
         LOGI("is not support device");
         return;
     }
@@ -414,8 +413,7 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
         return;
     }
     int32_t ret = IsSupportDevice(deviceInfo);
-    if (ret != FileManagement::ERR_OK)
-    {
+    if (ret != FileManagement::ERR_OK) {
         LOGI("is not support device");
         return;
     }
@@ -475,8 +473,7 @@ void DeviceManagerAgent::InitDeviceInfos()
 
     for (const auto &deviceInfo : deviceInfoList) {
         int32_t ret = IsSupportDevice(deviceInfo);
-        if (ret != FileManagement::ERR_OK)
-        {
+        if (ret != FileManagement::ERR_OK) {
             LOGI("is not support device");
             continue;
         }
