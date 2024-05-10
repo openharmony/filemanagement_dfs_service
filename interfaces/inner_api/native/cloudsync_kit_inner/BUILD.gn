@@ -116,7 +116,7 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
     "samgr:samgr_proxy",
   ]
 
-  deps = [ "${utils_path}:libdistributedfileutils" ]
+  deps = [ "${utils_path}:libdistributedfileutils_lite" ]
 
   use_exceptions = true
   innerapi_tags = [ "platformsdk" ]
