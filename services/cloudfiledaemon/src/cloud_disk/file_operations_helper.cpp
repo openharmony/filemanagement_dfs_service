@@ -180,6 +180,7 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::GenerateCloudDiskInode(struct C
     child->layer = GetNextLayer(parentInode, parent);
     int64_t localId = GetFixedLayerRootId(child->layer);
     if (child->layer >= CLOUD_DISK_INODE_FIRST_LAYER) {
+        std::lock_guard<std::shared_mutex> bWLock(data->bundleNameIdLock);
         data->bundleNameId++;
         localId = data->bundleNameId + BUNDLE_NAME_OFFSET;
     }

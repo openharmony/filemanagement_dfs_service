@@ -573,16 +573,16 @@ int32_t CloudDiskDataHandler::UpdateRDBAndDentryFile(DKRecord &record, MetaBase 
 }
 
 int32_t CloudDiskDataHandler::DeleteRDBAndDentryFile(MetaBase &metaBase, std::string &parentCloudId,
-    std::string &name, DKRecord &record)
+    std::string &name, DKRecord &record, NativeRdb::ResultSet &local)
 {
     DKRecordData data;
     record.GetRecordData(data);
-    if (data.find(DK_FILE_NAME) == data.end() ||
-        data.at(DK_FILE_NAME).GetString(name) != DKLocalErrorCode::NO_ERROR) {
-        LOGE(" extract fileName error");
-        return E_INVAL_ARG;
+    if (DataConvertor::GetString(FC::FILE_NAME, name, local) != E_OK) {
+        return E_RDB;
     }
-    parentCloudId = localConvertor_.GetParentCloudId(data);
+    if (DataConvertor::GetString(FC::PARENT_CLOUD_ID, parentCloudId, local) != E_OK) {
+        return E_RDB;
+    }
     metaBase.name = name;
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
     int32_t ret = metaFile->DoLookupAndRemove(metaBase);
@@ -788,7 +788,7 @@ int32_t CloudDiskDataHandler::PullRecordDelete(DKRecord &record, NativeRdb::Resu
         if (ret != E_OK) {
             return ret;
         }
-        ret = DeleteRDBAndDentryFile(metaBase, parentCloudId, name, record);
+        ret = DeleteRDBAndDentryFile(metaBase, parentCloudId, name, record, local);
         if (ret != E_OK) {
             LOGE(" delete rdb and dentry failed, ret = %{public}d", ret);
             return ret;
@@ -1263,10 +1263,10 @@ static int32_t UpdateFileAsset(DKRecordData data, ValuesBucket &values)
 }
 
 static int32_t UpdateDentryPosition(uint32_t userId, const std::string &bundleName, const std::string &fileName,
-    const std::string &parentCloudId)
+    const std::string &parentCloudId, int32_t position)
 {
-    auto callback = [] (MetaBase &m) {
-        m.position = static_cast<uint8_t>(CloudDisk::LOCAL_AND_CLOUD);
+    auto callback = [&position] (MetaBase &m) {
+        m.position = position;
     };
     auto oldMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, parentCloudId);
     return oldMetaFile->DoLookupAndUpdate(fileName, callback);
@@ -1314,7 +1314,7 @@ int32_t CloudDiskDataHandler::OnCreateRecordSuccess(
         LOGE("extract fileName error");
         return E_INVAL_ARG;
     }
-    ret = UpdateDentryPosition(userId_, bundleName_, fileName, parentCloudId);
+    ret = UpdateDentryPosition(userId_, bundleName_, fileName, parentCloudId, CloudDisk::LOCAL_AND_CLOUD);
     if (ret != E_OK) {
         LOGE("update dentry position failed, ret = %{public}d", ret);
         return ret;
@@ -1568,7 +1568,7 @@ int32_t CloudDiskDataHandler::OnDownloadSuccess(
     }
     std::string parentCloudId = dentryContext->GetParentCloudId();
     std::string fileName = dentryContext->GetFileName();
-    ret = UpdateDentryPosition(userId_, bundleName_, fileName, parentCloudId);
+    ret = UpdateDentryPosition(userId_, bundleName_, fileName, parentCloudId, CloudDisk::LOCAL_AND_CLOUD);
     if (ret != E_OK) {
         LOGE("update dentry position failed, ret = %{public}d", ret);
         return ret;
@@ -1579,17 +1579,57 @@ int32_t CloudDiskDataHandler::OnDownloadSuccess(
     return ret;
 }
 
+int32_t CloudDiskDataHandler::GetCleanCacheData(const string &path, string &parentCloudId, string &fileName,
+    string &cloudId)
+{
+    cloudId = CloudFileUtils::GetCloudId(path);
+    if (cloudId.empty()) {
+        LOGE("get cloud id failed, errno %{public}d", errno);
+        return E_INVAL_ARG;
+    }
+    int lastSlash = path.find_last_of("/");
+    fileName = path.substr(lastSlash + 1);
+    string parentPath = path.substr(0, lastSlash);
+    parentCloudId = CloudFileUtils::GetCloudId(parentPath);
+    if (parentCloudId.empty()) {
+        NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
+        predicates.SetWhereClause(FileColumn::CLOUD_ID + " = ?");
+        predicates.SetWhereArgs({cloudId});
+        predicates.Limit(LIMIT_SIZE);
+        auto resultSet = Query(predicates, {FileColumn::PARENT_CLOUD_ID});
+        if (resultSet == nullptr) {
+            LOGE("get nullptr created result");
+            return E_RDB;
+        }
+        int32_t rowCount = 0;
+        int32_t ret = resultSet->GetRowCount(rowCount);
+        if (ret != 0 || rowCount < 0) {
+            LOGE("result set get row count err %{public}d", ret);
+            return E_RDB;
+        }
+        if (resultSet->GoToNextRow() != E_OK) {
+            return E_RDB;
+        }
+        int32_t columnIndex = 0;
+        resultSet->GetColumnIndex(FileColumn::PARENT_CLOUD_ID, columnIndex);
+        resultSet->GetString(columnIndex, parentCloudId);
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskDataHandler::CleanCache(const string &uri)
 {
     string path;
+    string fileName;
+    string cloudId;
+    string parentCloudId;
     int32_t ret = AppFileService::SandboxHelper::GetPhysicalPath(uri, to_string(userId_), path);
     if (ret != E_OK) {
         LOGE("get physical path failed");
         return E_INVAL_ARG;
     }
-    string cloudId = CloudFileUtils::GetCloudId(path);
-    if (cloudId.empty()) {
-        LOGE("get cloud id failed, errno %{public}d", errno);
+    ret = GetCleanCacheData(path, parentCloudId, fileName, cloudId);
+    if (ret != E_OK) {
         return E_INVAL_ARG;
     }
     string bucketPaht = CloudFileUtils::GetLocalBucketPath(cloudId, bundleName_, userId_) + "/" + cloudId;
@@ -1606,11 +1646,22 @@ int32_t CloudDiskDataHandler::CleanCache(const string &uri)
     values.PutInt(FC::POSITION, POSITION_CLOUD);
     int32_t changedRows = 0;
     string whereClause = FC::CLOUD_ID + " = ?";
+    TransactionOperations rdbTransaction(GetRaw());
+    ret = rdbTransaction.Start();
+    if (ret != E_OK) {
+        return ret;
+    }
     int32_t rdbRet = Update(changedRows, values, whereClause, {cloudId});
     if (rdbRet != E_OK) {
         LOGE("rdb update failed, err=%{public}d", rdbRet);
         return E_RDB;
     }
+    ret = UpdateDentryPosition(userId_, bundleName_, fileName, parentCloudId, CloudDisk::CLOUD);
+    if (ret != E_OK) {
+        LOGE("update dentry position failed, ret = %{public}d", ret);
+        return ret;
+    }
+    rdbTransaction.Finish();
     CloudDiskNotify::GetInstance().TryNotifyService(
         {NotifyOpsType::SERVICE_UPDATE, cloudId, NotifyType::NOTIFY_MODIFIED}, {userId_, bundleName_});
     return ret;

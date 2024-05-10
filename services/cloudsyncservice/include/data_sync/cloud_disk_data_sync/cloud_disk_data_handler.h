@@ -133,11 +133,13 @@ private:
     int32_t UpdateRDBAndDentryFile(DriveKit::DKRecord &record, MetaBase &metaBase, const std::string &oldFileName,
         const std::string &oldParentCloudId, std::function<int32_t()> updateRDBCallback);
     int32_t DeleteRDBAndDentryFile(MetaBase &metaBase, std::string &parentCloudId, std::string &name,
-        DriveKit::DKRecord &record);
+        DriveKit::DKRecord &record, NativeRdb::ResultSet &local);
     int32_t UpdateDBDentryAndUnlink(DriveKit::DKRecord &record, NativeRdb::ResultSet &local,
         NativeRdb::ValuesBucket &values, const std::string &oldFileName, const std::string &oldParentCloudId);
     int32_t GetParentCloudId(std::shared_ptr<NativeRdb::RdbStore> rdbStore, const std::string &cloudId,
         std::string &parentCloudId);
+    int32_t GetCleanCacheData(const std::string &path, std::string &parentCloudId, std::string &fileName,
+        std::string &cloudId);
 
     CloudDiskDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
     int64_t UTCTimeMilliSeconds();
