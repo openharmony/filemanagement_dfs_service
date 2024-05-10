@@ -126,6 +126,7 @@ void SoftbusSessionDispatcher::OnSessionClosed(int32_t sessionId, ShutdownReason
 
 void SoftbusSessionDispatcher::CloseSessionByCid(const std::string &cid)
 {
+    LOGI("CloseSessionByCid Enter.");
     ShutdownReason reason = SHUTDOWN_REASON_UNKNOWN;
     for (const auto &pair : idMap_) {
         if (pair.second.first == cid) {
