@@ -135,7 +135,7 @@ bool NetworkAgentTemplate::FindSession(int32_t sessionId)
 
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 {
-    (void)cid;
+    SoftbusSessionDispatcher::CloseSessionByCid(cid);
     LOGI("session closed!");
 }
 

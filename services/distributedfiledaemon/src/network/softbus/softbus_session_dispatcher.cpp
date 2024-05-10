@@ -88,12 +88,9 @@ void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo
     }
     std::string peerSessionName(info.name);
     std::string peerDevId = info.networkId;
-    if (!idMap_.empty()) {
+    {
         std::lock_guard<std::mutex> lock(idMapMutex_);
-        auto it = idMap_.find(sessionId);
-        if (it != idMap_.end()) {
-            it->second = std::make_pair(peerDevId, peerSessionName);
-        }
+        idMap_[sessionId] = std::make_pair(peerDevId, peerSessionName);
     }
     auto agent = GetAgent(sessionId, peerSessionName);
     if (auto spt = agent.lock()) {
@@ -124,6 +121,16 @@ void SoftbusSessionDispatcher::OnSessionClosed(int32_t sessionId, ShutdownReason
         spt->OnSessionClosed(sessionId, peerDevId);
     } else {
         LOGE("session not exist!, session id is %{public}d", sessionId);
+    }
+}
+
+void SoftbusSessionDispatcher::CloseSessionByCid(const std::string &cid);
+{
+    ShutdownReason reason = SHUTDOWN_REASON_UNKNOWN;
+    for (const auto &pair : idMap_) {
+        if (pair.second.first == cid) {
+            OnSessionClosed(pair.first, reason);
+        }
     }
 }
 } // namespace DistributedFile
