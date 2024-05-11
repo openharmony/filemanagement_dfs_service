@@ -1042,10 +1042,12 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
         LOGE("Failed to Rename DB name:%{private}s err:%{public}d", name, err);
         return;
     }
-    int32_t isDir;
-    err = rdbStore->GetIsDirectory(newParentInode->cloudId, newName, isDir);
-    if (err != 0) {
-        LOGE("get isDir fail, err: %{public}d", err);
+    bool isDir = false;
+    string key = std::to_string(parent) + name;
+    int64_t localId = FileOperationsHelper::FindLocalId(data, key);
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, localId);
+    if (inoPtr != nullptr) {
+        isDir = S_ISDIR(inoPtr->stat.st_mode);
     }
     CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
         NotifyOpsType::DAEMON_RENAME, nullptr, parent, name, newParent, newName},
