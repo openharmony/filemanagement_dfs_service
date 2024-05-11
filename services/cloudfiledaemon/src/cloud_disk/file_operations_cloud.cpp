@@ -66,18 +66,20 @@ namespace {
     static const int32_t RIGHT_SHIFT = 5;
 }
 
-static void InitInodeAttr(struct CloudDiskFuseData *data, shared_ptr<CloudDiskInode> parentInode,
+static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
     struct CloudDiskInode *childInode, const MetaBase &metaBase, const int64_t &inodeId)
 {
+    auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
+        static_cast<int64_t>(parent));
     childInode->stat = parentInode->stat;
-    childInode->stat.st_ino = inodeId;
+    childInode->stat.st_ino = static_cast<uint64_t>(inodeId);
     childInode->stat.st_mtime = metaBase.mtime / MILLISECOND_TO_SECONDS_TIMES;
     childInode->stat.st_atime = metaBase.atime / MILLISECOND_TO_SECONDS_TIMES;
 
     childInode->bundleName = parentInode->bundleName;
     childInode->fileName = metaBase.name;
     childInode->layer = FileOperationsHelper::GetNextLayer(parentInode, parentInode->parent);
-    childInode->parent = parentInode->parent;
+    childInode->parent = parent;
     childInode->cloudId = metaBase.cloudId;
     childInode->ops = make_shared<FileOperationsCloud>();
 
@@ -219,26 +221,24 @@ static void LookUpRecycleBin(struct CloudDiskFuseData *data, fuse_ino_t parent,
     FileOperationsHelper::GetInodeAttr(child, &e->attr);
 }
 
-static int32_t LookupRecycledFile(struct CloudDiskFuseData *data, const char *name, struct fuse_entry_param *e)
+static int32_t LookupRecycledFile(struct CloudDiskFuseData *data, const char *name,
+    const std::string bundleName, struct fuse_entry_param *e)
 {
-    string nameStr = name;
-    size_t lastUnderline = nameStr.find_last_of('_');
-    string fileName = nameStr.substr(0, lastUnderline);
-    int64_t rowId = -1;
-    string remain = nameStr.substr(lastUnderline + 1,
-        nameStr.length() - lastUnderline);
-    istringstream transfer(remain);
-    if (!(transfer >> rowId)) {
-        LOGE("parse recycled file name failed");
+    MetaBase metaBase(name);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId, bundleName,
+        RECYCLE_CLOUD_ID);
+    int ret = metaFile->DoLookup(metaBase);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("file %{public}s not found in recyclebin", name);
         return EINVAL;
     }
-    int64_t localId = rowId + USER_LOCAL_ID_OFFSET;
-    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, localId);
+    int64_t inodeId = static_cast<int64_t>(DentryHash(metaBase.cloudId));
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
     if (inoPtr == nullptr) {
         LOGE("inode not found");
         return EINVAL;
     }
-    e->ino = static_cast<fuse_ino_t>(localId);
+    e->ino = static_cast<fuse_ino_t>(inodeId);
     FileOperationsHelper::GetInodeAttr(inoPtr, &e->attr);
     return 0;
 }
@@ -281,7 +281,7 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
         LookUpRecycleBin(data, parent, parentInode, e);
         return 0;
     } else if (parent == RECYCLE_LOCAL_ID) {
-        int32_t ret = LookupRecycledFile(data, name, e);
+        int32_t ret = LookupRecycledFile(data, name, parentInode->bundleName, e);
         if (ret != 0) {
             LOGE("fail to lookup recycledfile");
             return ret;
@@ -298,10 +298,10 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
     }
     string key = std::to_string(parent) + name;
     int64_t inodeId = static_cast<int64_t>(DentryHash(metaBase.cloudId));
-    auto child = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
-    child = UpdateChildCache(data, inodeId, child);
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
+    auto child = UpdateChildCache(data, inodeId, inoPtr);
     child->refCount++;
-    InitInodeAttr(data, parentInode, child.get(), metaBase, inodeId);
+    InitInodeAttr(data, parent, child.get(), metaBase, inodeId);
     InitLocalIdCache(data, key, inodeId);
     e->ino = static_cast<fuse_ino_t>(inodeId);
     FileOperationsHelper::GetInodeAttr(child, &e->attr);
@@ -388,7 +388,7 @@ static void CloudOpen(fuse_req_t req,
     shared_ptr<CloudDiskInode> inoPtr, struct fuse_file_info *fi, string path)
 {
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    auto filePtr = FileOperationsHelper::FindCloudDiskFile(data, data->fileId.load());
+    auto filePtr = FileOperationsHelper::FindCloudDiskFile(data, fi->fh);
     if (filePtr == nullptr) {
         filePtr = InitFileAttr(data, fi);
     }
@@ -428,8 +428,11 @@ static void CloudOpen(fuse_req_t req,
 void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    std::unique_lock<std::shared_mutex> wLock(data->fileIdLock, std::defer_lock);
+    wLock.lock();
     data->fileId++;
-    fi->fh = static_cast<uint64_t>(data->fileId.load());
+    fi->fh = data->fileId;
+    wLock.unlock();
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (inoPtr == nullptr) {
         LOGE("inode not found");
@@ -569,8 +572,11 @@ void FileOperationsCloud::Create(fuse_req_t req, fuse_ino_t parent, const char *
         return;
     }
     auto filePtr = InitFileAttr(data, fi);
+    std::unique_lock<std::shared_mutex> wLock(data->fileIdLock, std::defer_lock);
+    wLock.lock();
     data->fileId++;
     fi->fh = static_cast<uint64_t>(data->fileId);
+    wLock.unlock();
     filePtr->fd = err;
     filePtr->type = CLOUD_DISK_FILE_TYPE_LOCAL;
     filePtr->fileDirty = CLOUD_DISK_FILE_CREATE;
@@ -752,11 +758,10 @@ void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
         LOGE("create recycle dentry failed");
         return;
     }
-    int64_t rowId = static_cast<int64_t>(ino) - USER_LOCAL_ID_OFFSET;
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
     ret = rdbStore->SetXAttr(inoPtr->cloudId, CLOUD_CLOUD_RECYCLE_XATTR, value,
-        inoPtr->fileName, parentInode->cloudId, rowId);
+        inoPtr->fileName, parentInode->cloudId);
     if (ret != 0) {
         LOGE("set cloud id fail %{public}d", ret);
         fuse_reply_err(req, EINVAL);
@@ -953,18 +958,14 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
     }
     if (isDirectory == FILE && position != CLOUD) {
         string localPath = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
-        LOGI("DURANT: unlink %{public}s", localPath.c_str());
+        LOGI("unlink %{public}s", localPath.c_str());
         ret = unlink(localPath.c_str());
         if (ret != 0) {
             LOGE("Failed to unlink cloudId:%{private}s, errno:%{public}d", cloudId.c_str(), errno);
-            ret = metaFile->DoCreate(metaBase);
-            if (ret != 0) {
-                LOGE("DURANT:revoke dentryfile failed, ret = %{public}d", ret);
-                return ret;
-            }
-            return errno;
+            (void)metaFile->DoCreate(metaBase);
+            return ret;
         }
-        return errno;
+        return ret;
     }
     function<void()> rdbUnlink = [rdbStore, cloudId, position] {
         int32_t err = rdbStore->Unlink(cloudId, position);
@@ -990,7 +991,7 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
         parentInode->bundleName, parentInode->cloudId);
     if (metaFile->GetDentryCount() != 0) {
         LOGE("Directory not empty");
-        fuse_reply_err(req, EPERM);
+        fuse_reply_err(req, ENOTEMPTY);
         return;
     }
     err = DoCloudUnlink(req, parent, name);
@@ -1042,10 +1043,12 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
         LOGE("Failed to Rename DB name:%{private}s err:%{public}d", name, err);
         return;
     }
-    int32_t isDir;
-    err = rdbStore->GetIsDirectory(newParentInode->cloudId, newName, isDir);
-    if (err != 0) {
-        LOGE("get isDir fail, err: %{public}d", err);
+    bool isDir = false;
+    string key = std::to_string(parent) + name;
+    int64_t localId = FileOperationsHelper::FindLocalId(data, key);
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, localId);
+    if (inoPtr != nullptr) {
+        isDir = S_ISDIR(inoPtr->stat.st_mode);
     }
     CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
         NotifyOpsType::DAEMON_RENAME, nullptr, parent, name, newParent, newName},
@@ -1057,7 +1060,7 @@ void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
                                off_t offset, struct fuse_file_info *fi)
 {
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    auto filePtr = FileOperationsHelper::FindCloudDiskFile(data, data->fileId.load());
+    auto filePtr = FileOperationsHelper::FindCloudDiskFile(data, fi->fh);
     if (filePtr == nullptr) {
         fuse_reply_err(req, EINVAL);
         LOGE("file not found");

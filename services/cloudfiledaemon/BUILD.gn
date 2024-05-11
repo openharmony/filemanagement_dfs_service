@@ -17,6 +17,7 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_shared_library("cloudfiledaemon") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -70,6 +71,7 @@ ohos_shared_library("cloudfiledaemon") {
     "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
+    "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
     "relational_store:native_rdb",

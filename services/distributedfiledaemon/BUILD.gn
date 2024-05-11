@@ -16,6 +16,7 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_shared_library("libdistributedfiledaemon") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -91,6 +92,7 @@ config("public_config") {
   include_dirs = [
     ".",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
   ]
 }
 
@@ -105,6 +107,7 @@ config("private_config") {
 ohos_shared_library("distributed_file_daemon_kit_inner") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true

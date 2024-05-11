@@ -269,7 +269,7 @@ static int32_t CheckNameForSpace(const std::string& fileName, const int32_t isDi
         return EINVAL;
     }
     if (isDir == DIRECTORY) {
-        if (fileName.length() >= 1 && fileName[fileName.length() - 1] == ' ') {
+        if (fileName.length() >= 1 && fileName[fileName.length() - 1] == ' ' || fileName == RECYCLE_FILE_NAME) {
             LOGI("Illegal name");
             return EINVAL;
         }
@@ -597,17 +597,27 @@ int32_t CloudDiskRdbStore::LocationSetXattr(const std::string &name, const std::
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
-    const std::string &cloudId, const std::string &value, int64_t rowId)
+int32_t CloudDiskRdbStore::GetRowId(const std::string &cloudId, int64_t &rowId)
 {
-    LOGI("DURANT: recycleSetXattr, name:%{public}s value %{public}s", name.c_str(), value.c_str());
     RDBPTR_IS_NULLPTR(rdbStore_);
-    bool isNum = std::all_of(value.begin(), value.end(), ::isdigit);
-    if (!isNum) {
-        return EINVAL;
+    CLOUDID_IS_NULL(cloudId);
+    AbsRdbPredicates getRowIdPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    getRowIdPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(getRowIdPredicates, {FileColumn::ROW_ID});
+    if (resultSet == nullptr) {
+        LOGE("get nullptr result set");
+        return E_RDB;
     }
-    int32_t val = std::stoi(value);
-    ValuesBucket setXAttr;
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("getRowId result set go to next row failed");
+        return E_RDB;
+    }
+    CloudDiskRdbUtils::GetLong(FileColumn::ROW_ID, rowId, resultSet);
+    return E_OK;
+}
+
+static int32_t RecycleSetValue(int32_t val, ValuesBucket &setXAttr)
+{
     setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
     if (val == 0) {
         setXAttr.PutInt(FileColumn::OPERATE_TYPE, static_cast<int32_t>(OperationType::RESTORE));
@@ -618,22 +628,46 @@ int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::s
         setXAttr.PutLong(FileColumn::FILE_TIME_RECYCLED, UTCTimeMilliSeconds());
         setXAttr.PutInt(FileColumn::DIRECTLY_RECYCLED, SET_STATE);
     } else {
+        LOGE("invalid value");
         return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
+    const std::string &cloudId, const std::string &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    bool isNum = std::all_of(value.begin(), value.end(), ::isdigit);
+    if (!isNum) {
+        return EINVAL;
+    }
+    int32_t val = std::stoi(value);
+    ValuesBucket setXAttr;
+    int32_t ret = RecycleSetValue(val, setXAttr);
+    if (ret != E_OK) {
+        return ret;
     }
     int32_t changedRows = -1;
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(cloudId);
     TransactionOperations rdbTransaction(rdbStore_);
-    int32_t ret = rdbTransaction.Start();
+    ret = rdbTransaction.Start();
     if (ret != E_OK) {
-        LOGE("DURANT: rdbstore begin transaction failed, ret = %{public}d", ret);
+        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
         return ret;
     }
     ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setXAttr,
         FileColumn::CLOUD_ID + " = ?", bindArgs);
     if (ret != E_OK) {
-        LOGE("DURANT: set xAttr location fail, ret %{public}d", ret);
+        LOGE("set xAttr location fail, ret %{public}d", ret);
         return E_RDB;
+    }
+    int64_t rowId = 0;
+    ret = GetRowId(cloudId, rowId);
+    if (ret != E_OK) {
+        LOGE("get rowId fail, ret %{public}d", ret);
+        return ret;
     }
     if (val == 0) {
         ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId_, bundleName_, name,
@@ -643,7 +677,7 @@ int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::s
             parentCloudId, rowId);
     }
     if (ret != E_OK) {
-        LOGE("DURANT: recycle set dentryfile failed, ret = %{public}d", ret);
+        LOGE("recycle set dentryfile failed, ret = %{public}d", ret);
         return ret;
     }
     rdbTransaction.Finish();
@@ -793,7 +827,7 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
 }
 
 int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
-    const std::string &name, const std::string &parentCloudId, int64_t rowId)
+    const std::string &name, const std::string &parentCloudId)
 {
     int32_t num = CheckXattr(key);
     switch (num) {
@@ -801,7 +835,7 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
             return LocationSetXattr(name, parentCloudId, cloudId, value);
             break;
         case CLOUD_RECYCLE:
-            return RecycleSetXattr(name, parentCloudId, cloudId, value, rowId);
+            return RecycleSetXattr(name, parentCloudId, cloudId, value);
             break;
         case IS_FAVORITE:
             return FavoriteSetXattr(cloudId, value);
@@ -971,31 +1005,6 @@ int32_t CloudDiskRdbStore::GetDirtyType(const std::string &cloudId, int32_t &dir
     int32_t ret = CloudDiskRdbUtils::GetInt(FileColumn::DIRTY_TYPE, dirtyType, resultSet);
     if (ret != E_OK) {
         LOGE("get file status fail");
-        return ret;
-    }
-    return E_OK;
-}
-
-int32_t CloudDiskRdbStore::GetIsDirectory(const std::string &parentCloudId, const std::string &fileName, int32_t &isDir)
-{
-    if (parentCloudId.empty() || fileName.empty()) {
-        return E_INVAL_ARG;
-    }
-    AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
-    predicates.EqualTo(FileColumn::PARENT_CLOUD_ID, parentCloudId)->And()->EqualTo(FileColumn::FILE_NAME, fileName);
-    auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::IS_DIRECTORY});
-    if (resultSet == nullptr) {
-        LOGE("get null result");
-        return E_RDB;
-    }
-    if (resultSet->GoToNextRow() != E_OK) {
-        LOGE("get current node resultSet fail");
-        return E_RDB;
-    }
-
-    int32_t ret = CloudDiskRdbUtils::GetInt(FileColumn::IS_DIRECTORY, isDir, resultSet);
-    if (ret != E_OK) {
-        LOGE("get is dir fail");
         return ret;
     }
     return E_OK;

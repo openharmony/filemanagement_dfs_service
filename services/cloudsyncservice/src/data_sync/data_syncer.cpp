@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -81,7 +81,6 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
 
     forceFlag_ = forceFlag;
     triggerType_ = triggerType;
-    startTime_ = GetCurrentTimeStamp();
 
     /* only one specific data sycner running at a time */
     if (syncStateManager_.CheckAndSetPending(forceFlag, triggerType)) {
@@ -89,6 +88,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
         return E_PENDING;
     }
 
+    startTime_ = GetCurrentTimeStamp();
     int32_t ret = InitSysEventData();
     if (ret != E_OK) {
         return E_DATA;
