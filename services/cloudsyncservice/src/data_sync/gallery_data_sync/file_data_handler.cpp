@@ -620,7 +620,7 @@ int32_t FileDataHandler::ConflictRenamePath(string &fullPath, string &rdbPath, s
     return E_OK;
 }
 
-static int renameFilePath(const std::string &oldPath, const std::string &newPath)
+static int RenameFilePath(const std::string &oldPath, const std::string &newPath)
 {
     int ret = rename(oldPath.c_str(), newPath.c_str());
     if (ret != 0) {
@@ -651,13 +651,13 @@ int32_t FileDataHandler::ConflictRename(string &fullPath, string &relativePath)
     }
 
     /* thumb new path and new name */
-    ret = renameFilePath(tmpPath, newPath);
+    ret = RenameFilePath(tmpPath, newPath);
     if (ret != E_OK) {
         return ret;
     }
-    ret = renameFilePath(localPath, newLocalPath);
+    ret = RenameFilePath(localPath, newLocalPath);
     if (ret != 0) {
-        (void)renameFilePath(newPath, tmpPath);
+        (void)RenameFilePath(newPath, tmpPath);
     }
 
     ValuesBucket values;
@@ -670,8 +670,8 @@ int32_t FileDataHandler::ConflictRename(string &fullPath, string &relativePath)
     int updateRows = -1;
     ret = Update(updateRows, values, whereClause, {fullPath});
     if (updateRows <= 0  || ret != E_OK) {
-        (void)renameFilePath(newPath, tmpPath);
-        (void)renameFilePath(newLocalPath, localPath);
+        (void)RenameFilePath(newPath, tmpPath);
+        (void)RenameFilePath(newLocalPath, localPath);
         LOGE("update retry flag failed, updateRows=%{public}d, ret=%{public}d", updateRows, ret);
         return E_RDB;
     }

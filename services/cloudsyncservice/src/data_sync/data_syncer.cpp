@@ -622,22 +622,29 @@ void DataSyncer::PullRecordsWithId(shared_ptr<TaskContext> context, const std::v
         LOGE("context get handler err");
         return;
     }
+    if (records.empty()) {
+        if (!retry) {
+            handler->FinishPull(ctx->GetBatchNo());
+        }
+        LOGI("PullRecordsWithId records is empty");
+        return;
+    }
 
     FetchCondition cond;
     handler->GetFetchCondition(cond);
     LOGI("retry records count: %{public}u", static_cast<uint32_t>(records.size()));
 
-    auto callback = AsyncCallback(&DataSyncer::OnFetchRecordWithIds);
-    if (callback == nullptr) {
-        LOGE("wrap on fetch batch records fail");
-        return;
-    }
     std::vector<DKRecord> recordsToFetch;
     for (const auto& it : records) {
         DKRecord record;
         record.SetRecordId(it);
         record.SetRecordType(cond.recordType);
         recordsToFetch.push_back(record);
+    }
+    auto callback = AsyncCallback(&DataSyncer::OnFetchRecordWithIds);
+    if (callback == nullptr) {
+        LOGE("wrap on fetch batch records fail");
+        return;
     }
     int32_t ret = sdkHelper_->FetchRecordWithIds(context, cond, std::move(recordsToFetch), callback);
     if (ret != E_OK) {

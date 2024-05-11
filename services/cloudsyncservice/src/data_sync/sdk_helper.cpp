@@ -99,7 +99,7 @@ int32_t SdkHelper::FetchRecordWithId(std::shared_ptr<DriveKit::DKContext> contex
 int32_t SdkHelper::FetchRecordWithIds(std::shared_ptr<DriveKit::DKContext> context, FetchCondition &cond,
     std::vector<DriveKit::DKRecord> &&records, FetchRecordIdsCallback callback)
 {
-    auto err = database_->FetchRecordWithIds(context, std::move(records), cond.desiredKeys, callback);
+    auto err = database_->FetchRecordWithIds(context, std::move(records), cond.fullKeys, callback);
     if (err != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("drivekit fetch patch records err %{public}d", err);
         return E_CLOUD_SDK;
@@ -196,13 +196,13 @@ int32_t SdkHelper::DownloadAssets(DriveKit::DKDownloadAsset &assetsToDownload)
     return E_OK;
 }
 
-int32_t SdkHelper::DownloadAssets(std::vector<DriveKit::DKDownloadAsset> &assetsToDownload,
+int32_t SdkHelper::DownloadAssets(const std::vector<DriveKit::DKDownloadAsset> &assetsToDownload,
                                   std::vector<bool> &assetResultMap)
 {
-    std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> result;
+    std::vector<DriveKit::DKDownloadResult> result;
     auto ret = downloader_->DownLoadAssets(assetsToDownload, result);
     for (const auto &it : result) {
-        assetResultMap.emplace_back(it.second.IsSuccess());
+        assetResultMap.emplace_back(it.IsSuccess());
     }
     if (ret != DriveKit::DKLocalErrorCode::NO_ERROR) {
         LOGE("DownLoadAssets fail ret %{public}d", static_cast<int>(ret));

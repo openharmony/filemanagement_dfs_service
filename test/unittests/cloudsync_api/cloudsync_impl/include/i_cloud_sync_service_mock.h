@@ -122,7 +122,7 @@ public:
     }
     int32_t DownloadFiles(const int32_t userId,
                           const std::string &bundleName,
-                          std::vector<AssetInfoObj> &assetInfoObj,
+                          const std::vector<AssetInfoObj> &assetInfoObj,
                           std::vector<bool> &assetResultMap)
     {
         return E_OK;

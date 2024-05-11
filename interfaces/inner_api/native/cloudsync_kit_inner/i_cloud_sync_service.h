@@ -48,7 +48,7 @@ public:
     virtual int32_t DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj) = 0;
     virtual int32_t DownloadFiles(const int32_t userId,
                                   const std::string &bundleName,
-                                  std::vector<AssetInfoObj> &assetInfoObj,
+                                  const std::vector<AssetInfoObj> &assetInfoObj,
                                   std::vector<bool> &assetResultMap) = 0;
     virtual int32_t DownloadAsset(const uint64_t taskId,
                                   const int32_t userId,
