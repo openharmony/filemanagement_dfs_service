@@ -127,6 +127,7 @@ void SoftbusSessionDispatcher::OnSessionClosed(int32_t sessionId, ShutdownReason
 void SoftbusSessionDispatcher::CloseSessionByCid(const std::string &cid)
 {
     LOGI("CloseSessionByCid Enter.");
+    std::lock_guard<std::mutex> lock(idMapMutex_);
     for (const auto &pair : idMap_) {
         if (pair.second.first == cid) {
             std::string peerDevId = pair.second.first;
