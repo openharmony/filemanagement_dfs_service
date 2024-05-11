@@ -989,7 +989,14 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
     }
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
         parentInode->bundleName, parentInode->cloudId);
-    if (metaFile->GetDentryCount() != 0) {
+    std::vector<MetaBase> bases;
+    err = metaFile->LoadChildren(bases);
+    if (err != 0) {
+        LOGE("load children failed, err=%{public}d", err);
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    if (!bases.empty()) {
         LOGE("Directory not empty");
         fuse_reply_err(req, ENOTEMPTY);
         return;

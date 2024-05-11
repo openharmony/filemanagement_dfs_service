@@ -656,7 +656,7 @@ int32_t CloudDiskDataHandler::UpdateDBDentryAndUnlink(DKRecord &record, NativeRd
             {NotifyOpsType::SERVICE_UPDATE, record.GetRecordId(), NotifyType::NOTIFY_NONE, record},
             {userId_, bundleName_});
         auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, oldParentCloudId);
-        auto callback = [&metaBase] (MetaBase &m) {m.position = POSITION_CLOUD;};
+        auto callback = [] (MetaBase &m) {m.position = POSITION_CLOUD;};
         ret = metaFile->DoLookupAndUpdate(oldFileName, callback);
         if (ret != E_OK) {
             LOGE(" update dentryfile failed, ret = %{public}d", ret);
@@ -665,10 +665,8 @@ int32_t CloudDiskDataHandler::UpdateDBDentryAndUnlink(DKRecord &record, NativeRd
         ret = unlink(CloudFileUtils::GetLocalFilePath(record.GetRecordId(), bundleName_, userId_).c_str());
         if (ret != 0) {
             LOGE(" unlink local failed, errno %{public}d", errno);
-            ret = metaFile->DoCreate(metaBase);
-            if (ret != E_OK) {
-                return ret;
-            }
+            auto callback = [&metaBase] (MetaBase &m) {m.position = metaBase.position;};
+            (void)metaFile->DoLookupAndUpdate(oldFileName, callback);
             return ret;
         }
         rdbTransaction.Finish();
@@ -1469,6 +1467,27 @@ void CloudDiskDataHandler::Reset()
     createFailSet_.clear();
 }
 
+static int32_t GetDownloadDataFromLocal(NativeRdb::ResultSet &resultSet, int32_t &isDirectory, string &fileName,
+    string &parentCloudId)
+{
+    int32_t ret = DataConvertor::GetInt(FC::IS_DIRECTORY, isDirectory, resultSet);
+    if (ret != E_OK) {
+        LOGE("Get parent cloudId failed");
+        return E_RDB;
+    }
+    ret = DataConvertor::GetString(FC::FILE_NAME, fileName, resultSet);
+    if (ret != E_OK) {
+        LOGE("Get parent cloudId failed");
+        return E_RDB;
+    }
+    ret = DataConvertor::GetString(FC::PARENT_CLOUD_ID, parentCloudId, resultSet);
+    if (ret != E_OK) {
+        LOGE("Get parent cloudId failed");
+        return E_RDB;
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskDataHandler::GetDownloadAsset(std::string uri,
                                                vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
                                                std::shared_ptr<DentryContext> dentryContext)
@@ -1503,16 +1522,14 @@ int32_t CloudDiskDataHandler::GetDownloadAsset(std::string uri,
     if (resultSet->GoToNextRow() != E_OK) {
         return E_RDB;
     }
-    int32_t columnIndex = 0;
     int32_t isDirectory = 0;
-    resultSet->GetColumnIndex(FileColumn::IS_DIRECTORY, columnIndex);
-    resultSet->GetInt(columnIndex, isDirectory);
     string fileName;
-    resultSet->GetColumnIndex(FileColumn::FILE_NAME, columnIndex);
-    resultSet->GetString(columnIndex, fileName);
     string parentCloudId;
-    resultSet->GetColumnIndex(FileColumn::PARENT_CLOUD_ID, columnIndex);
-    resultSet->GetString(columnIndex, parentCloudId);
+    ret = GetDownloadDataFromLocal(*resultSet.get(), isDirectory, fileName, parentCloudId);
+    if (ret != E_OK) {
+        LOGE("Get download data from local failed");
+        return E_RDB;
+    }
     dentryContext->SetParentCloudId(parentCloudId);
     dentryContext->SetFileName(fileName);
     if (isDirectory == FILE) {

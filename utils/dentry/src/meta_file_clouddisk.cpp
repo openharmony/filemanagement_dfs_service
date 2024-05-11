@@ -142,12 +142,6 @@ CloudDiskMetaFile::CloudDiskMetaFile(uint32_t userId, const std::string &bundleN
 
     HmdfsDcacheHeader header{};
     (void)FileUtils::ReadFile(fd_, 0, sizeof(header), &header);
-    dentryCount_ = header.dentryCount;
-}
-
-uint64_t CloudDiskMetaFile::GetDentryCount()
-{
-    return dentryCount_;
 }
 
 int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskMetaFileCallBack callback)
@@ -191,8 +185,6 @@ int32_t CloudDiskMetaFile::DoLookupAndRemove(MetaBase &metaBase)
 
 CloudDiskMetaFile::~CloudDiskMetaFile()
 {
-    HmdfsDcacheHeader header{.dentryCount = dentryCount_};
-    (void)FileUtils::WriteFile(fd_, &header, 0, sizeof(header));
 }
 
 static bool IsDotDotdot(const std::string &name)
@@ -466,7 +458,6 @@ int32_t CloudDiskMetaFile::DoCreate(const MetaBase &base)
         LOGD("WriteFile failed, size %{public}d != %{public}d", size, DENTRYGROUP_SIZE);
         return EINVAL;
     }
-    ++dentryCount_;
     return E_OK;
 }
 
@@ -598,7 +589,6 @@ int32_t CloudDiskMetaFile::DoRemove(const MetaBase &base)
         return EIO;
     }
 
-    --dentryCount_;
     return E_OK;
 }
 
@@ -683,6 +673,55 @@ int32_t CloudDiskMetaFile::DoRename(MetaBase &metaBase, const std::string &newNa
         metaBase.name = newName;
         (void)newMetaFile->DoRemove(metaBase);
         return ret;
+    }
+    return E_OK;
+}
+
+static int32_t DecodeDentrys(const HmdfsDentryGroup &dentryGroup, std::vector<MetaBase> &bases)
+{
+    for (uint32_t i = 0; i < DENTRY_PER_GROUP; i++) {
+        int len = dentryGroup.nsl[i].namelen;
+        if (!BitOps::TestBit(i, dentryGroup.bitmap) || len == 0 || len >= PATH_MAX) {
+            continue;
+        }
+
+        std::string name(reinterpret_cast<const char *>(dentryGroup.fileName[i]), len);
+
+        MetaBase base(name);
+        base.mode = dentryGroup.nsl[i].mode;
+        base.mtime = dentryGroup.nsl[i].mtime;
+        base.size = dentryGroup.nsl[i].size;
+        base.position = MetaHelper::GetPosition(&dentryGroup.nsl[i]);
+        base.fileType = MetaHelper::GetFileType(&dentryGroup.nsl[i]);
+        base.cloudId = std::string(reinterpret_cast<const char *>(dentryGroup.nsl[i].recordId), CLOUD_RECORD_ID_LEN);
+        bases.emplace_back(base);
+    }
+    return 0;
+}
+
+int32_t CloudDiskMetaFile::LoadChildren(std::vector<MetaBase> &bases)
+{
+    if (fd_ < 0) {
+        LOGE("bad metafile fd");
+        return EINVAL;
+    }
+
+    std::lock_guard<std::mutex> lock(mtx_);
+    FileRangeLock fileLock(fd_, 0, 0);
+    struct stat fileStat;
+    int ret = fstat(fd_, &fileStat);
+    if (ret != E_OK) {
+        return EINVAL;
+    }
+
+    uint64_t fileSize = static_cast<uint64_t>(fileStat.st_size);
+    uint64_t groupCnt = GetDentryGroupCnt(fileSize);
+    HmdfsDentryGroup dentryGroup;
+
+    for (uint64_t i = 1; i < groupCnt + 1; i++) {
+        uint64_t off = i * sizeof(HmdfsDentryGroup);
+        FileUtils::ReadFile(fd_, off, sizeof(HmdfsDentryGroup), &dentryGroup);
+        DecodeDentrys(dentryGroup, bases);
     }
     return E_OK;
 }
