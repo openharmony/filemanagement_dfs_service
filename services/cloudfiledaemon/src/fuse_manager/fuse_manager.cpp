@@ -412,12 +412,6 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
         return RestoreTmpFile(localPath, tmpPath);
     }
     fi->fh = static_cast<uint64_t>(fd);
-    string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
-    if (remove(cloudMergeViewPath.c_str()) < 0) {
-        LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
-        close(fd);
-        return RestoreTmpFile(localPath, tmpPath);
-    }
     MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
     cInode->mBase->hasDownloaded = true;
     return 0;
@@ -507,8 +501,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
         close(fi->fh);
-        if (cInode->mBase->fileType != FILE_TYPE_THUMBNAIL &&
-            (!cInode->readSession->Close(cInode->mBase->fileType != FILE_TYPE_CONTENT))) {
+        if (cInode->mBase->fileType == FILE_TYPE_CONTENT && (!cInode->readSession->Close(false))) {
             LOGE("Failed to close readSession");
         }
         cInode->readSession = nullptr;
