@@ -542,7 +542,7 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
 }
 
 int32_t CloudSyncService::DownloadFiles(const int32_t userId, const std::string &bundleName,
-    std::vector<AssetInfoObj> &assetInfoObj, std::vector<bool> &assetResultMap)
+    const std::vector<AssetInfoObj> &assetInfoObj, std::vector<bool> &assetResultMap)
 {
     auto sdkHelper = std::make_shared<SdkHelper>();
     auto ret = sdkHelper->Init(userId, bundleName);

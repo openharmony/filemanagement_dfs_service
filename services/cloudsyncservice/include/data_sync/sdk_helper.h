@@ -101,7 +101,7 @@ public:
         std::function<void(std::shared_ptr<DriveKit::DKContext>, DriveKit::DKDownloadAsset, DriveKit::TotalSize,
                            DriveKit::DownloadSize)> progressCallback);
     int32_t DownloadAssets(DriveKit::DKDownloadAsset &assetsToDownload);
-    int32_t DownloadAssets(std::vector<DriveKit::DKDownloadAsset> &assetsToDownload,
+    int32_t DownloadAssets(const std::vector<DriveKit::DKDownloadAsset> &assetsToDownload,
                            std::vector<bool> &assetResultMap);
 
     int32_t CancelDownloadAssets(int32_t id);
