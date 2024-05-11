@@ -124,7 +124,7 @@ static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
     }
 }
 
-static void TeaTransform(uint32_t buf[4], uint32_t const in[])
+static void TeaTransform(uint32_t buf[4], uint32_t const in[]) __attribute__((no_sanitize("unsigned-integer-overflow")))
 {
     int n = 16;
     uint32_t a = in[0];
