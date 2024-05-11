@@ -870,6 +870,38 @@ static void FileMove(ValuesBucket &values, const int32_t &position, const std::s
     }
 }
 
+static void FileMoveAndRename(ValuesBucket &values, const int32_t &position, const std::string &newParentCloudId,
+    const std::string &newFileName)
+{
+    values.PutString(FileColumn::PARENT_CLOUD_ID, newParentCloudId);
+    values.PutString(FileColumn::FILE_NAME, newFileName);
+    values.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
+    FillFileType(newFileName, values);
+    if (position != LOCAL) {
+        values.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        values.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::MOVE));
+    }
+}
+
+static void HandleRenameValue(ValuesBucket &rename, int32_t position, const CacheNode &oldNode,
+    const CacheNode &newNode)
+{
+    string oldParentCloudId = oldNode.parentCloudId;
+    string oldFileName = oldNode.fileName;
+    string newParentCloudId = newNode.parentCloudId;
+    string newFileName = newNode.fileName;
+    rename.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
+    if (oldFileName != newFileName && oldParentCloudId == newParentCloudId) {
+        FileRename(rename, position, newFileName);
+    }
+    if (oldFileName == newFileName && oldParentCloudId != newParentCloudId) {
+        FileMove(rename, position, newParentCloudId);
+    }
+    if (oldFileName != newFileName && oldParentCloudId != newParentCloudId) {
+        FileMoveAndRename(rename, position, newParentCloudId, newFileName);
+    }
+}
+
 int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
     const std::string &newParentCloudId, const std::string &newFileName)
 {
@@ -894,13 +926,9 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         return ret;
     }
     ValuesBucket rename;
-    rename.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
-    if (oldFileName != newFileName && oldParentCloudId == newParentCloudId) {
-        FileRename(rename, metaBase.position, newFileName);
-    }
-    if (oldFileName == newFileName && oldParentCloudId != newParentCloudId) {
-        FileMove(rename, metaBase.position, newParentCloudId);
-    }
+    CacheNode newNode = {.fileName = newFileName, .parentCloudId = newParentCloudId};
+    CacheNode oldNode = {.fileName = oldFileName, .parentCloudId = oldParentCloudId};
+    HandleRenameValue(rename, metaBase.position, oldNode, newNode);
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(metaBase.cloudId);
     auto newMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, newParentCloudId);
