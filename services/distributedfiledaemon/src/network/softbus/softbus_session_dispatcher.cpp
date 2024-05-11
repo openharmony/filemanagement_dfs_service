@@ -127,10 +127,18 @@ void SoftbusSessionDispatcher::OnSessionClosed(int32_t sessionId, ShutdownReason
 void SoftbusSessionDispatcher::CloseSessionByCid(const std::string &cid)
 {
     LOGI("CloseSessionByCid Enter.");
-    ShutdownReason reason = SHUTDOWN_REASON_UNKNOWN;
     for (const auto &pair : idMap_) {
         if (pair.second.first == cid) {
-            OnSessionClosed(pair.first, reason);
+            std::string peerDevId = pair.second.first;
+            std::string peerSessionName = pair.second.second; 
+            idMap_.erase(pair.first);
+            auto agent = GetAgent(pair.first, peerSessionName);
+            if (auto spt = agent.lock()) {
+                spt->OnSessionClosed(pair.first, peerDevId);
+            } else {
+                LOGE("session not exist!, session id is %{public}d", pair.first);
+            }
+            break;
         }
     }
 }
