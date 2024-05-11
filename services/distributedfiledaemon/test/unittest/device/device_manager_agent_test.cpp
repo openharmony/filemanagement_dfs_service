@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,14 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "device/device_manager_agent.h"
 
+#include <atomic>
 #include <exception>
 #include <memory>
 #include <unistd.h>
 
-#include "device/device_manager_agent.h"
-#include "mountpoint/mount_point.h"
 #include "gtest/gtest.h"
+
+#include "mountpoint/mount_point.h"
+#include "network/softbus/softbus_agent.h"
 
 namespace OHOS {
 namespace Storage {
@@ -300,13 +303,75 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_JoinGroup_0100, TestSize
     try {
         auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
         DeviceManagerAgent::GetInstance()->JoinGroup(smp);
+        GTEST_LOG_(INFO) << smp->GetID();
+        auto it = DeviceManagerAgent::GetInstance()->mpToNetworks_.find(smp->GetID());
+        if (it == DeviceManagerAgent::GetInstance()->mpToNetworks_.end()) {
+            EXPECT_TRUE(false);
+        } else {
+            EXPECT_TRUE(true);
+        }
+        DeviceManagerAgent::GetInstance()->QuitGroup(smp);
+        it = DeviceManagerAgent::GetInstance()->mpToNetworks_.find(smp->GetID());
+        if (it == DeviceManagerAgent::GetInstance()->mpToNetworks_.end()) {
+            EXPECT_TRUE(true);
+        } else {
+            EXPECT_TRUE(false);
+        }
     } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
+        GTEST_LOG_(INFO) << e.what();
         res = false;
     }
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_JoinGroup_0200
+ * @tc.desc: Verify the JoinGroup function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_JoinGroup_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_0200 start";
+    bool res = true;
+
+    try {
+        weak_ptr<MountPoint> nullwmp;
+        DeviceManagerAgent::GetInstance()->JoinGroup(nullwmp);
+    } catch (const exception &e) {
+        EXPECT_EQ(string(e.what()), "Failed to join group: Received empty mountpoint");
+        res = false;
+    }
+
+    EXPECT_FALSE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_0200 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_JoinGroup_0100
+ * @tc.desc: Verify the JoinGroup function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_JoinGroup_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_0300 start";
+    bool res = true;
+
+    try {
+        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
+        DeviceManagerAgent::GetInstance()->JoinGroup(smp);
+        DeviceManagerAgent::GetInstance()->JoinGroup(smp);
+        DeviceManagerAgent::GetInstance()->QuitGroup(smp);
+    } catch (const exception &e) {
+        EXPECT_EQ(string(e.what()), "Failed to join group: Mountpoint existed");
+        res = false;
+    }
+
+    EXPECT_FALSE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_JoinGroup_0300 end";
 }
 
 /**
@@ -324,12 +389,35 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_QuitGroup_0100, TestSize
         auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
         DeviceManagerAgent::GetInstance()->QuitGroup(smp);
     } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
+        EXPECT_EQ(string(e.what()), "Failed to quit group: Mountpoint didn't exist ");
         res = false;
     }
 
     EXPECT_TRUE(res != true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_QuitGroup_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_QuitGroup_0200
+ * @tc.desc: Verify the QuitGroup function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_QuitGroup_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_QuitGroup_0200 start";
+    bool res = true;
+
+    try {
+        weak_ptr<MountPoint> nullwmp;
+        DeviceManagerAgent::GetInstance()->QuitGroup(nullwmp);
+    } catch (const exception &e) {
+        EXPECT_EQ(string(e.what()), "Failed to quit group: Received empty mountpoint");
+        res = false;
+    }
+
+    EXPECT_FALSE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_QuitGroup_0200 end";
 }
 
 /**
@@ -355,6 +443,35 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OfflineAllDevice_0100, T
 }
 
 /**
+ * @tc.name: DeviceManagerAgentTest_OfflineAllDevice_0200
+ * @tc.desc: Verify the OfflineAllDevice function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OfflineAllDevice_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OfflineAllDevice_0200 start";
+    bool res = true;
+
+    try {
+        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
+        auto agent1 = make_shared<SoftbusAgent>(smp);
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ "test1", agent1 });
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ "test2", nullptr });
+
+        DeviceManagerAgent::GetInstance()->OfflineAllDevice();
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.erase("test1");
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.erase("test2");
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OfflineAllDevice_0200 end";
+}
+
+/**
  * @tc.name: DeviceManagerAgentTest_ReconnectOnlineDevices_0100
  * @tc.desc: Verify the ReconnectOnlineDevices function.
  * @tc.type: FUNC
@@ -368,12 +485,40 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_ReconnectOnlineDevices_0
     try {
         DeviceManagerAgent::GetInstance()->ReconnectOnlineDevices();
     } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
+        GTEST_LOG_(INFO) << e.what();
         res = false;
     }
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ReconnectOnlineDevices_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_ReconnectOnlineDevices_0200
+ * @tc.desc: Verify the ReconnectOnlineDevices function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_ReconnectOnlineDevices_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ReconnectOnlineDevices_0200 start";
+    bool res = true;
+
+    try {
+        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
+        auto agent1 = make_shared<SoftbusAgent>(smp);
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ "test1", agent1 });
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ "test2", nullptr });
+        DeviceManagerAgent::GetInstance()->ReconnectOnlineDevices();
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.erase("test1");
+        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.erase("test2");
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_ReconnectOnlineDevices_0200 end";
 }
 
 /**
@@ -388,8 +533,10 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_FindNetworkBaseTrustRela
     bool res = true;
 
     try {
-        DeviceManagerAgent::GetInstance()->FindNetworkBaseTrustRelation(true);
-        DeviceManagerAgent::GetInstance()->FindNetworkBaseTrustRelation(false);
+        auto rltPtr = DeviceManagerAgent::GetInstance()->FindNetworkBaseTrustRelation(true);
+        EXPECT_EQ(rltPtr, nullptr);
+        rltPtr = DeviceManagerAgent::GetInstance()->FindNetworkBaseTrustRelation(false);
+        EXPECT_EQ(rltPtr, nullptr);
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
         res = false;
@@ -397,6 +544,67 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_FindNetworkBaseTrustRela
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0200
+ * @tc.desc: Verify the FindNetworkBaseTrustRelation function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0200 start";
+    bool res = true;
+
+    try {
+        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
+        DeviceManagerAgent::GetInstance()->JoinGroup(smp);
+        auto rltPtr = DeviceManagerAgent::GetInstance()->FindNetworkBaseTrustRelation(true);
+        EXPECT_EQ(rltPtr, nullptr);
+        rltPtr = DeviceManagerAgent::GetInstance()->FindNetworkBaseTrustRelation(false);
+        EXPECT_NE(rltPtr, nullptr);
+        DeviceManagerAgent::GetInstance()->QuitGroup(smp);
+
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0200 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0300
+ * @tc.desc: Verify the FindNetworkBaseTrustRelation function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0300 start";
+    bool res = true;
+
+    try {
+        auto nonmp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(101, "non_account"));
+        DeviceManagerAgent::GetInstance()->JoinGroup(nonmp);
+        auto id = nonmp->GetID() + 1;
+        DeviceManagerAgent::GetInstance()->mpToNetworks_.insert({ id, nullptr });
+        shared_ptr<SoftbusAgent> agent = nullptr;
+        auto rltPtr = DeviceManagerAgent::GetInstance()->FindNetworkBaseTrustRelation(true);
+        EXPECT_NE(rltPtr, nullptr);
+        rltPtr = DeviceManagerAgent::GetInstance()->FindNetworkBaseTrustRelation(false);
+        EXPECT_EQ(rltPtr, nullptr);
+        DeviceManagerAgent::GetInstance()->QuitGroup(nonmp);
+        DeviceManagerAgent::GetInstance()->mpToNetworks_.erase(id);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_FindNetworkBaseTrustRelation_0300 end";
 }
 
 /**

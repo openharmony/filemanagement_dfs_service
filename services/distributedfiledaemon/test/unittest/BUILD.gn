@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -24,6 +24,41 @@ config("module_private_config") {
     "${services_path}/distributedfiledaemon/include/ipc",
     "//third_party/json/include",
   ]
+}
+
+ohos_unittest("device_info_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  sources =
+      [ "${services_path}/distributedfiledaemon/src/device/device_info.cpp" ]
+
+  sources += [ "device/device_info_test.cpp" ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "device_manager:devicemanagersdk",
+    "hilog:libhilog",
+  ]
+
+  defines = [ "private=public" ]
 }
 
 ohos_unittest("device_manager_agent_test") {
@@ -864,6 +899,7 @@ ohos_unittest("softbus_session_listener_test") {
 group("unittest") {
   testonly = true
   deps = [
+    ":device_info_test",
     ":device_manager_agent_test",
     ":devsl_dispatcher_test",
     ":kernel_talker_test",
