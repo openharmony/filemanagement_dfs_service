@@ -1010,31 +1010,6 @@ int32_t CloudDiskRdbStore::GetDirtyType(const std::string &cloudId, int32_t &dir
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::GetIsDirectory(const std::string &parentCloudId, const std::string &fileName, int32_t &isDir)
-{
-    if (parentCloudId.empty() || fileName.empty()) {
-        return E_INVAL_ARG;
-    }
-    AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
-    predicates.EqualTo(FileColumn::PARENT_CLOUD_ID, parentCloudId)->And()->EqualTo(FileColumn::FILE_NAME, fileName);
-    auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::IS_DIRECTORY});
-    if (resultSet == nullptr) {
-        LOGE("get null result");
-        return E_RDB;
-    }
-    if (resultSet->GoToNextRow() != E_OK) {
-        LOGE("get current node resultSet fail");
-        return E_RDB;
-    }
-
-    int32_t ret = CloudDiskRdbUtils::GetInt(FileColumn::IS_DIRECTORY, isDir, resultSet);
-    if (ret != E_OK) {
-        LOGE("get is dir fail");
-        return ret;
-    }
-    return E_OK;
-}
-
 int32_t CloudDiskRdbStore::GetCurNode(const std::string &cloudId, CacheNode &curNode)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
