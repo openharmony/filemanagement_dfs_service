@@ -965,7 +965,6 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
             (void)metaFile->DoCreate(metaBase);
             return ret;
         }
-        return ret;
     }
     function<void()> rdbUnlink = [rdbStore, cloudId, position] {
         int32_t err = rdbStore->Unlink(cloudId, position);
