@@ -1525,7 +1525,7 @@ int32_t CloudDiskDataHandler::GetDownloadAsset(std::string uri,
     int32_t isDirectory = 0;
     string fileName;
     string parentCloudId;
-    ret = GetDownloadDataFromLocal(*resultSet.get(), isDirectory, fileName, parentCloudId);
+    ret = GetDownloadDataFromLocal(*resultSet, isDirectory, fileName, parentCloudId);
     if (ret != E_OK) {
         LOGE("Get download data from local failed");
         return E_RDB;
