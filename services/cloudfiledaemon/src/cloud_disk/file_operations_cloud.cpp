@@ -965,7 +965,6 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
             (void)metaFile->DoCreate(metaBase);
             return ret;
         }
-        return ret;
     }
     function<void()> rdbUnlink = [rdbStore, cloudId, position] {
         int32_t err = rdbStore->Unlink(cloudId, position);
@@ -989,7 +988,14 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
     }
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
         parentInode->bundleName, parentInode->cloudId);
-    if (metaFile->GetDentryCount() != 0) {
+    std::vector<MetaBase> bases;
+    err = metaFile->LoadChildren(bases);
+    if (err != 0) {
+        LOGE("load children failed, err=%{public}d", err);
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    if (!bases.empty()) {
         LOGE("Directory not empty");
         fuse_reply_err(req, ENOTEMPTY);
         return;

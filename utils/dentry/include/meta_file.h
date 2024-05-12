@@ -83,7 +83,7 @@ public:
     int32_t DoRename(MetaBase &metaBase, const std::string &newName,
         std::shared_ptr<CloudDiskMetaFile> newMetaFile);
     int32_t DoLookup(MetaBase &base);
-    uint64_t GetDentryCount();
+    int32_t LoadChildren(std::vector<MetaBase> &bases);
 
 private:
     std::mutex mtx_{};
@@ -94,7 +94,6 @@ private:
     std::string name_{};
     UniqueFd fd_{};
     uint32_t userId_{};
-    uint64_t dentryCount_{0};
     std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
 };
 

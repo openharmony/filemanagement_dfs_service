@@ -55,6 +55,7 @@ public:
                                     const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records);
     virtual int32_t GetAssetsToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload);
     virtual int32_t GetThumbToDownload(std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload);
+    /* 'dentryContext' is only used by cloudDisk */
     virtual int32_t GetDownloadAsset(std::string cloudId,
                                      std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
                                      std::shared_ptr<DentryContext> dentryContext = nullptr);
@@ -73,6 +74,7 @@ public:
         DriveKit::DKRecordOperResult> &map) = 0;
     virtual int32_t OnModifyFdirtyRecords(const std::map<DriveKit::DKRecordId,
         DriveKit::DKRecordOperResult> &map);
+    /* 'context' is only used by cloudDisk */
     virtual int32_t OnDownloadSuccess(const DriveKit::DKDownloadAsset &asset,
                                       std::shared_ptr<DriveKit::DKContext> context = nullptr);
     virtual int32_t OnDownloadAssets(const std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &resultMap);
