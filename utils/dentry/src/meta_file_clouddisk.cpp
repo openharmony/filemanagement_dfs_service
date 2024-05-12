@@ -144,6 +144,11 @@ CloudDiskMetaFile::CloudDiskMetaFile(uint32_t userId, const std::string &bundleN
     (void)FileUtils::ReadFile(fd_, 0, sizeof(header), &header);
 }
 
+std::string CloudDiskMetaFile::GetDentryFilePath()
+{
+    return cacheFile_;
+}
+
 int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskMetaFileCallBack callback)
 {
     MetaBase m(name);
@@ -724,6 +729,12 @@ int32_t CloudDiskMetaFile::LoadChildren(std::vector<MetaBase> &bases)
         DecodeDentrys(dentryGroup, bases);
     }
     return E_OK;
+}
+
+void MetaFileMgr::Clear(const std::string &cloudId)
+{
+    std::lock_guard<std::mutex> lock(cloudDiskMutex_);
+    cloudDiskMetaFile_.erase(cloudId);
 }
 
 std::shared_ptr<CloudDiskMetaFile> MetaFileMgr::GetCloudDiskMetaFile(uint32_t userId, const std::string &bundleName,

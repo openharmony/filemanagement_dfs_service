@@ -84,6 +84,7 @@ public:
         std::shared_ptr<CloudDiskMetaFile> newMetaFile);
     int32_t DoLookup(MetaBase &base);
     int32_t LoadChildren(std::vector<MetaBase> &bases);
+    std::string GetDentryFilePath();
 
 private:
     std::mutex mtx_{};
@@ -120,6 +121,7 @@ public:
     std::shared_ptr<CloudDiskMetaFile> GetCloudDiskMetaFile(uint32_t userId, const std::string &bundleName,
         const std::string &cloudId);
     void ClearAll();
+    void Clear(const std::string &cloudId);
     int32_t MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName,
         const std::string &name, const std::string &parentCloudId, int64_t rowId);
     int32_t RemoveFromRecycleDentryfile(uint32_t userId, const std::string &bundleName,
