@@ -986,8 +986,17 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
         fuse_reply_err(req, EINVAL);
         return;
     }
-    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
+    auto parentMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
         parentInode->bundleName, parentInode->cloudId);
+    MetaBase metaBase(name);
+    err = parentMetaFile->DoLookup(metaBase);
+    if (err != 0) {
+        LOGE("lookup dir failed, err=%{public}d", err);
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
+        parentInode->bundleName, metaBase.cloudId);
     std::vector<MetaBase> bases;
     err = metaFile->LoadChildren(bases);
     if (err != 0) {
@@ -1007,6 +1016,12 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
     }
     CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
         NotifyOpsType::DAEMON_RMDIR, nullptr, parent, name});
+    bool deleteFlag = false;
+    if (deleteFlag) {
+        string dentryfilePath = metaFile->GetDentryFilePath();
+        MetaFileMgr::GetInstance().Clear(metaBase.cloudId);
+        (void)unlink(dentryfilePath.c_str());
+    }
     return (void) fuse_reply_err(req, 0);
 }
 

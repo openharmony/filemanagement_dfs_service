@@ -1472,17 +1472,17 @@ static int32_t GetDownloadDataFromLocal(NativeRdb::ResultSet &resultSet, int32_t
 {
     int32_t ret = DataConvertor::GetInt(FC::IS_DIRECTORY, isDirectory, resultSet);
     if (ret != E_OK) {
-        LOGE("Get parent cloudId failed");
+        LOGE("Get isDirectory failed");
         return E_RDB;
     }
     ret = DataConvertor::GetString(FC::FILE_NAME, fileName, resultSet);
     if (ret != E_OK) {
-        LOGE("Get parent cloudId failed");
+        LOGE("Get fileName failed");
         return E_RDB;
     }
     ret = DataConvertor::GetString(FC::PARENT_CLOUD_ID, parentCloudId, resultSet);
     if (ret != E_OK) {
-        LOGE("Get parent cloudId failed");
+        LOGE("Get parentCloudId failed");
         return E_RDB;
     }
     return E_OK;
