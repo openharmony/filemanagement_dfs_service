@@ -269,7 +269,7 @@ static int32_t CheckNameForSpace(const std::string& fileName, const int32_t isDi
         return EINVAL;
     }
     if (isDir == DIRECTORY) {
-        if (fileName.length() >= 1 && fileName[fileName.length() - 1] == ' ' || fileName == RECYCLE_FILE_NAME) {
+        if ((fileName.length() >= 1 && fileName[fileName.length() - 1] == ' ') || fileName == RECYCLE_FILE_NAME) {
             LOGI("Illegal name");
             return EINVAL;
         }
