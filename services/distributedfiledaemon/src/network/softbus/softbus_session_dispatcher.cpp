@@ -131,7 +131,7 @@ void SoftbusSessionDispatcher::CloseSessionByCid(const std::string &cid)
     for (const auto &pair : idMap_) {
         if (pair.second.first == cid) {
             std::string peerDevId = pair.second.first;
-            std::string peerSessionName = pair.second.second; 
+            std::string peerSessionName = pair.second.second;
             idMap_.erase(pair.first);
             auto agent = GetAgent(pair.first, peerSessionName);
             if (auto spt = agent.lock()) {
