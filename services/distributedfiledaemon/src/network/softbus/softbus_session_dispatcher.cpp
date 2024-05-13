@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -115,7 +115,7 @@ void SoftbusSessionDispatcher::OnSessionClosed(int32_t sessionId, ShutdownReason
             idMap_.erase(it);
         }
     }
-    
+
     auto agent = GetAgent(sessionId, peerSessionName);
     if (auto spt = agent.lock()) {
         spt->OnSessionClosed(sessionId, peerDevId);
@@ -128,7 +128,7 @@ void SoftbusSessionDispatcher::CloseSessionByCid(const std::string &cid)
 {
     LOGI("CloseSessionByCid Enter.");
     std::lock_guard<std::mutex> lock(idMapMutex_);
-    for (auto it = idMap_.begin(); it != idMap_.end(); ) {
+    for (auto it = idMap_.begin(); it != idMap_.end();) {
         if (it->second.first == cid) {
             std::string peerDevId = it->second.first;
             std::string peerSessionName = it->second.second;
