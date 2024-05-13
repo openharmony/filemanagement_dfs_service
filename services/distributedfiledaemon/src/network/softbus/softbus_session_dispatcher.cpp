@@ -128,18 +128,20 @@ void SoftbusSessionDispatcher::CloseSessionByCid(const std::string &cid)
 {
     LOGI("CloseSessionByCid Enter.");
     std::lock_guard<std::mutex> lock(idMapMutex_);
-    for (const auto &pair : idMap_) {
-        if (pair.second.first == cid) {
-            std::string peerDevId = pair.second.first;
-            std::string peerSessionName = pair.second.second;
-            idMap_.erase(pair.first);
-            auto agent = GetAgent(pair.first, peerSessionName);
+    for (auto it = idMap_.begin(); it != idMap_.end(); ) {
+        if (it->second.first == cid) {
+            std::string peerDevId = it->second.first;
+            std::string peerSessionName = it->second.second;
+            auto agent = GetAgent(it->first, peerSessionName);
             if (auto spt = agent.lock()) {
-                spt->OnSessionClosed(pair.first, peerDevId);
+                spt->OnSessionClosed(it->first, peerDevId);
             } else {
-                LOGE("session not exist!, session id is %{public}d", pair.first);
+                LOGE("session not exist!, session id is %{public}d", it->first);
             }
+            it = idMap_.erase(it);
             break;
+        } else {
+            ++it;
         }
     }
 }
