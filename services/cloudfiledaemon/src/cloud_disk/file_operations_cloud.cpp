@@ -228,7 +228,7 @@ static int32_t LookupRecycledFile(struct CloudDiskFuseData *data, const char *na
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId, bundleName,
         RECYCLE_CLOUD_ID);
     int ret = metaFile->DoLookup(metaBase);
-    if (ret != NativeRdb::E_OK) {
+    if (ret != 0) {
         LOGE("file %{public}s not found in recyclebin", name);
         return EINVAL;
     }
@@ -725,16 +725,16 @@ static int32_t CreateRecycleDentry(uint32_t userId, const std::string &bundleNam
     MetaBase metaBase(RECYCLE_NAME);
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, ROOT_CLOUD_ID);
     int32_t ret = metaFile->DoLookup(metaBase);
-    if (ret != NativeRdb::E_OK) {
+    if (ret != 0) {
         metaBase.cloudId = RECYCLE_CLOUD_ID;
         metaBase.mode = S_IFDIR | STAT_MODE_DIR;
         metaBase.position = static_cast<uint8_t>(LOCAL);
         ret = metaFile->DoCreate(metaBase);
-        if (ret != NativeRdb::E_OK) {
+        if (ret != 0) {
             return ret;
         }
     }
-    return NativeRdb::E_OK;
+    return 0;
 }
 
 void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
@@ -754,7 +754,7 @@ void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
         return;
     }
     int32_t ret = CreateRecycleDentry(data->userId, inoPtr->bundleName);
-    if (ret != NativeRdb::E_OK) {
+    if (ret != 0) {
         LOGE("create recycle dentry failed");
         return;
     }
@@ -1180,7 +1180,7 @@ static void UploadLocalFile(CloudDiskFuseData *data, const std::string &fileName
     MetaBase metaBase(fileName);
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, inoPtr->bundleName, parentCloudId);
     int32_t ret = metaFile->DoLookup(metaBase);
-    if (ret != NativeRdb::E_OK) {
+    if (ret != 0) {
         LOGE("local file get location from dentryfile fail, ret = %{public}d", ret);
     } else if (metaBase.position == LOCAL) {
         DatabaseManager &databaseManager = DatabaseManager::GetInstance();
