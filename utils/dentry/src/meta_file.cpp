@@ -175,7 +175,6 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
 
     HmdfsDcacheHeader header{};
     (void)FileUtils::ReadFile(fd_, 0, sizeof(header), &header);
-    dentryCount_ = header.dentryCount;
 
     /* lookup and create in parent */
     parentMetaFile_ = GetParentMetaFile(userId, path);
@@ -197,8 +196,6 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
 
 MetaFile::~MetaFile()
 {
-    HmdfsDcacheHeader header{.dentryCount = dentryCount_};
-    (void)FileUtils::WriteFile(fd_, &header, 0, sizeof(header));
 }
 
 static bool IsDotDotdot(const std::string &name)
@@ -468,7 +465,6 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
         return EINVAL;
     }
 
-    ++dentryCount_;
     return E_OK;
 }
 
@@ -600,7 +596,6 @@ int32_t MetaFile::DoRemove(const MetaBase &base)
         return EIO;
     }
 
-    --dentryCount_;
     return E_OK;
 }
 

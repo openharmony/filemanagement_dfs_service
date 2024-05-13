@@ -63,7 +63,6 @@ private:
     std::string name_{};
     UniqueFd fd_{};
     uint32_t userId_{};
-    uint64_t dentryCount_{0};
     std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
 };
 
