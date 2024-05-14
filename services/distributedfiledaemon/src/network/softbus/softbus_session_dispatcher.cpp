@@ -137,6 +137,7 @@ void SoftbusSessionDispatcher::CloseSessionByCid(const std::string &cid)
                 spt->OnSessionClosed(it->first, peerDevId);
             } else {
                 LOGE("session not exist!, session id is %{public}d", it->first);
+                return;
             }
             it = idMap_.erase(it);
             break;

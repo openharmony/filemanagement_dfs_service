@@ -36,6 +36,8 @@ enum Uid {
     UID_MEDIA_RW = 1023,
 };
 
+std::string GetAnonyString(const std::string &value);
+
 void ForceCreateDirectory(const std::string &path);
 void ForceCreateDirectory(const std::string &path, mode_t mode);
 void ForceCreateDirectory(const std::string &path, mode_t mode, uid_t uid, gid_t gid);
