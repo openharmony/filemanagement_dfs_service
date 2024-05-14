@@ -51,7 +51,6 @@ std::string GetAnonyString(const std::string &value)
         res += tmpStr;
         res.append(value, strLen - INT32_PLAINTEXT_LENGTH, INT32_PLAINTEXT_LENGTH);
     }
-
     return res;
 }
 
