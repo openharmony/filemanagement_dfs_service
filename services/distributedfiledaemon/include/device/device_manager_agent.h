@@ -30,6 +30,7 @@
 #include "mountpoint/mount_point.h"
 #include "network/network_agent_template.h"
 #include "nlohmann/json.hpp"
+#include "utils_directory.h"
 
 namespace OHOS {
 namespace Storage {

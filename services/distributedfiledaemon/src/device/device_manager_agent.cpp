@@ -201,7 +201,7 @@ void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &
     LOGI("networkId %{public}s, OnDeviceReady begin", deviceInfo.deviceId);
     int32_t ret = IsSupportDevice(deviceInfo);
     if (ret != FileManagement::ERR_OK) {
-        LOGI("not support device, networkId %{public}s", GetAnonyString(deviceInfo.deviceId).c_str());
+        LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
         return;
     }
 
@@ -414,7 +414,7 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
     }
     int32_t ret = IsSupportDevice(deviceInfo);
     if (ret != FileManagement::ERR_OK) {
-        LOGI("not support device, networkId %{public}s", GetAnonyString(deviceInfo.deviceId).c_str());
+        LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
         return;
     }
 
@@ -474,7 +474,7 @@ void DeviceManagerAgent::InitDeviceInfos()
     for (const auto &deviceInfo : deviceInfoList) {
         int32_t ret = IsSupportDevice(deviceInfo);
         if (ret != FileManagement::ERR_OK) {
-            LOGI("not support device, networkId %{public}s", GetAnonyString(deviceInfo.deviceId).c_str());
+            LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
             continue;
         }
         DeviceInfo info(deviceInfo);
@@ -487,14 +487,14 @@ int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceI
     std::string udid = "";
     if (DistributedHardware::DeviceManager::GetInstance().
         GetUdidByNetworkId(IDaemon::SERVICE_NAME, deviceInfo.networkId, udid) != 0) {
-        LOGE("GetUdidByNetworkId failed networkId %{public}s", GetAnonyString(deviceInfo.deviceId).c_str());
+        LOGE("GetUdidByNetworkId failed networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     DistributedDeviceProfile::DeviceProfile outDeviceProfile;
     int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
         GetDeviceProfile(udid, outDeviceProfile);
     if (ret != FileManagement::E_OK) {
-        LOGE("GetDeviceProfile failed, errorCode: %{public}d, udid: %{public}s", ret, GetAnonyString(udid).c_str());
+        LOGE("GetDeviceProfile failed, errorCode: %{public}d, udid: %{public}s", ret, Utils::GetAnonyString(udid).c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
