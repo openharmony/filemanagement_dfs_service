@@ -73,18 +73,20 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
     for (const auto &info : infos) {
         std::string udid = "";
         if (DistributedHardware::DeviceManager::GetInstance().GetUdidByNetworkId(pkgName, info.GetCid(), udid) != 0) {
-            LOGE("GetUdidByNetworkId failed");
-            return;
+            LOGE("GetUdidByNetworkId failed networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
+            continue;
         }
         DistributedDeviceProfile::DeviceProfile outDeviceProfile;
         int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
             GetDeviceProfile(udid, outDeviceProfile);
         if (ret != FileManagement::E_OK) {
-            LOGE("GetDeviceProfile failed, errorCode: %{public}d", ret);
+            LOGE("GetDeviceProfile failed, errorCode: %{public}d, udid: %{public}s", ret,
+                Utils::GetAnonyString(udid).c_str());
             continue;
         }
         if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
-            LOGE("not the required type phone: %{private}d", outDeviceProfile.GetOsType());
+            LOGE("%{private}s  the device os type = %{private}d is not openharmony.", deviceInfo.deviceName,
+                outDeviceProfile.GetOsType());
             continue;
         }
 
