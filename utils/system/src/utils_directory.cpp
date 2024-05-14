@@ -32,24 +32,24 @@ using namespace std;
 
 std::string GetAnonyString(const std::string &value)
 {
-    constexpr size_t INT_SHORT_ID_LENGTH = 20;
-    constexpr size_t INT_PLAINTEXT_LENGTH = 4;
-    constexpr size_t INT_MIN_ID_LENGTH = 3;
+    constexpr size_t shortIdLength = 20;
+    constexpr size_t plaintextLength = 4;
+    constexpr size_t minIdLength = 3;
     std::string res;
     std::string tmpStr("******");
     size_t strLen = value.length();
-    if (strLen < INT_MIN_ID_LENGTH) {
+    if (strLen < minIdLength) {
         return tmpStr;
     }
 
-    if (strLen <= INT_SHORT_ID_LENGTH) {
+    if (strLen <= shortIdLength) {
         res += value[0];
         res += tmpStr;
         res += value[strLen - 1];
     } else {
-        res.append(value, 0, INT_PLAINTEXT_LENGTH);
+        res.append(value, 0, plaintextLength);  
         res += tmpStr;
-        res.append(value, strLen - INT_PLAINTEXT_LENGTH, INT_PLAINTEXT_LENGTH);
+        res.append(value, strLen - plaintextLength, plaintextLength);
     }
     return res;
 }
