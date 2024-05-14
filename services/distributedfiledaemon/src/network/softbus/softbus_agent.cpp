@@ -276,8 +276,6 @@ void SoftbusAgent::OnSessionOpened(const int32_t sessionId, PeerSocketInfo info)
 void SoftbusAgent::OnSessionClosed(int32_t sessionId, const std::string peerDeviceId)
 {
     LOGI("OnSessionClosed Enter.");
-    auto session = make_shared<SoftbusSession>(sessionId, peerDeviceId);
-    auto cid = session->GetCid();
     Shutdown(sessionId);
 }
 } // namespace DistributedFile

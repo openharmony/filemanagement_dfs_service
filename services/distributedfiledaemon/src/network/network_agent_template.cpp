@@ -16,7 +16,9 @@
 #include "network/network_agent_template.h"
 
 #include "device/device_manager_agent.h"
+#include "dfs_error.h"
 #include "dfsu_exception.h"
+#include "distributed_device_profile_client.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -24,6 +26,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 namespace {
+constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 } // namespace
@@ -68,6 +71,24 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
     auto infos = dma->GetRemoteDevicesInfo();
     LOGI("Have %{public}zu devices Online", infos.size());
     for (const auto &info : infos) {
+        std::string udid = "";
+        if (DistributedHardware::DeviceManager::GetInstance().GetUdidByNetworkId(pkgName, info.GetCid(), udid) != 0) {
+            LOGE("GetUdidByNetworkId failed networkId %{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
+            continue;
+        }
+        DistributedDeviceProfile::DeviceProfile outDeviceProfile;
+        int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
+            GetDeviceProfile(udid, outDeviceProfile);
+        if (ret != FileManagement::E_OK) {
+            LOGE("GetDeviceProfile failed, errorCode: %{public}d, udid: %{public}s", ret,
+                Utils::GetAnonyString(udid).c_str());
+            continue;
+        }
+        if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
+            LOGE("the device os type = %{private}d is not openharmony.", outDeviceProfile.GetOsType());
+            continue;
+        }
+
         int32_t networkType;
         int errCode = deviceManager.GetNetworkTypeByNetworkId(pkgName, info.GetCid(), networkType);
         if (errCode) {
@@ -115,7 +136,7 @@ bool NetworkAgentTemplate::FindSession(int32_t sessionId)
 
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 {
-    (void)cid;
+    SoftbusSessionDispatcher::CloseSessionByCid(cid);
     LOGI("session closed!");
 }
 

@@ -20,7 +20,9 @@
 #include <string>
 
 #include "device_auth.h"
+#include "dfs_error.h"
 #include "dfsu_exception.h"
+#include "distributed_device_profile_client.h"
 #include "ipc/i_daemon.h"
 #include "mountpoint/mount_manager.h"
 #include "network/devsl_dispatcher.h"
@@ -33,6 +35,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace {
+constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int PEER_TO_PEER_GROUP = 256;
 constexpr int ACROSS_ACCOUNT_AUTHORIZE_GROUP = 1282;
@@ -193,9 +196,14 @@ bool DeviceManagerAgent::IsWifiNetworkType(int32_t networkType)
     return true;
 }
 
-void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
+void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("networkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
+    LOGI("networkId %{public}s, OnDeviceReady begin", deviceInfo.deviceId);
+    int32_t ret = IsSupportDevice(deviceInfo);
+    if (ret != FileManagement::ERR_OK) {
+        LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
+        return;
+    }
 
     // online first query this dev's trust info
     DeviceInfo info(deviceInfo);
@@ -207,14 +215,14 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
-        LOGI("OnDeviceOnline end");
+        LOGI("OnDeviceReady end");
         return;
     }
 
     auto type_ = cidNetworkType_.find(info.cid_);
     if (type_ == cidNetworkType_.end()) {
         LOGE("cid %{public}s network type is null!", info.cid_.c_str());
-        LOGI("OnDeviceOnline end");
+        LOGI("OnDeviceReady end");
         return;
     }
 
@@ -223,7 +231,7 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
 
     if (!IsWifiNetworkType(newNetworkType)) {
         LOGE("cid %{public}s networkType:%{public}d", info.cid_.c_str(), type_->second);
-        LOGI("OnDeviceOnline end");
+        LOGI("OnDeviceReady end");
         return;
     }
 
@@ -231,7 +239,7 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
         make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
     cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
     it->second->Recv(move(cmd));
-    LOGI("OnDeviceOnline end");
+    LOGI("OnDeviceReady end");
 }
 
 void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -404,6 +412,12 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
         LOGI("OnDeviceInfoChanged end");
         return;
     }
+    int32_t ret = IsSupportDevice(deviceInfo);
+    if (ret != FileManagement::ERR_OK) {
+        LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
+        return;
+    }
+
     DeviceInfo info(deviceInfo);
     unique_lock<mutex> lock(mpToNetworksMutex_);
 
@@ -458,9 +472,38 @@ void DeviceManagerAgent::InitDeviceInfos()
     }
 
     for (const auto &deviceInfo : deviceInfoList) {
+        int32_t ret = IsSupportDevice(deviceInfo);
+        if (ret != FileManagement::ERR_OK) {
+            LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
+            continue;
+        }
         DeviceInfo info(deviceInfo);
         QueryRelatedGroups(info.udid_, info.cid_);
     }
+}
+
+int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
+{
+    std::string udid = "";
+    if (DistributedHardware::DeviceManager::GetInstance().
+        GetUdidByNetworkId(IDaemon::SERVICE_NAME, deviceInfo.networkId, udid) != 0) {
+        LOGE("GetUdidByNetworkId failed networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    DistributedDeviceProfile::DeviceProfile outDeviceProfile;
+    int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
+        GetDeviceProfile(udid, outDeviceProfile);
+    if (ret != FileManagement::E_OK) {
+        LOGE("GetDeviceProfile failed, errorCode: %{public}d, udid: %{public}s", ret,
+            Utils::GetAnonyString(udid).c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
+        LOGE("%{private}s  the device os type = %{private}d is not openharmony.", deviceInfo.deviceName,
+            outDeviceProfile.GetOsType());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    return FileManagement::ERR_OK;
 }
 
 void DeviceManagerAgent::InitLocalNodeInfo()
