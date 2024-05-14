@@ -47,7 +47,7 @@ std::string GetAnonyString(const std::string &value)
         res += tmpStr;
         res += value[strLen - 1];
     } else {
-        res.append(value, 0, plaintextLength);  
+        res.append(value, 0, plaintextLength);
         res += tmpStr;
         res.append(value, strLen - plaintextLength, plaintextLength);
     }
