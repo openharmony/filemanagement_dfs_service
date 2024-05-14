@@ -494,7 +494,8 @@ int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceI
     int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
         GetDeviceProfile(udid, outDeviceProfile);
     if (ret != FileManagement::E_OK) {
-        LOGE("GetDeviceProfile failed, errorCode: %{public}d, udid: %{public}s", ret, Utils::GetAnonyString(udid).c_str());
+        LOGE("GetDeviceProfile failed, errorCode: %{public}d, udid: %{public}s", ret,
+            Utils::GetAnonyString(udid).c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
