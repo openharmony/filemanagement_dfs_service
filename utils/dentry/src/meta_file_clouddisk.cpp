@@ -349,7 +349,7 @@ static uint32_t RoomForFilename(const uint8_t bitmap[], size_t slots, uint32_t m
         }
 
         uint32_t zeroEnd = BitOps::FindNextBit(bitmap, maxSlots, zeroStart);
-        if (zeroEnd - zeroStart >= slots) {
+        if (zeroEnd - zeroStart >= 0 && zeroEnd - zeroStart >= slots) {
             return zeroStart;
         }
 

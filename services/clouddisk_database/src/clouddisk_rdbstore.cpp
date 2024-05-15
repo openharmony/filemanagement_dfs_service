@@ -269,7 +269,7 @@ static int32_t CheckNameForSpace(const std::string& fileName, const int32_t isDi
         return EINVAL;
     }
     if (isDir == DIRECTORY) {
-        if (fileName[fileName.length() - 1] == ' ' || fileName == RECYCLE_FILE_NAME) {
+        if ((fileName.length() >= 1 && fileName[fileName.length() - 1] == ' ') || fileName == RECYCLE_FILE_NAME) {
             LOGI("Illegal name");
             return EINVAL;
         }
@@ -357,10 +357,10 @@ static int32_t CreateDentry(MetaBase &metaBase, uint32_t userId, const std::stri
 
 static void UpdateDatabase(MetaBase &metaBase, int64_t fileTimeAdded, struct stat *statInfo)
 {
-    metaBase.atime = fileTimeAdded;
-    metaBase.mtime = Timespec2Milliseconds(statInfo->st_mtim);
+    metaBase.atime = static_cast<uint64_t>(fileTimeAdded);
+    metaBase.mtime = static_cast<uint64_t>(Timespec2Milliseconds(statInfo->st_mtim));
     metaBase.mode = statInfo->st_mode;
-    metaBase.size = statInfo->st_size;
+    metaBase.size = static_cast<uint64_t>(statInfo->st_size);
     metaBase.position = LOCAL;
     metaBase.fileType = FILE_TYPE_CONTENT;
 }
@@ -460,8 +460,8 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
         return ret;
     }
     MetaBase metaBase(directoryName, cloudId);
-    metaBase.atime = fileTimeAdded;
-    metaBase.mtime = fileTimeEdited;
+    metaBase.atime = static_cast<uint64_t>(fileTimeAdded);
+    metaBase.mtime = static_cast<uint64_t>(fileTimeEdited);
     metaBase.mode = S_IFDIR | STAT_MODE_DIR;
     metaBase.position = LOCAL;
     metaBase.fileType = FILE_TYPE_CONTENT;
@@ -544,8 +544,8 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
         return E_RDB;
     }
     MetaBase metaBase(fileName, cloudId);
-    metaBase.mtime = Timespec2Milliseconds(statInfo.st_mtim);
-    metaBase.size = statInfo.st_size;
+    metaBase.mtime = static_cast<uint64_t>(Timespec2Milliseconds(statInfo.st_mtim));
+    metaBase.size = static_cast<uint64_t>(statInfo.st_size);
     ret = WriteUpdateDentry(metaBase, userId_, bundleName_, fileName, parentCloudId);
     if (ret != E_OK) {
         LOGE("write update dentry failed, ret %{public}d", ret);

@@ -575,7 +575,7 @@ void FileOperationsCloud::Create(fuse_req_t req, fuse_ino_t parent, const char *
     std::unique_lock<std::shared_mutex> wLock(data->fileIdLock, std::defer_lock);
     wLock.lock();
     data->fileId++;
-    fi->fh = data->fileId;
+    fi->fh = static_cast<uint64_t>(data->fileId);
     wLock.unlock();
     filePtr->fd = err;
     filePtr->type = CLOUD_DISK_FILE_TYPE_LOCAL;

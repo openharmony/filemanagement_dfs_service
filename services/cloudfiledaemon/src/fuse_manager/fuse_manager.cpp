@@ -403,8 +403,9 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
         LOGE("Failed to realpath, errno: %{public}d", errno);
         return RestoreTmpFile(localPath, tmpPath);
     }
-    if (fi->flags & O_DIRECT) {
-        fi->flags &= ~O_DIRECT;
+    unsigned int flags = static_cast<unsigned int>(fi->flags);
+    if (flags & O_DIRECT) {
+        flags &= ~O_DIRECT;
     }
     auto fd = open(realPath, fi->flags);
     if (fd < 0) {

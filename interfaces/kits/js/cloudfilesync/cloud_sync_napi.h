@@ -107,6 +107,7 @@ public:
         UvChangeMsg(napi_env env, napi_ref ref, AAFwk::ChangeInfo &changeInfo, std::string strUri)
             : env_(env), ref_(ref), changeInfo_(changeInfo), strUri_(std::move(strUri))
         {
+            data_ = nullptr;
         }
         ~UvChangeMsg() {}
         napi_env env_;
