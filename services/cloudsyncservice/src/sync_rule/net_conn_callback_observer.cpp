@@ -31,6 +31,7 @@ int32_t NetConnCallbackObserver::NetAvailable(sptr<NetHandle> &netHandle)
     LOGI("network is available");
     NetworkStatus::OnNetworkAvail();
     dataSyncManager_->TriggerRecoverySync(triggerType_);
+    dataSyncManager_->DownloadThumb();
     return E_OK;
 }
 
