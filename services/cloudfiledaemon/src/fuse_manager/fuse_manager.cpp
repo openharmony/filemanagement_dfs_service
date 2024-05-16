@@ -334,7 +334,8 @@ static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
     (void) fi;
 
     LOGD("getattr, %s", CloudPath(data, ino).c_str());
-    GetMetaAttr(data, GetCloudInode(data, ino), &buf);
+    shared_ptr<CloudInode> node = GetCloudInode(data, ino);
+    GetMetaAttr(data, node, &buf);
 
     fuse_reply_attr(req, &buf, 0);
 }
