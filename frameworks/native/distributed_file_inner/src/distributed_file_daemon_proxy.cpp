@@ -194,6 +194,76 @@ int32_t DistributedFileDaemonProxy::CloseP2PConnection(const DistributedHardware
     return reply.ReadInt32();
 }
 
+int32_t DistributedFileDaemonProxy::OpenP2PConnectionEx(const std::string &networkId,
+                                                        sptr<IFileDfsListener> remoteReverseObj)
+{
+    LOGI("DistributedFileDaemonProxy::OpenP2PConnectionEx start.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token.");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(networkId)) {
+        LOGE("Failed to send network id.");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteRemoteObject(remoteReverseObj->AsObject())) {
+        LOGE("fail to WriteRemoteObject remoteReverseObj");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr.");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX),
+        data, reply, option);
+    if (ret != 0) {
+        stringstream ss;
+        ss << "Failed to send out the requeset, errno:" << ret;
+        LOGE("%{public}s", ss.str().c_str());
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    LOGI("DistributedFileDaemonProxy::OpenP2PConnectionEx success.");
+    return reply.ReadInt32();
+}
+
+int32_t DistributedFileDaemonProxy::CloseP2PConnectionEx(const std::string &networkId)
+{
+    LOGI("Close p2p connection");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token.");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteString(networkId)) {
+        LOGE("Failed to send device id.");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr.");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX),
+        data, reply, option);
+    if (ret != 0) {
+        stringstream ss;
+        ss << "Failed to send out the requeset, errno:" << ret;
+        LOGE("%{public}s", ss.str().c_str());
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    LOGI("DistributedFileDaemonProxy::Close p2p connection Success");
+    return reply.ReadInt32();
+}
+
 int32_t DistributedFileDaemonProxy::PrepareSession(const std::string &srcUri,
                                                    const std::string &dstUri,
                                                    const std::string &srcDeviceId,

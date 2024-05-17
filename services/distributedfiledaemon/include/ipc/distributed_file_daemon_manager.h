@@ -21,6 +21,7 @@
 #include "dm_device_info.h"
 #include "hmdfs_info.h"
 #include "i_file_trans_listener.h"
+#include "i_file_dfs_listener.h"
 
 namespace OHOS {
 namespace Storage {
@@ -31,6 +32,8 @@ public:
 
     virtual int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
     virtual int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
+    virtual int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) = 0;
+    virtual int32_t CloseP2PConnectionEx(const std::string &networkId) = 0;
     virtual int32_t PrepareSession(const std::string &srcUri,
                                    const std::string &dstUri,
                                    const std::string &srcDeviceId,

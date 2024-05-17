@@ -51,6 +51,28 @@ int32_t DistributedFileDaemonManagerImpl::CloseP2PConnection(const DistributedHa
     return distributedFileDaemonProxy->CloseP2PConnection(deviceInfo);
 }
 
+int32_t DistributedFileDaemonManagerImpl::OpenP2PConnectionEx(const std::string &networkId,
+                                                              sptr<IFileDfsListener> remoteReverseObj)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (!distributedFileDaemonProxy) {
+        LOGE("proxy is null.");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->OpenP2PConnectionEx(networkId, remoteReverseObj);
+}
+
+int32_t DistributedFileDaemonManagerImpl::CloseP2PConnectionEx(const std::string &networkId)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (!distributedFileDaemonProxy) {
+        LOGE("proxy is null.");
+
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->CloseP2PConnectionEx(networkId);
+}
+
 int32_t DistributedFileDaemonManagerImpl::PrepareSession(const std::string &srcUri,
                                                          const std::string &dstUri,
                                                          const std::string &srcDeviceId,

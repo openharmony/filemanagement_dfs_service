@@ -12,23 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef IPC_DISTRIBUTED_FILE_DAEMON_IPC_INTERFACE_CODE_H
-#define IPC_DISTRIBUTED_FILE_DAEMON_IPC_INTERFACE_CODE_H
 
-/* SAID:5201 */
+#ifndef FILE_DFS_LISTENER_PROXY_H
+#define FILE_DFS_LISTENER_PROXY_H
+
+#include <string>
+
+#include "dm_device_info.h"
+#include "i_file_dfs_listener.h"
+#include "iremote_proxy.h"
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-    enum class DistributedFileDaemonInterfaceCode {
-        DISTRIBUTED_FILE_OPEN_P2P_CONNECTION = 0,
-        DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION,
-        DISTRIBUTED_FILE_PREPARE_SESSION,
-        DISTRIBUTED_FILE_REQUEST_SEND_FILE,
-        DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO,
-        DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX,
-        DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX,
-    };
+class FileDfsListenerProxy : public IRemoteProxy<IFileDfsListener> {
+public:
+    explicit FileDfsListenerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IFileDfsListener>(object) {}
+    ~FileDfsListenerProxy() override {}
+    void OnStatus(const std::string &networkId, int32_t status) override;
+
+private:
+    static inline BrokerDelegator<FileDfsListenerProxy> delegator_;
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif
+
+#endif // FILE_DFS_LISTENER_PROXY_H

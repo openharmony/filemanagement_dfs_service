@@ -19,8 +19,8 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
-
 #include "device_auth.h"
 #include "device_info.h"
 #include "device_manager.h"
@@ -29,11 +29,14 @@
 #include "dfsu_startable.h"
 #include "mountpoint/mount_point.h"
 #include "network/network_agent_template.h"
+#include "storage_manager_proxy.h"
+#include "i_file_dfs_listener.h"
 #include "nlohmann/json.hpp"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+const int32_t ON_STATUS_OFFLINE = 13900046;
 struct GroupInfo {
     std::string groupName;
     std::string groupId;
@@ -75,6 +78,19 @@ public:
 
     int32_t OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t OnDeviceP2POffline(const DistributedHardware::DmDeviceInfo &deviceInfo);
+    int32_t AddRemoteReverseObj(uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj);
+    int32_t RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId);
+    void NotifyRemoteReverseObj(const std::string& networkId, int32_t status);
+    int32_t FindListenerByObject(const wptr<IRemoteObject> &remote, uint32_t& tokenId, sptr<IFileDfsListener>& listener);
+    std::string GetDeviceIdByNetworkId(const std::string &networkId);
+    void MountDfsDocs(const std::string &networkId, const std::string &deviceId);
+    void UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear);
+    void AddNetworkId(uint32_t tokenId, const std::string &networkId);
+    void RemoveNetworkId(uint32_t tokenId);
+    void RemoveNetworkIdByOne(uint32_t tokenId, const std::string &networkId);
+    void RemoveNetworkIdForAllToken(const std::string &networkId);
+    void ClearNetworkId();
+    std::unordered_set<std::string> GetNetworkIds(uint32_t tokenId);
 
     void OfflineAllDevice();
     void ReconnectOnlineDevices();
@@ -82,6 +98,8 @@ public:
 
     DeviceInfo &GetLocalDeviceInfo();
     std::vector<DeviceInfo> GetRemoteDevicesInfo();
+    std::mutex appCallConnectMutex_;
+    std::unordered_map<uint32_t, sptr<IFileDfsListener>> appCallConnect_;
 
 private:
     void StartInstance() override;
@@ -105,6 +123,14 @@ private:
     // cid-->same_account/accoutless's network
     std::unordered_map<std::string, std::shared_ptr<NetworkAgentTemplate>> cidNetTypeRecord_;
     std::unordered_map<std::string, int32_t> cidNetworkType_;
+    bool MountDfsCountOnly(const std::string &deviceId);
+    bool UMountDfsCountOnly(const std::string &deviceId, bool needClear);
+    int32_t GetCurrentUserId();
+    void GetStorageManager();
+    sptr<StorageManager::IStorageManager> storageMgrProxy_;
+    std::unordered_map<std::string, int32_t> mountDfsCount_;
+    std::mutex networkIdMapMutex_;
+    std::unordered_map<uint32_t, std::unordered_set<std::string>> networkIdMap_;
 };
 } // namespace DistributedFile
 } // namespace Storage

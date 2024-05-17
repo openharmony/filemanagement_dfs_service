@@ -39,6 +39,8 @@ private:
 
     int32_t HandleOpenP2PConnection(MessageParcel &data, MessageParcel &reply);
     int32_t HandleCloseP2PConnection(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleOpenP2PConnectionEx(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleCloseP2PConnectionEx(MessageParcel &data, MessageParcel &reply);
     int32_t HandlePrepareSession(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRequestSendFile(MessageParcel &data, MessageParcel &reply);
     int32_t HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &reply);

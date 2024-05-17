@@ -45,6 +45,11 @@ public:
     MOCK_METHOD1(OnFinished, int32_t(const std::string &sessionName));
 };
 
+DistributedHardware::DmDeviceInfo deviceInfo = {
+    .deviceId = "testdevid",
+    .networkId = "testnetworkid",
+};
+
 void DaemonTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";

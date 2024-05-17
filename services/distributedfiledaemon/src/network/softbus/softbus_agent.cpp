@@ -136,12 +136,12 @@ void SoftbusAgent::StopTopHalf()
 
 void SoftbusAgent::StopBottomHalf() {}
 
-void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
+int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
     LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
     if (!IsSameAccount(info.GetCid())) {
         LOGI("The source and sink device is not same account, not support.");
-        return;
+        return FileManagement::E_INVAL_ARG;
     }
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
@@ -165,13 +165,13 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
     int32_t socketId = Socket(clientInfo);
     if (socketId < FileManagement::E_OK) {
         LOGE("Create OpenSoftbusChannel Socket error");
-        return;
+        return FileManagement::E_CONTEXT;
     }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener);
     if (ret != FileManagement::E_OK) {
         LOGE("Bind SocketClient error");
         Shutdown(socketId);
-        return;
+        return FileManagement::E_CONTEXT;
     }
     OccupySession(socketId, linkType);
     PeerSocketInfo peerSocketInfo = {
@@ -180,6 +180,7 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
     };
     SoftbusSessionDispatcher::OnSessionOpened(socketId, peerSocketInfo);
     LOGI("Success to OpenSession, socketId:%{public}d, linkType:%{public}d", socketId, linkType);
+    return FileManagement::E_OK;
 }
 
 void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType)

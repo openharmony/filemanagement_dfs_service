@@ -57,6 +57,8 @@ public:
 
     int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override;
+    int32_t CloseP2PConnectionEx(const std::string &networkId) override;
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
@@ -96,6 +98,14 @@ private:
                  const sptr<IDaemon> &daemon,
                  const std::string &sessionName);
     void DeleteSessionAndListener(const std::string &sessionName);
+
+    class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
+    public:
+        DfsListenerDeathRecipient(){};
+        ~DfsListenerDeathRecipient() = default;
+        void OnRemoteDied(const wptr<IRemoteObject> &remote) override;
+    };
+    static inline sptr<DfsListenerDeathRecipient> dfsListenerDeathRecipient_;
 };
 } // namespace DistributedFile
 } // namespace Storage

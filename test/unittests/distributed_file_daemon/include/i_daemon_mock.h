@@ -50,6 +50,16 @@ public:
         return FileManagement::E_OK;
     }
 
+    int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t CloseP2PConnectionEx(const std::string &networkId)
+    {
+        return FileManagement::E_OK;
+    }
+
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,

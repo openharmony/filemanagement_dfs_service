@@ -58,6 +58,7 @@ public:
     void ConnectDeviceAsync(const DeviceInfo info);
     void DisconnectDevice(const DeviceInfo info);
     void DisconnectDeviceByP2P(const DeviceInfo info);
+    void DisconnectDeviceByP2PHmdfs(const DeviceInfo info);
     void OccupySession(int32_t sessionId, uint8_t linkType);
     bool FindSession(int32_t sessionId);
     void AcceptSession(std::shared_ptr<BaseSession> session, const std::string backStage);
@@ -71,7 +72,7 @@ protected:
     virtual void QuitDomain() = 0;
     virtual void StopTopHalf() = 0;
     virtual void StopBottomHalf() = 0;
-    virtual void OpenSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
+    virtual int32_t OpenSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
     virtual void OpenApSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
     virtual void CloseSession(std::shared_ptr<BaseSession> session) = 0;
 
