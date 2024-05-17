@@ -31,11 +31,8 @@
 #include "mountpoint/mount_point.h"
 #include "network/network_agent_template.h"
 #include "nlohmann/json.hpp"
-<<<<<<< HEAD
 #include "storage_manager_proxy.h"
-=======
 #include "utils_directory.h"
->>>>>>> 25c44d380113487e6f05ec126f2dc7d3185f0bd2
 
 namespace OHOS {
 namespace Storage {
