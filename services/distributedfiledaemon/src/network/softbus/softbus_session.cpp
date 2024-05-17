@@ -30,16 +30,17 @@ SoftbusSession::SoftbusSession(int32_t sessionId, std::string peerDeviceId) : se
 {
     int32_t socket_fd = INVALID_SOCKET_FD;
     int32_t ret = ::GetSessionHandle(sessionId_, &socket_fd);
+    if (ret != SOFTBUS_OK) {
+        LOGE("get session socket fd failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);
+        socketFd_ = INVALID_SOCKET_FD;
+    } 
     int32_t flags = fcntl(socket_fd, F_GETFL, 0);
     if (flags < 0) {
         LOGE("SoftbusSession flags:%{public}d", flags);
         return;
     }
-    if (ret != SOFTBUS_OK) {
-        LOGE("get session socket fd failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);
-        socketFd_ = INVALID_SOCKET_FD;
-    } else {
-        # define O_NONBLOCK    0400
+    if (ret == SOFTBUS_OK) {
+        # define O_NONBLOCK    04000
         flags = (int32_t)((uint32_t)flags & ~O_NONBLOCK);
         fcntl(socket_fd, F_SETFL, flags);
         socketFd_ = socket_fd;
