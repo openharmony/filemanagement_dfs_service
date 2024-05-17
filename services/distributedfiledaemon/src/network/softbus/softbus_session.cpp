@@ -40,7 +40,7 @@ SoftbusSession::SoftbusSession(int32_t sessionId, std::string peerDeviceId) : se
         return;
     }
     if (ret == SOFTBUS_OK) {
-        # define O_NONBLOCK    04000
+        const int32_t O_NONBLOCK = 04000;
         flags = (int32_t)((uint32_t)flags & ~O_NONBLOCK);
         fcntl(socket_fd, F_SETFL, flags);
         socketFd_ = socket_fd;
