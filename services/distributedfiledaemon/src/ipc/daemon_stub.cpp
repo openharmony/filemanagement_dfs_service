@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -134,6 +134,10 @@ int32_t DaemonStub::HandleOpenP2PConnectionEx(MessageParcel &data, MessageParcel
         return E_IPC_READ_FAILED;
     }
     auto remoteReverseObj = iface_cast<IFileDfsListener>(remote);
+    if (remoteReverseObj == nullptr) {
+        LOGE("remoteReverseObj is null");
+        return E_INVAL_ARG;
+    }
     int32_t res = OpenP2PConnectionEx(networkId, remoteReverseObj);
     reply.WriteInt32(res);
     LOGI("DaemonStub::End OpenP2PConnection, res = %{public}d.", res);

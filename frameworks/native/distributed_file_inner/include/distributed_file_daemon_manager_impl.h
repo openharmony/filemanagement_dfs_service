@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #define DISTRIBUTED_FILE_DAEMON_MANAGER_IMPL_H
 
 #include "ipc/distributed_file_daemon_manager.h"
+#include "ipc/i_file_dfs_listener.h"
 #include "dm_device_info.h"
 #include "nocopyable.h"
 #include "ipc/i_file_dfs_listener.h"

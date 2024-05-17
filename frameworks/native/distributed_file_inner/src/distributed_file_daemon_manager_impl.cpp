@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -67,12 +67,19 @@ int32_t DistributedFileDaemonManagerImpl::CloseP2PConnectionEx(const std::string
     auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
     if (!distributedFileDaemonProxy) {
         LOGE("proxy is null.");
+<<<<<<< HEAD
+=======
 
+>>>>>>> 25c44d380113487e6f05ec126f2dc7d3185f0bd2
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
     return distributedFileDaemonProxy->CloseP2PConnectionEx(networkId);
 }
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 25c44d380113487e6f05ec126f2dc7d3185f0bd2
 int32_t DistributedFileDaemonManagerImpl::PrepareSession(const std::string &srcUri,
                                                          const std::string &dstUri,
                                                          const std::string &srcDeviceId,

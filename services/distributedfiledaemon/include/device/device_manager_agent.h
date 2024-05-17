@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,11 +27,11 @@
 #include "dfsu_actor.h"
 #include "dfsu_singleton.h"
 #include "dfsu_startable.h"
+#include "i_file_dfs_listener.h"
 #include "mountpoint/mount_point.h"
 #include "network/network_agent_template.h"
-#include "storage_manager_proxy.h"
-#include "i_file_dfs_listener.h"
 #include "nlohmann/json.hpp"
+#include "storage_manager_proxy.h"
 
 namespace OHOS {
 namespace Storage {
@@ -80,8 +80,9 @@ public:
     int32_t OnDeviceP2POffline(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t AddRemoteReverseObj(uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj);
     int32_t RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId);
-    void NotifyRemoteReverseObj(const std::string& networkId, int32_t status);
-    int32_t FindListenerByObject(const wptr<IRemoteObject> &remote, uint32_t& tokenId, sptr<IFileDfsListener>& listener);
+    void NotifyRemoteReverseObj(const std::string &networkId, int32_t status);
+    int32_t FindListenerByObject(const wptr<IRemoteObject> &remote, uint32_t &tokenId,
+        sptr<IFileDfsListener>& listener);
     std::string GetDeviceIdByNetworkId(const std::string &networkId);
     void MountDfsDocs(const std::string &networkId, const std::string &deviceId);
     void UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear);

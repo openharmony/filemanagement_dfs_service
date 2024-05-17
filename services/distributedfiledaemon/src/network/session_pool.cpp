@@ -22,8 +22,10 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace std;
+namespace {
 const int32_t MOUNT_DFS_COUNT_ONE = 1;
 const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
+}
 
 void SessionPool::OccupySession(int32_t sessionId, uint8_t linkType)
 {
@@ -46,6 +48,7 @@ void SessionPool::HoldSession(shared_ptr<BaseSession> session, const std::string
 {
     lock_guard lock(sessionPoolLock_);
     if (DeviceConnectCountOnly(session)) {
+        LOGE("DeviceConnect Count Only");
         return;
     }
     talker_->SinkSessionTokernel(session, backStage);

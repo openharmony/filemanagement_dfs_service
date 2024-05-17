@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -223,9 +223,7 @@ int32_t DistributedFileDaemonProxy::OpenP2PConnectionEx(const std::string &netwo
         static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX),
         data, reply, option);
     if (ret != 0) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s", ss.str().c_str());
+        LOGE("SendRequest failed, ret = %{public}d", ret);
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
     LOGI("DistributedFileDaemonProxy::OpenP2PConnectionEx success.");
@@ -255,9 +253,7 @@ int32_t DistributedFileDaemonProxy::CloseP2PConnectionEx(const std::string &netw
         static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX),
         data, reply, option);
     if (ret != 0) {
-        stringstream ss;
-        ss << "Failed to send out the requeset, errno:" << ret;
-        LOGE("%{public}s", ss.str().c_str());
+        LOGE("SendRequest failed, ret = %{public}d", ret);
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
     LOGI("DistributedFileDaemonProxy::Close p2p connection Success");

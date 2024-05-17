@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 
 #include "accesstoken_kit.h"
 #include "common_event_manager.h"
@@ -25,11 +26,12 @@
 #include "connection_detector.h"
 #include "device/device_manager_agent.h"
 #include "dfs_error.h"
+#include "dfsu_access_token_helper.h"
+#include "i_file_dfs_listener.h"
 #include "ipc_skeleton.h"
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
-#include "unordered_set"
 #include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
@@ -39,8 +41,6 @@
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
-#include "dfsu_access_token_helper.h"
-#include "i_file_dfs_listener.h"
 
 namespace OHOS {
 namespace Storage {
@@ -52,11 +52,13 @@ using namespace OHOS::Storage::DistributedFile;
 using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
 using AccessTokenKit = OHOS::Security::AccessToken::AccessTokenKit;
 
+namespace {
 const string FILE_MANAGER_AUTHORITY = "docs";
 const string MEDIA_AUTHORITY = "media";
 const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
+}
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
 
@@ -219,7 +221,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
 
 int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
 {
-    LOGI("Daemon::CloseP2PConnectionEx start");
+    LOGI("Daemon::CloseP2PConnectionEx start, networkId: %{public}s", Utils::GetAnonyString(networkId).c_str());
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[CloseP2PConnectionEx] DATASYNC permission denied");
         return E_PERMISSION_DENIED_NAPI;

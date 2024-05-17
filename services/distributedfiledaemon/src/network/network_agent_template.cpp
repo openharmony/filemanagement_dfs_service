@@ -175,6 +175,7 @@ void NetworkAgentTemplate::GetSession(const string &cid, uint8_t linkType)
             if (OpenSession(deviceInfo, LINK_TYPE_P2P) == E_OK) {
                 return;
             }
+            LOGE("reget session failed");
             auto deviceManager = DeviceManagerAgent::GetInstance();
             deviceManager->RemoveNetworkIdForAllToken(cid);
             auto deviceId = deviceManager->GetDeviceIdByNetworkId(cid);
