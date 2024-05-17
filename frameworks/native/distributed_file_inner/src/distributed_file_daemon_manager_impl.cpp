@@ -67,19 +67,11 @@ int32_t DistributedFileDaemonManagerImpl::CloseP2PConnectionEx(const std::string
     auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
     if (!distributedFileDaemonProxy) {
         LOGE("proxy is null.");
-<<<<<<< HEAD
-=======
-
->>>>>>> 25c44d380113487e6f05ec126f2dc7d3185f0bd2
         return OHOS::FileManagement::E_SA_LOAD_FAILED;
     }
     return distributedFileDaemonProxy->CloseP2PConnectionEx(networkId);
 }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 25c44d380113487e6f05ec126f2dc7d3185f0bd2
 int32_t DistributedFileDaemonManagerImpl::PrepareSession(const std::string &srcUri,
                                                          const std::string &dstUri,
                                                          const std::string &srcDeviceId,
