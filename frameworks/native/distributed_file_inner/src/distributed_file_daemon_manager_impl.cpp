@@ -116,6 +116,16 @@ int32_t DistributedFileDaemonManagerImpl::GetRemoteCopyInfo(const std::string &s
     }
     return distributedFileDaemonProxy->GetRemoteCopyInfo(srcUri, isFile, isDir);
 }
+
+int32_t DistributedFileDaemonManagerImpl::CancelCopyTask(const std::string &sessionName)
+{
+    auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+    if (distributedFileDaemonProxy == nullptr) {
+        LOGE("proxy is null");
+        return OHOS::FileManagement::E_SA_LOAD_FAILED;
+    }
+    return distributedFileDaemonProxy->CancelCopyTask(sessionName);
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

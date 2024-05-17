@@ -39,6 +39,7 @@ public:
                                    const std::string &srcDeviceId,
                                    const sptr<IRemoteObject> &listener,
                                    HmdfsInfo &info) = 0;
+    virtual int32_t CancelCopyTask(const std::string &sessionName) = 0;
     virtual int32_t RequestSendFile(const std::string &srcUri,
                                     const std::string &dstPath,
                                     const std::string &remoteDeviceId,

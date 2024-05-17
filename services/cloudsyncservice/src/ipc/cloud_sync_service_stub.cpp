@@ -465,6 +465,9 @@ int32_t CloudSyncServiceStub::HandleDownloadFiles(MessageParcel &data, MessagePa
     string bundleName = data.ReadString();
     int32_t size = data.ReadInt32();
     std::vector<AssetInfoObj> assetInfoObj;
+    if (size > INT_MAX) {
+        return E_INVAL_ARG;
+    }
     for (int i = 0; i < size; i++) {
         sptr<AssetInfoObj> obj = data.ReadParcelable<AssetInfoObj>();
         if (!obj) {

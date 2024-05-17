@@ -16,6 +16,7 @@
 #include "ipc/daemon.h"
 
 #include <exception>
+#include <regex>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
@@ -317,7 +318,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         LOGE("SessionServer exceed max");
         return E_SOFTBUS_SESSION_FAILED;
     }
-
+    info.sessionName = sessionName;
     StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
     ret = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName,
         DFS_CHANNLE_ROLE_SINK, physicalPath);
@@ -386,6 +387,7 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
                               const bool &isSrcFile,
                               HmdfsInfo &info)
 {
+    auto checkPath = physicalPath;
     if (isSrcFile && !Utils::IsFolder(physicalPath)) {
         auto pos = physicalPath.rfind('/');
         if (pos == std::string::npos) {
@@ -399,7 +401,13 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
     if (!std::filesystem::exists(physicalPath, errCode) && info.dirExistFlag) {
         LOGI("Not CheckValidPath, physicalPath %{public}s", physicalPath.c_str());
     } else {
-        if (!SandboxHelper::CheckValidPath(physicalPath)) {
+        auto pos = checkPath.rfind('/');
+        if (pos == std::string::npos) {
+            LOGE("invalid file path");
+            return E_GET_PHYSICAL_PATH_FAILED;
+        }
+        checkPath = checkPath.substr(0, pos);
+        if (!SandboxHelper::CheckValidPath(checkPath)) {
             LOGE("invalid path.");
             return E_GET_PHYSICAL_PATH_FAILED;
         }
@@ -414,6 +422,15 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
         if (!SandboxHelper::CheckValidPath(physicalPath)) {
             LOGE("invalid path.");
             return E_GET_PHYSICAL_PATH_FAILED;
+        }
+    } else {
+        std::regex pathRegex("^[a-zA-Z0-9_\\-/\\\\]*$");
+        if (!std::filesystem::exists(physicalPath, errCode) && std::regex_match(physicalPath.c_str(), pathRegex)) {
+            std::filesystem::create_directory(physicalPath, errCode);
+            if (errCode.value() != 0) {
+                LOGE("Create directory failed, physicalPath %{public}s", physicalPath.c_str());
+                return E_GET_PHYSICAL_PATH_FAILED;
+            }
         }
     }
     return E_OK;
@@ -469,6 +486,13 @@ int32_t Daemon::Copy(const std::string &srcUri,
         LOGE("RequestSendFile failed, ret = %{public}d", ret);
         return E_SA_LOAD_FAILED;
     }
+    return E_OK;
+}
+
+int32_t Daemon::CancelCopyTask(const std::string &sessionName)
+{
+    LOGD("Cancel copy task in. sessionName = %{public}s", sessionName.c_str());
+    SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
     return E_OK;
 }
 

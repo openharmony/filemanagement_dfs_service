@@ -188,9 +188,11 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_0100, TestSize.Level1)
         const std::string srcDeviceId = "testSrcDeviceId";
         auto listener = sptr<IRemoteObject>(new MockFileTransListener());
         const std::string copyPath = "tmpDir";
+        const std::string sessionName = "DistributedDevice0";
         HmdfsInfo fileInfo = {
             .copyPath = copyPath,
             .dirExistFlag = false,
+            .sessionName = sessionName,
         };
         EXPECT_EQ(daemon_->PrepareSession(srcUri, dstUri, srcDeviceId, listener, fileInfo),
                   FileManagement::E_SA_LOAD_FAILED);

@@ -16,6 +16,7 @@
 #include "network/softbus/softbus_session.h"
 
 #include "dfs_session.h"
+#include "fcntl.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -27,12 +28,20 @@ constexpr int32_t SOFTBUS_OK = 0;
 
 SoftbusSession::SoftbusSession(int32_t sessionId, std::string peerDeviceId) : sessionId_(sessionId), cid_(peerDeviceId)
 {
-    int32_t socket_fd;
+    int32_t socket_fd = INVALID_SOCKET_FD;
     int32_t ret = ::GetSessionHandle(sessionId_, &socket_fd);
     if (ret != SOFTBUS_OK) {
         LOGE("get session socket fd failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);
         socketFd_ = INVALID_SOCKET_FD;
-    } else {
+    }
+    int32_t flags = fcntl(socket_fd, F_GETFL, 0);
+    if (flags < 0) {
+        LOGE("SoftbusSession flags:%{public}d", flags);
+        return;
+    }
+    if (ret == SOFTBUS_OK) {
+        flags = (int32_t)((uint32_t)flags & ~O_NONBLOCK);
+        fcntl(socket_fd, F_SETFL, flags);
         socketFd_ = socket_fd;
     }
 

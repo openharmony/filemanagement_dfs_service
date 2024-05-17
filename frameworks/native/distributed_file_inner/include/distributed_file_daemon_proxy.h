@@ -43,6 +43,7 @@ public:
                            const std::string &srcDeviceId,
                            const sptr<IRemoteObject> &listener,
                            HmdfsInfo &info) override;
+    int32_t CancelCopyTask(const std::string &sessionName) override;
     int32_t RequestSendFile(const std::string &srcUri,
                             const std::string &dstPath,
                             const std::string &dstDeviceId,

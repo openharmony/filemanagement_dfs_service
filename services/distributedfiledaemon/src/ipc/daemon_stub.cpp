@@ -42,6 +42,8 @@ DaemonStub::DaemonStub()
         &DaemonStub::HandleCloseP2PConnectionEx;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION)] =
         &DaemonStub::HandlePrepareSession;
+    opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK)] =
+            &DaemonStub::HandleCancelCopyTask;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE)] =
         &DaemonStub::HandleRequestSendFile;
     opToInterfaceMap_[static_cast<uint32_t>(
@@ -195,6 +197,10 @@ int32_t DaemonStub::HandlePrepareSession(MessageParcel &data, MessageParcel &rep
         return E_IPC_READ_FAILED;
     }
     int32_t res = PrepareSession(srcUri, dstUri, srcDeviceId, listener, info);
+    if (!reply.WriteString(info.sessionName)) {
+        LOGE("Write sessionName failed");
+        return E_IPC_WRITE_FAILED;
+    }
     reply.WriteInt32(res);
     LOGD("End PrepareSession, ret = %{public}d.", res);
     return res;
@@ -266,6 +272,16 @@ int32_t DaemonStub::HandleGetRemoteCopyInfo(MessageParcel &data, MessageParcel &
     }
     LOGD("End GetRemoteCopyInfo, ret = %{public}d.", res);
     return res;
+}
+
+int32_t DaemonStub::HandleCancelCopyTask(MessageParcel &data, MessageParcel &reply)
+{
+    std::string sessionName;
+    if (!data.ReadString(sessionName)) {
+        LOGE("read sessionName failed");
+        return E_IPC_READ_FAILED;
+    }
+    return CancelCopyTask(sessionName);
 }
 } // namespace DistributedFile
 } // namespace Storage

@@ -64,7 +64,7 @@ int32_t CloudSyncAssetManagerImpl::DownloadFile(const int32_t userId,
 
 int32_t CloudSyncAssetManagerImpl::DownloadFiles(const int32_t userId,
                                                  const std::string &bundleName,
-                                                 std::vector<AssetInfo> &assetInfo,
+                                                 const std::vector<AssetInfo> &assetInfo,
                                                  std::vector<bool> &assetResultMap)
 {
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();

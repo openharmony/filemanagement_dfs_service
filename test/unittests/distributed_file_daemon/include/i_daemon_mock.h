@@ -81,6 +81,11 @@ public:
     {
         return FileManagement::E_OK;
     }
+
+    int32_t CancelCopyTask(const std::string &sessionName)
+    {
+        return FileManagement::E_OK;
+    }
 };
 } // namespace OHOS::Storage::DistributedFile
 

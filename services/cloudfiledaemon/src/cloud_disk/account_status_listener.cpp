@@ -30,12 +30,12 @@ static void SwapMemory()
 {
     auto fd = open("/proc/self/reclaim", O_WRONLY);
     if (fd < 0) {
-        LOGE("Failed to open reclaim, errno:{public}d", errno);
+        LOGE("Failed to open reclaim, errno:%{public}d", errno);
         return;
     }
     std::string content = "1";
     if (write(fd, content.c_str(), content.size()) < 0) {
-        LOGE("Failed to write reclaim, errno:{public}d", errno);
+        LOGE("Failed to write reclaim, errno:%{public}d", errno);
     }
     close(fd);
     return;

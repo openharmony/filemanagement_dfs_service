@@ -28,7 +28,7 @@ constexpr int RDB_TRANSACTION_WAIT_MS = 1000;
 std::mutex TransactionOperations::transactionMutex_;
 std::condition_variable TransactionOperations::transactionCV_;
 std::atomic<bool> TransactionOperations::isInTransaction_(false);
-constexpr int32_t MAX_TRY_TIMES = 30;
+constexpr int32_t MAX_TRY_TIMES = 5;
 constexpr int32_t TRANSACTION_WAIT_INTERVAL = 50; // in milliseconds.
 
 TransactionOperations::TransactionOperations(

@@ -14,11 +14,17 @@
  */
 
 #include "device_manager_impl.h"
+#include "dm_constants.h"
 
 #include "gtest/gtest.h"
 
 namespace OHOS {
 namespace DistributedHardware {
+const std::string NETWORKID_ONE = "45656596896323231";
+const std::string NETWORKID_TWO = "45656596896323232";
+const std::string NETWORKID_THREE = "45656596896323233";
+constexpr int32_t NETWORKTYPE_WITH_WIFI = 2;
+constexpr int32_t NETWORKTYPE_NONE_WIFI = 4;
 DeviceManagerImpl &DeviceManagerImpl::GetInstance()
 {
     GTEST_LOG_(INFO) << "GetInstance start";
@@ -314,8 +320,17 @@ int32_t DeviceManagerImpl::GetNetworkTypeByNetworkId(const std::string &pkgName,
                                                      int32_t &netWorkType)
 {
     GTEST_LOG_(INFO) << "GetTrustedDeviceList start";
-    netWorkType = 0;
-    return 0;
+    if (netWorkId == NETWORKID_ONE) {
+        return ERR_DM_INPUT_PARA_INVALID;
+    }
+
+    if (netWorkId == NETWORKID_TWO) {
+        netWorkType = NETWORKTYPE_WITH_WIFI;
+        return DM_OK;
+    }
+
+    netWorkType = NETWORKTYPE_NONE_WIFI;
+    return DM_OK;
 }
 } // namespace DistributedHardware
 } // namespace OHOS

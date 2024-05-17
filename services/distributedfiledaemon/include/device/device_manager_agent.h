@@ -31,7 +31,11 @@
 #include "mountpoint/mount_point.h"
 #include "network/network_agent_template.h"
 #include "nlohmann/json.hpp"
+<<<<<<< HEAD
 #include "storage_manager_proxy.h"
+=======
+#include "utils_directory.h"
+>>>>>>> 25c44d380113487e6f05ec126f2dc7d3185f0bd2
 
 namespace OHOS {
 namespace Storage {
@@ -70,11 +74,12 @@ public:
     void QuitGroup(std::weak_ptr<MountPoint> mp);
 
     void InitDeviceInfos();
+    int32_t IsSupportDevice(const DistributedHardware::DmDeviceInfo &deviceInfo);
 
-    void OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    void OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    void OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo) override {}
+    void OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo) override {}
 
     int32_t OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t OnDeviceP2POffline(const DistributedHardware::DmDeviceInfo &deviceInfo);

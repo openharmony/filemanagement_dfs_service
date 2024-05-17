@@ -80,6 +80,11 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_MEMORY,
 };
 
+enum DFSErrCode {
+    ERR_OK,
+    ERR_BAD_VALUE,
+};
+
 enum JsErrCode {
     E_PERMISSION = 201,
     E_PERMISSION_SYS = 202,
