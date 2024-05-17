@@ -78,7 +78,7 @@ static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
 
     childInode->bundleName = parentInode->bundleName;
     childInode->fileName = metaBase.name;
-    childInode->layer = FileOperationsHelper::GetNextLayer(parentInode, parentInode->parent);
+    childInode->layer = FileOperationsHelper::GetNextLayer(parentInode, parent);
     childInode->parent = parent;
     childInode->cloudId = metaBase.cloudId;
     childInode->ops = make_shared<FileOperationsCloud>();
@@ -293,8 +293,8 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
         parentInode->cloudId);
     int32_t ret = metaFile->DoLookup(metaBase);
     if (ret != 0) {
-        LOGE("lookup dnetry failed, ret = %{public}d", ret);
-        return EINVAL;
+        LOGE("lookup dentry failed, ret = %{public}d", ret);
+        return ENOENT;
     }
     string key = std::to_string(parent) + name;
     int64_t inodeId = static_cast<int64_t>(DentryHash(metaBase.cloudId));
