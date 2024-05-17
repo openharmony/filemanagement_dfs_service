@@ -20,7 +20,6 @@
 #include "ipc/i_file_dfs_listener.h"
 #include "dm_device_info.h"
 #include "nocopyable.h"
-#include "ipc/i_file_dfs_listener.h"
 
 namespace OHOS {
 namespace Storage {
