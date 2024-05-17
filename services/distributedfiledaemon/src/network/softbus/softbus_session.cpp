@@ -33,7 +33,7 @@ SoftbusSession::SoftbusSession(int32_t sessionId, std::string peerDeviceId) : se
     if (ret != SOFTBUS_OK) {
         LOGE("get session socket fd failed, errno:%{public}d, sessionId:%{public}d", ret, sessionId_);
         socketFd_ = INVALID_SOCKET_FD;
-    } 
+    }
     int32_t flags = fcntl(socket_fd, F_GETFL, 0);
     if (flags < 0) {
         LOGE("SoftbusSession flags:%{public}d", flags);
