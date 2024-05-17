@@ -16,6 +16,7 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_FILE_DATA_HANDLER_H
 #define OHOS_CLOUD_SYNC_SERVICE_FILE_DATA_HANDLER_H
 
+#include <bitset>
 #include "data_sync_notifier.h"
 #include "medialibrary_db_const.h"
 #include "medialibrary_type_const.h"
@@ -27,6 +28,8 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
+
+#define THM_LCD_MAP_BIT_COUNT 2
 
 class FileDataHandler : public RdbDataHandler, public GallerySyncStatContainer,
     public GalleryCheckStatContainer {
@@ -184,6 +187,8 @@ private:
     static inline const int32_t DELETE_BATCH_NUM = 20;
     static inline const int32_t DOWNLOAD_LIMIT_SIZE = 200;
     static inline const int32_t UPDATE_VEC_SIZE = 20;
+    static inline const uint32_t THM_POS = 0;
+    static inline const uint32_t LCD_POS = 1;
     DriveKit::DKRecordType recordType_ = "media";
     DriveKit::DKFieldKeyArray desiredKeys_;
     DriveKit::DKFieldKeyArray checkedKeys_ = {"version", "id"};
@@ -310,19 +315,19 @@ private:
     void QueryAndDeleteMap(int32_t fileId, const std::set<int> &cloudMapIds);
     int32_t BatchInsertAssetMaps(OnFetchParams &params);
     int32_t BatchInsertAssetAnalysisMaps(OnFetchParams &params);
-    void UpdateThmVec();
-    void UpdateLcdVec();
+    void CleanThmLcdVec();
+    void InsertOrUpdateThmLcdMap(DriveKit::DKRecordId key, uint32_t pos);
     void HandleShootingMode(const DriveKit::DKRecord &record, const NativeRdb::ValuesBucket &valuebucket,
         OnFetchParams &params);
 
     /* db result to record */
     FileDataConvertor localConvertor_ = { userId_, bundleName_, FILE_DOWNLOAD };
     std::mutex rdbMutex_;
-    std::mutex thmMutex_;
-    std::mutex lcdMutex_;
     std::mutex cleanMutex_;
-    std::vector<NativeRdb::ValueObject> thmVec_;
-    std::vector<NativeRdb::ValueObject> lcdVec_;
+    std::mutex thmLcdMapMutex_;
+    std::mutex thmLcdVecMutex_;
+    std::vector<NativeRdb::ValueObject> thmLcdVec_;
+    std::map<DriveKit::DKRecordId, std::bitset<THM_LCD_MAP_BIT_COUNT>> thmLcdMap_;
 };
 } // namespace CloudSync
 } // namespace FileManagement

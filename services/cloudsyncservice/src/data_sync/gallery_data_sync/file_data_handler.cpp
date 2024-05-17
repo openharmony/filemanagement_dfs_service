@@ -141,6 +141,24 @@ void FileDataHandler::GetFetchCondition(FetchCondition &cond)
     }
 }
 
+void FileDataHandler::InsertOrUpdateThmLcdMap(DriveKit::DKRecordId key, uint32_t pos)
+{
+    std::bitset<THM_LCD_MAP_BIT_COUNT> value("00");
+    value.set(pos);
+    std::unique_lock<std::mutex> lock(thmLcdMapMutex_);
+    if (thmLcdMap_.find(key) == thmLcdMap_.end()) {
+        thmLcdMap_.insert(std::make_pair(key, value));
+    } else {
+        thmLcdMap_[key] |= value;
+        if (thmLcdMap_[key].all()) {
+            thmLcdMap_.erase(key);
+            lock.unlock();
+            std::lock_guard<std::mutex> lock(thmLcdVecMutex_);
+            thmLcdVec_.emplace_back(key);
+        }
+    }
+}
+
 int32_t FileDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &records)
 {
     NativeRdb::AbsRdbPredicates retryPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
@@ -161,7 +179,6 @@ int32_t FileDataHandler::GetRetryRecords(std::vector<DriveKit::DKRecordId> &reco
             records.emplace_back(record);
         }
     }
-
     return E_OK;
 }
 
@@ -1407,6 +1424,7 @@ void FileDataHandler::PullRecordsInsert(std::vector<DriveKit::DKRecord> &records
             AppendToDownload(record, "thumbnail", params.assetsToDownload);
         } else if ((++params.totalPullCount <= downloadThumbLimit_)) {
             // the first 500 thms when pull records.
+            AppendToDownload(record, "lcd", params.assetsToDownload);
             AppendToDownload(record, "thumbnail", params.assetsToDownload);
         }
 
@@ -1502,8 +1520,7 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
     uint64_t thumbError = 0;
     uint64_t lcdError = 0;
 
-    UpdateThmVec();
-    UpdateLcdVec();
+    CleanThmLcdVec();
     for (const auto &it : resultMap) {
         auto asset = it.first;
         if (it.second.IsSuccess()) {
@@ -1553,19 +1570,15 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
 {
     RETURN_ON_ERR(IsStop());
     if (asset.fieldKey == "thumbnail") {
-        std::lock_guard<std::mutex> lock(thmMutex_);
-        thmVec_.emplace_back(asset.recordId);
+        InsertOrUpdateThmLcdMap(asset.recordId, THM_POS);
     }
     if (asset.fieldKey == "lcd") {
-        std::lock_guard<std::mutex> lock(lcdMutex_);
-        lcdVec_.emplace_back(asset.recordId);
+        InsertOrUpdateThmLcdMap(asset.recordId, LCD_POS);
     }
-    if (thmVec_.size() >= UPDATE_VEC_SIZE) {
-        UpdateThmVec();
+    if (thmLcdVec_.size() >= UPDATE_VEC_SIZE) {
+        CleanThmLcdVec();
     }
-    if (lcdVec_.size() >= UPDATE_VEC_SIZE) {
-        UpdateLcdVec();
-    }
+
     string tempPath = asset.downLoadPath + "/" + asset.asset.assetName;
     string localPath = CloudDisk::CloudFileUtils::GetPathWithoutTmp(tempPath);
     DentryRemoveThumb(localPath);
@@ -4470,50 +4483,65 @@ int32_t FileDataHandler::GetThumbToDownload(std::vector<DriveKit::DKDownloadAsse
             LOGE("Get file path failed");
             continue;
         }
-        if (thmState == static_cast<int32_t>(ThumbState::TO_DOWNLOAD)) {
+        string filePath = GetFilePath(*results);
+        string thumbLocalPath = createConvertor_.GetThumbPath(filePath, THUMB_SUFFIX);
+        string lcdLocalPath = createConvertor_.GetThumbPath(filePath, LCD_SUFFIX);
+        bool thumbLocal = access(thumbLocalPath.c_str(), F_OK) == 0;
+        bool lcdLocal = access(lcdLocalPath.c_str(), F_OK) == 0;
+
+        string recordId;
+        ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, recordId, *results);
+        if (ret != E_OK) {
+            LOGE("Get recordId failed");
+            continue;
+        }
+
+        if (thumbLocal) {
+            InsertOrUpdateThmLcdMap(recordId, THM_POS);
+        } else if (thmState == static_cast<int32_t>(ThumbState::TO_DOWNLOAD)
+            || thmState == static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) {
             AppendToDownload(*results, "thumbnail", outAssetsToDownload);
+        }
+        if (lcdLocal) {
+            InsertOrUpdateThmLcdMap(recordId, LCD_POS);
+        } else if (thmState == static_cast<int32_t>(ThumbState::TO_DOWNLOAD)
+            || thmState == static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) {
             AppendToDownload(*results, "lcd", outAssetsToDownload);
-        } else if (thmState == static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) {
-            AppendToDownload(*results, "lcd", outAssetsToDownload);
-        } else if (thmState == static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) {
-            AppendToDownload(*results, "thumbnail", outAssetsToDownload);
         }
     }
     return E_OK;
 }
 
-void FileDataHandler::UpdateThmVec()
+void FileDataHandler::CleanThmLcdVec()
 {
-    if (!thmVec_.empty()) {
-        LOGI("thmVec_ size is %{public}zu", thmVec_.size());
-        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
-            to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE)) + " , " + PC::PHOTO_THUMB_STATUS +
-            " = CASE WHEN " + PC::PHOTO_THUMB_STATUS + " - " +
-            to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) + " < 0 THEN 0 ELSE " + PC::PHOTO_THUMB_STATUS
-            + " - " + to_string(static_cast<int32_t>(ThumbState::THM_TO_DOWNLOAD)) + " END ";
-        int32_t ret = E_OK;
-        uint64_t count = 0;
+    if (!thmLcdVec_.empty()) {
+        LOGI("thmVec_ size is %{public}zu", thmLcdVec_.size());
         uint32_t size = 0;
         vector<ValueObject> tmp;
         {
-            std::lock_guard<std::mutex> lock(thmMutex_);
-            size = thmVec_.size();
-            tmp.assign(thmVec_.begin(), thmVec_.begin() + size);
-            thmVec_.erase(thmVec_.begin(), thmVec_.begin() + size);
+            std::lock_guard<std::mutex> lock(thmLcdVecMutex_);
+            size = thmLcdVec_.size();
+            tmp.assign(thmLcdVec_.begin(), thmLcdVec_.begin() + size);
+            thmLcdVec_.erase(thmLcdVec_.begin(), thmLcdVec_.begin() + size);
         }
+        uint64_t count = 0;
+        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_SYNC_STATUS + " = " +
+            to_string(static_cast<int32_t>(SyncStatusType::TYPE_VISIBLE)) + " , " + PC::PHOTO_THUMB_STATUS +
+            " = " + to_string(static_cast<int32_t>(ThumbState::DOWNLOADED));
         vector<int> fileIds;
         BatchGetFileIdFromCloudId(tmp, fileIds);
-        ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, tmp, count);
+        int32_t ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, tmp, count);
         LOGI("update size is %{public}u, success count is %{public}" PRIu64 ", fail count is %{public}zu",
             size, count, tmp.size());
         if (ret != E_OK) {
             LOGW("update thm fail");
-            std::lock_guard<std::mutex> lock(thmMutex_);
-            thmVec_.insert(thmVec_.end(), tmp.begin(), tmp.end());
+            std::lock_guard<std::mutex> lock(thmLcdVecMutex_);
+            thmLcdVec_.insert(thmLcdVec_.end(), tmp.begin(), tmp.end());
             fileIds.clear();
         }
         if (count != 0) {
             UpdateAttachmentStat(INDEX_THUMB_SUCCESS, count);
+            UpdateAttachmentStat(INDEX_LCD_SUCCESS, count);
         }
         if (!IsPullRecords()) {
             UpdateAlbumInternal();
@@ -4526,56 +4554,19 @@ void FileDataHandler::UpdateThmVec()
     }
 }
 
-void FileDataHandler::UpdateLcdVec()
-{
-    if (!lcdVec_.empty()) {
-        LOGI("lcdVec_ size is %{public}zu", lcdVec_.size());
-        string sql = "UPDATE " + PC::PHOTOS_TABLE + " SET " + PC::PHOTO_THUMB_STATUS + " = CASE WHEN " +
-            PC::PHOTO_THUMB_STATUS + " - " + to_string(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) +
-            " < 0 THEN 0 ELSE " + PC::PHOTO_THUMB_STATUS + " - " +
-            to_string(static_cast<int32_t>(ThumbState::LCD_TO_DOWNLOAD)) + " END ";
-        int32_t ret = E_OK;
-        uint64_t count = 0;
-        uint32_t size = 0;
-        vector<ValueObject> tmp;
-        {
-            std::lock_guard<std::mutex> lock(lcdMutex_);
-            size = lcdVec_.size();
-            tmp.assign(lcdVec_.begin(), lcdVec_.begin() + size);
-            lcdVec_.erase(lcdVec_.begin(), lcdVec_.begin() + size);
-        }
-        ret = BatchUpdate(sql, PC::PHOTO_CLOUD_ID, tmp, count);
-        LOGI("update size is %{public}u, success count is %{public}" PRIu64 ", fail count is %{public}zu",
-            size, count, tmp.size());
-        if (ret != E_OK) {
-            LOGW("update thm fail");
-            std::lock_guard<std::mutex> lock(lcdMutex_);
-            lcdVec_.insert(lcdVec_.end(), tmp.begin(), tmp.end());
-        }
-        if (count != 0) {
-            UpdateAttachmentStat(INDEX_LCD_SUCCESS, count);
-        }
-        if (!IsPullRecords()) {
-            UpdateAlbumInternal();
-        }
-    }
-}
-
-
 void FileDataHandler::StopUpdataFiles()
 {
     const uint32_t MAX_TRY_TIMES = 5;
     uint32_t tryCount = 1;
-    while (tryCount <= MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
-        UpdateThmVec();
-        UpdateLcdVec();
+    while (tryCount <= MAX_TRY_TIMES && !thmLcdVec_.empty()) {
+        CleanThmLcdVec();
         tryCount++;
     }
-    if (tryCount > MAX_TRY_TIMES && (!lcdVec_.empty() || !thmVec_.empty())) {
+    if (tryCount > MAX_TRY_TIMES && !thmLcdVec_.empty()) {
         LOGE("StopUpdataFiles update failed!");
     }
-    UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmVec_.size());
-    UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, lcdVec_.size());
+    UpdateAttachmentStat(INDEX_THUMB_ERROR_RDB, thmLcdVec_.size());
+    UpdateAttachmentStat(INDEX_LCD_ERROR_RDB, thmLcdVec_.size());
 }
 } // namespace CloudSync
 } // namespace FileManagement
