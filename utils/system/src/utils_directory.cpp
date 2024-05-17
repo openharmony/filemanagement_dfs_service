@@ -30,6 +30,30 @@ namespace DistributedFile {
 namespace Utils {
 using namespace std;
 
+std::string GetAnonyString(const std::string &value)
+{
+    constexpr size_t shortIdLength = 20;
+    constexpr size_t plaintextLength = 4;
+    constexpr size_t minIdLength = 3;
+    std::string res;
+    std::string tmpStr("******");
+    size_t strLen = value.length();
+    if (strLen < minIdLength) {
+        return tmpStr;
+    }
+
+    if (strLen <= shortIdLength) {
+        res += value[0];
+        res += tmpStr;
+        res += value[strLen - 1];
+    } else {
+        res.append(value, 0, plaintextLength);
+        res += tmpStr;
+        res.append(value, strLen - plaintextLength, plaintextLength);
+    }
+    return res;
+}
+
 void ForceCreateDirectory(const string &path, function<void(const string &)> onSubDirCreated)
 {
     string::size_type index = 0;

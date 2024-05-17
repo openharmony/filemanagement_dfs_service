@@ -74,7 +74,7 @@ public:
      */
     virtual int32_t DownloadFiles(const int32_t userId,
                                   const std::string &bundleName,
-                                  std::vector<AssetInfo> &assetInfo,
+                                  const std::vector<AssetInfo> &assetInfo,
                                   std::vector<bool> &assetResultMap) = 0;
     /**
      * @brief 接口触发附件删除

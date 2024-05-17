@@ -82,14 +82,16 @@ struct CloudDiskFile {
 
 struct CloudDiskFuseData {
     int userId;
-    std::atomic<int64_t> bundleNameId{1};
-    std::atomic<int64_t> fileId{0};
+    int64_t bundleNameId{1};
+    int64_t fileId{0};
     std::shared_ptr<CloudDiskInode> rootNode{nullptr};
     std::unordered_map<int64_t, std::shared_ptr<CloudDiskInode>> inodeCache;
     std::unordered_map<int64_t, std::shared_ptr<CloudDiskFile>> fileCache;
     std::unordered_map<std::string, int64_t> localIdCache;
+    std::shared_mutex bundleNameIdLock;
     std::shared_mutex cacheLock;
     std::shared_mutex fileLock;
+    std::shared_mutex fileIdLock;
     std::shared_mutex localIdLock;
     struct fuse_session *se;
 };

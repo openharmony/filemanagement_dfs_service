@@ -42,7 +42,7 @@ int32_t SoftBusSessionListener::QueryActiveUserId()
 {
     std::vector<int32_t> ids;
     ErrCode errCode = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
-    if (errCode != ERR_OK || ids.empty()) {
+    if (errCode != FileManagement::ERR_OK || ids.empty()) {
         LOGE("Query active userid failed, errCode: %{public}d, ", errCode);
         return DEFAULT_USER_ID;
     }

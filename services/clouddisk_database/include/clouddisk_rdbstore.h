@@ -52,12 +52,12 @@ public:
     int32_t Write(const std::string &fileName, const std::string &parentCloudId, const std::string &cloudId);
     int32_t GetXAttr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
-        const std::string &name = "", const std::string &parentCloudId = "", int64_t rowId = 0);
+        const std::string &name = "", const std::string &parentCloudId = "");
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
         const std::string &newParentCloudId, const std::string &newFileName);
     int32_t Unlink(const std::string &cloudId, const int32_t &position);
     int32_t RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
-        const std::string &cloudId, const std::string &value, int64_t rowId);
+        const std::string &cloudId, const std::string &value);
     int32_t LocationSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
     int32_t FavoriteSetXattr(const std::string &cloudId, const std::string &value);
@@ -65,10 +65,10 @@ public:
     int32_t FavoriteGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t FileStatusGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t GetHasChild(const std::string &cloudId, bool &hasChild);
+    int32_t GetRowId(const std::string &cloudId, int64_t &rowId);
 
     /* clouddisk syncer */
     int32_t GetDirtyType(const std::string &cloudId, int32_t &fileStatus);
-    int32_t GetIsDirectory(const std::string &parentCloudId, const std::string &fileName, int32_t &isDir);
     int32_t GetCurNode(const std::string &cloudId, CacheNode &curNode);
     int32_t GetParentNode(const std::string parentCloudId, std::string &nextCloudId, std::string &fileName);
     int32_t GetUriFromDB(const std::string &parentCloudId, std::string &uri);

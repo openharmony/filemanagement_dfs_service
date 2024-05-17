@@ -37,8 +37,8 @@ DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(DKDownloadAsset &assetsToDow
     return DKLocalErrorCode::NO_ERROR;
 }
 
-DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(std::vector<DriveKit::DKDownloadAsset> &assetsToDownload,
-    std::map<DriveKit::DKDownloadAsset, DriveKit::DKDownloadResult> &assetResultMap)
+DKLocalErrorCode DKAssetsDownloader::DownLoadAssets(const std::vector<DriveKit::DKDownloadAsset> &assetsToDownload,
+    std::vector<DriveKit::DKDownloadResult> &result)
 {
     return DKLocalErrorCode::NO_ERROR;
 }

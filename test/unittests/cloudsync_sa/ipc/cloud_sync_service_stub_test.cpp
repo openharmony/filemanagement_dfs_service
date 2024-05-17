@@ -53,7 +53,7 @@ public:
     MOCK_METHOD4(DownloadFiles,
                  int32_t(const int32_t userId,
                          const std::string &bundleName,
-                         std::vector<AssetInfoObj> &assetInfoObj,
+                         const std::vector<AssetInfoObj> &assetInfoObj,
                          std::vector<bool> &assetResultMap));
     MOCK_METHOD5(DownloadAsset,
                  int32_t(const uint64_t taskId,

@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -24,6 +24,41 @@ config("module_private_config") {
     "${services_path}/distributedfiledaemon/include/ipc",
     "//third_party/json/include",
   ]
+}
+
+ohos_unittest("device_info_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  sources =
+      [ "${services_path}/distributedfiledaemon/src/device/device_info.cpp" ]
+
+  sources += [ "device/device_info_test.cpp" ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "device_manager:devicemanagersdk",
+    "hilog:libhilog",
+  ]
+
+  defines = [ "private=public" ]
 }
 
 ohos_unittest("device_manager_agent_test") {
@@ -86,6 +121,8 @@ ohos_unittest("device_manager_agent_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_common",
+    "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -156,6 +193,8 @@ ohos_unittest("os_account_observer_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_common",
+    "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -225,6 +264,8 @@ ohos_unittest("devsl_dispatcher_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_common",
+    "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -294,6 +335,8 @@ ohos_unittest("kernel_talker_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_common",
+    "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -432,6 +475,8 @@ ohos_unittest("session_pool_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_common",
+    "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -501,6 +546,8 @@ ohos_unittest("softbus_agent_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_common",
+    "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -529,11 +576,18 @@ ohos_unittest("softbus_file_receive_listener_test") {
 
   module_out_path = module_output_path
 
-  include_dirs = [ "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus" ]
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
+    "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+  ]
 
   sources = [
+    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "network/softbus/softbus_file_receive_listener_test.cpp",
   ]
 
@@ -552,6 +606,54 @@ ohos_unittest("softbus_file_receive_listener_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
+    "os_account:os_account_innerkits",
+  ]
+
+  defines = [ "private=public" ]
+}
+
+ohos_unittest("softbus_file_send_listener_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
+    "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+  ]
+
+  sources = [
+    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+    "network/softbus/softbus_file_send_listener_test.cpp",
+  ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "app_file_service:sandbox_helper_native",
+    "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
+    "hilog:libhilog",
+    "os_account:os_account_innerkits",
   ]
 
   defines = [ "private=public" ]
@@ -612,6 +714,8 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_common",
+    "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -681,6 +785,8 @@ ohos_unittest("softbus_session_test") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_common",
+    "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -818,6 +924,7 @@ ohos_unittest("softbus_session_listener_test") {
 group("unittest") {
   testonly = true
   deps = [
+    ":device_info_test",
     ":device_manager_agent_test",
     ":devsl_dispatcher_test",
     ":kernel_talker_test",
@@ -825,6 +932,7 @@ group("unittest") {
     ":session_pool_test",
     ":softbus_agent_test",
     ":softbus_file_receive_listener_test",
+    ":softbus_file_send_listener_test",
     ":softbus_handler_test",
     ":softbus_session_dispatcher_test",
     ":softbus_session_listener_test",

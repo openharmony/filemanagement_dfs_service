@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,7 +63,6 @@ private:
     std::string name_{};
     UniqueFd fd_{};
     uint32_t userId_{};
-    uint64_t dentryCount_{0};
     std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
 };
 
@@ -83,7 +82,8 @@ public:
     int32_t DoRename(MetaBase &metaBase, const std::string &newName,
         std::shared_ptr<CloudDiskMetaFile> newMetaFile);
     int32_t DoLookup(MetaBase &base);
-    uint64_t GetDentryCount();
+    int32_t LoadChildren(std::vector<MetaBase> &bases);
+    std::string GetDentryFilePath();
 
 private:
     std::mutex mtx_{};
@@ -94,7 +94,6 @@ private:
     std::string name_{};
     UniqueFd fd_{};
     uint32_t userId_{};
-    uint64_t dentryCount_{0};
     std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
 };
 
@@ -106,9 +105,9 @@ enum {
 
 enum {
     POSITION_UNKNOWN = 0,
-    POSITION_LOCAL,
-    POSITION_CLOUD,
-    POSITION_LOCAL_AND_CLOUD,
+    POSITION_LOCAL = 0x01,
+    POSITION_CLOUD = 0x02,
+    POSITION_LOCAL_AND_CLOUD = POSITION_LOCAL | POSITION_CLOUD,
 };
 
 class MetaFileMgr {
@@ -121,6 +120,7 @@ public:
     std::shared_ptr<CloudDiskMetaFile> GetCloudDiskMetaFile(uint32_t userId, const std::string &bundleName,
         const std::string &cloudId);
     void ClearAll();
+    void Clear(const std::string &cloudId);
     int32_t MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName,
         const std::string &name, const std::string &parentCloudId, int64_t rowId);
     int32_t RemoveFromRecycleDentryfile(uint32_t userId, const std::string &bundleName,
@@ -132,7 +132,7 @@ private:
     const MetaFileMgr &operator=(const MetaFileMgr &m) = delete;
 
     std::recursive_mutex mtx_{};
-    std::mutex mutex_{};
+    std::mutex cloudDiskMutex_{};
     std::map<std::pair<uint32_t, std::string>, std::shared_ptr<MetaFile>> metaFiles_;
     std::unordered_map<std::string, std::shared_ptr<CloudDiskMetaFile>> cloudDiskMetaFile_;
 };

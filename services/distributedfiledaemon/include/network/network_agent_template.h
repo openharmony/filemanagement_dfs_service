@@ -29,6 +29,8 @@
 #include "mountpoint/mount_point.h"
 #include "network/kernel_talker.h"
 #include "network/session_pool.h"
+#include "network/softbus/softbus_session_dispatcher.h"
+#include "utils_directory.h"
 
 namespace OHOS {
 namespace Storage {
