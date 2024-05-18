@@ -86,6 +86,7 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
         }
         if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
             LOGE("the device os type = %{private}d is not openharmony.", outDeviceProfile.GetOsType());
+            Utils::SysEventWrite(udid);
             continue;
         }
 
