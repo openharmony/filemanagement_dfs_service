@@ -7,6 +7,7 @@
             "run-on-create": false,
             "distributed": true,
             "dump-level": 1,
+            "recycle-strategy": "low-memory",
             "start-on-demand": {
                 "timedevent": [
                     {
