@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,12 @@ DaemonStub::DaemonStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION)] =
         &DaemonStub::HandleCloseP2PConnection;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX)] =
+        &DaemonStub::HandleOpenP2PConnectionEx;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX)] =
+        &DaemonStub::HandleCloseP2PConnectionEx;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION)] =
         &DaemonStub::HandlePrepareSession;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK)] =
@@ -113,6 +119,45 @@ int32_t DaemonStub::HandleCloseP2PConnection(MessageParcel &data, MessageParcel 
     int32_t res = CloseP2PConnection(deviceInfo);
     reply.WriteInt32(res);
     LOGI("End CloseP2PConnection");
+    return res;
+}
+
+int32_t DaemonStub::HandleOpenP2PConnectionEx(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("DaemonStub::Begin OpenP2PConnectionEx");
+    std::string networkId;
+    if (!data.ReadString(networkId)) {
+        LOGE("read networkId failed");
+        return E_IPC_READ_FAILED;
+    }
+    auto remote = data.ReadRemoteObject();
+    if (remote == nullptr) {
+        LOGE("read remoteObject failed");
+        return E_IPC_READ_FAILED;
+    }
+    auto remoteReverseObj = iface_cast<IFileDfsListener>(remote);
+    if (remoteReverseObj == nullptr) {
+        LOGE("remoteReverseObj is null");
+        return E_INVAL_ARG;
+    }
+    int32_t res = OpenP2PConnectionEx(networkId, remoteReverseObj);
+    reply.WriteInt32(res);
+    LOGI("DaemonStub::End OpenP2PConnection, res = %{public}d.", res);
+    return res;
+}
+
+int32_t DaemonStub::HandleCloseP2PConnectionEx(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("DaemonStub::Begin CloseP2PConnection.");
+    std::string networkId;
+    if (!data.ReadString(networkId)) {
+        LOGE("read networkId failed");
+        return E_IPC_READ_FAILED;
+    }
+
+    int32_t res = CloseP2PConnectionEx(networkId);
+    reply.WriteInt32(res);
+    LOGI("DaemonStub::End CloseP2PConnection");
     return res;
 }
 

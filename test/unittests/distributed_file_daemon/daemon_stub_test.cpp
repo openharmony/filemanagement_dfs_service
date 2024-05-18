@@ -51,6 +51,8 @@ class MockDaemonStub : public DaemonStub {
 public:
     MOCK_METHOD1(OpenP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
     MOCK_METHOD1(CloseP2PConnection, int32_t(const DistributedHardware::DmDeviceInfo &deviceInfo));
+    MOCK_METHOD2(OpenP2PConnectionEx, int32_t(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj));
+    MOCK_METHOD1(CloseP2PConnectionEx, int32_t(const std::string &networkId));
     MOCK_METHOD4(RequestSendFile,
                  int32_t(const std::string &srcUri,
                          const std::string &dstPath,

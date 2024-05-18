@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,24 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef IPC_DISTRIBUTED_FILE_DAEMON_IPC_INTERFACE_CODE_H
-#define IPC_DISTRIBUTED_FILE_DAEMON_IPC_INTERFACE_CODE_H
 
-/* SAID:5201 */
+#ifndef OHOS_STORAGE_I_FILE_DFS_LISTENER_H
+#define OHOS_STORAGE_I_FILE_DFS_LISTENER_H
+#include <cstdint>
+#include "iremote_broker.h"
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-    enum class DistributedFileDaemonInterfaceCode {
-        DISTRIBUTED_FILE_OPEN_P2P_CONNECTION = 0,
-        DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION,
-        DISTRIBUTED_FILE_PREPARE_SESSION,
-        DISTRIBUTED_FILE_REQUEST_SEND_FILE,
-        DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO,
-        DISTRIBUTED_FILE_CANCEL_COPY_TASK,
-        DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX,
-        DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX,
+
+class IFileDfsListener : public OHOS::IRemoteBroker {
+public:
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.filedfslistener");
+
+    virtual void OnStatus(const std::string &networkId, int32_t status) = 0;
+
+    enum {
+        FILE_DFS_LISTENER_SUCCESS = 0,
+        FILE_DFS_LISTENER_DESCRIPTOR_IS_EMPTY,
     };
+};
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS
-#endif
+
+#endif // OHOS_STORAGE_I_FILE_DFS_LISTENER_H

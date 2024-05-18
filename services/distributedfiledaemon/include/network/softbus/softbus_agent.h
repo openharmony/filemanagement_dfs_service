@@ -39,7 +39,7 @@ protected:
     void QuitDomain() override;
     void StopTopHalf() override;
     void StopBottomHalf() override;
-    void OpenSession(const DeviceInfo &info, const uint8_t &linkType) override;
+    int32_t OpenSession(const DeviceInfo &info, const uint8_t &linkType) override;
     void OpenApSession(const DeviceInfo &info, const uint8_t &linkType) override;
     void CloseSession(std::shared_ptr<BaseSession> session) override;
 

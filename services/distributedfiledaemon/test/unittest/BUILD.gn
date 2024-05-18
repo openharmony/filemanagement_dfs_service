@@ -131,6 +131,7 @@ ohos_unittest("device_manager_agent_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -202,6 +203,7 @@ ohos_unittest("os_account_observer_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -272,6 +274,7 @@ ohos_unittest("devsl_dispatcher_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -342,6 +345,7 @@ ohos_unittest("kernel_talker_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -410,6 +414,7 @@ ohos_unittest("network_agent_template_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -480,6 +485,7 @@ ohos_unittest("session_pool_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -550,6 +556,7 @@ ohos_unittest("softbus_agent_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [
@@ -717,6 +724,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -787,6 +795,7 @@ ohos_unittest("softbus_session_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
