@@ -153,7 +153,7 @@ private:
     std::function<int32_t(std::shared_ptr<TaskRunner>, std::shared_ptr<Task>)> commitFunc_;
 
     /* stop */
-    std::shared_ptr<bool> stopFlag_ = nullptr;
+    std::shared_ptr<bool> stopFlag_ = std::make_shared<bool>(true);
 
     /* id */
     std::atomic<int32_t> currentId_ = 0;

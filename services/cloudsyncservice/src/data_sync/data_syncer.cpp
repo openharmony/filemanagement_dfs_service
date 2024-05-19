@@ -88,6 +88,7 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
         return E_PENDING;
     }
 
+    *stopFlag_ = false;
     startTime_ = GetCurrentTimeStamp();
     int32_t ret = InitSysEventData();
     if (ret != E_OK) {
@@ -108,6 +109,7 @@ int32_t DataSyncer::StopSync(SyncTriggerType triggerType)
         userId_, bundleName_.c_str(), triggerType);
     syncStateManager_.SetStopSyncFlag();
     StopUploadAssets();
+    *stopFlag_ = true;
     Abort();
     return E_OK;
 }
@@ -159,11 +161,8 @@ int32_t DataSyncer::UnregisterDownloadFileCallback(const int32_t userId)
 void DataSyncer::Abort()
 {
     LOGI("%{private}d %{private}s aborts", userId_, bundleName_.c_str());
-    thread ([this]() {
-        taskRunner_->ReleaseTask();
-        /* call the syncer manager's callback for notification */
-        Complete();
-    }).detach();
+    taskRunner_->ReleaseTask();
+    Complete();
 }
 
 void DataSyncer::SetSdkHelper(shared_ptr<SdkHelper> &sdkHelper)
@@ -1251,7 +1250,6 @@ void DataSyncer::CompleteClean()
             StartSync(false, SyncTriggerType::PENDING_TRIGGER);
         }
     }
-    *stopFlag_ = false;
 }
 
 void DataSyncer::BeginDisableCloud()

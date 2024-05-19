@@ -92,7 +92,6 @@ public:
     int32_t FileAgingDelete(const int64_t agingTime, const int64_t deleteSize);
 
     void UpdateAlbumInternal();
-    void UpdateAllAlbums();
 
     /* reset */
     void Reset();

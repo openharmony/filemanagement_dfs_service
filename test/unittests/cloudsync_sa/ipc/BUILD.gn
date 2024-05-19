@@ -88,6 +88,7 @@ ohos_unittest("cloud_sync_service_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
@@ -139,16 +140,6 @@ ohos_unittest("cloud_sync_service_test") {
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   transport = [
     "${services_path}/cloudsyncservice/src/transport/file_transfer_manager.cpp",
