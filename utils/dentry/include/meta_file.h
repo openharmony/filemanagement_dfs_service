@@ -157,6 +157,7 @@ struct MetaBase {
     uint8_t fileType{FILE_TYPE_CONTENT};
     std::string name{};
     std::string cloudId{};
+    off_t nextOff{0};
     bool hasDownloaded{false};
 };
 
