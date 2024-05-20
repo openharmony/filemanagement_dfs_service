@@ -335,6 +335,11 @@ static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
 
     LOGD("getattr, %s", CloudPath(data, ino).c_str());
     shared_ptr<CloudInode> node = GetCloudInode(data, ino);
+    if (!node || !node->mBase) {
+        LOGE("Failed to get cloud inode.");
+        fuse_reply_err(req, ENOMEM);
+        return;
+    }
     GetMetaAttr(data, node, &buf);
 
     fuse_reply_attr(req, &buf, 0);
