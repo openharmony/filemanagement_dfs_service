@@ -158,6 +158,9 @@ void CloudDiskDataSyncer::ChangesNotify()
 
 void CloudDiskDataSyncer::ScheduleByType(SyncTriggerType syncTriggerType)
 {
+    if (syncTriggerType == SyncTriggerType::TASK_TRIGGER) {
+        cloudDiskHandler_->SetChecking();
+    }
     Schedule();
     return;
 }
