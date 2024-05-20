@@ -45,6 +45,9 @@ public:
     virtual int32_t OnFetchRecords(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
                                    OnFetchParams &params) override;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
+    int32_t CheckResultSetByDentry(const std::string &cloudId, const MetaBase &metaBase,
+        NativeRdb::ResultSet &resultSet, NativeRdb::ValuesBucket &values);
+    int32_t CheckDataConsistency(const std::string &cloudId, NativeRdb::ResultSet &resultSet);
     virtual int32_t GetCheckRecords(std::vector<DriveKit::DKRecordId> &checkRecords,
                                     const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records) override;
     int32_t GetDownloadAsset(std::string cloudId, std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
