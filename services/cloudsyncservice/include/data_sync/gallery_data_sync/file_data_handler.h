@@ -92,7 +92,14 @@ public:
     int32_t OptimizeStorage(const int32_t agingDays);
     std::shared_ptr<NativeRdb::ResultSet> GetAgingFile(const int64_t agingTime, int32_t &rowCount);
     int32_t UpdateAgingFile(const std::string cloudId);
+    int32_t GetAgingFileInfo(std::shared_ptr<NativeRdb::ResultSet> results,
+                            std::string &path, std::string &cloudId, int64_t &size);
+    int32_t AgingDentryInsert(std::string file_name, std::string path, std::string cloudId,
+                                                    std::string relativePath, int64_t size);
     int32_t FileAgingDelete(const int64_t agingTime, const int64_t deleteSize);
+    int32_t RollBackUpdateAgingFile(const std::string cloudId);
+    int32_t RollBackAgingDentryInsert(std::string fileName, std::string path, std::string cloudId,
+                                                       std::string relativePath, int64_t size);
 
     void UpdateAlbumInternal();
 
