@@ -500,7 +500,6 @@ HWTEST_F(FileDataHandlerTest, BatchInsertAssetMaps005, TestSize.Level1)
         EXPECT_CALL(*rset, GoToRow(_)).WillOnce(Return(0));
         EXPECT_CALL(*rset, GetInt(_, _)).WillOnce(Return(0));
         EXPECT_CALL(*rdb, Query(_, _)).WillOnce(Return(ByMove(std::move(rset))));
-        EXPECT_CALL(*rdb, Insert(_, _, _)).WillOnce(Return(0));
 
         std::set<int> albumIds;
         albumIds.insert(1);

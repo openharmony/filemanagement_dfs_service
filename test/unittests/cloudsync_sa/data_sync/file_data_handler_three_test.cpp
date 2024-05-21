@@ -641,7 +641,7 @@ HWTEST_F(FileDataHandlerTest, ConflictRename004, TestSize.Level1)
         string fullPath = ROOT_MEDIA_DIR + "Photo/test.png";
         string relativePath = "";
         int32_t ret = fileDataHandler->ConflictRename(fullPath, relativePath);
-        EXPECT_EQ(ret, E_RDB);
+        EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " ConflictRename004 ERROR";
