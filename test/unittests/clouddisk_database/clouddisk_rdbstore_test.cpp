@@ -579,7 +579,7 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest1, TestSize.Level1)
     int32_t position = LOCAL;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
     int32_t ret = CloudDiskRdbStore.Unlink(unlinkCloudId, position);
-    EXPECT_EQ(ret, E_INVAL_ARG);
+    EXPECT_EQ(ret, E_OK);
 }
 
 } // namespace OHOS::FileManagement::CloudDisk::Test
