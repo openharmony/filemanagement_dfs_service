@@ -384,41 +384,40 @@ static void fuse_inval(fuse_session *se, fuse_ino_t parentIno, fuse_ino_t childI
     }
 }
 
-static int RestoreTmpFile(const string &localPath, const string &tmpPath)
-{
-    if (rename(localPath.c_str(), tmpPath.c_str()) < 0) {
-        LOGE("Failed to restore tmppath, errno: %{public}d", errno);
-        return -errno;
-    }
-    return 0;
-}
-
 static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
 {
     string localPath = GetLocalPath(data->userId, cInode->path);
     string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
-    filesystem::path parentPath = filesystem::path(localPath).parent_path();
-    ForceCreateDirectory(parentPath.string());
-    if (rename(tmpPath.c_str(), localPath.c_str()) < 0) {
-        LOGE("Failed to rename tmpPath to localPath, errno: %{public}d", errno);
-        return 0;
-    }
     char resolvedPath[PATH_MAX] = {'\0'};
-    char *realPath = realpath(localPath.c_str(), resolvedPath);
+    char *realPath = realpath(tmpPath.c_str(), resolvedPath);
     if (realPath == nullptr) {
         LOGE("Failed to realpath, errno: %{public}d", errno);
-        return RestoreTmpFile(localPath, tmpPath);
+        return 0;
     }
     unsigned int flags = static_cast<unsigned int>(fi->flags);
     if (flags & O_DIRECT) {
         flags &= ~O_DIRECT;
     }
-    auto fd = open(realPath, fi->flags);
+    auto fd = open(realPath, flags);
     if (fd < 0) {
         LOGE("Failed to open local file, errno: %{public}d", errno);
-        return RestoreTmpFile(localPath, tmpPath);
+        return 0;
     }
     fi->fh = static_cast<uint64_t>(fd);
+    string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
+    if (remove(cloudMergeViewPath.c_str()) < 0) {
+        LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
+        close(fd);
+        return 0;
+    }
+
+    filesystem::path parentPath = filesystem::path(localPath).parent_path();
+    ForceCreateDirectory(parentPath.string());
+    if (rename(tmpPath.c_str(), localPath.c_str()) < 0) {
+        LOGE("Failed to rename tmpPath to localPath, errno: %{public}d", errno);
+        close(fd);
+        return -errno;
+    }
     MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
     cInode->mBase->hasDownloaded = true;
     return 0;
