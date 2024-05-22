@@ -384,18 +384,21 @@ static void FetchRecordsDownloadProgress(shared_ptr<DKContext> context,
 int DataSyncer::HandleOnFetchRecords(const std::shared_ptr<DownloadTaskContext> context,
     std::shared_ptr<const DKDatabase> database, std::shared_ptr<std::vector<DKRecord>> records, bool checkOrRetry)
 {
-    if (records->size() == 0) {
-        LOGI("no records to handle");
-        return E_OK;
-    }
-
-    OnFetchParams onFetchParams;
     auto ctx = static_pointer_cast<TaskContext>(context);
     auto handler = ctx->GetHandler();
     if (handler == nullptr) {
         LOGE("context get handler err");
         return E_CONTEXT;
     }
+    if (records->size() == 0) {
+        LOGI("no records to handle");
+        if (!checkOrRetry) {
+            handler->FinishPull(context->GetBatchNo());
+        }
+        return E_OK;
+    }
+
+    OnFetchParams onFetchParams;
 
     if (handler->IsPullRecords() && !checkOrRetry) {
         onFetchParams.totalPullCount = context->GetBatchNo() * handler->GetRecordSize();
