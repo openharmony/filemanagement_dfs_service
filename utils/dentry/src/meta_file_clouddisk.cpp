@@ -738,6 +738,23 @@ std::shared_ptr<CloudDiskMetaFile> MetaFileMgr::GetCloudDiskMetaFile(uint32_t us
     return mFile;
 }
 
+int32_t MetaFileMgr::CreateRecycleDentry(uint32_t userId, const std::string &bundleName)
+{
+    MetaBase metaBase(RECYCLE_NAME);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, ROOT_CLOUD_ID);
+    int32_t ret = metaFile->DoLookup(metaBase);
+    if (ret != 0) {
+        metaBase.cloudId = RECYCLE_CLOUD_ID;
+        metaBase.mode = S_IFDIR | STAT_MODE_DIR;
+        metaBase.position = static_cast<uint8_t>(LOCAL);
+        ret = metaFile->DoCreate(metaBase);
+        if (ret != 0) {
+            return ret;
+        }
+    }
+    return 0;
+}
+
 int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName, const std::string &name,
     const std::string &parentCloudId, int64_t rowId)
 {
