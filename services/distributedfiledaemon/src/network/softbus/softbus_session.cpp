@@ -43,9 +43,9 @@ SoftbusSession::SoftbusSession(int32_t sessionId, std::string peerDeviceId) : se
         flags = (int32_t)((uint32_t)flags & ~O_NONBLOCK);
         ret = fcntl(socketFd, F_SETFL, flags);
         if (ret < 0) {
-        LOGE("error flags:%{public}d", ret);
-        return;
-    }
+            LOGE("error flags:%{public}d", ret);
+            return;
+        }
         socketFd_ = socketFd;
     }
 
