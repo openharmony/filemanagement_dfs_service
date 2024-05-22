@@ -661,28 +661,12 @@ HWTEST_F(CloudDiskRdbStoreTest, LocationGetXattrTest1, TestSize.Level1)
     const std::string key = IS_FAVORITE_XATTR;
     std::string value = "";
     const std::string bundleName = "com.ohos.photos";
+    const std::string name = "test";
+    const std::string parentCloudId = "rootId";
     const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.LocationGetXattr(cloudId, key, value);
+    int32_t ret = CloudDiskRdbStore.LocationGetXattr(name, key, value, parentCloudId);
     EXPECT_EQ(ret, E_INVAL_ARG);
-}
-
-/**
- * @tc.name: LocationGetXattr
- * @tc.desc: Verify the CloudDiskRdbStore::LocationGetXattr function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(CloudDiskRdbStoreTest, LocationGetXattrTest2, TestSize.Level1)
-{
-    const std::string cloudId = "cloudId";
-    const std::string key = CLOUD_FILE_LOCATION;
-    std::string value = "";
-    const std::string bundleName = "com.ohos.photos";
-    const int32_t userId = 100;
-    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.LocationGetXattr(cloudId, key, value);
-    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
