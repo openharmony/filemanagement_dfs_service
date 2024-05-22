@@ -19,6 +19,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <map>
+#include <stack>
 #include <string>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -1051,6 +1052,78 @@ int32_t CloudDiskDataHandler::Clean(const int action)
     return E_OK;
 }
 
+static void handleClearInner(unsigned char dType,
+                             int currentFd,
+                             const char *name,
+                             stack<DIR *> &dirStack,
+                             stack<DIR *> &closeStack)
+{
+    if (dType == DT_DIR) {
+        int subFd = openat(currentFd, name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        if (subFd < 0) {
+            LOGE("Failed in subFd openat: %{public}s ", name);
+            return;
+        }
+        DIR *subDir = fdopendir(subFd);
+        if (subDir == nullptr) {
+            close(subFd);
+            LOGE("Failed in fdopendir: %{public}d", errno);
+            return;
+        }
+        closeStack.push(subDir);
+        dirStack.push(subDir);
+    } else {
+        int subFd = openat(currentFd, name, O_WRONLY);
+        if (subFd < 0) {
+            LOGE("Failed in subFd openat: %{public}s ", name);
+            return;
+        }
+        if (ftruncate(subFd, 0) == -1) {
+            LOGE("Failed to truncate, err: %{public}d", errno);
+        }
+        close(subFd);
+    }
+}
+
+void CloudDiskDataHandler::ClearDentryFile()
+{
+    string cacheDir = "/data/service/el2/" + to_string(userId_) + "/hmdfs/cloud/data/" + bundleName_;
+    DIR *dir = opendir(cacheDir.c_str());
+    if (dir == nullptr) {
+        LOGE("Failed to open cache dir: %{public}d", errno);
+        return;
+    }
+    stack<DIR *> dirStack;
+    stack<DIR *> closeStack;
+    dirStack.push(dir);
+    closeStack.push(dir);
+    while (!dirStack.empty()) {
+        DIR *currentDir = dirStack.top();
+        dirStack.pop();
+        int currentFd = dirfd(currentDir);
+        if (currentFd < 0) {
+            LOGE("Failed to get dirfd: %{public}d ", errno);
+            continue;
+        }
+        while (true) {
+            struct dirent *ptr = readdir(currentDir);
+            if (ptr == nullptr) {
+                break;
+            }
+            const char *name = ptr->d_name;
+            if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) {
+                continue;
+            }
+            handleClearInner(ptr->d_type, currentFd, name, dirStack, closeStack);
+        }
+    }
+    while (!closeStack.empty()) {
+        DIR *closeDir = closeStack.top();
+        closeStack.pop();
+        closedir(closeDir);
+    }
+}
+
 int32_t CloudDiskDataHandler::CleanCloudRecord(const int32_t action)
 {
     int32_t ret = E_OK;
@@ -1090,6 +1163,7 @@ int32_t CloudDiskDataHandler::CleanCloudRecord(const int32_t action)
     int32_t deletedRows;
     ret = Delete(deletedRows, "", {});
     if (ret == E_OK) {
+        ClearDentryFile();
         CloudDiskNotify::GetInstance().TryNotifyService({NotifyOpsType::SERVICE_DELETE, "", NotifyType::NOTIFY_DELETED},
                                                         {userId_, bundleName_});
     }

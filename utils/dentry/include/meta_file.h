@@ -120,6 +120,7 @@ public:
     std::shared_ptr<CloudDiskMetaFile> GetCloudDiskMetaFile(uint32_t userId, const std::string &bundleName,
         const std::string &cloudId);
     void ClearAll();
+    void CloudDiskClearAll();
     void Clear(const std::string &cloudId);
     int32_t MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName,
         const std::string &name, const std::string &parentCloudId, int64_t rowId);
@@ -134,7 +135,7 @@ private:
     std::recursive_mutex mtx_{};
     std::mutex cloudDiskMutex_{};
     std::map<std::pair<uint32_t, std::string>, std::shared_ptr<MetaFile>> metaFiles_;
-    std::unordered_map<std::string, std::shared_ptr<CloudDiskMetaFile>> cloudDiskMetaFile_;
+    std::map<std::string, std::shared_ptr<CloudDiskMetaFile>> cloudDiskMetaFile_;
 };
 
 struct MetaBase {

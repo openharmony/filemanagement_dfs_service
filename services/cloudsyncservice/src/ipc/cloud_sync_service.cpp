@@ -428,6 +428,7 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
     }
 
     MetaFileMgr::GetInstance().ClearAll();
+    MetaFileMgr::GetInstance().CloudDiskClearAll();
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     LOGI("Clean callerUserId is: %{public}d", callerUserId);
     for (auto iter = cleanOptions.appActionsData.begin(); iter != cleanOptions.appActionsData.end(); ++iter) {
