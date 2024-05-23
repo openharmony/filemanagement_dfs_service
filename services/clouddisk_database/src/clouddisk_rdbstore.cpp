@@ -727,27 +727,21 @@ int32_t CheckXattr(const std::string &key)
     }
 }
 
-int32_t CloudDiskRdbStore::LocationGetXattr(const std::string &cloudId, const std::string &key, std::string &value)
+int32_t CloudDiskRdbStore::LocationGetXattr(const std::string &name, const std::string &key, std::string &value,
+    const std::string &parentCloudId)
 {
-    RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || cloudId == "rootId" || key != CLOUD_FILE_LOCATION) {
+    if (key != CLOUD_FILE_LOCATION) {
         LOGE("getxattr parameter is invalid");
         return E_INVAL_ARG;
     }
-    AbsRdbPredicates getXAttrPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
-    getXAttrPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
-    auto resultSet = rdbStore_->QueryByStep(getXAttrPredicates, { FileColumn::POSITION });
-    if (resultSet == nullptr) {
-        LOGE("get nullptr getxattr result");
-        return E_RDB;
+    MetaBase metaBase(name);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
+    int32_t ret = metaFile->DoLookup(metaBase);
+    if (ret != E_OK) {
+        LOGE("lookup dentry failed, ret = %{public}d", ret);
+        return ENOENT;
     }
-    if (resultSet->GoToNextRow() != E_OK) {
-        LOGE("getxattr result set go to next row failed");
-        return E_RDB;
-    }
-    int32_t position;
-    CloudDiskRdbUtils::GetInt(FileColumn::POSITION, position, resultSet);
-    value = to_string(position);
+    value = std::to_string(metaBase.position);
     return E_OK;
 }
 
@@ -803,12 +797,13 @@ int32_t CloudDiskRdbStore::FileStatusGetXattr(const std::string &cloudId, const 
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value)
+int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value,
+    const CacheNode &node)
 {
     int32_t num = CheckXattr(key);
     switch (num) {
         case CLOUD_LOCATION:
-            return LocationGetXattr(cloudId, key, value);
+            return LocationGetXattr(node.fileName, key, value, node.parentCloudId);
             break;
         case IS_FAVORITE:
             return FavoriteGetXattr(cloudId, key, value);

@@ -50,7 +50,8 @@ public:
     int32_t Create(const std::string &cloudId, const std::string &parentCloudId,
         const std::string &fileName);
     int32_t Write(const std::string &fileName, const std::string &parentCloudId, const std::string &cloudId);
-    int32_t GetXAttr(const std::string &cloudId, const std::string &key, std::string &value);
+    int32_t GetXAttr(const std::string &cloudId, const std::string &key, std::string &value,
+        const CacheNode &node = {});
     int32_t SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
         const std::string &name = "", const std::string &parentCloudId = "");
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
@@ -61,7 +62,8 @@ public:
     int32_t LocationSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
     int32_t FavoriteSetXattr(const std::string &cloudId, const std::string &value);
-    int32_t LocationGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
+    int32_t LocationGetXattr(const std::string &name, const std::string &key, std::string &value,
+        const std::string &parentCloudId);
     int32_t FavoriteGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t FileStatusGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t GetHasChild(const std::string &cloudId, bool &hasChild);

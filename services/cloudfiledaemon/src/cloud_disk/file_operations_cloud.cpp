@@ -915,7 +915,7 @@ string GetIsFavorite(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
     auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
     int res = rdbStore->GetXAttr(inoPtr->cloudId, IS_FAVORITE_XATTR, favorite);
     if (res != 0) {
-        LOGE("local file get location fail");
+        LOGE("local file get isFavorite fail");
         return "null";
     }
     return favorite;
@@ -939,6 +939,26 @@ static string GetFileStatus(fuse_req_t req, struct CloudDiskInode *inoPtr)
     return fileStatus;
 }
 
+string GetLocation(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
+{
+    string location;
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inoPtr->parent));
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        return "null";
+    }
+    CacheNode newNode = {.fileName = inoPtr->fileName, .parentCloudId = parentInode->cloudId};
+    int res = rdbStore->GetXAttr(inoPtr->cloudId, CLOUD_FILE_LOCATION, location, newNode);
+    if (res != 0) {
+        LOGE("local file get location fail");
+        return "null";
+    }
+    return location;
+}
+
 void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    size_t size)
 {
@@ -958,6 +978,8 @@ void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
         buf = GetIsFavorite(req, inoPtr);
     } else if (CloudFileUtils::CheckFileStatus(name)) {
         buf = GetFileStatus(req, inoPtr.get());
+    } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
+        buf = GetLocation(req, inoPtr);
     } else {
         fuse_reply_err(req, EINVAL);
         return;
