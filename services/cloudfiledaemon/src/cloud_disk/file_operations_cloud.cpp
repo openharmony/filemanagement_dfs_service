@@ -808,23 +808,6 @@ void HandleCloudLocation(fuse_req_t req, fuse_ino_t ino, const char *name,
     fuse_reply_err(req, 0);
 }
 
-static int32_t CreateRecycleDentry(uint32_t userId, const std::string &bundleName)
-{
-    MetaBase metaBase(RECYCLE_NAME);
-    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, ROOT_CLOUD_ID);
-    int32_t ret = metaFile->DoLookup(metaBase);
-    if (ret != 0) {
-        metaBase.cloudId = RECYCLE_CLOUD_ID;
-        metaBase.mode = S_IFDIR | STAT_MODE_DIR;
-        metaBase.position = static_cast<uint8_t>(LOCAL);
-        ret = metaFile->DoCreate(metaBase);
-        if (ret != 0) {
-            return ret;
-        }
-    }
-    return 0;
-}
-
 void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
                         const char *value)
 {
@@ -841,7 +824,7 @@ void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
         LOGE("parent inode not found");
         return;
     }
-    int32_t ret = CreateRecycleDentry(data->userId, inoPtr->bundleName);
+    int32_t ret = MetaFileMgr::GetInstance().CreateRecycleDentry(data->userId, inoPtr->bundleName);
     if (ret != 0) {
         LOGE("create recycle dentry failed");
         return;

@@ -295,7 +295,15 @@ int32_t CloudDiskDataHandler::InsertRDBAndDentryFile(DKRecord &record, ValuesBuc
         m.position = static_cast<uint8_t>(POSITION_CLOUD);
         m.fileType = static_cast<uint8_t>(FILE_TYPE_CONTENT);
     };
-    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
+    int64_t recycledTime = 0;
+    string realParentId = parentCloudId;
+    data[DK_FILE_TIME_RECYCLED].GetLong(recycledTime);
+    if (recycledTime > 0) {
+        RETURN_ON_ERR(MetaFileMgr::GetInstance().CreateRecycleDentry(userId_, bundleName_));
+        realParentId = RECYCLE_CLOUD_ID;
+        metaBase.name = metaBase.name + "_" + std::to_string(rowId);
+    }
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, realParentId);
     ret = metaFile->DoLookupAndUpdate(metaBase.name, callback);
     if (ret != E_OK) {
         LOGE(" update new dentry failed, ret = %{public}d", ret);
@@ -682,6 +690,7 @@ static int32_t RecycleHandler(uint32_t userId, const std::string &bundleName,
 {
     string fileName = data.fileName;
     string parentCloudId = data.parentCloudId;
+    RETURN_ON_ERR(MetaFileMgr::GetInstance().CreateRecycleDentry(userId, bundleName));
     auto recycleMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, RECYCLE_CLOUD_ID);
     MetaBase metaBase(fileName);
     int32_t ret = E_OK;
