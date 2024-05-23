@@ -353,6 +353,7 @@ int32_t FileDataHandler::HandleRecord(shared_ptr<vector<DKRecord>> &records, OnF
 
     /* batch processing insertion */
     PullRecordsInsert(insertRecords, params);
+    MetaFileMgr::GetInstance().ClearAll();
     return ret;
 }
 
@@ -1562,6 +1563,7 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
     if (lcdError > 0) {
         UpdateAttachmentStat(INDEX_LCD_ERROR_SDK, lcdError);
     }
+    MetaFileMgr::GetInstance().ClearAll();
 
     return E_OK;
 }
@@ -1576,15 +1578,11 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
         LOGE("err rename, errno: %{public}d, tmpLocalPath: %s, localPath: %s",
              errno, tempPath.c_str(), localPath.c_str());
     }
-    MetaFileMgr::GetInstance().ClearAll();
     if (asset.fieldKey == "thumbnail") {
         InsertOrUpdateThmLcdMap(asset.recordId, THM_POS);
     }
     if (asset.fieldKey == "lcd") {
         InsertOrUpdateThmLcdMap(asset.recordId, LCD_POS);
-    }
-    if (thmLcdVec_.size() >= UPDATE_VEC_SIZE) {
-        CleanThmLcdVec();
     }
     return E_OK;
 }
@@ -2489,6 +2487,26 @@ int32_t FileDataHandler::OnDownloadSuccess(const DriveKit::DKDownloadAsset &asse
     return ret;
 }
 
+static int32_t CreateThmDir(const string &path)
+{
+    if (access(path.c_str(), F_OK) == 0) {
+        return E_OK;
+    }
+    size_t lastSlashInd = path.find_last_of("/");
+    if (lastSlashInd != string::npos) {
+        std::string bucketDir = path.substr(lastSlashInd + 1);
+        if (mkdir(bucketDir.c_str(), (S_IRWXU | S_IRWXG | S_IXOTH)) != 0 && errno != EEXIST) {
+            LOGE("create bucketdir %s error %{public}d", bucketDir.c_str(), errno);
+            return E_PATH;
+        }
+    }
+    if (mkdir(path.c_str(), (S_IRWXU | S_IRWXG | S_IXOTH)) != 0 && errno != EEXIST) {
+        LOGE("create path %s error %{public}d", path.c_str(), errno);
+        return E_PATH;
+    }
+    return E_OK;
+}
+
 void FileDataHandler::AppendToDownload(const DKRecord &record,
                                        const std::string &fieldKey,
                                        std::vector<DKDownloadAsset> &assetsToDownload)
@@ -2520,7 +2538,9 @@ void FileDataHandler::AppendToDownload(const DKRecord &record,
     }
     downloadAsset.asset.assetName = MetaFile::GetFileName(downloadAsset.downLoadPath);
     downloadAsset.downLoadPath = MetaFile::GetParentDir(downloadAsset.downLoadPath);
-    ForceCreateDirectory(downloadAsset.downLoadPath);
+    if (CreateThmDir(downloadAsset.downLoadPath) != E_OK) {
+        return;
+    };
     assetsToDownload.push_back(downloadAsset);
 }
 
@@ -2915,11 +2935,11 @@ int32_t FileDataHandler::CleanPureCloudRecord(bool isReamin)
     LOGI("begin clean pure cloud record");
     int32_t ret = E_OK;
     NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    cleanPredicates.EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
-    cleanPredicates.EqualTo(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     if (isReamin) {
         cleanPredicates.EqualTo(PhotoColumn::PHOTO_CLEAN_FLAG, NEED_CLEAN);
     }
+    cleanPredicates.EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
+    cleanPredicates.EqualTo(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     cleanPredicates.Limit(BATCH_LIMIT_SIZE);
     vector<ValueObject> deleteFileId;
     shared_ptr<vector<string>> filePaths = make_shared<vector<string>>();
@@ -2928,14 +2948,14 @@ int32_t FileDataHandler::CleanPureCloudRecord(bool isReamin)
         deleteFileId.clear();
         filePaths->clear();
         RETURN_ON_ERR(GetFilePathAndId(cleanPredicates, deleteFileId, *filePaths));
-        ret = BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
+        ret = BatchDelete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
         if (ret != E_OK) {
-            LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
+            LOGW("BatchDelete fail, remove count is %{public}d", removeCount);
             return ret;
         }
-        ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
+        ret = BatchDelete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         if (ret != E_OK) {
-            LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
+            LOGW("BatchDelete fail, remove count is %{public}d", removeCount);
             return ret;
         }
         RemoveCloudRecord(filePaths);
@@ -2990,11 +3010,11 @@ int32_t FileDataHandler::CleanNotDirtyData(bool isReamin)
     LOGI("begin clean not dirty data");
     int32_t ret = E_OK;
     NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    cleanPredicates.EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
-    cleanPredicates.EqualTo(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     if (isReamin) {
         cleanPredicates.EqualTo(PhotoColumn::PHOTO_CLEAN_FLAG, NEED_CLEAN);
     }
+    cleanPredicates.EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
+    cleanPredicates.EqualTo(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     cleanPredicates.Limit(BATCH_LIMIT_SIZE);
     vector<ValueObject> deleteFileId;
     shared_ptr<vector<string>> filePaths = make_shared<vector<string>>();
@@ -3003,14 +3023,14 @@ int32_t FileDataHandler::CleanNotDirtyData(bool isReamin)
         deleteFileId.clear();
         filePaths->clear();
         RETURN_ON_ERR(GetFilePathAndId(cleanPredicates, deleteFileId, *filePaths));
-        ret = BatchDetete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
+        ret = BatchDelete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
         if (ret != E_OK) {
-            LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
+            LOGW("BatchDelete fail, remove count is %{public}d", removeCount);
             return ret;
         }
-        ret = BatchDetete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
+        ret = BatchDelete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         if (ret != E_OK) {
-            LOGW("BatchDetete fail, remove count is %{public}d", removeCount);
+            LOGW("BatchDelete fail, remove count is %{public}d", removeCount);
             return ret;
         }
         RemoveBothRecord(filePaths);
@@ -3159,12 +3179,7 @@ int32_t FileDataHandler::GetCreatedRecords(vector<DKRecord> &records)
         NativeRdb::AbsRdbPredicates createPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
         createPredicates
             .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_NEW)))
-            ->And()->EqualTo(Media::PhotoColumn::MEDIA_DATE_TRASHED, "0")
-            ->BeginWrap()
-            ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
-            ->Or()
-            ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-            ->EndWrap();
+            ->And()->EqualTo(Media::PhotoColumn::MEDIA_DATE_TRASHED, "0");
         if (!createFailSet_.empty()) {
             createPredicates.And()->NotIn(Media::PhotoColumn::MEDIA_FILE_PATH, createFailSet_);
         }
@@ -3210,12 +3225,7 @@ int32_t FileDataHandler::GetDeletedRecords(vector<DKRecord> &records)
     /* build predicates */
     NativeRdb::AbsRdbPredicates deletePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
     deletePredicates
-        .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)))
-        ->BeginWrap()
-        ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
-        ->Or()
-        ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-        ->EndWrap();
+        .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_DELETED)));
     if (!modifyFailSet_.empty()) {
         deletePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
     }
@@ -3247,12 +3257,6 @@ int32_t FileDataHandler::GetMetaModifiedRecords(vector<DKRecord> &records)
         ->EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_MDIRTY)))
         ->Or()
         ->EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_SDIRTY)))
-        ->EndWrap()
-        ->And()
-        ->BeginWrap()
-        ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
-        ->Or()
-        ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
         ->EndWrap();
     if (!modifyFailSet_.empty()) {
         updatePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
@@ -3517,13 +3521,7 @@ int32_t FileDataHandler::GetFileModifiedRecords(vector<DKRecord> &records)
         /* build predicates */
         NativeRdb::AbsRdbPredicates updatePredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
         updatePredicates
-            .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)))
-            ->And()
-            ->BeginWrap()
-            ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_IMAGE))
-            ->Or()
-            ->EqualTo(Media::PhotoColumn::MEDIA_TYPE, to_string(Media::MEDIA_TYPE_VIDEO))
-            ->EndWrap();
+            .EqualTo(Media::PhotoColumn::PHOTO_DIRTY, to_string(static_cast<int32_t>(Media::DirtyType::TYPE_FDIRTY)));
         if (!modifyFailSet_.empty()) {
             updatePredicates.And()->NotIn(Media::PhotoColumn::PHOTO_CLOUD_ID, modifyFailSet_);
         }

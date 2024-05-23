@@ -35,6 +35,13 @@ namespace CloudFile {
 using namespace std;
 using namespace CloudDisk;
 
+namespace {
+    static const string LOCAL_PATH_DATA_SERVICE_EL2 = "/data/service/el2/";
+    static const string LOCAL_PATH_HMDFS_DENTRY_CACHE = "/hmdfs/cache/account_cache/dentry_cache/";
+    static const string LOCAL_PATH_HMDFS_CACHE_CLOUD = "/hmdfs/cache/account_cache/dentry_cache/cloud";
+    static const int32_t STAT_MODE_DIR = 0771;
+    static const int32_t OID_DFS = 1009;
+}
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudDaemon, FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, true);
 
 CloudDaemon::CloudDaemon(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
@@ -118,11 +125,29 @@ void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
 int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
     LOGI("Start Fuse");
-
     std::thread([=]() {
         int32_t ret = FuseManager::GetInstance().StartFuse(userId, devFd, path);
         LOGI("start fuse result %d", ret);
         }).detach();
+
+    string dentryPath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CACHE_CLOUD;
+    if (access(dentryPath.c_str(), F_OK) != 0) {
+        string cachePath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_DENTRY_CACHE;
+        if (mkdir(cachePath.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
+            LOGE("create accout_cache path error %{public}d", errno);
+            return E_PATH;
+        }
+        if (chown(cachePath.c_str(), OID_DFS, OID_DFS) != 0) {
+            LOGE("chown cachepath error %{public}d", errno);
+        }
+        if (mkdir(dentryPath.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
+            LOGE("create dentrypath %{public}d", errno);
+            return E_PATH;
+        }
+        if (chown(dentryPath.c_str(), OID_DFS, OID_DFS) != 0) {
+            LOGE("chown cachepath error %{public}d", errno);
+        }
+    }
     return E_OK;
 }
 } // namespace CloudFile

@@ -75,7 +75,7 @@ public:
 
     MOCK_METHOD1(OnRecordFailed, int32_t(const std::pair<DKRecordId, DKRecordOperResult> &entry));
 
-    MOCK_METHOD3(BatchDetete,
+    MOCK_METHOD3(BatchDelete,
                  int32_t(const string &whichTable, const string &whichColumn,
                         const std::vector<NativeRdb::ValueObject> &bindArgs));
 
@@ -957,7 +957,7 @@ HWTEST_F(CloudDiskDataHandlerTest, CleanCloudRecordTest003, TestSize.Level1)
         .WillOnce(Return(1));
     EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*resultSet, GetString(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*cloudDiskDataHandler_, BatchDetete(_, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*cloudDiskDataHandler_, BatchDelete(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*cloudDiskDataHandler_, Delete(_, _, _)).WillOnce(Return(E_OK));
     int32_t ret = cloudDiskDataHandler_->CleanCloudRecord(action);
     EXPECT_EQ(ret, E_OK);

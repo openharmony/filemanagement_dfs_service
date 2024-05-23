@@ -1082,7 +1082,7 @@ int32_t CloudDiskDataHandler::CleanCloudRecord(const int32_t action)
         }
         vector<NotifyData> notifyDataList;
         CloudDiskNotify::GetInstance().GetDeleteNotifyData(deleteIds, notifyDataList, {userId_, bundleName_});
-        BatchDetete(FC::FILES_TABLE, FC::CLOUD_ID, deleteIds);
+        BatchDelete(FC::FILES_TABLE, FC::CLOUD_ID, deleteIds);
         CloudDiskNotify::GetInstance().TryNotifyService({NotifyOpsType::SERVICE_DELETE_BATCH},
                                                         {userId_, bundleName_, notifyDataList});
         deleteIds.clear();
