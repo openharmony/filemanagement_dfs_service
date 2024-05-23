@@ -29,7 +29,6 @@ namespace {
 constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
-constexpr int32_t E_OK = 0;
 } // namespace
 
 void NetworkAgentTemplate::Start()
@@ -193,7 +192,7 @@ void NetworkAgentTemplate::GetSession(const string &cid, uint8_t linkType)
         }
     } else if (linkType == LINK_TYPE_P2P) {
         try {
-            if (OpenSession(deviceInfo, LINK_TYPE_P2P) == E_OK) {
+            if (OpenSession(deviceInfo, LINK_TYPE_P2P) == FileManagement::E_OK) {
                 return;
             }
             LOGE("reget session failed");
