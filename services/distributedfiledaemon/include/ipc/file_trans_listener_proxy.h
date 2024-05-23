@@ -30,7 +30,7 @@ public:
     explicit FileTransListenerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IFileTransListener>(object) {}
     ~FileTransListenerProxy() override {}
     int32_t OnFileReceive(uint64_t totalBytes, uint64_t processedBytes) override;
-    int32_t OnFailed(const std::string &sessionName) override;
+    int32_t OnFailed(const std::string &sessionName, int32_t errorCode) override;
     int32_t OnFinished(const std::string &sessionName) override;
 
 private:

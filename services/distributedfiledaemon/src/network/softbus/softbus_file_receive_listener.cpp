@@ -46,7 +46,10 @@ void SoftBusFileReceiveListener::OnFile(int32_t socket, FileEvent *event)
             OnReceiveFileFinished(socket, event->fileCnt);
             break;
         case FILE_EVENT_RECV_ERROR:
-            OnFileTransError(socket);
+            OnFileTransError(socket, event->errorCode);
+            break;
+        case FILE_EVENT_TRANS_STATUS:
+            OnReceiveFileReport(socket, event->statusList, event->errorCode);
             break;
         case FILE_EVENT_RECV_UPDATE_PATH:
             event->UpdateRecvPath = GetRecvPath;
@@ -116,7 +119,7 @@ void SoftBusFileReceiveListener::OnReceiveFileFinished(int32_t sessionId, int32_
     SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
 }
 
-void SoftBusFileReceiveListener::OnFileTransError(int32_t sessionId)
+void SoftBusFileReceiveListener::OnFileTransError(int32_t sessionId, int32_t errorCode)
 {
     LOGD("OnFileTransError, sessionId = %{public}d", sessionId);
     std::string sessionName = GetLocalSessionName(sessionId);
@@ -124,9 +127,20 @@ void SoftBusFileReceiveListener::OnFileTransError(int32_t sessionId)
         LOGE("sessionName is empty");
         return;
     }
-    TransManager::GetInstance().NotifyFileFailed(sessionName);
+    TransManager::GetInstance().NotifyFileFailed(sessionName, errorCode);
     TransManager::GetInstance().DeleteTransTask(sessionName);
     SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
+}
+
+void SoftBusFileReceiveListener::OnReceiveFileReport(int32_t sessionId, FileStatusList statusList, int32_t errorCode)
+{
+    LOGD("OnReceiveFileReport, sessionId = %{public}d", sessionId);
+    std::string sessionName = GetLocalSessionName(sessionId);
+    if (sessionName.empty()) {
+        LOGE("sessionName is empty");
+        return;
+    }
+    TransManager::GetInstance().NotifyFileFailed(sessionName, errorCode);
 }
 } // namespace DistributedFile
 } // namespace Storage

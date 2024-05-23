@@ -20,6 +20,7 @@
 #include "dfs_error.h"
 #include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_session_pool.h"
+#include "trans_mananger.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -39,7 +40,10 @@ void SoftBusFileSendListener::OnFile(int32_t socket, FileEvent *event)
             OnSendFileFinished(socket);
             break;
         case FILE_EVENT_SEND_ERROR:
-            OnFileTransError(socket);
+            OnFileTransError(socket, event->errorCode);
+            break;
+        case FILE_EVENT_TRANS_STATUS:
+            OnSendFileReport(socket, event->statusList, event->errorCode);
             break;
         default:
             LOGI("Other situations");
@@ -79,7 +83,7 @@ void SoftBusFileSendListener::OnSendFileFinished(int32_t sessionId)
     SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
 }
 
-void SoftBusFileSendListener::OnFileTransError(int32_t sessionId)
+void SoftBusFileSendListener::OnFileTransError(int32_t sessionId, int32_t errorCode)
 {
     LOGD("SoftBusFileSendListener::OnFileTransError, sessionId = %{public}d", sessionId);
     std::string sessionName = GetLocalSessionName(sessionId);
@@ -87,7 +91,19 @@ void SoftBusFileSendListener::OnFileTransError(int32_t sessionId)
         LOGE("sessionName is empty");
         return;
     }
+    TransManager::GetInstance().NotifyFileFailed(sessionName, errorCode);
     SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
+}
+
+void SoftBusFileSendListener::OnSendFileReport(int32_t sessionId, FileStatusList statusList, int32_t errorCode)
+{
+    LOGD("OnSendFileReport, sessionId = %{public}d", sessionId);
+    std::string sessionName = GetLocalSessionName(sessionId);
+    if (sessionName.empty()) {
+        LOGE("sessionName is empty");
+        return;
+    }
+    TransManager::GetInstance().NotifyFileFailed(sessionName, errorCode);
 }
 } // namespace DistributedFile
 } // namespace Storage

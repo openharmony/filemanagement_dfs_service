@@ -77,7 +77,12 @@ int32_t FileTransListenerStub::HandleOnFailed(MessageParcel &data, MessageParcel
         LOGE("read sessionName failed");
         return E_INVAL_ARG;
     }
-    int32_t res = OnFailed(sessionName);
+    std::int32_t errorCode;
+    if (!data.ReadString(errorCode)) {
+        LOGE("read errorCode failed");
+        return E_INVAL_ARG;
+    }
+    int32_t res = OnFailed(sessionName, errorCode);
     if (res != E_OK) {
         LOGE("OnFailed call failed");
         return E_BROKEN_IPC;

@@ -29,7 +29,8 @@ public:
     static void OnFile(int32_t socket, FileEvent *event);
     static void OnSendFileProcess(int32_t sessionId, uint64_t bytesUpload, uint64_t bytesTotal);
     static void OnSendFileFinished(int32_t sessionId);
-    static void OnFileTransError(int32_t sessionId);
+    static void OnFileTransError(int32_t sessionId, int32_t errorCode);
+    static void OnSendFileReport(int32_t sessionId, FileStatusList statusList, int32_t errorCode);
     static std::string GetLocalSessionName(int32_t sessionId);
 
 private:
