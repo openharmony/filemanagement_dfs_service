@@ -88,6 +88,7 @@ private:
     std::string bundleName_;
     DriveKit::DKRecordId rootId_;
 
+    void ClearDentryFile();
     int32_t CleanCloudRecord(const int32_t action);
     void HandleCreateConvertErr(int32_t err, NativeRdb::ResultSet &resultSet);
     void HandleFdirtyConvertErr(int32_t err, NativeRdb::ResultSet &resultSet);

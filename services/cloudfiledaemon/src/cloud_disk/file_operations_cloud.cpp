@@ -1107,6 +1107,11 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
         fuse_reply_err(req, err);
         return;
     }
+    MetaFileMgr::GetInstance().Clear(metaBase.cloudId);
+    string dentryPath = metaFile->GetDentryFilePath();
+    if (unlink(dentryPath.c_str()) != 0) {
+        LOGE("fail to delete dentry: %{public}d", errno);
+    }
     CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
         NotifyOpsType::DAEMON_RMDIR, nullptr, parent, name});
     return (void) fuse_reply_err(req, 0);

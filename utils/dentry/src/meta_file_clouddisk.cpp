@@ -724,6 +724,12 @@ void MetaFileMgr::Clear(const std::string &cloudId)
     cloudDiskMetaFile_.erase(cloudId);
 }
 
+void MetaFileMgr::CloudDiskClearAll()
+{
+    std::lock_guard<std::mutex> lock(cloudDiskMutex_);
+    cloudDiskMetaFile_.clear();
+}
+
 std::shared_ptr<CloudDiskMetaFile> MetaFileMgr::GetCloudDiskMetaFile(uint32_t userId, const std::string &bundleName,
     const std::string &cloudId)
 {
