@@ -78,7 +78,7 @@ int32_t FileTransListenerStub::HandleOnFailed(MessageParcel &data, MessageParcel
         return E_INVAL_ARG;
     }
     std::int32_t errorCode;
-    if (!data.ReadString(errorCode)) {
+    if (!data.ReadInt32(errorCode)) {
         LOGE("read errorCode failed");
         return E_INVAL_ARG;
     }
