@@ -14,8 +14,11 @@
  */
 
 #include "softbus_bus_center.h"
+#include "device_manager_impl_mock.h"
 
 #include "gtest/gtest.h"
+
+using namespace OHOS::Storage::DistributedFile;
 
 int32_t GetLocalNodeDeviceInfo(const char *pkgName, NodeBasicInfo *info)
 {
@@ -26,7 +29,7 @@ int32_t GetLocalNodeDeviceInfo(const char *pkgName, NodeBasicInfo *info)
         .deviceTypeId = 1};
     (void)pkgName;
     *info = nodeBasicInfo;
-    return 0;
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->GetLocalNodeDeviceInfo(pkgName, info);
 }
 
 int32_t GetNodeKeyInfo(const char *pkgName, const char *networkId,
