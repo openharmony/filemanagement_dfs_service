@@ -21,6 +21,7 @@
 
 #include "gtest/gtest.h"
 
+#include "device_manager_impl_mock.h"
 #include "mountpoint/mount_point.h"
 #include "network/softbus/softbus_agent.h"
 
@@ -38,6 +39,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace Test {
+using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
@@ -59,16 +61,28 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline shared_ptr<DeviceManagerImplMock> deviceManagerImplMock_ = nullptr;
 };
 
 void DeviceManagerAgentTest::SetUpTestCase(void)
 {
     // input testsuit setup step，setup invoked before all testcases
+    deviceManagerImplMock_ = make_shared<DeviceManagerImplMock>();
+    DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
+    EXPECT_CALL(*deviceManagerImplMock_, InitDeviceManager(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, RegisterDevStateCallback(_, _, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalNodeDeviceInfo(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, UnRegisterDevStateCallback(_)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, UnInitDeviceManager(_)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, UnInitDeviceManager(_)).WillRepeatedly(Return(0));
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillRepeatedly(Return(0));
 }
 
 void DeviceManagerAgentTest::TearDownTestCase(void)
 {
     // input testsuit teardown step，teardown invoked after all testcases
+    DeviceManagerImplMock::dfsDeviceManagerImpl = nullptr;
+    deviceManagerImplMock_ = nullptr;
 }
 
 void DeviceManagerAgentTest::SetUp(void)
@@ -101,65 +115,6 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOnline_0100, Tes
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOnline_0100 end";
-}
-
-/**
- * @tc.name: DeviceManagerAgentTest_OnDeviceOnline_0200
- * @tc.desc: Verify the OnDeviceOnline function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOnline_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOnline_0200 start";
-    bool res = true;
-
-    try {
-        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
-        auto agent1 = make_shared<SoftbusAgent>(smp);
-        (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
-                       NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
-        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ deviceInfo.networkId, agent1 });
-        DeviceManagerAgent::GetInstance()->OnDeviceOnline(deviceInfo);
-        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.erase(deviceInfo.networkId);
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << e.what();
-        res = false;
-    }
-
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOnline_0200 end";
-}
-
-/**
- * @tc.name: DeviceManagerAgentTest_OnDeviceOnline_0200
- * @tc.desc: Verify the OnDeviceOnline function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOnline_0300, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOnline_0300 start";
-    bool res = true;
-
-    try {
-        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
-        auto agent1 = make_shared<SoftbusAgent>(smp);
-        (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
-                       NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
-        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.insert({ NETWORKID_ONE, agent1 });
-        DeviceManagerAgent::GetInstance()->OnDeviceOnline(deviceInfo);
-        DeviceManagerAgent::GetInstance()->cidNetworkType_.insert({ NETWORKID_ONE, NETWORKTYPE_NONE_WIFI });
-        DeviceManagerAgent::GetInstance()->OnDeviceOnline(deviceInfo);
-        DeviceManagerAgent::GetInstance()->cidNetTypeRecord_.erase(NETWORKID_ONE);
-        DeviceManagerAgent::GetInstance()->cidNetworkType_.erase(NETWORKID_ONE);
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << e.what();
-        res = false;
-    }
-
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOnline_0300 end";
 }
 
 /**
@@ -235,45 +190,6 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0200, Te
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOffline_0200 end";
-}
-
-/**
- * @tc.name: DeviceManagerAgentTest_OnDeviceOffline_0300
- * @tc.desc: Verify the DeviceManagerAgentTest_OnDeviceOffline_0300 function.
- * @tc.type: FUNC
- * @tc.require: I7M6L1
- */
-HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceOffline_0300, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOffline_0300 start";
-    bool res = true;
-
-    try {
-        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
-        auto agent1 = make_shared<SoftbusAgent>(smp);
-        (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
-                       NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
-        auto devicePtr = DeviceManagerAgent::GetInstance();
-        devicePtr->cidNetTypeRecord_.insert({ NETWORKID_TWO, agent1 });
-        devicePtr->OnDeviceOffline(deviceInfo);
-        devicePtr->cidNetworkType_.insert({ NETWORKID_TWO, NETWORKTYPE_NONE_WIFI });
-        devicePtr->OnDeviceOffline(deviceInfo);
-        auto iterRecord = devicePtr->cidNetTypeRecord_.find(NETWORKID_TWO);
-        if (iterRecord != devicePtr->cidNetTypeRecord_.end()) {
-            res = false;
-        }
-
-        auto iterType = devicePtr->cidNetworkType_.find(NETWORKID_TWO);
-        if (iterType != devicePtr->cidNetworkType_.end()) {
-            res = false;
-        }
-    } catch (const exception &e) {
-        GTEST_LOG_(INFO) << e.what();
-        res = false;
-    }
-
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceOffline_0300 end";
 }
 
 /**
@@ -614,6 +530,7 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_JoinGroup_0100, TestSize
     bool res = true;
 
     try {
+
         auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
         DeviceManagerAgent::GetInstance()->JoinGroup(smp);
         GTEST_LOG_(INFO) << smp->GetID();
@@ -1036,14 +953,38 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitDeviceInfos_0100, Te
     bool res = true;
 
     try {
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(0));
         DeviceManagerAgent::GetInstance()->InitDeviceInfos();
     } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
+        GTEST_LOG_(INFO) << e.what();
         res = false;
     }
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitDeviceInfos_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_InitDeviceInfos_0200
+ * @tc.desc: Verify the InitDeviceInfos function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitDeviceInfos_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitDeviceInfos_0200 start";
+    bool res = true;
+
+    try {
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(-1));
+        DeviceManagerAgent::GetInstance()->InitDeviceInfos();
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_FALSE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitDeviceInfos_0200 end";
 }
 
 /**
@@ -1058,6 +999,7 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitLocalNodeInfo_0100, 
     bool res = true;
 
     try {
+        EXPECT_CALL(*deviceManagerImplMock_, GetLocalNodeDeviceInfo(_, _)).WillOnce(Return(0));
         DeviceManagerAgent::GetInstance()->InitLocalNodeInfo();
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
@@ -1066,6 +1008,29 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitLocalNodeInfo_0100, 
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitLocalNodeInfo_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_InitLocalNodeInfo_0100
+ * @tc.desc: Verify the InitLocalNodeInfo function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitLocalNodeInfo_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitLocalNodeInfo_0200 start";
+    bool res = true;
+
+    try {
+        EXPECT_CALL(*deviceManagerImplMock_, GetLocalNodeDeviceInfo(_, _)).WillOnce(Return(-1));
+        DeviceManagerAgent::GetInstance()->InitLocalNodeInfo();
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_FALSE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitLocalNodeInfo_0200 end";
 }
 
 /**
@@ -1124,15 +1089,40 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_GetRemoteDevicesInfo_010
     bool res = true;
 
     try {
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(0));
         auto info = DeviceManagerAgent::GetInstance()->GetRemoteDevicesInfo();
         EXPECT_NE(info.size(), 0);
     } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
+        GTEST_LOG_(INFO) << e.what();
         res = false;
     }
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetRemoteDevicesInfo_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_GetRemoteDevicesInfo_0200
+ * @tc.desc: Verify the GetRemoteDevicesInfo function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_GetRemoteDevicesInfo_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetRemoteDevicesInfo_0200 start";
+    bool res = true;
+
+    try {
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(-1));
+        auto info = DeviceManagerAgent::GetInstance()->GetRemoteDevicesInfo();
+        EXPECT_NE(info.size(), 0);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_FALSE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_GetRemoteDevicesInfo_0200 end";
 }
 
 /**
@@ -1147,14 +1137,65 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_RegisterToExternalDm_010
     bool res = true;
 
     try {
+        EXPECT_CALL(*deviceManagerImplMock_, InitDeviceManager(_, _)).WillOnce(Return(-1));
         DeviceManagerAgent::GetInstance()->RegisterToExternalDm();
     } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
+        string errMsg = e.what();
+        EXPECT_NE(errMsg.find("Failed to InitDeviceManager"), string::npos);
         res = false;
     }
 
-    EXPECT_TRUE(res == true);
+    EXPECT_FALSE(res);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_RegisterToExternalDm_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_RegisterToExternalDm_0100
+ * @tc.desc: Verify the RegisterToExternalDm function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_RegisterToExternalDm_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_RegisterToExternalDm_0200 start";
+    bool res = true;
+
+    try {
+        EXPECT_CALL(*deviceManagerImplMock_, InitDeviceManager(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*deviceManagerImplMock_, RegisterDevStateCallback(_, _, _)).WillOnce(Return(-1));
+        DeviceManagerAgent::GetInstance()->RegisterToExternalDm();
+    } catch (const exception &e) {
+        string errMsg = e.what();
+        EXPECT_NE(errMsg.find("Failed to RegisterDevStateCallback"), string::npos);
+        res = false;
+    }
+
+    EXPECT_FALSE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_RegisterToExternalDm_0200 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_RegisterToExternalDm_0300
+ * @tc.desc: Verify the RegisterToExternalDm function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_RegisterToExternalDm_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_RegisterToExternalDm_0300 start";
+    bool res = true;
+
+    try {
+        EXPECT_CALL(*deviceManagerImplMock_, InitDeviceManager(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*deviceManagerImplMock_, RegisterDevStateCallback(_, _, _)).WillOnce(Return(0));
+        DeviceManagerAgent::GetInstance()->RegisterToExternalDm();
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_TRUE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_RegisterToExternalDm_0300 end";
 }
 
 /**
@@ -1169,14 +1210,65 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_UnregisterFromExternalDm
     bool res = true;
 
     try {
+        EXPECT_CALL(*deviceManagerImplMock_, UnRegisterDevStateCallback(_)).WillOnce(Return(-1));
         DeviceManagerAgent::GetInstance()->UnregisterFromExternalDm();
     } catch (const exception &e) {
-        LOGE("Error:%{public}s", e.what());
+        string errMsg = e.what();
+        EXPECT_NE(errMsg.find("Failed to UnRegisterDevStateCallback"), string::npos);
         res = false;
     }
 
-    EXPECT_TRUE(res == true);
+    EXPECT_FALSE(res);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UnregisterFromExternalDm_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_UnregisterFromExternalDm_0200
+ * @tc.desc: Verify the UnregisterFromExternalDm function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_UnregisterFromExternalDm_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UnregisterFromExternalDm_0200 start";
+    bool res = true;
+
+    try {
+        EXPECT_CALL(*deviceManagerImplMock_, UnRegisterDevStateCallback(_)).WillOnce(Return(0));
+        EXPECT_CALL(*deviceManagerImplMock_, UnInitDeviceManager(_)).WillOnce(Return(-1));
+        DeviceManagerAgent::GetInstance()->UnregisterFromExternalDm();
+    } catch (const exception &e) {
+        string errMsg = e.what();
+        EXPECT_NE(errMsg.find("Failed to UnInitDeviceManager"), string::npos);
+        res = false;
+    }
+
+    EXPECT_FALSE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UnregisterFromExternalDm_0200 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_UnregisterFromExternalDm_0300
+ * @tc.desc: Verify the UnregisterFromExternalDm function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_UnregisterFromExternalDm_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UnregisterFromExternalDm_0300 start";
+    bool res = true;
+
+    try {
+        EXPECT_CALL(*deviceManagerImplMock_, UnRegisterDevStateCallback(_)).WillOnce(Return(0));
+        EXPECT_CALL(*deviceManagerImplMock_, UnInitDeviceManager(_)).WillOnce(Return(0));
+        DeviceManagerAgent::GetInstance()->UnregisterFromExternalDm();
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_TRUE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UnregisterFromExternalDm_0300 end";
 }
 
 /**

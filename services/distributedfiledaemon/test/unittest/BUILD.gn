@@ -20,6 +20,7 @@ config("module_private_config") {
 
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/test/mock",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
     "//third_party/json/include",
@@ -68,6 +69,7 @@ ohos_unittest("device_manager_agent_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
   module_out_path = module_output_path
