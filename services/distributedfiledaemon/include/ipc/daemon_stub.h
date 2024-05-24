@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,6 +39,8 @@ private:
 
     int32_t HandleOpenP2PConnection(MessageParcel &data, MessageParcel &reply);
     int32_t HandleCloseP2PConnection(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleOpenP2PConnectionEx(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleCloseP2PConnectionEx(MessageParcel &data, MessageParcel &reply);
     int32_t HandlePrepareSession(MessageParcel &data, MessageParcel &reply);
     int32_t HandleCancelCopyTask(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRequestSendFile(MessageParcel &data, MessageParcel &reply);

@@ -111,8 +111,8 @@ void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo i
     if (ret != E_OK) {
         LOGE("SendFile failed, sessionId = %{public}d", sessionId);
         RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_FAIL);
-        SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
     }
+    SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
     RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_SUCCESS);
 }
 

@@ -20,6 +20,7 @@ config("module_private_config") {
 
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/test/mock",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
     "//third_party/json/include",
@@ -68,6 +69,7 @@ ohos_unittest("device_manager_agent_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
   module_out_path = module_output_path
@@ -131,6 +133,7 @@ ohos_unittest("device_manager_agent_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -202,6 +205,7 @@ ohos_unittest("os_account_observer_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -272,6 +276,7 @@ ohos_unittest("devsl_dispatcher_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -342,6 +347,7 @@ ohos_unittest("kernel_talker_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -410,6 +416,7 @@ ohos_unittest("network_agent_template_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -480,6 +487,7 @@ ohos_unittest("session_pool_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -550,6 +558,7 @@ ohos_unittest("softbus_agent_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [
@@ -717,6 +726,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]
@@ -787,6 +797,7 @@ ohos_unittest("softbus_session_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [ "private=public" ]

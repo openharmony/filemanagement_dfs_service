@@ -54,10 +54,6 @@ ohos_shared_library("cloudsync_sa") {
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  include_dirs += medialibrary_rdb_utils_include
-
   data_sync = [
     "src/data_sync/data_syncer.cpp",
     "src/data_sync/sdk_helper.cpp",
@@ -86,6 +82,7 @@ ohos_shared_library("cloudsync_sa") {
     "src/data_sync/gallery_data_sync/data_convertor.cpp",
     "src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "src/data_sync/gallery_data_sync/album_data_convertor.cpp",
+    "src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
   ]
 
   cloud_disk_data_sync = [
@@ -100,11 +97,6 @@ ohos_shared_library("cloudsync_sa") {
     "src/transport/softbus/session_manager.cpp",
     "src/transport/softbus/softbus_adapter.cpp",
     "src/transport/softbus/softbus_session.cpp",
-  ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
   ]
 
   sources = [
@@ -137,7 +129,6 @@ ohos_shared_library("cloudsync_sa") {
   sources += cycle_task
   sources += gallery_data_sync
   sources += cloud_disk_data_sync
-  sources += medialibrary_rdb_utils_source
   sources += transport
 
   defines = [
@@ -234,10 +225,6 @@ ohos_static_library("cloudsync_sa_static") {
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
 
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  include_dirs += medialibrary_rdb_utils_include
-
   data_sync = [
     "src/data_sync/data_syncer.cpp",
     "src/data_sync/sdk_helper.cpp",
@@ -266,6 +253,7 @@ ohos_static_library("cloudsync_sa_static") {
     "src/data_sync/gallery_data_sync/data_convertor.cpp",
     "src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "src/data_sync/gallery_data_sync/album_data_convertor.cpp",
+    "src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
   ]
 
   cloud_disk_data_sync = [
@@ -280,11 +268,6 @@ ohos_static_library("cloudsync_sa_static") {
     "src/transport/softbus/session_manager.cpp",
     "src/transport/softbus/softbus_adapter.cpp",
     "src/transport/softbus/softbus_session.cpp",
-  ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
   ]
 
   sources = [
@@ -316,7 +299,6 @@ ohos_static_library("cloudsync_sa_static") {
   sources += cycle_task
   sources += gallery_data_sync
   sources += cloud_disk_data_sync
-  sources += medialibrary_rdb_utils_source
   sources += transport
 
   defines = [

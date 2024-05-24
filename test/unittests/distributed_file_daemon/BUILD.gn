@@ -85,6 +85,7 @@ ohos_unittest("distributed_file_daemon_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [
@@ -168,6 +169,7 @@ ohos_unittest("distributed_file_daemon_stub_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = [

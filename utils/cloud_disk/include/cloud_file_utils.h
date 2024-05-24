@@ -26,6 +26,7 @@ struct CloudDiskFileInfo {
     std::string parentCloudId;
     uint32_t location{1};
     int64_t localId{0};
+    unsigned long long rowId{0};
     unsigned long long size{0};
     unsigned long long atime{0};
     unsigned long long ctime{0};
@@ -57,6 +58,8 @@ public:
                                         int32_t userId);
     static std::string GetPathWithoutTmp(const std::string &path);
     static std::string GetCloudId(const std::string &path);
+    static uint32_t GetBucketId(std::string cloudId);
+    static int64_t Timespec2Milliseconds(const struct timespec &time);
     static bool LocalWriteOpen(const std::string &dfsPath);
     static const std::string TMP_SUFFIX;
 private:

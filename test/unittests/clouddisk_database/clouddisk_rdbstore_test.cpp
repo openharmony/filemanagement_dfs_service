@@ -179,6 +179,23 @@ HWTEST_F(CloudDiskRdbStoreTest, GetAttrTest2, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ReadDir
+ * @tc.desc: Verify the CloudDiskRdbStore::ReadDir function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, ReadDirTest1, TestSize.Level1)
+{
+    const std::string cloudId = "rootId";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    vector<CloudDiskFileInfo> infos;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.ReadDir(cloudId, infos);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
  * @tc.name: Create
  * @tc.desc: Verify the CloudDiskRdbStore::Create function
  * @tc.type: FUNC
@@ -389,11 +406,11 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest4, TestSize.Level1)
  */
 HWTEST_F(CloudDiskRdbStoreTest, GetXAttrTest1, TestSize.Level1)
 {
-    const std::string cloudId = "rootId";
-    const std::string bundleName = "WriteTest";
-    const std::string key = "user.cloud.location";
-    std::string value = "test";
-    const int32_t userId = 123456789;
+    const std::string cloudId = "";
+    const std::string key = CLOUD_FILE_LOCATION;
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
     int32_t ret = CloudDiskRdbStore.GetXAttr(cloudId, key, value);
     EXPECT_EQ(ret, E_INVAL_ARG);
@@ -408,84 +425,66 @@ HWTEST_F(CloudDiskRdbStoreTest, GetXAttrTest1, TestSize.Level1)
 HWTEST_F(CloudDiskRdbStoreTest, GetXAttrTest2, TestSize.Level1)
 {
     const std::string cloudId = "";
-    const std::string bundleName = "WriteTest";
-    const std::string key = "user.cloud.location";
-    std::string value = "test";
-    const int32_t userId = 123456789;
+    const std::string key = IS_FAVORITE_XATTR;
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
     int32_t ret = CloudDiskRdbStore.GetXAttr(cloudId, key, value);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
 /**
- * @tc.name: SetXAttr
- * @tc.desc: Verify the CloudDiskRdbStore::SetXAttr function
+ * @tc.name: GetXAttr
+ * @tc.desc: Verify the CloudDiskRdbStore::GetXAttr function
  * @tc.type: FUNC
  * @tc.require: SR000HRKKA
  */
-HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest1, TestSize.Level1)
+HWTEST_F(CloudDiskRdbStoreTest, GetXAttrTest3, TestSize.Level1)
 {
     const std::string cloudId = "";
-    const std::string bundleName = "WriteTest";
-    const std::string key = "11111";
-    std::string value = "test";
-    const int32_t userId = 123456789;
+    const std::string key = IS_FILE_STATUS_XATTR;
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.SetXAttr(cloudId, key, value);
+    int32_t ret = CloudDiskRdbStore.GetXAttr(cloudId, key, value);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
 /**
- * @tc.name: SetXAttr
- * @tc.desc: Verify the CloudDiskRdbStore::SetXAttr function
+ * @tc.name: GetXAttr
+ * @tc.desc: Verify the CloudDiskRdbStore::GetXAttr function
  * @tc.type: FUNC
  * @tc.require: SR000HRKKA
  */
-HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest2, TestSize.Level1)
+HWTEST_F(CloudDiskRdbStoreTest, GetXAttrTest4, TestSize.Level1)
 {
-    const std::string cloudId = "rootId";
-    const std::string bundleName = "WriteTest";
-    const std::string key = "1234";
-    std::string value = "test";
-    const int32_t userId = 123456789;
+    const std::string cloudId = "";
+    const std::string key = CLOUD_CLOUD_RECYCLE_XATTR;
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.SetXAttr(cloudId, key, value);
+    int32_t ret = CloudDiskRdbStore.GetXAttr(cloudId, key, value);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
 /**
- * @tc.name: SetXAttr
- * @tc.desc: Verify the CloudDiskRdbStore::SetXAttr function
+ * @tc.name: GetXAttr
+ * @tc.desc: Verify the CloudDiskRdbStore::GetXAttr function
  * @tc.type: FUNC
  * @tc.require: SR000HRKKA
  */
-HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest3, TestSize.Level1)
+HWTEST_F(CloudDiskRdbStoreTest, GetXAttrTest5, TestSize.Level1)
 {
-    const std::string cloudId = "nullptr";
-    const std::string bundleName = "WriteTest";
-    const std::string key = "user.cloud.location";
-    std::string value = "test";
-    const int32_t userId = 123456789;
+    const std::string cloudId = "cloudId";
+    const std::string key = CLOUD_CLOUD_RECYCLE_XATTR;
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.SetXAttr(cloudId, key, value);
-    EXPECT_EQ(ret, E_INVAL_ARG);
-}
-
-/**
- * @tc.name: SetXAttr
- * @tc.desc: Verify the CloudDiskRdbStore::SetXAttr function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest4, TestSize.Level1)
-{
-    const std::string cloudId = "nullptr";
-    const std::string bundleName = "WriteTest";
-    const std::string key = "1231233";
-    std::string value = "4";
-    const int32_t userId = 123456789;
-    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.SetXAttr(cloudId, key, value);
+    int32_t ret = CloudDiskRdbStore.GetXAttr(cloudId, key, value);
     EXPECT_EQ(ret, E_OK);
 }
 
@@ -582,4 +581,163 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest1, TestSize.Level1)
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
+/**
+ * @tc.name: FavoriteSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::FavoriteSetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, FavoriteSetXattrTest1, TestSize.Level1)
+{
+    const std::string cloudId = "root";
+    const std::string value = "notnum";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.FavoriteSetXattr(cloudId, value);
+    EXPECT_EQ(ret, EINVAL);
+}
+
+/**
+ * @tc.name: FavoriteSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::FavoriteSetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, FavoriteSetXattrTest2, TestSize.Level1)
+{
+    const std::string cloudId = "root";
+    const std::string value = "0";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.FavoriteSetXattr(cloudId, value);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: FavoriteSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::FavoriteSetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, FavoriteSetXattrTest3, TestSize.Level1)
+{
+    const std::string cloudId = "root";
+    const std::string value = "1";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.FavoriteSetXattr(cloudId, value);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: FavoriteSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::FavoriteSetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, FavoriteSetXattrTest4, TestSize.Level1)
+{
+    const std::string cloudId = "root";
+    const std::string value = "2";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.FavoriteSetXattr(cloudId, value);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: LocationGetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::LocationGetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, LocationGetXattrTest1, TestSize.Level1)
+{
+    const std::string cloudId = "";
+    const std::string key = IS_FAVORITE_XATTR;
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const std::string name = "test";
+    const std::string parentCloudId = "rootId";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.LocationGetXattr(name, key, value, parentCloudId);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+}
+
+/**
+ * @tc.name: FavoriteGetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::FavoriteGetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, FavoriteGetXattrTest1, TestSize.Level1)
+{
+    const std::string cloudId = "";
+    const std::string key = CLOUD_FILE_LOCATION;
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.FavoriteGetXattr(cloudId, key, value);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+}
+
+/**
+ * @tc.name: FavoriteGetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::FavoriteGetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, FavoriteGetXattrTest2, TestSize.Level1)
+{
+    const std::string cloudId = "cloudId";
+    const std::string key = IS_FAVORITE_XATTR;
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.FavoriteGetXattr(cloudId, key, value);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: FileStatusGetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::FileStatusGetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, FileStatusGetXattrTest1, TestSize.Level1)
+{
+    const std::string cloudId = "";
+    const std::string key = IS_FAVORITE_XATTR;
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.FileStatusGetXattr(cloudId, key, value);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+}
+
+/**
+ * @tc.name: FileStatusGetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::FileStatusGetXattr function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskRdbStoreTest, FileStatusGetXattrTest2, TestSize.Level1)
+{
+    const std::string cloudId = "cloudId";
+    const std::string key = IS_FILE_STATUS_XATTR;
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.FileStatusGetXattr(cloudId, key, value);
+    EXPECT_EQ(ret, E_RDB);
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test

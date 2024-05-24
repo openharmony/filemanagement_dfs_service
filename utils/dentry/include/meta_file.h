@@ -30,7 +30,11 @@
 namespace OHOS {
 namespace FileManagement {
 
+const std::string RECYCLE_NAME = ".trash";
 const std::string RECYCLE_CLOUD_ID = ".trash";
+const std::string ROOT_CLOUD_ID = "rootId";
+const unsigned int STAT_MODE_DIR = 0771;
+constexpr int32_t LOCAL = 1;
 
 struct MetaBase;
 class MetaFile {
@@ -120,7 +124,9 @@ public:
     std::shared_ptr<CloudDiskMetaFile> GetCloudDiskMetaFile(uint32_t userId, const std::string &bundleName,
         const std::string &cloudId);
     void ClearAll();
+    void CloudDiskClearAll();
     void Clear(const std::string &cloudId);
+    int32_t CreateRecycleDentry(uint32_t userId, const std::string &bundleName);
     int32_t MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName,
         const std::string &name, const std::string &parentCloudId, int64_t rowId);
     int32_t RemoveFromRecycleDentryfile(uint32_t userId, const std::string &bundleName,
@@ -134,7 +140,7 @@ private:
     std::recursive_mutex mtx_{};
     std::mutex cloudDiskMutex_{};
     std::map<std::pair<uint32_t, std::string>, std::shared_ptr<MetaFile>> metaFiles_;
-    std::unordered_map<std::string, std::shared_ptr<CloudDiskMetaFile>> cloudDiskMetaFile_;
+    std::map<std::string, std::shared_ptr<CloudDiskMetaFile>> cloudDiskMetaFile_;
 };
 
 struct MetaBase {
@@ -157,6 +163,7 @@ struct MetaBase {
     uint8_t fileType{FILE_TYPE_CONTENT};
     std::string name{};
     std::string cloudId{};
+    off_t nextOff{0};
     bool hasDownloaded{false};
 };
 

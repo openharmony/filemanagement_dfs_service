@@ -29,6 +29,7 @@ namespace {
 constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
+constexpr int32_t E_OK = 0;
 } // namespace
 
 void NetworkAgentTemplate::Start()
@@ -125,6 +126,13 @@ void NetworkAgentTemplate::DisconnectDeviceByP2P(const DeviceInfo info)
     sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_P2P);
 }
 
+void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
+{
+    LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
+    sessionPool_.DeviceDisconnectCountOnly(info.GetCid(), LINK_TYPE_P2P, true);
+    sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_P2P);
+}
+
 void NetworkAgentTemplate::OccupySession(int32_t sessionId, uint8_t linkType)
 {
     sessionPool_.OccupySession(sessionId, linkType);
@@ -186,7 +194,19 @@ void NetworkAgentTemplate::GetSession(const string &cid, uint8_t linkType)
         }
     } else if (linkType == LINK_TYPE_P2P) {
         try {
-            OpenSession(deviceInfo, LINK_TYPE_P2P);
+            if (OpenSession(deviceInfo, LINK_TYPE_P2P) == E_OK) {
+                return;
+            }
+            LOGE("reget session failed");
+            auto deviceManager = DeviceManagerAgent::GetInstance();
+            deviceManager->RemoveNetworkIdForAllToken(cid);
+            auto deviceId = deviceManager->GetDeviceIdByNetworkId(cid);
+            if (!deviceId.empty()) {
+                deviceManager->UMountDfsDocs(cid, deviceId, true);
+            }
+            sessionPool_.DeviceDisconnectCountOnly(cid, linkType, true);
+            deviceManager->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
+            deviceManager->RemoveRemoteReverseObj(true, 0);
         } catch (const DfsuException &e) {
             LOGE("reget session failed, code: %{public}d", e.code());
         }

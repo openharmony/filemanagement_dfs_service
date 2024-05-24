@@ -60,6 +60,7 @@
           "safwk",
           "samgr",
           "ability_runtime",
+          "storage_service",
           "os_account",
           "power_manager",
           "app_file_service",

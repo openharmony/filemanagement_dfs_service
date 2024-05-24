@@ -137,6 +137,7 @@ ohos_shared_library("libdistributedfiledentry") {
     debug = false
   }
   include_dirs = [
+    "cloud_disk/include",
     "dentry/include",
     "log/include",
   ]

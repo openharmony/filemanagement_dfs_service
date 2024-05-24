@@ -22,6 +22,9 @@ namespace OHOS::FileManagement {
 inline const std::string PERM_CLOUD_SYNC_MANAGER = "ohos.permission.CLOUDFILE_SYNC_MANAGER";
 inline const std::string PERM_CLOUD_SYNC = "ohos.permission.CLOUDFILE_SYNC";
 inline const std::string PERM_AUTH_URI = "ohos.permission.PROXY_AUTHORIZATION_URI";
+inline const std::string FILE_ACCESS_MANAGER_PERMISSION = "ohos.permission.FILE_ACCESS_MANAGER";
+inline const std::string PERM_DISTRIBUTED_DATASYNC = "ohos.permission.DISTRIBUTED_DATASYNC";
+
 class DfsuAccessTokenHelper final {
 public:
     static bool CheckCallerPermission(const std::string &permissionName);

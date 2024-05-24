@@ -41,6 +41,7 @@ public:
     static const std::string OPERATE_TYPE;
     static const std::string FILE_STATUS;
     static const std::string ROW_ID;
+    static const std::string CHECK_FLAG;
 
     // Only Local
     static const std::string FILE_TIME_VISIT;
@@ -72,6 +73,9 @@ public:
 
     //set FileStatus
     static const std::string SET_FILE_STATUS_DEFAULT;
+
+    //set CheckFlag
+    static const std::string ADD_CHECK_FLAG;
 
     // Query FILES_TABLE for FileSystem
     static const std::vector<std::string> FILE_SYSTEM_QUERY_COLUMNS;

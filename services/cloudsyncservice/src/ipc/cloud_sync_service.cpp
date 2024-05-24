@@ -152,9 +152,10 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
 
     if (reason == "usual.event.wifi.CONN_STATE") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
+        dataSyncManager_->DownloadThumb();
     } else if (reason == "usual.event.BATTERY_OKAY") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
-    } else if (reason == "usual.event.SCREEN_OFF") {
+    } else if (reason == "usual.event.SCREEN_OFF" || reason == "usual.event.POWER_CONNECTED") {
         dataSyncManager_->DownloadThumb();
     }
 
@@ -427,6 +428,7 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
     }
 
     MetaFileMgr::GetInstance().ClearAll();
+    MetaFileMgr::GetInstance().CloudDiskClearAll();
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     LOGI("Clean callerUserId is: %{public}d", callerUserId);
     for (auto iter = cleanOptions.appActionsData.begin(); iter != cleanOptions.appActionsData.end(); ++iter) {

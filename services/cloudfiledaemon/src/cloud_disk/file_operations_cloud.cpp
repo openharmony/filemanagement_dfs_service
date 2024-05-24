@@ -78,7 +78,7 @@ static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
 
     childInode->bundleName = parentInode->bundleName;
     childInode->fileName = metaBase.name;
-    childInode->layer = FileOperationsHelper::GetNextLayer(parentInode, parentInode->parent);
+    childInode->layer = FileOperationsHelper::GetNextLayer(parentInode, parent);
     childInode->parent = parent;
     childInode->cloudId = metaBase.cloudId;
     childInode->ops = make_shared<FileOperationsCloud>();
@@ -293,8 +293,8 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
         parentInode->cloudId);
     int32_t ret = metaFile->DoLookup(metaBase);
     if (ret != 0) {
-        LOGE("lookup dnetry failed, ret = %{public}d", ret);
-        return EINVAL;
+        LOGE("lookup dentry failed, ret = %{public}d", ret);
+        return ENOENT;
     }
     string key = std::to_string(parent) + name;
     int64_t inodeId = static_cast<int64_t>(DentryHash(metaBase.cloudId));
@@ -598,6 +598,21 @@ static size_t FindNextPos(const vector<CloudDiskFileInfo> &childInfos, off_t off
     return 0;
 }
 
+static size_t FindNextPos(const vector<MetaBase> &childInfos, off_t off)
+{
+    for (size_t i = 0; i < childInfos.size(); i++) {
+        /* Find the first valid offset beyond @off */
+        if (childInfos[i].nextOff > off) {
+            return i + 1;
+        }
+    }
+    /* If @off is beyond all valid offset, then return the index after the last info */
+    if (!childInfos.empty() && childInfos.back().nextOff < off) {
+        return childInfos.size();
+    }
+    return 0;
+}
+
 static int32_t GetChildInfos(fuse_req_t req, fuse_ino_t ino, vector<CloudDiskFileInfo> &childInfos)
 {
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
@@ -640,9 +655,82 @@ static size_t CloudSeekDir(fuse_req_t req, fuse_ino_t ino, off_t off,
     return 0;
 }
 
+static size_t CloudSeekDir(fuse_req_t req, fuse_ino_t ino, off_t off,
+                           const std::vector<MetaBase> &childInfos)
+{
+    if (off == 0 || childInfos.empty()) {
+        return 0;
+    }
+
+    size_t i = 0;
+    for (; i < childInfos.size(); i++) {
+        if (childInfos[i].nextOff == off) {
+            /* Start position should be the index of next entry */
+            return i + 1;
+        }
+    }
+    if (i == childInfos.size()) {
+        /* The directory may changed recently, find the next valid index for this offset */
+        return FindNextPos(childInfos, off);
+    }
+
+    return 0;
+}
+
+static void ReadDirForRecycle(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
+                              struct fuse_file_info *fi)
+{
+    int32_t err = -1;
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto inode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+    if (inode == nullptr) {
+        LOGE("inode not found");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
+        inode->bundleName, RECYCLE_NAME);
+    std::vector<MetaBase> bases;
+    err = metaFile->LoadChildren(bases);
+    if (err != 0) {
+        LOGE("load children failed, err=%{public}d", err);
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+
+    size_t startPos = CloudSeekDir(req, ino, off, bases);
+    string buf;
+    buf.resize(size);
+    if (bases.empty() || startPos == bases.size()) {
+        return (void)fuse_reply_buf(req, buf.c_str(), 0);
+    }
+
+    size_t nextOff = 0;
+    size_t remain = size;
+    static const struct stat STAT_INFO_DIR = { .st_mode = S_IFDIR | STAT_MODE_DIR };
+    static const struct stat STAT_INFO_REG = { .st_mode = S_IFREG | STAT_MODE_REG };
+    for (size_t i = startPos; i < bases.size(); i++) {
+        size_t alignSize = CloudDiskRdbUtils::FuseDentryAlignSize(bases[i].name.c_str());
+        if (alignSize > remain) {
+            break;
+        }
+        alignSize = fuse_add_direntry(req, &buf[nextOff], alignSize, bases[i].name.c_str(),
+            bases[i].mode != S_IFREG ? &STAT_INFO_DIR : &STAT_INFO_REG,
+            off + static_cast<off_t>(nextOff) + static_cast<off_t>(alignSize));
+        nextOff += alignSize;
+        remain -= alignSize;
+    }
+    (void)fuse_reply_buf(req, buf.c_str(), size - remain);
+}
+
 void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                                   struct fuse_file_info *fi)
 {
+    if (ino == RECYCLE_LOCAL_ID) {
+        ReadDirForRecycle(req, ino, size, off, fi);
+        return;
+    }
+
     vector<CloudDiskFileInfo> childInfos;
     int32_t err = GetChildInfos(req, ino, childInfos);
     if (err != 0) {
@@ -720,23 +808,6 @@ void HandleCloudLocation(fuse_req_t req, fuse_ino_t ino, const char *name,
     fuse_reply_err(req, 0);
 }
 
-static int32_t CreateRecycleDentry(uint32_t userId, const std::string &bundleName)
-{
-    MetaBase metaBase(RECYCLE_NAME);
-    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, ROOT_CLOUD_ID);
-    int32_t ret = metaFile->DoLookup(metaBase);
-    if (ret != 0) {
-        metaBase.cloudId = RECYCLE_CLOUD_ID;
-        metaBase.mode = S_IFDIR | STAT_MODE_DIR;
-        metaBase.position = static_cast<uint8_t>(LOCAL);
-        ret = metaFile->DoCreate(metaBase);
-        if (ret != 0) {
-            return ret;
-        }
-    }
-    return 0;
-}
-
 void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
                         const char *value)
 {
@@ -753,7 +824,7 @@ void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
         LOGE("parent inode not found");
         return;
     }
-    int32_t ret = CreateRecycleDentry(data->userId, inoPtr->bundleName);
+    int32_t ret = MetaFileMgr::GetInstance().CreateRecycleDentry(data->userId, inoPtr->bundleName);
     if (ret != 0) {
         LOGE("create recycle dentry failed");
         return;
@@ -827,7 +898,7 @@ string GetIsFavorite(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
     auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
     int res = rdbStore->GetXAttr(inoPtr->cloudId, IS_FAVORITE_XATTR, favorite);
     if (res != 0) {
-        LOGE("local file get location fail");
+        LOGE("local file get isFavorite fail");
         return "null";
     }
     return favorite;
@@ -851,6 +922,26 @@ static string GetFileStatus(fuse_req_t req, struct CloudDiskInode *inoPtr)
     return fileStatus;
 }
 
+string GetLocation(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
+{
+    string location;
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inoPtr->parent));
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        return "null";
+    }
+    CacheNode newNode = {.fileName = inoPtr->fileName, .parentCloudId = parentInode->cloudId};
+    int res = rdbStore->GetXAttr(inoPtr->cloudId, CLOUD_FILE_LOCATION, location, newNode);
+    if (res != 0) {
+        LOGE("local file get location fail");
+        return "null";
+    }
+    return location;
+}
+
 void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    size_t size)
 {
@@ -870,6 +961,8 @@ void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
         buf = GetIsFavorite(req, inoPtr);
     } else if (CloudFileUtils::CheckFileStatus(name)) {
         buf = GetFileStatus(req, inoPtr.get());
+    } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
+        buf = GetLocation(req, inoPtr);
     } else {
         fuse_reply_err(req, EINVAL);
         return;
@@ -1013,6 +1106,11 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
     if (err != 0) {
         fuse_reply_err(req, err);
         return;
+    }
+    MetaFileMgr::GetInstance().Clear(metaBase.cloudId);
+    string dentryPath = metaFile->GetDentryFilePath();
+    if (unlink(dentryPath.c_str()) != 0) {
+        LOGE("fail to delete dentry: %{public}d", errno);
     }
     CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
         NotifyOpsType::DAEMON_RMDIR, nullptr, parent, name});

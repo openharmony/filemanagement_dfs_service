@@ -44,6 +44,8 @@ enum OperationType {
 /* thumb */
 const std::string THUMB_SUFFIX = "THM";
 const std::string LCD_SUFFIX = "LCD";
+const std::string THUMB_EX_SUFFIX = "THM_EX/THM";
+const std::string LCD_EX_SUFFIX = "THM_EX/LCD";
 
 /* basic */
 const std::string FILE_LOGIC_ALBUM_IDS = "albumIds";

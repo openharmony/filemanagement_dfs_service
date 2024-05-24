@@ -19,6 +19,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <map>
+#include <stack>
 #include <string>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -50,7 +51,10 @@ using namespace DriveKit;
 using namespace CloudDisk;
 using namespace Media;
 using FC = CloudDisk::FileColumn;
-
+namespace {
+    static const string LOCAL_PATH_DATA_SERVICE_EL2 = "/data/service/el2";
+    static const string LOCAL_PATH_HMDFS_CLOUD_DATA = "/hmdfs/cloud/data/";
+}
 CloudDiskDataHandler::CloudDiskDataHandler(int32_t userId, const string &bundleName,
                                            std::shared_ptr<RdbStore> rdb, shared_ptr<bool> stopFlag)
     : RdbDataHandler(userId, bundleName, FC::FILES_TABLE, rdb, stopFlag), userId_(userId), bundleName_(bundleName)
@@ -292,7 +296,15 @@ int32_t CloudDiskDataHandler::InsertRDBAndDentryFile(DKRecord &record, ValuesBuc
         m.position = static_cast<uint8_t>(POSITION_CLOUD);
         m.fileType = static_cast<uint8_t>(FILE_TYPE_CONTENT);
     };
-    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
+    int64_t recycledTime = 0;
+    string realParentId = parentCloudId;
+    data[DK_FILE_TIME_RECYCLED].GetLong(recycledTime);
+    if (recycledTime > 0) {
+        RETURN_ON_ERR(MetaFileMgr::GetInstance().CreateRecycleDentry(userId_, bundleName_));
+        realParentId = RECYCLE_CLOUD_ID;
+        metaBase.name = metaBase.name + "_" + std::to_string(rowId);
+    }
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, realParentId);
     ret = metaFile->DoLookupAndUpdate(metaBase.name, callback);
     if (ret != E_OK) {
         LOGE(" update new dentry failed, ret = %{public}d", ret);
@@ -679,6 +691,7 @@ static int32_t RecycleHandler(uint32_t userId, const std::string &bundleName,
 {
     string fileName = data.fileName;
     string parentCloudId = data.parentCloudId;
+    RETURN_ON_ERR(MetaFileMgr::GetInstance().CreateRecycleDentry(userId, bundleName));
     auto recycleMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, RECYCLE_CLOUD_ID);
     MetaBase metaBase(fileName);
     int32_t ret = E_OK;
@@ -887,6 +900,116 @@ int CloudDiskDataHandler::SetRetry(const string &recordId)
     return E_OK;
 }
 
+int32_t CloudDiskDataHandler::CheckResultSetByDentry(const string &cloudId, const MetaBase &metaBase,
+    NativeRdb::ResultSet &resultSet, ValuesBucket &values)
+{
+    int64_t atime = 0;
+    DataConvertor::GetLong(FC::FILE_TIME_ADDED, atime, resultSet);
+    if (metaBase.atime != static_cast<uint64_t>(atime)) {
+        values.PutLong(FC::FILE_TIME_ADDED, static_cast<int64_t>(metaBase.atime));
+    }
+    int64_t mtime = 0;
+    DataConvertor::GetLong(FC::FILE_TIME_EDITED, mtime, resultSet);
+    if (metaBase.mtime != static_cast<uint64_t>(mtime)) {
+        values.PutLong(FC::FILE_TIME_EDITED, static_cast<int64_t>(metaBase.mtime));
+    }
+    int64_t size = 0;
+    DataConvertor::GetLong(FC::FILE_SIZE, size, resultSet);
+    if (metaBase.size != static_cast<uint64_t>(size)) {
+        values.PutLong(FC::FILE_SIZE, static_cast<int64_t>(metaBase.size));
+    }
+    int32_t isDirectory = 0;
+    DataConvertor::GetInt(FC::IS_DIRECTORY, isDirectory, resultSet);
+    if (S_ISDIR(metaBase.mode) != isDirectory) {
+        values.PutLong(FC::IS_DIRECTORY, S_ISDIR(metaBase.mode));
+    }
+    int32_t position = 0;
+    DataConvertor::GetInt(FC::POSITION, position, resultSet);
+    if (metaBase.position != position) {
+        values.PutLong(FC::POSITION, position);
+    }
+    return E_OK;
+}
+
+static int32_t CheckLocalFileByDentry(uint32_t userId, const string &bundleName,
+    const string &cloudId, const MetaBase &metaBase)
+{
+    std::string localPath =
+        LOCAL_PATH_DATA_SERVICE_EL2 + std::to_string(userId) +
+        LOCAL_PATH_HMDFS_CLOUD_DATA + bundleName + "/" +
+        std::to_string(CloudFileUtils::GetBucketId(cloudId)) + "/" + cloudId;
+    if (access(localPath.c_str(), F_OK) != 0) {
+        LOGD("file is not cached");
+        return E_OK;
+    }
+    struct stat statInfo = {};
+    int32_t ret = stat(localPath.c_str(), &statInfo);
+    if (ret != 0) {
+        LOGE("stat local file error %{public}d", errno);
+        return ret;
+    }
+    uint64_t mtime = CloudFileUtils::Timespec2Milliseconds(statInfo.st_mtim);
+    if (statInfo.st_size != metaBase.size || mtime != metaBase.mtime) {
+        LOGD("unlink localPath:%{public}s", localPath.c_str());
+        ret = unlink(localPath.c_str());
+        if (ret != 0) {
+            LOGE("unlink local file error %{public}d", errno);
+            return ret;
+        }
+    }
+    return E_OK;
+}
+ 
+int32_t CloudDiskDataHandler::CheckDataConsistency(const string &cloudId, NativeRdb::ResultSet &resultSet)
+{
+    string parentCloudId;
+    int32_t ret = DataConvertor::GetString(FC::PARENT_CLOUD_ID, parentCloudId, resultSet);
+    if (ret != E_OK) {
+        LOGE("failed to get parentCloudId");
+    }
+    string name;
+    ret = DataConvertor::GetString(FC::FILE_NAME, name, resultSet);
+    if (ret != E_OK) {
+        LOGE("failed to get name");
+    }
+    MetaBase metaBase(name);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
+    ret = metaFile->DoLookup(metaBase);
+    ValuesBucket updateValue;
+    if (ret != E_OK) {
+        LOGE("failed to lookup name, delete rdbstore row");
+        updateValue.PutInt(FC::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_DELETED));
+    } else {
+        if (cloudId != metaBase.cloudId) {
+            auto callback = [&cloudId] (MetaBase &m) {
+                m.cloudId = cloudId;
+            };
+            ret = metaFile->DoLookupAndUpdate(name, callback);
+            if (ret != E_OK) {
+                LOGE("failed to update cloudId in dentryfile");
+                return ret;
+            }
+        }
+        ret = CheckResultSetByDentry(cloudId, metaBase, resultSet, updateValue);
+        if (ret != E_OK) {
+            LOGE("failed to check result set by dentry during data consistency check");
+            return ret;
+        }
+        ret = CheckLocalFileByDentry(userId_, bundleName_, cloudId, metaBase);
+        if (ret != E_OK) {
+            LOGE("failed to check localbase by dentry during data consistency check");
+            return ret;
+        }
+    }
+    int32_t changedRows;
+    ret = Update(changedRows, FC::FILES_TABLE, updateValue, FC::CLOUD_ID + " = ?", { cloudId });
+    if (ret != E_OK) {
+        LOGE("failed to delete records during data consistency check, ret = %{public}d", ret);
+        return ret;
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &checkRecords,
                                               const shared_ptr<std::vector<DriveKit::DKRecord>> &records)
 {
@@ -904,6 +1027,11 @@ int32_t CloudDiskDataHandler::GetCheckRecords(vector<DriveKit::DKRecordId> &chec
             fetchRecords->emplace_back(record);
         } else if (recordIdRowIdMap.find(record.GetRecordId()) != recordIdRowIdMap.end()) {
             resultSet->GoToRow(recordIdRowIdMap.at(record.GetRecordId()));
+            int32_t ret = CheckDataConsistency(record.GetRecordId(), *resultSet);
+            if (ret != E_OK) {
+                LOGE("data consistency check error, ret = %{public}d", ret);
+                continue;
+            }
             int64_t version = 0;
             DataConvertor::GetLong(FC::VERSION, version, *resultSet);
             if (record.GetVersion() != static_cast<unsigned long>(version) &&
@@ -931,6 +1059,78 @@ int32_t CloudDiskDataHandler::Clean(const int action)
     fdirtyConvertor_.SetRootId("");
     RETURN_ON_ERR(CleanCloudRecord(action));
     return E_OK;
+}
+
+static void handleClearInner(unsigned char dType,
+                             int currentFd,
+                             const char *name,
+                             stack<DIR *> &dirStack,
+                             stack<DIR *> &closeStack)
+{
+    if (dType == DT_DIR) {
+        int subFd = openat(currentFd, name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        if (subFd < 0) {
+            LOGE("Failed in subFd openat: %{public}s ", name);
+            return;
+        }
+        DIR *subDir = fdopendir(subFd);
+        if (subDir == nullptr) {
+            close(subFd);
+            LOGE("Failed in fdopendir: %{public}d", errno);
+            return;
+        }
+        closeStack.push(subDir);
+        dirStack.push(subDir);
+    } else {
+        int subFd = openat(currentFd, name, O_WRONLY);
+        if (subFd < 0) {
+            LOGE("Failed in subFd openat: %{public}s ", name);
+            return;
+        }
+        if (ftruncate(subFd, 0) == -1) {
+            LOGE("Failed to truncate, err: %{public}d", errno);
+        }
+        close(subFd);
+    }
+}
+
+void CloudDiskDataHandler::ClearDentryFile()
+{
+    string cacheDir = "/data/service/el2/" + to_string(userId_) + "/hmdfs/cloud/data/" + bundleName_;
+    DIR *dir = opendir(cacheDir.c_str());
+    if (dir == nullptr) {
+        LOGE("Failed to open cache dir: %{public}d", errno);
+        return;
+    }
+    stack<DIR *> dirStack;
+    stack<DIR *> closeStack;
+    dirStack.push(dir);
+    closeStack.push(dir);
+    while (!dirStack.empty()) {
+        DIR *currentDir = dirStack.top();
+        dirStack.pop();
+        int currentFd = dirfd(currentDir);
+        if (currentFd < 0) {
+            LOGE("Failed to get dirfd: %{public}d ", errno);
+            continue;
+        }
+        while (true) {
+            struct dirent *ptr = readdir(currentDir);
+            if (ptr == nullptr) {
+                break;
+            }
+            const char *name = ptr->d_name;
+            if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) {
+                continue;
+            }
+            handleClearInner(ptr->d_type, currentFd, name, dirStack, closeStack);
+        }
+    }
+    while (!closeStack.empty()) {
+        DIR *closeDir = closeStack.top();
+        closeStack.pop();
+        closedir(closeDir);
+    }
 }
 
 int32_t CloudDiskDataHandler::CleanCloudRecord(const int32_t action)
@@ -972,6 +1172,7 @@ int32_t CloudDiskDataHandler::CleanCloudRecord(const int32_t action)
     int32_t deletedRows;
     ret = Delete(deletedRows, "", {});
     if (ret == E_OK) {
+        ClearDentryFile();
         CloudDiskNotify::GetInstance().TryNotifyService({NotifyOpsType::SERVICE_DELETE, "", NotifyType::NOTIFY_DELETED},
                                                         {userId_, bundleName_});
     }
