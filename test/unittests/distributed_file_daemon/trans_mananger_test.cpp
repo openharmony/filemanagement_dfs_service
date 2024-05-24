@@ -103,7 +103,8 @@ HWTEST_F(TransManagerTest, DfsService_NotifyFileFailed_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFailed_001_Start";
     string sessionName;
-    transManager_->NotifyFileFailed(sessionName);
+    int32_t errorCode;
+    transManager_->NotifyFileFailed(sessionName, errorCode);
     EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFailed_001_End";
 }
@@ -112,7 +113,8 @@ HWTEST_F(TransManagerTest, DfsService_NotifyFileFailed_002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFailed_002_Start";
     string sessionName;
-    TransManager::GetInstance().NotifyFileFailed(sessionName);
+    int32_t errorCode;
+    TransManager::GetInstance().NotifyFileFailed(sessionName, errorCode);
     EXPECT_TRUE(true);
     GTEST_LOG_(INFO) << "DfsService_NotifyFileFailed_002_End";
 }
