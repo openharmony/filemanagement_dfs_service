@@ -38,7 +38,7 @@ public:
     FileTransListenerStubImpl() = default;
     ~FileTransListenerStubImpl() override {}
     int32_t OnFileReceive(uint64_t totalBytes, uint64_t processedBytes) override;
-    int32_t OnFailed(const std::string &sessionName) override;
+    int32_t OnFailed(const std::string &sessionName, int32_t errorCode) override;
     int32_t OnFinished(const std::string &sessionName) override;
 };
 }
@@ -49,7 +49,7 @@ int32_t FileTransListenerStubImpl::OnFileReceive(uint64_t totalBytes, uint64_t p
     return 0;
 }
 
-int32_t FileTransListenerStubImpl::OnFailed(const std::string &sessionName)
+int32_t FileTransListenerStubImpl::OnFailed(const std::string &sessionName, int32_t errorCode)
 {
     return 0;
 }

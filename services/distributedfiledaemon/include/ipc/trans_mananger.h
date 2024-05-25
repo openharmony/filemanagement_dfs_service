@@ -31,7 +31,7 @@ public:
 
     void AddTransTask(const std::string &sessionName, const sptr<IFileTransListener> &listener);
     void NotifyFileProgress(const std::string &sessionName, uint64_t total, uint64_t processed);
-    void NotifyFileFailed(const std::string &sessionName);
+    void NotifyFileFailed(const std::string &sessionName, int32_t errorCode);
     void NotifyFileFinished(const std::string &sessionName);
     void DeleteTransTask(const std::string &sessionName);
 

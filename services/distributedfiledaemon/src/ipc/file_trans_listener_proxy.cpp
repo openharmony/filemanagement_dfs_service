@@ -58,7 +58,7 @@ int32_t FileTransListenerProxy::OnFileReceive(uint64_t totalBytes, uint64_t proc
     return reply.ReadInt32();
 }
 
-int32_t FileTransListenerProxy::OnFailed(const std::string &sessionName)
+int32_t FileTransListenerProxy::OnFailed(const std::string &sessionName, int32_t errorCode)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -69,6 +69,10 @@ int32_t FileTransListenerProxy::OnFailed(const std::string &sessionName)
     }
     if (!data.WriteString(sessionName)) {
         LOGE("Failed to send sessionName");
+        return E_INVAL_ARG;
+    }
+    if (!data.WriteInt32(errorCode)) {
+        LOGE("Failed to send errorCode");
         return E_INVAL_ARG;
     }
     auto remote = Remote();

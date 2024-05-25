@@ -41,7 +41,7 @@ void TransManager::NotifyFileProgress(const std::string &sessionName, uint64_t t
     iter->second->OnFileReceive(total, processed);
 }
 
-void TransManager::NotifyFileFailed(const std::string &sessionName)
+void TransManager::NotifyFileFailed(const std::string &sessionName, int32_t errorCode)
 {
     std::lock_guard<std::mutex> lock(sessionTransMapMutex_);
     auto iter = sessionTransMap_.find(sessionName);
@@ -53,7 +53,7 @@ void TransManager::NotifyFileFailed(const std::string &sessionName)
         LOGE("IFileTransListener is empty!");
         return;
     }
-    iter->second->OnFailed(sessionName);
+    iter->second->OnFailed(sessionName, errorCode);
 }
 
 void TransManager::NotifyFileFinished(const std::string &sessionName)
