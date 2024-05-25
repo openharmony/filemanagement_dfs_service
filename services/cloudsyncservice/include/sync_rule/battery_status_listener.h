@@ -28,6 +28,7 @@ public:
     void Stop();
     void OnStatusNormal();
     void OnStatusAbnormal();
+    void OnPowerConnected();
 
 private:
     std::shared_ptr<DataSyncManager> dataSyncManager_;

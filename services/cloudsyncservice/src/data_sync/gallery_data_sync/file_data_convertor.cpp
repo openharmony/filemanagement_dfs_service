@@ -510,15 +510,27 @@ int32_t FileDataConvertor::HandleContent(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::HandleThumbnail(DriveKit::DKRecordData &data,
     string &path)
 {
-    string thumbnailPath = GetThumbPath(path, THUMB_SUFFIX);
-    if (access(thumbnailPath.c_str(), F_OK)) {
-        LOGE("thumbnail %{private}s doesn't exist", thumbnailPath.c_str());
-        return E_PATH;
+    string thumbnailUploadPath;
+    string thumbnailExPath = GetThumbPath(path, THUMB_EX_SUFFIX);
+    string thumbnailExDir = GetParentPath(thumbnailExPath);
+    if (access(thumbnailExDir.c_str(), F_OK)) {
+        string thumbnailPath = GetThumbPath(path, THUMB_SUFFIX);
+        if (access(thumbnailPath.c_str(), F_OK)) {
+            LOGE("thumbnail %{private}s doesn't exist", thumbnailPath.c_str());
+            return E_PATH;
+        }
+        thumbnailUploadPath = thumbnailPath;
+    } else {
+        if (access(thumbnailExPath.c_str(), F_OK)) {
+            LOGE("thumbnailEx %{private}s doesn't exist", thumbnailExPath.c_str());
+            return E_PATH;
+        }
+        thumbnailUploadPath = thumbnailExPath;
     }
 
     /* asset */
     DriveKit::DKAsset content;
-    content.uri = move(thumbnailPath);
+    content.uri = move(thumbnailUploadPath);
     content.assetName = FILE_THUMBNAIL;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
     data[FILE_THUMBNAIL] = DriveKit::DKRecordField(content);
@@ -528,15 +540,27 @@ int32_t FileDataConvertor::HandleThumbnail(DriveKit::DKRecordData &data,
 int32_t FileDataConvertor::HandleLcd(DriveKit::DKRecordData &data,
     string &path)
 {
-    string lcdPath = GetThumbPath(path, LCD_SUFFIX);
-    if (access(lcdPath.c_str(), F_OK)) {
-        LOGE("lcd %{private}s doesn't exist", lcdPath.c_str());
-        return E_PATH;
+    string lcdUploadPath;
+    string lcdExPath = GetThumbPath(path, LCD_EX_SUFFIX);
+    string lcdExDir = GetParentPath(lcdExPath);
+    if (access(lcdExDir.c_str(), F_OK)) {
+        string lcdPath = GetThumbPath(path, LCD_SUFFIX);
+        if (access(lcdPath.c_str(), F_OK)) {
+            LOGE("lcd %{private}s doesn't exist", lcdPath.c_str());
+            return E_PATH;
+        }
+        lcdUploadPath = lcdPath;
+    } else {
+        if (access(lcdExPath.c_str(), F_OK)) {
+            LOGE("lcdEx %{private}s doesn't exist", lcdExPath.c_str());
+            return E_PATH;
+        }
+        lcdUploadPath = lcdExPath;
     }
 
     /* asset */
     DriveKit::DKAsset content;
-    content.uri = move(lcdPath);
+    content.uri = move(lcdUploadPath);
     content.assetName = FILE_LCD;
     content.operationType = DriveKit::DKAssetOperType::DK_ASSET_ADD;
     data[FILE_LCD] = DriveKit::DKRecordField(content);
@@ -577,6 +601,17 @@ string FileDataConvertor::GetSandboxPath(const string &path)
 string FileDataConvertor::GetCloudPath(const std::string &path)
 {
     return prefixCloud_ + to_string(userId_) + "/" + path.substr(prefixCloud_.size());
+}
+
+string FileDataConvertor::GetParentPath(const std::string &path)
+{
+    string name;
+    size_t slashIndex = path.rfind("/");
+    if (slashIndex != string::npos) {
+        name = path.substr(0, slashIndex);
+    }
+
+    return name;
 }
 
 string FileDataConvertor::GetThumbPath(const string &path, const string &key)

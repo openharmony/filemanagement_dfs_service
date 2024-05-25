@@ -378,6 +378,7 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
                             HmdfsInfo &info,
                             const sptr<IDaemon> &daemon)
 {
+    auto start = std::chrono::high_resolution_clock::now();
     bool isSrcFile = false;
     bool isSrcDir = false;
     auto ret = daemon->GetRemoteCopyInfo(srcUri, isSrcFile, isSrcDir);
@@ -404,6 +405,9 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         LOGE("CheckCopyRule failed, ret = %{public}d", ret);
         return E_GET_PHYSICAL_PATH_FAILED;
     }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    Utils::SysEventFileParse(duration.count());
     return E_OK;
 }
 

@@ -86,6 +86,7 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
         }
         if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
             LOGE("the device os type = %{private}d is not openharmony.", outDeviceProfile.GetOsType());
+            Utils::SysEventWrite(udid);
             continue;
         }
 
@@ -114,13 +115,13 @@ void NetworkAgentTemplate::DisconnectAllDevices()
 
 void NetworkAgentTemplate::DisconnectDevice(const DeviceInfo info)
 {
-    LOGI("DeviceOffline, cid:%{public}s", info.GetCid().c_str());
+    LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
     sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_AP);
 }
 
 void NetworkAgentTemplate::DisconnectDeviceByP2P(const DeviceInfo info)
 {
-    LOGI("DeviceOffline, cid:%{public}s", info.GetCid().c_str());
+    LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
     sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_P2P);
 }
 
@@ -159,7 +160,7 @@ void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const 
 void NetworkAgentTemplate::AcceptSessionInner(shared_ptr<BaseSession> session, const std::string backStage)
 {
     auto cid = session->GetCid();
-    LOGI("AcceptSesion, cid:%{public}s", cid.c_str());
+    LOGI("AcceptSesion, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
     sessionPool_.HoldSession(session, backStage);
 }
 
@@ -175,7 +176,7 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
 {
     string cidStr(param.remoteCid, CID_MAX_LEN);
     int fd = param.fd;
-    LOGI("NOTIFY_GET_SESSION, old fd %{public}d, remote cid %{public}s", fd, cidStr.c_str());
+    LOGI("NOTIFY_GET_SESSION, old fd %{public}d, remote cid %{public}s", fd, Utils::GetAnonyString(cidStr).c_str());
     uint8_t linkType = sessionPool_.ReleaseSession(fd);
     GetSession(cidStr, linkType);
 }

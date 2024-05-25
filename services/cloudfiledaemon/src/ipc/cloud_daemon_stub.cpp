@@ -16,6 +16,7 @@
 #include "ipc/cloud_daemon_stub.h"
 
 #include "cloud_file_daemon_interface_code.h"
+#include "dfs_error.h"
 #include "dfsu_memory_guard.h"
 #include "utils_log.h"
 
@@ -52,7 +53,7 @@ int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel
     int32_t res = StartFuse(userId, int32_t(fd), path);
     reply.WriteInt32(res);
     LOGI("End StartFuseInner");
-    return res;
+    return E_OK;
 }
 } // namespace CloudFile
 } // namespace FileManagement

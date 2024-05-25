@@ -816,6 +816,7 @@ int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceI
     if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
         LOGE("%{private}s  the device os type = %{private}d is not openharmony.", deviceInfo.deviceName,
             outDeviceProfile.GetOsType());
+        Utils::SysEventWrite(udid);
         return FileManagement::ERR_BAD_VALUE;
     }
     return FileManagement::ERR_OK;

@@ -45,6 +45,9 @@ public:
     virtual int32_t OnFetchRecords(std::shared_ptr<std::vector<DriveKit::DKRecord>> &records,
                                    OnFetchParams &params) override;
     virtual int32_t GetRetryRecords(std::vector<DriveKit::DKRecordId> &records) override;
+    int32_t CheckResultSetByDentry(const std::string &cloudId, const MetaBase &metaBase,
+        NativeRdb::ResultSet &resultSet, NativeRdb::ValuesBucket &values);
+    int32_t CheckDataConsistency(const std::string &cloudId, NativeRdb::ResultSet &resultSet);
     virtual int32_t GetCheckRecords(std::vector<DriveKit::DKRecordId> &checkRecords,
                                     const std::shared_ptr<std::vector<DriveKit::DKRecord>> &records) override;
     int32_t GetDownloadAsset(std::string cloudId, std::vector<DriveKit::DKDownloadAsset> &outAssetsToDownload,
@@ -85,6 +88,7 @@ private:
     std::string bundleName_;
     DriveKit::DKRecordId rootId_;
 
+    void ClearDentryFile();
     int32_t CleanCloudRecord(const int32_t action);
     void HandleCreateConvertErr(int32_t err, NativeRdb::ResultSet &resultSet);
     void HandleFdirtyConvertErr(int32_t err, NativeRdb::ResultSet &resultSet);

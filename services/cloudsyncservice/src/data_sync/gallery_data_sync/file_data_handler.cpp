@@ -34,10 +34,10 @@
 #include "dk_error.h"
 #include "gallery_album_const.h"
 #include "gallery_file_const.h"
+#include "gallery_rdb_utils.h"
 #include "gallery_sysevent.h"
 #include "media_column.h"
 #include "medialibrary_errno.h"
-#include "medialibrary_rdb_utils.h"
 #include "medialibrary_type_const.h"
 #include "meta_file.h"
 #include "shooting_mode_column.h"
@@ -1331,7 +1331,7 @@ int32_t FileDataHandler::PullRecordsConflictProc(std::vector<DriveKit::DKRecord>
                 LOGD("merge record, recordId:%{public}s", (*iter).GetRecordId().c_str());
                 DoDataMerge(*iter, localKeyData.filePath, cloudKeyData.filePath, isSamePath);
                 UpdateAssetInPhotoMap((*iter), GetFileId(*resultSet));
-                records.erase(iter);
+                iter = records.erase(iter);
             } else {
                 ++iter;
             }
@@ -1569,6 +1569,14 @@ int32_t FileDataHandler::OnDownloadAssets(const map<DKDownloadAsset, DKDownloadR
 int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
 {
     RETURN_ON_ERR(IsStop());
+    string tempPath = asset.downLoadPath + "/" + asset.asset.assetName;
+    string localPath = CloudDisk::CloudFileUtils::GetPathWithoutTmp(tempPath);
+    DentryRemoveThumb(localPath);
+    if (rename(tempPath.c_str(), localPath.c_str()) != 0) {
+        LOGE("err rename, errno: %{public}d, tmpLocalPath: %s, localPath: %s",
+             errno, tempPath.c_str(), localPath.c_str());
+    }
+    MetaFileMgr::GetInstance().ClearAll();
     if (asset.fieldKey == "thumbnail") {
         InsertOrUpdateThmLcdMap(asset.recordId, THM_POS);
     }
@@ -1578,15 +1586,6 @@ int32_t FileDataHandler::OnDownloadAssets(const DKDownloadAsset &asset)
     if (thmLcdVec_.size() >= UPDATE_VEC_SIZE) {
         CleanThmLcdVec();
     }
-
-    string tempPath = asset.downLoadPath + "/" + asset.asset.assetName;
-    string localPath = CloudDisk::CloudFileUtils::GetPathWithoutTmp(tempPath);
-    DentryRemoveThumb(localPath);
-    if (rename(tempPath.c_str(), localPath.c_str()) != 0) {
-        LOGE("err rename, errno: %{public}d, tmpLocalPath: %s, localPath: %s",
-             errno, tempPath.c_str(), localPath.c_str());
-    }
-    MetaFileMgr::GetInstance().ClearAll();
     return E_OK;
 }
 
@@ -1687,18 +1686,7 @@ int32_t FileDataHandler::SetRetry(vector<NativeRdb::ValueObject> &retryList)
 void FileDataHandler::UpdateAlbumInternal()
 {
     std::lock_guard<std::mutex> lock(rdbMutex_);
-    MediaLibraryRdbUtils::UpdateAllAlbumsCountForCloud(GetRaw());
-}
-
-/**
- * Add locks to prevent multiple threads from updating albums at the same time.
- * Check Photos table to update all photo albums (system and user) in a synchronous operation.
- * When clean user data, use this function
- */
-void FileDataHandler::UpdateAllAlbums()
-{
-    std::lock_guard<std::mutex> lock(rdbMutex_);
-    MediaLibraryRdbUtils::UpdateAllAlbumsForCloud(GetRaw());
+    GalleryRdbUtils::UpdateAllAlbumsCountForCloud(GetRaw());
 }
 
 int FileDataHandler::SetRetry(const string &recordId)
@@ -1838,9 +1826,11 @@ int32_t FileDataHandler::UpdateRecordToDatabase(DriveKit::DKRecord &record,
     values.PutLong(Media::PhotoColumn::PHOTO_CLOUD_VERSION, record.GetVersion());
     values.PutInt(PhotoMap::DIRTY, static_cast<int32_t>(DirtyTypes::TYPE_SYNCED));
     values.PutInt(PC::PHOTO_CLEAN_FLAG, static_cast<int32_t>(NOT_NEED_CLEAN));
-    string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ? AND " + PC::PHOTO_DIRTY + " = ?";
+    string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ? AND (" + PC::PHOTO_DIRTY +
+        " = ? OR " + PC::PHOTO_DIRTY + " = ?)";
     vector<std::string> whereArgs = {record.GetRecordId(),
-        to_string(static_cast<int32_t>(DirtyType::TYPE_SYNCED))};
+        to_string(static_cast<int32_t>(DirtyType::TYPE_SYNCED)),
+        to_string(static_cast<int32_t>(DirtyType::TYPE_SDIRTY))};
     HandleShootingMode(record, values, params);
     ret = Update(changeRows, values, whereClause, whereArgs);
     if (ret != E_OK) {
@@ -2912,7 +2902,7 @@ int32_t FileDataHandler::Clean(const int action)
     if (ret != E_OK) {
         LOGE("clean cloud photo dir err: %{public}d", ret);
     }
-    UpdateAllAlbums();
+    UpdateAlbumInternal();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
@@ -3129,7 +3119,7 @@ int32_t FileDataHandler::MarkClean(const int32_t action)
     if (ret != E_OK) {
         LOGW("mark clean error %{public}d", ret);
     }
-    UpdateAllAlbums();
+    UpdateAlbumInternal();
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();

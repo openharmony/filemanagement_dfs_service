@@ -138,7 +138,8 @@ void SoftbusAgent::StopBottomHalf() {}
 
 int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
-    LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
+    LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d",
+        Utils::GetAnonyString(info.GetCid()).c_str(), linkType);
     if (!IsSameAccount(info.GetCid())) {
         LOGI("The source and sink device is not same account, not support.");
         return FileManagement::E_INVAL_ARG;
@@ -185,7 +186,8 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
 
 void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType)
 {
-    LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
+    LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d",
+        Utils::GetAnonyString(info.GetCid()).c_str(), linkType);
     if (!IsSameAccount(info.GetCid())) {
         LOGI("The source and sink device is not same account, not support.");
         return;

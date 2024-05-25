@@ -613,7 +613,7 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
 #ifdef SUPPORT_MEDIA_LIBRARY
     if (uri.find("file://media") == 0) {
         OHOS::Media::MediaFileUri Muri(uri);
-        string path = Muri.GetFilePath();
+        path = Muri.GetFilePath();
     }
 #endif
     LOGI("StopDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
