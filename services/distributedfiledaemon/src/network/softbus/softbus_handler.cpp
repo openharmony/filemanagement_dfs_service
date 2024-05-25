@@ -195,12 +195,14 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     if (ret != E_OK) {
         LOGE("Bind SocketClient error");
         Shutdown(socketId);
+        RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_FAIL);
         return E_OPEN_SESSION;
     }
     {
         std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
         clientSessNameMap_.insert(std::make_pair(socketId, mySessionName));
     }
+    RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_SUCCESS);
     LOGI("OpenSession success.");
     return socketId;
 }

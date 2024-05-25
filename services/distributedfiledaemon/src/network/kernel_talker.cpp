@@ -75,8 +75,8 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session, const st
     int socketFd = session->GetHandle();
     auto masterkey = session->GetKey();
     auto cid = session->GetCid();
-    LOGD("sink session to kernel success, cid:%{public}s, socketFd:%{public}d, key[0]:%{public}x", cid.c_str(),
-         socketFd, *(uint32_t *)masterkey.data());
+    LOGD("sink session to kernel success, cid:%{public}s, socketFd:%{public}d, key[0]:%{public}x",
+        Utils::GetAnonyString(cid).c_str(), socketFd, *(uint32_t *)masterkey.data());
 
     uint8_t status = (backStage == "Server" ? SOCKET_STAT_ACCEPT : SOCKET_STAT_OPEN);
 
@@ -100,7 +100,7 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session, const st
 
 void KernelTalker::SinkDevslTokernel(const std::string &cid, uint32_t devsl)
 {
-    LOGD("sink dsl to kernel success, cid:%{public}s, devsl:%{public}d", cid.c_str(), devsl);
+    LOGD("sink dsl to kernel success, cid:%{public}s, devsl:%{public}d", Utils::GetAnonyString(cid).c_str(), devsl);
     UpdateDevslParam cmd = {
         .cmd = CMD_UPDATE_DEVSL,
         .devsl = devsl,
@@ -119,7 +119,7 @@ void KernelTalker::SinkOfflineCmdToKernel(string cid)
     };
 
     if (cid.length() < CID_MAX_LEN) {
-        LOGE("cid lengh err, cid:%{public}s, length:%{public}zu", cid.c_str(), cid.length());
+        LOGE("cid lengh err, cid:%{public}s, length:%{public}zu", Utils::GetAnonyString(cid).c_str(), cid.length());
         return;
     }
 
@@ -229,7 +229,7 @@ void KernelTalker::NotifyHandler(NotifyParam &param)
             GetSessionCallback_(param);
             break;
         case NOTIFY_OFFLINE:
-            LOGI("NOTIFY_OFFLINE, remote cid %{public}s", cidStr.c_str());
+            LOGI("NOTIFY_OFFLINE, remote cid %{public}s", Utils::GetAnonyString(cidStr).c_str());
             CloseSessionCallback_(cidStr);
             break;
         default:
