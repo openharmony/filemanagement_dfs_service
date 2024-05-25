@@ -230,7 +230,7 @@ void KernelTalker::NotifyHandler(NotifyParam &param)
             break;
         case NOTIFY_OFFLINE:
             LOGI("NOTIFY_OFFLINE, remote cid %{public}s", cidStr.c_str());
-            CloseSessionCallback_(cidStr);
+            CloseSessionCallback_(param.fd);
             break;
         default:
             LOGI("cmd %{public}d not support now", cmd);

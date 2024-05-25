@@ -58,8 +58,19 @@ void SessionPool::HoldSession(shared_ptr<BaseSession> session, const std::string
 uint8_t SessionPool::ReleaseSession(const int32_t fd)
 {
     uint8_t linkType = 0;
+    std::string cid = "";
     lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
+        if ((*iter)->GetHandle() == fd) {
+            auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
+            if (linkTypeIter != occupySession_.end()) {
+                linkType = linkTypeIter->second;
+                cid = (*iter)->GetCid();
+            }
+        }
+        if (DeviceDisconnectCountOnly(cid, linkType, false)) {
+            continue;
+        }
         if ((*iter)->GetHandle() == fd) {
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
             if (linkTypeIter != occupySession_.end()) {
