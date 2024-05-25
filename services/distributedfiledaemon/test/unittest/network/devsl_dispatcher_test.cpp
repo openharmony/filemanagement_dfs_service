@@ -143,7 +143,7 @@ HWTEST_F(DevslDispatcherTest, DevslDispatcherTest_DevslGetRegister_0100, TestSiz
     constexpr int userId = 100;
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(userId, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
 
     try {
         DevslDispatcher::DevslGetRegister(cid, kernelTalker);

@@ -60,7 +60,7 @@ const string MEDIA_AUTHORITY = "media";
 const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
-constexpr int32_t CHECK_SESSION_DELAY_TIME = 5000000;
+constexpr int32_t CHECK_SESSION_DELAY_TIME_TWICE = 5000000;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -197,7 +197,7 @@ int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceI
     ret = ConnectionDetector::RepeatGetConnectionStatus(targetDir, networkId);
     if (ret != NO_ERROR) {
         LOGI("RepeatGetConnectionStatus third times, ret = %{public}d", ret);
-        usleep(CHECK_SESSION_DELAY_TIME);
+        usleep(CHECK_SESSION_DELAY_TIME_TWICE);
         ret = ConnectionDetector::RepeatGetConnectionStatus(targetDir, networkId);
     }
     return ret;
