@@ -31,6 +31,7 @@
 #include "sync_rule/cloud_status.h"
 #include "sync_rule/network_status.h"
 #include "sync_rule/system_load.h"
+#include "sync_rule/screen_status.h"
 #include "utils_log.h"
 #include "os_account_manager.h"
 #include "rdb_sql_utils.h"
@@ -307,6 +308,10 @@ void DataSyncManager::Convert2BundleName(const string &bundle, string &bundleNam
 
 int32_t DataSyncManager::DownloadThumb()
 {
+    if (!BatteryStatus::IsCharging() || NetworkStatus::GetNetConnStatus() != NetworkStatus::NetConnStatus::WIFI_CONNECT
+        || ScreenStatus::IsScreenOn()) {
+        return E_STOP;
+    }
     int32_t userId = 0;
     RETURN_ON_ERR(GetUserId(userId));
     auto dataSyncer = GetDataSyncer(GALLERY_BUNDLE_NAME, userId);

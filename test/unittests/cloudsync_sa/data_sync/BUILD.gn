@@ -45,6 +45,7 @@ ohos_unittest("cloud_disk_data_convertor_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
@@ -76,16 +77,6 @@ ohos_unittest("cloud_disk_data_convertor_test") {
     "${media_library_path}/frameworks/utils/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
@@ -161,6 +152,7 @@ ohos_unittest("album_data_handler_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
@@ -194,16 +186,6 @@ ohos_unittest("album_data_handler_test") {
     "${media_library_path}/frameworks/utils/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
@@ -279,6 +261,7 @@ ohos_unittest("data_sync_manager_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
@@ -312,16 +295,6 @@ ohos_unittest("data_sync_manager_test") {
     "${media_library_path}/frameworks/utils/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
@@ -394,6 +367,7 @@ ohos_unittest("data_handler_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
@@ -428,16 +402,6 @@ ohos_unittest("data_handler_test") {
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
@@ -553,6 +517,7 @@ ohos_unittest("file_data_handler_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
@@ -571,16 +536,6 @@ ohos_unittest("file_data_handler_test") {
     "${media_library_path}/frameworks/utils/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
@@ -634,6 +589,7 @@ ohos_unittest("gallery_data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
@@ -667,16 +623,6 @@ ohos_unittest("gallery_data_syncer_test") {
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
@@ -756,6 +702,7 @@ ohos_unittest("data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/sync_rule/screen_status.cpp",
@@ -788,16 +735,6 @@ ohos_unittest("data_syncer_test") {
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
@@ -862,6 +799,7 @@ ohos_unittest("file_data_convertor_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
@@ -894,16 +832,6 @@ ohos_unittest("file_data_convertor_test") {
     "${media_library_path}/frameworks/utils/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
@@ -976,6 +904,7 @@ ohos_unittest("sdk_helper_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
@@ -1013,16 +942,6 @@ ohos_unittest("sdk_helper_test") {
     "${media_library_path}/frameworks/utils/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
@@ -1095,6 +1014,7 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
@@ -1132,16 +1052,6 @@ ohos_unittest("sdk_helper_unnormal_test") {
     "${media_library_path}/frameworks/utils/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
@@ -1252,6 +1162,7 @@ ohos_unittest("task_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sdk_helper.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
@@ -1289,16 +1200,6 @@ ohos_unittest("task_test") {
     "${media_library_path}/frameworks/utils/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
@@ -1370,6 +1271,7 @@ ohos_unittest("cloud_disk_data_syncer_test") {
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
+    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_rdb_utils.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
     "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
@@ -1433,16 +1335,6 @@ ohos_unittest("cloud_disk_data_syncer_test") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
@@ -1519,11 +1411,6 @@ ohos_unittest("cloud_disk_data_handler_test") {
 
   gallery_data_sync = [ "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp" ]
 
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
   sources = [
     "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
     "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
@@ -1559,7 +1446,6 @@ ohos_unittest("cloud_disk_data_handler_test") {
 
   sources += data_sync
   sources += gallery_data_sync
-  sources += medialibrary_rdb_utils_source
 
   include_dirs = [
     "${services_path}/cloudsyncservice/include",
@@ -1583,10 +1469,6 @@ ohos_unittest("cloud_disk_data_handler_test") {
     "${media_library_path}/frameworks/utils/include",
     "//third_party/e2fsprogs/e2fsprogs/lib",
   ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  include_dirs += medialibrary_rdb_utils_include
 
   resource_config_file =
       "${distributedfile_path}/test/unittests/resource/ohos_test.xml"

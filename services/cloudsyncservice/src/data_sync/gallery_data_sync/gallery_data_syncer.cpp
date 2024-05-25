@@ -18,7 +18,6 @@
 #include "data_syncer.h"
 #include "dfs_error.h"
 #include "dfsu_timer.h"
-#include "medialibrary_rdb_utils.h"
 #include "parameters.h"
 #include "sync_rule/network_status.h"
 #include "sync_rule/screen_status.h"

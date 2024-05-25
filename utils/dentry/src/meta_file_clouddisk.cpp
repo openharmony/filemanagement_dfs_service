@@ -21,6 +21,7 @@
 #include <sstream>
 #include <sys/stat.h>
 
+#include "cloud_file_utils.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
 #include "file_utils.h"
@@ -45,9 +46,6 @@ constexpr uint32_t BITS_PER_BYTE = 8;
 constexpr uint32_t HMDFS_SLOT_LEN_BITS = 3;
 constexpr uint64_t DELTA = 0x9E3779B9; /* Hashing code copied from f2fs */
 constexpr uint64_t HMDFS_HASH_COL_BIT = (0x1ULL) << 63;
-constexpr uint32_t CLOUD_ID_BUCKET_MAX_SIZE = 32;
-constexpr uint32_t CLOUD_ID_BUCKET_MID_TIMES = 2;
-constexpr uint32_t CLOUD_ID_MIN_SIZE = 3;
 constexpr uint32_t FILE_TYPE_OFFSET = 2;
 
 #pragma pack(push, 1)
@@ -106,25 +104,13 @@ uint8_t MetaHelper::GetPosition(const struct HmdfsDentry *de)
     return de->flags & 0x3;
 }
 
-static uint32_t GetBucketId(std::string cloudId)
-{
-    size_t size = cloudId.size();
-    if (size < CLOUD_ID_MIN_SIZE) {
-        return 0;
-    }
-
-    char first = cloudId[0];
-    char last = cloudId[size - 1];
-    char middle = cloudId[size / CLOUD_ID_BUCKET_MID_TIMES];
-    return (first + last + middle) % CLOUD_ID_BUCKET_MAX_SIZE;
-}
-
 static std::string GetCloudDiskDentryFileByPath(uint32_t userId, const std::string &bundleName,
     const std::string &cloudId)
 {
     std::string cacheDir =
         "/data/service/el2/" + std::to_string(userId) +
-        "/hmdfs/cloud/data/" + bundleName + "/" + std::to_string(GetBucketId(cloudId)) + "/";
+        "/hmdfs/cloud/data/" + bundleName + "/" +
+        std::to_string(CloudDisk::CloudFileUtils::GetBucketId(cloudId)) + "/";
     std::string dentryFileName = MetaFileMgr::GetInstance().CloudIdToRecordId(cloudId);
     ForceCreateDirectory(cacheDir);
     return cacheDir + dentryFileName;
@@ -738,6 +724,12 @@ void MetaFileMgr::Clear(const std::string &cloudId)
     cloudDiskMetaFile_.erase(cloudId);
 }
 
+void MetaFileMgr::CloudDiskClearAll()
+{
+    std::lock_guard<std::mutex> lock(cloudDiskMutex_);
+    cloudDiskMetaFile_.clear();
+}
+
 std::shared_ptr<CloudDiskMetaFile> MetaFileMgr::GetCloudDiskMetaFile(uint32_t userId, const std::string &bundleName,
     const std::string &cloudId)
 {
@@ -750,6 +742,23 @@ std::shared_ptr<CloudDiskMetaFile> MetaFileMgr::GetCloudDiskMetaFile(uint32_t us
         cloudDiskMetaFile_[cloudId] = mFile;
     }
     return mFile;
+}
+
+int32_t MetaFileMgr::CreateRecycleDentry(uint32_t userId, const std::string &bundleName)
+{
+    MetaBase metaBase(RECYCLE_NAME);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, ROOT_CLOUD_ID);
+    int32_t ret = metaFile->DoLookup(metaBase);
+    if (ret != 0) {
+        metaBase.cloudId = RECYCLE_CLOUD_ID;
+        metaBase.mode = S_IFDIR | STAT_MODE_DIR;
+        metaBase.position = static_cast<uint8_t>(LOCAL);
+        ret = metaFile->DoCreate(metaBase);
+        if (ret != 0) {
+            return ret;
+        }
+    }
+    return 0;
 }
 
 int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName, const std::string &name,

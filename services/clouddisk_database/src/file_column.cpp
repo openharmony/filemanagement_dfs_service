@@ -41,7 +41,7 @@ const std::string FileColumn::FILE_CATEGORY = "file_category";
 const std::string FileColumn::IS_FAVORITE = "isFavorite";
 const std::string FileColumn::FILE_STATUS = "file_status";
 const std::string FileColumn::ROW_ID = "rowid";
-
+const std::string FileColumn::CHECK_FLAG = "check_flag";
 const std::string FileColumn::FILES_TABLE = "CloudDisk";
 const std::string FileColumn::PARENT_CLOUD_ID_INDEX = "parentCloudId_index";
 
@@ -68,7 +68,8 @@ const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " 
     FILE_TYPE + " INT, " +
     FILE_CATEGORY + " TEXT, " +
     IS_FAVORITE + " INT DEFAULT 0, " +
-    FILE_STATUS + " INT DEFAULT 4)";
+    FILE_STATUS + " INT DEFAULT 4, " +
+    CHECK_FLAG + " INT DEFAULT 0)";
 
 const std::string FileColumn::CREATE_PARENT_CLOUD_ID_INDEX = "CREATE INDEX IF NOT EXISTS " +
     PARENT_CLOUD_ID_INDEX + " ON " + FILES_TABLE +
@@ -82,6 +83,9 @@ const std::string FileColumn::ADD_FILE_STATUS = "ALTER Table " + FILES_TABLE +
 
 const std::string FileColumn::SET_FILE_STATUS_DEFAULT = "UPDATE " + FILES_TABLE +
     " SET " + FILE_STATUS + " = 4 WHERE " + FILE_STATUS + " IS NULL";
+
+const std::string FileColumn::ADD_CHECK_FLAG = "ALTER Table " + FILES_TABLE +
+    " ADD COLUMN " + CHECK_FLAG + " INT DEFAULT 0";
 
 const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
     FILE_NAME,
@@ -120,6 +124,7 @@ const std::vector<std::string> FileColumn::LOCAL_COLUMNS = {
 const std::vector<std::string> FileColumn::PULL_QUERY_COLUMNS = {
     CLOUD_ID, FILE_TIME_RECYCLED, VERSION, DIRTY_TYPE, POSITION,
     FILE_TIME_EDITED, FILE_SHA256, FILE_SIZE, FILE_NAME, PARENT_CLOUD_ID, ROW_ID,
+    IS_DIRECTORY, FILE_TIME_ADDED, FILE_TYPE,
 };
 
 const std::vector<std::string> FileColumn::DISK_ON_UPLOAD_COLUMNS = {

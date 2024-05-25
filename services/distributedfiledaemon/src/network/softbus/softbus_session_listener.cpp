@@ -110,8 +110,10 @@ void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo i
     ret = ::SendFile(sessionId, src, dst, static_cast<uint32_t>(fileList.size()));
     if (ret != E_OK) {
         LOGE("SendFile failed, sessionId = %{public}d", sessionId);
-        SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
+        RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_FAIL);
     }
+    SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
+    RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_SUCCESS);
 }
 
 void SoftBusSessionListener::OnSessionClosed(int32_t sessionId, ShutdownReason reason)

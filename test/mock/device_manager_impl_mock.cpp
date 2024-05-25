@@ -14,12 +14,14 @@
  */
 
 #include "device_manager_impl.h"
+#include "device_manager_impl_mock.h"
 #include "dm_constants.h"
 
 #include "gtest/gtest.h"
 
 namespace OHOS {
 namespace DistributedHardware {
+using namespace OHOS::Storage::DistributedFile;
 const std::string NETWORKID_ONE = "45656596896323231";
 const std::string NETWORKID_TWO = "45656596896323232";
 const std::string NETWORKID_THREE = "45656596896323233";
@@ -34,22 +36,26 @@ DeviceManagerImpl &DeviceManagerImpl::GetInstance()
 
 int32_t DeviceManagerImpl::InitDeviceManager(const std::string &pkgName, std::shared_ptr<DmInitCallback> dmInitCallback)
 {
-    return 0;
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->InitDeviceManager(pkgName, dmInitCallback);
 }
 
 int32_t DeviceManagerImpl::UnInitDeviceManager(const std::string &pkgName)
 {
-    return 0;
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->UnInitDeviceManager(pkgName);
 }
 
 int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName,
                                                 const std::string &extra,
                                                 std::vector<DmDeviceInfo> &deviceList)
 {
-    GTEST_LOG_(INFO) << "GetTrustedDeviceList start";
-    DmDeviceInfo deviceInfo{};
+    DmDeviceInfo deviceInfo{
+        .deviceId = "testdevid",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+        .networkId = "testNetWork",
+    };
     deviceList.push_back(deviceInfo);
-    return 0;
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->GetTrustedDeviceList(pkgName, extra, deviceList);
 }
 
 int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName,
@@ -82,7 +88,7 @@ int32_t DeviceManagerImpl::RegisterDevStateCallback(const std::string &pkgName,
                                                     const std::string &extra,
                                                     std::shared_ptr<DeviceStateCallback> callback)
 {
-    return 0;
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->RegisterDevStateCallback(pkgName, extra, callback);
 }
 
 int32_t DeviceManagerImpl::RegisterDevStatusCallback(const std::string &pkgName,
@@ -94,7 +100,7 @@ int32_t DeviceManagerImpl::RegisterDevStatusCallback(const std::string &pkgName,
 
 int32_t DeviceManagerImpl::UnRegisterDevStateCallback(const std::string &pkgName)
 {
-    return 0;
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->UnRegisterDevStateCallback(pkgName);
 }
 
 int32_t DeviceManagerImpl::UnRegisterDevStatusCallback(const std::string &pkgName)

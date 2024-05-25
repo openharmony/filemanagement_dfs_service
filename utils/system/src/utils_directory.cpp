@@ -21,7 +21,9 @@
 #include <system_error>
 #include <unistd.h>
 
+#include "dfs_error.h"
 #include "directory_ex.h"
+#include "hisysevent.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -52,6 +54,125 @@ std::string GetAnonyString(const std::string &value)
         res.append(value, strLen - plaintextLength, plaintextLength);
     }
     return res;
+}
+
+void SysEventWrite(string &uid)
+{
+    if (uid.empty()) {
+        LOGE("uid is empty.");
+        return;
+    }
+    int32_t ret = DEMO_SYNC_SYS_EVENT("PERMISSION_EXCEPTION",
+        HiviewDFX::HiSysEvent::EventType::SECURITY,
+        "CALLER_UID", uid,
+        "PERMISSION_NAME", "account");
+    if (ret != ERR_OK) {
+        LOGE("report PERMISSION_EXCEPTION error %{public}d", ret);
+    }
+}
+
+void SysEventFileParse(int64_t maxTime)
+{
+    int32_t ret = DEMO_SYNC_SYS_EVENT("INDEX_FILE_PARSE",
+        HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        "MAX_TIME", maxTime);
+    if (ret != ERR_OK) {
+        LOGE("report INDEX_FILE_PARSE error %{public}d", ret);
+    }
+}
+
+void RadarDotsReportOpenSession(struct RadarInfo &info)
+{
+    int32_t res = ERR_OK;
+    if (info.state == StageRes::STAGE_SUCCESS) {
+        res = DEMO_SYNC_SYS_EVENT(DISTRIBUTEDFILE_CONNECT_BEHAVIOR,
+            HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+            "ORG_PKG", ORGPKGNAME,
+            "TO_CALL_PKG", SOFTBUSNAME,
+            "FUNC", info.funcName,
+            "BIZ_SCENE", static_cast<int32_t>(BizScene::DFS_CONNECT),
+            "BIZ_STAGE", static_cast<int32_t>(BizStage::DFS_OPEN_SESSION),
+            "BIZ_STATE", static_cast<int32_t>(BizState::BIZ_STATE_START),
+            "STAGE_RES", static_cast<int32_t>(StageRes::STAGE_SUCCESS),
+            "LOCAL_SESS_NAME", info.localSessionName,
+            "PEER_SESS_NAME", info.peerSessionName);
+    } else {
+        res = DEMO_SYNC_SYS_EVENT(DISTRIBUTEDFILE_CONNECT_BEHAVIOR,
+            HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+            "ORG_PKG", ORGPKGNAME,
+            "TO_CALL_PKG", SOFTBUSNAME,
+            "FUNC", info.funcName,
+            "BIZ_SCENE", static_cast<int32_t>(BizScene::DFS_CONNECT),
+            "BIZ_STAGE", static_cast<int32_t>(BizStage::DFS_OPEN_SESSION),
+            "BIZ_STATE", static_cast<int32_t>(BizState::BIZ_STATE_END),
+            "STAGE_RES", static_cast<int32_t>(StageRes::STAGE_FAIL),
+            "LOCAL_SESS_NAME", info.localSessionName,
+            "PEER_SESS_NAME", info.peerSessionName,
+            "ERROR_CODE", std::abs(info.errCode));
+    }
+    if (res != ERR_OK) {
+        LOGE("report RadarDotsReportOpenSession error %{public}d", res);
+    }
+}
+
+void RadarDotsOpenSession(const std::string funcName, const std::string &sessionName,
+    const std::string &peerSssionName, int32_t errCode, StageRes state)
+{
+    struct RadarInfo info = {
+        .funcName = funcName,
+        .localSessionName = sessionName,
+        .peerSessionName = peerSssionName,
+        .errCode = errCode,
+        .state = state,
+    };
+    RadarDotsReportOpenSession(info);
+}
+
+void RadarDotsReportSendFile(struct RadarInfo &info)
+{
+    int32_t res = ERR_OK;
+    if (info.state == StageRes::STAGE_SUCCESS) {
+        res = DEMO_SYNC_SYS_EVENT(DISTRIBUTEDFILE_CONNECT_BEHAVIOR,
+            HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+            "ORG_PKG", ORGPKGNAME,
+            "TO_CALL_PKG", SOFTBUSNAME,
+            "FUNC", info.funcName,
+            "BIZ_SCENE", static_cast<int32_t>(BizScene::DFS_CONNECT),
+            "BIZ_STAGE", static_cast<int32_t>(BizStage::DFS_SENDFILE),
+            "BIZ_STATE", static_cast<int32_t>(BizState::BIZ_STATE_END),
+            "STAGE_RES", static_cast<int32_t>(StageRes::STAGE_SUCCESS),
+            "LOCAL_SESS_NAME", info.localSessionName,
+            "PEER_SESS_NAME", info.peerSessionName);
+    } else {
+        res = DEMO_SYNC_SYS_EVENT(DISTRIBUTEDFILE_CONNECT_BEHAVIOR,
+            HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+            "ORG_PKG", ORGPKGNAME,
+            "TO_CALL_PKG", SOFTBUSNAME,
+            "FUNC", info.funcName,
+            "BIZ_SCENE", static_cast<int32_t>(BizScene::DFS_CONNECT),
+            "BIZ_STAGE", static_cast<int32_t>(BizStage::DFS_SENDFILE),
+            "BIZ_STATE", static_cast<int32_t>(BizState::BIZ_STATE_END),
+            "STAGE_RES", static_cast<int32_t>(StageRes::STAGE_FAIL),
+            "LOCAL_SESS_NAME", info.localSessionName,
+            "PEER_SESS_NAME", info.peerSessionName,
+            "ERROR_CODE", std::abs(info.errCode));
+    }
+    if (res != ERR_OK) {
+        LOGE("report RadarDotsReportSendFile error %{public}d", res);
+    }
+}
+
+void RadarDotsSendFile(const std::string funcName, const std::string &sessionName,
+    const std::string &peerSssionName, int32_t errCode, StageRes state)
+{
+    struct RadarInfo info = {
+        .funcName = funcName,
+        .localSessionName = sessionName,
+        .peerSessionName = peerSssionName,
+        .errCode = errCode,
+        .state = state,
+    };
+    RadarDotsReportSendFile(info);
 }
 
 void ForceCreateDirectory(const string &path, function<void(const string &)> onSubDirCreated)

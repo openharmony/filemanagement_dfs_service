@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "cloud_file_utils.h"
+#include <ctime>
 #include <fcntl.h>
 #include <filesystem>
 #include <sys/xattr.h>
@@ -30,6 +31,8 @@ namespace {
     static const uint32_t CLOUD_ID_MIN_SIZE = 3;
     static const uint32_t CLOUD_ID_BUCKET_MID_TIMES = 2;
     static const uint32_t CLOUD_ID_BUCKET_MAX_SIZE = 32;
+    static const int64_t SECOND_TO_MILLISECOND = 1e3;
+    static const int64_t MILLISECOND_TO_NANOSECOND = 1e6;
 }
 
 constexpr unsigned HMDFS_IOC = 0xf2;
@@ -37,7 +40,7 @@ constexpr unsigned WRITEOPEN_CMD = 0x02;
 #define HMDFS_IOC_GET_WRITEOPEN_CNT _IOR(HMDFS_IOC, WRITEOPEN_CMD, uint32_t)
 const string CloudFileUtils::TMP_SUFFIX = ".temp.download";
 
-static uint32_t GetBucketId(string cloudId)
+uint32_t CloudFileUtils::GetBucketId(string cloudId)
 {
     size_t size = cloudId.size();
     if (size < CLOUD_ID_MIN_SIZE) {
@@ -48,6 +51,11 @@ static uint32_t GetBucketId(string cloudId)
     char last = cloudId[size - 1];
     char middle = cloudId[size / CLOUD_ID_BUCKET_MID_TIMES];
     return (first + last + middle) % CLOUD_ID_BUCKET_MAX_SIZE;
+}
+
+int64_t CloudFileUtils::Timespec2Milliseconds(const struct timespec &time)
+{
+    return time.tv_sec * SECOND_TO_MILLISECOND + time.tv_nsec / MILLISECOND_TO_NANOSECOND;
 }
 
 string CloudFileUtils::GetLocalBucketPath(string cloudId, string bundleName, int32_t userId)

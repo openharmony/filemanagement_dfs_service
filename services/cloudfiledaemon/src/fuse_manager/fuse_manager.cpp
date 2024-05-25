@@ -335,6 +335,11 @@ static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
 
     LOGD("getattr, %s", CloudPath(data, ino).c_str());
     shared_ptr<CloudInode> node = GetCloudInode(data, ino);
+    if (!node || !node->mBase) {
+        LOGE("Failed to get cloud inode.");
+        fuse_reply_err(req, ENOMEM);
+        return;
+    }
     GetMetaAttr(data, node, &buf);
 
     fuse_reply_attr(req, &buf, 0);
@@ -379,41 +384,40 @@ static void fuse_inval(fuse_session *se, fuse_ino_t parentIno, fuse_ino_t childI
     }
 }
 
-static int RestoreTmpFile(const string &localPath, const string &tmpPath)
-{
-    if (rename(localPath.c_str(), tmpPath.c_str()) < 0) {
-        LOGE("Failed to restore tmppath, errno: %{public}d", errno);
-        return -errno;
-    }
-    return 0;
-}
-
 static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
 {
     string localPath = GetLocalPath(data->userId, cInode->path);
     string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
-    filesystem::path parentPath = filesystem::path(localPath).parent_path();
-    ForceCreateDirectory(parentPath.string());
-    if (rename(tmpPath.c_str(), localPath.c_str()) < 0) {
-        LOGE("Failed to rename tmpPath to localPath, errno: %{public}d", errno);
-        return 0;
-    }
     char resolvedPath[PATH_MAX] = {'\0'};
-    char *realPath = realpath(localPath.c_str(), resolvedPath);
+    char *realPath = realpath(tmpPath.c_str(), resolvedPath);
     if (realPath == nullptr) {
         LOGE("Failed to realpath, errno: %{public}d", errno);
-        return RestoreTmpFile(localPath, tmpPath);
+        return 0;
     }
     unsigned int flags = static_cast<unsigned int>(fi->flags);
     if (flags & O_DIRECT) {
         flags &= ~O_DIRECT;
     }
-    auto fd = open(realPath, fi->flags);
+    auto fd = open(realPath, flags);
     if (fd < 0) {
         LOGE("Failed to open local file, errno: %{public}d", errno);
-        return RestoreTmpFile(localPath, tmpPath);
+        return 0;
     }
     fi->fh = static_cast<uint64_t>(fd);
+    string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
+    if (remove(cloudMergeViewPath.c_str()) < 0) {
+        LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
+        close(fd);
+        return 0;
+    }
+
+    filesystem::path parentPath = filesystem::path(localPath).parent_path();
+    ForceCreateDirectory(parentPath.string());
+    if (rename(tmpPath.c_str(), localPath.c_str()) < 0) {
+        LOGE("Failed to rename tmpPath to localPath, errno: %{public}d", errno);
+        close(fd);
+        return -errno;
+    }
     MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
     cInode->mBase->hasDownloaded = true;
     return 0;
@@ -575,16 +579,16 @@ static void CloudReadOnCloudFile(shared_ptr<ReadArguments> readArgs, shared_ptr<
     return;
 }
 
-static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t oldSize,
+static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t size,
     off_t off, struct fuse_file_info *fi)
 {
-    auto readSize = pread(fi->fh, buf.get(), oldSize, off);
+    auto readSize = pread(fi->fh, buf.get(), size, off);
     if (readSize < 0) {
         LOGE("Failed to read local file, errno: %{public}d", errno);
         fuse_reply_err(req, errno);
         return;
     }
-    fuse_reply_buf(req, buf.get(), min(oldSize, static_cast<size_t>(readSize)));
+    fuse_reply_buf(req, buf.get(), min(size, static_cast<size_t>(readSize)));
     return;
 }
 
@@ -597,8 +601,8 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     LOGI("%{public}s, size=%{public}zd, off=%{public}lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
     auto dkReadSession = cInode->readSession;
-    size_t oldSize = size;
-    if (size == KEY_FRAME_SIZE) {
+    size_t originalSize = size;
+    if (size <= MAX_READ_SIZE) {
         if (off <= cInode->offset || off >= cInode->offset + MAX_READ_SIZE - size) {
             size = MAX_READ_SIZE;
             cInode->offset = off;
@@ -608,10 +612,10 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         return;
     }
     if (cInode->mBase->hasDownloaded) {
-        CloudReadOnLocalFile(req, buf, oldSize, off, fi);
+        CloudReadOnLocalFile(req, buf, originalSize, off, fi);
         return;
     }
-    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(oldSize, off);
+    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(size, off);
     ffrt::thread(CloudReadOnCloudFile, readArgs, buf, cInode, dkReadSession).detach();
     unique_lock lck(cInode->readLock);
     auto waitStatus = readArgs->cond->wait_for(lck, READ_TIMEOUT_S, [readArgs] {
@@ -634,7 +638,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         return;
     }
     LOGD("read success");
-    fuse_reply_buf(req, buf.get(), min(oldSize, static_cast<size_t>(*readArgs->readResult)));
+    fuse_reply_buf(req, buf.get(), min(originalSize, static_cast<size_t>(*readArgs->readResult)));
 }
 
 static const struct fuse_lowlevel_ops cloudDiskFuseOps = {

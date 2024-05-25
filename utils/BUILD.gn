@@ -106,6 +106,7 @@ ohos_shared_library("libdistributedfileutils") {
     "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "napi:ace_napi",
     "preferences:native_preferences",
@@ -136,6 +137,7 @@ ohos_shared_library("libdistributedfiledentry") {
     debug = false
   }
   include_dirs = [
+    "cloud_disk/include",
     "dentry/include",
     "log/include",
   ]
@@ -152,6 +154,7 @@ ohos_shared_library("libdistributedfiledentry") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
   ]
 
   defines = [
@@ -210,6 +213,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
     "c_utils:utils",
     "c_utils:utilsbase",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
   ]
 
   if (use_musl) {

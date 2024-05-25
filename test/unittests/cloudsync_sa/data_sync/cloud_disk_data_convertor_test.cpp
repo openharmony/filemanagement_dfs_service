@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
+#include "abs_shared_result_set_mock.h"
 #include "cloud_disk_data_convertor.h"
 #include "cloud_disk_data_handler.h"
 #include "clouddisk_rdbstore.h"
@@ -72,8 +73,7 @@ HWTEST_F(CloudDiskDataConvertorTest, Convert001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         localConvertor->SetRootId(bundName);
         int res = localConvertor->Convert(record, values);
         EXPECT_EQ(res, E_OK);
@@ -254,8 +254,7 @@ HWTEST_F(CloudDiskDataConvertorTest, FillRecordId001, TestSize.Level1)
         string bundName = "com.ohos.photos";
         DriveKit::DKRecord record;
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         int32_t res = localConvertor->FillRecordId(record, *resultSet);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
@@ -264,6 +263,31 @@ HWTEST_F(CloudDiskDataConvertorTest, FillRecordId001, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "FillRecordId001 End";
+}
+
+/**
+ * @tc.name: FillRecordId002s
+ * @tc.desc: Verify the FillRecordId function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, FillRecordId002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FillRecordId002 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->FillRecordId(record, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FillRecordId002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "FillRecordId002 End";
 }
 
 /**
@@ -279,8 +303,7 @@ HWTEST_F(CloudDiskDataConvertorTest, FillCreatedTime001, TestSize.Level1)
         string bundName = "com.ohos.photos";
         DriveKit::DKRecord record;
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         int32_t res = localConvertor->FillCreatedTime(record, *resultSet);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
@@ -318,6 +341,31 @@ HWTEST_F(CloudDiskDataConvertorTest, FillCreatedTime002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: FillCreatedTime003
+ * @tc.desc: Verify the FillCreatedTime function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, FillCreatedTime003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FillCreatedTime003 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->FillCreatedTime(record, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FillCreatedTime003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "FillCreatedTime003 End";
+}
+
+/**
  * @tc.name: FillMetaEditedTime001
  * @tc.desc: Verify the FillMetaEditedTime function
  * @tc.type: FUNC
@@ -330,8 +378,7 @@ HWTEST_F(CloudDiskDataConvertorTest, FillMetaEditedTime001, TestSize.Level1)
         string bundName = "com.ohos.photos";
         DriveKit::DKRecord record;
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         int32_t res = localConvertor->FillMetaEditedTime(record, *resultSet);
         EXPECT_EQ(res, E_OK);
         GTEST_LOG_(INFO) << "FillMetaEditedTime001, zqw record edit time is " << record.GetEditedTime();
@@ -370,6 +417,31 @@ HWTEST_F(CloudDiskDataConvertorTest, FillMetaEditedTime002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: FillMetaEditedTime003
+ * @tc.desc: Verify the FillMetaEditedTime function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, FillMetaEditedTime003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FillMetaEditedTime003 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->FillMetaEditedTime(record, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FillMetaEditedTime003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "FillMetaEditedTime003 End";
+}
+
+/**
  * @tc.name: FillVersion001
  * @tc.desc: Verify the FillVersion function
  * @tc.type: FUNC
@@ -382,8 +454,7 @@ HWTEST_F(CloudDiskDataConvertorTest, FillVersion001, TestSize.Level1)
         string bundName = "com.ohos.photos";
         DriveKit::DKRecord record;
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         int32_t res = localConvertor->FillVersion(record, *resultSet);
         EXPECT_EQ(res, E_OK);
         GTEST_LOG_(INFO) << "FillVersion001, zqw record version is " << record.GetVersion();
@@ -393,6 +464,31 @@ HWTEST_F(CloudDiskDataConvertorTest, FillVersion001, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "FillVersion001 End";
+}
+
+/**
+ * @tc.name: FillVersion002
+ * @tc.desc: Verify the FillVersion function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, FillVersion002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FillVersion002 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->FillVersion(record, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "FillVersion002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "FillVersion002 End";
 }
 
 /**
@@ -410,8 +506,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractCompatibleValue001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         int32_t res = localConvertor->ExtractCompatibleValue(record, data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
@@ -438,8 +533,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractCompatibleValue002, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         int32_t res = localConvertor->ExtractCompatibleValue(record, data, values);
         EXPECT_EQ(res, E_OK);
         EXPECT_TRUE(record.GetIsDelete());
@@ -466,8 +560,7 @@ HWTEST_F(CloudDiskDataConvertorTest, CompensateAttributes001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         int32_t res = localConvertor->CompensateAttributes(data, record, values);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
@@ -494,8 +587,7 @@ HWTEST_F(CloudDiskDataConvertorTest, CompensateAttributes002, TestSize.Level1)
         data.emplace(DK_FILE_ATTRIBUTES, DriveKit::DKRecordField("DKRecordFieldTest"));
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         int32_t res = localConvertor->CompensateAttributes(data, record, values);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
@@ -525,8 +617,7 @@ HWTEST_F(CloudDiskDataConvertorTest, CompensateAttributes003, TestSize.Level1)
         data.emplace(DK_META_TIME_EDITED, DriveKit::DKRecordField(1));
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         int32_t res = localConvertor->CompensateAttributes(data, record, values);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
@@ -550,8 +641,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractCloudId001, TestSize.Level1)
         string bundName = "com.ohos.photos";
         DriveKit::DKRecord record;
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractCloudId(record, values);
         EXPECT_EQ(res, E_OK);
@@ -578,8 +668,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileName001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractFileName(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -607,8 +696,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileName002, TestSize.Level1)
         data.emplace(DK_FILE_NAME, DriveKit::DKRecordField("1.txt"));
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractFileName(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -636,8 +724,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileName003, TestSize.Level1)
         data.emplace(DK_FILE_NAME, DriveKit::DKRecordField("testFile"));
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractFileName(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -664,8 +751,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileParentCloudId001, TestSize.Level
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractFileParentCloudId(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -693,8 +779,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileParentCloudId002, TestSize.Level
         record.GetRecordData(data);
         data.emplace(DK_PARENT_CLOUD_ID, DriveKit::DKRecordField("parentFolder"));
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractFileParentCloudId(data, values);
         EXPECT_EQ(res, E_OK);
@@ -722,8 +807,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileParentCloudId003, TestSize.Level
         data.emplace(DK_PARENT_CLOUD_ID, DriveKit::DKRecordField(1));
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractFileParentCloudId(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -750,8 +834,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileSize001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractFileSize(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -779,8 +862,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileSize002, TestSize.Level1)
         data.emplace(DK_FILE_SIZE, DriveKit::DKRecordField("test"));
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractFileSize(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -808,8 +890,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileSize003, TestSize.Level1)
         data.emplace(DK_FILE_SIZE, DriveKit::DKRecordField(1));
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractFileSize(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -836,8 +917,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractSha256001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractSha256(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -865,8 +945,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractSha256002, TestSize.Level1)
         data.emplace(DK_FILE_SHA256, DriveKit::DKRecordField(1));
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractSha256(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -894,8 +973,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractSha256003, TestSize.Level1)
         data.emplace(DK_FILE_SHA256, DriveKit::DKRecordField("sha256"));
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractSha256(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -922,8 +1000,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileTimeRecycled001, TestSize.Level1
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractFileTimeRecycled(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -951,8 +1028,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileTimeRecycled002, TestSize.Level1
 
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         data.emplace(DK_IS_RECYCLED, DriveKit::DKRecordField(false));
         int32_t res = localConvertor->ExtractFileTimeRecycled(data, values);
         EXPECT_EQ(res, E_OK);
@@ -980,8 +1056,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileTimeRecycled003, TestSize.Level1
 
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         data.emplace(DK_FILE_TIME_RECYCLED, DriveKit::DKRecordField(false));
         int32_t res = localConvertor->ExtractFileTimeRecycled(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -1009,8 +1084,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractFileTimeRecycled004, TestSize.Level1
 
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         data.emplace(DK_IS_RECYCLED, DriveKit::DKRecordField(true));
         data.emplace(DK_FILE_TIME_RECYCLED, DriveKit::DKRecordField(true));
         int32_t res = localConvertor->ExtractFileTimeRecycled(data, values);
@@ -1038,8 +1112,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractDirectlyRecycled001, TestSize.Level1
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractDirectlyRecycled(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -1067,8 +1140,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractDirectlyRecycled002, TestSize.Level1
         data.emplace(DK_DIRECTLY_RECYCLED, DriveKit::DKRecordField(false));
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractDirectlyRecycled(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -1096,8 +1168,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractDirectlyRecycled003, TestSize.Level1
         data.emplace(DK_DIRECTLY_RECYCLED, DriveKit::DKRecordField(true));
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractDirectlyRecycled(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -1124,8 +1195,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractIsDirectory001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractIsDirectory(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -1153,8 +1223,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractIsDirectory002, TestSize.Level1)
         data.emplace(DK_IS_DIRECTORY, "dir");
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractIsDirectory(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -1182,8 +1251,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractIsDirectory003, TestSize.Level1)
         data.emplace(DK_IS_DIRECTORY, "file");
         record.GetRecordData(data);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractIsDirectory(data, values);
         EXPECT_EQ(res, E_INVAL_ARG);
@@ -1208,8 +1276,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractVersion001, TestSize.Level1)
         string bundName = "com.ohos.photos";
         DriveKit::DKRecord record;
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractVersion(record, values);
         EXPECT_EQ(res, E_OK);
@@ -1236,8 +1303,7 @@ HWTEST_F(CloudDiskDataConvertorTest, ExtractVersion002, TestSize.Level1)
         DriveKit::DKRecord record;
         record.SetVersion(1);
         NativeRdb::ValuesBucket values;
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->ExtractVersion(record, values);
         EXPECT_EQ(res, E_OK);
@@ -1265,8 +1331,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleFileName001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->HandleFileName(data, *resultSet);
         EXPECT_EQ(res, E_OK);
@@ -1309,6 +1374,33 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleFileName002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: HandleFileName003
+ * @tc.desc: Verify the HandleFileName function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleFileName003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleFileName003 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        record.GetRecordData(data);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->HandleFileName(data, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleFileName003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleFileName003 End";
+}
+
+/**
  * @tc.name: HandleParentId001
  * @tc.desc: Verify the HandleParentId function
  * @tc.type: FUNC
@@ -1323,8 +1415,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleParentId001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->HandleParentId(data, *resultSet);
         EXPECT_EQ(res, E_OK);
@@ -1367,6 +1458,33 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleParentId002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: HandleParentId003
+ * @tc.desc: Verify the HandleParentId function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleParentId003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleParentId003 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        record.GetRecordData(data);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetString(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->HandleParentId(data, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleParentId003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleParentId003 End";
+}
+
+/**
  * @tc.name: HandleDirectlyRecycled001
  * @tc.desc: Verify the HandleDirectlyRecycled function
  * @tc.type: FUNC
@@ -1381,8 +1499,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleDirectlyRecycled001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->HandleDirectlyRecycled(data, *resultSet);
         EXPECT_EQ(res, E_OK);
@@ -1425,6 +1542,33 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleDirectlyRecycled002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: HandleDirectlyRecycled003
+ * @tc.desc: Verify the HandleDirectlyRecycled function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleDirectlyRecycled003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleDirectlyRecycled003 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        record.GetRecordData(data);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->HandleDirectlyRecycled(data, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleDirectlyRecycled003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleDirectlyRecycled003 End";
+}
+
+/**
  * @tc.name: HandleRecycleTime001
  * @tc.desc: Verify the HandleRecycleTime function
  * @tc.type: FUNC
@@ -1439,8 +1583,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleRecycleTime001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->HandleRecycleTime(data, *resultSet);
         EXPECT_EQ(res, E_OK);
@@ -1483,6 +1626,33 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleRecycleTime002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: HandleRecycleTime003
+ * @tc.desc: Verify the HandleRecycleTime function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleRecycleTime003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleRecycleTime003 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        record.GetRecordData(data);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->HandleRecycleTime(data, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleRecycleTime003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleRecycleTime003 End";
+}
+
+/**
  * @tc.name: HandleType001
  * @tc.desc: Verify the HandleType function
  * @tc.type: FUNC
@@ -1497,8 +1667,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleType001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->HandleType(data, *resultSet);
         EXPECT_EQ(res, E_OK);
@@ -1509,6 +1678,33 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleType001, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "HandleType001 End";
+}
+
+/**
+ * @tc.name: HandleType002
+ * @tc.desc: Verify the HandleType function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleType002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleType002 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        record.GetRecordData(data);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetInt(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->HandleType(data, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleType002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleType002 End";
 }
 
 /**
@@ -1526,8 +1722,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleOperateType001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->HandleOperateType(data, *resultSet);
         EXPECT_EQ(res, E_OK);
@@ -1570,6 +1765,117 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleOperateType002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: HandleOperateType003
+ * @tc.desc: Verify the HandleOperateType function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleOperateType003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleOperateType003 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        record.GetRecordData(data);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->HandleOperateType(data, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleOperateType003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleOperateType003 End";
+}
+
+/**
+ * @tc.name: HandleFileSize001
+ * @tc.desc: Verify the HandleFileSize function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleFileSize001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleFileSize001 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        record.GetRecordData(data);
+        unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+
+        int32_t res = localConvertor->HandleFileSize(data, *resultSet);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(data.size(), 1);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleFileSize001 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleFileSize001 End";
+}
+
+/**
+ * @tc.name: HandleFileSize002
+ * @tc.desc: Verify the HandleFileSize function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleFileSize002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleFileSize002 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        record.GetRecordData(data);
+        unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
+        shared_ptr<CloudDiskDataConvertor> localConvertor =
+            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DELETE);
+
+        int32_t res = localConvertor->HandleFileSize(data, *resultSet);
+        EXPECT_EQ(res, E_OK);
+        EXPECT_EQ(data.size(), 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleFileSize002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleFileSize002 End";
+}
+
+/**
+ * @tc.name: HandleFileSize003
+ * @tc.desc: Verify the FillCreatedTime function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleFileSize003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleFileSize003 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecord record;
+        DriveKit::DKRecordData data;
+        record.GetRecordData(data);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->HandleFileSize(data, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleFileSize003 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleFileSize003 End";
+}
+
+/**
  * @tc.name: HandleCompatibleFileds001
  * @tc.desc: Verify the HandleCompatibleFileds function
  * @tc.type: FUNC
@@ -1584,8 +1890,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleCompatibleFileds001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->HandleCompatibleFileds(data, *resultSet);
         EXPECT_EQ(res, E_OK);
@@ -1612,8 +1917,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleAttributes001, TestSize.Level1)
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->HandleAttributes(data, *resultSet);
         EXPECT_EQ(res, E_OK);
@@ -1668,8 +1972,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleCreateTime001, TestSize.Level1)
         string bundName = "com.ohos.photos";
         DriveKit::DKRecordFieldMap map;
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->HandleCreateTime(map, *resultSet);
         EXPECT_EQ(res, E_OK);
@@ -1680,6 +1983,31 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleCreateTime001, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "HandleCreateTime001 End";
+}
+
+/**
+ * @tc.name: HandleCreateTime002
+ * @tc.desc: Verify the HandleCreateTime function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleCreateTime002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleCreateTime002 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecordFieldMap map;
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->HandleCreateTime(map, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleCreateTime002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleCreateTime002 End";
 }
 
 /**
@@ -1695,8 +2023,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleMetaEditedTime001, TestSize.Level1)
         string bundName = "com.ohos.photos";
         DriveKit::DKRecordFieldMap map;
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->HandleMetaEditedTime(map, *resultSet);
         EXPECT_EQ(res, E_OK);
@@ -1707,6 +2034,31 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleMetaEditedTime001, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "HandleMetaEditedTime001 End";
+}
+
+/**
+ * @tc.name: HandleMetaEditedTime002
+ * @tc.desc: Verify the HandleMetaEditedTime function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleMetaEditedTime002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleMetaEditedTime002 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecordFieldMap map;
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->HandleMetaEditedTime(map, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleMetaEditedTime002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleMetaEditedTime002 End";
 }
 
 /**
@@ -1722,8 +2074,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleEditedTime001, TestSize.Level1)
         string bundName = "com.ohos.photos";
         DriveKit::DKRecordFieldMap map;
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         int32_t res = localConvertor->HandleEditedTime(map, *resultSet);
         EXPECT_EQ(res, E_OK);
@@ -1734,6 +2085,31 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleEditedTime001, TestSize.Level1)
     }
 
     GTEST_LOG_(INFO) << "HandleEditedTime001 End";
+}
+
+/**
+ * @tc.name: HandleEditedTime002
+ * @tc.desc: Verify the HandleEditedTime function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(CloudDiskDataConvertorTest, HandleEditedTime002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleEditedTime002 Begin";
+    try {
+        string bundName = "com.ohos.photos";
+        DriveKit::DKRecordFieldMap map;
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto rset = std::make_unique<AbsSharedResultSetMock>();
+        EXPECT_CALL(*rset, GetLong(_, _)).WillRepeatedly(Return(1));
+        int32_t res = localConvertor->HandleEditedTime(map, *rset);
+        EXPECT_EQ(res, E_RDB);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleEditedTime002 ERROR";
+    }
+
+    GTEST_LOG_(INFO) << "HandleEditedTime002 End";
 }
 
 /**
@@ -1783,8 +2159,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleAttachments002, TestSize.Level1)
     GTEST_LOG_(INFO) << "HandleAttachments002 Begin";
     try {
         string bundName = "com.ohos.photos";
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         DriveKit::DKRecord recordFile;
         DriveKit::DKRecordData dataFile;
@@ -1819,8 +2194,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleAttachments003, TestSize.Level1)
     GTEST_LOG_(INFO) << "HandleAttachments003 Begin";
     try {
         string bundName = "com.ohos.photos";
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         DriveKit::DKRecord recordFile;
         DriveKit::DKRecordData dataFile;
@@ -1884,8 +2258,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleContent001, TestSize.Level1)
         DriveKit::DKRecord record;
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
         string filePath;
         string cloudId;
         unique_ptr<ResultSetMock> resultSet = make_unique<ResultSetMock>();
@@ -1918,8 +2291,7 @@ HWTEST_F(CloudDiskDataConvertorTest, HandleContent002, TestSize.Level1)
         DriveKit::DKRecord record;
         DriveKit::DKRecordData data;
         record.GetRecordData(data);
-        shared_ptr<CloudDiskDataConvertor> localConvertor =
-            make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
+        auto localConvertor = make_shared<CloudDiskDataConvertor>(USER_ID, bundName, FILE_DOWNLOAD);
 
         DriveKit::DKRecord recordFile;
         DriveKit::DKRecordData dataFile;

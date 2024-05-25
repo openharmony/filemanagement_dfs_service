@@ -13,11 +13,7 @@
  * limitations under the License.
  */
 
-#ifndef SYSTEM_PARAMETERS_H
-#define SYSTEM_PARAMETERS_H
-
-#include <limits>
-#include <string>
+#include "parameters.h"
 
 namespace OHOS {
 namespace system {
@@ -25,9 +21,14 @@ namespace system {
  * Returns true if the system parameter `key` has the value "1", "y", "yes", "on", or "true",
  * false for "0", "n", "no", "off", or "false", or `def` otherwise.
  */
-bool GetBoolParameter(const std::string &key, bool def);
-std::string GetParameter(const std::string &key, const std::string &def);
+bool GetBoolParameter(const std::string &key, bool def)
+{
+    return true;
+}
+
+std::string GetParameter(const std::string &key, const std::string &def)
+{
+    return "";
+}
 } // namespace system
 } // namespace OHOS
-
-#endif // SYSTEM_PARAMETERS_H

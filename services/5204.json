@@ -7,6 +7,7 @@
             "run-on-create": false,
             "distributed": true,
             "dump-level": 1,
+            "recycle-strategy": "low-memory",
             "start-on-demand": {
                 "timedevent": [
                     {
@@ -20,16 +21,12 @@
                         "value": "4"
                     },
                     {
-                        "name": "usual.event.CHARGING",
+                        "name": "usual.event.POWER_CONNECTED",
                         "conditions": [
                             {
                                 "eventId": "commonevent",
                                 "name": "usual.event.wifi.CONN_STATE",
                                 "value": "4"
-                            },
-                            {
-                                "eventId": "commonevent",
-                                "name": "usual.event.SCREEN_OFF"
                             }
                         ]
                     },
