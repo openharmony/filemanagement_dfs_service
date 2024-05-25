@@ -579,16 +579,16 @@ static void CloudReadOnCloudFile(shared_ptr<ReadArguments> readArgs, shared_ptr<
     return;
 }
 
-static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t oldSize,
+static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t size,
     off_t off, struct fuse_file_info *fi)
 {
-    auto readSize = pread(fi->fh, buf.get(), oldSize, off);
+    auto readSize = pread(fi->fh, buf.get(), size, off);
     if (readSize < 0) {
         LOGE("Failed to read local file, errno: %{public}d", errno);
         fuse_reply_err(req, errno);
         return;
     }
-    fuse_reply_buf(req, buf.get(), min(oldSize, static_cast<size_t>(readSize)));
+    fuse_reply_buf(req, buf.get(), min(size, static_cast<size_t>(readSize)));
     return;
 }
 
@@ -601,8 +601,8 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     LOGI("%{public}s, size=%{public}zd, off=%{public}lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
     auto dkReadSession = cInode->readSession;
-    size_t oldSize = size;
-    if (size == KEY_FRAME_SIZE) {
+    size_t originalSize = size;
+    if (size <= MAX_READ_SIZE) {
         if (off <= cInode->offset || off >= cInode->offset + MAX_READ_SIZE - size) {
             size = MAX_READ_SIZE;
             cInode->offset = off;
@@ -612,10 +612,10 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         return;
     }
     if (cInode->mBase->hasDownloaded) {
-        CloudReadOnLocalFile(req, buf, oldSize, off, fi);
+        CloudReadOnLocalFile(req, buf, originalSize, off, fi);
         return;
     }
-    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(oldSize, off);
+    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(size, off);
     ffrt::thread(CloudReadOnCloudFile, readArgs, buf, cInode, dkReadSession).detach();
     unique_lock lck(cInode->readLock);
     auto waitStatus = readArgs->cond->wait_for(lck, READ_TIMEOUT_S, [readArgs] {
@@ -638,7 +638,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         return;
     }
     LOGD("read success");
-    fuse_reply_buf(req, buf.get(), min(oldSize, static_cast<size_t>(*readArgs->readResult)));
+    fuse_reply_buf(req, buf.get(), min(originalSize, static_cast<size_t>(*readArgs->readResult)));
 }
 
 static const struct fuse_lowlevel_ops cloudDiskFuseOps = {
