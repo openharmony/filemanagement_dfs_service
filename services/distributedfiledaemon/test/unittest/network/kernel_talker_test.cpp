@@ -55,7 +55,7 @@ void KernelTalkerTest::SetUpTestCase(void)
 {
     g_smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
     g_wmp = g_smp;
-    g_talker = std::make_shared<KernelTalker>(g_wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    g_talker = std::make_shared<KernelTalker>(g_wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
 };
 
 void KernelTalkerTest::TearDownTestCase(void)

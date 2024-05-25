@@ -48,7 +48,7 @@ public:
           kernerlTalker_(std::make_shared<KernelTalker>(
               mountPoint,
               [&](NotifyParam &param) { GetSessionProcess(param); },
-              [&](const std::string &cid) { CloseSessionForOneDevice(cid); })),
+              [&](int32_t fd) { CloseSessionForOneDevice(fd); })),
           sessionPool_(kernerlTalker_)
     {
     }
@@ -85,7 +85,7 @@ private:
     void NotifyHandler(NotifyParam &param);
     void GetSessionProcess(NotifyParam &param);
     void GetSession(const std::string &cid, uint8_t linkType);
-    void CloseSessionForOneDevice(const std::string &cid);
+    void CloseSessionForOneDevice(int32_t fd);
     void AcceptSessionInner(std::shared_ptr<BaseSession> session, const std::string backStage);
     void GetSessionProcessInner(NotifyParam param);
 

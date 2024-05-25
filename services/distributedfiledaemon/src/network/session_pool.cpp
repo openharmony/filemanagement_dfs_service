@@ -58,8 +58,19 @@ void SessionPool::HoldSession(shared_ptr<BaseSession> session, const std::string
 uint8_t SessionPool::ReleaseSession(const int32_t fd)
 {
     uint8_t linkType = 0;
+    std::string cid = "";
     lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
+        if ((*iter)->GetHandle() == fd) {
+            auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
+            if (linkTypeIter != occupySession_.end()) {
+                linkType = linkTypeIter->second;
+                cid = (*iter)->GetCid();
+            }
+        }
+        if (DeviceDisconnectCountOnly(cid, linkType, false)) {
+            continue;
+        }
         if ((*iter)->GetHandle() == fd) {
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
             if (linkTypeIter != occupySession_.end()) {
@@ -135,20 +146,20 @@ bool SessionPool::DeviceDisconnectCountOnly(const string &cid, const uint8_t lin
     }
     std::string key = deviceId + "_" + std::to_string(linkType);
     
-    lock_guard lock(sessionPoolLock_);
     auto itCount = deviceConnectCount_.find(key);
     if (itCount != deviceConnectCount_.end() && needErase) {
         deviceConnectCount_.erase(itCount);
-        LOGI("[DeviceDisconnectCountOnly]  %{public}s, needErase", key.c_str());
+        LOGI("[DeviceDisconnectCountOnly]  %{public}s, needErase", Utils::GetAnonyString(key).c_str());
         return false;
     }
     if (itCount != deviceConnectCount_.end() && itCount->second > MOUNT_DFS_COUNT_ONE) {
         LOGI("[DeviceDisconnectCountOnly] deviceId_linkType %{public}s has already established \
-            more than one link, count %{public}d, decrease count by one now", key.c_str(), itCount->second);
+            more than one link, count %{public}d, decrease count by one now",
+            Utils::GetAnonyString(key).c_str(), itCount->second);
         deviceConnectCount_[key]--;
         return true;
     } else {
-        LOGI("[DeviceDisconnectCountOnly] deviceId_linkType %{public}s erase now", key.c_str());
+        LOGI("[DeviceDisconnectCountOnly] deviceId_linkType %{public}s erase now", Utils::GetAnonyString(key).c_str());
         deviceConnectCount_.erase(itCount);
     }
     return false;
@@ -176,7 +187,6 @@ bool SessionPool::DeviceConnectCountOnly(std::shared_ptr<BaseSession> session)
 
     std::string key = "";
     auto sessionId = session->GetSessionId();
-    lock_guard lock(sessionPoolLock_);
     auto it = occupySession_.find(sessionId);
     if (it != occupySession_.end()) {
         uint8_t linkType = it->second;
@@ -189,11 +199,12 @@ bool SessionPool::DeviceConnectCountOnly(std::shared_ptr<BaseSession> session)
     auto itCount = deviceConnectCount_.find(key);
     if (itCount != deviceConnectCount_.end() && itCount->second > 0) {
         LOGI("[DeviceDisconnectCountOnly] deviceId_linkType %{public}s has already established a link, \
-            count %{public}d, increase count by one now", key.c_str(), itCount->second);
+            count %{public}d, increase count by one now", Utils::GetAnonyString(key).c_str(), itCount->second);
         deviceConnectCount_[key]++;
         return true;
     } else {
-        LOGI("[DeviceDisconnectCountOnly] deviceId_linkType %{public}s increase count by one now", key.c_str());
+        LOGI("[DeviceDisconnectCountOnly] deviceId_linkType %{public}s increase count by one now",
+            Utils::GetAnonyString(key).c_str());
         deviceConnectCount_[key]++;
     }
     return false;

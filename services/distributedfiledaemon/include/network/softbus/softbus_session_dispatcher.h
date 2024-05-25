@@ -37,7 +37,6 @@ public:
     static std::weak_ptr<SoftbusAgent> GetAgent(int32_t sessionId, std::string peerSessionName);
     static void OnSessionOpened(int32_t sessionId, PeerSocketInfo info);
     static void OnSessionClosed(int32_t sessionId, ShutdownReason reason);
-    static void CloseSessionByCid(const std::string &cid);
 
 private:
     static std::mutex idMapMutex_;

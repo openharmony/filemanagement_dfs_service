@@ -377,7 +377,6 @@ bool DeviceManagerAgent::UMountDfsCountOnly(const std::string &deviceId, bool ne
         return false;
     }
     // Count sub one operation
-    unique_lock<mutex> lock(mpToNetworksMutex_);
     auto itCount = mountDfsCount_.find(deviceId);
     if (itCount == mountDfsCount_.end()) {
         LOGI("mountDfsCount_ can not find key");
@@ -471,7 +470,6 @@ void DeviceManagerAgent::RemoveNetworkIdForAllToken(const std::string &networkId
         LOGE("networkId is empty");
         return;
     }
-    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
     for (auto it = networkIdMap_.begin(); it != networkIdMap_.end();) {
         it->second.erase(networkId);
         if (it->second.empty()) {
@@ -561,7 +559,6 @@ void DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const std::
 
 void DeviceManagerAgent::NotifyRemoteReverseObj(const std::string &networkId, int32_t status)
 {
-    std::lock_guard<std::mutex> lock(appCallConnectMutex_);
     for (auto it = appCallConnect_.begin(); it != appCallConnect_.end(); ++it) {
         auto onstatusReverseProxy = it->second;
         if (onstatusReverseProxy == nullptr) {
@@ -588,7 +585,6 @@ int32_t DeviceManagerAgent::AddRemoteReverseObj(uint32_t callingTokenId, sptr<IF
 
 int32_t DeviceManagerAgent::RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId)
 {
-    std::lock_guard<std::mutex> lock(appCallConnectMutex_);
     if (clear) {
         appCallConnect_.clear();
         return FileManagement::E_OK;

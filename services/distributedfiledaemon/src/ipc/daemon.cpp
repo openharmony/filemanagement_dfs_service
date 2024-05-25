@@ -19,6 +19,7 @@
 #include <regex>
 #include <stdexcept>
 #include <string>
+#include <unistd.h>
 #include <unordered_set>
 
 #include "accesstoken_kit.h"
@@ -59,6 +60,7 @@ const string MEDIA_AUTHORITY = "media";
 const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
+constexpr int32_t CHECK_SESSION_DELAY_TIME_TWICE = 5000000;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -177,6 +179,30 @@ int32_t Daemon::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &devi
     return 0;
 }
 
+int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceInfo)
+{
+    auto path = ConnectionDetector::ParseHmdfsPath();
+    stringstream ss;
+    ss << ConnectionDetector::MocklispHash(path);
+    auto targetDir = ss.str();
+    auto networkId = std::string(deviceInfo.networkId);
+    int32_t ret = 0;
+    ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
+    if (ret != NO_ERROR) {
+        LOGE("OpenP2PConnection failed, ret = %{public}d", ret);
+    } else {
+        ret = ConnectionDetector::RepeatGetConnectionStatus(targetDir, networkId);
+        LOGI("RepeatGetConnectionStatus first time, ret = %{public}d", ret);
+    }
+    ret = ConnectionDetector::RepeatGetConnectionStatus(targetDir, networkId);
+    if (ret != NO_ERROR) {
+        LOGI("RepeatGetConnectionStatus third times, ret = %{public}d", ret);
+        usleep(CHECK_SESSION_DELAY_TIME_TWICE);
+        ret = ConnectionDetector::RepeatGetConnectionStatus(targetDir, networkId);
+    }
+    return ret;
+}
+
 int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
 {
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
@@ -200,7 +226,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         LOGE("OpenP2PConnectionEx strcpy failed, res = %{public}d", res);
         return E_INVAL_ARG_NAPI;
     }
-    int32_t ret = OpenP2PConnection(deviceInfo);
+    int32_t ret = ConnectionCount(deviceInfo);
     if (ret != E_OK) {
         LOGE("Daemon::OpenP2PConnectionEx connection failed");
         return E_CONNECTION_FAILED;
@@ -210,9 +236,9 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         LOGE("Daemon::OpenP2PConnectionEx::fail to AddRemoteReverseObj");
     }
     deviceManager->AddNetworkId(callingTokenId, networkId);
-    if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
         LOGE("[MountDfsDocs] permission denied: FILE_ACCESS_MANAGER_PERMISSION");
-        return ret;
+        return E_CONNECTION_FAILED;
     }
     std::string deviceId = deviceManager->GetDeviceIdByNetworkId(networkId);
     deviceManager->MountDfsDocs(networkId, deviceId);

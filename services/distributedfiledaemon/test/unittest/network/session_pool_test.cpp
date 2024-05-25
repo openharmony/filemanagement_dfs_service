@@ -51,7 +51,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_OccupySession_0100, TestSize.Level1)
     GTEST_LOG_(INFO) << "SessionPoolTest_OccupySession_0100 start";
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
     bool res = true;
@@ -77,7 +77,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_FindSession_0100, TestSize.Level1)
     GTEST_LOG_(INFO) << "SessionPoolTest_FindSession_0100 start";
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
     bool res = true;
@@ -105,7 +105,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0100, TestSize.Level1)
     auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
     bool res = true;
@@ -131,7 +131,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Fd_0100, TestSize.Level
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Fd_0100 start";
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
     bool res = true;
@@ -157,7 +157,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0100, TestSize.Leve
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseSession_Cid_0100 start";
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
     bool res = true;
@@ -183,7 +183,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseAllSession_0100, TestSize.Level
     GTEST_LOG_(INFO) << "SessionPoolTest_ReleaseAllSession_0100 start";
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
     bool res = true;
@@ -211,7 +211,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_AddSessionToPool_0100, TestSize.Level1
     auto session = make_shared<SoftbusSession>(TEST_SESSION_ID, peerDeviceId);
     auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
     weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](const std::string &cid) {});
+    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
     bool res = true;
