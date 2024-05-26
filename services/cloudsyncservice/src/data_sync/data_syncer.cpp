@@ -752,29 +752,10 @@ int32_t DataSyncer::Push(shared_ptr<DataHandler> handler)
     /* commit a dummy task */
     BeginTransaction();
 
-    int32_t ret = AsyncRun(context, &DataSyncer::CreateRecords);
-    if (ret != E_OK) {
-        LOGE("async run create records err %{public}d", ret);
-        return ret;
-    }
-
-    ret = AsyncRun(context, &DataSyncer::DeleteRecords);
-    if (ret != E_OK) {
-        LOGE("async run delete records err %{public}d", ret);
-        return ret;
-    }
-
-    ret = AsyncRun(context, &DataSyncer::ModifyMdirtyRecords);
-    if (ret != E_OK) {
-        LOGE("async run modify mdirty records err %{public}d", ret);
-        return ret;
-    }
-
-    ret = AsyncRun(context, &DataSyncer::ModifyFdirtyRecords);
-    if (ret != E_OK) {
-        LOGE("async run modify fdirty records err %{public}d", ret);
-        return ret;
-    }
+    CreateRecords(context);
+    DeleteRecords(context);
+    ModifyMdirtyRecords(context);
+    ModifyFdirtyRecords(context);
 
     /* complete the dummy task */
     EndTransaction();

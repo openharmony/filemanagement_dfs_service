@@ -69,7 +69,7 @@ int32_t RdbDataHandler::BatchInsert(int64_t &outRowId, const string &table,
     return ret;
 }
 
-int32_t RdbDataHandler::BatchDetete(const string &whichTable,
+int32_t RdbDataHandler::BatchDelete(const string &whichTable,
                                     const string &whichColumn,
                                     const std::vector<NativeRdb::ValueObject> &bindArgs)
 {
