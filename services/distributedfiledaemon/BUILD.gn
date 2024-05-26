@@ -91,6 +91,7 @@ ohos_shared_library("libdistributedfiledaemon") {
 
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
+  kernel_permission_path = "./encaps.json"
 }
 
 config("public_config") {
