@@ -98,6 +98,9 @@ int32_t DataSyncer::StartSync(bool forceFlag, SyncTriggerType triggerType)
     TaskStateManager::GetInstance().StartTask(bundleName_, TaskType::SYNC_TASK);
     /* start data sync */
     errorCode_ = E_OK;
+    system::SetParameter(wifiSysparam, "false");
+    system::SetParameter(batterySysparam, "false");
+
     ScheduleByType(triggerType);
 
     return E_OK;
@@ -1295,6 +1298,11 @@ void DataSyncer::UpdateErrorCode(int32_t code)
 void DataSyncer::SetErrorCodeMask(ErrorType errorType)
 {
     errorCode_ |= 1 << static_cast<uint32_t>(errorType);
+    if (errorType == NETWORK_UNAVAILABLE) {
+        system::SetParameter(wifiSysparam, "true");
+    } else if (errorType == BATTERY_LEVEL_LOW) {
+        system::SetParameter(batterySysparam, "true");
+    }
 }
 
 ErrorType DataSyncer::GetErrorType()

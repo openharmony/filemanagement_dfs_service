@@ -30,5 +30,10 @@ std::string GetParameter(const std::string &key, const std::string &def)
 {
     return "";
 }
+
+bool SetParameter(const std::string& key, const std::string& value)
+{
+    return true;
+}
 } // namespace system
 } // namespace OHOS
