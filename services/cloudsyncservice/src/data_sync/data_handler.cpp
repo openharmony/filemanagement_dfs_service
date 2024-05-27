@@ -66,7 +66,7 @@ void DataHandler::SetTempNextCursor(const DriveKit::DKQueryCursor &cursor, bool 
     cursorMap_.insert(std::pair<int32_t, DriveKit::DKQueryCursor>(batchNo_, cursor));
     cursorFinishMap_.insert(std::pair<int32_t, bool>(batchNo_, false));
     if (!isFinish) {
-        batchNo_ ++;
+        batchNo_++;
     } else {
         isFinish_ = true;
     }

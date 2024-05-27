@@ -77,6 +77,7 @@ ohos_shared_library("libdistributedfileutils") {
     "system/src/dfsu_memory_guard.cpp",
     "system/src/dfsu_mount_argument_descriptors.cpp",
     "system/src/dfsu_timer.cpp",
+    "system/src/sys_utils.cpp",
     "system/src/utils_directory.cpp",
     "work/src/async_work.cpp",
   ]

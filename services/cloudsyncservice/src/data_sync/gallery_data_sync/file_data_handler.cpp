@@ -41,6 +41,7 @@
 #include "medialibrary_type_const.h"
 #include "meta_file.h"
 #include "shooting_mode_column.h"
+#include "sys_utils.h"
 #include "thumbnail_const.h"
 #include "task_state_manager.h"
 #include "vision_column.h"
@@ -2916,6 +2917,7 @@ static int32_t DeleteAsset(const string &assetPath)
 
 int32_t FileDataHandler::Clean(const int action)
 {
+    SlowDown();
     std::lock_guard<std::mutex> lck(cleanMutex_);
     RETURN_ON_ERR(CleanPureCloudRecord());
     int32_t ret = DeleteCloudPhotoDir();
@@ -2926,7 +2928,7 @@ int32_t FileDataHandler::Clean(const int action)
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
-
+    ResetCpu();
     return E_OK;
 }
 
@@ -2935,9 +2937,7 @@ int32_t FileDataHandler::CleanPureCloudRecord(bool isReamin)
     LOGI("begin clean pure cloud record");
     int32_t ret = E_OK;
     NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    if (isReamin) {
-        cleanPredicates.EqualTo(PhotoColumn::PHOTO_CLEAN_FLAG, NEED_CLEAN);
-    }
+    cleanPredicates.EqualTo(PhotoColumn::PHOTO_CLEAN_FLAG, NEED_CLEAN);
     cleanPredicates.EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_CLOUD);
     cleanPredicates.EqualTo(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     cleanPredicates.Limit(BATCH_LIMIT_SIZE);
@@ -2948,11 +2948,6 @@ int32_t FileDataHandler::CleanPureCloudRecord(bool isReamin)
         deleteFileId.clear();
         filePaths->clear();
         RETURN_ON_ERR(GetFilePathAndId(cleanPredicates, deleteFileId, *filePaths));
-        ret = BatchDelete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
-        if (ret != E_OK) {
-            LOGW("BatchDelete fail, remove count is %{public}d", removeCount);
-            return ret;
-        }
         ret = BatchDelete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         if (ret != E_OK) {
             LOGW("BatchDelete fail, remove count is %{public}d", removeCount);
@@ -2978,6 +2973,7 @@ int32_t FileDataHandler::CleanNotPureCloudRecord(const int32_t action)
 
 int32_t FileDataHandler::CleanRemainRecord()
 {
+    SlowDown();
     if (!IsPullRecords()) {
         std::lock_guard<std::mutex> lck(cleanMutex_);
         int32_t ret = CleanPureCloudRecord(true);
@@ -2989,6 +2985,7 @@ int32_t FileDataHandler::CleanRemainRecord()
             LOGW("Clean not dirty data fail, try next time");
         }
     }
+    ResetCpu();
     return E_OK;
 }
 
@@ -3010,9 +3007,7 @@ int32_t FileDataHandler::CleanNotDirtyData(bool isReamin)
     LOGI("begin clean not dirty data");
     int32_t ret = E_OK;
     NativeRdb::AbsRdbPredicates cleanPredicates = NativeRdb::AbsRdbPredicates(TABLE_NAME);
-    if (isReamin) {
-        cleanPredicates.EqualTo(PhotoColumn::PHOTO_CLEAN_FLAG, NEED_CLEAN);
-    }
+    cleanPredicates.EqualTo(PhotoColumn::PHOTO_CLEAN_FLAG, NEED_CLEAN);
     cleanPredicates.EqualTo(PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
     cleanPredicates.EqualTo(PhotoColumn::PHOTO_DIRTY, static_cast<int32_t>(DirtyType::TYPE_SYNCED));
     cleanPredicates.Limit(BATCH_LIMIT_SIZE);
@@ -3023,11 +3018,6 @@ int32_t FileDataHandler::CleanNotDirtyData(bool isReamin)
         deleteFileId.clear();
         filePaths->clear();
         RETURN_ON_ERR(GetFilePathAndId(cleanPredicates, deleteFileId, *filePaths));
-        ret = BatchDelete(PhotoMap::TABLE, PhotoMap::ASSET_ID, deleteFileId);
-        if (ret != E_OK) {
-            LOGW("BatchDelete fail, remove count is %{public}d", removeCount);
-            return ret;
-        }
         ret = BatchDelete(PC::PHOTOS_TABLE, MediaColumn::MEDIA_ID, deleteFileId);
         if (ret != E_OK) {
             LOGW("BatchDelete fail, remove count is %{public}d", removeCount);
@@ -3122,6 +3112,8 @@ void FileDataHandler::RemoveBothRecord(shared_ptr<vector<string>> filePaths)
 
 int32_t FileDataHandler::MarkClean(const int32_t action)
 {
+    SlowDown();
+    std::lock_guard<std::mutex> lck(cleanMutex_);
     cloudPrefImpl_.SetInt("cleanAction", action);
     int32_t changedRows;
     NativeRdb::ValuesBucket values;
@@ -3143,7 +3135,8 @@ int32_t FileDataHandler::MarkClean(const int32_t action)
     DataSyncNotifier::GetInstance().TryNotify(PHOTO_URI_PREFIX, ChangeType::INSERT,
                                               INVALID_ASSET_ID);
     DataSyncNotifier::GetInstance().FinalNotify();
-    RETURN_ON_ERR(CleanNotPureCloudRecord(action));
+    ret = CleanNotPureCloudRecord(action);
+    ResetCpu();
     return ret;
 }
 
