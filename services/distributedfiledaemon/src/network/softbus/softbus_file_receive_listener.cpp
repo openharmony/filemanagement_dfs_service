@@ -134,7 +134,7 @@ void SoftBusFileReceiveListener::OnFileTransError(int32_t sessionId, int32_t err
 
 void SoftBusFileReceiveListener::OnReceiveFileReport(int32_t sessionId, FileStatusList statusList, int32_t errorCode)
 {
-    LOGD("OnReceiveFileReport, sessionId = %{public}d", sessionId);
+    LOGE("OnReceiveFileReport");
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");
