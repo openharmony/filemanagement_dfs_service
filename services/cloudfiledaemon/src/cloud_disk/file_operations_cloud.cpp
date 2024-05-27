@@ -64,6 +64,7 @@ namespace {
     static const float LOOKUP_TIMEOUT = 60.0;
     static const int32_t LEFT_SHIFT = 4;
     static const int32_t RIGHT_SHIFT = 5;
+    static const uint64_t UNKNOWN_INODE_ID = 0;
 }
 
 static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
@@ -221,28 +222,6 @@ static void LookUpRecycleBin(struct CloudDiskFuseData *data, fuse_ino_t parent,
     FileOperationsHelper::GetInodeAttr(child, &e->attr);
 }
 
-static int32_t LookupRecycledFile(struct CloudDiskFuseData *data, const char *name,
-    const std::string bundleName, struct fuse_entry_param *e)
-{
-    MetaBase metaBase(name);
-    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId, bundleName,
-        RECYCLE_CLOUD_ID);
-    int ret = metaFile->DoLookup(metaBase);
-    if (ret != 0) {
-        LOGE("file %{public}s not found in recyclebin", name);
-        return EINVAL;
-    }
-    int64_t inodeId = static_cast<int64_t>(DentryHash(metaBase.cloudId));
-    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
-    if (inoPtr == nullptr) {
-        LOGE("inode not found");
-        return EINVAL;
-    }
-    e->ino = static_cast<fuse_ino_t>(inodeId);
-    FileOperationsHelper::GetInodeAttr(inoPtr, &e->attr);
-    return 0;
-}
-
 static shared_ptr<CloudDiskInode> UpdateChildCache(struct CloudDiskFuseData *data, int64_t localId,
     shared_ptr<CloudDiskInode> child)
 {
@@ -260,6 +239,33 @@ static shared_ptr<CloudDiskInode> UpdateChildCache(struct CloudDiskFuseData *dat
         localIdWLock.unlock();
     }
     return child;
+}
+
+static int32_t LookupRecycledFile(struct CloudDiskFuseData *data, const char *name,
+    const std::string bundleName, struct fuse_entry_param *e)
+{
+    MetaBase metaBase(name);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId, bundleName,
+        RECYCLE_CLOUD_ID);
+    int ret = metaFile->DoLookup(metaBase);
+    if (ret != 0) {
+        LOGE("file %{public}s not found in recyclebin", name);
+        return EINVAL;
+    }
+    int64_t inodeId = static_cast<int64_t>(DentryHash(metaBase.cloudId));
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
+    if (inoPtr == nullptr) {
+        string nameStr = name;
+        int lastSlash = nameStr.find_last_of("_");
+        metaBase.name = nameStr.substr(0, lastSlash);
+        inoPtr = UpdateChildCache(data, inodeId, inoPtr);
+        inoPtr->refCount++;
+        InitInodeAttr(data, RECYCLE_LOCAL_ID, inoPtr.get(), metaBase, inodeId);
+        inoPtr->parent = UNKNOWN_INODE_ID;
+    }
+    e->ino = static_cast<fuse_ino_t>(inodeId);
+    FileOperationsHelper::GetInodeAttr(inoPtr, &e->attr);
+    return 0;
 }
 
 static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
@@ -415,7 +421,6 @@ static void CloudOpen(fuse_req_t req,
             fuse_reply_open(req, fi);
         } else {
             filePtr->readSession = nullptr;
-            fuse_reply_err(req, EPERM);
             LOGE("open fail");
         }
     } else {
@@ -818,28 +823,33 @@ void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
         LOGE("inode not found");
         return;
     }
+    string parentCloudId;
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inoPtr->parent));
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
     if (parentInode == nullptr) {
-        fuse_reply_err(req, EINVAL);
-        LOGE("parent inode not found");
-        return;
+        int32_t ret = rdbStore->GetParentCloudId(inoPtr->cloudId, parentCloudId);
+        if (ret != 0) {
+            fuse_reply_err(req, EINVAL);
+            LOGE("fail to get parentCloudId");
+            return;
+        }
+    } else {
+        parentCloudId = parentInode->cloudId;
     }
     int32_t ret = MetaFileMgr::GetInstance().CreateRecycleDentry(data->userId, inoPtr->bundleName);
     if (ret != 0) {
+        fuse_reply_err(req, EINVAL);
         LOGE("create recycle dentry failed");
         return;
     }
-    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
     ret = rdbStore->SetXAttr(inoPtr->cloudId, CLOUD_CLOUD_RECYCLE_XATTR, value,
-        inoPtr->fileName, parentInode->cloudId);
+        inoPtr->fileName, parentCloudId);
     if (ret != 0) {
         LOGE("set cloud id fail %{public}d", ret);
         fuse_reply_err(req, EINVAL);
         return;
     }
-    CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
-        NotifyOpsType::DAEMON_SETXATTR, inoPtr});
     fuse_reply_err(req, 0);
 }
 
