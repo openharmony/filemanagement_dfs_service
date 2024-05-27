@@ -633,6 +633,28 @@ static int32_t RecycleSetValue(int32_t val, ValuesBucket &setXAttr)
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::GetParentCloudId(const std::string &cloudId, std::string &parentCloudId)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    AbsRdbPredicates getParentCloudIdPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    getParentCloudIdPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(getParentCloudIdPredicates, { FileColumn::PARENT_CLOUD_ID });
+    if (resultSet == nullptr) {
+        LOGE("get nullptr parentCloudId resultSet");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get parentCloudId go to next row failed");
+        return E_RDB;
+    }
+    int32_t ret = CloudDiskRdbUtils::GetString(FileColumn::PARENT_CLOUD_ID, parentCloudId, resultSet);
+    if (ret != E_OK) {
+        LOGE("get parent cloudId failed");
+        return ret;
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
     const std::string &cloudId, const std::string &value)
 {

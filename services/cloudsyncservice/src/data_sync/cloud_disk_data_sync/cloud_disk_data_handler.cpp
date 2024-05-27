@@ -921,12 +921,12 @@ int32_t CloudDiskDataHandler::CheckResultSetByDentry(const string &cloudId, cons
     int32_t isDirectory = 0;
     DataConvertor::GetInt(FC::IS_DIRECTORY, isDirectory, resultSet);
     if (S_ISDIR(metaBase.mode) != isDirectory) {
-        values.PutLong(FC::IS_DIRECTORY, S_ISDIR(metaBase.mode));
+        values.PutInt(FC::IS_DIRECTORY, S_ISDIR(metaBase.mode));
     }
     int32_t position = 0;
     DataConvertor::GetInt(FC::POSITION, position, resultSet);
     if (metaBase.position != position) {
-        values.PutLong(FC::POSITION, position);
+        values.PutInt(FC::POSITION, position);
     }
     return E_OK;
 }

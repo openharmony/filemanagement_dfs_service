@@ -68,6 +68,7 @@ public:
     int32_t FileStatusGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t GetHasChild(const std::string &cloudId, bool &hasChild);
     int32_t GetRowId(const std::string &cloudId, int64_t &rowId);
+    int32_t GetParentCloudId(const std::string &cloudId, std::string &parentCloudId);
 
     /* clouddisk syncer */
     int32_t GetDirtyType(const std::string &cloudId, int32_t &fileStatus);
