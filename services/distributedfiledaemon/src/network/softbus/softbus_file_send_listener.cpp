@@ -85,7 +85,7 @@ void SoftBusFileSendListener::OnSendFileFinished(int32_t sessionId)
 
 void SoftBusFileSendListener::OnFileTransError(int32_t sessionId, int32_t errorCode)
 {
-    LOGD("SoftBusFileSendListener::OnFileTransError, sessionId = %{public}d", sessionId);
+    LOGE("OnFileTransError");
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");
