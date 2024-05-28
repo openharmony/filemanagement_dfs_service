@@ -314,6 +314,28 @@ int32_t CloudDiskDataHandler::InsertRDBAndDentryFile(DKRecord &record, ValuesBuc
     return E_OK;
 }
 
+static int32_t RecordToCacheNode(const DKRecord &record, CacheNode &cacheNode)
+{
+    DKRecordData data;
+    record.GetRecordData(data);
+    cacheNode.cloudId = record.GetRecordId();
+    if (data.find(DK_PARENT_CLOUD_ID) != data.end()) {
+        data.at(DK_PARENT_CLOUD_ID).GetString(cacheNode.parentCloudId);
+    }
+    if (data.find(DK_FILE_NAME) != data.end()) {
+        data.at(DK_FILE_NAME).GetString(cacheNode.fileName);
+    }
+    if (data.find(DK_IS_DIRECTORY) != data.end()) {
+        data.at(DK_IS_DIRECTORY).GetString(cacheNode.isDir);
+    }
+    if (cacheNode.parentCloudId.empty() || cacheNode.fileName.empty() || cacheNode.isDir.empty()) {
+        LOGE("get field from data fail, parent: %{public}s, fileName: %{public}s, isDir: %{public}s",
+             cacheNode.parentCloudId.c_str(), cacheNode.fileName.c_str(), cacheNode.isDir.c_str());
+        return E_INVAL_ARG;
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &params)
 {
     RETURN_ON_ERR(IsStop());
@@ -336,8 +358,10 @@ int32_t CloudDiskDataHandler::PullRecordInsert(DKRecord &record, OnFetchParams &
     params.insertFiles.push_back(values);
     ret = InsertRDBAndDentryFile(record, values);
     if (ret == E_OK) {
+        CacheNode cacheNode;
+        RETURN_ON_ERR(RecordToCacheNode(record, cacheNode));
         CloudDiskNotify::GetInstance().TryNotifyService(
-            {NotifyOpsType::SERVICE_INSERT, "", NotifyType::NOTIFY_ADDED, record}, {userId_, bundleName_});
+            {NotifyOpsType::SERVICE_INSERT, "", NotifyType::NOTIFY_ADDED, cacheNode}, {userId_, bundleName_});
     }
     return ret;
 }
@@ -464,8 +488,10 @@ int32_t CloudDiskDataHandler::ConflictReName(const string &cloudId, string newFi
         LOGE("update db, rename fail");
         return E_RDB;
     }
+    CacheNode cacheNode;
+    RETURN_ON_ERR(RecordToCacheNode(record, cacheNode));
     CloudDiskNotify::GetInstance().TryNotifyService(
-        {NotifyOpsType::SERVICE_UPDATE, cloudId, NotifyType::NOTIFY_NONE, record}, {userId_, bundleName_});
+        {NotifyOpsType::SERVICE_UPDATE, cloudId, NotifyType::NOTIFY_NONE, cacheNode}, {userId_, bundleName_});
     return E_OK;
 }
 
@@ -649,8 +675,10 @@ int32_t CloudDiskDataHandler::UpdateDBDentryAndUnlink(DKRecord &record, NativeRd
     if (ret != E_OK) {
         return ret;
     }
+    CacheNode cacheNode;
+    RETURN_ON_ERR(RecordToCacheNode(record, cacheNode));
     CloudDiskNotify::GetInstance().TryNotifyService(
-        {NotifyOpsType::SERVICE_UPDATE, record.GetRecordId(), NotifyType::NOTIFY_NONE, record},
+        {NotifyOpsType::SERVICE_UPDATE, record.GetRecordId(), NotifyType::NOTIFY_NONE, cacheNode},
         {userId_, bundleName_});
     if (FileIsLocal(local) && isFileContentChanged && changedRows != 0) {
         TransactionOperations rdbTransaction(GetRaw());
@@ -665,7 +693,7 @@ int32_t CloudDiskDataHandler::UpdateDBDentryAndUnlink(DKRecord &record, NativeRd
             return ret;
         }
         CloudDiskNotify::GetInstance().TryNotifyService(
-            {NotifyOpsType::SERVICE_UPDATE, record.GetRecordId(), NotifyType::NOTIFY_NONE, record},
+            {NotifyOpsType::SERVICE_UPDATE, record.GetRecordId(), NotifyType::NOTIFY_NONE, cacheNode},
             {userId_, bundleName_});
         auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, oldParentCloudId);
         auto callback = [] (MetaBase &m) {m.position = POSITION_CLOUD;};

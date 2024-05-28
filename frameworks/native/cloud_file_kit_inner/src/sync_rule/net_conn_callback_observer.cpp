@@ -13,15 +13,15 @@
 * limitations under the License.
 */
 
-#include "sync_rule/net_conn_callback_observer.h"
+#include "net_conn_callback_observer.h"
 #include "dfs_error.h"
-#include "sync_rule/network_status.h"
+#include "network_status.h"
 #include "utils_log.h"
 
 using namespace OHOS::NetManagerStandard;
 
 namespace OHOS::FileManagement::CloudSync {
-NetConnCallbackObserver::NetConnCallbackObserver(std::shared_ptr<DataSyncManager> dataSyncManager)
+NetConnCallbackObserver::NetConnCallbackObserver(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     dataSyncManager_ = dataSyncManager;
 }

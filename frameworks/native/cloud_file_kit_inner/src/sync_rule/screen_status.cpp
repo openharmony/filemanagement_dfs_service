@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "sync_rule/screen_status.h"
+#include "screen_status.h"
 
 #include "common_event_manager.h"
 #include "common_event_support.h"

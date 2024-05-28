@@ -59,7 +59,7 @@ struct NotifyParamService {
     NotifyOpsType opsType = NotifyOpsType::OPS_NONE;
     std::string cloudId = "";
     NotifyType notifyType = NotifyType::NOTIFY_NONE;
-    DriveKit::DKRecord record;
+    CacheNode node;
 };
 
 struct ParamServiceOther {

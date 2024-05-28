@@ -17,7 +17,7 @@
 
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "sync_rule/battery_status.h"
+#include "battery_status.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -49,7 +49,7 @@ void BatteryStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
     }
 }
 
-BatteryStatusListener::BatteryStatusListener(std::shared_ptr<DataSyncManager> dataSyncManager)
+BatteryStatusListener::BatteryStatusListener(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     dataSyncManager_ = dataSyncManager;
 }

@@ -15,10 +15,6 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_DATA_SYNC_CONST_H
 #define OHOS_CLOUD_SYNC_SERVICE_DATA_SYNC_CONST_H
 
-#include "medialibrary_db_const.h"
-#include "medialibrary_type_const.h"
-#include "photo_album_column.h"
-#include "photo_map_column.h"
 #include <set>
 #include <string>
 namespace OHOS::FileManagement::CloudSync {

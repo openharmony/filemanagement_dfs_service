@@ -18,7 +18,7 @@
 #include <cstdint>
 #include "iremote_object.h"
 #include "net_all_capabilities.h"
-#include "data_sync/data_sync_manager.h"
+#include "data_sync_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class NetworkStatus {
@@ -30,10 +30,10 @@ public:
         CELLULAR_CONNECT,
         NETWORK_AVAIL,
     };
-    static int32_t RegisterNetConnCallback(std::shared_ptr<DataSyncManager> dataSyncManager);
+    static int32_t RegisterNetConnCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static int32_t GetDefaultNet();
-    static int32_t GetAndRegisterNetwork(std::shared_ptr<DataSyncManager> dataSyncManager);
-    static void InitNetwork(std::shared_ptr<DataSyncManager> dataSyncManager);
+    static int32_t GetAndRegisterNetwork(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
+    static void InitNetwork(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void SetNetConnStatus(NetManagerStandard::NetAllCapabilities &netAllCap);
     static void SetNetConnStatus(NetConnStatus netStatus);
     static NetConnStatus GetNetConnStatus();

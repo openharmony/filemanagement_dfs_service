@@ -54,6 +54,7 @@ ohos_unittest("fuse_manager_test") {
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",

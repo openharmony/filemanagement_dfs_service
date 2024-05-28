@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 
 #include "dfs_error.h"
-#include "sync_rule/net_conn_callback_observer.h"
+#include "net_conn_callback_observer.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;

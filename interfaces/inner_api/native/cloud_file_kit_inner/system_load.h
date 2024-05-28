@@ -16,7 +16,7 @@
 #ifndef OHOS_FILEMGMT_CLOUD_SYNC_SYSTEM_LOAD_H
 #define OHOS_FILEMGMT_CLOUD_SYNC_SYSTEM_LOAD_H
 
-#include "data_sync/data_sync_manager.h"
+#include "data_sync_manager.h"
 #include <functional>
 #include "res_sched_systemload_notifier_client.h"
 #include "res_type.h"

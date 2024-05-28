@@ -16,6 +16,7 @@
 #ifndef OHOS_CLOUD_SYNC_DATA_SYNCER_RDB_COL_H
 #define OHOS_CLOUD_SYNC_DATA_SYNCER_RDB_COL_H
 
+#include <set>
 #include <string>
 
 namespace OHOS {

@@ -21,8 +21,8 @@
 #include "dfs_error.h"
 #include "gallery_data_syncer.h"
 #include "gmock/gmock-spec-builders.h"
-#include "sync_rule/battery_status.h"
-#include "sync_rule/cloud_status.h"
+#include "battery_status.h"
+#include "cloud_status.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;

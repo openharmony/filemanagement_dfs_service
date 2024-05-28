@@ -38,7 +38,6 @@
 
 namespace OHOS::FileManagement::CloudDisk {
 using namespace std;
-using namespace DriveKit;
 using namespace OHOS::NativeRdb;
 using namespace CloudSync;
 
@@ -1171,27 +1170,8 @@ int32_t CloudDiskRdbStore::GetNotifyUri(const CacheNode &cacheNode, std::string 
     return ret;
 }
 
-int32_t CloudDiskRdbStore::GetNotifyData(const DriveKit::DKRecord &record, NotifyData &notifyData)
+int32_t CloudDiskRdbStore::GetNotifyData(const CacheNode &cacheNode, NotifyData &notifyData)
 {
-    CacheNode cacheNode;
-    DKRecordData data;
-    record.GetRecordData(data);
-    cacheNode.cloudId = record.GetRecordId();
-    if (data.find(DK_PARENT_CLOUD_ID) != data.end()) {
-        data.at(DK_PARENT_CLOUD_ID).GetString(cacheNode.parentCloudId);
-    }
-    if (data.find(DK_FILE_NAME) != data.end()) {
-        data.at(DK_FILE_NAME).GetString(cacheNode.fileName);
-    }
-    if (data.find(DK_IS_DIRECTORY) != data.end()) {
-        data.at(DK_IS_DIRECTORY).GetString(cacheNode.isDir);
-    }
-    if (cacheNode.parentCloudId.empty() || cacheNode.fileName.empty() || cacheNode.isDir.empty()) {
-        LOGE("get field from data fail, parent: %{public}s, fileName: %{public}s, isDir: %{public}s",
-             cacheNode.parentCloudId.c_str(), cacheNode.fileName.c_str(), cacheNode.isDir.c_str());
-        return E_INVAL_ARG;
-    }
-
     int32_t ret = GetNotifyUri(cacheNode, notifyData.uri);
     if (ret == E_OK) {
         notifyData.isDir = cacheNode.isDir == "directory";

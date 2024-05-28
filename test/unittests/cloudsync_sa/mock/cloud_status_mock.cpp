@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "sync_rule/cloud_status.h"
+#include "cloud_status.h"
 
 #include "dfs_error.h"
 

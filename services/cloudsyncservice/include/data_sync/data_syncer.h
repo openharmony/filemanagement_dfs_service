@@ -24,7 +24,7 @@
 #include "cloud_pref_impl.h"
 #include "cloud_sync_constants.h"
 #include "data_handler.h"
-#include "data_sync/sync_state_manager.h"
+#include "sync_state_manager.h"
 #include "ipc/cloud_download_callback_manager.h"
 #include "i_cloud_download_callback.h"
 #include "sdk_helper.h"

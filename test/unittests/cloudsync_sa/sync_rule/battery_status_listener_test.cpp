@@ -18,14 +18,15 @@
 
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "sync_rule/battery_status.h"
-#include "sync_rule/battery_status_listener.h"
+#include "battery_status.h"
+#include "battery_status_listener.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using namespace CloudFile;
 
 class BatteryStatusListenerTest : public testing::Test {
 public:

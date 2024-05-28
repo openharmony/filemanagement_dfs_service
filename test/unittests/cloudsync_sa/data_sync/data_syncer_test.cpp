@@ -27,13 +27,14 @@
 #include "dk_error.h"
 #include "gallery_data_syncer.h"
 #include "gmock/gmock-actions.h"
-#include "sync_rule/battery_status.h"
-#include "sync_rule/cloud_status.h"
+#include "battery_status.h"
+#include "cloud_status.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using namespace CloudFile;
 
 class DataSyncerMock final : public DataSyncer {
 public:

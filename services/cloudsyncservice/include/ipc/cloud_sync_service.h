@@ -71,13 +71,14 @@ public:
     int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") override;
     int32_t CleanCacheInner(const std::string &uri) override;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
-    
+
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
     void OnStart(const SystemAbilityOnDemandReason& startReason) override;
     void OnStop() override;
     void PublishSA();
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+    void PreInit();
     void Init();
     void HandleStartReason(const SystemAbilityOnDemandReason &startReason);
 
@@ -94,7 +95,7 @@ private:
 
     static inline std::mutex loadRemoteSAMutex_;
 
-    std::shared_ptr<DataSyncManager> dataSyncManager_;
+    std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
     std::shared_ptr<UserStatusListener> userStatusListener_;
     std::shared_ptr<BatteryStatusListener> batteryStatusListener_;
     std::shared_ptr<ScreenStatusListener> screenStatusListener_;

@@ -38,16 +38,13 @@
 #include <unistd.h>
 
 #include "cloud_disk_inode.h"
+#include "cloud_file_kit.h"
 #include "datetime_ex.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
-#include "dk_database.h"
-#include "dk_asset_read_session.h"
-#include "drive_kit.h"
 #include "ffrt_inner.h"
 #include "fuse_operations.h"
 #include "meta_file.h"
-#include "sdk_helper.h"
 #include "utils_log.h"
 #include "hitrace_meter.h"
 
@@ -77,7 +74,7 @@ struct CloudInode {
     string path;
     fuse_ino_t parent{0};
     atomic<int> refCount{0};
-    shared_ptr<DriveKit::DKAssetReadSession> readSession{nullptr};
+    shared_ptr<CloudFile::CloudAssetReadSession> readSession{nullptr};
     atomic<int> sessionRefCount{0};
     std::shared_mutex sessionLock;
     ffrt::mutex readLock;
@@ -90,7 +87,7 @@ struct FuseData {
     /* store CloudInode by path */
     map<string, shared_ptr<CloudInode>> inodeCache;
     std::shared_mutex cacheLock;
-    shared_ptr<DriveKit::DKDatabase> database;
+    shared_ptr<CloudFile::CloudDatabase> database;
     struct fuse_session *se;
 };
 
@@ -99,14 +96,14 @@ struct ReadArguments {
     off_t offset{0};
     shared_ptr<int64_t> readResult{nullptr};
     shared_ptr<bool> readFinish{nullptr};
-    shared_ptr<DriveKit::DKError> dkError{nullptr};
+    shared_ptr<CloudFile::CloudError> ckError{nullptr};
     shared_ptr<ffrt::condition_variable> cond{nullptr};
 
     ReadArguments(size_t readSize, off_t readOffset) : size(readSize), offset(readOffset)
     {
         readResult = make_shared<int64_t>(-1);
         readFinish = make_shared<bool>(false);
-        dkError = make_shared<DriveKit::DKError>();
+        ckError = make_shared<CloudFile::CloudError>();
         cond = make_shared<ffrt::condition_variable>();
     }
 };
@@ -121,46 +118,41 @@ static string GetLocalTmpPath(int32_t userId, const string &relativePath)
     return GetLocalPath(userId, relativePath) + PATH_TEMP_SUFFIX;
 }
 
-static int HandleDkError(fuse_req_t req, DriveKit::DKError &dkError)
+static int HandleCloudError(fuse_req_t req, CloudError error)
 {
-    if (!dkError.HasError()) {
-        return 0;
+    int ret = 0;
+    switch (error) {
+        case CloudError::CK_NO_ERROR:
+            ret = 0;
+            break;
+        case CloudError::CK_NETWORK_ERROR:
+            ret = -ENOTCONN;
+            break;
+        case CloudError::CK_SERVER_ERROR:
+            ret = -EIO;
+            break;
+        case CloudError::CK_LOCAL_ERROR:
+            ret = -EINVAL;
+            break;
+        default:
+            ret = -EIO;
+            break;
     }
-    if ((dkError.serverErrorCode == static_cast<int>(DriveKit::DKServerErrorCode::NETWORK_ERROR))
-        || dkError.dkErrorCode == DriveKit::DKLocalErrorCode::DOWNLOAD_REQUEST_ERROR) {
-        LOGE("network error");
-        return -ENOTCONN;
-    } else if (dkError.isServerError) {
-        LOGE("server errorCode is: %d", dkError.serverErrorCode);
-        return -EIO;
-    } else if (dkError.isLocalError) {
-        LOGE("local errorCode is: %d", dkError.dkErrorCode);
-        return -EINVAL;
-    } else {
-        LOGE("Unknown error");
-        return -EIO;
-    }
-    return -1;
+    return ret;
 }
 
-static shared_ptr<DriveKit::DKDatabase> GetDatabase(struct FuseData *data)
+static shared_ptr<CloudDatabase> GetDatabase(struct FuseData *data)
 {
     if (!data->database) {
-        auto driveKit = DriveKit::DriveKitNative::GetInstance(data->userId);
-        if (driveKit == nullptr) {
-            LOGE("sdk helper get drive kit instance fail");
+        auto instance = CloudFile::CloudFileKit::GetInstance();
+        if (instance == nullptr) {
+            LOGE("get cloud file helper instance failed");
             return nullptr;
         }
 
-        auto container = driveKit->GetDefaultContainer(PHOTOS_BUNDLE_NAME);
-        if (container == nullptr) {
-            LOGE("sdk helper get drive kit container fail");
-            return nullptr;
-        }
-
-        data->database = container->GetPrivateDatabase();
+        data->database = instance->GetCloudDatabase(data->userId, PHOTOS_BUNDLE_NAME);
         if (data->database == nullptr) {
-            LOGE("sdk helper get drive kit database fail");
+            LOGE("get cloud file kit database fail");
             return nullptr;
         }
     }
@@ -423,10 +415,10 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
     return 0;
 }
 
-static int HandleOpenResult(fuse_req_t req, DriveKit::DKError dkError, struct FuseData *data,
+static int HandleOpenResult(fuse_req_t req, CloudFile::CloudError ckError, struct FuseData *data,
     shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
 {
-    auto ret = HandleDkError(req, dkError);
+    auto ret = HandleCloudError(req, ckError);
     if (ret < 0) {
         cInode->readSession = nullptr;
         LOGE("open fali");
@@ -452,7 +444,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId);
-    shared_ptr<DriveKit::DKDatabase> database = GetDatabase(data);
+    shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
 
     LOGI("%{public}d open %{public}s", req->ctx.pid, CloudPath(data, ino).c_str());
@@ -474,8 +466,8 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                                                             GetAssetKey(cInode->mBase->fileType),
                                                             GetAssetPath(cInode, data));
         if (cInode->readSession) {
-            DriveKit::DKError dkError = cInode->readSession->InitSession();
-            auto ret = HandleOpenResult(req, dkError, data, cInode, fi);
+            auto error = cInode->readSession->InitSession();
+            auto ret = HandleOpenResult(req, error, data, cInode, fi);
             if (ret < 0) {
                 fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
                 fuse_reply_err(req, -ret);
@@ -546,7 +538,7 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
 }
 
 static bool PrepareForRead(fuse_req_t req, shared_ptr<char> &buf, size_t size, shared_ptr<CloudInode> cInode,
-				shared_ptr<DriveKit::DKAssetReadSession> dkReadSession)
+				shared_ptr<CloudFile::CloudAssetReadSession> readSession)
 {
     if (size > MAX_READ_SIZE) {
         fuse_reply_err(req, EINVAL);
@@ -561,7 +553,7 @@ static bool PrepareForRead(fuse_req_t req, shared_ptr<char> &buf, size_t size, s
         return false;
     }
 
-    if (!dkReadSession) {
+    if (!readSession) {
         fuse_reply_err(req, EPERM);
         LOGE("read fail, readsession is null");
         return false;
@@ -571,10 +563,10 @@ static bool PrepareForRead(fuse_req_t req, shared_ptr<char> &buf, size_t size, s
 }
 
 static void CloudReadOnCloudFile(shared_ptr<ReadArguments> readArgs, shared_ptr<char> buf,
-    shared_ptr<CloudInode> cInode, shared_ptr<DriveKit::DKAssetReadSession> dkReadSession)
+    shared_ptr<CloudInode> cInode, shared_ptr<CloudFile::CloudAssetReadSession> readSession)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    *readArgs->readResult = dkReadSession->PRead(readArgs->offset, readArgs->size, buf.get(), *readArgs->dkError);
+    *readArgs->readResult = readSession->PRead(readArgs->offset, readArgs->size, buf.get(), *readArgs->ckError);
     {
         unique_lock lck(cInode->readLock);
         *readArgs->readFinish = true;
@@ -636,7 +628,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         fuse_reply_err(req, ENOMEM);
         return;
     }
-    auto ret = HandleDkError(req, *readArgs->dkError);
+    auto ret = HandleCloudError(req, *readArgs->ckError);
     if (ret < 0) {
         fuse_reply_err(req, -ret);
         return;

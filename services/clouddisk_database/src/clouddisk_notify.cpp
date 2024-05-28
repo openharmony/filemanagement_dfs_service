@@ -197,7 +197,7 @@ static void HandleInsert(const NotifyParamService &paramService, const ParamServ
         return;
     }
     NotifyData notifyData;
-    int32_t ret = rdbStore->GetNotifyData(paramService.record, notifyData);
+    int32_t ret = rdbStore->GetNotifyData(paramService.node, notifyData);
     if (ret == E_OK) {
         notifyData.type = NotifyType::NOTIFY_ADDED;
         CloudDiskNotify::GetInstance().AddNotify(notifyData);
@@ -219,7 +219,7 @@ static void HandleUpdate(const NotifyParamService &paramService, const ParamServ
         notifyData.type = NotifyType::NOTIFY_MODIFIED;
         notifyData.isDir = curNode.isDir == "directory";
         if (paramService.notifyType == NotifyType::NOTIFY_NONE &&
-            rdbStore->GetNotifyData(paramService.record, inNotifyData) == E_OK) {
+            rdbStore->GetNotifyData(paramService.node, inNotifyData) == E_OK) {
             if (inNotifyData.uri != notifyData.uri) {
                 notifyData.type = NotifyType::NOTIFY_DELETED;
                 inNotifyData.type = NotifyType::NOTIFY_RENAMED;

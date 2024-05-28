@@ -47,11 +47,10 @@ config("compiler_configs") {
 
 config("utils_public_config") {
   include_dirs = [
-    "cloud_disk/include",
-    "dfx/include",
-    "work/include",
+    "inner_api",
+    "load/include",
     "log/include",
-    "preference/include",
+    "work/include",
     "system/include",
   ]
 }
@@ -69,6 +68,7 @@ ohos_shared_library("libdistributedfileutils") {
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
     "dfx/src/xcollie_helper.cpp",
+    "load/src/plugin_loader.cpp",
     "log/src/dfs_error.cpp",
     "log/src/utils_log.cpp",
     "preference/src/cloud_pref_impl.cpp",
@@ -124,7 +124,10 @@ ohos_shared_library("libdistributedfileutils") {
 }
 
 config("dentry_public_config") {
-  include_dirs = [ "dentry/include" ]
+  include_dirs = [
+    "dentry/include",
+    "inner_api",
+  ]
 }
 
 ohos_shared_library("libdistributedfiledentry") {
@@ -137,11 +140,7 @@ ohos_shared_library("libdistributedfiledentry") {
     cfi_cross_dso = true
     debug = false
   }
-  include_dirs = [
-    "cloud_disk/include",
-    "dentry/include",
-    "log/include",
-  ]
+
   sources = [
     "dentry/src/file_utils.cpp",
     "dentry/src/meta_file.cpp",
@@ -172,6 +171,16 @@ ohos_shared_library("libdistributedfiledentry") {
   subsystem_name = "filemanagement"
 }
 
+config("utils_lite_public_config") {
+  include_dirs = [
+    "dentry/include",
+    "inner_api",
+    "load/include",
+    "log/include",
+    "system/include",
+  ]
+}
+
 ohos_shared_library("libdistributedfileutils_lite") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -182,19 +191,14 @@ ohos_shared_library("libdistributedfileutils_lite") {
     cfi_cross_dso = true
     debug = false
   }
-  include_dirs = [
-    "cloud_disk/include",
-    "dentry/include",
-    "dfx/include",
-    "log/include",
-    "system/include",
-  ]
+
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
     "dentry/src/file_utils.cpp",
     "dentry/src/meta_file.cpp",
     "dentry/src/meta_file_clouddisk.cpp",
     "dfx/src/xcollie_helper.cpp",
+    "load/src/plugin_loader.cpp",
     "log/src/dfs_error.cpp",
     "log/src/utils_log.cpp",
     "system/src/dfsu_memory_guard.cpp",
@@ -202,6 +206,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
   ]
 
   configs = [ "//build/config/compiler:exceptions" ]
+  public_configs = [ ":utils_lite_public_config" ]
 
   defines = [
     "LOG_DOMAIN=0xD004308",

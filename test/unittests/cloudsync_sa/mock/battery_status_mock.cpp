@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "sync_rule/battery_status.h"
+#include "battery_status.h"
 
 namespace OHOS::FileManagement::CloudSync {
 constexpr int32_t DEFAULT_BATTERY_CAPCITY = 100;
