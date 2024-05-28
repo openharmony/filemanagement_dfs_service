@@ -30,6 +30,7 @@
 #include "sdk_helper.h"
 #include "sysevent.h"
 #include "task.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -239,6 +240,9 @@ private:
 
     /* Current error type */
     ErrorType CurrentErrorType_{ErrorType::NO_ERROR};
+
+    const std::string wifiSysparam = "persist.kernel.cloudsync.network_unavailable";
+    const std::string batterySysparam = "persist.kernel.cloudsync.battery_level_low";
 };
 } // namespace CloudSync
 } // namespace FileManagement

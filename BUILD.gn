@@ -16,6 +16,8 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 group("services_target") {
   deps = [
+    "${services_path}:cloudsyncservice.para",
+    "${services_path}:cloudsyncservice.para.dac",
     "${services_path}:distributed_file.para",
     "${services_path}:distributedfile_etc",
     "${services_path}:distributedfile_sa_profile",

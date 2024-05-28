@@ -59,6 +59,7 @@ int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
 
     auto ret = InitSdk(userId, bundleName, dataSyncer);
     if (ret != E_OK) {
+        dataSyncer->UpdateErrorCode(E_SYNC_FAILED_BATTERY_LOW);
         return ret;
     }
     ret = IsSkipSync(bundleName, userId, forceFlag);
