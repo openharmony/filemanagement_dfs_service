@@ -437,6 +437,8 @@ static int HandleOpenResult(fuse_req_t req, DriveKit::DKError dkError, struct Fu
         if (ret < 0) {
             return ret;
         }
+    } else {
+        fi->fh = UINT64_MAX;
     }
     cInode->sessionRefCount++;
     LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
@@ -506,7 +508,9 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     wSesLock.lock();
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
-        close(fi->fh);
+        if (fi->fh != UINT64_MAX) {
+            close(fi->fh);
+        }
         if (cInode->mBase->fileType == FILE_TYPE_CONTENT && (!cInode->readSession->Close(false))) {
             LOGE("Failed to close readSession");
         }
