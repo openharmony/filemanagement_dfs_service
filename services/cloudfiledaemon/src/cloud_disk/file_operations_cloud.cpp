@@ -293,7 +293,7 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
         parentInode->cloudId);
     int32_t ret = metaFile->DoLookup(metaBase);
     if (ret != 0) {
-        LOGE("lookup dentry failed, ret = %{public}d", ret);
+        LOGE("lookup dentry failed, name:%{public}s, ret = %{public}d", name, ret);
         return ENOENT;
     }
     string key = std::to_string(parent) + name;
