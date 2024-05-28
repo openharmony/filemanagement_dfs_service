@@ -147,7 +147,7 @@ bool SessionPool::DeviceDisconnectCountOnly(const string &cid, const uint8_t lin
     std::string key = deviceId + "_" + std::to_string(linkType);
     
     auto itCount = deviceConnectCount_.find(key);
-    if (itCount != deviceConnectCount_.end()) {
+    if (itCount == deviceConnectCount_.end()) {
         LOGI("deviceConnectCount_ can not find %{public}s", Utils::GetAnonyString(key).c_str());
         return false;
     }
