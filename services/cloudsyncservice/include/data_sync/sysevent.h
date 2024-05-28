@@ -86,7 +86,7 @@ public:
 
     void SetDuration(uint64_t time)
     {
-        duration_ = time - startTime_;
+        duration_ = time > startTime_ ? time - startTime_ : 0;
     }
 
 protected:
