@@ -562,7 +562,7 @@ static uint32_t GetMaxLevel(int32_t fd)
     blkNum >>= 1;
     while (blkNum > 1) {
         blkNum >>= 1;
-        maxLevel ++;
+        maxLevel++;
     }
     return maxLevel;
 }
