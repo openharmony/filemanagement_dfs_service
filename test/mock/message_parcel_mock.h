@@ -40,12 +40,15 @@ public:
     virtual bool ReadBool(bool &value) = 0;
     virtual bool WriteBool(bool value) = 0;
     virtual bool WriteString(const std::string &value) = 0;
+    virtual bool WriteCString(const char *value) = 0;
     virtual bool WriteFileDescriptor(int fd) = 0;
     virtual bool ReadString(std::string &value) = 0;
     virtual int ReadFileDescriptor() = 0;
     virtual bool ReadStringVector(std::vector<std::string> *value) = 0;
     virtual bool ReadUint32(uint32_t &value) = 0;
     virtual bool WriteUint64(uint64_t value) = 0;
+    virtual bool WriteUint16(uint16_t value) = 0;
+    virtual bool WriteUint32(uint32_t value) = 0;
 public:
     static inline std::shared_ptr<DfsMessageParcel> messageParcel = nullptr;
 };
@@ -65,12 +68,15 @@ public:
     MOCK_METHOD1(ReadBool, bool(bool &value));
     MOCK_METHOD1(WriteBool, bool(bool value));
     MOCK_METHOD1(WriteString, bool(const std::string &value));
+    MOCK_METHOD1(WriteCString, bool(const char *value));
     MOCK_METHOD1(WriteFileDescriptor, bool(int fd));
     MOCK_METHOD1(ReadString, bool(std::string &value));
     MOCK_METHOD0(ReadFileDescriptor, int());
     MOCK_METHOD1(ReadStringVector, bool(std::vector<std::string> *value));
     MOCK_METHOD1(ReadUint32, bool(uint32_t &value));
     MOCK_METHOD1(WriteUint64, bool(uint64_t value));
+    MOCK_METHOD1(WriteUint16, bool(uint16_t value));
+    MOCK_METHOD1(WriteUint32, bool(uint32_t value));
 };
 }
 #endif
