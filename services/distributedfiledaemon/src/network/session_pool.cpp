@@ -147,12 +147,16 @@ bool SessionPool::DeviceDisconnectCountOnly(const string &cid, const uint8_t lin
     std::string key = deviceId + "_" + std::to_string(linkType);
     
     auto itCount = deviceConnectCount_.find(key);
-    if (itCount != deviceConnectCount_.end() && needErase) {
+    if (itCount == deviceConnectCount_.end()) {
+        LOGI("deviceConnectCount_ can not find %{public}s", Utils::GetAnonyString(key).c_str());
+        return false;
+    }
+    if (needErase) {
         deviceConnectCount_.erase(itCount);
         LOGI("[DeviceDisconnectCountOnly]  %{public}s, needErase", Utils::GetAnonyString(key).c_str());
         return false;
     }
-    if (itCount != deviceConnectCount_.end() && itCount->second > MOUNT_DFS_COUNT_ONE) {
+    if (itCount->second > MOUNT_DFS_COUNT_ONE) {
         LOGI("[DeviceDisconnectCountOnly] deviceId_linkType %{public}s has already established \
             more than one link, count %{public}d, decrease count by one now",
             Utils::GetAnonyString(key).c_str(), itCount->second);
