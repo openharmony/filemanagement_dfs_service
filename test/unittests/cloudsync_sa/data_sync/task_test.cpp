@@ -19,7 +19,7 @@
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
 #include "result_set_mock.h"
-#include "sync_rule/cloud_status.h"
+#include "cloud_status.h"
 #include "task.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

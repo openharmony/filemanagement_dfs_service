@@ -39,6 +39,10 @@ group("cloud_daemon_kit_inner_target") {
   ]
 }
 
+group("cloud_file_kit_inner_target") {
+  deps = [ "interfaces/inner_api/native/cloud_file_kit_inner:cloudfile_kit" ]
+}
+
 group("cloudsync_asset_kit_inner_target") {
   deps = [
     "interfaces/inner_api/native/cloudsync_kit_inner:cloudsync_asset_kit_inner",

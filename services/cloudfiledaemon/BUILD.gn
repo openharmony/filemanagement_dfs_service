@@ -61,6 +61,7 @@ ohos_shared_library("cloudfiledaemon") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
     "${utils_path}:libdistributedfileutils_lite",
   ]
 
@@ -78,14 +79,6 @@ ohos_shared_library("cloudfiledaemon") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
 
   use_exceptions = true
   part_name = "dfs_service"

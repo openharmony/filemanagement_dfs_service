@@ -17,7 +17,7 @@
 
 #include "utils_log.h"
 #include "ipc/cloud_download_callback_manager.h"
-#include "data_sync/task_state_manager.h"
+#include "task_state_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;

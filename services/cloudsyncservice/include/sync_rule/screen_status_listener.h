@@ -24,14 +24,14 @@ namespace FileManagement {
 namespace CloudSync {
 class ScreenStatusListener : public std::enable_shared_from_this<ScreenStatusListener> {
 public:
-    explicit ScreenStatusListener(std::shared_ptr<DataSyncManager> dataSyncManager);
+    explicit ScreenStatusListener(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     ~ScreenStatusListener();
     void Start();
     void Stop();
     void ScreenOff();
 
 private:
-    std::shared_ptr<DataSyncManager> dataSyncManager_;
+    std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
     std::shared_ptr<EventFwk::CommonEventSubscriber> commonEventSubscriber_ = nullptr;
 };
 

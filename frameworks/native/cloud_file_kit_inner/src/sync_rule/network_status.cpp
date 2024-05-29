@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "sync_rule/network_status.h"
+#include "network_status.h"
 
 #include <cstdint>
 #include <unistd.h>
@@ -22,7 +22,7 @@
 #include "parameter.h"
 
 #include "dfs_error.h"
-#include "sync_rule/net_conn_callback_observer.h"
+#include "net_conn_callback_observer.h"
 #include "utils_log.h"
 
 using namespace OHOS::NetManagerStandard;
@@ -32,7 +32,7 @@ static constexpr const int32_t MIN_VALID_NETID = 100;
 static constexpr const int32_t WAIT_NET_SERVICE_TIME = 4;
 static const char *g_netManagerOnStatus = "2";
 
-int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<DataSyncManager> dataSyncManager)
+int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     sptr<NetConnCallbackObserver> observer(new (std::nothrow) NetConnCallbackObserver(dataSyncManager));
     if (observer == nullptr) {
@@ -84,7 +84,7 @@ void NetworkStatus::SetNetConnStatus(NetManagerStandard::NetAllCapabilities &net
     }
 }
 
-int32_t NetworkStatus::GetAndRegisterNetwork(std::shared_ptr<DataSyncManager> dataSyncManager)
+int32_t NetworkStatus::GetAndRegisterNetwork(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     int32_t res = GetDefaultNet();
     if (res != E_OK) {
@@ -94,7 +94,7 @@ int32_t NetworkStatus::GetAndRegisterNetwork(std::shared_ptr<DataSyncManager> da
     return RegisterNetConnCallback(dataSyncManager);
 }
 
-void NetworkStatus::InitNetwork(std::shared_ptr<DataSyncManager> dataSyncManager)
+void NetworkStatus::InitNetwork(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     int status = WaitParameter("startup.service.ctl.netmanager", g_netManagerOnStatus, WAIT_NET_SERVICE_TIME);
     if (status != 0) {

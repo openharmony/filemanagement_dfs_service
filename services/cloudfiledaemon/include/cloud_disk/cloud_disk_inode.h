@@ -25,8 +25,7 @@
 #include <unistd.h>
 #include <unordered_map>
 
-#include "dk_asset_read_session.h"
-#include "dk_database.h"
+#include "cloud_asset_read_session.h"
 #include "file_operations_base.h"
 
 namespace OHOS {
@@ -77,7 +76,7 @@ struct CloudDiskFile {
     int fileDirty{CLOUD_DISK_FILE_UNKNOWN};
     int32_t fd{-1};
     std::atomic<int> refCount{0};
-    std::shared_ptr<DriveKit::DKAssetReadSession> readSession{nullptr};
+    std::shared_ptr<CloudFile::CloudAssetReadSession> readSession{nullptr};
 };
 
 struct CloudDiskFuseData {

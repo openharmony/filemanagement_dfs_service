@@ -18,6 +18,16 @@ config("clouddisk_database_config") {
   visibility = [ ":*" ]
 }
 
+config("clouddisk_database_public_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "include",
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
+    "${services_path}/cloudfiledaemon/include/cloud_disk",
+  ]
+}
+
 ohos_shared_library("clouddisk_database") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -28,15 +38,6 @@ ohos_shared_library("clouddisk_database") {
     cfi_cross_dso = true
     debug = false
   }
-  include_dirs = [
-    "include",
-    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
-    "${services_path}/cloudfiledaemon/include/cloud_disk",
-    "${utils_path}/cloud_disk/include",
-    "${utils_path}/dentry/include",
-    "${utils_path}/preference/include",
-    "${utils_path}/log/include",
-  ]
 
   sources = [
     "src/clouddisk_notify.cpp",
@@ -49,6 +50,8 @@ ohos_shared_library("clouddisk_database") {
   ]
 
   configs = [ ":clouddisk_database_config" ]
+  public_configs = [ ":clouddisk_database_public_config" ]
+
   cflags = [
     "-Wall",
     "-Werror",
@@ -76,14 +79,6 @@ ohos_shared_library("clouddisk_database") {
     "libfuse:libfuse",
     "relational_store:native_rdb",
   ]
-
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
 
   use_exceptions = true
   part_name = "dfs_service"

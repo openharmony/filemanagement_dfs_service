@@ -26,7 +26,7 @@ const std::string PeriodicCheckTaskName = "periodic_check_task";
 
 class PeriodicCheckTask : public CycleTask {
 public:
-    PeriodicCheckTask(std::shared_ptr<DataSyncManager> dataSyncManager);
+    PeriodicCheckTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     int32_t RunTaskForBundle(int32_t userId, std::string bundleName) override;
 };
 } // namespace CloudSync

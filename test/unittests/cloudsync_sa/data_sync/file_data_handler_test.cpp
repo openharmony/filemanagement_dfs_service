@@ -30,7 +30,7 @@
 #include "rdb_store_config.h"
 #include "rdb_store_mock.h"
 #include "result_set_mock.h"
-#include "sync_rule/cloud_status.h"
+#include "cloud_status.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;

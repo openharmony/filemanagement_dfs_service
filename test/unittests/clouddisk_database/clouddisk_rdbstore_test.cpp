@@ -22,7 +22,7 @@
 #include "rdb_helper.h"
 #include "rdb_open_callback.h"
 #include "rdb_store_config.h"
-#include "sync_rule/cloud_status.h"
+#include "cloud_status.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
@@ -32,7 +32,6 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 using namespace NativeRdb;
-using namespace DriveKit;
 
 class CloudDiskRdbStoreTest : public testing::Test {
 public:
@@ -150,7 +149,6 @@ HWTEST_F(CloudDiskRdbStoreTest, GetAttrTest1, TestSize.Level1)
     info.fileName = "test.txt";
     info.cloudId = "";
     info.parentCloudId = "22222";
-    DriveKit::DKRecordId rootId_ = "22222";
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
     int32_t ret = CloudDiskRdbStore.GetAttr(cloudId, info);
     EXPECT_EQ(ret, E_INVAL_ARG);

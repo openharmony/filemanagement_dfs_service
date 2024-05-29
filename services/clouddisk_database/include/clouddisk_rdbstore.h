@@ -24,7 +24,6 @@
 
 #include "cloud_file_utils.h"
 #include "clouddisk_db_const.h"
-#include "dk_record.h"
 #include "file_column.h"
 #include "meta_file.h"
 
@@ -76,7 +75,7 @@ public:
     int32_t GetParentNode(const std::string parentCloudId, std::string &nextCloudId, std::string &fileName);
     int32_t GetUriFromDB(const std::string &parentCloudId, std::string &uri);
     int32_t GetNotifyUri(const CacheNode &cacheNode, std::string &uri);
-    int32_t GetNotifyData(const DriveKit::DKRecord &record, NotifyData &notifyData);
+    int32_t GetNotifyData(const CacheNode &cacheNode, NotifyData &notifyData);
     int32_t CheckRootIdValid();
 
     static const int32_t BATCH_LIMIT_SIZE = 500;

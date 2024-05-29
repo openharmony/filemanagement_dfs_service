@@ -15,31 +15,32 @@
 
 #include "save_subscription_task.h"
 
+#include "cloud_file_kit.h"
+#include "utils_log.h"
+
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-SaveSubscriptionTask::SaveSubscriptionTask(std::shared_ptr<DataSyncManager> dataSyncManager)
+SaveSubscriptionTask::SaveSubscriptionTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
     : CycleTask("save_subscription_task", {}, ONE_DAY, dataSyncManager)
 {
 }
 
 int32_t SaveSubscriptionTask::RunTaskForBundle(int32_t userId, std::string bundleName)
 {
-    auto dataSyncer = dataSyncManager_->GetDataSyncer(bundleName, userId);
-    if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
-        return E_INVAL_ARG;
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance == nullptr) {
+        LOGE("get cloud file helper instance failed");
+        return E_NULLPTR;
     }
-    int32_t ret = dataSyncManager_->InitSdk(userId, bundleName, dataSyncer);
-    if (ret != E_OK) {
-        return ret;
+
+    auto cloudSyncHelper = instance->GetCloudSyncHelper(userId, bundleName);
+    if (cloudSyncHelper == nullptr) {
+        LOGE("get cloudSyncHelper failed");
+        return E_NULLPTR;
     }
-    if (!dataSyncer) {
-        LOGE("Get dataSyncer failed, bundleName: %{private}s", bundleName.c_str());
-        return E_INVAL_ARG;
-    }
-    dataSyncer->SaveSubscription();
-    return E_OK;
+
+    return cloudSyncHelper->SaveSubScription();
 }
 } // namespace CloudSync
 } // namespace FileManagement

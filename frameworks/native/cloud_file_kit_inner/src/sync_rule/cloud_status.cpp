@@ -13,53 +13,33 @@
  * limitations under the License.
  */
 
-#include "sync_rule/cloud_status.h"
+#include "cloud_status.h"
 
+#include "cloud_file_kit.h"
 #include "dfs_error.h"
-#include "drive_kit.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
-using namespace DriveKit;
 int32_t CloudStatus::GetCurrentCloudInfo(const std::string &bundleName, const int32_t userId)
 {
-    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
-    if (driveKit == nullptr) {
-        LOGE("sdk helper get drive kit instance fail");
-        return E_CLOUD_SDK;
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance == nullptr) {
+        LOGE("get cloud file helper instance failed");
+        return E_NULLPTR;
     }
 
-    auto err = driveKit->GetCloudUserInfo(userInfo_);
-    if (err.HasError()) {
-        LOGE("GetCloudUserInfo failed, server err:%{public}d and dk err:%{public}d", err.serverErrorCode,
-             err.dkErrorCode);
-        return E_CLOUD_SDK;
+    auto ret = instance->GetCloudUserInfo(userId, userInfo_);
+    if (ret != E_OK) {
+        return ret;
     }
 
-    if (!(userInfo_.cloudStatus == DKCloudStatus::DK_CLOUD_STATUS_LOGIN)) {
-        LOGE("cloudstatus:%{public}d, spaceStatus:%{public}d", userInfo_.cloudStatus, userInfo_.spaceStatus);
-        return E_CLOUD_SDK;
-    }
-
-    std::map<DriveKit::DKAppBundleName, DriveKit::DKAppInfo> appInfos;
-    err = driveKit->GetCloudAppInfo({bundleName}, appInfos);
-    if (err.HasError()) {
-        LOGE("GetCloudAppInfo failed, server err:%{public}d and dk err:%{public}d", err.serverErrorCode,
-             err.dkErrorCode);
-        return E_CLOUD_SDK;
-    }
-    auto appInfo = appInfos[bundleName];
-    if (appInfo.enableCloud != 1) {
-        LOGE("unexpected status:%{public}d, bundleName:%{private}s", appInfo.enableCloud, bundleName.c_str());
-        return E_CLOUD_SDK;
-    }
-    auto switchStatus = appInfo.switchStatus;
-    /* Record the log when the switch is not open */
-    if (switchStatus != DKAppSwitchStatus::DK_APP_SWITCH_STATUS_OPEN) {
-        LOGI("bundleName:%{private}s, switchStatus:%{public}d", bundleName.c_str(), switchStatus);
+    bool switchStatus = false;
+    ret = instance->GetAppSwitchStatus(bundleName, userId, switchStatus);
+    if (ret != E_OK) {
+        return ret;
     }
     /* insert key-value */
-    appSwitches_.insert(std::make_pair(bundleName, switchStatus == DKAppSwitchStatus::DK_APP_SWITCH_STATUS_OPEN));
+    appSwitches_.insert(std::make_pair(bundleName, switchStatus));
     userId_ = userId;
     return E_OK;
 }
@@ -82,8 +62,8 @@ bool CloudStatus::IsCloudStatusOkay(const std::string &bundleName, const int32_t
         }
     }
 
-    LOGI("bundleName:%{private}s, cloudSatus:%{public}d, spaceStatus:%{public}d, switcheStatus:%{public}d",
-         bundleName.c_str(), userInfo_.cloudStatus, userInfo_.spaceStatus, appSwitches_[bundleName]);
+    LOGI("bundleName:%{private}s, cloudSatus:%{public}d, switcheStatus:%{public}d", bundleName.c_str(),
+         userInfo_.enableCloud, appSwitches_[bundleName]);
     return appSwitches_[bundleName];
 }
 

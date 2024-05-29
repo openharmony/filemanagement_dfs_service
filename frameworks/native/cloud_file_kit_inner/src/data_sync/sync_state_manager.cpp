@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "data_sync/sync_state_manager.h"
+#include "sync_state_manager.h"
 
 #include <type_traits>
 

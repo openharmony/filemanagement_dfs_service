@@ -15,13 +15,13 @@
 
 #include "data_syncer_rdb_store.h"
 
-#include "data_convertor.h"
 #include "data_syncer_rdb_col.h"
 #include "dfs_error.h"
-#include "utils_log.h"
 #include "rdb_helper.h"
 #include "rdb_sql_utils.h"
 #include "rdb_store_config.h"
+#include "result_set.h"
+#include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
@@ -63,7 +63,10 @@ int32_t DataSyncerRdbStore::Insert(int32_t userId, const std::string &bundleName
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(DATA_SYNCER_TABLE);
     predicates.EqualTo(DATA_SYNCER_UNIQUE_ID, uniqueId);
     std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
-    RETURN_ON_ERR(Query(predicates, resultSet));
+    auto queryRet = Query(predicates, resultSet);
+    if (queryRet != E_OK) {
+        return queryRet;
+    }
     if (resultSet->GoToNextRow() == E_OK) {
         return E_OK;
     }
@@ -111,6 +114,24 @@ int32_t DataSyncerRdbStore::UpdateSyncState(int32_t userId, const string &bundle
     return E_OK;
 }
 
+static int32_t GetLong(const string &key, int64_t &val, NativeRdb::ResultSet &resultSet)
+{
+    int32_t index;
+    int32_t err = resultSet.GetColumnIndex(key, index);
+    if (err != NativeRdb::E_OK) {
+        LOGE("result set get  %{public}s column index err %{public}d", key.c_str(), err);
+        return E_RDB;
+    }
+
+    err = resultSet.GetLong(index, val);
+    if (err != 0) {
+        LOGE("result set get int err %{public}d", err);
+        return E_RDB;
+    }
+
+    return E_OK;
+}
+
 int32_t DataSyncerRdbStore::GetLastSyncTime(int32_t userId, const string &bundleName, int64_t &time)
 {
     LOGI("get sync time uid: %{public}d, name: %{public}s", userId, bundleName.c_str());
@@ -118,11 +139,14 @@ int32_t DataSyncerRdbStore::GetLastSyncTime(int32_t userId, const string &bundle
     predicates.EqualTo(USER_ID, userId)->EqualTo(BUNDLE_NAME, bundleName);
     std::shared_ptr<NativeRdb::ResultSet> resultSet = nullptr;
 
-    RETURN_ON_ERR(Query(predicates, resultSet));
+    auto queryRet = Query(predicates, resultSet);
+    if (queryRet != E_OK) {
+        return queryRet;
+    }
     if (resultSet->GoToNextRow() != E_OK) {
         return E_INVAL_ARG;
     }
-    int32_t ret = DataConvertor::GetLong(LAST_SYNC_TIME, time, *resultSet);
+    int32_t ret = GetLong(LAST_SYNC_TIME, time, *resultSet);
     if (ret != E_OK) {
         LOGE("get last sync time failed");
         return ret;

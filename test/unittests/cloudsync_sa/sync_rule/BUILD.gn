@@ -27,7 +27,6 @@ ohos_unittest("battery_status_listener_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
     "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
-    "${services_path}/cloudsyncservice/src/sync_rule/system_load.cpp",
     "battery_status_listener_test.cpp",
   ]
 
@@ -46,6 +45,7 @@ ohos_unittest("battery_status_listener_test") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
@@ -119,12 +119,12 @@ ohos_unittest("net_conn_callback_observer_test") {
 ohos_unittest("network_status_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
-    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/network_status.cpp",
-    "${services_path}/cloudsyncservice/src/sync_rule/system_load.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_status.cpp",
     "network_status_test.cpp",
   ]
 
   include_dirs = [
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${services_path}/cloudsyncservice/include/data_sync",
@@ -172,19 +172,20 @@ ohos_unittest("cloud_status_test") {
     "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
     "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
     "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/cloud_status.cpp",
     "${distributedfile_path}/utils/log/src/dfs_error.cpp",
-    "${services_path}/cloudsyncservice/src/sync_rule/cloud_status.cpp",
     "cloud_status_test.cpp",
   ]
 
   include_dirs = [
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
     "${services_path}/cloudsyncservice/include",
-    "${services_path}/cloudsyncservice/include/sync_rule",
     "${media_library_path}/frameworks/utils/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
   ]
 
   deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
@@ -213,7 +214,7 @@ ohos_unittest("battery_status_test") {
   }
   module_out_path = "filemanagement/dfs_service"
   sources = [
-    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/battery_status.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/battery_status.cpp",
     "battery_status_test.cpp",
   ]
 
@@ -222,9 +223,9 @@ ohos_unittest("battery_status_test") {
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store_mock.cpp",
     "${services_path}/cloudsyncservice/include/data_sync",
-    "${services_path}/cloudsyncservice/include/sync_rule",
     "${utils_path}/log/include",
     "${image_framework_path}/mock/native/include/log",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",

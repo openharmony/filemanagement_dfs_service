@@ -26,6 +26,7 @@
 #include "iremote_object.h"
 #include "system_ability_definition.h"
 #include "parameters.h"
+#include "plugin_loader.h"
 #include "dfs_error.h"
 #include "fuse_manager/fuse_manager.h"
 #include "utils_log.h"
@@ -106,6 +107,8 @@ void CloudDaemon::OnStart()
     }
 
     state_ = ServiceRunningState::STATE_RUNNING;
+    /* load cloud file ext plugin */
+    CloudFile::PluginLoader::GetInstance().LoadCloudKitPlugin();
     LOGI("Start service successfully");
 }
 

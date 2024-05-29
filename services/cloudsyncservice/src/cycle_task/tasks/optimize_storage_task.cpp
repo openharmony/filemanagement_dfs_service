@@ -14,30 +14,32 @@
  */
 
 #include "optimize_storage_task.h"
-#include "drive_kit.h"
+#include "cloud_file_kit.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-OptimizeStorageTask::OptimizeStorageTask(std::shared_ptr<DataSyncManager> dataSyncManager)
-    : CycleTask("optimize_storage_task", {"com.ohos.photos"}, ONE_DAY, dataSyncManager) {}
+OptimizeStorageTask::OptimizeStorageTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+    : CycleTask("optimize_storage_task", {"com.ohos.photos"}, ONE_DAY, dataSyncManager)
+{
+}
 
 int32_t OptimizeStorageTask::RunTaskForBundle(int32_t userId, std::string bundleName)
 {
-    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
-    auto dataSyncManager_ = GetDataSyncManager();
-    if (driveKit == nullptr) {
-        LOGE("get drive kit instance fail");
-        return E_CLOUD_SDK;
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance == nullptr) {
+        LOGE("get cloud file helper instance failed");
+        return E_NULLPTR;
     }
     std::map<std::string, std::string> param;
-    auto err = driveKit->GetAppConfigParams(bundleName, param);
-    if (err.HasError() || param.empty()) {
-        LOGE("GetAppConfigParams failed, server err:%{public}d and dk err:%{public}d",
-            err.serverErrorCode, err.dkErrorCode);
-        return E_CLOUD_SDK;
+    auto ret = instance->GetAppConfigParams(userId, bundleName, param);
+    if (ret != E_OK || param.empty()) {
+        LOGE("GetAppConfigParams failed");
+        return ret;
     }
 
+    auto dataSyncManager_ = GetDataSyncManager();
     int32_t agingDays = std::stoi(param["validDays"]);
     int32_t agingPolicy = std::stoi(param["dataAgingPolicy"]);
     if (agingPolicy == 0) {

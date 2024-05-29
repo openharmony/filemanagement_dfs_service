@@ -22,14 +22,13 @@
 
 #include "account_status.h"
 #include "cloud_disk_inode.h"
+#include "cloud_file_kit.h"
 #include "cloud_file_utils.h"
 #include "clouddisk_rdb_transaction.h"
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_notify.h"
 #include "database_manager.h"
 #include "directory_ex.h"
-#include "dk_database.h"
-#include "drive_kit.h"
 #include "ffrt_inner.h"
 #include "file_operations_helper.h"
 #include "securec.h"
@@ -39,7 +38,7 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
 using namespace std;
-using namespace DriveKit;
+using namespace CloudFile;
 enum XATTR_CODE {
     ERROR_CODE = -1,
     HMDFS_PERMISSION,
@@ -345,46 +344,38 @@ void FileOperationsCloud::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
     fuse_reply_attr(req, &inoPtr->stat, 0);
 }
 
-static bool HandleDkError(fuse_req_t req, DriveKit::DKError dkError)
+static bool HandleCloudError(fuse_req_t req, CloudError error)
 {
-    if (!dkError.HasError()) {
+    if (error == CloudError::CK_NO_ERROR) {
         return false;
     }
-    if ((dkError.serverErrorCode == static_cast<int>(DriveKit::DKServerErrorCode::NETWORK_ERROR))
-        || dkError.dkErrorCode == DriveKit::DKLocalErrorCode::DOWNLOAD_REQUEST_ERROR) {
+    if (error == CloudError::CK_NETWORK_ERROR) {
         LOGE("network error");
         fuse_reply_err(req, ENOTCONN);
-    } else if (dkError.isServerError) {
-        LOGE("server errorCode is: %d", dkError.serverErrorCode);
+    } else if (error == CloudError::CK_SERVER_ERROR) {
+        LOGE("server error");
         fuse_reply_err(req, EIO);
-    } else if (dkError.isLocalError) {
-        LOGE("local errorCode is: %d", dkError.dkErrorCode);
+    } else if (error == CloudError::CK_LOCAL_ERROR) {
+        LOGE("local error");
         fuse_reply_err(req, EINVAL);
+    } else {
+        LOGE("Unknow error");
+        fuse_reply_err(req, EIO);
     }
     return true;
 }
 
-static shared_ptr<DriveKit::DKDatabase> GetDatabase(int32_t userId, string bundleName)
+static shared_ptr<CloudDatabase> GetDatabase(int32_t userId, string bundleName)
 {
-    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
-    if (driveKit == nullptr) {
-        LOGE("sdk helper get drive kit instance fail");
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance == nullptr) {
+        LOGE("get cloud file helper instance failed");
         return nullptr;
     }
 
-    if (AccountStatus::IsNeedCleanCache()) {
-        driveKit->CleanCloudUserInfo();
-        LOGI("execute clean cloud user info success");
-    }
-    auto container = driveKit->GetDefaultContainer(bundleName);
-    if (container == nullptr) {
-        LOGE("sdk helper get drive kit container fail");
-        return nullptr;
-    }
-
-    shared_ptr<DriveKit::DKDatabase> database = container->GetPrivateDatabase();
+    auto database = instance->GetCloudDatabase(userId, bundleName);
     if (database == nullptr) {
-        LOGE("sdk helper get drive kit database fail");
+        LOGE("get cloud file kit database fail");
         return nullptr;
     }
     return database;
@@ -398,7 +389,7 @@ static void CloudOpen(fuse_req_t req,
     if (filePtr == nullptr) {
         filePtr = InitFileAttr(data, fi);
     }
-    shared_ptr<DriveKit::DKDatabase> database = GetDatabase(data->userId, inoPtr->bundleName);
+    auto database = GetDatabase(data->userId, inoPtr->bundleName);
     if (!database) {
         fuse_reply_err(req, EPERM);
         LOGE("database is null");
@@ -415,8 +406,8 @@ static void CloudOpen(fuse_req_t req,
     LOGD("cloudId: %s", cloudId.c_str());
     filePtr->readSession = database->NewAssetReadSession("file", cloudId, "content", path);
     if (filePtr->readSession) {
-        DriveKit::DKError dkError = filePtr->readSession->InitSession();
-        if (!HandleDkError(req, dkError)) {
+        auto error = filePtr->readSession->InitSession();
+        if (!HandleCloudError(req, error)) {
             filePtr->type = CLOUD_DISK_FILE_TYPE_CLOUD;
             fuse_reply_open(req, fi);
         } else {
@@ -498,15 +489,15 @@ void RemoveLocalFile(const string &path)
 
 int32_t GenerateCloudId(int32_t userId, const string &bundleName, string &cloudId)
 {
-    shared_ptr<DKDatabase> dkDatabasePtr = GetDatabase(userId, bundleName);
+    auto dkDatabasePtr = GetDatabase(userId, bundleName);
     if (dkDatabasePtr == nullptr) {
         LOGE("Failed to get database");
         return ENOSYS;
     }
 
-    vector<DKRecordId> ids;
-    DKError dkErr = dkDatabasePtr->GenerateIds(1, ids);
-    if (dkErr.dkErrorCode != DKLocalErrorCode::NO_ERROR || ids.size() == 0) {
+    vector<std::string> ids;
+    auto ret = dkDatabasePtr->GenerateIds(1, ids);
+    if (ret != 0 || ids.size() == 0) {
         return ENOSYS;
     }
     cloudId = ids[0];
@@ -1201,7 +1192,6 @@ void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
     }
 
     int64_t readSize;
-    DriveKit::DKError dkError;
     shared_ptr<char> buf = nullptr;
 
     buf.reset(new char[size], [](char* ptr) {
@@ -1214,8 +1204,9 @@ void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
         return;
     }
 
-    readSize = filePtr->readSession->PRead(offset, size, buf.get(), dkError);
-    if (!HandleDkError(req, dkError)) {
+    CloudError preadError;
+    readSize = filePtr->readSession->PRead(offset, size, buf.get(), preadError);
+    if (!HandleCloudError(req, preadError)) {
         LOGD("read success, %lld bytes", static_cast<long long>(readSize));
         fuse_reply_buf(req, buf.get(), readSize);
     } else {

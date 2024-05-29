@@ -14,7 +14,6 @@
  */
 
 #include "cycle_task.h"
-#include "gallery_data_syncer.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -23,9 +22,12 @@ namespace CloudSync {
 CycleTask::CycleTask(std::string taskName,
                      std::set<std::string> bundleNames,
                      int32_t intervalTime,
-                     std::shared_ptr<DataSyncManager> dataSyncManager)
-    : userId_(-1), taskName_(taskName), bundleNames_(bundleNames), intervalTime_(intervalTime),
-    dataSyncManager_(dataSyncManager)
+                     std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+    : userId_(-1),
+      taskName_(taskName),
+      bundleNames_(bundleNames),
+      intervalTime_(intervalTime),
+      dataSyncManager_(dataSyncManager)
 {
 }
 
@@ -36,7 +38,7 @@ void CycleTask::SetRunnableBundleNames(std::shared_ptr<std::set<std::string>> &b
     this->runnableBundleNames_ = bundleNames;
 }
 
-std::shared_ptr<DataSyncManager> CycleTask::GetDataSyncManager() const
+std::shared_ptr<CloudFile::DataSyncManager> CycleTask::GetDataSyncManager() const
 {
     return this->dataSyncManager_;
 }
