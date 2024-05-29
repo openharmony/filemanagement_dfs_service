@@ -2495,7 +2495,7 @@ static int32_t CreateThmDir(const string &path)
     }
     size_t lastSlashInd = path.find_last_of("/");
     if (lastSlashInd != string::npos) {
-        std::string bucketDir = path.substr(lastSlashInd + 1);
+        std::string bucketDir = path.substr(0, lastSlashInd + 1);
         if (mkdir(bucketDir.c_str(), (S_IRWXU | S_IRWXG | S_IXOTH)) != 0 && errno != EEXIST) {
             LOGE("create bucketdir %s error %{public}d", bucketDir.c_str(), errno);
             return E_PATH;
