@@ -27,16 +27,13 @@ namespace CloudSync {
 
 void SlowDown()
 {
-    for (int cpu = CPU_IDX_4; cpu <= CPU_IDX_7; cpu++) {
-        cpu_set_t cpuSet;
-        CPU_ZERO(&cpuSet);
+    cpu_set_t cpuSet;
+    CPU_ZERO(&cpuSet);
+    for (int cpu = CPU_IDX_0; cpu <= CPU_IDX_6; cpu++) {
         CPU_SET(cpu, &cpuSet);
-
-        if (sched_setaffinity(0, sizeof(cpuSet), &cpuSet) < 0) {
-            LOGE("set thread affinity failed, errno %{public}d", errno);
-            continue;
-        }
-        return;
+    }
+    if (sched_setaffinity(0, sizeof(cpuSet), &cpuSet) < 0) {
+        LOGE("set thread affinity failed, errno %{public}d", errno);
     }
 }
 
