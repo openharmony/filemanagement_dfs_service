@@ -4392,6 +4392,49 @@ int32_t FileDataHandler::UpdateAgingFile(const string cloudId)
     return E_OK;
 }
 
+int32_t FileDataHandler::GetAgingFileInfo(std::shared_ptr<NativeRdb::ResultSet> results,
+                                          string &path, string &cloudId, int64_t &size)
+{
+    int ret = DataConvertor::GetString(PhotoColumn::MEDIA_FILE_PATH, path, *results);
+    if (ret != E_OK) {
+        LOGE("get path error");
+        return E_RDB;
+    }
+    ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, *results);
+    if (ret != E_OK) {
+        LOGE("get cloudId error");
+        return E_RDB;
+    }
+    ret = DataConvertor::GetLong(PhotoColumn::MEDIA_SIZE, size, *results);
+    if (ret != E_OK) {
+        LOGE("get size error");
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::AgingDentryInsert(string fileName, string path,
+                                           string cloudId, string relativePath, int64_t size)
+{
+    DKRecord record;
+    if (GetDentryPathName(path, relativePath, fileName) != E_OK) {
+        LOGE("split to dentry path failed, path:%s", path.c_str());
+        return E_INVAL_ARG;
+    }
+    int64_t mtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
+    string recordId = MetaFileMgr::RecordIdToCloudId(cloudId);
+    auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
+    MetaBase mBaseLookup(fileName);
+    MetaBase mBase(fileName, recordId);
+    mBase.size = static_cast<uint64_t>(size);
+    mBase.mtime = static_cast<uint64_t>(mtime);
+    if (mFile->DoLookup(mBaseLookup) == E_OK) {
+        LOGE("dentry exist when insert, do update instead");
+        return mFile->DoUpdate(mBase);
+    }
+    return mFile->DoCreate(mBase);
+}
+
 int32_t FileDataHandler::FileAgingDelete(const int64_t agingTime, const int64_t deleteSize)
 {
     int rowCount = 0;
@@ -4406,28 +4449,14 @@ int32_t FileDataHandler::FileAgingDelete(const int64_t agingTime, const int64_t 
         return E_OK;
     }
     while (results->GoToNextRow() == 0) {
+        string fileName;
         string path;
-        int64_t size;
         string cloudId;
-        int ret = DataConvertor::GetString(PhotoColumn::MEDIA_FILE_PATH, path, *results);
+        string relativePath;
+        int64_t size;
+        int ret = GetAgingFileInfo(results, path, cloudId, size);
         if (ret != E_OK) {
-            LOGE("get path error");
-            continue;
-        }
-        ret = DataConvertor::GetString(PhotoColumn::PHOTO_CLOUD_ID, cloudId, *results);
-        if (ret != E_OK) {
-            LOGE("get cloudId error");
-            continue;
-        }
-        ret = DataConvertor::GetLong(PhotoColumn::MEDIA_SIZE, size, *results);
-        if (ret != E_OK) {
-            LOGE("get size error");
-            continue;
-        }
-        string filePath = GetLocalPath(userId_, path);
-        ret = unlink(filePath.c_str());
-        if (ret != 0) {
-            LOGE("fail to delete");
+            LOGE("get aging file info failed");
             continue;
         }
         ret = UpdateAgingFile(cloudId);
@@ -4435,10 +4464,61 @@ int32_t FileDataHandler::FileAgingDelete(const int64_t agingTime, const int64_t 
             LOGE("update failed");
             continue;
         }
+        ret = AgingDentryInsert(fileName, path, cloudId, relativePath, size);
+        if (ret != E_OK) {
+            ret = RollBackUpdateAgingFile(cloudId);
+            LOGE("aging file insert failed");
+            continue;
+        }
+        string filePath = GetLocalPath(userId_, path);
+        ret = unlink(filePath.c_str());
+        if (ret != 0) {
+            LOGE("fail to delete, errno:%{public}d", errno);
+            ret = RollBackUpdateAgingFile(cloudId);
+            ret = RollBackAgingDentryInsert(fileName, path, cloudId, relativePath, size);
+            continue;
+        }
         totalSize += size;
         if (totalSize > deleteSize) {
             break;
         }
+    }
+    MetaFileMgr::GetInstance().ClearAll();
+    return E_OK;
+}
+
+int32_t FileDataHandler::RollBackUpdateAgingFile(const string cloudId)
+{
+    ValuesBucket values;
+    values.PutInt(PhotoColumn::PHOTO_POSITION, POSITION_BOTH);
+    int32_t changedRows;
+    string whereClause = PhotoColumn::PHOTO_CLOUD_ID + " = ?";
+    int ret = Update(changedRows, values, whereClause, {cloudId});
+    if (ret != E_OK) {
+        LOGE("rdb update failed, err=%{public}d", ret);
+        return E_RDB;
+    }
+    return E_OK;
+}
+
+int32_t FileDataHandler::RollBackAgingDentryInsert(string fileName, string path, string cloudId,
+                                                   string relativePath, int64_t size)
+{
+    DKRecord record;
+    if (GetDentryPathName(path, relativePath, fileName) != E_OK) {
+        LOGE("split to dentry path failed, path:%s", path.c_str());
+        return E_INVAL_ARG;
+    }
+    int64_t mtime = static_cast<int64_t>(record.GetEditedTime()) / MILLISECOND_TO_SECOND;
+    string recordId = MetaFileMgr::RecordIdToCloudId(cloudId);
+    auto mFile = MetaFileMgr::GetInstance().GetMetaFile(userId_, relativePath);
+    MetaBase mBaseLookup(fileName);
+    MetaBase mBase(fileName, recordId);
+    mBase.size = static_cast<uint64_t>(size);
+    mBase.mtime = static_cast<uint64_t>(mtime);
+    if (mFile->DoLookup(mBaseLookup) == E_OK) {
+        LOGE("dentry exist when insert, do remove instead");
+        return mFile->DoRemove(mBase);
     }
     return E_OK;
 }
