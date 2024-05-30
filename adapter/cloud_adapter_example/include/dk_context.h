@@ -16,7 +16,10 @@
 #ifndef DRIVE_KIT_CONTEXT_H
 #define DRIVE_KIT_CONTEXT_H
 
+#include <string>
+
 namespace DriveKit {
+using namespace std;
 class DKContext {
 public:
     void SetData(void *data)
@@ -27,9 +30,21 @@ public:
     {
         return data_;
     }
+    void SetRequester(const std::string &bundleName, int32_t pid = 0)
+    {
+        if (!bundleName.empty()) {
+            reQuester_ = bundleName;
+            return;
+        }
+    }
+    std::string GetRequester()
+    {
+        return reQuester_;
+    }
 
 private:
     void *data_;
+    std::string reQuester_;
 };
 } // namespace DriveKit
 

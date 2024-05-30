@@ -37,6 +37,7 @@
           "c_utils",
           "common_event_service",
           "dataclassification",
+          "data_share",
           "device_auth",
           "device_info_manager",
           "device_manager",
