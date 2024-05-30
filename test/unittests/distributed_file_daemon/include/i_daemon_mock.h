@@ -86,6 +86,23 @@ public:
     {
         return FileManagement::E_OK;
     }
+
+    int32_t PushAsset(int32_t userId,
+                      const sptr<AssetObj> &assetObj,
+                      const sptr<IAssetSendCallback> &sendCallback)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
+    {
+        return FileManagement::E_OK;
+    }
 };
 } // namespace OHOS::Storage::DistributedFile
 

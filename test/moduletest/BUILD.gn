@@ -54,6 +54,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
   ]
 
   sources += [ "src/distributedfiledaemon_service_test.cpp" ]

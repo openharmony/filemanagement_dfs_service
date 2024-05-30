@@ -22,6 +22,9 @@
 #include "hmdfs_info.h"
 #include "i_file_trans_listener.h"
 #include "i_file_dfs_listener.h"
+#include "asset/i_asset_recv_callback.h"
+#include "asset/i_asset_send_callback.h"
+#include "asset/asset_obj.h"
 
 namespace OHOS {
 namespace Storage {
@@ -40,6 +43,12 @@ public:
                                    const sptr<IRemoteObject> &listener,
                                    HmdfsInfo &info) = 0;
     virtual int32_t CancelCopyTask(const std::string &sessionName) = 0;
+
+    virtual int32_t PushAsset(int32_t userId,
+                              const sptr<AssetObj> &assetObj,
+                              const sptr<IAssetSendCallback> &sendCallback) = 0;
+    virtual int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) = 0;
+    virtual int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) =0;
 };
 } // namespace DistributedFile
 } // namespace Storage

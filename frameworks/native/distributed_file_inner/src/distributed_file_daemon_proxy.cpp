@@ -426,6 +426,101 @@ int32_t DistributedFileDaemonProxy::CancelCopyTask(const std::string &sessionNam
     }
     return reply.ReadInt32();
 }
+
+int32_t DistributedFileDaemonProxy::PushAsset(int32_t userId,
+                                              const sptr<AssetObj> &assetObj,
+                                              const sptr<IAssetSendCallback> &sendCallback)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        LOGE("Failed to send the user id");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteParcelable(assetObj)) {
+        LOGE("Failed to send the assetInfoObj");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    if (!data.WriteRemoteObject(sendCallback->AsObject())) {
+        LOGE("Failed to send the listener callback stub");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET), data, reply,
+        option);
+    if (ret != 0) {
+        LOGE("UnRegisterAssetCallback failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
+}
+
+int32_t DistributedFileDaemonProxy::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteRemoteObject(recvCallback->AsObject())) {
+        LOGE("Failed to send the listener callback stub");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK), data,
+        reply, option);
+    if (ret != 0) {
+        LOGE("RegisterAssetCallback failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
+}
+
+int32_t DistributedFileDaemonProxy::UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (!data.WriteRemoteObject(recvCallback->AsObject())) {
+        LOGE("Failed to send the listener callback stub");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
+    auto remote = Remote();
+    if (remote == nullptr) {
+        LOGE("remote is nullptr");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK), data,
+        reply, option);
+    if (ret != 0) {
+        LOGE("UnRegisterAssetCallback failed, ret = %{public}d", ret);
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    return reply.ReadInt32();
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

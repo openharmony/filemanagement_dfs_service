@@ -21,7 +21,9 @@
 #include "dm_device_info.h"
 #include "ipc/i_daemon.h"
 #include "iremote_proxy.h"
-
+#include "asset/i_asset_recv_callback.h"
+#include "asset/i_asset_send_callback.h"
+#include "asset/asset_obj.h"
 
 namespace OHOS {
 namespace Storage {
@@ -49,6 +51,12 @@ public:
                             const std::string &dstDeviceId,
                             const std::string &sessionName) override;
     int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) override;
+
+    int32_t PushAsset(int32_t userId,
+                      const sptr<AssetObj> &assetObj,
+                      const sptr<IAssetSendCallback> &sendCallback) override;
+    int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
+    int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
 private:
     class DaemonDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

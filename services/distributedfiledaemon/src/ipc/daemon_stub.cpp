@@ -21,6 +21,8 @@
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
 #include "ipc_skeleton.h"
 #include "utils_log.h"
+#include "asset_recv_callback_stub.h"
+#include "asset_send_callback_stub.h"
 
 namespace OHOS {
 namespace Storage {
@@ -49,6 +51,15 @@ DaemonStub::DaemonStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO)] =
         &DaemonStub::HandleGetRemoteCopyInfo;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK)] =
+        &DaemonStub::HandleRegisterRecvCallback;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK)] =
+        &DaemonStub::HandleUnRegisterRecvCallback;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET)] =
+        &DaemonStub::HandlePushAsset;
 }
 
 int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -282,6 +293,82 @@ int32_t DaemonStub::HandleCancelCopyTask(MessageParcel &data, MessageParcel &rep
         return E_IPC_READ_FAILED;
     }
     return CancelCopyTask(sessionName);
+}
+
+int32_t DaemonStub::HandleRegisterRecvCallback(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin RegisterRecvCallback");
+    auto object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        LOGE("RegisterRecvCallback failed, object is nullptr.");
+        return E_IPC_READ_FAILED;
+    }
+    auto recvCallback = iface_cast<IAssetRecvCallback>(object);
+    if (recvCallback == nullptr) {
+        LOGE("RegisterRecvCallback failed, Callback is nullptr");
+        return E_INVAL_ARG;
+    }
+    int32_t res = RegisterAssetCallback(recvCallback);
+    if (!reply.WriteInt32(res)) {
+        LOGE("RegisterRecvCallback write res failed, res is %{public}d", res);
+        return E_IPC_READ_FAILED;
+    }
+    return res;
+}
+
+int32_t DaemonStub::HandleUnRegisterRecvCallback(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin UnRegisterRecvCallback");
+    auto object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        LOGE("UnRegisterRecvCallback failed, object is nullptr.");
+        return E_IPC_READ_FAILED;
+    }
+    auto recvCallback = iface_cast<IAssetRecvCallback>(object);
+    if (recvCallback == nullptr) {
+        LOGE("UnRegisterRecvCallback failed, Callback is nullptr");
+        return E_INVAL_ARG;
+    }
+    int32_t res = UnRegisterAssetCallback(recvCallback);
+    if (!reply.WriteInt32(res)) {
+        LOGE("UnRegisterRecvCallback write res failed, res is %{public}d", res);
+        return E_IPC_READ_FAILED;
+    }
+    return res;
+}
+
+int32_t DaemonStub::HandlePushAsset(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin PushAsset");
+    int32_t userId;
+    if (!data.ReadInt32(userId)) {
+        LOGE("read userId failed");
+        return E_INVAL_ARG;
+    }
+
+    sptr<AssetObj> assetObj = data.ReadParcelable<AssetObj>();
+    if (!assetObj) {
+        LOGE("object of AssetObj is nullptr");
+        return E_INVAL_ARG;
+    }
+
+    auto object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        LOGE("PushAsset failed, object is nullptr.");
+        return E_IPC_READ_FAILED;
+    }
+    auto sendCallback = iface_cast<IAssetSendCallback>(object);
+    if (sendCallback == nullptr) {
+        LOGE("PushAsset failed, Callback is nullptr");
+        return E_INVAL_ARG;
+    }
+
+    int32_t res = PushAsset(userId, assetObj, sendCallback);
+    if (!reply.WriteInt32(res)) {
+        LOGE("PushAsset write res failed, res is %{public}d", res);
+        return E_IPC_READ_FAILED;
+    }
+    return res;
 }
 } // namespace DistributedFile
 } // namespace Storage

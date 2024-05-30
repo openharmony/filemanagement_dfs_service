@@ -20,6 +20,9 @@
 #include "iremote_broker.h"
 #include "hmdfs_info.h"
 #include "i_file_dfs_listener.h"
+#include "asset/i_asset_recv_callback.h"
+#include "asset/i_asset_send_callback.h"
+#include "asset/asset_obj.h"
 
 namespace OHOS {
 namespace Storage {
@@ -46,6 +49,13 @@ public:
                                     const std::string &sessionName) = 0;
     static inline const std::string SERVICE_NAME { "ohos.storage.distributedfile.daemon" };
     virtual int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) = 0;
+
+    virtual int32_t PushAsset(int32_t userId,
+                              const sptr<AssetObj> &assetObj,
+                              const sptr<IAssetSendCallback> &sendCallback) = 0;
+    virtual int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) = 0;
+    virtual int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) =0;
+
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.daemon")
 };
 } // namespace DistributedFile
