@@ -23,6 +23,8 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
+static const unsigned int READ_SIZE = 100;
+
 CloudSyncServiceStub::CloudSyncServiceStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_CALLBACK)] =
@@ -465,7 +467,7 @@ int32_t CloudSyncServiceStub::HandleDownloadFiles(MessageParcel &data, MessagePa
     string bundleName = data.ReadString();
     int32_t size = data.ReadInt32();
     std::vector<AssetInfoObj> assetInfoObj;
-    if (size > INT_MAX) {
+    if (size > READ_SIZE) {
         return E_INVAL_ARG;
     }
     for (int i = 0; i < size; i++) {
