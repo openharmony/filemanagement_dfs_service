@@ -35,6 +35,7 @@
 #include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
 #include "network/softbus/softbus_handler.h"
+#include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
@@ -101,6 +102,7 @@ void Daemon::OnStart()
     try {
         PublishSA();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+        AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
@@ -119,32 +121,36 @@ void Daemon::OnStop()
         LOGE("UnSubscribe common event failed");
     }
     subScriber_ = nullptr;
+    SoftBusHandlerAsset::GetInstance().DeleteAssetLocalSessionServer();
     LOGI("Stop finished successfully");
 }
 
 void Daemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
-    (void)systemAbilityId;
-    (void)deviceId;
-    RegisterOsAccount();
+    if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
+        (void)systemAbilityId;
+        (void)deviceId;
+        RegisterOsAccount();
+    } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
+        SoftBusHandlerAsset::GetInstance().CreateAssetLocalSessionServer();
+    }
 }
 
 void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     (void)deviceId;
-    if (systemAbilityId != COMMON_EVENT_SERVICE_ID) {
-        LOGE("systemAbilityId is not COMMON_EVENT_SERVICE_ID");
-        return;
-    }
+    if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
+        if (subScriber_ == nullptr) {
+            LOGE("Daemon::OnRemoveSystemAbility subscriberPtr is nullptr");
+            return;
+        }
 
-    if (subScriber_ == nullptr) {
-        LOGE("Daemon::OnRemoveSystemAbility subscriberPtr is nullptr");
-        return;
+        bool subscribeResult = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subScriber_);
+        LOGI("Daemon::OnRemoveSystemAbility subscribeResult = %{public}d", subscribeResult);
+        subScriber_ = nullptr;
+    } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
+        SoftBusHandlerAsset::GetInstance().DeleteAssetLocalSessionServer();
     }
-
-    bool subscribeResult = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subScriber_);
-    LOGI("Daemon::OnRemoveSystemAbility subscribeResult = %{public}d", subscribeResult);
-    subScriber_ = nullptr;
 }
 
 int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
