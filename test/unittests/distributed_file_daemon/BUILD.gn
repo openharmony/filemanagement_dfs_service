@@ -366,6 +366,57 @@ ohos_unittest("connection_detector_test") {
   subsystem_name = "filemanagement"
 }
 
+ohos_unittest("file_dfs_listener_proxy_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
+    "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/file_dfs_listener_proxy.cpp",
+    "file_dfs_listener_proxy_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
+    "${services_path}/distributedfiledaemon/include/ipc",
+    "${services_path}/distributedfiledaemon/src/ipc",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "device_manager:devicemanagersdk",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "os_account:os_account_innerkits",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+
+  use_exceptions = true
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
 ohos_unittest("file_trans_listener_proxy_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -474,6 +525,7 @@ group("distributed_daemon_test") {
     ":daemon_service_proxy_test",
     ":distributed_file_daemon_stub_test",
     ":distributed_file_daemon_test",
+    ":file_dfs_listener_proxy_test",
     ":file_trans_listener_proxy_test",
     ":trans_mananger_test",
   ]

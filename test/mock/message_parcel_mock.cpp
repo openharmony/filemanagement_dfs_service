@@ -92,6 +92,11 @@ bool Parcel::WriteString(const std::string &value)
     return DfsMessageParcel::messageParcel->WriteString(value);
 }
 
+bool Parcel::WriteCString(const char *value)
+{
+    return DfsMessageParcel::messageParcel->WriteCString(value);
+}
+
 bool Parcel::ReadString(std::string &value)
 {
     return DfsMessageParcel::messageParcel->ReadString(value);
@@ -120,5 +125,15 @@ bool Parcel::ReadUint32(uint32_t &value)
 bool Parcel::WriteUint64(uint64_t value)
 {
     return DfsMessageParcel::messageParcel->WriteUint64(value);
+}
+
+bool Parcel::WriteUint16(uint16_t value)
+{
+    return DfsMessageParcel::messageParcel->WriteUint16(value);
+}
+
+bool Parcel::WriteUint32(uint32_t value)
+{
+    return DfsMessageParcel::messageParcel->WriteUint32(value);
 }
 } // namespace OHOS
