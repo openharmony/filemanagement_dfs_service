@@ -43,7 +43,7 @@ int32_t NetworkSetManager::QueryByDataShare(int32_t userId, const std::string &b
     std::vector<std::string> columns;
     DataShare::CreateOptions options;
     options.enabled_ = true;
-    shareStatus_ = false;
+    networkSetStatus_ = false;
     auto clouddriveBundleName = system::GetParameter(CLOUDDRIVE_KEY, "");
     auto queryUri = QUERY_URI + clouddriveBundleName + "/cloud_sp?user=" + std::to_string(userId);
     Uri uri(queryUri);
@@ -68,16 +68,16 @@ int32_t NetworkSetManager::QueryByDataShare(int32_t userId, const std::string &b
     if (resultSet->GetLong(columnIndex, status) != E_OK) {
         return E_RDB;
     }
-    shareStatus_ = status;
-    resultMap[std::to_string(userId) + "/" + bundleName] = shareStatus_;
+    networkSetStatus_ = status;
+    resultMap[std::to_string(userId) + "/" + bundleName] = networkSetStatus_;
     return E_OK;
 }
 
 void NetworkSetManager::GetNetworkSetting(int32_t userId, const std::string &bundleName)
 {
     if (QueryByDataShare(userId, bundleName) != E_OK) {
-        shareStatus_ = GetConfigParams(bundleName, userId);
-        resultMap[std::to_string(userId) + "/" + bundleName] = shareStatus_;
+        networkSetStatus_ = GetConfigParams(bundleName, userId);
+        resultMap[std::to_string(userId) + "/" + bundleName] = networkSetStatus_;
     }
 }
 
@@ -88,13 +88,14 @@ bool NetworkSetManager::GetConfigParams(const std::string &bundleName, int32_t u
     auto err = driveKit->GetAppConfigParams(userId, bundleName, param);
     if (err != E_OK || param.empty()) {
         LOGE("GetAppConfigParams failed");
+        return false;
     }
     int32_t networkData = std::stoi(param["useMobileNetworkData"]);
     if (networkData == 0) {
-        shareStatus_ = false;
+        networkSetStatus_ = false;
         return false;
     }
-    shareStatus_ = true;
+    networkSetStatus_ = true;
     return true;
 }
 
@@ -135,20 +136,20 @@ void MobileNetworkObserver::OnChange()
     NetworkSetManager::GetNetworkSetting(NetworkSetManager::userId_, NetworkSetManager::bundleName_);
 }
 
-bool NetworkSetManager::IsShareStatusOkay(const std::string &bundleName, const int32_t userId)
+bool NetworkSetManager::IsNetworkSetStatusOkay(const std::string &bundleName, const int32_t userId)
 {
-    LOGI("IsShareStatusOkay start");
+    LOGI("IsNetworkSetStatusOkay start");
     bool checkstatus = resultMap[std::to_string(userId) + "/" + bundleName];
     if (checkstatus) {
-        LOGI("IsShareStatusOkay checkstatus = true");
+        LOGI("IsNetworkSetStatusOkay checkstatus = true");
         return true;
     }
     return false;
 }
 
-void NetworkSetManager::InitDataShare(const std::string &bundleName, const int32_t userId)
+void NetworkSetManager::InitNetworkSetManager(const std::string &bundleName, const int32_t userId)
 {
-    LOGI("InitDataShare start");
+    LOGI("InitNetworkSetManager start");
     RegisterObserver();
     bundleName_ = bundleName;
     userId_ = userId;
