@@ -270,7 +270,7 @@ void SoftBusHandler::CloseSessionWithSessionName(const std::string sessionName)
             }
         }
     }
-    TransManager::GetInstance().NotifyFileFailed(sessionName, E_OK);
+    TransManager::GetInstance().NotifyFileFailed(sessionName, E_DFS_CANCEL_SUCCESS);
     TransManager::GetInstance().DeleteTransTask(sessionName);
     CloseSession(sessionId, sessionName);
 }
