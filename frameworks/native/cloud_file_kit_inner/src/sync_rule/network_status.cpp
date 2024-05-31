@@ -128,11 +128,11 @@ NetworkStatus::NetConnStatus NetworkStatus::GetNetConnStatus()
 
 bool NetworkStatus::CheckMobileNetwork(const std::string &bundleName, const int32_t userId)
 {
-    if (NetworkSetManager::IsShareStatusOkay(bundleName, userId)) {
+    if (NetworkSetManager::IsNetworkSetStatusOkay(bundleName, userId)) {
         LOGI("datashare status open, CheckMobileNetwork success");
         return true;
     }
-    if (NetworkSetManager::IsShareStatusOkay(bundleName, userId) || netStatus_ == WIFI_CONNECT) {
+    if (NetworkSetManager::IsNetworkSetStatusOkay(bundleName, userId) || netStatus_ == WIFI_CONNECT) {
         LOGI("datashare status close, networkdtatus:wifi");
         return true;
     }
