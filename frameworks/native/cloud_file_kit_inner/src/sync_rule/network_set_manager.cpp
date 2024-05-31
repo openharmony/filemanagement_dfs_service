@@ -43,7 +43,6 @@ int32_t NetworkSetManager::QueryByDataShare(int32_t userId, const std::string &b
     std::vector<std::string> columns;
     DataShare::CreateOptions options;
     options.enabled_ = true;
-    networkSetStatus_ = false;
     auto clouddriveBundleName = system::GetParameter(CLOUDDRIVE_KEY, "");
     auto queryUri = QUERY_URI + clouddriveBundleName + "/cloud_sp?user=" + std::to_string(userId);
     Uri uri(queryUri);
@@ -56,7 +55,6 @@ int32_t NetworkSetManager::QueryByDataShare(int32_t userId, const std::string &b
     if (resultSet == nullptr) {
         return E_RDB;
     }
-
     if (resultSet->GoToFirstRow() != E_OK) {
         return E_RDB;
     }
@@ -68,16 +66,19 @@ int32_t NetworkSetManager::QueryByDataShare(int32_t userId, const std::string &b
     if (resultSet->GetLong(columnIndex, status) != E_OK) {
         return E_RDB;
     }
-    networkSetStatus_ = status;
-    resultMap[std::to_string(userId) + "/" + bundleName] = networkSetStatus_;
-    return E_OK;
+    if (status == 1) {
+        resultMap[std::to_string(userId) + "/" + bundleName] = true;
+        return E_OK;
+    } else {
+        resultMap[std::to_string(userId) + "/" + bundleName] = false;
+        return E_OK;
+    }
 }
 
 void NetworkSetManager::GetNetworkSetting(int32_t userId, const std::string &bundleName)
 {
     if (QueryByDataShare(userId, bundleName) != E_OK) {
-        networkSetStatus_ = GetConfigParams(bundleName, userId);
-        resultMap[std::to_string(userId) + "/" + bundleName] = networkSetStatus_;
+        resultMap[std::to_string(userId) + "/" + bundleName] = GetConfigParams(bundleName, userId);
     }
 }
 
@@ -92,10 +93,8 @@ bool NetworkSetManager::GetConfigParams(const std::string &bundleName, int32_t u
     }
     int32_t networkData = std::stoi(param["useMobileNetworkData"]);
     if (networkData == 0) {
-        networkSetStatus_ = false;
         return false;
     }
-    networkSetStatus_ = true;
     return true;
 }
 
