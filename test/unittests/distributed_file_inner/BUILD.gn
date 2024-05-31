@@ -35,8 +35,10 @@ ohos_unittest("distributed_file_daemon_proxy_test") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "include",
     "${services_path}/distributedfiledaemon/include/",
+    "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
   deps = [
