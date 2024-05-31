@@ -35,14 +35,14 @@ private:
 
 class NetworkSetManager {
 public:
-    static void InitDataShare(const std::string &bundleName, const int32_t userId);
+    static void InitNetworkSetManager(const std::string &bundleName, const int32_t userId);
     static int32_t QueryByDataShare(int32_t userId, const std::string &bundleName);
     static void RegisterObserver();
     static void UnregisterObserver();
     static void GetNetworkSetting(int32_t userId, const std::string &bundleName);
-    static bool IsShareStatusOkay(const std::string &bundleName, const int32_t userId);
+    static bool IsNetworkSetStatusOkay(const std::string &bundleName, const int32_t userId);
     static bool GetConfigParams(const std::string &bundleName, const int32_t userId);
-    static inline bool shareStatus_;
+    static inline bool networkSetStatus_;
     static inline int32_t userId_;
     static inline std::string bundleName_;
 };
