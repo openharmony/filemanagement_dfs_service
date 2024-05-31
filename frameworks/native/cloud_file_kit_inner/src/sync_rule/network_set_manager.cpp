@@ -29,13 +29,10 @@ const std::string SWITCH_STATUS_KEY = "useMobileNetworkData";
 const std::string CLOUDDRIVE_KEY = "persist.kernel.bundle_name.clouddrive";
 const std::string BUNDLE_NAME_KEY = "key";
 const std::string BUNDLE_NAME_VALUE = "value";
-DataShare::CreateOptions options;
-options.enabled_ = true;
 auto clouddriveBundleName = system::GetParameter(CLOUDDRIVE_KEY, "");
 auto queryUri = QUERY_URI + clouddriveBundleName + "/cloud_sp?key=" + SWITCH_STATUS_KEY;
-auto dataShareHelper = DataShare::DataShareHelper::Creator(QUERY_URI, options);
 std::map<std::string, bool> resultMap;
-Uri observerUri(queryUri);
+DataShare::CreateOptions options;
 
 int32_t NetworkSetManager::QueryByDataShare(int32_t userId, const std::string &bundleName)
 {
@@ -103,29 +100,29 @@ bool NetworkSetManager::GetConfigParams(const std::string &bundleName, int32_t u
 
 void NetworkSetManager::UnregisterObserver()
 {
+    options.enabled_ = true;
+    auto dataShareHelper = DataShare::DataShareHelper::Creator(QUERY_URI, options);
+    Uri observerUri(queryUri);
     if (dataShareHelper == nullptr) {
         LOGE("dataShareHelper = nullptr");
         return;
     }
     sptr<MobileNetworkObserver> dataObserver(new (std::nothrow) MobileNetworkObserver());
     dataShareHelper->UnregisterObserver(observerUri, dataObserver);
-    if (dataShareHelper == nullptr) {
-        LOGE("UnRegisterObserver fail");
-    }
     LOGI("UnRegisterObserver finish");
 }
 
 void NetworkSetManager::RegisterObserver()
 {
+    options.enabled_ = true;
+    auto dataShareHelper = DataShare::DataShareHelper::Creator(QUERY_URI, options);
+    Uri observerUri(queryUri);
     if (dataShareHelper == nullptr) {
         LOGE("dataShareHelper = nullptr");
         return;
     }
     sptr<MobileNetworkObserver> dataObserver(new (std::nothrow) MobileNetworkObserver());
     dataShareHelper->RegisterObserver(observerUri, dataObserver);
-    if (dataShareHelper == nullptr) {
-        LOGE("RegisterObserver fail");
-    }
     LOGI("RegisterObserver finish");
 }
 
