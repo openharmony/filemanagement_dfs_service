@@ -1534,7 +1534,7 @@ int32_t CloudDiskDataHandler::OnCreateRecordSuccess(
         LOGE("on create records update synced err %{public}d, cloudId %{public}s", ret, entry.first.c_str());
         return ret;
     }
-    std::string parentCloudId = localConvertor_.GetParentCloudId(data);
+    std::string parentCloudId = createConvertor_.GetParentCloudId(data);
     std::string fileName;
     if (data.find(DK_FILE_NAME) == data.end() ||
         data.at(DK_FILE_NAME).GetString(fileName) != DKLocalErrorCode::NO_ERROR) {

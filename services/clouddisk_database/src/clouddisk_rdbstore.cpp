@@ -353,7 +353,7 @@ static int32_t CreateDentry(MetaBase &metaBase, uint32_t userId, const std::stri
     return E_OK;
 }
 
-static void UpdateDatabase(MetaBase &metaBase, int64_t fileTimeAdded, struct stat *statInfo)
+static void UpdateMetabase(MetaBase &metaBase, int64_t fileTimeAdded, struct stat *statInfo)
 {
     metaBase.atime = static_cast<uint64_t>(fileTimeAdded);
     metaBase.mtime = static_cast<uint64_t>(CloudFileUtils::Timespec2Milliseconds(statInfo->st_mtim));
@@ -406,7 +406,7 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
         return ret;
     }
     MetaBase metaBase(fileName, cloudId);
-    UpdateDatabase(metaBase, fileTimeAdded, &statInfo);
+    UpdateMetabase(metaBase, fileTimeAdded, &statInfo);
     ret = CreateDentry(metaBase, userId_, bundleName_, fileName, parentCloudId);
     if (ret != E_OK) {
         LOGE("create new dentry failed, ret = %{public}d", ret);
