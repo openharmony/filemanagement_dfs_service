@@ -54,6 +54,8 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/network/softbus/softbus_session_dispatcher.cpp",
     "src/network/softbus/softbus_session_listener.cpp",
     "src/network/softbus/softbus_session_pool.cpp",
+    "src/ipc/asset_recv_callback_proxy.cpp",
+    "src/ipc/asset_send_callback_proxy.cpp",
   ]
 
   deps = [
@@ -126,6 +128,9 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset_obj.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_recv_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_send_callback_stub.cpp",
   ]
 
   defines = [ "LOG_TAG=\"distributedfile_daemon\"" ]
