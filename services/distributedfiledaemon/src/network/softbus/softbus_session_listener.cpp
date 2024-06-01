@@ -164,31 +164,21 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         LOGE("get local uri failed.");
         return localUri;
     }
-    Uri uri(localUri);
-    std::string bundleName = uri.GetAuthority();
-    if (bundleName != MEDIA && bundleName != DOCS) {
-        bundleName = GetBundleName(localUri);
-        if (bundleName.empty()) {
-            LOGI("get bundleName failed.");
-            return "";
-        }
-
-        auto sandboxPath = GetSandboxPath(localUri);
-        if (sandboxPath.empty()) {
-            LOGI("get sandboxPath failed.");
-            return "";
-        }
-        localUri = FILE_SCHEMA + bundleName + FILE_SEPARATOR + sandboxPath;
-    }
     std::string physicalPath;
     if (SandboxHelper::GetPhysicalPath(localUri, std::to_string(QueryActiveUserId()), physicalPath) != E_OK) {
         LOGE("GetPhysicalPath failed, invalid uri, physicalPath = %{public}s", physicalPath.c_str());
         return "";
     }
-    if (!SandboxHelper::CheckValidPath(physicalPath)) {
-        LOGE("invalid path.");
+    auto size = strnlen(physicalPath.c_str(), PATH_MAX);
+    if (size == 0 || size == PATH_MAX) {
+        LOGE("physicalPath size %{public}zu", size);
+    }
+    char realPath[PATH_MAX]{ 0x00 };                                 
+    if (realpath(physicalPath.c_str(), realPath) == nullptr) {
+        LOGE("realpath failed with %{public}d", errno);
         return "";
     }
+    LOGI("GetPhysicalPath physicalPath = %{public}s", physicalPath.c_str());
     return physicalPath;
 }
 } // namespace DistributedFile
