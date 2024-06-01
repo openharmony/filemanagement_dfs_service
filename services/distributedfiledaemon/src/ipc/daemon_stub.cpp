@@ -21,8 +21,6 @@
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
 #include "ipc_skeleton.h"
 #include "utils_log.h"
-#include "asset_recv_callback_stub.h"
-#include "asset_send_callback_stub.h"
 
 namespace OHOS {
 namespace Storage {
