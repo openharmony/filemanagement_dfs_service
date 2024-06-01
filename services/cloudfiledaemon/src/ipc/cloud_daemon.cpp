@@ -22,7 +22,6 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
-#include "ffrt_inner.h"
 #include "iremote_object.h"
 #include "system_ability_definition.h"
 #include "parameters.h"
@@ -129,7 +128,7 @@ void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
 int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
     LOGI("Start Fuse");
-    ffrt::thread([=]() {
+    std::thread([=]() {
         int32_t ret = FuseManager::GetInstance().StartFuse(userId, devFd, path);
         LOGI("start fuse result %d", ret);
         }).detach();
