@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Storage {
-namespace DistributedFile{
+namespace DistributedFile {
 struct AssetObj : public Parcelable {
 public:
     std::string sessionId_;

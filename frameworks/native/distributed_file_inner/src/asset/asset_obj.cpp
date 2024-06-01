@@ -18,7 +18,7 @@
 
 namespace OHOS {
 namespace Storage {
-namespace DistributedFile{
+namespace DistributedFile {
 bool AssetObj::ReadFromParcel(Parcel &parcel)
 {
     parcel.ReadString(sessionId_);

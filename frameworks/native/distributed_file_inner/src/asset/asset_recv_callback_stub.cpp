@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Storage {
-namespace DistributedFile{
+namespace DistributedFile {
 using namespace FileManagement;
 AssetRecvCallbackStub::AssetRecvCallbackStub()
 {

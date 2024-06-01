@@ -18,7 +18,7 @@
 
 namespace OHOS {
 namespace Storage {
-namespace DistributedFile{
+namespace DistributedFile {
 enum class AssetCallbackInterfaceCode {
     ASSET_CALLBACK_ON_START = 0,
     ASSET_CALLBACK_ON_FINISHED,

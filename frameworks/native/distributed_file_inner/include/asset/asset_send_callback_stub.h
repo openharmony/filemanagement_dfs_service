@@ -27,7 +27,7 @@
 
 namespace OHOS {
 namespace Storage {
-namespace DistributedFile{
+namespace DistributedFile {
 class AssetSendCallbackStub : public IRemoteStub<IAssetSendCallback> {
 public:
     AssetSendCallbackStub();
