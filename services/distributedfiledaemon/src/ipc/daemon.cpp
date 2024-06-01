@@ -587,19 +587,19 @@ int32_t Daemon::PushAsset(int32_t userId,
                           const sptr<IAssetSendCallback> &sendCallback)
 {
     LOGI("Daemon::PushAsset begin.");
-    return 0;
+    return E_OK;
 }
 
 int32_t Daemon::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     LOGI("Daemon::RegisterAssetCallback begin.");
-    return 0;
+    return E_OK;
 }
 
 int32_t Daemon::UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     LOGI("Daemon::UnRegisterAssetCallback begin.");
-    return 0;
+    return E_OK;
 }
 } // namespace DistributedFile
 } // namespace Storage
