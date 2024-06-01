@@ -75,11 +75,14 @@ ohos_unittest("device_manager_agent_test") {
   module_out_path = module_output_path
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
@@ -151,8 +154,11 @@ ohos_unittest("os_account_observer_test") {
   module_out_path = module_output_path
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
@@ -223,8 +229,11 @@ ohos_unittest("devsl_dispatcher_test") {
   module_out_path = module_output_path
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
@@ -294,8 +303,11 @@ ohos_unittest("kernel_talker_test") {
   module_out_path = module_output_path
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
@@ -434,8 +446,11 @@ ohos_unittest("session_pool_test") {
   module_out_path = module_output_path
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
@@ -505,8 +520,11 @@ ohos_unittest("softbus_agent_test") {
   module_out_path = module_output_path
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
@@ -673,8 +691,11 @@ ohos_unittest("softbus_session_dispatcher_test") {
   module_out_path = module_output_path
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
@@ -744,8 +765,11 @@ ohos_unittest("softbus_session_test") {
   module_out_path = module_output_path
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
