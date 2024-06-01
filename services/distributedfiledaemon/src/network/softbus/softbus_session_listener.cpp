@@ -178,7 +178,6 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         LOGE("realpath failed with %{public}d", errno);
         return "";
     }
-    LOGI("GetPhysicalPath physicalPath = %{public}s", physicalPath.c_str());
     return physicalPath;
 }
 } // namespace DistributedFile
