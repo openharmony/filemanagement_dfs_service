@@ -169,11 +169,11 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         LOGE("GetPhysicalPath failed, invalid uri, physicalPath = %{public}s", physicalPath.c_str());
         return "";
     }
-    auto size = strnlen(physicalPath.c_str(), PATH_MAX);
-    if (size == 0 || size >= PATH_MAX) {
-        LOGE("physicalPath size %{public}zu", size);
+    if (physicalPath.empty() || physicalPath.size() >= PATH_MAX) {
+        LOGE("PhysicalPath.size() = %{public}zu", physicalPath.size());
+        return "";
     }
-    char realPath[PATH_MAX]{ 0x00 };                                 
+    char realPath[PATH_MAX] = { 0x00 };                                 
     if (realpath(physicalPath.c_str(), realPath) == nullptr) {
         LOGE("realpath failed with %{public}d", errno);
         return "";
