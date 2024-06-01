@@ -90,12 +90,12 @@ std::string SoftBusFileReceiveListener::GetLocalSessionName(int32_t sessionId)
 
 void SoftBusFileReceiveListener::OnReceiveFileStarted(int32_t sessionId, int32_t fileCnt)
 {
-    LOGD("OnReceiveFileStarted, sessionId = %{public}d, fileCnt = %{public}d", sessionId, fileCnt);
+    LOGI("OnReceiveFileStarted, sessionId = %{public}d, fileCnt = %{public}d", sessionId, fileCnt);
 }
 
 void SoftBusFileReceiveListener::OnReceiveFileProcess(int32_t sessionId, uint64_t bytesUpload, uint64_t bytesTotal)
 {
-    LOGD("OnReceiveFileProcess, sessionId = %{public}d, bytesUpload = %{public}" PRIu64 ","
+    LOGI("OnReceiveFileProcess, sessionId = %{public}d, bytesUpload = %{public}" PRIu64 ","
          "bytesTotal = %{public}" PRIu64 "", sessionId, bytesUpload, bytesTotal);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
@@ -107,7 +107,7 @@ void SoftBusFileReceiveListener::OnReceiveFileProcess(int32_t sessionId, uint64_
 
 void SoftBusFileReceiveListener::OnReceiveFileFinished(int32_t sessionId, int32_t fileCnt)
 {
-    LOGD("OnReceiveFileFinished, sessionId = %{public}d, fileCnt = %{public}d", sessionId, fileCnt);
+    LOGI("OnReceiveFileFinished, sessionId = %{public}d, fileCnt = %{public}d", sessionId, fileCnt);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");

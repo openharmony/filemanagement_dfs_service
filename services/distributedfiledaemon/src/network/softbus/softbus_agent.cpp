@@ -110,7 +110,7 @@ void SoftbusAgent::JoinDomain()
         std::lock_guard<std::mutex> lock(serverIdMapMutex_);
         serverIdMap_.insert(std::make_pair(sessionName_, socketId));
     }
-    LOGD("Succeed to JoinDomain, busName:%{public}s", sessionName_.c_str());
+    LOGI("Succeed to JoinDomain, busName:%{public}s", sessionName_.c_str());
 }
 
 void SoftbusAgent::QuitDomain()
@@ -126,7 +126,7 @@ void SoftbusAgent::QuitDomain()
         }
     }
     SoftbusSessionDispatcher::UnregisterSessionListener(sessionName_.c_str());
-    LOGD("Succeed to QuitDomain, busName:%{public}s", sessionName_.c_str());
+    LOGI("Succeed to QuitDomain, busName:%{public}s", sessionName_.c_str());
 }
 
 void SoftbusAgent::StopTopHalf()

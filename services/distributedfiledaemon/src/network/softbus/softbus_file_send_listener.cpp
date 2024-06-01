@@ -60,7 +60,7 @@ std::string SoftBusFileSendListener::GetLocalSessionName(int32_t sessionId)
 
 void SoftBusFileSendListener::OnSendFileProcess(int32_t sessionId, uint64_t bytesUpload, uint64_t bytesTotal)
 {
-    LOGD("OnSendFileProcess, sessionId = %{public}d bytesUpload = %{public}" PRIu64 "bytesTotal = %{public}" PRIu64 "",
+    LOGI("OnSendFileProcess, sessionId = %{public}d bytesUpload = %{public}" PRIu64 "bytesTotal = %{public}" PRIu64 "",
          sessionId, bytesUpload, bytesTotal);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
@@ -74,7 +74,7 @@ void SoftBusFileSendListener::OnSendFileProcess(int32_t sessionId, uint64_t byte
 
 void SoftBusFileSendListener::OnSendFileFinished(int32_t sessionId)
 {
-    LOGD("OnSendFileFinished, sessionId = %{public}d", sessionId);
+    LOGI("OnSendFileFinished, sessionId = %{public}d", sessionId);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");

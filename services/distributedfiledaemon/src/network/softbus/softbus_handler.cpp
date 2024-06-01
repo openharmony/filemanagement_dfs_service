@@ -111,7 +111,7 @@ SoftBusHandler::~SoftBusHandler() = default;
 
 SoftBusHandler &SoftBusHandler::GetInstance()
 {
-    LOGD("SoftBusHandle::GetInstance");
+    LOGI("SoftBusHandle::GetInstance");
     static SoftBusHandler handle;
     return handle;
 }
