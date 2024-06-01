@@ -35,7 +35,6 @@
 #include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
 #include "network/softbus/softbus_handler.h"
-#include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
@@ -44,6 +43,7 @@
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
+#include "network/softbus/softbus_handler_asset.h"
 
 namespace OHOS {
 namespace Storage {
