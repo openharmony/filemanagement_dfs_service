@@ -170,7 +170,7 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         return "";
     }
     auto size = strnlen(physicalPath.c_str(), PATH_MAX);
-    if (size == 0 || size == PATH_MAX) {
+    if (size == 0 || size >= PATH_MAX) {
         LOGE("physicalPath size %{public}zu", size);
     }
     char realPath[PATH_MAX]{ 0x00 };                                 
