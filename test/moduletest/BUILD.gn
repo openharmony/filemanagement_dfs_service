@@ -32,6 +32,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
   module_out_path = module_output_path
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
