@@ -548,7 +548,7 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
     GetStorageManager();
     if (storageMgrProxy_ == nullptr) {
         LOGE("storageMgrProxy_ is null");
-        return;
+        return INVALID_USER_ID;
     }
     int32_t ret = storageMgrProxy_->UMountDfsDocs(userId, "account", networkId, deviceId);
     if (ret != FileManagement::E_OK) {
