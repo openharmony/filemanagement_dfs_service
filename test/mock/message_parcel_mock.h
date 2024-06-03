@@ -49,6 +49,7 @@ public:
     virtual bool WriteUint64(uint64_t value) = 0;
     virtual bool WriteUint16(uint16_t value) = 0;
     virtual bool WriteUint32(uint32_t value) = 0;
+    virtual bool ReadUint64(uint64_t &value) = 0;
 public:
     static inline std::shared_ptr<DfsMessageParcel> messageParcel = nullptr;
 };
@@ -77,6 +78,7 @@ public:
     MOCK_METHOD1(WriteUint64, bool(uint64_t value));
     MOCK_METHOD1(WriteUint16, bool(uint16_t value));
     MOCK_METHOD1(WriteUint32, bool(uint32_t value));
+    MOCK_METHOD1(ReadUint64, bool(uint64_t &value));
 };
 }
 #endif

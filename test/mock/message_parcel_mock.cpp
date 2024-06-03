@@ -136,4 +136,9 @@ bool Parcel::WriteUint32(uint32_t value)
 {
     return DfsMessageParcel::messageParcel->WriteUint32(value);
 }
+
+bool Parcel::ReadUint64(uint64_t &value)
+{
+    return DfsMessageParcel::messageParcel->ReadUint64(value);
+}
 } // namespace OHOS
