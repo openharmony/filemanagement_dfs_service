@@ -60,6 +60,7 @@ const string MEDIA_AUTHORITY = "media";
 const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
+const int32_t E_UNMOUNT = 13600004;
 constexpr int32_t CHECK_SESSION_DELAY_TIME_TWICE = 5000000;
 }
 
@@ -272,7 +273,11 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
     }
     if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
         LOGE("[UMountDfsDocs] permission ok: FILE_ACCESS_MANAGER_PERMISSION");
-        deviceManager->UMountDfsDocs(networkId, deviceId, false);
+        int32_t ret_umount = deviceManager->UMountDfsDocs(networkId, deviceId, false);
+        if (ret_umount != E_OK) {
+            LOGE("[UMountDfsDocs] failed");
+            return E_UNMOUNT;
+        }
     }
     
     deviceManager->RemoveNetworkIdByOne(callingTokenId, networkId);
