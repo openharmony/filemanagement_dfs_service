@@ -116,7 +116,6 @@ void SoftBusFileReceiveListener::OnReceiveFileFinished(int32_t sessionId, int32_
     TransManager::GetInstance().NotifyFileFinished(sessionName);
     TransManager::GetInstance().DeleteTransTask(sessionName);
     SoftBusHandler::GetInstance().ChangeOwnerIfNeeded(sessionId, sessionName);
-    SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
 }
 
 void SoftBusFileReceiveListener::OnFileTransError(int32_t sessionId, int32_t errorCode)
