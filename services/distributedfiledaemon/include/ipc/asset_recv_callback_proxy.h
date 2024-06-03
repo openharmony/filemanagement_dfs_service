@@ -17,9 +17,9 @@
 #define ASSET_RECV_CALLBACK_PROXY_H
 
 #include <string>
+#include "asset/asset_obj.h"
 #include "asset/i_asset_recv_callback.h"
 #include "iremote_proxy.h"
-#include "asset/asset_obj.h"
 
 namespace OHOS {
 namespace Storage {

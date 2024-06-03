@@ -16,8 +16,8 @@
 #ifndef OHOS_STORAGE_ASSET_OBJ_H
 #define OHOS_STORAGE_ASSET_OBJ_H
 
-#include<string>
-#include<vector>
+#include <string>
+#include <vector>
 #include "parcel.h"
 
 namespace OHOS {

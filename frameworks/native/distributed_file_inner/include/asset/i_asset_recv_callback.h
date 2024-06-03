@@ -16,10 +16,10 @@
 #ifndef OHOS_STORAGE_I_ASSET_RECV_CALLBACK_H
 #define OHOS_STORAGE_I_ASSET_RECV_CALLBACK_H
 
-#include <string>
 #include <cstdint>
-#include "iremote_broker.h"
+#include <string>
 #include "asset/asset_obj.h"
+#include "iremote_broker.h"
 #include "refbase.h"
 
 namespace OHOS {
