@@ -673,6 +673,7 @@ static const struct fuse_lowlevel_ops cloudMediaFuseOps = {
 
 int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
+    LOGI("FuseManager::StartFuse entry");
     struct fuse_loop_config config;
     struct fuse_args args = FUSE_ARGS_INIT(0, nullptr);
     struct CloudDisk::CloudDiskFuseData cloudDiskData;
