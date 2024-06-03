@@ -20,7 +20,6 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 
-std::string SoftbusAssetRecvListener::path_ = "";
 void SoftbusAssetRecvListener::OnFile(int32_t socket, FileEvent *event)
 {
     if (event == nullptr) {
