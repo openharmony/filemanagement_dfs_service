@@ -23,11 +23,11 @@
 
 #include "cloud_file_utils.h"
 #include "dfs_error.h"
-#include "directory_ex.h"
 #include "file_utils.h"
 #include "securec.h"
 #include "string_ex.h"
 #include "sys/xattr.h"
+#include "utils_directory.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -112,7 +112,7 @@ static std::string GetCloudDiskDentryFileByPath(uint32_t userId, const std::stri
         "/hmdfs/cloud/data/" + bundleName + "/" +
         std::to_string(CloudDisk::CloudFileUtils::GetBucketId(cloudId)) + "/";
     std::string dentryFileName = MetaFileMgr::GetInstance().CloudIdToRecordId(cloudId);
-    ForceCreateDirectory(cacheDir);
+    Storage::DistributedFile::Utils::ForceCreateDirectory(cacheDir, STAT_MODE_DIR);
     return cacheDir + dentryFileName;
 }
 
