@@ -24,8 +24,7 @@ namespace FileManagement {
 namespace CloudSync {
 using namespace std;
 
-const string TASK_ID = "unload";
-const int32_t DELAY_TIME = 180000;
+const int32_t DELAY_TIME = 90000; // ms
 
 TaskStateManager &TaskStateManager::GetInstance()
 {
@@ -33,20 +32,13 @@ TaskStateManager &TaskStateManager::GetInstance()
     return instance;
 }
 
-TaskStateManager::TaskStateManager()
+TaskStateManager::TaskStateManager() : queue_("unloadTask")
 {
-    auto runner = AppExecFwk::EventRunner::Create(TASK_ID);
-    if (unloadHandler_ == nullptr) {
-        unloadHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
-    }
-    if (unloadHandler_ == nullptr) {
-        LOGE("init unload handler failed");
-    }
 }
 
 void TaskStateManager::StartTask(string bundleName, TaskType task)
 {
-    unloadHandler_->RemoveTask(TASK_ID);
+    CancelUnloadTask();
     std::lock_guard<std::mutex> lock(taskMapsMutex_);
     auto iterator = taskMaps_.find(bundleName);
     if (iterator == taskMaps_.end()) {
@@ -94,11 +86,27 @@ bool TaskStateManager::HasTask(const string bundleName, TaskType task)
     return false;
 }
 
+
+void TaskStateManager::CancelUnloadTask()
+{
+    std::lock_guard<ffrt::mutex> lock(unloadTaskMutex_);
+    if (unloadTaskHandle_ == nullptr) {
+        return;
+    }
+    LOGD("cancel unload task");
+    queue_.cancel(unloadTaskHandle_);
+    unloadTaskHandle_ = nullptr;
+}
+
 void TaskStateManager::DelayUnloadTask()
 {
     LOGI("delay unload task begin");
     auto task = [this]() {
         LOGI("do unload task");
+        {
+            std::lock_guard<ffrt::mutex> lock(unloadTaskMutex_);
+            unloadTaskHandle_ = nullptr;
+        }
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {
             LOGE("get samgr failed");
@@ -110,8 +118,12 @@ void TaskStateManager::DelayUnloadTask()
             return;
         }
     };
-    unloadHandler_->RemoveTask(TASK_ID);
-    unloadHandler_->PostTask(task, TASK_ID, DELAY_TIME);
+
+    CancelUnloadTask();
+    std::lock_guard<ffrt::mutex> lock(unloadTaskMutex_);
+    std::chrono::milliseconds ms(DELAY_TIME);
+    auto us = std::chrono::duration_cast<std::chrono::microseconds>(ms);
+    unloadTaskHandle_ = queue_.submit_h(task, ffrt::task_attr().delay(us.count()));
 }
 } // namespace CloudSync
 } // namespace FileManagement

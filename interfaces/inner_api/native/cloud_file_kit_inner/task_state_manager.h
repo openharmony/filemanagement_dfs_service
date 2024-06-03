@@ -17,7 +17,7 @@
 #define OHOS_FILEMGMT_TASK_STATE_MANAGER_H
 
 #include <nocopyable.h>
-#include "event_handler.h"
+#include "ffrt_inner.h"
 
 namespace OHOS::FileManagement::CloudSync {
 enum class TaskType : uint64_t {
@@ -40,10 +40,14 @@ public:
     void StartTask();
 private:
     TaskStateManager();
+    void DelayUnloadTask();
+    void CancelUnloadTask();
+
     std::mutex taskMapsMutex_;
     std::unordered_map<std::string, uint64_t> taskMaps_;
-    std::shared_ptr<AppExecFwk::EventHandler> unloadHandler_;
-    void DelayUnloadTask();
+    ffrt::queue queue_;
+    ffrt::task_handle unloadTaskHandle_;
+    ffrt::mutex unloadTaskMutex_;
 };
 }
 #endif // OHOS_FILEMGMT_TASK_STATE_MANAGER_H

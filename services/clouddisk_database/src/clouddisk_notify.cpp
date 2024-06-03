@@ -37,23 +37,6 @@ CloudDiskNotify &CloudDiskNotify::GetInstance()
     return instance_;
 }
 
-CloudDiskNotify::CloudDiskNotify()
-{
-    if (timer_ == nullptr) {
-        timer_ = make_unique<Utils::Timer>("CloudDisk_Notify");
-    }
-    notifyCount_ = 0;
-    timerCallback_ = [this]() { NotifyChangeOuter(); };
-    timer_->Setup();
-    timerId_ = timer_->Register(timerCallback_, MNOTIFY_TIME_INTERVAL, true);
-}
-
-CloudDiskNotify::~CloudDiskNotify()
-{
-    timer_->Unregister(timerId_);
-    timer_->Shutdown();
-}
-
 static int32_t GetDataInner(const NotifyParamDisk &paramDisk, NotifyData &notifyData)
 {
     int32_t ret;
