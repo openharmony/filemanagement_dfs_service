@@ -127,6 +127,7 @@ config("dentry_public_config") {
   include_dirs = [
     "dentry/include",
     "inner_api",
+    "system/include",
   ]
 }
 
@@ -145,6 +146,7 @@ ohos_shared_library("libdistributedfiledentry") {
     "dentry/src/file_utils.cpp",
     "dentry/src/meta_file.cpp",
     "dentry/src/meta_file_clouddisk.cpp",
+    "system/src/utils_directory.cpp",
   ]
 
   public_configs = [ ":dentry_public_config" ]
