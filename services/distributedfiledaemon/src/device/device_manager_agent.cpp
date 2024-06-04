@@ -300,8 +300,12 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline begin", deviceInfo.networkId);
+    int32_t ret = IsSupportDevice(deviceInfo);
+    if (ret != FileManagement::ERR_OK) {
+        LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
+        return P2P_FAILED;
+    }
     DeviceInfo info(deviceInfo);
-
     QueryRelatedGroups(info.udid_, info.cid_);
 
     unique_lock<mutex> lock(mpToNetworksMutex_);

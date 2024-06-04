@@ -48,7 +48,7 @@ void SoftbusSessionDispatcher::RegisterSessionListener(const string busName, wea
     } else {
         busNameToAgent_.insert(make_pair(busName, softbusAgent));
     }
-    LOGD("RegisterSessionListener Success, busName:%{public}s", busName.c_str());
+    LOGI("RegisterSessionListener Success, busName:%{public}s", busName.c_str());
 }
 void SoftbusSessionDispatcher::UnregisterSessionListener(const string busName)
 {
@@ -62,7 +62,7 @@ void SoftbusSessionDispatcher::UnregisterSessionListener(const string busName)
         LOGE("%{public}s", ss.str().c_str());
         throw runtime_error(ss.str());
     }
-    LOGD("UnregisterSessionListener Success, busName:%{public}s", busName.c_str());
+    LOGI("UnregisterSessionListener Success, busName:%{public}s", busName.c_str());
 }
 weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std::string peerSessionName)
 {
@@ -72,7 +72,7 @@ weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std
     lock_guard<mutex> lock(softbusAgentMutex_);
     auto agent = busNameToAgent_.find(string(peerSessionName));
     if (agent != busNameToAgent_.end()) {
-        LOGD("Get softbus Agent Success, busName:%{public}s", peerSessionName.c_str());
+        LOGI("Get softbus Agent Success, busName:%{public}s", peerSessionName.c_str());
         return agent->second;
     }
     LOGE("Get Session Agent fail, not exist! sessionId:%{public}d", sessionId);
