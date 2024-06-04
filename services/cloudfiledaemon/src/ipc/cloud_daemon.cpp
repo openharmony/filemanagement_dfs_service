@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
+#include "ffrt_inner.h"
 #include "iremote_object.h"
 #include "system_ability_definition.h"
 #include "parameters.h"
@@ -146,10 +147,10 @@ static void CreateBundlenameDirectory(const string &bundleNamePath)
 int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
     LOGI("Start Fuse");
-    std::thread([=]() {
+    ffrt::submit([=]() {
         int32_t ret = FuseManager::GetInstance().StartFuse(userId, devFd, path);
         LOGI("start fuse result %d", ret);
-        }).detach();
+        });
 
     string dentryPath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CACHE_CLOUD;
     if (access(dentryPath.c_str(), F_OK) != 0) {
