@@ -296,6 +296,10 @@ int32_t DaemonStub::HandleCancelCopyTask(MessageParcel &data, MessageParcel &rep
 int32_t DaemonStub::HandleRegisterRecvCallback(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin RegisterRecvCallback");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
+        LOGE("[RegisterRecvCallback] DATASYNC permission denied");
+        return E_PERMISSION_DENIED;
+    }
     auto object = data.ReadRemoteObject();
     if (object == nullptr) {
         LOGE("RegisterRecvCallback failed, object is nullptr.");
@@ -317,6 +321,10 @@ int32_t DaemonStub::HandleRegisterRecvCallback(MessageParcel &data, MessageParce
 int32_t DaemonStub::HandleUnRegisterRecvCallback(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin UnRegisterRecvCallback");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
+        LOGE("[UnRegisterRecvCallback] DATASYNC permission denied");
+        return E_PERMISSION_DENIED;
+    }
     auto object = data.ReadRemoteObject();
     if (object == nullptr) {
         LOGE("UnRegisterRecvCallback failed, object is nullptr.");
@@ -338,6 +346,10 @@ int32_t DaemonStub::HandleUnRegisterRecvCallback(MessageParcel &data, MessagePar
 int32_t DaemonStub::HandlePushAsset(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin PushAsset");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
+        LOGE("[PushAsset] DATASYNC permission denied");
+        return E_PERMISSION_DENIED;
+    }
     int32_t userId;
     if (!data.ReadInt32(userId)) {
         LOGE("read userId failed");

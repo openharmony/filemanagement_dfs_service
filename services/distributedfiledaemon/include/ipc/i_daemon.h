@@ -24,9 +24,6 @@
 #include "iremote_broker.h"
 #include "i_file_dfs_listener.h"
 
-
-
-
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
