@@ -118,6 +118,7 @@ void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo i
 
 void SoftBusSessionListener::OnSessionClosed(int32_t sessionId, ShutdownReason reason)
 {
+    (void)reason;
     std::string sessionName = "";
     sessionName = SoftBusHandler::GetSessionName(sessionId);
     LOGI("OnSessionClosed, sessionId = %{public}d", sessionId);
