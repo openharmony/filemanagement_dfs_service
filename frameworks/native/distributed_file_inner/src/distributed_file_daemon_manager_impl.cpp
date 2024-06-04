@@ -15,10 +15,10 @@
 
 #include "distributed_file_daemon_manager_impl.h"
 
+#include "asset/asset_adapter_sa_client.h"
 #include "dfs_error.h"
 #include "distributed_file_daemon_proxy.h"
 #include "utils_log.h"
-#include "asset/asset_adapter_sa_client.h"
 
 namespace OHOS {
 namespace Storage {

@@ -18,13 +18,12 @@
 
 #include <cstdint>
 
+#include "asset/asset_obj.h"
+#include "asset/i_asset_recv_callback.h"
+#include "asset/i_asset_send_callback.h"
 #include "dm_device_info.h"
 #include "ipc/i_daemon.h"
 #include "iremote_proxy.h"
-
-#include "asset/i_asset_recv_callback.h"
-#include "asset/i_asset_send_callback.h"
-#include "asset/asset_obj.h"
 
 namespace OHOS {
 namespace Storage {

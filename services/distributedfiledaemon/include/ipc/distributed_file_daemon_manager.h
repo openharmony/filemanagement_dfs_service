@@ -18,13 +18,14 @@
 
 #include <memory>
 
-#include "dm_device_info.h"
-#include "hmdfs_info.h"
-#include "i_file_trans_listener.h"
-#include "i_file_dfs_listener.h"
+#include "asset/asset_obj.h"
 #include "asset/i_asset_recv_callback.h"
 #include "asset/i_asset_send_callback.h"
-#include "asset/asset_obj.h"
+#include "dm_device_info.h"
+#include "hmdfs_info.h"
+#include "i_file_dfs_listener.h"
+#include "i_file_trans_listener.h"
+
 
 namespace OHOS {
 namespace Storage {

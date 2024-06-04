@@ -16,13 +16,13 @@
 #ifndef DISTRIBUTED_FILE_DAEMON_MANAGER_IMPL_H
 #define DISTRIBUTED_FILE_DAEMON_MANAGER_IMPL_H
 
-#include "ipc/distributed_file_daemon_manager.h"
-#include "ipc/i_file_dfs_listener.h"
-#include "dm_device_info.h"
-#include "nocopyable.h"
+#include "asset/asset_obj.h"
 #include "asset/i_asset_recv_callback.h"
 #include "asset/i_asset_send_callback.h"
-#include "asset/asset_obj.h"
+#include "dm_device_info.h"
+#include "ipc/distributed_file_daemon_manager.h"
+#include "ipc/i_file_dfs_listener.h"
+#include "nocopyable.h"
 #include "refbase.h"
 
 namespace OHOS {

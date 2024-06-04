@@ -16,13 +16,16 @@
 #ifndef I_DAEMON_H
 #define I_DAEMON_H
 
-#include "dm_device_info.h"
-#include "iremote_broker.h"
-#include "hmdfs_info.h"
-#include "i_file_dfs_listener.h"
+#include "asset/asset_obj.h"
 #include "asset/i_asset_recv_callback.h"
 #include "asset/i_asset_send_callback.h"
-#include "asset/asset_obj.h"
+#include "dm_device_info.h"
+#include "hmdfs_info.h"
+#include "iremote_broker.h"
+#include "i_file_dfs_listener.h"
+
+
+
 
 namespace OHOS {
 namespace Storage {

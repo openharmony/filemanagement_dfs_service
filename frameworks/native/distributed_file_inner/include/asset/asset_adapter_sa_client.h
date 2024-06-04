@@ -18,9 +18,9 @@
 
 #include <cstdint>
 #include <mutex>
+#include "asset/i_asset_recv_callback.h"
 #include "refbase.h"
 #include "system_ability_status_change_stub.h"
-#include "asset/i_asset_recv_callback.h"
 
 namespace OHOS {
 namespace Storage {
