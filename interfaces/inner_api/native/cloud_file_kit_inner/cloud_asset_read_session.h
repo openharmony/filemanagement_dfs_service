@@ -30,6 +30,7 @@ public:
     virtual CloudError InitSession();
     virtual int64_t PRead(int64_t offset, int64_t size, char *buffer, CloudError &error);
     virtual bool Close(bool needRemain = false);
+    virtual bool HasCache(int64_t offset, int64_t readSize);
 };
 } // namespace OHOS::FileManagement::CloudFile
 

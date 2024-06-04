@@ -36,6 +36,7 @@
 #include <sys/stat.h>
 #include <thread>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
 #include "cloud_disk_inode.h"
 #include "cloud_file_kit.h"
@@ -67,7 +68,10 @@ static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
 static const unsigned int TWO_MB = 2 * 1024 * 1024;
 static const unsigned int KEY_FRAME_SIZE = 8192;
 static const unsigned int MAX_IDLE_THREADS = 10;
+static const unsigned int HMDFS_IOC = 0xf2;
 static const std::chrono::seconds READ_TIMEOUT_S = 20s;
+
+#define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
 
 struct CloudInode {
     shared_ptr<MetaBase> mBase{nullptr};
@@ -79,6 +83,11 @@ struct CloudInode {
     std::shared_mutex sessionLock;
     ffrt::mutex readLock;
     off_t offset{0xffffffff};
+};
+
+struct HmdfsHasCache {
+    int64_t offset;
+    int64_t readSize;
 };
 
 struct FuseData {
@@ -537,6 +546,37 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
     fuse_reply_none(req);
 }
 
+static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *in_buf)
+{
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+    if (!cInode->readSession) {
+        fuse_reply_err(req, EPERM);
+        return;
+    }
+
+    const struct HmdfsHasCache *ioctlData = reinterpret_cast<const struct HmdfsHasCache *>(in_buf);
+    if (!ioctlData) {
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    if (cInode->readSession->HasCache(ioctlData->offset, ioctlData->readSize)) {
+        fuse_reply_ioctl(req, 0, NULL, 0);
+    } else {
+        fuse_reply_err(req, EIO);
+    }
+}
+
+static void CloudIoctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
+                       unsigned flags, const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+{
+    if (static_cast<unsigned int>(cmd) == HMDFS_IOC_HAS_CACHE) {
+        HasCache(req, ino, in_buf);
+    } else {
+        fuse_reply_err(req, ENOTTY);
+    }
+}
+
 static bool PrepareForRead(fuse_req_t req, shared_ptr<char> &buf, size_t size, shared_ptr<CloudInode> cInode,
 				shared_ptr<CloudFile::CloudAssetReadSession> readSession)
 {
@@ -669,6 +709,7 @@ static const struct fuse_lowlevel_ops cloudMediaFuseOps = {
     .release            = CloudRelease,
     .readdir            = CloudReadDir,
     .forget_multi       = CloudForgetMulti,
+    .ioctl              = CloudIoctl,
 };
 
 int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path)
