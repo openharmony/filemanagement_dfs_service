@@ -19,19 +19,23 @@
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
+namespace {
+    static const uint32_t STAT_MODE_DIR = 0771;
+}
+
 CloudPrefImpl::CloudPrefImpl(const int32_t userId, const std::string& bundleName, const std::string& tableName)
 {
     /* the file name varies from different userId and bundle name */
     std::string userIdDir = CLOUDFILE_DIR + std::to_string(userId);
     if (access(userIdDir.c_str(), F_OK) != 0) {
-        if (mkdir(userIdDir.c_str(), S_IRWXU | S_IRWXG | S_IXOTH) != 0) {
+        if (mkdir(userIdDir.c_str(), STAT_MODE_DIR) != 0) {
             LOGE("CloudPrefImpl: mkdir failed");
         }
     }
 
     std::string bundleDir = userIdDir + "/" + bundleName;
     if (access(bundleDir.c_str(), F_OK) != 0) {
-        if (mkdir(bundleDir.c_str(), S_IRWXU | S_IRWXG | S_IXOTH) != 0) {
+        if (mkdir(bundleDir.c_str(), STAT_MODE_DIR) != 0) {
             LOGE("CloudPrefImpl: mkdir failed");
         }
     }

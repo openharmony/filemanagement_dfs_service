@@ -22,6 +22,7 @@
 #include "parameter.h"
 
 #include "dfs_error.h"
+#include "network_set_manager.h"
 #include "net_conn_callback_observer.h"
 #include "utils_log.h"
 
@@ -123,6 +124,19 @@ void NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus netStatus)
 NetworkStatus::NetConnStatus NetworkStatus::GetNetConnStatus()
 {
     return netStatus_;
+}
+
+bool NetworkStatus::CheckMobileNetwork(const std::string &bundleName, const int32_t userId)
+{
+    if (NetworkSetManager::IsNetworkSetStatusOkay(bundleName, userId)) {
+        LOGI("datashare status open, CheckMobileNetwork success");
+        return true;
+    }
+    if (NetworkSetManager::IsNetworkSetStatusOkay(bundleName, userId) || netStatus_ == WIFI_CONNECT) {
+        LOGI("datashare status close, networkdtatus:wifi");
+        return true;
+    }
+    return false;
 }
 
 void NetworkStatus::OnNetworkAvail()

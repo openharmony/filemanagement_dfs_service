@@ -87,7 +87,7 @@ public:
         sptr<IFileDfsListener>& listener);
     std::string GetDeviceIdByNetworkId(const std::string &networkId);
     void MountDfsDocs(const std::string &networkId, const std::string &deviceId);
-    void UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear);
+    int32_t UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear);
     void AddNetworkId(uint32_t tokenId, const std::string &networkId);
     void RemoveNetworkId(uint32_t tokenId);
     void RemoveNetworkIdByOne(uint32_t tokenId, const std::string &networkId);

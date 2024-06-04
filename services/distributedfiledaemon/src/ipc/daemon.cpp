@@ -43,6 +43,7 @@
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
+#include "network/softbus/softbus_handler_asset.h"
 
 namespace OHOS {
 namespace Storage {
@@ -60,6 +61,7 @@ const string MEDIA_AUTHORITY = "media";
 const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
+const int32_t E_UNMOUNT = 13600004;
 constexpr int32_t CHECK_SESSION_DELAY_TIME_TWICE = 5000000;
 }
 
@@ -101,6 +103,7 @@ void Daemon::OnStart()
     try {
         PublishSA();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+        AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
@@ -119,32 +122,36 @@ void Daemon::OnStop()
         LOGE("UnSubscribe common event failed");
     }
     subScriber_ = nullptr;
+    SoftBusHandlerAsset::GetInstance().DeleteAssetLocalSessionServer();
     LOGI("Stop finished successfully");
 }
 
 void Daemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
-    (void)systemAbilityId;
-    (void)deviceId;
-    RegisterOsAccount();
+    if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
+        (void)systemAbilityId;
+        (void)deviceId;
+        RegisterOsAccount();
+    } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
+        SoftBusHandlerAsset::GetInstance().CreateAssetLocalSessionServer();
+    }
 }
 
 void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     (void)deviceId;
-    if (systemAbilityId != COMMON_EVENT_SERVICE_ID) {
-        LOGE("systemAbilityId is not COMMON_EVENT_SERVICE_ID");
-        return;
-    }
+    if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
+        if (subScriber_ == nullptr) {
+            LOGE("Daemon::OnRemoveSystemAbility subscriberPtr is nullptr");
+            return;
+        }
 
-    if (subScriber_ == nullptr) {
-        LOGE("Daemon::OnRemoveSystemAbility subscriberPtr is nullptr");
-        return;
+        bool subscribeResult = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subScriber_);
+        LOGI("Daemon::OnRemoveSystemAbility subscribeResult = %{public}d", subscribeResult);
+        subScriber_ = nullptr;
+    } else if (systemAbilityId == SOFTBUS_SERVER_SA_ID) {
+        SoftBusHandlerAsset::GetInstance().DeleteAssetLocalSessionServer();
     }
-
-    bool subscribeResult = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subScriber_);
-    LOGI("Daemon::OnRemoveSystemAbility subscribeResult = %{public}d", subscribeResult);
-    subScriber_ = nullptr;
 }
 
 int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -272,7 +279,11 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
     }
     if (DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
         LOGE("[UMountDfsDocs] permission ok: FILE_ACCESS_MANAGER_PERMISSION");
-        deviceManager->UMountDfsDocs(networkId, deviceId, false);
+        int32_t ret_umount = deviceManager->UMountDfsDocs(networkId, deviceId, false);
+        if (ret_umount != E_OK) {
+            LOGE("[UMountDfsDocs] failed");
+            return E_UNMOUNT;
+        }
     }
     
     deviceManager->RemoveNetworkIdByOne(callingTokenId, networkId);

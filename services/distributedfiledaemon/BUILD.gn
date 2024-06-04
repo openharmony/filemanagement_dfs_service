@@ -33,6 +33,8 @@ ohos_shared_library("libdistributedfiledaemon") {
   sources = [
     "src/device/device_info.cpp",
     "src/device/device_manager_agent.cpp",
+    "src/ipc/asset_recv_callback_proxy.cpp",
+    "src/ipc/asset_send_callback_proxy.cpp",
     "src/ipc/connection_detector.cpp",
     "src/ipc/daemon.cpp",
     "src/ipc/daemon_stub.cpp",
@@ -47,9 +49,11 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/network/network_agent_template.cpp",
     "src/network/session_pool.cpp",
     "src/network/softbus/softbus_agent.cpp",
+    "src/network/softbus/softbus_asset_recv_listener.cpp",
     "src/network/softbus/softbus_file_receive_listener.cpp",
     "src/network/softbus/softbus_file_send_listener.cpp",
     "src/network/softbus/softbus_handler.cpp",
+    "src/network/softbus/softbus_handler_asset.cpp",
     "src/network/softbus/softbus_session.cpp",
     "src/network/softbus/softbus_session_dispatcher.cpp",
     "src/network/softbus/softbus_session_listener.cpp",
@@ -122,6 +126,9 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
   }
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_adapter_sa_client.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_recv_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_send_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",

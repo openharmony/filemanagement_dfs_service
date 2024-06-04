@@ -525,36 +525,37 @@ void DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std::s
     LOGI("storageMgr.MountDfsDocs end.");
 }
 
-void DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear)
+int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear)
 {
     LOGI("UMountDfsDocs start in OpenP2PConnection, networkId: %{public}s, deviceId: %{public}s",
         Utils::GetAnonyString(networkId).c_str(), Utils::GetAnonyString(deviceId).c_str());
     if (networkId.empty() || deviceId.empty()) {
-        LOGI("NetworkId or DeviceId is empty");
-        return;
+        LOGE("NetworkId or DeviceId is empty");
+        return INVALID_USER_ID;
     }
 
     if (UMountDfsCountOnly(deviceId, needClear)) {
-        LOGI("only count sub one, do not neet umount");
-        return;
+        LOGE("only count sub one, do not neet umount");
+        return INVALID_USER_ID;
     }
 
     int32_t userId = GetCurrentUserId();
     if (userId == INVALID_USER_ID) {
-        LOGI("GetCurrentUserId Fail");
-        return;
+        LOGE("GetCurrentUserId Fail");
+        return INVALID_USER_ID;
     }
 
     GetStorageManager();
     if (storageMgrProxy_ == nullptr) {
-        LOGI("storageMgrProxy_ is null");
-        return;
+        LOGE("storageMgrProxy_ is null");
+        return INVALID_USER_ID;
     }
     int32_t ret = storageMgrProxy_->UMountDfsDocs(userId, "account", networkId, deviceId);
     if (ret != FileManagement::E_OK) {
-        LOGI("UMountDfsDocs fail, ret = %{public}d", ret);
+        LOGE("UMountDfsDocs fail, ret = %{public}d", ret);
     }
     LOGI("storageMgr.UMountDfsDocs end.");
+    return ret;
 }
 
 void DeviceManagerAgent::NotifyRemoteReverseObj(const std::string &networkId, int32_t status)

@@ -32,6 +32,10 @@ namespace DistributedFile {
 namespace Utils {
 using namespace std;
 
+namespace {
+    static const uint32_t STAT_MODE_DIR = 0771;
+}
+
 std::string GetAnonyString(const std::string &value)
 {
     constexpr size_t shortIdLength = 20;
@@ -188,8 +192,9 @@ void ForceCreateDirectory(const string &path, function<void(const string &)> onS
         }
 
         if (access(subPath.c_str(), F_OK) != 0) {
-            if (mkdir(subPath.c_str(), (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)) != 0 && errno != EEXIST) {
-                throw system_error(errno, system_category());
+            if (mkdir(subPath.c_str(), STAT_MODE_DIR) != 0) {
+                LOGE("failed to mkdir, errno:%{public}d", errno);
+                return;
             }
             onSubDirCreated(subPath);
         }
@@ -205,7 +210,7 @@ void ForceCreateDirectory(const string &path, mode_t mode)
 {
     ForceCreateDirectory(path, [mode](const string &subPath) {
         if (chmod(subPath.c_str(), mode) == -1) {
-            throw system_error(errno, system_category());
+            LOGE("failed to chmod, errno:%{public}d", errno);
         }
     });
 }
@@ -214,7 +219,7 @@ void ForceCreateDirectory(const string &path, mode_t mode, uid_t uid, gid_t gid)
 {
     ForceCreateDirectory(path, [mode, uid, gid](const string &subPath) {
         if (chmod(subPath.c_str(), mode) == -1 || chown(subPath.c_str(), uid, gid) == -1) {
-            throw system_error(errno, system_category());
+            LOGE("failed to chmod or chown, errno:%{public}d", errno);
         }
     });
 }
@@ -222,7 +227,7 @@ void ForceCreateDirectory(const string &path, mode_t mode, uid_t uid, gid_t gid)
 void ForceRemoveDirectory(const string &path)
 {
     if (!OHOS::ForceRemoveDirectory(path)) {
-        throw system_error(errno, system_category());
+        LOGE("failed to forcibly remove directory, errno:%{public}d", errno);
     }
 }
 

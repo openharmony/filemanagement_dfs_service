@@ -52,6 +52,11 @@ void NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus netStatus)
     return;
 }
 
+bool NetworkStatus::CheckMobileNetwork(const std::string &bundleName, const int32_t userId)
+{
+    return true;
+}
+
 NetworkStatus::NetConnStatus NetworkStatus::GetNetConnStatus()
 {
     return NetworkStatus::NetConnStatus::WIFI_CONNECT;
