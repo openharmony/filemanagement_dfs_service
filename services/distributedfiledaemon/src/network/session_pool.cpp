@@ -71,6 +71,7 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
         if (DeviceDisconnectCountOnly(cid, linkType, false)) {
             continue;
         }
+        DeviceConnectCount_.clear();
         if ((*iter)->GetHandle() == fd) {
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
             if (linkTypeIter != occupySession_.end()) {
