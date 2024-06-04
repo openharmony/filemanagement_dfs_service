@@ -26,7 +26,6 @@
 #include "i_file_dfs_listener.h"
 #include "i_file_trans_listener.h"
 
-
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
