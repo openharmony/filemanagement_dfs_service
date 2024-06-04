@@ -53,7 +53,8 @@ bool AssetAdapterSaClient::SubscribeAssetAdapterSA()
     sptr<AssetSystemAbilityStatusChange> callback = new AssetSystemAbilityStatusChange();
     int32_t ret = samgrProxy->SubscribeSystemAbility(FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, callback);
     if (ret != E_OK) {
-        LOGE("SA manager subscribe system ability fail, SA Id %{public}d, ret %{public}d", FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, ret);
+        LOGE("SA manager subscribe system ability fail, SA Id %{public}d, ret %{public}d",
+             FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, ret);
         return false;
     }
     return true;
@@ -98,7 +99,8 @@ bool AssetAdapterSaClient::CheckSystemAbilityStatus()
         return false;
     }
     if (!samgrProxy->CheckSystemAbility(FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID)) {
-        LOGI("SA manager proxy check system ability fail, SA Id %{public}d", FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID);
+        LOGI("SA manager proxy check system ability fail, SA Id %{public}d",
+             FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID);
         return false;
     }
     return true;
@@ -162,7 +164,8 @@ void AssetSystemAbilityStatusChange::OnAddSystemAbility(int32_t systemAbilityId,
 {
     LOGI("OnAddSystemAbility called, the systemAbilityId is %{public}d", systemAbilityId);
     if (systemAbilityId != FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID) {
-        LOGE("systemAbilityId must be FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, but it is %{public}d", systemAbilityId);
+        LOGE("systemAbilityId must be FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, but it is %{public}d",
+             systemAbilityId);
     }
 
     AssetAdapterSaClient::GetInstance().OnAddSystemAbility();
@@ -173,7 +176,8 @@ void AssetSystemAbilityStatusChange::OnRemoveSystemAbility(int32_t systemAbility
 {
     LOGI("OnRemoveSystemAbility called, the systemAbilityId is %{public}d", systemAbilityId);
     if (systemAbilityId != FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID) {
-        LOGE("systemAbilityId must be FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, but it is %{public}d", systemAbilityId);
+        LOGE("systemAbilityId must be FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, but it is %{public}d",
+             systemAbilityId);
     }
 }
 
