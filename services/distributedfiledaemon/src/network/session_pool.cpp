@@ -75,7 +75,6 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
             LOGI("fd=%{public}d, deviceConnectCount clear", fd);
             deviceConnectCount_.clear();
         }
-        deviceConnectCount_.clear();
         if ((*iter)->GetHandle() == fd) {
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
             if (linkTypeIter != occupySession_.end()) {
