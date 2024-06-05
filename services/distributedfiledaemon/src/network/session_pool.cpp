@@ -161,7 +161,6 @@ bool SessionPool::DeviceDisconnectCountOnly(const string &cid, const uint8_t lin
         return false;
     }
     std::string deviceId = GetDeviceIdByCid(cid);
-    for (const auto &deviceInfo : deviceList) {
     if (deviceId.empty()) {
         LOGE("fail to get deviceId");
         return false;
