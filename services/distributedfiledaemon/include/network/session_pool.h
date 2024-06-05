@@ -47,8 +47,10 @@ private:
     std::shared_ptr<KernelTalker> &talker_;
     std::map<int32_t, uint8_t> occupySession_;
     std::unordered_map<std::string, int32_t> deviceConnectCount_;
+    std::unordered_map<std::string, std::string> deviceIdByCid_;
 
     void AddSessionToPool(std::shared_ptr<BaseSession> session);
+    std::string GetDeviceIdByCid(const std::string &cid);
 };
 } // namespace DistributedFile
 } // namespace Storage
