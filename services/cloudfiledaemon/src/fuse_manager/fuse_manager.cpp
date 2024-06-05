@@ -695,6 +695,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         }
         cloudDiskData.userId = userId;
         cloudDiskData.se = se;
+        config.max_idle_threads = 1;
     } else {
         se = fuse_session_new(&args, &cloudMediaFuseOps,
                               sizeof(cloudMediaFuseOps), &data);
@@ -704,6 +705,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         }
         data.userId = userId;
         data.se = se;
+        config.max_idle_threads = MAX_IDLE_THREADS;
     }
 
     LOGI("fuse_session_new success, userId: %{public}d", userId);
@@ -711,7 +713,6 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     se->mountpoint = strdup(path.c_str());
 
     fuse_daemonize(true);
-    config.max_idle_threads = MAX_IDLE_THREADS;
     ret = fuse_session_loop_mt(se, &config);
 
     fuse_session_unmount(se);
