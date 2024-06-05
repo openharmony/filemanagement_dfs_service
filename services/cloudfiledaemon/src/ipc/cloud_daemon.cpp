@@ -42,6 +42,7 @@ namespace {
     static const string LOCAL_PATH_HMDFS_DENTRY_CACHE = "/hmdfs/cache/account_cache/dentry_cache/";
     static const string LOCAL_PATH_HMDFS_CACHE_CLOUD = "/hmdfs/cache/account_cache/dentry_cache/cloud";
     static const string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
+    static const string HMDFS_CLOUD_DATA = "/hmdfs/cloud/data/";
     static const int32_t STAT_MODE_DIR = 0771;
     static const int32_t OID_DFS = 1009;
     static const int32_t BUCKET_LEN = 32;
@@ -172,7 +173,7 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
     }
     if (path.find("cloud_fuse") != string::npos) {
         string bundleName = system::GetParameter(FILEMANAGER_KEY, "");
-        string bundleNamePath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + "/" + bundleName;
+        string bundleNamePath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + HMDFS_CLOUD_DATA + bundleName;
         if (access(bundleNamePath.c_str(), F_OK) == 0) {
             CreateBundlenameDirectory(bundleNamePath);
         }
