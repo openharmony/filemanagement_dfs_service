@@ -124,6 +124,7 @@ public:
         this->env_ = listener.env_;
         this->cbOnRef_ = listener.cbOnRef_;
         this->cbOffRef_ = listener.cbOffRef_;
+        this->observers_ = listener.observers_;
     }
 
     ChangeListenerNapi &operator=(const ChangeListenerNapi &listener)
@@ -131,6 +132,7 @@ public:
         this->env_ = listener.env_;
         this->cbOnRef_ = listener.cbOnRef_;
         this->cbOffRef_ = listener.cbOffRef_;
+        this->observers_ = listener.observers_;
         return *this;
     }
 

@@ -557,7 +557,7 @@ static uint32_t GetMaxLevel(int32_t fd)
     if (fstat(fd, &st) == -1) {
         return MAX_BUCKET_LEVEL;
     }
-    uint32_t blkNum = st.st_size / DENTRYGROUP_SIZE + 1;
+    uint32_t blkNum = static_cast<uint32_t>(st.st_size) / DENTRYGROUP_SIZE + 1;
     uint32_t maxLevel = 0;
     blkNum >>= 1;
     while (blkNum > 1) {
