@@ -40,4 +40,9 @@ bool CloudAssetReadSession::Close(bool needRemain)
 {
     return true;
 }
+
+bool CloudAssetReadSession::HasCache(int64_t offset, int64_t readSize)
+{
+    return true;
+}
 } // namespace OHOS::FileManagement::CloudFile

@@ -38,6 +38,7 @@ public:
      * needRemain = true:  返回值为true时保留缓存文件成功, 返回值为false保留缓存文件失败
      */
     bool Close(bool needRemain = false);
+    bool HasCache(int64_t offset, int64_t readSize);
 };
 } // namespace DriveKit
 #endif
