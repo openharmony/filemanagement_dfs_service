@@ -212,7 +212,6 @@ bool SessionPool::DeviceConnectCountOnly(std::shared_ptr<BaseSession> session)
         LOGE("fail to get deviceId");
         return false;
     }
-    deviceIdByCid_.insert({cid, deviceId});
 
     std::string key = "";
     auto sessionId = session->GetSessionId();
@@ -223,6 +222,7 @@ bool SessionPool::DeviceConnectCountOnly(std::shared_ptr<BaseSession> session)
             LOGI("DeviceConnectCountOnly return, linkType is %{public}d, not LINK_TYPE_P2P,", linkType);
             return false;
         }
+        deviceIdByCid_.insert({cid, deviceId});
         key = deviceId + "_" + std::to_string(linkType);
     } else {
         LOGE("occupySession find sessionId failed");
