@@ -71,6 +71,10 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
         if (DeviceDisconnectCountOnly(cid, linkType, false)) {
             continue;
         }
+        if (fd < 0) {
+            LOGI("fd=%{public}d, deviceConnectCount clear", fd);
+            deviceConnectCount_.clear();
+        }
         if ((*iter)->GetHandle() == fd) {
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
             if (linkTypeIter != occupySession_.end()) {
@@ -126,20 +130,37 @@ void SessionPool::AddSessionToPool(shared_ptr<BaseSession> session)
     usrSpaceSessionPool_.push_back(session);
 }
 
-bool SessionPool::DeviceDisconnectCountOnly(const string &cid, const uint8_t linkType, bool needErase)
+std::string SessionPool::GetDeviceIdByCid(const std::string &cid)
 {
+    std::string deviceId = "";
+    auto it = deviceIdByCid_.find(cid);
+    if (!cid.empty() && it != deviceIdByCid_.end()) {
+        deviceId = it->second;
+    }
+    if (!deviceId.empty()) {
+        return deviceId;
+    }
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
     DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
     if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
         LOGE("the size of trust device list is invalid, size=%zu", deviceList.size());
-        return false;
+        return deviceId;
     }
-    std::string deviceId = "";
     for (const auto &deviceInfo : deviceList) {
         if (!cid.empty() && std::string(deviceInfo.networkId) == cid) {
             deviceId = std::string(deviceInfo.deviceId);
         }
     }
+    return deviceId;
+}
+
+bool SessionPool::DeviceDisconnectCountOnly(const string &cid, const uint8_t linkType, bool needErase)
+{
+    if (linkType != LINK_TYPE_P2P) {
+        LOGI("DeviceDisconnectCountOnly return, linkType is %{public}d, not LINK_TYPE_P2P,", linkType);
+        return false;
+    }
+    std::string deviceId = GetDeviceIdByCid(cid);
     if (deviceId.empty()) {
         LOGE("fail to get deviceId");
         return false;
@@ -149,11 +170,13 @@ bool SessionPool::DeviceDisconnectCountOnly(const string &cid, const uint8_t lin
     auto itCount = deviceConnectCount_.find(key);
     if (itCount == deviceConnectCount_.end()) {
         LOGI("deviceConnectCount_ can not find %{public}s", Utils::GetAnonyString(key).c_str());
+        deviceIdByCid_.erase(cid);
         return false;
     }
     if (needErase) {
         deviceConnectCount_.erase(itCount);
         LOGI("[DeviceDisconnectCountOnly]  %{public}s, needErase", Utils::GetAnonyString(key).c_str());
+        deviceIdByCid_.erase(cid);
         return false;
     }
     if (itCount->second > MOUNT_DFS_COUNT_ONE) {
@@ -166,6 +189,7 @@ bool SessionPool::DeviceDisconnectCountOnly(const string &cid, const uint8_t lin
         LOGI("[DeviceDisconnectCountOnly] deviceId_linkType %{public}s erase now", Utils::GetAnonyString(key).c_str());
         deviceConnectCount_.erase(itCount);
     }
+    deviceIdByCid_.erase(cid);
     return false;
 }
 
@@ -194,6 +218,11 @@ bool SessionPool::DeviceConnectCountOnly(std::shared_ptr<BaseSession> session)
     auto it = occupySession_.find(sessionId);
     if (it != occupySession_.end()) {
         uint8_t linkType = it->second;
+        if (linkType != LINK_TYPE_P2P) {
+            LOGI("DeviceConnectCountOnly return, linkType is %{public}d, not LINK_TYPE_P2P,", linkType);
+            return false;
+        }
+        deviceIdByCid_.insert({cid, deviceId});
         key = deviceId + "_" + std::to_string(linkType);
     } else {
         LOGE("occupySession find sessionId failed");
@@ -202,12 +231,12 @@ bool SessionPool::DeviceConnectCountOnly(std::shared_ptr<BaseSession> session)
 
     auto itCount = deviceConnectCount_.find(key);
     if (itCount != deviceConnectCount_.end() && itCount->second > 0) {
-        LOGI("[DeviceDisconnectCountOnly] deviceId_linkType %{public}s has already established a link, \
+        LOGI("[DeviceConnectCountOnly] deviceId_linkType %{public}s has already established a link, \
             count %{public}d, increase count by one now", Utils::GetAnonyString(key).c_str(), itCount->second);
         deviceConnectCount_[key]++;
         return true;
     } else {
-        LOGI("[DeviceDisconnectCountOnly] deviceId_linkType %{public}s increase count by one now",
+        LOGI("[DeviceConnectCountOnly] deviceId_linkType %{public}s increase count by one now",
             Utils::GetAnonyString(key).c_str());
         deviceConnectCount_[key]++;
     }
