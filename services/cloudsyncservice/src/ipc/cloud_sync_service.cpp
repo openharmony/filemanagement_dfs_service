@@ -69,6 +69,7 @@ void CloudSyncService::PreInit()
     auto instance = CloudFile::CloudFileKit::GetInstance();
     if (instance == nullptr) {
         LOGE("get cloud file helper instance failed");
+        dataSyncManager_ = make_shared<DataSyncManager>();
         return;
     }
 
