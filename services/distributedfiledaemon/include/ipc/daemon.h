@@ -72,6 +72,12 @@ public:
                             const std::string &sessionName) override;
     int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) override;
 
+    int32_t PushAsset(int32_t userId,
+                      const sptr<AssetObj> &assetObj,
+                      const sptr<IAssetSendCallback> &sendCallback) override;
+    int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
+    int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
+
 private:
     Daemon();
     ServiceRunningState state_ { ServiceRunningState::STATE_NOT_START };
