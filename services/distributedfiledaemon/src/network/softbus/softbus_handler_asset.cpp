@@ -38,6 +38,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::FileManagement;
 constexpr size_t MAX_SIZE = 500;
+constexpr size_t BUFFER_SIZE = 512;
 const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
@@ -428,7 +429,10 @@ int32_t SoftBusHandlerAsset::ZipFile(const std::vector<std::string> &fileList,
         while ((len = fread(buf, 1, sizeof(buf), f)) > 0) {
             zipWriteInFileInZip(outputFile, buf, len);
         }
-        fclose(f);
+        int ret = fclose(f);
+        if (!ret) {
+            LOGE("Minizip failed to fclose");
+        }
         zipCloseFileInZip(outputFile);
     }
     zipClose(outputFile, NULL);
@@ -486,9 +490,15 @@ int32_t SoftBusHandlerAsset::MkDir(const std::string &path, mode_t mode)
 
 bool SoftBusHandlerAsset::MkDirRecurse(const std::string& path, mode_t mode)
 {
+    size_t pos = path.rfind("/");
+    if (pos == std::string::npos) {
+        LOGE("is not a dir, path : %{public}s", path.c_str());
+    }
+    auto dirPath = path.substr(0, pos);
+
     std::string::size_type index = 0;
     do {
-        std::string subPath = path;
+        std::string subPath = dirPath;
         index = path.find('/', index + 1);
         if (index != std::string::npos) {
             subPath = path.substr(0, index);
@@ -517,42 +527,44 @@ bool SoftBusHandlerAsset::IsDir(const std::string &path)
 
 std::string SoftBusHandlerAsset::ExtractFile(unzFile zipFile, std::string dir)
 {
-    char *filenameWithPath = new char[512];
+    char *filenameWithPath = new char[BUFFER_SIZE];
     char *p;
     char *filenameWithoutPath;
     unz_file_info64 fileInfo;
     p = filenameWithoutPath = filenameWithPath;
-    if (unzGetCurrentFileInfo64(zipFile, &fileInfo, filenameWithPath, 512, NULL, 0, NULL, 0) != UNZ_OK) {
+    if (unzGetCurrentFileInfo64(zipFile, &fileInfo, filenameWithPath, BUFFER_SIZE, NULL, 0, NULL, 0) != UNZ_OK) {
         LOGE("Minizip failed to unzGetCurrentFileInfo64");
         return "";
     }
-    char *temp = new char[512];
-    strcpy_s(temp, 512, dir.c_str());
-    strcat_s(temp, 512, filenameWithPath);
+    char *temp = new char[BUFFER_SIZE];
+    int ret = strcpy_s(temp, BUFFER_SIZE, dir.c_str());
+    if (!ret) {
+        LOGE("Minizip failed to strcpy");
+        return "";
+    }
+    ret = strcat_s(temp, BUFFER_SIZE, filenameWithPath);
+    if (!ret) {
+        LOGE("Minizip failed to strcat");
+        return "";
+    }
     filenameWithPath = temp;
-
     while ((*p) != '\0') {
         if ((*p) == '/') {
             filenameWithoutPath = p + 1;
         }
         p++;
     }
-
     LOGI("Minizip ExtractFile, filenameWithPath = %{public}s ", filenameWithPath);
-
     if (*filenameWithoutPath != '\0') {
         if (!IsDir(filenameWithPath)) {
             MkDirRecurse(filenameWithPath, S_IRWXU | S_IRWXG | S_IXOTH);
         }
-
         if (unzOpenCurrentFile(zipFile) != UNZ_OK) {
             LOGE("Minizip failed to unzOpenCurrentFile");
         }
-
         std::fstream file;
         file.open(filenameWithPath, std::ios_base::out | std::ios_base::binary);
         ZPOS64_T fileLength = fileInfo.uncompressed_size;
-
         char *fileData = new char[fileLength];
         ZPOS64_T err = unzReadCurrentFile(zipFile, (voidp)fileData, fileLength);
         if (err < 0) {
@@ -562,7 +574,6 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile zipFile, std::string dir)
         file.close();
         free(fileData);
     }
-
     std::string filenameWithPathStr = filenameWithPath;
     return filenameWithPathStr;
 }
