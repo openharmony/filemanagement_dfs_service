@@ -63,7 +63,8 @@
           "os_account",
           "power_manager",
           "resource_schedule_service",
-          "libfuse"
+          "libfuse",
+          "zlib"
         ],
         "third_party": [
           "e2fsprogs"
