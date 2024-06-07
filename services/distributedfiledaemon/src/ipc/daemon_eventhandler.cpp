@@ -23,8 +23,8 @@ namespace Storage {
 namespace DistributedFile {
 
 DaemonEventHandler::DaemonEventHandler(const std::shared_ptr<AppExecFwk::EventRunner> &runner,
-                                       const std::shared_ptr<DaemonExecute> &daemonExecute) :
-      AppExecFwk::EventHandler(runner), daemonExecute_(daemonExecute)
+                                       const std::shared_ptr<DaemonExecute> &daemonExecute)
+    : AppExecFwk::EventHandler(runner), daemonExecute_(daemonExecute)
 {
     LOGI("daemon event handler create.");
 }

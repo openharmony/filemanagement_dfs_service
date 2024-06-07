@@ -36,7 +36,6 @@ DaemonExecute::DaemonExecute()
 {
     LOGI("DaemonExecute begin.");
     executeFuncMap_[DEAMON_EXECUTE_PUSH_ASSET] = &DaemonExecute::ExecutePushAsset;
-
 }
 void DaemonExecute::ProcessEvent(const AppExecFwk::InnerEvent::Pointer &event)
 {
@@ -106,8 +105,8 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
 }
 
 std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::string> &uris,
-                                             int32_t userId,
-                                             const std::string &srcBundleName)
+                                                    int32_t userId,
+                                                    const std::string &srcBundleName)
 {
     std::vector<std::string> fileList;
     for (const auto &uri : uris) {
@@ -138,9 +137,9 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
     return fileList;
 }
 int32_t DaemonExecute::HandleZip(const std::vector<std::string> &fileList,
-                              const std::string &srcBundleName,
-                              std::string &sendFileName,
-                              bool &isSingleFile)
+                                 const std::string &srcBundleName,
+                                 std::string &sendFileName,
+                                 bool &isSingleFile)
 {
     if (fileList.size() > 1) {
         size_t pos = fileList[0].find(srcBundleName);

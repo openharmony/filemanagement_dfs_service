@@ -116,7 +116,8 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
 
     if (ret != FileManagement::ERR_OK) {
         LOGE("MoveAsset fail, socket %{public}d", socketId);
-        AssetCallbackMananger::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj, FileManagement::ERR_BAD_VALUE);
+        AssetCallbackMananger::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj,
+                                                                     FileManagement::ERR_BAD_VALUE);
         SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
         return;
     }
@@ -134,7 +135,8 @@ void SoftbusAssetRecvListener::OnRecvAssetError(int32_t socketId, int32_t errorC
     }
     sptr<AssetObj> nullAssetObj = new (std::nothrow) AssetObj();
 
-    AssetCallbackMananger::GetInstance().NotifyAssetRecvFinished(srcNetworkId, nullAssetObj, FileManagement::ERR_BAD_VALUE);
+    AssetCallbackMananger::GetInstance().NotifyAssetRecvFinished(srcNetworkId, nullAssetObj,
+                                                                 FileManagement::ERR_BAD_VALUE);
     SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
 }
 
@@ -183,7 +185,7 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
         return true;
     }
 
-    for(auto oldPath : fileList) {
+    for (auto oldPath : fileList) {
         std::string newPath = oldPath;
         size_t pos = newPath.find(TEMP_DIR);
         if (pos == std::string::npos) {

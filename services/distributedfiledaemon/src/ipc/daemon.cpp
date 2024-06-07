@@ -655,7 +655,7 @@ int32_t Daemon::UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCall
 void Daemon::StartEventHandler()
 {
     LOGI("StartEventHandler begin");
-    if(daemonExecute_ == nullptr) {
+    if (daemonExecute_ == nullptr) {
         daemonExecute_ = std::make_shared<DaemonExecute>();
     }
 

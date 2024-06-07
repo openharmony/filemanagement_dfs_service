@@ -191,7 +191,8 @@ int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& 
     const char *src[MAX_SIZE] = {};
     src[0] = sendFile.c_str();
 
-    auto dstFile = GetDstFile(sendFile, assetObj->srcBundleName_, assetObj->dstBundleName_, assetObj->sessionId_, isSingleFile);
+    auto dstFile = GetDstFile(sendFile, assetObj->srcBundleName_,
+                              assetObj->dstBundleName_, assetObj->sessionId_, isSingleFile);
     if (dstFile.empty()) {
         LOGE("GetFileName failed or file is empty");
         return ERR_BAD_VALUE;
@@ -293,14 +294,14 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
 
     std::smatch match;
     std::regex sessionIdRegex("sessionId=([^&]+)");
-    if (!std::regex_search(fileName, match, sessionIdRegex)){
+    if (!std::regex_search(fileName, match, sessionIdRegex)) {
         LOGE("Generate sessionId fail, relativeFirstFile is %{public}s", fileName.c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     assetObj->sessionId_ = match[1].str();
 
     std::regex srcBundleNameRegex("srcBundleName=([^&]+)");
-    if (!std::regex_search(fileName, match, srcBundleNameRegex)){
+    if (!std::regex_search(fileName, match, srcBundleNameRegex)) {
         LOGE("Generate srcBundleName fail, relativeFirstFile is %{public}s", fileName.c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
@@ -372,7 +373,8 @@ std::vector<std::string> SoftBusHandlerAsset::GenerateUris(const std::vector<std
             LOGE("not find asset postfix in fileList.");
             return {};
         }
-        uri <<"file://" << dstBundleName << "/data/storage/el2/distributedfiles" << file.substr(posPrefix + tempDir.length(), posPostfix);
+        uri <<"file://" << dstBundleName << "/data/storage/el2/distributedfiles"
+            << file.substr(posPrefix + tempDir.length(), posPostfix);
         uris.emplace_back(uri.str());
         return uris;
     }
@@ -383,7 +385,8 @@ std::vector<std::string> SoftBusHandlerAsset::GenerateUris(const std::vector<std
             LOGE("not find tempDir in fileList.");
             return {};
         }
-        uri <<"file://" << dstBundleName << "/data/storage/el2/distributedfiles" << file.substr(posPrefix + tempDir.length());
+        uri <<"file://" << dstBundleName << "/data/storage/el2/distributedfiles"
+            << file.substr(posPrefix + tempDir.length());
         uris.emplace_back(uri.str());
     }
     return uris;
@@ -404,7 +407,6 @@ int32_t SoftBusHandlerAsset::ZipFile(const std::vector<std::string> &fileList,
     }
 
     for (const std::string& rootFile : fileList) {
-
         size_t pos = rootFile.find(relativePath);
         if (pos == std::string::npos) {
             LOGE("rootFile not have relativePath");
@@ -516,7 +518,8 @@ bool SoftBusHandlerAsset::IsDir(const std::string &path)
 std::string SoftBusHandlerAsset::ExtractFile(unzFile zipFile, std::string dir)
 {
     char *filenameWithPath = new char[512];
-    char *p, *filenameWithoutPath;
+    char *p;
+    char *filenameWithoutPath;
     unz_file_info64 fileInfo;
     p = filenameWithoutPath = filenameWithPath;
     if (unzGetCurrentFileInfo64(zipFile, &fileInfo, filenameWithPath, 512, NULL, 0, NULL, 0) != UNZ_OK) {
@@ -552,11 +555,9 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile zipFile, std::string dir)
 
         char *fileData = new char[fileLength];
         ZPOS64_T err = unzReadCurrentFile(zipFile, (voidp)fileData, fileLength);
-
         if (err < 0) {
             LOGE("Minizip failed to unzReadCurrentFile");
         }
-
         file.write(fileData, fileLength);
         file.close();
         free(fileData);
