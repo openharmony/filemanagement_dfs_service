@@ -705,6 +705,11 @@ void FileDataHandler::HandleShootingMode(const DriveKit::DKRecord &record, const
     if (valuebucket.GetObject(Media::PhotoColumn::PHOTO_SHOOTING_MODE, valueObject)) {
         valueObject.GetString(shootingMode);
     }
+    bool isNum = std::all_of(shootingMode.begin(), shootingMode.end(), ::isdigit);
+    if (!isNum) {
+        LOGE("shootingMode %{public}s is invailed string", shootingMode.c_str());
+        return;
+    }
     if (!shootingMode.empty()) {
         params.recordAnalysisAlbumMaps[record.GetRecordId()] = stoi(shootingMode);
     }
