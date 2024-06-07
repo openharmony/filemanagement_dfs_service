@@ -150,7 +150,7 @@ int32_t SoftbusAssetRecvListener::GetCurrentUserId()
     auto ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(userIds);
     if (ret != NO_ERROR || userIds.empty()) {
         LOGE("query active os account id failed, ret = %{public}d", ret);
-        return INVALID_USER_ID;
+        return FileManagement::E_GET_USER_ID;
     }
     LOGI("DeviceManagerAgent::GetCurrentUserId end.");
     return userIds[0];
