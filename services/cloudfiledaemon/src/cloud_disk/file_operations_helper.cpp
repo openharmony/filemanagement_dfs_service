@@ -14,6 +14,7 @@
  */
 #include "file_operations_helper.h"
 
+#include <cinttypes>
 #include <unistd.h>
 
 #include "file_operations_cloud.h"
@@ -209,7 +210,7 @@ void FileOperationsHelper::PutCloudDiskInode(struct CloudDiskFuseData *data,
     }
     inoPtr->refCount -= num;
     if (inoPtr->refCount == 0) {
-        LOGD("node released: %{public}lld", key);
+        LOGD("node released: %{public}" PRId64 "", key);
         wLock.lock();
         data->inodeCache.erase(key);
         wLock.unlock();
@@ -225,7 +226,7 @@ void FileOperationsHelper::PutCloudDiskFile(struct CloudDiskFuseData *data,
         return;
     }
     if (filePtr->refCount == 0) {
-        LOGD("file released: %{public}lld", key);
+        LOGD("file released: %{public}" PRId64 "", key);
         wLock.lock();
         data->fileCache.erase(key);
         wLock.unlock();
