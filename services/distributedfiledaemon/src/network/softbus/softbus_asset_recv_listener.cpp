@@ -174,6 +174,7 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
         }
         newPath = newPath.substr(0, pos);
         try {
+            SoftBusHandlerAsset::GetInstance().MkDirRecurse(newPath, S_IRWXU | S_IRWXG | S_IXOTH);
             std::filesystem::rename(oldPath.c_str(), newPath.c_str());
         } catch (const std::filesystem::filesystem_error &e) {
             LOGE("rename file fail, file name is %{public}s", e.what());
@@ -191,6 +192,7 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
         }
         newPath.replace(pos, TEMP_DIR.length(), "");
         try {
+            SoftBusHandlerAsset::GetInstance().MkDirRecurse(newPath, S_IRWXU | S_IRWXG | S_IXOTH);
             std::filesystem::rename(oldPath.c_str(), newPath.c_str());
         } catch (const std::filesystem::filesystem_error &e) {
             LOGE("rename file fail, file name is %{public}s", e.what());

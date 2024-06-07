@@ -66,7 +66,7 @@ public:
                     const std::string &relativePath,
                     const std::string &zipFileName);
     std::vector<std::string> UnzipFile(std::string zipFileName, std::string relativePath);
-
+    bool MkDirRecurse(const std::string& path, mode_t mode);
 private:
     static bool IsSameAccount(const std::string &networkId);
     std::string GetDstFile(const std::string &file,
@@ -76,7 +76,7 @@ private:
                            bool isSingleFile);
     std::string GetLocalNetworkId();
     int32_t MkDir(const std::string &path, mode_t mode);
-    bool MkDirRecurse(const std::string& path, mode_t mode);
+
     bool IsDir(const std::string &path);
     std::string ExtractFile(unzFile zipFile, std::string dir);
     std::mutex clientInfoMutex_;
