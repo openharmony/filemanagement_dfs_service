@@ -20,6 +20,7 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
+#include "accesstoken_kit.h"
 
 namespace OHOS {
 namespace Storage {

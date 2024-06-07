@@ -81,10 +81,13 @@ ohos_unittest("device_manager_agent_test") {
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
@@ -97,6 +100,7 @@ ohos_unittest("device_manager_agent_test") {
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
@@ -139,6 +143,8 @@ ohos_unittest("device_manager_agent_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "eventhandler:libeventhandler",
+    "zlib:shared_libz",
   ]
 
   defines = [ "private=public" ]
@@ -159,10 +165,13 @@ ohos_unittest("os_account_observer_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
@@ -175,6 +184,7 @@ ohos_unittest("os_account_observer_test") {
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
@@ -216,6 +226,8 @@ ohos_unittest("os_account_observer_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "eventhandler:libeventhandler",
+    "zlib:shared_libz",
   ]
 
   defines = [ "private=public" ]
@@ -236,10 +248,13 @@ ohos_unittest("devsl_dispatcher_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
@@ -252,6 +267,7 @@ ohos_unittest("devsl_dispatcher_test") {
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
@@ -292,6 +308,8 @@ ohos_unittest("devsl_dispatcher_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "eventhandler:libeventhandler",
+    "zlib:shared_libz",
   ]
 
   defines = [ "private=public" ]
@@ -312,10 +330,13 @@ ohos_unittest("kernel_talker_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
@@ -328,6 +349,7 @@ ohos_unittest("kernel_talker_test") {
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
@@ -368,6 +390,8 @@ ohos_unittest("kernel_talker_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "eventhandler:libeventhandler",
+    "zlib:shared_libz",
   ]
 
   defines = [ "private=public" ]
@@ -389,6 +413,8 @@ ohos_unittest("network_agent_template_test") {
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
@@ -401,6 +427,7 @@ ohos_unittest("network_agent_template_test") {
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
@@ -439,6 +466,8 @@ ohos_unittest("network_agent_template_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "eventhandler:libeventhandler",
+    "zlib:shared_libz",
   ]
 
   defines = [ "private=public" ]
@@ -459,10 +488,13 @@ ohos_unittest("session_pool_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
@@ -475,6 +507,7 @@ ohos_unittest("session_pool_test") {
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
@@ -515,6 +548,8 @@ ohos_unittest("session_pool_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "eventhandler:libeventhandler",
+    "zlib:shared_libz",
   ]
 
   defines = [ "private=public" ]
@@ -535,10 +570,13 @@ ohos_unittest("softbus_agent_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
@@ -551,6 +589,7 @@ ohos_unittest("softbus_agent_test") {
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
@@ -591,6 +630,8 @@ ohos_unittest("softbus_agent_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "eventhandler:libeventhandler",
+    "zlib:shared_libz",
   ]
 
   defines = [
@@ -708,10 +749,13 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
@@ -724,6 +768,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
@@ -764,6 +809,8 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "eventhandler:libeventhandler",
+    "zlib:shared_libz",
   ]
 
   defines = [ "private=public" ]
@@ -784,10 +831,13 @@ ohos_unittest("softbus_session_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
@@ -800,6 +850,7 @@ ohos_unittest("softbus_session_test") {
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
@@ -840,6 +891,8 @@ ohos_unittest("softbus_session_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "eventhandler:libeventhandler",
+    "zlib:shared_libz",
   ]
 
   defines = [ "private=public" ]

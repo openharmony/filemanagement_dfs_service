@@ -18,9 +18,11 @@
 
 #include <cstdint>
 #include <string>
-
+#include <map>
+#include <mutex>
 #include "transport/socket.h"
 #include "transport/trans_type.h"
+#include "asset/asset_obj.h"
 
 namespace OHOS {
 namespace Storage {
@@ -30,9 +32,20 @@ public:
     static void OnFile(int32_t socket, FileEvent *event);
     static const char* GetRecvPath();
 
+    static void OnRecvAssetStart(int32_t socketId, const char **fileList, int32_t fileCnt);
+    static void OnRecvAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt);
+    static void OnRecvAssetError(int32_t socketId, int32_t errorCode);
+
     static void OnAssetRecvBind(int32_t sessionId, PeerSocketInfo info);
 
 private:
+    static int32_t HandleOneFile(int32_t socketId, std::string filePath, const sptr<AssetObj> &assetObj);
+    static int32_t HandleMoreFile(int32_t socketId, std::string filePath, const sptr<AssetObj> &assetObj);
+    static bool JudgeSingleFile(std::string filePath);
+
+    static int32_t GetCurrentUserId();
+    static bool MoveAsset(const std::vector<std::string> &fileList, bool isSingleFile);
+    static bool RemoveAsset(const std::vector<std::string> &fileList);
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
     static inline std::string path_;
 };

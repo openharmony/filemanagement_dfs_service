@@ -32,6 +32,9 @@
 #include "refbase.h"
 #include "system_ability.h"
 #include "accesstoken_kit.h"
+#include "daemon_eventhandler.h"
+#include "daemon_event.h"
+#include "daemon_execute.h"
 
 namespace OHOS {
 namespace Storage {
@@ -114,6 +117,11 @@ private:
         void OnRemoteDied(const wptr<IRemoteObject> &remote) override;
     };
     static inline sptr<DfsListenerDeathRecipient> dfsListenerDeathRecipient_;
+private:
+    std::mutex eventHandlerMutex_;
+    std::shared_ptr<DaemonEventHandler> eventHandler_;
+    std::shared_ptr<DaemonExecute> daemonExecute_;
+    void StartEventHandler();
 };
 } // namespace DistributedFile
 } // namespace Storage

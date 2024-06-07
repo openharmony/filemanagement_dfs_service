@@ -22,6 +22,12 @@
 #include <mutex>
 #include <cstdint>
 #include <string>
+#include "asset/asset_obj.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <vector>
+#include "third_party/zlib/contrib/minizip/zip.h"
+#include "third_party/zlib/contrib/minizip/unzip.h"
 
 namespace OHOS {
 namespace Storage {
@@ -39,10 +45,46 @@ public:
     void CreateAssetLocalSessionServer();
     void DeleteAssetLocalSessionServer();
 
-    static bool IsSameAccount(const std::string &networkId);
+    int32_t AssetBind(const std::string &dstNetworkId, int32_t &socketId);
+    int32_t AssetSendFile(int32_t socketId, const std::string& sendFile, bool isSingleFile);
+    void closeAssetBind(int32_t socketId);
+    void OnAssetRecvBind(int32_t socketId, const std::string &srcNetWorkId);
+
+    std::string GetClientInfo(int32_t socketId);
+    void RemoveClientInfo(int32_t socketId);
+    void AddAssetObj(int32_t socketId, const sptr<AssetObj> &assetObj);
+    sptr<AssetObj> GetAssetObj(int32_t socketId);
+    void RemoveAssetObj(int32_t socketId);
+
+    int32_t GenerateAssetObjInfo(int32_t socketId,
+                             const std::string &fileName,
+                             const sptr<AssetObj> &assetObj);
+    std::vector<std::string> GenerateUris(const std::vector<std::string> &fileList,
+                                          const std::string &dstBundleName,
+                                          bool isSingleFile);
+    int32_t ZipFile(const std::vector<std::string> &fileList,
+                    const std::string &relativePath,
+                    const std::string &zipFileName);
+    std::vector<std::string> UnzipFile(std::string zipFileName, std::string relativePath);
+
 private:
+    static bool IsSameAccount(const std::string &networkId);
+    std::string GetDstFile(const std::string &file,
+                           const std::string &srcBundleName,
+                           const std::string &dstBundleName,
+                           const std::string &sessionId,
+                           bool isSingleFile);
+    std::string GetLocalNetworkId();
+    int32_t MkDir(const std::string &path, mode_t mode);
+    bool MkDirRecurse(const std::string& path, mode_t mode);
+    bool IsDir(const std::string &path);
+    std::string ExtractFile(unzFile zipFile, std::string dir);
+    std::mutex clientInfoMutex_;
+    std::map<int32_t, std::string> clientInfoMap_;
     std::mutex serverIdMapMutex_;
     std::map<std::string, int32_t> serverIdMap_;
+    std::mutex assetObjMapMutex_;
+    std::map<int32_t, sptr<AssetObj>> assetObjMap_;
     std::map<DFS_ASSET_ROLE, ISocketListener> sessionListener_;
     static inline const std::string SERVICE_NAME {"ohos.storage.distributedfile.daemon"};
     static inline const std::string ASSET_LOCAL_SESSION_NAME {"DistributedFileService_assetListener"};
