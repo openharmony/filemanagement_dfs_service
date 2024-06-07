@@ -93,6 +93,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -100,6 +101,6 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "eventhandler:libeventhandler",
+    "zlib:shared_libz",
   ]
 }

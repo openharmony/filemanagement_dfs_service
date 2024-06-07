@@ -136,6 +136,7 @@ ohos_unittest("device_manager_agent_test") {
     "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -143,7 +144,6 @@ ohos_unittest("device_manager_agent_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "eventhandler:libeventhandler",
     "zlib:shared_libz",
   ]
 
@@ -219,6 +219,7 @@ ohos_unittest("os_account_observer_test") {
     "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -226,7 +227,6 @@ ohos_unittest("os_account_observer_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "eventhandler:libeventhandler",
     "zlib:shared_libz",
   ]
 
@@ -301,6 +301,7 @@ ohos_unittest("devsl_dispatcher_test") {
     "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -308,7 +309,6 @@ ohos_unittest("devsl_dispatcher_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "eventhandler:libeventhandler",
     "zlib:shared_libz",
   ]
 
@@ -383,6 +383,7 @@ ohos_unittest("kernel_talker_test") {
     "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -390,7 +391,6 @@ ohos_unittest("kernel_talker_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "eventhandler:libeventhandler",
     "zlib:shared_libz",
   ]
 
@@ -459,6 +459,7 @@ ohos_unittest("network_agent_template_test") {
     "device_auth:deviceauth_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -466,7 +467,6 @@ ohos_unittest("network_agent_template_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "eventhandler:libeventhandler",
     "zlib:shared_libz",
   ]
 
@@ -541,6 +541,7 @@ ohos_unittest("session_pool_test") {
     "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -548,7 +549,6 @@ ohos_unittest("session_pool_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "eventhandler:libeventhandler",
     "zlib:shared_libz",
   ]
 
@@ -623,6 +623,7 @@ ohos_unittest("softbus_agent_test") {
     "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -630,7 +631,6 @@ ohos_unittest("softbus_agent_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "eventhandler:libeventhandler",
     "zlib:shared_libz",
   ]
 
@@ -802,6 +802,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -809,7 +810,6 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "eventhandler:libeventhandler",
     "zlib:shared_libz",
   ]
 
@@ -884,6 +884,7 @@ ohos_unittest("softbus_session_test") {
     "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -891,7 +892,6 @@ ohos_unittest("softbus_session_test") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "eventhandler:libeventhandler",
     "zlib:shared_libz",
   ]
 

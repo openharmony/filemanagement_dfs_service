@@ -83,6 +83,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -92,7 +93,6 @@ ohos_shared_library("libdistributedfiledaemon") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "eventhandler:libeventhandler",
     "zlib:shared_libz",
   ]
   configs = [ "${utils_path}:compiler_configs" ]
