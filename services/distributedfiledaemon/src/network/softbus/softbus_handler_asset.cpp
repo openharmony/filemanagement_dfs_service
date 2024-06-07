@@ -372,7 +372,7 @@ std::vector<std::string> SoftBusHandlerAsset::GenerateUris(const std::vector<std
             LOGE("not find asset postfix in fileList.");
             return {};
         }
-        uri <<"file://" << dstBundleName << "/data/storage/el2/base" << file.substr(posPrefix + tempDir.length(), posPostfix);
+        uri <<"file://" << dstBundleName << "/data/storage/el2/distributedfiles" << file.substr(posPrefix + tempDir.length(), posPostfix);
         uris.emplace_back(uri.str());
         return uris;
     }
@@ -383,7 +383,7 @@ std::vector<std::string> SoftBusHandlerAsset::GenerateUris(const std::vector<std
             LOGE("not find tempDir in fileList.");
             return {};
         }
-        uri <<"file://" << dstBundleName << "/data/storage/el2/base" << file.substr(posPrefix + tempDir.length());
+        uri <<"file://" << dstBundleName << "/data/storage/el2/distributedfiles" << file.substr(posPrefix + tempDir.length());
         uris.emplace_back(uri.str());
     }
     return uris;

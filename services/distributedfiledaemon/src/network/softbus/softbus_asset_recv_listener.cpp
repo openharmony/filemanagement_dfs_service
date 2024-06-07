@@ -35,8 +35,6 @@ const std::string USRT_ID_FLAG = "{userId}";
 const std::string TEMP_DIR = "ASSET_TEMP/";
 const std::string ASSET_FLAG_SINGLE = ".asset_single?";
 const std::string ASSET_FLAG_ZIP = ".asset_zip?";
-using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
-using AccessTokenKit = OHOS::Security::AccessToken::AccessTokenKit;
 void SoftbusAssetRecvListener::OnFile(int32_t socket, FileEvent *event)
 {
     if (event == nullptr) {
@@ -162,36 +160,40 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
 {
     if (isSingleFile) {
         std::string oldPath = fileList[0];
-        size_t pos = oldPath.find(TEMP_DIR);
+        std::string newPath = oldPath;
+        size_t pos = newPath.find(TEMP_DIR);
         if (pos == std::string::npos) {
             LOGE("get asset temp dir fail, file name is %{public}s", oldPath.c_str());
             return false;
         }
-        std::string newPath = oldPath.replace(pos, TEMP_DIR.length(), "");
+        newPath.replace(pos, TEMP_DIR.length(), "");
         pos = newPath.find(ASSET_FLAG_SINGLE);
         if (pos == std::string::npos) {
             LOGE("get asset flag fail, file name is %{public}s", oldPath.c_str());
             return false;
         }
         newPath = newPath.substr(0, pos);
-        int32_t ret = rename(oldPath.c_str(), newPath.c_str());
-        if (ret != 0) {
-            LOGE("rename file fail, file name is %{public}s", oldPath.c_str());
+        try {
+            std::filesystem::rename(oldPath.c_str(), newPath.c_str());
+        } catch (const std::filesystem::filesystem_error &e) {
+            LOGE("rename file fail, file name is %{public}s", e.what());
             return false;
         }
         return true;
     }
 
     for(auto oldPath : fileList) {
-        size_t pos = oldPath.find(TEMP_DIR);
+        std::string newPath = oldPath;
+        size_t pos = newPath.find(TEMP_DIR);
         if (pos == std::string::npos) {
             LOGE("get asset temp dir fail, file name is %{public}s", oldPath.c_str());
             return false;
         }
-        std::string newPath = oldPath.replace(pos, TEMP_DIR.length(), "");
-        int32_t ret = rename(oldPath.c_str(), newPath.c_str());
-        if (ret != 0) {
-            LOGE("rename file fail, file name is %{public}s", oldPath.c_str());
+        newPath.replace(pos, TEMP_DIR.length(), "");
+        try {
+            std::filesystem::rename(oldPath.c_str(), newPath.c_str());
+        } catch (const std::filesystem::filesystem_error &e) {
+            LOGE("rename file fail, file name is %{public}s", e.what());
             return false;
         }
     }
@@ -259,9 +261,10 @@ int32_t SoftbusAssetRecvListener::HandleMoreFile(int32_t socketId, std::string f
         return FileManagement::ERR_BAD_VALUE;
     }
     std::string zipfilePath = filePath.substr(0, pos);
-    ret = rename(filePath.c_str(), zipfilePath.c_str());
-    if (ret != 0) {
-        LOGE("rename file fail, file name is %{public}s", filePath.c_str());
+    try {
+        std::filesystem::rename(filePath.c_str(), zipfilePath.c_str());
+    } catch (const std::filesystem::filesystem_error &e) {
+        LOGE("rename file fail, file name is %{public}s", e.what());
         return FileManagement::ERR_BAD_VALUE;
     }
     pos = zipfilePath.rfind("/");
@@ -269,7 +272,7 @@ int32_t SoftbusAssetRecvListener::HandleMoreFile(int32_t socketId, std::string f
         LOGE("filePath is not a zip file : %{public}s", filePath.c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
-    std::string relativePath = zipfilePath.substr(0, pos);
+    std::string relativePath = zipfilePath.substr(0, pos + 1);
     std::vector<std::string> fileList = SoftBusHandlerAsset::GetInstance().UnzipFile(zipfilePath, relativePath);
     if (fileList.empty()) {
         LOGE("unzip fail");
