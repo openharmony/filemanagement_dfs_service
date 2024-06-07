@@ -25,6 +25,7 @@
 #include "utils_directory.h"
 #include "utils_log.h"
 #include "refbase.h"
+#include "network/softbus/softbus_asset_send_listener.h"
 
 namespace OHOS {
 namespace Storage {
@@ -56,15 +57,10 @@ void DaemonExecute::ProcessEvent(const AppExecFwk::InnerEvent::Pointer &event)
 void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &event)
 {
     auto pushData = event->GetSharedObject<PushAssetData>();
-    if (pushData == nullptr) {
-        LOGE("pushData is nullptr.");
-        return;
-    }
     int32_t userId = pushData->userId_;
-    LOGI("ExecutePushAsset userId %{public}d", userId);
     auto assetObj = pushData->assetObj_;
-    if (assetObj == nullptr) {
-        LOGE("assetObj is nullptr.");
+    if (pushData == nullptr || assetObj == nullptr) {
+        LOGE("pushData is nullptr.");
         return;
     }
 
@@ -83,7 +79,7 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
     auto fileList = GetFileList(assetObj->uris_, userId, assetObj->srcBundleName_);
     if (fileList.empty()) {
         LOGE("get fileList is empty.");
-        HamndlePushAssetFail(socketId, assetObj);
+        HandlePushAssetFail(socketId, assetObj);
         return;
     }
 
@@ -92,14 +88,16 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
     ret = HandleZip(fileList, assetObj->srcBundleName_, sendFileName, isSingleFile);
     if (ret != E_OK) {
         LOGE("zip files fail. socketId is %{public}d", socketId);
-        HamndlePushAssetFail(socketId, assetObj);
+        HandlePushAssetFail(socketId, assetObj);
+        SoftBusHandlerAsset::GetInstance().RemoveFile(sendFileName, !isSingleFile);
         return;
     }
 
     ret = SoftBusHandlerAsset::GetInstance().AssetSendFile(socketId, sendFileName, isSingleFile);
     if (ret != E_OK) {
         LOGE("ExecutePushAsset send file fail, ret %{public}d", ret);
-        HamndlePushAssetFail(socketId, assetObj);
+        HandlePushAssetFail(socketId, assetObj);
+        SoftBusHandlerAsset::GetInstance().RemoveFile(sendFileName, !isSingleFile);
         return;
     }
 }
@@ -155,15 +153,17 @@ int32_t DaemonExecute::HandleZip(const std::vector<std::string> &fileList,
             return E_ZIP;
         }
         isSingleFile = false;
+        SoftBusAssetSendListener::isSingleFile_ = false;
         return E_OK;
     } else {
         sendFileName = fileList[0];
         isSingleFile = true;
+        SoftBusAssetSendListener::isSingleFile_ = true;
         return E_OK;
     }
 }
 
-void DaemonExecute::HamndlePushAssetFail(int32_t socketId, sptr<AssetObj> &assetObj)
+void DaemonExecute::HandlePushAssetFail(int32_t socketId, sptr<AssetObj> &assetObj)
 {
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
     AssetCallbackMananger::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_EVENT_HANDLER);

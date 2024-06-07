@@ -212,7 +212,7 @@ bool SoftbusAssetRecvListener::RemoveAsset(const std::vector<std::string> &fileL
         LOGE("get asset temp dir fail, file name is %{public}s", firstName.c_str());
         return false;
     }
-    std::string removePath = firstName.substr(0, pos + TEMP_DIR.length() + 1);
+    std::string removePath = firstName.substr(0, pos + TEMP_DIR.length() - 1);
     bool ret = std::filesystem::remove_all(removePath.c_str());
     if (!ret) {
         LOGE("remove file fail, remove path is %{public}s", removePath.c_str());

@@ -20,10 +20,10 @@
 #include "network/softbus/softbus_handler_asset.h"
 #include "utils_log.h"
 
-
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+bool SoftBusAssetSendListener::isSingleFile_;
 void SoftBusAssetSendListener::OnFile(int32_t socket, FileEvent *event)
 {
     if (event == nullptr) {
@@ -42,7 +42,7 @@ void SoftBusAssetSendListener::OnFile(int32_t socket, FileEvent *event)
             break;
     }
 }
-void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId)
+void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char **fileList)
 {
     LOGE("Push asset finished.");
     auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(socketId);
@@ -54,9 +54,10 @@ void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId)
     AssetCallbackMananger::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_OK);
     SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
     AssetCallbackMananger::GetInstance().RemoveSendCallback(taskId);
+    SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], !SoftBusAssetSendListener::isSingleFile_);
 }
 
-void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId, int32_t errorCode)
+void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId, const char **fileList, int32_t errorCode)
 {
     LOGE("SendAssetError errorCode %{public}d", errorCode);
     auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(socketId);
@@ -68,6 +69,7 @@ void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId, int32_t errorC
     AssetCallbackMananger::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_SEND_FILE);
     SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
     AssetCallbackMananger::GetInstance().RemoveSendCallback(taskId);
+    SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], !SoftBusAssetSendListener::isSingleFile_);
 }
 
 } // namespace DistributedFile

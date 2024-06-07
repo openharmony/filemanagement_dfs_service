@@ -67,6 +67,8 @@ public:
                     const std::string &zipFileName);
     std::vector<std::string> UnzipFile(std::string zipFileName, std::string relativePath);
     bool MkDirRecurse(const std::string& path, mode_t mode);
+
+    void RemoveFile(const std::string &path, bool isRemove = true);
 private:
     static bool IsSameAccount(const std::string &networkId);
     std::string GetDstFile(const std::string &file,

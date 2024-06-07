@@ -41,7 +41,7 @@ private:
                       const std::string &srcBundleName,
                       std::string &sendFileName,
                       bool &isSingleFile);
-    void HamndlePushAssetFail(int32_t socketId, sptr<AssetObj> &assetObj);
+    void HandlePushAssetFail(int32_t socketId, sptr<AssetObj> &assetObj);
 
     using ExecuteFunc = void (DaemonExecute::*)(const AppExecFwk::InnerEvent::Pointer &event);
     std::map<uint32_t, ExecuteFunc> executeFuncMap_;

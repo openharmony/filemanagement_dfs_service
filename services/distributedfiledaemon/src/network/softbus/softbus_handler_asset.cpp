@@ -19,6 +19,7 @@
 #include <regex>
 #include <sstream>
 #include <fstream>
+#include <filesystem>
 
 #include "asset_callback_mananger.h"
 #include "device_manager.h"
@@ -285,7 +286,7 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
     }
     std::string relativeFileName = fileName.substr(pos + RELATIVE_PATH_FLAG.length());
 
-    pos = fileName.find(DST_BUNDLE_NAME_FLAG);
+    pos = relativeFileName.find(DST_BUNDLE_NAME_FLAG);
     if (pos == std::string::npos) {
         LOGE("Generate dstBundleName fail, relativeFirstFile is %{public}s", fileName.c_str());
         return FileManagement::ERR_BAD_VALUE;
@@ -375,7 +376,7 @@ std::vector<std::string> SoftBusHandlerAsset::GenerateUris(const std::vector<std
             return {};
         }
         uri <<"file://" << dstBundleName << "/data/storage/el2/distributedfiles"
-            << file.substr(posPrefix + tempDir.length(), posPostfix);
+            << file.substr(posPrefix + tempDir.length(), posPostfix - posPrefix - tempDir.length());
         uris.emplace_back(uri.str());
         return uris;
     }
@@ -397,10 +398,6 @@ int32_t SoftBusHandlerAsset::ZipFile(const std::vector<std::string> &fileList,
                                      const std::string &relativePath,
                                      const std::string &zipFileName)
 {
-    if (!IsDir(zipFileName)) {
-        MkDirRecurse(zipFileName, S_IRWXU | S_IRWXG | S_IXOTH);
-    }
-
     zipFile outputFile = zipOpen64(zipFileName.c_str(), APPEND_STATUS_CREATE);
     if (!outputFile) {
         LOGE("Minizip failed to zipOpen, zipFileName = %{public}s", zipFileName.c_str());
@@ -574,6 +571,18 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile zipFile, std::string dir)
     }
     std::string filenameWithPathStr = filenameWithPath;
     return filenameWithPathStr;
+}
+
+void SoftBusHandlerAsset::RemoveFile(const std::string &path, bool isRemove)
+{
+    if (!isRemove) {
+        LOGI("this file is not need remove");
+        return;
+    }
+    bool ret = std::filesystem::remove(path.c_str());
+    if (!ret) {
+        LOGE("remove file fail, remove path is %{public}s", path.c_str());
+    }
 }
 } // namespace DistributedFile
 } // namespace Storage
