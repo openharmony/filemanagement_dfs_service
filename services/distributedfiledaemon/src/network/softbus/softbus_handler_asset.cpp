@@ -290,7 +290,7 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
         LOGE("Generate dstBundleName fail, relativeFirstFile is %{public}s", fileName.c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
-    auto dstBundleName = fileName.substr(0, pos);
+    auto dstBundleName = relativeFileName.substr(0, pos);
     assetObj->dstBundleName_ = dstBundleName;
 
     std::smatch match;
@@ -537,14 +537,12 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile zipFile, std::string dir)
         return "";
     }
     char *temp = new char[BUFFER_SIZE];
-    int ret = strcpy_s(temp, BUFFER_SIZE, dir.c_str());
-    if (!ret) {
-        LOGE("Minizip failed to strcpy");
+    int retCpy = strcpy_s(temp, BUFFER_SIZE, dir.c_str());
+    if (!retCpy) {
         return "";
     }
-    ret = strcat_s(temp, BUFFER_SIZE, filenameWithPath);
-    if (!ret) {
-        LOGE("Minizip failed to strcat");
+    int retCat = strcat_s(temp, BUFFER_SIZE, filenameWithPath);
+    if (!retCat) {
         return "";
     }
     filenameWithPath = temp;
