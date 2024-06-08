@@ -70,10 +70,10 @@ void CloudSyncService::PreInit()
     if (instance == nullptr) {
         LOGE("get cloud file helper instance failed");
         dataSyncManager_ = make_shared<DataSyncManager>();
-        return;
+    } else {
+        dataSyncManager_ = instance->GetDataSyncManager();
     }
 
-    dataSyncManager_ = instance->GetDataSyncManager();
     batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
     screenStatusListener_ = make_shared<ScreenStatusListener>(dataSyncManager_);
     userStatusListener_ = make_shared<UserStatusListener>();
