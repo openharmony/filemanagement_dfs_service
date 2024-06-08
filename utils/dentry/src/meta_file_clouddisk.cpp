@@ -159,6 +159,25 @@ int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskM
     return E_OK;
 }
 
+int32_t CloudDiskMetaFile::DoChildUpdate(const std::string &name, CloudDiskMetaFileCallBack callback)
+{
+    MetaBase m(name);
+    /* lookup and update */
+    int32_t ret = DoLookup(m);
+    if (ret != E_OK) {
+        LOGE("lookup dentry file failed, ret %{public}d", ret);
+        return ret;
+    } else {
+        callback(m);
+        ret = DoUpdate(m);
+        if (ret != E_OK) {
+            LOGE("update dentry file failed, ret %{public}d", ret);
+            return ret;
+        }
+    }
+    return E_OK;
+}
+
 int32_t CloudDiskMetaFile::DoLookupAndRemove(MetaBase &metaBase)
 {
     /* lookup and remove in parent */

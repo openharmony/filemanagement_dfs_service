@@ -495,7 +495,8 @@ static int32_t WriteUpdateDentry(MetaBase &metaBase, uint32_t userId, const std:
         m.size = metaBase.size;
     };
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, parentCloudId);
-    int32_t ret = metaFile->DoLookupAndUpdate(fileName, callback);
+    LOGD("write update dentry start");
+    int32_t ret = metaFile->DoChildUpdate(fileName, callback);
     if (ret != E_OK) {
         LOGE("update new dentry failed, ret = %{public}d", ret);
         return ret;

@@ -1050,6 +1050,7 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
         LOGE("remove dentry failed, ret = %{public}d", ret);
         return ret;
     }
+    LOGD("doUnlink, dentry file has been deleted");
     if (isDirectory == FILE && position != CLOUD) {
         string localPath = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
         LOGI("unlink %{public}s", localPath.c_str());
