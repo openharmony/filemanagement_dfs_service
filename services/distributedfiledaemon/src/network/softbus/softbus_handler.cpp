@@ -43,16 +43,6 @@ std::map<std::string, int32_t> SoftBusHandler::serverIdMap_;
 
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
-    if (!SoftBusHandler::IsSameAccount(info.networkId)) {
-        std::lock_guard<std::mutex> lock(serverIdMapMutex_);
-        auto it = serverIdMap_.find(info.name);
-        if (it != serverIdMap_.end()) {
-            Shutdown(it->second);
-            serverIdMap_.erase(it);
-            LOGI("RemoveSessionServer success.");
-        }
-        Shutdown(sessionId);
-    }
     std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
     SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, info.name));
 }
@@ -170,10 +160,6 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         return E_OPEN_SESSION;
     }
     LOGI("OpenSession Enter.");
-    if (!IsSameAccount(peerDevId)) {
-        LOGI("The source and sink device is not same account, not support.");
-        return E_OPEN_SESSION;
-    }
     QosTV qos[] = {
         {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
         {.qos = QOS_TYPE_MAX_LATENCY,        .value = DFS_QOS_TYPE_MAX_LATENCY},
