@@ -16,9 +16,9 @@
 #ifndef FILEMANAGEMENT_DFS_SERVICE_SDK_ASSET_CALLBACK_MANANGER_H
 #define FILEMANAGEMENT_DFS_SERVICE_SDK_ASSET_CALLBACK_MANANGER_H
 
-#include <vector>
 #include <map>
 #include <mutex>
+#include <vector>
 
 #include "asset/i_asset_recv_callback.h"
 #include "asset/i_asset_send_callback.h"

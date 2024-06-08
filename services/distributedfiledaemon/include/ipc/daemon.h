@@ -21,6 +21,9 @@
 #include <string>
 
 #include "accesstoken_kit.h"
+#include "daemon_event.h"
+#include "daemon_eventhandler.h"
+#include "daemon_execute.h"
 #include "daemon_stub.h"
 #include "dm_device_info.h"
 #include "file_trans_listener_proxy.h"
@@ -32,9 +35,6 @@
 #include "refbase.h"
 #include "system_ability.h"
 #include "accesstoken_kit.h"
-#include "daemon_eventhandler.h"
-#include "daemon_event.h"
-#include "daemon_execute.h"
 
 namespace OHOS {
 namespace Storage {

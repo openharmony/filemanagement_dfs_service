@@ -16,8 +16,9 @@
 #ifndef FILEMANAGEMENT_DFS_SERVICE_EVENTHANDLE_DAEMON_EVENTHANDLE_H
 #define FILEMANAGEMENT_DFS_SERVICE_EVENTHANDLE_DAEMON_EVENTHANDLE_H
 
-#include "event_handler.h"
 #include <memory>
+
+#include "event_handler.h"
 
 namespace OHOS {
 namespace Storage {

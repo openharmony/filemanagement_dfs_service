@@ -14,6 +14,7 @@
  */
 
 #include "asset_callback_mananger.h"
+
 #include "network/softbus/softbus_handler_asset.h"
 #include "utils_log.h"
 
@@ -72,6 +73,7 @@ void AssetCallbackMananger::RemoveSendCallback(std::string taskId)
     }
     sendCallbackMap_.erase(iter);
 }
+
 void AssetCallbackMananger::NotifyAssetRecvStart(const std::string &srcNetworkId,
                                                  const std::string &dstNetworkId,
                                                  const std::string &sessionId,
@@ -86,6 +88,7 @@ void AssetCallbackMananger::NotifyAssetRecvStart(const std::string &srcNetworkId
         callback->OnStart(srcNetworkId, dstNetworkId, sessionId, dstBundleName);
     }
 }
+
 void AssetCallbackMananger::NotifyAssetRecvFinished(const std::string &srcNetworkId,
                                                     const sptr<AssetObj> &assetObj,
                                                     int32_t result)
@@ -99,6 +102,7 @@ void AssetCallbackMananger::NotifyAssetRecvFinished(const std::string &srcNetwor
         callback->OnFinished(srcNetworkId, assetObj, result);
     }
 }
+
 void AssetCallbackMananger::NotifyAssetSendResult(std::string &taskId,
                                                   const sptr<AssetObj> &assetObj,
                                                   int32_t result)

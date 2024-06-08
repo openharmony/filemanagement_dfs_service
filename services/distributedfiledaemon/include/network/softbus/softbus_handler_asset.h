@@ -16,18 +16,19 @@
 #ifndef FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_HANDLER_ASSET_H
 #define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_HANDLER_ASSET_H
 
-#include "transport/socket.h"
-#include "transport/trans_type.h"
+#include <cstdint>
 #include <map>
 #include <mutex>
-#include <cstdint>
 #include <string>
-#include "asset/asset_obj.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <vector>
-#include "third_party/zlib/contrib/minizip/zip.h"
+
+#include "asset/asset_obj.h"
 #include "third_party/zlib/contrib/minizip/unzip.h"
+#include "third_party/zlib/contrib/minizip/zip.h"
+#include "transport/socket.h"
+#include "transport/trans_type.h"
 
 namespace OHOS {
 namespace Storage {

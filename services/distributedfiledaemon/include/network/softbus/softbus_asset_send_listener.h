@@ -16,8 +16,9 @@
 #ifndef FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_ASSET_SEND_LISTENER_H
 #define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_ASSET_SEND_LISTENER_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
+
 #include "transport/socket.h"
 #include "transport/trans_type.h"
 

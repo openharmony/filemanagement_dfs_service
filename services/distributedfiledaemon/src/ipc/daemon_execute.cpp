@@ -19,13 +19,14 @@
 
 #include "asset_callback_mananger.h"
 #include "dfs_error.h"
+#include "network/softbus/softbus_asset_send_listener.h"
 #include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_session_pool.h"
+#include "refbase.h"
 #include "sandbox_helper.h"
 #include "utils_directory.h"
 #include "utils_log.h"
-#include "refbase.h"
-#include "network/softbus/softbus_asset_send_listener.h"
+
 
 namespace OHOS {
 namespace Storage {
@@ -38,6 +39,7 @@ DaemonExecute::DaemonExecute()
     LOGI("DaemonExecute begin.");
     executeFuncMap_[DEAMON_EXECUTE_PUSH_ASSET] = &DaemonExecute::ExecutePushAsset;
 }
+
 void DaemonExecute::ProcessEvent(const AppExecFwk::InnerEvent::Pointer &event)
 {
     if (event == nullptr) {
@@ -134,6 +136,7 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
     }
     return fileList;
 }
+
 int32_t DaemonExecute::HandleZip(const std::vector<std::string> &fileList,
                                  const std::string &srcBundleName,
                                  std::string &sendFileName,

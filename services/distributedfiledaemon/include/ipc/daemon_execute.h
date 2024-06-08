@@ -17,9 +17,9 @@
 #define FILEMANAGEMENT_DFS_SERVICE_EVENTHANDLE_DAEMON_EXECUTE_H
 
 #include <cstdint>
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 #include "daemon_event.h"
 #include "daemon_eventhandler.h"

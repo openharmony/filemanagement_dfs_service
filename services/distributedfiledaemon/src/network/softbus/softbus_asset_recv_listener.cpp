@@ -15,17 +15,17 @@
 
 #include "network/softbus/softbus_asset_recv_listener.h"
 
-#include <memory>
 #include <filesystem>
+#include <memory>
 
+#include "accesstoken_kit.h"
 #include "asset_callback_mananger.h"
 #include "dfs_error.h"
-#include "network/softbus/softbus_handler_asset.h"
-#include "utils_log.h"
-#include "refbase.h"
-#include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
+#include "network/softbus/softbus_handler_asset.h"
 #include "os_account_manager.h"
+#include "refbase.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
@@ -292,6 +292,7 @@ int32_t SoftbusAssetRecvListener::HandleMoreFile(int32_t socketId, std::string f
     }
     return FileManagement::ERR_OK;
 }
+
 bool SoftbusAssetRecvListener::JudgeSingleFile(std::string filePath)
 {
     size_t pos = filePath.find(ASSET_FLAG_SINGLE);

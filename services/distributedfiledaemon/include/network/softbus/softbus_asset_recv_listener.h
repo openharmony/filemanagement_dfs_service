@@ -17,12 +17,13 @@
 #define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_ASSET_RECV_LISTENER_H
 
 #include <cstdint>
-#include <string>
 #include <map>
 #include <mutex>
+#include <string>
+
+#include "asset/asset_obj.h"
 #include "transport/socket.h"
 #include "transport/trans_type.h"
-#include "asset/asset_obj.h"
 
 namespace OHOS {
 namespace Storage {

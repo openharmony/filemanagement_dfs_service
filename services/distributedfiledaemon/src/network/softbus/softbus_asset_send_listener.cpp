@@ -42,6 +42,7 @@ void SoftBusAssetSendListener::OnFile(int32_t socket, FileEvent *event)
             break;
     }
 }
+
 void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char **fileList)
 {
     LOGE("Push asset finished.");
