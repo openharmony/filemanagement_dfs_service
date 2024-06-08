@@ -534,10 +534,10 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile zipFile, std::string dir)
         return "";
     }
     char *temp = new char[BUFFER_SIZE];
-    if (!strcpy_s(temp, BUFFER_SIZE, dir.c_str())) {
+    if (strcpy_s(temp, BUFFER_SIZE, dir.c_str())) {
         return "";
     }
-    if (!strcat_s(temp, BUFFER_SIZE, filenameWithPath)) {
+    if (strcat_s(temp, BUFFER_SIZE, filenameWithPath)) {
         return "";
     }
     filenameWithPath = temp;

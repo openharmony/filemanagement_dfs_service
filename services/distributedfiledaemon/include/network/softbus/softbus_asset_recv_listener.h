@@ -45,7 +45,7 @@ private:
 
     static int32_t GetCurrentUserId();
     static bool MoveAsset(const std::vector<std::string> &fileList, bool isSingleFile);
-    static bool RemoveAsset(const std::vector<std::string> &fileList);
+    static bool RemoveAsset(const std::string &file);
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
     static inline std::string path_;
 };

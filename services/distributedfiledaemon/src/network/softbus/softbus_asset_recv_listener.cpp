@@ -113,6 +113,7 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
     } else {
         ret = HandleMoreFile(socketId, filePath, assetObj);
     }
+    RemoveAsset(filePath);
 
     if (ret != FileManagement::ERR_OK) {
         LOGE("MoveAsset fail, socket %{public}d", socketId);
@@ -204,15 +205,14 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
     return true;
 }
 
-bool SoftbusAssetRecvListener::RemoveAsset(const std::vector<std::string> &fileList)
+bool SoftbusAssetRecvListener::RemoveAsset(const std::string &file)
 {
-    std::string firstName = fileList[0];
-    size_t pos = firstName.find(TEMP_DIR);
+    size_t pos = file.find(TEMP_DIR);
     if (pos == std::string::npos) {
-        LOGE("get asset temp dir fail, file name is %{public}s", firstName.c_str());
+        LOGE("get asset temp dir fail, file name is %{public}s", file.c_str());
         return false;
     }
-    std::string removePath = firstName.substr(0, pos + TEMP_DIR.length() - 1);
+    std::string removePath = file.substr(0, pos + TEMP_DIR.length() - 1);
     bool ret = std::filesystem::remove_all(removePath.c_str());
     if (!ret) {
         LOGE("remove file fail, remove path is %{public}s", removePath.c_str());
@@ -243,11 +243,6 @@ int32_t SoftbusAssetRecvListener::HandleOneFile(int32_t socketId, std::string fi
         return FileManagement::ERR_BAD_VALUE;
     }
 
-    bool removeRet = RemoveAsset(fileList);
-    if (!removeRet) {
-        LOGE("MoveAsset fail, socket %{public}d", socketId);
-        return FileManagement::ERR_BAD_VALUE;
-    }
     return FileManagement::ERR_OK;
 }
 
@@ -292,11 +287,6 @@ int32_t SoftbusAssetRecvListener::HandleMoreFile(int32_t socketId, std::string f
 
     bool moveRet = MoveAsset(fileList, false);
     if (!moveRet) {
-        LOGE("MoveAsset fail, socket %{public}d", socketId);
-        return FileManagement::ERR_BAD_VALUE;
-    }
-    bool removeRet = RemoveAsset(fileList);
-    if (!removeRet) {
         LOGE("MoveAsset fail, socket %{public}d", socketId);
         return FileManagement::ERR_BAD_VALUE;
     }

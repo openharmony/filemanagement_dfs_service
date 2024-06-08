@@ -32,10 +32,10 @@ void SoftBusAssetSendListener::OnFile(int32_t socket, FileEvent *event)
     }
     switch (event->type) {
         case FILE_EVENT_SEND_FINISH:
-            OnSendAssetFinished(socket);
+            OnSendAssetFinished(socket, event->files);
             break;
         case FILE_EVENT_SEND_ERROR:
-            OnSendAssetError(socket, event->errorCode);
+            OnSendAssetError(socket, event->files, event->errorCode);
             break;
         default:
             LOGI("Other situations");
