@@ -54,8 +54,8 @@ struct HmdfsDentry {
     uint16_t mode{0};
     uint16_t namelen{0};
     uint64_t size{0};
-    uint64_t atime{0};
     uint64_t mtime{0};
+    uint64_t atime{0};
     uint8_t recordId[CLOUD_RECORD_ID_LEN]{0};
     uint8_t flags{0};
     /* reserved bytes for long term extend, total 60 bytes */
@@ -718,10 +718,11 @@ int32_t CloudDiskMetaFile::LoadChildren(std::vector<MetaBase> &bases)
     return E_OK;
 }
 
-void MetaFileMgr::Clear(const std::string &cloudId)
+void MetaFileMgr::Clear(uint32_t userId, const std::string &bundleName,
+    const std::string &cloudId)
 {
     std::lock_guard<std::mutex> lock(cloudDiskMutex_);
-    cloudDiskMetaFile_.erase(cloudId);
+    cloudDiskMetaFile_.erase({userId, cloudId + bundleName});
 }
 
 void MetaFileMgr::CloudDiskClearAll()
@@ -735,11 +736,11 @@ std::shared_ptr<CloudDiskMetaFile> MetaFileMgr::GetCloudDiskMetaFile(uint32_t us
 {
     std::shared_ptr<CloudDiskMetaFile> mFile = nullptr;
     std::lock_guard<std::mutex> lock(cloudDiskMutex_);
-    if (cloudDiskMetaFile_.find(cloudId) != cloudDiskMetaFile_.end()) {
-        mFile = cloudDiskMetaFile_[cloudId];
+    if (cloudDiskMetaFile_.find({userId, cloudId + bundleName}) != cloudDiskMetaFile_.end()) {
+        mFile = cloudDiskMetaFile_[{userId, cloudId + bundleName}];
     } else {
         mFile = std::make_shared<CloudDiskMetaFile>(userId, bundleName, cloudId);
-        cloudDiskMetaFile_[cloudId] = mFile;
+        cloudDiskMetaFile_[{userId, cloudId + bundleName}] = mFile;
     }
     return mFile;
 }

@@ -67,6 +67,7 @@ ohos_unittest("fuse_manager_test") {
     "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
+    "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
     "relational_store:native_rdb",

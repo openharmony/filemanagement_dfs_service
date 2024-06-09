@@ -75,6 +75,7 @@ ohos_shared_library("clouddisk_database") {
     "c_utils:utils",
     "ffrt:libffrt",
     "hilog:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
     "relational_store:native_rdb",

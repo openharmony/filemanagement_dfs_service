@@ -30,6 +30,7 @@
 #include "database_manager.h"
 #include "directory_ex.h"
 #include "ffrt_inner.h"
+#include "parameters.h"
 #include "file_operations_helper.h"
 #include "securec.h"
 #include "utils_log.h"
@@ -64,6 +65,7 @@ namespace {
     static const int32_t LEFT_SHIFT = 4;
     static const int32_t RIGHT_SHIFT = 5;
     static const uint64_t UNKNOWN_INODE_ID = 0;
+    static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
 }
 
 static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
@@ -365,7 +367,7 @@ static bool HandleCloudError(fuse_req_t req, CloudError error)
     return true;
 }
 
-static shared_ptr<CloudDatabase> GetDatabase(int32_t userId, string bundleName)
+static shared_ptr<CloudDatabase> GetDatabase(int32_t userId)
 {
     auto instance = CloudFile::CloudFileKit::GetInstance();
     if (instance == nullptr) {
@@ -373,7 +375,7 @@ static shared_ptr<CloudDatabase> GetDatabase(int32_t userId, string bundleName)
         return nullptr;
     }
 
-    auto database = instance->GetCloudDatabase(userId, bundleName);
+    auto database = instance->GetCloudDatabase(userId, system::GetParameter(FILEMANAGER_KEY, ""));
     if (database == nullptr) {
         LOGE("get cloud file kit database fail");
         return nullptr;
@@ -389,7 +391,7 @@ static void CloudOpen(fuse_req_t req,
     if (filePtr == nullptr) {
         filePtr = InitFileAttr(data, fi);
     }
-    auto database = GetDatabase(data->userId, inoPtr->bundleName);
+    auto database = GetDatabase(data->userId);
     if (!database) {
         fuse_reply_err(req, EPERM);
         LOGE("database is null");
@@ -487,9 +489,9 @@ void RemoveLocalFile(const string &path)
     }
 }
 
-int32_t GenerateCloudId(int32_t userId, const string &bundleName, string &cloudId)
+int32_t GenerateCloudId(int32_t userId, string &cloudId)
 {
-    auto dkDatabasePtr = GetDatabase(userId, bundleName);
+    auto dkDatabasePtr = GetDatabase(userId);
     if (dkDatabasePtr == nullptr) {
         LOGE("Failed to get database");
         return ENOSYS;
@@ -513,7 +515,7 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
         static_cast<int64_t>(parent));
 
     string cloudId;
-    int32_t err = GenerateCloudId(data->userId, parentInode->bundleName, cloudId);
+    int32_t err = GenerateCloudId(data->userId, cloudId);
     if (err != 0) {
         LOGE("Failed to generate cloud id");
         return -err;
@@ -996,7 +998,7 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
         return (void) fuse_reply_err(req, EINVAL);
     }
     string cloudId;
-    int32_t err = GenerateCloudId(data->userId, parentInode->bundleName, cloudId);
+    int32_t err = GenerateCloudId(data->userId, cloudId);
     if (err != 0) {
         LOGE("Failed to generate cloud id");
         return (void) fuse_reply_err(req, err);
@@ -1108,7 +1110,8 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
         fuse_reply_err(req, err);
         return;
     }
-    MetaFileMgr::GetInstance().Clear(metaBase.cloudId);
+    MetaFileMgr::GetInstance()
+        .Clear(static_cast<uint32_t>(data->userId), parentInode->bundleName, metaBase.cloudId);
     string dentryPath = metaFile->GetDentryFilePath();
     if (unlink(dentryPath.c_str()) != 0) {
         LOGE("fail to delete dentry: %{public}d", errno);
