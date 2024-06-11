@@ -107,7 +107,7 @@ void AssetCallbackMananger::NotifyAssetRecvFinished(const std::string &srcNetwor
                                                     const sptr<AssetObj> &assetObj,
                                                     int32_t result)
 {
-    LOGI("NotifyAssetRecvFinished.")
+    LOGI("NotifyAssetRecvFinished.");
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
     for (auto callback : recvCallbackList_) {
         if (callback == nullptr) {
