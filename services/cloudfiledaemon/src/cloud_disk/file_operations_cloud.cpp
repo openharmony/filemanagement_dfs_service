@@ -936,7 +936,7 @@ string GetLocation(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
         LOGE("parent inode not found");
         return "null";
     }
-    CacheNode newNode = {.fileName = inoPtr->fileName, .parentCloudId = parentInode->cloudId};
+    CacheNode newNode = {.parentCloudId = parentInode->cloudId, .fileName = inoPtr->fileName};
     int res = rdbStore->GetXAttr(inoPtr->cloudId, CLOUD_FILE_LOCATION, location, newNode);
     if (res != 0) {
         LOGE("local file get location fail");

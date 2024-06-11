@@ -955,8 +955,8 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         return ret;
     }
     ValuesBucket rename;
-    CacheNode newNode = {.fileName = newFileName, .parentCloudId = newParentCloudId};
-    CacheNode oldNode = {.fileName = oldFileName, .parentCloudId = oldParentCloudId};
+    CacheNode newNode = {.parentCloudId = newParentCloudId, .fileName = newFileName};
+    CacheNode oldNode = {.parentCloudId = oldParentCloudId, .fileName = oldFileName};
     HandleRenameValue(rename, metaBase.position, oldNode, newNode);
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(metaBase.cloudId);

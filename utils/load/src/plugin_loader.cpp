@@ -62,6 +62,11 @@ void PluginLoader::LoadCloudKitPlugin(bool isSupportCloudSync)
     for (auto &pluginFileName : pluginFileNames) {
         auto pluginFilePath = GetPluginPath(pluginFileName);
         if (!pluginFilePath.empty()) {
+            char resolvedPath[PATH_MAX] = {'\0'};
+            if (realpath(pluginFilePath.c_str(), resolvedPath) == nullptr) {
+                LOGE("realpath failed in line path: %s", pluginFilePath.c_str());
+                return;
+            }
             cloudKitPulginHandle_ = dlopen(pluginFilePath.c_str(), RTLD_LAZY);
             if (cloudKitPulginHandle_ == nullptr) {
                 LOGE("dlopen failed, path:%{public}s", pluginFilePath.c_str());
