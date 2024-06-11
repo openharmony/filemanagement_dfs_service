@@ -102,6 +102,7 @@ ohos_unittest("file_operations_cloud_test") {
     "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
     "hilog:libhilog",
+    "init:libbegetutil",
     "libfuse:libfuse",
     "relational_store:native_rdb",
   ]

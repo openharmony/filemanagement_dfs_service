@@ -32,6 +32,7 @@
 #include "dfs_error.h"
 #include "file_column.h"
 #include "ffrt_inner.h"
+#include "parameters.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
 #include "utils_log.h"
@@ -61,6 +62,7 @@ const string CLOUDDISK_URI_PREFIX = "file://<BundleName>/data/storage/el2/cloud"
 const string BACKFLASH = "/";
 static const string RECYCLE_FILE_NAME = ".trash";
 static const string ROOT_CLOUD_ID = "rootId";
+static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
 
 static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
 {
@@ -89,9 +91,10 @@ CloudDiskRdbStore::~CloudDiskRdbStore()
 
 int32_t CloudDiskRdbStore::RdbInit()
 {
-    LOGI("Init rdb store, userId_ = %{private}d, bundleName_ = %{private}s", userId_, bundleName_.c_str());
+    LOGI("Init rdb store, userId_ = %{public}d, bundleName_ = %{public}s", userId_, bundleName_.c_str());
     string baseDir = DATA_SERVICE_EL1_PUBLIC_CLOUDFILE;
-    string customDir = baseDir.append(to_string(userId_)).append("/").append(bundleName_);
+    string customDir = baseDir.append(to_string(userId_))
+        .append("/").append(system::GetParameter(FILEMANAGER_KEY, ""));
     string name = CLOUD_DISK_DATABASE_NAME;
     int32_t errCode = 0;
     string databasePath = RdbSqlUtils::GetDefaultDatabasePath(customDir, CLOUD_DISK_DATABASE_NAME, errCode);
@@ -107,7 +110,7 @@ int32_t CloudDiskRdbStore::RdbInit()
     CloudDiskDataCallBack rdbDataCallBack;
     rdbStore_ = RdbHelper::GetRdbStore(config_, CLOUD_DISK_RDB_VERSION, rdbDataCallBack, errCode);
     if (rdbStore_ == nullptr) {
-        LOGE("GetRdbStore is failed, userId_ = %{private}d, bundleName_ = %{private}s, errCode = %{public}d",
+        LOGE("GetRdbStore is failed, userId_ = %{public}d, bundleName_ = %{public}s, errCode = %{public}d",
              userId_, bundleName_.c_str(), errCode);
         return E_RDB;
     }
@@ -139,6 +142,7 @@ int32_t CloudDiskRdbStore::LookUp(const std::string &parentCloudId,
     lookUpPredicates
         .EqualTo(FileColumn::PARENT_CLOUD_ID, parentCloudId)->And()
         ->EqualTo(FileColumn::FILE_NAME, fileName)->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0")->And()
+        ->EqualTo(FileColumn::ROOT_DIRECTORY, bundleName_)->And()
         ->NotEqualTo(FileColumn::DIRTY_TYPE, to_string(static_cast<int32_t>(DirtyType::TYPE_DELETED)));
     lookUpPredicates.Limit(LOOKUP_QUERY_LIMIT);
     auto resultSet = rdbStore_->QueryByStep(lookUpPredicates, FileColumn::FILE_SYSTEM_QUERY_COLUMNS);
@@ -221,6 +225,7 @@ int32_t CloudDiskRdbStore::ReadDir(const std::string &cloudId, vector<CloudDiskF
     AbsRdbPredicates readDirPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
     readDirPredicates.EqualTo(FileColumn::PARENT_CLOUD_ID, cloudId)
         ->And()->EqualTo(FileColumn::FILE_TIME_RECYCLED, "0")->And()
+        ->EqualTo(FileColumn::ROOT_DIRECTORY, bundleName_)->And()
         ->NotEqualTo(FileColumn::DIRTY_TYPE, to_string(static_cast<int32_t>(DirtyType::TYPE_DELETED)));
     auto resultSet = rdbStore_->QueryByStep(readDirPredicates, { FileColumn::FILE_NAME, FileColumn::IS_DIRECTORY });
     int32_t ret = CloudDiskRdbUtils::ResultSetToFileInfos(move(resultSet), infos);
@@ -363,6 +368,17 @@ static void UpdateMetabase(MetaBase &metaBase, int64_t fileTimeAdded, struct sta
     metaBase.fileType = FILE_TYPE_CONTENT;
 }
 
+static void HandleCreateValue(ValuesBucket &fileInfo, const std::string &cloudId, const std::string &parentCloudId,
+                              const std::string &fileName, const std::string &bundleName)
+{
+    fileInfo.PutString(FileColumn::CLOUD_ID, cloudId);
+    fileInfo.PutString(FileColumn::FILE_NAME, fileName);
+    fileInfo.PutString(FileColumn::PARENT_CLOUD_ID, parentCloudId);
+    fileInfo.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD));
+    fileInfo.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::NEW));
+    fileInfo.PutString(FileColumn::ROOT_DIRECTORY, bundleName);
+}
+
 int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string &parentCloudId,
     const std::string &fileName)
 {
@@ -380,13 +396,9 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
         LOGE("create parameter is invalid");
         return E_INVAL_ARG;
     }
-    fileInfo.PutString(FileColumn::CLOUD_ID, cloudId);
-    fileInfo.PutString(FileColumn::FILE_NAME, fileName);
     int64_t fileTimeAdded = UTCTimeMilliSeconds();
     fileInfo.PutLong(FileColumn::FILE_TIME_ADDED, fileTimeAdded);
-    fileInfo.PutString(FileColumn::PARENT_CLOUD_ID, parentCloudId);
-    fileInfo.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD));
-    fileInfo.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::NEW));
+    HandleCreateValue(fileInfo, cloudId, parentCloudId, fileName, bundleName_);
     struct stat statInfo {};
     string filePath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
     if (CreateFile(fileName, filePath, fileInfo, &statInfo)) {
@@ -445,6 +457,7 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
     dirInfo.PutString(FileColumn::PARENT_CLOUD_ID, parentCloudId);
     dirInfo.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::NEW));
     dirInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
+    dirInfo.PutString(FileColumn::ROOT_DIRECTORY, bundleName_);
     TransactionOperations rdbTransaction(rdbStore_);
     ret = rdbTransaction.Start();
     if (ret != E_OK) {
@@ -1185,7 +1198,7 @@ int32_t CloudDiskRdbStore::CheckRootIdValid()
     if (!rootId_.empty()) {
         return E_OK;
     }
-    CloudPrefImpl cloudPrefImpl(userId_, bundleName_, FileColumn::FILES_TABLE);
+    CloudPrefImpl cloudPrefImpl(userId_, system::GetParameter(FILEMANAGER_KEY, ""), FileColumn::FILES_TABLE);
     cloudPrefImpl.GetString("rootId", rootId_);
     if (rootId_.empty()) {
         LOGE("get rootId fail");
@@ -1533,6 +1546,22 @@ static void VersionAddCheckFlag(RdbStore &store)
     }
 }
 
+static void VersionAddRootDirectory(RdbStore &store)
+{
+    const string addRootDirectory = "ALTER Table " + FileColumn::FILES_TABLE +
+        " ADD COLUMN " + FileColumn::ROOT_DIRECTORY + " TEXT";
+    int32_t ret = store.ExecuteSql(addRootDirectory);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add root_directory fail, ret = %{public}d", ret);
+    }
+    const string setRootDirectory = "UPDATE " + FileColumn::FILES_TABLE +
+        " SET " + FileColumn::ROOT_DIRECTORY + " = " + system::GetParameter(FILEMANAGER_KEY, "");
+    ret = store.ExecuteSql(setRootDirectory);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("set root_directory fail, err %{public}d", ret);
+    }
+}
+
 int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
@@ -1556,6 +1585,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     }
     if (oldVersion < VERSION_ADD_CHECK_FLAG) {
         VersionAddCheckFlag(store);
+    }
+    if (oldVersion < VERSION_ADD_ROOT_DIRECTORY) {
+        VersionAddRootDirectory(store);
     }
     return NativeRdb::E_OK;
 }

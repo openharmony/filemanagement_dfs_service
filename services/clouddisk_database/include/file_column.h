@@ -42,6 +42,7 @@ public:
     static const std::string FILE_STATUS;
     static const std::string ROW_ID;
     static const std::string CHECK_FLAG;
+    static const std::string ROOT_DIRECTORY;
 
     // Only Local
     static const std::string FILE_TIME_VISIT;
