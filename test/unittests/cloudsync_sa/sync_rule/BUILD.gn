@@ -35,8 +35,6 @@ ohos_unittest("battery_status_listener_test") {
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store_mock.cpp",
-    "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${utils_path}/log/include",
     "${image_framework_path}/mock/native/include/log",
@@ -87,7 +85,6 @@ ohos_unittest("net_conn_callback_observer_test") {
     "${image_framework_path}/mock/native/include/log",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
-    "${services_path}/cloudsyncservice/include/data_sync",
   ]
 
   deps = [
@@ -128,12 +125,10 @@ ohos_unittest("network_status_test") {
     "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
-    "${services_path}/cloudsyncservice/include/data_sync",
     "${utils_path}/log/include",
     "${image_framework_path}/mock/native/include/log",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
-    "${services_path}/cloudsyncservice/include/data_sync",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
   ]
@@ -171,11 +166,6 @@ ohos_unittest("network_status_test") {
 ohos_unittest("cloud_status_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/cloud_status.cpp",
     "${distributedfile_path}/utils/log/src/dfs_error.cpp",
     "cloud_status_test.cpp",
@@ -228,8 +218,6 @@ ohos_unittest("battery_status_test") {
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store_mock.cpp",
-    "${services_path}/cloudsyncservice/include/data_sync",
     "${utils_path}/log/include",
     "${image_framework_path}/mock/native/include/log",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",

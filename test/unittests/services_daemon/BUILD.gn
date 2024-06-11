@@ -18,13 +18,6 @@ ohos_unittest("fuse_manager_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/fuse_manager.cpp",
     "fuse_manager_test.cpp",
   ]
@@ -43,7 +36,6 @@ ohos_unittest("fuse_manager_test") {
     "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
     "${distributedfile_path}/services/cloudfiledaemon/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
-    "${services_path}/cloudsyncservice/include/data_sync/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${clouddisk_database_path}/include",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
@@ -88,13 +80,6 @@ ohos_unittest("cloud_daemon_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/fuse_manager.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon_stub.cpp",
@@ -115,7 +100,6 @@ ohos_unittest("cloud_daemon_test") {
     "../../../../../communication/ipc/interfaces/innerkits/ipc_core/include",
     "${distributedfile_path}/services/cloudfiledaemon/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
-    "${services_path}/cloudsyncservice/include/data_sync/",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${clouddisk_database_path}/include",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
@@ -160,13 +144,6 @@ ohos_unittest("cloud_daemon_stub_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon_stub.cpp",
     "cloud_daemon_stub_test.cpp",
   ]
