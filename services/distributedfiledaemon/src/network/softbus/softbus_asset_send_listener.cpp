@@ -60,7 +60,7 @@ void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char 
 
 void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId, const char **fileList, int32_t errorCode)
 {
-    LOGE("SendAssetError, socketId is %{public}d, errorCode %{public}d",socketId, errorCode);
+    LOGE("SendAssetError, socketId is %{public}d, errorCode %{public}d", socketId, errorCode);
     auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(socketId);
     if (assetObj == nullptr) {
         LOGE("OnSendAssetError  get assetObj is nullptr");
