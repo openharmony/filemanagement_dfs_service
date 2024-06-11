@@ -313,6 +313,16 @@ int32_t ChangeOwnerRecursive(const std::string &path, uid_t uid, gid_t gid)
     }
     return 0;
 }
+
+bool IsInt32(const nlohmann::json &jsonObj, const std::string &key)
+{
+    bool res = jsonObj.contains(key) && jsonObj[key].is_number_integer() && jsonObj[key] >= INT32_MIN &&
+        jsonObj[key] <= INT32_MAX;
+    if (!res) {
+        LOGE("the key %{public}s in jsonObj is invalid.", key.c_str());
+    }
+    return res;
+}
 } // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage

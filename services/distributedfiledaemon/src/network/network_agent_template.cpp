@@ -29,6 +29,7 @@ namespace {
 constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
+constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 } // namespace
 
 void NetworkAgentTemplate::Start()
@@ -71,23 +72,24 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
     auto infos = dma->GetRemoteDevicesInfo();
     LOGI("Have %{public}zu devices Online", infos.size());
     for (const auto &info : infos) {
-        std::string udid = "";
-        if (DistributedHardware::DeviceManager::GetInstance().GetUdidByNetworkId(pkgName, info.GetCid(), udid) != 0) {
-            LOGE("GetUdidByNetworkId failed networkId %{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-            continue;
+        if (deviceInfo.GetExtraData().empty()) {
+            LOGE("extraData is empty");
+            return;
         }
-        DistributedDeviceProfile::DeviceProfile outDeviceProfile;
-        int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
-            GetDeviceProfile(udid, outDeviceProfile);
-        if (ret != FileManagement::E_OK) {
-            LOGE("GetDeviceProfile failed, errorCode: %{public}d, udid: %{public}s", ret,
-                Utils::GetAnonyString(udid).c_str());
-            continue;
+        nlohman::json entraDataJson = nolohman::json::parse(deviceInfo.GetExtraData(), nullptr, false);
+        if (entraDataJson.is_discarded()) {
+            LOGE("entraDataJson parse failed.");
+            return;
         }
-        if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
-            LOGE("the device os type = %{private}d is not openharmony.", outDeviceProfile.GetOsType());
-            Utils::SysEventWrite(udid);
-            continue;
+        if (!Utils::IsInt32(entarDataJson, PARAM_KEY_OS_TYPE)) {
+            LOGE("error json int32_t param.");
+            return;
+        }
+        int32_t osType = entraDataJson[PARAM_KEY_OS_TYPE].get<int32_t>();
+        if (osType != DEVICE_OS_TYPE_OH ) {
+            LOGE("%{private}s  the device os type = %{private}d is not openharmony.",
+                Utils::GetAnonyString(info.GetCid()).c_str(), osType);
+            return;
         }
 
         int32_t networkType;

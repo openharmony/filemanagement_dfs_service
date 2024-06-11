@@ -36,12 +36,14 @@ public:
     void SetCid(const std::string &cid);
 
     const std::string &GetCid() const;
+    const std::string &GetExtraData() const;
 
 private:
     friend class DeviceManagerAgent;
     std::atomic<bool> initCidFlag_ { false };
     std::string cid_;
     std::string udid_;
+    std::string extraData_;
 };
 } // namespace DistributedFile
 } // namespace Storage
