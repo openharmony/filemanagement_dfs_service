@@ -26,6 +26,8 @@
 #include <dirent.h>
 #include <iostream>
 
+#include "nlohmann/json.hpp"
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
@@ -94,6 +96,7 @@ bool IsFile(const std::string &path);
 bool IsFolder(const std::string &name);
 std::vector<std::string> GetFilePath(const std::string &name);
 int32_t ChangeOwnerRecursive(const std::string &path, uid_t uid, gid_t gid);
+bool IsInt32(const nlohmann::json &jsonObj, const std::string &key);
 } // namespace Utils
 } // namespace DistributedFile
 } // namespace Storage

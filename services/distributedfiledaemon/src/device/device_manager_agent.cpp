@@ -47,6 +47,7 @@ constexpr int ACROSS_ACCOUNT_AUTHORIZE_GROUP = 1282;
 const int32_t MOUNT_DFS_COUNT_ONE = 1;
 const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 const int32_t INVALID_USER_ID = -1;
+constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 const std::string SAME_ACCOUNT_MARK = "const.distributed_file_only_for_same_account_test";
 } // namespace
 using namespace std;
@@ -804,24 +805,22 @@ void DeviceManagerAgent::InitDeviceInfos()
 
 int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    std::string udid = "";
-    if (DistributedHardware::DeviceManager::GetInstance().
-        GetUdidByNetworkId(IDaemon::SERVICE_NAME, deviceInfo.networkId, udid) != 0) {
-        LOGE("GetUdidByNetworkId failed networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
+    if (deviceInfo.extraData.empty()) {
+        LOGE("extraData is empty");
         return FileManagement::ERR_BAD_VALUE;
     }
-    DistributedDeviceProfile::DeviceProfile outDeviceProfile;
-    int32_t ret = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().
-        GetDeviceProfile(udid, outDeviceProfile);
-    if (ret != FileManagement::E_OK) {
-        LOGE("GetDeviceProfile failed, errorCode: %{public}d, udid: %{public}s", ret,
-            Utils::GetAnonyString(udid).c_str());
+    nlohmann::json entraDataJson = nlohmann::json::parse(deviceInfo.extraData, nullptr, false);
+    if (entraDataJson.is_discarded()) {
+        LOGE("entraDataJson parse failed.");
         return FileManagement::ERR_BAD_VALUE;
     }
-    if (outDeviceProfile.GetOsType() != DEVICE_OS_TYPE_OH) {
-        LOGE("%{private}s  the device os type = %{private}d is not openharmony.", deviceInfo.deviceName,
-            outDeviceProfile.GetOsType());
-        Utils::SysEventWrite(udid);
+    if (!Utils::IsInt32(entraDataJson, PARAM_KEY_OS_TYPE)) {
+        LOGE("error json int32_t param.");
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    int32_t osType = entraDataJson[PARAM_KEY_OS_TYPE].get<int32_t>();
+    if (osType != DEVICE_OS_TYPE_OH) {
+        LOGE("%{private}s  the device os type = %{private}d is not openharmony.", deviceInfo.deviceName, osType);
         return FileManagement::ERR_BAD_VALUE;
     }
     return FileManagement::ERR_OK;

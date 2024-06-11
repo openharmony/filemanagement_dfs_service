@@ -26,6 +26,7 @@ DeviceInfo::DeviceInfo(const DistributedHardware::DmDeviceInfo &nodeInfo)
 {
     cid_ = string(nodeInfo.networkId);
     initCidFlag_ = true;
+    extraData_ = nodeInfo.extraData;
     // convert networkId to udid
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, cid_, udid_);
@@ -35,6 +36,7 @@ DeviceInfo &DeviceInfo::operator=(const DistributedHardware::DmDeviceInfo &nodeI
 {
     cid_ = string(nodeInfo.networkId);
     initCidFlag_ = true;
+    extraData_ = nodeInfo.extraData;
     return *this;
 }
 
@@ -59,6 +61,14 @@ const string &DeviceInfo::GetCid() const
         THROW_EXCEPTION(ERR_DEVICE_CID_UN_INIT, "cid uninitialized");
     }
     return cid_;
+}
+
+const string &DeviceInfo::GetExtraData() const
+{
+    if (extraData_.empty()) {
+        LOGE("extraData is empty.");
+    }
+    return extraData_;
 }
 } // namespace DistributedFile
 } // namespace Storage
