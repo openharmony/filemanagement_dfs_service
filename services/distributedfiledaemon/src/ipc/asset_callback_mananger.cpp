@@ -80,7 +80,7 @@ void AssetCallbackMananger::RemoveSendCallback(const std::string &taskId)
     std::lock_guard<std::mutex> lock(sendCallbackMapMutex_);
     auto iter = sendCallbackMap_.find(taskId);
     if (iter == sendCallbackMap_.end()) {
-        LOGE("taskId not exist, taskId %{public}s", taskId);
+        LOGE("taskId not exist, taskId %{public}s", taskId.c_str());
         return;
     }
     sendCallbackMap_.erase(iter);
@@ -91,14 +91,14 @@ void AssetCallbackMananger::NotifyAssetRecvStart(const std::string &srcNetworkId
                                                  const std::string &sessionId,
                                                  const std::string &dstBundleName)
 {
-    LOGI("NotifyAssetRecvStart.")
+    LOGI("NotifyAssetRecvStart.");
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
     for (auto callback : recvCallbackList_) {
         if (callback != nullptr) {
             callback->OnStart(srcNetworkId, dstNetworkId, sessionId, dstBundleName);
         } else {
             LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
-                 sessionId, dstBundleName);
+                 sessionId.c_str(), dstBundleName.c_str());
         }
     }
 }
@@ -112,7 +112,7 @@ void AssetCallbackMananger::NotifyAssetRecvFinished(const std::string &srcNetwor
     for (auto callback : recvCallbackList_) {
         if (callback == nullptr) {
             LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
-                 assetObj->sessionId, assetObj->dstBundleName);
+                 assetObj->sessionId_.c_str(), assetObj->dstBundleName_.c_str());
         } else {
             callback->OnFinished(srcNetworkId, assetObj, result);
         }
@@ -123,11 +123,11 @@ void AssetCallbackMananger::NotifyAssetSendResult(const std::string &taskId,
                                                   const sptr<AssetObj> &assetObj,
                                                   int32_t result)
 {
-    LOGI("NotifyAssetSendResult.")
+    LOGI("NotifyAssetSendResult.");
     std::lock_guard<std::mutex> lock(sendCallbackMapMutex_);
     auto iter = sendCallbackMap_.find(taskId);
     if (iter == sendCallbackMap_.end()) {
-        LOGE("taskId not exist, taskId %{public}s", taskId);
+        LOGE("taskId not exist, taskId %{public}s", taskId.c_str());
         return;
     }
     if (iter->second == nullptr) {
