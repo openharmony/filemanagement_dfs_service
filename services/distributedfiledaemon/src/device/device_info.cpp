@@ -66,7 +66,7 @@ const string &DeviceInfo::GetCid() const
 const string &DeviceInfo::GetExtraData() const
 {
     if (extraData_.empty()) {
-        THROW_EXCEPTION(ERR_DEVICE_EXTRADATA_UN_INIT, "extraData uninitialized");
+        LOGE("extraData is empty.");
     }
     return extraData_;
 }
