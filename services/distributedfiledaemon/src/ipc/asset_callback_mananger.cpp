@@ -30,6 +30,10 @@ AssetCallbackMananger &AssetCallbackMananger::GetInstance()
 
 void AssetCallbackMananger::AddRecvCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
+    if (recvCallback == nullptr) {
+        LOGE("recvCallback is nullptr");
+        return;
+    }
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
     for (auto callback : recvCallbackList_) {
         if (recvCallback->AsObject() == callback->AsObject()) {
@@ -42,6 +46,10 @@ void AssetCallbackMananger::AddRecvCallback(const sptr<IAssetRecvCallback> &recv
 
 void AssetCallbackMananger::RemoveRecvCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
+    if (recvCallback == nullptr) {
+        LOGE("recvCallback is nullptr");
+        return;
+    }
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
     for (auto iter = recvCallbackList_.begin(); iter != recvCallbackList_.end();) {
         if ((*iter)->AsObject() == recvCallback->AsObject()) {
@@ -52,23 +60,27 @@ void AssetCallbackMananger::RemoveRecvCallback(const sptr<IAssetRecvCallback> &r
     }
 }
 
-void AssetCallbackMananger::AddSendCallback(std::string taskId, const sptr<IAssetSendCallback> &sendCallback)
+void AssetCallbackMananger::AddSendCallback(const std::string &taskId, const sptr<IAssetSendCallback> &sendCallback)
 {
+    if (taskId.empty()) {
+        LOGI("taskId is empty");
+        return;
+    }
     std::lock_guard<std::mutex> lock(sendCallbackMapMutex_);
     auto iter = sendCallbackMap_.find(taskId);
     if (iter != sendCallbackMap_.end()) {
-        LOGI("socketId exist.");
+        LOGI("taskId exist, taskId %{public}s", taskId.c_str());
         return;
     }
     sendCallbackMap_.insert(std::pair<std::string, sptr<IAssetSendCallback>>(taskId, sendCallback));
 }
 
-void AssetCallbackMananger::RemoveSendCallback(std::string taskId)
+void AssetCallbackMananger::RemoveSendCallback(const std::string &taskId)
 {
     std::lock_guard<std::mutex> lock(sendCallbackMapMutex_);
     auto iter = sendCallbackMap_.find(taskId);
     if (iter == sendCallbackMap_.end()) {
-        LOGE("socketId not exist.");
+        LOGE("taskId not exist, taskId %{public}s", taskId);
         return;
     }
     sendCallbackMap_.erase(iter);
@@ -79,13 +91,15 @@ void AssetCallbackMananger::NotifyAssetRecvStart(const std::string &srcNetworkId
                                                  const std::string &sessionId,
                                                  const std::string &dstBundleName)
 {
+    LOGI("NotifyAssetRecvStart.")
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
     for (auto callback : recvCallbackList_) {
-        if (callback == nullptr) {
-            LOGE("IAssetRecvCallback is empty!");
-            return;
+        if (callback != nullptr) {
+            callback->OnStart(srcNetworkId, dstNetworkId, sessionId, dstBundleName);
+        } else {
+            LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
+                 sessionId, dstBundleName);
         }
-        callback->OnStart(srcNetworkId, dstNetworkId, sessionId, dstBundleName);
     }
 }
 
@@ -93,24 +107,27 @@ void AssetCallbackMananger::NotifyAssetRecvFinished(const std::string &srcNetwor
                                                     const sptr<AssetObj> &assetObj,
                                                     int32_t result)
 {
+    LOGI("NotifyAssetRecvFinished.")
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
     for (auto callback : recvCallbackList_) {
         if (callback == nullptr) {
-            LOGE("IAssetRecvCallback is empty!");
-            return;
+            LOGE("IAssetRecvCallback is empty, sessionId is %{public}s, dstBundleName is %{public}s",
+                 assetObj->sessionId, assetObj->dstBundleName);
+        } else {
+            callback->OnFinished(srcNetworkId, assetObj, result);
         }
-        callback->OnFinished(srcNetworkId, assetObj, result);
     }
 }
 
-void AssetCallbackMananger::NotifyAssetSendResult(std::string &taskId,
+void AssetCallbackMananger::NotifyAssetSendResult(const std::string &taskId,
                                                   const sptr<AssetObj> &assetObj,
                                                   int32_t result)
 {
+    LOGI("NotifyAssetSendResult.")
     std::lock_guard<std::mutex> lock(sendCallbackMapMutex_);
     auto iter = sendCallbackMap_.find(taskId);
     if (iter == sendCallbackMap_.end()) {
-        LOGE("taskId not exist.");
+        LOGE("taskId not exist, taskId %{public}s", taskId);
         return;
     }
     if (iter->second == nullptr) {

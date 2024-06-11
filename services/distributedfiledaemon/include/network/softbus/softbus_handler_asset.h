@@ -58,15 +58,15 @@ public:
     void RemoveAssetObj(int32_t socketId);
 
     int32_t GenerateAssetObjInfo(int32_t socketId,
-                             const std::string &fileName,
-                             const sptr<AssetObj> &assetObj);
+                                const std::string &fileName,
+                                const sptr<AssetObj> &assetObj);
     std::vector<std::string> GenerateUris(const std::vector<std::string> &fileList,
                                           const std::string &dstBundleName,
                                           bool isSingleFile);
-    int32_t ZipFile(const std::vector<std::string> &fileList,
-                    const std::string &relativePath,
-                    const std::string &zipFileName);
-    std::vector<std::string> UnzipFile(std::string zipFileName, std::string relativePath);
+    int32_t CompressFile(const std::vector<std::string> &fileList,
+                        const std::string &relativePath,
+                        const std::string &zipFileName);
+    std::vector<std::string> DecompressFile(const std::string &unZipFileName, const std::string &relativePath);
     bool MkDirRecurse(const std::string& path, mode_t mode);
 
     void RemoveFile(const std::string &path, bool isRemove = true);
@@ -81,7 +81,7 @@ private:
     int32_t MkDir(const std::string &path, mode_t mode);
 
     bool IsDir(const std::string &path);
-    std::string ExtractFile(unzFile zipFile, std::string dir);
+    std::string ExtractFile(unzFile unZipFile, const std::string &dir);
     std::mutex clientInfoMutex_;
     std::map<int32_t, std::string> clientInfoMap_;
     std::mutex serverIdMapMutex_;

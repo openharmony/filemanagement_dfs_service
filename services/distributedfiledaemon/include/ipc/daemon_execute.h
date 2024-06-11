@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <map>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -41,9 +42,10 @@ private:
                       const std::string &srcBundleName,
                       std::string &sendFileName,
                       bool &isSingleFile);
-    void HandlePushAssetFail(int32_t socketId, sptr<AssetObj> &assetObj);
+    void HandlePushAssetFail(int32_t socketId, const sptr<AssetObj> &assetObj);
 
     using ExecuteFunc = void (DaemonExecute::*)(const AppExecFwk::InnerEvent::Pointer &event);
+    std::mutex executeFuncMapMutex_;
     std::map<uint32_t, ExecuteFunc> executeFuncMap_;
 };
 } // namespace DistributedFile

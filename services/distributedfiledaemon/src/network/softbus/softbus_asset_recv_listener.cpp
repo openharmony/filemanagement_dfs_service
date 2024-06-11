@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -221,8 +221,11 @@ bool SoftbusAssetRecvListener::RemoveAsset(const std::string &file)
     return true;
 }
 
-int32_t SoftbusAssetRecvListener::HandleOneFile(int32_t socketId, std::string filePath, const sptr<AssetObj> &assetObj)
+int32_t SoftbusAssetRecvListener::HandleOneFile(int32_t socketId,
+                                                const std::string &filePath,
+                                                const sptr<AssetObj> &assetObj)
 {
+    LOGI("HandleOneFile begin.");
     int32_t ret = SoftBusHandlerAsset::GetInstance().GenerateAssetObjInfo(socketId, filePath, assetObj);
     if (ret != FileManagement::ERR_OK) {
         LOGE("Generate assetObj fail");
@@ -242,12 +245,15 @@ int32_t SoftbusAssetRecvListener::HandleOneFile(int32_t socketId, std::string fi
         LOGE("MoveAsset fail, socket %{public}d", socketId);
         return FileManagement::ERR_BAD_VALUE;
     }
-
+    LOGI("HandleOneFile end.");
     return FileManagement::ERR_OK;
 }
 
-int32_t SoftbusAssetRecvListener::HandleMoreFile(int32_t socketId, std::string filePath, const sptr<AssetObj> &assetObj)
+int32_t SoftbusAssetRecvListener::HandleMoreFile(int32_t socketId,
+                                                 const std::string &filePath,
+                                                 const sptr<AssetObj> &assetObj)
 {
+    LOGI("HandleMoreFile begin.");
     int32_t ret = SoftBusHandlerAsset::GetInstance().GenerateAssetObjInfo(socketId, filePath, assetObj);
     if (ret != FileManagement::ERR_OK) {
         LOGE("Generate assetObj fail");
@@ -272,7 +278,7 @@ int32_t SoftbusAssetRecvListener::HandleMoreFile(int32_t socketId, std::string f
         return FileManagement::ERR_BAD_VALUE;
     }
     std::string relativePath = zipfilePath.substr(0, pos + 1);
-    std::vector<std::string> fileList = SoftBusHandlerAsset::GetInstance().UnzipFile(zipfilePath, relativePath);
+    std::vector<std::string> fileList = SoftBusHandlerAsset::GetInstance().DecompressFile(zipfilePath, relativePath);
     if (fileList.empty()) {
         LOGE("unzip fail");
         return FileManagement::ERR_BAD_VALUE;
@@ -290,10 +296,11 @@ int32_t SoftbusAssetRecvListener::HandleMoreFile(int32_t socketId, std::string f
         LOGE("MoveAsset fail, socket %{public}d", socketId);
         return FileManagement::ERR_BAD_VALUE;
     }
+    LOGI("HandleMoreFile end.");
     return FileManagement::ERR_OK;
 }
 
-bool SoftbusAssetRecvListener::JudgeSingleFile(std::string filePath)
+bool SoftbusAssetRecvListener::JudgeSingleFile(const std::string &filePath)
 {
     size_t pos = filePath.find(ASSET_FLAG_SINGLE);
     if (pos == std::string::npos) {

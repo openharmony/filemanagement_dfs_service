@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+* Copyright (c) 2024 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -45,7 +45,7 @@ void SoftBusAssetSendListener::OnFile(int32_t socket, FileEvent *event)
 
 void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char **fileList)
 {
-    LOGE("Push asset finished.");
+    LOGE("Push asset finished, socketId is %{public}d", socketId);
     auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(socketId);
     if (assetObj == nullptr) {
         LOGE("OnSendAssetFinished get assetObj is nullptr");
@@ -60,7 +60,7 @@ void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char 
 
 void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId, const char **fileList, int32_t errorCode)
 {
-    LOGE("SendAssetError errorCode %{public}d", errorCode);
+    LOGE("SendAssetError, socketId is %{public}d, errorCode %{public}d",socketId, errorCode);
     auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(socketId);
     if (assetObj == nullptr) {
         LOGE("OnSendAssetError  get assetObj is nullptr");

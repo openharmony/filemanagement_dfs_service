@@ -46,6 +46,7 @@ void DaemonExecute::ProcessEvent(const AppExecFwk::InnerEvent::Pointer &event)
         LOGE("event is nullptr.");
         return;
     }
+    std::lock_guard<std::mutex> lock(executeFuncMapMutex_);
     auto itFunc = executeFuncMap_.find(event->GetInnerEventId());
     if (itFunc == executeFuncMap_.end()) {
         LOGE("not find execute func.");
@@ -58,14 +59,21 @@ void DaemonExecute::ProcessEvent(const AppExecFwk::InnerEvent::Pointer &event)
 
 void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &event)
 {
+    if (event == nullptr) {
+        LOGI("eventhandler fail.");
+        return;
+    }
     auto pushData = event->GetSharedObject<PushAssetData>();
-    int32_t userId = pushData->userId_;
-    auto assetObj = pushData->assetObj_;
-    if (pushData == nullptr || assetObj == nullptr) {
+    if (pushData == nullptr) {
         LOGE("pushData is nullptr.");
         return;
     }
-
+    int32_t userId = pushData->userId_;
+    auto assetObj = pushData->assetObj_;
+    if (assetObj == nullptr) {
+        LOGE("assetObj is nullptr.");
+        return;
+    }
     int32_t socketId;
     auto ret = SoftBusHandlerAsset::GetInstance().AssetBind(assetObj->dstNetworkId_, socketId);
     if (ret != E_OK) {
@@ -75,7 +83,6 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
         AssetCallbackMananger::GetInstance().RemoveSendCallback(taskId);
         return;
     }
-    LOGI("ExecutePushAsset AssetBind success");
     SoftBusHandlerAsset::GetInstance().AddAssetObj(socketId, assetObj);
 
     auto fileList = GetFileList(assetObj->uris_, userId, assetObj->srcBundleName_);
@@ -150,7 +157,7 @@ int32_t DaemonExecute::HandleZip(const std::vector<std::string> &fileList,
         }
         std::string relativePath = fileList[0].substr(0, pos + srcBundleName.length()) + "/";
         sendFileName = relativePath + ZIP_FILENAME;
-        int32_t ret = SoftBusHandlerAsset::GetInstance().ZipFile(fileList, relativePath, sendFileName);
+        int32_t ret = SoftBusHandlerAsset::GetInstance().CompressFile(fileList, relativePath, sendFileName);
         if (ret != E_OK) {
             LOGE("zip ffiles fail.");
             return E_ZIP;
@@ -166,7 +173,7 @@ int32_t DaemonExecute::HandleZip(const std::vector<std::string> &fileList,
     }
 }
 
-void DaemonExecute::HandlePushAssetFail(int32_t socketId, sptr<AssetObj> &assetObj)
+void DaemonExecute::HandlePushAssetFail(int32_t socketId, const sptr<AssetObj> &assetObj)
 {
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
     AssetCallbackMananger::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_EVENT_HANDLER);

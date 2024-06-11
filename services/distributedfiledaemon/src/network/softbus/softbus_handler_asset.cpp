@@ -394,10 +394,11 @@ std::vector<std::string> SoftBusHandlerAsset::GenerateUris(const std::vector<std
     return uris;
 }
 
-int32_t SoftBusHandlerAsset::ZipFile(const std::vector<std::string> &fileList,
-                                     const std::string &relativePath,
-                                     const std::string &zipFileName)
+int32_t SoftBusHandlerAsset::CompressFile(const std::vector<std::string> &fileList,
+                                          const std::string &relativePath,
+                                          const std::string &zipFileName)
 {
+    LOGI("CompressFile begin.");
     zipFile outputFile = zipOpen64(zipFileName.c_str(), APPEND_STATUS_CREATE);
     if (!outputFile) {
         LOGE("Minizip failed to zipOpen, zipFileName = %{public}s", zipFileName.c_str());
@@ -413,7 +414,7 @@ int32_t SoftBusHandlerAsset::ZipFile(const std::vector<std::string> &fileList,
         auto file = rootFile.substr(pos + relativePath.length());
 
         int err = zipOpenNewFileInZip3_64(outputFile, file.c_str(), NULL, NULL, 0, NULL, 0, NULL,
-                                          Z_DEFLATED, 9, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, NULL, 0, 0);
+                                          Z_DEFLATED, 0, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, NULL, 0, 0);
         if (err != ZIP_OK) {
             LOGE("Minizip failed to zipOpenNewFileInZip, file = %{public}s", file.c_str());
             zipClose(outputFile, NULL);
@@ -427,24 +428,27 @@ int32_t SoftBusHandlerAsset::ZipFile(const std::vector<std::string> &fileList,
             zipWriteInFileInZip(outputFile, buf, len);
         }
         int ret = fclose(f);
-        if (!ret) {
+        if (ret != 0) {
             LOGE("Minizip failed to fclose");
         }
         zipCloseFileInZip(outputFile);
     }
     zipClose(outputFile, NULL);
+    LOGI("CompressFile end.");
     return E_OK;
 }
 
-std::vector<std::string> SoftBusHandlerAsset::UnzipFile(std::string zipFileName, std::string relativePath)
+std::vector<std::string> SoftBusHandlerAsset::DecompressFile(const std::string &unZipFileName,
+                                                             const std::string &relativePath)
 {
+    LOGI("DecompressFile begin.");
     if (!IsDir(relativePath)) {
         MkDirRecurse(relativePath, S_IRWXU | S_IRWXG | S_IXOTH);
     }
 
-    unzFile zipFile = unzOpen64(zipFileName.c_str());
+    unzFile zipFile = unzOpen64(unZipFileName.c_str());
     if (!zipFile) {
-        LOGE("Minizip failed to unzOpen, zipFileName = %{public}s", zipFileName.c_str());
+        LOGE("Minizip failed to unzOpen, zipFileName = %{public}s", unZipFileName.c_str());
         return {};
     }
 
@@ -466,6 +470,7 @@ std::vector<std::string> SoftBusHandlerAsset::UnzipFile(std::string zipFileName,
         unzGoToNextFile(zipFile);
     }
     unzClose(zipFile);
+    LOGI("DecompressFile end.");
     return fileList;
 }
 
@@ -522,22 +527,22 @@ bool SoftBusHandlerAsset::IsDir(const std::string &path)
     return S_ISDIR(st.st_mode);
 }
 
-std::string SoftBusHandlerAsset::ExtractFile(unzFile zipFile, std::string dir)
+std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::string &dir)
 {
     char *filenameWithPath = new char[BUFFER_SIZE];
     char *p;
     char *filenameWithoutPath;
     unz_file_info64 fileInfo;
     p = filenameWithoutPath = filenameWithPath;
-    if (unzGetCurrentFileInfo64(zipFile, &fileInfo, filenameWithPath, BUFFER_SIZE, NULL, 0, NULL, 0) != UNZ_OK) {
+    if (unzGetCurrentFileInfo64(unZipFile, &fileInfo, filenameWithPath, BUFFER_SIZE, NULL, 0, NULL, 0) != UNZ_OK) {
         LOGE("Minizip failed to unzGetCurrentFileInfo64");
         return "";
     }
     char *temp = new char[BUFFER_SIZE];
-    if (strcpy_s(temp, BUFFER_SIZE, dir.c_str())) {
+    if (strcpy_s(temp, BUFFER_SIZE, dir.c_str()) != 0) {
         return "";
     }
-    if (strcat_s(temp, BUFFER_SIZE, filenameWithPath)) {
+    if (strcat_s(temp, BUFFER_SIZE, filenameWithPath) != 0) {
         return "";
     }
     filenameWithPath = temp;
@@ -552,14 +557,14 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile zipFile, std::string dir)
         if (!IsDir(filenameWithPath)) {
             MkDirRecurse(filenameWithPath, S_IRWXU | S_IRWXG | S_IXOTH);
         }
-        if (unzOpenCurrentFile(zipFile) != UNZ_OK) {
+        if (unzOpenCurrentFile(unZipFile) != UNZ_OK) {
             LOGE("Minizip failed to unzOpenCurrentFile");
         }
         std::fstream file;
         file.open(filenameWithPath, std::ios_base::out | std::ios_base::binary);
         ZPOS64_T fileLength = fileInfo.uncompressed_size;
         char *fileData = new char[fileLength];
-        ZPOS64_T err = unzReadCurrentFile(zipFile, (voidp)fileData, fileLength);
+        ZPOS64_T err = unzReadCurrentFile(unZipFile, (voidp)fileData, fileLength);
         if (err < 0) {
             LOGE("Minizip failed to unzReadCurrentFile");
         }
@@ -573,6 +578,7 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile zipFile, std::string dir)
 
 void SoftBusHandlerAsset::RemoveFile(const std::string &path, bool isRemove)
 {
+    LOGI("RemoveFile path is %{public}s", path.c_str());
     if (!isRemove) {
         LOGI("this file is not need remove");
         return;

@@ -34,8 +34,8 @@ public:
 
     void AddRecvCallback(const sptr<IAssetRecvCallback> &recvCallback);
     void RemoveRecvCallback(const sptr<IAssetRecvCallback> &recvCallback);
-    void AddSendCallback(std::string taskId, const sptr<IAssetSendCallback> &sendCallback);
-    void RemoveSendCallback(std::string taskId);
+    void AddSendCallback(const std::string &taskId, const sptr<IAssetSendCallback> &sendCallback);
+    void RemoveSendCallback(const std::string &taskId);
 
     void NotifyAssetRecvStart(const std::string &srcNetworkId,
                               const std::string &dstNetworkId,
@@ -44,7 +44,7 @@ public:
     void NotifyAssetRecvFinished(const std::string &srcNetworkId,
                                  const sptr<AssetObj> &assetObj,
                                  int32_t result);
-    void NotifyAssetSendResult(std::string &taskId,
+    void NotifyAssetSendResult(const std::string &taskId,
                                const sptr<AssetObj> &assetObj,
                                int32_t result);
 
