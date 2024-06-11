@@ -72,21 +72,21 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
     auto infos = dma->GetRemoteDevicesInfo();
     LOGI("Have %{public}zu devices Online", infos.size());
     for (const auto &info : infos) {
-        if (deviceInfo.GetExtraData().empty()) {
-            LOGE("extraData is empty");
+        if (info.GetExtraData().empty()) {
+            LOGE("extraData is empty.");
             return;
         }
-        nlohman::json entraDataJson = nolohman::json::parse(deviceInfo.GetExtraData(), nullptr, false);
+        nlohmann::json entraDataJson = nolohmann::json::parse(info.GetExtraData(), nullptr, false);
         if (entraDataJson.is_discarded()) {
             LOGE("entraDataJson parse failed.");
             return;
         }
-        if (!Utils::IsInt32(entarDataJson, PARAM_KEY_OS_TYPE)) {
+        if (!Utils::IsInt32(entraDataJson, PARAM_KEY_OS_TYPE)) {
             LOGE("error json int32_t param.");
             return;
         }
         int32_t osType = entraDataJson[PARAM_KEY_OS_TYPE].get<int32_t>();
-        if (osType != DEVICE_OS_TYPE_OH ) {
+        if (osType != DEVICE_OS_TYPE_OH) {
             LOGE("%{private}s  the device os type = %{private}d is not openharmony.",
                 Utils::GetAnonyString(info.GetCid()).c_str(), osType);
             return;

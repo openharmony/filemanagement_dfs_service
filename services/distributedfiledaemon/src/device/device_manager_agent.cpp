@@ -805,16 +805,16 @@ void DeviceManagerAgent::InitDeviceInfos()
 
 int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    if (deviceInfo.extradata.empty()) {
+    if (deviceInfo.extraData.empty()) {
         LOGE("extraData is empty");
         return FileManagement::ERR_BAD_VALUE;
     }
-    nlohman::json entraDataJson = nolohman::json::parse(deviceInfo.extraData, nullptr, false);
+    nlohmann::json entraDataJson = nolohmann::json::parse(deviceInfo.extraData, nullptr, false);
     if (entraDataJson.is_discarded()) {
         LOGE("entraDataJson parse failed.");
         return FileManagement::ERR_BAD_VALUE;
     }
-    if (!Utils::IsInt32(entarDataJson, PARAM_KEY_OS_TYPE)) {
+    if (!Utils::IsInt32(entraDataJson, PARAM_KEY_OS_TYPE)) {
         LOGE("error json int32_t param.");
         return FileManagement::ERR_BAD_VALUE;
     }

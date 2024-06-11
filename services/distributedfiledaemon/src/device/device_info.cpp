@@ -26,7 +26,7 @@ DeviceInfo::DeviceInfo(const DistributedHardware::DmDeviceInfo &nodeInfo)
 {
     cid_ = string(nodeInfo.networkId);
     initCidFlag_ = true;
-    extradata_ = nodeInfo.extraData;
+    extraData_ = nodeInfo.extraData;
     // convert networkId to udid
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, cid_, udid_);
@@ -36,7 +36,7 @@ DeviceInfo &DeviceInfo::operator=(const DistributedHardware::DmDeviceInfo &nodeI
 {
     cid_ = string(nodeInfo.networkId);
     initCidFlag_ = true;
-    extradata_ = nodeInfo.extraData;
+    extraData_ = nodeInfo.extraData;
     return *this;
 }
 
