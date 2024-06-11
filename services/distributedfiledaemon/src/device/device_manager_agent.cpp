@@ -809,7 +809,7 @@ int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceI
         LOGE("extraData is empty");
         return FileManagement::ERR_BAD_VALUE;
     }
-    nlohmann::json entraDataJson = nolohmann::json::parse(deviceInfo.extraData, nullptr, false);
+    nlohmann::json entraDataJson = nlohmann::json::parse(deviceInfo.extraData, nullptr, false);
     if (entraDataJson.is_discarded()) {
         LOGE("entraDataJson parse failed.");
         return FileManagement::ERR_BAD_VALUE;

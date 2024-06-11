@@ -76,7 +76,7 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
             LOGE("extraData is empty.");
             return;
         }
-        nlohmann::json entraDataJson = nolohmann::json::parse(info.GetExtraData(), nullptr, false);
+        nlohmann::json entraDataJson = nlohmann::json::parse(info.GetExtraData(), nullptr, false);
         if (entraDataJson.is_discarded()) {
             LOGE("entraDataJson parse failed.");
             return;
