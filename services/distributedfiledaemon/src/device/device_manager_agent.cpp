@@ -819,7 +819,7 @@ int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceI
         return FileManagement::ERR_BAD_VALUE;
     }
     int32_t osType = entraDataJson[PARAM_KEY_OS_TYPE].get<int32_t>();
-    if (osType != DEVICE_OS_TYPE_OH ) {
+    if (osType != DEVICE_OS_TYPE_OH) {
         LOGE("%{private}s  the device os type = %{private}d is not openharmony.", deviceInfo.deviceName, osType);
         return FileManagement::ERR_BAD_VALUE;
     }
