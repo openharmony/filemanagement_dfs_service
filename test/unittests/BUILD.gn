@@ -16,7 +16,6 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 group("cloudsyncunittests") {
   testonly = true
   deps = [
-    "cloud_adapter:cloud_adapter_test",
     "cloud_daemon:cloud_daemon_test",
     "cloud_disk:cloud_disk_test",
     "clouddisk_database:clouddisk_database_test",
