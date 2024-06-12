@@ -21,6 +21,7 @@
 #include "message_option.h"
 #include "message_parcel.h"
 #include "daemon_stub.h"
+#include "distributed_file_daemon_ipc_interface_code.h"
 #include "securec.h"
 
 namespace OHOS {
@@ -30,122 +31,210 @@ constexpr size_t U32_AT_SIZE = 4;
 
 using namespace OHOS::Storage::DistributedFile;
 
-
-namespace Storage {
-namespace DistributedFile {
 class DaemonStubImpl : public DaemonStub {
 public:
     DaemonStubImpl() = default;
     ~DaemonStubImpl() override {}
-    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override;
-    int32_t CloseP2PConnectionEx(const std::string &networkId) override;
+    int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override {
+        return 0;
+    }
+    int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override {
+        return 0;
+    }
+    int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override {
+        return 0;
+    }
+    int32_t CloseP2PConnectionEx(const std::string &networkId) override {
+        return 0;
+    }
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
                            const sptr<IRemoteObject> &listener,
-                           HmdfsInfo &info) override;
-    int32_t CancelCopyTask(const std::string &sessionName) override;
+                           HmdfsInfo &info) override {
+        return 0;
+    }
+    int32_t CancelCopyTask(const std::string &sessionName) override {
+        return 0;
+    }
     int32_t RequestSendFile(const std::string &srcUri,
-                                    const std::string &dstPath,
-                                    const std::string &remoteDeviceId,
-                                    const std::string &sessionName) override;
-    int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) override;
+                            const std::string &dstPath,
+                            const std::string &remoteDeviceId,
+                            const std::string &sessionName) override {
+        return 0;
+    }
+    int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) override
+    {
+        return 0;
+    }
     int32_t PushAsset(int32_t userId,
-                              const sptr<AssetObj> &assetObj,
-                              const sptr<IAssetSendCallback> &sendCallback) override;
-    int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
-    int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
+                      const sptr<AssetObj> &assetObj,
+                      const sptr<IAssetSendCallback> &sendCallback) override
+    {
+        return 0;
+    }
+
+    int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override {
+        return 0;
+    }
+
+    int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override {
+        return 0;
+    }
 };
-}
-}
 
-int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
-{
-    return 0;
-}
-
-int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
-{
-    return 0;
-}
-
-int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
-{
-    return 0;
-}
-
-int32_t CloseP2PConnectionEx(const std::string &networkId)
-{
-    return 0;
-}
-
-int32_t PrepareSession(const std::string &srcUri, const std::string &dstUri,
-                                   const std::string &srcDeviceId,
-                                   const sptr<IRemoteObject> &listener,
-                                   HmdfsInfo &info)
-{
-    return 0;
-}
-
-int32_t CancelCopyTask(const std::string &sessionName)
-{
-    return 0;
-}
-
-int32_t RequestSendFile(const std::string &srcUri, const std::string &dstPath,
-                                    const std::string &remoteDeviceId,
-                                    const std::string &sessionName)
-{
-    return 0;
-}
-
-int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir)
-{
-    return 0;
-}
-
-int32_t PushAsset(int32_t userId,
-                              const sptr<AssetObj> &assetObj,
-                              const sptr<IAssetSendCallback> &sendCallback)
-{
-    return 0;
-}
-
-int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
-{
-    return 0;
-}
-
-int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
-{
-    return 0;
-}
-
-uint32_t GetU32Data(const char *ptr)
-{
-    // 将第0个数字左移24位，将第1个数字左移16位，将第2个数字左移8位，第3个数字不左移
-    return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | (ptr[3]);
-}
-
-bool DaemonStubFuzzTest(
-    std::shared_ptr<Storage::DistributedFile::DaemonStub> daemonStubPtr,
+void HandleOpenP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
     std::unique_ptr<char[]> data, size_t size)
 {
-    uint32_t code = GetU32Data(data.get());
-    if (code == 0) {
-        return true;
-    }
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data.get(), size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 
-    return true;
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleCloseP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                     std::unique_ptr<char[]> data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data.get(), size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleOpenP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                     std::unique_ptr<char[]> data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data.get(), size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                     std::unique_ptr<char[]> data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data.get(), size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandlePrepareSessionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                     std::unique_ptr<char[]> data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data.get(), size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                     std::unique_ptr<char[]> data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data.get(), size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleRequestSendFileFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                     std::unique_ptr<char[]> data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data.get(), size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleGetRemoteCopyInfoFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                     std::unique_ptr<char[]> data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data.get(), size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandlePushAssetFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                     std::unique_ptr<char[]> data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data.get(), size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                             std::unique_ptr<char[]> data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data.get(), size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
+}
+
+void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                             std::unique_ptr<char[]> data, size_t size)
+{
+    uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK);
+    MessageParcel datas;
+    datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
+    datas.WriteBuffer(data.get(), size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+
+    daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 } // namespace OHOS::Storage::DistributedFile
 
@@ -167,7 +256,17 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         return 0;
     }
 
-    auto daemonStubPtr = std::make_shared<OHOS::Storage::DistributedFile::DaemonStubImpl>();
-    OHOS::DaemonStubFuzzTest(daemonStubPtr, move(str), size);
+    auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
+    OHOS::HandleOpenP2PConnectionFuzzTest(daemonStubPtr, move(str), size);
+    OHOS::HandleCloseP2PConnectionFuzzTest(daemonStubPtr, move(str), size);
+    OHOS::HandlePrepareSessionFuzzTest(daemonStubPtr, move(str), size);
+    OHOS::HandleRequestSendFileFuzzTest(daemonStubPtr, move(str), size);
+    OHOS::HandleOpenP2PConnectionExFuzzTest(daemonStubPtr, move(str), size);
+    OHOS::HandleCloseP2PConnectionExFuzzTest(daemonStubPtr, move(str), size);
+    OHOS::HandleCancelCopyTaskFuzzTest(daemonStubPtr, move(str), size);
+    OHOS::HandleGetRemoteCopyInfoFuzzTest(daemonStubPtr, move(str), size);
+    OHOS::HandlePushAssetFuzzTest(daemonStubPtr, move(str), size);
+    OHOS::HandleRegisterRecvCallbackFuzzTest(daemonStubPtr, move(str), size);
+    OHOS::HandleUnRegisterRecvCallbackFuzzTest(daemonStubPtr, move(str), size);
     return 0;
 }
