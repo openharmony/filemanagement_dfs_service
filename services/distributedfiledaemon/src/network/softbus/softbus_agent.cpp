@@ -139,10 +139,6 @@ void SoftbusAgent::StopBottomHalf() {}
 void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
     LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
-    if (!IsSameAccount(info.GetCid())) {
-        LOGI("The source and sink device is not same account, not support.");
-        return;
-    }
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
         .OnShutdown = SoftbusSessionDispatcher::OnSessionClosed,
@@ -185,10 +181,6 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType)
 {
     LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
-    if (!IsSameAccount(info.GetCid())) {
-        LOGI("The source and sink device is not same account, not support.");
-        return;
-    }
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
         .OnShutdown = SoftbusSessionDispatcher::OnSessionClosed,
