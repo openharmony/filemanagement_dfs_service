@@ -21,6 +21,9 @@
 #include <string>
 
 #include "accesstoken_kit.h"
+#include "daemon_event.h"
+#include "daemon_eventhandler.h"
+#include "daemon_execute.h"
 #include "daemon_stub.h"
 #include "dm_device_info.h"
 #include "file_trans_listener_proxy.h"
@@ -114,6 +117,11 @@ private:
         void OnRemoteDied(const wptr<IRemoteObject> &remote) override;
     };
     static inline sptr<DfsListenerDeathRecipient> dfsListenerDeathRecipient_;
+private:
+    std::mutex eventHandlerMutex_;
+    std::shared_ptr<DaemonEventHandler> eventHandler_;
+    std::shared_ptr<DaemonExecute> daemonExecute_;
+    void StartEventHandler();
 };
 } // namespace DistributedFile
 } // namespace Storage

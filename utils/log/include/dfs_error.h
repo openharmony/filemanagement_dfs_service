@@ -78,6 +78,10 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_FILE_NOT_EXIST,
     E_SEND_FILE,
     E_MEMORY,
+
+    /* eventhandler */
+    E_EVENT_HANDLER,
+    E_ZIP,
 };
 
 enum DFSErrCode {

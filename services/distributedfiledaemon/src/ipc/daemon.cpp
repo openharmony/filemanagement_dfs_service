@@ -23,6 +23,7 @@
 #include <unordered_set>
 
 #include "accesstoken_kit.h"
+#include "asset_callback_mananger.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "connection_detector.h"
@@ -102,6 +103,7 @@ void Daemon::OnStart()
 
     try {
         PublishSA();
+        StartEventHandler();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
         AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
     } catch (const exception &e) {
@@ -122,6 +124,8 @@ void Daemon::OnStop()
         LOGE("UnSubscribe common event failed");
     }
     subScriber_ = nullptr;
+    daemonExecute_ = nullptr;
+    eventHandler_ = nullptr;
     SoftBusHandlerAsset::GetInstance().DeleteAssetLocalSessionServer();
     LOGI("Stop finished successfully");
 }
@@ -598,19 +602,66 @@ int32_t Daemon::PushAsset(int32_t userId,
                           const sptr<IAssetSendCallback> &sendCallback)
 {
     LOGI("Daemon::PushAsset begin.");
+    if (assetObj == nullptr) {
+        LOGE("assetObj is nullptr.");
+        return E_NULLPTR;
+    }
+    if (assetObj->srcBundleName_ != assetObj->dstBundleName_) {
+        LOGE("Different bundleName are not supported now.");
+        return E_SEND_FILE;
+    }
+    if (sendCallback == nullptr) {
+        LOGE("sendCallback is nullptr.");
+        return E_NULLPTR;
+    }
+    auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
+    if (taskId.empty()) {
+        LOGE("assetObj info is null.");
+        return E_NULLPTR;
+    }
+    AssetCallbackMananger::GetInstance().AddSendCallback(taskId, sendCallback);
+    std::shared_ptr<PushAssetData> pushData = std::make_shared<PushAssetData>(userId, assetObj);
+    auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
+    bool isSucc = eventHandler_->SendEvent(msgEvent, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    if (!isSucc) {
+        LOGE("Daemon event handler post push asset event fail.");
+        return E_EVENT_HANDLER;
+    }
     return E_OK;
 }
 
 int32_t Daemon::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     LOGI("Daemon::RegisterAssetCallback begin.");
+    if (recvCallback == nullptr) {
+        LOGE("recvCallback is nullptr.");
+        return E_NULLPTR;
+    }
+    AssetCallbackMananger::GetInstance().AddRecvCallback(recvCallback);
     return E_OK;
 }
 
 int32_t Daemon::UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     LOGI("Daemon::UnRegisterAssetCallback begin.");
+    if (recvCallback == nullptr) {
+        LOGE("recvCallback is nullptr.");
+        return E_NULLPTR;
+    }
+    AssetCallbackMananger::GetInstance().RemoveRecvCallback(recvCallback);
     return E_OK;
+}
+
+void Daemon::StartEventHandler()
+{
+    LOGI("StartEventHandler begin");
+    if (daemonExecute_ == nullptr) {
+        daemonExecute_ = std::make_shared<DaemonExecute>();
+    }
+
+    std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+    auto runer = AppExecFwk::EventRunner::Create(IDaemon::SERVICE_NAME.c_str());
+    eventHandler_ = std::make_shared<DaemonEventHandler>(runer, daemonExecute_);
 }
 } // namespace DistributedFile
 } // namespace Storage

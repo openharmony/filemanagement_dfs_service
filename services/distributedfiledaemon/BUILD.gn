@@ -33,10 +33,13 @@ ohos_shared_library("libdistributedfiledaemon") {
   sources = [
     "src/device/device_info.cpp",
     "src/device/device_manager_agent.cpp",
+    "src/ipc/asset_callback_mananger.cpp",
     "src/ipc/asset_recv_callback_proxy.cpp",
     "src/ipc/asset_send_callback_proxy.cpp",
     "src/ipc/connection_detector.cpp",
     "src/ipc/daemon.cpp",
+    "src/ipc/daemon_eventhandler.cpp",
+    "src/ipc/daemon_execute.cpp",
     "src/ipc/daemon_stub.cpp",
     "src/ipc/file_dfs_listener_proxy.cpp",
     "src/ipc/file_trans_listener_proxy.cpp",
@@ -50,6 +53,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/network/session_pool.cpp",
     "src/network/softbus/softbus_agent.cpp",
     "src/network/softbus/softbus_asset_recv_listener.cpp",
+    "src/network/softbus/softbus_asset_send_listener.cpp",
     "src/network/softbus/softbus_file_receive_listener.cpp",
     "src/network/softbus/softbus_file_send_listener.cpp",
     "src/network/softbus/softbus_handler.cpp",
@@ -79,6 +83,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
@@ -88,6 +93,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "zlib:shared_libz",
   ]
   configs = [ "${utils_path}:compiler_configs" ]
 
