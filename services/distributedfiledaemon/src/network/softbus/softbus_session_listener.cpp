@@ -42,7 +42,7 @@ int32_t SoftBusSessionListener::QueryActiveUserId()
 {
     std::vector<int32_t> ids;
     ErrCode errCode = AccountSA::OsAccountManager::QueryActiveOsAccountIds(ids);
-    if (errCode != ERR_OK || ids.empty()) {
+    if (errCode != FileManagement::ERR_OK || ids.empty()) {
         LOGE("Query active userid failed, errCode: %{public}d, ", errCode);
         return DEFAULT_USER_ID;
     }
@@ -67,11 +67,6 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
 void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     LOGI("OnSessionOpened.");
-    if (!SoftBusHandler::IsSameAccount(info.networkId)) {
-        LOGI("The source and sink device is not same account, not support.");
-        Shutdown(sessionId);
-        return;
-    }
     std::string sessionName = info.name;
     SoftBusSessionPool::SessionInfo sessionInfo;
     auto ret = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
@@ -110,14 +105,19 @@ void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo i
     ret = ::SendFile(sessionId, src, dst, static_cast<uint32_t>(fileList.size()));
     if (ret != E_OK) {
         LOGE("SendFile failed, sessionId = %{public}d", sessionId);
-        SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
+        RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_FAIL);
     }
+    SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
+    RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_SUCCESS);
 }
 
 void SoftBusSessionListener::OnSessionClosed(int32_t sessionId, ShutdownReason reason)
 {
     (void)reason;
+    std::string sessionName = "";
+    sessionName = SoftBusHandler::GetSessionName(sessionId);
     LOGI("OnSessionClosed, sessionId = %{public}d", sessionId);
+    SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
 }
 
 std::string SoftBusSessionListener::GetLocalUri(const std::string &uri)
@@ -162,29 +162,18 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
         LOGE("get local uri failed.");
         return localUri;
     }
-    Uri uri(localUri);
-    std::string bundleName = uri.GetAuthority();
-    if (bundleName != MEDIA && bundleName != DOCS) {
-        bundleName = GetBundleName(localUri);
-        if (bundleName.empty()) {
-            LOGI("get bundleName failed.");
-            return "";
-        }
-
-        auto sandboxPath = GetSandboxPath(localUri);
-        if (sandboxPath.empty()) {
-            LOGI("get sandboxPath failed.");
-            return "";
-        }
-        localUri = FILE_SCHEMA + bundleName + FILE_SEPARATOR + sandboxPath;
-    }
     std::string physicalPath;
     if (SandboxHelper::GetPhysicalPath(localUri, std::to_string(QueryActiveUserId()), physicalPath) != E_OK) {
         LOGE("GetPhysicalPath failed, invalid uri, physicalPath = %{public}s", physicalPath.c_str());
         return "";
     }
-    if (!SandboxHelper::CheckValidPath(physicalPath)) {
-        LOGE("invalid path.");
+    if (physicalPath.empty() || physicalPath.size() >= PATH_MAX) {
+        LOGE("PhysicalPath.size() = %{public}zu", physicalPath.size());
+        return "";
+    }
+    char realPath[PATH_MAX] = { 0x00 };
+    if (realpath(physicalPath.c_str(), realPath) == nullptr) {
+        LOGE("realpath failed with %{public}d", errno);
         return "";
     }
     return physicalPath;

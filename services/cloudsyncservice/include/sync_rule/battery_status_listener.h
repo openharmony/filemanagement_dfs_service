@@ -17,20 +17,21 @@
 #define OHOS_FILEMGMT_BATTERY_STATUS_LISTENER_H
 
 #include "common_event_subscriber.h"
-#include "data_sync/data_sync_manager.h"
+#include "data_sync_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class BatteryStatusListener : public std::enable_shared_from_this<BatteryStatusListener> {
 public:
-    explicit BatteryStatusListener(std::shared_ptr<DataSyncManager> dataSyncManager);
+    explicit BatteryStatusListener(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     ~BatteryStatusListener();
     void Start();
     void Stop();
     void OnStatusNormal();
     void OnStatusAbnormal();
+    void OnPowerConnected();
 
 private:
-    std::shared_ptr<DataSyncManager> dataSyncManager_;
+    std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
     std::shared_ptr<EventFwk::CommonEventSubscriber> commonEventSubscriber_ = nullptr;
     SyncTriggerType triggerType_{SyncTriggerType::BATTERY_OK_TRIGGER};
 };

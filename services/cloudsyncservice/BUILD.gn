@@ -28,6 +28,7 @@ config("optimize-size") {
 ohos_shared_library("cloudsync_sa") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -36,38 +37,12 @@ ohos_shared_library("cloudsync_sa") {
   }
   include_dirs = [
     "include",
-    "include/data_sync",
     "include/cycle_task",
     "include/cycle_task/tasks",
-    "include/data_sync/gallery_data_sync",
-    "include/data_sync/cloud_disk_data_sync",
     "include/transport",
     "include/transport/softbus",
-    "${clouddisk_database_path}/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk",
     "${innerkits_native_path}/cloudsync_kit_inner",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
-    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
-    "${media_library_path}/frameworks/services/media_thumbnail/include",
-    "${media_library_path}/frameworks/utils/include",
-    "//third_party/e2fsprogs/e2fsprogs/lib",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  include_dirs += medialibrary_rdb_utils_include
-
-  data_sync = [
-    "src/data_sync/data_syncer.cpp",
-    "src/data_sync/sdk_helper.cpp",
-    "src/data_sync/data_handler.cpp",
-    "src/data_sync/rdb_data_handler.cpp",
-    "src/data_sync/task.cpp",
-    "src/data_sync/data_sync_notifier.cpp",
-    "src/data_sync/data_sync_manager.cpp",
-    "src/data_sync/data_syncer_rdb_store.cpp",
-    "src/data_sync/sync_state_manager.cpp",
-    "src/data_sync/task_state_manager.cpp",
   ]
 
   cycle_task = [
@@ -78,21 +53,6 @@ ohos_shared_library("cloudsync_sa") {
     "src/cycle_task/tasks/save_subscription_task.cpp",
   ]
 
-  gallery_data_sync = [
-    "src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
-    "src/data_sync/gallery_data_sync/file_data_handler.cpp",
-    "src/data_sync/gallery_data_sync/album_data_handler.cpp",
-    "src/data_sync/gallery_data_sync/data_convertor.cpp",
-    "src/data_sync/gallery_data_sync/file_data_convertor.cpp",
-    "src/data_sync/gallery_data_sync/album_data_convertor.cpp",
-  ]
-
-  cloud_disk_data_sync = [
-    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
-    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
-  ]
-
   transport = [
     "src/transport/file_transfer_manager.cpp",
     "src/transport/message_handler.cpp",
@@ -101,42 +61,18 @@ ohos_shared_library("cloudsync_sa") {
     "src/transport/softbus/softbus_session.cpp",
   ]
 
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/medialibrary_business_record_column.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
-    "src/ipc/cloud_download_callback_manager.cpp",
-    "src/ipc/cloud_download_callback_proxy.cpp",
-    "src/ipc/cloud_sync_callback_manager.cpp",
-    "src/ipc/cloud_sync_callback_proxy.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/cloud_sync_service_stub.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
-    "src/sync_rule/battery_status.cpp",
     "src/sync_rule/battery_status_listener.cpp",
-    "src/sync_rule/cloud_status.cpp",
-    "src/sync_rule/net_conn_callback_observer.cpp",
-    "src/sync_rule/network_status.cpp",
-    "src/sync_rule/screen_status.cpp",
     "src/sync_rule/screen_status_listener.cpp",
-    "src/sync_rule/system_load.cpp",
     "src/sync_rule/user_status_listener.cpp",
   ]
 
-  sources += data_sync
   sources += cycle_task
-  sources += gallery_data_sync
-  sources += cloud_disk_data_sync
-  sources += medialibrary_rdb_utils_source
   sources += transport
 
   defines = [
@@ -145,31 +81,26 @@ ohos_shared_library("cloudsync_sa") {
   ]
 
   deps = [
-    "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
-    "//third_party/e2fsprogs:libext2_uuid",
   ]
 
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:ability_manager",
-    "ability_runtime:dataobs_manager",
     "app_file_service:sandbox_helper_native",
     "common_event_service:cesfwk_innerkits",
     "dsoftbus:softbus_client",
-    "eventhandler:libeventhandler",
+    "ffrt:libffrt",
     "hilog:libhilog",
-    "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
-    "power_manager:powermgr_client",
-    "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -179,24 +110,10 @@ ohos_shared_library("cloudsync_sa") {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
-
   if (cloudsync_service_resource_schedule) {
     external_deps += [ "resource_schedule_service:ressched_client" ]
-    defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
   }
 
-  if (cloudsync_service_power) {
-    external_deps += [ "battery_manager:batterysrv_client" ]
-
-    defines += [ "SUPPORT_POWER" ]
-  }
   configs = [ ":optimize-size" ]
 
   use_exceptions = true
@@ -207,6 +124,7 @@ ohos_shared_library("cloudsync_sa") {
 ohos_static_library("cloudsync_sa_static") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -215,11 +133,8 @@ ohos_static_library("cloudsync_sa_static") {
   }
   include_dirs = [
     "include",
-    "include/data_sync",
     "include/cycle_task",
     "include/cycle_task/tasks",
-    "include/data_sync/gallery_data_sync",
-    "include/data_sync/cloud_disk_data_sync",
     "include/transport",
     "include/transport/softbus",
     "${clouddisk_database_path}/include",
@@ -229,24 +144,8 @@ ohos_static_library("cloudsync_sa_static") {
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
     "${media_library_path}/frameworks/utils/include",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "//third_party/e2fsprogs/e2fsprogs/lib",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  include_dirs += medialibrary_rdb_utils_include
-
-  data_sync = [
-    "src/data_sync/data_syncer.cpp",
-    "src/data_sync/sdk_helper.cpp",
-    "src/data_sync/data_handler.cpp",
-    "src/data_sync/rdb_data_handler.cpp",
-    "src/data_sync/task.cpp",
-    "src/data_sync/data_sync_notifier.cpp",
-    "src/data_sync/data_sync_manager.cpp",
-    "src/data_sync/data_syncer_rdb_store.cpp",
-    "src/data_sync/sync_state_manager.cpp",
-    "src/data_sync/task_state_manager.cpp",
   ]
 
   cycle_task = [
@@ -257,32 +156,12 @@ ohos_static_library("cloudsync_sa_static") {
     "src/cycle_task/tasks/save_subscription_task.cpp",
   ]
 
-  gallery_data_sync = [
-    "src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
-    "src/data_sync/gallery_data_sync/file_data_handler.cpp",
-    "src/data_sync/gallery_data_sync/album_data_handler.cpp",
-    "src/data_sync/gallery_data_sync/data_convertor.cpp",
-    "src/data_sync/gallery_data_sync/file_data_convertor.cpp",
-    "src/data_sync/gallery_data_sync/album_data_convertor.cpp",
-  ]
-
-  cloud_disk_data_sync = [
-    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
-    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
-    "src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
-  ]
-
   transport = [
     "src/transport/file_transfer_manager.cpp",
     "src/transport/message_handler.cpp",
     "src/transport/softbus/session_manager.cpp",
     "src/transport/softbus/softbus_adapter.cpp",
     "src/transport/softbus/softbus_session.cpp",
-  ]
-
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
   ]
 
   sources = [
@@ -292,29 +171,16 @@ ohos_static_library("cloudsync_sa_static") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/medialibrary_business_record_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
-    "src/ipc/cloud_download_callback_manager.cpp",
-    "src/ipc/cloud_download_callback_proxy.cpp",
-    "src/ipc/cloud_sync_callback_manager.cpp",
-    "src/ipc/cloud_sync_callback_proxy.cpp",
     "src/ipc/cloud_sync_service.cpp",
     "src/ipc/cloud_sync_service_stub.cpp",
     "src/ipc/download_asset_callback_manager.cpp",
     "src/ipc/download_asset_callback_proxy.cpp",
-    "src/sync_rule/battery_status.cpp",
     "src/sync_rule/battery_status_listener.cpp",
-    "src/sync_rule/cloud_status.cpp",
-    "src/sync_rule/net_conn_callback_observer.cpp",
-    "src/sync_rule/network_status.cpp",
-    "src/sync_rule/screen_status.cpp",
     "src/sync_rule/screen_status_listener.cpp",
     "src/sync_rule/user_status_listener.cpp",
   ]
 
-  sources += data_sync
   sources += cycle_task
-  sources += gallery_data_sync
-  sources += cloud_disk_data_sync
-  sources += medialibrary_rdb_utils_source
   sources += transport
 
   defines = [
@@ -324,6 +190,7 @@ ohos_static_library("cloudsync_sa_static") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/e2fsprogs:libext2_uuid",
@@ -338,6 +205,7 @@ ohos_static_library("cloudsync_sa_static") {
     "common_event_service:cesfwk_innerkits",
     "dsoftbus:softbus_client",
     "eventhandler:libeventhandler",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
@@ -356,13 +224,8 @@ ohos_static_library("cloudsync_sa_static") {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
+  deps +=
+      [ "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter" ]
 
   if (cloudsync_service_resource_schedule) {
     external_deps += [ "resource_schedule_service:ressched_client" ]

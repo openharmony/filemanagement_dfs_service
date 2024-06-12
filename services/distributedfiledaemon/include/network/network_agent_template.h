@@ -29,6 +29,9 @@
 #include "mountpoint/mount_point.h"
 #include "network/kernel_talker.h"
 #include "network/session_pool.h"
+#include "network/softbus/softbus_session_dispatcher.h"
+#include "nlohmann/json.hpp"
+#include "utils_directory.h"
 
 namespace OHOS {
 namespace Storage {
@@ -46,7 +49,7 @@ public:
           kernerlTalker_(std::make_shared<KernelTalker>(
               mountPoint,
               [&](NotifyParam &param) { GetSessionProcess(param); },
-              [&](const std::string &cid) { CloseSessionForOneDevice(cid); })),
+              [&](int32_t fd) { CloseSessionForOneDevice(fd); })),
           sessionPool_(kernerlTalker_)
     {
     }
@@ -58,6 +61,7 @@ public:
     void ConnectDeviceAsync(const DeviceInfo info);
     void DisconnectDevice(const DeviceInfo info);
     void DisconnectDeviceByP2P(const DeviceInfo info);
+    void DisconnectDeviceByP2PHmdfs(const DeviceInfo info);
     void OccupySession(int32_t sessionId, uint8_t linkType);
     bool FindSession(int32_t sessionId);
     void AcceptSession(std::shared_ptr<BaseSession> session, const std::string backStage);
@@ -71,7 +75,7 @@ protected:
     virtual void QuitDomain() = 0;
     virtual void StopTopHalf() = 0;
     virtual void StopBottomHalf() = 0;
-    virtual void OpenSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
+    virtual int32_t OpenSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
     virtual void OpenApSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
     virtual void CloseSession(std::shared_ptr<BaseSession> session) = 0;
 
@@ -82,7 +86,7 @@ private:
     void NotifyHandler(NotifyParam &param);
     void GetSessionProcess(NotifyParam &param);
     void GetSession(const std::string &cid, uint8_t linkType);
-    void CloseSessionForOneDevice(const std::string &cid);
+    void CloseSessionForOneDevice(int32_t fd);
     void AcceptSessionInner(std::shared_ptr<BaseSession> session, const std::string backStage);
     void GetSessionProcessInner(NotifyParam param);
 

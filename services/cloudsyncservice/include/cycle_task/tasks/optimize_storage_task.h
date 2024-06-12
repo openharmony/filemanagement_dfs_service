@@ -24,7 +24,7 @@ namespace CloudSync {
 
 class OptimizeStorageTask : public CycleTask {
 public:
-    OptimizeStorageTask(std::shared_ptr<DataSyncManager> dataSyncManager);
+    OptimizeStorageTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     int32_t RunTaskForBundle(int32_t userId, std::string bundleName) override;
 };
 } // namespace CloudSync

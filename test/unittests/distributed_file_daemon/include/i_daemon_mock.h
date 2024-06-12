@@ -50,6 +50,16 @@ public:
         return FileManagement::E_OK;
     }
 
+    int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t CloseP2PConnectionEx(const std::string &networkId)
+    {
+        return FileManagement::E_OK;
+    }
+
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
@@ -73,6 +83,23 @@ public:
     }
 
     int32_t CancelCopyTask(const std::string &sessionName)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t PushAsset(int32_t userId,
+                      const sptr<AssetObj> &assetObj,
+                      const sptr<IAssetSendCallback> &sendCallback)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
+    {
+        return FileManagement::E_OK;
+    }
+
+    int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback)
     {
         return FileManagement::E_OK;
     }

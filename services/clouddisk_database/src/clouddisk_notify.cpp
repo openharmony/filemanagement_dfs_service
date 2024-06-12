@@ -17,6 +17,7 @@
 #include "clouddisk_notify_utils.h"
 #include "clouddisk_rdbstore.h"
 #include "dfs_error.h"
+#include "ffrt_inner.h"
 #include "file_column.h"
 #include "securec.h"
 #include "uri.h"
@@ -34,23 +35,6 @@ CloudDiskNotify &CloudDiskNotify::GetInstance()
 {
     static CloudDiskNotify instance_;
     return instance_;
-}
-
-CloudDiskNotify::CloudDiskNotify()
-{
-    if (timer_ == nullptr) {
-        timer_ = make_unique<Utils::Timer>("CloudDisk_Notify");
-    }
-    notifyCount_ = 0;
-    timerCallback_ = [this]() { NotifyChangeOuter(); };
-    timer_->Setup();
-    timerId_ = timer_->Register(timerCallback_, MNOTIFY_TIME_INTERVAL, true);
-}
-
-CloudDiskNotify::~CloudDiskNotify()
-{
-    timer_->Unregister(timerId_);
-    timer_->Shutdown();
 }
 
 static int32_t GetDataInner(const NotifyParamDisk &paramDisk, NotifyData &notifyData)
@@ -196,7 +180,7 @@ static void HandleInsert(const NotifyParamService &paramService, const ParamServ
         return;
     }
     NotifyData notifyData;
-    int32_t ret = rdbStore->GetNotifyData(paramService.record, notifyData);
+    int32_t ret = rdbStore->GetNotifyData(paramService.node, notifyData);
     if (ret == E_OK) {
         notifyData.type = NotifyType::NOTIFY_ADDED;
         CloudDiskNotify::GetInstance().AddNotify(notifyData);
@@ -218,7 +202,7 @@ static void HandleUpdate(const NotifyParamService &paramService, const ParamServ
         notifyData.type = NotifyType::NOTIFY_MODIFIED;
         notifyData.isDir = curNode.isDir == "directory";
         if (paramService.notifyType == NotifyType::NOTIFY_NONE &&
-            rdbStore->GetNotifyData(paramService.record, inNotifyData) == E_OK) {
+            rdbStore->GetNotifyData(paramService.node, inNotifyData) == E_OK) {
             if (inNotifyData.uri != notifyData.uri) {
                 notifyData.type = NotifyType::NOTIFY_DELETED;
                 inNotifyData.type = NotifyType::NOTIFY_RENAMED;
@@ -302,24 +286,37 @@ void CloudDiskNotify::AddNotify(NotifyData notifyData)
         return;
     }
 
-    if (notifyCount_ >= MAX_NOTIFY_LIST_SIZE || nfList_.empty()) {
-        notifyCount_ = 0;
-        timer_->Shutdown();
-        NotifyChangeOuter();
-        timer_->Setup();
-        timer_->Register(timerCallback_, MNOTIFY_TIME_INTERVAL, true);
-    }
-    {
-        lock_guard<mutex> lock(mutex_);
-        if (!nfList_.empty() && nfList_.back().notifyType == notifyData.type) {
-            nfList_.back().uriList.push_back(Uri(notifyData.uri));
-            nfList_.back().isDirList.push_back(notifyData.isDir);
-        } else {
-            CacheNotifyInfo cacheNotifyInfo({notifyData.type, {Uri(notifyData.uri)}, {notifyData.isDir}});
-            nfList_.push_back(cacheNotifyInfo);
+    auto notifyFunc = [notifyData] {
+        auto obsMgrClient = AAFwk::DataObsMgrClient::GetInstance();
+        if (obsMgrClient == nullptr) {
+            LOGE("obsMgrClient is null");
+            return;
         }
-        notifyCount_++;
-    }
+        Parcel parcel;
+        parcel.WriteUint32(1);
+        parcel.WriteBool(notifyData.isDir);
+        uintptr_t buf = parcel.GetData();
+        if (parcel.GetDataSize() == 0) {
+            LOGE("parcel.getDataSize fail");
+            return;
+        }
+
+        auto *uBuf = new (std::nothrow) uint8_t[parcel.GetDataSize()];
+        if (uBuf == nullptr) {
+            return;
+        }
+        int32_t ret = memcpy_s(uBuf, parcel.GetDataSize(), reinterpret_cast<uint8_t *>(buf), parcel.GetDataSize());
+        if (ret != 0) {
+            LOGE("Parcel Data copy failed, err: %{public}d", ret);
+            delete[] uBuf;
+            return;
+        }
+        ChangeInfo changeInfo({static_cast<ChangeInfo::ChangeType>(notifyData.type), {Uri(notifyData.uri)}, uBuf,
+                               parcel.GetDataSize()});
+        obsMgrClient->NotifyChangeExt(changeInfo);
+        delete[] uBuf;
+    };
+    ffrt::thread(notifyFunc).detach();
 }
 
 void CloudDiskNotify::NotifyChangeOuter()

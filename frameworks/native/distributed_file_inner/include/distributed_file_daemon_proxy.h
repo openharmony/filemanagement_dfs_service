@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,10 +18,12 @@
 
 #include <cstdint>
 
+#include "asset/asset_obj.h"
+#include "asset/i_asset_recv_callback.h"
+#include "asset/i_asset_send_callback.h"
 #include "dm_device_info.h"
 #include "ipc/i_daemon.h"
 #include "iremote_proxy.h"
-
 
 namespace OHOS {
 namespace Storage {
@@ -36,6 +38,8 @@ public:
 
     int32_t OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     int32_t CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
+    int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override;
+    int32_t CloseP2PConnectionEx(const std::string &networkId) override;
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
@@ -47,6 +51,12 @@ public:
                             const std::string &dstDeviceId,
                             const std::string &sessionName) override;
     int32_t GetRemoteCopyInfo(const std::string &srcUri, bool &isFile, bool &isDir) override;
+
+    int32_t PushAsset(int32_t userId,
+                      const sptr<AssetObj> &assetObj,
+                      const sptr<IAssetSendCallback> &sendCallback) override;
+    int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
+    int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
 private:
     class DaemonDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

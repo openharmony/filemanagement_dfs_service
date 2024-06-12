@@ -13,12 +13,19 @@
  * limitations under the License.
  */
 #include "periodic_check_task.h"
+#include "parameters.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-PeriodicCheckTask::PeriodicCheckTask(std::shared_ptr<DataSyncManager> dataSyncManager)
-    : CycleTask(PeriodicCheckTaskName, {"com.ohos.photos"}, THREE_DAY, dataSyncManager) {}
+static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
+PeriodicCheckTask::PeriodicCheckTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+    : CycleTask(PeriodicCheckTaskName, {"com.ohos.photos", system::GetParameter(FILEMANAGER_KEY, "")},
+                THREE_DAY,
+                dataSyncManager)
+{
+}
 
 int32_t PeriodicCheckTask::RunTaskForBundle(int32_t userId, std::string bundleName)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -102,7 +102,7 @@ static void FillFileInfo(const RowEntity &rowEntity, CloudDiskFileInfo &info)
     rowEntity.Get(FileColumn::IS_DIRECTORY).GetInt(int_variable);
     info.IsDirectory = (int_variable == DIRECTORY);
     rowEntity.Get(FileColumn::ROW_ID).GetLong(long_variable);
-    info.localId = static_cast<unsigned long long>(long_variable) + LOCAL_ID_OFFSET;
+    info.localId = static_cast<long long>(long_variable) + LOCAL_ID_OFFSET;
 }
 
 int32_t CloudDiskRdbUtils::ResultSetToFileInfo(const shared_ptr<ResultSet> resultSet,

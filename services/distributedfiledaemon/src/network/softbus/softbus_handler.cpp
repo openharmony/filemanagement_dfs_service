@@ -43,16 +43,6 @@ std::map<std::string, int32_t> SoftBusHandler::serverIdMap_;
 
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
-    if (!SoftBusHandler::IsSameAccount(info.networkId)) {
-        std::lock_guard<std::mutex> lock(serverIdMapMutex_);
-        auto it = serverIdMap_.find(info.name);
-        if (it != serverIdMap_.end()) {
-            Shutdown(it->second);
-            serverIdMap_.erase(it);
-            LOGI("RemoveSessionServer success.");
-        }
-        Shutdown(sessionId);
-    }
     std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
     SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, info.name));
 }
@@ -111,7 +101,7 @@ SoftBusHandler::~SoftBusHandler() = default;
 
 SoftBusHandler &SoftBusHandler::GetInstance()
 {
-    LOGD("SoftBusHandle::GetInstance");
+    LOGI("SoftBusHandle::GetInstance");
     static SoftBusHandler handle;
     return handle;
 }
@@ -170,10 +160,6 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         return E_OPEN_SESSION;
     }
     LOGI("OpenSession Enter.");
-    if (!IsSameAccount(peerDevId)) {
-        LOGI("The source and sink device is not same account, not support.");
-        return E_OPEN_SESSION;
-    }
     QosTV qos[] = {
         {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
         {.qos = QOS_TYPE_MAX_LATENCY,        .value = DFS_QOS_TYPE_MAX_LATENCY},
@@ -195,12 +181,14 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     if (ret != E_OK) {
         LOGE("Bind SocketClient error");
         Shutdown(socketId);
+        RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_FAIL);
         return E_OPEN_SESSION;
     }
     {
         std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
         clientSessNameMap_.insert(std::make_pair(socketId, mySessionName));
     }
+    RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_SUCCESS);
     LOGI("OpenSession success.");
     return socketId;
 }
@@ -268,7 +256,7 @@ void SoftBusHandler::CloseSessionWithSessionName(const std::string sessionName)
             }
         }
     }
-    TransManager::GetInstance().NotifyFileFailed(sessionName);
+    TransManager::GetInstance().NotifyFileFailed(sessionName, E_DFS_CANCEL_SUCCESS);
     TransManager::GetInstance().DeleteTransTask(sessionName);
     CloseSession(sessionId, sessionName);
 }

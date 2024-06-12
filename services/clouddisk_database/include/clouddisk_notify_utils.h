@@ -24,8 +24,6 @@
 
 namespace OHOS::FileManagement::CloudDisk {
 using namespace std;
-using namespace DriveKit;
-
 class CloudDiskNotifyUtils final {
 public:
     using FindCloudDiskInodeFunc = std::function<std::shared_ptr<CloudDiskInode>(CloudDiskFuseData*, int64_t)>;

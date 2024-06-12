@@ -21,8 +21,7 @@
 
 #include "clouddisk_notify_const.h"
 #include "dataobs_mgr_client.h"
-#include "timer.h"
-
+#include "nocopyable.h"
 
 namespace OHOS::FileManagement::CloudDisk {
 using namespace std;
@@ -34,7 +33,7 @@ struct CacheNotifyInfo {
     mutable list<bool> isDirList;
 };
 
-class CloudDiskNotify final {
+class CloudDiskNotify final : public NoCopyable {
 public:
     static CloudDiskNotify &GetInstance();
     void TryNotify(const NotifyParamDisk &paramDisk, const ParamDiskOthers &paramOthers = {});
@@ -46,14 +45,10 @@ public:
     void NotifyChangeOuter();
 
 private:
-    CloudDiskNotify();
-    ~CloudDiskNotify();
+    CloudDiskNotify() = default;
+    ~CloudDiskNotify() = default;
     list<CacheNotifyInfo> nfList_;
     mutex mutex_;
-    uint32_t timerId_;
-    unique_ptr<Utils::Timer> timer_;
-    Utils::Timer::TimerCallback timerCallback_;
-    uint32_t notifyCount_;
 };
 } // namespace OHOS::FileManagement::CloudDisk
 

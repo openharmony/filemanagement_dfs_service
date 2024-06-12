@@ -16,7 +16,9 @@
 #include "network/network_agent_template.h"
 
 #include "device/device_manager_agent.h"
+#include "dfs_error.h"
 #include "dfsu_exception.h"
+#include "distributed_device_profile_client.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -24,8 +26,10 @@ namespace Storage {
 namespace DistributedFile {
 using namespace std;
 namespace {
+constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
+constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 } // namespace
 
 void NetworkAgentTemplate::Start()
@@ -68,6 +72,26 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
     auto infos = dma->GetRemoteDevicesInfo();
     LOGI("Have %{public}zu devices Online", infos.size());
     for (const auto &info : infos) {
+        if (info.GetExtraData().empty()) {
+            LOGE("extraData is empty.");
+            return;
+        }
+        nlohmann::json entraDataJson = nlohmann::json::parse(info.GetExtraData(), nullptr, false);
+        if (entraDataJson.is_discarded()) {
+            LOGE("entraDataJson parse failed.");
+            return;
+        }
+        if (!Utils::IsInt32(entraDataJson, PARAM_KEY_OS_TYPE)) {
+            LOGE("error json int32_t param.");
+            return;
+        }
+        int32_t osType = entraDataJson[PARAM_KEY_OS_TYPE].get<int32_t>();
+        if (osType != DEVICE_OS_TYPE_OH) {
+            LOGE("%{private}s  the device os type = %{private}d is not openharmony.",
+                Utils::GetAnonyString(info.GetCid()).c_str(), osType);
+            return;
+        }
+
         int32_t networkType;
         int errCode = deviceManager.GetNetworkTypeByNetworkId(pkgName, info.GetCid(), networkType);
         if (errCode) {
@@ -93,13 +117,20 @@ void NetworkAgentTemplate::DisconnectAllDevices()
 
 void NetworkAgentTemplate::DisconnectDevice(const DeviceInfo info)
 {
-    LOGI("DeviceOffline, cid:%{public}s", info.GetCid().c_str());
+    LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
     sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_AP);
 }
 
 void NetworkAgentTemplate::DisconnectDeviceByP2P(const DeviceInfo info)
 {
-    LOGI("DeviceOffline, cid:%{public}s", info.GetCid().c_str());
+    LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
+    sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_P2P);
+}
+
+void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
+{
+    LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
+    sessionPool_.DeviceDisconnectCountOnly(info.GetCid(), LINK_TYPE_P2P, true);
     sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_P2P);
 }
 
@@ -113,9 +144,9 @@ bool NetworkAgentTemplate::FindSession(int32_t sessionId)
     return sessionPool_.FindSession(sessionId);
 }
 
-void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
+void NetworkAgentTemplate::CloseSessionForOneDevice(int32_t fd)
 {
-    (void)cid;
+    sessionPool_.ReleaseSession(fd);
     LOGI("session closed!");
 }
 
@@ -131,7 +162,7 @@ void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const 
 void NetworkAgentTemplate::AcceptSessionInner(shared_ptr<BaseSession> session, const std::string backStage)
 {
     auto cid = session->GetCid();
-    LOGI("AcceptSesion, cid:%{public}s", cid.c_str());
+    LOGI("AcceptSesion, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
     sessionPool_.HoldSession(session, backStage);
 }
 
@@ -147,7 +178,7 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
 {
     string cidStr(param.remoteCid, CID_MAX_LEN);
     int fd = param.fd;
-    LOGI("NOTIFY_GET_SESSION, old fd %{public}d, remote cid %{public}s", fd, cidStr.c_str());
+    LOGI("NOTIFY_GET_SESSION, old fd %{public}d, remote cid %{public}s", fd, Utils::GetAnonyString(cidStr).c_str());
     uint8_t linkType = sessionPool_.ReleaseSession(fd);
     GetSession(cidStr, linkType);
 }
@@ -164,7 +195,19 @@ void NetworkAgentTemplate::GetSession(const string &cid, uint8_t linkType)
         }
     } else if (linkType == LINK_TYPE_P2P) {
         try {
-            OpenSession(deviceInfo, LINK_TYPE_P2P);
+            if (OpenSession(deviceInfo, LINK_TYPE_P2P) == FileManagement::E_OK) {
+                return;
+            }
+            LOGE("reget session failed");
+            auto deviceManager = DeviceManagerAgent::GetInstance();
+            deviceManager->RemoveNetworkIdForAllToken(cid);
+            auto deviceId = deviceManager->GetDeviceIdByNetworkId(cid);
+            if (!deviceId.empty()) {
+                deviceManager->UMountDfsDocs(cid, deviceId, true);
+            }
+            sessionPool_.DeviceDisconnectCountOnly(cid, linkType, true);
+            deviceManager->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
+            deviceManager->RemoveRemoteReverseObj(true, 0);
         } catch (const DfsuException &e) {
             LOGE("reget session failed, code: %{public}d", e.code());
         }

@@ -17,6 +17,7 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_shared_library("cloudfiledaemon") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -60,6 +61,7 @@ ohos_shared_library("cloudfiledaemon") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
     "${utils_path}:libdistributedfileutils_lite",
   ]
 
@@ -70,20 +72,13 @@ ohos_shared_library("cloudfiledaemon") {
     "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
+    "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-
-  if (!dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
-    ]
-  } else {
-    external_deps += [ "drivekit_native:drivekit" ]
-  }
 
   use_exceptions = true
   part_name = "dfs_service"

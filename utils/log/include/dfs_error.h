@@ -80,9 +80,15 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_MEMORY,
 };
 
+enum DFSErrCode {
+    ERR_OK,
+    ERR_BAD_VALUE,
+};
+
 enum JsErrCode {
     E_PERMISSION = 201,
     E_PERMISSION_SYS = 202,
+    E_DFS_CANCEL_SUCCESS = 204,
     E_PARAMS_ = 401,
     E_IPCSS = STORAGE_SERVICE_SYS_CAP_TAG + 1,
     E_CLOUD_NOT_READY = DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG + 1,

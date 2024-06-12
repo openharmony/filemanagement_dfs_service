@@ -21,14 +21,15 @@
 #include "dfs_error.h"
 #include "net_conn_client.h"
 #include "parameter.h"
-#include "sync_rule/net_conn_callback_observer.h"
-#include "sync_rule/network_status.h"
+#include "net_conn_callback_observer.h"
+#include "network_status.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+using namespace CloudFile;
 
 class NetworkStatusTest : public testing::Test {
 public:

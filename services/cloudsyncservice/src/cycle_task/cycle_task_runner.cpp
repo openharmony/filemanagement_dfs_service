@@ -15,13 +15,13 @@
 
 #include "cycle_task_runner.h"
 #include "cycle_task.h"
-#include "data_convertor.h"
 #include "data_syncer_rdb_col.h"
 #include "data_syncer_rdb_store.h"
+#include "result_set.h"
 #include "tasks/optimize_storage_task.h"
 #include "tasks/periodic_check_task.h"
 #include "tasks/save_subscription_task.h"
-#include "sync_rule/cloud_status.h"
+#include "cloud_status.h"
 #include "utils_log.h"
 #include "os_account_manager.h"
 #include <memory>
@@ -31,7 +31,7 @@ namespace FileManagement {
 namespace CloudSync {
 using namespace std;
 
-CycleTaskRunner::CycleTaskRunner(std::shared_ptr<DataSyncManager> dataSyncManager)
+CycleTaskRunner::CycleTaskRunner(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     dataSyncManager_ = dataSyncManager;
     vector<int32_t> activeUsers;
@@ -64,6 +64,24 @@ void CycleTaskRunner::InitTasks()
     cycleTasks_.push_back(std::make_shared<PeriodicCheckTask>(dataSyncManager_));
 }
 
+static int32_t GetString(const string &key, string &val, NativeRdb::ResultSet &resultSet)
+{
+    int32_t index;
+    int32_t err = resultSet.GetColumnIndex(key, index);
+    if (err != NativeRdb::E_OK) {
+        LOGE("result set get  %{public}s column index err %{public}d", key.c_str(), err);
+        return E_RDB;
+    }
+
+    err = resultSet.GetString(index, val);
+    if (err != 0) {
+        LOGE("result set get string err %{public}d", err);
+        return E_RDB;
+    }
+
+    return E_OK;
+}
+
 void CycleTaskRunner::SetRunableBundleNames()
 {
     std::shared_ptr<std::set<std::string>> runnableBundleNames = make_shared<std::set<std::string>>();
@@ -75,7 +93,7 @@ void CycleTaskRunner::SetRunableBundleNames()
     }
     while (resultSet->GoToNextRow() == E_OK) {
         string bundleName;
-        ret = DataConvertor::GetString(BUNDLE_NAME, bundleName, *resultSet);
+        ret = GetString(BUNDLE_NAME, bundleName, *resultSet);
         if (ret != E_OK) {
             LOGE("get bundle name failed");
             continue;

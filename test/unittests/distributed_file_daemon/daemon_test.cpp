@@ -41,8 +41,13 @@ public:
 class MockFileTransListener : public IRemoteStub<IFileTransListener> {
 public:
     MOCK_METHOD2(OnFileReceive, int32_t(uint64_t totalBytes, uint64_t processedBytes));
-    MOCK_METHOD1(OnFailed, int32_t(const std::string &sessionName));
+    MOCK_METHOD2(OnFailed, int32_t(const std::string &sessionName, int32_t errorCode));
     MOCK_METHOD1(OnFinished, int32_t(const std::string &sessionName));
+};
+
+DistributedHardware::DmDeviceInfo deviceInfo = {
+    .deviceId = "testdevid",
+    .networkId = "testnetworkid",
 };
 
 void DaemonTest::SetUpTestCase(void)

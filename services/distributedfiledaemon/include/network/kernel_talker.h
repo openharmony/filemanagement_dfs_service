@@ -43,7 +43,7 @@ class KernelTalker final : protected NoCopyable, public std::enable_shared_from_
 public:
     explicit KernelTalker(std::weak_ptr<MountPoint> mountPoint,
                           std::function<void(NotifyParam &)> getSessionCallback,
-                          std::function<void(const std::string &)> closeSessionCallback)
+                          std::function<void(int32_t)> closeSessionCallback)
         : mountPoint_(mountPoint), GetSessionCallback_(getSessionCallback), CloseSessionCallback_(closeSessionCallback)
     {
     }
@@ -96,7 +96,7 @@ private:
     std::atomic<bool> isRunning_ {true};
     std::unique_ptr<std::thread> pollThread_ {nullptr};
     std::function<void(NotifyParam &)> GetSessionCallback_ {nullptr};
-    std::function<void(const std::string &)> CloseSessionCallback_ {nullptr};
+    std::function<void(int32_t fd)> CloseSessionCallback_ {nullptr};
 };
 } // namespace DistributedFile
 } // namespace Storage

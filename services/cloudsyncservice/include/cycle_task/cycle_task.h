@@ -18,6 +18,9 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <set>
+
+#include "cloud_pref_impl.h"
 #include "dfs_error.h"
 #include "data_sync_manager.h"
 namespace OHOS {
@@ -31,13 +34,15 @@ public:
         THREE_DAY = ONE_DAY * 3,
         ONE_WEEK = ONE_DAY * 7,
     };
-    CycleTask(std::string taskName, std::set<std::string> bundleNames, int32_t intervalTime,
-              std::shared_ptr<DataSyncManager> dataSyncManager);
+    CycleTask(std::string taskName,
+              std::set<std::string> bundleNames,
+              int32_t intervalTime,
+              std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     virtual ~CycleTask() = default;
     std::string GetTaskName() const;
     void RunTask(int32_t userId);
     void SetRunnableBundleNames(std::shared_ptr<std::set<std::string>> &bundleNames);
-    std::shared_ptr<DataSyncManager> GetDataSyncManager() const;
+    std::shared_ptr<CloudFile::DataSyncManager> GetDataSyncManager() const;
     static const std::string FILE_PATH;
 
 protected:
@@ -45,7 +50,7 @@ protected:
     std::string taskName_;
     std::set<std::string> bundleNames_;
     int32_t intervalTime_;
-    std::shared_ptr<DataSyncManager> dataSyncManager_;
+    std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
 
 private:
     void GetLastRunTime(std::time_t &time);

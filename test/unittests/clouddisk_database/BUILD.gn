@@ -41,6 +41,7 @@ ohos_unittest("clouddisk_rdb_utils_test") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -90,11 +91,6 @@ ohos_unittest("clouddisk_rdbstore_test") {
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_client.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_download_uri_manager.cpp",
@@ -108,28 +104,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_map_column.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_manager.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_sync_notifier.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/data_syncer_rdb_store.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_convertor.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/album_data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/data_convertor.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_convertor.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/file_data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/gallery_data_sync/gallery_data_syncer.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/rdb_data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/sync_state_manager.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/task.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/task_state_manager.cpp",
-    "${services_path}/cloudsyncservice/src/ipc/cloud_download_callback_manager.cpp",
     "clouddisk_rdbstore_test.cpp",
-  ]
-
-  cloud_disk_sync = [
-    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_syncer.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_handler.cpp",
-    "${services_path}/cloudsyncservice/src/data_sync/cloud_disk_data_sync/cloud_disk_data_convertor.cpp",
   ]
 
   clouddisk_database = [
@@ -142,21 +117,18 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${services_path}/clouddisk_database/src/clouddisk_rdb_transaction.cpp",
   ]
 
-  sources += cloud_disk_sync
   sources += clouddisk_database
 
   include_dirs = [
     "${services_path}/clouddisk_database/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${services_path}/cloudsyncservice/include",
-    "${services_path}/cloudsyncservice/include/data_sync",
-    "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
-    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
     "${services_path}/cloudfiledaemon/include",
     "${distributedfile_path}/interfaces/inner_api/native/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/include",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/include",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/frameworks/services/media_thumbnail/include",
@@ -174,17 +146,8 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${services_path}/cloudfiledaemon/include/cloud_disk",
   ]
 
-  medialibrary_rdb_utils_source = [
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_transaction.cpp",
-    "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/src/medialibrary_rdb_utils.cpp",
-  ]
-
-  medialibrary_rdb_utils_include = [ "${media_library_path}/frameworks/innerkitsimpl/medialibrary_data_extension/include" ]
-
-  sources += medialibrary_rdb_utils_source
-  include_dirs += medialibrary_rdb_utils_include
-
   deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",

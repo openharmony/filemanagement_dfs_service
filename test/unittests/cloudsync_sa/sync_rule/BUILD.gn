@@ -27,7 +27,6 @@ ohos_unittest("battery_status_listener_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
     "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/battery_status_listener.cpp",
-    "${services_path}/cloudsyncservice/src/sync_rule/system_load.cpp",
     "battery_status_listener_test.cpp",
   ]
 
@@ -36,8 +35,6 @@ ohos_unittest("battery_status_listener_test") {
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
-    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/data_syncer_rdb_store_mock.cpp",
-    "${services_path}/cloudsyncservice/include/data_sync",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${utils_path}/log/include",
     "${image_framework_path}/mock/native/include/log",
@@ -46,6 +43,7 @@ ohos_unittest("battery_status_listener_test") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
@@ -87,7 +85,6 @@ ohos_unittest("net_conn_callback_observer_test") {
     "${image_framework_path}/mock/native/include/log",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
-    "${services_path}/cloudsyncservice/include/data_sync",
   ]
 
   deps = [
@@ -119,20 +116,19 @@ ohos_unittest("net_conn_callback_observer_test") {
 ohos_unittest("network_status_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
-    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/network_status.cpp",
-    "${services_path}/cloudsyncservice/src/sync_rule/system_load.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_set_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_status.cpp",
     "network_status_test.cpp",
   ]
 
   include_dirs = [
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
-    "${services_path}/cloudsyncservice/include/data_sync",
     "${utils_path}/log/include",
     "${image_framework_path}/mock/native/include/log",
     "${innerkits_native_path}/cloudsync_kit_inner",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
-    "${services_path}/cloudsyncservice/include/data_sync",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
   ]
@@ -145,7 +141,10 @@ ohos_unittest("network_status_test") {
   ]
 
   external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
     "common_event_service:cesfwk_innerkits",
+    "data_share:datashare_consumer",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -167,24 +166,20 @@ ohos_unittest("network_status_test") {
 ohos_unittest("cloud_status_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/cloud_status.cpp",
     "${distributedfile_path}/utils/log/src/dfs_error.cpp",
-    "${services_path}/cloudsyncservice/src/sync_rule/cloud_status.cpp",
     "cloud_status_test.cpp",
   ]
 
   include_dirs = [
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
     "${services_path}/cloudsyncservice/include",
-    "${services_path}/cloudsyncservice/include/sync_rule",
     "${media_library_path}/frameworks/utils/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
   ]
 
   deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
@@ -201,10 +196,68 @@ ohos_unittest("cloud_status_test") {
   use_exceptions = true
 }
 
+ohos_unittest("battery_status_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+  module_out_path = "filemanagement/dfs_service"
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/battery_status.cpp",
+    "battery_status_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/sync_rule",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
+    "${utils_path}/log/include",
+    "${image_framework_path}/mock/native/include/log",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/utils/include",
+  ]
+
+  deps = [
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "netmanager_base:net_conn_manager_if",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_TEST\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("cloudsync_sa_sync_rule_test") {
   testonly = true
   deps = [
     ":battery_status_listener_test",
+    ":battery_status_test",
     ":cloud_status_test",
     ":network_status_test",
   ]

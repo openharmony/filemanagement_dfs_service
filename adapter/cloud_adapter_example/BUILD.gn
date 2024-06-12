@@ -14,6 +14,15 @@
 import("//build/ohos.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
+group("cloud_adapter_example_target") {
+  deps = []
+  if (!dfs_service_feature_enable_cloud_adapter) {
+    deps += [
+      "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter",
+    ]
+  }
+}
+
 config("public_config") {
   include_dirs =
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
@@ -22,6 +31,7 @@ config("public_config") {
 ohos_shared_library("cloud_adapter") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -29,16 +39,20 @@ ohos_shared_library("cloud_adapter") {
     debug = false
   }
   sources = [
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_asset_read_session.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_assets_downloader.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_container.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_database.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_error.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/dk_record_field.cpp",
-    "${distributedfile_path}/adapter/cloud_adapter_example/src/drive_kit.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_asset_read_session_impl.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_assets_downloader_impl.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_database_impl.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_file_kit_impl.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/cloud_sync_helper_impl.cpp",
+    "${distributedfile_path}/adapter/cloud_adapter_example/src/data_sync_manager_impl.cpp",
   ]
 
   public_configs = [ ":public_config" ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   use_exceptions = true
   part_name = "dfs_service"

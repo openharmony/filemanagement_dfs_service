@@ -117,7 +117,6 @@ static std::string GetDentryfileByPath(uint32_t userId, const std::string &path,
 {
     std::string cacheDir =
         "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/account_cache/dentry_cache/cloud/";
-    ForceCreateDirectory(cacheDir);
     std::string dentryFileName = GetDentryfileName(path, caseSense);
 
     return cacheDir + dentryFileName;
@@ -173,10 +172,6 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
         LOGE("setxattr failed, errno %{public}d, cacheFile_ %s", errno, cacheFile_.c_str());
     }
 
-    HmdfsDcacheHeader header{};
-    (void)FileUtils::ReadFile(fd_, 0, sizeof(header), &header);
-    dentryCount_ = header.dentryCount;
-
     /* lookup and create in parent */
     parentMetaFile_ = GetParentMetaFile(userId, path);
     std::string dirName = GetFileName(path);
@@ -197,8 +192,6 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
 
 MetaFile::~MetaFile()
 {
-    HmdfsDcacheHeader header{.dentryCount = dentryCount_};
-    (void)FileUtils::WriteFile(fd_, &header, 0, sizeof(header));
 }
 
 static bool IsDotDotdot(const std::string &name)
@@ -233,7 +226,7 @@ static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
     }
 }
 
-static void TeaTransform(uint32_t buf[4], uint32_t const in[])
+static void TeaTransform(uint32_t buf[4], uint32_t const in[]) __attribute__((no_sanitize("unsigned-integer-overflow")))
 {
     int n = 16;           /* transform total rounds 16 */
     uint32_t a = in[0];   /* transform input pos 0 */
@@ -468,7 +461,6 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
         return EINVAL;
     }
 
-    ++dentryCount_;
     return E_OK;
 }
 
@@ -531,6 +523,7 @@ static HmdfsDentry *FindInBlock(HmdfsDentryGroup &dentryBlk, uint32_t namehash, 
 }
 
 static HmdfsDentry *InLevel(uint32_t level, DcacheLookupCtx *ctx)
+                            __attribute__((no_sanitize("unsigned-integer-overflow")))
 {
     HmdfsDentry *de = nullptr;
 
@@ -558,9 +551,26 @@ static HmdfsDentry *InLevel(uint32_t level, DcacheLookupCtx *ctx)
     return de;
 }
 
+static uint32_t GetMaxLevel(int32_t fd)
+{
+    struct stat st;
+    if (fstat(fd, &st) == -1) {
+        return MAX_BUCKET_LEVEL;
+    }
+    uint32_t blkNum = static_cast<uint32_t>(st.st_size) / DENTRYGROUP_SIZE + 1;
+    uint32_t maxLevel = 0;
+    blkNum >>= 1;
+    while (blkNum > 1) {
+        blkNum >>= 1;
+        maxLevel++;
+    }
+    return maxLevel;
+}
+
 static HmdfsDentry *FindDentry(DcacheLookupCtx *ctx)
 {
-    for (uint32_t level = 0; level < MAX_BUCKET_LEVEL; level++) {
+    uint32_t maxLevel = GetMaxLevel(ctx->fd);
+    for (uint32_t level = 0; level < maxLevel; level++) {
         HmdfsDentry *de = InLevel(level, ctx);
         if (de != nullptr) {
             return de;
@@ -599,7 +609,6 @@ int32_t MetaFile::DoRemove(const MetaBase &base)
         return EIO;
     }
 
-    --dentryCount_;
     return E_OK;
 }
 

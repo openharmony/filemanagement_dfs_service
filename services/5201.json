@@ -13,7 +13,7 @@
                 "deviceonline":[
                     {
                         "name": "deviceonline",
-                        "value": "on"
+                        "value": "ready"
                     }
                 ]
             },

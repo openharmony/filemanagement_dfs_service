@@ -81,13 +81,14 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value)
+int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value,
+    const CacheNode &node)
 {
     return E_OK;
 }
 
 int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
-    const std::string &name, const std::string &parentCloudId, int64_t rowId)
+    const std::string &name, const std::string &parentCloudId)
 {
     return E_OK;
 }
@@ -114,6 +115,11 @@ int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &pos
 }
 
 int32_t CloudDiskRdbStore::GetHasChild(const std::string &cloudId, bool &hasChild)
+{
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::GetRowId(const std::string &cloudId, int64_t &rowId)
 {
     return E_OK;
 }

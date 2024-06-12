@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
-#include "sync_rule/network_status.h"
+#include "network_status.h"
 #include "dfs_error.h"
 
 namespace OHOS::FileManagement::CloudSync {
+using namespace CloudFile;
 
 int32_t NetworkStatus::RegisterNetConnCallback(std::shared_ptr<DataSyncManager> dataSyncManager)
 {
@@ -49,6 +50,11 @@ void NetworkStatus::InitNetwork(std::shared_ptr<DataSyncManager> dataSyncManager
 void NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus netStatus)
 {
     return;
+}
+
+bool NetworkStatus::CheckMobileNetwork(const std::string &bundleName, const int32_t userId)
+{
+    return true;
 }
 
 NetworkStatus::NetConnStatus NetworkStatus::GetNetConnStatus()

@@ -17,7 +17,7 @@
 
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "sync_rule/screen_status.h"
+#include "screen_status.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -41,7 +41,7 @@ void ScreenStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eve
     }
 }
 
-ScreenStatusListener::ScreenStatusListener(std::shared_ptr<DataSyncManager> dataSyncManager)
+ScreenStatusListener::ScreenStatusListener(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     dataSyncManager_ = dataSyncManager;
 }

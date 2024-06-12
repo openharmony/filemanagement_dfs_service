@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,6 +16,8 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 group("services_target") {
   deps = [
+    "${services_path}:cloudsyncservice.para",
+    "${services_path}:cloudsyncservice.para.dac",
     "${services_path}:distributed_file.para",
     "${services_path}:distributedfile_etc",
     "${services_path}:distributedfile_sa_profile",
@@ -37,6 +39,10 @@ group("cloud_daemon_kit_inner_target") {
   ]
 }
 
+group("cloud_file_kit_inner_target") {
+  deps = [ "interfaces/inner_api/native/cloud_file_kit_inner:cloudfile_kit" ]
+}
+
 group("cloudsync_asset_kit_inner_target") {
   deps = [
     "interfaces/inner_api/native/cloudsync_kit_inner:cloudsync_asset_kit_inner",
@@ -50,6 +56,7 @@ group("distributed_file_daemon_kit_inner_target") {
 group("dfs_test_moudule") {
   testonly = true
   deps = [
+    "${services_path}/distributedfiledaemon/test/unittest:device_info_test",
     "${services_path}/distributedfiledaemon/test/unittest:device_manager_agent_test",
     "${services_path}/distributedfiledaemon/test/unittest:devsl_dispatcher_test",
     "${services_path}/distributedfiledaemon/test/unittest:kernel_talker_test",
@@ -57,6 +64,7 @@ group("dfs_test_moudule") {
     "${services_path}/distributedfiledaemon/test/unittest:session_pool_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_agent_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_file_receive_listener_test",
+    "${services_path}/distributedfiledaemon/test/unittest:softbus_file_send_listener_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_handler_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_dispatcher_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_session_listener_test",

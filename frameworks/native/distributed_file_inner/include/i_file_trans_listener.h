@@ -29,7 +29,7 @@ public:
         File_Trans_Listener_DESCRIPTOR_IS_EMPTY,
     };
     virtual int32_t OnFileReceive(uint64_t totalBytes, uint64_t processedBytes) = 0;
-    virtual int32_t OnFailed(const std::string &sessionName) = 0;
+    virtual int32_t OnFailed(const std::string &sessionName, int32_t errorCode) = 0;
     virtual int32_t OnFinished(const std::string &sessionName) = 0;
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.storage.distributedfile.translistener")
 };

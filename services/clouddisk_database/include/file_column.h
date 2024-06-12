@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,6 +41,8 @@ public:
     static const std::string OPERATE_TYPE;
     static const std::string FILE_STATUS;
     static const std::string ROW_ID;
+    static const std::string CHECK_FLAG;
+    static const std::string ROOT_DIRECTORY;
 
     // Only Local
     static const std::string FILE_TIME_VISIT;
@@ -72,6 +74,9 @@ public:
 
     //set FileStatus
     static const std::string SET_FILE_STATUS_DEFAULT;
+
+    //set CheckFlag
+    static const std::string ADD_CHECK_FLAG;
 
     // Query FILES_TABLE for FileSystem
     static const std::vector<std::string> FILE_SYSTEM_QUERY_COLUMNS;

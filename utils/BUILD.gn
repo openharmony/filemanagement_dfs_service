@@ -47,11 +47,10 @@ config("compiler_configs") {
 
 config("utils_public_config") {
   include_dirs = [
-    "cloud_disk/include",
-    "dfx/include",
-    "work/include",
+    "inner_api",
+    "load/include",
     "log/include",
-    "preference/include",
+    "work/include",
     "system/include",
   ]
 }
@@ -59,6 +58,7 @@ config("utils_public_config") {
 ohos_shared_library("libdistributedfileutils") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -68,6 +68,8 @@ ohos_shared_library("libdistributedfileutils") {
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
     "dfx/src/xcollie_helper.cpp",
+    "ffrt/src/ffrt_timer.cpp",
+    "load/src/plugin_loader.cpp",
     "log/src/dfs_error.cpp",
     "log/src/utils_log.cpp",
     "preference/src/cloud_pref_impl.cpp",
@@ -76,6 +78,7 @@ ohos_shared_library("libdistributedfileutils") {
     "system/src/dfsu_memory_guard.cpp",
     "system/src/dfsu_mount_argument_descriptors.cpp",
     "system/src/dfsu_timer.cpp",
+    "system/src/sys_utils.cpp",
     "system/src/utils_directory.cpp",
     "work/src/async_work.cpp",
   ]
@@ -102,9 +105,12 @@ ohos_shared_library("libdistributedfileutils") {
     "access_token:libtokenid_sdk",
     "c_utils:utils",
     "c_utils:utilsbase",
+    "device_manager:devicemanagersdk",
+    "ffrt:libffrt",
     "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "napi:ace_napi",
     "preferences:native_preferences",
@@ -121,26 +127,29 @@ ohos_shared_library("libdistributedfileutils") {
 }
 
 config("dentry_public_config") {
-  include_dirs = [ "dentry/include" ]
+  include_dirs = [
+    "dentry/include",
+    "inner_api",
+    "system/include",
+  ]
 }
 
 ohos_shared_library("libdistributedfiledentry") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
   }
-  include_dirs = [
-    "dentry/include",
-    "log/include",
-  ]
+
   sources = [
     "dentry/src/file_utils.cpp",
     "dentry/src/meta_file.cpp",
     "dentry/src/meta_file_clouddisk.cpp",
+    "system/src/utils_directory.cpp",
   ]
 
   public_configs = [ ":dentry_public_config" ]
@@ -149,7 +158,9 @@ ohos_shared_library("libdistributedfiledentry") {
 
   external_deps = [
     "c_utils:utils",
+    "device_manager:devicemanagersdk",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
   ]
 
   defines = [
@@ -166,28 +177,35 @@ ohos_shared_library("libdistributedfiledentry") {
   subsystem_name = "filemanagement"
 }
 
+config("utils_lite_public_config") {
+  include_dirs = [
+    "dentry/include",
+    "inner_api",
+    "load/include",
+    "log/include",
+    "system/include",
+  ]
+}
+
 ohos_shared_library("libdistributedfileutils_lite") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
   }
-  include_dirs = [
-    "cloud_disk/include",
-    "dentry/include",
-    "dfx/include",
-    "log/include",
-    "system/include",
-  ]
+
   sources = [
     "cloud_disk/src/cloud_file_utils.cpp",
     "dentry/src/file_utils.cpp",
     "dentry/src/meta_file.cpp",
     "dentry/src/meta_file_clouddisk.cpp",
     "dfx/src/xcollie_helper.cpp",
+    "ffrt/src/ffrt_timer.cpp",
+    "load/src/plugin_loader.cpp",
     "log/src/dfs_error.cpp",
     "log/src/utils_log.cpp",
     "system/src/dfsu_memory_guard.cpp",
@@ -195,6 +213,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
   ]
 
   configs = [ "//build/config/compiler:exceptions" ]
+  public_configs = [ ":utils_lite_public_config" ]
 
   defines = [
     "LOG_DOMAIN=0xD004308",
@@ -206,7 +225,10 @@ ohos_shared_library("libdistributedfileutils_lite") {
   external_deps = [
     "c_utils:utils",
     "c_utils:utilsbase",
+    "device_manager:devicemanagersdk",
+    "ffrt:libffrt",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
   ]
 
   if (use_musl) {

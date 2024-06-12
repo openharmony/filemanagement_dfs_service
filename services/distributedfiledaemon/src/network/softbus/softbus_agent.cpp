@@ -110,7 +110,7 @@ void SoftbusAgent::JoinDomain()
         std::lock_guard<std::mutex> lock(serverIdMapMutex_);
         serverIdMap_.insert(std::make_pair(sessionName_, socketId));
     }
-    LOGD("Succeed to JoinDomain, busName:%{public}s", sessionName_.c_str());
+    LOGI("Succeed to JoinDomain, busName:%{public}s", sessionName_.c_str());
 }
 
 void SoftbusAgent::QuitDomain()
@@ -126,7 +126,7 @@ void SoftbusAgent::QuitDomain()
         }
     }
     SoftbusSessionDispatcher::UnregisterSessionListener(sessionName_.c_str());
-    LOGD("Succeed to QuitDomain, busName:%{public}s", sessionName_.c_str());
+    LOGI("Succeed to QuitDomain, busName:%{public}s", sessionName_.c_str());
 }
 
 void SoftbusAgent::StopTopHalf()
@@ -136,13 +136,10 @@ void SoftbusAgent::StopTopHalf()
 
 void SoftbusAgent::StopBottomHalf() {}
 
-void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
+int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
-    LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
-    if (!IsSameAccount(info.GetCid())) {
-        LOGI("The source and sink device is not same account, not support.");
-        return;
-    }
+    LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d",
+        Utils::GetAnonyString(info.GetCid()).c_str(), linkType);
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
         .OnShutdown = SoftbusSessionDispatcher::OnSessionClosed,
@@ -165,13 +162,13 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
     int32_t socketId = Socket(clientInfo);
     if (socketId < FileManagement::E_OK) {
         LOGE("Create OpenSoftbusChannel Socket error");
-        return;
+        return FileManagement::E_CONTEXT;
     }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener);
     if (ret != FileManagement::E_OK) {
         LOGE("Bind SocketClient error");
         Shutdown(socketId);
-        return;
+        return FileManagement::E_CONTEXT;
     }
     OccupySession(socketId, linkType);
     PeerSocketInfo peerSocketInfo = {
@@ -180,15 +177,13 @@ void SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
     };
     SoftbusSessionDispatcher::OnSessionOpened(socketId, peerSocketInfo);
     LOGI("Success to OpenSession, socketId:%{public}d, linkType:%{public}d", socketId, linkType);
+    return FileManagement::E_OK;
 }
 
 void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType)
 {
-    LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d", info.GetCid().c_str(), linkType);
-    if (!IsSameAccount(info.GetCid())) {
-        LOGI("The source and sink device is not same account, not support.");
-        return;
-    }
+    LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d",
+        Utils::GetAnonyString(info.GetCid()).c_str(), linkType);
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
         .OnShutdown = SoftbusSessionDispatcher::OnSessionClosed,
@@ -276,8 +271,6 @@ void SoftbusAgent::OnSessionOpened(const int32_t sessionId, PeerSocketInfo info)
 void SoftbusAgent::OnSessionClosed(int32_t sessionId, const std::string peerDeviceId)
 {
     LOGI("OnSessionClosed Enter.");
-    auto session = make_shared<SoftbusSession>(sessionId, peerDeviceId);
-    auto cid = session->GetCid();
     Shutdown(sessionId);
 }
 } // namespace DistributedFile

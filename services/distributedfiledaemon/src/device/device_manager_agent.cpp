@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,24 +18,36 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 
 #include "device_auth.h"
+#include "dfs_error.h"
 #include "dfsu_exception.h"
+#include "distributed_device_profile_client.h"
 #include "ipc/i_daemon.h"
+#include "iservice_registry.h"
+#include "iremote_object.h"
 #include "mountpoint/mount_manager.h"
 #include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_agent.h"
+#include "os_account_manager.h"
 #include "parameters.h"
 #include "softbus_bus_center.h"
+#include "system_ability_definition.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace {
+constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int PEER_TO_PEER_GROUP = 256;
 constexpr int ACROSS_ACCOUNT_AUTHORIZE_GROUP = 1282;
+const int32_t MOUNT_DFS_COUNT_ONE = 1;
+const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
+const int32_t INVALID_USER_ID = -1;
+constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 const std::string SAME_ACCOUNT_MARK = "const.distributed_file_only_for_same_account_test";
 } // namespace
 using namespace std;
@@ -193,9 +205,14 @@ bool DeviceManagerAgent::IsWifiNetworkType(int32_t networkType)
     return true;
 }
 
-void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
+void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("networkId %{public}s, OnDeviceOnline begin", deviceInfo.deviceId);
+    LOGI("networkId %{public}s, OnDeviceReady begin", deviceInfo.deviceId);
+    int32_t ret = IsSupportDevice(deviceInfo);
+    if (ret != FileManagement::ERR_OK) {
+        LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
+        return;
+    }
 
     // online first query this dev's trust info
     DeviceInfo info(deviceInfo);
@@ -207,14 +224,14 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
         LOGE("cid %{public}s network is null!", info.cid_.c_str());
-        LOGI("OnDeviceOnline end");
+        LOGI("OnDeviceReady end");
         return;
     }
 
     auto type_ = cidNetworkType_.find(info.cid_);
     if (type_ == cidNetworkType_.end()) {
         LOGE("cid %{public}s network type is null!", info.cid_.c_str());
-        LOGI("OnDeviceOnline end");
+        LOGI("OnDeviceReady end");
         return;
     }
 
@@ -223,7 +240,7 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
 
     if (!IsWifiNetworkType(newNetworkType)) {
         LOGE("cid %{public}s networkType:%{public}d", info.cid_.c_str(), type_->second);
-        LOGI("OnDeviceOnline end");
+        LOGI("OnDeviceReady end");
         return;
     }
 
@@ -231,7 +248,7 @@ void DeviceManagerAgent::OnDeviceOnline(const DistributedHardware::DmDeviceInfo 
         make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
     cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
     it->second->Recv(move(cmd));
-    LOGI("OnDeviceOnline end");
+    LOGI("OnDeviceReady end");
 }
 
 void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
@@ -257,6 +274,25 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     auto cmd =
         make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
     it->second->Recv(move(cmd));
+
+    auto networkId = std::string(deviceInfo.networkId);
+    auto deviceId = std::string(deviceInfo.deviceId);
+    if (deviceId.empty()) {
+        deviceId = GetDeviceIdByNetworkId(networkId);
+    }
+    if (!networkId.empty()) {
+        NotifyRemoteReverseObj(networkId, ON_STATUS_OFFLINE);
+        UMountDfsDocs(networkId, deviceId, true);
+    }
+
+    auto cmd2 = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
+        &NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs, info);
+    it->second->Recv(move(cmd2));
+
+    if (RemoveRemoteReverseObj(true, 0) != 0) {
+        LOGI("RemoveRemoteReverseObj fail");
+    }
+    RemoveNetworkIdForAllToken(networkId);
     cidNetTypeRecord_.erase(info.cid_);
     cidNetworkType_.erase(info.cid_);
     LOGI("OnDeviceOffline end");
@@ -265,8 +301,12 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline begin", deviceInfo.networkId);
+    int32_t ret = IsSupportDevice(deviceInfo);
+    if (ret != FileManagement::ERR_OK) {
+        LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
+        return P2P_FAILED;
+    }
     DeviceInfo info(deviceInfo);
-
     QueryRelatedGroups(info.udid_, info.cid_);
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
@@ -311,6 +351,295 @@ int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDevi
     cidNetworkType_.erase(info.cid_);
     LOGI("OnDeviceP2POffline end");
     return P2P_SUCCESS;
+}
+
+bool DeviceManagerAgent::MountDfsCountOnly(const std::string &deviceId)
+{
+    if (deviceId.empty()) {
+        LOGI("deviceId empty");
+        return false;
+    }
+    // Count plus one operation
+    unique_lock<mutex> lock(mpToNetworksMutex_);
+    auto itCount = mountDfsCount_.find(deviceId);
+    if (itCount != mountDfsCount_.end() && itCount->second > 0) {
+        LOGI("[MountDfsCountOnly] deviceIde %{public}s has already established a link, count %{public}d, \
+            increase count by one now", Utils::GetAnonyString(deviceId).c_str(), itCount->second);
+        mountDfsCount_[deviceId]++;
+        return true;
+    } else {
+        LOGI("[MountDfsCountOnly] deviceId %{public}s increase count by one now",
+            Utils::GetAnonyString(deviceId).c_str());
+        mountDfsCount_[deviceId]++;
+    }
+    return false;
+}
+
+bool DeviceManagerAgent::UMountDfsCountOnly(const std::string &deviceId, bool needClear)
+{
+    if (deviceId.empty()) {
+        LOGI("deviceId empty");
+        return false;
+    }
+    // Count sub one operation
+    auto itCount = mountDfsCount_.find(deviceId);
+    if (itCount == mountDfsCount_.end()) {
+        LOGI("mountDfsCount_ can not find key");
+        return false;
+    }
+    if (needClear) {
+        LOGI("mountDfsCount_ erase");
+        mountDfsCount_.erase(itCount);
+        return false;
+    }
+    if (itCount->second > MOUNT_DFS_COUNT_ONE) {
+        LOGI("[UMountDfsCountOnly] deviceId %{public}s has already established more than one link, \
+            count %{public}d, decrease count by one now",
+            Utils::GetAnonyString(deviceId).c_str(), itCount->second);
+        mountDfsCount_[deviceId]--;
+        return true;
+    } else {
+        LOGI("[UMountDfsCountOnly] deviceId %{public}s erase count", Utils::GetAnonyString(deviceId).c_str());
+        mountDfsCount_.erase(itCount);
+    }
+    return false;
+}
+
+int32_t DeviceManagerAgent::GetCurrentUserId()
+{
+    std::vector<int32_t> userIds{};
+    auto ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(userIds);
+    if (ret != NO_ERROR || userIds.empty()) {
+        LOGE("query active os account id failed, ret = %{public}d", ret);
+        return INVALID_USER_ID;
+    }
+    LOGI("DeviceManagerAgent::GetCurrentUserId end.");
+    return userIds[0];
+}
+
+void DeviceManagerAgent::GetStorageManager()
+{
+    auto saMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saMgr == nullptr) {
+        LOGE("GetSystemAbilityManager filed");
+        return;
+    }
+
+    auto storageObj = saMgr->GetSystemAbility(STORAGE_MANAGER_MANAGER_ID);
+    if (storageObj == nullptr) {
+        LOGE("filed to get STORAGE_MANAGER_MANAGER_ID proxy");
+        return;
+    }
+
+    storageMgrProxy_ = iface_cast<StorageManager::IStorageManager>(storageObj);
+    if (storageMgrProxy_ == nullptr) {
+        LOGE("filed to get STORAGE_MANAGER_MANAGER_ID proxy!");
+        return;
+    }
+
+    LOGI("GetStorageManager end.");
+    return;
+}
+
+void DeviceManagerAgent::AddNetworkId(uint32_t tokenId, const std::string &networkId)
+{
+    LOGI("DeviceManagerAgent::AddNetworkId, networkId: %{public}s", Utils::GetAnonyString(networkId).c_str());
+    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+    networkIdMap_[tokenId].insert(networkId);
+}
+
+void DeviceManagerAgent::RemoveNetworkId(uint32_t tokenId)
+{
+    LOGI("DeviceManagerAgent::RemoveNetworkId start");
+    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+    networkIdMap_.erase(tokenId);
+}
+
+void DeviceManagerAgent::RemoveNetworkIdByOne(uint32_t tokenId, const std::string &networkId)
+{
+    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+    auto it = networkIdMap_.find(tokenId);
+    if (it != networkIdMap_.end()) {
+        (it->second).erase(networkId);
+        if (it->second.empty()) {
+            networkIdMap_.erase(it);
+        }
+        LOGI("DeviceManagerAgent::RemoveNetworkIdByOne success, networkId: %{public}s",
+            Utils::GetAnonyString(networkId).c_str());
+    }
+}
+
+void DeviceManagerAgent::RemoveNetworkIdForAllToken(const std::string &networkId)
+{
+    if (networkId.empty()) {
+        LOGE("networkId is empty");
+        return;
+    }
+    for (auto it = networkIdMap_.begin(); it != networkIdMap_.end();) {
+        it->second.erase(networkId);
+        if (it->second.empty()) {
+            networkIdMap_.erase(it);
+        }
+        LOGI("RemoveNetworkIdForAllToken, networkId: %{public}s",
+            Utils::GetAnonyString(networkId).c_str());
+        ++it;
+    }
+}
+
+void DeviceManagerAgent::ClearNetworkId()
+{
+    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+    networkIdMap_.clear();
+}
+
+std::unordered_set<std::string> DeviceManagerAgent::GetNetworkIds(uint32_t tokenId)
+{
+    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+    return networkIdMap_[tokenId];
+}
+
+void DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std::string &deviceId)
+{
+    LOGI("MountDfsDocs start");
+    if (networkId.empty() || deviceId.empty()) {
+        LOGI("NetworkId or DeviceId is empty");
+        return;
+    }
+
+    if (MountDfsCountOnly(deviceId)) {
+        LOGI("only count plus one, do not neet mount");
+        return;
+    }
+
+    int32_t userId = GetCurrentUserId();
+    if (userId == INVALID_USER_ID) {
+        LOGI("GetCurrentUserId Fail");
+        return;
+    }
+
+    GetStorageManager();
+    if (storageMgrProxy_ == nullptr) {
+        LOGI("storageMgrProxy_ is null");
+        return;
+    }
+
+    int32_t ret = storageMgrProxy_->MountDfsDocs(userId, "account", networkId, deviceId);
+    if (ret != FileManagement::E_OK) {
+        LOGI("MountDfsDocs fail, ret = %{public}d", ret);
+    }
+    LOGI("storageMgr.MountDfsDocs end.");
+}
+
+int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear)
+{
+    LOGI("UMountDfsDocs start in OpenP2PConnection, networkId: %{public}s, deviceId: %{public}s",
+        Utils::GetAnonyString(networkId).c_str(), Utils::GetAnonyString(deviceId).c_str());
+    if (networkId.empty() || deviceId.empty()) {
+        LOGE("NetworkId or DeviceId is empty");
+        return INVALID_USER_ID;
+    }
+
+    if (UMountDfsCountOnly(deviceId, needClear)) {
+        LOGE("only count sub one, do not neet umount");
+        return INVALID_USER_ID;
+    }
+
+    int32_t userId = GetCurrentUserId();
+    if (userId == INVALID_USER_ID) {
+        LOGE("GetCurrentUserId Fail");
+        return INVALID_USER_ID;
+    }
+
+    GetStorageManager();
+    if (storageMgrProxy_ == nullptr) {
+        LOGE("storageMgrProxy_ is null");
+        return INVALID_USER_ID;
+    }
+    int32_t ret = storageMgrProxy_->UMountDfsDocs(userId, "account", networkId, deviceId);
+    if (ret != FileManagement::E_OK) {
+        LOGE("UMountDfsDocs fail, ret = %{public}d", ret);
+    }
+    LOGI("storageMgr.UMountDfsDocs end.");
+    return ret;
+}
+
+void DeviceManagerAgent::NotifyRemoteReverseObj(const std::string &networkId, int32_t status)
+{
+    for (auto it = appCallConnect_.begin(); it != appCallConnect_.end(); ++it) {
+        auto onstatusReverseProxy = it->second;
+        if (onstatusReverseProxy == nullptr) {
+            LOGI("get onstatusReverseProxy fail");
+            return;
+        }
+        onstatusReverseProxy->OnStatus(networkId, status);
+        LOGI("NotifyRemoteReverseObj, deviceId: %{public}s", Utils::GetAnonyString(networkId).c_str());
+    }
+}
+
+int32_t DeviceManagerAgent::AddRemoteReverseObj(uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj)
+{
+    std::lock_guard<std::mutex> lock(appCallConnectMutex_);
+    auto it = appCallConnect_.find(callingTokenId);
+    if (it != appCallConnect_.end()) {
+        LOGE("AddRemoteReverseObj fail");
+        return FileManagement::E_INVAL_ARG;
+    }
+    appCallConnect_[callingTokenId] = remoteReverseObj;
+    LOGI("DeviceManagerAgent::AddRemoteReverseObj::add new value suceess");
+    return FileManagement::E_OK;
+}
+
+int32_t DeviceManagerAgent::RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId)
+{
+    if (clear) {
+        appCallConnect_.clear();
+        return FileManagement::E_OK;
+    }
+
+    auto it = appCallConnect_.find(callingTokenId);
+    if (it == appCallConnect_.end()) {
+        LOGE("RemoveRemoteReverseObj fail");
+        return FileManagement::E_INVAL_ARG;
+    }
+    appCallConnect_.erase(it);
+    return FileManagement::E_OK;
+}
+
+int32_t DeviceManagerAgent::FindListenerByObject(const wptr<IRemoteObject> &remote,
+                                                 uint32_t &tokenId, sptr<IFileDfsListener>& listener)
+{
+    std::lock_guard<std::mutex> lock(appCallConnectMutex_);
+    for (auto it = appCallConnect_.begin(); it != appCallConnect_.end(); ++it) {
+        if (remote != (it->second)->AsObject()) {
+            continue;
+        }
+        tokenId = it->first;
+        listener = it->second;
+        return FileManagement::E_OK;
+    }
+    return FileManagement::E_INVAL_ARG;
+}
+
+std::string DeviceManagerAgent::GetDeviceIdByNetworkId(const std::string &networkId)
+{
+    LOGI("DeviceManagerAgent::GetDeviceIdByNetworkId called");
+    if (networkId.empty()) {
+        return "";
+    }
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
+    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
+        LOGE("the size of trust device list is invalid, size=%zu", deviceList.size());
+        return "";
+    }
+    std::string deviceId = "";
+    for (const auto &device : deviceList) {
+        if (std::string(device.networkId) == networkId) {
+            deviceId = std::string(device.deviceId);
+        }
+    }
+    LOGI("DeviceManagerAgent::GetDeviceIdByNetworkId end");
+    return deviceId;
 }
 
 void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
@@ -404,6 +733,12 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
         LOGI("OnDeviceInfoChanged end");
         return;
     }
+    int32_t ret = IsSupportDevice(deviceInfo);
+    if (ret != FileManagement::ERR_OK) {
+        LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
+        return;
+    }
+
     DeviceInfo info(deviceInfo);
     unique_lock<mutex> lock(mpToNetworksMutex_);
 
@@ -458,9 +793,37 @@ void DeviceManagerAgent::InitDeviceInfos()
     }
 
     for (const auto &deviceInfo : deviceInfoList) {
+        int32_t ret = IsSupportDevice(deviceInfo);
+        if (ret != FileManagement::ERR_OK) {
+            LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
+            continue;
+        }
         DeviceInfo info(deviceInfo);
         QueryRelatedGroups(info.udid_, info.cid_);
     }
+}
+
+int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
+{
+    if (deviceInfo.extraData.empty()) {
+        LOGE("extraData is empty");
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    nlohmann::json entraDataJson = nlohmann::json::parse(deviceInfo.extraData, nullptr, false);
+    if (entraDataJson.is_discarded()) {
+        LOGE("entraDataJson parse failed.");
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    if (!Utils::IsInt32(entraDataJson, PARAM_KEY_OS_TYPE)) {
+        LOGE("error json int32_t param.");
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    int32_t osType = entraDataJson[PARAM_KEY_OS_TYPE].get<int32_t>();
+    if (osType != DEVICE_OS_TYPE_OH) {
+        LOGE("%{private}s  the device os type = %{private}d is not openharmony.", deviceInfo.deviceName, osType);
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    return FileManagement::ERR_OK;
 }
 
 void DeviceManagerAgent::InitLocalNodeInfo()

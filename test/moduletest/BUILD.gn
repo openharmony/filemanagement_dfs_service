@@ -32,6 +32,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
   module_out_path = module_output_path
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
@@ -50,6 +51,7 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
@@ -83,6 +85,8 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_common",
+    "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -91,5 +95,6 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 }

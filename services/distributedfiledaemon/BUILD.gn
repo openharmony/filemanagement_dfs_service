@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,6 +16,7 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_shared_library("libdistributedfiledaemon") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -32,9 +33,12 @@ ohos_shared_library("libdistributedfiledaemon") {
   sources = [
     "src/device/device_info.cpp",
     "src/device/device_manager_agent.cpp",
+    "src/ipc/asset_recv_callback_proxy.cpp",
+    "src/ipc/asset_send_callback_proxy.cpp",
     "src/ipc/connection_detector.cpp",
     "src/ipc/daemon.cpp",
     "src/ipc/daemon_stub.cpp",
+    "src/ipc/file_dfs_listener_proxy.cpp",
     "src/ipc/file_trans_listener_proxy.cpp",
     "src/ipc/trans_mananger.cpp",
     "src/mountpoint/mount_manager.cpp",
@@ -45,9 +49,11 @@ ohos_shared_library("libdistributedfiledaemon") {
     "src/network/network_agent_template.cpp",
     "src/network/session_pool.cpp",
     "src/network/softbus/softbus_agent.cpp",
+    "src/network/softbus/softbus_asset_recv_listener.cpp",
     "src/network/softbus/softbus_file_receive_listener.cpp",
     "src/network/softbus/softbus_file_send_listener.cpp",
     "src/network/softbus/softbus_handler.cpp",
+    "src/network/softbus/softbus_handler_asset.cpp",
     "src/network/softbus/softbus_session.cpp",
     "src/network/softbus/softbus_session_dispatcher.cpp",
     "src/network/softbus/softbus_session_listener.cpp",
@@ -69,15 +75,19 @@ ohos_shared_library("libdistributedfiledaemon") {
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_common",
+    "device_info_manager:distributed_device_profile_sdk",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "init:libbegetutil",
     "ipc:ipc_single",
     "json:nlohmann_json_static",
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
   configs = [ "${utils_path}:compiler_configs" ]
 
@@ -85,6 +95,7 @@ ohos_shared_library("libdistributedfiledaemon") {
 
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
+  kernel_permission_path = "./encaps.json"
 }
 
 config("public_config") {
@@ -106,6 +117,7 @@ config("private_config") {
 ohos_shared_library("distributed_file_daemon_kit_inner") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    integer_overflow = true
     ubsan = true
     boundary_sanitize = true
     cfi = true
@@ -113,6 +125,10 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     debug = false
   }
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_adapter_sa_client.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_recv_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_send_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",

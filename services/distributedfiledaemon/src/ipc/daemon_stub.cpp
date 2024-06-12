@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,12 @@ DaemonStub::DaemonStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION)] =
         &DaemonStub::HandleCloseP2PConnection;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX)] =
+        &DaemonStub::HandleOpenP2PConnectionEx;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX)] =
+        &DaemonStub::HandleCloseP2PConnectionEx;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION)] =
         &DaemonStub::HandlePrepareSession;
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK)] =
@@ -43,6 +49,15 @@ DaemonStub::DaemonStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO)] =
         &DaemonStub::HandleGetRemoteCopyInfo;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK)] =
+        &DaemonStub::HandleRegisterRecvCallback;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK)] =
+        &DaemonStub::HandleUnRegisterRecvCallback;
+    opToInterfaceMap_[static_cast<uint32_t>(
+        DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET)] =
+        &DaemonStub::HandlePushAsset;
 }
 
 int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -113,6 +128,45 @@ int32_t DaemonStub::HandleCloseP2PConnection(MessageParcel &data, MessageParcel 
     int32_t res = CloseP2PConnection(deviceInfo);
     reply.WriteInt32(res);
     LOGI("End CloseP2PConnection");
+    return res;
+}
+
+int32_t DaemonStub::HandleOpenP2PConnectionEx(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("DaemonStub::Begin OpenP2PConnectionEx");
+    std::string networkId;
+    if (!data.ReadString(networkId)) {
+        LOGE("read networkId failed");
+        return E_IPC_READ_FAILED;
+    }
+    auto remote = data.ReadRemoteObject();
+    if (remote == nullptr) {
+        LOGE("read remoteObject failed");
+        return E_IPC_READ_FAILED;
+    }
+    auto remoteReverseObj = iface_cast<IFileDfsListener>(remote);
+    if (remoteReverseObj == nullptr) {
+        LOGE("remoteReverseObj is null");
+        return E_INVAL_ARG;
+    }
+    int32_t res = OpenP2PConnectionEx(networkId, remoteReverseObj);
+    reply.WriteInt32(res);
+    LOGI("DaemonStub::End OpenP2PConnection, res = %{public}d.", res);
+    return res;
+}
+
+int32_t DaemonStub::HandleCloseP2PConnectionEx(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("DaemonStub::Begin CloseP2PConnection.");
+    std::string networkId;
+    if (!data.ReadString(networkId)) {
+        LOGE("read networkId failed");
+        return E_IPC_READ_FAILED;
+    }
+
+    int32_t res = CloseP2PConnectionEx(networkId);
+    reply.WriteInt32(res);
+    LOGI("DaemonStub::End CloseP2PConnection");
     return res;
 }
 
@@ -237,6 +291,94 @@ int32_t DaemonStub::HandleCancelCopyTask(MessageParcel &data, MessageParcel &rep
         return E_IPC_READ_FAILED;
     }
     return CancelCopyTask(sessionName);
+}
+
+int32_t DaemonStub::HandleRegisterRecvCallback(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin RegisterRecvCallback");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
+        LOGE("[RegisterRecvCallback] DATASYNC permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    auto object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        LOGE("RegisterRecvCallback failed, object is nullptr.");
+        return E_IPC_READ_FAILED;
+    }
+    auto recvCallback = iface_cast<IAssetRecvCallback>(object);
+    if (recvCallback == nullptr) {
+        LOGE("RegisterRecvCallback failed, Callback is nullptr");
+        return E_INVAL_ARG;
+    }
+    int32_t res = RegisterAssetCallback(recvCallback);
+    if (!reply.WriteInt32(res)) {
+        LOGE("RegisterRecvCallback write res failed, res is %{public}d", res);
+        return E_IPC_READ_FAILED;
+    }
+    return res;
+}
+
+int32_t DaemonStub::HandleUnRegisterRecvCallback(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin UnRegisterRecvCallback");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
+        LOGE("[UnRegisterRecvCallback] DATASYNC permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    auto object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        LOGE("UnRegisterRecvCallback failed, object is nullptr.");
+        return E_IPC_READ_FAILED;
+    }
+    auto recvCallback = iface_cast<IAssetRecvCallback>(object);
+    if (recvCallback == nullptr) {
+        LOGE("UnRegisterRecvCallback failed, Callback is nullptr");
+        return E_INVAL_ARG;
+    }
+    int32_t res = UnRegisterAssetCallback(recvCallback);
+    if (!reply.WriteInt32(res)) {
+        LOGE("UnRegisterRecvCallback write res failed, res is %{public}d", res);
+        return E_IPC_READ_FAILED;
+    }
+    return res;
+}
+
+int32_t DaemonStub::HandlePushAsset(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin PushAsset");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
+        LOGE("[PushAsset] DATASYNC permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    int32_t userId;
+    if (!data.ReadInt32(userId)) {
+        LOGE("read userId failed");
+        return E_INVAL_ARG;
+    }
+
+    sptr<AssetObj> assetObj = data.ReadParcelable<AssetObj>();
+    if (!assetObj) {
+        LOGE("object of AssetObj is nullptr");
+        return E_INVAL_ARG;
+    }
+
+    auto object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        LOGE("PushAsset failed, object is nullptr.");
+        return E_IPC_READ_FAILED;
+    }
+    auto sendCallback = iface_cast<IAssetSendCallback>(object);
+    if (sendCallback == nullptr) {
+        LOGE("PushAsset failed, Callback is nullptr");
+        return E_INVAL_ARG;
+    }
+
+    int32_t res = PushAsset(userId, assetObj, sendCallback);
+    if (!reply.WriteInt32(res)) {
+        LOGE("PushAsset write res failed, res is %{public}d", res);
+        return E_IPC_READ_FAILED;
+    }
+    return res;
 }
 } // namespace DistributedFile
 } // namespace Storage

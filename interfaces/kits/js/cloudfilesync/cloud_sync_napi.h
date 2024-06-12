@@ -107,6 +107,7 @@ public:
         UvChangeMsg(napi_env env, napi_ref ref, AAFwk::ChangeInfo &changeInfo, std::string strUri)
             : env_(env), ref_(ref), changeInfo_(changeInfo), strUri_(std::move(strUri))
         {
+            data_ = nullptr;
         }
         ~UvChangeMsg() {}
         napi_env env_;
@@ -123,6 +124,7 @@ public:
         this->env_ = listener.env_;
         this->cbOnRef_ = listener.cbOnRef_;
         this->cbOffRef_ = listener.cbOffRef_;
+        this->observers_ = listener.observers_;
     }
 
     ChangeListenerNapi &operator=(const ChangeListenerNapi &listener)
@@ -130,6 +132,7 @@ public:
         this->env_ = listener.env_;
         this->cbOnRef_ = listener.cbOnRef_;
         this->cbOffRef_ = listener.cbOffRef_;
+        this->observers_ = listener.observers_;
         return *this;
     }
 

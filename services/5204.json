@@ -7,6 +7,7 @@
             "run-on-create": false,
             "distributed": true,
             "dump-level": 1,
+            "recycle-strategy": "low-memory",
             "start-on-demand": {
                 "timedevent": [
                     {
@@ -17,19 +18,12 @@
                 "commonevent": [
                     {
                         "name": "usual.event.wifi.CONN_STATE",
-                        "value": "4"
-                    },
-                    {
-                        "name": "usual.event.CHARGING",
+                        "value": "4",
                         "conditions": [
                             {
-                                "eventId": "commonevent",
-                                "name": "usual.event.wifi.CONN_STATE",
-                                "value": "4"
-                            },
-                            {
-                                "eventId": "commonevent",
-                                "name": "usual.event.SCREEN_OFF"
+                                "eventId": "param",
+                                "name": "persist.kernel.cloudsync.network_unavailable",
+                                "value": "true"
                             }
                         ]
                     },
@@ -40,11 +34,46 @@
                                 "eventId": "commonevent",
                                 "name": "usual.event.wifi.CONN_STATE",
                                 "value": "4"
+                            },
+                            {
+                                "eventId": "commonevent",
+                                "name": "usual.event.POWER_CONNECTED"
                             }
                         ]
                     },
                     {
-                        "name": "usual.event.BATTERY_OKAY"
+                        "name": "usual.event.wifi.CONN_STATE",
+                        "value": "4",
+                        "conditions": [
+                            {
+                                "eventId": "commonevent",
+                                "name": "usual.event.SCREEN_OFF"
+                            },
+                            {
+                                "eventId": "commonevent",
+                                "name": "usual.event.POWER_CONNECTED"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "usual.event.POWER_CONNECTED",
+                        "conditions": [
+                            {
+                                "eventId": "commonevent",
+                                "name": "usual.event.wifi.CONN_STATE",
+                                "value": "4"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "usual.event.BATTERY_OKAY",
+                        "conditions": [
+                            {
+                                "eventId": "param",
+                                "name": "persist.kernel.cloudsync.battery_level_low",
+                                "value": "true"
+                            }
+                        ]
                     },
                     {
                         "name": "usual.event.USER_UNLOCKED"

@@ -52,9 +52,7 @@ private:
         TriggerSyncCallback callback;
     };
     std::unique_ptr<Utils::Timer> timer_;
-    std::mutex registerMutex_;
-    std::mutex unregisterMutex_;
-    std::mutex callbackMutex_;
+    std::mutex triggerMapMutex_;
     std::unordered_map<std::string, std::shared_ptr<TriggerInfo>> triggerInfoMap_;
 };
 } // namespace CloudDisk

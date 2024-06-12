@@ -17,7 +17,7 @@
 
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "sync_rule/battery_status.h"
+#include "battery_status.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -42,12 +42,14 @@ void BatteryStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING) {
         BatteryStatus::SetChargingStatus(false);
         LOGI("Charging status changed: discharging");
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED) {
+        listener_->OnPowerConnected();
     } else {
         LOGI("OnReceiveEvent action is invalid");
     }
 }
 
-BatteryStatusListener::BatteryStatusListener(std::shared_ptr<DataSyncManager> dataSyncManager)
+BatteryStatusListener::BatteryStatusListener(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     dataSyncManager_ = dataSyncManager;
 }
@@ -64,6 +66,7 @@ void BatteryStatusListener::Start()
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_OKAY);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_CHARGING);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED);
     EventFwk::CommonEventSubscribeInfo info(matchingSkills);
     commonEventSubscriber_ = std::make_shared<BatteryStatusSubscriber>(info, shared_from_this());
     auto subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(commonEventSubscriber_);
@@ -85,4 +88,9 @@ void BatteryStatusListener::OnStatusNormal()
 }
 
 void BatteryStatusListener::OnStatusAbnormal() {}
+
+void BatteryStatusListener::OnPowerConnected()
+{
+    dataSyncManager_->DownloadThumb();
+}
 } // namespace OHOS::FileManagement::CloudSync

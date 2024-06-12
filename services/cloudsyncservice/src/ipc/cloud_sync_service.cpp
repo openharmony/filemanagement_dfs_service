@@ -17,32 +17,33 @@
 #include <cstdint>
 #include <memory>
 
+#include "battery_status.h"
+#include "cloud_file_kit.h"
+#include "cloud_status.h"
 #include "cycle_task/cycle_task_runner.h"
-#include "dfs_error.h"
 #include "data_sync_const.h"
 #include "data_syncer_rdb_store.h"
+#include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
-#include "ipc/cloud_sync_callback_manager.h"
 #include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
+#include "net_conn_callback_observer.h"
 #include "periodic_check_task.h"
+#include "plugin_loader.h"
+#include "network_status.h"
 #include "sandbox_helper.h"
+#include "screen_status.h"
 #include "session_manager.h"
-#include "sdk_helper.h"
-#include "sync_rule/battery_status.h"
-#include "sync_rule/cloud_status.h"
-#include "sync_rule/net_conn_callback_observer.h"
-#include "sync_rule/network_status.h"
 #include "system_ability_definition.h"
-#include "sync_rule/screen_status.h"
-#include "sync_rule/system_load.h"
+#include "system_load.h"
 #include "task_state_manager.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 using namespace OHOS;
+using namespace CloudFile;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
 
@@ -50,10 +51,6 @@ REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVIC
 
 CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
 {
-    dataSyncManager_ = make_shared<DataSyncManager>();
-    batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
-    screenStatusListener_ = make_shared<ScreenStatusListener>(dataSyncManager_);
-    userStatusListener_ = make_shared<UserStatusListener>();
 }
 
 void CloudSyncService::PublishSA()
@@ -63,6 +60,23 @@ void CloudSyncService::PublishSA()
         throw runtime_error("Failed to publish the daemon");
     }
     LOGI("Init finished successfully");
+}
+
+void CloudSyncService::PreInit()
+{
+    /* load cloud file ext plugin */
+    CloudFile::PluginLoader::GetInstance().LoadCloudKitPlugin(true);
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance == nullptr) {
+        LOGE("get cloud file helper instance failed");
+        dataSyncManager_ = make_shared<DataSyncManager>();
+    } else {
+        dataSyncManager_ = instance->GetDataSyncManager();
+    }
+
+    batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
+    screenStatusListener_ = make_shared<ScreenStatusListener>(dataSyncManager_);
+    userStatusListener_ = make_shared<UserStatusListener>();
 }
 
 void CloudSyncService::Init()
@@ -112,6 +126,7 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
 
 void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
 {
+    PreInit();
     try {
         PublishSA();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
@@ -152,9 +167,10 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
 
     if (reason == "usual.event.wifi.CONN_STATE") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
+        dataSyncManager_->DownloadThumb();
     } else if (reason == "usual.event.BATTERY_OKAY") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
-    } else if (reason == "usual.event.SCREEN_OFF") {
+    } else if (reason == "usual.event.SCREEN_OFF" || reason == "usual.event.POWER_CONNECTED") {
         dataSyncManager_->DownloadThumb();
     }
 
@@ -278,7 +294,7 @@ int32_t CloudSyncService::UnRegisterCallbackInner(const string &bundleName)
         LOGE("get bundle name failed: %{public}d", ret);
         return ret;
     }
-    CloudSyncCallbackManager::GetInstance().RemoveCallback(targetBundleName);
+    dataSyncManager_->UnRegisterCloudSyncCallback(targetBundleName);
     return E_OK;
 }
 
@@ -298,8 +314,7 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
 
     auto callback = iface_cast<ICloudSyncCallback>(remoteObject);
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    CloudSyncCallbackManager::GetInstance().AddCallback(targetBundleName, callerUserId, callback);
-    dataSyncManager_->RegisterCloudSyncCallback(targetBundleName, callerUserId);
+    dataSyncManager_->RegisterCloudSyncCallback(targetBundleName, callerUserId, callback);
     return E_OK;
 }
 
@@ -384,28 +399,20 @@ int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const st
 
 int32_t CloudSyncService::NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData)
 {
-    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
-    if (driveKit == nullptr) {
-        LOGE("sdk helper get drive kit instance fail");
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance == nullptr) {
+        LOGE("get cloud file helper instance failed");
+        return E_NULLPTR;
+    }
+
+    string appBundleName;
+    auto ret = instance->ResolveNotificationEvent(userId, extraData, appBundleName);
+    if (ret != E_OK) {
+        LOGE("ResolveNotificationEvent failed, ret:%{public}d", ret);
         return E_CLOUD_SDK;
     }
 
-    DriveKit::DKUserInfo userInfo;
-    auto err = driveKit->GetCloudUserInfo(userInfo);
-    if (err.HasError()) {
-        LOGE("GetCloudUserInfo failed, server err:%{public}d and dk err:%{public}d", err.serverErrorCode,
-             err.dkErrorCode);
-        return E_CLOUD_SDK;
-    }
-
-    DriveKit::DKRecordChangeEvent event;
-    auto eventErr = driveKit->ResolveNotificationEvent(extraData, event);
-    if (eventErr.HasError()) {
-        LOGE("ResolveNotificationEvent failed, server err:%{public}d and dk err:%{public}d", eventErr.serverErrorCode,
-             eventErr.dkErrorCode);
-        return E_CLOUD_SDK;
-    }
-    return dataSyncManager_->TriggerStartSync(event.appBundleName, userId, false, SyncTriggerType::CLOUD_TRIGGER);
+    return dataSyncManager_->TriggerStartSync(appBundleName, userId, false, SyncTriggerType::CLOUD_TRIGGER);
 }
 
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
@@ -427,6 +434,7 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
     }
 
     MetaFileMgr::GetInstance().ClearAll();
+    MetaFileMgr::GetInstance().CloudDiskClearAll();
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     LOGI("Clean callerUserId is: %{public}d", callerUserId);
     for (auto iter = cleanOptions.appActionsData.begin(); iter != cleanOptions.appActionsData.end(); ++iter) {
@@ -503,28 +511,34 @@ int32_t CloudSyncService::UnregisterDownloadFileCallback()
 
 int32_t CloudSyncService::UploadAsset(const int32_t userId, const std::string &request, std::string &result)
 {
-    auto driveKit = DriveKit::DriveKitNative::GetInstance(userId);
-    if (driveKit == nullptr) {
-        LOGE("uploadAsset get drive kit instance err");
-        return E_CLOUD_SDK;
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance == nullptr) {
+        LOGE("get cloud file helper instance failed");
+        return E_NULLPTR;
     }
+
     string bundleName("distributeddata");
     TaskStateManager::GetInstance().StartTask(bundleName, TaskType::UPLOAD_ASSET_TASK);
-    auto ret = driveKit->OnUploadAsset(request, result);
+    auto ret = instance->OnUploadAsset(userId, request, result);
     TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::UPLOAD_ASSET_TASK);
     return ret;
 }
 
 int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &bundleName, AssetInfoObj &assetInfoObj)
 {
-    auto sdkHelper = std::make_shared<SdkHelper>();
-    auto ret = sdkHelper->Init(userId, bundleName);
-    if (ret != E_OK) {
-        LOGE("get sdk helper err %{public}d", ret);
-        return ret;
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance == nullptr) {
+        LOGE("get cloud file helper instance failed");
+        return E_NULLPTR;
     }
 
-    DriveKit::DKAsset asset;
+    auto assetsDownloader = instance->GetCloudAssetsDownloader(userId, bundleName);
+    if (assetsDownloader == nullptr) {
+        LOGE("get asset downloader failed");
+        return E_NULLPTR;
+    }
+
+    Asset asset;
     asset.assetName = assetInfoObj.assetName;
 
     asset.uri = GetHmdfsPath(assetInfoObj.uri, userId);
@@ -534,38 +548,43 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
     }
 
     // Not to pass the assetinfo.fieldkey
-    DriveKit::DKDownloadAsset assetsToDownload{assetInfoObj.recordType, assetInfoObj.recordId, {}, asset, {}};
+    DownloadAssetInfo assetsToDownload{assetInfoObj.recordType, assetInfoObj.recordId, {}, asset, {}};
     TaskStateManager::GetInstance().StartTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
-    ret = sdkHelper->DownloadAssets(assetsToDownload);
+    auto ret = assetsDownloader->DownloadAssets(assetsToDownload);
     TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
     return ret;
 }
 
 int32_t CloudSyncService::DownloadFiles(const int32_t userId, const std::string &bundleName,
-    std::vector<AssetInfoObj> &assetInfoObj, std::vector<bool> &assetResultMap)
+    const std::vector<AssetInfoObj> &assetInfoObj, std::vector<bool> &assetResultMap)
 {
-    auto sdkHelper = std::make_shared<SdkHelper>();
-    auto ret = sdkHelper->Init(userId, bundleName);
-    if (ret != E_OK) {
-        LOGE("get sdk helper err %{public}d", ret);
-        return ret;
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance == nullptr) {
+        LOGE("get cloud file helper instance failed");
+        return E_NULLPTR;
     }
 
-    std::vector<DriveKit::DKDownloadAsset> assetsToDownload;
+    auto assetsDownloader = instance->GetCloudAssetsDownloader(userId, bundleName);
+    if (assetsDownloader == nullptr) {
+        LOGE("get asset downloader failed");
+        return E_NULLPTR;
+    }
+
+    std::vector<DownloadAssetInfo> assetsToDownload;
     for (const auto &obj: assetInfoObj) {
-        DriveKit::DKAsset asset;
+        Asset asset;
         asset.assetName = obj.assetName;
         asset.uri = GetHmdfsPath(obj.uri, userId);
         if (asset.uri.empty()) {
             LOGE("fail to get download path from %{private}s", obj.uri.c_str());
             return E_INVAL_ARG;
         }
-        DriveKit::DKDownloadAsset assetToDownload{obj.recordType, obj.recordId, {}, asset, {}};
+        DownloadAssetInfo assetToDownload{obj.recordType, obj.recordId, {}, asset, {}};
         assetsToDownload.emplace_back(assetToDownload);
     }
 
     TaskStateManager::GetInstance().StartTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
-    ret = sdkHelper->DownloadAssets(assetsToDownload, assetResultMap);
+    auto ret = assetsDownloader->DownloadAssets(assetsToDownload, assetResultMap);
     TaskStateManager::GetInstance().CompleteTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
     return ret;
 }

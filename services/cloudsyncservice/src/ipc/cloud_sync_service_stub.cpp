@@ -14,7 +14,7 @@
  */
 #include "ipc/cloud_sync_service_stub.h"
 #include "cloud_file_sync_service_interface_code.h"
-#include "data_sync/task_state_manager.h"
+#include "task_state_manager.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "dfsu_memory_guard.h"
@@ -22,6 +22,8 @@
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
+
+static const unsigned int READ_SIZE = 100;
 
 CloudSyncServiceStub::CloudSyncServiceStub()
 {
@@ -112,7 +114,7 @@ int32_t CloudSyncServiceStub::HandleUnRegisterCallbackInner(MessageParcel &data,
     int32_t res = UnRegisterCallbackInner(bundleName);
     reply.WriteInt32(res);
     LOGI("End UnRegisterCallbackInner");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply)
@@ -131,7 +133,7 @@ int32_t CloudSyncServiceStub::HandleRegisterCallbackInner(MessageParcel &data, M
     int32_t res = RegisterCallbackInner(remoteObj, bundleName);
     reply.WriteInt32(res);
     LOGI("End RegisterCallbackInner");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageParcel &reply)
@@ -150,7 +152,7 @@ int32_t CloudSyncServiceStub::HandleStartSyncInner(MessageParcel &data, MessageP
     int32_t res = StartSyncInner(forceFlag, bundleName);
     reply.WriteInt32(res);
     LOGI("End StartSyncInner");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleTriggerSyncInner(MessageParcel &data, MessageParcel &reply)
@@ -169,7 +171,7 @@ int32_t CloudSyncServiceStub::HandleTriggerSyncInner(MessageParcel &data, Messag
     int32_t res = TriggerSyncInner(bundleName, userId);
     reply.WriteInt32(res);
     LOGI("End TriggerSyncInner");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessageParcel &reply)
@@ -188,7 +190,7 @@ int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessagePa
     int32_t res = StopSyncInner(bundleName);
     reply.WriteInt32(res);
     LOGI("End StopSyncInner");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleChangeAppSwitch(MessageParcel &data, MessageParcel &reply)
@@ -208,7 +210,7 @@ int32_t CloudSyncServiceStub::HandleChangeAppSwitch(MessageParcel &data, Message
     int32_t res = ChangeAppSwitch(accountId, bundleName, status);
     reply.WriteInt32(res);
     LOGI("End ChangeAppSwitch");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleClean(MessageParcel &data, MessageParcel &reply)
@@ -231,7 +233,7 @@ int32_t CloudSyncServiceStub::HandleClean(MessageParcel &data, MessageParcel &re
     int32_t res = Clean(accountId, *options);
     reply.WriteInt32(res);
     LOGI("End Clean");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleNotifyDataChange(MessageParcel &data, MessageParcel &reply)
@@ -250,7 +252,7 @@ int32_t CloudSyncServiceStub::HandleNotifyDataChange(MessageParcel &data, Messag
     int32_t res = NotifyDataChange(accountId, bundleName);
     reply.WriteInt32(res);
     LOGI("End NotifyDataChange");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleNotifyEventChange(MessageParcel &data, MessageParcel &reply)
@@ -271,7 +273,7 @@ int32_t CloudSyncServiceStub::HandleNotifyEventChange(MessageParcel &data, Messa
     int32_t res = NotifyEventChange(userId, eventIdStr, extraDataStr);
     reply.WriteInt32(res);
     LOGI("End NotifyEventChange");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleDisableCloud(MessageParcel &data, MessageParcel &reply)
@@ -289,7 +291,7 @@ int32_t CloudSyncServiceStub::HandleDisableCloud(MessageParcel &data, MessagePar
     int32_t res = DisableCloud(accountId);
     reply.WriteInt32(res);
     LOGI("End DisableCloud");
-    return res;
+    return E_OK;
 }
 int32_t CloudSyncServiceStub::HandleEnableCloud(MessageParcel &data, MessageParcel &reply)
 {
@@ -311,7 +313,7 @@ int32_t CloudSyncServiceStub::HandleEnableCloud(MessageParcel &data, MessageParc
     int32_t res = EnableCloud(accountId, *switchObj);
     reply.WriteInt32(res);
     LOGI("End EnableCloud");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, MessageParcel &reply)
@@ -330,7 +332,7 @@ int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, Messa
     int32_t res = StartDownloadFile(path);
     reply.WriteInt32(res);
     LOGI("End HandleStartDownloadFile");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageParcel &reply)
@@ -345,7 +347,7 @@ int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageP
     int32_t res = StartDownloadFile(path);
     reply.WriteInt32(res);
     LOGI("End HandleStartFileCache");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleStopDownloadFile(MessageParcel &data, MessageParcel &reply)
@@ -364,7 +366,7 @@ int32_t CloudSyncServiceStub::HandleStopDownloadFile(MessageParcel &data, Messag
     int32_t res = StopDownloadFile(path);
     reply.WriteInt32(res);
     LOGI("End HandleStopDownloadFile");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
@@ -384,7 +386,7 @@ int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &
     int32_t res = RegisterDownloadFileCallback(downloadCallback);
     reply.WriteInt32(res);
     LOGI("End HandleRegisterDownloadFileCallback");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
@@ -402,7 +404,7 @@ int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel
     int32_t res = UnregisterDownloadFileCallback();
     reply.WriteInt32(res);
     LOGI("End HandleUnregisterDownloadFileCallback");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleUploadAsset(MessageParcel &data, MessageParcel &reply)
@@ -423,7 +425,7 @@ int32_t CloudSyncServiceStub::HandleUploadAsset(MessageParcel &data, MessageParc
     reply.WriteInt32(res);
     reply.WriteString(result);
     LOGI("End UploadAsset");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessageParcel &reply)
@@ -447,7 +449,7 @@ int32_t CloudSyncServiceStub::HandleDownloadFile(MessageParcel &data, MessagePar
     int32_t res = DownloadFile(userId, bundleName, *assetInfoObj);
     reply.WriteInt32(res);
     LOGI("End DownloadFile");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleDownloadFiles(MessageParcel &data, MessageParcel &reply)
@@ -465,6 +467,9 @@ int32_t CloudSyncServiceStub::HandleDownloadFiles(MessageParcel &data, MessagePa
     string bundleName = data.ReadString();
     int32_t size = data.ReadInt32();
     std::vector<AssetInfoObj> assetInfoObj;
+    if (size > READ_SIZE) {
+        return E_INVAL_ARG;
+    }
     for (int i = 0; i < size; i++) {
         sptr<AssetInfoObj> obj = data.ReadParcelable<AssetInfoObj>();
         if (!obj) {
@@ -479,7 +484,7 @@ int32_t CloudSyncServiceStub::HandleDownloadFiles(MessageParcel &data, MessagePa
     reply.WriteBoolVector(assetResultMap);
     reply.WriteInt32(res);
     LOGI("End DownloadFiles");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleDownloadAsset(MessageParcel &data, MessageParcel &reply)
@@ -505,7 +510,7 @@ int32_t CloudSyncServiceStub::HandleDownloadAsset(MessageParcel &data, MessagePa
     int32_t res = DownloadAsset(taskId, userId, bundleName, networkId, * assetInfoObj);
     reply.WriteInt32(res);
     LOGI("End DownloadAsset");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleRegisterDownloadAssetCallback(MessageParcel &data, MessageParcel &reply)
@@ -523,7 +528,7 @@ int32_t CloudSyncServiceStub::HandleRegisterDownloadAssetCallback(MessageParcel 
     int32_t res = RegisterDownloadAssetCallback(remoteObj);
     reply.WriteInt32(res);
     LOGI("End RegisterDownloadAssetCallback");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleDeleteAsset(MessageParcel &data, MessageParcel &reply)
@@ -543,7 +548,7 @@ int32_t CloudSyncServiceStub::HandleDeleteAsset(MessageParcel &data, MessageParc
     reply.WriteInt32(res);
     reply.WriteString(uri);
     LOGI("End DeleteAsset");
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleGetSyncTime(MessageParcel &data, MessageParcel &reply)
@@ -563,7 +568,7 @@ int32_t CloudSyncServiceStub::HandleGetSyncTime(MessageParcel &data, MessageParc
     int32_t res = GetSyncTimeInner(syncTime, bundleName);
     reply.WriteInt64(syncTime);
     reply.WriteInt32(res);
-    return res;
+    return E_OK;
 }
 
 int32_t CloudSyncServiceStub::HandleCleanCache(MessageParcel &data, MessageParcel &reply)
@@ -582,6 +587,6 @@ int32_t CloudSyncServiceStub::HandleCleanCache(MessageParcel &data, MessageParce
     int32_t res = CleanCacheInner(uri);
 
     reply.WriteInt32(res);
-    return res;
+    return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudSync

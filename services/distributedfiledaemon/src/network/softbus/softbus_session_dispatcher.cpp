@@ -48,7 +48,7 @@ void SoftbusSessionDispatcher::RegisterSessionListener(const string busName, wea
     } else {
         busNameToAgent_.insert(make_pair(busName, softbusAgent));
     }
-    LOGD("RegisterSessionListener Success, busName:%{public}s", busName.c_str());
+    LOGI("RegisterSessionListener Success, busName:%{public}s", busName.c_str());
 }
 void SoftbusSessionDispatcher::UnregisterSessionListener(const string busName)
 {
@@ -62,7 +62,7 @@ void SoftbusSessionDispatcher::UnregisterSessionListener(const string busName)
         LOGE("%{public}s", ss.str().c_str());
         throw runtime_error(ss.str());
     }
-    LOGD("UnregisterSessionListener Success, busName:%{public}s", busName.c_str());
+    LOGI("UnregisterSessionListener Success, busName:%{public}s", busName.c_str());
 }
 weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std::string peerSessionName)
 {
@@ -72,7 +72,7 @@ weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std
     lock_guard<mutex> lock(softbusAgentMutex_);
     auto agent = busNameToAgent_.find(string(peerSessionName));
     if (agent != busNameToAgent_.end()) {
-        LOGD("Get softbus Agent Success, busName:%{public}s", peerSessionName.c_str());
+        LOGI("Get softbus Agent Success, busName:%{public}s", peerSessionName.c_str());
         return agent->second;
     }
     LOGE("Get Session Agent fail, not exist! sessionId:%{public}d", sessionId);
@@ -81,19 +81,11 @@ weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std
 void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     LOGI("OnSessionOpened Enter.");
-    if (!SoftbusAgent::IsSameAccount(info.networkId)) {
-        LOGI("The source and sink device is not same account, not support.");
-        Shutdown(sessionId);
-        return;
-    }
     std::string peerSessionName(info.name);
     std::string peerDevId = info.networkId;
-    if (!idMap_.empty()) {
+    {
         std::lock_guard<std::mutex> lock(idMapMutex_);
-        auto it = idMap_.find(sessionId);
-        if (it != idMap_.end()) {
-            it->second = std::make_pair(peerDevId, peerSessionName);
-        }
+        idMap_[sessionId] = std::make_pair(peerDevId, peerSessionName);
     }
     auto agent = GetAgent(sessionId, peerSessionName);
     if (auto spt = agent.lock()) {
@@ -118,7 +110,7 @@ void SoftbusSessionDispatcher::OnSessionClosed(int32_t sessionId, ShutdownReason
             idMap_.erase(it);
         }
     }
-    
+
     auto agent = GetAgent(sessionId, peerSessionName);
     if (auto spt = agent.lock()) {
         spt->OnSessionClosed(sessionId, peerDevId);

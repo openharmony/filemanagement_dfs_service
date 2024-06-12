@@ -613,7 +613,7 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
 #ifdef SUPPORT_MEDIA_LIBRARY
     if (uri.find("file://media") == 0) {
         OHOS::Media::MediaFileUri Muri(uri);
-        string path = Muri.GetFilePath();
+        path = Muri.GetFilePath();
     }
 #endif
     LOGI("StopDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
@@ -789,7 +789,7 @@ int32_t CloudSyncServiceProxy::DownloadFile(const int32_t userId,
 
 int32_t CloudSyncServiceProxy::DownloadFiles(const int32_t userId,
                                              const std::string &bundleName,
-                                             std::vector<AssetInfoObj> &assetInfoObj,
+                                             const std::vector<AssetInfoObj> &assetInfoObj,
                                              std::vector<bool> &assetResultMap)
 {
     LOGI("DownloadFiles");
@@ -839,7 +839,7 @@ int32_t CloudSyncServiceProxy::DownloadFiles(const int32_t userId,
     }
     LOGI("DownloadFile Success");
     bool readParcel = reply.ReadBoolVector(&assetResultMap);
-    if (readParcel != E_OK) {
+    if (readParcel != true) {
         LOGE("Failed to ReadBoolVector");
         return E_INVAL_ARG;
     }

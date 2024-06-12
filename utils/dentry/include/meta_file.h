@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,11 @@
 namespace OHOS {
 namespace FileManagement {
 
+const std::string RECYCLE_NAME = ".trash";
 const std::string RECYCLE_CLOUD_ID = ".trash";
+const std::string ROOT_CLOUD_ID = "rootId";
+const unsigned int STAT_MODE_DIR = 0771;
+constexpr int32_t LOCAL = 1;
 
 struct MetaBase;
 class MetaFile {
@@ -63,7 +67,6 @@ private:
     std::string name_{};
     UniqueFd fd_{};
     uint32_t userId_{};
-    uint64_t dentryCount_{0};
     std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
 };
 
@@ -75,6 +78,7 @@ public:
     explicit CloudDiskMetaFile(uint32_t userId, const std::string &bundleName, const std::string &cloudId);
 
     int32_t DoLookupAndUpdate(const std::string &name, CloudDiskMetaFileCallBack updateFunc);
+    int32_t DoChildUpdate(const std::string &name, CloudDiskMetaFileCallBack updateFunc);
     int32_t DoLookupAndRemove(MetaBase &metaBase);
     int32_t DoCreate(const MetaBase &base);
     int32_t HandleFileByFd(unsigned long &endBlock, uint32_t &level);
@@ -83,7 +87,8 @@ public:
     int32_t DoRename(MetaBase &metaBase, const std::string &newName,
         std::shared_ptr<CloudDiskMetaFile> newMetaFile);
     int32_t DoLookup(MetaBase &base);
-    uint64_t GetDentryCount();
+    int32_t LoadChildren(std::vector<MetaBase> &bases);
+    std::string GetDentryFilePath();
 
 private:
     std::mutex mtx_{};
@@ -94,7 +99,6 @@ private:
     std::string name_{};
     UniqueFd fd_{};
     uint32_t userId_{};
-    uint64_t dentryCount_{0};
     std::shared_ptr<MetaFile> parentMetaFile_{nullptr};
 };
 
@@ -106,9 +110,9 @@ enum {
 
 enum {
     POSITION_UNKNOWN = 0,
-    POSITION_LOCAL,
-    POSITION_CLOUD,
-    POSITION_LOCAL_AND_CLOUD,
+    POSITION_LOCAL = 0x01,
+    POSITION_CLOUD = 0x02,
+    POSITION_LOCAL_AND_CLOUD = POSITION_LOCAL | POSITION_CLOUD,
 };
 
 class MetaFileMgr {
@@ -121,6 +125,9 @@ public:
     std::shared_ptr<CloudDiskMetaFile> GetCloudDiskMetaFile(uint32_t userId, const std::string &bundleName,
         const std::string &cloudId);
     void ClearAll();
+    void CloudDiskClearAll();
+    void Clear(uint32_t userId, const std::string &bundleName, const std::string &cloudId);
+    int32_t CreateRecycleDentry(uint32_t userId, const std::string &bundleName);
     int32_t MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName,
         const std::string &name, const std::string &parentCloudId, int64_t rowId);
     int32_t RemoveFromRecycleDentryfile(uint32_t userId, const std::string &bundleName,
@@ -132,9 +139,9 @@ private:
     const MetaFileMgr &operator=(const MetaFileMgr &m) = delete;
 
     std::recursive_mutex mtx_{};
-    std::mutex mutex_{};
+    std::mutex cloudDiskMutex_{};
     std::map<std::pair<uint32_t, std::string>, std::shared_ptr<MetaFile>> metaFiles_;
-    std::unordered_map<std::string, std::shared_ptr<CloudDiskMetaFile>> cloudDiskMetaFile_;
+    std::map<std::pair<uint32_t, std::string>, std::shared_ptr<CloudDiskMetaFile>> cloudDiskMetaFile_;
 };
 
 struct MetaBase {
@@ -157,6 +164,7 @@ struct MetaBase {
     uint8_t fileType{FILE_TYPE_CONTENT};
     std::string name{};
     std::string cloudId{};
+    off_t nextOff{0};
     bool hasDownloaded{false};
 };
 

@@ -59,10 +59,42 @@ ohos_unittest("dentry_file_utils_test") {
   ]
   use_exceptions = true
 }
+
+ohos_unittest("dentry_meta_file_clouddisk_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "dentry_meta_file_clouddisk_test.cpp" ]
+
+  include_dirs = [ "${utils_path}/dentry/include" ]
+
+  deps = [
+    "${utils_path}:libdistributedfiledentry",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [ "c_utils:utils" ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_SA\"",
+  ]
+  use_exceptions = true
+}
+
 group("cloudsync_sa_dentry_test") {
   testonly = true
   deps = [
     ":dentry_file_utils_test",
+    ":dentry_meta_file_clouddisk_test",
     ":dentry_meta_file_test",
   ]
 }

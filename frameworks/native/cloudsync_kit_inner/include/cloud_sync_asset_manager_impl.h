@@ -39,7 +39,7 @@ public:
                          ResultCallback resultCallback) override;
     int32_t DownloadFiles(const int32_t userId,
                           const std::string &bundleName,
-                          std::vector<AssetInfo> &assetInfo,
+                          const std::vector<AssetInfo> &assetInfo,
                           std::vector<bool> &assetResultMap) override;
 
 private:

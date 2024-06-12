@@ -25,11 +25,9 @@ namespace system {
  * Returns true if the system parameter `key` has the value "1", "y", "yes", "on", or "true",
  * false for "0", "n", "no", "off", or "false", or `def` otherwise.
  */
-bool GetBoolParameter(const std::string& key, bool def)
-{
-    return true;
-}
-
+bool GetBoolParameter(const std::string &key, bool def);
+std::string GetParameter(const std::string &key, const std::string &def);
+bool SetParameter(const std::string& key, const std::string& value);
 } // namespace system
 } // namespace OHOS
 

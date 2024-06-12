@@ -37,10 +37,6 @@ CloudDiskNotify &CloudDiskNotify::GetInstance()
     return instance_;
 }
 
-CloudDiskNotify::CloudDiskNotify() {}
-
-CloudDiskNotify::~CloudDiskNotify() {}
-
 void CloudDiskNotify::TryNotify(const NotifyParamDisk &paramDisk, const ParamDiskOthers &paramOthers) {}
 
 void CloudDiskNotify::TryNotifyService(const NotifyParamService &paramService, const ParamServiceOther &paramOthers) {}
