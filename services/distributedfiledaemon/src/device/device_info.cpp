@@ -40,7 +40,7 @@ DeviceInfo &DeviceInfo::operator=(const DistributedHardware::DmDeviceInfo &nodeI
     return *this;
 }
 
-DeviceInfo::DeviceInfo(const DeviceInfo &nodeInfo) : cid_(nodeInfo.cid_), udid_(nodeInfo.udid_)
+DeviceInfo::DeviceInfo(const DeviceInfo &nodeInfo) : cid_(nodeInfo.cid_), udid_(nodeInfo.udid_), extraData_(nodeInfo.extraData_)
 {
     initCidFlag_.store(nodeInfo.initCidFlag_.load());
 }
