@@ -502,7 +502,6 @@ ohos_unittest("session_pool_test") {
     "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
     "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
     "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
-    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
     "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
     "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
