@@ -546,7 +546,7 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
     fuse_reply_none(req);
 }
 
-static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *in_buf)
+static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *inBuf)
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
@@ -555,7 +555,7 @@ static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *in_buf)
         return;
     }
 
-    const struct HmdfsHasCache *ioctlData = reinterpret_cast<const struct HmdfsHasCache *>(in_buf);
+    const struct HmdfsHasCache *ioctlData = reinterpret_cast<const struct HmdfsHasCache *>(inBuf);
     if (!ioctlData) {
         fuse_reply_err(req, EINVAL);
         return;
@@ -568,10 +568,10 @@ static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *in_buf)
 }
 
 static void CloudIoctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
-                       unsigned flags, const void *in_buf, size_t in_bufsz, size_t out_bufsz)
+                       unsigned flags, const void *inBuf, size_t inBufsz, size_t outBufsz)
 {
     if (static_cast<unsigned int>(cmd) == HMDFS_IOC_HAS_CACHE) {
-        HasCache(req, ino, in_buf);
+        HasCache(req, ino, inBuf);
     } else {
         fuse_reply_err(req, ENOTTY);
     }
@@ -708,8 +708,8 @@ static const struct fuse_lowlevel_ops cloudMediaFuseOps = {
     .read               = CloudRead,
     .release            = CloudRelease,
     .readdir            = CloudReadDir,
-    .forget_multi       = CloudForgetMulti,
     .ioctl              = CloudIoctl,
+    .forget_multi       = CloudForgetMulti,
 };
 
 int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path)
