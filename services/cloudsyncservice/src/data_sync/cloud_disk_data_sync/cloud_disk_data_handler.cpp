@@ -948,7 +948,7 @@ static int32_t CheckLocalFileByDentry(uint32_t userId, const string &bundleName,
         LOGE("stat local file error %{public}d", errno);
         return ret;
     }
-    int64_t mtime = CloudFileUtils::Timespec2Milliseconds(statInfo.st_mtim);
+    uint64_t mtime = CloudFileUtils::Timespec2Milliseconds(statInfo.st_mtim);
     if (statInfo.st_size != metaBase.size || mtime != metaBase.mtime) {
         LOGD("unlink localPath:%{public}s", localPath.c_str());
         ret = unlink(localPath.c_str());
@@ -1805,7 +1805,7 @@ int32_t CloudDiskDataHandler::GetCleanCacheData(const string &path, string &pare
         LOGE("get cloud id failed, errno %{public}d", errno);
         return E_INVAL_ARG;
     }
-    size_t lastSlash = path.find_last_of("/");
+    int lastSlash = path.find_last_of("/");
     fileName = path.substr(lastSlash + 1);
     string parentPath = path.substr(0, lastSlash);
     parentCloudId = CloudFileUtils::GetCloudId(parentPath);
