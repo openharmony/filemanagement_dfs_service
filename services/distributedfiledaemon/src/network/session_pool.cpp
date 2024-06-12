@@ -30,7 +30,7 @@ const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 void SessionPool::OccupySession(int32_t sessionId, uint8_t linkType)
 {
     lock_guard lock(sessionPoolLock_);
-    occupySession_.insert(std::pair<int32_t, uint8_t>(sessionId, linkType));
+    occupySession_[sessionId] = linkType;
 }
 
 bool SessionPool::FindSession(int32_t sessionId)
@@ -60,6 +60,10 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
     uint8_t linkType = 0;
     std::string cid = "";
     lock_guard lock(sessionPoolLock_);
+    if (fd < 0) {
+        LOGI("fd=%{public}d, deviceConnectCount clear", fd);
+        deviceConnectCount_.clear();
+    }
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
         if ((*iter)->GetHandle() == fd) {
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
@@ -70,10 +74,6 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
         }
         if (DeviceDisconnectCountOnly(cid, linkType, false)) {
             continue;
-        }
-        if (fd < 0) {
-            LOGI("fd=%{public}d, deviceConnectCount clear", fd);
-            deviceConnectCount_.clear();
         }
         if ((*iter)->GetHandle() == fd) {
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
