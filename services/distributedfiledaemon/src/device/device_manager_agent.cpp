@@ -834,7 +834,8 @@ int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceI
     }
     int32_t osType = entraDataJson[PARAM_KEY_OS_TYPE].get<int32_t>();
     if (osType != DEVICE_OS_TYPE_OH) {
-        LOGE("%{private}s  the device os type = %{private}d is not openharmony.", Utils::GetAnonyString(infoTemp.deviceName).c_str(), osType);
+        LOGE("%{private}s  the device os type = %{private}d is not openharmony.",
+            Utils::GetAnonyString(infoTemp.deviceId).c_str(), osType);
         return FileManagement::ERR_BAD_VALUE;
     }
     return FileManagement::ERR_OK;
