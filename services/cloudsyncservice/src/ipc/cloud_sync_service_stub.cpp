@@ -23,7 +23,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-static const unsigned int READ_SIZE = 100;
+static const int READ_SIZE = 100;
 
 CloudSyncServiceStub::CloudSyncServiceStub()
 {

@@ -262,7 +262,7 @@ static int32_t LookupRecycledFile(struct CloudDiskFuseData *data, const char *na
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
     if (inoPtr == nullptr) {
         string nameStr = name;
-        int lastSlash = nameStr.find_last_of("_");
+        size_t lastSlash = nameStr.find_last_of("_");
         metaBase.name = nameStr.substr(0, lastSlash);
         inoPtr = UpdateChildCache(data, inodeId, inoPtr);
         inoPtr->refCount++;
