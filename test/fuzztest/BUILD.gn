@@ -19,5 +19,6 @@ group("dfs_service_fuzztest") {
     "${distributedfile_path}/test/fuzztest/clouddaemonstub_fuzzer:CloudDaemonStubFuzzTest",
     "${distributedfile_path}/test/fuzztest/cloudsyncservicestub_fuzzer:CloudSyncServiceStubFuzzTest",
     "${distributedfile_path}/test/fuzztest/filetranslistenerstub_fuzzer:FileTransListenerStubFuzzTest",
+    "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer:DaemonStubFuzzTest",
   ]
 }
