@@ -31,7 +31,7 @@ DKLocalErrorCode DKDatabase::SaveRecords(std::shared_ptr<DKContext> context,
     srand(time(nullptr));
     for (auto &record : records) {
         DKRecordId recordId = std::to_string(rand() + 1);
-        DKRecordOperResult operResult;
+        DKRecordOperResult operResult(DKLocalErrorCode::NO_ERROR);
         operResult.SetDKRecord(std::move(record));
         (*result)[recordId] = operResult;
     }
