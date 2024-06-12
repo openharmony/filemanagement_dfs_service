@@ -28,8 +28,8 @@ namespace DistributedFile {
 class SoftBusAssetSendListener {
 public:
     static void OnFile(int32_t socket, FileEvent *event);
-    static void OnSendAssetFinished(int32_t socketId, const char **fileList);
-    static void OnSendAssetError(int32_t socketId, const char **fileList, int32_t errorCode);
+    static void OnSendAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt);
+    static void OnSendAssetError(int32_t socketId, const char **fileList, int32_t fileCnt, int32_t errorCode);
     static bool isSingleFile_;
 private:
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};

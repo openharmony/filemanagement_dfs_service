@@ -78,6 +78,10 @@ const char* SoftbusAssetRecvListener::GetRecvPath()
 void SoftbusAssetRecvListener::OnRecvAssetStart(int32_t socketId, const char **fileList, int32_t fileCnt)
 {
     LOGI("OnRecvFileStart, sessionId = %{public}d, fileCnt = %{public}d", socketId, fileCnt);
+    if (fileCnt == 0) {
+        LOGE("fileList has no file");
+        return;
+    }
     auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
     if (srcNetworkId.empty()) {
         LOGE("get srcNetworkId fail");
@@ -99,6 +103,10 @@ void SoftbusAssetRecvListener::OnRecvAssetStart(int32_t socketId, const char **f
 void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt)
 {
     LOGI("OnRecvFileFinished, sessionId = %{public}d, fileCnt = %{public}d", socketId, fileCnt);
+    if (fileCnt == 0) {
+        LOGE("fileList has no file");
+        return;
+    }
     auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
     if (srcNetworkId.empty()) {
         LOGE("get srcNetworkId fail");

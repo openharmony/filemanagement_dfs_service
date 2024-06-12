@@ -570,9 +570,11 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
         }
         file.write(fileData, fileLength);
         file.close();
-        free(fileData);
+        delete[] fileData;
     }
-    std::string filenameWithPathStr = filenameWithPath;
+    std::string filenameWithPathStr(filenameWithPath);
+    delete[] filenameWithPath;
+    delete[] temp;
     return filenameWithPathStr;
 }
 

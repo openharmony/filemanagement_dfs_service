@@ -32,10 +32,10 @@ void SoftBusAssetSendListener::OnFile(int32_t socket, FileEvent *event)
     }
     switch (event->type) {
         case FILE_EVENT_SEND_FINISH:
-            OnSendAssetFinished(socket, event->files);
+            OnSendAssetFinished(socket, event->files, event->fileCnt);
             break;
         case FILE_EVENT_SEND_ERROR:
-            OnSendAssetError(socket, event->files, event->errorCode);
+            OnSendAssetError(socket, event->files, event->fileCnt, event->errorCode);
             break;
         default:
             LOGI("Other situations");
@@ -43,9 +43,13 @@ void SoftBusAssetSendListener::OnFile(int32_t socket, FileEvent *event)
     }
 }
 
-void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char **fileList)
+void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt)
 {
     LOGE("Push asset finished, socketId is %{public}d", socketId);
+    if (fileCnt == 0) {
+        LOGE("fileList has no file");
+        return;
+    }
     auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(socketId);
     if (assetObj == nullptr) {
         LOGE("OnSendAssetFinished get assetObj is nullptr");
@@ -58,9 +62,16 @@ void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char 
     SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], !SoftBusAssetSendListener::isSingleFile_);
 }
 
-void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId, const char **fileList, int32_t errorCode)
+void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId,
+                                                const char **fileList,
+                                                int32_t fileCnt,
+                                                int32_t errorCode)
 {
     LOGE("SendAssetError, socketId is %{public}d, errorCode %{public}d", socketId, errorCode);
+    if (fileCnt == 0) {
+        LOGE("fileList has no file");
+        return;
+    }
     auto assetObj = SoftBusHandlerAsset::GetInstance().GetAssetObj(socketId);
     if (assetObj == nullptr) {
         LOGE("OnSendAssetError  get assetObj is nullptr");
