@@ -805,11 +805,25 @@ void DeviceManagerAgent::InitDeviceInfos()
 
 int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    if (deviceInfo.extraData.empty()) {
+    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
+    DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
+    if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
+        LOGE("trust device list size is invalid, size=%zu", deviceList.size());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    DistributedHardware::DmDeviceInfo infoTemp;
+    for (const auto &info : deviceList) {
+        if (std::string(info.networkId) == std::string(deviceInfo.networkId)) {
+            infoTemp = info;
+            break;
+        }
+    }
+
+    if (infoTemp.extraData.empty()) {
         LOGE("extraData is empty");
         return FileManagement::ERR_BAD_VALUE;
     }
-    nlohmann::json entraDataJson = nlohmann::json::parse(deviceInfo.extraData, nullptr, false);
+    nlohmann::json entraDataJson = nlohmann::json::parse(infoTemp.extraData, nullptr, false);
     if (entraDataJson.is_discarded()) {
         LOGE("entraDataJson parse failed.");
         return FileManagement::ERR_BAD_VALUE;
@@ -820,7 +834,8 @@ int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceI
     }
     int32_t osType = entraDataJson[PARAM_KEY_OS_TYPE].get<int32_t>();
     if (osType != DEVICE_OS_TYPE_OH) {
-        LOGE("%{private}s  the device os type = %{private}d is not openharmony.", deviceInfo.deviceName, osType);
+        LOGE("%{private}s  the device os type = %{private}d is not openharmony.",
+            Utils::GetAnonyString(infoTemp.deviceId).c_str(), osType);
         return FileManagement::ERR_BAD_VALUE;
     }
     return FileManagement::ERR_OK;
