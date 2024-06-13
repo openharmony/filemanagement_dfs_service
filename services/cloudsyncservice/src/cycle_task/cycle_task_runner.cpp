@@ -21,6 +21,7 @@
 #include "tasks/optimize_storage_task.h"
 #include "tasks/periodic_check_task.h"
 #include "tasks/save_subscription_task.h"
+#include "tasks/report_statistics_task.h"
 #include "cloud_status.h"
 #include "utils_log.h"
 #include "os_account_manager.h"

@@ -12,18 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "repot_statistics_task.h"
+#include "report_statistics_task.h"
 #include "parameters.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
-static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
 ReportStatisticsTask::ReportStatisticsTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
-    : CycleTask(ReportStatisticsTaskName, {"com.ohos.photos", system::GetParameter(FILEMANAGER_KEY, "")},
-                ONE_WEEK,
-                dataSyncManager)
+    : CycleTask(ReportStatisticsTaskName, {"com.ohos.photos"}, ONE_WEEK, dataSyncManager)
 {
 }
 
@@ -31,7 +28,7 @@ int32_t ReportStatisticsTask::RunTaskForBundle(int32_t userId, std::string bundl
 {
     int32_t ret = dataSyncManager_->ReportDownloadStat(bundleName, userId);
     if (ret != E_OK) {
-        LOGE("report download file stat failed", bundleName.c_str());
+        LOGE("report download file stat failed");
     }
     return ret;
 }
