@@ -62,6 +62,99 @@ ohos_unittest("device_info_test") {
   defines = [ "private=public" ]
 }
 
+ohos_unittest("device_manager_agent_sup_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = module_output_path
+
+  include_dirs = [ "device/include/" ]
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
+    "${distributedfile_path}/test/mock/device_manager_mock.cpp",
+    "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
+    "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
+    "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_mananger.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
+    "${services_path}/distributedfiledaemon/src/mountpoint/mount_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/mountpoint/mount_point.cpp",
+    "${services_path}/distributedfiledaemon/src/multiuser/os_account_observer.cpp",
+    "${services_path}/distributedfiledaemon/src/network/devsl_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/kernel_talker.cpp",
+    "${services_path}/distributedfiledaemon/src/network/network_agent_template.cpp",
+    "${services_path}/distributedfiledaemon/src/network/session_pool.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_dispatcher.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+  ]
+
+  sources += [
+    "device/device_manager_agent_sup_test.cpp",
+    "device/mock_other_method.cpp",
+  ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
+    "common_event_service:cesfwk_innerkits",
+    "dataclassification:data_transit_mgr",
+    "device_auth:deviceauth_sdk",
+    "device_info_manager:distributed_device_profile_common",
+    "device_info_manager:distributed_device_profile_sdk",
+    "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
+    "zlib:shared_libz",
+  ]
+
+  defines = [ "private=public" ]
+}
+
 ohos_unittest("device_manager_agent_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -1021,6 +1114,7 @@ group("unittest") {
   testonly = true
   deps = [
     ":device_info_test",
+    ":device_manager_agent_sup_test",
     ":device_manager_agent_test",
     ":devsl_dispatcher_test",
     ":kernel_talker_test",
