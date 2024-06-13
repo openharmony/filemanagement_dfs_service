@@ -644,19 +644,19 @@ std::string DeviceManagerAgent::GetDeviceIdByNetworkId(const std::string &networ
 
 void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
 {
-    if (jsonObject.find(FIELD_GROUP_NAME) != jsonObject.end()) {
+    if (jsonObject.find(FIELD_GROUP_NAME) != jsonObject.end() && jsonObject[FIELD_GROUP_NAME].is_string()) {
         groupInfo.groupName = jsonObject.at(FIELD_GROUP_NAME).get<std::string>();
     }
 
-    if (jsonObject.find(FIELD_GROUP_ID) != jsonObject.end()) {
+    if (jsonObject.find(FIELD_GROUP_ID) != jsonObject.end() && jsonObject[FIELD_GROUP_ID].is_string()) {
         groupInfo.groupId = jsonObject.at(FIELD_GROUP_ID).get<std::string>();
     }
 
-    if (jsonObject.find(FIELD_GROUP_OWNER) != jsonObject.end()) {
+    if (jsonObject.find(FIELD_GROUP_OWNER) != jsonObject.end() && jsonObject[FIELD_GROUP_OWNER].is_string()) {
         groupInfo.groupOwner = jsonObject.at(FIELD_GROUP_OWNER).get<std::string>();
     }
 
-    if (jsonObject.find(FIELD_GROUP_TYPE) != jsonObject.end()) {
+    if (jsonObject.find(FIELD_GROUP_TYPE) != jsonObject.end() jsonObject[FIELD_GROUP_TYPE].is_number()) {
         groupInfo.groupType = jsonObject.at(FIELD_GROUP_TYPE).get<int32_t>();
     }
 }
