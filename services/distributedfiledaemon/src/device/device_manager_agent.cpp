@@ -656,7 +656,7 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
         groupInfo.groupOwner = jsonObject.at(FIELD_GROUP_OWNER).get<std::string>();
     }
 
-    if (jsonObject.find(FIELD_GROUP_TYPE) != jsonObject.end() jsonObject[FIELD_GROUP_TYPE].is_number()) {
+    if (jsonObject.find(FIELD_GROUP_TYPE) != jsonObject.end() && jsonObject[FIELD_GROUP_TYPE].is_number()) {
         groupInfo.groupType = jsonObject.at(FIELD_GROUP_TYPE).get<int32_t>();
     }
 }
