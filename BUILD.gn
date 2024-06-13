@@ -57,6 +57,7 @@ group("dfs_test_moudule") {
   testonly = true
   deps = [
     "${services_path}/distributedfiledaemon/test/unittest:device_info_test",
+    "${services_path}/distributedfiledaemon/test/unittest:device_manager_agent_sup_test",
     "${services_path}/distributedfiledaemon/test/unittest:device_manager_agent_test",
     "${services_path}/distributedfiledaemon/test/unittest:devsl_dispatcher_test",
     "${services_path}/distributedfiledaemon/test/unittest:kernel_talker_test",
