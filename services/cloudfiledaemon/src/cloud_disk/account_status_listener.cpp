@@ -17,6 +17,7 @@
 
 #include <fcntl.h>
 
+#include "cloud_daemon_statistic.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "account_status.h"
@@ -60,6 +61,7 @@ void AccountStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
         AccountStatus::GetAccountState() == AccountStatus::AccountState::ACCOUNT_LOGIN) {
         LOGI("Screen Off and Swap Memory!");
         SwapMemory();
+        CloudFile::CloudDaemonStatistic::GetInstance().UpdateStatData();
     }
 }
 

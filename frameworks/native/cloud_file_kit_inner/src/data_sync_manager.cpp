@@ -119,4 +119,9 @@ int32_t DataSyncManager::ReportDownloadStat(const std::string &bundleName, const
 {
     return E_OK;
 }
+int32_t DataSyncManager::ReportReadFileStat(const std::string &bundleName, const int32_t userId)
+{
+    return E_OK;
+}
+
 } // namespace OHOS::FileManagement::CloudFile

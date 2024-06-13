@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <exception>
 #include <filesystem>
 #include <fcntl.h>
@@ -38,8 +39,10 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
+#include "cloud_daemon_statistic.h"
 #include "cloud_disk_inode.h"
 #include "cloud_file_kit.h"
+#include "clouddisk_type_const.h"
 #include "datetime_ex.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
@@ -448,6 +451,13 @@ static int HandleOpenResult(fuse_req_t req, CloudFile::CloudError ckError, struc
     return 0;
 }
 
+static uint64_t UTCTimeMilliSeconds()
+{
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &t);
+    return t.tv_sec * CloudDisk::SECOND_TO_MILLISECOND + t.tv_nsec / CloudDisk::MILLISECOND_TO_NANOSECOND;
+}
+
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                       struct fuse_file_info *fi)
 {
@@ -473,10 +483,14 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
          * 'assetKey' is one of "content"/"lcd"/"thumbnail"
          */
         LOGD("recordId: %s", recordId.c_str());
-        cInode->readSession = database->NewAssetReadSession("media",
-                                                            recordId,
+        uint64_t startTime = UTCTimeMilliSeconds();
+        cInode->readSession = database->NewAssetReadSession("media", recordId,
                                                             GetAssetKey(cInode->mBase->fileType),
                                                             GetAssetPath(cInode, data));
+        uint64_t endTime = UTCTimeMilliSeconds();
+        CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+        readStat.UpdateOpenSizeStat(cInode->mBase->size);
+        readStat.UpdateOpenTimeStat(cInode->mBase->fileType, (endTime > startTime) ? (endTime - startTime) : 0);
         if (cInode->readSession) {
             auto error = cInode->readSession->InitSession();
             auto ret = HandleOpenResult(req, error, data, cInode, fi);
@@ -615,7 +629,13 @@ static void CloudReadOnCloudFile(shared_ptr<ReadArguments> readArgs, shared_ptr<
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     LOGI("PRead cloud file, path: %{public}s, size: %{public}zd, off: %{public}lu", cInode->path.c_str(),
         readArgs->size, static_cast<unsigned long>(readArgs->offset));
+    uint64_t startTime = UTCTimeMilliSeconds();
     *readArgs->readResult = readSession->PRead(readArgs->offset, readArgs->size, buf.get(), *readArgs->ckError);
+    uint64_t endTime = UTCTimeMilliSeconds();
+    uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
+    CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+    readStat.UpdateReadSizeStat(cInode->mBase->size);
+    readStat.UpdateReadTimeStat(cInode->mBase->size, readTime);
     {
         unique_lock lck(cInode->readLock);
         *readArgs->readFinish = true;
