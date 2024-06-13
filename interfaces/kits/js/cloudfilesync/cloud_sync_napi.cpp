@@ -689,12 +689,16 @@ void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref 
     if (!listener.changeInfo.uris_.empty()) {
         if (static_cast<NotifyType>(listener.changeInfo.changeType_) == NotifyType::NOTIFY_NONE) {
             LOGE("changeInfo.changeType_ is other");
+            delete msg;
+            delete work;
             return;
         }
         if (msg->changeInfo_.size_ > 0) {
             msg->data_ = (uint8_t *)malloc(msg->changeInfo_.size_);
             if (msg->data_ == nullptr) {
                 LOGE("new msg->data failed");
+                delete msg;
+                delete work;
                 return;
             }
             int copyRet = memcpy_s(msg->data_, msg->changeInfo_.size_, msg->changeInfo_.data_, msg->changeInfo_.size_);

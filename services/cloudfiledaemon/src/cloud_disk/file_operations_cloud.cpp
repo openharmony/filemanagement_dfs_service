@@ -440,7 +440,7 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
     std::unique_lock<std::shared_mutex> wLock(data->fileIdLock, std::defer_lock);
     wLock.lock();
     data->fileId++;
-    fi->fh = data->fileId;
+    fi->fh = static_cast<uint64_t>(data->fileId);
     wLock.unlock();
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (inoPtr == nullptr) {

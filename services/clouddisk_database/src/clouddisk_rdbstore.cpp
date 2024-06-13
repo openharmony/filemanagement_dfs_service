@@ -1422,7 +1422,7 @@ static int32_t GetUserIdAndBundleName(RdbStore &store, uint32_t &userId, string 
         LOGE("invalid user Id");
         return E_INVAL_ARG;
     }
-    userId = std::stoi(userIdStr);
+    userId = static_cast<uint32_t>(std::stoi(userIdStr));
     return E_OK;
 }
 
