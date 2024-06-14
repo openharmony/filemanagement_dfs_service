@@ -263,7 +263,8 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OnSinkSessionOpened_0100, TestSi
     EXPECT_EQ(handler.GetSessionName(sessionId2), sessionName2);
     EXPECT_EQ(handler.GetSessionName(sessionId3), sessionName3);
     auto iter = handler.serverIdMap_.find(sessionName2);
-    if (iter == handler.serverIdMap_.end()) {
+    if (iter != handler.serverIdMap_.end()) {
+        handler.serverIdMap_.clear();
         EXPECT_TRUE(true);
     } else {
         EXPECT_TRUE(false);
