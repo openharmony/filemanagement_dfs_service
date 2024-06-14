@@ -321,6 +321,10 @@ static void CloudForget(fuse_req_t req, fuse_ino_t ino,
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> node = GetCloudInode(data, ino);
+    if (!node) {
+        fuse_reply_err(req, ENOMEM);
+        return;
+    }
     LOGD("forget %s, nlookup: %lld", node->path.c_str(), (long long)nlookup);
     PutNode(data, node, nlookup);
     fuse_reply_none(req);
@@ -540,6 +544,10 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
     LOGD("forget_multi");
     for (size_t i = 0; i < count; i++) {
         shared_ptr<CloudInode> node = GetCloudInode(data, forgets[i].ino);
+        if (!node) {
+            fuse_reply_err(req, ENOMEM);
+            return;
+        }
         LOGD("forget (i=%zu) %s, nlookup: %lld", i, node->path.c_str(), (long long)forgets[i].nlookup);
         PutNode(data, node, forgets[i].nlookup);
     }
@@ -606,6 +614,8 @@ static void CloudReadOnCloudFile(shared_ptr<ReadArguments> readArgs, shared_ptr<
     shared_ptr<CloudInode> cInode, shared_ptr<CloudFile::CloudAssetReadSession> readSession)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    LOGI("PRead cloud file, path: %{public}s, size: %{public}zd, off: %{public}lu", cInode->path.c_str(),
+        readArgs->size, static_cast<unsigned long>(readArgs->offset));
     *readArgs->readResult = readSession->PRead(readArgs->offset, readArgs->size, buf.get(), *readArgs->ckError);
     {
         unique_lock lck(cInode->readLock);
