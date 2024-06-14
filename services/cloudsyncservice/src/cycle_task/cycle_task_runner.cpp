@@ -63,6 +63,7 @@ void CycleTaskRunner::InitTasks()
     cycleTasks_.push_back(std::make_shared<OptimizeStorageTask>(dataSyncManager_));
     cycleTasks_.push_back(std::make_shared<SaveSubscriptionTask>(dataSyncManager_));
     cycleTasks_.push_back(std::make_shared<PeriodicCheckTask>(dataSyncManager_));
+    cycleTasks_.push_back(std::make_shared<ReportStatisticsTask>(dataSyncManager_));
 }
 
 static int32_t GetString(const string &key, string &val, NativeRdb::ResultSet &resultSet)
