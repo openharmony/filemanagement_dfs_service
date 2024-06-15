@@ -208,7 +208,7 @@ bool DeviceManagerAgent::IsWifiNetworkType(int32_t networkType)
 void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("networkId %{public}s, OnDeviceReady begin", deviceInfo.deviceId);
-    int32_t ret = IsSupportDevice(deviceInfo);
+    int32_t ret = IsSupportedDevice(deviceInfo);
     if (ret != FileManagement::ERR_OK) {
         LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
         return;
@@ -301,7 +301,7 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline begin", deviceInfo.networkId);
-    int32_t ret = IsSupportDevice(deviceInfo);
+    int32_t ret = IsSupportedDevice(deviceInfo);
     if (ret != FileManagement::ERR_OK) {
         LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
         return P2P_FAILED;
@@ -733,7 +733,7 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
         LOGI("OnDeviceInfoChanged end");
         return;
     }
-    int32_t ret = IsSupportDevice(deviceInfo);
+    int32_t ret = IsSupportedDevice(deviceInfo);
     if (ret != FileManagement::ERR_OK) {
         LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
         return;
@@ -793,7 +793,7 @@ void DeviceManagerAgent::InitDeviceInfos()
     }
 
     for (const auto &deviceInfo : deviceInfoList) {
-        int32_t ret = IsSupportDevice(deviceInfo);
+        int32_t ret = IsSupportedDevice(deviceInfo);
         if (ret != FileManagement::ERR_OK) {
             LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
             continue;
@@ -803,7 +803,7 @@ void DeviceManagerAgent::InitDeviceInfos()
     }
 }
 
-int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
+int32_t DeviceManagerAgent::IsSupportedDevice(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
     DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
@@ -813,7 +813,7 @@ int32_t DeviceManagerAgent::IsSupportDevice(const DistributedHardware::DmDeviceI
     }
     DistributedHardware::DmDeviceInfo infoTemp;
     for (const auto &info : deviceList) {
-        if (std::string(info.networkId) == std::string(deviceInfo.networkId)) {
+        if (std::string_view(info.networkId) == std::string_view(deviceInfo.networkId)) {
             infoTemp = info;
             break;
         }

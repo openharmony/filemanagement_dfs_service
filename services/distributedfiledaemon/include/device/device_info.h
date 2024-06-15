@@ -37,6 +37,7 @@ public:
 
     const std::string &GetCid() const;
     const std::string &GetExtraData() const;
+    const std::string &GetDeviceId() const;
 
 private:
     friend class DeviceManagerAgent;
@@ -44,6 +45,7 @@ private:
     std::string cid_;
     std::string udid_;
     std::string extraData_;
+    std::string deviceId_;
 };
 } // namespace DistributedFile
 } // namespace Storage
