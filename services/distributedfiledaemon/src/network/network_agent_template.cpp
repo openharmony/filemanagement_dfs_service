@@ -53,7 +53,7 @@ void NetworkAgentTemplate::Stop()
 int32_t NetworkAgentTemplate::GetRemoteSA(const std::string &remoteDeviceId)
 {
     if (remoteDeviceId.empty()) {
-        LOGE("remoteDeviceId is empty");
+        LOGE("RemoteDeviceId is empty");
         FileManagement::ERR_BAD_VALUE;
     }
     int32_t reconnectionCount = FileManagement::ERR_BAD_VALUE;
@@ -65,7 +65,7 @@ int32_t NetworkAgentTemplate::GetRemoteSA(const std::string &remoteDeviceId)
         }
         auto object = sam->GetSystemAbility(FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, remoteDeviceId);
         if (object != nullptr) {
-            LOGE("GetSystemAbility failed");
+            LOGE("Get remote system ability success");
             return FileManagement::ERR_OK;
         }
         reconnectionCount++;
