@@ -27,6 +27,7 @@ DeviceInfo::DeviceInfo(const DistributedHardware::DmDeviceInfo &nodeInfo)
     cid_ = string(nodeInfo.networkId);
     initCidFlag_ = true;
     extraData_ = nodeInfo.extraData;
+    deviceId_ = string(nodeInfo.deviceId);
     // convert networkId to udid
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
     deviceManager.GetUdidByNetworkId(IDaemon::SERVICE_NAME, cid_, udid_);
@@ -37,11 +38,12 @@ DeviceInfo &DeviceInfo::operator=(const DistributedHardware::DmDeviceInfo &nodeI
     cid_ = string(nodeInfo.networkId);
     initCidFlag_ = true;
     extraData_ = nodeInfo.extraData;
+    deviceId_ = string(nodeInfo.deviceId);
     return *this;
 }
 
 DeviceInfo::DeviceInfo(const DeviceInfo &nodeInfo) : cid_(nodeInfo.cid_), udid_(nodeInfo.udid_),
-    extraData_(nodeInfo.extraData_)
+    extraData_(nodeInfo.extraData_), deviceId_(nodeInfo.deviceId_)
 {
     initCidFlag_.store(nodeInfo.initCidFlag_.load());
 }
@@ -70,6 +72,14 @@ const string &DeviceInfo::GetExtraData() const
         LOGE("extraData is empty.");
     }
     return extraData_;
+}
+
+const string &DeviceInfo::GetDeviceId() const
+{
+    if (deviceId_.empty()) {
+        LOGE("deviceId is empty.");
+    }
+    return deviceId_;
 }
 } // namespace DistributedFile
 } // namespace Storage

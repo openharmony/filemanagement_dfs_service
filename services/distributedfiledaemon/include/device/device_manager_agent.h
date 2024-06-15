@@ -71,7 +71,7 @@ public:
     void QuitGroup(std::weak_ptr<MountPoint> mp);
 
     void InitDeviceInfos();
-    int32_t IsSupportDevice(const DistributedHardware::DmDeviceInfo &deviceInfo);
+    int32_t IsSupportedDevice(const DistributedHardware::DmDeviceInfo &deviceInfo);
 
     void OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
