@@ -422,6 +422,10 @@ int32_t SoftBusHandlerAsset::CompressFile(const std::vector<std::string> &fileLi
         }
 
         FILE* f = fopen(rootFile.c_str(), "rb");
+        if (f == NULL) {
+            LOGE("open file fail, path is %{public}s", rootFile.c_str());
+            return E_ZIP;
+        }
         char buf[1024];
         int len;
         while ((len = fread(buf, 1, sizeof(buf), f)) > 0) {
@@ -545,6 +549,7 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
     if (strcat_s(temp, BUFFER_SIZE, filenameWithPath) != 0) {
         return "";
     }
+    delete[] filenameWithPath;
     filenameWithPath = temp;
     while ((*p) != '\0') {
         if ((*p) == '/') {
@@ -574,7 +579,6 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
     }
     std::string filenameWithPathStr(filenameWithPath);
     delete[] filenameWithPath;
-    delete[] temp;
     return filenameWithPathStr;
 }
 
