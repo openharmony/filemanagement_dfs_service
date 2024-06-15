@@ -59,7 +59,7 @@ public:
     virtual ~NetworkAgentTemplate() {}
     void Start();
     void Stop();
-    int32_t GetRemotSA(const std::string &remoteDeviceId);
+    int32_t GetRemoteSA(const std::string &remoteDeviceId);
     void ConnectOnlineDevices();
     void DisconnectAllDevices();
     void ConnectDeviceAsync(const DeviceInfo info);
