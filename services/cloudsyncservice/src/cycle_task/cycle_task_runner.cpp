@@ -21,6 +21,7 @@
 #include "tasks/optimize_storage_task.h"
 #include "tasks/periodic_check_task.h"
 #include "tasks/save_subscription_task.h"
+#include "tasks/report_statistics_task.h"
 #include "cloud_status.h"
 #include "utils_log.h"
 #include "os_account_manager.h"
@@ -62,6 +63,7 @@ void CycleTaskRunner::InitTasks()
     cycleTasks_.push_back(std::make_shared<OptimizeStorageTask>(dataSyncManager_));
     cycleTasks_.push_back(std::make_shared<SaveSubscriptionTask>(dataSyncManager_));
     cycleTasks_.push_back(std::make_shared<PeriodicCheckTask>(dataSyncManager_));
+    cycleTasks_.push_back(std::make_shared<ReportStatisticsTask>(dataSyncManager_));
 }
 
 static int32_t GetString(const string &key, string &val, NativeRdb::ResultSet &resultSet)

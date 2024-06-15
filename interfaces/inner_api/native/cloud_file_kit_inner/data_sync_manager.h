@@ -52,6 +52,7 @@ public:
     virtual int32_t DisableCloud(const int32_t userId);
     virtual int32_t GetUserId(int32_t &userId);
     virtual int32_t SaveSubscription(const std::string &bundleName, const int32_t userId);
+    virtual int32_t ReportDownloadStat(const std::string &bundleName, const int32_t userId);
 };
 } // namespace OHOS::FileManagement::CloudSync
 
