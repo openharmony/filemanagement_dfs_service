@@ -408,7 +408,6 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
         LOGE("Failed to open local file, errno: %{public}d", errno);
         return 0;
     }
-    fi->fh = static_cast<uint64_t>(fd);
     string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
     if (remove(cloudMergeViewPath.c_str()) < 0) {
         LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
@@ -425,6 +424,7 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
     }
     MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
     cInode->mBase->hasDownloaded = true;
+    fi->fh = static_cast<uint64_t>(fd);
     return 0;
 }
 
@@ -442,8 +442,6 @@ static int HandleOpenResult(fuse_req_t req, CloudFile::CloudError ckError, struc
         if (ret < 0) {
             return ret;
         }
-    } else {
-        fi->fh = UINT64_MAX;
     }
     cInode->sessionRefCount++;
     LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
@@ -455,6 +453,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    fi->fh = UINT64_MAX;
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId);
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
