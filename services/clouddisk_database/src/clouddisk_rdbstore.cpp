@@ -1554,9 +1554,11 @@ static void VersionAddRootDirectory(RdbStore &store)
     if (ret != NativeRdb::E_OK) {
         LOGE("add root_directory fail, ret = %{public}d", ret);
     }
-    const string setRootDirectory = "UPDATE " + FileColumn::FILES_TABLE +
-        " SET " + FileColumn::ROOT_DIRECTORY + " = " + system::GetParameter(FILEMANAGER_KEY, "");
-    ret = store.ExecuteSql(setRootDirectory);
+    ValuesBucket rootDirectory;
+    rootDirectory.PutString(FileColumn::ROOT_DIRECTORY, system::GetParameter(FILEMANAGER_KEY, ""));
+    int32_t changedRows = -1;
+    vector<ValueObject> bindArgs;
+    ret = store.Update(changedRows, FileColumn::FILES_TABLE, rootDirectory, "", bindArgs);
     if (ret != NativeRdb::E_OK) {
         LOGE("set root_directory fail, err %{public}d", ret);
     }
