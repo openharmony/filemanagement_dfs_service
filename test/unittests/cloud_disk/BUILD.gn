@@ -20,11 +20,13 @@ ohos_unittest("account_status_listener_test") {
   include_dirs = [
     "${distributedfile_path}/utils/log/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${services_path}/cloudfiledaemon/include/fuse_manager/",
   ]
 
   sources = [
     "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/account_status_listener.cpp",
+    "${services_path}/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
     "account_status_listener_test.cpp",
   ]
 

@@ -31,6 +31,10 @@ int32_t ReportStatisticsTask::RunTaskForBundle(int32_t userId, std::string bundl
     if (ret != E_OK) {
         LOGE("report download file stat failed");
     }
+    ret = dataSyncManager_->ReportReadFileStat(bundleName, userId);
+    if (ret != E_OK) {
+        LOGE("report read file stat failed");
+    }
     return ret;
 }
 } // namespace CloudSync
