@@ -46,7 +46,7 @@ static int32_t GetRangeIndex(uint64_t value, const vector<uint64_t> rangeVector)
 {
     int32_t index = 0;
     for (; index < rangeVector.size(); index++) {
-        if (value < rangeVector[index]) {
+        if (value <= rangeVector[index]) {
             break;
         }
     }
@@ -56,18 +56,30 @@ static int32_t GetRangeIndex(uint64_t value, const vector<uint64_t> rangeVector)
 void CloudDaemonStatistic::UpdateOpenSizeStat(uint64_t size)
 {
     uint32_t index = GetRangeIndex(size / FILE_SIZE_BYTE_TO_KB, OPEN_SIZE_RANGE_VECTOR);
+    if (index >= OPEN_SIZE_MAX) {
+        LOGE("update open size stat fail, index overflow, index = %{public}u.", index);
+        return;
+    }
     openSizeStat_[index]++;
 }
 
 void CloudDaemonStatistic::UpdateOpenTimeStat(uint32_t type, uint64_t time)
 {
     uint32_t index = GetRangeIndex(time, OPEN_TIME_RANGE_VECTOR);
+    if (index >= OPEN_TIME_MAX) {
+        LOGE("update open time stat fail, index overflow, index = %{public}u.", index);
+        return;
+    }
     openTimeStat_[type][index]++;
 }
 
 void CloudDaemonStatistic::UpdateReadSizeStat(uint64_t size)
 {
     uint32_t index = GetRangeIndex(size / FILE_SIZE_BYTE_TO_KB, READ_SIZE_RANGE_VECTOR);
+    if (index >= READ_SIZE_MAX) {
+        LOGE("update read size stat fail, index overflow, index = %{public}u.", index);
+        return;
+    }
     readSizeStat_[index]++;
 }
 
@@ -75,6 +87,11 @@ void CloudDaemonStatistic::UpdateReadTimeStat(uint64_t size, uint64_t time)
 {
     uint32_t indexSize = GetRangeIndex(size / FILE_SIZE_BYTE_TO_KB, READ_SIZE_RANGE_VECTOR);
     uint32_t indexTime = GetRangeIndex(time, READ_TIME_RANGE_VECTOR);
+    if (indexSize >= READ_SIZE_MAX || indexTime >= READ_TIME_MAX) {
+        LOGE("update read time stat fail, index overflow, indexSize = %{public}u, indexTime = %{public}u.",
+            indexSize, indexTime);
+        return;
+    }
     readTimeStat_[indexSize][indexTime]++;
 }
 
