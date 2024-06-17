@@ -384,6 +384,14 @@ static shared_ptr<CloudDatabase> GetDatabase(int32_t userId)
         return nullptr;
     }
 
+    if (AccountStatus::IsNeedCleanCache()) {
+        auto ret = instance->CleanCloudUserInfo(userId);
+        if (ret != 0) {
+            return nullptr;
+        }
+        LOGI("execute clean cloud user info success");
+    }
+
     auto database = instance->GetCloudDatabase(userId, system::GetParameter(FILEMANAGER_KEY, ""));
     if (database == nullptr) {
         LOGE("get cloud file kit database fail");

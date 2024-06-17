@@ -62,7 +62,7 @@ int32_t CloudFileKit::GetAppConfigParams(const int32_t userId,
     return E_OK;
 }
 
-int32_t CloudFileKit::CleanCloudUserInfo()
+int32_t CloudFileKit::CleanCloudUserInfo(const int32_t userId)
 {
     return E_OK;
 }

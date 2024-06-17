@@ -41,7 +41,7 @@ public:
     virtual int32_t GetAppConfigParams(const int32_t userId,
                                        const std::string &bundleName,
                                        std::map<std::string, std::string> &param);
-    virtual int32_t CleanCloudUserInfo();
+    virtual int32_t CleanCloudUserInfo(const int32_t userId);
     virtual int32_t OnUploadAsset(const int32_t userId, const std::string &request, std::string &result);
 
     virtual std::shared_ptr<DataSyncManager> GetDataSyncManager();
