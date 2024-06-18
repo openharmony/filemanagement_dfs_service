@@ -70,6 +70,23 @@ bool SoftbusAgent::IsSameAccount(const std::string &networkId)
     return false;
 }
 
+int32_t JudgeNetworkTypeIsWife(const DeviceInfo &info)
+{
+    int32_t networkType;
+    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
+    int errCode = deviceManager.GetNetworkTypeByNetworkId(IDaemon::SERVICE_NAME, info.GetCid(), networkType);
+    if (errCode) {
+        LOGE("failed to get network type by network id errCode = %{public}d", errCode);
+        FileManagement::ERR_BAD_VALUE;
+    }
+    if (!(static_cast<uint32_t>(networkType) & (1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI))) {
+        LOGI("not wifi network networkType = %{public}d == %{public}d", networkType,
+             1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI);
+        FileManagement::ERR_BAD_VALUE;
+    }
+    FileManagement::ERR_OK;
+}
+
 void SoftbusAgent::JoinDomain()
 {
     LOGI("JoinDomain Enter.");
@@ -184,6 +201,10 @@ void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType
 {
     LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d",
         Utils::GetAnonyString(info.GetCid()).c_str(), linkType);
+    if (JudgeNetworkTypeIsWife(info)) {
+        LOGI("networktype is not wife");
+        return;
+    }
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
         .OnShutdown = SoftbusSessionDispatcher::OnSessionClosed,
