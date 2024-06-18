@@ -30,6 +30,8 @@ using namespace std;
 using namespace NativeRdb;
 
 static const int32_t LOCAL_ID_OFFSET = 100;
+static const uint32_t STAT_MODE_REG = 0660;
+static const uint32_t STAT_MODE_DIR = 0771;
 
 int32_t CloudDiskRdbUtils::GetInt(const string &key, int32_t &val,
                                   const shared_ptr<ResultSet> resultSet)
@@ -84,7 +86,7 @@ int32_t CloudDiskRdbUtils::GetString(const string &key, string &val,
 
 static void FillFileInfo(const RowEntity &rowEntity, CloudDiskFileInfo &info)
 {
-    rowEntity.Get(FileColumn::FILE_NAME).GetString(info.fileName);
+    rowEntity.Get(FileColumn::FILE_NAME).GetString(info.name);
     rowEntity.Get(FileColumn::CLOUD_ID).GetString(info.cloudId);
     rowEntity.Get(FileColumn::PARENT_CLOUD_ID).GetString(info.parentCloudId);
     int32_t int_variable;
@@ -101,6 +103,7 @@ static void FillFileInfo(const RowEntity &rowEntity, CloudDiskFileInfo &info)
     info.mtime = static_cast<unsigned long long>(long_variable);
     rowEntity.Get(FileColumn::IS_DIRECTORY).GetInt(int_variable);
     info.IsDirectory = (int_variable == DIRECTORY);
+    info.mode = (info.IsDirectory) ? (S_IFDIR | STAT_MODE_DIR) : (S_IFREG | STAT_MODE_REG);
     rowEntity.Get(FileColumn::ROW_ID).GetLong(long_variable);
     info.localId = static_cast<long long>(long_variable) + LOCAL_ID_OFFSET;
 }
@@ -140,11 +143,12 @@ int32_t CloudDiskRdbUtils::ResultSetToFileInfos(const shared_ptr<ResultSet> resu
     off_t nextOff = 0;
     while (resultSet->GoToNextRow() == E_OK) {
         CloudDiskFileInfo info;
-        GetString(FileColumn::FILE_NAME, info.fileName, resultSet);
+        GetString(FileColumn::FILE_NAME, info.name, resultSet);
         int32_t isDirectory;
         GetInt(FileColumn::IS_DIRECTORY, isDirectory, resultSet);
         info.IsDirectory = (isDirectory == DIRECTORY);
-        nextOff += FuseDentryAlignSize(info.fileName.c_str());
+        info.mode = (info.IsDirectory) ? (S_IFDIR | STAT_MODE_DIR) : (S_IFREG | STAT_MODE_REG);
+        nextOff += FuseDentryAlignSize(info.name.c_str());
         info.nextOff = nextOff;
         infos.emplace_back(info);
     }

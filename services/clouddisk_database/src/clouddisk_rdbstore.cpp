@@ -157,7 +157,7 @@ int32_t CloudDiskRdbStore::LookUp(const std::string &parentCloudId,
 int32_t CloudDiskRdbStore::GetAttr(const std::string &cloudId, CloudDiskFileInfo &info)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || cloudId == "rootId") {
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
         LOGE("getAttr parameter is invalid");
         return E_INVAL_ARG;
     }
@@ -180,7 +180,7 @@ int32_t CloudDiskRdbStore::SetAttr(const std::string &fileName, const std::strin
         LOGE("cloudId is empty");
         return E_INVAL_ARG;
     }
-    if (cloudId == "rootId") {
+    if (cloudId == ROOT_CLOUD_ID) {
         LOGE("cloudId is rootId");
         return E_INVAL_ARG;
     }
@@ -521,7 +521,7 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
     const std::string &cloudId)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || cloudId == "rootId") {
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
         LOGE("write parameter is invalid");
         return E_INVAL_ARG;
     }
@@ -783,7 +783,7 @@ int32_t CloudDiskRdbStore::LocationGetXattr(const std::string &name, const std::
 int32_t CloudDiskRdbStore::FavoriteGetXattr(const std::string &cloudId, const std::string &key, std::string &value)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || cloudId == "rootId" || key != IS_FAVORITE_XATTR) {
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID || key != IS_FAVORITE_XATTR) {
         LOGE("getxattr parameter is invalid");
         return E_INVAL_ARG;
     }
@@ -807,7 +807,7 @@ int32_t CloudDiskRdbStore::FavoriteGetXattr(const std::string &cloudId, const st
 int32_t CloudDiskRdbStore::FileStatusGetXattr(const std::string &cloudId, const std::string &key, std::string &value)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || cloudId == "rootId" || key != IS_FILE_STATUS_XATTR) {
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID || key != IS_FILE_STATUS_XATTR) {
         LOGE("getxattr parameter is invalid");
         return E_INVAL_ARG;
     }
@@ -847,7 +847,7 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
             return FileStatusGetXattr(cloudId, key, value);
             break;
     }
-    if (cloudId.empty() || cloudId == "rootId") {
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
         LOGE("getxattr parameter is invalid");
         return E_INVAL_ARG;
     } else {
@@ -870,7 +870,7 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
             return FavoriteSetXattr(cloudId, value);
             break;
     }
-    if (cloudId.empty() || cloudId == "rootId") {
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
         LOGE("setxattr parameter is invalid");
         return E_INVAL_ARG;
     } else {
@@ -1033,7 +1033,7 @@ int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &cloudId)
 int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &position)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || cloudId == "rootId") {
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
         LOGE("Unlink parameters is invalid");
         return E_INVAL_ARG;
     }
@@ -1070,7 +1070,7 @@ int32_t CloudDiskRdbStore::GetDirtyType(const std::string &cloudId, int32_t &dir
 int32_t CloudDiskRdbStore::GetCurNode(const std::string &cloudId, CacheNode &curNode)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
-    if (cloudId.empty() || cloudId == "rootId") {
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
         LOGE("parameter invalid");
         return E_INVAL_ARG;
     }
@@ -1134,7 +1134,7 @@ int32_t CloudDiskRdbStore::GetUriFromDB(const std::string &parentCloudId, std::s
 {
     string realPrefix = CLOUDDISK_URI_PREFIX;
     realPrefix.replace(realPrefix.find(BUNDLENAME_FLAG), BUNDLENAME_FLAG.length(), bundleName_);
-    if (parentCloudId.empty() || parentCloudId == rootId_ || parentCloudId == "rootId") {
+    if (parentCloudId.empty() || parentCloudId == rootId_ || parentCloudId == ROOT_CLOUD_ID) {
         uri = realPrefix + BACKFLASH + uri;
         return E_OK;
     }
@@ -1148,7 +1148,7 @@ int32_t CloudDiskRdbStore::GetUriFromDB(const std::string &parentCloudId, std::s
     }
     uri = fileName + BACKFLASH + uri;
     uint32_t queryTimes = 0;
-    while (nextCloudId != "rootId") {
+    while (nextCloudId != ROOT_CLOUD_ID) {
         ret = GetParentNode(nextCloudId, nextCloudId, fileName);
         if (ret != E_OK) {
             return E_OK;
@@ -1199,7 +1199,7 @@ int32_t CloudDiskRdbStore::CheckRootIdValid()
         return E_OK;
     }
     CloudPrefImpl cloudPrefImpl(userId_, system::GetParameter(FILEMANAGER_KEY, ""), FileColumn::FILES_TABLE);
-    cloudPrefImpl.GetString("rootId", rootId_);
+    cloudPrefImpl.GetString(ROOT_CLOUD_ID, rootId_);
     if (rootId_.empty()) {
         LOGE("get rootId fail");
         return E_INVAL_ARG;
@@ -1391,7 +1391,7 @@ static void VersionSetFileStatusDefault(RdbStore &store)
 static int32_t GetMetaBaseData(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
 {
     RETURN_ON_ERR(CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, info.cloudId, resultSet));
-    RETURN_ON_ERR(CloudDiskRdbUtils::GetString(FileColumn::FILE_NAME, info.fileName, resultSet));
+    RETURN_ON_ERR(CloudDiskRdbUtils::GetString(FileColumn::FILE_NAME, info.name, resultSet));
     int32_t isDir = 0;
     RETURN_ON_ERR(CloudDiskRdbUtils::GetInt(FileColumn::IS_DIRECTORY, isDir, resultSet));
     info.IsDirectory = static_cast<bool>(isDir);
@@ -1455,7 +1455,7 @@ static int32_t GenerateDentryRecursively(RdbStore &store, const string &parentCl
         CloudDiskFileInfo info;
         while (resultSet->GoToNextRow() == 0) {
             RETURN_ON_ERR(GetMetaBaseData(info, resultSet));
-            MetaBase metaBase(info.fileName);
+            MetaBase metaBase(info.name);
             auto callback = [info] (MetaBase &m) {
                 m.cloudId = info.cloudId;
                 m.atime = info.atime;
@@ -1466,7 +1466,7 @@ static int32_t GenerateDentryRecursively(RdbStore &store, const string &parentCl
                 m.fileType = FILE_TYPE_CONTENT;
             };
             auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, parentCloudId);
-            ret = metaFile->DoLookupAndUpdate(info.fileName, callback);
+            ret = metaFile->DoLookupAndUpdate(info.name, callback);
             if (ret != E_OK) {
                 LOGE("insert new dentry failed, ret = %{public}d", ret);
                 return ret;
@@ -1505,7 +1505,7 @@ static int32_t GenerateRecycleDentryRecursively(RdbStore &store)
         CloudDiskFileInfo info;
         while (resultSet->GoToNextRow() == 0) {
             RETURN_ON_ERR(GetMetaBaseData(info, resultSet));
-            string uniqueName = info.fileName + "_" + std::to_string(info.rowId);
+            string uniqueName = info.name + "_" + std::to_string(info.rowId);
             MetaBase metaBase(uniqueName);
             auto callback = [info] (MetaBase &m) {
                 m.cloudId = info.cloudId;

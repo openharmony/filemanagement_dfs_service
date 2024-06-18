@@ -657,8 +657,9 @@ static int32_t GetChildInfos(fuse_req_t req, fuse_ino_t ino, vector<CloudDiskFil
     return 0;
 }
 
+template<typename T>
 static size_t CloudSeekDir(fuse_req_t req, fuse_ino_t ino, off_t off,
-                           const vector<CloudDiskFileInfo> &childInfos)
+                           const std::vector<T> &childInfos)
 {
     if (off == 0 || childInfos.empty()) {
         return 0;
@@ -679,26 +680,34 @@ static size_t CloudSeekDir(fuse_req_t req, fuse_ino_t ino, off_t off,
     return 0;
 }
 
-static size_t CloudSeekDir(fuse_req_t req, fuse_ino_t ino, off_t off,
-                           const std::vector<MetaBase> &childInfos)
+template<typename T>
+static void AddDirEntryToBuf(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
+    const std::vector<T> &childInfos)
 {
-    if (off == 0 || childInfos.empty()) {
-        return 0;
+    size_t startPos = CloudSeekDir<T>(req, ino, off, childInfos);
+    string buf;
+    buf.resize(size);
+    if (childInfos.empty() || startPos == childInfos.size()) {
+        LOGE("empty buffer replied");
+        return (void)fuse_reply_buf(req, buf.c_str(), 0);
     }
 
-    size_t i = 0;
-    for (; i < childInfos.size(); i++) {
-        if (childInfos[i].nextOff == off) {
-            /* Start position should be the index of next entry */
-            return i + 1;
+    size_t nextOff = 0;
+    size_t remain = size;
+    static const struct stat statInfoDir = { .st_mode = S_IFDIR | STAT_MODE_DIR };
+    static const struct stat statInfoReg = { .st_mode = S_IFREG | STAT_MODE_REG };
+    for (size_t i = startPos; i < childInfos.size(); i++) {
+        size_t alignSize = CloudDiskRdbUtils::FuseDentryAlignSize(childInfos[i].name.c_str());
+        if (alignSize > remain) {
+            break;
         }
+        alignSize = fuse_add_direntry(req, &buf[nextOff], alignSize, childInfos[i].name.c_str(),
+            childInfos[i].mode != S_IFREG ? &statInfoDir : &statInfoReg,
+            off + static_cast<off_t>(nextOff) + static_cast<off_t>(alignSize));
+        nextOff += alignSize;
+        remain -= alignSize;
     }
-    if (i == childInfos.size()) {
-        /* The directory may changed recently, find the next valid index for this offset */
-        return FindNextPos(childInfos, off);
-    }
-
-    return 0;
+    (void)fuse_reply_buf(req, buf.c_str(), size - remain);
 }
 
 static void ReadDirForRecycle(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
@@ -714,37 +723,20 @@ static void ReadDirForRecycle(fuse_req_t req, fuse_ino_t ino, size_t size, off_t
     }
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
         inode->bundleName, RECYCLE_NAME);
-    std::vector<MetaBase> bases;
-    err = metaFile->LoadChildren(bases);
+    std::vector<MetaBase> childInfos;
+    err = metaFile->LoadChildren(childInfos);
     if (err != 0) {
         LOGE("load children failed, err=%{public}d", err);
         fuse_reply_err(req, EINVAL);
         return;
     }
-
-    size_t startPos = CloudSeekDir(req, ino, off, bases);
-    string buf;
-    buf.resize(size);
-    if (bases.empty() || startPos == bases.size()) {
-        return (void)fuse_reply_buf(req, buf.c_str(), 0);
-    }
-
     size_t nextOff = 0;
-    size_t remain = size;
-    static const struct stat STAT_INFO_DIR = { .st_mode = S_IFDIR | STAT_MODE_DIR };
-    static const struct stat STAT_INFO_REG = { .st_mode = S_IFREG | STAT_MODE_REG };
-    for (size_t i = startPos; i < bases.size(); i++) {
-        size_t alignSize = CloudDiskRdbUtils::FuseDentryAlignSize(bases[i].name.c_str());
-        if (alignSize > remain) {
-            break;
-        }
-        alignSize = fuse_add_direntry(req, &buf[nextOff], alignSize, bases[i].name.c_str(),
-            bases[i].mode != S_IFREG ? &STAT_INFO_DIR : &STAT_INFO_REG,
-            off + static_cast<off_t>(nextOff) + static_cast<off_t>(alignSize));
+    for (size_t i = 0; i < childInfos.size(); ++i) {
+        size_t alignSize = CloudDiskRdbUtils::FuseDentryAlignSize(childInfos[i].name.c_str());
         nextOff += alignSize;
-        remain -= alignSize;
+        childInfos[i].nextOff = nextOff;
     }
-    (void)fuse_reply_buf(req, buf.c_str(), size - remain);
+    AddDirEntryToBuf(req, ino, size, off, childInfos);
 }
 
 void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
@@ -759,32 +751,10 @@ void FileOperationsCloud::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
     vector<CloudDiskFileInfo> childInfos;
     int32_t err = GetChildInfos(req, ino, childInfos);
     if (err != 0) {
+        LOGE("failed to get child infos, err=%{public}d", err);
         return (void)fuse_reply_err(req, err);
     }
-
-    size_t startPos = CloudSeekDir(req, ino, off, childInfos);
-    string buf;
-    buf.resize(size);
-    if (childInfos.empty() || startPos == childInfos.size()) {
-        return (void)fuse_reply_buf(req, buf.c_str(), 0);
-    }
-
-    size_t nextOff = 0;
-    size_t remain = size;
-    static const struct stat STAT_INFO_DIR = { .st_mode = S_IFDIR | STAT_MODE_DIR };
-    static const struct stat STAT_INFO_REG = { .st_mode = S_IFREG | STAT_MODE_REG };
-    for (size_t i = startPos; i < childInfos.size(); i++) {
-        size_t alignSize = CloudDiskRdbUtils::FuseDentryAlignSize(childInfos[i].fileName.c_str());
-        if (alignSize > remain) {
-            break;
-        }
-        alignSize = fuse_add_direntry(req, &buf[nextOff], alignSize, childInfos[i].fileName.c_str(),
-            childInfos[i].IsDirectory ? &STAT_INFO_DIR : &STAT_INFO_REG,
-            off + static_cast<off_t>(nextOff) + static_cast<off_t>(alignSize));
-        nextOff += alignSize;
-        remain -= alignSize;
-    }
-    (void)fuse_reply_buf(req, buf.c_str(), size - remain);
+    AddDirEntryToBuf(req, ino, size, off, childInfos);
 }
 
 int32_t CheckXattr(const char *name)
