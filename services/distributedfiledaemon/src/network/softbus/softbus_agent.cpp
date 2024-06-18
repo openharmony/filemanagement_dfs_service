@@ -77,14 +77,14 @@ int32_t JudgeNetworkTypeIsWife(const DeviceInfo &info)
     int errCode = deviceManager.GetNetworkTypeByNetworkId(IDaemon::SERVICE_NAME, info.GetCid(), networkType);
     if (errCode) {
         LOGE("failed to get network type by network id errCode = %{public}d", errCode);
-        FileManagement::ERR_BAD_VALUE;
+        return FileManagement::ERR_BAD_VALUE;
     }
     if (!(static_cast<uint32_t>(networkType) & (1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI))) {
         LOGI("not wifi network networkType = %{public}d == %{public}d", networkType,
              1 << DistributedHardware::BIT_NETWORK_TYPE_WIFI);
-        FileManagement::ERR_BAD_VALUE;
+        return FileManagement::ERR_BAD_VALUE;
     }
-    FileManagement::ERR_OK;
+    return FileManagement::ERR_OK;
 }
 
 void SoftbusAgent::JoinDomain()
