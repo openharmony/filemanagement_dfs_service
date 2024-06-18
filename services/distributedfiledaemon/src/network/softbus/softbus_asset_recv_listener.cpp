@@ -95,9 +95,9 @@ void SoftbusAssetRecvListener::OnRecvAssetStart(int32_t socketId, const char **f
         return;
     }
     AssetCallbackManager::GetInstance().NotifyAssetRecvStart(srcNetworkId,
-                                                              assetObj->dstNetworkId_,
-                                                              assetObj->sessionId_,
-                                                              assetObj->dstBundleName_);
+                                                             assetObj->dstNetworkId_,
+                                                             assetObj->sessionId_,
+                                                             assetObj->dstBundleName_);
 }
 
 void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt)
@@ -130,7 +130,7 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
         if (ret != FileManagement::ERR_OK) {
             LOGE("MoveAsset fail, socket %{public}d", socketId);
             AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj,
-                                                                         FileManagement::ERR_BAD_VALUE);
+                                                                        FileManagement::ERR_BAD_VALUE);
             SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
             return;
         }
@@ -151,7 +151,7 @@ void SoftbusAssetRecvListener::OnRecvAssetError(int32_t socketId, int32_t errorC
     sptr<AssetObj> nullAssetObj = new (std::nothrow) AssetObj();
 
     AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, nullAssetObj,
-                                                                 FileManagement::ERR_BAD_VALUE);
+                                                                FileManagement::ERR_BAD_VALUE);
     SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
 }
 
