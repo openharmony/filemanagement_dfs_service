@@ -17,7 +17,7 @@
 
 #include <memory>
 
-#include "asset_callback_mananger.h"
+#include "asset_callback_manager.h"
 #include "dfs_error.h"
 #include "network/softbus/softbus_asset_send_listener.h"
 #include "network/softbus/softbus_handler_asset.h"
@@ -79,8 +79,8 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
     if (ret != E_OK) {
         LOGE("ExecutePushAsset AssetBind failed, ret %{public}d", ret);
         auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
-        AssetCallbackMananger::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_EVENT_HANDLER);
-        AssetCallbackMananger::GetInstance().RemoveSendCallback(taskId);
+        AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_EVENT_HANDLER);
+        AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
         return;
     }
     SoftBusHandlerAsset::GetInstance().AddAssetObj(socketId, assetObj);
@@ -176,9 +176,9 @@ int32_t DaemonExecute::HandleZip(const std::vector<std::string> &fileList,
 void DaemonExecute::HandlePushAssetFail(int32_t socketId, const sptr<AssetObj> &assetObj)
 {
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
-    AssetCallbackMananger::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_EVENT_HANDLER);
+    AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_EVENT_HANDLER);
     SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
-    AssetCallbackMananger::GetInstance().RemoveSendCallback(taskId);
+    AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
 }
 } // namespace DistributedFile
 } // namespace Storage

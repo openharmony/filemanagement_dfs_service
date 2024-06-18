@@ -58,14 +58,14 @@ public:
     void RemoveAssetObj(int32_t socketId);
 
     int32_t GenerateAssetObjInfo(int32_t socketId,
-                                const std::string &fileName,
-                                const sptr<AssetObj> &assetObj);
+                                 const std::string &fileName,
+                                 const sptr<AssetObj> &assetObj);
     std::vector<std::string> GenerateUris(const std::vector<std::string> &fileList,
                                           const std::string &dstBundleName,
                                           bool isSingleFile);
     int32_t CompressFile(const std::vector<std::string> &fileList,
-                        const std::string &relativePath,
-                        const std::string &zipFileName);
+                         const std::string &relativePath,
+                         const std::string &zipFileName);
     std::vector<std::string> DecompressFile(const std::string &unZipFileName, const std::string &relativePath);
     bool MkDirRecurse(const std::string& path, mode_t mode);
 

@@ -23,7 +23,7 @@
 #include <unordered_set>
 
 #include "accesstoken_kit.h"
-#include "asset_callback_mananger.h"
+#include "asset_callback_manager.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "connection_detector.h"
@@ -36,6 +36,7 @@
 #include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
 #include "network/softbus/softbus_handler.h"
+#include "network/softbus/softbus_handler_asset.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
@@ -44,7 +45,6 @@
 #include "trans_mananger.h"
 #include "utils_directory.h"
 #include "utils_log.h"
-#include "network/softbus/softbus_handler_asset.h"
 
 namespace OHOS {
 namespace Storage {
@@ -619,8 +619,8 @@ int32_t Daemon::PushAsset(int32_t userId,
         LOGE("assetObj info is null.");
         return E_NULLPTR;
     }
-    AssetCallbackMananger::GetInstance().AddSendCallback(taskId, sendCallback);
-    std::shared_ptr<PushAssetData> pushData = std::make_shared<PushAssetData>(userId, assetObj);
+    AssetCallbackManager::GetInstance().AddSendCallback(taskId, sendCallback);
+    auto pushData = std::make_shared<PushAssetData>(userId, assetObj);
     auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
     bool isSucc = eventHandler_->SendEvent(msgEvent, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     if (!isSucc) {
@@ -637,7 +637,7 @@ int32_t Daemon::RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallba
         LOGE("recvCallback is nullptr.");
         return E_NULLPTR;
     }
-    AssetCallbackMananger::GetInstance().AddRecvCallback(recvCallback);
+    AssetCallbackManager::GetInstance().AddRecvCallback(recvCallback);
     return E_OK;
 }
 
@@ -648,7 +648,7 @@ int32_t Daemon::UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCall
         LOGE("recvCallback is nullptr.");
         return E_NULLPTR;
     }
-    AssetCallbackMananger::GetInstance().RemoveRecvCallback(recvCallback);
+    AssetCallbackManager::GetInstance().RemoveRecvCallback(recvCallback);
     return E_OK;
 }
 

@@ -15,7 +15,7 @@
 
 #include "network/softbus/softbus_asset_send_listener.h"
 
-#include "asset_callback_mananger.h"
+#include "asset_callback_manager.h"
 #include "dfs_error.h"
 #include "network/softbus/softbus_handler_asset.h"
 #include "utils_log.h"
@@ -56,9 +56,9 @@ void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char 
         return;
     }
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
-    AssetCallbackMananger::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_OK);
+    AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_OK);
     SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
-    AssetCallbackMananger::GetInstance().RemoveSendCallback(taskId);
+    AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
     SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], !SoftBusAssetSendListener::isSingleFile_);
 }
 
@@ -78,9 +78,9 @@ void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId,
         return;
     }
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
-    AssetCallbackMananger::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_SEND_FILE);
+    AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_SEND_FILE);
     SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
-    AssetCallbackMananger::GetInstance().RemoveSendCallback(taskId);
+    AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
     SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], !SoftBusAssetSendListener::isSingleFile_);
 }
 
