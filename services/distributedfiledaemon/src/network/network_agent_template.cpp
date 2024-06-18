@@ -219,7 +219,7 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
 
 void NetworkAgentTemplate::GetSession(const string &cid, uint8_t linkType)
 {
-    std::this_thread::sleep_for(std::chrono:seconds(NOTIFY_GET_SESSION_WAITING_TIME));     
+    std::this_thread::sleep_for(std::chrono::seconds(NOTIFY_GET_SESSION_WAITING_TIME));     
     DeviceInfo deviceInfo;
     deviceInfo.SetCid(cid);
     if (linkType == LINK_TYPE_AP) {
