@@ -70,7 +70,7 @@ bool SoftbusAgent::IsSameAccount(const std::string &networkId)
     return false;
 }
 
-int32_t JudgeNetworkTypeIsWife(const DeviceInfo &info)
+int32_t SoftbusAgent::JudgeNetworkTypeIsWife(const DeviceInfo &info)
 {
     int32_t networkType;
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
