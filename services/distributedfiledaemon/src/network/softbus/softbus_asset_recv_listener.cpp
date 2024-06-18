@@ -291,7 +291,7 @@ int32_t SoftbusAssetRecvListener::HandleZipFile(int32_t socketId,
         LOGE("Generate uris fail");
         return FileManagement::ERR_BAD_VALUE;
     }
-    assetObj->uris_ = uris;
+    assetObj->uris_.insert(assetObj->uris_.end(), uris.begin(), uris.end());
 
     bool moveRet = MoveAsset(fileList, false);
     if (!moveRet) {
