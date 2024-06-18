@@ -25,8 +25,22 @@ config("private_config") {
   include_dirs = []
 }
 
+config("optimize-size") {
+  cflags = [
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Oz",
+  ]
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Oz",
+  ]
+}
+
 ohos_shared_library("cloudfile_kit") {
   branch_protector_ret = "pac_ret"
+  config = [ ":optimize-size" ]
   sanitize = {
     ubsan = true
     boundary_sanitize = true
@@ -116,6 +130,7 @@ config("cloudfile_kit_lite_public_config") {
 
 ohos_shared_library("cloudfile_kit_core") {
   branch_protector_ret = "pac_ret"
+  config = [ ":optimize-size" ]
   sanitize = {
     ubsan = true
     boundary_sanitize = true

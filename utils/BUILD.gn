@@ -55,8 +55,22 @@ config("utils_public_config") {
   ]
 }
 
+config("optimize-size") {
+  cflags = [
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Oz",
+  ]
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Oz",
+  ]
+}
+
 ohos_shared_library("libdistributedfileutils") {
   branch_protector_ret = "pac_ret"
+  config = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -136,6 +150,7 @@ config("dentry_public_config") {
 
 ohos_shared_library("libdistributedfiledentry") {
   branch_protector_ret = "pac_ret"
+  config = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -189,6 +204,7 @@ config("utils_lite_public_config") {
 
 ohos_shared_library("libdistributedfileutils_lite") {
   branch_protector_ret = "pac_ret"
+  config = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true

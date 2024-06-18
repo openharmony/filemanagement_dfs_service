@@ -28,8 +28,22 @@ config("public_config") {
       [ "${distributedfile_path}/adapter/cloud_adapter_example/include" ]
 }
 
+config("optimize-size") {
+  cflags = [
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Oz",
+  ]
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Oz",
+  ]
+}
+
 ohos_shared_library("cloud_adapter") {
   branch_protector_ret = "pac_ret"
+  config = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true

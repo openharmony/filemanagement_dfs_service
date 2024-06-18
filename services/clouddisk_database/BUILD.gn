@@ -28,8 +28,22 @@ config("clouddisk_database_public_config") {
   ]
 }
 
+config("optimize-size") {
+  cflags = [
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Oz",
+  ]
+  cflags_cc = [
+    "-fvisibility-inlines-hidden",
+    "-Oz",
+  ]
+}
+
 ohos_shared_library("clouddisk_database") {
   branch_protector_ret = "pac_ret"
+  config = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
