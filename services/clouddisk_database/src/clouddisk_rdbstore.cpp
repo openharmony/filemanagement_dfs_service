@@ -635,10 +635,13 @@ static int32_t RecycleSetValue(int32_t val, ValuesBucket &setXAttr)
         setXAttr.PutInt(FileColumn::OPERATE_TYPE, static_cast<int32_t>(OperationType::RESTORE));
         setXAttr.PutLong(FileColumn::FILE_TIME_RECYCLED, CANCEL_STATE);
         setXAttr.PutInt(FileColumn::DIRECTLY_RECYCLED, CANCEL_STATE);
+        setXAttr.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
     } else if (val == 1) {
+        int64_t recycledTime = UTCTimeMilliSeconds();
         setXAttr.PutInt(FileColumn::OPERATE_TYPE, static_cast<int32_t>(OperationType::DELETE));
-        setXAttr.PutLong(FileColumn::FILE_TIME_RECYCLED, UTCTimeMilliSeconds());
+        setXAttr.PutLong(FileColumn::FILE_TIME_RECYCLED, recycledTime);
         setXAttr.PutInt(FileColumn::DIRECTLY_RECYCLED, SET_STATE);
+        setXAttr.PutLong(FileColumn::META_TIME_EDITED, recycledTime);
     } else {
         LOGE("invalid value");
         return E_RDB;
@@ -730,8 +733,10 @@ int32_t CloudDiskRdbStore::FavoriteSetXattr(const std::string &cloudId, const st
     ValuesBucket setXAttr;
     if (val == 0) {
         setXAttr.PutInt(FileColumn::IS_FAVORITE, CANCEL_STATE);
+        setXAttr.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
     } else if (val == 1) {
         setXAttr.PutInt(FileColumn::IS_FAVORITE, SET_STATE);
+        setXAttr.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
     } else {
         return E_RDB;
     }
@@ -1251,6 +1256,7 @@ static const std::string &UpdateFileTriggerSync(RdbStore &store)
     static const string CREATE_FILES_UPDATE_CLOUD_SYNC =
         "CREATE TRIGGER files_update_cloud_sync_trigger AFTER UPDATE ON " + FileColumn::FILES_TABLE +
         " FOR EACH ROW WHEN OLD.dirty_type IN (0,1,2,3) AND new.dirty_type IN (2,3)" +
+        " AND OLD.meta_time_edited != new.meta_time_edited" +
         " BEGIN SELECT cloud_sync_func(" + "'" + userId + "', " + "'" + bundleName + "'); END;";
     return CREATE_FILES_UPDATE_CLOUD_SYNC;
 }
@@ -1385,6 +1391,19 @@ static void VersionSetFileStatusDefault(RdbStore &store)
     int32_t ret = store.ExecuteSql(setFileStatus);
     if (ret != NativeRdb::E_OK) {
         LOGE("set file_status fail, err %{public}d", ret);
+    }
+}
+
+static void VersionFixSyncMetatimeTrigger(RdbStore &store)
+{
+    const string dropFilesUpdateTrigger = "DROP TRIGGER IF EXISTS files_update_cloud_sync_trigger";
+    if (store.ExecuteSql(dropFilesUpdateTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_update_cloud_sync_trigger fail");
+    }
+    const string addUpdateFileTrigger = UpdateFileTriggerSync(store);
+    int32_t ret = store.ExecuteSql(addUpdateFileTrigger);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add update file trigger fail, err %{public}d", ret);
     }
 }
 
@@ -1590,6 +1609,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     }
     if (oldVersion < VERSION_ADD_ROOT_DIRECTORY) {
         VersionAddRootDirectory(store);
+    }
+    if (oldVersion < VERSION_FIX_SYNC_METATIME_TRIGGER) {
+        VersionFixSyncMetatimeTrigger(store);
     }
     return NativeRdb::E_OK;
 }
