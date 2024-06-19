@@ -70,7 +70,7 @@ bool SoftbusAgent::IsSameAccount(const std::string &networkId)
     return false;
 }
 
-int32_t SoftbusAgent::JudgeNetworkTypeIsWife(const DeviceInfo &info)
+int32_t SoftbusAgent::JudgeNetworkTypeIsWifi(const DeviceInfo &info)
 {
     int32_t networkType;
     auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
@@ -201,8 +201,8 @@ void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType
 {
     LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d",
         Utils::GetAnonyString(info.GetCid()).c_str(), linkType);
-    if (JudgeNetworkTypeIsWife(info)) {
-        LOGI("networktype is not wife");
+    if (JudgeNetworkTypeIsWifi(info)) {
+        LOGI("networktype is not wifi");
         return;
     }
     ISocketListener sessionListener = {

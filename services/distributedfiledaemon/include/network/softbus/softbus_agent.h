@@ -34,7 +34,7 @@ public:
     void OnSessionOpened(const int32_t sessionId, PeerSocketInfo info);
     void OnSessionClosed(int32_t sessionId, const std::string peerDeviceId);
     static bool IsSameAccount(const std::string &networkId);
-    int32_t JudgeNetworkTypeIsWife(const DeviceInfo &info);
+    int32_t JudgeNetworkTypeIsWifi(const DeviceInfo &info);
 protected:
     void JoinDomain() override;
     void QuitDomain() override;
