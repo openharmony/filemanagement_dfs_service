@@ -31,6 +31,7 @@ constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 constexpr int32_t NUMBER_OF_RECONNECTIONS = 200;
 constexpr int32_t RECONNECTION_WAITING_TIME = 500;
+constexpr int32_t NOTIFY_GET_SESSION_WAITING_TIME = 2;
 constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 } // namespace
 
@@ -218,6 +219,7 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
 
 void NetworkAgentTemplate::GetSession(const string &cid, uint8_t linkType)
 {
+    std::this_thread::sleep_for(std::chrono::seconds(NOTIFY_GET_SESSION_WAITING_TIME));
     DeviceInfo deviceInfo;
     deviceInfo.SetCid(cid);
     if (linkType == LINK_TYPE_AP) {
