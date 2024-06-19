@@ -537,15 +537,14 @@ bool SoftBusHandlerAsset::IsDir(const std::string &path)
 
 std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::string &dir)
 {
-    char *filename = new char[BUFFER_SIZE];
+    auto filename = std::make_unique<char[]>(BUFFER_SIZE);
     unz_file_info64 fileInfo;
-    if (unzGetCurrentFileInfo64(unZipFile, &fileInfo, filename, BUFFER_SIZE, NULL, 0, NULL, 0) != UNZ_OK) {
+    if (unzGetCurrentFileInfo64(unZipFile, &fileInfo, filename.get(), BUFFER_SIZE, NULL, 0, NULL, 0) != UNZ_OK) {
         LOGE("Minizip failed to unzGetCurrentFileInfo64");
         return "";
     }
-    std::string filenameWithPath(filename);
+    std::string filenameWithPath(filename.get());
     filenameWithPath = dir + filenameWithPath;
-    delete[] filename;
     size_t pos = filenameWithPath.rfind('/');
     if (pos == std::string::npos) {
         LOGE("file path error, %{public}s", filenameWithPath.c_str());
@@ -561,6 +560,10 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
     }
     std::fstream file;
     file.open(filenameWithPath, std::ios_base::out | std::ios_base::binary);
+    if (!file.is_open()) {
+        LOGE("open zip file fail, path is %{public}s", filenameWithPath.c_str());
+        return "";
+    }
     const size_t pageSize =  { getpagesize() };
     auto fileData = std::make_unique<char[]>(pageSize);
     int32_t bytesRead;
