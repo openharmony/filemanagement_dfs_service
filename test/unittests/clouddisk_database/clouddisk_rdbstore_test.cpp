@@ -103,7 +103,7 @@ HWTEST_F(CloudDiskRdbStoreTest, LookUpTest1, TestSize.Level1)
     const std::string bundleName = "InitRootIdTest";
     const int32_t userId = 123456789;
     CloudDiskFileInfo info;
-    info.fileName = "test.txt";
+    info.name = "test.txt";
     info.cloudId = "1223456";
     info.parentCloudId = "22222";
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
@@ -124,7 +124,7 @@ HWTEST_F(CloudDiskRdbStoreTest, LookUpTest2, TestSize.Level1)
     const std::string bundleName = "InitRootIdTest";
     const int32_t userId = 123456789;
     CloudDiskFileInfo info;
-    info.fileName = "test.txt";
+    info.name = "test.txt";
     info.cloudId = "1223456";
     info.parentCloudId = "22222";
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
@@ -146,7 +146,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetAttrTest1, TestSize.Level1)
     const std::string bundleName = "InitRootIdTest";
     const int32_t userId = 123456789;
     CloudDiskFileInfo info;
-    info.fileName = "test.txt";
+    info.name = "test.txt";
     info.cloudId = "";
     info.parentCloudId = "22222";
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
@@ -168,7 +168,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetAttrTest2, TestSize.Level1)
     const std::string bundleName = "InitRootIdTest";
     const int32_t userId = 123456789;
     CloudDiskFileInfo info;
-    info.fileName = "test.txt";
+    info.name = "test.txt";
     info.cloudId = "rootId";
     info.parentCloudId = "22222";
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);

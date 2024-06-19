@@ -16,15 +16,16 @@
 #define CLOUD_FILE_DAEMON_CLOUD_FILE_UTILS_H
 
 #include <string>
-
+#include <sys/stat.h>
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
 struct CloudDiskFileInfo {
-    std::string fileName;
+    std::string name;
     std::string cloudId;
     std::string parentCloudId;
     uint32_t location{1};
+    uint32_t mode{S_IFREG};
     int64_t localId{0};
     unsigned long long rowId{0};
     unsigned long long size{0};
