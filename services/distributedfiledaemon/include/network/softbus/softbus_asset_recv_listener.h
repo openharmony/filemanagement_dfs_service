@@ -40,8 +40,8 @@ public:
     static void OnAssetRecvBind(int32_t sessionId, PeerSocketInfo info);
 
 private:
-    static int32_t HandleOneFile(int32_t socketId, const std::string &filePath, const sptr<AssetObj> &assetObj);
-    static int32_t HandleMoreFile(int32_t socketId, const std::string &filePath, const sptr<AssetObj> &assetObj);
+    static int32_t HandleSingleFile(int32_t socketId, const std::string &filePath, const sptr<AssetObj> &assetObj);
+    static int32_t HandleZipFile(int32_t socketId, const std::string &filePath, const sptr<AssetObj> &assetObj);
     static bool JudgeSingleFile(const std::string &filePath);
 
     static int32_t GetCurrentUserId();

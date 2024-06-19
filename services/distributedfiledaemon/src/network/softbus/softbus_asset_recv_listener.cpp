@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "accesstoken_kit.h"
-#include "asset_callback_mananger.h"
+#include "asset_callback_manager.h"
 #include "dfs_error.h"
 #include "ipc_skeleton.h"
 #include "network/softbus/softbus_handler_asset.h"
@@ -94,10 +94,10 @@ void SoftbusAssetRecvListener::OnRecvAssetStart(int32_t socketId, const char **f
         LOGE("Generate assetObjInfo fail");
         return;
     }
-    AssetCallbackMananger::GetInstance().NotifyAssetRecvStart(srcNetworkId,
-                                                              assetObj->dstNetworkId_,
-                                                              assetObj->sessionId_,
-                                                              assetObj->dstBundleName_);
+    AssetCallbackManager::GetInstance().NotifyAssetRecvStart(srcNetworkId,
+                                                             assetObj->dstNetworkId_,
+                                                             assetObj->sessionId_,
+                                                             assetObj->dstBundleName_);
 }
 
 void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt)
@@ -112,25 +112,31 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
         LOGE("get srcNetworkId fail");
         return;
     }
-    std::string filePath(path_ + fileList[0]);
+    std::string firstFilePath(path_ + fileList[0]);
     sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
-
-    int32_t ret;
-    if (JudgeSingleFile(filePath)) {
-        ret = HandleOneFile(socketId, filePath, assetObj);
-    } else {
-        ret = HandleMoreFile(socketId, filePath, assetObj);
-    }
-    RemoveAsset(filePath);
-
+    int32_t ret = SoftBusHandlerAsset::GetInstance().GenerateAssetObjInfo(socketId, firstFilePath, assetObj);
     if (ret != FileManagement::ERR_OK) {
-        LOGE("MoveAsset fail, socket %{public}d", socketId);
-        AssetCallbackMananger::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj,
-                                                                     FileManagement::ERR_BAD_VALUE);
-        SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
+        LOGE("Generate assetObjInfo fail");
         return;
     }
-    AssetCallbackMananger::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj, FileManagement::ERR_OK);
+    for (int32_t i = 0; i < fileCnt; i++) {
+        std::string filePath(path_ + fileList[i]);
+        if (JudgeSingleFile(filePath)) {
+            ret = HandleSingleFile(socketId, filePath, assetObj);
+        } else {
+            ret = HandleZipFile(socketId, filePath, assetObj);
+        }
+
+        if (ret != FileManagement::ERR_OK) {
+            LOGE("MoveAsset fail, socket %{public}d", socketId);
+            AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj,
+                                                                        FileManagement::ERR_BAD_VALUE);
+            SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
+            return;
+        }
+    }
+    RemoveAsset(firstFilePath);
+    AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj, FileManagement::ERR_OK);
     SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
 }
 
@@ -144,8 +150,8 @@ void SoftbusAssetRecvListener::OnRecvAssetError(int32_t socketId, int32_t errorC
     }
     sptr<AssetObj> nullAssetObj = new (std::nothrow) AssetObj();
 
-    AssetCallbackMananger::GetInstance().NotifyAssetRecvFinished(srcNetworkId, nullAssetObj,
-                                                                 FileManagement::ERR_BAD_VALUE);
+    AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, nullAssetObj,
+                                                                FileManagement::ERR_BAD_VALUE);
     SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
 }
 
@@ -229,24 +235,18 @@ bool SoftbusAssetRecvListener::RemoveAsset(const std::string &file)
     return true;
 }
 
-int32_t SoftbusAssetRecvListener::HandleOneFile(int32_t socketId,
-                                                const std::string &filePath,
-                                                const sptr<AssetObj> &assetObj)
+int32_t SoftbusAssetRecvListener::HandleSingleFile(int32_t socketId,
+                                                   const std::string &filePath,
+                                                   const sptr<AssetObj> &assetObj)
 {
-    LOGI("HandleOneFile begin.");
-    int32_t ret = SoftBusHandlerAsset::GetInstance().GenerateAssetObjInfo(socketId, filePath, assetObj);
-    if (ret != FileManagement::ERR_OK) {
-        LOGE("Generate assetObj fail");
-        return FileManagement::ERR_BAD_VALUE;
-    }
-
+    LOGI("HandleSingleFile begin.");
     std::vector<std::string> fileList = {filePath};
     auto uris = SoftBusHandlerAsset::GetInstance().GenerateUris(fileList, assetObj->dstBundleName_, true);
     if (uris.size() == 0) {
         LOGE("Generate uris fail");
         return FileManagement::ERR_BAD_VALUE;
     }
-    assetObj->uris_ = uris;
+    assetObj->uris_.emplace_back(uris[0]);
 
     bool moveRet = MoveAsset(fileList, true);
     if (!moveRet) {
@@ -257,17 +257,11 @@ int32_t SoftbusAssetRecvListener::HandleOneFile(int32_t socketId,
     return FileManagement::ERR_OK;
 }
 
-int32_t SoftbusAssetRecvListener::HandleMoreFile(int32_t socketId,
-                                                 const std::string &filePath,
-                                                 const sptr<AssetObj> &assetObj)
+int32_t SoftbusAssetRecvListener::HandleZipFile(int32_t socketId,
+                                                const std::string &filePath,
+                                                const sptr<AssetObj> &assetObj)
 {
-    LOGI("HandleMoreFile begin.");
-    int32_t ret = SoftBusHandlerAsset::GetInstance().GenerateAssetObjInfo(socketId, filePath, assetObj);
-    if (ret != FileManagement::ERR_OK) {
-        LOGE("Generate assetObj fail");
-        return FileManagement::ERR_BAD_VALUE;
-    }
-
+    LOGI("HandleZipFile begin.");
     size_t pos = filePath.find(ASSET_FLAG_ZIP);
     if (pos == std::string::npos) {
         LOGE("filePath is not a zip file : %{public}s", filePath.c_str());
@@ -297,7 +291,7 @@ int32_t SoftbusAssetRecvListener::HandleMoreFile(int32_t socketId,
         LOGE("Generate uris fail");
         return FileManagement::ERR_BAD_VALUE;
     }
-    assetObj->uris_ = uris;
+    assetObj->uris_.insert(assetObj->uris_.end(), uris.begin(), uris.end());
 
     bool moveRet = MoveAsset(fileList, false);
     if (!moveRet) {

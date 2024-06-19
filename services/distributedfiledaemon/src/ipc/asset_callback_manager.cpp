@@ -13,7 +13,7 @@
 * limitations under the License.
  */
 
-#include "asset_callback_mananger.h"
+#include "asset_callback_manager.h"
 
 #include "network/softbus/softbus_handler_asset.h"
 #include "utils_log.h"
@@ -21,14 +21,13 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-
-AssetCallbackMananger &AssetCallbackMananger::GetInstance()
+AssetCallbackManager &AssetCallbackManager::GetInstance()
 {
-    static AssetCallbackMananger instance;
+    static AssetCallbackManager instance;
     return instance;
 }
 
-void AssetCallbackMananger::AddRecvCallback(const sptr<IAssetRecvCallback> &recvCallback)
+void AssetCallbackManager::AddRecvCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     if (recvCallback == nullptr) {
         LOGE("recvCallback is nullptr");
@@ -44,7 +43,7 @@ void AssetCallbackMananger::AddRecvCallback(const sptr<IAssetRecvCallback> &recv
     recvCallbackList_.emplace_back(recvCallback);
 }
 
-void AssetCallbackMananger::RemoveRecvCallback(const sptr<IAssetRecvCallback> &recvCallback)
+void AssetCallbackManager::RemoveRecvCallback(const sptr<IAssetRecvCallback> &recvCallback)
 {
     if (recvCallback == nullptr) {
         LOGE("recvCallback is nullptr");
@@ -60,7 +59,7 @@ void AssetCallbackMananger::RemoveRecvCallback(const sptr<IAssetRecvCallback> &r
     }
 }
 
-void AssetCallbackMananger::AddSendCallback(const std::string &taskId, const sptr<IAssetSendCallback> &sendCallback)
+void AssetCallbackManager::AddSendCallback(const std::string &taskId, const sptr<IAssetSendCallback> &sendCallback)
 {
     if (taskId.empty()) {
         LOGI("taskId is empty");
@@ -75,7 +74,7 @@ void AssetCallbackMananger::AddSendCallback(const std::string &taskId, const spt
     sendCallbackMap_.insert(std::pair<std::string, sptr<IAssetSendCallback>>(taskId, sendCallback));
 }
 
-void AssetCallbackMananger::RemoveSendCallback(const std::string &taskId)
+void AssetCallbackManager::RemoveSendCallback(const std::string &taskId)
 {
     std::lock_guard<std::mutex> lock(sendCallbackMapMutex_);
     auto iter = sendCallbackMap_.find(taskId);
@@ -86,10 +85,10 @@ void AssetCallbackMananger::RemoveSendCallback(const std::string &taskId)
     sendCallbackMap_.erase(iter);
 }
 
-void AssetCallbackMananger::NotifyAssetRecvStart(const std::string &srcNetworkId,
-                                                 const std::string &dstNetworkId,
-                                                 const std::string &sessionId,
-                                                 const std::string &dstBundleName)
+void AssetCallbackManager::NotifyAssetRecvStart(const std::string &srcNetworkId,
+                                                const std::string &dstNetworkId,
+                                                const std::string &sessionId,
+                                                const std::string &dstBundleName)
 {
     LOGI("NotifyAssetRecvStart.");
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
@@ -103,9 +102,9 @@ void AssetCallbackMananger::NotifyAssetRecvStart(const std::string &srcNetworkId
     }
 }
 
-void AssetCallbackMananger::NotifyAssetRecvFinished(const std::string &srcNetworkId,
-                                                    const sptr<AssetObj> &assetObj,
-                                                    int32_t result)
+void AssetCallbackManager::NotifyAssetRecvFinished(const std::string &srcNetworkId,
+                                                   const sptr<AssetObj> &assetObj,
+                                                   int32_t result)
 {
     LOGI("NotifyAssetRecvFinished.");
     std::lock_guard<std::mutex> lock(recvCallbackListMutex_);
@@ -119,9 +118,9 @@ void AssetCallbackMananger::NotifyAssetRecvFinished(const std::string &srcNetwor
     }
 }
 
-void AssetCallbackMananger::NotifyAssetSendResult(const std::string &taskId,
-                                                  const sptr<AssetObj> &assetObj,
-                                                  int32_t result)
+void AssetCallbackManager::NotifyAssetSendResult(const std::string &taskId,
+                                                 const sptr<AssetObj> &assetObj,
+                                                 int32_t result)
 {
     LOGI("NotifyAssetSendResult.");
     std::lock_guard<std::mutex> lock(sendCallbackMapMutex_);

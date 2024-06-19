@@ -13,8 +13,8 @@
 * limitations under the License.
  */
 
-#ifndef FILEMANAGEMENT_DFS_SERVICE_SDK_ASSET_CALLBACK_MANANGER_H
-#define FILEMANAGEMENT_DFS_SERVICE_SDK_ASSET_CALLBACK_MANANGER_H
+#ifndef FILEMANAGEMENT_DFS_SERVICE_SDK_ASSET_CALLBACK_MANAGER_H
+#define FILEMANAGEMENT_DFS_SERVICE_SDK_ASSET_CALLBACK_MANAGER_H
 
 #include <map>
 #include <mutex>
@@ -28,9 +28,9 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 
-class AssetCallbackMananger {
+class AssetCallbackManager {
 public:
-    static AssetCallbackMananger &GetInstance();
+    static AssetCallbackManager &GetInstance();
 
     void AddRecvCallback(const sptr<IAssetRecvCallback> &recvCallback);
     void RemoveRecvCallback(const sptr<IAssetRecvCallback> &recvCallback);
@@ -59,4 +59,4 @@ private:
 } // namespace Storage
 } // namespace OHOS
 
-#endif // FILEMANAGEMENT_DFS_SERVICE_SDK_ASSET_CALLBACK_MANANGER_H
+#endif // FILEMANAGEMENT_DFS_SERVICE_SDK_ASSET_CALLBACK_MANAGER_H
