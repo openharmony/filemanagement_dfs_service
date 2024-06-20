@@ -93,7 +93,8 @@ std::string CloudSyncService::GetHmdfsPath(const std::string &uri, int32_t userI
     const std::string DATA_DIR = "/account/device_view/local/data/";
     const std::string FILE_DIR = "data/storage/el2/distributedfiles/";
     const std::string URI_PREFIX = "://";
-    if (uri.empty()) {
+    if (uri.empty() || uri.find(".") != std::string::npos
+        || uri.find("..") != std::string::npos) {
         return "";
     }
 
