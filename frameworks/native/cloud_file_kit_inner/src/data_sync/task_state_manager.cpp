@@ -15,6 +15,7 @@
 
 #include "task_state_manager.h"
 
+#include "gallery_download_file_stat.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
@@ -107,6 +108,10 @@ void TaskStateManager::DelayUnloadTask()
             std::lock_guard<ffrt::mutex> lock(unloadTaskMutex_);
             unloadTaskHandle_ = nullptr;
         }
+
+        /* for big data statistics */
+        CloudFile::GalleryDownloadFileStat::GetInstance().OutputToFile();
+
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {
             LOGE("get samgr failed");
