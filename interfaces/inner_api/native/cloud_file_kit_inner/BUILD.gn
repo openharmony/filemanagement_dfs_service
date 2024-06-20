@@ -17,6 +17,7 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 config("public_config") {
   include_dirs = [
     ".",
+    "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",
     "${innerkits_native_path}/cloudsync_kit_inner",
   ]
 }
@@ -34,6 +35,8 @@ ohos_shared_library("cloudfile_kit") {
     cfi_cross_dso = true
     debug = false
   }
+
+  big_data_statistics = [ "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/gallery_download_file_stat.cpp" ]
 
   data_sync = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync/data_syncer_rdb_store.cpp",
@@ -60,6 +63,7 @@ ohos_shared_library("cloudfile_kit") {
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync_manager.cpp",
   ]
 
+  sources += big_data_statistics
   sources += data_sync
   sources += sync_rule
 
@@ -80,6 +84,7 @@ ohos_shared_library("cloudfile_kit") {
     "eventhandler:libeventhandler",
     "ffrt:libffrt",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "init:libbegetutil",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",
