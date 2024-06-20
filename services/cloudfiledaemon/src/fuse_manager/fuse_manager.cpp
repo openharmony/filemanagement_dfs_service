@@ -741,6 +741,40 @@ static const struct fuse_lowlevel_ops cloudMediaFuseOps = {
     .forget_multi       = CloudForgetMulti,
 };
 
+static bool CheckPathForStartFuse(const string &path)
+{
+    char resolvedPath[PATH_MAX] = {'\0'};
+    char* ret = realpath(path.c_str(), resolvedPath);
+    if (ret == nullptr) {
+        return false;
+    }
+    std::string realPath(resolvedPath);
+    std::string PATH_PREFIX = "/mnt/data/";
+    if (realPath.rfind(PATH_PREFIX, 0) != 0) {
+        return false;
+    }
+
+    size_t userIdBeginPos = PATH_PREFIX.length();
+    size_t userIdEndPos = realPath.find("/", userIdBeginPos);
+    const std::string userId = realPath.substr(userIdBeginPos, userIdEndPos - userIdBeginPos);
+    if (userId.find_first_not_of("0123456789") != std::string::npos) {
+        return false;
+    }
+
+    size_t suffixBeginPos = userIdEndPos + 1;
+    const std::string PATH_SUFFIX1 = "cloud";
+    const std::string PATH_SUFFIX2 = "cloud_fuse";
+    if (realPath.rfind(PATH_SUFFIX1) == suffixBeginPos &&
+        suffixBeginPos + PATH_SUFFIX1.length() == realPath.length()) {
+        return true;
+    }
+    if (realPath.rfind(PATH_SUFFIX2) == suffixBeginPos &&
+        suffixBeginPos + PATH_SUFFIX2.length() == realPath.length()) {
+        return true;
+    }
+    return false;
+}
+
 int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
     LOGI("FuseManager::StartFuse entry");
@@ -751,7 +785,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     struct fuse_session *se = nullptr;
     int ret;
 
-    if (fuse_opt_add_arg(&args, path.c_str())) {
+    if (fuse_opt_add_arg(&args, path.c_str()) || !CheckPathForStartFuse(path)) {
         LOGE("Mount path invalid");
         return -EINVAL;
     }
