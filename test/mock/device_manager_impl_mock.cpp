@@ -48,13 +48,6 @@ int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName,
                                                 const std::string &extra,
                                                 std::vector<DmDeviceInfo> &deviceList)
 {
-    DmDeviceInfo deviceInfo{
-        .deviceId = "testdevid",
-        .deviceName = "testdevname",
-        .deviceTypeId = 1,
-        .networkId = "testNetWork",
-    };
-    deviceList.push_back(deviceInfo);
     return DfsDeviceManagerImpl::dfsDeviceManagerImpl->GetTrustedDeviceList(pkgName, extra, deviceList);
 }
 
