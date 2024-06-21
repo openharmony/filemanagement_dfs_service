@@ -141,9 +141,18 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     LOGI("init service successfully");
     TaskStateManager::GetInstance().StartTask();
     // 跟随进程生命周期
-    std::thread([startReason, this]() {
+    ffrt::submit([startReason, this]() {
         this->HandleStartReason(startReason);
-        }).detach();
+    });
+}
+
+void CloudSyncService::OnActive(const SystemAbilityOnDemandReason& startReason)
+{
+    LOGI("active service successfully");
+    TaskStateManager::GetInstance().StartTask();
+    ffrt::submit([startReason, this]() {
+        this->HandleStartReason(startReason);
+    });
 }
 
 void CloudSyncService::OnStop()

@@ -75,6 +75,7 @@ public:
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
     void OnStart(const SystemAbilityOnDemandReason& startReason) override;
+    void OnActive(const SystemAbilityOnDemandReason& startReason) override;
     void OnStop() override;
     void PublishSA();
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
