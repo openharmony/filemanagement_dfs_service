@@ -29,6 +29,7 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
 const int32_t PARAM0 = 0;
+static const unsigned int READ_SIZE = 1024;
 const string FILE_SCHEME = "file";
 thread_local unique_ptr<ChangeListenerNapi> g_listObj = nullptr;
 mutex CloudSyncNapi::sOnOffMutex_;
@@ -740,6 +741,7 @@ int32_t ChangeListenerNapi::UvQueueWork(uv_loop_s *loop, uv_work_t *work)
                 napi_value jsCallback = nullptr;
                 napi_status status = napi_get_reference_value(env, msg->ref_, &jsCallback);
                 if (status != napi_ok) {
+                    napi_close_handle_scope(env, scope);
                     LOGE("Create reference fail, status: %{public}d", status);
                     break;
                 }
@@ -747,6 +749,7 @@ int32_t ChangeListenerNapi::UvQueueWork(uv_loop_s *loop, uv_work_t *work)
                 napi_value result[ARGS_ONE];
                 result[PARAM0] = ChangeListenerNapi::SolveOnChange(env, msg);
                 if (result[PARAM0] == nullptr) {
+                    napi_close_handle_scope(env, scope);
                     break;
                 }
                 napi_call_function(env, nullptr, jsCallback, ARGS_ONE, result, &retVal);
@@ -813,6 +816,9 @@ static napi_status SetIsDir(const napi_env &env, const shared_ptr<MessageParcel>
     napi_value isDirArray = nullptr;
     napi_create_array_with_length(env, len, &isDirArray);
     int elementIndex = 0;
+    if (len > READ_SIZE) {
+        return napi_invalid_arg;
+    }
     for (uint32_t i = 0; i < len; i++) {
         bool isDir = parcel->ReadBool();
         napi_value isDirRet = nullptr;
