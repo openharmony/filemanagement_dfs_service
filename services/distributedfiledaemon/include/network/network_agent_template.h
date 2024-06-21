@@ -26,14 +26,11 @@
 #include "dfsu_actor.h"
 #include "dfsu_startable.h"
 #include "dfsu_thread.h"
-#include "iservice_registry.h"
 #include "mountpoint/mount_point.h"
 #include "network/kernel_talker.h"
 #include "network/session_pool.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "nlohmann/json.hpp"
-#include "system_ability_definition.h"
-#include "system_ability.h"
 #include "utils_directory.h"
 
 namespace OHOS {
@@ -59,7 +56,6 @@ public:
     virtual ~NetworkAgentTemplate() {}
     void Start();
     void Stop();
-    int32_t GetRemoteSA(const std::string &remoteDeviceId);
     void ConnectOnlineDevices();
     void DisconnectAllDevices();
     void ConnectDeviceAsync(const DeviceInfo info);

@@ -29,8 +29,6 @@ namespace {
 constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
-constexpr int32_t NUMBER_OF_RECONNECTIONS = 200;
-constexpr int32_t RECONNECTION_WAITING_TIME = 500;
 constexpr int32_t NOTIFY_GET_SESSION_WAITING_TIME = 2;
 constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 } // namespace
@@ -51,40 +49,9 @@ void NetworkAgentTemplate::Stop()
     kernerlTalker_->WaitForPollThreadExited();
 }
 
-int32_t NetworkAgentTemplate::GetRemoteSA(const std::string &remoteDeviceId)
-{
-    if (remoteDeviceId.empty()) {
-        LOGE("RemoteDeviceId is empty");
-        return FileManagement::ERR_BAD_VALUE;
-    }
-    int32_t reconnectionCount = FileManagement::ERR_BAD_VALUE;
-    while (reconnectionCount < NUMBER_OF_RECONNECTIONS) {
-        auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (sam == nullptr) {
-            LOGE("Sam is nullptr");
-            return FileManagement::ERR_BAD_VALUE;
-        }
-        auto object = sam->GetSystemAbility(FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, remoteDeviceId);
-        if (object != nullptr) {
-            LOGI("Get remote system ability success");
-            return FileManagement::ERR_OK;
-        }
-        reconnectionCount++;
-        std::this_thread::sleep_for(std::chrono::milliseconds(RECONNECTION_WAITING_TIME));
-    }
-    return FileManagement::ERR_BAD_VALUE;
-}
-
 void NetworkAgentTemplate::ConnectDeviceAsync(const DeviceInfo info)
 {
     LOGI("ConnectDeviceAsync Enter");
-    {
-        std::lock_guard<std::mutex> lock(taskMut_);
-        if (GetRemoteSA(info.GetDeviceId())) {
-            LOGE("Remote SA not online");
-            return;
-        }
-    }
     std::this_thread::sleep_for(std::chrono::milliseconds(
         OPEN_SESSSION_DELAY_TIME)); // Temporary workaround for time sequence issues(offline-onSessionOpened)
     OpenApSession(info, LINK_TYPE_AP);
