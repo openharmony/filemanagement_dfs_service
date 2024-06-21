@@ -47,6 +47,8 @@ DistributedHardware::DmDeviceInfo deviceInfo = {
     .deviceId = "testdevid",
     .deviceName = "testdevname",
     .deviceTypeId = 1,
+    .networkId = "testNetWork",
+    .extraData = R"({"OS_TYPE":10})",
 };
 
 const std::string NETWORKID_ONE = "45656596896323231";
@@ -256,12 +258,22 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceChanged_0300, Te
         auto agent1 = make_shared<SoftbusAgent>(smp);
         (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
                        NETWORKID_THREE.c_str(), NETWORKID_THREE.size());
+        std::vector<DmDeviceInfo> deviceList;
+        deviceList.push_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
         auto devicePtr = DeviceManagerAgent::GetInstance();
         devicePtr->cidNetTypeRecord_.insert({ NETWORKID_THREE, agent1 });
         devicePtr->OnDeviceChanged(deviceInfo);
+
         devicePtr->cidNetworkType_.insert({ NETWORKID_THREE, NETWORKTYPE_NONE_WIFI });
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
         devicePtr->OnDeviceChanged(deviceInfo);
+
         deviceInfo.networkType = NETWORKTYPE_WITH_WIFI;
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
         devicePtr->OnDeviceChanged(deviceInfo);
         devicePtr->cidNetTypeRecord_.erase(NETWORKID_THREE);
         devicePtr->cidNetworkType_.erase(NETWORKID_THREE);
@@ -291,11 +303,18 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceChanged_0400, Te
         auto agent1 = make_shared<SoftbusAgent>(smp);
         (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
                        NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
+        std::vector<DmDeviceInfo> deviceList;
+        deviceList.push_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
         auto devicePtr = DeviceManagerAgent::GetInstance();
         devicePtr->cidNetTypeRecord_.insert({ NETWORKID_TWO, agent1 });
         devicePtr->cidNetworkType_.insert({ NETWORKID_TWO, NETWORKTYPE_WITH_WIFI });
         devicePtr->OnDeviceChanged(deviceInfo);
+
         deviceInfo.networkType = NETWORKTYPE_NONE_WIFI;
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0))).WillOnce(Return(0));
         devicePtr->OnDeviceChanged(deviceInfo);
         devicePtr->cidNetTypeRecord_.erase(NETWORKID_TWO);
         devicePtr->cidNetworkType_.erase(NETWORKID_TWO);
@@ -327,6 +346,82 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceReady_0100, Test
 
     EXPECT_TRUE(res == true);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceReady_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_OnDeviceReady_0200
+ * @tc.desc: Verify the OnDeviceReady function.
+ * @tc.type: FUNC
+ * @tc.require: IA6UD3
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceReady_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceReady_0200 start";
+    bool res = true;
+
+    try {
+        (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
+                       NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
+        std::vector<DmDeviceInfo> deviceList;
+        deviceList.push_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+        auto devicePtr = DeviceManagerAgent::GetInstance();
+        devicePtr->OnDeviceReady(deviceInfo);
+        
+        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
+        auto agent1 = make_shared<SoftbusAgent>(smp);
+        devicePtr->cidNetTypeRecord_.insert({ NETWORKID_TWO, agent1 });
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+        devicePtr->OnDeviceReady(deviceInfo);
+
+        devicePtr->cidNetworkType_.insert({ NETWORKID_TWO, NETWORKTYPE_WITH_WIFI });
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+        devicePtr->OnDeviceReady(deviceInfo);
+    } catch (const exception &e) {
+        LOGE("Error:%{public}s", e.what());
+        res = false;
+    }
+
+    EXPECT_TRUE(res == true);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceReady_0200 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_OnDeviceReady_0300
+ * @tc.desc: Verify the OnDeviceReady function.
+ * @tc.type: FUNC
+ * @tc.require: IA6UD3
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceReady_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceReady_0300 start";
+    bool res = true;
+
+    try {
+        auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
+        auto agent1 = make_shared<SoftbusAgent>(smp);
+        (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
+                       NETWORKID_THREE.c_str(), NETWORKID_THREE.size());
+        std::vector<DmDeviceInfo> deviceList;
+        deviceList.push_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0))).WillOnce(Return(0));
+        auto devicePtr = DeviceManagerAgent::GetInstance();
+        devicePtr->cidNetTypeRecord_.insert({ NETWORKID_THREE, agent1 });
+        devicePtr->cidNetworkType_.insert({ NETWORKID_THREE, NETWORKTYPE_NONE_WIFI });
+        devicePtr->OnDeviceReady(deviceInfo);
+        devicePtr->cidNetTypeRecord_.erase(NETWORKID_THREE);
+        devicePtr->cidNetworkType_.erase(NETWORKID_THREE);
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_TRUE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_OnDeviceReady_0300 end";
 }
 
 /**
@@ -364,19 +459,25 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceP2POnline_0200, 
     bool res = true;
 
     try {
+        std::vector<DmDeviceInfo> deviceList;
+        deviceList.push_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
         auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(100, "relativePath"));
         auto agent1 = make_shared<SoftbusAgent>(smp);
-        (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
-                       NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
+        string testNetWorkId = deviceInfo.networkId;
         auto devicePtr = DeviceManagerAgent::GetInstance();
-        devicePtr->cidNetTypeRecord_.insert({ NETWORKID_TWO, agent1 });
+        devicePtr->cidNetTypeRecord_.insert({ testNetWorkId, agent1 });
         auto ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
         EXPECT_EQ(ret, 1);
-        devicePtr->cidNetworkType_.insert({ NETWORKID_TWO, NETWORKTYPE_NONE_WIFI });
+
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0))).WillRepeatedly(Return(0));
+        devicePtr->cidNetworkType_.insert({ testNetWorkId, NETWORKTYPE_NONE_WIFI });
         ret = devicePtr->OnDeviceP2POnline(deviceInfo);
         EXPECT_EQ(ret, 0);
-        devicePtr->cidNetTypeRecord_.erase(NETWORKID_TWO);
-        devicePtr->cidNetworkType_.erase(NETWORKID_TWO);
+        devicePtr->cidNetTypeRecord_.erase(testNetWorkId);
+        devicePtr->cidNetworkType_.erase(testNetWorkId);
     } catch (const exception &e) {
         GTEST_LOG_(INFO) << e.what();
         res = false;
@@ -449,6 +550,8 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_OnDeviceP2POffline_0300,
         (void)memcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
                        NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
         auto devicePtr = DeviceManagerAgent::GetInstance();
+        devicePtr->cidNetTypeRecord_.clear();
+        devicePtr->cidNetworkType_.clear();
         devicePtr->cidNetTypeRecord_.insert({ NETWORKID_TWO, agent1 });
         auto ret = devicePtr->OnDeviceP2POffline(deviceInfo);
         EXPECT_EQ(ret, 1);
@@ -953,7 +1056,11 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitDeviceInfos_0100, Te
     bool res = true;
 
     try {
-        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(0));
+        std::vector<DmDeviceInfo> deviceList;
+        deviceList.push_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
         DeviceManagerAgent::GetInstance()->InitDeviceInfos();
     } catch (const exception &e) {
         GTEST_LOG_(INFO) << e.what();
@@ -985,6 +1092,32 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitDeviceInfos_0200, Te
 
     EXPECT_FALSE(res);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitDeviceInfos_0200 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_InitDeviceInfos_0300
+ * @tc.desc: Verify the InitDeviceInfos function.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitDeviceInfos_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitDeviceInfos_0300 start";
+    bool res = true;
+
+    try {
+        std::vector<DmDeviceInfo> deviceList;
+        deviceList.push_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0))).WillOnce(Return(0));
+        DeviceManagerAgent::GetInstance()->InitDeviceInfos();
+    } catch (const exception &e) {
+        GTEST_LOG_(INFO) << e.what();
+        res = false;
+    }
+
+    EXPECT_TRUE(res);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_InitDeviceInfos_0300 end";
 }
 
 /**
@@ -1089,7 +1222,10 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_GetRemoteDevicesInfo_010
     bool res = true;
 
     try {
-        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(0));
+        std::vector<DmDeviceInfo> deviceList;
+        deviceList.push_back(deviceInfo);
+        EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+            .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
         auto info = DeviceManagerAgent::GetInstance()->GetRemoteDevicesInfo();
         EXPECT_NE(info.size(), 0);
     } catch (const exception &e) {

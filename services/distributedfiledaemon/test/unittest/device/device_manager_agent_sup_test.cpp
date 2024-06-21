@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include "device_manager_impl_mock.h"
+#include "dfs_error.h"
 #include "mock_other_method.h"
 #include "mountpoint/mount_point.h"
 #include "network/softbus/softbus_agent.h"
@@ -35,6 +36,13 @@ using namespace std;
 
 const int32_t MOUNT_DFS_COUNT_ONE = 1;
 const int32_t INVALID_USER_ID = -1;
+
+DistributedHardware::DmDeviceInfo deviceInfo = {
+    .deviceId = "testdevid",
+    .deviceName = "testdevname",
+    .deviceTypeId = 1,
+    .networkId = "testNetWork",
+};
 
 class DeviceManagerAgentSupTest : public testing::Test {
 public:
@@ -321,6 +329,94 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_UMountDfsDocs_0100, T
         EXPECT_TRUE(true);
     }
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UMountDfsDocs_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_IsSupportedDevice_0100
+ * @tc.desc: Verify the IsSupportedDevice function.
+ * @tc.type: FUNC
+ * @tc.require: IA6UD3
+ */
+HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_IsSupportedDevice_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_IsSupportedDevice_0100 start";
+    DmDeviceInfo testInfo;
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(0));
+    auto testPtr = DeviceManagerAgent::GetInstance();
+    EXPECT_EQ(testPtr->IsSupportedDevice(testInfo), FileManagement::ERR_BAD_VALUE);
+    
+    std::vector<DmDeviceInfo> deviceList;
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    EXPECT_EQ(testPtr->IsSupportedDevice(testInfo), FileManagement::ERR_BAD_VALUE);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_IsSupportedDevice_0100 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_IsSupportedDevice_0200
+ * @tc.desc: Verify the IsSupportedDevice function.
+ * @tc.type: FUNC
+ * @tc.require: IA6UD3
+ */
+HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_IsSupportedDevice_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_IsSupportedDevice_0200 start";
+    DmDeviceInfo testInfo = {
+        .deviceId = "testdevid",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+        .networkId = "testNetWork",
+    };
+    
+    deviceInfo.extraData = "test";
+    std::vector<DmDeviceInfo> deviceList;
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    auto testPtr = DeviceManagerAgent::GetInstance();
+    EXPECT_EQ(testPtr->IsSupportedDevice(testInfo), FileManagement::ERR_BAD_VALUE);
+
+    deviceInfo.extraData = R"({"OS_TYPE":"3"})";
+    deviceList.clear();
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    EXPECT_EQ(testPtr->IsSupportedDevice(testInfo), FileManagement::ERR_BAD_VALUE);
+
+    deviceInfo.extraData = R"({"OS_TYPE":3})";
+    deviceList.clear();
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    EXPECT_EQ(testPtr->IsSupportedDevice(testInfo), FileManagement::ERR_BAD_VALUE);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_IsSupportedDevice_0200 end";
+}
+
+/**
+ * @tc.name: DeviceManagerAgentTest_IsSupportedDevice_0300
+ * @tc.desc: Verify the IsSupportedDevice function.
+ * @tc.type: FUNC
+ * @tc.require: IA6UD3
+ */
+HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_IsSupportedDevice_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_IsSupportedDevice_0300 start";
+    DmDeviceInfo testInfo = {
+        .deviceId = "testdevid",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+        .networkId = "testNetWork",
+    };
+
+    std::vector<DmDeviceInfo> deviceList;
+    deviceInfo.extraData = R"({"OS_TYPE":10})";
+    deviceList.push_back(deviceInfo);
+    EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>(deviceList), Return(0)));
+    auto testPtr = DeviceManagerAgent::GetInstance();
+    EXPECT_EQ(testPtr->IsSupportedDevice(testInfo), FileManagement::ERR_OK);
+    GTEST_LOG_(INFO) << "DeviceManagerAgentTest_IsSupportedDevice_0300 end";
 }
 } // namespace Test
 } // namespace DistributedFile
