@@ -487,10 +487,6 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
         cInode->readSession = database->NewAssetReadSession("media", recordId,
                                                             GetAssetKey(cInode->mBase->fileType),
                                                             GetAssetPath(cInode, data));
-        uint64_t endTime = UTCTimeMilliSeconds();
-        CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
-        readStat.UpdateOpenSizeStat(cInode->mBase->size);
-        readStat.UpdateOpenTimeStat(cInode->mBase->fileType, (endTime > startTime) ? (endTime - startTime) : 0);
         if (cInode->readSession) {
             auto error = cInode->readSession->InitSession();
             auto ret = HandleOpenResult(req, error, data, cInode, fi);
@@ -500,6 +496,10 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
             } else {
                 fuse_reply_open(req, fi);
             }
+            uint64_t endTime = UTCTimeMilliSeconds();
+            CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+            readStat.UpdateOpenSizeStat(cInode->mBase->size);
+            readStat.UpdateOpenTimeStat(cInode->mBase->fileType, (endTime > startTime) ? (endTime - startTime) : 0);
             wSesLock.unlock();
             return;
         }
