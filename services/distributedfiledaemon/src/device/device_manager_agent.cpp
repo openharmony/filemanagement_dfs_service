@@ -843,12 +843,13 @@ int32_t DeviceManagerAgent::IsSupportedDevice(const DistributedHardware::DmDevic
 
 void DeviceManagerAgent::InitLocalNodeInfo()
 {
-    NodeBasicInfo tmpNodeInfo;
-    int errCode = GetLocalNodeDeviceInfo(IDaemon::SERVICE_NAME.c_str(), &tmpNodeInfo);
+    auto &deviceManager = DistributedHardware::DeviceManager::GetInstance();
+    DistributedHardware::DmDeviceInfo localDeviceInfo{};
+    int errCode = deviceManager.GetLocalDeviceInfo(IDaemon::SERVICE_NAME, localDeviceInfo);
     if (errCode != 0) {
         THROW_EXCEPTION(errCode, "Failed to get info of local devices");
     }
-    localDeviceInfo_.SetCid(string(tmpNodeInfo.networkId));
+    localDeviceInfo_.SetCid(string(localDeviceInfo.networkId));
 }
 
 void DeviceManagerAgent::OnRemoteDied()
