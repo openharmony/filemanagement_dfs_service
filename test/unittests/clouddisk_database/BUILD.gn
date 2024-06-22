@@ -88,6 +88,14 @@ ohos_unittest("clouddisk_rdb_utils_test") {
 }
 
 ohos_unittest("clouddisk_rdbstore_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
   module_out_path = "filemanagement/dfs_service"
 
   sources = [
@@ -100,6 +108,9 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_lite.cpp",
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_service_proxy_lite.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_rdb_transaction_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_rdb_utils_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/photo_album_column.cpp",
@@ -110,11 +121,9 @@ ohos_unittest("clouddisk_rdbstore_test") {
   clouddisk_database = [
     "${services_path}/clouddisk_database/src/clouddisk_rdbstore.cpp",
     "${services_path}/clouddisk_database/src/file_column.cpp",
-    "${services_path}/clouddisk_database/src/clouddisk_rdb_utils.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_sync_helper.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify_utils.cpp",
     "${services_path}/clouddisk_database/src/clouddisk_notify.cpp",
-    "${services_path}/clouddisk_database/src/clouddisk_rdb_transaction.cpp",
   ]
 
   sources += clouddisk_database
@@ -148,7 +157,6 @@ ohos_unittest("clouddisk_rdbstore_test") {
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
-    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "${utils_path}:libdistributedfileutils_lite",
     "//third_party/e2fsprogs:libext2_uuid",
