@@ -30,6 +30,7 @@ constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int MAX_RETRY_COUNT = 7;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 constexpr int32_t NOTIFY_GET_SESSION_WAITING_TIME = 2;
+constexpr int32_t WAITING_REMOTE_SA_ONLINE = 5;
 constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 } // namespace
 
@@ -52,8 +53,7 @@ void NetworkAgentTemplate::Stop()
 void NetworkAgentTemplate::ConnectDeviceAsync(const DeviceInfo info)
 {
     LOGI("ConnectDeviceAsync Enter");
-    std::this_thread::sleep_for(std::chrono::milliseconds(
-        OPEN_SESSSION_DELAY_TIME)); // Temporary workaround for time sequence issues(offline-onSessionOpened)
+    std::this_thread::sleep_for(std::chrono::seconds(WAITING_REMOTE_SA_ONLINE));
     OpenApSession(info, LINK_TYPE_AP);
 }
 
