@@ -42,9 +42,9 @@ static const vector<uint64_t> READ_SIZE_RANGE_VECTOR = { 128, 256, 512, 1 * FILE
     4 * FILE_SIZE_KB_TO_MB };
 static const vector<uint64_t> READ_TIME_RANGE_VECTOR = { 300, 600, 900, 1200, 1500, 2000, 3000, 5000, 8000 };
 
-static int32_t GetRangeIndex(uint64_t value, const vector<uint64_t> rangeVector)
+static uint32_t GetRangeIndex(uint64_t value, const vector<uint64_t> rangeVector)
 {
-    int32_t index = 0;
+    uint32_t index = 0;
     for (; index < rangeVector.size(); index++) {
         if (value <= rangeVector[index]) {
             break;
