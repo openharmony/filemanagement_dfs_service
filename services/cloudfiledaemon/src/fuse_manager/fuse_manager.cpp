@@ -73,6 +73,7 @@ static const unsigned int KEY_FRAME_SIZE = 8192;
 static const unsigned int MAX_IDLE_THREADS = 10;
 static const unsigned int HMDFS_IOC = 0xf2;
 static const std::chrono::seconds READ_TIMEOUT_S = 20s;
+static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
 
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
 
@@ -85,6 +86,7 @@ struct CloudInode {
     atomic<int> sessionRefCount{0};
     std::shared_mutex sessionLock;
     ffrt::mutex readLock;
+    ffrt::mutex openLock;
     off_t offset{0xffffffff};
 };
 
@@ -130,7 +132,7 @@ static string GetLocalTmpPath(int32_t userId, const string &relativePath)
     return GetLocalPath(userId, relativePath) + PATH_TEMP_SUFFIX;
 }
 
-static int HandleCloudError(fuse_req_t req, CloudError error)
+static int HandleCloudError(CloudError error)
 {
     int ret = 0;
     switch (error) {
@@ -431,10 +433,10 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
     return 0;
 }
 
-static int HandleOpenResult(fuse_req_t req, CloudFile::CloudError ckError, struct FuseData *data,
+static int HandleOpenResult(CloudFile::CloudError ckError, struct FuseData *data,
     shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
 {
-    auto ret = HandleCloudError(req, ckError);
+    auto ret = HandleCloudError(ckError);
     if (ret < 0) {
         cInode->readSession = nullptr;
         LOGE("open fali");
@@ -456,6 +458,37 @@ static uint64_t UTCTimeMilliSeconds()
     struct timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
     return t.tv_sec * CloudDisk::SECOND_TO_MILLISECOND + t.tv_nsec / CloudDisk::MILLISECOND_TO_NANOSECOND;
+}
+
+static void DownloadThmOrLcd(shared_ptr<CloudInode> cInode, shared_ptr<CloudError> err, shared_ptr<bool> openFinish,
+    shared_ptr<ffrt::condition_variable> cond)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    *err = cInode->readSession->InitSession();
+    {
+        unique_lock lck(cInode->openLock);
+        *openFinish = true;
+    }
+    cond->notify_one();
+    LOGI("download done, path: %{public}s", cInode->path.c_str());
+    return;
+}
+
+static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi, struct FuseData *data)
+{
+    auto error = make_shared<CloudError>();
+    auto openFinish = make_shared<bool>(false);
+    auto cond = make_shared<ffrt::condition_variable>();
+    ffrt::thread(DownloadThmOrLcd, cInode, error, openFinish, cond).detach();
+    unique_lock lck(cInode->openLock);
+    auto waitStatus = cond->wait_for(lck, OPEN_TIMEOUT_S, [openFinish] {
+        return *openFinish;
+    });
+    if (!waitStatus) {
+        LOGE("download %{public}s timeout", cInode->path.c_str());
+        return -ENETUNREACH;
+    }
+    return HandleOpenResult(*error, data, cInode, fi);
 }
 
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
@@ -488,13 +521,12 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                                                             GetAssetKey(cInode->mBase->fileType),
                                                             GetAssetPath(cInode, data));
         if (cInode->readSession) {
-            auto error = cInode->readSession->InitSession();
-            auto ret = HandleOpenResult(req, error, data, cInode, fi);
-            if (ret < 0) {
+            auto ret = DoCloudOpen(cInode, fi, data);
+            if (ret == 0) {
+                fuse_reply_open(req, fi);
+            } else {
                 fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
                 fuse_reply_err(req, -ret);
-            } else {
-                fuse_reply_open(req, fi);
             }
             uint64_t endTime = UTCTimeMilliSeconds();
             CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
@@ -697,7 +729,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         fuse_reply_err(req, ENOMEM);
         return;
     }
-    auto ret = HandleCloudError(req, *readArgs->ckError);
+    auto ret = HandleCloudError(*readArgs->ckError);
     if (ret < 0) {
         fuse_reply_err(req, -ret);
         return;
