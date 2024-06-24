@@ -93,9 +93,9 @@ GalleryDownloadFileStat::GalleryDownloadFileStat()
     }
 }
 
-static int32_t GetRangeIndex(uint64_t value, const std::vector<uint64_t> rangeVector)
+static uint32_t GetRangeIndex(uint64_t value, const std::vector<uint64_t> rangeVector)
 {
-    int32_t index = 0;
+    uint32_t index = 0;
     for (; index < rangeVector.size(); index++) {
         if (value <= rangeVector[index] * DOWNLOAD_FILE_BYTE_SIZE) {
             break;
@@ -128,14 +128,14 @@ void GalleryDownloadFileStat::UpdateDownloadSizeStat(uint32_t mediaType, uint64_
     std::vector<uint64_t> rangeVector;
     if (mediaType == TYPE_DOWNLOAD_FILE_IMAGE) {
         rangeVector = DOWNLOAD_IMAGE_SIZE_RANGE_VECTOR;
-        int32_t index = GetRangeIndex(size, rangeVector);
+        uint32_t index = GetRangeIndex(size, rangeVector);
         if (index >= stat_.imageSize.size()) {
             return;
         }
         stat_.imageSize[index]++;
     } else {
         rangeVector = DOWNLOAD_VIDEO_SIZE_RANGE_VECTOR;
-        int32_t index = GetRangeIndex(size, rangeVector);
+        uint32_t index = GetRangeIndex(size, rangeVector);
         if (index >= stat_.videoSize.size()) {
             return;
         }
