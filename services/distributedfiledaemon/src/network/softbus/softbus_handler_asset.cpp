@@ -236,6 +236,7 @@ std::string SoftBusHandlerAsset::GetClientInfo(int32_t socketId)
     auto iter = clientInfoMap_.find(socketId);
     if (iter == clientInfoMap_.end()) {
         LOGE("ClientInfo not registered");
+        return "";
     }
     return iter->second;
 }
@@ -264,6 +265,11 @@ sptr<AssetObj> SoftBusHandlerAsset::GetAssetObj(int32_t socketId)
 {
     std::lock_guard<std::mutex> lock(assetObjMapMutex_);
     auto iter = assetObjMap_.find(socketId);
+    if (iter == assetObjMap_.end()) {
+        LOGE("AssetObj not exist");
+        return nullptr;
+    }
+
     return iter->second;
 }
 

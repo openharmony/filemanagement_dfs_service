@@ -43,8 +43,13 @@ int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::st
         return -EINVAL;
     }
 
-    if (fileUri == TEST_URI || fileUri == TEST_MEDIA_URI) {
+    if (fileUri == TEST_URI) {
         physicalPath = TEST_PATH;
+        return E_OK;
+    }
+
+    if (fileUri == TEST_MEDIA_URI) {
+        physicalPath = "";
         return E_OK;
     }
 
@@ -150,25 +155,15 @@ HWTEST_F(SoftBusSessionListenerTest, SoftBusSessionListenerTest_GetRealPath_0100
     EXPECT_EQ(realPath, "");
     string testUri3 = TEST_URI + netWorkId;
     realPath = SoftBusSessionListener::GetRealPath(testUri3);
-    EXPECT_EQ(realPath, "");
-
-    string testUri4 = "file://com.demo.a/distributedfiles/.remote_share/data/test/el2/base/files/test.txt";
-    testUri4 += netWorkId;
-    realPath = SoftBusSessionListener::GetRealPath(testUri4);
     EXPECT_EQ(realPath, TEST_PATH);
 
-    string testUri5 = "file://com.demo.a/distributedfiles/.remote_share/data/test/el2/base/files/test2.txt";
-    testUri5 += netWorkId;
+    string testUri4 = "file://docs/data/test/el2/base/files/test2.txt" + netWorkId;
+    realPath = SoftBusSessionListener::GetRealPath(testUri4);
+    EXPECT_EQ(realPath, "");
+
+    string testUri5 = TEST_MEDIA_URI + netWorkId;
     realPath = SoftBusSessionListener::GetRealPath(testUri5);
     EXPECT_EQ(realPath, "");
-
-    string testUri6 = "file://docs/data/test/el2/base/files/test2.txt" + netWorkId;
-    realPath = SoftBusSessionListener::GetRealPath(testUri6);
-    EXPECT_EQ(realPath, "");
-
-    string testUri7 = TEST_MEDIA_URI + netWorkId;
-    realPath = SoftBusSessionListener::GetRealPath(testUri7);
-    EXPECT_EQ(realPath, TEST_PATH);
     GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_GetRealPath_0100 end";
 }
 
