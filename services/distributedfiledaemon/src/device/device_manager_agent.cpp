@@ -694,8 +694,8 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     std::vector<GroupInfo> groupList;
     groupList = jsonObject.get<std::vector<GroupInfo>>();
     for (auto &a : groupList) {
-        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s,
-            [groupOwner] %{public}s,[groupType] %{public}d,", Utils::GetAnonyString(a.groupName).c_str(),
+        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s,[groupOwner] %{public}s,[groupType] %{public}d,",
+            Utils::GetAnonyString(a.groupName).c_str(),
             Utils::GetAnonyString(a.groupId).c_str(), a.groupOwner.c_str(), a.groupType);
     }
 
