@@ -264,7 +264,7 @@ bool SoftbusAgent::IsContinueRetry(const string &cid)
 
 void SoftbusAgent::OnSessionOpened(const int32_t sessionId, PeerSocketInfo info)
 {
-    LOGI("OnSessionOpened Enter.");
+    LOGI("OnSessionOpened socketId = %{public}d", sessionId);
     std::string peerDeviceId = info.networkId;
     auto session = make_shared<SoftbusSession>(sessionId, peerDeviceId);
     auto cid = session->GetCid();

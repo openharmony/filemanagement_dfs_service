@@ -160,6 +160,7 @@ void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &d
 
 int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
+    LOGI("OpenP2PConnection networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     auto path = ConnectionDetector::ParseHmdfsPath();
     stringstream ss;
     ss << ConnectionDetector::MocklispHash(path);
@@ -181,7 +182,7 @@ int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &devic
 
 int32_t Daemon::CloseP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("Close P2P Connection");
+    LOGI("Close P2P Connection networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     std::thread([=]() {
         int32_t ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POffline(deviceInfo);
         LOGI("Close P2P Connection result %d", ret);
