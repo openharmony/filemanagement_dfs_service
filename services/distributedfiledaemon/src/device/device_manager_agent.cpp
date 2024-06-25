@@ -695,7 +695,7 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     groupList = jsonObject.get<std::vector<GroupInfo>>();
     for (auto &a : groupList) {
         LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupType] %{public}d,",
-             a.groupName.c_str(), a.groupId.c_str(), a.groupOwner.c_str(), a.groupType);
+            Utils::GetAnonyString(a.groupName).c_str(), Utils::GetAnonyString(a.groupId).c_str(), a.groupOwner.c_str(), a.groupType);
     }
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
