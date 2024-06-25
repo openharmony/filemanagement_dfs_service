@@ -634,8 +634,8 @@ static void CloudReadOnCloudFile(shared_ptr<ReadArguments> readArgs, shared_ptr<
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
     CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
-    readStat.UpdateReadSizeStat(cInode->mBase->size);
-    readStat.UpdateReadTimeStat(cInode->mBase->size, readTime);
+    readStat.UpdateReadSizeStat(readArgs->size);
+    readStat.UpdateReadTimeStat(readArgs->size, readTime);
     {
         unique_lock lck(cInode->readLock);
         *readArgs->readFinish = true;
