@@ -672,8 +672,8 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
 
     char *returnGroupVec = nullptr;
     uint32_t groupNum = 0;
-     int ret = hichainDevGroupMgr_->getRelatedGroups(ANY_OS_ACCOUNT, IDaemon::SERVICE_NAME.c_str(), udid.c_str(),
-                                                    &returnGroupVec, &groupNum);
+    int ret = hichainDevGroupMgr_->getRelatedGroups(ANY_OS_ACCOUNT, IDaemon::SERVICE_NAME.c_str(), udid.c_str(),
+        &returnGroupVec, &groupNum);
     if (ret != 0 || returnGroupVec == nullptr) {
         LOGE("failed to get related groups, ret %{public}d", ret);
         return;
@@ -694,8 +694,9 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     std::vector<GroupInfo> groupList;
     groupList = jsonObject.get<std::vector<GroupInfo>>();
     for (auto &a : groupList) {
-        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupType] %{public}d,",
-            Utils::GetAnonyString(a.groupName).c_str(), Utils::GetAnonyString(a.groupId).c_str(), a.groupOwner.c_str(), a.groupType);
+        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s,
+            [groupOwner] %{public}s,[groupType] %{public}d,", Utils::GetAnonyString(a.groupName).c_str(),
+            Utils::GetAnonyString(a.groupId).c_str(), a.groupOwner.c_str(), a.groupType);
     }
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
