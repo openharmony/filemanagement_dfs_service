@@ -114,13 +114,6 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
         return E_SOFTBUS_SESSION_FAILED;
     }
     LOGI("CreateSessionServer Enter.");
-    {
-        std::lock_guard<std::mutex> lock(serverIdMapMutex_);
-        if (serverIdMap_.find(sessionName) != serverIdMap_.end()) {
-            LOGI("%s: Session already create.", sessionName.c_str());
-            return E_OK;
-        }
-    }
     SocketInfo serverInfo = {
         .name = const_cast<char*>(sessionName.c_str()),
         .pkgName = const_cast<char*>(packageName.c_str()),
@@ -148,7 +141,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
         serverIdMap_.insert(std::make_pair(sessionName, socketId));
     }
     DistributedFile::SoftBusFileReceiveListener::SetRecvPath(physicalPath);
-    LOGI("CreateSessionServer success socketId = %{public}d", socketId");
+    LOGI("CreateSessionServer success socketId = %{public}d", socketId);
     return ret;
 }
 
