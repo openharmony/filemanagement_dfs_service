@@ -207,7 +207,7 @@ bool DeviceManagerAgent::IsWifiNetworkType(int32_t networkType)
 
 void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("networkId %{public}s, OnDeviceReady begin", deviceInfo.deviceId);
+    LOGI("networkId %{public}s, OnDeviceReady begin", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
     int32_t ret = IsSupportedDevice(deviceInfo);
     if (ret != FileManagement::ERR_OK) {
         LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
@@ -223,14 +223,14 @@ void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &
 
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
-        LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        LOGE("cid %{public}s network is null!", Utils::GetAnonyString(info.cid_).c_str());
         LOGI("OnDeviceReady end");
         return;
     }
 
     auto type_ = cidNetworkType_.find(info.cid_);
     if (type_ == cidNetworkType_.end()) {
-        LOGE("cid %{public}s network type is null!", info.cid_.c_str());
+        LOGE("cid %{public}s network type is null!", Utils::GetAnonyString(info.cid_).c_str());
         LOGI("OnDeviceReady end");
         return;
     }
@@ -239,7 +239,7 @@ void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &
     LOGI("newNetworkType:%{public}d", newNetworkType);
 
     if (!IsWifiNetworkType(newNetworkType)) {
-        LOGE("cid %{public}s networkType:%{public}d", info.cid_.c_str(), type_->second);
+        LOGE("cid %{public}s networkType:%{public}d",  Utils::GetAnonyString(info.cid_).c_str(), type_->second);
         LOGI("OnDeviceReady end");
         return;
     }
@@ -253,20 +253,20 @@ void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &
 
 void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("OnDeviceOffline begin");
+    LOGI("OnDeviceOffline  begin networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     DeviceInfo info(deviceInfo);
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
-        LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        LOGE("cid %{public}s network is null!", Utils::GetAnonyString(info.cid_).c_str());
         LOGI("OnDeviceOffline end");
         return;
     }
 
     auto type_ = cidNetworkType_.find(info.cid_);
     if (type_ == cidNetworkType_.end()) {
-        LOGE("cid %{public}s network type is null!", info.cid_.c_str());
+        LOGE("cid %{public}s network type is null!", Utils::GetAnonyString(info.cid_).c_str());
         LOGI("OnDeviceOffline end");
         return;
     }
@@ -300,7 +300,8 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 
 int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline begin", deviceInfo.networkId);
+    LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline begin",
+        Utils::GetAnonyString(deviceInfo.networkId).c_str());
     int32_t ret = IsSupportedDevice(deviceInfo);
     if (ret != FileManagement::ERR_OK) {
         LOGI("not support device, networkId %{public}s", Utils::GetAnonyString(deviceInfo.deviceId).c_str());
@@ -312,36 +313,36 @@ int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDevic
     unique_lock<mutex> lock(mpToNetworksMutex_);
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
-        LOGE("[OnDeviceP2POnline] cid %{public}s network is null!", info.cid_.c_str());
+        LOGE("[OnDeviceP2POnline] cid %{public}s network is null!", Utils::GetAnonyString(info.cid_).c_str());
         return P2P_FAILED;
     }
     auto type_ = cidNetworkType_.find(info.cid_);
     if (type_ == cidNetworkType_.end()) {
-        LOGE("[OnDeviceP2POnline] cid %{public}s network type is null!", info.cid_.c_str());
+        LOGE("[OnDeviceP2POnline] cid %{public}s network type is null!", Utils::GetAnonyString(info.cid_).c_str());
         return P2P_FAILED;
     }
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
         &NetworkAgentTemplate::ConnectDeviceByP2PAsync, info);
     cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
     it->second->Recv(move(cmd));
-    LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline end", deviceInfo.networkId);
+    LOGI("OnDeviceP2POnline end networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     return P2P_SUCCESS;
 }
 
 int32_t DeviceManagerAgent::OnDeviceP2POffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("OnDeviceP2POffline begin");
+    LOGI("OnDeviceP2POffline  begin networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     DeviceInfo info(deviceInfo);
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
-        LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        LOGE("cid %{public}s network is null!",  Utils::GetAnonyString(info.cid_).c_str());
         return P2P_FAILED;
     }
     auto type_ = cidNetworkType_.find(info.cid_);
     if (type_ == cidNetworkType_.end()) {
-        LOGE("cid %{public}s network type is null!", info.cid_.c_str());
+        LOGE("cid %{public}s network type is null!",  Utils::GetAnonyString(info.cid_).c_str());
         return P2P_FAILED;
     }
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
@@ -672,7 +673,7 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     char *returnGroupVec = nullptr;
     uint32_t groupNum = 0;
     int ret = hichainDevGroupMgr_->getRelatedGroups(ANY_OS_ACCOUNT, IDaemon::SERVICE_NAME.c_str(), udid.c_str(),
-                                                    &returnGroupVec, &groupNum);
+        &returnGroupVec, &groupNum);
     if (ret != 0 || returnGroupVec == nullptr) {
         LOGE("failed to get related groups, ret %{public}d", ret);
         return;
@@ -693,8 +694,9 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     std::vector<GroupInfo> groupList;
     groupList = jsonObject.get<std::vector<GroupInfo>>();
     for (auto &a : groupList) {
-        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s, [groupOwner] %{public}s,[groupType] %{public}d,",
-             a.groupName.c_str(), a.groupId.c_str(), a.groupOwner.c_str(), a.groupType);
+        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s,[groupOwner] %{public}s,[groupType] %{public}d,",
+            Utils::GetAnonyString(a.groupName).c_str(),
+            Utils::GetAnonyString(a.groupId).c_str(), a.groupOwner.c_str(), a.groupType);
     }
 
     unique_lock<mutex> lock(mpToNetworksMutex_);
@@ -728,7 +730,7 @@ bool DeviceManagerAgent::CheckIsAccountless(const GroupInfo &group)
 
 void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("OnDeviceInfoChanged begin");
+    LOGI("OnDeviceInfoChanged  begin networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     if (deviceInfo.networkType == -1) {
         LOGI("OnDeviceInfoChanged end");
         return;
@@ -744,14 +746,14 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
 
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
-        LOGE("cid %{public}s network is null!", info.cid_.c_str());
+        LOGE("cid %{public}s network is null!", Utils::GetAnonyString(info.cid_).c_str());
         LOGI("OnDeviceInfoChanged end");
         return;
     }
 
     auto type_ = cidNetworkType_.find(info.cid_);
     if (type_ == cidNetworkType_.end()) {
-        LOGE("cid %{public}s network type is null!", info.cid_.c_str());
+        LOGE("cid %{public}s network type is null!", Utils::GetAnonyString(info.cid_).c_str());
         LOGI("OnDeviceInfoChanged end");
         return;
     }

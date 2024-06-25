@@ -80,7 +80,7 @@ weak_ptr<SoftbusAgent> SoftbusSessionDispatcher::GetAgent(int32_t sessionId, std
 }
 void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
-    LOGI("OnSessionOpened Enter.");
+    LOGI("OnSessionOpened Enter sessionId = %{public}d", sessionId);
     std::string peerSessionName(info.name);
     std::string peerDevId = info.networkId;
     {
@@ -97,7 +97,7 @@ void SoftbusSessionDispatcher::OnSessionOpened(int32_t sessionId, PeerSocketInfo
 }
 void SoftbusSessionDispatcher::OnSessionClosed(int32_t sessionId, ShutdownReason reason)
 {
-    LOGI("OnSessionClosed Enter.");
+    LOGI("OnSessionClosed Enter sessionId = %{public}d", sessionId);
     (void)reason;
     std::string peerSessionName = "";
     std::string peerDevId = "";
