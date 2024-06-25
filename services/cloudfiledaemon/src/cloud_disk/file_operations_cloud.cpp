@@ -734,7 +734,7 @@ static void ReadDirForRecycle(fuse_req_t req, fuse_ino_t ino, size_t size, off_t
     for (size_t i = 0; i < childInfos.size(); ++i) {
         size_t alignSize = CloudDiskRdbUtils::FuseDentryAlignSize(childInfos[i].name.c_str());
         nextOff += alignSize;
-        childInfos[i].nextOff = nextOff;
+        childInfos[i].nextOff = static_cast<off_t>(nextOff);
     }
     AddDirEntryToBuf(req, ino, size, off, childInfos);
 }
