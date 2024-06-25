@@ -325,7 +325,7 @@ int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDevic
         &NetworkAgentTemplate::ConnectDeviceByP2PAsync, info);
     cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
     it->second->Recv(move(cmd));
-    LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline end", Utils::GetAnonyString(deviceInfo.networkId));
+    LOGI("OnDeviceP2POnline end networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
     return P2P_SUCCESS;
 }
 
