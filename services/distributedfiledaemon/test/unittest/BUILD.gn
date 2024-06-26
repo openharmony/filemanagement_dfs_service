@@ -990,6 +990,63 @@ ohos_unittest("softbus_session_test") {
   defines = [ "private=public" ]
 }
 
+ohos_unittest("softbus_handler_asset_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = module_output_path
+
+  include_dirs = [ "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus" ]
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
+    "${distributedfile_path}/test/mock/socket_mock.cpp",
+    "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
+    "network/softbus/softbus_handler_asset_test.cpp",
+  ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
+    "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "os_account:os_account_innerkits",
+    "zlib:shared_libz",
+  ]
+
+  defines = [ "private=public" ]
+}
+
 ohos_unittest("softbus_handler_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -1123,6 +1180,7 @@ group("unittest") {
     ":softbus_agent_test",
     ":softbus_file_receive_listener_test",
     ":softbus_file_send_listener_test",
+    ":softbus_handler_asset_test",
     ":softbus_handler_test",
     ":softbus_session_dispatcher_test",
     ":softbus_session_listener_test",
