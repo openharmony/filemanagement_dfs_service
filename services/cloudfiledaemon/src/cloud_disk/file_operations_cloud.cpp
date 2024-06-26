@@ -67,6 +67,7 @@ namespace {
     static const int32_t RIGHT_SHIFT = 5;
     static const uint64_t UNKNOWN_INODE_ID = 0;
     static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
+    static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
 }
 
 static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
@@ -1188,6 +1189,11 @@ void FileOperationsCloud::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
                                off_t offset, struct fuse_file_info *fi)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    if (size > MAX_READ_SIZE) {
+        fuse_reply_err(req, EINVAL);
+        LOGE("Read size is larger than the kernel pre-read window");
+        return;
+    }
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto filePtr = FileOperationsHelper::FindCloudDiskFile(data, fi->fh);
     if (filePtr == nullptr) {
@@ -1331,6 +1337,7 @@ void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
         static_cast<int64_t>(inoPtr->parent));
     if (parentInode == nullptr) {
+        fuse_reply_err(req, EINVAL);
         LOGE("fail to find parent inode");
         return;
     }
