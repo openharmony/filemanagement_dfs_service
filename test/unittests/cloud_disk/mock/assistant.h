@@ -37,6 +37,8 @@ public:
     virtual int fuse_reply_lseek(fuse_req_t, off_t) = 0;
     virtual int fuse_reply_buf(fuse_req_t, const char *, size_t) = 0;
     virtual int fuse_reply_xattr(fuse_req_t, size_t) = 0;
+    virtual int fuse_reply_attr(fuse_req_t, const struct stat *, double) = 0;
+    virtual int fuse_reply_entry(fuse_req_t, const struct fuse_entry_param *) = 0;
 public:
     virtual int access(const char *, int) = 0;
     virtual int open(const char *, int) = 0;
@@ -56,6 +58,8 @@ public:
     MOCK_METHOD2(fuse_reply_lseek, int(fuse_req_t, off_t));
     MOCK_METHOD3(fuse_reply_buf, int(fuse_req_t, const char *, size_t));
     MOCK_METHOD2(fuse_reply_xattr, int(fuse_req_t, size_t));
+    MOCK_METHOD3(fuse_reply_attr, int(fuse_req_t, const struct stat *, double));
+    MOCK_METHOD2(fuse_reply_entry, int(fuse_req_t, const struct fuse_entry_param *));
 
 public:
     MOCK_METHOD2(access, int(const char *, int));
