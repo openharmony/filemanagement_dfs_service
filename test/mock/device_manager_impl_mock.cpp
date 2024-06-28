@@ -74,7 +74,7 @@ int32_t DeviceManagerImpl::GetDeviceInfo(const std::string &pkgName,
 
 int32_t DeviceManagerImpl::GetLocalDeviceInfo(const std::string &pkgName, DmDeviceInfo &info)
 {
-    return 0;
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->GetLocalDeviceInfo(pkgName, info);
 }
 
 int32_t DeviceManagerImpl::RegisterDevStateCallback(const std::string &pkgName,

@@ -1061,6 +1061,7 @@ ohos_unittest("softbus_handler_test") {
   include_dirs = [ "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus" ]
 
   sources = [
+    "${distributedfile_path}/test/mock/socket_mock.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
@@ -1077,6 +1078,7 @@ ohos_unittest("softbus_handler_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 

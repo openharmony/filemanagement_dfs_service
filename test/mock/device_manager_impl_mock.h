@@ -36,6 +36,7 @@ public:
     virtual int32_t RegisterDevStateCallback(const std::string &pkgName,
         const std::string &extra, std::shared_ptr<DeviceStateCallback> callback) = 0;
     virtual int32_t UnRegisterDevStateCallback(const std::string &pkgName) = 0;
+    virtual int32_t GetLocalDeviceInfo(const std::string &pkgName, DmDeviceInfo &info) = 0;
 public:
     virtual int32_t GetLocalNodeDeviceInfo(const char *pkgName, NodeBasicInfo *info) = 0;
 public:
@@ -53,6 +54,7 @@ public:
         const std::string &extra, std::shared_ptr<DeviceStateCallback> callback));
     MOCK_METHOD1(UnRegisterDevStateCallback, int32_t(const std::string &pkgName));
     MOCK_METHOD2(GetLocalNodeDeviceInfo, int32_t(const char *pkgName, NodeBasicInfo *info));
+    MOCK_METHOD2(GetLocalDeviceInfo, int32_t(const std::string &pkgName, DmDeviceInfo &info));
 };
 }
 #endif

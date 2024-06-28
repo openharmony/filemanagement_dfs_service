@@ -14,20 +14,21 @@
  */
 #include "network/softbus/softbus_handler.h"
 
+#include "gtest/gtest.h"
 #include <memory>
 #include <unistd.h>
 #include <utility>
 #include <securec.h>
 
-#include "gtest/gtest.h"
-
-#include "dfs_error.h"
 #include "device_manager_impl.h"
 #include "dm_constants.h"
+
+#include "dfs_error.h"
+#include "network/softbus/softbus_file_receive_listener.h"
+#include "network/softbus/softbus_session_pool.h"
+#include "socket_mock.h"
 #include "utils_directory.h"
 #include "utils_log.h"
-
-#include "network/softbus/softbus_session_pool.h"
 
 using namespace OHOS::DistributedHardware;
 using namespace OHOS::FileManagement;
@@ -71,14 +72,40 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace Test {
+using namespace testing;
 using namespace testing::ext;
 class SoftbusHandlerTest : public testing::Test {
 public:
-    static void SetUpTestCase(void) {};
-    static void TearDownTestCase(void) {};
-    void SetUp() {};
-    void TearDown() {};
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
+    static inline shared_ptr<SocketMock> socketMock_ = nullptr;
 };
+
+void SoftbusHandlerTest::SetUpTestCase(void)
+{
+    GTEST_LOG_(INFO) << "SetUpTestCase";
+    socketMock_ = make_shared<SocketMock>();
+    SocketMock::dfsSocket = socketMock_;
+}
+
+void SoftbusHandlerTest::TearDownTestCase(void)
+{
+    GTEST_LOG_(INFO) << "TearDownTestCase";
+    SocketMock::dfsSocket = nullptr;
+    socketMock_ = nullptr;
+}
+
+void SoftbusHandlerTest::SetUp(void)
+{
+    GTEST_LOG_(INFO) << "SetUp";
+}
+
+void SoftbusHandlerTest::TearDown(void)
+{
+    GTEST_LOG_(INFO) << "TearDown";
+}
 
 /**
  * @tc.name: SoftbusHandlerTest_CreateSessionServer_0100
@@ -94,10 +121,28 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CreateSessionServer_0100, TestSi
     std::string sessionName = "testSession";
     DFS_CHANNEL_ROLE role = DFS_CHANNLE_ROLE_SOURCE;
     std::string physicalPath = "/data/test";
-    handler.serverIdMap_.insert(std::make_pair(sessionName, 2));
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
     int32_t result = handler.CreateSessionServer(packageName, sessionName, role, physicalPath);
     handler.serverIdMap_.erase(sessionName);
+    EXPECT_EQ(result, E_SOFTBUS_SESSION_FAILED);
+
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(0));
+    EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(-1));
+    result = handler.CreateSessionServer(packageName, sessionName, role, physicalPath);
+    handler.serverIdMap_.erase(sessionName);
+    EXPECT_EQ(result, E_SOFTBUS_SESSION_FAILED);
+
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(0));
+    EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(0));
+    result = handler.CreateSessionServer(packageName, sessionName, role, physicalPath);
     EXPECT_EQ(result, E_OK);
+    if (handler.serverIdMap_.find(sessionName) != handler.serverIdMap_.end()) {
+        EXPECT_TRUE(true);
+    } else {
+        EXPECT_TRUE(false);
+    }
+    handler.serverIdMap_.erase(sessionName);
+    EXPECT_EQ(string(SoftBusFileReceiveListener::GetRecvPath()), physicalPath);
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_CreateSessionServer_0100 end";
 }
 
@@ -116,10 +161,7 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CreateSessionServer_0200, TestSi
     DFS_CHANNEL_ROLE role = DFS_CHANNLE_ROLE_SOURCE;
     std::string physicalPath = "/data/test";
 
-    int32_t result = handler.CreateSessionServer(packageName, sessionName, role, physicalPath);
-    EXPECT_EQ(result, E_SOFTBUS_SESSION_FAILED);
-
-    result = handler.CreateSessionServer("", sessionName, role, physicalPath);
+    auto result = handler.CreateSessionServer("", sessionName, role, physicalPath);
     EXPECT_EQ(result, E_SOFTBUS_SESSION_FAILED);
 
     result = handler.CreateSessionServer(packageName, "", role, physicalPath);
@@ -145,7 +187,53 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0100, TestSize.Level
     DFS_CHANNEL_ROLE role = DFS_CHANNLE_ROLE_SOURCE;
     std::string physicalPath = "/data/test";
 
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
     int32_t result = handler.OpenSession(packageName, sessionName, physicalPath, role);
+    EXPECT_EQ(result, E_OPEN_SESSION);
+
+    int32_t socketId = 0;
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(socketId));
+    EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(-1));
+    result = handler.OpenSession(packageName, sessionName, physicalPath, role);
+    EXPECT_EQ(result, E_OPEN_SESSION);
+
+    EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(socketId));
+    EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(0));
+    result = handler.OpenSession(packageName, sessionName, physicalPath, role);
+    EXPECT_EQ(result, 0);
+
+    if (handler.clientSessNameMap_.find(socketId) != handler.clientSessNameMap_.end()) {
+        EXPECT_TRUE(true);
+    } else {
+        EXPECT_TRUE(false);
+    }
+
+    handler.clientSessNameMap_.erase(socketId);
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusHandlerTest_OpenSession_0200
+ * @tc.desc: Verify the OpenSession by Cid function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0100 start";
+    SoftBusHandler handler;
+    std::string packageName = "com.example.test";
+    std::string sessionName = "testSession";
+    DFS_CHANNEL_ROLE role = DFS_CHANNLE_ROLE_SOURCE;
+    std::string physicalPath = "/data/test";
+
+    int32_t result = handler.OpenSession("", sessionName, physicalPath, role);
+    EXPECT_EQ(result, E_OPEN_SESSION);
+
+    result = handler.OpenSession(packageName, "", physicalPath, role);
+    EXPECT_EQ(result, E_OPEN_SESSION);
+
+    result = handler.OpenSession(packageName, sessionName, "", role);
     EXPECT_EQ(result, E_OPEN_SESSION);
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0100 end";
 }
@@ -159,19 +247,25 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0100, TestSize.Level
 HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_ChangeOwnerIfNeeded_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_ChangeOwnerIfNeeded_0100 start";
-    SoftBusHandler handler;
-    handler.ChangeOwnerIfNeeded(1, "");
-    handler.ChangeOwnerIfNeeded(1, "sessionName");
-    int32_t result = handler.OpenSession("packname", "sessionName", "/data/test", DFS_CHANNLE_ROLE_SOURCE);
-    EXPECT_EQ(result, E_OPEN_SESSION);
+    bool res = true;
+    try {
+        SoftBusHandler handler;
+        handler.ChangeOwnerIfNeeded(1, "");
+        handler.ChangeOwnerIfNeeded(1, "sessionName");
 
-    SoftBusSessionPool::SessionInfo sessionInfo1{.sessionId = SESSION_ID_ONE,
-                                                 .srcUri = "file://com.demo.a/test/1",
-                                                 .dstPath = "/data/test/1",
-                                                 .uid = UID_ONE};
-    string sessionName1 = "sessionName1";
-    SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName1, sessionInfo1);
-    handler.ChangeOwnerIfNeeded(1, sessionName1);
+        SoftBusSessionPool::SessionInfo sessionInfo1{.sessionId = SESSION_ID_ONE,
+                                                    .srcUri = "file://com.demo.a/test/1",
+                                                    .dstPath = "/data/test/1",
+                                                    .uid = UID_ONE};
+        string sessionName1 = "sessionName1";
+        SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName1, sessionInfo1);
+        handler.ChangeOwnerIfNeeded(1, sessionName1);
+        SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName1);
+    } catch(...) {
+        res = false;
+    }
+
+    EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_ChangeOwnerIfNeeded_0100 end";
 }
 
@@ -284,6 +378,7 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OnSinkSessionOpened_0100, TestSi
  */
 HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSession_0100, TestSize.Level1)
 {
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSession_0100 start";
     string sessionName = "sessionName";
     SoftBusHandler::GetInstance().serverIdMap_.clear();
     SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(sessionName, 2));
@@ -312,6 +407,67 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSession_0100, TestSize.Leve
     EXPECT_EQ(SoftBusHandler::GetInstance().serverIdMap_.size(), 0);
     flag = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
     EXPECT_EQ(flag, false);
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSession_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusHandlerTest_CloseSessionWithSessionName_0100
+ * @tc.desc: Verify the CloseSession.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSessionWithSessionName_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSessionWithSessionName_0100 start";
+
+    SoftBusHandler::GetInstance().CloseSessionWithSessionName("");
+
+    string sessionName = "sessionName";
+    SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(sessionName, 2));
+    SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
+    auto iter = SoftBusHandler::GetInstance().serverIdMap_.find(sessionName);
+    if (iter == SoftBusHandler::GetInstance().serverIdMap_.end()) {
+        EXPECT_TRUE(true);
+    } else {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSessionWithSessionName_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusHandlerTest_CloseSessionWithSessionName_0200
+ * @tc.desc: Verify the CloseSessionWithSessionName.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSessionWithSessionName_0200, TestSize.Level1)
+{
+    string sessionName = "sessionName";
+    SoftBusHandler::GetInstance().clientSessNameMap_.insert(make_pair(0, sessionName));
+    SoftBusHandler::GetInstance().clientSessNameMap_.insert(make_pair(1, "test"));
+    SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(sessionName, 2));
+    SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
+    auto iter = SoftBusHandler::GetInstance().serverIdMap_.find(sessionName);
+    if (iter == SoftBusHandler::GetInstance().serverIdMap_.end()) {
+        EXPECT_TRUE(true);
+    } else {
+        EXPECT_TRUE(false);
+    }
+
+    auto iterClient = SoftBusHandler::GetInstance().clientSessNameMap_.find(0);
+    if (iterClient == SoftBusHandler::GetInstance().clientSessNameMap_.end()) {
+        EXPECT_TRUE(true);
+    } else {
+        EXPECT_TRUE(false);
+    }
+
+    iterClient = SoftBusHandler::GetInstance().clientSessNameMap_.find(1);
+    if (iterClient == SoftBusHandler::GetInstance().clientSessNameMap_.end()) {
+        EXPECT_TRUE(false);
+    } else {
+        EXPECT_TRUE(true);
+    }
+    GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSessionWithSessionName_0200 end";
 }
 } // namespace Test
 } // namespace DistributedFile
