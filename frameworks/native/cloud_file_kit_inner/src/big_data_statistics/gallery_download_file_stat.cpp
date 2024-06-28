@@ -216,6 +216,7 @@ void GalleryDownloadFileStat::OutputToFile()
         localData << line << std::endl;
     }
     localData.close();
+    ClearDownloadFileStat();
     return;
 }
 
@@ -255,6 +256,15 @@ DownloadFileStatInfo GalleryDownloadFileStat::ReadVecFromLocal()
     return tmpStat;
 }
 
+void GalleryDownloadFileStat::ClearDownloadFileStat()
+{
+    std::fill(stat_.downloadFileError.begin(), stat_.downloadFileError.end(), 0);
+    std::fill(stat_.imageSize.begin(), stat_.imageSize.end(), 0);
+    std::fill(stat_.imageDownloadSpeed.begin(), stat_.imageDownloadSpeed.end(), 0);
+    std::fill(stat_.videoSize.begin(), stat_.videoSize.end(), 0);
+    std::fill(stat_.videoDownloadSpeed.begin(), stat_.videoDownloadSpeed.end(), 0);
+}
+
 void GalleryDownloadFileStat::Report()
 {
     const std::string path = DOWNLOAD_FILE_STAT_LOCAL_PATH + DOWNLOAD_FILE_STAT_NAME;
@@ -277,7 +287,6 @@ void GalleryDownloadFileStat::Report()
     if (ret != E_OK) {
         LOGE("report CLOUD_SYNC_DOWNLOAD_FILE_STAT error %{public}d", ret);
     }
-
     ret = unlink(path.c_str());
     if (ret != 0) {
         LOGE("fail to delete local statistic data, errno %{public}d", errno);

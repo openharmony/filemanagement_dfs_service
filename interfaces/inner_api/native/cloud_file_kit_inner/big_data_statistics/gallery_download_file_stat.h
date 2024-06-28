@@ -59,6 +59,7 @@ public:
 private:
     GalleryDownloadFileStat();
     ~GalleryDownloadFileStat() = default;
+    void ClearDownloadFileStat();
     void UpdateDownloadSpeedStat(uint32_t mediaType, uint64_t size, uint64_t duration);
     void UpdateDownloadSizeStat(uint32_t mediaType, uint64_t size, uint64_t duration);
     DownloadFileStatInfo ReadVecFromLocal();
