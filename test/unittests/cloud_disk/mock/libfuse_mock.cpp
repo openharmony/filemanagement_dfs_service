@@ -72,3 +72,8 @@ int fuse_reply_xattr(fuse_req_t req, size_t count)
 {
     return Assistant::ins->fuse_reply_xattr(req, count);
 }
+
+int fuse_reply_attr(fuse_req_t req, const struct stat *attr, double attr_timeout)
+{
+    return Assistant::ins->fuse_reply_attr(req, attr, attr_timeout);
+}
