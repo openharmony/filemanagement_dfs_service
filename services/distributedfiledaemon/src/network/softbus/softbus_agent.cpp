@@ -275,6 +275,7 @@ void SoftbusAgent::OnSessionOpened(const int32_t sessionId, PeerSocketInfo info)
     if (retriedTimesMap != OpenSessionRetriedTimesMap_.end()) {
         OpenSessionRetriedTimesMap_.erase(cid);
     }
+    session->DisableSessionListener();
     if (FindSession(sessionId)) {
         std::string client = "Client";
         AcceptSession(session, client);
