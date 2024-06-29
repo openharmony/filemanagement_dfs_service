@@ -38,6 +38,7 @@
 #include <thread>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <vector>
 
 #include "cloud_daemon_statistic.h"
 #include "cloud_disk_inode.h"
@@ -48,14 +49,16 @@
 #include "directory_ex.h"
 #include "ffrt_inner.h"
 #include "fuse_operations.h"
-#include "meta_file.h"
-#include "utils_log.h"
 #include "hitrace_meter.h"
+#include "meta_file.h"
+#include "securec.h"
+#include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudFile {
 using namespace std;
+using PAGE_FLAG_TYPE = const uint32_t;
 
 static const string HMDFS_PATH_PREFIX = "/mnt/hmdfs/";
 static const string LOCAL_PATH_SUFFIX = "/account/device_view/local";
@@ -68,14 +71,32 @@ static const unsigned int STAT_NLINK_DIR = 2;
 static const unsigned int STAT_MODE_REG = 0770;
 static const unsigned int STAT_MODE_DIR = 0771;
 static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
-static const unsigned int TWO_MB = 2 * 1024 * 1024;
 static const unsigned int KEY_FRAME_SIZE = 8192;
 static const unsigned int MAX_IDLE_THREADS = 10;
+static const unsigned int READ_CACHE_SLEEP = 10 * 1000;
+static const unsigned int CACHE_PAGE_NUM = 2;
 static const unsigned int HMDFS_IOC = 0xf2;
 static const std::chrono::seconds READ_TIMEOUT_S = 20s;
 static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
 
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
+PAGE_FLAG_TYPE PG_READAHEAD = 0x00000001;
+PAGE_FLAG_TYPE PG_UPTODATE = 0x00000002;
+PAGE_FLAG_TYPE PG_REFERENCED = 0x00000004;
+PAGE_FLAG_TYPE PG_NEEDBECLEANED = 0x00000020;
+
+struct ReadCacheInfo {
+    std::mutex mutex;
+    std::condition_variable cond{};
+    uint32_t flags{0};
+};
+
+struct ReadSlice {
+    size_t sizeHead{0};
+    size_t sizeTail{0};
+    off_t offHead{0};
+    off_t offTail{0};
+};
 
 struct CloudInode {
     shared_ptr<MetaBase> mBase{nullptr};
@@ -88,6 +109,27 @@ struct CloudInode {
     ffrt::mutex readLock;
     ffrt::mutex openLock;
     off_t offset{0xffffffff};
+    std::map<int64_t, std::shared_ptr<ReadCacheInfo>> readCacheMap;
+    bool SetReadCacheFlag(int64_t index, PAGE_FLAG_TYPE flag)
+    {
+        std::shared_lock lock(sessionLock);
+        auto it = readCacheMap.find(index);
+        if (it != readCacheMap.end()) {
+            std::unique_lock<std::mutex> lock(it->second->mutex);
+            it->second->flags |= flag;
+            return true;
+        }
+        return false;
+    }
+    bool IsReadAhead(int64_t index)
+    {
+        std::shared_lock lock(sessionLock);
+        auto it = readCacheMap.find(index);
+        if (it == readCacheMap.end()) {
+            return false;
+        }
+        return it->second->flags & PG_READAHEAD;
+    }
 };
 
 struct HmdfsHasCache {
@@ -112,6 +154,7 @@ struct ReadArguments {
     shared_ptr<bool> readFinish{nullptr};
     shared_ptr<CloudFile::CloudError> ckError{nullptr};
     shared_ptr<ffrt::condition_variable> cond{nullptr};
+    shared_ptr<char> buf{nullptr};
 
     ReadArguments(size_t readSize, off_t readOffset) : size(readSize), offset(readOffset)
     {
@@ -119,6 +162,9 @@ struct ReadArguments {
         readFinish = make_shared<bool>(false);
         ckError = make_shared<CloudFile::CloudError>();
         cond = make_shared<ffrt::condition_variable>();
+        if (0 < readSize && readSize <= MAX_READ_SIZE) {
+            buf.reset(new char[readSize], [](char *ptr) { delete[] ptr; });
+        }
     }
 };
 
@@ -565,6 +611,7 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
             LOGE("Failed to close readSession");
         }
         cInode->readSession = nullptr;
+        cInode->readCacheMap.clear();
         LOGD("readSession released");
     }
     wSesLock.unlock();
@@ -630,49 +677,116 @@ static void CloudIoctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struc
     }
 }
 
-static bool PrepareForRead(fuse_req_t req, shared_ptr<char> &buf, size_t size, shared_ptr<CloudInode> cInode,
-				shared_ptr<CloudFile::CloudAssetReadSession> readSession)
+static bool CheckAndWait(shared_ptr<CloudInode> cInode, off_t off)
 {
-    if (size > MAX_READ_SIZE) {
-        fuse_reply_err(req, EINVAL);
-        return false;
+    int64_t cacheIndex = off / MAX_READ_SIZE;
+    if (cInode->IsReadAhead(cacheIndex)) {
+        auto &it = cInode->readCacheMap[cacheIndex];
+        std::unique_lock<std::mutex> lock(it->mutex);
+        if (it->flags & PG_UPTODATE) {
+            return true;
+        }
+        auto waitStatus = it->cond.wait_for(lock, READ_TIMEOUT_S, [it] { return it->flags & PG_UPTODATE; });
+        if (!waitStatus) {
+            LOGE("CheckAndWait timeout: %{public}ld", static_cast<long>(cacheIndex));
+            return false;
+        }
     }
-    buf.reset(new char[size], [](char* ptr) {
-        delete[] ptr;
-    });
-    if (!buf) {
-        fuse_reply_err(req, ENOMEM);
-        LOGE("buffer is null");
-        return false;
-    }
-
-    if (!readSession) {
-        fuse_reply_err(req, EPERM);
-        LOGE("read fail, readsession is null");
-        return false;
-    }
-
     return true;
 }
 
-static void CloudReadOnCloudFile(shared_ptr<ReadArguments> readArgs, shared_ptr<char> buf,
+static void CloudReadOnCloudFile(shared_ptr<ReadArguments> readArgs,
     shared_ptr<CloudInode> cInode, shared_ptr<CloudFile::CloudAssetReadSession> readSession)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     LOGI("PRead cloud file, path: %{public}s, size: %{public}zd, off: %{public}lu", cInode->path.c_str(),
-        readArgs->size, static_cast<unsigned long>(readArgs->offset));
+         readArgs->size, static_cast<unsigned long>(readArgs->offset));
+
     uint64_t startTime = UTCTimeMilliSeconds();
-    *readArgs->readResult = readSession->PRead(readArgs->offset, readArgs->size, buf.get(), *readArgs->ckError);
+    bool isReading = true;
+    int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
+    std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+
+    wSesLock.lock();
+    if (readArgs->offset % MAX_READ_SIZE == 0 && cInode->readCacheMap.find(cacheIndex) == cInode->readCacheMap.end()) {
+        auto memInfo = std::make_shared<ReadCacheInfo>();
+        memInfo->flags = PG_READAHEAD;
+        cInode->readCacheMap[cacheIndex] = memInfo;
+        isReading = false;
+        LOGI("OnCloudFile Add: %{public}ld", static_cast<long>(cacheIndex));
+    }
+    wSesLock.unlock();
+    if (isReading && !CheckAndWait(cInode, readArgs->offset)) {
+        return;
+    }
+
+    *readArgs->readResult =
+        readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
     CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
     readStat.UpdateReadSizeStat(readArgs->size);
     readStat.UpdateReadTimeStat(readArgs->size, readTime);
+
     {
         unique_lock lck(cInode->readLock);
         *readArgs->readFinish = true;
     }
     readArgs->cond->notify_one();
+    if (readArgs->offset % MAX_READ_SIZE == 0) {
+        cInode->SetReadCacheFlag(cacheIndex, PG_UPTODATE);
+        wSesLock.lock();
+        if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
+            cInode->readCacheMap[cacheIndex]->cond.notify_all();
+            LOGI("OnCloudFile NotifyAll: %{public}ld", static_cast<long>(cacheIndex));
+        }
+        wSesLock.unlock();
+    }
+    return;
+}
+
+static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
+                                 shared_ptr<CloudInode> cInode,
+                                 shared_ptr<CloudFile::CloudAssetReadSession> readSession)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    usleep(READ_CACHE_SLEEP);
+    LOGI("PRead cloud file, path: %{public}s, size: %{public}zd, off: %{public}lu", cInode->path.c_str(),
+        readArgs->size, static_cast<unsigned long>(readArgs->offset));
+    uint64_t startTime = UTCTimeMilliSeconds();
+    int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
+    std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+
+    wSesLock.lock();
+    while (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
+        if (cacheIndex * MAX_READ_SIZE > cInode->mBase->size) {
+            wSesLock.unlock();
+            return;
+        }
+        cacheIndex++;
+    }
+    auto memInfo = std::make_shared<ReadCacheInfo>();
+    memInfo->flags = PG_READAHEAD;
+    cInode->readCacheMap[cacheIndex] = memInfo;
+    LOGI("OnCacheFile Add: %{public}ld", static_cast<long>(cacheIndex));
+    wSesLock.unlock();
+
+    *readArgs->readResult =
+        readSession->PRead(cacheIndex * MAX_READ_SIZE, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
+
+    uint64_t endTime = UTCTimeMilliSeconds();
+    uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
+    CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
+    readStat.UpdateReadSizeStat(readArgs->size);
+    readStat.UpdateReadTimeStat(readArgs->size, readTime);
+
+    cInode->SetReadCacheFlag(cacheIndex, PG_UPTODATE);
+    wSesLock.lock();
+    if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
+        cInode->readCacheMap[cacheIndex]->cond.notify_all();
+        LOGI("OnCacheFile NotifyAll: %{public}ld", static_cast<long>(cacheIndex));
+    }
+    wSesLock.unlock();
     return;
 }
 
@@ -689,6 +803,115 @@ static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t s
     return;
 }
 
+static void InitReadSlice(size_t size, off_t off, ReadSlice &readSlice)
+{
+    readSlice.offHead = off;
+    readSlice.offTail = static_cast<off_t>((off + size) / MAX_READ_SIZE * MAX_READ_SIZE);
+    if (readSlice.offTail > readSlice.offHead) {
+        readSlice.sizeHead = static_cast<size_t>(readSlice.offTail - readSlice.offHead);
+        readSlice.sizeTail = MAX_READ_SIZE;
+    } else {
+        readSlice.sizeHead = static_cast<size_t>(readSlice.offHead + MAX_READ_SIZE - readSlice.offHead);
+    }
+    if (readSlice.sizeHead == MAX_READ_SIZE) {
+        readSlice.offTail -= MAX_READ_SIZE;
+        readSlice.sizeTail = 0;
+    }
+}
+
+static bool StartReadTask(fuse_req_t req,
+                          vector<shared_ptr<ReadArguments>> readArgsList,
+                          off_t offTail,
+                          shared_ptr<CloudInode> cInode,
+                          shared_ptr<CloudFile::CloudAssetReadSession> readSession)
+{
+    for (auto &it : readArgsList) {
+        if (!it) {
+            continue;
+        }
+        if (!it->buf) {
+            fuse_reply_err(req, ENOMEM);
+            LOGE("buffer is null");
+            return false;
+        }
+        ffrt::thread(CloudReadOnCloudFile, it, cInode, readSession).detach();
+    }
+    for (int32_t i = 1; i <= CACHE_PAGE_NUM; i++) {
+        auto readArgsCache = make_shared<ReadArguments>(MAX_READ_SIZE, offTail + MAX_READ_SIZE * i);
+        if (!readArgsCache) {
+            LOGE("Init readArgsCache failed");
+            break;
+        }
+        if (!readArgsCache->buf) {
+            LOGE("cache buffer is null");
+            break;
+        }
+        ffrt::thread(CloudReadOnCacheFile, readArgsCache, cInode, readSession).detach();
+    }
+    return true;
+}
+
+static bool FixData(fuse_req_t req, shared_ptr<char> buf, size_t size, size_t sizeDone,
+    shared_ptr<ReadArguments> readArgs)
+{
+    if (*readArgs->readResult < 0) {
+        LOGE("ReadSize: %{public}lld", static_cast<long long>(*readArgs->readResult));
+        fuse_reply_err(req, ENOMEM);
+        return false;
+    }
+
+    auto ret = HandleCloudError(*readArgs->ckError);
+    if (ret < 0) {
+        fuse_reply_err(req, -ret);
+        return false;
+    }
+
+    int32_t copyRet = memcpy_s(buf.get() + sizeDone, min(size - sizeDone, static_cast<size_t>(*readArgs->readResult)),
+                               readArgs->buf.get(), min(size - sizeDone, static_cast<size_t>(*readArgs->readResult)));
+    if (copyRet != 0) {
+        LOGE("Parcel data copy failed, err=%{public}d", copyRet);
+        fuse_reply_err(req, ENETUNREACH);
+        return false;
+    }
+    return true;
+}
+
+static void WaitAndFixData(fuse_req_t req,
+                           shared_ptr<char> buf,
+                           size_t size,
+                           shared_ptr<CloudInode> cInode,
+                           vector<shared_ptr<ReadArguments>> readArgsList)
+{
+    size_t sizeDone = 0;
+    for (auto &it : readArgsList) {
+        if (!it) {
+            continue;
+        }
+        {
+            std::unique_lock lock(cInode->readLock);
+            auto waitStatus = it->cond->wait_for(lock, READ_TIMEOUT_S, [it] { return *it->readFinish; });
+            if (!waitStatus) {
+                std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+                int64_t cacheIndex = it->offset / MAX_READ_SIZE;
+                cInode->SetReadCacheFlag(cacheIndex, PG_UPTODATE);
+                wSesLock.lock();
+                if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
+                    cInode->readCacheMap[cacheIndex]->cond.notify_all();
+                }
+                wSesLock.unlock();
+                LOGE("Wait Pread Timeout: %{public}ld", static_cast<long>(cacheIndex));
+                fuse_reply_err(req, ENETUNREACH);
+                return;
+            }
+        }
+        if (!FixData(req, buf, size, sizeDone, it)) {
+            return;
+        }
+        sizeDone += it->size;
+    }
+    fuse_reply_buf(req, buf.get(), min(size, sizeDone));
+}
+
 static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                       struct fuse_file_info *fi)
 {
@@ -696,46 +919,44 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+
     LOGI("%{public}s, size=%{public}zd, off=%{public}lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
+    if (size > MAX_READ_SIZE) {
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
     auto dkReadSession = cInode->readSession;
-    size_t originalSize = size;
-    if (size <= MAX_READ_SIZE) {
-        if (off <= cInode->offset || off >= cInode->offset + MAX_READ_SIZE - size) {
-            size = MAX_READ_SIZE;
-            cInode->offset = off;
-        }
-    }
-    if (!PrepareForRead(req, buf, size, cInode, dkReadSession)) {
+    if (!dkReadSession) {
+        fuse_reply_err(req, EPERM);
         return;
     }
-    if (cInode->mBase->hasDownloaded) {
-        CloudReadOnLocalFile(req, buf, originalSize, off, fi);
+    buf.reset(new char[size], [](char *ptr) { delete[] ptr; });
+    if (!buf) {
+        fuse_reply_err(req, ENOMEM);
+        LOGE("buffer is null");
         return;
     }
-    shared_ptr<ReadArguments> readArgs = make_shared<ReadArguments>(size, off);
-    ffrt::thread(CloudReadOnCloudFile, readArgs, buf, cInode, dkReadSession).detach();
-    unique_lock lck(cInode->readLock);
-    auto waitStatus = readArgs->cond->wait_for(lck, READ_TIMEOUT_S, [readArgs] {
-        return *readArgs->readFinish;
-    });
-    if (!waitStatus) {
-        LOGE("Pread timeout %{public}s, size=%{public}zd, off=%{public}lu", CloudPath(data, ino).c_str(), size,
-            (unsigned long)off);
+
+    ReadSlice readSlice;
+    /* slice read request into 4M pages */
+    InitReadSlice(size, off, readSlice);
+    /* wait when current page is reading */
+    if (!CheckAndWait(cInode, readSlice.offHead)) {
         fuse_reply_err(req, ENETUNREACH);
         return;
     }
-    if (*readArgs->readResult < 0) {
-        LOGE("readSize: %{public}lld", static_cast<long long>(*readArgs->readResult));
-        fuse_reply_err(req, ENOMEM);
+    /* init readArgs for current page, and next page if cross pages */
+    shared_ptr<ReadArguments> readArgsHead = make_shared<ReadArguments>(readSlice.sizeHead, readSlice.offHead);
+    shared_ptr<ReadArguments> readArgsTail = nullptr;
+    if (readSlice.sizeTail > 0) {
+        readArgsTail = make_shared<ReadArguments>(readSlice.sizeTail, readSlice.offTail);
+    }
+    /* read current page, next page, and prefetch 2 pages */
+    if (!StartReadTask(req, {readArgsHead, readArgsTail}, readSlice.offTail, cInode, dkReadSession)) {
         return;
     }
-    auto ret = HandleCloudError(*readArgs->ckError);
-    if (ret < 0) {
-        fuse_reply_err(req, -ret);
-        return;
-    }
-    LOGD("read success");
-    fuse_reply_buf(req, buf.get(), min(originalSize, static_cast<size_t>(*readArgs->readResult)));
+    /* wait and reply current req data */
+    WaitAndFixData(req, buf, size, cInode, {readArgsHead, readArgsTail});
 }
 
 static const struct fuse_lowlevel_ops cloudDiskFuseOps = {
