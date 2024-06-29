@@ -475,7 +475,7 @@ int32_t CloudSyncService::StartDownloadFile(const std::string &path)
     return dataSyncManager_->StartDownloadFile(bundleName, callerUserId, path);
 }
 
-int32_t CloudSyncService::StopDownloadFile(const std::string &path)
+int32_t CloudSyncService::StopDownloadFile(const std::string &path, bool needClean)
 {
     string bundleName;
     if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
@@ -486,7 +486,7 @@ int32_t CloudSyncService::StopDownloadFile(const std::string &path)
     if (callerUserId == 0) {
         callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
     }
-    return dataSyncManager_->StopDownloadFile(bundleName, callerUserId, path);
+    return dataSyncManager_->StopDownloadFile(bundleName, callerUserId, path, needClean);
 }
 
 int32_t CloudSyncService::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)

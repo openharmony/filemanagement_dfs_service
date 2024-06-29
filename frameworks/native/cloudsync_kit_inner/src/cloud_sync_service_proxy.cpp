@@ -597,7 +597,7 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
+int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool needClean)
 {
     LOGI("StopDownloadFile Start");
     MessageParcel data;
@@ -620,6 +620,11 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri)
 
     if (!data.WriteString(path)) {
         LOGE("Failed to send the cloud id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteBool(needClean)) {
+        LOGE("Failed to send the needClean flag");
         return E_INVAL_ARG;
     }
 

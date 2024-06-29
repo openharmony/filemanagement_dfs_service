@@ -63,7 +63,10 @@ int32_t DataSyncManager::StartDownloadFile(const std::string &bundleName,
     return E_OK;
 }
 
-int32_t DataSyncManager::StopDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path)
+int32_t DataSyncManager::StopDownloadFile(const std::string &bundleName,
+                                          const int32_t userId,
+                                          const std::string path,
+                                          bool needClean)
 {
     return E_OK;
 }

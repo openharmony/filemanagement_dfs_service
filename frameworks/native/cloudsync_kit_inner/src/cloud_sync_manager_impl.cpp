@@ -228,7 +228,7 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::string &uri)
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri)
+int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri,  bool needClean)
 {
     LOGI("StopDownloadFile start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
@@ -237,7 +237,7 @@ int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri)
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    int32_t ret = CloudSyncServiceProxy->StopDownloadFile(uri);
+    int32_t ret = CloudSyncServiceProxy->StopDownloadFile(uri, needClean);
     LOGI("StopDownloadFile ret %{public}d", ret);
     return ret;
 }

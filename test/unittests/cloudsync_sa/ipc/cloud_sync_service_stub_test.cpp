@@ -44,7 +44,7 @@ public:
     MOCK_METHOD1(DisableCloud, int32_t(const std::string &accoutId));
     MOCK_METHOD1(StartDownloadFile, int32_t(const std::string &path));
     MOCK_METHOD1(StartFileCache, int32_t(const std::string &path));
-    MOCK_METHOD1(StopDownloadFile, int32_t(const std::string &path));
+    MOCK_METHOD2(StopDownloadFile, int32_t(const std::string &path, bool needClean));
     MOCK_METHOD1(RegisterDownloadFileCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
     MOCK_METHOD0(UnregisterDownloadFileCallback, int32_t());
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
@@ -478,7 +478,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopDownloadFileTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "HandleStopDownloadFile Start";
     try {
         MockService service;
-        EXPECT_CALL(service, StopDownloadFile(_)).WillOnce(Return(E_OK));
+        EXPECT_CALL(service, StopDownloadFile(_, _)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;

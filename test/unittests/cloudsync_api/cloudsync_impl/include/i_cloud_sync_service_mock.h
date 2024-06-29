@@ -100,7 +100,7 @@ public:
     {
         return E_OK;
     }
-    int32_t StopDownloadFile(const std::string &path)
+    int32_t StopDownloadFile(const std::string &path, bool needClean = false)
     {
         return E_OK;
     }
