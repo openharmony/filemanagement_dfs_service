@@ -73,7 +73,6 @@ void DeviceManagerAgentTest::SetUpTestCase(void)
     DeviceManagerImplMock::dfsDeviceManagerImpl = deviceManagerImplMock_;
     EXPECT_CALL(*deviceManagerImplMock_, InitDeviceManager(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*deviceManagerImplMock_, RegisterDevStateCallback(_, _, _)).WillRepeatedly(Return(0));
-    EXPECT_CALL(*deviceManagerImplMock_, GetLocalNodeDeviceInfo(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(*deviceManagerImplMock_, UnRegisterDevStateCallback(_)).WillRepeatedly(Return(0));
     EXPECT_CALL(*deviceManagerImplMock_, UnInitDeviceManager(_)).WillRepeatedly(Return(0));
     EXPECT_CALL(*deviceManagerImplMock_, UnInitDeviceManager(_)).WillRepeatedly(Return(0));
@@ -1132,7 +1131,7 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitLocalNodeInfo_0100, 
     bool res = true;
 
     try {
-        EXPECT_CALL(*deviceManagerImplMock_, GetLocalNodeDeviceInfo(_, _)).WillOnce(Return(0));
+        EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(0));
         DeviceManagerAgent::GetInstance()->InitLocalNodeInfo();
     } catch (const exception &e) {
         LOGE("Error:%{public}s", e.what());
@@ -1155,7 +1154,7 @@ HWTEST_F(DeviceManagerAgentTest, DeviceManagerAgentTest_InitLocalNodeInfo_0200, 
     bool res = true;
 
     try {
-        EXPECT_CALL(*deviceManagerImplMock_, GetLocalNodeDeviceInfo(_, _)).WillOnce(Return(-1));
+        EXPECT_CALL(*deviceManagerImplMock_, GetLocalDeviceInfo(_, _)).WillOnce(Return(-1));
         DeviceManagerAgent::GetInstance()->InitLocalNodeInfo();
     } catch (const exception &e) {
         GTEST_LOG_(INFO) << e.what();

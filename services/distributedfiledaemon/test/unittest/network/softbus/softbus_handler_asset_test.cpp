@@ -14,6 +14,7 @@
  */
 #include "network/softbus/softbus_handler_asset.h"
 
+#include <fcntl.h>
 #include <gmock/gmock.h>
 #include "gtest/gtest.h"
 #include <memory>
@@ -78,7 +79,6 @@ void SoftBusHandlerAssetTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
 }
-
 
 /**
  * @tc.name: SoftBusHandlerAssetTest_CreateAssetLocalSessionServer_0100
@@ -376,6 +376,178 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetSendFile_0100, Te
     EXPECT_CALL(*socketMock_, SendFile(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(softBusHandlerAsset.AssetSendFile(0, file, true), E_OK);
     GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_AssetSendFile_0100 end";
+}
+
+/**
+ * @tc.name: SoftBusHandlerAssetTest_GetLocalNetworkId_0100
+ * @tc.desc: Verify the GetLocalNetworkId function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_GetLocalNetworkId_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GetLocalNetworkId_0100 start";
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalNodeDeviceInfo(_, _)).WillOnce(Return(-1));
+    string ret = softBusHandlerAsset.GetLocalNetworkId();
+    EXPECT_EQ(ret, "");
+
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalNodeDeviceInfo(_, _)).WillOnce(Return(0));
+    ret = softBusHandlerAsset.GetLocalNetworkId();
+    EXPECT_EQ(ret, "100");
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GetLocalNetworkId_0100 end";
+}
+
+/**
+ * @tc.name: SoftBusHandlerAssetTest_GenerateAssetObjInfo_0100
+ * @tc.desc: Verify the GenerateAssetObjInfo function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_GenerateAssetObjInfo_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GenerateAssetObjInfo_0100 start";
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    string fileName = "test";
+    auto ret = softBusHandlerAsset.GenerateAssetObjInfo(0, fileName, assetObj);
+    EXPECT_EQ(ret, ERR_BAD_VALUE);
+
+    fileName = "/account/device_view/local/data/test";
+    ret = softBusHandlerAsset.GenerateAssetObjInfo(0, fileName, assetObj);
+    EXPECT_EQ(ret, ERR_BAD_VALUE);
+
+    fileName = "/account/device_view/local/data/test/";
+    ret = softBusHandlerAsset.GenerateAssetObjInfo(0, fileName, assetObj);
+    EXPECT_EQ(ret, ERR_BAD_VALUE);
+
+    fileName = "/account/device_view/local/data/test/sessionId=20";
+    ret = softBusHandlerAsset.GenerateAssetObjInfo(0, fileName, assetObj);
+    EXPECT_EQ(ret, ERR_BAD_VALUE);
+
+    fileName = "/account/device_view/local/data/test/sessionId=20&srcBundleName=demoA";
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalNodeDeviceInfo(_, _)).WillOnce(Return(-1));
+    ret = softBusHandlerAsset.GenerateAssetObjInfo(0, fileName, assetObj);
+    EXPECT_EQ(ret, ERR_BAD_VALUE);
+
+    fileName = "/account/device_view/local/data/test/sessionId=20&srcBundleName=demoA";
+    EXPECT_CALL(*deviceManagerImplMock_, GetLocalNodeDeviceInfo(_, _)).WillOnce(Return(0));
+    ret = softBusHandlerAsset.GenerateAssetObjInfo(0, fileName, assetObj);
+    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(assetObj->dstBundleName_, "test");
+    EXPECT_EQ(assetObj->sessionId_, "20");
+    EXPECT_EQ(assetObj->srcBundleName_, "demoA");
+    EXPECT_EQ(assetObj->dstNetworkId_, "100");
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GenerateAssetObjInfo_0100 end";
+}
+
+/**
+ * @tc.name: SoftBusHandlerAssetTest_GenerateUris_0100
+ * @tc.desc: Verify the GenerateUris function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_GenerateUris_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GenerateUris_0100 start";
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    string fileName = "test";
+    vector<string> fileList;
+    fileList.push_back(fileName);
+    auto rlt = softBusHandlerAsset.GenerateUris(fileList, "demoB", true);
+    EXPECT_EQ(rlt.size(), 0);
+
+    fileList[0].clear();
+    fileList[0] = "demoB/ASSET_TEMP";
+    rlt = softBusHandlerAsset.GenerateUris(fileList, "demoB", true);
+    EXPECT_EQ(rlt.size(), 0);
+
+    fileList[0].clear();
+    fileList[0] = "demoB/ASSET_TEMP/test.asset_single?";
+    rlt = softBusHandlerAsset.GenerateUris(fileList, "demoB", true);
+    EXPECT_EQ(rlt.size(), 1);
+    EXPECT_EQ(rlt[0], "file://demoB/data/storage/el2/distributedfiles/test");
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GenerateUris_0100 end";
+}
+
+/**
+ * @tc.name: SoftBusHandlerAssetTest_GenerateUris_0200
+ * @tc.desc: Verify the GenerateUris function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_GenerateUris_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GenerateUris_0200 start";
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    string fileName = "test";
+    vector<string> fileList;
+    fileList.push_back(fileName);
+    auto rlt = softBusHandlerAsset.GenerateUris(fileList, "demoB", false);
+    EXPECT_EQ(rlt.size(), 0);
+
+    fileList[0].clear();
+    fileList[0] = "demoB/ASSET_TEMP/test1";
+    fileList.push_back("demoB/ASSET_TEMP/test2");
+    rlt = softBusHandlerAsset.GenerateUris(fileList, "demoB", false);
+    EXPECT_EQ(rlt.size(), 2);
+    EXPECT_EQ(rlt[0], "file://demoB/data/storage/el2/distributedfiles/test1");
+    EXPECT_EQ(rlt[1], "file://demoB/data/storage/el2/distributedfiles/test2");
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GenerateUris_0200 end";
+}
+
+/**
+ * @tc.name: SoftBusHandlerAssetTest_IsDir_0100
+ * @tc.desc: Verify the IsDir function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_IsDir_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_IsDir_0100 start";
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    string fileName =  "/data/test/";
+    auto rlt = softBusHandlerAsset.IsDir(fileName);
+    EXPECT_EQ(rlt, true);
+
+    fileName.clear();
+    fileName = "/data/test/test.txt";
+    int32_t fd = open(fileName.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) << "SoftBusHandlerAssetTest_IsDir_0100 Create File Failed!";
+    close(fd);
+    rlt = softBusHandlerAsset.IsDir(fileName);
+    EXPECT_EQ(rlt, false);
+
+    softBusHandlerAsset.RemoveFile(fileName, true);
+    rlt = softBusHandlerAsset.IsDir(fileName);
+    EXPECT_EQ(rlt, false);
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_IsDir_0100 end";
+}
+
+/**
+ * @tc.name: SoftBusHandlerAssetTest_RemoveFile_0100
+ * @tc.desc: Verify the RemoveFile function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_RemoveFile_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_RemoveFile_0100 start";
+    string fileName = "/data/test/test.txt";
+    int32_t fd = open(fileName.c_str(), O_RDWR | O_CREAT);
+    ASSERT_TRUE(fd != -1) << "SoftBusHandlerAssetTest_RemoveFile_0100 Create File Failed!";
+    close(fd);
+
+    auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
+    softBusHandlerAsset.RemoveFile(fileName, false);
+    auto ret = access(fileName.c_str(), F_OK);
+    EXPECT_EQ(ret, 0);
+
+    softBusHandlerAsset.RemoveFile(fileName, true);
+    ret = access(fileName.c_str(), F_OK);
+    EXPECT_NE(ret, 0);
+    softBusHandlerAsset.RemoveFile(fileName, true);
+    GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_RemoveFile_0100 end";
 }
 } // namespace Test
 } // namespace DistributedFile
