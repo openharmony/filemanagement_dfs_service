@@ -93,7 +93,7 @@ public:
     {
         return E_OK;
     }
-    int32_t StopDownloadFile(const std::string &path) override
+    int32_t StopDownloadFile(const std::string &path, bool needClean) override
     {
         return E_OK;
     }

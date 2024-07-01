@@ -362,8 +362,9 @@ int32_t CloudSyncServiceStub::HandleStopDownloadFile(MessageParcel &data, Messag
         return E_PERMISSION_SYSTEM;
     }
     string path = data.ReadString();
+    bool needClean = data.ReadBool();
 
-    int32_t res = StopDownloadFile(path);
+    int32_t res = StopDownloadFile(path, needClean);
     reply.WriteInt32(res);
     LOGI("End HandleStopDownloadFile");
     return E_OK;
