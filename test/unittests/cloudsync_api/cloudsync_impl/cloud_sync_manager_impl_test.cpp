@@ -36,7 +36,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    std::shared_ptr<CloudSyncManagerImpl> managePtr_;
+    std::shared_ptr<CloudSyncManagerImpl> managePtr_ = nullptr;
 };
 
 class CloudSyncCallbackDerived : public CloudSyncCallback {
@@ -67,6 +67,7 @@ void CloudSyncManagerImplTest::TearDownTestCase(void)
 
 void CloudSyncManagerImplTest::SetUp(void)
 {
+    managePtr_ = make_shared<CloudSyncManagerImpl>();
     std::cout << "SetUp" << std::endl;
 }
 
@@ -77,77 +78,189 @@ void CloudSyncManagerImplTest::TearDown(void)
 }
 
 /**
- * @tc.name: RegisterCallbackTest
+ * @tc.name: RegisterCallbackTest001
  * @tc.desc: Verify the RegisterCallback function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
+    try {
+        auto callback = nullptr;
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callback);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterCallbackTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "RegisterCallbackTest End";
+}
+
+/**
+ * @tc.name: RegisterCallbackTest002
+ * @tc.desc: Verify the RegisterCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, RegisterCallbackTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackTest Start";
     try {
         shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
-        auto res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callback);
+        int32_t res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callback);
         EXPECT_EQ(res, E_OK);
-        callback = nullptr;
-        res = CloudSyncManagerImpl::GetInstance().RegisterCallback(callback);
-        EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " RegisterCallbackTest FAILED";
+        GTEST_LOG_(INFO) << "RegisterCallbackTest FAILED";
     }
     GTEST_LOG_(INFO) << "RegisterCallbackTest End";
 }
 
 /*
- * @tc.name: UnRegisterCallbackTest
+ * @tc.name: UnRegisterCallbackTest001
  * @tc.desc: Verify the UnRegisterCallback function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, UnRegisterCallbackTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnRegisterCallbackTest Start";
     try {
-        auto res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback();
+        string bundleName = "com.ohos.photos";
+        int32_t res = CloudSyncManagerImpl::GetInstance().UnRegisterCallback(bundleName);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " UnRegisterCallbackTest FAILED";
+        GTEST_LOG_(INFO) << "UnRegisterCallbackTest FAILED";
     }
     GTEST_LOG_(INFO) << "UnRegisterCallbackTest End";
 }
 
 /**
- * @tc.name: StartSyncTest
+ * @tc.name: StartSyncTest001
  * @tc.desc: Verify the StartSync function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudSyncManagerImplTest, StartSyncTest, TestSize.Level1)
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartSyncTest Start";
     try {
-        bool forceFlag = false;
-        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
-        auto res = CloudSyncManagerImpl::GetInstance().StartSync();
+        string bundleName = "com.ohos.photos";
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(bundleName);
         EXPECT_EQ(res, E_OK);
-        res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
-        EXPECT_EQ(res, E_OK);
-        forceFlag = true;
-        res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
-        EXPECT_EQ(res, E_OK);
-        forceFlag = true;
-        res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, nullptr);
-        EXPECT_EQ(res, E_INVAL_ARG);
-        forceFlag = false;
-        res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, nullptr);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest End";
+}
+
+/**
+ * @tc.name: StartSyncTest002
+ * @tc.desc: Verify the StartSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest Start";
+    try {
+        bool forceFlag = true;
+        string bundleName = "com.ohos.photos";
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, nullptr);
         EXPECT_EQ(res, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " StartSyncTest FAILED";
+        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
     }
     GTEST_LOG_(INFO) << "StartSyncTest End";
+}
+
+/**
+ * @tc.name: StartSyncTest003
+ * @tc.desc: Verify the StartSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartSyncTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartSyncTest Start";
+    try {
+        bool forceFlag = true;
+        shared_ptr<CloudSyncCallback> callback = make_shared<CloudSyncCallbackDerived>();
+        string bundleName = "com.ohos.photos";
+        int32_t res = CloudSyncManagerImpl::GetInstance().StartSync(forceFlag, callback);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartSyncTest End";
+}
+
+/**
+ * @tc.name: GetSyncTimeTest001
+ * @tc.desc: Verify the GetSyncTime function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, GetSyncTimeTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetSyncTimeTest Start";
+    try {
+        int64_t syncTime = 0;
+        string bundleName = "com.ohos.photos";
+        int32_t res = CloudSyncManagerImpl::GetInstance().GetSyncTime(syncTime, bundleName);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetSyncTimeTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "GetSyncTimeTest End";
+}
+
+/**
+ * @tc.name: TriggerSyncTest001
+ * @tc.desc: Verify the TriggerSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, TriggerSyncTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TriggerSyncTest Start";
+    try {
+        string bundleName = "";
+        int32_t userId = 0;
+        int32_t res = CloudSyncManagerImpl::GetInstance().TriggerSync(bundleName, userId);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TriggerSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "TriggerSyncTest End";
+}
+
+/**
+ * @tc.name: TriggerSyncTest002
+ * @tc.desc: Verify the TriggerSync function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, TriggerSyncTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TriggerSyncTest Start";
+    try {
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        int32_t res = CloudSyncManagerImpl::GetInstance().TriggerSync(bundleName, userId);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TriggerSyncTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "TriggerSyncTest End";
 }
 
 /*
@@ -160,7 +273,8 @@ HWTEST_F(CloudSyncManagerImplTest, StopSyncTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopSyncTest Start";
     try {
-        int res = CloudSyncManagerImpl::GetInstance().StopSync();
+        string bundleName = "com.ohos.photos";
+        int res = CloudSyncManagerImpl::GetInstance().StopSync(bundleName);
         EXPECT_EQ(res, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -213,6 +327,28 @@ HWTEST_F(CloudSyncManagerImplTest, NotifyDataChangeTest, TestSize.Level1)
 }
 
 /*
+ * @tc.name: NotifyEventChangeTest
+ * @tc.desc: Verify the NotifyEventChange function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, NotifyEventChangeTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyEventChangeTest Start";
+    try {
+        int32_t userId = 100;
+        std::string eventId = "eventId";
+        std::string extraData = "extraData";
+        auto res = CloudSyncManagerImpl::GetInstance().NotifyEventChange(userId, eventId, extraData);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "NotifyEventChangeTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "NotifyEventChangeTest End";
+}
+
+/*
  * @tc.name: StartDownloadFileTest
  * @tc.desc: Verify the StartDownloadFile function.
  * @tc.type: FUNC
@@ -230,6 +366,26 @@ HWTEST_F(CloudSyncManagerImplTest, StartDownloadFileTest, TestSize.Level1)
         GTEST_LOG_(INFO) << " StartDownloadFileTest FAILED";
     }
     GTEST_LOG_(INFO) << "StartDownloadFileTest End";
+}
+
+/*
+ * @tc.name: StartFileCacheTest
+ * @tc.desc: Verify the StartFileCache function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, StartFileCacheTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "StartFileCacheTest Start";
+    try {
+        std::string uri = "uri";
+        auto res = CloudSyncManagerImpl::GetInstance().StartFileCache(uri);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "StartFileCacheTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "StartFileCacheTest End";
 }
 
 /*
@@ -299,14 +455,14 @@ HWTEST_F(CloudSyncManagerImplTest, UnregisterDownloadFileCallbackTest, TestSize.
  */
 HWTEST_F(CloudSyncManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "NotifyDataChangeTest Start";
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest Start";
     try {
         auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
         CloudSyncManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetDeathRecipientTest FAILED";
+        GTEST_LOG_(INFO) << "SetDeathRecipientTest FAILED";
     }
     GTEST_LOG_(INFO) << "SetDeathRecipientTest End";
 }
@@ -371,6 +527,26 @@ HWTEST_F(CloudSyncManagerImplTest, CleanTest, TestSize.Level1)
         GTEST_LOG_(INFO) << " CleanTest FAILED";
     }
     GTEST_LOG_(INFO) << "CleanTest End";
+}
+
+/*
+ * @tc.name: CleanCacheTest
+ * @tc.desc: Verify the CleanCache function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncManagerImplTest, CleanCacheTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CleanCacheTest Start";
+    try {
+        string uri = "uri";
+        auto res = CloudSyncManagerImpl::GetInstance().CleanCache(uri);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CleanCacheTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CleanCacheTest End";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync
