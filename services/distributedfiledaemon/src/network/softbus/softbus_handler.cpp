@@ -111,7 +111,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
 {
     if (packageName.empty() || sessionName.empty() || physicalPath.empty()) {
         LOGI("The parameter is empty");
-        return E_SOFTBUS_SESSION_FAILED;
+        return FileManagement::ERR_BAD_VALUE;
     }
     LOGI("CreateSessionServer Enter.");
     SocketInfo serverInfo = {
@@ -122,7 +122,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
     int32_t socketId = Socket(serverInfo);
     if (socketId < E_OK) {
         LOGE("Create Socket fail socketId, socketId = %{public}d", socketId);
-        return E_SOFTBUS_SESSION_FAILED;
+        return FileManagement::ERR_BAD_VALUE;
     }
     QosTV qos[] = {
         {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
@@ -134,7 +134,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
     if (ret != E_OK) {
         LOGE("Listen socket error for sessionName:%s", sessionName.c_str());
         Shutdown(socketId);
-        return E_SOFTBUS_SESSION_FAILED;
+        return FileManagement::ERR_BAD_VALUE;
     }
     {
         std::lock_guard<std::mutex> lock(serverIdMapMutex_);
@@ -142,7 +142,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
     }
     DistributedFile::SoftBusFileReceiveListener::SetRecvPath(physicalPath);
     LOGI("CreateSessionServer success socketId = %{public}d", socketId);
-    return ret;
+    return socketId;
 }
 
 int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std::string &peerSessionName,
@@ -206,7 +206,7 @@ void SoftBusHandler::ChangeOwnerIfNeeded(int32_t sessionId, const std::string se
 void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionName)
 {
     LOGI("CloseSession Enter socketId = %{public}d", sessionId);
-    if (sessionName.empty()) {
+    if (sessionName.empty() || sessionId <= 0) {
         LOGI("sessionName is empty");
         return;
     }
