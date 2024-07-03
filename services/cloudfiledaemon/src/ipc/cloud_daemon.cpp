@@ -44,6 +44,7 @@ namespace {
     static const string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
     static const string HMDFS_CLOUD_DATA = "/hmdfs/cloud/data/";
     static const int32_t STAT_MODE_DIR = 0771;
+    static const int32_t STAT_MODE_DIR_DENTRY_CACHE = 02771;
     static const int32_t OID_DFS = 1009;
     static const int32_t BUCKET_LEN = 32;
 }
@@ -159,6 +160,9 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
         if (mkdir(cachePath.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
             LOGE("create accout_cache path error %{public}d", errno);
             return E_PATH;
+        }
+        if (chmod(cachePath.c_str(), STAT_MODE_DIR_DENTRY_CACHE) != 0) {
+            LOGE("chmod cachepath error %{public}d", errno);
         }
         if (chown(cachePath.c_str(), OID_DFS, OID_DFS) != 0) {
             LOGE("chown cachepath error %{public}d", errno);
