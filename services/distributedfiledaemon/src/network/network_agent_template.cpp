@@ -18,7 +18,6 @@
 #include "device/device_manager_agent.h"
 #include "dfs_error.h"
 #include "dfsu_exception.h"
-#include "distributed_device_profile_client.h"
 #include "utils_log.h"
 
 namespace OHOS {

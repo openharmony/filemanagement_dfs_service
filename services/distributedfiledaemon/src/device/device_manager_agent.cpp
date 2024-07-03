@@ -23,7 +23,6 @@
 #include "device_auth.h"
 #include "dfs_error.h"
 #include "dfsu_exception.h"
-#include "distributed_device_profile_client.h"
 #include "ipc/i_daemon.h"
 #include "iservice_registry.h"
 #include "iremote_object.h"
