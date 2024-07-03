@@ -124,13 +124,13 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CreateSessionServer_0100, TestSi
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
     int32_t result = handler.CreateSessionServer(packageName, sessionName, role, physicalPath);
     handler.serverIdMap_.erase(sessionName);
-    EXPECT_EQ(result, E_SOFTBUS_SESSION_FAILED);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
 
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(0));
     EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(-1));
     result = handler.CreateSessionServer(packageName, sessionName, role, physicalPath);
     handler.serverIdMap_.erase(sessionName);
-    EXPECT_EQ(result, E_SOFTBUS_SESSION_FAILED);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
 
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(0));
     EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(0));
@@ -162,13 +162,13 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CreateSessionServer_0200, TestSi
     std::string physicalPath = "/data/test";
 
     auto result = handler.CreateSessionServer("", sessionName, role, physicalPath);
-    EXPECT_EQ(result, E_SOFTBUS_SESSION_FAILED);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
 
     result = handler.CreateSessionServer(packageName, "", role, physicalPath);
-    EXPECT_EQ(result, E_SOFTBUS_SESSION_FAILED);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
 
     result = handler.CreateSessionServer(packageName, sessionName, role, "");
-    EXPECT_EQ(result, E_SOFTBUS_SESSION_FAILED);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_CreateSessionServer_0200 end";
 }
 
@@ -189,13 +189,13 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0100, TestSize.Level
 
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
     int32_t result = handler.OpenSession(packageName, sessionName, physicalPath, role);
-    EXPECT_EQ(result, E_OPEN_SESSION);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
 
     int32_t socketId = 0;
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(socketId));
     EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(-1));
     result = handler.OpenSession(packageName, sessionName, physicalPath, role);
-    EXPECT_EQ(result, E_OPEN_SESSION);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
 
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(socketId));
     EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(0));
@@ -228,13 +228,13 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0200, TestSize.Level
     std::string physicalPath = "/data/test";
 
     int32_t result = handler.OpenSession("", sessionName, physicalPath, role);
-    EXPECT_EQ(result, E_OPEN_SESSION);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
 
     result = handler.OpenSession(packageName, "", physicalPath, role);
-    EXPECT_EQ(result, E_OPEN_SESSION);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
 
     result = handler.OpenSession(packageName, sessionName, "", role);
-    EXPECT_EQ(result, E_OPEN_SESSION);
+    EXPECT_EQ(result, ERR_BAD_VALUE);
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_OpenSession_0100 end";
 }
 
