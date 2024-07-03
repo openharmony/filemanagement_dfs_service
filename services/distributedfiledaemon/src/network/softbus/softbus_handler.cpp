@@ -150,7 +150,7 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
 {
     if (mySessionName.empty() || peerSessionName.empty() || peerDevId.empty()) {
         LOGI("The parameter is empty");
-        return E_OPEN_SESSION;
+        return FileManagement::ERR_BAD_VALUE;
     }
     LOGI("OpenSession Enter.");
     QosTV qos[] = {
@@ -168,14 +168,14 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     int32_t socketId = Socket(clientInfo);
     if (socketId < E_OK) {
         LOGE("Create OpenSoftbusChannel Socket error");
-        return E_OPEN_SESSION;
+        return FileManagement::ERR_BAD_VALUE;
     }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[role]);
     if (ret != E_OK) {
         LOGE("Bind SocketClient error");
         Shutdown(socketId);
         RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_FAIL);
-        return E_OPEN_SESSION;
+        return FileManagement::ERR_BAD_VALUE;
     }
     {
         std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
