@@ -33,12 +33,102 @@ namespace {
     static const uint32_t CLOUD_ID_BUCKET_MAX_SIZE = 32;
     static const int64_t SECOND_TO_MILLISECOND = 1e3;
     static const int64_t MILLISECOND_TO_NANOSECOND = 1e6;
+    static const uint64_t DELTA_DISK = 0x9E3779B9;
+    static const uint64_t HMDFS_HASH_COL_BIT_DISK = (0x1ULL) << 63;
 }
 
 constexpr unsigned HMDFS_IOC = 0xf2;
 constexpr unsigned WRITEOPEN_CMD = 0x02;
 #define HMDFS_IOC_GET_WRITEOPEN_CNT _IOR(HMDFS_IOC, WRITEOPEN_CMD, uint32_t)
 const string CloudFileUtils::TMP_SUFFIX = ".temp.download";
+
+bool CloudFileUtils::IsDotDotdot(const std::string &name)
+{
+    return name == "." || name == "..";
+}
+
+void CloudFileUtils::Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
+{
+    const int32_t shift8 = 8;
+    const int32_t shift16 = 16;
+    const int32_t three = 3;
+    const int32_t mod = 4;
+    uint32_t pad = static_cast<uint32_t>(len) | (static_cast<uint32_t>(len) << shift8);
+    pad |= pad << shift16;
+
+    uint32_t val = pad;
+    len = std::min(len, static_cast<size_t>(num * sizeof(int)));
+    for (uint32_t i = 0; i < len; i++) {
+        if ((i % sizeof(int)) == 0) {
+            val = pad;
+        }
+        uint8_t c = static_cast<uint8_t>(tolower(msg[i]));
+        val = c + (val << shift8);
+        if ((i % mod) == three) {
+            *buf++ = val;
+            val = pad;
+            num--;
+        }
+    }
+    if (--num >= 0) {
+        *buf++ = val;
+    }
+    while (--num >= 0) {
+        *buf++ = pad;
+    }
+}
+
+void CloudFileUtils::TeaTransform(uint32_t buf[4], uint32_t const in[]) __attribute__((no_sanitize(
+    "unsigned-integer-overflow")))
+{
+    int n = 16;
+    uint32_t a = in[0];
+    uint32_t b = in[1];
+    uint32_t c = in[2];
+    uint32_t d = in[3];
+    uint32_t b0 = buf[0];
+    uint32_t b1 = buf[1];
+    uint32_t sum = 0;
+    const int32_t LEFT_SHIFT = 4;
+    const int32_t RIGHT_SHIFT = 5;
+    do {
+        sum += DELTA_DISK;
+        b0 += ((b1 << LEFT_SHIFT) + a) ^ (b1 + sum) ^ ((b1 >> RIGHT_SHIFT) + b);
+        b1 += ((b0 << LEFT_SHIFT) + c) ^ (b0 + sum) ^ ((b0 >> RIGHT_SHIFT) + d);
+    } while (--n);
+
+    buf[0] += b0;
+    buf[1] += b1;
+}
+
+uint32_t CloudFileUtils::DentryHash(const std::string &inputStr)
+{
+    if (IsDotDotdot(inputStr)) {
+        return 0;
+    }
+    constexpr int inLen = 8;
+    constexpr int bufLen = 4;
+    uint32_t in[inLen];
+    uint32_t buf[bufLen] = {0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476};
+    auto len = inputStr.length();
+    constexpr decltype(len) hashWidth = 16;
+    const char *p = inputStr.c_str();
+
+    bool loopFlag = true;
+    while (loopFlag) {
+        Str2HashBuf(p, len, in, bufLen);
+        TeaTransform(buf, in);
+
+        if (len <= hashWidth) {
+            break;
+        }
+        p += hashWidth;
+        len -= hashWidth;
+    };
+    uint32_t hash = buf[0];
+    uint32_t hmdfsHash = hash & ~HMDFS_HASH_COL_BIT_DISK;
+    return hmdfsHash;
+}
 
 uint32_t CloudFileUtils::GetBucketId(string cloudId)
 {

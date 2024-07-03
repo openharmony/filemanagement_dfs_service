@@ -45,7 +45,7 @@ static int32_t GetUriRecursively(CloudDiskFuseData* data, FindCloudDiskInodeFunc
     while (!isRoot(inoPtr->parent)) {
         inoPtr = func(data, inoPtr->parent);
         if (!inoPtr || inoPtr->fileName.empty()) {
-            continue;
+            break;
         }
         uri = inoPtr->fileName + BACKFLASH + uri;
         queryTimes++;
