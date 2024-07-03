@@ -364,7 +364,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
     auto socketId = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName,
         DFS_CHANNLE_ROLE_SINK, physicalPath);
-    if (ret <= 0) {
+    if (socketId <= 0) {
         LOGE("CreateSessionServer failed, ret = %{public}d", ret);
         DeleteSessionAndListener(sessionName, socketId);
         return E_SOFTBUS_SESSION_FAILED;
