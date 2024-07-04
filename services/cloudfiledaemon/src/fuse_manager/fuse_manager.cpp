@@ -525,7 +525,9 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
     auto error = make_shared<CloudError>();
     auto openFinish = make_shared<bool>(false);
     auto cond = make_shared<ffrt::condition_variable>();
-    ffrt::thread(DownloadThmOrLcd, cInode, error, openFinish, cond).detach();
+    ffrt::submit([cInode, error, openFinish, cond] {
+        DownloadThmOrLcd(cInode, error, openFinish, cond);
+    });
     unique_lock lck(cInode->openLock);
     auto waitStatus = cond->wait_for(lck, OPEN_TIMEOUT_S, [openFinish] {
         return *openFinish;
