@@ -312,9 +312,10 @@ static int32_t CheckName(const std::string &fileName)
         lastDot = fileName.length();
     }
     std::string realFileName = fileName.substr(0, lastDot);
-    if (realFileName.find(".") != std::string::npos ||
-        ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji") ||
-        fileName.length() > MAX_FILE_NAME_SIZE) {
+    if (realFileName == "." ||
+        realFileName == ".." ||
+        fileName.length() > MAX_FILE_NAME_SIZE ||
+        ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji")) {
         LOGI("Illegal name");
         return EINVAL;
     }
