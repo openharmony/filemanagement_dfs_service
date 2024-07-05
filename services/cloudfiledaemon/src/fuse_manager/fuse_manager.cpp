@@ -115,7 +115,7 @@ struct CloudInode {
         std::shared_lock lock(sessionLock);
         auto it = readCacheMap.find(index);
         if (it != readCacheMap.end()) {
-            std::unique_lock<std::mutex> lock(it->second->mutex);
+            std::unique_lock<std::mutex> flock(it->second->mutex);
             it->second->flags |= flag;
             return true;
         }
@@ -128,6 +128,7 @@ struct CloudInode {
         if (it == readCacheMap.end()) {
             return false;
         }
+        std::unique_lock<std::mutex> flock(it->second->mutex);
         return it->second->flags & PG_READAHEAD;
     }
 };
@@ -685,9 +686,6 @@ static bool CheckAndWait(shared_ptr<CloudInode> cInode, off_t off)
     if (cInode->IsReadAhead(cacheIndex)) {
         auto &it = cInode->readCacheMap[cacheIndex];
         std::unique_lock<std::mutex> lock(it->mutex);
-        if (it->flags & PG_UPTODATE) {
-            return true;
-        }
         auto waitStatus = it->cond.wait_for(lock, READ_TIMEOUT_S, [it] { return it->flags & PG_UPTODATE; });
         if (!waitStatus) {
             LOGE("CheckAndWait timeout: %{public}ld", static_cast<long>(cacheIndex));
@@ -815,7 +813,7 @@ static void InitReadSlice(size_t size, off_t off, ReadSlice &readSlice)
     } else {
         readSlice.sizeHead = static_cast<size_t>(readSlice.offHead + MAX_READ_SIZE - readSlice.offHead);
     }
-    if (readSlice.sizeHead == MAX_READ_SIZE) {
+    if ((size + off) % MAX_READ_SIZE == 0) {
         readSlice.offTail -= MAX_READ_SIZE;
         readSlice.sizeTail = 0;
     }
@@ -878,6 +876,26 @@ static bool FixData(fuse_req_t req, shared_ptr<char> buf, size_t size, size_t si
     return true;
 }
 
+static bool WaitData(fuse_req_t req, shared_ptr<CloudInode> cInode, shared_ptr<ReadArguments> readArgs)
+{
+    std::unique_lock lock(cInode->readLock);
+    auto waitStatus = readArgs->cond->wait_for(lock, READ_TIMEOUT_S, [readArgs] { return *readArgs->readFinish; });
+    if (!waitStatus) {
+        std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
+        int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
+        cInode->SetReadCacheFlag(cacheIndex, PG_UPTODATE);
+        wSesLock.lock();
+        if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
+            cInode->readCacheMap[cacheIndex]->cond.notify_all();
+        }
+        wSesLock.unlock();
+        LOGE("Wait Pread Timeout: %{public}ld", static_cast<long>(cacheIndex));
+        fuse_reply_err(req, ENETUNREACH);
+        return false;
+    }
+    return true;
+}
+
 static void WaitAndFixData(fuse_req_t req,
                            shared_ptr<char> buf,
                            size_t size,
@@ -889,22 +907,8 @@ static void WaitAndFixData(fuse_req_t req,
         if (!it) {
             continue;
         }
-        {
-            std::unique_lock lock(cInode->readLock);
-            auto waitStatus = it->cond->wait_for(lock, READ_TIMEOUT_S, [it] { return *it->readFinish; });
-            if (!waitStatus) {
-                std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
-                int64_t cacheIndex = it->offset / MAX_READ_SIZE;
-                cInode->SetReadCacheFlag(cacheIndex, PG_UPTODATE);
-                wSesLock.lock();
-                if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
-                    cInode->readCacheMap[cacheIndex]->cond.notify_all();
-                }
-                wSesLock.unlock();
-                LOGE("Wait Pread Timeout: %{public}ld", static_cast<long>(cacheIndex));
-                fuse_reply_err(req, ENETUNREACH);
-                return;
-            }
+        if (!WaitData(req, cInode, it)) {
+            return;
         }
         if (!FixData(req, buf, size, sizeDone, it)) {
             return;
@@ -936,6 +940,10 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     if (!buf) {
         fuse_reply_err(req, ENOMEM);
         LOGE("buffer is null");
+        return;
+    }
+    if (cInode->mBase->hasDownloaded) {
+        CloudReadOnLocalFile(req, buf, size, off, fi);
         return;
     }
 
