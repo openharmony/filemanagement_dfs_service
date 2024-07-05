@@ -684,7 +684,7 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
     }
 
     std::string groups = std::string(returnGroupVec);
-    nlohmann::json jsonObject = nlohmann::json::parse(groups); // transform from cjson to cppjson
+    nlohmann::json jsonObject = nlohmann::json::parse(groups, nullptr, false); // transform from cjson to cppjson
     if (jsonObject.is_discarded()) {
         LOGE("returnGroupVec parse failed");
         return;
