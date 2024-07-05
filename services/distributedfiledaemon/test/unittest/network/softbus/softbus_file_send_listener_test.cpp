@@ -114,7 +114,7 @@ HWTEST_F(SoftBusFileSendListenerTest, SoftBusFileSendListenerTest_OnSendFileFini
                        .bytesProcessed = 0,
                        .bytesTotal = 1};
 
-    SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(sessionName, socket));
+    SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(sessionName, 2));
 
     SoftBusFileSendListener::OnFile(socketEmpty, &event);
     auto it = SoftBusHandler::GetInstance().serverIdMap_.find(sessionName);
@@ -140,7 +140,7 @@ HWTEST_F(SoftBusFileSendListenerTest, SoftBusFileSendListenerTest_OnFileTransErr
                        .bytesProcessed = 0,
                        .bytesTotal = 1};
 
-    SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(sessionName, socket));
+    SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(sessionName, 2));
 
     SoftBusFileSendListener::OnFile(socketEmpty, &event);
     auto it = SoftBusHandler::GetInstance().serverIdMap_.find(sessionName);
