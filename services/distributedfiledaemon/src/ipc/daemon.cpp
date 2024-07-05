@@ -177,6 +177,10 @@ int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &devic
             LOGI("RepeatGetConnectionStatus end, ret = %{public}d", ret);
         }
     }
+    if (ret != NO_ERROR) {
+        LOGI("OpenP2PConnection check connection status failed, start to clean up");
+        CloseP2PConnection(deviceInfo);
+    }
     return ret;
 }
 
@@ -215,6 +219,48 @@ int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceI
     return ret;
 }
 
+int32_t Daemon::CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo,
+                        const std::string &networkId, uint32_t callingTokenId)
+{
+    auto deviceManager = DeviceManagerAgent::GetInstance();
+    if (deviceManager->RemoveRemoteReverseObj(false, callingTokenId) != E_OK) {
+        LOGE("fail to RemoveRemoteReverseObj");
+    }
+    deviceManager->RemoveNetworkIdByOne(callingTokenId, networkId);
+    int32_t ret = CloseP2PConnection(deviceInfo);
+    if (ret != NO_ERROR) {
+        LOGE("Daemon::CleanUp CloseP2PConnection failed");
+        return E_CONNECTION_FAILED;
+    }
+    return 0;
+}
+
+int32_t Daemon::MountAfterConnection(const DistributedHardware::DmDeviceInfo &deviceInfo,
+                                     const std::string &networkId, uint32_t callingTokenId)
+{
+    int32_t ret = NO_ERROR;
+    do {
+        ret = ConnectionCount(deviceInfo);
+        if (ret != NO_ERROR) {
+            LOGE("connection failed");
+            break;
+        }
+        auto deviceManager = DeviceManagerAgent::GetInstance();
+        deviceManager->AddNetworkId(callingTokenId, networkId);
+        if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
+            LOGE("[MountDfsDocs] permission denied: FILE_ACCESS_MANAGER_PERMISSION");
+            break;
+        }
+        std::string deviceId = deviceManager->GetDeviceIdByNetworkId(networkId);
+        ret = deviceManager->MountDfsDocs(networkId, deviceId);
+        if (ret != NO_ERROR) {
+            LOGE("[MountDfsDocs] failed");
+            break;
+        }
+    } while (ret != NO_ERROR);
+    return ret;
+}
+
 int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
 {
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
@@ -231,29 +277,21 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         LOGE("Daemon::OpenP2PConnectionEx networkId is null");
         return E_INVAL_ARG_NAPI;
     }
-
     DistributedHardware::DmDeviceInfo deviceInfo{};
     auto res = strcpy_s(deviceInfo.networkId, networkId.size() + 1, networkId.c_str());
     if (res != NO_ERROR) {
         LOGE("OpenP2PConnectionEx strcpy failed, res = %{public}d", res);
         return E_INVAL_ARG_NAPI;
     }
-    int32_t ret = ConnectionCount(deviceInfo);
-    if (ret != E_OK) {
-        LOGE("Daemon::OpenP2PConnectionEx connection failed");
-        return E_CONNECTION_FAILED;
-    }
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
     if (deviceManager->AddRemoteReverseObj(callingTokenId, remoteReverseObj) != E_OK) {
         LOGE("Daemon::OpenP2PConnectionEx::fail to AddRemoteReverseObj");
     }
-    deviceManager->AddNetworkId(callingTokenId, networkId);
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
-        LOGE("[MountDfsDocs] permission denied: FILE_ACCESS_MANAGER_PERMISSION");
+    int32_t ret = MountAfterConnection(deviceInfo, networkId, callingTokenId);
+    if (ret != NO_ERROR) {
+        CleanUp(deviceInfo, networkId, callingTokenId);
         return E_CONNECTION_FAILED;
     }
-    std::string deviceId = deviceManager->GetDeviceIdByNetworkId(networkId);
-    deviceManager->MountDfsDocs(networkId, deviceId);
     LOGI("Daemon::OpenP2PConnectionEx end");
     return ret;
 }
@@ -265,18 +303,12 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
         LOGE("[CloseP2PConnectionEx] DATASYNC permission denied");
         return E_PERMISSION_DENIED_NAPI;
     }
-
     auto deviceManager = DeviceManagerAgent::GetInstance();
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
-    if (deviceManager->RemoveRemoteReverseObj(false, callingTokenId) != E_OK) {
-        LOGE("fail to RemoveRemoteReverseObj");
-    }
-
     if (networkId.empty()) {
         LOGE("[OpenP2PConnectionEx] networkId is null");
         return E_INVAL_ARG_NAPI;
     }
-
     std::string deviceId = deviceManager->GetDeviceIdByNetworkId(networkId);
     if (deviceId.empty()) {
         LOGE("fail to get deviceId");
@@ -290,17 +322,14 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
             return E_UNMOUNT;
         }
     }
-    
-    deviceManager->RemoveNetworkIdByOne(callingTokenId, networkId);
-
     DistributedHardware::DmDeviceInfo deviceInfo{};
     auto res = strcpy_s(deviceInfo.networkId, networkId.size() + 1, networkId.c_str());
-    if (res != 0) {
+    if (res != NO_ERROR) {
         LOGE("strcpy failed, res = %{public}d", res);
         return E_INVAL_ARG_NAPI;
     }
-    int32_t ret = CloseP2PConnection(deviceInfo);
-    if (ret != E_OK) {
+    int32_t ret = CleanUp(deviceInfo, networkId, callingTokenId);
+    if (ret != NO_ERROR) {
         LOGE("Daemon::CloseP2PConnectionEx disconnection failed");
         return E_CONNECTION_FAILED;
     }

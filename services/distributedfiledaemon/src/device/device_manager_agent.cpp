@@ -383,10 +383,6 @@ bool DeviceManagerAgent::UMountDfsCountOnly(const std::string &deviceId, bool ne
     }
     // Count sub one operation
     auto itCount = mountDfsCount_.find(deviceId);
-    if (itCount == mountDfsCount_.end()) {
-        LOGI("mountDfsCount_ can not find key");
-        return false;
-    }
     if (needClear) {
         LOGI("mountDfsCount_ erase");
         mountDfsCount_.erase(itCount);
@@ -498,36 +494,42 @@ std::unordered_set<std::string> DeviceManagerAgent::GetNetworkIds(uint32_t token
     return networkIdMap_[tokenId];
 }
 
-void DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std::string &deviceId)
+int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std::string &deviceId)
 {
     LOGI("MountDfsDocs start");
     if (networkId.empty() || deviceId.empty()) {
-        LOGI("NetworkId or DeviceId is empty");
-        return;
+        LOGE("NetworkId or DeviceId is empty");
+        return INVALID_USER_ID;
     }
+    int32_t ret = NO_ERROR;
+    do {
+        if (MountDfsCountOnly(deviceId)) {
+            LOGI("only count plus one, do not need mount");
+            break;
+        }
 
-    if (MountDfsCountOnly(deviceId)) {
-        LOGI("only count plus one, do not neet mount");
-        return;
-    }
+        int32_t userId = GetCurrentUserId();
+        if (userId == INVALID_USER_ID) {
+            LOGE("GetCurrentUserId Fail");
+            ret = INVALID_USER_ID;
+            break;
+        }
 
-    int32_t userId = GetCurrentUserId();
-    if (userId == INVALID_USER_ID) {
-        LOGI("GetCurrentUserId Fail");
-        return;
-    }
+        GetStorageManager();
+        if (storageMgrProxy_ == nullptr) {
+            LOGE("storageMgrProxy_ is null");
+            ret = INVALID_USER_ID;
+            break;
+        }
 
-    GetStorageManager();
-    if (storageMgrProxy_ == nullptr) {
-        LOGI("storageMgrProxy_ is null");
-        return;
-    }
-
-    int32_t ret = storageMgrProxy_->MountDfsDocs(userId, "account", networkId, deviceId);
-    if (ret != FileManagement::E_OK) {
-        LOGI("MountDfsDocs fail, ret = %{public}d", ret);
+        ret = storageMgrProxy_->MountDfsDocs(userId, "account", networkId, deviceId);
+    } while (false);
+    if (ret != NO_ERROR) {
+        LOGE("MountDfsDocs fail, ret = %{public}d", ret);
+        mountDfsCount_[deviceId]--;
     }
     LOGI("storageMgr.MountDfsDocs end.");
+    return ret;
 }
 
 int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear)
@@ -538,26 +540,40 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
         LOGE("NetworkId or DeviceId is empty");
         return INVALID_USER_ID;
     }
-
-    if (UMountDfsCountOnly(deviceId, needClear)) {
-        LOGE("only count sub one, do not neet umount");
-        return INVALID_USER_ID;
+    auto itCount = mountDfsCount_.find(deviceId);
+    if (itCount == mountDfsCount_.end()) {
+        LOGI("mountDfsCount_ can not find key, do not need umount");
+        return NO_ERROR;
     }
+    int32_t mount_count = mountDfsCount_[deviceId];
+    int32_t ret = NO_ERROR;
+    do {
+        if (UMountDfsCountOnly(deviceId, needClear)) {
+            LOGE("only count sub one, do not need umount");
+            break;
+        }
 
-    int32_t userId = GetCurrentUserId();
-    if (userId == INVALID_USER_ID) {
-        LOGE("GetCurrentUserId Fail");
-        return INVALID_USER_ID;
-    }
+        int32_t userId = GetCurrentUserId();
+        if (userId == INVALID_USER_ID) {
+            LOGE("GetCurrentUserId Fail");
+            ret = INVALID_USER_ID;
+            break;
+        }
 
-    GetStorageManager();
-    if (storageMgrProxy_ == nullptr) {
-        LOGE("storageMgrProxy_ is null");
-        return INVALID_USER_ID;
-    }
-    int32_t ret = storageMgrProxy_->UMountDfsDocs(userId, "account", networkId, deviceId);
-    if (ret != FileManagement::E_OK) {
+        GetStorageManager();
+        if (storageMgrProxy_ == nullptr) {
+            LOGE("storageMgrProxy_ is null");
+            ret = INVALID_USER_ID;
+            break;
+        }
+
+        ret = storageMgrProxy_->UMountDfsDocs(userId, "account", networkId, deviceId);
+    } while (false);
+    if (ret != NO_ERROR) {
         LOGE("UMountDfsDocs fail, ret = %{public}d", ret);
+        if (!needClear) {
+            mountDfsCount_[deviceId] = mount_count;
+        }
     }
     LOGI("storageMgr.UMountDfsDocs end.");
     return ret;
@@ -591,6 +607,7 @@ int32_t DeviceManagerAgent::AddRemoteReverseObj(uint32_t callingTokenId, sptr<IF
 
 int32_t DeviceManagerAgent::RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId)
 {
+    LOGI("DeviceManagerAgent::RemoveRemoteReverseObj called");
     if (clear) {
         appCallConnect_.clear();
         return FileManagement::E_OK;
@@ -602,6 +619,7 @@ int32_t DeviceManagerAgent::RemoveRemoteReverseObj(bool clear, uint32_t callingT
         return FileManagement::E_INVAL_ARG;
     }
     appCallConnect_.erase(it);
+    LOGI("DeviceManagerAgent::RemoveRemoteReverseObj end");
     return FileManagement::E_OK;
 }
 
