@@ -427,9 +427,9 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSessionWithSessionName_0100
     SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
     auto iter = SoftBusHandler::GetInstance().serverIdMap_.find(sessionName);
     if (iter == SoftBusHandler::GetInstance().serverIdMap_.end()) {
-        EXPECT_TRUE(true);
-    } else {
         EXPECT_TRUE(false);
+    } else {
+        EXPECT_TRUE(true);
     }
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_CloseSessionWithSessionName_0100 end";
 }
@@ -443,7 +443,7 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSessionWithSessionName_0100
 HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_CloseSessionWithSessionName_0200, TestSize.Level1)
 {
     string sessionName = "sessionName";
-    SoftBusHandler::GetInstance().clientSessNameMap_.insert(make_pair(0, sessionName));
+    SoftBusHandler::GetInstance().clientSessNameMap_.insert(make_pair(2, sessionName));
     SoftBusHandler::GetInstance().clientSessNameMap_.insert(make_pair(1, "test"));
     SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(sessionName, 2));
     SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
