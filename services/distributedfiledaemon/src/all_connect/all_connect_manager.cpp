@@ -88,12 +88,12 @@ int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,
         LOGE("dllHandle_ is nullptr, all connect not support.");
         return FileManagement::ERR_OK;
     }
-    if (allConnect_.HMS_ServiceCollaborationManager_PublishServiceState == nullptr) {
+    if (allConnect_.ServiceCollaborationManager_PublishServiceState == nullptr) {
         LOGE("PublishServiceState is nullptr, all connect function not load.");
         return FileManagement::ERR_DLOPEN;
     }
 
-    int32_t ret = allConnect_.HMS_ServiceCollaborationManager_PublishServiceState(peerNetworkId.c_str(),
+    int32_t ret = allConnect_.ServiceCollaborationManager_PublishServiceState(peerNetworkId.c_str(),
                                                                                   SERVICE_NAME.c_str(),
                                                                                   "", state);
     if (ret != FileManagement::ERR_OK) {
@@ -104,7 +104,7 @@ int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,
 }
 
 int32_t AllConnectManager::ApplyAdvancedResource(const std::string &peerNetworkId,
-    HMS_ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest)
+    ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest)
 {
     LOGI("ApplyAdvancedResource begin");
     std::lock_guard<std::mutex> lock(allConnectLock_);
@@ -112,7 +112,7 @@ int32_t AllConnectManager::ApplyAdvancedResource(const std::string &peerNetworkI
         LOGE("dllHandle_ is nullptr, all connect not support.");
         return FileManagement::ERR_OK;
     }
-    if (allConnect_.HMS_ServiceCollaborationManager_ApplyAdvancedResource == nullptr) {
+    if (allConnect_.ServiceCollaborationManager_ApplyAdvancedResource == nullptr) {
         LOGE("PublishServiceState is nullptr, all connect function not load.");
         return FileManagement::ERR_DLOPEN;
     }
@@ -121,10 +121,10 @@ int32_t AllConnectManager::ApplyAdvancedResource(const std::string &peerNetworkI
         applyResultBlock_ = std::make_shared<BlockObject<bool>>(BLOCK_INTERVAL_ALLCONNECT, false);
     }
 
-    int32_t ret = allConnect_.HMS_ServiceCollaborationManager_ApplyAdvancedResource(peerNetworkId.c_str(),
-                                                                                    SERVICE_NAME.c_str(),
-                                                                                    resourceRequest,
-                                                                                    &allConnectCallback_);
+    int32_t ret = allConnect_.ServiceCollaborationManager_ApplyAdvancedResource(peerNetworkId.c_str(),
+                                                                                SERVICE_NAME.c_str(),
+                                                                                resourceRequest,
+                                                                                &allConnectCallback_);
     if (ret != FileManagement::ERR_OK) {
         LOGE("ApplyAdvancedResource fail, ret %{public}d", ret);
         return FileManagement::ERR_APPLY_RESULT;
@@ -149,7 +149,7 @@ int32_t AllConnectManager::GetAllConnectSoLoad()
         return FileManagement::ERR_DLOPEN;
     }
 
-    int32_t (*allConnectProxy)(HMS_ServiceCollaborationManager_API *exportapi) = nullptr;
+    int32_t (*allConnectProxy)(ServiceCollaborationManager_API *exportapi) = nullptr;
 
     dllHandle_ = dlopen(path, RTLD_LAZY);
     if (dllHandle_ == nullptr) {
@@ -157,8 +157,8 @@ int32_t AllConnectManager::GetAllConnectSoLoad()
         return FileManagement::ERR_DLOPEN;
     }
 
-    allConnectProxy = reinterpret_cast<int32_t (*)(HMS_ServiceCollaborationManager_API *exportapi)>(
-        dlsym(dllHandle_, "HMS_ServiceCollaborationManager_Export"));
+    allConnectProxy = reinterpret_cast<int32_t (*)(ServiceCollaborationManager_API *exportapi)>(
+        dlsym(dllHandle_, "ServiceCollaborationManager_Export"));
     if (allConnectProxy == nullptr) {
         dlclose(dllHandle_);
         dllHandle_ = nullptr;
@@ -185,12 +185,12 @@ int32_t AllConnectManager::RegisterLifecycleCallback()
         LOGE("dllHandle_ is nullptr, all connect so has not been loaded.");
         return FileManagement::ERR_DLOPEN;
     }
-    if (allConnect_.HMS_ServiceCollaborationManager_RegisterLifecycleCallback == nullptr) {
+    if (allConnect_.ServiceCollaborationManager_RegisterLifecycleCallback == nullptr) {
         LOGE("RegisterLifecycleCallback is nullptr, all connect function not load.");
         return FileManagement::ERR_DLOPEN;
     }
 
-    int32_t ret = allConnect_.HMS_ServiceCollaborationManager_RegisterLifecycleCallback(SERVICE_NAME.c_str(),
+    int32_t ret = allConnect_.ServiceCollaborationManager_RegisterLifecycleCallback(SERVICE_NAME.c_str(),
                                                                                         &allConnectCallback_);
     if (ret != FileManagement::ERR_OK) {
         LOGE("RegisterLifecycleCallback fail, ret %{public}d", ret);
@@ -207,12 +207,12 @@ int32_t AllConnectManager::UnRegisterLifecycleCallback()
         LOGE("dllHandle_ is nullptr, all connect so has not been loaded.");
         return FileManagement::ERR_DLOPEN;
     }
-    if (allConnect_.HMS_ServiceCollaborationManager_UnRegisterLifecycleCallback == nullptr) {
+    if (allConnect_.ServiceCollaborationManager_UnRegisterLifecycleCallback == nullptr) {
         LOGE("RegisterLifecycleCallback is nullptr, all connect function not load.");
         return FileManagement::ERR_DLOPEN;
     }
 
-    int32_t ret = allConnect_.HMS_ServiceCollaborationManager_UnRegisterLifecycleCallback(SERVICE_NAME.c_str());
+    int32_t ret = allConnect_.ServiceCollaborationManager_UnRegisterLifecycleCallback(SERVICE_NAME.c_str());
     if (ret != FileManagement::ERR_OK) {
         LOGE("UnRegisterLifecycleCallback fail, ret %{public}d", ret);
         return FileManagement::ERR_ALLCONNECT;
@@ -241,12 +241,12 @@ int32_t AllConnectManager::OnStop(const char *peerNetworkId)
     return FileManagement::ERR_OK;
 }
 
-std::shared_ptr<HMS_ServiceCollaborationManager_ResourceRequestInfoSets> AllConnectManager::BuildResourceRequest()
+std::shared_ptr<ServiceCollaborationManager_ResourceRequestInfoSets> AllConnectManager::BuildResourceRequest()
 {
-    auto resourceRequest = std::make_shared<HMS_ServiceCollaborationManager_ResourceRequestInfoSets>();
+    auto resourceRequest = std::make_shared<ServiceCollaborationManager_ResourceRequestInfoSets>();
 
     if (remoteHardwareList_ == nullptr) {
-        remoteHardwareList_ = std::make_shared<HMS_ServiceCollaborationManager_HardwareRequestInfo>();
+        remoteHardwareList_ = std::make_shared<ServiceCollaborationManager_HardwareRequestInfo>();
         remoteHardwareList_->hardWareType = ServiceCollaborationManagerHardwareType::SCM_DISPLAY;
         remoteHardwareList_->canShare = true;
     }
@@ -254,7 +254,7 @@ std::shared_ptr<HMS_ServiceCollaborationManager_ResourceRequestInfoSets> AllConn
     resourceRequest->remoteHardwareList = remoteHardwareList_.get();
 
     if (localHardwareList_ == nullptr) {
-        localHardwareList_ = std::make_shared<HMS_ServiceCollaborationManager_HardwareRequestInfo>();
+        localHardwareList_ = std::make_shared<ServiceCollaborationManager_HardwareRequestInfo>();
         localHardwareList_->hardWareType = ServiceCollaborationManagerHardwareType::SCM_DISPLAY;
         localHardwareList_->canShare = true;
     }
@@ -262,7 +262,7 @@ std::shared_ptr<HMS_ServiceCollaborationManager_ResourceRequestInfoSets> AllConn
     resourceRequest->localHardwareList = localHardwareList_.get();
 
     if (communicationRequest_ == nullptr) {
-        communicationRequest_ = std::make_shared<HMS_ServiceCollaborationManager_CommunicationRequestInfo>();
+        communicationRequest_ = std::make_shared<ServiceCollaborationManager_CommunicationRequestInfo>();
         communicationRequest_->minBandwidth = DFS_QOS_TYPE_MIN_BW;
         communicationRequest_->maxLatency = DFS_QOS_TYPE_MAX_LATENCY;
         communicationRequest_->minLatency = DFS_QOS_TYPE_MIN_LATENCY;

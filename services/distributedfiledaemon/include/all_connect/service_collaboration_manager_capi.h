@@ -45,44 +45,44 @@ typedef enum ServiceCollaborationManagerResultCode {
     REJECT = 1004720002
 } ServiceCollaborationManagerResultCode;
 
-typedef struct HMS_ServiceCollaborationManager_HardwareRequestInfo {
+typedef struct ServiceCollaborationManager_HardwareRequestInfo {
     ServiceCollaborationManagerHardwareType hardWareType;
     bool canShare;
-} HMS_ServiceCollaborationManager_HardwareRequestInfo;
+} ServiceCollaborationManager_HardwareRequestInfo;
 
-typedef struct HMS_ServiceCollaborationManager_CommunicationRequestInfo {
+typedef struct ServiceCollaborationManager_CommunicationRequestInfo {
     int32_t minBandwidth;
     int32_t maxLatency;
     int32_t minLatency;
     int32_t maxWaitTime;
     const char *dataType;
-} HMS_ServiceCollaborationManager_CommunicationRequestInfo;
+} ServiceCollaborationManager_CommunicationRequestInfo;
 
-typedef struct HMS_ServiceCollaborationManager_ResourceRequestInfoSets {
+typedef struct ServiceCollaborationManager_ResourceRequestInfoSets {
     uint32_t remoteHardwareListSize;
-    HMS_ServiceCollaborationManager_HardwareRequestInfo *remoteHardwareList;
+    ServiceCollaborationManager_HardwareRequestInfo *remoteHardwareList;
     uint32_t localHardwareListSize;
-    HMS_ServiceCollaborationManager_HardwareRequestInfo *localHardwareList;
-    HMS_ServiceCollaborationManager_CommunicationRequestInfo *communicationRequest;
-} HMS_ServiceCollaborationManager_ResourceRequestInfoSets;
+    ServiceCollaborationManager_HardwareRequestInfo *localHardwareList;
+    ServiceCollaborationManager_CommunicationRequestInfo *communicationRequest;
+} ServiceCollaborationManager_ResourceRequestInfoSets;
 
-typedef struct HMS_ServiceCollaborationManager_Callback {
+typedef struct ServiceCollaborationManager_Callback {
     int32_t (*OnStop)(const char *peerNetworkId);
     int32_t (*ApplyResult)(int32_t errorcode, int32_t result, const char *reason);
-} HMS_ServiceCollaborationManager_Callback;
+} ServiceCollaborationManager_Callback;
 
-typedef struct HMS_ServiceCollaborationManager_API {
-    int32_t (*HMS_ServiceCollaborationManager_PublishServiceState)(const char *peerNetworkId, const char *serviceName,
+typedef struct ServiceCollaborationManager_API {
+    int32_t (*ServiceCollaborationManager_PublishServiceState)(const char *peerNetworkId, const char *serviceName,
         const char *extraInfo, ServiceCollaborationManagerBussinessStatus state);
-    int32_t (*HMS_ServiceCollaborationManager_ApplyAdvancedResource)(const char *peerNetworkId, const char *serviceName,
-        HMS_ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest,
-        HMS_ServiceCollaborationManager_Callback *callback);
-    int32_t (*HMS_ServiceCollaborationManager_RegisterLifecycleCallback)(const char *serviceName,
-        HMS_ServiceCollaborationManager_Callback *callback);
-    int32_t (*HMS_ServiceCollaborationManager_UnRegisterLifecycleCallback)(const char *serviceName);
-} HMS_ServiceCollaborationManager_API;
+    int32_t (*ServiceCollaborationManager_ApplyAdvancedResource)(const char *peerNetworkId, const char *serviceName,
+        ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest,
+        ServiceCollaborationManager_Callback *callback);
+    int32_t (*ServiceCollaborationManager_RegisterLifecycleCallback)(const char *serviceName,
+        ServiceCollaborationManager_Callback *callback);
+    int32_t (*ServiceCollaborationManager_UnRegisterLifecycleCallback)(const char *serviceName);
+} ServiceCollaborationManager_API;
 
-int32_t HMS_ServiceCollaborationManager_Export(HMS_ServiceCollaborationManager_API *exportapi);
+int32_t ServiceCollaborationManager_Export(ServiceCollaborationManager_API *exportapi);
 
 #ifdef __cplusplus
 }

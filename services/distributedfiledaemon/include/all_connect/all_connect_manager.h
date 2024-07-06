@@ -34,8 +34,8 @@ public:
     int32_t PublishServiceState(const std::string &peerNetworkId,
                                 ServiceCollaborationManagerBussinessStatus state);
     int32_t ApplyAdvancedResource(const std::string &peerNetworkId,
-                                  HMS_ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest);
-    std::shared_ptr<HMS_ServiceCollaborationManager_ResourceRequestInfoSets> BuildResourceRequest();
+                                  ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest);
+    std::shared_ptr<ServiceCollaborationManager_ResourceRequestInfoSets> BuildResourceRequest();
 
 private:
     AllConnectManager();
@@ -51,16 +51,16 @@ private:
     std::mutex allConnectLock_;
     void *dllHandle_ = nullptr;
 
-    HMS_ServiceCollaborationManager_API allConnect_ = {
-        .HMS_ServiceCollaborationManager_PublishServiceState = nullptr,
-        .HMS_ServiceCollaborationManager_ApplyAdvancedResource = nullptr,
-        .HMS_ServiceCollaborationManager_RegisterLifecycleCallback = nullptr,
-        .HMS_ServiceCollaborationManager_UnRegisterLifecycleCallback = nullptr,
+    ServiceCollaborationManager_API allConnect_ = {
+        .ServiceCollaborationManager_PublishServiceState = nullptr,
+        .ServiceCollaborationManager_ApplyAdvancedResource = nullptr,
+        .ServiceCollaborationManager_RegisterLifecycleCallback = nullptr,
+        .ServiceCollaborationManager_UnRegisterLifecycleCallback = nullptr,
     };
-    HMS_ServiceCollaborationManager_Callback allConnectCallback_;
-    std::shared_ptr<HMS_ServiceCollaborationManager_HardwareRequestInfo> remoteHardwareList_;
-    std::shared_ptr<HMS_ServiceCollaborationManager_HardwareRequestInfo> localHardwareList_;
-    std::shared_ptr<HMS_ServiceCollaborationManager_CommunicationRequestInfo> communicationRequest_;
+    ServiceCollaborationManager_Callback allConnectCallback_;
+    std::shared_ptr<ServiceCollaborationManager_HardwareRequestInfo> remoteHardwareList_;
+    std::shared_ptr<ServiceCollaborationManager_HardwareRequestInfo> localHardwareList_;
+    std::shared_ptr<ServiceCollaborationManager_CommunicationRequestInfo> communicationRequest_;
 
     static std::shared_ptr<BlockObject<bool>> applyResultBlock_;
     static constexpr uint32_t BLOCK_INTERVAL_ALLCONNECT = 60 * 1000;

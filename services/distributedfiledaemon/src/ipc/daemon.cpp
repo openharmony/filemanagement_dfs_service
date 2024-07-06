@@ -375,7 +375,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
 
     std::string physicalPath;
-    auto ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
+    ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
     if (ret != E_OK) {
         LOGE("GetRealPath failed, ret = %{public}d", ret);
         return ret;

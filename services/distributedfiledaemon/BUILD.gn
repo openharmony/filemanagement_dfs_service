@@ -33,7 +33,7 @@ ohos_shared_library("libdistributedfiledaemon") {
   sources = [
     "src/device/device_info.cpp",
     "src/device/device_manager_agent.cpp",
-    "src/ipc/all_connect_manager.cpp",
+    "src/all_connect/all_connect_manager.cpp",
     "src/ipc/asset_callback_manager.cpp",
     "src/ipc/asset_recv_callback_proxy.cpp",
     "src/ipc/asset_send_callback_proxy.cpp",
