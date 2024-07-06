@@ -311,6 +311,11 @@ bool SoftbusAssetRecvListener::JudgeSingleFile(const std::string &filePath)
     }
     return true;
 }
+
+void SoftbusAssetRecvListener::OnRecvShutdown(int32_t sessionId, ShutdownReason reason)
+{
+    LOGI("OnSessionClosed, sessionId = %{public}d, reason = %{public}d", sessionId, reason);
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

@@ -84,6 +84,11 @@ void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId,
     SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], !SoftBusAssetSendListener::isSingleFile_);
 }
 
+void SoftBusAssetSendListener::OnSendShutdown(int32_t sessionId, ShutdownReason reason)
+{
+    LOGI("OnSessionClosed, sessionId = %{public}d, reason = %{public}d", sessionId, reason);
+}
+
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

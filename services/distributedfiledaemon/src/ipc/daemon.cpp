@@ -23,6 +23,7 @@
 #include <unordered_set>
 
 #include "accesstoken_kit.h"
+#include "all_connect/all_connect_manager.h"
 #include "asset_callback_manager.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
@@ -106,6 +107,7 @@ void Daemon::OnStart()
         StartEventHandler();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
         AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
+        AllConnectManager::GetInstance().InitAllConnectManager();
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
     }
@@ -127,6 +129,7 @@ void Daemon::OnStop()
     daemonExecute_ = nullptr;
     eventHandler_ = nullptr;
     SoftBusHandlerAsset::GetInstance().DeleteAssetLocalSessionServer();
+    AllConnectManager::GetInstance().UnInitAllConnectManager();
     LOGI("Stop finished successfully");
 }
 
@@ -313,12 +316,28 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &dstDeviceId,
                                 const std::string &sessionName)
 {
+    LOGI("RequestSendFile begin");
+    auto resourceReq = AllConnectManager::GetInstance().BuildResourceRequest();
+    int32_t ret = AllConnectManager::GetInstance().ApplyAdvancedResource(dstDeviceId, resourceReq.get());
+    if (ret != E_OK) {
+        LOGE("ApplyAdvancedResource fail, ret is %{public}d", ret);
+        return ERR_APPLY_RESULT;
+    }
+
     auto sessionId = SoftBusHandler::GetInstance().OpenSession(sessionName.c_str(), sessionName.c_str(),
         dstDeviceId.c_str(), DFS_CHANNLE_ROLE_SOURCE);
     if (sessionId <= 0) {
         LOGE("OpenSession failed");
         return E_SOFTBUS_SESSION_FAILED;
     }
+
+    ret = AllConnectManager::GetInstance().PublishServiceState(dstDeviceId,
+        ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
+    if (ret != E_OK) {
+        LOGE("PublishServiceState fail, ret is %{public}d", ret);
+        return ERR_PUBLISH_STATE;
+    }
+
     LOGI("RequestSendFile OpenSession success");
     SoftBusSessionPool::SessionInfo sessionInfo{.sessionId = sessionId, .srcUri = srcUri, .dstPath = dstPath};
     SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo);
@@ -336,6 +355,13 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
                                const sptr<IRemoteObject> &listener,
                                HmdfsInfo &info)
 {
+    int32_t ret = AllConnectManager::GetInstance().PublishServiceState(srcDeviceId,
+        ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
+    if (ret != E_OK) {
+        LOGE("PublishServiceState fail, ret is %{public}d", ret);
+        return ERR_PUBLISH_STATE;
+    }
+
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
         LOGE("ListenerCallback is nullptr");

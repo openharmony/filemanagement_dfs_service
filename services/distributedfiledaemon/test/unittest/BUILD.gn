@@ -83,6 +83,7 @@ ohos_unittest("device_manager_agent_sup_test") {
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
@@ -172,6 +173,7 @@ ohos_unittest("device_manager_agent_test") {
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
@@ -254,6 +256,7 @@ ohos_unittest("os_account_observer_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
@@ -335,6 +338,7 @@ ohos_unittest("devsl_dispatcher_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
@@ -415,6 +419,7 @@ ohos_unittest("kernel_talker_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
@@ -494,6 +499,7 @@ ohos_unittest("network_agent_template_test") {
   sources = [
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
@@ -571,6 +577,7 @@ ohos_unittest("session_pool_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
@@ -650,6 +657,7 @@ ohos_unittest("softbus_agent_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
@@ -735,6 +743,7 @@ ohos_unittest("softbus_file_receive_listener_test") {
   ]
 
   sources = [
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
@@ -782,6 +791,7 @@ ohos_unittest("softbus_file_send_listener_test") {
   ]
 
   sources = [
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
@@ -827,6 +837,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
@@ -907,6 +918,7 @@ ohos_unittest("softbus_session_test") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
@@ -1045,6 +1057,7 @@ ohos_unittest("softbus_handler_test") {
 
   sources = [
     "${distributedfile_path}/test/mock/socket_mock.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",

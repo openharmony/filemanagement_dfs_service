@@ -87,6 +87,11 @@ enum CloudSyncServiceErrCode : ErrCode {
 enum DFSErrCode {
     ERR_OK = 0,
     ERR_BAD_VALUE = -1,
+
+    ERR_APPLY_RESULT = 1,
+    ERR_DLOPEN,
+    ERR_PUBLISH_STATE,
+    ERR_ALLCONNECT,
 };
 
 enum JsErrCode {

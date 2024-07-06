@@ -54,7 +54,7 @@ SoftBusHandlerAsset::SoftBusHandlerAsset()
 {
     ISocketListener fileSendListener;
     fileSendListener.OnBind = nullptr;
-    fileSendListener.OnShutdown = DistributedFile::SoftBusSessionListener::OnSessionClosed;
+    fileSendListener.OnShutdown = SoftBusAssetSendListener::OnSendShutdown;
     fileSendListener.OnFile = SoftBusAssetSendListener::OnFile;
     fileSendListener.OnBytes = nullptr;
     fileSendListener.OnMessage = nullptr;
@@ -63,7 +63,7 @@ SoftBusHandlerAsset::SoftBusHandlerAsset()
 
     ISocketListener fileReceiveListener;
     fileReceiveListener.OnBind = SoftbusAssetRecvListener::OnAssetRecvBind;
-    fileReceiveListener.OnShutdown = DistributedFile::SoftBusSessionListener::OnSessionClosed;
+    fileReceiveListener.OnShutdown = SoftbusAssetRecvListener::OnRecvShutdown;
     fileReceiveListener.OnFile = SoftbusAssetRecvListener::OnFile;
     fileReceiveListener.OnBytes = nullptr;
     fileReceiveListener.OnMessage = nullptr;

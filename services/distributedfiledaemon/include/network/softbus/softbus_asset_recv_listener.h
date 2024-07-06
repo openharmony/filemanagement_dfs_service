@@ -38,7 +38,7 @@ public:
     static void OnRecvAssetError(int32_t socketId, int32_t errorCode);
 
     static void OnAssetRecvBind(int32_t sessionId, PeerSocketInfo info);
-
+    static void OnRecvShutdown(int32_t sessionId, ShutdownReason reason);
 private:
     static int32_t HandleSingleFile(int32_t socketId, const std::string &filePath, const sptr<AssetObj> &assetObj);
     static int32_t HandleZipFile(int32_t socketId, const std::string &filePath, const sptr<AssetObj> &assetObj);
