@@ -293,10 +293,6 @@ void SoftBusHandler::CloseSessionWithNetworkId(const std::string &peerNetworkId)
     std::string sessionName;
     {
         std::lock_guard<std::mutex> lock(networkIdMapMutex_);
-        if (networkIdMap_.empty()) {
-            LOGE("CloseSessionWithNetworkId failed, networkIdMap_ is empty");
-            return;
-        }
         auto it = networkIdMap_.find(peerNetworkId);
         if (it != networkIdMap_.end()) {
             sessionName = it->second;
