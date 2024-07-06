@@ -128,14 +128,30 @@ NetworkStatus::NetConnStatus NetworkStatus::GetNetConnStatus()
 
 bool NetworkStatus::CheckMobileNetwork(const std::string &bundleName, const int32_t userId)
 {
-    if (NetworkSetManager::IsNetworkSetStatusOkay(bundleName, userId)) {
+    if (bundleName != "com.ohos.photos") {
+        return true;
+    }
+    if (NetworkSetManager::IsAllowCellularConnect(bundleName, userId)) {
         LOGI("datashare status open, CheckMobileNetwork success");
         return true;
     }
-    if (NetworkSetManager::IsNetworkSetStatusOkay(bundleName, userId) || netStatus_ == WIFI_CONNECT) {
+    if (netStatus_ == WIFI_CONNECT) {
         LOGI("datashare status close, networkdtatus:wifi");
         return true;
     }
+    return false;
+}
+
+bool NetworkStatus::CheckNetwork(const std::string &bundleName, const int32_t userId)
+{
+    if (bundleName != "com.ohos.photos") {
+        return true;
+    }
+    if (NetworkSetManager::IsAllowNetConnect(bundleName, userId)) {
+        LOGI("CheckNetwork on");
+        return true;
+    }
+    LOGI("CheckNetwork off");
     return false;
 }
 
