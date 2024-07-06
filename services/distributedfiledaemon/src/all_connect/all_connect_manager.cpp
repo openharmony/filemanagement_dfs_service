@@ -94,8 +94,8 @@ int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,
     }
 
     int32_t ret = allConnect_.ServiceCollaborationManager_PublishServiceState(peerNetworkId.c_str(),
-                                                                                  SERVICE_NAME.c_str(),
-                                                                                  "", state);
+                                                                              SERVICE_NAME.c_str(),
+                                                                              "", state);
     if (ret != FileManagement::ERR_OK) {
         LOGE("PublishServiceState %{public}d fail, ret %{public}d", state, ret);
         return FileManagement::ERR_PUBLISH_STATE;
@@ -191,7 +191,7 @@ int32_t AllConnectManager::RegisterLifecycleCallback()
     }
 
     int32_t ret = allConnect_.ServiceCollaborationManager_RegisterLifecycleCallback(SERVICE_NAME.c_str(),
-                                                                                        &allConnectCallback_);
+                                                                                    &allConnectCallback_);
     if (ret != FileManagement::ERR_OK) {
         LOGE("RegisterLifecycleCallback fail, ret %{public}d", ret);
         return FileManagement::ERR_ALLCONNECT;

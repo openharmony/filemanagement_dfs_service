@@ -59,7 +59,6 @@ private:
 
     static std::mutex networkIdMapMutex_;
     static std::map<std::string, std::string> networkIdMap_;
-
 };
 } // namespace DistributedFile
 } // namespace Storage

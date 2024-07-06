@@ -44,7 +44,6 @@ private:
     int32_t RegisterLifecycleCallback();
     int32_t UnRegisterLifecycleCallback();
 
-
     static int32_t OnStop(const char *peerNetworkId);
     static int32_t ApplyResult(int32_t errorcode, int32_t result, const char *reason);
 
