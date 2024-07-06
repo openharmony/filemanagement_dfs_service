@@ -49,6 +49,7 @@ public:
                                                  const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback);
     virtual int32_t UnregisterDownloadFileCallback(const std::string &bundleName, const int32_t userId);
     virtual int32_t CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action);
+    virtual int32_t CleanRemainFile(const std::string &bundleName, const int32_t userId);
     virtual int32_t OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays);
     virtual int32_t DownloadThumb();
     virtual int32_t CleanCache(const std::string &bundleName, const int32_t userId, const std::string &uri);
