@@ -117,7 +117,7 @@ void SoftBusSessionListener::OnSessionClosed(int32_t sessionId, ShutdownReason r
     std::string sessionName = "";
     sessionName = SoftBusHandler::GetSessionName(sessionId);
     LOGI("OnSessionClosed, sessionId = %{public}d", sessionId);
-    SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
+    SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
 }
 
 std::string SoftBusSessionListener::GetLocalUri(const std::string &uri)

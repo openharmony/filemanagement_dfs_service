@@ -17,6 +17,7 @@
 
 #include <utility>
 
+#include "all_connect/all_connect_manager.h"
 #include "device_manager.h"
 #include "dfs_error.h"
 #include "dm_device_info.h"
@@ -40,9 +41,14 @@ std::mutex SoftBusHandler::clientSessNameMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
 std::mutex SoftBusHandler::serverIdMapMutex_;
 std::map<std::string, int32_t> SoftBusHandler::serverIdMap_;
-
+std::mutex SoftBusHandler::networkIdMapMutex_;
+std::map<std::string, std::string> SoftBusHandler::networkIdMap_;
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
+    {
+        std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+        networkIdMap_.insert(std::make_pair(info.networkId, info.name));
+    }
     std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
     SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, info.name));
 }
@@ -181,6 +187,10 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
         clientSessNameMap_.insert(std::make_pair(socketId, mySessionName));
     }
+    {
+        std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+        networkIdMap_.insert(std::make_pair(peerDevId, mySessionName));
+    }
     RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_SUCCESS);
     LOGI("OpenSession success socketId = %{public}d", socketId);
     return socketId;
@@ -227,6 +237,7 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
             clientSessNameMap_.erase(it->first);
         }
     }
+    RemoveNetworkId(sessionName);
     Shutdown(sessionId);
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
 }
@@ -252,6 +263,42 @@ void SoftBusHandler::CloseSessionWithSessionName(const std::string sessionName)
     TransManager::GetInstance().NotifyFileFailed(sessionName, E_DFS_CANCEL_SUCCESS);
     TransManager::GetInstance().DeleteTransTask(sessionName);
     CloseSession(sessionId, sessionName);
+}
+void SoftBusHandler::RemoveNetworkId(const std::string &sessionName)
+{
+    LOGI("RemoveNetworkId begin");
+    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+    if (networkIdMap_.empty()) {
+        LOGE("networkIdMap_ is empty");
+        return;
+    }
+    for (auto it : networkIdMap_) {
+        if (it.second == sessionName) {
+            AllConnectManager::GetInstance().PublishServiceState(it.first,
+                ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
+            networkIdMap_.erase(it.first);
+            return;
+        }
+    }
+}
+
+void SoftBusHandler::CloseSessionWithNetworkId(const std::string &peerNetworkId)
+{
+    LOGI("CloseSessionWithNetworkId begin");
+    if (peerNetworkId.empty()) {
+        LOGE("peerNetworkId is empty");
+        return;
+    }
+
+    std::string sessionName;
+    {
+        std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+        auto it = networkIdMap_.find(peerNetworkId);
+        if (it != networkIdMap_.end()) {
+            sessionName = it->second;
+        }
+    }
+    CloseSessionWithSessionName(sessionName);
 }
 } // namespace DistributedFile
 } // namespace Storage

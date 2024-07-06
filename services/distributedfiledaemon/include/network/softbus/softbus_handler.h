@@ -16,11 +16,13 @@
 #ifndef FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_HANDLER_H
 #define FILEMANAGEMENT_DFS_SERVICE_SOFTBUS_HANDLER_H
 
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
+
 #include "transport/socket.h"
 #include "transport/trans_type.h"
-#include <map>
-#include <string>
-#include <mutex>
 
 namespace OHOS {
 namespace Storage {
@@ -41,9 +43,11 @@ public:
     void ChangeOwnerIfNeeded(int32_t sessionId, const std::string sessionName);
     void CloseSession(int32_t sessionId, const std::string sessionName);
     void CloseSessionWithSessionName(const std::string sessionName);
+    void CloseSessionWithNetworkId(const std::string &peerNetworkId);
     static std::string GetSessionName(int32_t sessionId);
     static void OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info);
     static bool IsSameAccount(const std::string &networkId);
+    void RemoveNetworkId(const std::string &sessionName);
 
 private:
     static std::mutex clientSessNameMapMutex_;
@@ -52,6 +56,9 @@ private:
     static std::map<std::string, int32_t> serverIdMap_;
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
     std::map<DFS_CHANNEL_ROLE, ISocketListener> sessionListener_;
+
+    static std::mutex networkIdMapMutex_;
+    static std::map<std::string, std::string> networkIdMap_;
 };
 } // namespace DistributedFile
 } // namespace Storage
