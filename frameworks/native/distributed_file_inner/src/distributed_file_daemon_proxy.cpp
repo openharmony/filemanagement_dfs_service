@@ -209,6 +209,10 @@ int32_t DistributedFileDaemonProxy::OpenP2PConnectionEx(const std::string &netwo
         LOGE("Failed to send network id.");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
+    if (remoteReverseObj == nullptr) {
+        LOGE("remoteReverseObj is nullptr.");
+        return OHOS::FileManagement::E_BROKEN_IPC;
+    }
     if (!data.WriteRemoteObject(remoteReverseObj->AsObject())) {
         LOGE("fail to WriteRemoteObject remoteReverseObj");
         return OHOS::FileManagement::E_BROKEN_IPC;
@@ -447,6 +451,10 @@ int32_t DistributedFileDaemonProxy::PushAsset(int32_t userId,
         LOGE("Failed to send the assetInfoObj");
         return OHOS::FileManagement::E_INVAL_ARG;
     }
+    if (sendCallback == nullptr) {
+        LOGE("sendCallback is nullptr.");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
     if (!data.WriteRemoteObject(sendCallback->AsObject())) {
         LOGE("Failed to send the listener callback stub");
         return OHOS::FileManagement::E_INVAL_ARG;
@@ -475,6 +483,10 @@ int32_t DistributedFileDaemonProxy::RegisterAssetCallback(const sptr<IAssetRecvC
         LOGE("Failed to write interface token");
         return OHOS::FileManagement::E_BROKEN_IPC;
     }
+    if (recvCallback == nullptr) {
+        LOGE("recvCallback is nullptr.");
+        return OHOS::FileManagement::E_INVAL_ARG;
+    }
     if (!data.WriteRemoteObject(recvCallback->AsObject())) {
         LOGE("Failed to send the listener callback stub");
         return OHOS::FileManagement::E_INVAL_ARG;
@@ -502,6 +514,10 @@ int32_t DistributedFileDaemonProxy::UnRegisterAssetCallback(const sptr<IAssetRec
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOGE("Failed to write interface token");
         return OHOS::FileManagement::E_BROKEN_IPC;
+    }
+    if (recvCallback == nullptr) {
+        LOGE("recvCallback is nullptr.");
+        return OHOS::FileManagement::E_INVAL_ARG;
     }
     if (!data.WriteRemoteObject(recvCallback->AsObject())) {
         LOGE("Failed to send the listener callback stub");
