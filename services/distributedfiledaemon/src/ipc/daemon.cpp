@@ -228,8 +228,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         LOGE("Daemon::OpenP2PConnectionEx, new death recipient");
         dfsListenerDeathRecipient_ = new (std::nothrow) DfsListenerDeathRecipient();
     }
-    if (remoteReverseObj == nullptr)
-    {
+    if (remoteReverseObj == nullptr) {
         LOGE("Daemon::OpenP2PConnectionEx remoteReverseObj is nullptr");
         return E_INVAL_ARG_NAPI;
     }
@@ -428,8 +427,7 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     auto start = std::chrono::high_resolution_clock::now();
     bool isSrcFile = false;
     bool isSrcDir = false;
-    if (daemon == nullptr)
-    {
+    if (daemon == nullptr) {
         LOGE("Daemon::GetRealPath daemon is nullptr");
         return E_INVAL_ARG_NAPI;
     }
@@ -562,8 +560,7 @@ int32_t Daemon::Copy(const std::string &srcUri,
         LOGE("GetLocalDeviceInfo failed, errCode = %{public}d", errCode);
         return E_GET_DEVICE_ID;
     }
-    if (daemon == nullptr)
-    {
+    if (daemon == nullptr) {
         LOGE("Daemon::Copy daemon is nullptr");
         return E_INVAL_ARG_NAPI;
     }
