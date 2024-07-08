@@ -321,7 +321,7 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &dstDeviceId,
                                 const std::string &sessionName)
 {
-    LOGI("RequestSendFile begin");
+    LOGI("RequestSendFile begin dstDeviceId: %{public}s", Utils::GetAnonyString(dstDeviceId).c_str());
     auto resourceReq = AllConnectManager::GetInstance().BuildResourceRequest();
     int32_t ret = AllConnectManager::GetInstance().ApplyAdvancedResource(dstDeviceId, resourceReq.get());
     if (ret != E_OK) {
@@ -567,6 +567,7 @@ int32_t Daemon::Copy(const std::string &srcUri,
         LOGE("Daemon::Copy daemon is nullptr");
         return E_INVAL_ARG_NAPI;
     }
+    LOGI("Copy localDeviceInfo.networkId: %{public}s", Utils::GetAnonyString(localDeviceInfo.networkId).c_str());
     auto ret = daemon->RequestSendFile(srcUri, dstPath, localDeviceInfo.networkId, sessionName);
     if (ret != E_OK) {
         LOGE("RequestSendFile failed, ret = %{public}d", ret);
