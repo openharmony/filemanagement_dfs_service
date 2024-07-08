@@ -228,6 +228,11 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
         LOGE("Daemon::OpenP2PConnectionEx, new death recipient");
         dfsListenerDeathRecipient_ = new (std::nothrow) DfsListenerDeathRecipient();
     }
+    if (remoteReverseObj == nullptr)
+    {
+        LOGE("Daemon::OpenP2PConnectionEx remoteReverseObj is nullptr");
+        return E_INVAL_ARG_NAPI;
+    }
     remoteReverseObj->AsObject()->AddDeathRecipient(dfsListenerDeathRecipient_);
     auto deviceManager = DeviceManagerAgent::GetInstance();
     if (networkId.empty()) {
@@ -423,6 +428,11 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     auto start = std::chrono::high_resolution_clock::now();
     bool isSrcFile = false;
     bool isSrcDir = false;
+    if (daemon == nullptr)
+    {
+        LOGE("Daemon::GetRealPath daemon is nullptr");
+        return E_INVAL_ARG_NAPI;
+    }
     auto ret = daemon->GetRemoteCopyInfo(srcUri, isSrcFile, isSrcDir);
     if (ret != E_OK) {
         LOGE("GetRemoteCopyInfo failed, ret = %{public}d", ret);
@@ -552,7 +562,11 @@ int32_t Daemon::Copy(const std::string &srcUri,
         LOGE("GetLocalDeviceInfo failed, errCode = %{public}d", errCode);
         return E_GET_DEVICE_ID;
     }
-
+    if (daemon == nullptr)
+    {
+        LOGE("Daemon::Copy daemon is nullptr");
+        return E_INVAL_ARG_NAPI;
+    }
     auto ret = daemon->RequestSendFile(srcUri, dstPath, localDeviceInfo.networkId, sessionName);
     if (ret != E_OK) {
         LOGE("RequestSendFile failed, ret = %{public}d", ret);
