@@ -21,6 +21,7 @@
 #include <sstream>
 #include <sys/stat.h>
 
+#include "cloud_file_utils.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
 #include "file_utils.h"
@@ -43,8 +44,6 @@ constexpr uint32_t MAX_BUCKET_LEVEL = 63;
 constexpr uint32_t BUCKET_BLOCKS = 2;
 constexpr uint32_t BITS_PER_BYTE = 8;
 constexpr uint32_t HMDFS_SLOT_LEN_BITS = 3;
-constexpr uint64_t DELTA = 0x9E3779B9; /* Hashing code copied from f2fs */
-constexpr uint64_t HMDFS_HASH_COL_BIT = (0x1ULL) << 63;
 constexpr uint32_t DIR_SIZE = 4096;
 
 #pragma pack(push, 1)
@@ -194,95 +193,6 @@ MetaFile::~MetaFile()
 {
 }
 
-static bool IsDotDotdot(const std::string &name)
-{
-    return name == "." || name == "..";
-}
-
-static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
-{
-    uint32_t pad = static_cast<uint32_t>(len) | (static_cast<uint32_t>(len) << 8);
-    pad |= pad << 16; /* hash pad length 16 */
-
-    uint32_t val = pad;
-    len = std::min(len, static_cast<size_t>(num * sizeof(int)));
-    for (uint32_t i = 0; i < len; i++) {
-        if ((i % sizeof(int)) == 0) {
-            val = pad;
-        }
-        uint8_t c = static_cast<uint8_t>(tolower(msg[i]));
-        val = c + (val << 8); /* hash shift size 8 */
-        if ((i % 4) == 3) {   /* msg size 4, shift when 3 */
-            *buf++ = val;
-            val = pad;
-            num--;
-        }
-    }
-    if (--num >= 0) {
-        *buf++ = val;
-    }
-    while (--num >= 0) {
-        *buf++ = pad;
-    }
-}
-
-static void TeaTransform(uint32_t buf[4], uint32_t const in[]) __attribute__((no_sanitize("unsigned-integer-overflow")))
-{
-    int n = 16;           /* transform total rounds 16 */
-    uint32_t a = in[0];   /* transform input pos 0 */
-    uint32_t b = in[1];   /* transform input pos 1 */
-    uint32_t c = in[2];   /* transform input pos 2 */
-    uint32_t d = in[3];   /* transform input pos 3 */
-    uint32_t b0 = buf[0]; /* buf pos 0 */
-    uint32_t b1 = buf[1]; /* buf pos 1 */
-    uint32_t sum = 0;
-
-    do {
-        sum += DELTA;
-        b0 += ((b1 << 4) + a) ^ (b1 + sum) ^ ((b1 >> 5) + b); /* tea transform width 4 and 5 */
-        b1 += ((b0 << 4) + c) ^ (b0 + sum) ^ ((b0 >> 5) + d); /* tea transform width 4 and 5 */
-    } while (--n);
-
-    buf[0] += b0;
-    buf[1] += b1;
-}
-
-static uint32_t DentryHash(const std::string &name)
-{
-    if (IsDotDotdot(name)) {
-        return 0;
-    }
-
-    constexpr int inLen = 8;      /* hash input buf size 8 */
-    constexpr int bufLen = 4;     /* hash output buf size 4 */
-    uint32_t in[inLen];
-    uint32_t buf[bufLen];
-    auto len = name.length();
-    constexpr decltype(len) hashWidth = 16; /* hash operation width 4 */
-    const char *p = name.c_str();
-
-    buf[0] = 0x67452301; /* hash magic 1 */
-    buf[1] = 0xefcdab89; /* hash magic 2 */
-    buf[2] = 0x98badcfe; /* hash magic 3 */
-    buf[3] = 0x10325476; /* hash magic 4 */
-
-    while (true) {
-        Str2HashBuf(p, len, in, bufLen);
-        TeaTransform(buf, in);
-
-        if (len <= hashWidth) {
-            break;
-        }
-
-        p += hashWidth;
-        len -= hashWidth;
-    };
-    uint32_t hash = buf[0];
-    uint32_t hmdfsHash = hash & ~HMDFS_HASH_COL_BIT;
-
-    return hmdfsHash;
-}
-
 static inline uint32_t GetDentrySlots(size_t nameLen)
 {
     return static_cast<uint32_t>((nameLen + BITS_PER_BYTE - 1) >> HMDFS_SLOT_LEN_BITS);
@@ -423,7 +333,7 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
 
     std::unique_lock<std::mutex> lock(mtx_);
     FileRangeLock fileLock(fd_, 0, 0);
-    namehash = DentryHash(base.name);
+    namehash = CloudDisk::CloudFileUtils::DentryHash(base.name);
 
     bool found = false;
     while (!found) {
@@ -478,7 +388,7 @@ static void InitDcacheLookupCtx(DcacheLookupCtx *ctx, const MetaBase &base, int 
     ctx->name = base.name;
     ctx->bidx = 0;
     ctx->page = nullptr;
-    ctx->hash = DentryHash(ctx->name);
+    ctx->hash = CloudDisk::CloudFileUtils::DentryHash(ctx->name);
 }
 
 static std::unique_ptr<HmdfsDentryGroup> FindDentryPage(uint64_t index, DcacheLookupCtx *ctx)

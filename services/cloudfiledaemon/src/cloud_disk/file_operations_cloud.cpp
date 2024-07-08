@@ -60,11 +60,7 @@ namespace {
     static const string FILE_LOCAL = "1";
     static const string ROOT_CLOUD_ID = "rootId";
     static const string RECYCLE_NAME = ".trash";
-    static const uint64_t DELTA_DISK = 0x9E3779B9;
-    static const uint64_t HMDFS_HASH_COL_BIT_DISK = (0x1ULL) << 63;
     static const float LOOKUP_TIMEOUT = 60.0;
-    static const int32_t LEFT_SHIFT = 4;
-    static const int32_t RIGHT_SHIFT = 5;
     static const uint64_t UNKNOWN_INODE_ID = 0;
     static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
     static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
@@ -96,84 +92,6 @@ static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
         childInode->stat.st_nlink = STAT_NLINK_REG;
         childInode->stat.st_size = metaBase.size;
     }
-}
-
-static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num)
-{
-    const int32_t shift8 = 8;
-    const int32_t shift16 = 16;
-    const int32_t three = 3;
-    const int32_t mod = 4;
-    uint32_t pad = static_cast<uint32_t>(len) | (static_cast<uint32_t>(len) << shift8);
-    pad |= pad << shift16;
-
-    uint32_t val = pad;
-    len = std::min(len, static_cast<size_t>(num * sizeof(int)));
-    for (uint32_t i = 0; i < len; i++) {
-        if ((i % sizeof(int)) == 0) {
-            val = pad;
-        }
-        uint8_t c = static_cast<uint8_t>(tolower(msg[i]));
-        val = c + (val << shift8);
-        if ((i % mod) == three) {
-            *buf++ = val;
-            val = pad;
-            num--;
-        }
-    }
-    if (--num >= 0) {
-        *buf++ = val;
-    }
-    while (--num >= 0) {
-        *buf++ = pad;
-    }
-}
-
-static void TeaTransform(uint32_t buf[4], uint32_t const in[]) __attribute__((no_sanitize("unsigned-integer-overflow")))
-{
-    int n = 16;
-    uint32_t a = in[0];
-    uint32_t b = in[1];
-    uint32_t c = in[2];
-    uint32_t d = in[3];
-    uint32_t b0 = buf[0];
-    uint32_t b1 = buf[1];
-    uint32_t sum = 0;
-
-    do {
-        sum += DELTA_DISK;
-        b0 += ((b1 << LEFT_SHIFT) + a) ^ (b1 + sum) ^ ((b1 >> RIGHT_SHIFT) + b);
-        b1 += ((b0 << LEFT_SHIFT) + c) ^ (b0 + sum) ^ ((b0 >> RIGHT_SHIFT) + d);
-    } while (--n);
-
-    buf[0] += b0;
-    buf[1] += b1;
-}
-
-static uint32_t DentryHash(const std::string &cloudId)
-{
-    constexpr int inLen = 8;
-    constexpr int bufLen = 4;
-    uint32_t in[inLen];
-    uint32_t buf[bufLen] = {0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476};
-    auto len = cloudId.length();
-    constexpr decltype(len) hashWidth = 16;
-    const char *p = cloudId.c_str();
-
-    bool loopFlag = true;
-    while (loopFlag) {
-        Str2HashBuf(p, len, in, bufLen);
-        TeaTransform(buf, in);
-
-        if (len <= hashWidth) {
-            break;
-        }
-        p += hashWidth;
-        len -= hashWidth;
-    };
-    uint32_t hash = buf[0];
-    uint32_t hmdfsHash = hash & ~HMDFS_HASH_COL_BIT_DISK;
-    return hmdfsHash;
 }
 
 static shared_ptr<CloudDiskFile> InitFileAttr(struct CloudDiskFuseData *data, struct fuse_file_info *fi)
@@ -259,7 +177,7 @@ static int32_t LookupRecycledFile(struct CloudDiskFuseData *data, const char *na
         LOGE("file %{public}s not found in recyclebin", name);
         return EINVAL;
     }
-    int64_t inodeId = static_cast<int64_t>(DentryHash(metaBase.cloudId));
+    int64_t inodeId = static_cast<int64_t>(CloudFileUtils::DentryHash(metaBase.cloudId));
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
     if (inoPtr == nullptr) {
         string nameStr = name;
@@ -311,7 +229,7 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
         return ENOENT;
     }
     string key = std::to_string(parent) + name;
-    int64_t inodeId = static_cast<int64_t>(DentryHash(metaBase.cloudId));
+    int64_t inodeId = static_cast<int64_t>(CloudFileUtils::DentryHash(metaBase.cloudId));
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
     auto child = UpdateChildCache(data, inodeId, inoPtr);
     child->refCount++;
@@ -689,7 +607,7 @@ static void AddDirEntryToBuf(fuse_req_t req, fuse_ino_t ino, size_t size, off_t 
     string buf;
     buf.resize(size);
     if (childInfos.empty() || startPos == childInfos.size()) {
-        LOGE("empty buffer replied");
+        LOGW("empty buffer replied");
         return (void)fuse_reply_buf(req, buf.c_str(), 0);
     }
 
@@ -1177,6 +1095,8 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
     int64_t localId = FileOperationsHelper::FindLocalId(data, key);
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, localId);
     if (inoPtr != nullptr) {
+        inoPtr->fileName = newName;
+        inoPtr->parent = newParent;
         isDir = S_ISDIR(inoPtr->stat.st_mode);
     }
     CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
