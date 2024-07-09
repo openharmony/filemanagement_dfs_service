@@ -396,12 +396,8 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         return E_SOFTBUS_SESSION_FAILED;
     }
     physicalPath.clear();
-    Uri uri(dstUri);
-    auto authority = uri.GetAuthority();
-    if (authority == FILE_MANAGER_AUTHORITY || authority == MEDIA_AUTHORITY) {
-        HapTokenInfo hapTokenInfo;
-        AccessTokenKit::GetHapTokenInfo(IPCSkeleton::GetCallingTokenID(), hapTokenInfo);
-        SandboxHelper::GetPhysicalPath(dstUri, std::to_string(hapTokenInfo.userID), physicalPath);
+    if (info.authority == FILE_MANAGER_AUTHORITY || info.authority == MEDIA_AUTHORITY) {
+        physicalPath = info.dstPhysicalPath;
     }
     ret = Copy(srcUri, physicalPath, daemon, sessionName);
     if (ret != E_OK) {
@@ -449,6 +445,7 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     }
 
     LOGI("physicalPath %{public}s", physicalPath.c_str());
+    info.dstPhysicalPath = physicalPath;
     ret = CheckCopyRule(physicalPath, dstUri, hapTokenInfo, isSrcFile, info);
     if (ret != E_OK) {
         LOGE("CheckCopyRule failed, ret = %{public}d", ret);
@@ -494,6 +491,7 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
 
     Uri uri(dstUri);
     auto authority = uri.GetAuthority();
+    info.authority = authority;
     if (authority != FILE_MANAGER_AUTHORITY && authority != MEDIA_AUTHORITY) {
         auto bundleName = SoftBusSessionListener::GetBundleName(dstUri);
         physicalPath = "/data/service/el2/" + to_string(hapTokenInfo.userID) + "/hmdfs/account/data/" + bundleName +
