@@ -278,9 +278,8 @@ int32_t CloudSyncService::LoadRemoteSA(const std::string &deviceId)
     return E_OK;
 }
 
-static int32_t GetTargetBundleName(string &targetBundleName)
+static int32_t GetTargetBundleName(string &targetBundleName, string &callerBundleName)
 {
-    string callerBundleName;
     if (DfsuAccessTokenHelper::GetCallerBundleName(callerBundleName)) {
         return E_INVAL_ARG;
     }
@@ -298,12 +297,13 @@ static int32_t GetTargetBundleName(string &targetBundleName)
 int32_t CloudSyncService::UnRegisterCallbackInner(const string &bundleName)
 {
     string targetBundleName = bundleName;
-    int32_t ret = GetTargetBundleName(targetBundleName);
+    string callerBundleName = "";
+    int32_t ret = GetTargetBundleName(targetBundleName, callerBundleName);
     if (ret != E_OK) {
         LOGE("get bundle name failed: %{public}d", ret);
         return ret;
     }
-    dataSyncManager_->UnRegisterCloudSyncCallback(targetBundleName);
+    dataSyncManager_->UnRegisterCloudSyncCallback(targetBundleName, callerBundleName);
     return E_OK;
 }
 
@@ -315,7 +315,8 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
     }
 
     string targetBundleName = bundleName;
-    int32_t ret = GetTargetBundleName(targetBundleName);
+    string callerBundleName = "";
+    int32_t ret = GetTargetBundleName(targetBundleName, callerBundleName);
     if (ret != E_OK) {
         LOGE("get bundle name failed: %{public}d", ret);
         return ret;
@@ -323,14 +324,15 @@ int32_t CloudSyncService::RegisterCallbackInner(const sptr<IRemoteObject> &remot
 
     auto callback = iface_cast<ICloudSyncCallback>(remoteObject);
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    dataSyncManager_->RegisterCloudSyncCallback(targetBundleName, callerUserId, callback);
+    dataSyncManager_->RegisterCloudSyncCallback(targetBundleName, callerBundleName, callerUserId, callback);
     return E_OK;
 }
 
 int32_t CloudSyncService::StartSyncInner(bool forceFlag, const string &bundleName)
 {
     string targetBundleName = bundleName;
-    int32_t ret = GetTargetBundleName(targetBundleName);
+    string callerBundleName = "";
+    int32_t ret = GetTargetBundleName(targetBundleName, callerBundleName);
     if (ret != E_OK) {
         LOGE("get bundle name failed: %{public}d", ret);
         return ret;
@@ -353,7 +355,8 @@ int32_t CloudSyncService::TriggerSyncInner(const std::string &bundleName, const 
 int32_t CloudSyncService::StopSyncInner(const string &bundleName)
 {
     string targetBundleName = bundleName;
-    int32_t ret = GetTargetBundleName(targetBundleName);
+    string callerBundleName = "";
+    int32_t ret = GetTargetBundleName(targetBundleName, callerBundleName);
     if (ret != E_OK) {
         LOGE("get bundle name failed: %{public}d", ret);
         return ret;
@@ -365,7 +368,8 @@ int32_t CloudSyncService::StopSyncInner(const string &bundleName)
 int32_t CloudSyncService::GetSyncTimeInner(int64_t &syncTime, const string &bundleName)
 {
     string targetBundleName = bundleName;
-    int32_t ret = GetTargetBundleName(targetBundleName);
+    string callerBundleName = "";
+    int32_t ret = GetTargetBundleName(targetBundleName, callerBundleName);
     if (ret != E_OK) {
         LOGE("get bundle name failed: %{public}d", ret);
         return ret;
