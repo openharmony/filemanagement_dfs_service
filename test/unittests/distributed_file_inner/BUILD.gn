@@ -48,6 +48,7 @@ ohos_unittest("distributed_file_daemon_proxy_test") {
   ]
 
   external_deps = [
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -93,6 +94,7 @@ ohos_unittest("file_trans_listener_stub_test") {
   ]
 
   external_deps = [
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_core",

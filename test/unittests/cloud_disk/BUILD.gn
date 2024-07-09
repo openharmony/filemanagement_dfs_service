@@ -41,6 +41,7 @@ ohos_unittest("account_status_listener_test") {
 
   external_deps = [
     "ability_base:want",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
   ]
@@ -98,6 +99,7 @@ ohos_unittest("file_operations_cloud_test") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:dataobs_manager",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
     "hilog:libhilog",
@@ -158,6 +160,7 @@ ohos_unittest("database_manager_test") {
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dfs_service:cloudsync_kit_inner",
     "ffrt:libffrt",

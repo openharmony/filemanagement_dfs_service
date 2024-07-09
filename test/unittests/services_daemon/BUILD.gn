@@ -58,6 +58,7 @@ ohos_unittest("fuse_manager_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "c_utils:utils",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -122,6 +123,7 @@ ohos_unittest("cloud_daemon_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "c_utils:utils",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -166,6 +168,7 @@ ohos_unittest("cloud_daemon_stub_test") {
   ]
 
   external_deps = [
+    "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
     "libfuse:libfuse",

@@ -55,6 +55,7 @@ ohos_unittest("device_info_test") {
   ]
 
   external_deps = [
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
   ]
@@ -135,6 +136,7 @@ ohos_unittest("device_manager_agent_sup_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -222,6 +224,7 @@ ohos_unittest("device_manager_agent_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -304,6 +307,7 @@ ohos_unittest("os_account_observer_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -385,6 +389,7 @@ ohos_unittest("devsl_dispatcher_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -466,6 +471,7 @@ ohos_unittest("kernel_talker_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -543,6 +549,7 @@ ohos_unittest("network_agent_template_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -623,6 +630,7 @@ ohos_unittest("session_pool_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -704,6 +712,7 @@ ohos_unittest("softbus_agent_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -765,6 +774,7 @@ ohos_unittest("softbus_file_receive_listener_test") {
 
   external_deps = [
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -813,6 +823,7 @@ ohos_unittest("softbus_file_send_listener_test") {
 
   external_deps = [
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -884,6 +895,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -965,6 +977,7 @@ ohos_unittest("softbus_session_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -1030,6 +1043,7 @@ ohos_unittest("softbus_handler_asset_test") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -1081,6 +1095,7 @@ ohos_unittest("softbus_handler_test") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -1120,6 +1135,7 @@ ohos_unittest("softbus_session_pool_test") {
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "c_utils:utils",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
   ]
@@ -1157,6 +1173,7 @@ ohos_unittest("softbus_session_listener_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
     "os_account:os_account_innerkits",
