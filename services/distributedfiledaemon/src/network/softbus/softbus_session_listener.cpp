@@ -50,16 +50,23 @@ int32_t SoftBusSessionListener::QueryActiveUserId()
 }
 
 std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<std::string> &fileList,
-                                                             const std::string &path)
+                                                             const std::string &path,
+                                                             const std::string &dstPath)
 {
     std::vector<std::string> tmp;
-    if (!Utils::IsFolder(path)) {
-        auto pos = path.rfind("/");
-        tmp.push_back(path.substr(pos + 1));
-    } else {
+    if (Utils::IsFolder(path)) {
         for (const auto &it : fileList) {
             tmp.push_back(it.substr(path.size() + 1));
         }
+        return tmp;
+    }
+    if (dstPath.empty()) {
+        auto pos = path.rfind("/");
+        tmp.push_back(path.substr(pos + 1));
+    } else {
+        auto pos = dstPath.rfind("/");
+        dstPath.substr(pos + 1);
+        tmp.push_back(dstPath.substr(pos + 1));
     }
     return tmp;
 }
@@ -92,7 +99,7 @@ void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo i
         src[i] = fileList.at(i).c_str();
     }
 
-    auto fileNameList = GetFileName(fileList, physicalPath);
+    auto fileNameList = GetFileName(fileList, physicalPath, sessionInfo.dstPath);
     if (fileNameList.empty()) {
         LOGE("GetFileName failed or file is empty");
         return;

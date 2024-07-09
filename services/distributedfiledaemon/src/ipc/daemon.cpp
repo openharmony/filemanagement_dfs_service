@@ -395,7 +395,14 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         DeleteSessionAndListener(sessionName);
         return E_SOFTBUS_SESSION_FAILED;
     }
-
+    physicalPath.clear();
+    Uri uri(dstUri);
+    auto authority = uri.GetAuthority();
+    if (authority == FILE_MANAGER_AUTHORITY || authority == MEDIA_AUTHORITY) {
+        HapTokenInfo hapTokenInfo;
+        AccessTokenKit::GetHapTokenInfo(IPCSkeleton::GetCallingTokenID(), hapTokenInfo);
+        SandboxHelper::GetPhysicalPath(dstUri, std::to_string(hapTokenInfo.userID), physicalPath);
+    }
     ret = Copy(srcUri, physicalPath, daemon, sessionName);
     if (ret != E_OK) {
         LOGE("Remote copy failed,ret = %{public}d", ret);
