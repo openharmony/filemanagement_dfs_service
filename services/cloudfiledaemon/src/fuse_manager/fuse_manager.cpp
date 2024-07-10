@@ -759,7 +759,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 
     wSesLock.lock();
     while (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
-        if (cacheIndex * MAX_READ_SIZE > cInode->mBase->size) {
+        if (cacheIndex * MAX_READ_SIZE > static_cast<int64_t>(cInode->mBase->size)) {
             wSesLock.unlock();
             return;
         }
@@ -806,14 +806,14 @@ static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t s
 static void InitReadSlice(size_t size, off_t off, ReadSlice &readSlice)
 {
     readSlice.offHead = off;
-    readSlice.offTail = static_cast<off_t>((off + size) / MAX_READ_SIZE * MAX_READ_SIZE);
+    readSlice.offTail = (off + static_cast<off_t>(size)) / MAX_READ_SIZE * MAX_READ_SIZE;
     if (readSlice.offTail > readSlice.offHead) {
         readSlice.sizeHead = static_cast<size_t>(readSlice.offTail - readSlice.offHead);
         readSlice.sizeTail = MAX_READ_SIZE;
     } else {
         readSlice.sizeHead = static_cast<size_t>(readSlice.offHead + MAX_READ_SIZE - readSlice.offHead);
     }
-    if ((size + off) % MAX_READ_SIZE == 0) {
+    if ((static_cast<off_t>(size) + off) % MAX_READ_SIZE == 0) {
         readSlice.offTail -= MAX_READ_SIZE;
         readSlice.sizeTail = 0;
     }
@@ -836,7 +836,7 @@ static bool StartReadTask(fuse_req_t req,
         }
         ffrt::thread(CloudReadOnCloudFile, it, cInode, readSession).detach();
     }
-    for (int32_t i = 1; i <= CACHE_PAGE_NUM; i++) {
+    for (uint32_t i = 1; i <= CACHE_PAGE_NUM; i++) {
         auto readArgsCache = make_shared<ReadArguments>(MAX_READ_SIZE, offTail + MAX_READ_SIZE * i);
         if (!readArgsCache) {
             LOGE("Init readArgsCache failed");
@@ -1064,8 +1064,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         cloudDiskData.se = se;
         config.max_idle_threads = 1;
     } else {
-        se = fuse_session_new(&args, &cloudMediaFuseOps,
-                              sizeof(cloudMediaFuseOps), &data);
+        se = fuse_session_new(&args, &cloudMediaFuseOps, sizeof(cloudMediaFuseOps), &data);
         if (se == nullptr) {
             LOGE("cloud media fuse_session_new error");
             return -EINVAL;
@@ -1078,6 +1077,9 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     LOGI("fuse_session_new success, userId: %{public}d", userId);
     se->fd = devFd;
     se->mountpoint = strdup(path.c_str());
+    if (se->mountpoint == nullptr) {
+        return -ENOMEM;
+    }
 
     fuse_daemonize(true);
     ret = fuse_session_loop_mt(se, &config);
