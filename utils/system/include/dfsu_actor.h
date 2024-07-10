@@ -43,7 +43,7 @@ public:
     {
         // Always insert cmds b4 starting an actor
         StartCtx();
-        loop_ = std::thread(&DfsuActor<Ctx>::Main, this);
+        loop_ = std::thread([this]() { this->Main(); });
     }
 
     void StopActor()
