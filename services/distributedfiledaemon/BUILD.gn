@@ -77,6 +77,7 @@ ohos_shared_library("libdistributedfiledaemon") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",

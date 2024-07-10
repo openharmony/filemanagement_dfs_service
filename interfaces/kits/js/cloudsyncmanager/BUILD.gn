@@ -48,6 +48,7 @@ ohos_shared_library("cloudsyncmanager") {
   ]
 
   external_deps = [
+    "c_utils:utils",
     "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
     "hilog:libhilog",

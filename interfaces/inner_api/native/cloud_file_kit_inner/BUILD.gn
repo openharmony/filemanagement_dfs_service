@@ -93,6 +93,7 @@ ohos_shared_library("cloudfile_kit") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "data_share:datashare_consumer",
     "eventhandler:libeventhandler",

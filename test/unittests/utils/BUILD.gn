@@ -41,6 +41,7 @@ ohos_unittest("cloud_pref_impl_test") {
   ]
 
   external_deps = [
+    "c_utils:utils",
     "dfs_service:cloudsync_kit_inner",
     "hilog:libhilog",
     "ipc:ipc_single",

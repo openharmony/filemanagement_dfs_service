@@ -125,6 +125,7 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
 
   external_deps = [
     "ability_base:zuri",
+    "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
@@ -165,7 +166,7 @@ ohos_shared_library("cloudsync_kit_inner_lite") {
   public_configs = [ ":public_config" ]
 
   external_deps = [
-    "c_utils:utilsbase",
+    "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
