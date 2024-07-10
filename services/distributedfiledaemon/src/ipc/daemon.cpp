@@ -396,9 +396,9 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         return E_SOFTBUS_SESSION_FAILED;
     }
     physicalPath.clear();
-    physicalPath = "??" + physicalPath;
     if (info.authority == FILE_MANAGER_AUTHORITY || info.authority == MEDIA_AUTHORITY) {
         physicalPath = info.dstPhysicalPath;
+        physicalPath = "??" + physicalPath;
     }
     ret = Copy(srcUri, physicalPath, daemon, sessionName);
     if (ret != E_OK) {
