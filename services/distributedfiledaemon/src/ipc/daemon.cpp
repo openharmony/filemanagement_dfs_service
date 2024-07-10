@@ -397,8 +397,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
     physicalPath.clear();
     if (info.authority == FILE_MANAGER_AUTHORITY || info.authority == MEDIA_AUTHORITY) {
-        physicalPath = info.dstPhysicalPath;
-        physicalPath = "??" + physicalPath;
+        physicalPath = "??" + info.dstPhysicalPath;
     }
     ret = Copy(srcUri, physicalPath, daemon, sessionName);
     if (ret != E_OK) {

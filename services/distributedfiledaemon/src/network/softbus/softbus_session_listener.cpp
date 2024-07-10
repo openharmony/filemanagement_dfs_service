@@ -29,7 +29,6 @@ namespace Storage {
 namespace DistributedFile {
 constexpr size_t MAX_SIZE = 500;
 constexpr int32_t DEFAULT_USER_ID = 100;
-constexpr int32_t TRUNCATE_LENGTH = 2;
 const std::string FILE_SCHEMA = "file://";
 const std::string DOCS = "docs";
 const std::string NETWORK_ID = "?networkid=";
@@ -61,15 +60,15 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
         }
         return tmp;
     }
-    if (dstPath.substr(0, TRUNCATE_LENGTH) != "??") {
-        auto pos = path.rfind("/");
-        tmp.push_back(path.substr(pos + 1));
-    } else {
+    if (dstPath.find("??") == 0) {
         auto pos = dstPath.rfind("/");
         tmp.push_back(dstPath.substr(pos + 1));
+    } else {
+        auto pos = path.rfind("/");
+        tmp.push_back(path.substr(pos + 1));
     }
     return tmp;
-}
+}   
 
 void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
