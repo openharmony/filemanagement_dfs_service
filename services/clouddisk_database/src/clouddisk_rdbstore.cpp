@@ -74,7 +74,6 @@ static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &ar
     int32_t userId = std::strtol(args[ARG_USER_ID].c_str(), nullptr, 0);
     string bundleName = args[ARG_BUNDLE_NAME];
     LOGD("begin cloud sync trigger, bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
-    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName, userId);
     return "";
 }
 
@@ -483,6 +482,7 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
         return ret;
     }
     rdbTransaction.Finish();
+    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     return E_OK;
 }
 
@@ -565,6 +565,7 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
         return E_RDB;
     }
     rdbTransaction.Finish();
+    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     return E_OK;
 }
 
@@ -719,6 +720,7 @@ int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::s
         return ret;
     }
     rdbTransaction.Finish();
+    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     return E_OK;
 }
 
@@ -979,6 +981,7 @@ int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std
         if (ret != E_OK) {
             LOGE("rename file fail, ret %{public}d", ret);
         }
+        CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     };
     ffrt::thread(rdbUpdate).detach();
     return E_OK;
@@ -1048,6 +1051,7 @@ int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &pos
     } else {
         RETURN_ON_ERR(UnlinkSynced(cloudId));
     }
+    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     return E_OK;
 }
 
@@ -1204,7 +1208,7 @@ int32_t CloudDiskRdbStore::CheckRootIdValid()
     if (!rootId_.empty()) {
         return E_OK;
     }
-    CloudPrefImpl cloudPrefImpl(userId_, system::GetParameter(FILEMANAGER_KEY, ""), FileColumn::FILES_TABLE);
+    CloudPrefImpl cloudPrefImpl(userId_, bundleName_, FileColumn::FILES_TABLE);
     cloudPrefImpl.GetString(ROOT_CLOUD_ID, rootId_);
     if (rootId_.empty()) {
         LOGE("get rootId fail");
@@ -1293,11 +1297,7 @@ static int32_t ExecuteSql(RdbStore &store)
 {
     static const vector<string> onCreateSqlStrs = {
         FileColumn::CREATE_FILE_TABLE,
-        CreateFolderTriggerSync(store),
-        UpdateFileTriggerSync(store),
         FileColumn::CREATE_PARENT_CLOUD_ID_INDEX,
-        DeleteFileTriggerSync(store),
-        LocalFileTriggerSync(store),
     };
     for (const string& sqlStr : onCreateSqlStrs) {
         if (store.ExecuteSql(sqlStr) != NativeRdb::E_OK) {
@@ -1419,6 +1419,26 @@ static void VersionFixRetryTrigger(RdbStore &store)
     int32_t ret = store.ExecuteSql(addFilesLocalTrigger);
     if (ret != NativeRdb::E_OK) {
         LOGE("add local file trigger fail, err %{public}d", ret);
+    }
+}
+
+static void VersionRemoveCloudSyncFuncTrigger(RdbStore &store)
+{
+    const string dropNewFolderTrigger = "DROP TRIGGER IF EXISTS folders_new_cloud_sync_trigger";
+    if (store.ExecuteSql(dropNewFolderTrigger) != NativeRdb::E_OK) {
+        LOGE("drop folders_new_cloud_sync_trigger fail");
+    }
+    const string dropUpdateFileTrigger = "DROP TRIGGER IF EXISTS files_update_cloud_sync_trigger";
+    if (store.ExecuteSql(dropUpdateFileTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_update_cloud_sync_trigger fail");
+    }
+    const string dropFileDeleteTrigger = "DROP TRIGGER IF EXISTS files_delete_cloud_sync_trigger";
+    if (store.ExecuteSql(dropFileDeleteTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_delete_cloud_sync_trigger fail");
+    }
+    const string dropFileLocalTrigger = "DROP TRIGGER IF EXISTS files_local_cloud_sync_trigger";
+    if (store.ExecuteSql(dropFileLocalTrigger) != NativeRdb::E_OK) {
+        LOGE("drop files_local_cloud_sync_trigger fail");
     }
 }
 
@@ -1630,6 +1650,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     }
     if (oldVersion < VERSION_FIX_RETRY_TRIGGER) {
         VersionFixRetryTrigger(store);
+    }
+    if (oldVersion < VERSION_REMOVE_CLOUD_SYNC_FUNC_TRIGGER) {
+        VersionRemoveCloudSyncFuncTrigger(store);
     }
     return NativeRdb::E_OK;
 }
