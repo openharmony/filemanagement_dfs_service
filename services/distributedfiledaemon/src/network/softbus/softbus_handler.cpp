@@ -158,7 +158,7 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         LOGI("The parameter is empty");
         return E_OPEN_SESSION;
     }
-    LOGI("OpenSession Enter.");
+    LOGI("OpenSession Enter peerDevId: %{public}s", Utils::GetAnonyString(peerDevId).c_str());
     QosTV qos[] = {
         {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
         {.qos = QOS_TYPE_MAX_LATENCY,        .value = DFS_QOS_TYPE_MAX_LATENCY},
