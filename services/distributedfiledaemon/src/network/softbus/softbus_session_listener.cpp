@@ -29,6 +29,7 @@ namespace Storage {
 namespace DistributedFile {
 constexpr size_t MAX_SIZE = 500;
 constexpr int32_t DEFAULT_USER_ID = 100;
+constexpr int32_t TRUNCATE_LENGTH = 2;
 const std::string FILE_SCHEMA = "file://";
 const std::string DOCS = "docs";
 const std::string NETWORK_ID = "?networkid=";
@@ -60,7 +61,12 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
         }
         return tmp;
     }
-    if (dstPath.empty()) {
+    if (dstPath.substr(0, TRUNCATE_LENGTH) != "??") {
+        auto pos = path.rfind("/");
+        tmp.push_back(path.substr(pos + 1));
+    }
+
+    if (dstPath.substr(0, TRUNCATE_LENGTH) == "??" && dstPath.length() == TRUNCATE_LENGTH) {
         auto pos = path.rfind("/");
         tmp.push_back(path.substr(pos + 1));
     } else {
