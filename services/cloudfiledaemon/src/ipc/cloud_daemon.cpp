@@ -41,12 +41,9 @@ namespace {
     static const string LOCAL_PATH_DATA_SERVICE_EL2 = "/data/service/el2/";
     static const string LOCAL_PATH_HMDFS_DENTRY_CACHE = "/hmdfs/cache/account_cache/dentry_cache/";
     static const string LOCAL_PATH_HMDFS_CACHE_CLOUD = "/hmdfs/cache/account_cache/dentry_cache/cloud";
-    static const string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
-    static const string HMDFS_CLOUD_DATA = "/hmdfs/cloud/data/";
     static const int32_t STAT_MODE_DIR = 0771;
     static const int32_t STAT_MODE_DIR_DENTRY_CACHE = 02771;
     static const int32_t OID_DFS = 1009;
-    static const int32_t BUCKET_LEN = 32;
 }
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudDaemon, FILEMANAGEMENT_CLOUD_DAEMON_SERVICE_SA_ID, true);
 
@@ -130,22 +127,6 @@ void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
     accountStatusListener_->Start();
 }
 
-static void CreateBundlenameDirectory(const string &bundleNamePath)
-{
-    for (uint32_t i = 0; i < BUCKET_LEN; ++i) {
-        string bucketPath = bundleNamePath + "/" + to_string(i);
-        if (access(bucketPath.c_str(), F_OK) == 0) {
-            if (chmod(bucketPath.c_str(), STAT_MODE_DIR) == -1) {
-                LOGE("failed to chmod dir, errno:%{public}d", errno);
-            }
-        } else {
-            if (mkdir(bucketPath.c_str(), STAT_MODE_DIR) != 0) {
-                LOGE("failed to mkdir, errno:%{public}d", errno);
-            }
-        }
-    }
-}
-
 int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
     LOGI("Start Fuse");
@@ -173,13 +154,6 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
         }
         if (chown(dentryPath.c_str(), OID_DFS, OID_DFS) != 0) {
             LOGE("chown cachepath error %{public}d", errno);
-        }
-    }
-    if (path.find("cloud_fuse") != string::npos) {
-        string bundleName = system::GetParameter(FILEMANAGER_KEY, "");
-        string bundleNamePath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + HMDFS_CLOUD_DATA + bundleName;
-        if (access(bundleNamePath.c_str(), F_OK) == 0) {
-            CreateBundlenameDirectory(bundleNamePath);
         }
     }
     return E_OK;
