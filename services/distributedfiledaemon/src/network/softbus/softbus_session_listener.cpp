@@ -64,6 +64,7 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
     if (dstPath.substr(0, TRUNCATE_LENGTH) != "??") {
         auto pos = path.rfind("/");
         tmp.push_back(path.substr(pos + 1));
+        return tmp;
     }
 
     if (dstPath.substr(0, TRUNCATE_LENGTH) == "??" && dstPath.length() == TRUNCATE_LENGTH) {
