@@ -68,7 +68,7 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
         tmp.push_back(path.substr(pos + 1));
     }
     return tmp;
-}   
+}
 
 void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
