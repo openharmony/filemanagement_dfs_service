@@ -108,7 +108,7 @@ private:
                  const std::string &dstPath,
                  const sptr<IDaemon> &daemon,
                  const std::string &sessionName);
-    void DeleteSessionAndListener(const std::string &sessionName);
+    void DeleteSessionAndListener(const std::string &sessionName, const int32_t socketId);
 
     class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

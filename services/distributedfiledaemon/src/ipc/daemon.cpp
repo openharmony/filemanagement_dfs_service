@@ -392,11 +392,11 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
     info.sessionName = sessionName;
     StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
-    ret = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName,
+    auto socketId = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName,
         DFS_CHANNLE_ROLE_SINK, physicalPath);
-    if (ret != E_OK) {
+    if (socketId <= 0) {
         LOGE("CreateSessionServer failed, ret = %{public}d", ret);
-        DeleteSessionAndListener(sessionName);
+        DeleteSessionAndListener(sessionName, socketId);
         return E_SOFTBUS_SESSION_FAILED;
     }
     physicalPath.clear();
@@ -406,7 +406,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     ret = Copy(srcUri, physicalPath, daemon, sessionName);
     if (ret != E_OK) {
         LOGE("Remote copy failed,ret = %{public}d", ret);
-        DeleteSessionAndListener(sessionName);
+        DeleteSessionAndListener(sessionName, socketId);
         return ret;
     }
     return ret;
@@ -585,10 +585,11 @@ int32_t Daemon::CancelCopyTask(const std::string &sessionName)
     return E_OK;
 }
 
-void Daemon::DeleteSessionAndListener(const std::string &sessionName)
+void Daemon::DeleteSessionAndListener(const std::string &sessionName, const int32_t socketId)
 {
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
     TransManager::GetInstance().DeleteTransTask(sessionName);
+    SoftBusHandler::GetInstance().CloseSession(socketId, sessionName);
 }
 
 void Daemon::DfsListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)

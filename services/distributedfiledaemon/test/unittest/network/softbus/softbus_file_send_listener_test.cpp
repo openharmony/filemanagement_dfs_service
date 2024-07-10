@@ -30,7 +30,7 @@ namespace Test {
 using namespace testing::ext;
 using namespace std;
 
-constexpr int32_t socket = 0;
+constexpr int32_t socket = 2;
 constexpr int32_t socketEmpty = 1;
 constexpr int SESSION_ID_ONE = 1;
 constexpr int UID_ONE = 1;
@@ -142,7 +142,6 @@ HWTEST_F(SoftBusFileSendListenerTest, SoftBusFileSendListenerTest_OnFileTransErr
                        .bytesTotal = 1};
 
     SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(sessionName, socket));
-
     SoftBusFileSendListener::OnFile(socketEmpty, &event);
     SoftBusFileSendListener::OnFile(socket, &event);
     auto it = SoftBusHandler::GetInstance().serverIdMap_.find(sessionName);
