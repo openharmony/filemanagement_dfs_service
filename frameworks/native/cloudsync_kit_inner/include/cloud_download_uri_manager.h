@@ -29,6 +29,7 @@ public:
     int32_t AddPathToUri(const std::string& path, const std::string& uri);
     std::string GetUri(const std::string& path);
     void RemoveUri(const std::string& path);
+    void Reset();
 
 private:
     CloudDownloadUriManager() = default;

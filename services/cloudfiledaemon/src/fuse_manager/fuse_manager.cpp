@@ -445,7 +445,7 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
 {
     string localPath = GetLocalPath(data->userId, cInode->path);
     string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
-    char resolvedPath[PATH_MAX] = {'\0'};
+    char resolvedPath[PATH_MAX + 1] = {'\0'};
     char *realPath = realpath(tmpPath.c_str(), resolvedPath);
     if (realPath == nullptr) {
         LOGE("Failed to realpath, errno: %{public}d", errno);
@@ -1012,12 +1012,12 @@ static bool CheckPathForStartFuse(const string &path)
         return false;
     }
     std::string realPath(resolvedPath);
-    std::string PATH_PREFIX = "/mnt/data/";
-    if (realPath.rfind(PATH_PREFIX, 0) != 0) {
+    std::string pathPrefix = "/mnt/data/";
+    if (realPath.rfind(pathPrefix, 0) != 0) {
         return false;
     }
 
-    size_t userIdBeginPos = PATH_PREFIX.length();
+    size_t userIdBeginPos = pathPrefix.length();
     size_t userIdEndPos = realPath.find("/", userIdBeginPos);
     const std::string userId = realPath.substr(userIdBeginPos, userIdEndPos - userIdBeginPos);
     if (userId.find_first_not_of("0123456789") != std::string::npos) {
@@ -1025,14 +1025,14 @@ static bool CheckPathForStartFuse(const string &path)
     }
 
     size_t suffixBeginPos = userIdEndPos + 1;
-    const std::string PATH_SUFFIX1 = "cloud";
-    const std::string PATH_SUFFIX2 = "cloud_fuse";
-    if (realPath.rfind(PATH_SUFFIX1) == suffixBeginPos &&
-        suffixBeginPos + PATH_SUFFIX1.length() == realPath.length()) {
+    const std::string pathSuffix1 = "cloud";
+    const std::string pathSuffix2 = "cloud_fuse";
+    if (realPath.rfind(pathSuffix1) == suffixBeginPos &&
+        suffixBeginPos + pathSuffix1.length() == realPath.length()) {
         return true;
     }
-    if (realPath.rfind(PATH_SUFFIX2) == suffixBeginPos &&
-        suffixBeginPos + PATH_SUFFIX2.length() == realPath.length()) {
+    if (realPath.rfind(pathSuffix2) == suffixBeginPos &&
+        suffixBeginPos + pathSuffix2.length() == realPath.length()) {
         return true;
     }
     return false;

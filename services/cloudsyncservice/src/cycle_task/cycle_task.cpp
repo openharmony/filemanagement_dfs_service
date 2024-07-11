@@ -51,7 +51,7 @@ std::string CycleTask::GetTaskName() const
 void CycleTask::SetLastRunTime(std::time_t time)
 {
     if (cloudPrefImpl_ == nullptr) {
-        LOGE(" cloudPrefImpl_ is nullptr");
+        LOGE(" cloudPrefImpl is nullptr");
         return;
     }
     cloudPrefImpl_->SetLong("lastRunTime-" + taskName_, time);
@@ -60,7 +60,7 @@ void CycleTask::SetLastRunTime(std::time_t time)
 void CycleTask::GetLastRunTime(std::time_t &time)
 {
     if (cloudPrefImpl_ == nullptr) {
-        LOGE(" cloudPrefImpl_ is nullptr");
+        LOGE(" cloudPrefImpl is nullptr");
         time = std::time(nullptr);
         return;
     }

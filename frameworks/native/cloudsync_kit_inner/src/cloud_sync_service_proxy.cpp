@@ -1025,6 +1025,7 @@ void CloudSyncServiceProxy::InvaildInstance()
     LOGI("invalid instance");
     unique_lock<mutex> lock(instanceMutex_);
     serviceProxy_ = nullptr;
+    CloudDownloadUriManager::GetInstance().Reset();
 }
 
 void CloudSyncServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(

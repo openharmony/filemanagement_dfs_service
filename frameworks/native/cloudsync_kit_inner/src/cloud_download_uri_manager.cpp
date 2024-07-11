@@ -63,4 +63,9 @@ std::string CloudDownloadUriManager::GetUri(const std::string& path)
     return "";
 }
 
+void CloudDownloadUriManager::Reset()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    pathMap_.clear();
+}
 } // namespace OHOS::FileManagement::CloudSync

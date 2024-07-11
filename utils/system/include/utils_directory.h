@@ -19,10 +19,8 @@
 #include <string>
 #include <sys/types.h>
 #include <vector>
-
 #include <cstring>
 #include <unistd.h>
-
 #include <dirent.h>
 #include <iostream>
 
