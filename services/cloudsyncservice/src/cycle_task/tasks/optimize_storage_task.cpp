@@ -32,14 +32,10 @@ int32_t OptimizeStorageTask::RunTaskForBundle(int32_t userId, std::string bundle
         LOGE("get cloud file helper instance failed");
         return E_NULLPTR;
     }
-
     auto dataSyncManager_ = GetDataSyncManager();
-
-    // clean need clean_flag files
     if (dataSyncManager_->CleanRemainFile(bundleName, userId) != E_OK) {
         LOGW(" clean reamin file fail");
     }
-
     std::map<std::string, std::string> param;
     auto ret = instance->GetAppConfigParams(userId, bundleName, param);
     if (ret != E_OK || param.empty()) {
