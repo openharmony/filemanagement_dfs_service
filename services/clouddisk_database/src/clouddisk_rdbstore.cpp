@@ -282,9 +282,7 @@ static int32_t CheckNameForSpace(const std::string& fileName, const int32_t isDi
 
 static int32_t CheckName(const std::string &fileName)
 {
-    if (fileName.empty() ||
-        fileName == "." ||
-        fileName == "..") {
+    if (fileName.empty()) {
         return EINVAL;
     }
     std::map<char, bool> illegalCharacter = {
@@ -314,7 +312,9 @@ static int32_t CheckName(const std::string &fileName)
         lastDot = fileName.length();
     }
     std::string realFileName = fileName.substr(0, lastDot);
-    if (fileName.length() > MAX_FILE_NAME_SIZE ||
+    if (realFileName == "." ||
+        realFileName == ".." ||
+        fileName.length() > MAX_FILE_NAME_SIZE ||
         ((fileName.find("emoji") != std::string::npos) && realFileName != "emoji")) {
         LOGI("Illegal name");
         return EINVAL;
