@@ -179,11 +179,120 @@ ohos_unittest("database_manager_test") {
   use_exceptions = true
 }
 
+ohos_unittest("file_operations_base_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  include_dirs = [
+    "${distributedfile_path}/utils/log/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${distributedfile_path}/test/unittests/cloud_disk/mock/",
+    "${distributedfile_path}/test/unittests/cloud_disk/mock/rdb/",
+    "//third_party/libfuse/include",
+    "//third_party/libfuse/lib",
+    "${distributedfile_path}/services/clouddisk_database/include/",
+  ]
+
+  sources = [
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
+    "file_operations_base_test.cpp",
+    "mock/clouddisk_rdbstore_mock.cpp",
+    "mock/libfuse_mock.cpp",
+    "mock/system_function_mock.cpp",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+    "libfuse:libfuse",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  use_exceptions = true
+}
+
+ohos_unittest("fuse_operations_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  include_dirs = [
+    "${distributedfile_path}/utils/log/include",
+    "${services_path}/cloudfiledaemon/include/cloud_disk/",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+    "${distributedfile_path}/test/unittests/cloud_disk/mock/",
+    "${distributedfile_path}/test/unittests/cloud_disk/mock/rdb/",
+  ]
+
+  sources = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/database_manager.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_cloud.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
+    "fuse_operations_test.cpp",
+    "mock/clouddisk_rdbstore_mock.cpp",
+    "mock/file_operations_local_mock.cpp",
+    "mock/libfuse_mock.cpp",
+    "mock/system_function_mock.cpp",
+  ]
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  cflags = [ "--coverage" ]
+
+  ldflags = [ "--coverage" ]
+
+  cflags_cc = [ "--coverage" ]
+
+  external_deps = [
+    "ability_runtime:dataobs_manager",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "libfuse:libfuse",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004308",
+    "LOG_TAG=\"CLOUD_DAEMON_API\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("cloud_disk_test") {
   testonly = true
 
   deps = [
     ":account_status_listener_test",
+    ":file_operations_base_test",
     ":file_operations_cloud_test",
+    ":fuse_operations_test",
   ]
 }
