@@ -63,7 +63,7 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
         LOGI("fd=%{public}d, deviceConnectCount clear", fd);
         deviceConnectCount_.clear();
     }
-    for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
+    for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
         if ((*iter)->GetHandle() == fd) {
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
             if (linkTypeIter != occupySession_.end()) {
@@ -84,7 +84,6 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
                 break;
             }
         }
-        ++iter;
     }
     return linkType;
 }
@@ -93,7 +92,7 @@ void SessionPool::ReleaseSession(const string &cid, const uint8_t linkType)
 {
     uint8_t mlinkType = 0;
     lock_guard lock(sessionPoolLock_);
-    for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end();) {
+    for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
         if ((*iter)->GetCid() == cid) {
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());
             if (linkTypeIter != occupySession_.end()) {
@@ -110,7 +109,6 @@ void SessionPool::ReleaseSession(const string &cid, const uint8_t linkType)
                 continue;
             }
         }
-        ++iter;
     }
 }
 

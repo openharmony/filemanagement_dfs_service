@@ -359,18 +359,16 @@ bool DeviceManagerAgent::MountDfsCountOnly(const std::string &deviceId)
         LOGI("deviceId empty");
         return false;
     }
-    // Count plus one operation
     unique_lock<mutex> lock(mpToNetworksMutex_);
     auto itCount = mountDfsCount_.find(deviceId);
-    if (itCount != mountDfsCount_.end() && itCount->second > 0) {
-        LOGI("[MountDfsCountOnly] deviceIde %{public}s has already established a link, count %{public}d, \
+    if (itCount == mountDfsCount_.end()) {
+        LOGI("mountDfsCount_ can not find key");
+        return false;
+    }
+    if (itCount->second > 0) {
+        LOGI("[MountDfsCountOnly] deviceId %{public}s has already established a link, count %{public}d, \
             increase count by one now", Utils::GetAnonyString(deviceId).c_str(), itCount->second);
-        mountDfsCount_[deviceId]++;
         return true;
-    } else {
-        LOGI("[MountDfsCountOnly] deviceId %{public}s increase count by one now",
-            Utils::GetAnonyString(deviceId).c_str());
-        mountDfsCount_[deviceId]++;
     }
     return false;
 }
@@ -381,8 +379,11 @@ bool DeviceManagerAgent::UMountDfsCountOnly(const std::string &deviceId, bool ne
         LOGI("deviceId empty");
         return false;
     }
-    // Count sub one operation
     auto itCount = mountDfsCount_.find(deviceId);
+    if (itCount == mountDfsCount_.end()) {
+        LOGI("mountDfsCount_ can not find key");
+        return true;
+    }
     if (needClear) {
         LOGI("mountDfsCount_ erase");
         mountDfsCount_.erase(itCount);
@@ -394,10 +395,8 @@ bool DeviceManagerAgent::UMountDfsCountOnly(const std::string &deviceId, bool ne
             Utils::GetAnonyString(deviceId).c_str(), itCount->second);
         mountDfsCount_[deviceId]--;
         return true;
-    } else {
-        LOGI("[UMountDfsCountOnly] deviceId %{public}s erase count", Utils::GetAnonyString(deviceId).c_str());
-        mountDfsCount_.erase(itCount);
     }
+    LOGI("[UMountDfsCountOnly] deviceId %{public}s erase count", Utils::GetAnonyString(deviceId).c_str());
     return false;
 }
 
@@ -502,31 +501,28 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std
         return INVALID_USER_ID;
     }
     int32_t ret = NO_ERROR;
-    do {
-        if (MountDfsCountOnly(deviceId)) {
-            LOGI("only count plus one, do not need mount");
-            break;
-        }
-
-        int32_t userId = GetCurrentUserId();
-        if (userId == INVALID_USER_ID) {
-            LOGE("GetCurrentUserId Fail");
-            ret = INVALID_USER_ID;
-            break;
-        }
-
-        GetStorageManager();
-        if (storageMgrProxy_ == nullptr) {
-            LOGE("storageMgrProxy_ is null");
-            ret = INVALID_USER_ID;
-            break;
-        }
-
-        ret = storageMgrProxy_->MountDfsDocs(userId, "account", networkId, deviceId);
-    } while (false);
+    if (MountDfsCountOnly(deviceId)) {
+        LOGI("only count plus one, do not need mount");
+        mountDfsCount_[deviceId]++;
+        return ret;
+    }
+    int32_t userId = GetCurrentUserId();
+    if (userId == INVALID_USER_ID) {
+        LOGE("GetCurrentUserId Fail");
+        return INVALID_USER_ID;
+    }
+    GetStorageManager();
+    if (storageMgrProxy_ == nullptr) {
+        LOGE("storageMgrProxy_ is null");
+        return INVALID_USER_ID;
+    }
+    ret = storageMgrProxy_->MountDfsDocs(userId, "account", networkId, deviceId);
     if (ret != NO_ERROR) {
         LOGE("MountDfsDocs fail, ret = %{public}d", ret);
-        mountDfsCount_[deviceId]--;
+    } else {
+        LOGE("MountDfsDocs success, deviceId %{public}s increase count by one now",
+            Utils::GetAnonyString(deviceId).c_str());
+        mountDfsCount_[deviceId]++;
     }
     LOGI("storageMgr.MountDfsDocs end.");
     return ret;
@@ -540,40 +536,28 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
         LOGE("NetworkId or DeviceId is empty");
         return INVALID_USER_ID;
     }
-    auto itCount = mountDfsCount_.find(deviceId);
-    if (itCount == mountDfsCount_.end()) {
-        LOGI("mountDfsCount_ can not find key, do not need umount");
-        return NO_ERROR;
-    }
-    int32_t mount_count = mountDfsCount_[deviceId];
     int32_t ret = NO_ERROR;
-    do {
-        if (UMountDfsCountOnly(deviceId, needClear)) {
-            LOGE("only count sub one, do not need umount");
-            break;
-        }
-
-        int32_t userId = GetCurrentUserId();
-        if (userId == INVALID_USER_ID) {
-            LOGE("GetCurrentUserId Fail");
-            ret = INVALID_USER_ID;
-            break;
-        }
-
-        GetStorageManager();
-        if (storageMgrProxy_ == nullptr) {
-            LOGE("storageMgrProxy_ is null");
-            ret = INVALID_USER_ID;
-            break;
-        }
-
-        ret = storageMgrProxy_->UMountDfsDocs(userId, "account", networkId, deviceId);
-    } while (false);
+    if (UMountDfsCountOnly(deviceId, needClear)) {
+        LOGE("do not need umount");
+        return ret;
+    }
+    int32_t userId = GetCurrentUserId();
+    if (userId == INVALID_USER_ID) {
+        LOGE("GetCurrentUserId Fail");
+        return INVALID_USER_ID;
+    }
+    GetStorageManager();
+    if (storageMgrProxy_ == nullptr) {
+        LOGE("storageMgrProxy_ is null");
+        return INVALID_USER_ID;
+    }
+    ret = storageMgrProxy_->UMountDfsDocs(userId, "account", networkId, deviceId);
     if (ret != NO_ERROR) {
         LOGE("UMountDfsDocs fail, ret = %{public}d", ret);
-        if (!needClear) {
-            mountDfsCount_[deviceId] = mount_count;
-        }
+    } else {
+        LOGE("UMountDfsDocs success, deviceId %{public}s erase count",
+            Utils::GetAnonyString(deviceId).c_str());
+        mountDfsCount_.erase[deviceId];
     }
     LOGI("storageMgr.UMountDfsDocs end.");
     return ret;

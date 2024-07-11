@@ -222,6 +222,7 @@ int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceI
 int32_t Daemon::CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo,
                         const std::string &networkId, uint32_t callingTokenId)
 {
+    LOGI("CleanUp start");
     auto deviceManager = DeviceManagerAgent::GetInstance();
     if (deviceManager->RemoveRemoteReverseObj(false, callingTokenId) != E_OK) {
         LOGE("fail to RemoveRemoteReverseObj");
@@ -235,34 +236,33 @@ int32_t Daemon::CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo,
     return 0;
 }
 
-int32_t Daemon::MountAfterConnection(const DistributedHardware::DmDeviceInfo &deviceInfo,
-                                     const std::string &networkId, uint32_t callingTokenId)
+int32_t Daemon::ConnectionAndMount(const DistributedHardware::DmDeviceInfo &deviceInfo,
+                                   const std::string &networkId, uint32_t callingTokenId)
 {
+    LOGI("ConnectionAndMount start");
     int32_t ret = NO_ERROR;
-    do {
-        ret = ConnectionCount(deviceInfo);
-        if (ret != NO_ERROR) {
-            LOGE("connection failed");
-            break;
-        }
-        auto deviceManager = DeviceManagerAgent::GetInstance();
-        deviceManager->AddNetworkId(callingTokenId, networkId);
-        if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
-            LOGE("[MountDfsDocs] permission denied: FILE_ACCESS_MANAGER_PERMISSION");
-            break;
-        }
-        std::string deviceId = deviceManager->GetDeviceIdByNetworkId(networkId);
-        ret = deviceManager->MountDfsDocs(networkId, deviceId);
-        if (ret != NO_ERROR) {
-            LOGE("[MountDfsDocs] failed");
-            break;
-        }
-    } while (ret != NO_ERROR);
+    ret = ConnectionCount(deviceInfo);
+    if (ret != NO_ERROR) {
+        LOGE("connection failed");
+        return ret;
+    }
+    auto deviceManager = DeviceManagerAgent::GetInstance();
+    deviceManager->AddNetworkId(callingTokenId, networkId);
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(FILE_ACCESS_MANAGER_PERMISSION)) {
+        LOGW("permission denied: FILE_ACCESS_MANAGER_PERMISSION");
+        return ret;
+    }
+    std::string deviceId = deviceManager->GetDeviceIdByNetworkId(networkId);
+    ret = deviceManager->MountDfsDocs(networkId, deviceId);
+    if (ret != NO_ERROR) {
+        LOGE("[MountDfsDocs] failed");
+    }
     return ret;
 }
 
 int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj)
 {
+    LOGI("Daemon::OpenP2PConnectionEx start, networkId %{public}s", Utils::GetAnonyString(networkId).c_str());
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[OpenP2PConnectionEx] DATASYNC permission denied");
         return E_PERMISSION_DENIED_NAPI;
@@ -287,7 +287,7 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     if (deviceManager->AddRemoteReverseObj(callingTokenId, remoteReverseObj) != E_OK) {
         LOGE("Daemon::OpenP2PConnectionEx::fail to AddRemoteReverseObj");
     }
-    int32_t ret = MountAfterConnection(deviceInfo, networkId, callingTokenId);
+    int32_t ret = ConnectionAndMount(deviceInfo, networkId, callingTokenId);
     if (ret != NO_ERROR) {
         CleanUp(deviceInfo, networkId, callingTokenId);
         return E_CONNECTION_FAILED;
