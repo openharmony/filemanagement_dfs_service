@@ -557,7 +557,7 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
     } else {
         LOGE("UMountDfsDocs success, deviceId %{public}s erase count",
             Utils::GetAnonyString(deviceId).c_str());
-        mountDfsCount_.erase[deviceId];
+        mountDfsCount_.erase(deviceId);
     }
     LOGI("storageMgr.UMountDfsDocs end.");
     return ret;
