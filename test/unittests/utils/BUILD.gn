@@ -80,8 +80,7 @@ ohos_unittest("utils_directory_test") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
-
-    # "json:nlohmann_json_static",
+    "json:nlohmann_json_static",
   ]
 
   defines = [ "private=public" ]

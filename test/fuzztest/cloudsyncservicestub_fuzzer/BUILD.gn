@@ -36,6 +36,7 @@ ohos_fuzztest("CloudSyncServiceStubFuzzTest") {
   deps = [ "${services_path}/cloudsyncservice:cloudsync_sa" ]
 
   external_deps = [
+    "ability:want",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
