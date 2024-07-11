@@ -359,6 +359,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
                                const sptr<IRemoteObject> &listener,
                                HmdfsInfo &info)
 {
+    LOGI("PrepareSession begin.")
     int32_t ret = AllConnectManager::GetInstance().PublishServiceState(srcDeviceId,
         ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
     if (ret != E_OK) {

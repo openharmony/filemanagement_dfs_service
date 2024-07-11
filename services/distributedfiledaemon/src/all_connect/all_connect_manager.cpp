@@ -82,7 +82,7 @@ int32_t AllConnectManager::UnInitAllConnectManager()
 int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,
                                                ServiceCollaborationManagerBussinessStatus state)
 {
-    LOGI("PublishServiceState begin");
+    LOGI("PublishServiceState %{public}d begin", state);
     std::lock_guard<std::mutex> lock(allConnectLock_);
     if (dllHandle_ == nullptr) {
         LOGE("dllHandle_ is nullptr, all connect not support.");
@@ -234,7 +234,7 @@ int32_t AllConnectManager::ApplyResult(int32_t errorcode, int32_t result, const 
 
 int32_t AllConnectManager::OnStop(const char *peerNetworkId)
 {
-    LOGI("OnStop begin peerNetworkId:%{public}s", peerNetworkId);
+    LOGI("OnStop begin");
     std::thread([peerNetworkId]() {
         SoftBusHandler::GetInstance().CloseSessionWithNetworkId(peerNetworkId);
     }).detach();
