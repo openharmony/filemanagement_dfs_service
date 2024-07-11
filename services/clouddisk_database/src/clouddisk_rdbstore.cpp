@@ -1284,6 +1284,7 @@ static const std::string &LocalFileTriggerSync(RdbStore &store)
         "CREATE TRIGGER files_local_cloud_sync_trigger AFTER UPDATE ON " + FileColumn::FILES_TABLE +
         " FOR EACH ROW WHEN OLD.dirty_type IN (1,6) AND new.dirty_type == " +
         std::to_string(static_cast<int32_t>(DirtyType::TYPE_NEW)) +
+        " AND OLD.file_status NOT IN (0,1) AND new.file_status NOT IN (1,2)" +
         " BEGIN SELECT cloud_sync_func(" + "'" + userId + "', " + "'" + bundleName + "'); END;";
     return CREATE_FILES_LOCAL_CLOUD_SYNC;
 }
@@ -1405,6 +1406,19 @@ static void VersionFixSyncMetatimeTrigger(RdbStore &store)
     int32_t ret = store.ExecuteSql(addUpdateFileTrigger);
     if (ret != NativeRdb::E_OK) {
         LOGE("add update file trigger fail, err %{public}d", ret);
+    }
+}
+
+static void VersionFixRetryTrigger(RdbStore &store)
+{
+    const string dropFilesLocalTrigger = "DROP TRIGGER IF EXISTS files_local_cloud_sync_trigger";
+    if (store.ExecuteSql(dropFilesLocalTrigger) != NativeRdb::E_OK) {
+        LOGE("drop local file trigger fail");
+    }
+    const string addFilesLocalTrigger = LocalFileTriggerSync(store);
+    int32_t ret = store.ExecuteSql(addFilesLocalTrigger);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add local file trigger fail, err %{public}d", ret);
     }
 }
 
@@ -1613,6 +1627,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     }
     if (oldVersion < VERSION_FIX_SYNC_METATIME_TRIGGER) {
         VersionFixSyncMetatimeTrigger(store);
+    }
+    if (oldVersion < VERSION_FIX_RETRY_TRIGGER) {
+        VersionFixRetryTrigger(store);
     }
     return NativeRdb::E_OK;
 }
