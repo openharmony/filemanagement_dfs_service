@@ -45,6 +45,8 @@ std::mutex SoftBusHandler::networkIdMapMutex_;
 std::map<std::string, std::string> SoftBusHandler::networkIdMap_;
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
+    AllConnectManager::GetInstance().PublishServiceState(info.networkId,
+        ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
     {
         std::lock_guard<std::mutex> lock(networkIdMapMutex_);
         networkIdMap_.insert(std::make_pair(info.networkId, info.name));
@@ -237,8 +239,8 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
             clientSessNameMap_.erase(it->first);
         }
     }
-    RemoveNetworkId(sessionName);
     Shutdown(sessionId);
+    RemoveNetworkId(sessionName);
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
 }
 

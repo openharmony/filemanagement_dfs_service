@@ -335,12 +335,8 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
         return E_SOFTBUS_SESSION_FAILED;
     }
 
-    ret = AllConnectManager::GetInstance().PublishServiceState(dstDeviceId,
+    AllConnectManager::GetInstance().PublishServiceState(dstDeviceId,
         ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
-    if (ret != E_OK) {
-        LOGE("PublishServiceState fail, ret is %{public}d", ret);
-        return ERR_PUBLISH_STATE;
-    }
 
     LOGI("RequestSendFile OpenSession success");
     SoftBusSessionPool::SessionInfo sessionInfo{.sessionId = sessionId, .srcUri = srcUri, .dstPath = dstPath};
@@ -359,12 +355,9 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
                                const sptr<IRemoteObject> &listener,
                                HmdfsInfo &info)
 {
-    int32_t ret = AllConnectManager::GetInstance().PublishServiceState(srcDeviceId,
+    LOGI("PrepareSession begin srcDeviceId: %{public}s", Utils::GetAnonyString(srcDeviceId).c_str());
+    AllConnectManager::GetInstance().PublishServiceState(srcDeviceId,
         ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
-    if (ret != E_OK) {
-        LOGE("PublishServiceState fail, ret is %{public}d", ret);
-        return ERR_PUBLISH_STATE;
-    }
 
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
@@ -379,7 +372,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
 
     std::string physicalPath;
-    ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
+    auto ret = GetRealPath(srcUri, dstUri, physicalPath, info, daemon);
     if (ret != E_OK) {
         LOGE("GetRealPath failed, ret = %{public}d", ret);
         return ret;
