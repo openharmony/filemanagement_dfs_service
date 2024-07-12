@@ -46,7 +46,7 @@ std::map<std::string, std::string> SoftBusHandler::networkIdMap_;
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     AllConnectManager::GetInstance().PublishServiceState(info.networkId,
-                                                         ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
+        ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
     {
         std::lock_guard<std::mutex> lock(networkIdMapMutex_);
         networkIdMap_.insert(std::make_pair(info.networkId, info.name));

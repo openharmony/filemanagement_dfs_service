@@ -22,6 +22,7 @@
 
 #include "dfs_error.h"
 #include "network/softbus/softbus_handler.h"
+#include "utils_directory.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -234,7 +235,7 @@ int32_t AllConnectManager::ApplyResult(int32_t errorcode, int32_t result, const 
 
 int32_t AllConnectManager::OnStop(const char *peerNetworkId)
 {
-    LOGI("OnStop begin");
+    LOGI("OnStop begin, peerNetworkId:%{public}s", Utils::GetAnonyString(peerNetworkId).c_str());
     std::thread([peerNetworkId]() {
         SoftBusHandler::GetInstance().CloseSessionWithNetworkId(peerNetworkId);
     }).detach();
