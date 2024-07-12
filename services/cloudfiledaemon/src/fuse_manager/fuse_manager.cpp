@@ -436,9 +436,12 @@ static string GetAssetPath(shared_ptr<CloudInode> cInode, struct FuseData *data)
 
 static void fuse_inval(fuse_session *se, fuse_ino_t parentIno, fuse_ino_t childIno, const string &childName)
 {
-    if (fuse_lowlevel_notify_inval_entry(se, parentIno, childName.c_str(), childName.size())) {
-        fuse_lowlevel_notify_inval_inode(se, childIno, 0, 0);
-    }
+    auto task = [se, parentIno, childIno, childName] {
+        if (fuse_lowlevel_notify_inval_entry(se, parentIno, childName.c_str(), childName.size())) {
+            fuse_lowlevel_notify_inval_inode(se, childIno, 0, 0);
+        }
+    };
+    ffrt::submit(task, {}, {}, ffrt::task_attr().qos(ffrt_qos_background));
 }
 
 static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
