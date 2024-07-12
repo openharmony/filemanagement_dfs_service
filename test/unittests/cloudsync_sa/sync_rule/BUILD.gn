@@ -118,13 +118,16 @@ ohos_unittest("net_conn_callback_observer_test") {
 ohos_unittest("network_status_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
-    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_set_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync_manager.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/net_conn_callback_observer.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_status.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/network_set_manager_mock.cpp",
     "network_status_test.cpp",
   ]
 
   include_dirs = [
     "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
+    "${innerkits_native_path}/cloud_file_kit_inner",
     "${services_path}/cloudsyncservice/include",
     "${services_path}/cloudsyncservice/include/sync_rule",
     "${utils_path}/log/include",
@@ -136,7 +139,7 @@ ohos_unittest("network_status_test") {
   ]
 
   deps = [
-    "${services_path}/cloudsyncservice:cloudsync_sa_static",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -182,6 +185,7 @@ ohos_unittest("cloud_status_test") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner",
     "${services_path}/cloudsyncservice:cloudsync_sa_static",
     "${utils_path}:libdistributedfileutils",
