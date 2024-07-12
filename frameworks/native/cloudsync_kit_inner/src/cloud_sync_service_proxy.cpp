@@ -528,14 +528,14 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
     if (uri.find("file://media") == 0) {
         OHOS::Media::MediaFileUri mediaUri(uri);
         path = mediaUri.GetFilePath();
+
+        CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
+        if (uriMgr.AddPathToUri(path, uri) == E_STOP) {
+            return E_OK;
+        }
     }
 
     LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
-
-    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-    if (uriMgr.AddPathToUri(path, uri) == E_STOP) {
-        return E_OK;
-    }
 
     if (!data.WriteString(path)) {
         LOGE("Failed to send the cloud id");
