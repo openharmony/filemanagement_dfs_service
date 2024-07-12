@@ -65,33 +65,12 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return DFS_DAEMON_DESCRIPTOR_IS_EMPTY;
     }
-    switch (code) {
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION):
-            return HandleOpenP2PConnection(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION):
-            return HandleCloseP2PConnection(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX):
-            return HandleOpenP2PConnectionEx(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX):
-            return HandleCloseP2PConnectionEx(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION):
-            return HandlePrepareSession(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK):
-            return HandleCancelCopyTask(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE):
-            return HandleRequestSendFile(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO):
-            return HandleGetRemoteCopyInfo(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK):
-            return HandleRegisterRecvCallback(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK):
-            return HandleUnRegisterRecvCallback(data, reply);
-        case static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET):
-            return HandlePushAsset(data, reply);
-        default:
-            LOGE("Cannot response request %d: unknown tranction", code);
-            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    auto interfaceIndex = opToInterfaceMap_.find(code);
+    if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {
+        LOGE("Cannot response request %d: unknown tranction", code);
+        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
+    return (this->*(interfaceIndex->second))(data, reply);
 }
 
 int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &reply)

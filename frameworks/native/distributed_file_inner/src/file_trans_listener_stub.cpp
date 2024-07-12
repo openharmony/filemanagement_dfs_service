@@ -41,17 +41,12 @@ int32_t FileTransListenerStub::OnRemoteRequest(uint32_t code,
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         return File_Trans_Listener_DESCRIPTOR_IS_EMPTY;
     }
-    switch (code) {
-        case static_cast<uint32_t>(FileTransListenerInterfaceCode::FILE_TRANS_LISTENER_ON_PROGRESS):
-            return HandleOnFileReceive(data, reply);
-        case static_cast<uint32_t>(FileTransListenerInterfaceCode::FILE_TRANS_LISTENER_ON_FAILED):
-            return HandleOnFailed(data, reply);
-        case static_cast<uint32_t>(FileTransListenerInterfaceCode::FILE_TRANS_LISTENER_ON_FINISHED):
-            return HandleOnFinished(data, reply);
-        default:
-            LOGE("Cannot response request %d: unknown tranction", code);
-            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    auto interfaceIndex = opToInterfaceMap_.find(code);
+    if (interfaceIndex == opToInterfaceMap_.end() || !interfaceIndex->second) {
+        LOGE("Cannot response request %d: unknown tranction", code);
+        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
+    return (this->*(interfaceIndex->second))(data, reply);
 }
 
 int32_t FileTransListenerStub::HandleOnFileReceive(MessageParcel &data, MessageParcel &reply)
