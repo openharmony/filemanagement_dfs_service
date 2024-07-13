@@ -18,10 +18,10 @@
 #include <cstdint>
 #include <cstring>
 
-#include "message_option.h"
-#include "message_parcel.h"
 #include "daemon_stub.h"
 #include "distributed_file_daemon_ipc_interface_code.h"
+#include "message_option.h"
+#include "message_parcel.h"
 #include "securec.h"
 
 namespace OHOS {
@@ -100,9 +100,9 @@ public:
     }
 };
 
-void HandleOpenP2PConnectionFuzzTest(
-    std::shared_ptr<DaemonStub> daemonStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+void HandleOpenP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                     std::unique_ptr<char[]> data,
+                                     size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION);
     MessageParcel datas;
@@ -115,9 +115,9 @@ void HandleOpenP2PConnectionFuzzTest(
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleCloseP2PConnectionFuzzTest(
-    std::shared_ptr<DaemonStub> daemonStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+void HandleCloseP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                      std::unique_ptr<char[]> data,
+                                      size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION);
     MessageParcel datas;
@@ -130,9 +130,9 @@ void HandleCloseP2PConnectionFuzzTest(
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleOpenP2PConnectionExFuzzTest(
-    std::shared_ptr<DaemonStub> daemonStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+void HandleOpenP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                       std::unique_ptr<char[]> data,
+                                       size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX);
     MessageParcel datas;
@@ -145,9 +145,9 @@ void HandleOpenP2PConnectionExFuzzTest(
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleCloseP2PConnectionExFuzzTest(
-    std::shared_ptr<DaemonStub> daemonStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                        std::unique_ptr<char[]> data,
+                                        size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX);
     MessageParcel datas;
@@ -160,9 +160,7 @@ void HandleCloseP2PConnectionExFuzzTest(
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandlePrepareSessionFuzzTest(
-    std::shared_ptr<DaemonStub> daemonStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+void HandlePrepareSessionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, std::unique_ptr<char[]> data, size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION);
     MessageParcel datas;
@@ -175,9 +173,7 @@ void HandlePrepareSessionFuzzTest(
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleCancelCopyTaskFuzzTest(
-    std::shared_ptr<DaemonStub> daemonStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+void HandleCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, std::unique_ptr<char[]> data, size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK);
     MessageParcel datas;
@@ -190,9 +186,9 @@ void HandleCancelCopyTaskFuzzTest(
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleRequestSendFileFuzzTest(
-    std::shared_ptr<DaemonStub> daemonStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+void HandleRequestSendFileFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                   std::unique_ptr<char[]> data,
+                                   size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE);
     MessageParcel datas;
@@ -205,9 +201,9 @@ void HandleRequestSendFileFuzzTest(
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleGetRemoteCopyInfoFuzzTest(
-    std::shared_ptr<DaemonStub> daemonStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+void HandleGetRemoteCopyInfoFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                     std::unique_ptr<char[]> data,
+                                     size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO);
     MessageParcel datas;
@@ -220,9 +216,7 @@ void HandleGetRemoteCopyInfoFuzzTest(
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandlePushAssetFuzzTest(
-    std::shared_ptr<DaemonStub> daemonStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+void HandlePushAssetFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, std::unique_ptr<char[]> data, size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET);
     MessageParcel datas;
@@ -235,9 +229,9 @@ void HandlePushAssetFuzzTest(
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleRegisterRecvCallbackFuzzTest(
-    std::shared_ptr<DaemonStub> daemonStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+void HandleRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                        std::unique_ptr<char[]> data,
+                                        size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK);
     MessageParcel datas;
@@ -250,12 +244,12 @@ void HandleRegisterRecvCallbackFuzzTest(
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleUnRegisterRecvCallbackFuzzTest(
-    std::shared_ptr<DaemonStub> daemonStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
+                                          std::unique_ptr<char[]> data,
+                                          size_t size)
 {
-    uint32_t code = static_cast<uint32_t>(
-            DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK);
+    uint32_t code =
+        static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
     datas.WriteBuffer(data.get(), size);
@@ -265,7 +259,7 @@ void HandleUnRegisterRecvCallbackFuzzTest(
 
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
-} // namespace OHOS::Storage::DistributedFile
+} // namespace OHOS
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
