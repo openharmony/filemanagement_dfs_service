@@ -90,6 +90,11 @@ int32_t DataSyncManager::CleanCloudFile(const int32_t userId, const std::string 
     return E_OK;
 }
 
+int32_t DataSyncManager::CleanRemainFile(const std::string &bundleName, const int32_t userId)
+{
+    return E_OK;
+}
+
 int32_t DataSyncManager::OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays)
 {
     return E_OK;
