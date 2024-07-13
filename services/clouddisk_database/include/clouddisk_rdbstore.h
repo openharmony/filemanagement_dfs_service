@@ -50,7 +50,7 @@ public:
         const std::string &fileName);
     int32_t Write(const std::string &fileName, const std::string &parentCloudId, const std::string &cloudId);
     int32_t GetXAttr(const std::string &cloudId, const std::string &key, std::string &value,
-        const CacheNode &node = {});
+        const CacheNode &node = {}, const std::string &extAttrKey = "");
     int32_t SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
         const std::string &name = "", const std::string &parentCloudId = "");
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
@@ -68,6 +68,9 @@ public:
     int32_t GetHasChild(const std::string &cloudId, bool &hasChild);
     int32_t GetRowId(const std::string &cloudId, int64_t &rowId);
     int32_t GetParentCloudId(const std::string &cloudId, std::string &parentCloudId);
+    int32_t ExtAttributeSetAttr(const std::string &cloudId, const std::string &value, const std::string &key);
+    int32_t GetExtAttr(const std::string &cloudId, std::string &value);
+    int32_t GetExtAttrValue(const std::string &cloudId, const std::string &key, std::string &value);
 
     /* clouddisk syncer */
     int32_t GetDirtyType(const std::string &cloudId, int32_t &fileStatus);

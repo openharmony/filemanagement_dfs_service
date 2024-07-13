@@ -789,6 +789,28 @@ void HandleFavorite(fuse_req_t req, fuse_ino_t ino, const char *name,
     fuse_reply_err(req, 0);
 }
 
+void HandleExtAttribute(fuse_req_t req, fuse_ino_t ino, const char *name, const char *value)
+{
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+    if (inoPtr == nullptr) {
+        fuse_reply_err(req, EINVAL);
+        LOGE("inode not found");
+        return;
+    }
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, CLOUD_EXT_ATTR, value, name);
+    if (err != 0) {
+        LOGE("set cloud id fail %{public}d", err);
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
+        NotifyOpsType::DAEMON_SETXATTR, inoPtr});
+    fuse_reply_err(req, 0);
+}
+
 void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    const char *value, size_t size, int flags)
 {
@@ -809,7 +831,7 @@ void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
             HandleFavorite(req, ino, name, value);
             break;
         default:
-            fuse_reply_err(req, EINVAL);
+            HandleExtAttribute(req, ino, name, value);
             break;
     }
 }
@@ -868,6 +890,26 @@ string GetLocation(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
     return location;
 }
 
+string GetExtAttr(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr, const char *extAttrKey)
+{
+    string extAttr;
+    if (inoPtr == nullptr) {
+        LOGE("get ext attr inoPtr is null");
+        return "null";
+    }
+
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    CacheNode newNode = {};
+    int res = rdbStore->GetXAttr(inoPtr->cloudId, CLOUD_EXT_ATTR, extAttr, newNode, extAttrKey);
+    if (res != 0) {
+        LOGE("get ext attr is null");
+        return "null";
+    }
+    return extAttr;
+}
+
 void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    size_t size)
 {
@@ -891,8 +933,7 @@ void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
     } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
         buf = GetLocation(req, inoPtr);
     } else {
-        fuse_reply_err(req, EINVAL);
-        return;
+        buf = GetExtAttr(req, inoPtr, name);
     }
     if (buf == "null") {
         fuse_reply_err(req, ENODATA);

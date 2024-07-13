@@ -36,6 +36,7 @@
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
 #include "utils_log.h"
+#include "nlohmann/json.hpp"
 
 namespace OHOS::FileManagement::CloudDisk {
 using namespace std;
@@ -47,7 +48,8 @@ enum XATTR_CODE {
     CLOUD_LOCATION = 1,
     CLOUD_RECYCLE,
     IS_FAVORITE,
-    FILE_SYNC_STATUS
+    FILE_SYNC_STATUS,
+    IS_EXT_ATTR
 };
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static constexpr int32_t CHECK_QUERY_LIMIT = 2000;
@@ -763,6 +765,8 @@ int32_t CheckXattr(const std::string &key)
         return IS_FAVORITE;
     } else if (key == IS_FILE_STATUS_XATTR) {
         return FILE_SYNC_STATUS;
+    } else if (key == CLOUD_EXT_ATTR) {
+        return IS_EXT_ATTR;
     } else {
         return ERROR_CODE;
     }
@@ -838,8 +842,66 @@ int32_t CloudDiskRdbStore::FileStatusGetXattr(const std::string &cloudId, const 
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::GetExtAttrValue(const std::string &cloudId, const std::string &key, std::string &value)
+{
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID || key.empty()) {
+        LOGE("get ext attr value parameter is invalid");
+        return E_INVAL_ARG;
+    }
+
+    std::string res;
+    int32_t ret = GetExtAttr(cloudId, res);
+    if (ret != E_OK || res.empty()) {
+        LOGE("get ext attr value res is empty");
+        return E_RDB;
+    }
+
+    nlohmann::json jsonObj = nlohmann::json::parse(res);
+    if (jsonObj.is_discarded()) {
+        LOGE("get ext jsonObj parse failed");
+        return E_RDB;
+    }
+
+    LOGD("GetExtAttrValue, name %{public}s", key.c_str());
+    if (!jsonObj.contains(key) || !jsonObj[key].is_string()) {
+        LOGE("get ext not a string");
+        return E_RDB;
+    }
+
+    value = jsonObj[key].get<std::string>();
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::GetExtAttr(const std::string &cloudId, std::string &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
+        LOGE("get ext attr parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    AbsRdbPredicates getAttrPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    getAttrPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(getAttrPredicates, FileColumn::EXT_ATTR_QUERY_COLUMNS);
+    if (resultSet == nullptr) {
+        LOGE("get nullptr get ext attr result");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("get ext attr result set go to next row failed");
+        return E_RDB;
+    }
+
+    int32_t ret = CloudDiskRdbUtils::GetString(FileColumn::ATTRIBUTE, value, resultSet);
+    if (ret != E_OK) {
+        LOGE("get ext attr value failed");
+        return ret;
+    }
+
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value,
-    const CacheNode &node)
+    const CacheNode &node, const std::string &extAttrKey)
 {
     int32_t num = CheckXattr(key);
     switch (num) {
@@ -852,13 +914,55 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
         case FILE_SYNC_STATUS:
             return FileStatusGetXattr(cloudId, key, value);
             break;
+        case IS_EXT_ATTR:
+            return GetExtAttrValue(cloudId, extAttrKey, value);
     }
-    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
-        LOGE("getxattr parameter is invalid");
-        return E_INVAL_ARG;
+    
+    return E_INVAL_ARG;
+}
+
+int32_t CloudDiskRdbStore::ExtAttributeSetAttr(const std::string &cloudId, const std::string &value,
+    const std::string &key)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    ValuesBucket setAttr;
+    int32_t changedRows = -1;
+    vector<ValueObject> bindArgs;
+    bindArgs.emplace_back(cloudId);
+
+    TransactionOperations rdbTransaction(rdbStore_);
+    int32_t ret = rdbTransaction.Start();
+    if (ret != E_OK) {
+        LOGE("Ext rdbstore begin transaction failed, ret = %{public}d", ret);
+        return ret;
+    }
+
+    std::string res;
+    nlohmann::json jsonObj;
+    ret = GetExtAttr(cloudId, res);
+    if (ret != E_OK || res.empty()) {
+        jsonObj = nlohmann::json({{key, value}});
     } else {
-        return E_OK;
+        jsonObj = nlohmann::json::parse(res);
+        if (jsonObj.is_discarded()) {
+            LOGE("ext jsonObj parse failed");
+            return E_RDB;
+        }
+
+        jsonObj[key] = value;
     }
+
+    std::string jsonValue = jsonObj.dump();
+    setAttr.PutString(FileColumn::ATTRIBUTE, jsonValue);
+    ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setAttr,
+        FileColumn::CLOUD_ID + " = ?", bindArgs);
+    if (ret != E_OK) {
+        LOGE("ext attr location fail, ret %{public}d", ret);
+        return E_RDB;
+    }
+
+    rdbTransaction.Finish();
+    return E_OK;
 }
 
 int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
@@ -875,13 +979,11 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
         case IS_FAVORITE:
             return FavoriteSetXattr(cloudId, value);
             break;
+        case IS_EXT_ATTR:
+            return ExtAttributeSetAttr(cloudId, value, name);
     }
-    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
-        LOGE("setxattr parameter is invalid");
-        return E_INVAL_ARG;
-    } else {
-        return E_OK;
-    }
+    
+    return E_INVAL_ARG;
 }
 
 static void FileRename(ValuesBucket &values, const int32_t &position, const std::string &newFileName)
@@ -1598,6 +1700,15 @@ static void VersionAddRootDirectory(RdbStore &store)
     }
 }
 
+static void VersionAddAttribute(RdbStore &store)
+{
+    const string attrbute = FileColumn::ADD_ATTRIBUTE;
+    int32_t ret = store.ExecuteSql(attrbute);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add attrbute fail, ret = %{public}d", ret);
+    }
+}
+
 int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, int32_t newVersion)
 {
     LOGD("OnUpgrade old:%d, new:%d", oldVersion, newVersion);
@@ -1630,6 +1741,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     }
     if (oldVersion < VERSION_FIX_RETRY_TRIGGER) {
         VersionFixRetryTrigger(store);
+    }
+    if (oldVersion < VERSION_ADD_ATTRIBUTE) {
+        VersionAddAttribute(store);
     }
     return NativeRdb::E_OK;
 }
