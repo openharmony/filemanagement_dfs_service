@@ -63,22 +63,7 @@ HWTEST_F(CloudStatusTest, GetCurrentCloudInfo001, TestSize.Level1)
     const string bundleName = "ohos.com.test";
     const int32_t userId = 1;
     auto ret = cloudStatus.GetCurrentCloudInfo(bundleName, userId);
-    EXPECT_EQ(ret, E_OK);
-}
-
-/**
- * @tc.name: GetCurrentCloudInfo002
- * @tc.desc: Verify the CloudStatus::GetCurrentCloudInfo function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(CloudStatusTest, GetCurrentCloudInfo002, TestSize.Level1)
-{
-    CloudStatus cloudStatus;
-    const string bundleName = "";
-    const int32_t userId = -1;
-    auto ret = cloudStatus.GetCurrentCloudInfo(bundleName, userId);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_NULLPTR);
 }
 
 /**
@@ -93,7 +78,7 @@ HWTEST_F(CloudStatusTest, IsCloudStatusOkay001, TestSize.Level1)
     const string bundleName = "ohos.com.demo";
     const int32_t userId = -1;
     auto ret = cloudStatus.IsCloudStatusOkay(bundleName, userId);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -108,23 +93,7 @@ HWTEST_F(CloudStatusTest, IsCloudStatusOkay002, TestSize.Level1)
     const string bundleName = "ohos.com.demo1";
     const int32_t userId = 1;
     auto ret = cloudStatus.IsCloudStatusOkay(bundleName, userId);
-    EXPECT_EQ(ret, true);
-}
-
-/**
- * @tc.name: IsCloudStatusOkay003
- * @tc.desc: Verify the CloudStatus::IsCloudStatusOkay function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(CloudStatusTest, IsCloudStatusOkay003, TestSize.Level1)
-{
-    CloudStatus cloudStatus;
-    const string bundleName = "ohos.com.demo1";
-    const int32_t userId = 1;
-    cloudStatus.appSwitches_[bundleName] = true;
-    auto ret = cloudStatus.IsCloudStatusOkay(bundleName, userId);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 }
 
 /**

@@ -64,7 +64,7 @@ void NetworkStatusTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(NetworkStatusTest, RegisterNetConnCallbackTest, TestSize.Level1)
+HWTEST_F(NetworkStatusTest, RegisterNetConnCallbackTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterNetConnCallbackTest Start";
     try {
@@ -118,6 +118,93 @@ HWTEST_F(NetworkStatusTest, SetNetConnStatusTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetNetConnStatusTest002
+ * @tc.desc: Verify the SetNetConnStatus function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, SetNetConnStatusTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetNetConnStatusTest001 Start";
+    try {
+        NetManagerStandard::NetAllCapabilities netAllCap;
+        netAllCap.netCaps_.insert(NetManagerStandard::NetCap::NET_CAPABILITY_INTERNET);
+        NetworkStatus::SetNetConnStatus(netAllCap);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetNetConnStatusTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetNetConnStatusTest001 End";
+}
+
+/**
+ * @tc.name: SetNetConnStatusTest003
+ * @tc.desc: Verify the SetNetConnStatus function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, SetNetConnStatusTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetNetConnStatusTest001 Start";
+    try {
+        NetManagerStandard::NetAllCapabilities netAllCap;
+        netAllCap.netCaps_.insert(NetManagerStandard::NetCap::NET_CAPABILITY_INTERNET);
+        netAllCap.bearerTypes_.insert(NetManagerStandard::BEARER_ETHERNET);
+        NetworkStatus::SetNetConnStatus(netAllCap);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetNetConnStatusTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetNetConnStatusTest001 End";
+}
+
+/**
+ * @tc.name: SetNetConnStatusTest004
+ * @tc.desc: Verify the SetNetConnStatus function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, SetNetConnStatusTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetNetConnStatusTest001 Start";
+    try {
+        NetManagerStandard::NetAllCapabilities netAllCap;
+        netAllCap.netCaps_.insert(NetManagerStandard::NetCap::NET_CAPABILITY_INTERNET);
+        netAllCap.bearerTypes_.insert(NetManagerStandard::BEARER_WIFI);
+        NetworkStatus::SetNetConnStatus(netAllCap);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetNetConnStatusTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetNetConnStatusTest001 End";
+}
+
+/**
+ * @tc.name: SetNetConnStatusTest005
+ * @tc.desc: Verify the SetNetConnStatus function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, SetNetConnStatusTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetNetConnStatusTest001 Start";
+    try {
+        NetManagerStandard::NetAllCapabilities netAllCap;
+        netAllCap.netCaps_.insert(NetManagerStandard::NetCap::NET_CAPABILITY_INTERNET);
+        netAllCap.bearerTypes_.insert(NetManagerStandard::BEARER_CELLULAR);
+        NetworkStatus::SetNetConnStatus(netAllCap);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " SetNetConnStatusTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "SetNetConnStatusTest001 End";
+}
+
+/**
  * @tc.name: GetAndRegisterNetworkTest
  * @tc.desc: Verify the GetAndRegisterNetwork function
  * @tc.type: FUNC
@@ -158,40 +245,155 @@ HWTEST_F(NetworkStatusTest, InitNetworkTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: SetNetConnStatusTest002
- * @tc.desc: Verify the SetNetConnStatus function
+ * @tc.name: CheckMobileNetworkTest001
+ * @tc.desc: Verify the CheckMobileNetwork function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(NetworkStatusTest, SetNetConnStatusTest002, TestSize.Level1)
+HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SetNetConnStatusTest002 Start";
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest Start";
     try {
-        NetworkStatus::SetNetConnStatus(NetworkStatus::NO_NETWORK);
-        EXPECT_TRUE(true);
+        NetworkStatus networkStatus;
+        string bundleName = "";
+        int32_t userId = 100;
+        bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
+        EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " SetNetConnStatusTest002 FAILED";
+        GTEST_LOG_(INFO) << "CheckMobileNetworkTest FAILED";
     }
-    GTEST_LOG_(INFO) << "SetNetConnStatusTest002 End";
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest End";
 }
 
 /**
- * @tc.name: GetNetConnStatusTest
- * @tc.desc: Verify the GetNetConnStatus function
+ * @tc.name: CheckMobileNetworkTest002
+ * @tc.desc: Verify the CheckMobileNetwork function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(NetworkStatusTest, GetNetConnStatusTest, TestSize.Level1)
+HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetNetConnStatusTest Start";
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest Start";
     try {
-        auto ret = NetworkStatus::GetNetConnStatus();
-        EXPECT_EQ(ret, NetworkStatus::NO_NETWORK);
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
+        EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetNetConnStatusTest FAILED";
+        GTEST_LOG_(INFO) << "CheckMobileNetworkTest FAILED";
     }
-    GTEST_LOG_(INFO) << "GetNetConnStatusTest End";
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest End";
+}
+
+/**
+ * @tc.name: CheckMobileNetworkTest003
+ * @tc.desc: Verify the CheckMobileNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        networkStatus.SetNetConnStatus(NetworkStatus::WIFI_CONNECT);
+        bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMobileNetworkTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest End";
+}
+
+
+/**
+ * @tc.name: CheckNetworkTest001
+ * @tc.desc: Verify the CheckNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckNetworkTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckNetworkTest Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "";
+        int32_t userId = 100;
+        bool ret = networkStatus.CheckNetwork(bundleName, userId);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckNetworkTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckNetworkTest End";
+}
+
+/**
+ * @tc.name: CheckNetworkTest002
+ * @tc.desc: Verify the CheckNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckNetworkTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckNetworkTest Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        bool ret = networkStatus.CheckNetwork(bundleName, userId);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckNetworkTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckNetworkTest End";
+}
+
+/**
+ * @tc.name: OnNetworkAvailTest001
+ * @tc.desc: Verify the OnNetworkAvail function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, OnNetworkAvailTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnNetworkAvailTest Start";
+    try {
+        NetworkStatus networkStatus;
+        networkStatus.SetNetConnStatus(NetworkStatus::WIFI_CONNECT);
+        networkStatus.OnNetworkAvail();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnNetworkAvailTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnNetworkAvailTest End";
+}
+
+/**
+ * @tc.name: OnNetworkAvailTest00
+ * @tc.desc: Verify the OnNetworkAvail function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, OnNetworkAvailTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnNetworkAvailTest Start";
+    try {
+        NetworkStatus networkStatus;
+        networkStatus.SetNetConnStatus(NetworkStatus::NO_NETWORK);
+        networkStatus.OnNetworkAvail();
+        EXPECT_EQ(networkStatus.netStatus_, NetworkStatus::NETWORK_AVAIL);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnNetworkAvailTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnNetworkAvailTest End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
