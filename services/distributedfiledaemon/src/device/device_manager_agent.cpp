@@ -359,7 +359,7 @@ bool DeviceManagerAgent::MountDfsCountOnly(const std::string &deviceId)
         LOGI("deviceId empty");
         return false;
     }
-    unique_lock<mutex> lock(mpToNetworksMutex_);
+    std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
     auto itCount = mountDfsCount_.find(deviceId);
     if (itCount == mountDfsCount_.end()) {
         LOGI("mountDfsCount_ can not find key");
@@ -379,6 +379,7 @@ bool DeviceManagerAgent::UMountDfsCountOnly(const std::string &deviceId, bool ne
         LOGI("deviceId empty");
         return false;
     }
+    std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
     auto itCount = mountDfsCount_.find(deviceId);
     if (itCount == mountDfsCount_.end()) {
         LOGI("mountDfsCount_ can not find key");
@@ -503,7 +504,7 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std
     int32_t ret = NO_ERROR;
     if (MountDfsCountOnly(deviceId)) {
         LOGI("only count plus one, do not need mount");
-        mountDfsCount_[deviceId]++;
+        IncreaseMountDfsCount(deviceId);
         return ret;
     }
     int32_t userId = GetCurrentUserId();
@@ -522,7 +523,7 @@ int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std
     } else {
         LOGE("MountDfsDocs success, deviceId %{public}s increase count by one now",
             Utils::GetAnonyString(deviceId).c_str());
-        mountDfsCount_[deviceId]++;
+        IncreaseMountDfsCount(deviceId);
     }
     LOGI("storageMgr.MountDfsDocs end.");
     return ret;
@@ -557,10 +558,22 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
     } else {
         LOGE("UMountDfsDocs success, deviceId %{public}s erase count",
             Utils::GetAnonyString(deviceId).c_str());
-        mountDfsCount_.erase(deviceId);
+        RemoveMountDfsCount(deviceId);
     }
     LOGI("storageMgr.UMountDfsDocs end.");
     return ret;
+}
+
+void DeviceManagerAgent::IncreaseMountDfsCount(const std::string &deviceId)
+{
+    std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
+    mountDfsCount_[deviceId]++;
+}
+
+void DeviceManagerAgent::RemoveMountDfsCount(const std::string &deviceId)
+{
+    std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
+    mountDfsCount_.erase(deviceId);
 }
 
 void DeviceManagerAgent::NotifyRemoteReverseObj(const std::string &networkId, int32_t status)
