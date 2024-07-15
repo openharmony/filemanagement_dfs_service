@@ -16,6 +16,7 @@
 #include "network/session_pool.h"
 #include "dm_device_info.h"
 #include "device/device_manager_agent.h"
+#include "dfs_error.h"
 #include "ipc/i_daemon.h"
 
 namespace OHOS {
@@ -60,8 +61,12 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
     std::string cid = "";
     lock_guard lock(sessionPoolLock_);
     if (fd < 0) {
-        LOGI("fd=%{public}d, deviceConnectCount clear", fd);
+        LOGI("NOTIFY OFFLINE, fd=%{public}d, deviceConnectCount clear", fd);
+        if (deviceConnectCount_.empty()) {
+            return FileManagement::ERR_BAD_VALUE;
+        }
         deviceConnectCount_.clear();
+        return FileManagement::ERR_BAD_VALUE;
     }
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
         if ((*iter)->GetHandle() == fd) {
@@ -70,9 +75,9 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
                 linkType = linkTypeIter->second;
                 cid = (*iter)->GetCid();
             }
-        }
-        if (DeviceDisconnectCountOnly(cid, linkType, false)) {
-            continue;
+            if (DeviceDisconnectCountOnly(cid, linkType, false)) {
+                continue;
+            }
         }
         if ((*iter)->GetHandle() == fd) {
             auto linkTypeIter = occupySession_.find((*iter)->GetSessionId());

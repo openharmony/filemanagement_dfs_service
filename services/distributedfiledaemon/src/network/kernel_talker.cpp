@@ -229,7 +229,6 @@ void KernelTalker::NotifyHandler(NotifyParam &param)
             GetSessionCallback_(param);
             break;
         case NOTIFY_OFFLINE:
-            LOGI("NOTIFY_OFFLINE, remote cid %{public}s", Utils::GetAnonyString(cidStr).c_str());
             CloseSessionCallback_(param.fd);
             break;
         default:

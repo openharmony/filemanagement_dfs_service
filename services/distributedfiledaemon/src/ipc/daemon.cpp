@@ -177,7 +177,7 @@ int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &devic
             LOGI("RepeatGetConnectionStatus end, ret = %{public}d", ret);
         }
     }
-    if (ret != NO_ERROR) {
+    if (ret != FileManagement::ERR_BAD_VALUE) {
         LOGI("OpenP2PConnection check connection status failed, start to clean up");
         CloseP2PConnection(deviceInfo);
     }
