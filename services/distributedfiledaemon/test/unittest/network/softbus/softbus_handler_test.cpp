@@ -185,21 +185,21 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OpenSession_0100, TestSize.Level
     std::string packageName = "com.example.test";
     std::string sessionName = "testSession";
     DFS_CHANNEL_ROLE role = DFS_CHANNLE_ROLE_SOURCE;
-    std::string physicalPath = "/data/test";
 
+    g_mockGetTrustedDeviceList = true;
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
-    int32_t result = handler.OpenSession(packageName, sessionName, physicalPath, role);
+    int32_t result = handler.OpenSession(packageName, sessionName, TEST_NETWORKID, role);
     EXPECT_EQ(result, ERR_BAD_VALUE);
 
     int32_t socketId = 0;
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(socketId));
     EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(-1));
-    result = handler.OpenSession(packageName, sessionName, physicalPath, role);
+    result = handler.OpenSession(packageName, sessionName, TEST_NETWORKID, role);
     EXPECT_EQ(result, ERR_BAD_VALUE);
 
     EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(socketId));
     EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(0));
-    result = handler.OpenSession(packageName, sessionName, physicalPath, role);
+    result = handler.OpenSession(packageName, sessionName, TEST_NETWORKID, role);
     EXPECT_EQ(result, 0);
 
     if (handler.clientSessNameMap_.find(socketId) != handler.clientSessNameMap_.end()) {

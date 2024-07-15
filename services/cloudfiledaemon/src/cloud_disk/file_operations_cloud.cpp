@@ -295,7 +295,7 @@ static bool HandleCloudError(fuse_req_t req, CloudError error)
     return true;
 }
 
-static shared_ptr<CloudDatabase> GetDatabase(int32_t userId)
+static shared_ptr<CloudDatabase> GetDatabase(int32_t userId, const string &bundleName)
 {
     auto instance = CloudFile::CloudFileKit::GetInstance();
     if (instance == nullptr) {
@@ -311,7 +311,7 @@ static shared_ptr<CloudDatabase> GetDatabase(int32_t userId)
         LOGI("execute clean cloud user info success");
     }
 
-    auto database = instance->GetCloudDatabase(userId, system::GetParameter(FILEMANAGER_KEY, ""));
+    auto database = instance->GetCloudDatabase(userId, bundleName);
     if (database == nullptr) {
         LOGE("get cloud file kit database fail");
         return nullptr;
@@ -328,7 +328,7 @@ static void CloudOpen(fuse_req_t req,
     if (filePtr == nullptr) {
         filePtr = InitFileAttr(data, fi);
     }
-    auto database = GetDatabase(data->userId);
+    auto database = GetDatabase(data->userId, inoPtr->bundleName);
     if (!database) {
         fuse_reply_err(req, EPERM);
         LOGE("database is null");
@@ -430,10 +430,10 @@ void RemoveLocalFile(const string &path)
     }
 }
 
-int32_t GenerateCloudId(int32_t userId, string &cloudId)
+int32_t GenerateCloudId(int32_t userId, string &cloudId, const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    auto dkDatabasePtr = GetDatabase(userId);
+    auto dkDatabasePtr = GetDatabase(userId, bundleName);
     if (dkDatabasePtr == nullptr) {
         LOGE("Failed to get database");
         return ENOSYS;
@@ -458,7 +458,7 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
         static_cast<int64_t>(parent));
 
     string cloudId;
-    int32_t err = GenerateCloudId(data->userId, cloudId);
+    int32_t err = GenerateCloudId(data->userId, cloudId, parentInode->bundleName);
     if (err != 0) {
         LOGE("Failed to generate cloud id");
         return -err;
@@ -924,7 +924,7 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
         return (void) fuse_reply_err(req, EINVAL);
     }
     string cloudId;
-    int32_t err = GenerateCloudId(data->userId, cloudId);
+    int32_t err = GenerateCloudId(data->userId, cloudId, parentInode->bundleName);
     if (err != 0) {
         LOGE("Failed to generate cloud id");
         return (void) fuse_reply_err(req, err);

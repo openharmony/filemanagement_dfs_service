@@ -60,12 +60,12 @@ std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<s
         }
         return tmp;
     }
-    if (dstPath.empty()) {
-        auto pos = path.rfind("/");
-        tmp.push_back(path.substr(pos + 1));
-    } else {
+    if (dstPath.find("??") == 0) {
         auto pos = dstPath.rfind("/");
         tmp.push_back(dstPath.substr(pos + 1));
+    } else {
+        auto pos = path.rfind("/");
+        tmp.push_back(path.substr(pos + 1));
     }
     return tmp;
 }

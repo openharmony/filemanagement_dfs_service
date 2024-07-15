@@ -113,8 +113,9 @@ void DevslDispatcher::DevslGottonCallback(DEVSLQueryParams *queryParams, int32_t
         LOGE("devsl dispatcher dsl get callback result : %{public}d", result);
     }
 
-    std::string udid(reinterpret_cast<char*>(queryParams->udid), queryParams->udidLen);
-    std::thread callbackThread = std::thread(DevslDispatcher::DevslGottonCallbackAsync, udid, levelInfo);
+    std::string udid(reinterpret_cast<char *>(queryParams->udid), queryParams->udidLen);
+    std::thread callbackThread =
+        std::thread([udid, levelInfo]() { DevslGottonCallbackAsync(udid, levelInfo); });
     callbackThread.detach();
 }
 } // namespace DistributedFile
