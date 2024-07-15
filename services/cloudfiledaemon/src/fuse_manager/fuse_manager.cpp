@@ -81,6 +81,7 @@ static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
 
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
 #define HMDFS_IOC_CANCEL_READ _IO(HMDFS_IOC, 8)
+#define HMDFS_IOC_RESET_READ _IO(HMDFS_IOC, 9)
 PAGE_FLAG_TYPE PG_READAHEAD = 0x00000001;
 PAGE_FLAG_TYPE PG_UPTODATE = 0x00000002;
 PAGE_FLAG_TYPE PG_REFERENCED = 0x00000004;
@@ -90,17 +91,6 @@ enum CLOUD_READ_STATUS {
     READING = 0,
     READ_FINISHED,
     READ_CANCELED,
-};
-
-enum FH_TYPE : int32_t {
-    IS_FD = 0,
-    IS_PID,
-};
-
-struct FileInfoFh {
-    FH_TYPE fhType{IS_FD};
-    int32_t val{-1};
-    FileInfoFh(FH_TYPE type, int32_t value) : fhType(type), val(value) {}
 };
 
 struct ReadCacheInfo {
@@ -526,9 +516,7 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
     }
     MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
     cInode->mBase->hasDownloaded = true;
-    FileInfoFh *fileFh = reinterpret_cast<FileInfoFh *>(fi->fh);
-    fileFh->fhType = IS_FD;
-    fileFh->val = fd;
+    fi->fh = static_cast<uint64_t>(fd);
     return 0;
 }
 
@@ -605,8 +593,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
-    FileInfoFh *fileFh = new FileInfoFh(IS_PID, req->ctx.pid);
-    fi->fh = reinterpret_cast<uint64_t>(fileFh);
+    fi->fh = UINT64_MAX;
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId);
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
@@ -615,7 +602,6 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
     LOGI("%{public}d open %{public}s", req->ctx.pid, CloudPath(data, ino).c_str());
     if (!database) {
         LOGE("database is null");
-        delete fileFh;
         fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
         fuse_reply_err(req, EPERM);
         return;
@@ -636,7 +622,6 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
             if (ret == 0) {
                 fuse_reply_open(req, fi);
             } else {
-                delete fileFh;
                 fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
                 fuse_reply_err(req, -ret);
             }
@@ -647,7 +632,6 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
     }
     if (!cInode->readSession) {
         LOGE("readSession is null or fix size fail");
-        delete fileFh;
         fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
         fuse_reply_err(req, EPERM);
     } else {
@@ -662,15 +646,13 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
-    FileInfoFh *fileFh = reinterpret_cast<FileInfoFh *>(fi->fh);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
-    LOGI("%{public}d:%{public}d release, sessionRefCount: %{public}d", fileFh->fhType, fileFh->val,
-         cInode->sessionRefCount.load());
+    LOGI("%{public}d release, sessionRefCount: %{public}d", req->ctx.pid, cInode->sessionRefCount.load());
     wSesLock.lock();
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
-        if (fileFh->fhType == IS_FD && fileFh->val >= 0) {
-            close(fileFh->val);
+        if (fi->fh != UINT64_MAX) {
+            close(fi->fh);
         }
         if (cInode->mBase->fileType == FILE_TYPE_CONTENT && (!cInode->readSession->Close(false))) {
             LOGE("Failed to close readSession");
@@ -682,16 +664,9 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
             cInode->readCtlMap.clear();
         }
         LOGD("readSession released");
-    } else {
-        std::unique_lock<std::mutex> lock(cInode->readArgsLock);
-        if (fileFh->fhType == IS_PID) {
-            LOGI("reset ctl state to false");
-            cInode->readCtlMap[fileFh->val] = false;
-        }
     }
     wSesLock.unlock();
 
-    delete fileFh;
     LOGI("release end");
     fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
     fuse_reply_err(req, 0);
@@ -784,6 +759,22 @@ static void CancelRead(fuse_req_t req, fuse_ino_t ino)
     fuse_reply_ioctl(req, 0, NULL, 0);
 }
 
+static void ResetRead(fuse_req_t req, fuse_ino_t ino)
+{
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+    if (!cInode) {
+        fuse_reply_err(req, ENOMEM);
+        return;
+    }
+    LOGI("Reset read for pid: %{public}d", req->ctx.pid);
+    {
+        std::unique_lock<std::mutex> lock(cInode->readArgsLock);
+        cInode->readCtlMap[req->ctx.pid] = false;
+    }
+    fuse_reply_ioctl(req, 0, NULL, 0);
+}
+
 static void CloudIoctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
                        unsigned flags, const void *inBuf, size_t inBufsz, size_t outBufsz)
 {
@@ -793,6 +784,9 @@ static void CloudIoctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struc
             break;
         case HMDFS_IOC_CANCEL_READ:
             CancelRead(req, ino);
+            break;
+        case HMDFS_IOC_RESET_READ:
+            ResetRead(req, ino);
             break;
         default:
             fuse_reply_err(req, ENOTTY);
@@ -914,12 +908,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t size,
     off_t off, struct fuse_file_info *fi)
 {
-    FileInfoFh *fileFh = reinterpret_cast<FileInfoFh *>(fi->fh);
-    if (fileFh->fhType != IS_FD) {
-        fuse_reply_err(req, EINVAL);
-        return;
-    }
-    auto readSize = pread(fileFh->val, buf.get(), size, off);
+    auto readSize = pread(fi->fh, buf.get(), size, off);
     if (readSize < 0) {
         LOGE("Failed to read local file, errno: %{public}d", errno);
         fuse_reply_err(req, errno);
