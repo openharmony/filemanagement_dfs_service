@@ -30,11 +30,11 @@ namespace Test {
 using namespace testing::ext;
 using namespace std;
 
-constexpr int32_t socket = 2;
-constexpr int32_t socketEmpty = 1;
+constexpr int32_t SOCKET_ID = 2;
+constexpr int32_t SOCKET_EMPTY = 1;
 constexpr int SESSION_ID_ONE = 1;
 constexpr int UID_ONE = 1;
-const string sessionName = "mySessionName";
+const string SESSION_NAME = "mySessionName";
 
 class SoftBusFileSendListenerTest : public testing::Test {
 public:
@@ -57,13 +57,13 @@ void SoftBusFileSendListenerTest::TearDownTestCase(void)
 void SoftBusFileSendListenerTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
-    SoftBusHandler::clientSessNameMap_.insert(std::make_pair(socket, sessionName));
+    SoftBusHandler::clientSessNameMap_.insert(std::make_pair(SOCKET_ID, SESSION_NAME));
 }
 
 void SoftBusFileSendListenerTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
-    SoftBusHandler::clientSessNameMap_.erase(socket);
+    SoftBusHandler::clientSessNameMap_.erase(SOCKET_ID);
 }
 
 /**
@@ -84,17 +84,17 @@ HWTEST_F(SoftBusFileSendListenerTest, SoftBusFileSendListenerTest_OnSendFileProc
                                                  .srcUri = "file://com.demo.a/test/1",
                                                  .dstPath = "/data/test/1",
                                                  .uid = UID_ONE};
-    SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo1);
+    SoftBusSessionPool::GetInstance().AddSessionInfo(SESSION_NAME, sessionInfo1);
 
-    SoftBusFileSendListener::OnFile(socketEmpty, &event);
-    SoftBusFileSendListener::OnFile(socket, &event);
+    SoftBusFileSendListener::OnFile(SOCKET_EMPTY, &event);
+    SoftBusFileSendListener::OnFile(SOCKET_ID, &event);
     SoftBusSessionPool::SessionInfo sessionInfo;
-    bool flag = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
+    bool flag = SoftBusSessionPool::GetInstance().GetSessionInfo(SESSION_NAME, sessionInfo);
     EXPECT_EQ(flag, true);
 
     event.bytesTotal = 0;
-    SoftBusFileSendListener::OnFile(socket, &event);
-    flag = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
+    SoftBusFileSendListener::OnFile(SOCKET_ID, &event);
+    flag = SoftBusSessionPool::GetInstance().GetSessionInfo(SESSION_NAME, sessionInfo);
     EXPECT_EQ(flag, false);
 
     GTEST_LOG_(INFO) << "SoftBusFileSendListenerTest_OnSendFileProcess_0100 end";
@@ -114,11 +114,11 @@ HWTEST_F(SoftBusFileSendListenerTest, SoftBusFileSendListenerTest_OnSendFileFini
                        .bytesProcessed = 0,
                        .bytesTotal = 1};
 
-    SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(sessionName, socket));
+    SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(SESSION_NAME, SOCKET_ID));
 
-    SoftBusFileSendListener::OnFile(socketEmpty, &event);
-    SoftBusFileSendListener::OnFile(socket, &event);
-    auto it = SoftBusHandler::GetInstance().serverIdMap_.find(sessionName);
+    SoftBusFileSendListener::OnFile(SOCKET_EMPTY, &event);
+    SoftBusFileSendListener::OnFile(SOCKET_ID, &event);
+    auto it = SoftBusHandler::GetInstance().serverIdMap_.find(SESSION_NAME);
     if (it == SoftBusHandler::GetInstance().serverIdMap_.end()) {
         EXPECT_TRUE(true);
     } else {
@@ -141,10 +141,10 @@ HWTEST_F(SoftBusFileSendListenerTest, SoftBusFileSendListenerTest_OnFileTransErr
                        .bytesProcessed = 0,
                        .bytesTotal = 1};
 
-    SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(sessionName, socket));
-    SoftBusFileSendListener::OnFile(socketEmpty, &event);
-    SoftBusFileSendListener::OnFile(socket, &event);
-    auto it = SoftBusHandler::GetInstance().serverIdMap_.find(sessionName);
+    SoftBusHandler::GetInstance().serverIdMap_.insert(std::make_pair(SESSION_NAME, SOCKET_ID));
+    SoftBusFileSendListener::OnFile(SOCKET_EMPTY, &event);
+    SoftBusFileSendListener::OnFile(SOCKET_ID, &event);
+    auto it = SoftBusHandler::GetInstance().serverIdMap_.find(SESSION_NAME);
     if (it == SoftBusHandler::GetInstance().serverIdMap_.end()) {
         EXPECT_TRUE(true);
     } else {
@@ -168,8 +168,8 @@ HWTEST_F(SoftBusFileSendListenerTest, SoftBusFileSendListenerTest_OnFile_0100, T
                        .bytesTotal = 1};
 
     try {
-        SoftBusFileSendListener::OnFile(socketEmpty, nullptr);
-        SoftBusFileSendListener::OnFile(socketEmpty, &event);
+        SoftBusFileSendListener::OnFile(SOCKET_EMPTY, nullptr);
+        SoftBusFileSendListener::OnFile(SOCKET_EMPTY, &event);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
