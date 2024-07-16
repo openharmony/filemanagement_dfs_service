@@ -35,7 +35,9 @@ ohos_moduletest("DistributedFileDaemonServiceTest") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
-    3
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
