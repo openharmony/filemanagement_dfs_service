@@ -130,7 +130,7 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_UMountDfsCountOnly_01
     bool flag = testPtr->UMountDfsCountOnly("", true);
     EXPECT_EQ(flag, false);
     flag = testPtr->UMountDfsCountOnly("test", true);
-    EXPECT_EQ(flag, false);
+    EXPECT_EQ(flag, true);
 
     flag = testPtr->MountDfsCountOnly("test");
     EXPECT_EQ(flag, false);
