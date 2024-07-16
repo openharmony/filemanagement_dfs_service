@@ -359,18 +359,16 @@ bool DeviceManagerAgent::MountDfsCountOnly(const std::string &deviceId)
         LOGI("deviceId empty");
         return false;
     }
-    // Count plus one operation
-    unique_lock<mutex> lock(mpToNetworksMutex_);
+    std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
     auto itCount = mountDfsCount_.find(deviceId);
-    if (itCount != mountDfsCount_.end() && itCount->second > 0) {
-        LOGI("[MountDfsCountOnly] deviceIde %{public}s has already established a link, count %{public}d, \
+    if (itCount == mountDfsCount_.end()) {
+        LOGI("mountDfsCount_ can not find key");
+        return false;
+    }
+    if (itCount->second > 0) {
+        LOGI("[MountDfsCountOnly] deviceId %{public}s has already established a link, count %{public}d, \
             increase count by one now", Utils::GetAnonyString(deviceId).c_str(), itCount->second);
-        mountDfsCount_[deviceId]++;
         return true;
-    } else {
-        LOGI("[MountDfsCountOnly] deviceId %{public}s increase count by one now",
-            Utils::GetAnonyString(deviceId).c_str());
-        mountDfsCount_[deviceId]++;
     }
     return false;
 }
@@ -381,11 +379,11 @@ bool DeviceManagerAgent::UMountDfsCountOnly(const std::string &deviceId, bool ne
         LOGI("deviceId empty");
         return false;
     }
-    // Count sub one operation
+    std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
     auto itCount = mountDfsCount_.find(deviceId);
     if (itCount == mountDfsCount_.end()) {
         LOGI("mountDfsCount_ can not find key");
-        return false;
+        return true;
     }
     if (needClear) {
         LOGI("mountDfsCount_ erase");
@@ -398,10 +396,8 @@ bool DeviceManagerAgent::UMountDfsCountOnly(const std::string &deviceId, bool ne
             Utils::GetAnonyString(deviceId).c_str(), itCount->second);
         mountDfsCount_[deviceId]--;
         return true;
-    } else {
-        LOGI("[UMountDfsCountOnly] deviceId %{public}s erase count", Utils::GetAnonyString(deviceId).c_str());
-        mountDfsCount_.erase(itCount);
     }
+    LOGI("[UMountDfsCountOnly] deviceId %{public}s erase count", Utils::GetAnonyString(deviceId).c_str());
     return false;
 }
 
@@ -498,36 +494,39 @@ std::unordered_set<std::string> DeviceManagerAgent::GetNetworkIds(uint32_t token
     return networkIdMap_[tokenId];
 }
 
-void DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std::string &deviceId)
+int32_t DeviceManagerAgent::MountDfsDocs(const std::string &networkId, const std::string &deviceId)
 {
     LOGI("MountDfsDocs start");
     if (networkId.empty() || deviceId.empty()) {
-        LOGI("NetworkId or DeviceId is empty");
-        return;
+        LOGE("NetworkId or DeviceId is empty");
+        return INVALID_USER_ID;
     }
-
+    int32_t ret = NO_ERROR;
     if (MountDfsCountOnly(deviceId)) {
-        LOGI("only count plus one, do not neet mount");
-        return;
+        LOGI("only count plus one, do not need mount");
+        IncreaseMountDfsCount(deviceId);
+        return ret;
     }
-
     int32_t userId = GetCurrentUserId();
     if (userId == INVALID_USER_ID) {
-        LOGI("GetCurrentUserId Fail");
-        return;
+        LOGE("GetCurrentUserId Fail");
+        return INVALID_USER_ID;
     }
-
     GetStorageManager();
     if (storageMgrProxy_ == nullptr) {
-        LOGI("storageMgrProxy_ is null");
-        return;
+        LOGE("storageMgrProxy_ is null");
+        return INVALID_USER_ID;
     }
-
-    int32_t ret = storageMgrProxy_->MountDfsDocs(userId, "account", networkId, deviceId);
-    if (ret != FileManagement::E_OK) {
-        LOGI("MountDfsDocs fail, ret = %{public}d", ret);
+    ret = storageMgrProxy_->MountDfsDocs(userId, "account", networkId, deviceId);
+    if (ret != NO_ERROR) {
+        LOGE("MountDfsDocs fail, ret = %{public}d", ret);
+    } else {
+        LOGE("MountDfsDocs success, deviceId %{public}s increase count by one now",
+            Utils::GetAnonyString(deviceId).c_str());
+        IncreaseMountDfsCount(deviceId);
     }
     LOGI("storageMgr.MountDfsDocs end.");
+    return ret;
 }
 
 int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear)
@@ -538,29 +537,43 @@ int32_t DeviceManagerAgent::UMountDfsDocs(const std::string &networkId, const st
         LOGE("NetworkId or DeviceId is empty");
         return INVALID_USER_ID;
     }
-
+    int32_t ret = NO_ERROR;
     if (UMountDfsCountOnly(deviceId, needClear)) {
-        LOGE("only count sub one, do not neet umount");
-        return INVALID_USER_ID;
+        LOGE("do not need umount");
+        return ret;
     }
-
     int32_t userId = GetCurrentUserId();
     if (userId == INVALID_USER_ID) {
         LOGE("GetCurrentUserId Fail");
         return INVALID_USER_ID;
     }
-
     GetStorageManager();
     if (storageMgrProxy_ == nullptr) {
         LOGE("storageMgrProxy_ is null");
         return INVALID_USER_ID;
     }
-    int32_t ret = storageMgrProxy_->UMountDfsDocs(userId, "account", networkId, deviceId);
-    if (ret != FileManagement::E_OK) {
+    ret = storageMgrProxy_->UMountDfsDocs(userId, "account", networkId, deviceId);
+    if (ret != NO_ERROR) {
         LOGE("UMountDfsDocs fail, ret = %{public}d", ret);
+    } else {
+        LOGE("UMountDfsDocs success, deviceId %{public}s erase count",
+            Utils::GetAnonyString(deviceId).c_str());
+        RemoveMountDfsCount(deviceId);
     }
     LOGI("storageMgr.UMountDfsDocs end.");
     return ret;
+}
+
+void DeviceManagerAgent::IncreaseMountDfsCount(const std::string &deviceId)
+{
+    std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
+    mountDfsCount_[deviceId]++;
+}
+
+void DeviceManagerAgent::RemoveMountDfsCount(const std::string &deviceId)
+{
+    std::lock_guard<std::mutex> lock(mountDfsCountMutex_);
+    mountDfsCount_.erase(deviceId);
 }
 
 void DeviceManagerAgent::NotifyRemoteReverseObj(const std::string &networkId, int32_t status)
@@ -591,6 +604,7 @@ int32_t DeviceManagerAgent::AddRemoteReverseObj(uint32_t callingTokenId, sptr<IF
 
 int32_t DeviceManagerAgent::RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId)
 {
+    LOGI("DeviceManagerAgent::RemoveRemoteReverseObj called");
     if (clear) {
         appCallConnect_.clear();
         return FileManagement::E_OK;
@@ -602,6 +616,7 @@ int32_t DeviceManagerAgent::RemoveRemoteReverseObj(bool clear, uint32_t callingT
         return FileManagement::E_INVAL_ARG;
     }
     appCallConnect_.erase(it);
+    LOGI("DeviceManagerAgent::RemoveRemoteReverseObj end");
     return FileManagement::E_OK;
 }
 
