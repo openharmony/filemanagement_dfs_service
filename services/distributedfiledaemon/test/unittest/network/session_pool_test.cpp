@@ -251,7 +251,7 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_HoldSession_0200, TestSize.Level1)
     pool->occupySession_.insert(make_pair(TEST_SESSION_ID, LINK_TYPE_P2P));
     pool->occupySession_.erase(TEST_SESSION_ID);
     pool->occupySession_.insert(make_pair(TEST_SESSION_ID, LINK_TYPE_P2P));
-    pool->deviceConnectCount_["testdevid_2"] = 1;
+    pool->deviceConnectCount_["testNetWork_2"] = 1;
     bool res = true;
     try {
         auto size = pool->usrSpaceSessionPool_.size();
@@ -318,7 +318,6 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Fd_0200, TestSize.Level
 
     auto size = pool->usrSpaceSessionPool_.size();
     pool->occupySession_.insert(make_pair(TEST_SESSION_ID_TWO, LINK_TYPE_P2P));
-    pool->deviceIdByCid_[peerDeviceId2] = "deviceId1";
     string key = "deviceId1_" + to_string(LINK_TYPE_P2P);
     pool->deviceConnectCount_[key] = MOUNT_DFS_COUNT_ONE + 1;
     EXPECT_EQ(pool->ReleaseSession(1), LINK_TYPE_P2P);
@@ -430,7 +429,6 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_ReleaseSession_Cid_0300, TestSize.Leve
     auto session = make_shared<SoftbusSession>(TEST_SESSION_ID,  peerDeviceId);
     pool->usrSpaceSessionPool_.push_back(session);
 
-    pool->deviceIdByCid_[peerDeviceId] = "deviceId2";
     string key = "deviceId2_2";
     pool->deviceConnectCount_[key] = MOUNT_DFS_COUNT_ONE + 1;
 
@@ -508,31 +506,6 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_AddSessionToPool_0100, TestSize.Level1
 }
 
 /**
- * @tc.name: SessionPoolTest_GetDeviceIdByCid_0100
- * @tc.desc: Verify the GetDeviceIdByCid function.
- * @tc.type: FUNC
- * @tc.require: IA4TFG
- */
-HWTEST_F(SessionPoolTest, SessionPoolTest_GetDeviceIdByCid_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SessionPoolTest_GetDeviceIdByCid_0100 start";
-    auto smp = make_shared<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, "account"));
-    weak_ptr<MountPoint> wmp = smp;
-    auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
-    shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
-    pool->deviceIdByCid_["cid"] = "deviceId";
-    EXPECT_EQ(pool->GetDeviceIdByCid("cid"), "deviceId");
-    pool->deviceIdByCid_.erase("cid");
-
-    EXPECT_EQ(pool->GetDeviceIdByCid(""), "");
-
-    EXPECT_EQ(pool->GetDeviceIdByCid("cid"), "");
-
-    EXPECT_EQ(pool->GetDeviceIdByCid("testNetWork"), "testdevid");
-    GTEST_LOG_(INFO) << "SessionPoolTest_GetDeviceIdByCid_0100 end";
-}
-
-/**
  * @tc.name: SessionPoolTest_DeviceDisconnectCountOnly_0100
  * @tc.desc: Verify the DeviceDisconnectCountOnly function.
  * @tc.type: FUNC
@@ -550,26 +523,10 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_DeviceDisconnectCountOnly_0100, TestSi
 
     EXPECT_EQ(pool->DeviceDisconnectCountOnly("cid", LINK_TYPE_P2P, false), false);
 
-    pool->deviceIdByCid_["cid"] = "deviceId";
-    EXPECT_EQ(pool->DeviceDisconnectCountOnly("cid", LINK_TYPE_P2P, false), false);
-    auto itCid = pool->deviceIdByCid_.find("cid");
-    if (itCid == pool->deviceIdByCid_.end()) {
-        EXPECT_TRUE(true);
-    } else {
-        EXPECT_TRUE(false);
-    }
-
-    pool->deviceIdByCid_["cid"] = "deviceId";
-    string key = "deviceId_2";
+    string key = "cid_2";
     pool->deviceConnectCount_[key] = 2;
 
     EXPECT_EQ(pool->DeviceDisconnectCountOnly("cid", LINK_TYPE_P2P, true), false);
-    itCid = pool->deviceIdByCid_.find("cid");
-    if (itCid == pool->deviceIdByCid_.end()) {
-        EXPECT_TRUE(true);
-    } else {
-        EXPECT_TRUE(false);
-    }
 
     auto itCount = pool->deviceConnectCount_.find(key);
     if (itCount == pool->deviceConnectCount_.end()) {
@@ -594,26 +551,13 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_DeviceDisconnectCountOnly_0200, TestSi
     auto kernelTalker = std::make_shared<KernelTalker>(wmp, [](NotifyParam &param) {}, [](int32_t fd) {});
     shared_ptr<SessionPool> pool = make_shared<SessionPool>(kernelTalker);
 
-    pool->deviceIdByCid_["cid"] = "deviceId";
-    string key = "deviceId_2";
+    string key = "cid_2";
     pool->deviceConnectCount_[key] = MOUNT_DFS_COUNT_ONE + 1;
 
     EXPECT_EQ(pool->DeviceDisconnectCountOnly("cid", LINK_TYPE_P2P, false), true);
-    auto itCid = pool->deviceIdByCid_.find("cid");
-    if (itCid == pool->deviceIdByCid_.end()) {
-        EXPECT_TRUE(false);
-    } else {
-        EXPECT_TRUE(true);
-    }
 
     EXPECT_EQ(pool->deviceConnectCount_[key], MOUNT_DFS_COUNT_ONE);
     EXPECT_EQ(pool->DeviceDisconnectCountOnly("cid", LINK_TYPE_P2P, false), false);
-    itCid = pool->deviceIdByCid_.find("cid");
-    if (itCid == pool->deviceIdByCid_.end()) {
-        EXPECT_TRUE(true);
-    } else {
-        EXPECT_TRUE(false);
-    }
 
     auto itCount = pool->deviceConnectCount_.find(key);
     if (itCount == pool->deviceConnectCount_.end()) {
@@ -650,12 +594,12 @@ HWTEST_F(SessionPoolTest, SessionPoolTest_DeviceConnectCountOnly_0100, TestSize.
 
     pool->occupySession_.erase(TEST_SESSION_ID);
     pool->occupySession_.insert(make_pair(TEST_SESSION_ID, LINK_TYPE_P2P));
-    pool->deviceConnectCount_["testdevid_2"] = 0;
+    pool->deviceConnectCount_["testNetWork_2"] = 0;
     EXPECT_EQ(pool->DeviceConnectCountOnly(session3), false);
-    EXPECT_EQ(pool->deviceConnectCount_["testdevid_2"], 1);
+    EXPECT_EQ(pool->deviceConnectCount_["testNetWork_2"], 1);
     
     EXPECT_EQ(pool->DeviceConnectCountOnly(session3), true);
-    EXPECT_EQ(pool->deviceConnectCount_["testdevid_2"], 2);
+    EXPECT_EQ(pool->deviceConnectCount_["testNetWork_2"], 2);
     GTEST_LOG_(INFO) << "SessionPoolTest_DeviceConnectCountOnly_0100 end";
 }
 } // namespace Test
