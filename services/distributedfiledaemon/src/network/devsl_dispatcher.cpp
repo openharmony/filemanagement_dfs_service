@@ -116,6 +116,7 @@ void DevslDispatcher::DevslGottonCallback(DEVSLQueryParams *queryParams, int32_t
     std::string udid(reinterpret_cast<char *>(queryParams->udid), queryParams->udidLen);
     std::thread callbackThread =
         std::thread([udid, levelInfo]() { DevslGottonCallbackAsync(udid, levelInfo); });
+    callbackThread.detach();
 }
 } // namespace DistributedFile
 } // namespace Storage

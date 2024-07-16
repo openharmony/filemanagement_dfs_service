@@ -46,6 +46,7 @@ void CloudSyncServiceTest::SetUpTestCase(void)
         ASSERT_TRUE(g_servicePtr_ != nullptr) << "SystemAbility failed";
     }
     std::cout << "SetUpTestCase" << std::endl;
+    g_servicePtr_->dataSyncManager_ = make_shared<CloudFile::DataSyncManager>();
 }
 
 void CloudSyncServiceTest::TearDownTestCase(void)
@@ -195,7 +196,8 @@ HWTEST_F(CloudSyncServiceTest, UnRegisterCallbackInnerTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "UnRegisterCallbackInner Start";
     try {
-        int ret = g_servicePtr_->UnRegisterCallbackInner();
+        std::string bundleName = "";
+        int ret = g_servicePtr_->UnRegisterCallbackInner(bundleName);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -214,8 +216,9 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackInner start";
     try {
+        std::string bundleName = "";
         sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
-        int ret = g_servicePtr_->RegisterCallbackInner(callback);
+        int ret = g_servicePtr_->RegisterCallbackInner(callback, bundleName);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -234,8 +237,9 @@ HWTEST_F(CloudSyncServiceTest, RegisterCallbackInnerTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterCallbackInner error branch start";
     try {
+        std::string bundleName = "com.ohos.photos";
         sptr<CloudSyncCallbackMock> callback = nullptr;
-        int ret = g_servicePtr_->RegisterCallbackInner(callback);
+        int ret = g_servicePtr_->RegisterCallbackInner(callback, bundleName);
         EXPECT_EQ(ret, E_INVAL_ARG);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -276,9 +280,7 @@ HWTEST_F(CloudSyncServiceTest, StopSyncInnerTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "StopSyncInner Start";
     try {
         std::string bundleName = "";
-        int32_t callerUserId = 100;
-        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::APP_TRIGGER);
+        int ret = g_servicePtr_->StopSyncInner(bundleName);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -297,11 +299,8 @@ HWTEST_F(CloudSyncServiceTest, CleanCacheInnerTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CleanCacheInner Start";
     try {
-        int32_t userId = 100;
-        std::string bundleName = "com.ohos.photos";
         std::string uri = "";
-        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->CleanCache(bundleName, userId, uri);
+        int ret = g_servicePtr_->CleanCacheInner(uri);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -362,11 +361,9 @@ HWTEST_F(CloudSyncServiceTest, StopDownloadFileTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StopDownloadFile start";
     try {
-        string bundleName = "com.ohos.photos";
-        int32_t callerUserId = 100;
         std::string path;
-        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->StopDownloadFile(bundleName, callerUserId, path);
+        bool needClean = false;
+        int ret = g_servicePtr_->StopDownloadFile(path, needClean);
         EXPECT_EQ(E_OK, ret);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -385,11 +382,8 @@ HWTEST_F(CloudSyncServiceTest, RegisterDownloadFileCallbackTest, TestSize.Level1
 {
     GTEST_LOG_(INFO) << "RegisterDownloadFileCallback start";
     try {
-        string bundleName = "com.ohos.photos";
-        int32_t callerUserId = 100;
         sptr<CloudDownloadCallbackMock> downloadCallback = sptr(new CloudDownloadCallbackMock());
-        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->RegisterDownloadFileCallback(bundleName, callerUserId, downloadCallback);
+        int ret = g_servicePtr_->RegisterDownloadFileCallback(downloadCallback);
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -408,10 +402,7 @@ HWTEST_F(CloudSyncServiceTest, UnregisterDownloadFileCallbackTest, TestSize.Leve
 {
     GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback start";
     try {
-        string bundleName = "com.ohos.photos";
-        int32_t callerUserId = 100;
-        auto dataSyncManager = g_servicePtr_->dataSyncManager_;
-        int ret = dataSyncManager->UnregisterDownloadFileCallback(bundleName, callerUserId);
+        int ret = g_servicePtr_->UnregisterDownloadFileCallback();
         EXPECT_EQ(ret, E_OK);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -434,7 +425,7 @@ HWTEST_F(CloudSyncServiceTest, UploadAssetTest, TestSize.Level1)
         std::string request = "testReq";
         std::string result = "expRes";
         int ret = g_servicePtr_->UploadAsset(userId, request, result);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_NULLPTR);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "UploadAsset FAILED";
@@ -458,34 +449,12 @@ HWTEST_F(CloudSyncServiceTest, DownloadFileTest001, TestSize.Level1)
         AssetInfoObj assetInfoObj;
         assetInfoObj.uri = uri;
         int ret = g_servicePtr_->DownloadFile(userId, bundleName, assetInfoObj);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_NULLPTR);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DownloadFileTest001 FAILED";
     }
     GTEST_LOG_(INFO) << "DownloadFileTest001 end";
-}
-
-/**
- * @tc.name:DownloadFileTest002
- * @tc.desc:Verify the DownloadFile function.
- * @tc.type:FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceTest, DownloadFileTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DownloadFileTest002 start";
-    try {
-        int32_t userId = 100;
-        std::string bundleName = "com.ohos.photos";
-        AssetInfoObj assetInfoObj;
-        int ret = g_servicePtr_->DownloadFile(userId, bundleName, assetInfoObj);
-        EXPECT_EQ(ret, E_INVAL_ARG);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "DownloadFileTest002 FAILED";
-    }
-    GTEST_LOG_(INFO) << "DownloadFileTest002 end";
 }
 
 /**

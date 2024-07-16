@@ -56,6 +56,7 @@ int32_t NetworkSetManager::QueryCellularConnect(int32_t userId, const std::strin
         return E_RDB;
     }
     resultSet = dataShareHelper->Query(uri, predicates, columns);
+    ReleaseDataShareHelper(dataShareHelper);
     if (resultSet == nullptr) {
         return E_RDB;
     }
@@ -98,6 +99,7 @@ int32_t NetworkSetManager::QueryNetConnect(int32_t userId, const std::string &bu
         return E_RDB;
     }
     resultSet = dataShareHelper->Query(uri, predicates, columns);
+    ReleaseDataShareHelper(dataShareHelper);
     if (resultSet == nullptr) {
         return E_RDB;
     }
@@ -173,6 +175,7 @@ void NetworkSetManager::UnregisterObserver(const std::string &bundleName, const 
         Uri observerUri(photoQueryUri);
         dataShareHelper->UnregisterObserver(observerUri, dataObserver);
     }
+    ReleaseDataShareHelper(dataShareHelper);
     LOGI("UnregisterObserver type:%{public}d, finish", type);
 }
 
@@ -192,7 +195,21 @@ void NetworkSetManager::RegisterObserver(const std::string &bundleName, const in
         Uri observerUri(photoQueryUri);
         dataShareHelper->RegisterObserver(observerUri, dataObserver);
     }
+    ReleaseDataShareHelper(dataShareHelper);
     LOGI("RegisterObserver type:%{public}d, finish", type);
+}
+
+void NetworkSetManager::ReleaseDataShareHelper(std::shared_ptr<DataShare::DataShareHelper> &helper)
+{
+    if (helper == nullptr) {
+        LOGI("helper is nullptr");
+        return;
+    }
+    if (!helper->Release()) {
+        LOGI("Release data share helper failed");
+        return;
+    }
+    LOGI("Release data share helper finish");
 }
 
 void MobileNetworkObserver::OnChange()
