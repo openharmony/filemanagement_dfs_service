@@ -376,18 +376,19 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
         return;
     }
     string path = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
+    unsigned int flags = static_cast<unsigned int>(fi->flags);
     if (access(path.c_str(), F_OK) == 0) {
-        if ((fi->flags & O_ACCMODE) & O_WRONLY) {
-            fi->flags &= ~O_WRONLY;
-            fi->flags |= O_RDWR;
+        if ((flags & O_ACCMODE) & O_WRONLY) {
+            flags &= ~O_WRONLY;
+            flags |= O_RDWR;
         }
-        if (fi->flags & O_APPEND) {
-            fi->flags &= ~O_APPEND;
+        if (flags & O_APPEND) {
+            flags &= ~O_APPEND;
         }
-        if (fi->flags & O_DIRECT) {
-            fi->flags &= ~O_DIRECT;
+        if (flags & O_DIRECT) {
+            flags &= ~O_DIRECT;
         }
-        int32_t fd = open(path.c_str(), fi->flags);
+        int32_t fd = open(path.c_str(), flags);
         if (fd < 0) {
             LOGE("open file failed path:%{public}s errno:%{public}d", path.c_str(), errno);
             return (void) fuse_reply_err(req, errno);

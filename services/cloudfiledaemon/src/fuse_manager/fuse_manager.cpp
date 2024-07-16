@@ -921,14 +921,14 @@ static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t s
 static void InitReadSlice(size_t size, off_t off, ReadSlice &readSlice)
 {
     readSlice.offHead = off;
-    readSlice.offTail = static_cast<off_t>((off + size) / MAX_READ_SIZE * MAX_READ_SIZE);
+    readSlice.offTail = (off + static_cast<off_t>(size)) / MAX_READ_SIZE * MAX_READ_SIZE;
     if (readSlice.offTail > readSlice.offHead) {
         readSlice.sizeHead = static_cast<size_t>(readSlice.offTail - readSlice.offHead);
         readSlice.sizeTail = MAX_READ_SIZE;
     } else {
         readSlice.sizeHead = static_cast<size_t>(readSlice.offHead + MAX_READ_SIZE - readSlice.offHead);
     }
-    if ((size + off) % MAX_READ_SIZE == 0) {
+    if ((static_cast<off_t>(size) + off) % MAX_READ_SIZE == 0) {
         readSlice.offTail -= MAX_READ_SIZE;
         readSlice.sizeTail = 0;
     }
@@ -1192,8 +1192,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         cloudDiskData.se = se;
         config.max_idle_threads = 1;
     } else {
-        se = fuse_session_new(&args, &cloudMediaFuseOps,
-                              sizeof(cloudMediaFuseOps), &data);
+        se = fuse_session_new(&args, &cloudMediaFuseOps, sizeof(cloudMediaFuseOps), &data);
         if (se == nullptr) {
             LOGE("cloud media fuse_session_new error");
             return -EINVAL;
@@ -1206,6 +1205,9 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     LOGI("fuse_session_new success, userId: %{public}d", userId);
     se->fd = devFd;
     se->mountpoint = strdup(path.c_str());
+    if (se->mountpoint == nullptr) {
+        return -ENOMEM;
+    }
 
     fuse_daemonize(true);
     ret = fuse_session_loop_mt(se, &config);
