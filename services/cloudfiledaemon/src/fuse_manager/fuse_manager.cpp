@@ -304,6 +304,10 @@ static shared_ptr<CloudInode> GetCloudInode(struct FuseData *data, fuse_ino_t in
         return GetRootInode(data, ino);
     } else {
         struct CloudInode *inoPtr = reinterpret_cast<struct CloudInode *>(ino);
+        if (inoPtr == nullptr) {
+            LOGE("inoPtr is nullptr");
+            return nullptr;
+        }
         return FindNode(data, inoPtr->path);
     }
 }
@@ -605,9 +609,13 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+    if (!cInode) {
+        fuse_reply_err(req, ENOMEM);
+        return;
+    }
     FileInfoFh *fileFh = new FileInfoFh(IS_PID, req->ctx.pid);
     fi->fh = reinterpret_cast<uint64_t>(fileFh);
-    shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId);
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
@@ -628,8 +636,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
          */
         LOGD("recordId: %s", recordId.c_str());
         uint64_t startTime = UTCTimeMilliSeconds();
-        cInode->readSession = database->NewAssetReadSession("media", recordId,
-                                                            GetAssetKey(cInode->mBase->fileType),
+        cInode->readSession = database->NewAssetReadSession("media", recordId, GetAssetKey(cInode->mBase->fileType),
                                                             GetAssetPath(cInode, data));
         if (cInode->readSession) {
             auto ret = DoCloudOpen(cInode, fi, data);
@@ -662,6 +669,10 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+    if (!cInode) {
+        fuse_reply_err(req, ENOMEM);
+        return;
+    }
     FileInfoFh *fileFh = reinterpret_cast<FileInfoFh *>(fi->fh);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
     LOGI("%{public}d:%{public}d release, sessionRefCount: %{public}d", fileFh->fhType, fileFh->val,
@@ -714,7 +725,7 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
         shared_ptr<CloudInode> node = GetCloudInode(data, forgets[i].ino);
         if (!node) {
             fuse_reply_err(req, ENOMEM);
-            return;
+            continue;
         }
         LOGD("forget (i=%zu) %s, nlookup: %lld", i, node->path.c_str(), (long long)forgets[i].nlookup);
         PutNode(data, node, forgets[i].nlookup);
@@ -726,7 +737,7 @@ static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *inBuf)
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
-    if (!cInode->readSession) {
+    if (!cInode || !cInode->readSession) {
         fuse_reply_err(req, EPERM);
         return;
     }
@@ -1057,6 +1068,10 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+    if (!cInode) {
+        fuse_reply_err(req, ENOMEM);
+        return;
+    }
     LOGI("%{public}s, size=%{public}zd, off=%{public}lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
 
     if (CheckReadIsCanceled(req->ctx.pid, cInode)) {
