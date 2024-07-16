@@ -542,16 +542,16 @@ ohos_unittest("file_trans_listener_proxy_test") {
     debug = false
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
- 
+
   module_out_path = "filemanagement/dfs_service"
- 
+
   sources = [
     "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/file_trans_listener_proxy.cpp",
     "file_trans_listener_proxy_test.cpp",
   ]
- 
+
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/test/mock",
@@ -559,13 +559,13 @@ ohos_unittest("file_trans_listener_proxy_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
     "${services_path}/distributedfiledaemon/src/ipc",
   ]
- 
+
   deps = [
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
- 
+
   external_deps = [
     "ability_base:zuri",
     "c_utils:utils",
@@ -574,12 +574,12 @@ ohos_unittest("file_trans_listener_proxy_test") {
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
   ]
- 
+
   defines = [
     "private=public",
     "LOG_TAG=\"distributedfile_daemon\"",
   ]
- 
+
   use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
