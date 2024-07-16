@@ -28,7 +28,7 @@ namespace DistributedFile {
 namespace Test {
 using namespace testing::ext;
 using namespace std;
-const string testPath = "/data/test";
+const string TEST_PATH = "/data/test";
 
 class SoftBusFileReceiveListenerTest : public testing::Test {
 public:
@@ -51,7 +51,7 @@ void SoftBusFileReceiveListenerTest::TearDownTestCase(void)
 void SoftBusFileReceiveListenerTest::SetUp(void)
 {
     GTEST_LOG_(INFO) << "SetUp";
-    SoftBusFileReceiveListener::SetRecvPath(testPath);
+    SoftBusFileReceiveListener::SetRecvPath(TEST_PATH);
 }
 
 void SoftBusFileReceiveListenerTest::TearDown(void)
@@ -69,15 +69,15 @@ HWTEST_F(SoftBusFileReceiveListenerTest, SoftBusFileReceiveListenerTest_SetRecvP
 {
     GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_SessionInfo_0100 start";
     string path = string(SoftBusFileReceiveListener::GetRecvPath());
-    EXPECT_EQ(path, testPath);
+    EXPECT_EQ(path, TEST_PATH);
     SoftBusFileReceiveListener::SetRecvPath("");
     path.clear();
     path = string(SoftBusFileReceiveListener::GetRecvPath());
-    EXPECT_EQ(path, testPath);
+    EXPECT_EQ(path, TEST_PATH);
     SoftBusFileReceiveListener::SetRecvPath("/data/test2");
     path.clear();
     path = string(SoftBusFileReceiveListener::GetRecvPath());
-    EXPECT_EQ(path, testPath);
+    EXPECT_EQ(path, TEST_PATH);
     GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_SessionInfo_0100 end";
 }
 
@@ -136,7 +136,7 @@ HWTEST_F(SoftBusFileReceiveListenerTest, SoftBusFileReceiveListenerTest_OnFile_0
 
         event.type = FILE_EVENT_RECV_UPDATE_PATH;
         SoftBusFileReceiveListener::OnFile(socket, &event);
-        EXPECT_EQ(string((event.UpdateRecvPath)()), testPath);
+        EXPECT_EQ(string((event.UpdateRecvPath)()), TEST_PATH);
 
         event.type = FILE_EVENT_BUTT;
         SoftBusFileReceiveListener::OnFile(socket, &event);
