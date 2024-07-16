@@ -1,5 +1,4 @@
 {
-  6
     "name": "@ohos/dfs_service",
     "version": "3.1",
     "description": "The dfs_service module belongs to the filemanagement subsystem of OpenHarmony. It provides the ability of accessing distributed files.",
@@ -47,8 +46,8 @@
           "file_api",
           "hicollie",
           "hilog",
-          "hitrace",
           "hisysevent",
+          "hitrace",
           "init",
           "ipc",
           "json",
@@ -58,8 +57,8 @@
           "netmanager_base",
           "relational_store",
           "safwk",
-          "samgr",
           "storage_service",
+          "samgr",
           "os_account",
           "power_manager",
           "resource_schedule_service",
@@ -169,7 +168,6 @@
             "header": {
               "header_files": [
                 "distributed_file_daemon_manager.h",
-                "hmdfs_info.h",
                 "i_daemon.h"
               ],
               "header_base": "//foundation/filemanagement/dfs_service/services/distributedfiledaemon/include/ipc"
