@@ -58,20 +58,23 @@ public:
 
     std::string GetStringFromData(int len)
     {
-        if (len <= 0) {
+        if (len <= 0 || baseData == nullptr || basePos >= baseSize) {
             return "";
         }
-        char cstr[len];
-        cstr[len - 1] = '\0';
-        for (int i = 0; i < len - 1; i++) {
+
+        std::string cstr;
+        for (int i = 0; i < len; ++i) {
+            if (basePos >= baseSize) {
+                basePos = 0;
+            }
             char tmp = GetData<char>();
             if (tmp == '\0') {
-                tmp = '1';
+                cstr.push_back('1');
+            } else {
+                cstr.push_back(tmp);
             }
-            cstr[i] = tmp;
         }
-        std::string str(cstr);
-        return str;
+        return cstr;
     }
 
 private:
