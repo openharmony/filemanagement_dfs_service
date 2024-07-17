@@ -389,7 +389,7 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
         }
         int32_t fd = open(path.c_str(), fi->flags);
         if (fd < 0) {
-            LOGE("open file failed path:%{public}s errno:%{public}d", path.c_str(), errno);
+            LOGE("open file failed path:%{public}s errno:%{public}d", GetAnonyString(path).c_str(), errno);
             return (void) fuse_reply_err(req, errno);
         }
         auto filePtr = InitFileAttr(data, fi);
@@ -408,13 +408,13 @@ static int32_t CreateLocalFile(const string &cloudId, const string &bundleName, 
     string path = CloudFileUtils::GetLocalFilePath(cloudId, bundleName, userId);
     if (access(bucketPath.c_str(), F_OK) != 0) {
         if (mkdir(bucketPath.c_str(), STAT_MODE_DIR) != 0) {
-            LOGE("mkdir bucketpath failed :%{public}s err:%{public}d", bucketPath.c_str(), errno);
+            LOGE("mkdir bucketpath failed :%{public}s err:%{public}d", GetAnonyString(bucketPath).c_str(), errno);
             return -errno;
         }
     }
     int32_t fd = open(path.c_str(), (mode & O_NOFOLLOW) | O_CREAT | O_RDWR, STAT_MODE_REG);
     if (fd < 0) {
-        LOGE("create file failed :%{public}s err:%{public}d", path.c_str(), errno);
+        LOGE("create file failed :%{public}s err:%{public}d", GetAnonyString(path).c_str(), errno);
         return -errno;
     }
     return fd;
@@ -425,7 +425,7 @@ void RemoveLocalFile(const string &path)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     int32_t err = remove(path.c_str());
     if (err != 0) {
-        LOGE("remove file %{public}s failed, error:%{public}d", path.c_str(), errno);
+        LOGE("remove file %{public}s failed, error:%{public}d", GetAnonyString(path).c_str(), errno);
     }
 }
 
@@ -981,7 +981,7 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
     LOGD("doUnlink, dentry file has been deleted");
     if (isDirectory == FILE && position != CLOUD) {
         string localPath = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
-        LOGI("unlink %{public}s", localPath.c_str());
+        LOGI("unlink %{public}s", GetAnonyString(localPath).c_str());
         ret = unlink(localPath.c_str());
         if (ret != 0) {
             LOGE("Failed to unlink cloudId:%{private}s, errno:%{public}d", cloudId.c_str(), errno);

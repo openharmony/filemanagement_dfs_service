@@ -168,7 +168,7 @@ MetaFile::MetaFile(uint32_t userId, const std::string &path)
 
     int ret = fsetxattr(fd_, "user.hmdfs_cache", path.c_str(), path.size(), 0);
     if (ret != 0) {
-        LOGE("setxattr failed, errno %{public}d, cacheFile_ %s", errno, cacheFile_.c_str());
+        LOGE("setxattr failed, errno %{public}d, cacheFile_ %s", errno, GetAnonyString(cacheFile_).c_str());
     }
 
     /* lookup and create in parent */

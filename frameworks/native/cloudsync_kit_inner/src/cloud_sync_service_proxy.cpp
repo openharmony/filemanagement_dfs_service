@@ -535,7 +535,8 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
         }
     }
 
-    LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
+    LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s",
+         GetAnonyString(uri).c_str(), GetAnonyString(path).c_str());
 
     if (!data.WriteString(path)) {
         LOGE("Failed to send the cloud id");
@@ -616,7 +617,8 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool nee
         path = Muri.GetFilePath();
     }
 #endif
-    LOGI("StopDownloadFile Start, uri: %{public}s, path: %{public}s", uri.c_str(), path.c_str());
+    LOGI("StopDownloadFile Start, uri: %{public}s, path: %{public}s",
+         GetAnonyString(uri).c_str(), GetAnonyString(path).c_str());
 
     if (!data.WriteString(path)) {
         LOGE("Failed to send the cloud id");

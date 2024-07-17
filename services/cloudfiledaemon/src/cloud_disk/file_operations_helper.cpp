@@ -166,7 +166,7 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::GenerateCloudDiskInode(struct C
     shared_ptr<CloudDiskInode> child = make_shared<CloudDiskInode>();
     int32_t err = stat(path.c_str(), &child->stat);
     if (err != 0) {
-        LOGE("GenerateCloudDiskInode %{public}s error, err: %{public}d", path.c_str(), errno);
+        LOGE("GenerateCloudDiskInode %{public}s error, err: %{public}d", GetAnonyString(path).c_str(), errno);
         return nullptr;
     }
     child->stat.st_mode |= STAT_MODE_DIR;

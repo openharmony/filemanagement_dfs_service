@@ -328,12 +328,12 @@ static void GetMetaAttr(struct FuseData *data, shared_ptr<CloudInode> ino, struc
     if (ino->mBase->mode & S_IFDIR) {
         stbuf->st_mode = S_IFDIR | STAT_MODE_DIR;
         stbuf->st_nlink = STAT_NLINK_DIR;
-        LOGD("directory, ino:%s", ino->path.c_str());
+        LOGD("directory, ino:%s", GetAnonyString(ino->path).c_str());
     } else {
         stbuf->st_mode = S_IFREG | STAT_MODE_REG;
         stbuf->st_nlink = STAT_NLINK_REG;
         stbuf->st_size = static_cast<decltype(stbuf->st_size)>(ino->mBase->size);
-        LOGD("regular file, ino:%s, size: %lld", ino->path.c_str(), (long long)stbuf->st_size);
+        LOGD("regular file, ino:%s, size: %lld", GetAnonyString(ino->path).c_str(), (long long)stbuf->st_size);
     }
 }
 
@@ -359,7 +359,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     if (!child) {
         child = make_shared<CloudInode>();
         create = true;
-        LOGD("new child %s", child->path.c_str());
+        LOGD("new child %s", GetAnonyString(child->path).c_str());
     }
     MetaBase mBase(name);
     err = MetaFile(data->userId, GetCloudInode(data, parent)->path).DoLookup(mBase);
@@ -380,7 +380,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         LOGW("invalidate %s", childName.c_str());
         child->mBase = make_shared<MetaBase>(mBase);
     }
-    LOGD("lookup success, child: %{private}s, refCount: %lld", child->path.c_str(),
+    LOGD("lookup success, child: %{private}s, refCount: %lld", GetAnonyString(child->path).c_str(),
          static_cast<long long>(child->refCount));
     GetMetaAttr(data, child, &e->attr);
     e->ino = reinterpret_cast<fuse_ino_t>(child.get());
@@ -406,9 +406,10 @@ static void PutNode(struct FuseData *data, shared_ptr<CloudInode> node, uint64_t
 {
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
     node->refCount -= num;
-    LOGD("%s, put num: %lld,  current refCount: %d", node->path.c_str(), (long long)num,  node->refCount.load());
+    LOGD("%s, put num: %lld,  current refCount: %d",
+         GetAnonyString(node->path).c_str(), (long long)num,  node->refCount.load());
     if (node->refCount == 0) {
-        LOGD("node released: %s", node->path.c_str());
+        LOGD("node released: %s", GetAnonyString(node->path).c_str());
         wLock.lock();
         data->inodeCache.erase(node->path);
         wLock.unlock();
@@ -424,7 +425,7 @@ static void CloudForget(fuse_req_t req, fuse_ino_t ino,
         fuse_reply_err(req, ENOMEM);
         return;
     }
-    LOGD("forget %s, nlookup: %lld", node->path.c_str(), (long long)nlookup);
+    LOGD("forget %s, nlookup: %lld", GetAnonyString(node->path).c_str(), (long long)nlookup);
     PutNode(data, node, nlookup);
     fuse_reply_none(req);
 }
@@ -437,7 +438,7 @@ static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     (void) fi;
 
-    LOGD("getattr, %s", CloudPath(data, ino).c_str());
+    LOGD("getattr, %s", GetAnonyString(CloudPath(data, ino)).c_str());
     shared_ptr<CloudInode> node = GetCloudInode(data, ino);
     if (!node || !node->mBase) {
         LOGE("Failed to get cloud inode.");
@@ -477,7 +478,7 @@ static string GetAssetPath(shared_ptr<CloudInode> cInode, struct FuseData *data)
     parentPath = filesystem::path(path).parent_path();
     ForceCreateDirectory(parentPath.string());
     LOGD("fileType: %d, create dir: %s, relative path: %s",
-         cInode->mBase->fileType, parentPath.string().c_str(), cInode->path.c_str());
+         cInode->mBase->fileType, GetAnonyString(parentPath.string()).c_str(), GetAnonyString(cInode->path).c_str());
     return path;
 }
 
@@ -569,7 +570,7 @@ static void DownloadThmOrLcd(shared_ptr<CloudInode> cInode, shared_ptr<CloudErro
         *openFinish = true;
     }
     cond->notify_one();
-    LOGI("download done, path: %{public}s", cInode->path.c_str());
+    LOGI("download done, path: %{public}s", GetAnonyString(cInode->path).c_str());
     return;
 }
 
@@ -586,7 +587,7 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
         return *openFinish;
     });
     if (!waitStatus) {
-        LOGE("download %{public}s timeout", cInode->path.c_str());
+        LOGE("download %{public}s timeout", GetAnonyString(cInode->path).c_str());
         return -ENETUNREACH;
     }
     return HandleOpenResult(*error, data, cInode, fi);
@@ -612,7 +613,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
 
-    LOGI("%{public}d open %{public}s", req->ctx.pid, CloudPath(data, ino).c_str());
+    LOGI("%{public}d open %{public}s", req->ctx.pid, GetAnonyString(CloudPath(data, ino)).c_str());
     if (!database) {
         LOGE("database is null");
         delete fileFh;
@@ -701,7 +702,7 @@ static void CloudReadDir(fuse_req_t req, fuse_ino_t ino, size_t size,
                          off_t off, struct fuse_file_info *fi)
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
-    LOGE("readdir %s, not support", CloudPath(data, ino).c_str());
+    LOGE("readdir %s, not support", GetAnonyString(CloudPath(data, ino)).c_str());
     fuse_reply_err(req, ENOENT);
 }
 
@@ -716,7 +717,7 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
             fuse_reply_err(req, ENOMEM);
             return;
         }
-        LOGD("forget (i=%zu) %s, nlookup: %lld", i, node->path.c_str(), (long long)forgets[i].nlookup);
+        LOGD("forget (i=%zu) %s, nlookup: %lld", i, GetAnonyString(node->path).c_str(), (long long)forgets[i].nlookup);
         PutNode(data, node, forgets[i].nlookup);
     }
     fuse_reply_none(req);
@@ -820,7 +821,7 @@ static void CloudReadOnCloudFile(pid_t pid, shared_ptr<ReadArguments> readArgs,
     shared_ptr<CloudInode> cInode, shared_ptr<CloudFile::CloudAssetReadSession> readSession)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    LOGI("PRead CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu", cInode->path.c_str(),
+    LOGI("PRead CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu", GetAnonyString(cInode->path).c_str(),
          readArgs->size, static_cast<unsigned long>(readArgs->offset));
 
     uint64_t startTime = UTCTimeMilliSeconds();
@@ -872,8 +873,8 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     usleep(READ_CACHE_SLEEP);
-    LOGI("PRead CacheFile, path: %{public}s, size: %{public}zd, off: %{public}lu", cInode->path.c_str(),
-        readArgs->size, static_cast<unsigned long>(readArgs->offset));
+    LOGI("PRead CacheFile, path: %{public}s, size: %{public}zd, off: %{public}lu",
+        GetAnonyString(cInode->path).c_str(), readArgs->size, static_cast<unsigned long>(readArgs->offset));
     uint64_t startTime = UTCTimeMilliSeconds();
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
@@ -1057,7 +1058,8 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
-    LOGI("%{public}s, size=%{public}zd, off=%{public}lu", CloudPath(data, ino).c_str(), size, (unsigned long)off);
+    LOGI("%{public}s, size=%{public}zd, off=%{public}lu",
+         GetAnonyString(CloudPath(data, ino)).c_str(), size, (unsigned long)off);
 
     if (CheckReadIsCanceled(req->ctx.pid, cInode)) {
         LOGI("read is canceled");

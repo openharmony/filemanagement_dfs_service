@@ -170,7 +170,7 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
     }
     std::string physicalPath;
     if (SandboxHelper::GetPhysicalPath(localUri, std::to_string(QueryActiveUserId()), physicalPath) != E_OK) {
-        LOGE("GetPhysicalPath failed, invalid uri, physicalPath = %{public}s", physicalPath.c_str());
+        LOGE("GetPhysicalPath failed, invalid uri, physicalPath = %{public}s", GetAnonyString(physicalPath).c_str());
         return "";
     }
     if (physicalPath.empty() || physicalPath.size() >= PATH_MAX) {

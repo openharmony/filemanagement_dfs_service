@@ -313,7 +313,7 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
 {
     int32_t ret = stat(filePath.c_str(), statInfo);
     if (ret) {
-        LOGE("filePath %{private}s is invalid", filePath.c_str());
+        LOGE("filePath %{private}s is invalid", GetAnonyString(filePath).c_str());
         return E_PATH;
     }
     fileInfo.PutInt(FileColumn::IS_DIRECTORY, FILE);
@@ -516,7 +516,7 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
     struct stat statInfo {};
     int32_t ret = stat(filePath.c_str(), &statInfo);
     if (ret) {
-        LOGE("filePath %{private}s is invalid", filePath.c_str());
+        LOGE("filePath %{private}s is invalid", GetAnonyString(filePath).c_str());
         return E_PATH;
     }
     CloudDiskFileInfo info;
@@ -1166,13 +1166,13 @@ int32_t CloudDiskRdbStore::GetNotifyUri(const CacheNode &cacheNode, std::string 
     if (ret == E_OK) {
         return ret;
     }
-    LOGD("get uri from cache fail, name: %{public}s", cacheNode.fileName.c_str());
+    LOGD("get uri from cache fail, name: %{public}s", GetAnonyString(cacheNode.fileName).c_str());
     uri = cacheNode.fileName;
     ret = GetUriFromDB(cacheNode.parentCloudId, uri);
     if (ret == E_OK) {
         return ret;
     }
-    LOGI("get uri from db fail, name: %{public}s", cacheNode.fileName.c_str());
+    LOGI("get uri from db fail, name: %{public}s", GetAnonyString(cacheNode.fileName).c_str());
     return ret;
 }
 

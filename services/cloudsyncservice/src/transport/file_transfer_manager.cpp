@@ -57,7 +57,7 @@ void FileTransferManager::DownloadFileFromRemoteDevice(const std::string &networ
     LOGI("send data, dataLen:%{public}d, taskId: %{public}" PRIu64 "", dataLen, taskId);
     auto ret = sessionManager_->SendData(networkId, data.get(), dataLen);
     if (ret != E_OK) {
-        LOGE("download file failed, uri:%{public}s, ret:%{public}d", uri.c_str(), ret);
+        LOGE("download file failed, uri:%{public}s, ret:%{public}d", GetAnonyString(uri).c_str(), ret);
         DownloadAssetCallbackManager::GetInstance().OnDownloadFinshed(taskId, uri, ret);
         DecTransTaskCount();
     } else {
@@ -77,7 +77,8 @@ void FileTransferManager::HandleDownloadFileRequest(MessageHandler &msgHandler,
     if (!relativePath.empty()) {
         auto result = sessionManager_->SendFile(senderNetworkId, {physicalPath}, {relativePath});
         if (result != E_OK) {
-            LOGE("send file failed, relativePath:%{public}s, ret:%{public}d", relativePath.c_str(), result);
+            LOGE("send file failed, relativePath:%{public}s, ret:%{public}d",
+                 GetAnonyString(relativePath).c_str(), result);
             errorCode = E_SEND_FILE;
             DecTransTaskCount();
         }
@@ -177,7 +178,7 @@ void FileTransferManager::OnSessionClosed() // avoid sa cannot unload when sessi
 bool FileTransferManager::IsFileExists(const std::string &filePath)
 {
     if (access(filePath.c_str(), F_OK) != E_OK) {
-        LOGE("file is not exist, path:%{public}s, error:%{public}s", filePath.c_str(), strerror(errno));
+        LOGE("file is not exist, path:%{public}s, error:%{public}s", GetAnonyString(filePath).c_str(), strerror(errno));
         return false;
     }
     return true;
@@ -247,7 +248,7 @@ void FileTransferManager::FinishTransTask(const std::string &relativePath, int r
             ++iter;
         }
     }
-    LOGE("not found task, relativePath:%{public}s", relativePath.c_str());
+    LOGE("not found task, relativePath:%{public}s", GetAnonyString(relativePath).c_str());
 }
 
 void FileTransferManager::IncTransTaskCount()
