@@ -29,6 +29,7 @@
 #include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
 #include "net_conn_callback_observer.h"
+#include "parameters.h"
 #include "periodic_check_task.h"
 #include "plugin_loader.h"
 #include "network_status.h"
@@ -400,6 +401,7 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
     if (status) {
         return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     } else {
+        system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_SWITCHOFF);
         return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
     }
 }
@@ -431,6 +433,7 @@ int32_t CloudSyncService::NotifyEventChange(int32_t userId, const std::string &e
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_LOGOUT);
     return dataSyncManager_->DisableCloud(callerUserId);
 }
 
