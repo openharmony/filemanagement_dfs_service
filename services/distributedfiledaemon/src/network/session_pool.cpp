@@ -60,6 +60,7 @@ uint8_t SessionPool::ReleaseSession(const int32_t fd)
     uint8_t linkType = 0;
     std::string cid = "";
     lock_guard lock(sessionPoolLock_);
+    LOGI("ReleaseSession start, fd=%{public}d", fd);
     if (fd < 0) {
         LOGI("NOTIFY OFFLINE, fd=%{public}d, deviceConnectCount clear", fd);
         if (deviceConnectCount_.empty()) {
