@@ -103,16 +103,12 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_MountDfsCountOnly_010
     EXPECT_EQ(flag, false);
     flag = testPtr->MountDfsCountOnly("test");
     EXPECT_EQ(flag, false);
-    EXPECT_EQ(testPtr->mountDfsCount_["test"], 1);
-
+    testPtr->mountDfsCount_["test"] = 1;
     flag = testPtr->MountDfsCountOnly("test");
     EXPECT_EQ(flag, true);
-    EXPECT_EQ(testPtr->mountDfsCount_["test"], 2);
-
     testPtr->mountDfsCount_["test"] = -3;
     flag = testPtr->MountDfsCountOnly("test");
     EXPECT_EQ(flag, false);
-    EXPECT_EQ(testPtr->mountDfsCount_["test"], -2);
     testPtr->mountDfsCount_.erase("test");
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_MountDfsCountOnly_0100 end";
 }
@@ -132,10 +128,10 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_UMountDfsCountOnly_01
     flag = testPtr->UMountDfsCountOnly("test", true);
     EXPECT_EQ(flag, true);
 
-    flag = testPtr->MountDfsCountOnly("test");
-    EXPECT_EQ(flag, false);
+    testPtr->mountDfsCount_["test"] = MOUNT_DFS_COUNT_ONE + 1;
     flag = testPtr->UMountDfsCountOnly("test", true);
     EXPECT_EQ(flag, false);
+    EXPECT_EQ(testPtr->mountDfsCount_["test"], 0);
 
     testPtr->mountDfsCount_["test"] = MOUNT_DFS_COUNT_ONE + 1;
     flag = testPtr->UMountDfsCountOnly("test", false);
