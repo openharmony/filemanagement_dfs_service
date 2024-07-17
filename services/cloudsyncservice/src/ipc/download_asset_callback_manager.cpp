@@ -49,8 +49,8 @@ void DownloadAssetCallbackManager::OnDownloadFinshed(const TaskId taskId, const 
         LOGE("callbackProxy_ is nullptr");
         return;
     }
-    LOGD("On Download finished, taskId:%{public}" PRIu64 ", uri:%{public}s, ret:%{public}d", taskId, uri.c_str(),
-         result);
+    LOGD("On Download finished, taskId:%{public}" PRIu64 ", uri:%{public}s, ret:%{public}d",
+          taskId, GetAnonyString(uri).c_str(), result);
     callback->OnFinished(taskId, uri, result);
 }
 } // namespace OHOS::FileManagement::CloudSync

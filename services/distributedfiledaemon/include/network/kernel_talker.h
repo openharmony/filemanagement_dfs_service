@@ -67,7 +67,7 @@ private:
             return;
         }
         std::string ctrlPath = spt->GetMountArgument().GetCtrlPath();
-        LOGI("cmd path:%{public}s", ctrlPath.c_str());
+        LOGI("cmd path:%{public}s", GetAnonyString(ctrlPath).c_str());
         std::lock_guard<std::mutex> lock(cmdMutex_);
         char resolvedPath[PATH_MAX] = {'\0'};
         char *realPath = realpath(ctrlPath.c_str(), resolvedPath);

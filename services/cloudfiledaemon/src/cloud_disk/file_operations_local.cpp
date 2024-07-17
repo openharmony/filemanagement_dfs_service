@@ -50,7 +50,7 @@ static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name
     if (createFlag) {
         err = stat(path.c_str(), &child->stat);
         if (err != 0) {
-            LOGE("lookup %{public}s error, err: %{public}d", path.c_str(), errno);
+            LOGE("lookup %{public}s error, err: %{public}d", GetAnonyString(path).c_str(), errno);
             return errno;
         }
         child->stat.st_mode |= STAT_MODE_DIR;
@@ -105,7 +105,7 @@ void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
         struct stat statBuf;
         int err = stat(path.c_str(), &statBuf);
         if (err != 0) {
-            LOGE("lookup %{public}s error, err: %{public}d", path.c_str(), err);
+            LOGE("lookup %{public}s error, err: %{public}d", GetAnonyString(path).c_str(), err);
             fuse_reply_err(req, err);
             return;
         }
@@ -141,7 +141,7 @@ void FileOperationsLocal::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
     }
     DIR* dir = opendir(path.c_str());
     if (dir == NULL) {
-        LOGE("opendir error %{public}d, path:%{public}s", errno, path.c_str());
+        LOGE("opendir error %{public}d, path:%{public}s", errno, GetAnonyString(path).c_str());
         return;
     }
 

@@ -474,7 +474,7 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         return E_GET_PHYSICAL_PATH_FAILED;
     }
 
-    LOGI("physicalPath %{public}s", physicalPath.c_str());
+    LOGI("physicalPath %{public}s", GetAnonyString(physicalPath).c_str());
     info.dstPhysicalPath = physicalPath;
     ret = CheckCopyRule(physicalPath, dstUri, hapTokenInfo, isSrcFile, info);
     if (ret != E_OK) {
@@ -505,7 +505,7 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
 
     std::error_code errCode;
     if (!std::filesystem::exists(physicalPath, errCode) && info.dirExistFlag) {
-        LOGI("Not CheckValidPath, physicalPath %{public}s", physicalPath.c_str());
+        LOGI("Not CheckValidPath, physicalPath %{public}s", GetAnonyString(physicalPath).c_str());
     } else {
         auto pos = checkPath.rfind('/');
         if (pos == std::string::npos) {
@@ -535,7 +535,7 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
         if (!std::filesystem::exists(physicalPath, errCode) && std::regex_match(physicalPath.c_str(), pathRegex)) {
             std::filesystem::create_directory(physicalPath, errCode);
             if (errCode.value() != 0) {
-                LOGE("Create directory failed, physicalPath %{public}s", physicalPath.c_str());
+                LOGE("Create directory failed, physicalPath %{public}s", GetAnonyString(physicalPath).c_str());
                 return E_GET_PHYSICAL_PATH_FAILED;
             }
         }
