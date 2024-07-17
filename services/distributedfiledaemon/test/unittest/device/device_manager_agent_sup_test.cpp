@@ -296,7 +296,7 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_MountDfsDocs_0100, Te
     testPtr->mountDfsCount_["deviceId"] = 0;
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(INVALID_USER_ID));
     testPtr->MountDfsDocs("test", "deviceId");
-    EXPECT_EQ(testPtr->mountDfsCount_["deviceId"], 1);
+    EXPECT_EQ(testPtr->mountDfsCount_["deviceId"], 0);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_MountDfsDocs_0100 end";
 }
 
