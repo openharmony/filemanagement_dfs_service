@@ -60,7 +60,6 @@ namespace {
     static const string FILE_LOCAL = "1";
     static const string ROOT_CLOUD_ID = "rootId";
     static const string RECYCLE_NAME = ".trash";
-    static const float LOOKUP_TIMEOUT = 60.0;
     static const uint64_t UNKNOWN_INODE_ID = 0;
     static const std::string FILEMANAGER_KEY = "persist.kernel.bundle_name.filemanager";
     static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
@@ -244,8 +243,8 @@ void FileOperationsCloud::Lookup(fuse_req_t req, fuse_ino_t parent, const char *
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     struct fuse_entry_param e;
-    e.attr_timeout = LOOKUP_TIMEOUT;
-    e.entry_timeout = LOOKUP_TIMEOUT;
+    e.attr_timeout = 1.0;
+    e.entry_timeout = 1.0;
     int32_t err = DoCloudLookup(req, parent, name, &e);
     if (err) {
         fuse_reply_err(req, err);
