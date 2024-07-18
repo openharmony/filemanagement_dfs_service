@@ -186,7 +186,6 @@ ohos_unittest("file_operations_base_test") {
     "${distributedfile_path}/utils/log/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/",
-    "${distributedfile_path}/test/unittests/cloud_disk/mock/rdb/",
     "//third_party/libfuse/include",
     "//third_party/libfuse/lib",
     "${distributedfile_path}/services/clouddisk_database/include/",
@@ -215,6 +214,7 @@ ohos_unittest("file_operations_base_test") {
     "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "libfuse:libfuse",
+    "relational_store:native_rdb",
   ]
 
   defines = [
@@ -234,7 +234,6 @@ ohos_unittest("fuse_operations_test") {
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/",
-    "${distributedfile_path}/test/unittests/cloud_disk/mock/rdb/",
   ]
 
   sources = [
@@ -275,6 +274,7 @@ ohos_unittest("fuse_operations_test") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "libfuse:libfuse",
+    "relational_store:native_rdb",
   ]
 
   defines = [
