@@ -56,11 +56,13 @@ CloudSyncServiceStub::CloudSyncServiceStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK)] =
         [this](MessageParcel &data, MessageParcel &reply) {
-            return this->HandleRegisterDownloadFileCallback(data, reply);};
+                return this->HandleRegisterDownloadFileCallback(data, reply);
+            };
     opToInterfaceMap_[static_cast<uint32_t>(
         CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK)] =
         [this](MessageParcel &data, MessageParcel &reply) {
-            return this->HandleUnregisterDownloadFileCallback(data, reply);};
+                return this->HandleUnregisterDownloadFileCallback(data, reply);
+            };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UPLOAD_ASSET)] =
         [this](MessageParcel &data, MessageParcel &reply) {return this->HandleUploadAsset(data, reply);};
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILE)] =
@@ -72,7 +74,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_ASSET_CALLBACK)] =
         [this](MessageParcel &data, MessageParcel &reply) {
-            return this->HandleRegisterDownloadAssetCallback(data, reply);};
+                return this->HandleRegisterDownloadAssetCallback(data, reply);
+            };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DELETE_ASSET)] =
         [this](MessageParcel &data, MessageParcel &reply) {return this->HandleDeleteAsset(data, reply);};
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_GET_SYNC_TIME)] =
