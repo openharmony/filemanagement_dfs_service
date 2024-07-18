@@ -161,7 +161,7 @@ HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnStart_0300, TestSi
 HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnFinished_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackProxy_OnFinished_0100 Start";
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
     ASSERT_NE(proxy_, nullptr);
     auto ret = proxy_->OnFinished("srcNetworkId", assetObj, 0);
@@ -196,7 +196,7 @@ HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnFinished_0100, Tes
 HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnFinished_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackProxy_OnFinished_0200 Start";
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
@@ -225,7 +225,7 @@ HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnFinished_0200, Tes
 HWTEST_F(AssetRecvCallbackProxyTest, AssetRecvCallbackProxy_OnFinished_0300, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "AssetRecvCallbackProxy_OnFinished_0300 Start";
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));

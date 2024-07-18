@@ -50,7 +50,7 @@ bool AssetAdapterSaClient::SubscribeAssetAdapterSA()
         LOGE("Asset adapter Sa client get Sa manager proxy fail.");
         return false;
     }
-    sptr<AssetSystemAbilityStatusChange> callback = new AssetSystemAbilityStatusChange();
+    sptr<AssetSystemAbilityStatusChange> callback (new AssetSystemAbilityStatusChange());
     int32_t ret = samgrProxy->SubscribeSystemAbility(FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, callback);
     if (ret != E_OK) {
         LOGE("SA manager subscribe system ability fail, SA Id %{public}d, ret %{public}d",

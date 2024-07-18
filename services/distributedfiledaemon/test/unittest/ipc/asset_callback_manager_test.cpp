@@ -140,7 +140,7 @@ HWTEST_F(AssetCallbackManagerTest, AssetCallbackManager_NotifyAssetRecv_0100, Te
         AssetCallbackManager::GetInstance().NotifyAssetRecvStart("srcNetworkId", "dstNetworkId",
             "sessionId", "dstBundleName");
 
-        sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+        sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
         AssetCallbackManager::GetInstance().NotifyAssetRecvFinished("srcNetworkId", assetObj, 0);
         AssetCallbackManager::GetInstance().recvCallbackList_.clear();
     EXPECT_TRUE(true);
@@ -166,7 +166,7 @@ HWTEST_F(AssetCallbackManagerTest, AssetCallbackManager_NotifyAssetSendResult_01
         AssetCallbackManager::GetInstance().AddSendCallback("test", sendCallback);
         AssetCallbackManager::GetInstance().AddSendCallback("test2", nullptr);
 
-        sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+        sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
         AssetCallbackManager::GetInstance().NotifyAssetSendResult("test3", assetObj, 0);
         AssetCallbackManager::GetInstance().NotifyAssetSendResult("test", assetObj, 0);
         AssetCallbackManager::GetInstance().NotifyAssetSendResult("test2", assetObj, 0);
