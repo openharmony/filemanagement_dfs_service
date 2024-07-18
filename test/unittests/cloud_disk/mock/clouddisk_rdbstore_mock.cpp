@@ -82,7 +82,7 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
 }
 
 int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value,
-    const CacheNode &node)
+    const CacheNode &node, const std::string &extAttrKey)
 {
     return E_OK;
 }

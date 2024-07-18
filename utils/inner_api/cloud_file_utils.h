@@ -43,6 +43,7 @@ namespace {
     static const std::string CLOUD_CLOUD_RECYCLE_XATTR = "user.cloud.recycle";
     static const std::string IS_FAVORITE_XATTR = "user.cloud.favorite";
     static const std::string IS_FILE_STATUS_XATTR = "user.cloud.filestatus";
+    static const std::string CLOUD_EXT_ATTR = "extended_attributes";
 }
 
 class CloudFileUtils final {

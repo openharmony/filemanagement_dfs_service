@@ -295,7 +295,7 @@ static bool HandleCloudError(fuse_req_t req, CloudError error)
     return true;
 }
 
-static shared_ptr<CloudDatabase> GetDatabase(int32_t userId)
+static shared_ptr<CloudDatabase> GetDatabase(int32_t userId, const string &bundleName)
 {
     auto instance = CloudFile::CloudFileKit::GetInstance();
     if (instance == nullptr) {
@@ -311,7 +311,7 @@ static shared_ptr<CloudDatabase> GetDatabase(int32_t userId)
         LOGI("execute clean cloud user info success");
     }
 
-    auto database = instance->GetCloudDatabase(userId, system::GetParameter(FILEMANAGER_KEY, ""));
+    auto database = instance->GetCloudDatabase(userId, bundleName);
     if (database == nullptr) {
         LOGE("get cloud file kit database fail");
         return nullptr;
@@ -328,7 +328,7 @@ static void CloudOpen(fuse_req_t req,
     if (filePtr == nullptr) {
         filePtr = InitFileAttr(data, fi);
     }
-    auto database = GetDatabase(data->userId);
+    auto database = GetDatabase(data->userId, inoPtr->bundleName);
     if (!database) {
         fuse_reply_err(req, EPERM);
         LOGE("database is null");
@@ -376,20 +376,21 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
         return;
     }
     string path = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
+    unsigned int flags = static_cast<unsigned int>(fi->flags);
     if (access(path.c_str(), F_OK) == 0) {
-        if ((fi->flags & O_ACCMODE) & O_WRONLY) {
-            fi->flags &= ~O_WRONLY;
-            fi->flags |= O_RDWR;
+        if ((flags & O_ACCMODE) & O_WRONLY) {
+            flags &= ~O_WRONLY;
+            flags |= O_RDWR;
         }
-        if (fi->flags & O_APPEND) {
-            fi->flags &= ~O_APPEND;
+        if (flags & O_APPEND) {
+            flags &= ~O_APPEND;
         }
-        if (fi->flags & O_DIRECT) {
-            fi->flags &= ~O_DIRECT;
+        if (flags & O_DIRECT) {
+            flags &= ~O_DIRECT;
         }
-        int32_t fd = open(path.c_str(), fi->flags);
+        int32_t fd = open(path.c_str(), flags);
         if (fd < 0) {
-            LOGE("open file failed path:%{public}s errno:%{public}d", path.c_str(), errno);
+            LOGE("open file failed path:%{public}s errno:%{public}d", GetAnonyString(path).c_str(), errno);
             return (void) fuse_reply_err(req, errno);
         }
         auto filePtr = InitFileAttr(data, fi);
@@ -408,13 +409,13 @@ static int32_t CreateLocalFile(const string &cloudId, const string &bundleName, 
     string path = CloudFileUtils::GetLocalFilePath(cloudId, bundleName, userId);
     if (access(bucketPath.c_str(), F_OK) != 0) {
         if (mkdir(bucketPath.c_str(), STAT_MODE_DIR) != 0) {
-            LOGE("mkdir bucketpath failed :%{public}s err:%{public}d", bucketPath.c_str(), errno);
+            LOGE("mkdir bucketpath failed :%{public}s err:%{public}d", GetAnonyString(bucketPath).c_str(), errno);
             return -errno;
         }
     }
     int32_t fd = open(path.c_str(), (mode & O_NOFOLLOW) | O_CREAT | O_RDWR, STAT_MODE_REG);
     if (fd < 0) {
-        LOGE("create file failed :%{public}s err:%{public}d", path.c_str(), errno);
+        LOGE("create file failed :%{public}s err:%{public}d", GetAnonyString(path).c_str(), errno);
         return -errno;
     }
     return fd;
@@ -425,14 +426,14 @@ void RemoveLocalFile(const string &path)
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     int32_t err = remove(path.c_str());
     if (err != 0) {
-        LOGE("remove file %{public}s failed, error:%{public}d", path.c_str(), errno);
+        LOGE("remove file %{public}s failed, error:%{public}d", GetAnonyString(path).c_str(), errno);
     }
 }
 
-int32_t GenerateCloudId(int32_t userId, string &cloudId)
+int32_t GenerateCloudId(int32_t userId, string &cloudId, const string &bundleName)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    auto dkDatabasePtr = GetDatabase(userId);
+    auto dkDatabasePtr = GetDatabase(userId, bundleName);
     if (dkDatabasePtr == nullptr) {
         LOGE("Failed to get database");
         return ENOSYS;
@@ -457,7 +458,7 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
         static_cast<int64_t>(parent));
 
     string cloudId;
-    int32_t err = GenerateCloudId(data->userId, cloudId);
+    int32_t err = GenerateCloudId(data->userId, cloudId, parentInode->bundleName);
     if (err != 0) {
         LOGE("Failed to generate cloud id");
         return -err;
@@ -789,6 +790,28 @@ void HandleFavorite(fuse_req_t req, fuse_ino_t ino, const char *name,
     fuse_reply_err(req, 0);
 }
 
+void HandleExtAttribute(fuse_req_t req, fuse_ino_t ino, const char *name, const char *value)
+{
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+    if (inoPtr == nullptr) {
+        fuse_reply_err(req, EINVAL);
+        LOGE("inode not found");
+        return;
+    }
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, CLOUD_EXT_ATTR, value, name);
+    if (err != 0) {
+        LOGE("set cloud id fail %{public}d", err);
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
+        NotifyOpsType::DAEMON_SETXATTR, inoPtr});
+    fuse_reply_err(req, 0);
+}
+
 void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    const char *value, size_t size, int flags)
 {
@@ -809,7 +832,7 @@ void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
             HandleFavorite(req, ino, name, value);
             break;
         default:
-            fuse_reply_err(req, EINVAL);
+            HandleExtAttribute(req, ino, name, value);
             break;
     }
 }
@@ -868,6 +891,26 @@ string GetLocation(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
     return location;
 }
 
+string GetExtAttr(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr, const char *extAttrKey)
+{
+    string extAttr;
+    if (inoPtr == nullptr) {
+        LOGE("get ext attr inoPtr is null");
+        return "null";
+    }
+
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    CacheNode newNode = {};
+    int res = rdbStore->GetXAttr(inoPtr->cloudId, CLOUD_EXT_ATTR, extAttr, newNode, extAttrKey);
+    if (res != 0) {
+        LOGE("get ext attr is null");
+        return "null";
+    }
+    return extAttr;
+}
+
 void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
                                    size_t size)
 {
@@ -891,8 +934,7 @@ void FileOperationsCloud::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
     } else if (CloudFileUtils::CheckIsCloudLocation(name)) {
         buf = GetLocation(req, inoPtr);
     } else {
-        fuse_reply_err(req, EINVAL);
-        return;
+        buf = GetExtAttr(req, inoPtr, name);
     }
     if (buf == "null") {
         fuse_reply_err(req, ENODATA);
@@ -923,7 +965,7 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
         return (void) fuse_reply_err(req, EINVAL);
     }
     string cloudId;
-    int32_t err = GenerateCloudId(data->userId, cloudId);
+    int32_t err = GenerateCloudId(data->userId, cloudId, parentInode->bundleName);
     if (err != 0) {
         LOGE("Failed to generate cloud id");
         return (void) fuse_reply_err(req, err);
@@ -981,7 +1023,7 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
     LOGD("doUnlink, dentry file has been deleted");
     if (isDirectory == FILE && position != CLOUD) {
         string localPath = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
-        LOGI("unlink %{public}s", localPath.c_str());
+        LOGI("unlink %{public}s", GetAnonyString(localPath).c_str());
         ret = unlink(localPath.c_str());
         if (ret != 0) {
             LOGE("Failed to unlink cloudId:%{private}s, errno:%{public}d", cloudId.c_str(), errno);

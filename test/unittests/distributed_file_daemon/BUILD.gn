@@ -28,6 +28,9 @@ ohos_unittest("distributed_file_daemon_test") {
   sources = [
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
@@ -118,6 +121,9 @@ ohos_unittest("distributed_file_daemon_stub_test") {
   sources = [
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",

@@ -288,14 +288,14 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
 {
     size_t pos = fileName.find(RELATIVE_PATH_FLAG);
     if (pos == std::string::npos) {
-        LOGE("Generate dstBundleName fail, firstFile is %{public}s", fileName.c_str());
+        LOGE("Generate dstBundleName fail, firstFile is %{public}s", GetAnonyString(fileName).c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     std::string relativeFileName = fileName.substr(pos + RELATIVE_PATH_FLAG.length());
 
     pos = relativeFileName.find(DST_BUNDLE_NAME_FLAG);
     if (pos == std::string::npos) {
-        LOGE("Generate dstBundleName fail, relativeFirstFile is %{public}s", fileName.c_str());
+        LOGE("Generate dstBundleName fail, relativeFirstFile is %{public}s", GetAnonyString(fileName).c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     auto dstBundleName = relativeFileName.substr(0, pos);
@@ -304,14 +304,14 @@ int32_t SoftBusHandlerAsset::GenerateAssetObjInfo(int32_t socketId,
     std::smatch match;
     std::regex sessionIdRegex("sessionId=([^&]+)");
     if (!std::regex_search(fileName, match, sessionIdRegex)) {
-        LOGE("Generate sessionId fail, relativeFirstFile is %{public}s", fileName.c_str());
+        LOGE("Generate sessionId fail, relativeFirstFile is %{public}s", GetAnonyString(fileName).c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     assetObj->sessionId_ = match[1].str();
 
     std::regex srcBundleNameRegex("srcBundleName=([^&]+)");
     if (!std::regex_search(fileName, match, srcBundleNameRegex)) {
-        LOGE("Generate srcBundleName fail, relativeFirstFile is %{public}s", fileName.c_str());
+        LOGE("Generate srcBundleName fail, relativeFirstFile is %{public}s", GetAnonyString(fileName).c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     assetObj->srcBundleName_ = match[1].str();
@@ -408,7 +408,7 @@ int32_t SoftBusHandlerAsset::CompressFile(const std::vector<std::string> &fileLi
     LOGI("CompressFile begin.");
     zipFile outputFile = zipOpen64(zipFileName.c_str(), APPEND_STATUS_CREATE);
     if (!outputFile) {
-        LOGE("Minizip failed to zipOpen, zipFileName = %{public}s", zipFileName.c_str());
+        LOGE("Minizip failed to zipOpen, zipFileName = %{public}s", GetAnonyString(zipFileName).c_str());
         return E_ZIP;
     }
 
@@ -423,14 +423,14 @@ int32_t SoftBusHandlerAsset::CompressFile(const std::vector<std::string> &fileLi
         int err = zipOpenNewFileInZip3_64(outputFile, file.c_str(), NULL, NULL, 0, NULL, 0, NULL,
                                           Z_DEFLATED, 0, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, NULL, 0, 0);
         if (err != ZIP_OK) {
-            LOGE("Minizip failed to zipOpenNewFileInZip, file = %{public}s", file.c_str());
+            LOGE("Minizip failed to zipOpenNewFileInZip, file = %{public}s", GetAnonyString(file).c_str());
             zipClose(outputFile, NULL);
             return E_ZIP;
         }
 
         FILE* f = fopen(rootFile.c_str(), "rb");
         if (f == NULL) {
-            LOGE("open file fail, path is %{public}s", rootFile.c_str());
+            LOGE("open file fail, path is %{public}s", GetAnonyString(rootFile).c_str());
             return E_ZIP;
         }
         const size_t pageSize { getpagesize() };
@@ -462,7 +462,7 @@ std::vector<std::string> SoftBusHandlerAsset::DecompressFile(const std::string &
 
     unzFile zipFile = unzOpen64(unZipFileName.c_str());
     if (!zipFile) {
-        LOGE("Minizip failed to unzOpen, zipFileName = %{public}s", unZipFileName.c_str());
+        LOGE("Minizip failed to unzOpen, zipFileName = %{public}s", GetAnonyString(unZipFileName).c_str());
         return {};
     }
 
@@ -508,7 +508,7 @@ bool SoftBusHandlerAsset::MkDirRecurse(const std::string& path, mode_t mode)
 {
     size_t pos = path.rfind("/");
     if (pos == std::string::npos) {
-        LOGE("is not a dir, path : %{public}s", path.c_str());
+        LOGE("is not a dir, path : %{public}s", GetAnonyString(path).c_str());
     }
     auto dirPath = path.substr(0, pos);
 
@@ -553,7 +553,7 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
     filenameWithPath = dir + filenameWithPath;
     size_t pos = filenameWithPath.rfind('/');
     if (pos == std::string::npos) {
-        LOGE("file path error, %{public}s", filenameWithPath.c_str());
+        LOGE("file path error, %{public}s", GetAnonyString(filenameWithPath).c_str());
         return "";
     }
     std::string filenameWithoutPath = filenameWithPath.substr(pos + 1);
@@ -562,12 +562,12 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
         MkDirRecurse(filenameWithPath, S_IRWXU | S_IRWXG | S_IXOTH);
     }
     if (unzOpenCurrentFile(unZipFile) != UNZ_OK) {
-        LOGE("Minizip failed to unzOpenCurrentFile, filepath is %{public}s", filenameWithPath.c_str());
+        LOGE("Minizip failed to unzOpenCurrentFile, filepath is %{public}s", GetAnonyString(filenameWithPath).c_str());
     }
     std::fstream file;
     file.open(filenameWithPath, std::ios_base::out | std::ios_base::binary);
     if (!file.is_open()) {
-        LOGE("open zip file fail, path is %{public}s", filenameWithPath.c_str());
+        LOGE("open zip file fail, path is %{public}s", GetAnonyString(filenameWithPath).c_str());
         return "";
     }
     const size_t pageSize =  { getpagesize() };
@@ -576,7 +576,8 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
     do {
         bytesRead = unzReadCurrentFile(unZipFile, (voidp)fileData.get(), pageSize);
         if (bytesRead < 0) {
-            LOGE("Minizip failed to unzReadCurrentFile, filepath is %{public}s", filenameWithPath.c_str());
+            LOGE("Minizip failed to unzReadCurrentFile, filepath is %{public}s",
+                 GetAnonyString(filenameWithPath).c_str());
             file.close();
             return "";
         }
@@ -588,14 +589,14 @@ std::string SoftBusHandlerAsset::ExtractFile(unzFile unZipFile, const std::strin
 
 void SoftBusHandlerAsset::RemoveFile(const std::string &path, bool isRemove)
 {
-    LOGI("RemoveFile path is %{public}s", path.c_str());
+    LOGI("RemoveFile path is %{public}s", GetAnonyString(path).c_str());
     if (!isRemove) {
         LOGI("this file is not need remove");
         return;
     }
     bool ret = std::filesystem::remove(path.c_str());
     if (!ret) {
-        LOGE("remove file fail, remove path is %{public}s", path.c_str());
+        LOGE("remove file fail, remove path is %{public}s", GetAnonyString(path).c_str());
     }
 }
 } // namespace DistributedFile

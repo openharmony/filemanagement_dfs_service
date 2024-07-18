@@ -42,5 +42,7 @@ std::string GetFileNameFromFullPath(const char *str);
                             GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__,  ##__VA_ARGS__)
 #define LOGF(fmt, ...) HILOG_FATAL(LOG_CORE, "[%{public}s:%{public}d->%{public}s] " fmt, \
                             GetFileNameFromFullPath(__FILE__).c_str(), __LINE__, __FUNCTION__,  ##__VA_ARGS__)
+
+std::string GetAnonyString(const std::string &value);
 } // namespace OHOS
 #endif // UTILS_LOG_H

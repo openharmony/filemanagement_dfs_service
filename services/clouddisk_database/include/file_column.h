@@ -43,6 +43,7 @@ public:
     static const std::string ROW_ID;
     static const std::string CHECK_FLAG;
     static const std::string ROOT_DIRECTORY;
+    static const std::string ATTRIBUTE;
 
     // Only Local
     static const std::string FILE_TIME_VISIT;
@@ -78,6 +79,9 @@ public:
     //set CheckFlag
     static const std::string ADD_CHECK_FLAG;
 
+    // set attribute
+    static const std::string ADD_ATTRIBUTE;
+
     // Query FILES_TABLE for FileSystem
     static const std::vector<std::string> FILE_SYSTEM_QUERY_COLUMNS;
 
@@ -91,6 +95,8 @@ public:
 
     // Query local info columns
     static const std::vector<std::string> DISK_ON_UPLOAD_COLUMNS;
+
+    static const std::vector<std::string> EXT_ATTR_QUERY_COLUMNS;
 };
 } // namespace CloudDisk
 } // namespace FileManagement

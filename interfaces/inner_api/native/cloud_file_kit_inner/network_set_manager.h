@@ -54,6 +54,7 @@ public:
     static void UnregisterObserver(const std::string &bundleName, const int32_t userId, const int32_t type);
     static void GetCellularConnect(const std::string &bundleName, const int32_t userId);
     static void GetNetConnect(const std::string &bundleName, const int32_t userId);
+    static void ReleaseDataShareHelper(std::shared_ptr<DataShare::DataShareHelper> &helper);
     static bool IsAllowCellularConnect(const std::string &bundleName, const int32_t userId);
     static bool IsAllowNetConnect(const std::string &bundleName, const int32_t userId);
     static bool GetConfigParams(const std::string &bundleName, const int32_t userId);

@@ -556,7 +556,7 @@ int32_t CloudSyncService::DownloadFile(const int32_t userId, const std::string &
 
     asset.uri = GetHmdfsPath(assetInfoObj.uri, userId);
     if (asset.uri.empty()) {
-        LOGE("fail to get download path from %{public}s", assetInfoObj.uri.c_str());
+        LOGE("fail to get download path from %{public}s", GetAnonyString(assetInfoObj.uri).c_str());
         return E_INVAL_ARG;
     }
 
@@ -589,7 +589,7 @@ int32_t CloudSyncService::DownloadFiles(const int32_t userId, const std::string 
         asset.assetName = obj.assetName;
         asset.uri = GetHmdfsPath(obj.uri, userId);
         if (asset.uri.empty()) {
-            LOGE("fail to get download path from %{private}s", obj.uri.c_str());
+            LOGE("fail to get download path from %{private}s", GetAnonyString(obj.uri).c_str());
             return E_INVAL_ARG;
         }
         DownloadAssetInfo assetToDownload{obj.recordType, obj.recordId, {}, asset, {}};
@@ -642,7 +642,7 @@ int32_t CloudSyncService::DeleteAsset(const int32_t userId, const std::string &u
         return E_GET_PHYSICAL_PATH_FAILED;
     }
 
-    LOGD("delete assert, path %{public}s", physicalPath.c_str());
+    LOGD("delete assert, path %{public}s", GetAnonyString(physicalPath).c_str());
 
     ret = unlink(physicalPath.c_str());
     if (ret != 0) {

@@ -121,7 +121,7 @@ CloudDiskMetaFile::CloudDiskMetaFile(uint32_t userId, const std::string &bundleN
     cloudId_ = cloudId;
     cacheFile_ = GetCloudDiskDentryFileByPath(userId_, bundleName_, cloudId_);
     fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
-    LOGD("CloudDiskMetaFile cloudId=%{public}s, path=%{public}s", cloudId_.c_str(), cacheFile_.c_str());
+    LOGD("CloudDiskMetaFile cloudId=%{public}s, path=%{public}s", cloudId_.c_str(), GetAnonyString(cacheFile_).c_str());
     LOGD("CloudDiskMetaFile fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
 
     HmdfsDcacheHeader header{};

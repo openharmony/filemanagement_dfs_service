@@ -101,13 +101,13 @@ public:
 };
 
 void HandleOpenP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                     std::unique_ptr<char[]> data,
+                                     const uint8_t *data,
                                      size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -116,13 +116,13 @@ void HandleOpenP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
 }
 
 void HandleCloseP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                      std::unique_ptr<char[]> data,
+                                      const uint8_t *data,
                                       size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -131,13 +131,13 @@ void HandleCloseP2PConnectionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
 }
 
 void HandleOpenP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                       std::unique_ptr<char[]> data,
+                                       const uint8_t *data,
                                        size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION_EX);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -146,13 +146,13 @@ void HandleOpenP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr
 }
 
 void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                        std::unique_ptr<char[]> data,
+                                        const uint8_t *data,
                                         size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CLOSE_P2P_CONNECTION_EX);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -160,12 +160,12 @@ void HandleCloseP2PConnectionExFuzzTest(std::shared_ptr<DaemonStub> daemonStubPt
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandlePrepareSessionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, std::unique_ptr<char[]> data, size_t size)
+void HandlePrepareSessionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PREPARE_SESSION);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -173,12 +173,12 @@ void HandlePrepareSessionFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, std
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandleCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, std::unique_ptr<char[]> data, size_t size)
+void HandleCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_CANCEL_COPY_TASK);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -187,13 +187,13 @@ void HandleCancelCopyTaskFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, std
 }
 
 void HandleRequestSendFileFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                   std::unique_ptr<char[]> data,
+                                   const uint8_t *data,
                                    size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -202,13 +202,13 @@ void HandleRequestSendFileFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
 }
 
 void HandleGetRemoteCopyInfoFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                     std::unique_ptr<char[]> data,
+                                     const uint8_t *data,
                                      size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -216,12 +216,12 @@ void HandleGetRemoteCopyInfoFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
 
-void HandlePushAssetFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, std::unique_ptr<char[]> data, size_t size)
+void HandlePushAssetFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -230,13 +230,13 @@ void HandlePushAssetFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, std::uni
 }
 
 void HandleRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                        std::unique_ptr<char[]> data,
+                                        const uint8_t *data,
                                         size_t size)
 {
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -245,14 +245,14 @@ void HandleRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStubPt
 }
 
 void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
-                                          std::unique_ptr<char[]> data,
+                                          const uint8_t *data,
                                           size_t size)
 {
     uint32_t code =
         static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -274,22 +274,17 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         return 0;
     }
 
-    auto str = std::make_unique<char[]>(size + 1);
-    if (memcpy_s(str.get(), size, data, size) != EOK) {
-        return 0;
-    }
-
     auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
-    OHOS::HandleOpenP2PConnectionFuzzTest(daemonStubPtr, move(str), size);
-    OHOS::HandleCloseP2PConnectionFuzzTest(daemonStubPtr, move(str), size);
-    OHOS::HandlePrepareSessionFuzzTest(daemonStubPtr, move(str), size);
-    OHOS::HandleRequestSendFileFuzzTest(daemonStubPtr, move(str), size);
-    OHOS::HandleOpenP2PConnectionExFuzzTest(daemonStubPtr, move(str), size);
-    OHOS::HandleCloseP2PConnectionExFuzzTest(daemonStubPtr, move(str), size);
-    OHOS::HandleCancelCopyTaskFuzzTest(daemonStubPtr, move(str), size);
-    OHOS::HandleGetRemoteCopyInfoFuzzTest(daemonStubPtr, move(str), size);
-    OHOS::HandlePushAssetFuzzTest(daemonStubPtr, move(str), size);
-    OHOS::HandleRegisterRecvCallbackFuzzTest(daemonStubPtr, move(str), size);
-    OHOS::HandleUnRegisterRecvCallbackFuzzTest(daemonStubPtr, move(str), size);
+    OHOS::HandleOpenP2PConnectionFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleCloseP2PConnectionFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandlePrepareSessionFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleRequestSendFileFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleOpenP2PConnectionExFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleCloseP2PConnectionExFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleCancelCopyTaskFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleGetRemoteCopyInfoFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandlePushAssetFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
+    OHOS::HandleUnRegisterRecvCallbackFuzzTest(daemonStubPtr, data, size);
     return 0;
 }
