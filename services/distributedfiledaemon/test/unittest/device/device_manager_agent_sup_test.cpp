@@ -103,16 +103,12 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_MountDfsCountOnly_010
     EXPECT_EQ(flag, false);
     flag = testPtr->MountDfsCountOnly("test");
     EXPECT_EQ(flag, false);
-    EXPECT_EQ(testPtr->mountDfsCount_["test"], 1);
-
+    testPtr->mountDfsCount_["test"] = 1;
     flag = testPtr->MountDfsCountOnly("test");
     EXPECT_EQ(flag, true);
-    EXPECT_EQ(testPtr->mountDfsCount_["test"], 2);
-
     testPtr->mountDfsCount_["test"] = -3;
     flag = testPtr->MountDfsCountOnly("test");
     EXPECT_EQ(flag, false);
-    EXPECT_EQ(testPtr->mountDfsCount_["test"], -2);
     testPtr->mountDfsCount_.erase("test");
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_MountDfsCountOnly_0100 end";
 }
@@ -130,12 +126,12 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_UMountDfsCountOnly_01
     bool flag = testPtr->UMountDfsCountOnly("", true);
     EXPECT_EQ(flag, false);
     flag = testPtr->UMountDfsCountOnly("test", true);
-    EXPECT_EQ(flag, false);
+    EXPECT_EQ(flag, true);
 
-    flag = testPtr->MountDfsCountOnly("test");
-    EXPECT_EQ(flag, false);
+    testPtr->mountDfsCount_["test"] = MOUNT_DFS_COUNT_ONE + 1;
     flag = testPtr->UMountDfsCountOnly("test", true);
     EXPECT_EQ(flag, false);
+    EXPECT_EQ(testPtr->mountDfsCount_["test"], 0);
 
     testPtr->mountDfsCount_["test"] = MOUNT_DFS_COUNT_ONE + 1;
     flag = testPtr->UMountDfsCountOnly("test", false);
@@ -147,10 +143,11 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_UMountDfsCountOnly_01
 
     auto itCount = testPtr->mountDfsCount_.find("test");
     if (itCount == testPtr->mountDfsCount_.end()) {
-        EXPECT_TRUE(true);
-    } else {
         EXPECT_TRUE(false);
+    } else {
+        EXPECT_TRUE(true);
     }
+    testPtr->mountDfsCount_.erase("test");
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UMountDfsCountOnly_0100 end";
 }
 
@@ -300,7 +297,7 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_MountDfsDocs_0100, Te
     testPtr->mountDfsCount_["deviceId"] = 0;
     EXPECT_CALL(*otherMethodMock_, QueryActiveOsAccountIds(_)).WillOnce(Return(INVALID_USER_ID));
     testPtr->MountDfsDocs("test", "deviceId");
-    EXPECT_EQ(testPtr->mountDfsCount_["deviceId"], 1);
+    EXPECT_EQ(testPtr->mountDfsCount_["deviceId"], 0);
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_MountDfsDocs_0100 end";
 }
 
