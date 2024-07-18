@@ -21,24 +21,51 @@ ohos_fuzztest("CloudSyncServiceStubFuzzTest") {
   fuzz_config_file =
       "${distributedfile_path}/test/fuzztest/cloudsyncservicestub_fuzzer"
   include_dirs = [
-    "${services_path}/cloudsyncservice/include/ipc",
-    "${utils_path}/log/include",
+    "${distributedfile_path}/test/fuzztest/fuzz_common",
     "${innerkits_native_path}/cloudsync_kit_inner",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/cycle_task",
+    "${services_path}/cloudsyncservice/include/cycle_task/tasks",
+    "${services_path}/cloudsyncservice/include/data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/cloud_disk_data_sync",
+    "${services_path}/cloudsyncservice/include/data_sync/gallery_data_sync",
+    "${services_path}/cloudsyncservice/include/ipc",
+    "${services_path}/cloudsyncservice/include/sync_rule",
+    "${services_path}/cloudsyncservice/include/transport",
+    "${services_path}/cloudsyncservice/include/transport/softbus",
+    "${utils_path}/dentry/include",
   ]
   cflags = [
     "-g",
     "-O0",
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
+    "-flto",
+    "-fvisibility=hidden",
+    "-Dprivate=public",
+    "--coverage",
+  ]
+  ldflags = [
+    "-flto",
+    "--coverage",
   ]
   sources = [ "${distributedfile_path}/test/fuzztest/cloudsyncservicestub_fuzzer/cloudsyncservicestub_fuzzer.cpp" ]
 
-  deps = [ "${services_path}/cloudsyncservice:cloudsync_sa" ]
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
+    "${utils_path}:libdistributedfileutils_lite",
+  ]
 
   external_deps = [
-    "ability:want",
+    "ability_base:want",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken_shared",
+    "access_token:libtokensetproc_shared",
     "c_utils:utils",
     "device_manager:devicemanagersdk",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",

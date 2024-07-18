@@ -180,12 +180,12 @@ HWTEST_F(SoftBusSessionListenerTest, SoftBusSessionListenerTest_GetFileName_0100
     fileList.push_back("/data/test/test1/t1.txt");
     fileList.push_back("/data/test/test1/t2.txt");
     vector<string> rltList;
-    rltList = SoftBusSessionListener::GetFileName(fileList, "/data/test");
+    rltList = SoftBusSessionListener::GetFileName(fileList, "/data/test", "/data/test");
     EXPECT_EQ(rltList.size(), 2);
     EXPECT_EQ(rltList[0], "test1/t1.txt");
     EXPECT_EQ(rltList[1], "test1/t2.txt");
     rltList.clear();
-    rltList = SoftBusSessionListener::GetFileName(fileList, "/data/test/test1/t1.txt");
+    rltList = SoftBusSessionListener::GetFileName(fileList, "/data/test/test1/t1.txt", "/data/test");
     EXPECT_EQ(rltList.size(), 1);
     EXPECT_EQ(rltList[0], "t1.txt");
     GTEST_LOG_(INFO) << "SoftBusSessionListenerTest_GetSandboxPath_0100 end";

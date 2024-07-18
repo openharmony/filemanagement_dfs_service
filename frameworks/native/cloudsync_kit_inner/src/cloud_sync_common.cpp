@@ -204,7 +204,8 @@ bool DownloadProgressObj::ReadFromParcel(Parcel &parcel)
 std::string DownloadProgressObj::to_string()
 {
     std::stringstream ss;
-    ss << "DownloadProgressObj [path: " << path;
+    std::string pathAnony = GetAnonyString(path);
+    ss << "DownloadProgressObj [path: " << pathAnony;
     ss << " state: " << state;
     ss << " downloaded: " << downloadedSize;
     ss << " total: " << totalSize;

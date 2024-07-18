@@ -27,6 +27,7 @@ struct HmdfsInfo {
     std::string authority;
     std::string sandboxPath;
     std::string sessionName;
+    std::string dstPhysicalPath;
 };
 }
 }

@@ -29,7 +29,8 @@ void DownloadAssetCallbackClient::OnFinished(const TaskId taskId, const std::str
         callback(uri, result);
     }
     RemoveDownloadTaskCallback(taskId);
-    LOGD("On Download finished, taskId:%{public}" PRIu64 ", uri:%{public}s, ret:%{public}d", taskId, uri.c_str(),
+    LOGD("On Download finished, taskId:%{public}" PRIu64 ", uri:%{public}s, ret:%{public}d",
+          taskId, GetAnonyString(uri).c_str(),
          result);
 }
 

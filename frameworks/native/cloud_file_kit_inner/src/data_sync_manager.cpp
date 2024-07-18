@@ -40,13 +40,15 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
 }
 
 void DataSyncManager::RegisterCloudSyncCallback(const std::string &bundleName,
+                                                const std::string &callerBundleName,
                                                 const int32_t userId,
                                                 const sptr<CloudSync::ICloudSyncCallback> &callback)
 {
     return;
 }
 
-void DataSyncManager::UnRegisterCloudSyncCallback(const std::string &bundleName)
+void DataSyncManager::UnRegisterCloudSyncCallback(const std::string &bundleName,
+                                                  const std::string &callerBundleName)
 {
     return;
 }
@@ -84,6 +86,11 @@ int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string &bundl
 }
 
 int32_t DataSyncManager::CleanCloudFile(const int32_t userId, const std::string &bundleName, const int action)
+{
+    return E_OK;
+}
+
+int32_t DataSyncManager::CleanRemainFile(const std::string &bundleName, const int32_t userId)
 {
     return E_OK;
 }

@@ -48,26 +48,26 @@ public:
 void FileOperationsCloudTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
-    fileOperationsCloud_ = make_shared<FileOperationsCloud>();
-    insMock = make_shared<AssistantMock>();
-    Assistant::ins = insMock;
 }
 
 void FileOperationsCloudTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
-    Assistant::ins = nullptr;
-    insMock = nullptr;
-    fileOperationsCloud_ = nullptr;
 }
 
 void FileOperationsCloudTest::SetUp(void)
 {
+    fileOperationsCloud_ = make_shared<FileOperationsCloud>();
+    insMock = make_shared<AssistantMock>();
+    Assistant::ins = insMock;
     GTEST_LOG_(INFO) << "SetUp";
 }
 
 void FileOperationsCloudTest::TearDown(void)
 {
+    Assistant::ins = nullptr;
+    insMock = nullptr;
+    fileOperationsCloud_ = nullptr;
     GTEST_LOG_(INFO) << "TearDown";
 }
 
@@ -326,7 +326,7 @@ HWTEST_F(FileOperationsCloudTest, WriteBufTest001, TestSize.Level1)
 
         EXPECT_CALL(*insMock, fuse_buf_size(_)).WillOnce(Return(E_OK));
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         fileOperationsCloud_->WriteBuf(req, reinterpret_cast<fuse_ino_t>(&ino), bufv, offset, &fi);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -384,7 +384,6 @@ HWTEST_F(FileOperationsCloudTest, LseekTest001, TestSize.Level1)
         struct fuse_file_info fi;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_lseek(_, _)).WillOnce(Return(E_OK));
         fileOperationsCloud_->Lseek(req, 0, off, whence, &fi);
         EXPECT_TRUE(true);
     } catch (...) {

@@ -55,6 +55,7 @@ ohos_shared_library("cloudsync") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "c_utils:utils",
     "file_api:filemgmt_libhilog",
     "file_api:filemgmt_libn",
     "hilog:libhilog",

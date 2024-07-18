@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,19 +52,52 @@ void DentryMetaFileTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
 }
+
 /**
- * @tc.name: MetaFileCreate
+ * @tc.name: MetaFileHandleFileByFd001
+ * @tc.desc: Verify the MetaFile::HandleFileByFd function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(DentryMetaFileTest, MetaFileHandleFileByFd001, TestSize.Level1)
+{
+    MetaFile mFile(TEST_USER_ID, "/");
+    unsigned long endBlock = 0;
+    uint32_t level = 0;
+    int ret = mFile.HandleFileByFd(endBlock, level);
+    EXPECT_EQ(ret, EINVAL);
+}
+
+/**
+ * @tc.name: MetaFileHandleFileByFd002
+ * @tc.desc: Verify the MetaFile::HandleFileByFd function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(DentryMetaFileTest, MetaFileHandleFileByFd002, TestSize.Level1)
+{
+    uint32_t userId = 100;
+    MetaFile mFile(userId, "/");
+    unsigned long endBlock = 0;
+    uint32_t level = 0;
+    int ret = mFile.HandleFileByFd(endBlock, level);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: MetaFileCreate001
  * @tc.desc: Verify the MetaFile::DoCreate function
  * @tc.type: FUNC
  * @tc.require: SR000HRKKA
  */
-HWTEST_F(DentryMetaFileTest, MetaFileCreate, TestSize.Level1)
+HWTEST_F(DentryMetaFileTest, MetaFileCreate001, TestSize.Level1)
 {
+    uint32_t userId = 100;
     std::string cacheDir =
-        "/data/service/el2/" + std::to_string(TEST_USER_ID) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+        "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
     ForceRemoveDirectory(cacheDir);
 
-    MetaFile mFile(TEST_USER_ID, "/");
+    MetaFile mFile(userId, "/");
     MetaBase mBase1("file1", "id1");
     mBase1.size = TEST_ISIZE;
     int ret = mFile.DoCreate(mBase1);
@@ -73,24 +106,67 @@ HWTEST_F(DentryMetaFileTest, MetaFileCreate, TestSize.Level1)
     mBase2.size = TEST_ISIZE;
     ret = mFile.DoCreate(mBase2);
     EXPECT_EQ(ret, 0);
-    MetaFile mFile2(TEST_USER_ID, "/a/b");
+    MetaFile mFile2(userId, "/a/b");
     MetaBase mBase3("file3", "id3");
     ret = mFile2.DoCreate(mBase3);
 }
 
 /**
- * @tc.name: MetaFileLookup
+ * @tc.name: MetaFileCreate002
+ * @tc.desc: Verify the MetaFile::DoCreate function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(DentryMetaFileTest, MetaFileCreate002, TestSize.Level1)
+{
+    MetaFile mFile(TEST_USER_ID, "/");
+    MetaBase mBase1("file1", "id1");
+    int ret = mFile.DoCreate(mBase1);
+    EXPECT_EQ(ret, EINVAL);
+}
+
+/**
+ * @tc.name: MetaFileLookup001
  * @tc.desc: Verify the MetaFile::DoLookup function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(DentryMetaFileTest, MetaFileLookup001, TestSize.Level1)
+{
+    MetaFile mFile(TEST_USER_ID, "/");
+    MetaBase mBase1("file1");
+    int ret = mFile.DoLookup(mBase1);
+    EXPECT_EQ(ret, EINVAL);
+}
+
+/**
+ * @tc.name: MetaFileLookup002
+ * @tc.desc: Verify the MetaFile::DoLookup002 function
  * @tc.type: FUNC
  * @tc.require: SR000HRKKA
  */
 HWTEST_F(DentryMetaFileTest, MetaFileLookup, TestSize.Level1)
 {
-    MetaFile mFile(TEST_USER_ID, "/");
+    uint32_t userId = 100;
+    MetaFile mFile(userId, "/");
     MetaBase mBase1("file1");
     int ret = mFile.DoLookup(mBase1);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(mBase1.size, TEST_ISIZE);
+}
+
+/**
+ * @tc.name: MetaFileUpdate001
+ * @tc.desc: Verify the MetaFile::DoUpdate function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKC
+ */
+HWTEST_F(DentryMetaFileTest, MetaFileUpdate001, TestSize.Level1)
+{
+    MetaFile mFile(TEST_USER_ID, "/");
+    MetaBase mBase1("file1", "id11");
+    int ret = mFile.DoUpdate(mBase1);
+    EXPECT_EQ(ret, EINVAL);
 }
 
 /**
@@ -101,7 +177,8 @@ HWTEST_F(DentryMetaFileTest, MetaFileLookup, TestSize.Level1)
  */
 HWTEST_F(DentryMetaFileTest, MetaFileUpdate, TestSize.Level1)
 {
-    MetaFile mFile(TEST_USER_ID, "/");
+    uint32_t userId = 100;
+    MetaFile mFile(userId, "/");
     MetaBase mBase1("file1", "id11");
     mBase1.size = 0;
     int ret = mFile.DoUpdate(mBase1);
@@ -120,7 +197,8 @@ HWTEST_F(DentryMetaFileTest, MetaFileUpdate, TestSize.Level1)
  */
 HWTEST_F(DentryMetaFileTest, MetaFileRename, TestSize.Level1)
 {
-    MetaFile mFile(TEST_USER_ID, "/");
+    uint32_t userId = 100;
+    MetaFile mFile(userId, "/");
     MetaBase mBase1("file2");
     int ret = mFile.DoRename(mBase1, "file4");
     EXPECT_EQ(ret, 0);
@@ -131,14 +209,29 @@ HWTEST_F(DentryMetaFileTest, MetaFileRename, TestSize.Level1)
 }
 
 /**
- * @tc.name: MetaFileRemove
+ * @tc.name: MetaFileRemove001
  * @tc.desc: Verify the MetaFile::DoRemove function
  * @tc.type: FUNC
  * @tc.require: SR000HRKJB
  */
-HWTEST_F(DentryMetaFileTest, MetaFileRemove, TestSize.Level1)
+HWTEST_F(DentryMetaFileTest, MetaFileRemove001, TestSize.Level1)
 {
     MetaFile mFile(TEST_USER_ID, "/");
+    MetaBase mBase1("file1");
+    int ret = mFile.DoRemove(mBase1);
+    EXPECT_EQ(ret, EINVAL);
+}
+
+/**
+ * @tc.name: MetaFileRemove002
+ * @tc.desc: Verify the MetaFile::DoRemove function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKJB
+ */
+HWTEST_F(DentryMetaFileTest, MetaFileRemove002, TestSize.Level1)
+{
+    uint32_t userId = 100;
+    MetaFile mFile(userId, "/");
     MetaBase mBase1("file1");
     int ret = mFile.DoRemove(mBase1);
     EXPECT_EQ(ret, 0);
@@ -157,7 +250,8 @@ HWTEST_F(DentryMetaFileTest, MetaFileMgr001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "MetaFileMgr001 Start";
     try {
-        auto m = MetaFileMgr::GetInstance().GetMetaFile(TEST_USER_ID, "/o/p/q/r/s/t");
+        uint32_t userId = 100;
+        auto m = MetaFileMgr::GetInstance().GetMetaFile(userId, "/o/p/q/r/s/t");
         MetaBase mBase1("file1", "file1");
         EXPECT_EQ(m->DoCreate(mBase1), 0);
         m = nullptr;
@@ -179,7 +273,8 @@ HWTEST_F(DentryMetaFileTest, MetaFileMgr002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "MetaFileMgr002 Start";
     try {
-        auto m = MetaFileMgr::GetInstance().GetMetaFile(TEST_USER_ID, "/o/p/q/r/s/t");
+        uint32_t userId = 100;
+        auto m = MetaFileMgr::GetInstance().GetMetaFile(userId, "/o/p/q/r/s/t");
         MetaBase mBase1("testLongLongfileName", "testLongLongfileName");
         EXPECT_EQ(m->DoCreate(mBase1), 0);
         m = nullptr;

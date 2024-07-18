@@ -86,13 +86,15 @@ public:
     int32_t FindListenerByObject(const wptr<IRemoteObject> &remote, uint32_t &tokenId,
         sptr<IFileDfsListener>& listener);
     std::string GetDeviceIdByNetworkId(const std::string &networkId);
-    void MountDfsDocs(const std::string &networkId, const std::string &deviceId);
+    int32_t MountDfsDocs(const std::string &networkId, const std::string &deviceId);
     int32_t UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear);
     void AddNetworkId(uint32_t tokenId, const std::string &networkId);
     void RemoveNetworkId(uint32_t tokenId);
     void RemoveNetworkIdByOne(uint32_t tokenId, const std::string &networkId);
     void RemoveNetworkIdForAllToken(const std::string &networkId);
     void ClearNetworkId();
+    void IncreaseMountDfsCount(const std::string &deviceId);
+    void RemoveMountDfsCount(const std::string &devcieId);
     std::unordered_set<std::string> GetNetworkIds(uint32_t tokenId);
 
     void OfflineAllDevice();
@@ -131,6 +133,7 @@ private:
     int32_t GetCurrentUserId();
     void GetStorageManager();
     sptr<StorageManager::IStorageManager> storageMgrProxy_;
+    std::mutex mountDfsCountMutex_;
     std::unordered_map<std::string, int32_t> mountDfsCount_;
     std::mutex networkIdMapMutex_;
     std::unordered_map<uint32_t, std::unordered_set<std::string>> networkIdMap_;

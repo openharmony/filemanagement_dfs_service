@@ -18,9 +18,9 @@
 #include <cstdint>
 #include <cstring>
 
+#include "file_trans_listener_stub.h"
 #include "message_option.h"
 #include "message_parcel.h"
-#include "file_trans_listener_stub.h"
 #include "securec.h"
 
 namespace OHOS {
@@ -29,7 +29,6 @@ constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 
 using namespace OHOS::Storage::DistributedFile;
-
 
 namespace Storage {
 namespace DistributedFile {
@@ -41,8 +40,8 @@ public:
     int32_t OnFailed(const std::string &sessionName, int32_t errorCode) override;
     int32_t OnFinished(const std::string &sessionName) override;
 };
-}
-}
+} // namespace DistributedFile
+} // namespace Storage
 
 int32_t FileTransListenerStubImpl::OnFileReceive(uint64_t totalBytes, uint64_t processedBytes)
 {
@@ -59,7 +58,6 @@ int32_t FileTransListenerStubImpl::OnFinished(const std::string &sessionName)
     return 0;
 }
 
-
 uint32_t GetU32Data(const char *ptr)
 {
     // 将第0个数字左移24位，将第1个数字左移16位，将第2个数字左移8位，第3个数字不左移
@@ -68,7 +66,8 @@ uint32_t GetU32Data(const char *ptr)
 
 bool FileTransListenerStubFuzzTest(
     std::shared_ptr<Storage::DistributedFile::FileTransListenerStub> transListenerStubPtr,
-    std::unique_ptr<char[]> data, size_t size)
+    std::unique_ptr<char[]> data,
+    size_t size)
 {
     uint32_t code = GetU32Data(data.get());
     if (code == 0) {
@@ -84,7 +83,7 @@ bool FileTransListenerStubFuzzTest(
 
     return true;
 }
-} // namespace OHOS::Storage::DistributedFile
+} // namespace OHOS
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)

@@ -28,6 +28,9 @@ ohos_unittest("distributed_file_daemon_test") {
   sources = [
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
@@ -76,6 +79,7 @@ ohos_unittest("distributed_file_daemon_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -117,6 +121,9 @@ ohos_unittest("distributed_file_daemon_stub_test") {
   sources = [
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_recv_callback_proxy.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_send_callback_proxy.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon_eventhandler.cpp",
@@ -165,6 +172,7 @@ ohos_unittest("distributed_file_daemon_stub_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -257,6 +265,7 @@ ohos_unittest("distributed_file_daemon_stub_sup_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -314,6 +323,7 @@ ohos_unittest("daemon_manager_impl_test") {
   ]
 
   external_deps = [
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_single",
@@ -360,6 +370,7 @@ ohos_unittest("daemon_manager_test") {
   ]
 
   external_deps = [
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -407,6 +418,7 @@ ohos_unittest("daemon_service_proxy_test") {
 
   external_deps = [
     "ability_base:zuri",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -452,6 +464,7 @@ ohos_unittest("connection_detector_test") {
 
   external_deps = [
     "ability_base:zuri",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -503,6 +516,7 @@ ohos_unittest("file_dfs_listener_proxy_test") {
 
   external_deps = [
     "ability_base:zuri",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -554,6 +568,7 @@ ohos_unittest("file_trans_listener_proxy_test") {
 
   external_deps = [
     "ability_base:zuri",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_core",
@@ -601,6 +616,7 @@ ohos_unittest("trans_mananger_test") {
 
   external_deps = [
     "ability_base:zuri",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "ipc:ipc_core",

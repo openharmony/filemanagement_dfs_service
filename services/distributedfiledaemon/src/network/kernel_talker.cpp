@@ -168,7 +168,7 @@ void KernelTalker::PollRun()
         return;
     }
     string ctrlPath = spt->GetMountArgument().GetCtrlPath();
-    LOGI("Open node file ctrl path %{public}s", ctrlPath.c_str());
+    LOGI("Open node file ctrl path %{public}s", GetAnonyString(ctrlPath).c_str());
     char resolvedPath[PATH_MAX] = {'\0'};
     char *realPath = realpath(ctrlPath.c_str(), resolvedPath);
     if (realPath == nullptr) {
@@ -176,7 +176,7 @@ void KernelTalker::PollRun()
     }
     cmdFd = open(realPath, O_RDWR);
     if (cmdFd < 0) {
-        LOGE("Open node file error %{public}d, ctrl path %{public}s", errno, ctrlPath.c_str());
+        LOGE("Open node file error %{public}d, ctrl path %{public}s", errno, GetAnonyString(ctrlPath).c_str());
         return;
     }
 
@@ -229,7 +229,8 @@ void KernelTalker::NotifyHandler(NotifyParam &param)
             GetSessionCallback_(param);
             break;
         case NOTIFY_OFFLINE:
-            LOGI("NOTIFY_OFFLINE, remote cid %{public}s", Utils::GetAnonyString(cidStr).c_str());
+            LOGI("NOTIFY_OFFLINE, remote cid %{public}s, fd=%{public}d",
+                Utils::GetAnonyString(cidStr).c_str(), param.fd);
             CloseSessionCallback_(param.fd);
             break;
         default:

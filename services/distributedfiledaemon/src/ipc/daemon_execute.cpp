@@ -129,7 +129,7 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
             LOGE("invalid uri, ret = %{public}d", ret);
             return {};
         }
-        LOGI("physicalPath %{public}s", physicalPath.c_str());
+        LOGI("physicalPath %{public}s", GetAnonyString(physicalPath).c_str());
         if (!SandboxHelper::CheckValidPath(physicalPath)) {
             LOGE("invalid path.");
             return {};

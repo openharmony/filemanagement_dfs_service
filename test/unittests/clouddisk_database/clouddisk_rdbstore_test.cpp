@@ -1306,4 +1306,75 @@ HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest1, TestSize.Level1)
     int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
     EXPECT_EQ(ret, E_OK);
 }
+
+/**
+ * @tc.name: OnUpgrade
+ * @tc.desc: Verify the CloudDiskRdbStore::OnUpgrade function
+ * @tc.type: FUNC
+ * @tc.require: SR20240604745994
+ */
+HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest2, TestSize.Level1)
+{
+    RdbStoreMock store;
+    int32_t oldVersion = 11;
+    int32_t newVersion = 12;
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskDataCallBack CloudDiskDataCallBack;
+    int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: ExtAttributeSetAttr
+ * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetAttr function
+ * @tc.type: FUNC
+ * @tc.require: SR20240604745994
+ */
+HWTEST_F(CloudDiskRdbStoreTest, ExtAttributeSetAttrTest1, TestSize.Level1)
+{
+    const std::string cloudId = "root";
+    const std::string key = "user.cloud.test1";
+    const std::string value = "1";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.ExtAttributeSetAttr(cloudId, value, key);
+    EXPECT_EQ(ret, E_OK);
+}
+
+/**
+ * @tc.name: GetExtAttrValue
+ * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetAttr function
+ * @tc.type: FUNC
+ * @tc.require: SR20240604745994
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrValueTest1, TestSize.Level1)
+{
+    const std::string cloudId = "root";
+    const std::string key = "user.cloud.test2";
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.GetExtAttrValue(cloudId, key, value);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: GetExtAttr
+ * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetAttr function
+ * @tc.type: FUNC
+ * @tc.require: SR20240604745994
+ */
+HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest1, TestSize.Level1)
+{
+    const std::string cloudId = "root";
+    std::string value = "";
+    const std::string bundleName = "com.ohos.photos";
+    const int32_t userId = 100;
+    CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
+    int32_t ret = CloudDiskRdbStore.GetExtAttr(cloudId, value);
+    EXPECT_EQ(ret, E_RDB);
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test

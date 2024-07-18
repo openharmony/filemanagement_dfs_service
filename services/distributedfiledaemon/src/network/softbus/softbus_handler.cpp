@@ -17,6 +17,7 @@
 
 #include <utility>
 
+#include "all_connect/all_connect_manager.h"
 #include "device_manager.h"
 #include "dfs_error.h"
 #include "dm_device_info.h"
@@ -40,9 +41,16 @@ std::mutex SoftBusHandler::clientSessNameMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
 std::mutex SoftBusHandler::serverIdMapMutex_;
 std::map<std::string, int32_t> SoftBusHandler::serverIdMap_;
-
+std::mutex SoftBusHandler::networkIdMapMutex_;
+std::map<std::string, std::string> SoftBusHandler::networkIdMap_;
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
+    AllConnectManager::GetInstance().PublishServiceState(info.networkId,
+        ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
+    {
+        std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+        networkIdMap_.insert(std::make_pair(info.networkId, info.name));
+    }
     std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
     SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, info.name));
 }
@@ -111,7 +119,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
 {
     if (packageName.empty() || sessionName.empty() || physicalPath.empty()) {
         LOGI("The parameter is empty");
-        return E_SOFTBUS_SESSION_FAILED;
+        return FileManagement::ERR_BAD_VALUE;
     }
     LOGI("CreateSessionServer Enter.");
     SocketInfo serverInfo = {
@@ -122,7 +130,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
     int32_t socketId = Socket(serverInfo);
     if (socketId < E_OK) {
         LOGE("Create Socket fail socketId, socketId = %{public}d", socketId);
-        return E_SOFTBUS_SESSION_FAILED;
+        return FileManagement::ERR_BAD_VALUE;
     }
     QosTV qos[] = {
         {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
@@ -134,7 +142,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
     if (ret != E_OK) {
         LOGE("Listen socket error for sessionName:%s", sessionName.c_str());
         Shutdown(socketId);
-        return E_SOFTBUS_SESSION_FAILED;
+        return FileManagement::ERR_BAD_VALUE;
     }
     {
         std::lock_guard<std::mutex> lock(serverIdMapMutex_);
@@ -142,7 +150,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
     }
     DistributedFile::SoftBusFileReceiveListener::SetRecvPath(physicalPath);
     LOGI("CreateSessionServer success socketId = %{public}d", socketId);
-    return ret;
+    return socketId;
 }
 
 int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std::string &peerSessionName,
@@ -150,9 +158,9 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
 {
     if (mySessionName.empty() || peerSessionName.empty() || peerDevId.empty()) {
         LOGI("The parameter is empty");
-        return E_OPEN_SESSION;
+        return FileManagement::ERR_BAD_VALUE;
     }
-    LOGI("OpenSession Enter.");
+    LOGI("OpenSession Enter peerDevId: %{public}s", Utils::GetAnonyString(peerDevId).c_str());
     QosTV qos[] = {
         {.qos = QOS_TYPE_MIN_BW,        .value = DFS_QOS_TYPE_MIN_BW},
         {.qos = QOS_TYPE_MAX_LATENCY,        .value = DFS_QOS_TYPE_MAX_LATENCY},
@@ -168,18 +176,22 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     int32_t socketId = Socket(clientInfo);
     if (socketId < E_OK) {
         LOGE("Create OpenSoftbusChannel Socket error");
-        return E_OPEN_SESSION;
+        return FileManagement::ERR_BAD_VALUE;
     }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[role]);
     if (ret != E_OK) {
         LOGE("Bind SocketClient error");
         Shutdown(socketId);
         RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_FAIL);
-        return E_OPEN_SESSION;
+        return FileManagement::ERR_BAD_VALUE;
     }
     {
         std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
         clientSessNameMap_.insert(std::make_pair(socketId, mySessionName));
+    }
+    {
+        std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+        networkIdMap_.insert(std::make_pair(peerDevId, mySessionName));
     }
     RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_SUCCESS);
     LOGI("OpenSession success socketId = %{public}d", socketId);
@@ -206,7 +218,7 @@ void SoftBusHandler::ChangeOwnerIfNeeded(int32_t sessionId, const std::string se
 void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionName)
 {
     LOGI("CloseSession Enter socketId = %{public}d", sessionId);
-    if (sessionName.empty()) {
+    if (sessionName.empty() || sessionId <= 0) {
         LOGI("sessionName is empty");
         return;
     }
@@ -228,6 +240,7 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
         }
     }
     Shutdown(sessionId);
+    RemoveNetworkId(sessionName);
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
 }
 
@@ -252,6 +265,42 @@ void SoftBusHandler::CloseSessionWithSessionName(const std::string sessionName)
     TransManager::GetInstance().NotifyFileFailed(sessionName, E_DFS_CANCEL_SUCCESS);
     TransManager::GetInstance().DeleteTransTask(sessionName);
     CloseSession(sessionId, sessionName);
+}
+void SoftBusHandler::RemoveNetworkId(const std::string &sessionName)
+{
+    LOGI("RemoveNetworkId begin");
+    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+    if (networkIdMap_.empty()) {
+        LOGE("networkIdMap_ is empty");
+        return;
+    }
+    for (auto it : networkIdMap_) {
+        if (it.second == sessionName) {
+            AllConnectManager::GetInstance().PublishServiceState(it.first,
+                ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
+            networkIdMap_.erase(it.first);
+            return;
+        }
+    }
+}
+
+void SoftBusHandler::CloseSessionWithNetworkId(const std::string &peerNetworkId)
+{
+    LOGI("CloseSessionWithNetworkId begin");
+    if (peerNetworkId.empty()) {
+        LOGE("peerNetworkId is empty");
+        return;
+    }
+
+    std::string sessionName;
+    {
+        std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+        auto it = networkIdMap_.find(peerNetworkId);
+        if (it != networkIdMap_.end()) {
+            sessionName = it->second;
+        }
+    }
+    CloseSessionWithSessionName(sessionName);
 }
 } // namespace DistributedFile
 } // namespace Storage

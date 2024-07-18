@@ -45,7 +45,7 @@ static int32_t GetUriRecursively(CloudDiskFuseData* data, FindCloudDiskInodeFunc
     while (!isRoot(inoPtr->parent)) {
         inoPtr = func(data, inoPtr->parent);
         if (!inoPtr || inoPtr->fileName.empty()) {
-            continue;
+            break;
         }
         uri = inoPtr->fileName + BACKFLASH + uri;
         queryTimes++;
@@ -54,7 +54,7 @@ static int32_t GetUriRecursively(CloudDiskFuseData* data, FindCloudDiskInodeFunc
         }
     }
     uri = realPrefix + BACKFLASH + uri;
-    LOGD("GetUriRecursively uri: %{public}s", uri.c_str());
+    LOGD("GetUriRecursively uri: %{public}s", GetAnonyString(uri).c_str());
     return E_OK;
 }
 
@@ -136,7 +136,7 @@ void CloudDiskNotifyUtils::PutCacheNode(const string &cloudId, const CacheNode &
     lock_guard<mutex> lock(cacheMutex_);
     auto it = cacheMap_.find(cloudId);
     if (it != cacheMap_.end()) {
-        LOGD("update cache name: %{public}s", cacheNode.fileName.c_str());
+        LOGD("update cache name: %{public}s", GetAnonyString(cacheNode.fileName).c_str());
         it->second->second = cacheNode;
         cacheList_.splice(cacheList_.begin(), cacheList_, it->second);
         return;
@@ -147,7 +147,7 @@ void CloudDiskNotifyUtils::PutCacheNode(const string &cloudId, const CacheNode &
         cacheList_.pop_back();
         cacheMap_.erase(deleteCloudId);
     }
-    LOGD("insert to cache name: %{public}s", cacheNode.fileName.c_str());
+    LOGD("insert to cache name: %{public}s", GetAnonyString(cacheNode.fileName).c_str());
     cacheList_.emplace_front(cloudId, cacheNode);
     cacheMap_[cloudId] = cacheList_.begin();
 }

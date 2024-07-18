@@ -43,6 +43,7 @@ namespace {
     static const std::string CLOUD_CLOUD_RECYCLE_XATTR = "user.cloud.recycle";
     static const std::string IS_FAVORITE_XATTR = "user.cloud.favorite";
     static const std::string IS_FILE_STATUS_XATTR = "user.cloud.filestatus";
+    static const std::string CLOUD_EXT_ATTR = "extended_attributes";
 }
 
 class CloudFileUtils final {
@@ -62,6 +63,10 @@ public:
     static uint32_t GetBucketId(std::string cloudId);
     static int64_t Timespec2Milliseconds(const struct timespec &time);
     static bool LocalWriteOpen(const std::string &dfsPath);
+    static uint32_t DentryHash(const std::string &cloudId);
+    static void TeaTransform(uint32_t buf[4], uint32_t const in[]);
+    static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num);
+    static bool IsDotDotdot(const std::string &name);
     static const std::string TMP_SUFFIX;
 private:
     static bool EndsWith(const std::string &fullString, const std::string &ending);

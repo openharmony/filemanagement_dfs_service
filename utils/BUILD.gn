@@ -118,7 +118,6 @@ ohos_shared_library("libdistributedfileutils") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
-    "c_utils:utilsbase",
     "device_manager:devicemanagersdk",
     "ffrt:libffrt",
     "file_api:filemgmt_libhilog",
@@ -240,7 +239,6 @@ ohos_shared_library("libdistributedfileutils_lite") {
 
   external_deps = [
     "c_utils:utils",
-    "c_utils:utilsbase",
     "device_manager:devicemanagersdk",
     "ffrt:libffrt",
     "hilog:libhilog",

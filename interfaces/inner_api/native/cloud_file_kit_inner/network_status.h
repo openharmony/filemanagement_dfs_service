@@ -39,6 +39,7 @@ public:
     static NetConnStatus GetNetConnStatus();
     static void OnNetworkAvail();
     static bool CheckMobileNetwork(const std::string &bundleName, const int32_t userId);
+    static bool CheckNetwork(const std::string &bundleName, const int32_t userId);
 
 private:
     static inline NetConnStatus netStatus_{NO_NETWORK};

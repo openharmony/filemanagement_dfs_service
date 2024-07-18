@@ -63,6 +63,10 @@ public:
     int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override;
     int32_t CloseP2PConnectionEx(const std::string &networkId) override;
     int32_t ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceInfo);
+    int32_t CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo,
+                    const std::string &networkId, uint32_t callingTokenId);
+    int32_t ConnectionAndMount(const DistributedHardware::DmDeviceInfo &deviceInfo,
+                               const std::string &networkId, uint32_t callingTokenId);
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
@@ -108,7 +112,7 @@ private:
                  const std::string &dstPath,
                  const sptr<IDaemon> &daemon,
                  const std::string &sessionName);
-    void DeleteSessionAndListener(const std::string &sessionName);
+    void DeleteSessionAndListener(const std::string &sessionName, const int32_t socketId);
 
     class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

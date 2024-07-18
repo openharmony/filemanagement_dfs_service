@@ -84,6 +84,7 @@ ohos_shared_library("cloudfiledaemon") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:dataobs_manager",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
     "hilog:libhilog",

@@ -55,6 +55,7 @@ ohos_unittest("device_info_test") {
   ]
 
   external_deps = [
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
   ]
@@ -81,6 +82,7 @@ ohos_unittest("device_manager_agent_sup_test") {
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
@@ -134,6 +136,7 @@ ohos_unittest("device_manager_agent_sup_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -170,6 +173,7 @@ ohos_unittest("device_manager_agent_test") {
     "${distributedfile_path}/test/mock/device_manager_impl_mock.cpp",
     "${distributedfile_path}/test/mock/device_manager_mock.cpp",
     "${distributedfile_path}/test/mock/softbus_bus_center_mock.cpp",
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
@@ -220,6 +224,7 @@ ohos_unittest("device_manager_agent_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -252,6 +257,7 @@ ohos_unittest("os_account_observer_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
@@ -301,6 +307,7 @@ ohos_unittest("os_account_observer_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -333,6 +340,7 @@ ohos_unittest("devsl_dispatcher_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
@@ -381,6 +389,7 @@ ohos_unittest("devsl_dispatcher_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -413,6 +422,7 @@ ohos_unittest("kernel_talker_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
@@ -461,6 +471,7 @@ ohos_unittest("kernel_talker_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -492,6 +503,7 @@ ohos_unittest("network_agent_template_test") {
   module_out_path = module_output_path
 
   sources = [
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/connection_detector.cpp",
@@ -537,6 +549,7 @@ ohos_unittest("network_agent_template_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -569,6 +582,7 @@ ohos_unittest("session_pool_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
@@ -616,6 +630,7 @@ ohos_unittest("session_pool_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -648,6 +663,7 @@ ohos_unittest("softbus_agent_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
@@ -696,6 +712,7 @@ ohos_unittest("softbus_agent_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -735,6 +752,7 @@ ohos_unittest("softbus_file_receive_listener_test") {
   ]
 
   sources = [
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
@@ -756,6 +774,7 @@ ohos_unittest("softbus_file_receive_listener_test") {
 
   external_deps = [
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -782,6 +801,7 @@ ohos_unittest("softbus_file_send_listener_test") {
   ]
 
   sources = [
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
@@ -803,6 +823,7 @@ ohos_unittest("softbus_file_send_listener_test") {
 
   external_deps = [
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -825,6 +846,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
@@ -873,6 +895,7 @@ ohos_unittest("softbus_session_dispatcher_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -905,6 +928,7 @@ ohos_unittest("softbus_session_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_info.cpp",
     "${services_path}/distributedfiledaemon/src/device/device_manager_agent.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
@@ -953,6 +977,7 @@ ohos_unittest("softbus_session_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dataclassification:data_transit_mgr",
     "device_auth:deviceauth_sdk",
@@ -1018,6 +1043,7 @@ ohos_unittest("softbus_handler_asset_test") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -1045,6 +1071,7 @@ ohos_unittest("softbus_handler_test") {
 
   sources = [
     "${distributedfile_path}/test/mock/socket_mock.cpp",
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
@@ -1068,6 +1095,7 @@ ohos_unittest("softbus_handler_test") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
@@ -1107,6 +1135,7 @@ ohos_unittest("softbus_session_pool_test") {
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "c_utils:utils",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
   ]
@@ -1144,6 +1173,7 @@ ohos_unittest("softbus_session_listener_test") {
     "ability_base:zuri",
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
     "os_account:os_account_innerkits",

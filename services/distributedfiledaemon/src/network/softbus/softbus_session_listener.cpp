@@ -50,16 +50,22 @@ int32_t SoftBusSessionListener::QueryActiveUserId()
 }
 
 std::vector<std::string> SoftBusSessionListener::GetFileName(const std::vector<std::string> &fileList,
-                                                             const std::string &path)
+                                                             const std::string &path,
+                                                             const std::string &dstPath)
 {
     std::vector<std::string> tmp;
-    if (!Utils::IsFolder(path)) {
-        auto pos = path.rfind("/");
-        tmp.push_back(path.substr(pos + 1));
-    } else {
+    if (Utils::IsFolder(path)) {
         for (const auto &it : fileList) {
             tmp.push_back(it.substr(path.size() + 1));
         }
+        return tmp;
+    }
+    if (dstPath.find("??") == 0) {
+        auto pos = dstPath.rfind("/");
+        tmp.push_back(dstPath.substr(pos + 1));
+    } else {
+        auto pos = path.rfind("/");
+        tmp.push_back(path.substr(pos + 1));
     }
     return tmp;
 }
@@ -92,7 +98,7 @@ void SoftBusSessionListener::OnSessionOpened(int32_t sessionId, PeerSocketInfo i
         src[i] = fileList.at(i).c_str();
     }
 
-    auto fileNameList = GetFileName(fileList, physicalPath);
+    auto fileNameList = GetFileName(fileList, physicalPath, sessionInfo.dstPath);
     if (fileNameList.empty()) {
         LOGE("GetFileName failed or file is empty");
         return;
@@ -117,7 +123,7 @@ void SoftBusSessionListener::OnSessionClosed(int32_t sessionId, ShutdownReason r
     std::string sessionName = "";
     sessionName = SoftBusHandler::GetSessionName(sessionId);
     LOGI("OnSessionClosed, sessionId = %{public}d", sessionId);
-    SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
+    SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
 }
 
 std::string SoftBusSessionListener::GetLocalUri(const std::string &uri)
@@ -164,7 +170,7 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
     }
     std::string physicalPath;
     if (SandboxHelper::GetPhysicalPath(localUri, std::to_string(QueryActiveUserId()), physicalPath) != E_OK) {
-        LOGE("GetPhysicalPath failed, invalid uri, physicalPath = %{public}s", physicalPath.c_str());
+        LOGE("GetPhysicalPath failed, invalid uri, physicalPath = %{public}s", GetAnonyString(physicalPath).c_str());
         return "";
     }
     if (physicalPath.empty() || physicalPath.size() >= PATH_MAX) {

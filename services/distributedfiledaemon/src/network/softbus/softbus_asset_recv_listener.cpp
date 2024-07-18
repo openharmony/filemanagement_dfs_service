@@ -180,13 +180,13 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
         std::string newPath = oldPath;
         size_t pos = newPath.find(TEMP_DIR);
         if (pos == std::string::npos) {
-            LOGE("get asset temp dir fail, file name is %{public}s", oldPath.c_str());
+            LOGE("get asset temp dir fail, file name is %{public}s", GetAnonyString(oldPath).c_str());
             return false;
         }
         newPath.replace(pos, TEMP_DIR.length(), "");
         pos = newPath.find(ASSET_FLAG_SINGLE);
         if (pos == std::string::npos) {
-            LOGE("get asset flag fail, file name is %{public}s", oldPath.c_str());
+            LOGE("get asset flag fail, file name is %{public}s", GetAnonyString(oldPath).c_str());
             return false;
         }
         newPath = newPath.substr(0, pos);
@@ -204,7 +204,7 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
         std::string newPath = oldPath;
         size_t pos = newPath.find(TEMP_DIR);
         if (pos == std::string::npos) {
-            LOGE("get asset temp dir fail, file name is %{public}s", oldPath.c_str());
+            LOGE("get asset temp dir fail, file name is %{public}s", GetAnonyString(oldPath).c_str());
             return false;
         }
         newPath.replace(pos, TEMP_DIR.length(), "");
@@ -223,13 +223,13 @@ bool SoftbusAssetRecvListener::RemoveAsset(const std::string &file)
 {
     size_t pos = file.find(TEMP_DIR);
     if (pos == std::string::npos) {
-        LOGE("get asset temp dir fail, file name is %{public}s", file.c_str());
+        LOGE("get asset temp dir fail, file name is %{public}s", GetAnonyString(file).c_str());
         return false;
     }
     std::string removePath = file.substr(0, pos + TEMP_DIR.length() - 1);
     bool ret = std::filesystem::remove_all(removePath.c_str());
     if (!ret) {
-        LOGE("remove file fail, remove path is %{public}s", removePath.c_str());
+        LOGE("remove file fail, remove path is %{public}s", GetAnonyString(removePath).c_str());
         return false;
     }
     return true;
@@ -264,7 +264,7 @@ int32_t SoftbusAssetRecvListener::HandleZipFile(int32_t socketId,
     LOGI("HandleZipFile begin.");
     size_t pos = filePath.find(ASSET_FLAG_ZIP);
     if (pos == std::string::npos) {
-        LOGE("filePath is not a zip file : %{public}s", filePath.c_str());
+        LOGE("filePath is not a zip file : %{public}s", GetAnonyString(filePath).c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     std::string zipfilePath = filePath.substr(0, pos);
@@ -276,7 +276,7 @@ int32_t SoftbusAssetRecvListener::HandleZipFile(int32_t socketId,
     }
     pos = zipfilePath.rfind("/");
     if (pos == std::string::npos) {
-        LOGE("filePath is not a zip file : %{public}s", filePath.c_str());
+        LOGE("filePath is not a zip file : %{public}s", GetAnonyString(filePath).c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     std::string relativePath = zipfilePath.substr(0, pos + 1);
@@ -310,6 +310,11 @@ bool SoftbusAssetRecvListener::JudgeSingleFile(const std::string &filePath)
         return false;
     }
     return true;
+}
+
+void SoftbusAssetRecvListener::OnRecvShutdown(int32_t sessionId, ShutdownReason reason)
+{
+    LOGI("OnSessionClosed, sessionId = %{public}d, reason = %{public}d", sessionId, reason);
 }
 } // namespace DistributedFile
 } // namespace Storage
