@@ -262,12 +262,69 @@ ohos_unittest("battery_status_test") {
   use_exceptions = true
 }
 
+ohos_unittest("network_set_manager_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = "filemanagement/dfs_service"
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_set_manager.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_helper.cpp",
+    "network_set_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
+    "${innerkits_native_path}/cloud_file_kit_inner",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/sync_rule",
+    "${utils_path}/log/include",
+    "${image_framework_path}/mock/native/include/log",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/utils/include",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_runtime:dataobs_manager",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 group("cloudsync_sa_sync_rule_test") {
   testonly = true
   deps = [
     ":battery_status_listener_test",
     ":battery_status_test",
     ":cloud_status_test",
+    ":network_set_manager_test",
     ":network_status_test",
   ]
 }
