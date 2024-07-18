@@ -28,31 +28,31 @@ static const int READ_SIZE = 100;
 CloudSyncServiceStub::CloudSyncServiceStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_CALLBACK)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleUnRegisterCallbackInner(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleUnRegisterCallbackInner(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_CALLBACK)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleRegisterCallbackInner(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleRegisterCallbackInner(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_SYNC)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleStartSyncInner(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStartSyncInner(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_TRIGGER_SYNC)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleTriggerSyncInner(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleTriggerSyncInner(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_SYNC)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleStopSyncInner(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStopSyncInner(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CHANGE_APP_SWITCH)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleChangeAppSwitch(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleChangeAppSwitch(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CLEAN)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleClean(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleClean(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_DATA_CHANGE)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleNotifyDataChange(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleNotifyDataChange(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_NOTIFY_EVENT_CHANGE)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleNotifyEventChange(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleNotifyEventChange(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_ENABLE_CLOUD)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleEnableCloud(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleEnableCloud(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DISABLE_CLOUD)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleDisableCloud(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDisableCloud(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_DOWNLOAD_FILE)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleStartDownloadFile(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStartDownloadFile(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_DOWNLOAD_FILE)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleStopDownloadFile(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStopDownloadFile(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(
         CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK)] =
         [this](MessageParcel &data, MessageParcel &reply) {
@@ -64,26 +64,26 @@ CloudSyncServiceStub::CloudSyncServiceStub()
                 return this->HandleUnregisterDownloadFileCallback(data, reply);
             };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UPLOAD_ASSET)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleUploadAsset(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleUploadAsset(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILE)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleDownloadFile(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDownloadFile(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILES)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleDownloadFiles(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDownloadFiles(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_ASSET)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleDownloadAsset(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDownloadAsset(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(
         CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_ASSET_CALLBACK)] =
         [this](MessageParcel &data, MessageParcel &reply) {
                 return this->HandleRegisterDownloadAssetCallback(data, reply);
             };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DELETE_ASSET)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleDeleteAsset(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDeleteAsset(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_GET_SYNC_TIME)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleGetSyncTime(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleGetSyncTime(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_CLEAN_CACHE)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleCleanCache(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleCleanCache(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_CACHE)] =
-        [this](MessageParcel &data, MessageParcel &reply) {return this->HandleStartFileCache(data, reply);};
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStartFileCache(data, reply); };
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
