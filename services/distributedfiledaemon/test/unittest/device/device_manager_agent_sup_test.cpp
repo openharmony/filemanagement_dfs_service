@@ -143,10 +143,11 @@ HWTEST_F(DeviceManagerAgentSupTest, DeviceManagerAgentTest_UMountDfsCountOnly_01
 
     auto itCount = testPtr->mountDfsCount_.find("test");
     if (itCount == testPtr->mountDfsCount_.end()) {
-        EXPECT_TRUE(true);
-    } else {
         EXPECT_TRUE(false);
+    } else {
+        EXPECT_TRUE(true);
     }
+    testPtr->mountDfsCount_.erase("test");
     GTEST_LOG_(INFO) << "DeviceManagerAgentTest_UMountDfsCountOnly_0100 end";
 }
 
