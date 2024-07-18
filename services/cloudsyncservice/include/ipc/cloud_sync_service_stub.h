@@ -21,7 +21,7 @@
 #include "i_cloud_sync_service.h"
 
 namespace OHOS::FileManagement::CloudSync {
-using ServiceInterface = std::functiom<int32_t(MessageParcel &data, MessageParcel &reply)>;
+using ServiceInterface = std::function<int32_t(MessageParcel &data, MessageParcel &reply)>;
 class __attribute__ ((visibility("default"))) CloudSyncServiceStub : public IRemoteStub<ICloudSyncService> {
 public:
     CloudSyncServiceStub();
