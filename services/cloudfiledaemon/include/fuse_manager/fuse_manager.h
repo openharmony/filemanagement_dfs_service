@@ -38,7 +38,6 @@ private:
 private:
     map<int32_t, struct fuse_session *> sessions_;
 };
-
 } // namespace CloudFile
 } // namespace FileManagement
 } // namespace OHOS
