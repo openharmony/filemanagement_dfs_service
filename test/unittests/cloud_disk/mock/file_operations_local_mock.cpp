@@ -82,10 +82,7 @@ static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name
     return 0;
 }
 
-void FileOperationsLocal::Lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
-{
-
-}
+void FileOperationsLocal::Lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {}
 
 void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
