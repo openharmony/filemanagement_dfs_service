@@ -26,6 +26,7 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudFile {
+using CloudDaemonInterface = std::function<int32_t (MessageParcel &data, MessageParcel &reply)>;
 class CloudDaemonStub : public IRemoteStub<ICloudDaemon> {
 public:
     CloudDaemonStub();
@@ -33,7 +34,6 @@ public:
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
-    using CloudDaemonInterface = int32_t (CloudDaemonStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, CloudDaemonInterface> opToInterfaceMap_;
 
     int32_t HandleStartFuseInner(MessageParcel &data, MessageParcel &reply);

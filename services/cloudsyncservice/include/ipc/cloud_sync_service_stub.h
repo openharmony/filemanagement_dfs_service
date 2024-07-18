@@ -21,6 +21,7 @@
 #include "i_cloud_sync_service.h"
 
 namespace OHOS::FileManagement::CloudSync {
+using ServiceInterface = std::functiom<int32_t(MessageParcel &data, MessageParcel &reply)>;
 class __attribute__ ((visibility("default"))) CloudSyncServiceStub : public IRemoteStub<ICloudSyncService> {
 public:
     CloudSyncServiceStub();
@@ -28,7 +29,6 @@ public:
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
-    using ServiceInterface = int32_t (CloudSyncServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, ServiceInterface> opToInterfaceMap_;
     int32_t HandleUnRegisterCallbackInner(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRegisterCallbackInner(MessageParcel &data, MessageParcel &reply);
