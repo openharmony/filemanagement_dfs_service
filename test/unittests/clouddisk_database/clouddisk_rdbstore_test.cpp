@@ -1311,7 +1311,6 @@ HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest1, TestSize.Level1)
  * @tc.name: OnUpgrade
  * @tc.desc: Verify the CloudDiskRdbStore::OnUpgrade function
  * @tc.type: FUNC
- * @tc.require: SR20240604745994
  */
 HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest2, TestSize.Level1)
 {
