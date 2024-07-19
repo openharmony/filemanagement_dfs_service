@@ -23,7 +23,9 @@ using namespace std;
 
 CloudDownloadCallbackStub::CloudDownloadCallbackStub()
 {
-    opToInterfaceMap_[SERVICE_CMD_ON_PROCESS] = &CloudDownloadCallbackStub::HandleOnProcess;
+    opToInterfaceMap_[SERVICE_CMD_ON_PROCESS] = [this](MessageParcel &data, MessageParcel &reply) {
+            return this->HandleOnProcess(data, reply);
+        };
 }
 
 int32_t CloudDownloadCallbackStub::OnRemoteRequest(uint32_t code,
@@ -39,7 +41,8 @@ int32_t CloudDownloadCallbackStub::OnRemoteRequest(uint32_t code,
         LOGE("Cannot response request %d: unknown tranction", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    return (this->*(interfaceIndex->second))(data, reply);
+    auto memberFunc = interfaceIndex->second;
+    return memberFunc(data, reply);
 }
 
 int32_t CloudDownloadCallbackStub::HandleOnProcess(MessageParcel &data, MessageParcel &reply)

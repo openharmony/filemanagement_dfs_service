@@ -22,6 +22,8 @@
 #include "iremote_stub.h"
 
 namespace OHOS::FileManagement::CloudSync {
+
+using ServiceInterface = std::function<int32_t(MessageParcel &data, MessageParcel &reply)>;
 class CloudDownloadCallbackStub : public IRemoteStub<ICloudDownloadCallback> {
 public:
     CloudDownloadCallbackStub();
@@ -29,7 +31,6 @@ public:
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
-    using ServiceInterface = int32_t (CloudDownloadCallbackStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, ServiceInterface> opToInterfaceMap_;
 
     int32_t HandleOnProcess(MessageParcel &data, MessageParcel &reply);

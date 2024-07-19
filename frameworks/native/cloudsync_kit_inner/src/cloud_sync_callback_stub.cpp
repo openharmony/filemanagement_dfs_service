@@ -22,7 +22,9 @@ using namespace std;
 
 CloudSyncCallbackStub::CloudSyncCallbackStub()
 {
-    opToInterfaceMap_[SERVICE_CMD_ON_SYNC_STATE_CHANGED] = &CloudSyncCallbackStub::HandleOnSyncStateChanged;
+    opToInterfaceMap_[SERVICE_CMD_ON_SYNC_STATE_CHANGED] = [this](MessageParcel &data, MessageParcel &reply) {
+            return this->HandleOnSyncStateChanged(data, reply);
+        };
 }
 
 int32_t CloudSyncCallbackStub::OnRemoteRequest(uint32_t code,
@@ -38,7 +40,8 @@ int32_t CloudSyncCallbackStub::OnRemoteRequest(uint32_t code,
         LOGE("Cannot response request %d: unknown tranction", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    return (this->*(interfaceIndex->second))(data, reply);
+    auto memberFunc = interfaceIndex->second;
+    return memberFunc(data, reply);
 }
 
 int32_t CloudSyncCallbackStub::HandleOnSyncStateChanged(MessageParcel &data, MessageParcel &reply)
