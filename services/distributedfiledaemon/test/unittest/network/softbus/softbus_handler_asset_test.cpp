@@ -283,7 +283,7 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AddAssetObj_0100, Test
 {
     GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_AddAssetObj_0100 start";
     auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
     softBusHandlerAsset.AddAssetObj(0, assetObj);
     softBusHandlerAsset.AddAssetObj(0, assetObj);
     auto iter = softBusHandlerAsset.assetObjMap_.find(0);
@@ -346,7 +346,7 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_AssetSendFile_0100, Te
     string file = "test123";
     EXPECT_EQ(softBusHandlerAsset.AssetSendFile(0, file, true), ERR_BAD_VALUE);
 
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
     softBusHandlerAsset.AddAssetObj(0, assetObj);
     EXPECT_CALL(*deviceManagerImplMock_, GetTrustedDeviceList(_, _, _)).WillOnce(Return(0));
     EXPECT_EQ(softBusHandlerAsset.AssetSendFile(0, file, true), ERR_BAD_VALUE);
@@ -408,7 +408,7 @@ HWTEST_F(SoftBusHandlerAssetTest, SoftBusHandlerAssetTest_GenerateAssetObjInfo_0
 {
     GTEST_LOG_(INFO) << "SoftBusHandlerAssetTest_GenerateAssetObjInfo_0100 start";
     auto &&softBusHandlerAsset = SoftBusHandlerAsset::GetInstance();
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
     string fileName = "test";
     auto ret = softBusHandlerAsset.GenerateAssetObjInfo(0, fileName, assetObj);
     EXPECT_EQ(ret, ERR_BAD_VALUE);

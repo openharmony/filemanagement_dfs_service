@@ -88,7 +88,7 @@ void SoftbusAssetRecvListener::OnRecvAssetStart(int32_t socketId, const char **f
         return;
     }
     std::string filePath(path_ + fileList[0]);
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
     int32_t ret = SoftBusHandlerAsset::GetInstance().GenerateAssetObjInfo(socketId, filePath, assetObj);
     if (ret != FileManagement::ERR_OK) {
         LOGE("Generate assetObjInfo fail");
@@ -113,7 +113,7 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
         return;
     }
     std::string firstFilePath(path_ + fileList[0]);
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
     int32_t ret = SoftBusHandlerAsset::GetInstance().GenerateAssetObjInfo(socketId, firstFilePath, assetObj);
     if (ret != FileManagement::ERR_OK) {
         LOGE("Generate assetObjInfo fail");
@@ -148,7 +148,7 @@ void SoftbusAssetRecvListener::OnRecvAssetError(int32_t socketId, int32_t errorC
         LOGE("get srcNetworkId fail");
         return;
     }
-    sptr<AssetObj> nullAssetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> nullAssetObj (new (std::nothrow) AssetObj());
 
     AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, nullAssetObj,
                                                                 FileManagement::ERR_BAD_VALUE);
