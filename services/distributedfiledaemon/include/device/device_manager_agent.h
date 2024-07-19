@@ -78,6 +78,7 @@ public:
     void OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
     void OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo) override {}
 
+    void ClearCount(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t OnDeviceP2POffline(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t AddRemoteReverseObj(uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj);

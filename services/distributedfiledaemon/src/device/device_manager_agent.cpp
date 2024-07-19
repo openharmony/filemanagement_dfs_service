@@ -297,6 +297,19 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
     LOGI("OnDeviceOffline end");
 }
 
+void DeviceManagerAgent::ClearCount(const DistributedHardware::DmDeviceInfo &deviceInfo)
+{
+    LOGI("ClearCount networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
+    DeviceInfo info(deviceInfo);
+    unique_lock<mutex> lock(mpToNetworksMutex_);
+    auto it = cidNetTypeRecord_.find(info.cid_);
+    if (it == cidNetTypeRecord_.end()) {
+        LOGE("cid %{public}s network is null!",  Utils::GetAnonyString(info.cid_).c_str());
+        return;
+    }
+    it->second->DisconnectDeviceByP2P(info);
+}
+
 int32_t DeviceManagerAgent::OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("[OnDeviceP2POnline] networkId %{public}s, OnDeviceOnline begin",
