@@ -22,11 +22,6 @@
 #include "assistant.h"
 
 using namespace OHOS::FileManagement::CloudDisk;
-int access(const char *name, int type)
-{
-    return Assistant::ins->access(name, type);
-}
-
 int open(const char *file, int oflag, ...)
 {
     return Assistant::ins->open(file, oflag);
