@@ -113,7 +113,7 @@ void CloudDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
     obj.AddProp("processed", NVal::CreateInt64(env, (int64_t)msg->downloadProgress_.downloadedSize).val_);
     obj.AddProp("size", NVal::CreateInt64(env, (int64_t)msg->downloadProgress_.totalSize).val_);
     obj.AddProp("uri", NVal::CreateUTF8String(env, msg->downloadProgress_.path).val_);
-    obj.AddProp("downloadErrorType", NVal::CreateInt32(env, (int32_t)msg->downloadProgress_.downloadErrorType).val_);
+    obj.AddProp("error", NVal::CreateInt32(env, (int32_t)msg->downloadProgress_.downloadErrorType).val_);
     napi_value retVal = nullptr;
     napi_value global = nullptr;
     napi_get_global(env, &global);
