@@ -65,6 +65,14 @@ const int64_t MILLISECOND_TO_NANOSECOND = 1e6;
 const std::string GALLERY_BUNDLE_NAME = "com.ohos.photos";
 const std::string MEDIALIBRARY_BUNDLE_NAME = "com.ohos.medialibrary.medialibrarydata";
 
+static const std::string CLOUDSYNC_STATUS_KEY = "persist.kernel.cloudsync.status";
+static const std::string CLOUDSYNC_STATUS_LOGOUT = "0";
+static const std::string CLOUDSYNC_STATUS_START = "1";
+static const std::string CLOUDSYNC_STATUS_INC_SYNC = "2";
+static const std::string CLOUDSYNC_STATUS_FULL_SYNC = "3";
+static const std::string CLOUDSYNC_STATUS_FINISH = "4";
+static const std::string CLOUDSYNC_STATUS_SWITCHOFF = "5";
+
 static inline uint64_t GetCurrentTimeStamp()
 {
     struct timespec t;
