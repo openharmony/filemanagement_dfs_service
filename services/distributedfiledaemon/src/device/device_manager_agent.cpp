@@ -299,7 +299,8 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
 
 void DeviceManagerAgent::ClearCount(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
-    LOGI("ClearCount networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str())
+    LOGI("ClearCount networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
+    DeviceInfo info(deviceInfo);
     unique_lock<mutex> lock(mpToNetworksMutex_);
     auto it = cidNetTypeRecord_.find(info.cid_);
     if (it == cidNetTypeRecord_.end()) {
