@@ -35,6 +35,12 @@ declare_args() {
   } else {
     cloudsync_service_power = false
   }
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.powermgr_power_manager)) {
+    cloudsync_service_power_manager = true
+  } else {
+    cloudsync_service_power_manager = false
+  }
   dfs_service_feature_enable_cloud_adapter = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.multimedia_media_library)) {

@@ -18,7 +18,9 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "dfs_error.h"
+#ifdef SUPPORT_POWER_MANAGER
 #include "power_mgr_client.h"
+#endif
 #include "utils_log.h"
 
 namespace OHOS {
@@ -31,8 +33,12 @@ bool ScreenStatus::IsScreenOn()
 
 void ScreenStatus::InitScreenStatus()
 {
+#ifdef SUPPORT_POWER_MANAGER
     bool isScreenOn = PowerMgr::PowerMgrClient::GetInstance().IsScreenOn();
     screenState_ =  isScreenOn? ScreenState::SCREEN_ON : ScreenState::SCREEN_OFF;
+#else
+    screenState_ = ScreenState::SCREEN_ON;
+#endif
 }
 
 void ScreenStatus::SetScreenState(ScreenState screenState)
