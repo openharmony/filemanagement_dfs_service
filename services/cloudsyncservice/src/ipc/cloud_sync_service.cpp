@@ -178,10 +178,12 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
     if (reason == "usual.event.wifi.CONN_STATE") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
         dataSyncManager_->DownloadThumb();
+        dataSyncManager_->CacheVideo();
     } else if (reason == "usual.event.BATTERY_OKAY") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
     } else if (reason == "usual.event.SCREEN_OFF" || reason == "usual.event.POWER_CONNECTED") {
         dataSyncManager_->DownloadThumb();
+        dataSyncManager_->CacheVideo();
     }
 
     if (reason != "load") {
