@@ -133,4 +133,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
 {
     return NativeRdb::E_OK;
 }
+
+int32_t CloudDiskRdbStore::GetDirtyType(const std::string &cloudId, int32_t &dirtyType)
+{
+    return E_OK;
+}
 }

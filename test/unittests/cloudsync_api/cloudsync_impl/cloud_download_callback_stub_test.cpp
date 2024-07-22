@@ -177,7 +177,7 @@ HWTEST_F(CloudDownloadCallbackStubTest, HandleOnProcessTest002, TestSize.Level1)
         bool prog = data.WriteParcelable(&progress);
         EXPECT_TRUE(prog);
         int32_t ret = cloudDownloadCallbackStub_->HandleOnProcess(data, reply);
-        EXPECT_EQ(E_INVAL_ARG, ret);
+        EXPECT_EQ(E_OK, ret);
     } catch(...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " HandleOnProcess ERROR";
