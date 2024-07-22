@@ -1130,7 +1130,9 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
     if (fd < 0) {
         return fd;
     }
-    return pread(fd, readArgs->buf.get(), readArgs->size, readArgs->offset);
+    ssize_t bytesRead = pread(fd, readArgs->buf.get(), readArgs->size, readArgs->offset);
+    close(fd);
+    return bytesRead;
 }
 
 static bool DoReadSlice(fuse_req_t req,
