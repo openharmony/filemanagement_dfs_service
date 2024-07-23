@@ -26,6 +26,7 @@
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_name.h"
 #include "network/softbus/softbus_session.h"
+#include "softbus_error_code.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 
@@ -193,7 +194,8 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
         .networkId = const_cast<char*>(info.GetCid().c_str()),
     };
     SoftbusSessionDispatcher::OnSessionOpened(socketId, peerSocketInfo);
-    LOGI("Success to OpenSession, socketId:%{public}d, linkType:%{public}d", socketId, linkType);
+    LOGI("Success to OpenSession, socketId:%{public}d, linkType:%{public}d, cid:%{public}s",
+        socketId, linkType, Utils::GetAnonyString(info.GetCid()).c_str());
     return FileManagement::E_OK;
 }
 
@@ -225,8 +227,12 @@ void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType
         return;
     }
     int32_t ret = DfsBind(socketId, &sessionListener);
+    if (ret == SOFTBUS_TRANS_SOCKET_IN_USE) {
+        LOGI("Bind Socket in use cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
+        return;
+    }
     if (ret != FileManagement::E_OK) {
-        LOGE("Bind SocketClient error");
+        LOGE("Bind SocketClient error cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
         Shutdown(socketId);
         return;
     }
@@ -236,7 +242,8 @@ void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType
         .networkId = const_cast<char*>(info.GetCid().c_str()),
     };
     SoftbusSessionDispatcher::OnSessionOpened(socketId, peerSocketInfo);
-    LOGI("Success to OpenApSession, socketId:%{public}d, linkType:%{public}d", socketId, linkType);
+    LOGI("Success to OpenApSession, socketId:%{public}d, linkType:%{public}d, cid:%{public}s",
+        socketId, linkType, Utils::GetAnonyString(info.GetCid()).c_str());
 }
 
 void SoftbusAgent::CloseSession(shared_ptr<BaseSession> session)
