@@ -15,8 +15,5 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 group("cloud_file_kit_inner_test") {
   testonly = true
-  deps = [
-    "big_data_statistics:big_data_statistics_test",
-    "data_sync:data_sync_test",
-  ]
+  deps = [ "data_sync:data_sync_test" ]
 }

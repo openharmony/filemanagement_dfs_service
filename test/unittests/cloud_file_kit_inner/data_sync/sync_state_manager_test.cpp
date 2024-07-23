@@ -211,4 +211,258 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_008, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "SyncStateManagerTest_008 End";
 }
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_009";
+    try {
+        SyncStateManager syncStateManager;
+        int32_t ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::INIT);
+        EXPECT_EQ(ret, 0);
+        ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::SYNCING);
+        EXPECT_EQ(ret, 0);
+        ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::CLEANING);
+        EXPECT_EQ(ret, 0);
+        ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::SYNC_FAILED);
+        EXPECT_EQ(ret, 0);
+        ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::SYNC_SUCCEED);
+        EXPECT_EQ(ret, 0);
+        ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::CLEAN_SUCCEED);
+        EXPECT_EQ(ret, 0);
+        ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::DISABLE_CLOUD);
+        EXPECT_EQ(ret, 0);
+        ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::DISABLE_CLOUD_SUCCEED);
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_009 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_010";
+    try {
+        SyncStateManager syncStateManager;
+        bool forceFlag = true;
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), 0);
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::APP_TRIGGER);
+        EXPECT_FALSE(ret);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_010 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_010 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_011";
+    try {
+        SyncStateManager syncStateManager;
+        bool forceFlag = true;
+
+        Action action = syncStateManager.UpdateSyncState(SyncState::SYNCING);
+        EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::SYNCING));
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret);
+        syncStateManager.SetCleaningFlag();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_011 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_011 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_012";
+    try {
+        SyncStateManager syncStateManager;
+        bool forceFlag = false;
+
+        Action action = syncStateManager.UpdateSyncState(SyncState::SYNCING);
+        EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::SYNCING));
+        
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::TASK_TRIGGER);
+        EXPECT_TRUE(ret);
+
+        ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret);
+
+        forceFlag = true;
+        ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret);
+        syncStateManager.SetCleaningFlag();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_012 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_012 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_013";
+    try {
+        SyncStateManager syncStateManager;
+        bool forceFlag = false;
+
+        Action action = syncStateManager.UpdateSyncState(SyncState::CLEANING);
+        EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::CLEANING));
+        
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::TASK_TRIGGER);
+        EXPECT_TRUE(ret);
+
+        ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret);
+
+        forceFlag = true;
+        ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret);
+        syncStateManager.SetCleaningFlag();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_013 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_013 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_014, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_014";
+    try {
+        SyncStateManager syncStateManager;
+        bool forceFlag = false;
+
+        Action action = syncStateManager.UpdateSyncState(SyncState::DISABLE_CLOUD);
+        EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::DISABLE_CLOUD));
+        
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::TASK_TRIGGER);
+        EXPECT_TRUE(ret);
+
+        ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret);
+
+        forceFlag = true;
+        ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::APP_TRIGGER);
+        EXPECT_TRUE(ret);
+        syncStateManager.SetCleaningFlag();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_014 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_014 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_015, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_015";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetCleaningFlag();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_015 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_015 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_016, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_016";
+    try {
+        SyncStateManager syncStateManager;
+        EXPECT_FALSE(syncStateManager.GetStopSyncFlag());
+        syncStateManager.SetStopSyncFlag();
+        EXPECT_TRUE(syncStateManager.GetStopSyncFlag());
+
+        Action action = syncStateManager.UpdateSyncState(SyncState::INIT);
+        EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
+        EXPECT_FALSE(syncStateManager.GetStopSyncFlag());
+
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::INIT));
+        syncStateManager.SetStopSyncFlag();
+        EXPECT_TRUE(syncStateManager.GetStopSyncFlag());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_016 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_016 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_017, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_017";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetStopSyncFlag();
+        EXPECT_TRUE(syncStateManager.GetStopSyncFlag());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_017 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_017 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_018, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_018";
+    try {
+        SyncStateManager syncStateManager;
+        syncStateManager.SetDisableCloudFlag();
+        SyncState syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::DISABLE_CLOUD));
+
+        Action action = syncStateManager.UpdateSyncState(SyncState::CLEANING);
+        EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
+
+        syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::CLEANING));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_018 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_018 End";
+}
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_019, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_019";
+    try {
+        SyncStateManager syncStateManager;
+        SyncState syncState;
+        bool forceFlag = true;
+        EXPECT_FALSE(syncStateManager.GetForceFlag());
+
+        Action action = syncStateManager.UpdateSyncState(SyncState::DISABLE_CLOUD_SUCCEED);
+        EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
+        syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::DISABLE_CLOUD_SUCCEED));
+
+        bool ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::TASK_TRIGGER);
+        syncState = syncStateManager.GetSyncState();
+        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::SYNCING));
+        EXPECT_FALSE(ret);
+        EXPECT_TRUE(syncStateManager.GetForceFlag());
+        
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_019 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_019 End";
+}
 }
