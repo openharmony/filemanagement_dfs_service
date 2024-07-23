@@ -26,6 +26,7 @@
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_name.h"
 #include "network/softbus/softbus_session.h"
+#include "softbus_error_code.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 
@@ -226,11 +227,11 @@ void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType
         return;
     }
     int32_t ret = DfsBind(socketId, &sessionListener);
+    if (ret == FileManagement::SOFTBUS_TRANS_SOCKET_IN_USE) {
+        LOGI("Bind Socket in use cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
+        return;
+    }
     if (ret != FileManagement::E_OK) {
-        if (ret == FileManagement::SOFTBUS_TRANS_SOCKET_IN_USE) {
-            LOGI("Bind Socket in use cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-            return;
-        }
         LOGE("Bind SocketClient error cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
         Shutdown(socketId);
         return;

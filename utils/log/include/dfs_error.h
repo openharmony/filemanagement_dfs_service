@@ -92,8 +92,6 @@ enum DFSErrCode {
     ERR_DLOPEN,
     ERR_PUBLISH_STATE,
     ERR_ALLCONNECT,
-
-    SOFTBUS_TRANS_SOCKET_IN_USE = -426115001,
 };
 
 enum JsErrCode {

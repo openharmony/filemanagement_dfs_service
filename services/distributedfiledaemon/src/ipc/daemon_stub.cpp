@@ -27,7 +27,6 @@ namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::FileManagement;
 const int32_t UID = 1009;
-const int32_t E_PERMISSION_DENIED_NAPI = 201;
 DaemonStub::DaemonStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION)] =
@@ -100,7 +99,7 @@ int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &
     LOGI("Begin OpenP2PConnection");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[HandleOpenP2PConnection] DATASYNC permission denied");
-        return E_PERMISSION_DENIED_NAPI;
+        return E_PERMISSION_DENIED;
     }
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto ret = strcpy_s(deviceInfo.deviceId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
@@ -133,7 +132,7 @@ int32_t DaemonStub::HandleCloseP2PConnection(MessageParcel &data, MessageParcel 
     LOGI("Begin CloseP2PConnection");
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[HandleCloseP2PConnection] DATASYNC permission denied");
-        return E_PERMISSION_DENIED_NAPI;
+        return E_PERMISSION_DENIED;
     }
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto ret = strcpy_s(deviceInfo.deviceId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
