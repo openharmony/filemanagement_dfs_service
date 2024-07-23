@@ -557,7 +557,7 @@ int32_t Daemon::GetRemoteCopyInfo(const std::string &srcUri, bool &isSrcFile, bo
 
 sptr<IDaemon> Daemon::GetRemoteSA(const std::string &remoteDeviceId)
 {
-    LOGI("GetRemoteSA begin.");
+    LOGI("GetRemoteSA begin, DeviceId: %{public}s", Utils::GetAnonyString(remoteDeviceId).c_str());
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sam == nullptr) {
         LOGE("Sam is nullptr");
@@ -574,7 +574,7 @@ sptr<IDaemon> Daemon::GetRemoteSA(const std::string &remoteDeviceId)
         LOGE("Connect service nullptr");
         return nullptr;
     }
-    LOGI("GetRemoteSA success.");
+    LOGI("GetRemoteSA success, DeviceId: %{public}s", Utils::GetAnonyString(remoteDeviceId).c_str());
     return daemon;
 }
 

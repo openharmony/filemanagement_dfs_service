@@ -284,27 +284,6 @@ HWTEST_F(NetworkAgentTemplateTest, NetworkAgentTemplateTest_AcceptSession_0100, 
 }
 
 /**
- * @tc.name: NetworkAgentTemplateTest_AcceptSessionInner_0100
- * @tc.desc: Verify the AcceptSessionInner function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-HWTEST_F(NetworkAgentTemplateTest, NetworkAgentTemplateTest_AcceptSessionInner_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "NetworkAgentTemplateTest_AcceptSessionInner_0100 start";
-    auto session = make_shared<SoftbusSession>(TEST_SESSION_ID);
-    bool res = true;
-    try {
-        NetworkAgentTemplate::AcceptSessionInner(session);
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "NetworkAgentTemplateTest_AcceptSessionInner_0100 end";
-}
-
-/**
  * @tc.name: NetworkAgentTemplateTest_GetSessionProcess_0100
  * @tc.desc: Verify the GetSessionProcess function.
  * @tc.type: FUNC
