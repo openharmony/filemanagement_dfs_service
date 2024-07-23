@@ -135,6 +135,7 @@ int32_t AllConnectManager::ApplyAdvancedResource(const std::string &peerNetworkI
         LOGE("applyResult is reject");
         return FileManagement::ERR_APPLY_RESULT;
     }
+    LOGI("ApplyAdvancedResource success.");
     return FileManagement::ERR_OK;
 }
 
