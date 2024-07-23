@@ -542,7 +542,6 @@ static int HandleOpenResult(CloudFile::CloudError ckError, struct FuseData *data
 {
     auto ret = HandleCloudError(ckError);
     if (ret < 0) {
-        cInode->readSession = nullptr;
         LOGE("open fali");
         return ret;
     }
@@ -568,7 +567,12 @@ static void DownloadThmOrLcd(shared_ptr<CloudInode> cInode, shared_ptr<CloudErro
     shared_ptr<ffrt::condition_variable> cond)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
-    *err = cInode->readSession->InitSession();
+    auto session = cInode->readSession;
+    if (!session) {
+        LOGE("readSession is nullptr");
+        return;
+    }
+    *err = session->InitSession();
     {
         unique_lock lck(cInode->openLock);
         *openFinish = true;
@@ -695,6 +699,7 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
             } else {
                 fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
                 fuse_reply_err(req, -ret);
+                cInode->readSession = nullptr;
             }
             UpdateReadStat(cInode, startTime);
             wSesLock.unlock();
