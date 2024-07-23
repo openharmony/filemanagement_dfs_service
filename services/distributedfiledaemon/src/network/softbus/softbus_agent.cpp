@@ -200,7 +200,7 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
 
 void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType)
 {
-    LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d, cid:%{public}s"
+    LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d",
         Utils::GetAnonyString(info.GetCid()).c_str(), linkType);
     if (JudgeNetworkTypeIsWifi(info)) {
         LOGI("networktype is not wifi");
