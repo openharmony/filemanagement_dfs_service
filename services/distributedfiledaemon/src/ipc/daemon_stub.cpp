@@ -27,6 +27,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::FileManagement;
 const int32_t UID = 1009;
+const int32_t E_PERMISSION_DENIED_NAPI = 201;
 DaemonStub::DaemonStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION)] =
