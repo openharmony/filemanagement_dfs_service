@@ -227,7 +227,7 @@ void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType
         return;
     }
     int32_t ret = DfsBind(socketId, &sessionListener);
-    if (ret == FileManagement::SOFTBUS_TRANS_SOCKET_IN_USE) {
+    if (ret == SOFTBUS_TRANS_SOCKET_IN_USE) {
         LOGI("Bind Socket in use cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
         return;
     }
