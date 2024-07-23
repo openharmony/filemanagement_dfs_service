@@ -152,15 +152,6 @@ void NetworkAgentTemplate::CloseSessionForOneDevice(int32_t fd)
 
 void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const std::string backStage)
 {
-    LOGI("AcceptSession Enter");
-    auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, shared_ptr<BaseSession>, const std::string>>(
-        &NetworkAgentTemplate::AcceptSessionInner, session, backStage);
-    cmd->UpdateOption({.tryTimes_ = 1});
-    Recv(move(cmd));
-}
-
-void NetworkAgentTemplate::AcceptSessionInner(shared_ptr<BaseSession> session, const std::string backStage)
-{
     auto cid = session->GetCid();
     LOGI("AcceptSesion, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
     sessionPool_.HoldSession(session, backStage);
@@ -168,6 +159,11 @@ void NetworkAgentTemplate::AcceptSessionInner(shared_ptr<BaseSession> session, c
 
 void NetworkAgentTemplate::GetSessionProcess(NotifyParam &param)
 {
+    if (!sessionPool_.IsCidExist(param.remoteCid)) {
+        LOGI("cid: %{public}s is already not exist.", Utils::GetAnonyString(param.remoteCid).c_str());
+        return;
+    }
+
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, NotifyParam>>(
         &NetworkAgentTemplate::GetSessionProcessInner, param);
     cmd->UpdateOption({.tryTimes_ = 1});

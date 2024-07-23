@@ -83,7 +83,8 @@ int32_t AllConnectManager::UnInitAllConnectManager()
 int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,
                                                ServiceCollaborationManagerBussinessStatus state)
 {
-    LOGI("PublishServiceState %{public}d begin", state);
+    LOGI("PublishServiceState NetworkId: %{public}s, %{public}d begin",
+         Utils::GetAnonyString(peerNetworkId).c_str(), state);
     std::lock_guard<std::mutex> lock(allConnectLock_);
     if (dllHandle_ == nullptr) {
         LOGE("dllHandle_ is nullptr, all connect not support.");
@@ -107,7 +108,7 @@ int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,
 int32_t AllConnectManager::ApplyAdvancedResource(const std::string &peerNetworkId,
     ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest)
 {
-    LOGI("ApplyAdvancedResource begin");
+    LOGI("ApplyAdvancedResource begin, peerNetworkId: %{public}s", Utils::GetAnonyString(peerNetworkId).c_str());
     std::lock_guard<std::mutex> lock(allConnectLock_);
     if (dllHandle_ == nullptr) {
         LOGE("dllHandle_ is nullptr, all connect not support.");
@@ -132,9 +133,10 @@ int32_t AllConnectManager::ApplyAdvancedResource(const std::string &peerNetworkI
     }
     auto success = applyResultBlock_->GetValue();
     if (!success) {
-        LOGE("applyResult is reject");
+        LOGE("applyResult is reject, peerNetworkId: %{public}s", Utils::GetAnonyString(peerNetworkId).c_str());
         return FileManagement::ERR_APPLY_RESULT;
     }
+    LOGI("ApplyAdvancedResource success, peerNetworkId: %{public}s", Utils::GetAnonyString(peerNetworkId).c_str());
     return FileManagement::ERR_OK;
 }
 

@@ -40,6 +40,7 @@ public:
     void ReleaseAllSession();
     bool DeviceConnectCountOnly(std::shared_ptr<BaseSession> session);
     bool DeviceDisconnectCountOnly(const std::string &cid, const uint8_t linkType, bool needErase);
+    bool IsCidExist(const std::string &cid);
 
 private:
     std::recursive_mutex sessionPoolLock_;
