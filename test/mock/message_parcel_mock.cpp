@@ -141,4 +141,9 @@ bool Parcel::ReadUint64(uint64_t &value)
 {
     return DfsMessageParcel::messageParcel->ReadUint64(value);
 }
+
+bool Parcel::WriteStringVector(const std::vector<std::string> &val)
+{
+    return DfsMessageParcel::messageParcel->WriteStringVector(val);
+}
 } // namespace OHOS
