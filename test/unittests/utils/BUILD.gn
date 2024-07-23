@@ -55,11 +55,10 @@ ohos_unittest("cloud_pref_impl_test") {
 ohos_unittest("utils_directory_test") {
   branch_protector_ret = "pac_ret"
   sanitize = {
-    ubsan = true
-    boundary_sanitize = true
+    integer_overflow = true
     cfi = true
     cfi_cross_dso = true
-    debug = true
+    debug = false
     blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
