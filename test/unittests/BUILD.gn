@@ -15,6 +15,7 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 group("cloudsyncunittests") {
   testonly = true
+  if (!use_libfuzzer) {
   deps = [
     "cloud_daemon:cloud_daemon_test",
     "cloud_disk:cloud_disk_test",
@@ -26,11 +27,14 @@ group("cloudsyncunittests") {
     "utils:utils_test",
   ]
 }
+}
 
 group("distributedfileunittests") {
   testonly = true
+  if (!use_libfuzzer) {
   deps = [
     "distributed_file_daemon:distributed_daemon_test",
     "distributed_file_inner:distributed_file_inner",
   ]
+}
 }
