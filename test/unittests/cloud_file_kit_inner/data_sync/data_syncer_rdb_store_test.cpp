@@ -201,4 +201,107 @@ HWTEST_F(DataSyncerRdbStoreTest, DataSyncerRdbStoreTest_007, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_007 End";
 }
+
+HWTEST_F(DataSyncerRdbStoreTest, DataSyncerRdbStoreTest_008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_008 Start";
+    try {
+        DataSyncerRdbStore dataSyncerRdbStore;
+        int32_t userId = 1;
+        string bundleName = "testBundleName";
+        int32_t ret = dataSyncerRdbStore.Insert(userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+
+        userId = 0;
+        ret = dataSyncerRdbStore.Insert(userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+
+        userId = -1;
+        bundleName = "test01";
+        ret = dataSyncerRdbStore.Insert(userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_008 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_008 End";
+}
+
+HWTEST_F(DataSyncerRdbStoreTest, DataSyncerRdbStoreTest_009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_009 Start";
+    try {
+        DataSyncerRdbStore dataSyncerRdbStore;
+        int32_t userId = 1;
+        string bundleName = "testBundleName";
+        int32_t ret = dataSyncerRdbStore.Insert(userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+        ret = dataSyncerRdbStore.UpdateSyncState(userId, bundleName, SyncState::SYNC_SUCCEED);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_009 End";
+}
+
+HWTEST_F(DataSyncerRdbStoreTest, DataSyncerRdbStoreTest_010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_010 Start";
+    try {
+        DataSyncerRdbStore dataSyncerRdbStore;
+        int32_t userId = 1;
+        string bundleName = "testBundleName";
+        int32_t ret = dataSyncerRdbStore.Insert(userId, bundleName);
+        EXPECT_EQ(ret, E_OK);
+        ret = dataSyncerRdbStore.UpdateSyncState(userId, bundleName, SyncState::INIT);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_010 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_010 End";
+}
+
+HWTEST_F(DataSyncerRdbStoreTest, DataSyncerRdbStoreTest_011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_011 Start";
+    try {
+        DataSyncerRdbStore dataSyncerRdbStore;
+        int32_t userId = 0;
+        string bundleName = "testBundleName";
+        int64_t time = 20240722;
+
+        int32_t ret = dataSyncerRdbStore.GetLastSyncTime(userId, bundleName, time);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_011 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_011 End";
+}
+
+HWTEST_F(DataSyncerRdbStoreTest, DataSyncerRdbStoreTest_012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_012 Start";
+    try {
+        DataSyncerRdbStore dataSyncerRdbStore;
+        int32_t userId = 0;
+        shared_ptr<NativeRdb::ResultSet> resultSet;
+
+        int32_t ret = dataSyncerRdbStore.QueryDataSyncer(userId, resultSet);
+        EXPECT_EQ(ret, E_OK);
+        userId = 20;
+        ret = dataSyncerRdbStore.QueryDataSyncer(userId, resultSet);
+        EXPECT_EQ(ret, E_OK);
+
+        userId = -1;
+        ret = dataSyncerRdbStore.QueryDataSyncer(userId, resultSet);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_012 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_012 End";
+}
 }

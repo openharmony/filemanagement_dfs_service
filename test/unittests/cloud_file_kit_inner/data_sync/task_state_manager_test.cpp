@@ -261,4 +261,113 @@ HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_011, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "TaskStateManagerTest_011 End";
 }
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_012 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        taskStateManager.StartTask();
+        taskStateManager.StartTask(bundleName, TaskType::SYNC_TASK);
+        taskStateManager.StartTask();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_012 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_012 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_013 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        taskStateManager.StartTask(bundleName, TaskType::SYNC_TASK);
+        taskStateManager.CompleteTask(bundleName, TaskType::SYNC_TASK);
+        taskStateManager.StartTask();
+        taskStateManager.GetInstance();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_013 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_013 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_014, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_014 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        taskStateManager.StartTask(bundleName, TaskType::SYNC_TASK);
+        taskStateManager.CompleteTask(bundleName, TaskType::SYNC_TASK);
+        taskStateManager.StartTask();
+        taskStateManager.GetInstance();
+        EXPECT_FALSE(taskStateManager.HasTask(bundleName, TaskType::SYNC_TASK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_014 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_014 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_015, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_015 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        taskStateManager.StartTask(bundleName, TaskType::SYNC_TASK);
+        EXPECT_TRUE(taskStateManager.HasTask(bundleName, TaskType::SYNC_TASK));
+        taskStateManager.StartTask(bundleName, TaskType::DOWNLOAD_TASK);
+        EXPECT_TRUE(taskStateManager.HasTask(bundleName, TaskType::DOWNLOAD_TASK));
+
+        taskStateManager.StartTask(bundleName, TaskType::CLEAN_TASK);
+        EXPECT_TRUE(taskStateManager.HasTask(bundleName, TaskType::CLEAN_TASK));
+        taskStateManager.StartTask(bundleName, TaskType::UPLOAD_ASSET_TASK);
+        EXPECT_TRUE(taskStateManager.HasTask(bundleName, TaskType::UPLOAD_ASSET_TASK));
+
+        taskStateManager.StartTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK);
+        EXPECT_TRUE(taskStateManager.HasTask(bundleName, TaskType::DOWNLOAD_ASSET_TASK));
+        taskStateManager.StartTask(bundleName, TaskType::DOWNLOAD_REMOTE_ASSET_TASK);
+        EXPECT_TRUE(taskStateManager.HasTask(bundleName, TaskType::DOWNLOAD_REMOTE_ASSET_TASK));
+
+        taskStateManager.StartTask(bundleName, TaskType::DOWNLOAD_THUMB_TASK);
+        EXPECT_TRUE(taskStateManager.HasTask(bundleName, TaskType::DOWNLOAD_THUMB_TASK));
+        taskStateManager.StartTask(bundleName, TaskType::DISABLE_CLOUD_TASK);
+        EXPECT_TRUE(taskStateManager.HasTask(bundleName, TaskType::DISABLE_CLOUD_TASK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_015 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_015 End";
+}
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_016, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_016 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        
+        taskStateManager.StartTask();
+        EXPECT_FALSE(taskStateManager.HasTask(bundleName, TaskType::SYNC_TASK));
+
+        taskStateManager.StartTask(bundleName, TaskType::SYNC_TASK);
+        taskStateManager.CompleteTask(bundleName, TaskType::SYNC_TASK);
+        EXPECT_FALSE(taskStateManager.HasTask(bundleName, TaskType::SYNC_TASK));
+
+        taskStateManager.StartTask();
+        taskStateManager.GetInstance();
+        EXPECT_FALSE(taskStateManager.HasTask(bundleName, TaskType::SYNC_TASK));
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_016 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_016 End";
+}
 }
