@@ -81,7 +81,6 @@ HWTEST_F(FileOperationsLocalTest, GetAttrTest001, TestSize.Level1)
         fuse_req_t req = nullptr;
         struct fuse_file_info *fi = nullptr;
 
-
         fileoperationslocal_->GetAttr(req, FUSE_ROOT_ID, fi);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -105,7 +104,6 @@ HWTEST_F(FileOperationsLocalTest, GetAttrTest002, TestSize.Level1)
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
         fuse_req_t req = nullptr;
         struct fuse_file_info *fi = nullptr;
-
 
         fileoperationslocal_->GetAttr(req, 0, fi);
         EXPECT_TRUE(true);
