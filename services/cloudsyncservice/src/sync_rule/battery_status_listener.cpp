@@ -92,5 +92,6 @@ void BatteryStatusListener::OnStatusAbnormal() {}
 void BatteryStatusListener::OnPowerConnected()
 {
     dataSyncManager_->DownloadThumb();
+    dataSyncManager_->CacheVideo();
 }
 } // namespace OHOS::FileManagement::CloudSync

@@ -54,6 +54,7 @@ ScreenStatusListener::~ScreenStatusListener()
 void ScreenStatusListener::ScreenOff()
 {
     dataSyncManager_->DownloadThumb();
+    dataSyncManager_->CacheVideo();
 }
 
 void ScreenStatusListener::Start()

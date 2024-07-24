@@ -180,6 +180,13 @@ struct CloudInode {
     }
 };
 
+struct DoCloudReadParams {
+    shared_ptr<CloudInode> cInode{nullptr};
+    shared_ptr<CloudFile::CloudAssetReadSession> readSession{nullptr};
+    shared_ptr<ReadArguments> readArgsHead{nullptr};
+    shared_ptr<ReadArguments> readArgsTail{nullptr};
+};
+
 struct HmdfsHasCache {
     int64_t offset;
     int64_t readSize;
@@ -1172,23 +1179,24 @@ static bool DoReadSlice(fuse_req_t req,
     return true;
 }
 
-static bool DoCloudRead(fuse_req_t req,
-                        shared_ptr<CloudInode> cInode,
-                        shared_ptr<CloudFile::CloudAssetReadSession> readSession,
-                        shared_ptr<ReadArguments> readArgsHead,
-                        shared_ptr<ReadArguments> readArgsTail)
+static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
 {
-    if (!DoReadSlice(req, cInode, readSession, readArgsHead, true)) {
+    if (!DoReadSlice(req, params.cInode, params.readSession, params.readArgsHead, true)) {
         return false;
     }
-    if (!DoReadSlice(req, cInode, readSession, readArgsTail, false)) {
+    if (!DoReadSlice(req, params.cInode, params.readSession, params.readArgsTail, false)) {
         return false;
+    }
+    // no prefetch when contains O_NOFOLLOW
+    if (flags & O_NOFOLLOW) {
+        return true;
     }
 
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     for (uint32_t i = 1; i <= CACHE_PAGE_NUM; i++) {
-        int64_t cacheIndex = (readArgsTail ? readArgsTail->offset : readArgsHead->offset) / MAX_READ_SIZE + i;
-        if (IsVideoType(cInode->mBase->name) && cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
+        int64_t cacheIndex =
+            (params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset) / MAX_READ_SIZE + i;
+        if (IsVideoType(params.cInode->mBase->name) && params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
             continue;
         }
         auto readArgsCache = make_shared<ReadArguments>(MAX_READ_SIZE, cacheIndex * MAX_READ_SIZE, req->ctx.pid);
@@ -1200,8 +1208,8 @@ static bool DoCloudRead(fuse_req_t req,
             LOGE("cache buffer is null");
             break;
         }
-        ffrt::submit([readArgsCache, cInode, readSession, data] {
-            CloudReadOnCacheFile(readArgsCache, cInode, readSession, data->userId);
+        ffrt::submit([readArgsCache, params, data] {
+            CloudReadOnCacheFile(readArgsCache, params.cInode, params.readSession, data->userId);
         });
     }
     return true;
@@ -1255,7 +1263,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     if (readSlice.sizeTail > 0) {
         readArgsTail = make_shared<ReadArguments>(readSlice.sizeTail, readSlice.offTail, req->ctx.pid);
     }
-    if (!DoCloudRead(req, cInode, dkReadSession, readArgsHead, readArgsTail)) {
+    if (!DoCloudRead(req, fi->flags, {cInode, dkReadSession, readArgsHead, readArgsTail})) {
         return;
     }
     /* wait and reply current req data */

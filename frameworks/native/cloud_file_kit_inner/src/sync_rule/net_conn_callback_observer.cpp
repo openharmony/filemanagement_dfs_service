@@ -32,6 +32,7 @@ int32_t NetConnCallbackObserver::NetAvailable(sptr<NetHandle> &netHandle)
     NetworkStatus::OnNetworkAvail();
     dataSyncManager_->TriggerRecoverySync(triggerType_);
     dataSyncManager_->DownloadThumb();
+    dataSyncManager_->CacheVideo();
     return E_OK;
 }
 

@@ -105,6 +105,11 @@ int32_t DataSyncManager::DownloadThumb()
     return E_OK;
 }
 
+int32_t DataSyncManager::CacheVideo()
+{
+    return E_OK;
+}
+
 int32_t DataSyncManager::CleanCache(const std::string &bundleName, const int32_t userId, const std::string &uri)
 {
     return E_OK;
