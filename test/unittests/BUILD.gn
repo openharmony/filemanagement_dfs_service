@@ -16,25 +16,25 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 group("cloudsyncunittests") {
   testonly = true
   if (!use_libfuzzer) {
-  deps = [
-    "cloud_daemon:cloud_daemon_test",
-    "cloud_disk:cloud_disk_test",
-    "cloud_file_kit_inner:cloud_file_kit_inner_test",
-    "clouddisk_database:clouddisk_database_test",
-    "cloudsync_api:cloudsync_api_test",
-    "cloudsync_sa:cloudsync_sa_test",
-    "services_daemon:services_daemon_test",
-    "utils:utils_test",
-  ]
-}
+    deps = [
+      "cloud_daemon:cloud_daemon_test",
+      "cloud_disk:cloud_disk_test",
+      "cloud_file_kit_inner:cloud_file_kit_inner_test",
+      "clouddisk_database:clouddisk_database_test",
+      "cloudsync_api:cloudsync_api_test",
+      "cloudsync_sa:cloudsync_sa_test",
+      "services_daemon:services_daemon_test",
+      "utils:utils_test",
+    ]
+  }
 }
 
 group("distributedfileunittests") {
   testonly = true
   if (!use_libfuzzer) {
-  deps = [
-    "distributed_file_daemon:distributed_daemon_test",
-    "distributed_file_inner:distributed_file_inner",
-  ]
-}
+    deps = [
+      "distributed_file_daemon:distributed_daemon_test",
+      "distributed_file_inner:distributed_file_inner",
+    ]
+  }
 }
