@@ -124,12 +124,43 @@ ohos_unittest("cloud_file_utils_test") {
   use_exceptions = true
 }
 
+ohos_unittest("plugin_loader_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "./load/plugin_loader_test.cpp" ]
+
+  include_dirs = [
+    "${utils_path}/load/include",
+    "${utils_path}/load/src",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"utils_test\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("utils_test") {
   testonly = true
 
   deps = [
     ":cloud_file_utils_test",
     ":cloud_pref_impl_test",
+    ":plugin_loader_test",
     ":utils_directory_test",
   ]
 }
