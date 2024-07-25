@@ -942,6 +942,8 @@ int32_t CloudDiskRdbStore::ExtAttributeSetAttr(const std::string &cloudId, const
 
     std::string jsonValue = jsonObj.dump();
     setAttr.PutString(FileColumn::ATTRIBUTE, jsonValue);
+    setAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+    setAttr.PutLong(FileColumn::OPERATE_TYPE, static_cast<int32_t>(OperationType::UNKNOWN_TYPE));
     ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setAttr,
         FileColumn::CLOUD_ID + " = ?", bindArgs);
     if (ret != E_OK) {
