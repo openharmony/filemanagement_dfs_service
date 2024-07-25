@@ -87,7 +87,6 @@ private:
     void GetSessionProcess(NotifyParam &param);
     void GetSession(const std::string &cid, uint8_t linkType);
     void CloseSessionForOneDevice(int32_t fd);
-    void AcceptSessionInner(std::shared_ptr<BaseSession> session, const std::string backStage);
     void GetSessionProcessInner(NotifyParam param);
 
     std::mutex taskMut_;

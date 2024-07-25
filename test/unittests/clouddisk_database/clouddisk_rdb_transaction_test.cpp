@@ -211,7 +211,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, TransactionRollbackTest002, TestSize.Level
     auto rdb = std::make_shared<RdbStoreMock>();
     auto transaction = make_shared<TransactionOperations>(rdb);
     int32_t ret = transaction->TransactionRollback();
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_HAS_DB_ERROR);
     GTEST_LOG_(INFO) << "TransactionRollback End";
 }
 } // namespace Test

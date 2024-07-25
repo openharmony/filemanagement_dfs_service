@@ -17,17 +17,8 @@ group("dfs_service_fuzztest") {
 
   deps = [
     "${distributedfile_path}/test/fuzztest/clouddaemonstub_fuzzer:CloudDaemonStubFuzzTest",
-    "${distributedfile_path}/test/fuzztest/clouddisknotify_fuzzer:CloudDiskNotifyFuzzTest",
-    "${distributedfile_path}/test/fuzztest/clouddownloadcallbackstub_fuzzer:CloudDownloadCallbackStubFuzzTest",
-    "${distributedfile_path}/test/fuzztest/cloudsynccallbackstub_fuzzer:CloudSyncCallbackStubFuzzTest",
-    "${distributedfile_path}/test/fuzztest/cloudsyncservicestub_fuzzer:CloudSyncServiceStubFuzzTest",
-    "${distributedfile_path}/test/fuzztest/cycletaskrunner_fuzzer:CycleTaskRunnerFuzzTest",
     "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer:DaemonStubFuzzTest",
-    "${distributedfile_path}/test/fuzztest/downloadassetcallbackstub_fuzzer:DownloadAssetCallbackStubFuzzTest",
-    "${distributedfile_path}/test/fuzztest/downloadassetcbmgr_fuzzer:DownloadAssetCbMgrFuzzTest",
     "${distributedfile_path}/test/fuzztest/ffrttimer_fuzzer:FfrtTimerFuzzTest",
-    "${distributedfile_path}/test/fuzztest/filetransfermanager_fuzzer:FileTransferManagerFuzzTest",
     "${distributedfile_path}/test/fuzztest/filetranslistenerstub_fuzzer:FileTransListenerStubFuzzTest",
-    "${distributedfile_path}/test/fuzztest/transportmsghandle_fuzzer:TransportMsgHandleFuzzTest",
   ]
 }

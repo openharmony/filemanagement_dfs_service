@@ -32,6 +32,7 @@ namespace {
     static const string LOCAL_PATH_HMDFS_CLOUD = "/hmdfs/cloud/";
     static const int32_t BUNDLE_NAME_OFFSET = 1000000000;
     static const int32_t STAT_MODE_DIR = 0771;
+    static const int32_t NULL_PTR = -1;
 }
 
 string FileOperationsHelper::GetCloudDiskRootPath(int32_t userId)
@@ -93,6 +94,9 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::FindCloudDiskInode(struct Cloud
                                                                     int64_t key)
 {
     shared_ptr<CloudDiskInode> ptr = make_shared<CloudDiskInode>();
+    if (key == NULL_PTR) {
+        ptr = nullptr;
+    }
     return ptr;
 }
 
@@ -100,6 +104,12 @@ shared_ptr<CloudDiskFile> FileOperationsHelper::FindCloudDiskFile(struct CloudDi
                                                                   int64_t key)
 {
     shared_ptr<CloudDiskFile> ptr = make_shared<CloudDiskFile>();
+    ptr -> type = CLOUD_DISK_FILE_TYPE_LOCAL;
+    ptr -> refCount = 1;
+    ptr -> fileDirty = CLOUD_DISK_FILE_CREATE;
+    if (key == NULL_PTR) {
+        ptr = nullptr;
+    }
     return ptr;
 }
 
@@ -148,7 +158,7 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::GenerateCloudDiskInode(struct C
     shared_ptr<CloudDiskInode> child = make_shared<CloudDiskInode>();
     int32_t err = stat(path.c_str(), &child->stat);
     if (err != 0) {
-        LOGE("GenerateCloudDiskInode %{public}s error, err: %{public}d", GetAnonyString(path).c_str(), errno);
+        LOGE("GenerateCloudDiskInode %{public}s error, err: %{public}d", path.c_str(), errno);
         return nullptr;
     }
     child->stat.st_mode |= STAT_MODE_DIR;

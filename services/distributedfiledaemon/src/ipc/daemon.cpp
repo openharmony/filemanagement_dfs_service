@@ -171,6 +171,7 @@ int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &devic
     auto networkId = std::string(deviceInfo.networkId);
     int32_t ret = 0;
     if (!ConnectionDetector::GetConnectionStatus(targetDir, networkId)) {
+        DeviceManagerAgent::GetInstance()->ClearCount(deviceInfo);
         LOGI("Get connection status not ok, try again.");
         ret = DeviceManagerAgent::GetInstance()->OnDeviceP2POnline(deviceInfo);
         if (ret != NO_ERROR) {
@@ -556,6 +557,7 @@ int32_t Daemon::GetRemoteCopyInfo(const std::string &srcUri, bool &isSrcFile, bo
 
 sptr<IDaemon> Daemon::GetRemoteSA(const std::string &remoteDeviceId)
 {
+    LOGI("GetRemoteSA begin, DeviceId: %{public}s", Utils::GetAnonyString(remoteDeviceId).c_str());
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sam == nullptr) {
         LOGE("Sam is nullptr");
@@ -572,6 +574,7 @@ sptr<IDaemon> Daemon::GetRemoteSA(const std::string &remoteDeviceId)
         LOGE("Connect service nullptr");
         return nullptr;
     }
+    LOGI("GetRemoteSA success, DeviceId: %{public}s", Utils::GetAnonyString(remoteDeviceId).c_str());
     return daemon;
 }
 

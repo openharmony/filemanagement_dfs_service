@@ -35,6 +35,7 @@
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
+#include <sys/xattr.h>
 #include <thread>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -60,6 +61,11 @@ namespace CloudFile {
 using namespace std;
 using PAGE_FLAG_TYPE = const uint32_t;
 
+static const string LOCAL_PATH_DATA_SERVICE_EL2 = "/data/service/el2/";
+static const string LOCAL_PATH_HMDFS_CLOUD_CACHE = "/hmdfs/cache/cloud_cache";
+static const string CLOUD_CACHE_DIR = "/pread_cache";
+static const string CLOUD_CACHE_XATTR_NAME = "user.cloud.cacheMap";
+static const string VIDEO_TYPE_PREFIX = "VID_";
 static const string HMDFS_PATH_PREFIX = "/mnt/hmdfs/";
 static const string LOCAL_PATH_SUFFIX = "/account/device_view/local";
 static const string CLOUD_MERGE_VIEW_PATH_SUFFIX = "/account/cloud_merge_view";
@@ -91,6 +97,11 @@ enum CLOUD_READ_STATUS {
     READING = 0,
     READ_FINISHED,
     READ_CANCELED,
+};
+
+enum CLOUD_CACHE_STATUS : int {
+    NOT_CACHE = 0,
+    HAS_CACHED,
 };
 
 struct ReadCacheInfo {
@@ -145,6 +156,7 @@ struct CloudInode {
     std::set<shared_ptr<ReadArguments>> readArgsSet;
     /* process's read status for ioctl, true when canceled */
     std::map<pid_t, bool> readCtlMap;
+    std::unique_ptr<CLOUD_CACHE_STATUS[]> cacheFileIndex{nullptr};
     bool SetReadCacheFlag(int64_t index, PAGE_FLAG_TYPE flag)
     {
         std::shared_lock lock(sessionLock);
@@ -166,6 +178,13 @@ struct CloudInode {
         std::unique_lock<std::mutex> flock(it->second->mutex);
         return it->second->flags & PG_READAHEAD;
     }
+};
+
+struct DoCloudReadParams {
+    shared_ptr<CloudInode> cInode{nullptr};
+    shared_ptr<CloudFile::CloudAssetReadSession> readSession{nullptr};
+    shared_ptr<ReadArguments> readArgsHead{nullptr};
+    shared_ptr<ReadArguments> readArgsTail{nullptr};
 };
 
 struct HmdfsHasCache {
@@ -566,12 +585,63 @@ static void DownloadThmOrLcd(shared_ptr<CloudInode> cInode, shared_ptr<CloudErro
     return;
 }
 
+static bool IsVideoType(const string &name)
+{
+    return name.find(VIDEO_TYPE_PREFIX) == 0;
+}
+
+static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
+{
+    string cachePath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE +
+                       CLOUD_CACHE_DIR + cInode->path;
+    int filePageSize = cInode->mBase->size / MAX_READ_SIZE + 1;
+    CLOUD_CACHE_STATUS *tmp = new CLOUD_CACHE_STATUS[filePageSize]();
+    std::unique_ptr<CLOUD_CACHE_STATUS[]> mp(tmp);
+    if (access(cachePath.c_str(), F_OK) != 0) {
+        string parentPath = filesystem::path(cachePath).parent_path().string();
+        if (!ForceCreateDirectory(parentPath)) {
+            LOGE("failed to create parent dir");
+            return;
+        }
+        int fd = open(cachePath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        if (fd < 0) {
+            LOGE("failed to open cache file, ret: %{public}d", errno);
+            return;
+        }
+        if (ftruncate(fd, cInode->mBase->size) == -1) {
+            LOGE("failed to truncate file, ret: %{public}d", errno);
+        }
+        close(fd);
+        cInode->cacheFileIndex = std::move(mp);
+        return;
+    }
+
+    if (getxattr(cachePath.c_str(), CLOUD_CACHE_XATTR_NAME.c_str(), mp.get(),
+                 sizeof(CLOUD_CACHE_STATUS[filePageSize])) < 0 &&
+        errno != ENODATA) {
+        LOGE("getxattr fail, err: %{public}d", errno);
+        cInode->cacheFileIndex = std::move(mp);
+        return;
+    }
+    for (int i = 0; i < filePageSize; i++) {
+        if (mp.get()[i] == HAS_CACHED) {
+            auto memInfo = std::make_shared<ReadCacheInfo>();
+            memInfo->flags = PG_UPTODATE;
+            cInode->readCacheMap[i] = memInfo;
+        }
+    }
+    cInode->cacheFileIndex = std::move(mp);
+}
+
 static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi, struct FuseData *data)
 {
     auto error = make_shared<CloudError>();
     auto openFinish = make_shared<bool>(false);
     auto cond = make_shared<ffrt::condition_variable>();
-    ffrt::submit([cInode, error, openFinish, cond] {
+    ffrt::submit([cInode, error, openFinish, cond, data] {
+        if (IsVideoType(cInode->mBase->name)) {
+            LoadCacheFileIndex(cInode, data->userId);
+        }
         DownloadThmOrLcd(cInode, error, openFinish, cond);
     });
     unique_lock lck(cInode->openLock);
@@ -659,7 +729,8 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         return;
     }
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
-    LOGI("%{public}d release, sessionRefCount: %{public}d", req->ctx.pid, cInode->sessionRefCount.load());
+    LOGI("%{public}d release %{public}s, sessionRefCount: %{public}d", req->ctx.pid,
+         GetAnonyString(cInode->path).c_str(), cInode->sessionRefCount.load());
     wSesLock.lock();
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
@@ -674,6 +745,14 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
         {
             std::unique_lock<std::mutex> lock(cInode->readArgsLock);
             cInode->readCtlMap.clear();
+        }
+        if (cInode->cacheFileIndex) {
+            string cachePath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(data->userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE +
+                               CLOUD_CACHE_DIR + cInode->path;
+            if (setxattr(cachePath.c_str(), CLOUD_CACHE_XATTR_NAME.c_str(), cInode->cacheFileIndex.get(),
+                         sizeof(int[cInode->mBase->size / MAX_READ_SIZE + 1]), 0) < 0) {
+                LOGE("setxattr fail, err: %{public}d", errno);
+            }
         }
         LOGD("readSession released");
     }
@@ -822,8 +901,31 @@ static bool CheckAndWait(pid_t pid, shared_ptr<CloudInode> cInode, off_t off)
     return !CheckReadIsCanceled(pid, cInode);
 }
 
-static void CloudReadOnCloudFile(pid_t pid, shared_ptr<ReadArguments> readArgs,
-    shared_ptr<CloudInode> cInode, shared_ptr<CloudFile::CloudAssetReadSession> readSession)
+static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
+                            shared_ptr<CloudInode> cInode,
+                            int64_t cacheIndex,
+                            int32_t userId)
+{
+    string cachePath =
+        LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE + CLOUD_CACHE_DIR + cInode->path;
+    int fd = open(cachePath.c_str(), O_RDWR);
+    if (fd < 0) {
+        LOGE("Failed to open cache file, err: %{public}d", errno);
+        return;
+    }
+    if (cInode->cacheFileIndex.get()[cacheIndex] == NOT_CACHE &&
+        pwrite(fd, readArgs->buf.get(), *readArgs->readResult, readArgs->offset) == *readArgs->readResult) {
+        LOGI("Write to file, index: %{public}ld", static_cast<long>(cacheIndex));
+        cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
+    }
+    close(fd);
+}
+
+static void CloudReadOnCloudFile(pid_t pid,
+                                 int32_t userId,
+                                 shared_ptr<ReadArguments> readArgs,
+                                 shared_ptr<CloudInode> cInode,
+                                 shared_ptr<CloudFile::CloudAssetReadSession> readSession)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     LOGI("PRead CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu", GetAnonyString(cInode->path).c_str(),
@@ -849,6 +951,7 @@ static void CloudReadOnCloudFile(pid_t pid, shared_ptr<ReadArguments> readArgs,
 
     *readArgs->readResult =
         readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
+
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
     CloudDaemonStatistic &readStat = CloudDaemonStatistic::GetInstance();
@@ -867,6 +970,10 @@ static void CloudReadOnCloudFile(pid_t pid, shared_ptr<ReadArguments> readArgs,
             cInode->readCacheMap[cacheIndex]->cond.notify_all();
             LOGI("OnCloudFile NotifyAll: %{public}ld", static_cast<long>(cacheIndex));
         }
+        if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
+            ffrt::submit(
+                [userId, readArgs, cInode, cacheIndex] { SaveCacheToFile(readArgs, cInode, cacheIndex, userId); });
+        }
         wSesLock.unlock();
     }
     return;
@@ -874,7 +981,8 @@ static void CloudReadOnCloudFile(pid_t pid, shared_ptr<ReadArguments> readArgs,
 
 static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
                                  shared_ptr<CloudInode> cInode,
-                                 shared_ptr<CloudFile::CloudAssetReadSession> readSession)
+                                 shared_ptr<CloudFile::CloudAssetReadSession> readSession,
+                                 int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     usleep(READ_CACHE_SLEEP);
@@ -898,8 +1006,9 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     LOGI("OnCacheFile Add: %{public}ld", static_cast<long>(cacheIndex));
     wSesLock.unlock();
 
+    readArgs->offset = cacheIndex * MAX_READ_SIZE;
     *readArgs->readResult =
-        readSession->PRead(cacheIndex * MAX_READ_SIZE, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
+        readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
 
     uint64_t endTime = UTCTimeMilliSeconds();
     uint64_t readTime = (endTime > startTime) ? (endTime - startTime) : 0;
@@ -912,6 +1021,9 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
         cInode->readCacheMap[cacheIndex]->cond.notify_all();
         LOGI("OnCacheFile NotifyAll: %{public}ld", static_cast<long>(cacheIndex));
+    }
+    if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
+        ffrt::submit([readArgs, cInode, cacheIndex, userId] { SaveCacheToFile(readArgs, cInode, cacheIndex, userId); });
     }
     wSesLock.unlock();
     return;
@@ -944,40 +1056,6 @@ static void InitReadSlice(size_t size, off_t off, ReadSlice &readSlice)
         readSlice.offTail -= MAX_READ_SIZE;
         readSlice.sizeTail = 0;
     }
-}
-
-static bool StartReadTask(fuse_req_t req,
-                          vector<shared_ptr<ReadArguments>> readArgsList,
-                          off_t offTail,
-                          shared_ptr<CloudInode> cInode,
-                          shared_ptr<CloudFile::CloudAssetReadSession> readSession)
-{
-    for (auto &it : readArgsList) {
-        if (!it) {
-            continue;
-        }
-        if (!it->buf) {
-            fuse_reply_err(req, ENOMEM);
-            LOGE("buffer is null");
-            return false;
-        }
-        ffrt::submit([req, it, cInode, readSession] { CloudReadOnCloudFile(req->ctx.pid, it, cInode, readSession); });
-    }
-    for (uint32_t i = 1; i <= CACHE_PAGE_NUM; i++) {
-        auto readArgsCache =
-            make_shared<ReadArguments>(MAX_READ_SIZE, offTail + MAX_READ_SIZE * i, req->ctx.pid);
-        if (!readArgsCache) {
-            LOGE("Init readArgsCache failed");
-            break;
-        }
-        if (!readArgsCache->buf) {
-            LOGE("cache buffer is null");
-            break;
-        }
-        ffrt::submit(
-            [readArgsCache, cInode, readSession] { CloudReadOnCacheFile(readArgsCache, cInode, readSession); });
-    }
-    return true;
 }
 
 static bool FixData(fuse_req_t req, shared_ptr<char> buf, size_t size, size_t sizeDone,
@@ -1051,6 +1129,92 @@ static void WaitAndFixData(fuse_req_t req,
     fuse_reply_buf(req, buf.get(), min(size, sizeDone));
 }
 
+static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &path, int32_t userId)
+{
+    string cachePath =
+        LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE + CLOUD_CACHE_DIR + path;
+    int fd = open(cachePath.c_str(), O_RDONLY);
+    if (fd < 0) {
+        return fd;
+    }
+    ssize_t bytesRead = pread(fd, readArgs->buf.get(), readArgs->size, readArgs->offset);
+    close(fd);
+    return bytesRead;
+}
+
+static bool DoReadSlice(fuse_req_t req,
+                        shared_ptr<CloudInode> cInode,
+                        shared_ptr<CloudFile::CloudAssetReadSession> readSession,
+                        shared_ptr<ReadArguments> readArgs,
+                        bool needCheck)
+{
+    if (!readArgs) {
+        return true;
+    }
+    if (!readArgs->buf) {
+        fuse_reply_err(req, ENOMEM);
+        LOGE("buffer is null");
+        return false;
+    }
+    int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    if (IsVideoType(cInode->mBase->name) && cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
+        LOGI("DoReadSlice from local: %{public}ld", static_cast<long>(cacheIndex));
+        *readArgs->readResult = ReadCacheFile(readArgs, cInode->path, data->userId);
+        if (*readArgs->readResult >= 0) {
+            unique_lock lock(cInode->readLock);
+            *readArgs->readStatus = READ_FINISHED;
+            return true;
+        }
+    }
+
+    LOGI("DoReadSlice from cloud: %{public}ld", static_cast<long>(cacheIndex));
+    if (needCheck && !CheckAndWait(req->ctx.pid, cInode, readArgs->offset)) {
+        fuse_reply_err(req, ENETUNREACH);
+        return false;
+    }
+    ffrt::submit([req, readArgs, cInode, readSession, data] {
+        CloudReadOnCloudFile(req->ctx.pid, data->userId, readArgs, cInode, readSession);
+    });
+    return true;
+}
+
+static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
+{
+    if (!DoReadSlice(req, params.cInode, params.readSession, params.readArgsHead, true)) {
+        return false;
+    }
+    if (!DoReadSlice(req, params.cInode, params.readSession, params.readArgsTail, false)) {
+        return false;
+    }
+    // no prefetch when contains O_NOFOLLOW
+    if (flags & O_NOFOLLOW) {
+        return true;
+    }
+
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    for (uint32_t i = 1; i <= CACHE_PAGE_NUM; i++) {
+        int64_t cacheIndex =
+            (params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset) / MAX_READ_SIZE + i;
+        if (IsVideoType(params.cInode->mBase->name) && params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
+            continue;
+        }
+        auto readArgsCache = make_shared<ReadArguments>(MAX_READ_SIZE, cacheIndex * MAX_READ_SIZE, req->ctx.pid);
+        if (!readArgsCache) {
+            LOGE("Init readArgsCache failed");
+            break;
+        }
+        if (!readArgsCache->buf) {
+            LOGE("cache buffer is null");
+            break;
+        }
+        ffrt::submit([readArgsCache, params, data] {
+            CloudReadOnCacheFile(readArgsCache, params.cInode, params.readSession, data->userId);
+        });
+    }
+    return true;
+}
+
 static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                       struct fuse_file_info *fi)
 {
@@ -1093,19 +1257,13 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     ReadSlice readSlice;
     /* slice read request into 4M pages */
     InitReadSlice(size, off, readSlice);
-    /* wait when current page is reading */
-    if (!CheckAndWait(req->ctx.pid, cInode, readSlice.offHead)) {
-        fuse_reply_err(req, ENETUNREACH);
-        return;
-    }
     /* init readArgs for current page, and next page if cross pages */
     auto readArgsHead = make_shared<ReadArguments>(readSlice.sizeHead, readSlice.offHead, req->ctx.pid);
     shared_ptr<ReadArguments> readArgsTail = nullptr;
     if (readSlice.sizeTail > 0) {
         readArgsTail = make_shared<ReadArguments>(readSlice.sizeTail, readSlice.offTail, req->ctx.pid);
     }
-    /* read current page, next page, and prefetch 2 pages */
-    if (!StartReadTask(req, {readArgsHead, readArgsTail}, readSlice.offTail, cInode, dkReadSession)) {
+    if (!DoCloudRead(req, fi->flags, {cInode, dkReadSession, readArgsHead, readArgsTail})) {
         return;
     }
     /* wait and reply current req data */

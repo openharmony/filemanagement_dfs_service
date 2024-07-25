@@ -130,6 +130,7 @@ void SessionPool::ReleaseAllSession()
 
 void SessionPool::AddSessionToPool(shared_ptr<BaseSession> session)
 {
+    lock_guard lock(sessionPoolLock_);
     usrSpaceSessionPool_.push_back(session);
 }
 
@@ -198,6 +199,16 @@ bool SessionPool::DeviceConnectCountOnly(std::shared_ptr<BaseSession> session)
         LOGI("[DeviceConnectCountOnly] networkId_linkType %{public}s increase count by one now",
             Utils::GetAnonyString(key).c_str());
         deviceConnectCount_[key]++;
+    }
+    return false;
+}
+bool SessionPool::IsCidExist(const std::string &cid)
+{
+    lock_guard lock(sessionPoolLock_);
+    for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
+        if ((*iter)->GetCid() == cid) {
+            return true;
+        }
     }
     return false;
 }

@@ -79,7 +79,7 @@ void AssetSendCallbackProxyTest::TearDown(void)
 HWTEST_F(AssetSendCallbackProxyTest, AssetSendCallbackProxyTest_OnSendResult_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "AssetSendCallbackProxyTest_OnSendResult_0100 Start";
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
     ASSERT_NE(proxy_, nullptr);
     auto ret = proxy_->OnSendResult(assetObj, 0);
@@ -121,7 +121,7 @@ HWTEST_F(AssetSendCallbackProxyTest, AssetSendCallbackProxyTest_OnSendResult_010
 HWTEST_F(AssetSendCallbackProxyTest, AssetSendCallbackProxyTest_OnSendResult_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "AssetSendCallbackProxyTest_OnSendResult_0200 Start";
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
     EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));

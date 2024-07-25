@@ -523,6 +523,7 @@ group("cloudsync_impl_test") {
     ":cloud_sync_asset_manager_test",
     ":cloud_sync_callback_client_test",
     ":cloud_sync_callback_stub_test",
+    ":cloud_sync_common_test",
     ":cloud_sync_manager_impl_test",
     ":cloud_sync_manager_impl_unnomal_test",
     ":cloud_sync_manager_test",

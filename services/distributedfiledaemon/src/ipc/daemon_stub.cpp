@@ -97,6 +97,10 @@ int32_t DaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageP
 int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin OpenP2PConnection");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
+        LOGE("[HandleOpenP2PConnection] DATASYNC permission denied");
+        return E_PERMISSION_DENIED;
+    }
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto ret = strcpy_s(deviceInfo.deviceId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
     if (ret != 0) {
@@ -126,6 +130,10 @@ int32_t DaemonStub::HandleOpenP2PConnection(MessageParcel &data, MessageParcel &
 int32_t DaemonStub::HandleCloseP2PConnection(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin CloseP2PConnection");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
+        LOGE("[HandleCloseP2PConnection] DATASYNC permission denied");
+        return E_PERMISSION_DENIED;
+    }
     DistributedHardware::DmDeviceInfo deviceInfo;
     auto ret = strcpy_s(deviceInfo.deviceId, DM_MAX_DEVICE_ID_LEN, data.ReadCString());
     if (ret != 0) {

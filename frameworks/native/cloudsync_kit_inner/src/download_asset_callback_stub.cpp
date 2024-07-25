@@ -22,7 +22,9 @@ using namespace std;
 
 DownloadAssetCallbackStub::DownloadAssetCallbackStub()
 {
-    opToInterfaceMap_[SERVICE_CMD_ON_DOWNLOAD_FINSHED] = &DownloadAssetCallbackStub::HandleOnFinished;
+    opToInterfaceMap_[SERVICE_CMD_ON_DOWNLOAD_FINSHED] = [this](MessageParcel &data, MessageParcel &reply) {
+            return this->HandleOnFinished(data, reply);
+        };
 }
 
 int32_t DownloadAssetCallbackStub::OnRemoteRequest(uint32_t code,
@@ -38,7 +40,8 @@ int32_t DownloadAssetCallbackStub::OnRemoteRequest(uint32_t code,
         LOGE("Cannot response request %d: unknown tranction", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    return (this->*(interfaceIndex->second))(data, reply);
+    auto memberFunc = interfaceIndex->second;
+    return memberFunc(data, reply);
 }
 
 int32_t DownloadAssetCallbackStub::HandleOnFinished(MessageParcel &data, MessageParcel &reply)

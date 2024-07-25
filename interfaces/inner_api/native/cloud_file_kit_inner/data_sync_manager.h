@@ -53,6 +53,7 @@ public:
     virtual int32_t CleanRemainFile(const std::string &bundleName, const int32_t userId);
     virtual int32_t OptimizeStorage(const std::string &bundleName, const int32_t userId, const int32_t agingDays);
     virtual int32_t DownloadThumb();
+    virtual int32_t CacheVideo();
     virtual int32_t CleanCache(const std::string &bundleName, const int32_t userId, const std::string &uri);
     virtual int32_t DisableCloud(const int32_t userId);
     virtual int32_t GetUserId(int32_t &userId);

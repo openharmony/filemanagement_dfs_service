@@ -26,7 +26,9 @@ namespace CloudFile {
 CloudDaemonStub::CloudDaemonStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileDaemonInterfaceCode::CLOUD_DAEMON_CMD_START_FUSE)] =
-        &CloudDaemonStub::HandleStartFuseInner;
+        [this](MessageParcel &data, MessageParcel &reply) {
+                return this->HandleStartFuseInner(data, reply);
+            };
 }
 
 int32_t CloudDaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
@@ -41,7 +43,8 @@ int32_t CloudDaemonStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
         LOGE("Cannot response request %d: unknown tranction", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    return (this->*(interfaceIndex->second))(data, reply);
+    auto memberFunc = interfaceIndex->second;
+    return memberFunc(data, reply);
 }
 
 int32_t CloudDaemonStub::HandleStartFuseInner(MessageParcel &data, MessageParcel &reply)
