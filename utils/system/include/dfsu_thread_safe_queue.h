@@ -42,7 +42,7 @@ public:
     void Push(std::unique_ptr<T> pt)
     {
         if (!pt) {
-            THROW_EXCEPTION(ERR_UTILS_ACTOR_INVALID_CMD, "Push an empty cmd");
+            ThrowException(ERR_UTILS_ACTOR_INVALID_CMD, "Push an empty cmd");
         }
         std::unique_lock<std::mutex> lock(mutex_);
         if (!halted) {
@@ -54,7 +54,7 @@ public:
     void PushFront(std::unique_ptr<T> pt)
     {
         if (!pt) {
-            THROW_EXCEPTION(ERR_UTILS_ACTOR_INVALID_CMD, "Push an empty cmd");
+            ThrowException(ERR_UTILS_ACTOR_INVALID_CMD, "Push an empty cmd");
         }
         std::unique_lock<std::mutex> lock(mutex_);
         if (!halted) {
@@ -68,7 +68,7 @@ public:
         std::unique_lock<std::mutex> lock(mutex_);
         cv_.wait(lock, [&] { return !queue_.empty() || halted; });
         if (halted && queue_.empty()) {
-            THROW_EXCEPTION(ERR_UTILS_ACTOR_QUEUE_STOP, "Queue was halted");
+            ThrowException(ERR_UTILS_ACTOR_QUEUE_STOP, "Queue was halted");
         }
 
         auto res = std::move(queue_.front());

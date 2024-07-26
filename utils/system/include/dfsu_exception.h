@@ -55,7 +55,7 @@ private:
     std::string msg_;
 };
 
-#define THROW_EXCEPTION(code, msg)                           \
+#define ThrowException(code, msg)                           \
     do {                                                    \
         std::stringstream __ss;                             \
         __ss << '[' << (code) << ']' << (msg) << std::endl; \
