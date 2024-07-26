@@ -20,22 +20,25 @@
 #include <vector>
 
 #include "common_event_subscriber.h"
+#include "data_sync_manager.h"
 #include "i_user_status_observer.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class UserStatusListener : public std::enable_shared_from_this<UserStatusListener> {
 public:
-    UserStatusListener() = default;
+    explicit UserStatusListener(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     ~UserStatusListener();
     void Start();
     void Stop();
     void AddObserver(std::shared_ptr<IUserStatusObserver> observer);
     void NotifyUserUnlocked();
+    void DoCleanVideoCache();
 
 private:
     std::shared_ptr<EventFwk::CommonEventSubscriber> commonEventSubscriber_ = nullptr;
     std::mutex obsVecMutex_;
     std::vector<std::shared_ptr<IUserStatusObserver>> observers_;
+    std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
 };
 
 class UserStatusSubscriber : public EventFwk::CommonEventSubscriber {
