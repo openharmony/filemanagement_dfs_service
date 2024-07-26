@@ -34,6 +34,16 @@ void UserStatusSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &event
         listener_->NotifyUserUnlocked();
         return;
     }
+    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT) {
+        LOGI("account logout");
+        listener_->DoCleanVideoCache();
+        return;
+    }
+}
+
+UserStatusListener::UserStatusListener(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+{
+    dataSyncManager_ = dataSyncManager;
 }
 
 UserStatusListener::~UserStatusListener()
@@ -60,6 +70,7 @@ void UserStatusListener::Start()
     /* subscribe user unlock event */
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_HWID_LOGOUT);
     EventFwk::CommonEventSubscribeInfo info(matchingSkills);
     commonEventSubscriber_ = std::make_shared<UserStatusSubscriber>(info, shared_from_this());
     auto subRet = EventFwk::CommonEventManager::SubscribeCommonEvent(commonEventSubscriber_);
@@ -72,5 +83,10 @@ void UserStatusListener::Stop()
         EventFwk::CommonEventManager::UnSubscribeCommonEvent(commonEventSubscriber_);
         commonEventSubscriber_ = nullptr;
     }
+}
+
+void UserStatusListener::DoCleanVideoCache()
+{
+    dataSyncManager_->CleanVideoCache();
 }
 } // namespace OHOS::FileManagement::CloudSync

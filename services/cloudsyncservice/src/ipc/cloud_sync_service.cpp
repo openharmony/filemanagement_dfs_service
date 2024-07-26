@@ -77,7 +77,7 @@ void CloudSyncService::PreInit()
 
     batteryStatusListener_ = make_shared<BatteryStatusListener>(dataSyncManager_);
     screenStatusListener_ = make_shared<ScreenStatusListener>(dataSyncManager_);
-    userStatusListener_ = make_shared<UserStatusListener>();
+    userStatusListener_ = make_shared<UserStatusListener>(dataSyncManager_);
 }
 
 void CloudSyncService::Init()
