@@ -114,6 +114,7 @@ ohos_unittest("distributed_file_daemon_stub_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
   module_out_path = "filemanagement/dfs_service"
@@ -245,11 +246,14 @@ ohos_unittest("distributed_file_daemon_stub_sup_test") {
   ]
 
   include_dirs = [
+    "include",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include/asset",
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "${distributedfile_path}/test/mock",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
+    "${services_path}/distributedfiledaemon/test/unittest/ipc",
   ]
 
   deps = [

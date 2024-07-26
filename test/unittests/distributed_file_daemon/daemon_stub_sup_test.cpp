@@ -19,8 +19,10 @@
 
 #include "ipc_skeleton.h"
 
+#include "asset_recv_callback_mock.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
+#include "file_dfs_listener_mock.h"
 #include "ipc/hmdfs_info.h"
 #include "ipc/distributed_file_daemon_ipc_interface_code.h"
 #include "i_daemon_mock.h"
@@ -30,6 +32,7 @@
 namespace {
     bool g_getCallingUidTrue = true;
     bool g_checkUriPermissionTrue = true;
+    bool g_checkCallerPermissionTrue = true;
     const pid_t UID = 1009;
 }
 
@@ -51,6 +54,15 @@ namespace OHOS::FileManagement {
 bool DfsuAccessTokenHelper::CheckUriPermission(const std::string &uriStr)
 {
     if (g_checkUriPermissionTrue) {
+        return true;
+    }
+
+    return false;
+}
+
+bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionName)
+{
+    if (g_checkCallerPermissionTrue) {
         return true;
     }
 
@@ -111,6 +123,9 @@ void DaemonStubSupPTest::SetUpTestCase(void)
 void DaemonStubSupPTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
+    daemonStub_ = nullptr;
+    MessageParcelMock::messageParcel = nullptr;
+    messageParcelMock_ = nullptr;
 }
 
 void DaemonStubSupPTest::SetUp(void)
@@ -151,6 +166,36 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupOnRemoteRequestTest001, TestSize.Level
     EXPECT_EQ(ret, 305);
     daemonStub_->opToInterfaceMap_.erase(errCode);
     GTEST_LOG_(INFO) << "DaemonStubSupOnRemoteRequestTest001 End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleOpenP2PConnectionExTest001
+ * @tc.desc: Verify the DaemonStubSupHandleOpenP2PConnectionExTest001 function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleOpenP2PConnectionExTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleOpenP2PConnectionExTest001 Start";
+    MessageParcel data;
+    MessageParcel reply;
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(false));
+    auto ret = daemonStub_->HandleOpenP2PConnectionEx(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(nullptr));
+    ret = daemonStub_->HandleOpenP2PConnectionEx(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    sptr<IRemoteObject> listenerPtr = sptr(new FileDfsListenerMock());
+    EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(listenerPtr));
+    EXPECT_CALL(*daemonStub_, OpenP2PConnectionEx(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    ret = daemonStub_->HandleOpenP2PConnectionEx(data, reply);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleOpenP2PConnectionExTest001 End";
 }
 
 /**
@@ -208,7 +253,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandlePrepareSessionTest001, TestSize.
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
     
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true)).WillOnce(Return(true))
-        .WillOnce(Return(false));
+        .WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(nullptr));
     ret = daemonStub_->HandlePrepareSession(data, reply);
     EXPECT_EQ(ret, E_IPC_READ_FAILED);
@@ -375,8 +420,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoTest002, TestSi
     g_getCallingUidTrue = true;
     EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
     EXPECT_CALL(*daemonStub_, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true)).WillOnce(Return(true))
-        .WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteBool(_)).WillOnce(Return(true)).WillOnce(Return(true));
     EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
     auto ret = daemonStub_->HandleGetRemoteCopyInfo(data, reply);
     EXPECT_EQ(ret, E_OK);
@@ -403,5 +447,75 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleCancelCopyTaskTest001, TestSize.
     ret = daemonStub_->HandleCancelCopyTask(data, reply);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "DaemonStubSupHandleCancelCopyTaskTest001 End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleRegisterRecvCallback001
+ * @tc.desc: Verify the HandleRegisterRecvCallback function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRegisterRecvCallback001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleRegisterRecvCallback001 Start";
+    MessageParcel data;
+    MessageParcel reply;
+    g_checkCallerPermissionTrue = false;
+    auto ret = daemonStub_->HandleRegisterRecvCallback(data, reply);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+
+    g_checkCallerPermissionTrue = true;
+    EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(nullptr));
+    ret = daemonStub_->HandleRegisterRecvCallback(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    auto recvCallback = sptr(new IAssetRecvCallbackMock());
+    EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(recvCallback));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, RegisterAssetCallback(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleRegisterRecvCallback(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(recvCallback));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, RegisterAssetCallback(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleRegisterRecvCallback(data, reply);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleRegisterRecvCallback001 End";
+}
+
+/**
+ * @tc.name: DaemonStubSupHandleUnRegisterRecvCallback001
+ * @tc.desc: Verify the HandleUnRegisterRecvCallback function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleUnRegisterRecvCallback001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleUnRegisterRecvCallback001 Start";
+    MessageParcel data;
+    MessageParcel reply;
+    g_checkCallerPermissionTrue = false;
+    auto ret = daemonStub_->HandleUnRegisterRecvCallback(data, reply);
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+
+    g_checkCallerPermissionTrue = true;
+    EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(nullptr));
+    ret = daemonStub_->HandleUnRegisterRecvCallback(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    auto recvCallback = sptr(new IAssetRecvCallbackMock());
+    EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(recvCallback));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    EXPECT_CALL(*daemonStub_, UnRegisterAssetCallback(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleUnRegisterRecvCallback(data, reply);
+    EXPECT_EQ(ret, E_IPC_READ_FAILED);
+
+    EXPECT_CALL(*messageParcelMock_, ReadRemoteObject()).WillOnce(Return(recvCallback));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*daemonStub_, UnRegisterAssetCallback(_)).WillOnce(Return(E_OK));
+    ret = daemonStub_->HandleUnRegisterRecvCallback(data, reply);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DaemonStubSupHandleUnRegisterRecvCallback001 End";
 }
 } // namespace OHOS::Storage::DistributedFile::Test
