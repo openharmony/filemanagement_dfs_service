@@ -606,6 +606,18 @@ int32_t Daemon::Copy(const std::string &srcUri,
 int32_t Daemon::CancelCopyTask(const std::string &sessionName)
 {
     LOGD("Cancel copy task in. sessionName = %{public}s", sessionName.c_str());
+    SoftBusSessionPool::SessionInfo sessionInfo{};
+    bool isExist = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
+    if (!isExist) {
+        LOGE("CancelCopyTask failed, cannot get session info for input session name=%{public}s.", sessionName.c_str());
+        return E_INVAL_ARG;
+    }
+    auto callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != sessionInfo.uid) {
+        LOGE("CancelCopyTask failed, calling uid=%{public}d has no permission to cancel copy for uid=%{public}d.",
+             callingUid, sessionInfo.uid);
+        return E_PERMISSION_DENIED;
+    }
     SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
     return E_OK;
 }
