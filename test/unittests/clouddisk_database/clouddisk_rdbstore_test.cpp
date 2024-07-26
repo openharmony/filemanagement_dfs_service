@@ -1328,7 +1328,6 @@ HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest2, TestSize.Level1)
  * @tc.name: ExtAttributeSetAttr
  * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetAttr function
  * @tc.type: FUNC
- * @tc.require: SR20240604745994
  */
 HWTEST_F(CloudDiskRdbStoreTest, ExtAttributeSetAttrTest1, TestSize.Level1)
 {
@@ -1346,7 +1345,6 @@ HWTEST_F(CloudDiskRdbStoreTest, ExtAttributeSetAttrTest1, TestSize.Level1)
  * @tc.name: GetExtAttrValue
  * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetAttr function
  * @tc.type: FUNC
- * @tc.require: SR20240604745994
  */
 HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrValueTest1, TestSize.Level1)
 {
@@ -1364,7 +1362,6 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrValueTest1, TestSize.Level1)
  * @tc.name: GetExtAttr
  * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetAttr function
  * @tc.type: FUNC
- * @tc.require: SR20240604745994
  */
 HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest1, TestSize.Level1)
 {
