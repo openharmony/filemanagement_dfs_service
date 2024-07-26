@@ -197,12 +197,12 @@ int32_t CloudSyncServiceProxy::NotifyEventChange(
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
+int32_t CloudSyncServiceProxy::StartDownloadFile(const std::vector<std::string> &uriVec)
 {
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
+int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &uriVec)
 {
     return E_OK;
 }
