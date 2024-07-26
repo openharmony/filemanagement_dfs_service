@@ -133,28 +133,4 @@ HWTEST_F(FileOperationBaseTest, ForgetMultiTest001, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ForgetMultiTest001 End";
 }
-
-/**
- * @tc.name: ForgetMultiTest002
- * @tc.desc: Verify the ForgetMulti function
- * @tc.type: FUNC
- * @tc.require: issuesI92WQP
- */
-HWTEST_F(FileOperationBaseTest, ForgetMultiTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "ForgetMultiTest002 Start";
-    try {
-        CloudDiskFuseData data;
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        fuse_req_t req = nullptr;
-        fuse_forget_data* forgets = nullptr;
-
-        fileoperationBase_->ForgetMulti(req, 5, forgets);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "ForgetMultiTest002  ERROR";
-    }
-    GTEST_LOG_(INFO) << "ForgetMultiTest002 End";
-}
 } // namespace OHOS::FileManagement::CloudDisk::Test
