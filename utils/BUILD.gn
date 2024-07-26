@@ -28,7 +28,6 @@ config("compiler_configs") {
     "-Wfloat-equal",
     "-Wshadow",
     "-Wformat=2",
-    "-fvisibility=hidden",
     "-ffunction-sections",
     "-Os",
   ]
