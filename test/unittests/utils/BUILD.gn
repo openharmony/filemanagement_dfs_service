@@ -73,7 +73,6 @@ ohos_unittest("utils_directory_test") {
   ]
 
   deps = [
-    "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",

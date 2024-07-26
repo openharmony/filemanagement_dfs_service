@@ -52,6 +52,21 @@ void CloudDiskDentryMetaFileTest::TearDown(void)
 {
     GTEST_LOG_(INFO) << "TearDown";
 }
+
+/**
+ * @tc.name: DoLookupAndRemoveTest
+ * @tc.desc: Verify the CloudDiskMetaFile::DoLookupAndRemove function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndRemoveTest, TestSize.Level1)
+{
+    CloudDiskMetaFile mFile(100, "com.ohos.photos", "rootId");
+    MetaBase mBase1(".trash", "rootId");
+    int ret = mFile.DoLookupAndRemove(mBase1);
+    EXPECT_EQ(ret, 0);
+}
+
 /**
  * @tc.name: CloudDiskDentryFileCreateTest
  * @tc.desc: Verify the CloudDiskMetaFile::DoCreate function
@@ -154,6 +169,22 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileRemoveTest, TestSize.Leve
 }
 
 /**
+ * @tc.name:LoadChildrenTest
+ * @tc.desc: Verify the CloudDiskMetaFile::LoadChildren function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKJB
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, LoadChildrenTest, TestSize.Level1)
+{
+    CloudDiskMetaFile mFile(100, "/", "id1");
+    MetaBase mBase1("file1", "id1");
+    std::vector<MetaBase> bases;
+    bases.push_back(mBase1);
+    int32_t ret = mFile.LoadChildren(bases);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
  * @tc.name: CloudDiskMetaFileMgrTest001
  * @tc.desc: Verify the MetaFileMgr
  * @tc.type: FUNC
@@ -195,5 +226,79 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileMgrTest002, TestSize.Leve
         GTEST_LOG_(INFO) << "CloudDiskMetaFileMgrTest002 ERROR";
     }
     GTEST_LOG_(INFO) << "CloudDiskMetaFileMgrTest002 End";
+}
+
+/**
+ * @tc.name: CreateRecycleDentryTest001
+ * @tc.desc: Verify the CreateRecycleDentry
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKJB
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, CreateRecycleDentryTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateRecycleDentryTest001 Start";
+    try {
+        uint32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        int32_t ret = MetaFileMgr::GetInstance().CreateRecycleDentry(userId, bundleName);
+        EXPECT_EQ(ret, 0);
+        MetaFileMgr::GetInstance().CloudDiskClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "CreateRecycleDentryTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "CreateRecycleDentryTest001 End";
+}
+
+/**
+ * @tc.name: MoveIntoRecycleDentryfileTest001
+ * @tc.desc: Verify the MoveIntoRecycleDentryfile
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKJB
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, MoveIntoRecycleDentryfileTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MoveIntoRecycleDentryfileTest001 Start";
+    try {
+        uint32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        string name = ".trash";
+        string parentCloudId = "rootId";
+        int64_t rowId = 0;
+        int32_t ret = MetaFileMgr::GetInstance().MoveIntoRecycleDentryfile(userId, bundleName,
+                                                                           name, parentCloudId, rowId);
+        EXPECT_EQ(ret, 0);
+        MetaFileMgr::GetInstance().CloudDiskClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "MoveIntoRecycleDentryfileTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MoveIntoRecycleDentryfileTest001 End";
+}
+
+/**
+ * @tc.name: RemoveFromRecycleDentryfileTest001
+ * @tc.desc: Verify the RemoveFromRecycleDentryfile
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKJB
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, RemoveFromRecycleDentryfileTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfileTest001 Start";
+    try {
+        uint32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        string name = ".trash";
+        string parentCloudId = "rootId";
+        int64_t rowId = 0;
+        int32_t ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId, bundleName,
+                                                                             name, parentCloudId, rowId);
+        EXPECT_EQ(ret, 2);
+        MetaFileMgr::GetInstance().CloudDiskClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfileTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfileTest001 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
