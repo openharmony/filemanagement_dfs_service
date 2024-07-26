@@ -609,7 +609,7 @@ int32_t Daemon::CancelCopyTask(const std::string &sessionName)
     SoftBusSessionPool::SessionInfo sessionInfo{};
     bool isExist = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
     if (!isExist) {
-        LOGE("CancelCopyTask failed, cannot get session info for input session name=%{public}s.", sessionName);
+        LOGE("CancelCopyTask failed, cannot get session info for input session name=%{public}s.", sessionName.c_str());
         return E_INVAL_ARG;
     }
     auto callingUid = IPCSkeleton::GetCallingUid();
