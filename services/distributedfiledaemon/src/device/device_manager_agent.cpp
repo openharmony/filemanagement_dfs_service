@@ -487,11 +487,12 @@ void DeviceManagerAgent::RemoveNetworkIdForAllToken(const std::string &networkId
     for (auto it = networkIdMap_.begin(); it != networkIdMap_.end();) {
         it->second.erase(networkId);
         if (it->second.empty()) {
-            networkIdMap_.erase(it);
+            it = networkIdMap_.erase(it);
+        } else {
+            ++it;
         }
         LOGI("RemoveNetworkIdForAllToken, networkId: %{public}s",
             Utils::GetAnonyString(networkId).c_str());
-        ++it;
     }
 }
 
