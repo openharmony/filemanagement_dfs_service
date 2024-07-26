@@ -614,7 +614,8 @@ int32_t Daemon::CancelCopyTask(const std::string &sessionName)
     }
     auto callingUid = IPCSkeleton::GetCallingUid();
     if (callingUid != sessionInfo.uid) {
-        LOGE("CancelCopyTask failed, calling uid=%{public}d has no permission to cancel copy for uid=%{public}d.");
+        LOGE("CancelCopyTask failed, calling uid=%{public}d has no permission to cancel copy for uid=%{public}d.",
+             callingUid, sessionInfo.uid);
         return E_PERMISSION_DENIED;
     }
     SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
