@@ -124,6 +124,7 @@ ohos_unittest("task_state_manager_test") {
 
   use_exceptions = true
 }
+
 group("data_sync_test") {
   testonly = true
   deps = [
