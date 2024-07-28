@@ -19,6 +19,7 @@
 #include <regex>
 #include <stdexcept>
 #include <string>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <unordered_set>
 
@@ -65,6 +66,7 @@ const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
 constexpr int32_t CHECK_SESSION_DELAY_TIME_TWICE = 5000000;
+constexpr mode_t DEFAULT_UMASK = 0002;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -107,6 +109,7 @@ void Daemon::OnStart()
         StartEventHandler();
         AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
         AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
+        umask(DEFAULT_UMASK);
         AllConnectManager::GetInstance().InitAllConnectManager();
     } catch (const exception &e) {
         LOGE("%{public}s", e.what());
