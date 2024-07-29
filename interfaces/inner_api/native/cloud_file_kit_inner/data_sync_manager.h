@@ -40,7 +40,9 @@ public:
                                            const sptr<CloudSync::ICloudSyncCallback> &callback);
     virtual void UnRegisterCloudSyncCallback(const std::string &bundleName, const std::string &callerBundleName);
     virtual int32_t IsSkipSync(const std::string &bundleName, const int32_t userId, bool forceFlag);
-    virtual int32_t StartDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path);
+    virtual int32_t StartDownloadFile(const std::string &bundleName,
+                                      const int32_t userId,
+                                      const std::vector<std::string> pathVec);
     virtual int32_t StopDownloadFile(const std::string &bundleName,
                                      const int32_t userId,
                                      const std::string path,

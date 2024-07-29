@@ -98,7 +98,9 @@ public:
      */
     virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;
     virtual int32_t StartDownloadFile(const std::string &path) = 0;
+    virtual int32_t StartDownloadFile(const std::vector<std::string> &pathVec) = 0;
     virtual int32_t StartFileCache(const std::string &path) = 0;
+    virtual int32_t StartFileCache(const std::vector<std::string> &pathVec) = 0;
     virtual int32_t StopDownloadFile(const std::string &path, bool needClean = false) = 0;
     virtual int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) = 0;
     virtual int32_t UnregisterDownloadFileCallback() = 0;

@@ -209,7 +209,23 @@ int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri)
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    int32_t ret = CloudSyncServiceProxy->StartDownloadFile(uri);
+    std::vector<std::string> uriVec;
+    uriVec.push_back(uri);
+    int32_t ret = CloudSyncServiceProxy->StartDownloadFile(uriVec);
+    LOGI("StartDownloadFile ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::StartDownloadFile(const std::vector<std::string> &uriVec)
+{
+    LOGI("StartDownloadFile start");
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->StartDownloadFile(uriVec);
     LOGI("StartDownloadFile ret %{public}d", ret);
     return ret;
 }
@@ -223,7 +239,23 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::string &uri)
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    int32_t ret = CloudSyncServiceProxy->StartFileCache(uri);
+    std::vector<std::string> uriVec;
+    uriVec.push_back(uri);
+    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec);
+    LOGI("StartDownloadCache ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uriVec)
+{
+    LOGI("StartDownloadCache start");
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec);
     LOGI("StartDownloadCache ret %{public}d", ret);
     return ret;
 }

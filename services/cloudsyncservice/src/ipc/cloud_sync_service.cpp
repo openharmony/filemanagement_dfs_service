@@ -461,16 +461,16 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
 
     return E_OK;
 }
-int32_t CloudSyncService::StartFileCache(const std::string &uriStr)
+int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec)
 {
-    Uri uri(uriStr);
+    Uri uri(uriVec[0]);
     string bundleName = uri.GetAuthority();
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    return dataSyncManager_->StartDownloadFile(bundleName, callerUserId, uriStr);
+    return dataSyncManager_->StartDownloadFile(bundleName, callerUserId, uriVec);
 }
 
 constexpr int TEST_MAIN_USR_ID = 100;
-int32_t CloudSyncService::StartDownloadFile(const std::string &path)
+int32_t CloudSyncService::StartDownloadFile(const std::vector<std::string> &pathVec)
 {
     string bundleName;
     if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
@@ -481,7 +481,7 @@ int32_t CloudSyncService::StartDownloadFile(const std::string &path)
     if (callerUserId == 0) {
         callerUserId = TEST_MAIN_USR_ID; // for root user change id to main user for test
     }
-    return dataSyncManager_->StartDownloadFile(bundleName, callerUserId, path);
+    return dataSyncManager_->StartDownloadFile(bundleName, callerUserId, pathVec);
 }
 
 int32_t CloudSyncService::StopDownloadFile(const std::string &path, bool needClean)
