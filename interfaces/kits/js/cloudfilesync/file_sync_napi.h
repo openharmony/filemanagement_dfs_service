@@ -22,7 +22,7 @@
 namespace OHOS::FileManagement::CloudSync {
 class FileSyncNapi final : public CloudSyncNapi {
 public:
-    virtual bool Export() override;
+    bool Export() override;
     static napi_value GetLastSyncTime(napi_env env, napi_callback_info info);
     FileSyncNapi(napi_env env, napi_value exports) : CloudSyncNapi(env, exports) {};
     ~FileSyncNapi() = default;
