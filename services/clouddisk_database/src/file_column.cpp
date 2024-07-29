@@ -143,7 +143,8 @@ const std::vector<std::string> FileColumn::DISK_ON_UPLOAD_COLUMNS = {
 };
 
 const std::vector<std::string> FileColumn::EXT_ATTR_QUERY_COLUMNS = {
-    ATTRIBUTE
+    ATTRIBUTE,
+    POSITION
 };
 } // namespace CloudDisk
 } // namespace FileManagement
