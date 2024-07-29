@@ -920,7 +920,7 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
     }
     if (cInode->cacheFileIndex.get()[cacheIndex] == NOT_CACHE &&
         pwrite(fd, readArgs->buf.get(), *readArgs->readResult, readArgs->offset) == *readArgs->readResult) {
-        LOGI("Write to file, index: %{public}ld", static_cast<long>(cacheIndex));
+        LOGI("Write to cache file, offset: %{public}ld*4M ", static_cast<long>(cacheIndex));
         cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
     }
     close(fd);
@@ -947,7 +947,7 @@ static void CloudReadOnCloudFile(pid_t pid,
         memInfo->flags = PG_READAHEAD;
         cInode->readCacheMap[cacheIndex] = memInfo;
         isReading = false;
-        LOGI("OnCloudFile Add: %{public}ld", static_cast<long>(cacheIndex));
+        LOGI("To do read cloudfile, offset: %{public}ld*4M", static_cast<long>(cacheIndex));
     }
     wSesLock.unlock();
     if (isReading && !CheckAndWait(pid, cInode, readArgs->offset)) {
@@ -973,7 +973,8 @@ static void CloudReadOnCloudFile(pid_t pid,
         wSesLock.lock();
         if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
             cInode->readCacheMap[cacheIndex]->cond.notify_all();
-            LOGI("OnCloudFile NotifyAll: %{public}ld", static_cast<long>(cacheIndex));
+            LOGI("Read cloudfile done and notify all waiting threads, offset: %{public}ld*4M",
+                static_cast<long>(cacheIndex));
         }
         if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
             ffrt::submit(
@@ -991,7 +992,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     usleep(READ_CACHE_SLEEP);
-    LOGI("PRead CacheFile, path: %{public}s, size: %{public}zd, off: %{public}lu",
+    LOGI("Preread CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu",
         GetAnonyString(cInode->path).c_str(), readArgs->size, static_cast<unsigned long>(readArgs->offset));
     uint64_t startTime = UTCTimeMilliSeconds();
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
@@ -1008,7 +1009,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     auto memInfo = std::make_shared<ReadCacheInfo>();
     memInfo->flags = PG_READAHEAD;
     cInode->readCacheMap[cacheIndex] = memInfo;
-    LOGI("OnCacheFile Add: %{public}ld", static_cast<long>(cacheIndex));
+    LOGI("To do preread cloudfile, offset: %{public}ld*4M", static_cast<long>(cacheIndex));
     wSesLock.unlock();
 
     readArgs->offset = cacheIndex * MAX_READ_SIZE;
@@ -1025,7 +1026,8 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     wSesLock.lock();
     if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
         cInode->readCacheMap[cacheIndex]->cond.notify_all();
-        LOGI("OnCacheFile NotifyAll: %{public}ld", static_cast<long>(cacheIndex));
+        LOGI("Preread cloudfile done and notify all waiting threads, offset: %{public}ld*4M",
+            static_cast<long>(cacheIndex));
     }
     if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
         ffrt::submit([readArgs, cInode, cacheIndex, userId] { SaveCacheToFile(readArgs, cInode, cacheIndex, userId); });
@@ -1067,13 +1069,14 @@ static bool FixData(fuse_req_t req, shared_ptr<char> buf, size_t size, size_t si
     shared_ptr<ReadArguments> readArgs)
 {
     if (*readArgs->readResult < 0) {
-        LOGE("ReadSize: %{public}lld", static_cast<long long>(*readArgs->readResult));
+        LOGE("Pread failed, readResult: %{public}ld", static_cast<long>(*readArgs->readResult));
         fuse_reply_err(req, ENOMEM);
         return false;
     }
 
     auto ret = HandleCloudError(*readArgs->ckError);
     if (ret < 0) {
+        LOGE("Pread failed, clouderror: %{public}d", -ret);
         fuse_reply_err(req, -ret);
         return false;
     }
@@ -1093,6 +1096,7 @@ static bool WaitData(fuse_req_t req, shared_ptr<CloudInode> cInode, shared_ptr<R
     std::unique_lock lock(cInode->readLock);
     auto waitStatus = readArgs->cond->wait_for(lock, READ_TIMEOUT_S, [readArgs] { return *readArgs->readStatus; });
     if (*readArgs->readStatus == READ_CANCELED) {
+        LOGI("read is cancelled");
         fuse_reply_err(req, EIO);
         return false;
     }
@@ -1105,7 +1109,7 @@ static bool WaitData(fuse_req_t req, shared_ptr<CloudInode> cInode, shared_ptr<R
             cInode->readCacheMap[cacheIndex]->cond.notify_all();
         }
         wSesLock.unlock();
-        LOGE("Wait Pread Timeout: %{public}ld", static_cast<long>(cacheIndex));
+        LOGE("Pread timeout, offset: %{public}ld*4M", static_cast<long>(cacheIndex));
         fuse_reply_err(req, ENETUNREACH);
         return false;
     }
@@ -1170,6 +1174,8 @@ static bool DoReadSlice(fuse_req_t req,
             unique_lock lock(cInode->readLock);
             *readArgs->readStatus = READ_FINISHED;
             return true;
+        } else {
+            LOGI("read cache file failed, errno: %{public}d", errno);
         }
     }
 
@@ -1231,20 +1237,22 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         fuse_reply_err(req, ENOMEM);
         return;
     }
-    LOGI("%{public}s, size=%{public}zd, off=%{public}lu",
+    LOGI("CloudRead: %{public}s, size=%{public}zd, off=%{public}lu",
          GetAnonyString(CloudPath(data, ino)).c_str(), size, (unsigned long)off);
 
     if (CheckReadIsCanceled(req->ctx.pid, cInode)) {
-        LOGI("read is canceled");
+        LOGI("read is cancelled");
         fuse_reply_err(req, EIO);
         return;
     }
     if (size > MAX_READ_SIZE) {
+        LOGE("input size exceeds MAX_READ_SIZE");
         fuse_reply_err(req, EINVAL);
         return;
     }
     auto dkReadSession = cInode->readSession;
     if (!dkReadSession) {
+        LOGE("readSession is nullptr");
         fuse_reply_err(req, EPERM);
         return;
     }
