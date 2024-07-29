@@ -598,7 +598,7 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
 {
     string cachePath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE +
                        CLOUD_CACHE_DIR + cInode->path;
-    int filePageSize = cInode->mBase->size / MAX_READ_SIZE + 1;
+    int filePageSize = static_cast<int32_t>(cInode->mBase->size / MAX_READ_SIZE + 1);
     CLOUD_CACHE_STATUS *tmp = new CLOUD_CACHE_STATUS[filePageSize]();
     std::unique_ptr<CLOUD_CACHE_STATUS[]> mp(tmp);
     if (access(cachePath.c_str(), F_OK) != 0) {
@@ -607,7 +607,13 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
             LOGE("failed to create parent dir");
             return;
         }
-        int fd = open(cachePath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        char *realPaths = realpath(cachePath.c_str(), NULL);
+        if (realPaths == nullptr) {
+            LOGE("realpath failed");
+            return;
+        }
+        int fd = open(realPaths, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+        free(realPaths);
         if (fd < 0) {
             LOGE("failed to open cache file, ret: %{public}d", errno);
             return;
@@ -913,7 +919,13 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
 {
     string cachePath =
         LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE + CLOUD_CACHE_DIR + cInode->path;
-    int fd = open(cachePath.c_str(), O_RDWR);
+    char *realPaths = realpath(cachePath.c_str(), NULL);
+    if (realPaths == nullptr) {
+        LOGE("realpath failed");
+        return;
+    }
+    int fd = open(realPaths, O_RDWR);
+    free(realPaths);
     if (fd < 0) {
         LOGE("Failed to open cache file, err: %{public}d", errno);
         return;
@@ -1138,7 +1150,13 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
 {
     string cachePath =
         LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE + CLOUD_CACHE_DIR + path;
-    int fd = open(cachePath.c_str(), O_RDONLY);
+    char *realPaths = realpath(cachePath.c_str(), NULL);
+    if (realPaths == nullptr) {
+        LOGE("realpath failed");
+        return -1;
+    }
+    int fd = open(realPaths, O_RDONLY);
+    free(realPaths);
     if (fd < 0) {
         return fd;
     }
@@ -1193,14 +1211,15 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
         return false;
     }
     // no prefetch when contains O_NOFOLLOW
-    if (flags & O_NOFOLLOW) {
+    unsigned int unflags = static_cast<unsigned int>(flags);
+    if (unflags & O_NOFOLLOW) {
         return true;
     }
 
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     for (uint32_t i = 1; i <= CACHE_PAGE_NUM; i++) {
-        int64_t cacheIndex =
-            (params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset) / MAX_READ_SIZE + i;
+        int64_t cacheIndex = static_cast<int64_t>(
+            (params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset) / MAX_READ_SIZE + i);
         if (IsVideoType(params.cInode->mBase->name) && params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
             continue;
         }
