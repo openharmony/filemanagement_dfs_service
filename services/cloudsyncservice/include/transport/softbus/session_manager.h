@@ -45,8 +45,8 @@ public:
 
     void ReleaseSession(SoftbusSession::DataType type, const std::string &peerDeviceId);
 
-    int OnSessionOpened(int sesssionId, int result) override;
-    void OnSessionClosed(int sessionId) override;
+    void OnSessionOpened(int socket, int result) override;
+    void OnSessionClosed(int socket) override;
     void OnDataReceived(const std::string &senderNetworkId,
                         int receiverSessionId,
                         const void *data,
