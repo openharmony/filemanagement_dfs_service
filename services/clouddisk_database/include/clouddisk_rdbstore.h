@@ -68,8 +68,8 @@ public:
     int32_t GetHasChild(const std::string &cloudId, bool &hasChild);
     int32_t GetRowId(const std::string &cloudId, int64_t &rowId);
     int32_t GetParentCloudId(const std::string &cloudId, std::string &parentCloudId);
-    int32_t ExtAttributeSetAttr(const std::string &cloudId, const std::string &value, const std::string &key);
-    int32_t GetExtAttr(const std::string &cloudId, std::string &value);
+    int32_t ExtAttributeSetXattr(const std::string &cloudId, const std::string &value, const std::string &key);
+    int32_t GetExtAttr(const std::string &cloudId, std::string &value, int32_t &position);
     int32_t GetExtAttrValue(const std::string &cloudId, const std::string &key, std::string &value);
 
     /* clouddisk syncer */
