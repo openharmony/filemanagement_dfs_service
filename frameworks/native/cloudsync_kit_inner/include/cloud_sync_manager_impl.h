@@ -57,13 +57,15 @@ public:
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
         SystemAbilityStatusChange(std::shared_ptr<CloudSyncCallback> callback,
-            std::shared_ptr<CloudDownloadCallback> downloadCallback)
-            : callback_(callback), downloadCallback_(downloadCallback) {};
+            std::shared_ptr<CloudDownloadCallback> downloadCallback,
+            std::string bundleName)
+            : callback_(callback), downloadCallback_(downloadCallback), bundleName_(bundleName) {};
         void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId);
         void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId);
     private:
         std::shared_ptr<CloudSyncCallback> callback_;
         std::shared_ptr<CloudDownloadCallback> downloadCallback_;
+        std::string bundleName_ = "";
     };
 private:
     CloudSyncManagerImpl() = default;
@@ -76,7 +78,7 @@ private:
     sptr<CloudSyncManagerImpl::SystemAbilityStatusChange> listener_;
     std::mutex subscribeMutex_;
     std::mutex callbackMutex_;
-    void SubscribeListener();
+    void SubscribeListener(std::string bundleName = "");
 };
 } // namespace OHOS::FileManagement::CloudSync
 

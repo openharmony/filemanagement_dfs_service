@@ -21,19 +21,15 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudSync {
 ReportStatisticsTask::ReportStatisticsTask(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
-    : CycleTask("report_statistics_task", {"com.ohos.photos"}, TWO_DAY, dataSyncManager)
+    : CycleTask("report_statistics_task", {"com.ohos.photos"}, ONE_DAY, dataSyncManager)
 {
 }
 
 int32_t ReportStatisticsTask::RunTaskForBundle(int32_t userId, std::string bundleName)
 {
-    int32_t ret = dataSyncManager_->ReportDownloadStat(bundleName, userId);
+    int32_t ret = dataSyncManager_->ReportEntry(bundleName, userId);
     if (ret != E_OK) {
-        LOGE("report download file stat failed");
-    }
-    ret = dataSyncManager_->ReportReadFileStat(bundleName, userId);
-    if (ret != E_OK) {
-        LOGE("report read file stat failed");
+        LOGE("report failed");
     }
     return ret;
 }
