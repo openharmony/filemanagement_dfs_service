@@ -60,7 +60,7 @@ int32_t DataSyncManager::IsSkipSync(const std::string &bundleName, const int32_t
 
 int32_t DataSyncManager::StartDownloadFile(const std::string &bundleName,
                                            const int32_t userId,
-                                           const std::vector<std::string> pathVec)
+                                           const std::string path)
 {
     return E_OK;
 }
