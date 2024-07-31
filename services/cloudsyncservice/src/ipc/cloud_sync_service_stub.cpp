@@ -326,12 +326,6 @@ int32_t CloudSyncServiceStub::HandleEnableCloud(MessageParcel &data, MessageParc
 int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleStartDownloadFile");
-    std::vector<std::string> pathVec;
-    if (!data.ReadStringVector(&pathVec)) {
-        LOGE("Failed to get the cloud id.");
-        return E_INVAL_ARG;
-    }
-
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
@@ -340,8 +334,9 @@ int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, Messa
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
+    string path = data.ReadString();
 
-    int32_t res = StartDownloadFile(pathVec);
+    int32_t res = StartDownloadFile(path);
     reply.WriteInt32(res);
     LOGI("End HandleStartDownloadFile");
     return E_OK;
@@ -350,24 +345,13 @@ int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, Messa
 int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleStartFileCache");
-    std::vector<std::string> pathVec;
-    if (!data.ReadStringVector(&pathVec)) {
-        LOGE("Failed to get the cloud id.");
-        return E_INVAL_ARG;
-    }
-
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
+    string path = data.ReadString();
+    if (!DfsuAccessTokenHelper::CheckUriPermission(path) &&
+        !DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
-
-    for (int i = 0; i < pathVec.size(); i++) {
-        if (!DfsuAccessTokenHelper::CheckUriPermission(pathVec[i])) {
-            LOGE("permission denied");
-            return E_PERMISSION_DENIED;
-        }
-    }
-    int32_t res = StartDownloadFile(pathVec);
+    int32_t res = StartDownloadFile(path);
     reply.WriteInt32(res);
     LOGI("End HandleStartFileCache");
     return E_OK;
