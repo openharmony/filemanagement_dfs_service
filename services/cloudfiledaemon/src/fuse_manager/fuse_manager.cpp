@@ -607,7 +607,7 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
             LOGE("failed to create parent dir");
             return;
         }
-        char *realPaths = realpath(cachePath.c_str(), NULL);
+        char *realPaths = realpath(cachePath.c_str(), nullptr);
         if (realPaths == nullptr) {
             LOGE("realpath failed");
             return;
@@ -919,7 +919,7 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
 {
     string cachePath =
         LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE + CLOUD_CACHE_DIR + cInode->path;
-    char *realPaths = realpath(cachePath.c_str(), NULL);
+    char *realPaths = realpath(cachePath.c_str(), nullptr);
     if (realPaths == nullptr) {
         LOGE("realpath failed");
         return;
@@ -1150,7 +1150,7 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
 {
     string cachePath =
         LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE + CLOUD_CACHE_DIR + path;
-    char *realPaths = realpath(cachePath.c_str(), NULL);
+    char *realPaths = realpath(cachePath.c_str(), nullptr);
     if (realPaths == nullptr) {
         LOGE("realpath failed");
         return -1;
