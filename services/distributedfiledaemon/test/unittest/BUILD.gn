@@ -1182,6 +1182,56 @@ ohos_unittest("softbus_session_listener_test") {
   defines = [ "private=public" ]
 }
 
+ohos_unittest("softbus_asset_send_listener_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include/asset",
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
+    "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+  ]
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_recv_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler_asset.cpp",
+    "network/softbus/softbus_asset_send_listener_test.cpp",
+  ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "c_utils:utils",
+    "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
+    "hilog:libhilog",
+    "os_account:os_account_innerkits",
+    "zlib:shared_libz",
+  ]
+
+  defines = [ "private=public" ]
+}
+
 group("unittest") {
   testonly = true
   deps = [
@@ -1193,6 +1243,7 @@ group("unittest") {
     ":os_account_observer_test",
     ":session_pool_test",
     ":softbus_agent_test",
+    ":softbus_asset_send_listener_test",
     ":softbus_file_receive_listener_test",
     ":softbus_file_send_listener_test",
     ":softbus_handler_asset_test",
