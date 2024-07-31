@@ -82,7 +82,7 @@ static const unsigned int MAX_IDLE_THREADS = 10;
 static const unsigned int READ_CACHE_SLEEP = 10 * 1000;
 static const unsigned int CACHE_PAGE_NUM = 2;
 static const unsigned int HMDFS_IOC = 0xf2;
-static const std::chrono::seconds READ_TIMEOUT_S = 20s;
+static const std::chrono::seconds READ_TIMEOUT_S = 8s;
 static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
 
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
