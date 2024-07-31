@@ -64,6 +64,7 @@ group("dfs_test_moudule") {
     "${services_path}/distributedfiledaemon/test/unittest:os_account_observer_test",
     "${services_path}/distributedfiledaemon/test/unittest:session_pool_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_agent_test",
+    "${services_path}/distributedfiledaemon/test/unittest:softbus_asset_send_listener_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_file_receive_listener_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_file_send_listener_test",
     "${services_path}/distributedfiledaemon/test/unittest:softbus_handler_asset_test",

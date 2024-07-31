@@ -68,7 +68,7 @@ void DeviceInfoTest::TearDown(void)
  * @tc.name: DeviceInfoTest_SetCid_0100
  * @tc.desc: Verify the SetCid function.
  * @tc.type: FUNC
- * @tc.require: SR000H0387
+ * @tc.require: IAGNEY
  */
 HWTEST_F(DeviceInfoTest, DeviceInfoTest_SetCid_0100, TestSize.Level1)
 {
@@ -92,7 +92,7 @@ HWTEST_F(DeviceInfoTest, DeviceInfoTest_SetCid_0100, TestSize.Level1)
  * @tc.name: DeviceInfoTest_GetCid_0100
  * @tc.desc: Verify the GetCid function.
  * @tc.type: FUNC
- * @tc.require: SR000H0387
+ * @tc.require: IAGNEY
  */
 HWTEST_F(DeviceInfoTest, DeviceInfoTest_GetCid_0100, TestSize.Level1)
 {
@@ -106,6 +106,87 @@ HWTEST_F(DeviceInfoTest, DeviceInfoTest_GetCid_0100, TestSize.Level1)
         EXPECT_TRUE(true);
     }
     GTEST_LOG_(INFO) << "DeviceInfoTest_GetCid_0100 start";
+}
+
+/**
+ * @tc.name: DeviceInfoTest_GetExtraData_0100
+ * @tc.desc: Verify the GetExtraData function.
+ * @tc.type: FUNC
+ * @tc.require: IAGNEY
+ */
+HWTEST_F(DeviceInfoTest, DeviceInfoTest_GetExtraData_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoTest_GetExtraData_0100 start";
+    DeviceInfo devInfo(deviceInfo);
+    try {
+        devInfo.extraData_ = "";
+        EXPECT_EQ(devInfo.GetExtraData(), "");
+
+        devInfo.extraData_ = "test";
+        EXPECT_EQ(devInfo.GetExtraData(), "test");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "DeviceInfoTest_GetExtraData_0100 start";
+}
+
+/**
+ * @tc.name: DeviceInfoTest_GetDeviceId_0100
+ * @tc.desc: Verify the GetDeviceId function.
+ * @tc.type: FUNC
+ * @tc.require: IAGNEY
+ */
+HWTEST_F(DeviceInfoTest, DeviceInfoTest_GetDeviceId_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoTest_GetDeviceId_0100 start";
+    DeviceInfo devInfo(deviceInfo);
+    try {
+        devInfo.deviceId_ = "";
+        EXPECT_EQ(devInfo.GetDeviceId(), "");
+
+        devInfo.deviceId_ = "test";
+        EXPECT_EQ(devInfo.GetDeviceId(), "test");
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "DeviceInfoTest_GetDeviceId_0100 start";
+}
+
+/**
+ * @tc.name: DeviceInfoTest_OperateEqual_0100
+ * @tc.desc: Verify the operate= function.
+ * @tc.type: FUNC
+ * @tc.require: IAGNEY
+ */
+HWTEST_F(DeviceInfoTest, DeviceInfoTest_OperateEqual_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoTest_OperateEqual_0100 start";
+    DeviceInfo devInfo(deviceInfo);
+    DeviceInfo devInfoTwo(devInfo);
+    try {
+        EXPECT_EQ(devInfoTwo.GetDeviceId(), deviceInfo.deviceId);
+        EXPECT_EQ(devInfoTwo.GetCid(), deviceInfo.networkId);
+        EXPECT_EQ(devInfoTwo.initCidFlag_, true);
+        EXPECT_TRUE(true);
+
+        DistributedHardware::DmDeviceInfo dmDeviceInfoTwo = {
+            .deviceId = "testdevid2",
+            .deviceName = "testdevname2",
+            .deviceTypeId = 2,
+            .networkId = "testNetWorkId2",
+        };
+
+        devInfoTwo = dmDeviceInfoTwo;
+        EXPECT_EQ(devInfoTwo.GetDeviceId(), dmDeviceInfoTwo.deviceId);
+        EXPECT_EQ(devInfoTwo.GetCid(), dmDeviceInfoTwo.networkId);
+        EXPECT_EQ(devInfoTwo.initCidFlag_, true);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "DeviceInfoTest_OperateEqual_0100 start";
 }
 }
 } // namespace Test
