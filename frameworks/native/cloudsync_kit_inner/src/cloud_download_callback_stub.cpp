@@ -58,6 +58,7 @@ int32_t CloudDownloadCallbackStub::HandleOnProcess(MessageParcel &data, MessageP
     std::string uri = uriMgr.GetUri(path);
     if (uri.empty()) {
         LOGI("CloudDownloadCallbackStub path %{public}s trans to uri error, skip.", GetAnonyString(path).c_str());
+        return E_OK;
     } else {
         progress->path = uri;
 
