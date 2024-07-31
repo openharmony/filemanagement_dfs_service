@@ -639,6 +639,8 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool nee
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
+    CloudDownloadUriManager& uriMgr = CloudDownloadUriManager::GetInstance();
+    uriMgr.RemoveUri(path);
     LOGI("StopDownloadFile Success");
     return reply.ReadInt32();
 }
