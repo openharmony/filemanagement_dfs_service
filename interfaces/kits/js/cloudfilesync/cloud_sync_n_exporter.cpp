@@ -52,6 +52,7 @@ napi_value CloudSyncExport(napi_env env, napi_value exports)
 {
     InitCloudSyncState(env, exports);
     InitErrorType(env, exports);
+    InitDownloadErrorType(env, exports);
     InitState(env, exports);
     InitFileSyncState(env, exports);
     InitNotifyType(env, exports);
@@ -117,6 +118,23 @@ void InitErrorType(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("BATTERY_LEVEL_WARNING", NVal::CreateInt32(env, BATTERY_LEVEL_WARNING).val_),
         DECLARE_NAPI_STATIC_PROPERTY("CLOUD_STORAGE_FULL", NVal::CreateInt32(env, CLOUD_STORAGE_FULL).val_),
         DECLARE_NAPI_STATIC_PROPERTY("LOCAL_STORAGE_FULL", NVal::CreateInt32(env, LOCAL_STORAGE_FULL).val_),
+    };
+    napi_value obj = nullptr;
+    napi_create_object(env, &obj);
+    napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
+    napi_set_named_property(env, exports, propertyName, obj);
+}
+
+void InitDownloadErrorType(napi_env env, napi_value exports)
+{
+    char propertyName[] = "DownloadErrorType";
+    napi_property_descriptor desc[] = {
+        DECLARE_NAPI_STATIC_PROPERTY("NO_ERROR", NVal::CreateInt32(env, NO_ERROR).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("UNKNOWN_ERROR", NVal::CreateInt32(env, DownloadProgressObj::UNKNOWN_ERROR).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("NETWORK_UNAVAILABLE", NVal::CreateInt32(env, DownloadProgressObj::NETWORK_UNAVAILABLE).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("LOCAL_STORAGE_FULL", NVal::CreateInt32(env, DownloadProgressObj::LOCAL_STORAGE_FULL).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("CONTENT_NOT_FOUND", NVal::CreateInt32(env, DownloadProgressObj::CONTENT_NOT_FOUND).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("FREQUENT_USER_REQUESTS", NVal::CreateInt32(env, DownloadProgressObj::FREQUENT_USER_REQUESTS).val_),
     };
     napi_value obj = nullptr;
     napi_create_object(env, &obj);
