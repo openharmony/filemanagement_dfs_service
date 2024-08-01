@@ -49,7 +49,7 @@ int32_t CloudSyncManagerImpl::RegisterCallback(const std::shared_ptr<CloudSyncCa
         unique_lock<mutex> lock(callbackMutex_);
         callback_ = callback;
     }
-    SubscribeListener();
+    SubscribeListener(bundleName);
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     LOGI("RegisterCallback ret %{public}d", ret);
     return ret;
@@ -344,7 +344,7 @@ int32_t CloudSyncManagerImpl::CleanCache(const std::string &uri)
     return CloudSyncServiceProxy->CleanCacheInner(uri);
 }
 
-void CloudSyncManagerImpl::SubscribeListener()
+void CloudSyncManagerImpl::SubscribeListener(std::string bundleName)
 {
     unique_lock<mutex> lock(subscribeMutex_);
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -357,7 +357,7 @@ void CloudSyncManagerImpl::SubscribeListener()
         LOGI("unsubscribed to systemAbility ret %{public}d", ret);
     }
     if (callback_ != nullptr || downloadCallback_ != nullptr) {
-        listener_ = new SystemAbilityStatusChange(callback_, downloadCallback_);
+        listener_ = new SystemAbilityStatusChange(callback_, downloadCallback_, bundleName);
         auto ret = samgr->SubscribeSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, listener_);
         LOGI("subscribed to systemAbility ret %{public}d", ret);
     } else {
@@ -379,7 +379,8 @@ void CloudSyncManagerImpl::SystemAbilityStatusChange::OnAddSystemAbility(int32_t
         CloudSyncManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     }
     if (callback_) {
-        CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback_)));
+        CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback_)),
+                                                     bundleName_);
         CloudSyncManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     }
     return;
