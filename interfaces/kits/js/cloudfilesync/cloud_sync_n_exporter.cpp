@@ -131,15 +131,15 @@ void InitDownloadErrorType(napi_env env, napi_value exports)
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_STATIC_PROPERTY("NO_ERROR", NVal::CreateInt32(env, NO_ERROR).val_),
         DECLARE_NAPI_STATIC_PROPERTY("UNKNOWN_ERROR",
-            NVal::CreateInt32(env,DownloadProgressObj::UNKNOWN_ERROR).val_),
+            NVal::CreateInt32(env, DownloadProgressObj::UNKNOWN_ERROR).val_),
         DECLARE_NAPI_STATIC_PROPERTY("NETWORK_UNAVAILABLE",
-            NVal::CreateInt32(env,DownloadProgressObj::NETWORK_UNAVAILABLE).val_),
+            NVal::CreateInt32(env, DownloadProgressObj::NETWORK_UNAVAILABLE).val_),
         DECLARE_NAPI_STATIC_PROPERTY("LOCAL_STORAGE_FULL",
-            NVal::CreateInt32(env,DownloadProgressObj::LOCAL_STORAGE_FULL).val_),
+            NVal::CreateInt32(env, DownloadProgressObj::LOCAL_STORAGE_FULL).val_),
         DECLARE_NAPI_STATIC_PROPERTY("CONTENT_NOT_FOUND",
-            NVal::CreateInt32(env,DownloadProgressObj::CONTENT_NOT_FOUND).val_),
+            NVal::CreateInt32(env, DownloadProgressObj::CONTENT_NOT_FOUND).val_),
         DECLARE_NAPI_STATIC_PROPERTY("FREQUENT_USER_REQUESTS",
-            NVal::CreateInt32(env,DownloadProgressObj::FREQUENT_USER_REQUESTS).val_),
+            NVal::CreateInt32(env, DownloadProgressObj::FREQUENT_USER_REQUESTS).val_),
     };
     napi_value obj = nullptr;
     napi_create_object(env, &obj);
