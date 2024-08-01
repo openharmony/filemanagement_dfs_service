@@ -225,9 +225,10 @@ int32_t AllConnectManager::UnRegisterLifecycleCallback()
 
 int32_t AllConnectManager::ApplyResult(int32_t errorcode, int32_t result, const char *reason)
 {
+    (void)reason;
     LOGI("ApplyResult begin");
     if (result != PASS) {
-        LOGE("Apply Result is Reject, errorcode is %{}d, reason is %{public}s", errorcode, reason);
+        LOGE("Apply Result is Reject, errorcode is %{public}d", errorcode);
         applyResultBlock_->SetValue(false);
         return FileManagement::ERR_APPLY_RESULT;
     }
