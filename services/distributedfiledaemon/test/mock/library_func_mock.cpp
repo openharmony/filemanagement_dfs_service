@@ -32,7 +32,7 @@ int dlclose(void *handle)
     return LibraryFunc::libraryFunc_->dlclose(handle);
 }
 
-void *dlsym(void *__restrict handle, char *__restrict name)
+void *dlsym(void *__restrict handle, const char *__restrict name)
 {
     if (LibraryFunc::libraryFunc_ == nullptr) {
         return nullptr;

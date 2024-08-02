@@ -31,7 +31,7 @@ public:
 
     virtual void *dlopen(const char *file, int mode) = 0;
     virtual int dlclose(void *handle) = 0;
-    virtual void *dlsym(void *__restrict handle, char *__restrict name) = 0;
+    virtual void *dlsym(void *__restrict handle, const char *__restrict name) = 0;
     virtual char *realpath(const char *__restrict path, char *__restrict resolved_path) = 0;
 
 public:
@@ -42,7 +42,7 @@ class LibraryFuncMock : public LibraryFunc {
 public:
     MOCK_METHOD2(dlopen, void *(const char *file, int mode));
     MOCK_METHOD1(dlclose, int(void *handle));
-    MOCK_METHOD2(dlsym, void *(void *__restrict handle, char *__restrict name));
+    MOCK_METHOD2(dlsym, void *(void *__restrict handle, const char *__restrict name));
     MOCK_METHOD2(realpath, char *(const char *__restrict path, char *__restrict resolved_path));
 };
 } // namespace DistributedFile
