@@ -159,8 +159,9 @@ void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const 
 
 void NetworkAgentTemplate::GetSessionProcess(NotifyParam &param)
 {
-    if (!sessionPool_.IsCidExist(param.remoteCid)) {
-        LOGI("cid: %{public}s is already not exist.", Utils::GetAnonyString(param.remoteCid).c_str());
+    string cidStr(param.remoteCid, CID_MAX_LEN);
+    if (!sessionPool_.IsCidExist(cidStr)) {
+        LOGI("cid: %{public}s is already not exist.", Utils::GetAnonyString(cidStr).c_str());
         return;
     }
 

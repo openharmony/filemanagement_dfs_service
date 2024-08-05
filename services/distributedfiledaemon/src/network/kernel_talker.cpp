@@ -90,7 +90,7 @@ void KernelTalker::SinkSessionTokernel(shared_ptr<BaseSession> session, const st
         return;
     }
 
-    if (memcpy_s(cmd.cid, CID_MAX_LEN, cid.c_str(), cid.size())) {
+    if (memcpy_s(cmd.cid, CID_MAX_LEN, cid.c_str(), CID_MAX_LEN)) {
         return;
     }
     SetCmd(cmd);
