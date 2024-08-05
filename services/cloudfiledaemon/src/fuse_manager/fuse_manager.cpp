@@ -602,18 +602,13 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
     CLOUD_CACHE_STATUS *tmp = new CLOUD_CACHE_STATUS[filePageSize]();
     std::unique_ptr<CLOUD_CACHE_STATUS[]> mp(tmp);
     if (access(cachePath.c_str(), F_OK) != 0) {
+        cInode->cacheFileIndex = std::move(mp);
         string parentPath = filesystem::path(cachePath).parent_path().string();
         if (!ForceCreateDirectory(parentPath)) {
             LOGE("failed to create parent dir");
             return;
         }
-        char *realPaths = realpath(cachePath.c_str(), nullptr);
-        if (realPaths == nullptr) {
-            LOGE("realpath failed");
-            return;
-        }
-        int fd = open(realPaths, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-        free(realPaths);
+        int fd = open(cachePath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         if (fd < 0) {
             LOGE("failed to open cache file, ret: %{public}d", errno);
             return;
@@ -622,7 +617,6 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
             LOGE("failed to truncate file, ret: %{public}d", errno);
         }
         close(fd);
-        cInode->cacheFileIndex = std::move(mp);
         return;
     }
 
