@@ -206,6 +206,14 @@ bool SessionPool::IsCidExist(const std::string &cid)
 {
     lock_guard lock(sessionPoolLock_);
     for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
+        auto sessionId = (*iter)->GetSessionId();
+        auto it = occupySession_.find(sessionId);
+        if (it != occupySession_.end()) {
+            uint8_t linkType = it->second;
+            if (linkType == 0) {
+                continue;
+            }
+        }
         if ((*iter)->GetCid() == cid) {
             return true;
         }
