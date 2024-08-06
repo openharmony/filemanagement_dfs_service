@@ -32,6 +32,7 @@ ohos_fuzztest("DaemonStubFuzzTest") {
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
+    "${utils_path}:libdistributedfileutils",
   ]
 
   external_deps = [
