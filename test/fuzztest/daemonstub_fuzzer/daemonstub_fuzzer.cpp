@@ -264,7 +264,6 @@ void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStub
 
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
-} // namespace OHOS
 
 void SetAccessTokenPermission()
 {
@@ -298,6 +297,9 @@ void SetAccessTokenPermission()
         return;
     }
 }
+} // namespace OHOS
+
+
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
@@ -311,7 +313,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (size < OHOS::U32_AT_SIZE || size > OHOS::FOO_MAX_LEN) {
         return 0;
     }
-    SetAccessTokenPermission()
+    OHOS::SetAccessTokenPermission();
     auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
     OHOS::HandleOpenP2PConnectionFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleCloseP2PConnectionFuzzTest(daemonStubPtr, data, size);
