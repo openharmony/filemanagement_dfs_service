@@ -20,12 +20,12 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
-void SystemLoadStatus::SetDataSycner(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+void SystemLoadListener::SetDataSycner(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     dataSyncManager_ = dataSyncManager;
 }
 
-void SystemLoadStatus::RegisterSystemloadCallback()
+void SystemLoadStatus::RegisterSystemloadCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     sptr<SystemLoadListener> loadListener = new (std::nothrow) SystemLoadListener();
     if (loadListener == nullptr) {
