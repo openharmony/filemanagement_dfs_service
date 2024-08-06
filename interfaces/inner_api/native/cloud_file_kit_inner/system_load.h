@@ -29,20 +29,21 @@ class SystemLoadStatus {
 public:
     SystemLoadStatus() = default;
     virtual ~SystemLoadStatus() = default;
-    static void RegisterSystemloadCallback();
+    static void RegisterSystemloadCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void GetSystemloadLevel();
     static bool IsLoadStatusOkay();
     static void InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void Setload(int32_t load);
-private:
     static inline int32_t loadstatus_ = 0;
-    static std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_ = nullptr;
 };
 
 class SystemLoadListener : public ResourceSchedule::ResSchedSystemloadNotifierClient {
 public:
     SystemLoadListener() = default;
     void OnSystemloadLevel(int32_t level) override;
+    void SetDataSycner(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
+private:
+    std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_ = nullptr;
 };
 } // OHOS
 

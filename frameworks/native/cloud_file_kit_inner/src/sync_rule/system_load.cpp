@@ -20,12 +20,18 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
+void SystemLoadStatus::SetDataSycner(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+{
+    dataSyncManager_ = dataSyncManager;
+}
+
 void SystemLoadStatus::RegisterSystemloadCallback()
 {
     sptr<SystemLoadListener> loadListener = new (std::nothrow) SystemLoadListener();
     if (loadListener == nullptr) {
         return;
     }
+    loadListener->SetDataSycner(dataSyncManager);
     ResourceSchedule::ResSchedClient::GetInstance().RegisterSystemloadNotifier(loadListener);
 }
 
@@ -52,9 +58,8 @@ void SystemLoadStatus::Setload(int32_t load)
 
 void SystemLoadStatus::InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
-    dataSyncManager_ = dataSyncManager;
     GetSystemloadLevel();
-    RegisterSystemloadCallback();
+    RegisterSystemloadCallback(dataSyncManager);
 }
 
 bool SystemLoadStatus::IsLoadStatusOkay()
