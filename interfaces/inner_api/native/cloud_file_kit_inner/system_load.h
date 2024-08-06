@@ -23,7 +23,7 @@
 #include "sync_state_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
-constexpr int32_t SYSTEMLOADLEVEL = ResourceSchedule::ResType::SystemloadLevel::WARNING;
+constexpr int32_t SYSTEMLOADLEVEL = ResourceSchedule::ResType::SystemloadLevel::NORMAL;
 
 class SystemLoadStatus {
 public:
@@ -32,9 +32,11 @@ public:
     static void RegisterSystemloadCallback();
     static void GetSystemloadLevel();
     static bool IsLoadStatusOkay();
-    static void InitSystemload();
+    static void InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void Setload(int32_t load);
+private:
     static inline int32_t loadstatus_ = 0;
+    static std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_ = nullptr;
 };
 
 class SystemLoadListener : public ResourceSchedule::ResSchedSystemloadNotifierClient {

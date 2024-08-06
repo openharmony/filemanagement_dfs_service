@@ -34,6 +34,8 @@ void SystemLoadListener::OnSystemloadLevel(int32_t level)
     SystemLoadStatus::Setload(level);
     if (level >= SYSTEMLOADLEVEL) {
         LOGI("systemloadlevel over temperature");
+    } else if (dataSyncManager_) {
+        dataSyncManager_->DownloadThumb();
     }
 }
 
@@ -48,8 +50,9 @@ void SystemLoadStatus::Setload(int32_t load)
     loadstatus_ = load;
 }
 
-void SystemLoadStatus::InitSystemload()
+void SystemLoadStatus::InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
+    dataSyncManager_ = dataSyncManager;
     GetSystemloadLevel();
     RegisterSystemloadCallback();
 }
