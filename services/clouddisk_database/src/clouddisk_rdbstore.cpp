@@ -844,6 +844,11 @@ int32_t CloudDiskRdbStore::GetExtAttrValue(const std::string &cloudId, const std
         return E_RDB;
     }
 
+    if (!nlohmann::json::accept(res)) {
+        LOGE("get ext jsonObj accept failed");
+        return E_RDB;
+    }
+
     nlohmann::json jsonObj = nlohmann::json::parse(res);
     if (jsonObj.is_discarded()) {
         LOGE("get ext jsonObj parse failed");
@@ -931,6 +936,10 @@ int32_t CloudDiskRdbStore::ExtAttributeSetAttr(const std::string &cloudId, const
     if (ret != E_OK || res.empty()) {
         jsonObj = nlohmann::json({{key, value}});
     } else {
+        if (!nlohmann::json::accept(res)) {
+            LOGE("ext jsonObj accept failed");
+            return E_RDB;
+        }
         jsonObj = nlohmann::json::parse(res);
         if (jsonObj.is_discarded()) {
             LOGE("ext jsonObj parse failed");
