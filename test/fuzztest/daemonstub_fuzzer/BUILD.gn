@@ -19,19 +19,23 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_fuzztest("DaemonStubFuzzTest") {
   module_out_path = "dfs_service/dfs_service"
   fuzz_config_file = "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer"
-  include_dirs =
-      [ "${distributedfile_path}/services/distributedfiledaemon/include/ipc" ]
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include",
+    "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
+  ]
   cflags = [
     "-g",
     "-O0",
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer/daemonstub_fuzzer.cpp" ]
+  sources = [
+    "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer/daemonstub_fuzzer.cpp",
+    "${distributedfile_path}/distributedfiledaemon/src/ipc/daemon_stub.cpp",
+  ]
   defines = [ "DFS_LOG_TAG = \"dfs_service\"" ]
   deps = [
     "${services_path}/distributedfiledaemon:distributed_file_daemon_kit_inner",
-    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
     "${utils_path}:libdistributedfileutils",
   ]
 
