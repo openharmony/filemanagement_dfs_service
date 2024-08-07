@@ -27,14 +27,61 @@ namespace OHOS::FileManagement::CloudDisk {
 const string BUNDLENAME_FLAG = "<BundleName>";
 const string CLOUDDISK_URI_PREFIX = "file://<BundleName>/data/storage/el2/cloud";
 const string BACKFLASH = "/";
+const string RECYCLE_BIN = ".trash";
 constexpr uint32_t MAX_NOTIFY_LIST_SIZE = 32;
 constexpr size_t MNOTIFY_TIME_INTERVAL = 500;
 static pair<string, shared_ptr<CloudDiskRdbStore>> cacheRdbStore("", nullptr);
+std::mutex cacheRdbMutex;
 
 CloudDiskNotify &CloudDiskNotify::GetInstance()
 {
     static CloudDiskNotify instance_;
     return instance_;
+}
+
+static shared_ptr<CloudDiskRdbStore> GetRdbStore(const string &bundleName, int32_t userId)
+{
+    std::lock_guard<std::mutex> lock(cacheRdbMutex);
+    string storeKey = bundleName + to_string(userId);
+    if (cacheRdbStore.first == storeKey) {
+        return cacheRdbStore.second;
+    }
+    cacheRdbStore.first = storeKey;
+    cacheRdbStore.second = make_shared<CloudDiskRdbStore>(bundleName, userId);
+    return cacheRdbStore.second;
+}
+
+static int32_t GetTrashNotifyData(const NotifyParamDisk &paramDisk, NotifyData &notifyData)
+{
+    if (paramDisk.inoPtr == nullptr) {
+        return E_INVAL_ARG;
+    }
+    string realPrefix = CLOUDDISK_URI_PREFIX;
+    realPrefix.replace(CLOUDDISK_URI_PREFIX.find(BUNDLENAME_FLAG), BUNDLENAME_FLAG.length(),
+                       paramDisk.inoPtr->bundleName);
+    notifyData.uri = realPrefix + BACKFLASH + RECYCLE_BIN + BACKFLASH + paramDisk.inoPtr->fileName;
+    return E_OK;
+}
+
+static int32_t GetTrashNotifyData(const CacheNode &cacheNode, const ParamServiceOther &paramOthers,
+    NotifyData &notifyData)
+{
+    string realPrefix = CLOUDDISK_URI_PREFIX;
+    realPrefix.replace(CLOUDDISK_URI_PREFIX.find(BUNDLENAME_FLAG), BUNDLENAME_FLAG.length(), paramOthers.bundleName);
+    notifyData.uri = realPrefix + BACKFLASH + RECYCLE_BIN + BACKFLASH + cacheNode.fileName;
+    return E_OK;
+}
+
+static int32_t TrashUriAddRowId(shared_ptr<CloudDiskRdbStore> rdbStore, const string &cloudId, string &uri)
+{
+    int64_t rowId = 0;
+    int32_t ret = rdbStore->GetRowId(cloudId, rowId);
+    if (ret != E_OK) {
+        LOGE("Get rowId fail, ret: %{public}d", ret);
+        return ret;
+    }
+    uri = uri + "_" + std::to_string(rowId);
+    return E_OK;
 }
 
 static int32_t GetDataInner(const NotifyParamDisk &paramDisk, NotifyData &notifyData)
@@ -74,6 +121,40 @@ static void HandleSetAttr(const NotifyParamDisk &paramDisk)
     }
     notifyData.type = NotifyType::NOTIFY_MODIFIED;
     CloudDiskNotify::GetInstance().AddNotify(notifyData);
+}
+
+static void HandleRecycleRestore(const NotifyParamDisk &paramDisk)
+{
+    NotifyData trashNotifyData;
+    if (GetTrashNotifyData(paramDisk, trashNotifyData) != E_OK) {
+        LOGE("Get trash notify data fail");
+        return;
+    }
+    shared_ptr<CloudDiskRdbStore> rdbStore = GetRdbStore(paramDisk.inoPtr->bundleName, paramDisk.data->userId);
+    if (rdbStore == nullptr) {
+        LOGE("Get rdb store fail, bundleName: %{public}s", paramDisk.inoPtr->bundleName.c_str());
+        return;
+    }
+    if (TrashUriAddRowId(rdbStore, paramDisk.inoPtr->cloudId, trashNotifyData.uri) != E_OK) {
+        return;
+    }
+
+    NotifyData originNotifyData;
+    if (GetDataInner(paramDisk, originNotifyData) != E_OK) {
+        LOGE("Get origin notify data fail");
+        return;
+    }
+    trashNotifyData.isDir = originNotifyData.isDir;
+    if (paramDisk.opsType == NotifyOpsType::DAEMON_RECYCLE) {
+        trashNotifyData.type = NotifyType::NOTIFY_ADDED;
+        originNotifyData.type = NotifyType::NOTIFY_DELETED;
+    }
+    if (paramDisk.opsType == NotifyOpsType::DAEMON_RESTORE) {
+        trashNotifyData.type = NotifyType::NOTIFY_DELETED;
+        originNotifyData.type = NotifyType::NOTIFY_ADDED;
+    }
+    CloudDiskNotify::GetInstance().AddNotify(trashNotifyData);
+    CloudDiskNotify::GetInstance().AddNotify(originNotifyData);
 }
 
 static void HandleWrite(const NotifyParamDisk &paramDisk, const ParamDiskOthers &paramOthers)
@@ -142,6 +223,10 @@ void CloudDiskNotify::TryNotify(const NotifyParamDisk &paramDisk, const ParamDis
         case NotifyOpsType::DAEMON_SETXATTR:
             HandleSetAttr(paramDisk);
             break;
+        case NotifyOpsType::DAEMON_RECYCLE:
+        case NotifyOpsType::DAEMON_RESTORE:
+            HandleRecycleRestore(paramDisk);
+            break;
         case NotifyOpsType::DAEMON_MKDIR:
             HandleMkdir(paramDisk);
             break;
@@ -161,17 +246,6 @@ void CloudDiskNotify::TryNotify(const NotifyParamDisk &paramDisk, const ParamDis
     }
 }
 
-static shared_ptr<CloudDiskRdbStore> GetRdbStore(const string &bundleName, int32_t userId)
-{
-    string storeKey = bundleName + to_string(userId);
-    if (cacheRdbStore.first == storeKey) {
-        return cacheRdbStore.second;
-    }
-    cacheRdbStore.first = storeKey;
-    cacheRdbStore.second = make_shared<CloudDiskRdbStore>(bundleName, userId);
-    return cacheRdbStore.second;
-}
-
 static void HandleInsert(const NotifyParamService &paramService, const ParamServiceOther &paramOthers)
 {
     shared_ptr<CloudDiskRdbStore> rdbStore = GetRdbStore(paramOthers.bundleName, paramOthers.userId);
@@ -180,7 +254,16 @@ static void HandleInsert(const NotifyParamService &paramService, const ParamServ
         return;
     }
     NotifyData notifyData;
-    int32_t ret = rdbStore->GetNotifyData(paramService.node, notifyData);
+    int32_t ret;
+    if (paramService.node.isRecycled) {
+        ret = GetTrashNotifyData(paramService.node, paramOthers, notifyData);
+        if (TrashUriAddRowId(rdbStore, paramService.cloudId, notifyData.uri) != E_OK) {
+            return;
+        }
+        notifyData.isDir = paramService.node.isDir == TYPE_DIR_STR;
+    } else {
+        ret = rdbStore->GetNotifyData(paramService.node, notifyData);
+    }
     if (ret == E_OK) {
         notifyData.type = NotifyType::NOTIFY_ADDED;
         CloudDiskNotify::GetInstance().AddNotify(notifyData);
@@ -200,7 +283,7 @@ static void HandleUpdate(const NotifyParamService &paramService, const ParamServ
     if (rdbStore->GetCurNode(paramService.cloudId, curNode) == E_OK &&
         rdbStore->GetNotifyUri(curNode, notifyData.uri) == E_OK) {
         notifyData.type = NotifyType::NOTIFY_MODIFIED;
-        notifyData.isDir = curNode.isDir == "directory";
+        notifyData.isDir = curNode.isDir == TYPE_DIR_STR;
         if (paramService.notifyType == NotifyType::NOTIFY_NONE &&
             rdbStore->GetNotifyData(paramService.node, inNotifyData) == E_OK) {
             if (inNotifyData.uri != notifyData.uri) {
@@ -211,6 +294,40 @@ static void HandleUpdate(const NotifyParamService &paramService, const ParamServ
     }
     CloudDiskNotify::GetInstance().AddNotify(notifyData);
     CloudDiskNotify::GetInstance().AddNotify(inNotifyData);
+}
+
+static void HandleUpdateRecycle(const NotifyParamService &paramService, const ParamServiceOther &paramOthers)
+{
+    shared_ptr<CloudDiskRdbStore> rdbStore = GetRdbStore(paramOthers.bundleName, paramOthers.userId);
+    if (rdbStore == nullptr) {
+        LOGE("Get rdb store fail, bundleName: %{public}s", paramOthers.bundleName.c_str());
+        return;
+    }
+    NotifyData trashNotifyData;
+    if (GetTrashNotifyData(paramService.node, paramOthers, trashNotifyData) != E_OK) {
+        LOGE("Get trash notify data fail");
+        return;
+    }
+    if (TrashUriAddRowId(rdbStore, paramService.cloudId, trashNotifyData.uri) != E_OK) {
+        return;
+    }
+
+    NotifyData originNotifyData;
+    if (rdbStore->GetNotifyData(paramService.node, originNotifyData) != E_OK) {
+        LOGE("Get origin notify data fail");
+        return;
+    }
+    trashNotifyData.isDir = paramService.node.isDir == TYPE_DIR_STR;
+    originNotifyData.isDir = trashNotifyData.isDir;
+    if (paramService.node.isRecycled) {
+        trashNotifyData.type = NotifyType::NOTIFY_ADDED;
+        originNotifyData.type = NotifyType::NOTIFY_DELETED;
+    } else {
+        trashNotifyData.type = NotifyType::NOTIFY_DELETED;
+        originNotifyData.type = NotifyType::NOTIFY_ADDED;
+    }
+    CloudDiskNotify::GetInstance().AddNotify(trashNotifyData);
+    CloudDiskNotify::GetInstance().AddNotify(originNotifyData);
 }
 
 static void HandleDelete(const NotifyParamService &paramService, const ParamServiceOther &paramOthers)
@@ -245,6 +362,9 @@ void CloudDiskNotify::TryNotifyService(const NotifyParamService &paramService, c
         case NotifyOpsType::SERVICE_UPDATE:
             HandleUpdate(paramService, paramOthers);
             break;
+        case NotifyOpsType::SERVICE_UPDATE_RECYCLE:
+            HandleUpdateRecycle(paramService, paramOthers);
+            break;
         case NotifyOpsType::SERVICE_DELETE:
             HandleDelete(paramService, paramOthers);
             break;
@@ -271,7 +391,7 @@ int32_t CloudDiskNotify::GetDeleteNotifyData(const vector<NativeRdb::ValueObject
         string cloudId = static_cast<string>(deleteId);
         CacheNode curNode{cloudId};
         if (rdbStore->GetCurNode(cloudId, curNode) == E_OK && rdbStore->GetNotifyUri(curNode, notifyData.uri) == E_OK) {
-            notifyData.isDir = curNode.isDir == "directory";
+            notifyData.isDir = curNode.isDir == TYPE_DIR_STR;
             notifyDataList.push_back(notifyData);
         }
     }
