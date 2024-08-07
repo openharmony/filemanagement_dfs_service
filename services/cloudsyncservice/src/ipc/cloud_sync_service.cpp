@@ -206,7 +206,7 @@ void CloudSyncService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
         fileTransferManager_ = make_shared<FileTransferManager>(sessionManager);
         fileTransferManager_->Init();
     } else if (systemAbilityId == RES_SCHED_SYS_ABILITY_ID) {
-        SystemLoadStatus::InitSystemload();
+        SystemLoadStatus::InitSystemload(dataSyncManager_);
     } else {
         LOGE("unexpected");
     }
