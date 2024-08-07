@@ -202,16 +202,6 @@ bool SessionPool::DeviceConnectCountOnly(std::shared_ptr<BaseSession> session)
     }
     return false;
 }
-bool SessionPool::IsCidExist(const std::string &cid)
-{
-    lock_guard lock(sessionPoolLock_);
-    for (auto iter = usrSpaceSessionPool_.begin(); iter != usrSpaceSessionPool_.end(); ++iter) {
-        if ((*iter)->GetCid() == cid) {
-            return true;
-        }
-    }
-    return false;
-}
 
 } // namespace DistributedFile
 } // namespace Storage

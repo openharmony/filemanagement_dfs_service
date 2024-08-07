@@ -149,6 +149,7 @@ ohos_shared_library("cloudsync_kit_inner_lite") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    cfi_vcall_icall_only = true
   }
   sources = [
     "${distributedfile_path}/frameworks/native/cloudsync_kit_inner_lite/src/cloud_sync_manager_impl_lite.cpp",

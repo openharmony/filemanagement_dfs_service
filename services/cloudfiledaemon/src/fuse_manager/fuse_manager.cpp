@@ -82,7 +82,7 @@ static const unsigned int MAX_IDLE_THREADS = 10;
 static const unsigned int READ_CACHE_SLEEP = 10 * 1000;
 static const unsigned int CACHE_PAGE_NUM = 2;
 static const unsigned int HMDFS_IOC = 0xf2;
-static const std::chrono::seconds READ_TIMEOUT_S = 20s;
+static const std::chrono::seconds READ_TIMEOUT_S = 16s;
 static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
 
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
@@ -509,7 +509,7 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
 {
     string localPath = GetLocalPath(data->userId, cInode->path);
     string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
-    char resolvedPath[PATH_MAX] = {'\0'};
+    char resolvedPath[PATH_MAX + 1] = {'\0'};
     char *realPath = realpath(tmpPath.c_str(), resolvedPath);
     if (realPath == nullptr) {
         LOGE("Failed to realpath, errno: %{public}d", errno);
@@ -598,10 +598,11 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
 {
     string cachePath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE +
                        CLOUD_CACHE_DIR + cInode->path;
-    int filePageSize = cInode->mBase->size / MAX_READ_SIZE + 1;
+    int filePageSize = static_cast<int32_t>(cInode->mBase->size / MAX_READ_SIZE + 1);
     CLOUD_CACHE_STATUS *tmp = new CLOUD_CACHE_STATUS[filePageSize]();
     std::unique_ptr<CLOUD_CACHE_STATUS[]> mp(tmp);
     if (access(cachePath.c_str(), F_OK) != 0) {
+        cInode->cacheFileIndex = std::move(mp);
         string parentPath = filesystem::path(cachePath).parent_path().string();
         if (!ForceCreateDirectory(parentPath)) {
             LOGE("failed to create parent dir");
@@ -616,7 +617,6 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
             LOGE("failed to truncate file, ret: %{public}d", errno);
         }
         close(fd);
-        cInode->cacheFileIndex = std::move(mp);
         return;
     }
 
@@ -913,14 +913,20 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
 {
     string cachePath =
         LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE + CLOUD_CACHE_DIR + cInode->path;
-    int fd = open(cachePath.c_str(), O_RDWR);
+    char *realPaths = realpath(cachePath.c_str(), nullptr);
+    if (realPaths == nullptr) {
+        LOGE("realpath failed");
+        return;
+    }
+    int fd = open(realPaths, O_RDWR);
+    free(realPaths);
     if (fd < 0) {
         LOGE("Failed to open cache file, err: %{public}d", errno);
         return;
     }
     if (cInode->cacheFileIndex.get()[cacheIndex] == NOT_CACHE &&
         pwrite(fd, readArgs->buf.get(), *readArgs->readResult, readArgs->offset) == *readArgs->readResult) {
-        LOGI("Write to file, index: %{public}ld", static_cast<long>(cacheIndex));
+        LOGI("Write to cache file, offset: %{public}ld*4M ", static_cast<long>(cacheIndex));
         cInode->cacheFileIndex.get()[cacheIndex] = HAS_CACHED;
     }
     close(fd);
@@ -947,7 +953,7 @@ static void CloudReadOnCloudFile(pid_t pid,
         memInfo->flags = PG_READAHEAD;
         cInode->readCacheMap[cacheIndex] = memInfo;
         isReading = false;
-        LOGI("OnCloudFile Add: %{public}ld", static_cast<long>(cacheIndex));
+        LOGI("To do read cloudfile, offset: %{public}ld*4M", static_cast<long>(cacheIndex));
     }
     wSesLock.unlock();
     if (isReading && !CheckAndWait(pid, cInode, readArgs->offset)) {
@@ -973,7 +979,8 @@ static void CloudReadOnCloudFile(pid_t pid,
         wSesLock.lock();
         if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
             cInode->readCacheMap[cacheIndex]->cond.notify_all();
-            LOGI("OnCloudFile NotifyAll: %{public}ld", static_cast<long>(cacheIndex));
+            LOGI("Read cloudfile done and notify all waiting threads, offset: %{public}ld*4M",
+                static_cast<long>(cacheIndex));
         }
         if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
             ffrt::submit(
@@ -991,7 +998,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 {
     HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
     usleep(READ_CACHE_SLEEP);
-    LOGI("PRead CacheFile, path: %{public}s, size: %{public}zd, off: %{public}lu",
+    LOGI("Preread CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu",
         GetAnonyString(cInode->path).c_str(), readArgs->size, static_cast<unsigned long>(readArgs->offset));
     uint64_t startTime = UTCTimeMilliSeconds();
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
@@ -1008,7 +1015,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     auto memInfo = std::make_shared<ReadCacheInfo>();
     memInfo->flags = PG_READAHEAD;
     cInode->readCacheMap[cacheIndex] = memInfo;
-    LOGI("OnCacheFile Add: %{public}ld", static_cast<long>(cacheIndex));
+    LOGI("To do preread cloudfile, offset: %{public}ld*4M", static_cast<long>(cacheIndex));
     wSesLock.unlock();
 
     readArgs->offset = cacheIndex * MAX_READ_SIZE;
@@ -1025,7 +1032,8 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     wSesLock.lock();
     if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
         cInode->readCacheMap[cacheIndex]->cond.notify_all();
-        LOGI("OnCacheFile NotifyAll: %{public}ld", static_cast<long>(cacheIndex));
+        LOGI("Preread cloudfile done and notify all waiting threads, offset: %{public}ld*4M",
+            static_cast<long>(cacheIndex));
     }
     if (IsVideoType(cInode->mBase->name) && *readArgs->readResult > 0) {
         ffrt::submit([readArgs, cInode, cacheIndex, userId] { SaveCacheToFile(readArgs, cInode, cacheIndex, userId); });
@@ -1067,13 +1075,14 @@ static bool FixData(fuse_req_t req, shared_ptr<char> buf, size_t size, size_t si
     shared_ptr<ReadArguments> readArgs)
 {
     if (*readArgs->readResult < 0) {
-        LOGE("ReadSize: %{public}lld", static_cast<long long>(*readArgs->readResult));
+        LOGE("Pread failed, readResult: %{public}ld", static_cast<long>(*readArgs->readResult));
         fuse_reply_err(req, ENOMEM);
         return false;
     }
 
     auto ret = HandleCloudError(*readArgs->ckError);
     if (ret < 0) {
+        LOGE("Pread failed, clouderror: %{public}d", -ret);
         fuse_reply_err(req, -ret);
         return false;
     }
@@ -1093,6 +1102,7 @@ static bool WaitData(fuse_req_t req, shared_ptr<CloudInode> cInode, shared_ptr<R
     std::unique_lock lock(cInode->readLock);
     auto waitStatus = readArgs->cond->wait_for(lock, READ_TIMEOUT_S, [readArgs] { return *readArgs->readStatus; });
     if (*readArgs->readStatus == READ_CANCELED) {
+        LOGI("read is cancelled");
         fuse_reply_err(req, EIO);
         return false;
     }
@@ -1105,7 +1115,7 @@ static bool WaitData(fuse_req_t req, shared_ptr<CloudInode> cInode, shared_ptr<R
             cInode->readCacheMap[cacheIndex]->cond.notify_all();
         }
         wSesLock.unlock();
-        LOGE("Wait Pread Timeout: %{public}ld", static_cast<long>(cacheIndex));
+        LOGE("Pread timeout, offset: %{public}ld*4M", static_cast<long>(cacheIndex));
         fuse_reply_err(req, ENETUNREACH);
         return false;
     }
@@ -1138,7 +1148,13 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
 {
     string cachePath =
         LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE + CLOUD_CACHE_DIR + path;
-    int fd = open(cachePath.c_str(), O_RDONLY);
+    char *realPaths = realpath(cachePath.c_str(), nullptr);
+    if (realPaths == nullptr) {
+        LOGE("realpath failed");
+        return -1;
+    }
+    int fd = open(realPaths, O_RDONLY);
+    free(realPaths);
     if (fd < 0) {
         return fd;
     }
@@ -1170,6 +1186,8 @@ static bool DoReadSlice(fuse_req_t req,
             unique_lock lock(cInode->readLock);
             *readArgs->readStatus = READ_FINISHED;
             return true;
+        } else {
+            LOGI("read cache file failed, errno: %{public}d", errno);
         }
     }
 
@@ -1193,14 +1211,15 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
         return false;
     }
     // no prefetch when contains O_NOFOLLOW
-    if (flags & O_NOFOLLOW) {
+    unsigned int unflags = static_cast<unsigned int>(flags);
+    if (unflags & O_NOFOLLOW) {
         return true;
     }
 
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     for (uint32_t i = 1; i <= CACHE_PAGE_NUM; i++) {
-        int64_t cacheIndex =
-            (params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset) / MAX_READ_SIZE + i;
+        int64_t cacheIndex = static_cast<int64_t>(
+            (params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset) / MAX_READ_SIZE + i);
         if (IsVideoType(params.cInode->mBase->name) && params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
             continue;
         }
@@ -1231,20 +1250,22 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         fuse_reply_err(req, ENOMEM);
         return;
     }
-    LOGI("%{public}s, size=%{public}zd, off=%{public}lu",
+    LOGI("CloudRead: %{public}s, size=%{public}zd, off=%{public}lu",
          GetAnonyString(CloudPath(data, ino)).c_str(), size, (unsigned long)off);
 
     if (CheckReadIsCanceled(req->ctx.pid, cInode)) {
-        LOGI("read is canceled");
+        LOGI("read is cancelled");
         fuse_reply_err(req, EIO);
         return;
     }
     if (size > MAX_READ_SIZE) {
+        LOGE("input size exceeds MAX_READ_SIZE");
         fuse_reply_err(req, EINVAL);
         return;
     }
     auto dkReadSession = cInode->readSession;
     if (!dkReadSession) {
+        LOGE("readSession is nullptr");
         fuse_reply_err(req, EPERM);
         return;
     }
@@ -1320,12 +1341,12 @@ static bool CheckPathForStartFuse(const string &path)
         return false;
     }
     std::string realPath(resolvedPath);
-    std::string PATH_PREFIX = "/mnt/data/";
-    if (realPath.rfind(PATH_PREFIX, 0) != 0) {
+    std::string pathPrefix = "/mnt/data/";
+    if (realPath.rfind(pathPrefix, 0) != 0) {
         return false;
     }
 
-    size_t userIdBeginPos = PATH_PREFIX.length();
+    size_t userIdBeginPos = pathPrefix.length();
     size_t userIdEndPos = realPath.find("/", userIdBeginPos);
     const std::string userId = realPath.substr(userIdBeginPos, userIdEndPos - userIdBeginPos);
     if (userId.find_first_not_of("0123456789") != std::string::npos) {
@@ -1333,14 +1354,14 @@ static bool CheckPathForStartFuse(const string &path)
     }
 
     size_t suffixBeginPos = userIdEndPos + 1;
-    const std::string PATH_SUFFIX1 = "cloud";
-    const std::string PATH_SUFFIX2 = "cloud_fuse";
-    if (realPath.rfind(PATH_SUFFIX1) == suffixBeginPos &&
-        suffixBeginPos + PATH_SUFFIX1.length() == realPath.length()) {
+    const std::string pathSuffix1 = "cloud";
+    const std::string pathSuffix2 = "cloud_fuse";
+    if (realPath.rfind(pathSuffix1) == suffixBeginPos &&
+        suffixBeginPos + pathSuffix1.length() == realPath.length()) {
         return true;
     }
-    if (realPath.rfind(PATH_SUFFIX2) == suffixBeginPos &&
-        suffixBeginPos + PATH_SUFFIX2.length() == realPath.length()) {
+    if (realPath.rfind(pathSuffix2) == suffixBeginPos &&
+        suffixBeginPos + pathSuffix2.length() == realPath.length()) {
         return true;
     }
     return false;

@@ -21,7 +21,7 @@
 namespace OHOS::FileManagement::CloudSync {
 class GallerySyncNapi final : public CloudSyncNapi {
 public:
-    virtual bool Export() override;
+    bool Export() override;
     GallerySyncNapi(napi_env env, napi_value exports) : CloudSyncNapi(env, exports) {}
     ~GallerySyncNapi() = default;
 };

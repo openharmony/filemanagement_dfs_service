@@ -16,6 +16,7 @@
 #include "file_transfer_manager.h"
 
 #include <cinttypes>
+#include <unistd.h>
 
 #include "dfs_error.h"
 #include "ipc/download_asset_callback_manager.h"

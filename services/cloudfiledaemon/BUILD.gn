@@ -71,6 +71,7 @@ ohos_shared_library("cloudfiledaemon") {
     "${innerkits_native_path}/cloud_daemon_kit_inner",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
     "${services_path}/cloudfiledaemon/include/fuse_manager/",
+    "${services_path}/cloudfiledaemon/include/ipc/",
     "${services_path}/cloudsyncservice/include/data_sync/",
     "${clouddisk_database_path}/include",
   ]

@@ -1325,11 +1325,11 @@ HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest2, TestSize.Level1)
 }
 
 /**
- * @tc.name: ExtAttributeSetAttr
- * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetAttr function
+ * @tc.name: ExtAttributeSetXattr
+ * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetXattr function
  * @tc.type: FUNC
  */
-HWTEST_F(CloudDiskRdbStoreTest, ExtAttributeSetAttrTest1, TestSize.Level1)
+HWTEST_F(CloudDiskRdbStoreTest, ExtAttributeSetXattrTest1, TestSize.Level1)
 {
     const std::string cloudId = "root";
     const std::string key = "user.cloud.test1";
@@ -1337,13 +1337,13 @@ HWTEST_F(CloudDiskRdbStoreTest, ExtAttributeSetAttrTest1, TestSize.Level1)
     const std::string bundleName = "com.ohos.photos";
     const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.ExtAttributeSetAttr(cloudId, value, key);
+    int32_t ret = CloudDiskRdbStore.ExtAttributeSetXattr(cloudId, value, key);
     EXPECT_EQ(ret, E_OK);
 }
 
 /**
  * @tc.name: GetExtAttrValue
- * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetAttr function
+ * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetXattr function
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrValueTest1, TestSize.Level1)
@@ -1360,7 +1360,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrValueTest1, TestSize.Level1)
 
 /**
  * @tc.name: GetExtAttr
- * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetAttr function
+ * @tc.desc: Verify the CloudDiskRdbStore::ExtAttributeSetXattr function
  * @tc.type: FUNC
  */
 HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest1, TestSize.Level1)
@@ -1369,8 +1369,9 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest1, TestSize.Level1)
     std::string value = "";
     const std::string bundleName = "com.ohos.photos";
     const int32_t userId = 100;
+    int32_t pos = 0;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.GetExtAttr(cloudId, value);
+    int32_t ret = CloudDiskRdbStore.GetExtAttr(cloudId, value, pos);
     EXPECT_EQ(ret, E_RDB);
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test

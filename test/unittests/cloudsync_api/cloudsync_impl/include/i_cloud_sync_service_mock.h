@@ -92,11 +92,11 @@ public:
     {
         return E_OK;
     }
-    int32_t StartDownloadFile(const std::vector<std::string> &pathVec)
+    int32_t StartDownloadFile(const std::string &path)
     {
         return E_OK;
     }
-    int32_t StartFileCache(const std::vector<std::string> &pathVec)
+    int32_t StartFileCache(const std::string &path)
     {
         return E_OK;
     }

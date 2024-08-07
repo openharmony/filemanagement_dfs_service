@@ -838,7 +838,8 @@ int32_t CloudDiskRdbStore::GetExtAttrValue(const std::string &cloudId, const std
     }
 
     std::string res;
-    int32_t ret = GetExtAttr(cloudId, res);
+    int32_t pos = 0;
+    int32_t ret = GetExtAttr(cloudId, res, pos);
     if (ret != E_OK || res.empty()) {
         LOGE("get ext attr value res is empty");
         return E_RDB;
@@ -865,7 +866,7 @@ int32_t CloudDiskRdbStore::GetExtAttrValue(const std::string &cloudId, const std
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::GetExtAttr(const std::string &cloudId, std::string &value)
+int32_t CloudDiskRdbStore::GetExtAttr(const std::string &cloudId, std::string &value, int32_t &position)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
@@ -887,6 +888,12 @@ int32_t CloudDiskRdbStore::GetExtAttr(const std::string &cloudId, std::string &v
     int32_t ret = CloudDiskRdbUtils::GetString(FileColumn::ATTRIBUTE, value, resultSet);
     if (ret != E_OK) {
         LOGE("get ext attr value failed");
+        return ret;
+    }
+
+    ret = CloudDiskRdbUtils::GetInt(FileColumn::POSITION, position, resultSet);
+    if (ret != E_OK) {
+        LOGE("get location value failed");
         return ret;
     }
 
@@ -914,7 +921,36 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
     return E_INVAL_ARG;
 }
 
-int32_t CloudDiskRdbStore::ExtAttributeSetAttr(const std::string &cloudId, const std::string &value,
+static int32_t ExtAttributeSetValue(const std::string &key, const std::string &value,
+    ValuesBucket &setXAttr, std::string &xattrList, int32_t pos)
+{
+    nlohmann::json jsonObj;
+    if (xattrList.empty()) {
+        jsonObj = nlohmann::json({{key, value}});
+    } else {
+        if (!nlohmann::json::accept(xattrList)) {
+            LOGE("ext jsonObj accept failed");
+            return E_RDB;
+        }
+        jsonObj = nlohmann::json::parse(xattrList);
+        if (jsonObj.is_discarded()) {
+            LOGE("ext jsonObj parse failed");
+            return E_RDB;
+        }
+
+        jsonObj[key] = value;
+    }
+    std::string jsonValue = jsonObj.dump();
+    setXAttr.PutString(FileColumn::ATTRIBUTE, jsonValue);
+    if (pos != LOCAL) {
+        setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+        setXAttr.PutLong(FileColumn::OPERATE_TYPE, static_cast<int32_t>(OperationType::UNKNOWN_TYPE));
+    }
+    setXAttr.PutLong(FileColumn::META_TIME_EDITED, UTCTimeMilliSeconds());
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::ExtAttributeSetXattr(const std::string &cloudId, const std::string &value,
     const std::string &key)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
@@ -929,38 +965,18 @@ int32_t CloudDiskRdbStore::ExtAttributeSetAttr(const std::string &cloudId, const
         LOGE("Ext rdbstore begin transaction failed, ret = %{public}d", ret);
         return ret;
     }
-
-    std::string res;
-    nlohmann::json jsonObj;
-    ret = GetExtAttr(cloudId, res);
-    if (ret != E_OK || res.empty()) {
-        jsonObj = nlohmann::json({{key, value}});
-    } else {
-        if (!nlohmann::json::accept(res)) {
-            LOGE("ext jsonObj accept failed");
-            return E_RDB;
-        }
-        jsonObj = nlohmann::json::parse(res);
-        if (jsonObj.is_discarded()) {
-            LOGE("ext jsonObj parse failed");
-            return E_RDB;
-        }
-
-        jsonObj[key] = value;
-    }
-
-    std::string jsonValue = jsonObj.dump();
-    setAttr.PutString(FileColumn::ATTRIBUTE, jsonValue);
-    setAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
-    setAttr.PutLong(FileColumn::OPERATE_TYPE, static_cast<int32_t>(OperationType::UNKNOWN_TYPE));
+    std::string xattrList;
+    int32_t pos = 0;
+    RETURN_ON_ERR(GetExtAttr(cloudId, xattrList, pos));
+    RETURN_ON_ERR(ExtAttributeSetValue(key, value, setAttr, xattrList, pos));
     ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setAttr,
         FileColumn::CLOUD_ID + " = ?", bindArgs);
     if (ret != E_OK) {
         LOGE("ext attr location fail, ret %{public}d", ret);
         return E_RDB;
     }
-
     rdbTransaction.Finish();
+    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     return E_OK;
 }
 
@@ -979,7 +995,7 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
             return FavoriteSetXattr(cloudId, value);
             break;
         case IS_EXT_ATTR:
-            return ExtAttributeSetAttr(cloudId, value, name);
+            return ExtAttributeSetXattr(cloudId, value, name);
     }
     
     return E_INVAL_ARG;
