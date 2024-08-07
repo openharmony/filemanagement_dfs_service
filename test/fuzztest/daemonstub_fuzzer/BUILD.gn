@@ -30,8 +30,8 @@ ohos_fuzztest("DaemonStubFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [
-    "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer/daemonstub_fuzzer.cpp",
     "${distributedfile_path}/src/ipc/daemon_stub.cpp",
+    "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer/daemonstub_fuzzer.cpp",
   ]
   defines = [ "DFS_LOG_TAG = \"dfs_service\"" ]
   deps = [
