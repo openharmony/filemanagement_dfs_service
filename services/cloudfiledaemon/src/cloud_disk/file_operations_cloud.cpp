@@ -762,6 +762,9 @@ void HandleCloudRecycle(fuse_req_t req, fuse_ino_t ino, const char *name,
         fuse_reply_err(req, EINVAL);
         return;
     }
+    int32_t val = std::stoi(value);
+    CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
+        val == 0 ? NotifyOpsType::DAEMON_RESTORE : NotifyOpsType::DAEMON_RECYCLE, inoPtr});
     fuse_reply_err(req, 0);
 }
 

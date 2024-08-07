@@ -130,7 +130,7 @@ int32_t CloudDiskNotifyUtils::GetCacheNode(const string &cloudId, CacheNode &cac
 
 void CloudDiskNotifyUtils::PutCacheNode(const string &cloudId, const CacheNode &cacheNode)
 {
-    if (cacheNode.isDir != "directory") {
+    if (cacheNode.isDir != TYPE_DIR_STR) {
         return;
     }
     lock_guard<mutex> lock(cacheMutex_);

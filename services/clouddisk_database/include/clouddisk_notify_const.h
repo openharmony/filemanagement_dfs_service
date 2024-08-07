@@ -23,9 +23,13 @@
 
 namespace OHOS::FileManagement::CloudDisk {
 
+const std::string TYPE_DIR_STR = "directory";
+
 enum class NotifyOpsType : uint32_t {
     DAEMON_SETXATTR = 0,
     DAEMON_SETATTR,
+    DAEMON_RESTORE,
+    DAEMON_RECYCLE,
     DAEMON_MKDIR,
     DAEMON_RMDIR,
     DAEMON_UNLINK,
@@ -33,6 +37,7 @@ enum class NotifyOpsType : uint32_t {
     DAEMON_WRITE,
     SERVICE_INSERT,
     SERVICE_UPDATE,
+    SERVICE_UPDATE_RECYCLE,
     SERVICE_DELETE,
     SERVICE_DELETE_BATCH,
     OPS_NONE,
