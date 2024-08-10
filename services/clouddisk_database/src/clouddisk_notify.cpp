@@ -118,13 +118,13 @@ static void HandleRename(const NotifyParamDisk &paramDisk, const ParamDiskOthers
     int32_t ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func, paramDisk.ino,
         paramDisk.name, notifyData);
     if (ret != E_OK) {
-        LOGE("get notify data fail, name: %{public}s", paramDisk.name.c_str());
+        LOGE("get notify data fail, name: %{public}s", GetAnonyString(paramDisk.name).c_str());
         return;
     }
     ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func, paramDisk.newIno,
         paramDisk.newName, newNotifyData);
     if (ret != E_OK) {
-        LOGE("get new notify data fail, name: %{public}s", paramDisk.newName.c_str());
+        LOGE("get new notify data fail, name: %{public}s", GetAnonyString(paramDisk.newName).c_str());
         return;
     }
     notifyData.isDir = paramOthers.isDir;

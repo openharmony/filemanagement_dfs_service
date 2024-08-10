@@ -136,8 +136,8 @@ void SoftbusAdapter::OnBytesReceived(int sessionId, const void *data, unsigned i
 
 int SoftbusAdapter::OnReceiveFileStarted(int sessionId, const char *files, int fileCnt)
 {
-    LOGD("File receive start sessionId = %{public}d, first file:%{public}s, fileCnt:%{public}d", sessionId, files,
-         fileCnt);
+    LOGD("File receive start sessionId = %{public}d, first file:%{public}s, fileCnt:%{public}d", sessionId,
+         GetAnonyString(files).c_str(), fileCnt);
     return E_OK;
 }
 
@@ -149,13 +149,13 @@ int SoftbusAdapter::OnReceiveFileProcess(int sessionId,
     LOGD(
         "File receive process sessionId = %{public}d, first file:%{public}s, bytesUpload:%{public}" PRIu64 ", "
         "bytesTotal:%{public}" PRIu64 "",
-        sessionId, firstFile, bytesUpload, bytesTotal);
+        sessionId, GetAnonyString(firstFile).c_str(), bytesUpload, bytesTotal);
     return E_OK;
 }
 
 void SoftbusAdapter::OnReceiveFileFinished(int sessionId, const char *files, int fileCnt)
 {
-    LOGD("OnReceiveFileFinished invoked, files:%{public}s, fileCnt:%{public}d", files, fileCnt);
+    LOGD("OnReceiveFileFinished invoked, files:%{public}s, fileCnt:%{public}d", GetAnonyString(files).c_str(), fileCnt);
     string sessionName = SoftbusAdapter::GetInstance().GetSessionNameById(sessionId);
     if (sessionName.empty()) {
         LOGE("get session name failed");
