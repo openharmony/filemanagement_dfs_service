@@ -120,6 +120,7 @@ static void HandleSetAttr(const NotifyParamDisk &paramDisk)
         return;
     }
     notifyData.type = NotifyType::NOTIFY_MODIFIED;
+    notifyData.isLocalOperation = true;
     CloudDiskNotify::GetInstance().AddNotify(notifyData);
 }
 
@@ -153,6 +154,8 @@ static void HandleRecycleRestore(const NotifyParamDisk &paramDisk)
         trashNotifyData.type = NotifyType::NOTIFY_DELETED;
         originNotifyData.type = NotifyType::NOTIFY_ADDED;
     }
+    trashNotifyData.isLocalOperation = true;
+    originNotifyData.isLocalOperation = true;
     CloudDiskNotify::GetInstance().AddNotify(trashNotifyData);
     CloudDiskNotify::GetInstance().AddNotify(originNotifyData);
 }
@@ -167,6 +170,7 @@ static void HandleWrite(const NotifyParamDisk &paramDisk, const ParamDiskOthers 
     if (paramOthers.dirtyType == static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD)) {
         notifyData.type = NotifyType::NOTIFY_ADDED;
     }
+    notifyData.isLocalOperation = true;
     CloudDiskNotify::GetInstance().AddNotify(notifyData);
 }
 
@@ -178,6 +182,7 @@ static void HandleMkdir(const NotifyParamDisk &paramDisk)
     }
     notifyData.type = NotifyType::NOTIFY_ADDED;
     notifyData.isDir = true;
+    notifyData.isLocalOperation = true;
     CloudDiskNotify::GetInstance().AddNotify(notifyData);
 }
 
@@ -189,6 +194,7 @@ static void HandleUnlink(const NotifyParamDisk &paramDisk)
     }
     notifyData.type = NotifyType::NOTIFY_DELETED;
     notifyData.isDir = paramDisk.opsType == NotifyOpsType::DAEMON_RMDIR;
+    notifyData.isLocalOperation = true;
     CloudDiskNotify::GetInstance().AddNotify(notifyData);
 }
 
@@ -212,6 +218,8 @@ static void HandleRename(const NotifyParamDisk &paramDisk, const ParamDiskOthers
     newNotifyData.isDir = paramOthers.isDir;
     notifyData.type = notifyData.isDir ? NotifyType::NOTIFY_DELETED : NotifyType::NOTIFY_NONE;
     newNotifyData.type = NotifyType::NOTIFY_RENAMED;
+    notifyData.isLocalOperation = true;
+    newNotifyData.isLocalOperation = true;
     CloudDiskNotify::GetInstance().AddNotify(notifyData);
     CloudDiskNotify::GetInstance().AddNotify(newNotifyData);
 }
@@ -415,6 +423,7 @@ void CloudDiskNotify::AddNotify(NotifyData notifyData)
         Parcel parcel;
         parcel.WriteUint32(1);
         parcel.WriteBool(notifyData.isDir);
+        parcel.WriteBool(notifyData.isLocalOperation);
         uintptr_t buf = parcel.GetData();
         if (parcel.GetDataSize() == 0) {
             LOGE("parcel.getDataSize fail");
