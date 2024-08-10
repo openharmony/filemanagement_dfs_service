@@ -50,6 +50,7 @@ struct NotifyData {
     std::string uri;
     bool isDir;
     NotifyType type = NotifyType::NOTIFY_NONE;
+    bool isLocalOperation = false;
 };
 
 struct CacheNode {
