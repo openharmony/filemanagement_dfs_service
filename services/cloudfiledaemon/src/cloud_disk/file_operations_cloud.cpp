@@ -447,6 +447,22 @@ int32_t GenerateCloudId(int32_t userId, string &cloudId, const string &bundleNam
     return 0;
 }
 
+static int32_t GetParentUpload(shared_ptr<CloudDiskInode> parentInode, struct CloudDiskFuseData *data,
+                               bool &parentNoUpload)
+{
+    auto grandparentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parentInode->parent));
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
+        grandparentInode->bundleName, grandparentInode->cloudId);
+    MetaBase metaBase(parentInode->fileName);
+    auto ret = metaFile->DoLookup(metaBase);
+    if (ret != 0) {
+        LOGE("file %{public}s not found", parentInode->fileName.c_str());
+        return ret;
+    }
+    parentNoUpload = (metaBase.noUpload == NO_UPLOAD);
+    return 0;
+}
+
 int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
                     mode_t mode, struct fuse_entry_param &e)
 {
@@ -469,11 +485,18 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
         return fd;
     }
 
+    bool noNeedUpload;
+    err = GetParentUpload(parentInode, data, noNeedUpload);
+    if (err != 0) {
+        LOGE("Failed to get parent no upload");
+        return err;
+    }
+
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     string path = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
     shared_ptr<CloudDiskRdbStore> rdbStore =
         databaseManager.GetRdbStore(parentInode->bundleName, data->userId);
-    err = rdbStore->Create(cloudId, parentInode->cloudId, name);
+    err = rdbStore->Create(cloudId, parentInode->cloudId, name, noNeedUpload);
     if (err != 0) {
         close(fd);
         RemoveLocalFile(path);
@@ -966,8 +989,20 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
         LOGE("parent inode not found");
         return (void) fuse_reply_err(req, EINVAL);
     }
+    string fileName = name;
+    bool noNeedUpload;
+    int32_t err = 0;
+    if (fileName == ".thumbs" && parentInode->cloudId == ROOT_CLOUD_ID) {
+        noNeedUpload = true;
+    } else if (parentInode->cloudId != ROOT_CLOUD_ID) {
+        err = GetParentUpload(parentInode, data, noNeedUpload);
+        if (err != 0) {
+            LOGE("Failed to get parent no upload");
+            return (void) fuse_reply_err(req, err);
+        }
+    }
     string cloudId;
-    int32_t err = GenerateCloudId(data->userId, cloudId, parentInode->bundleName);
+    err = GenerateCloudId(data->userId, cloudId, parentInode->bundleName);
     if (err != 0) {
         LOGE("Failed to generate cloud id");
         return (void) fuse_reply_err(req, err);
@@ -976,7 +1011,7 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
     shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName,
                                                                          data->userId);
-    err = rdbStore->MkDir(cloudId, parentInode->cloudId, name);
+    err = rdbStore->MkDir(cloudId, parentInode->cloudId, name, noNeedUpload);
     if (err != 0) {
         LOGE("Failed to mkdir to DB err:%{public}d", err);
         return (void) fuse_reply_err(req, ENOSYS);
