@@ -48,6 +48,7 @@
 #include "datetime_ex.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
+#include "fdsan.h"
 #include "ffrt_inner.h"
 #include "fuse_operations.h"
 #include "hitrace_meter.h"
@@ -524,10 +525,11 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
         LOGE("Failed to open local file, errno: %{public}d", errno);
         return 0;
     }
+    auto fdsan = new fdsan_fd(fd);
     string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
     if (remove(cloudMergeViewPath.c_str()) < 0) {
         LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
-        close(fd);
+        delete fdsan;
         return 0;
     }
 
@@ -535,12 +537,12 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
     ForceCreateDirectory(parentPath.string());
     if (rename(tmpPath.c_str(), localPath.c_str()) < 0) {
         LOGE("Failed to rename tmpPath to localPath, errno: %{public}d", errno);
-        close(fd);
+        delete fdsan;
         return -errno;
     }
     MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
     cInode->mBase->hasDownloaded = true;
-    fi->fh = static_cast<uint64_t>(fd);
+    fi->fh = reinterpret_cast<uint64_t>(fdsan);
     return 0;
 }
 
@@ -740,7 +742,9 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
         if (fi->fh != UINT64_MAX) {
-            close(fi->fh);
+            auto fdsan = reinterpret_cast<fdsan_fd *>(fi->fh);
+            delete fdsan;
+            fi->fh = UINT64_MAX;
         }
         if (cInode->mBase->fileType == FILE_TYPE_CONTENT && (!cInode->readSession->Close(false))) {
             LOGE("Failed to close readSession");
@@ -1045,7 +1049,13 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t size,
     off_t off, struct fuse_file_info *fi)
 {
-    auto readSize = pread(fi->fh, buf.get(), size, off);
+    if (fd->fh == UINT64_MAX) {
+        LOGE("Invalid fh in fuse_file_info");
+        fuse_reply_err(req, EBADF);
+        return;
+    }
+    auto fdsan = reinterpret_cast<fdsan_fd *>(fi->fh);
+    auto readSize = pread(fdsan->get(), buf.get(), size, off);
     if (readSize < 0) {
         LOGE("Failed to read local file, errno: %{public}d", errno);
         fuse_reply_err(req, errno);
