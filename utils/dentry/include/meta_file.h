@@ -103,6 +103,11 @@ private:
 };
 
 enum {
+    NEED_UPLOAD = 0,
+    NO_UPLOAD,
+};
+
+enum {
     FILE_TYPE_CONTENT = 0,
     FILE_TYPE_THUMBNAIL,
     FILE_TYPE_LCD,
@@ -162,6 +167,7 @@ struct MetaBase {
     uint32_t mode{S_IFREG};
     uint8_t position{POSITION_LOCAL};
     uint8_t fileType{FILE_TYPE_CONTENT};
+    uint8_t noUpload{NEED_UPLOAD};
     std::string name{};
     std::string cloudId{};
     off_t nextOff{0};
@@ -211,8 +217,10 @@ struct BitOps {
 struct MetaHelper {
     static void SetFileType(struct HmdfsDentry *de, uint8_t fileType);
     static void SetPosition(struct HmdfsDentry *de, uint8_t position);
+    static void SetNoUpload(struct HmdfsDentry *de, uint8_t noUpload);
     static uint8_t GetFileType(const struct HmdfsDentry *de);
     static uint8_t GetPosition(const struct HmdfsDentry *de);
+    static uint8_t GetNoUpload(const struct HmdfsDentry *de);
 };
 } // namespace FileManagement
 } // namespace OHOS

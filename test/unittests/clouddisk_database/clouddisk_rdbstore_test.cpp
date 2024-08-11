@@ -306,7 +306,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest1, TestSize.Level1)
     const std::string bundleName = "MkDirTest";
     const int32_t userId = 123456789;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.Create(cloudId, parentCloudId, fileName);
+    int32_t ret = CloudDiskRdbStore.Create(cloudId, parentCloudId, fileName, false);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -325,7 +325,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest2, TestSize.Level1)
     const std::string bundleName = "MkDirTest";
     const int32_t userId = 123456789;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.Create(cloudId, parentCloudId, fileName);
+    int32_t ret = CloudDiskRdbStore.Create(cloudId, parentCloudId, fileName, false);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
@@ -344,7 +344,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest3, TestSize.Level1)
     const std::string bundleName = "MkDirTest";
     const int32_t userId = 123456789;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.Create(cloudId, parentCloudId, fileName);
+    int32_t ret = CloudDiskRdbStore.Create(cloudId, parentCloudId, fileName, false);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -363,7 +363,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest4, TestSize.Level1)
     const std::string bundleName = "MkDirTest";
     const int32_t userId = 123456789;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.Create(cloudId, parentCloudId, fileName);
+    int32_t ret = CloudDiskRdbStore.Create(cloudId, parentCloudId, fileName, false);
     EXPECT_EQ(ret, E_PATH);
 }
 
@@ -381,7 +381,7 @@ HWTEST_F(CloudDiskRdbStoreTest, MkDirTest1, TestSize.Level1)
     const std::string bundleName = "com.ohos.photos";;
     const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.MkDir(cloudId, parentCloudId, directoryName);
+    int32_t ret = CloudDiskRdbStore.MkDir(cloudId, parentCloudId, directoryName, false);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -399,7 +399,7 @@ HWTEST_F(CloudDiskRdbStoreTest, MkDirTest2, TestSize.Level1)
     const std::string bundleName = "com.ohos.photos";;
     const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.MkDir(cloudId, parentCloudId, directoryName);
+    int32_t ret = CloudDiskRdbStore.MkDir(cloudId, parentCloudId, directoryName, false);
     EXPECT_EQ(ret, EINVAL);
 }
 
@@ -417,7 +417,7 @@ HWTEST_F(CloudDiskRdbStoreTest, MkDirTest3, TestSize.Level1)
     const std::string bundleName = "com.ohos.photos";;
     const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-    int32_t ret = CloudDiskRdbStore.MkDir(cloudId, parentCloudId, directoryName);
+    int32_t ret = CloudDiskRdbStore.MkDir(cloudId, parentCloudId, directoryName, false);
     EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
