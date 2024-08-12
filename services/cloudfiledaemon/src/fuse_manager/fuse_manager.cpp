@@ -1049,7 +1049,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t size,
     off_t off, struct fuse_file_info *fi)
 {
-    if (fd->fh == UINT64_MAX) {
+    if (fi->fh == UINT64_MAX) {
         LOGE("Invalid fh in fuse_file_info");
         fuse_reply_err(req, EBADF);
         return;
