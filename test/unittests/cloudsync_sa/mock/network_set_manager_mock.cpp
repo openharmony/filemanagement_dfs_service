@@ -33,6 +33,7 @@ const std::string CLOUDDRIVE_KEY = "persist.kernel.bundle_name.clouddrive";
 const std::string PHOTOS_BUNDLE_NAME = "com.ohos.photos";
 const std::string BUNDLE_NAME_KEY = "key";
 const std::string BUNDLE_NAME_VALUE = "value";
+const std::int32_t MOCK_USER_ID = 1;
 auto clouddriveBundleName = system::GetParameter(CLOUDDRIVE_KEY, "");
 auto photoQueryUri = PHOTO_NET_CONT + "&key=photo_network_connection_status";
 auto queryUri = QUERY_URI + clouddriveBundleName + "/cloud_sp?key=" + SWITCH_STATUS_KEY;
@@ -51,7 +52,6 @@ int32_t NetworkSetManager::QueryNetConnect(int32_t userId, const std::string &bu
 void NetworkSetManager::GetCellularConnect(const std::string &bundleName, const int32_t userId)
 {
 }
-
 
 void NetworkSetManager::GetNetConnect(const std::string &bundleName, const int32_t userId)
 {
@@ -76,11 +76,17 @@ void MobileNetworkObserver::OnChange()
 
 bool NetworkSetManager::IsAllowCellularConnect(const std::string &bundleName, const int32_t userId)
 {
+    if (userId == MOCK_USER_ID) {
+        return true;
+    }
     return false;
 }
 
 bool NetworkSetManager::IsAllowNetConnect(const std::string &bundleName, const int32_t userId)
 {
+    if (userId == MOCK_USER_ID) {
+        return true;
+    }
     return false;
 }
 

@@ -278,9 +278,9 @@ HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest002, TestSize.Level1)
     try {
         NetworkStatus networkStatus;
         string bundleName = "com.ohos.photos";
-        int32_t userId = 100;
+        int32_t userId = 1;
         bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
-        EXPECT_EQ(ret, false);
+        EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "CheckMobileNetworkTest FAILED";
@@ -311,6 +311,28 @@ HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "CheckMobileNetworkTest End";
 }
 
+/**
+ * @tc.name: CheckMobileNetworkTest004
+ * @tc.desc: Verify the CheckMobileNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckMobileNetworkTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 100;
+        networkStatus.SetNetConnStatus(NetworkStatus::NO_NETWORK);
+        bool ret = networkStatus.CheckMobileNetwork(bundleName, userId);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckMobileNetworkTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckMobileNetworkTest End";
+}
 
 /**
  * @tc.name: CheckNetworkTest001
@@ -341,6 +363,28 @@ HWTEST_F(NetworkStatusTest, CheckNetworkTest001, TestSize.Level1)
  * @tc.require: I6JPKG
  */
 HWTEST_F(NetworkStatusTest, CheckNetworkTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CheckNetworkTest Start";
+    try {
+        NetworkStatus networkStatus;
+        string bundleName = "com.ohos.photos";
+        int32_t userId = 1;
+        bool ret = networkStatus.CheckNetwork(bundleName, userId);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CheckNetworkTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "CheckNetworkTest End";
+}
+
+/**
+ * @tc.name: CheckNetworkTest003
+ * @tc.desc: Verify the CheckNetwork function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, CheckNetworkTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "CheckNetworkTest Start";
     try {
@@ -377,7 +421,7 @@ HWTEST_F(NetworkStatusTest, OnNetworkAvailTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: OnNetworkAvailTest00
+ * @tc.name: OnNetworkAvailTest002
  * @tc.desc: Verify the OnNetworkAvail function
  * @tc.type: FUNC
  * @tc.require: I6JPKG

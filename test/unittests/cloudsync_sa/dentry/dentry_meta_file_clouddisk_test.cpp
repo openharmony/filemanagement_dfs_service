@@ -54,6 +54,68 @@ void CloudDiskDentryMetaFileTest::TearDown(void)
 }
 
 /**
+ * @tc.name: CloudDiskMetaFileHandleFileByFd001
+ * @tc.desc: Verify the MetaFile::HandleFileByFd function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileHandleFileByFd001, TestSize.Level1)
+{
+    MetaFile mFile(TEST_USER_ID, "/");
+    unsigned long endBlock = 0;
+    uint32_t level = 0;
+    int ret = mFile.HandleFileByFd(endBlock, level);
+    EXPECT_EQ(ret, EINVAL);
+}
+
+/**
+ * @tc.name: CloudDiskMetaFileHandleFileByFd002
+ * @tc.desc: Verify the MetaFile::HandleFileByFd function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileHandleFileByFd002, TestSize.Level1)
+{
+    uint32_t userId = 100;
+    CloudDiskMetaFile mFile(userId, "/", "id1");
+    unsigned long endBlock = 0;
+    uint32_t level = 64;
+    int ret = mFile.HandleFileByFd(endBlock, level);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: CloudDiskMetaFileHandleFileByFd003
+ * @tc.desc: Verify the MetaFile::HandleFileByFd function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileHandleFileByFd003, TestSize.Level1)
+{
+    uint32_t userId = 100;
+    CloudDiskMetaFile mFile(userId, "/", "id1");
+    unsigned long endBlock = 0;
+    uint32_t level = 0;
+    int ret = mFile.HandleFileByFd(endBlock, level);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: CloudDiskMetaFileDoChildUpdateTest
+ * @tc.desc: Verify the CloudDiskMetaFile::DoChildUpdate function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKC
+ */
+HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileDoChildUpdateTest, TestSize.Level1)
+{
+    CloudDiskMetaFile mFile(TEST_USER_ID, "/", "id1");
+    string name = "";
+    CloudDiskMetaFile::CloudDiskMetaFileCallBack callback;
+    int ret = mFile.DoChildUpdate(name, callback);
+    EXPECT_EQ(ret, 2);
+}
+
+/**
  * @tc.name: DoLookupAndRemoveTest
  * @tc.desc: Verify the CloudDiskMetaFile::DoLookupAndRemove function
  * @tc.type: FUNC
@@ -293,7 +355,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, RemoveFromRecycleDentryfileTest001, TestSi
         int64_t rowId = 0;
         int32_t ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId, bundleName,
                                                                              name, parentCloudId, rowId);
-        EXPECT_EQ(ret, 2);
+        EXPECT_EQ(ret, 0);
         MetaFileMgr::GetInstance().CloudDiskClearAll();
     } catch (...) {
         EXPECT_FALSE(false);

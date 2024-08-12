@@ -137,6 +137,9 @@ std::string CloudDiskMetaFile::GetDentryFilePath()
 
 int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskMetaFileCallBack callback)
 {
+    if (name == "mock") {
+        return E_RDB;
+    }
     return E_OK;
 }
 

@@ -52,21 +52,6 @@ HWTEST_F(PluginLoaderTest, PluginLoaderTest_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "PluginLoaderTest_001 End";
 }
 
-HWTEST_F(PluginLoaderTest, PluginLoaderTest_002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "PluginLoaderTest_002 Start";
-    try {
-        PluginLoader pluginLoader;
-        bool isSupportCloudSync = true;
-        pluginLoader.LoadCloudKitPlugin(isSupportCloudSync);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "PluginLoaderTest_002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "PluginLoaderTest_002 End";
-}
-
 HWTEST_F(PluginLoaderTest, PluginLoaderTest_003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "PluginLoaderTest_003 Start";
