@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_FILEMGMT_FDSAN_FILE_H
-#define OHOS_FILEMGMT_FDSAN_FILE_H
+#ifndef OHOS_FILEMGMT_FDSAN_H
+#define OHOS_FILEMGMT_FDSAN_H
 
 #include <cstdio>
 
@@ -94,4 +94,4 @@ struct fdsan_fd {
         }
     }
 };
-#endif // OHOS_FILEMGMT_FDSAN_FILE_H
+#endif // OHOS_FILEMGMT_FDSAN_H
