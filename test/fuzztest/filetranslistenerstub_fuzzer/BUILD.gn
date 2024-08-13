@@ -17,7 +17,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_fuzztest("FileTransListenerStubFuzzTest") {
-  module_out_path = "dfs_service/dfs_service"
+  module_out_path = "dfs_service/dfs_service_daemon"
   fuzz_config_file =
       "${distributedfile_path}/test/fuzztest/filetranslistenerstub_fuzzer"
   include_dirs = [
