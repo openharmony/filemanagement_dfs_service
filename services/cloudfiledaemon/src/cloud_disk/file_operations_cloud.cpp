@@ -485,15 +485,20 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
         return fd;
     }
 
-    bool noNeedUpload;
-    err = GetParentUpload(parentInode, data, noNeedUpload);
-    if (err != 0) {
-        LOGE("Failed to get parent no upload");
-        return err;
+    string path = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
+
+    bool noNeedUpload = false;
+    if (parentInode->cloudId != ROOT_CLOUD_ID) {
+        err = GetParentUpload(parentInode, data, noNeedUpload);
+        if (err != 0) {
+            LOGE("Failed to get parent no upload");
+            close(fd);
+            RemoveLocalFile(path);
+            return err;
+        }
     }
 
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-    string path = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
     shared_ptr<CloudDiskRdbStore> rdbStore =
         databaseManager.GetRdbStore(parentInode->bundleName, data->userId);
     err = rdbStore->Create(cloudId, parentInode->cloudId, name, noNeedUpload);
