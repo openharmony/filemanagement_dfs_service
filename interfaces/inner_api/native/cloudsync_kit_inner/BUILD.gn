@@ -42,7 +42,7 @@ config("optimize-size") {
 
 ohos_shared_library("cloudsync_kit_inner") {
   branch_protector_ret = "pac_ret"
-  config = [ ":optimize-size" ]
+  configs = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -69,7 +69,7 @@ ohos_shared_library("cloudsync_kit_inner") {
     "LOG_TAG=\"CLOUDSYNC_API\"",
   ]
 
-  configs = [ ":private_config" ]
+  configs += [ ":private_config" ]
   public_configs = [ ":public_config" ]
 
   external_deps = [
@@ -95,7 +95,7 @@ ohos_shared_library("cloudsync_kit_inner") {
 
 ohos_shared_library("cloudsync_asset_kit_inner") {
   branch_protector_ret = "pac_ret"
-  config = [ ":optimize-size" ]
+  configs = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -119,7 +119,7 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
     "LOG_TAG=\"CLOUD_ASSET_API\"",
   ]
 
-  configs = [ ":private_config" ]
+  configs += [ ":private_config" ]
   public_configs = [ ":public_config" ]
 
   external_deps = [
@@ -141,7 +141,7 @@ ohos_shared_library("cloudsync_asset_kit_inner") {
 
 ohos_shared_library("cloudsync_kit_inner_lite") {
   branch_protector_ret = "pac_ret"
-  config = [ ":optimize-size" ]
+  configs = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -162,7 +162,7 @@ ohos_shared_library("cloudsync_kit_inner_lite") {
     "LOG_TAG=\"CloudFileDaemon\"",
   ]
 
-  configs = [ ":private_config" ]
+  configs += [ ":private_config" ]
   public_configs = [ ":public_config" ]
 
   external_deps = [
