@@ -404,7 +404,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
 static void CloudLookup(fuse_req_t req, fuse_ino_t parent,
                         const char *name)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     struct fuse_entry_param e;
     int err;
 
@@ -447,7 +447,7 @@ static void CloudForget(fuse_req_t req, fuse_ino_t ino,
 static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
                          struct fuse_file_info *fi)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     struct stat buf;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     (void) fi;
@@ -575,7 +575,7 @@ static uint64_t UTCTimeMilliSeconds()
 static void DownloadThmOrLcd(shared_ptr<CloudInode> cInode, shared_ptr<CloudError> err, shared_ptr<bool> openFinish,
     shared_ptr<ffrt::condition_variable> cond)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     auto session = cInode->readSession;
     if (!session) {
         LOGE("readSession is nullptr");
@@ -672,7 +672,7 @@ static void UpdateReadStat(shared_ptr<CloudInode> cInode, uint64_t startTime)
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                       struct fuse_file_info *fi)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     fi->fh = UINT64_MAX;
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
@@ -942,7 +942,7 @@ static void CloudReadOnCloudFile(pid_t pid,
                                  shared_ptr<CloudInode> cInode,
                                  shared_ptr<CloudFile::CloudAssetReadSession> readSession)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     LOGI("PRead CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu", GetAnonyString(cInode->path).c_str(),
          readArgs->size, static_cast<unsigned long>(readArgs->offset));
 
@@ -1000,7 +1000,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
                                  shared_ptr<CloudFile::CloudAssetReadSession> readSession,
                                  int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     usleep(READ_CACHE_SLEEP);
     LOGI("Preread CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu",
         GetAnonyString(cInode->path).c_str(), readArgs->size, static_cast<unsigned long>(readArgs->offset));
@@ -1252,7 +1252,7 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
 static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                       struct fuse_file_info *fi)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
