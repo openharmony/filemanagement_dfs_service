@@ -90,6 +90,26 @@ CloudDiskRdbStore::~CloudDiskRdbStore()
     Stop();
 }
 
+int32_t CloudDiskRdbStore::ReBuildDatabase(const string &databasePath)
+{
+    LOGI("database need to be rebuilded");
+    int32_t errCode = RdbHelper::DeleteRdbStore(databasePath);
+    if (errCode != NativeRdb::E_OK) {
+        LOGE("Delete CloudDisk Database is failed, err = %{public}d", errCode);
+        return errCode;
+    }
+    errCode = 0;
+    CloudDiskDataCallBack rdbDataCallBack;
+    rdbStore_ = RdbHelper::GetRdbStore(config_, CLOUD_DISK_RDB_VERSION, rdbDataCallBack, errCode);
+    if (rdbStore_ == nullptr) {
+        LOGE("ReGetRdbStore is failed, userId_ = %{public}d, bundleName_ = %{public}s, errCode = %{public}d",
+             userId_, bundleName_.c_str(), errCode);
+        return errCode;
+    }
+    DatabaseRestore();
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::RdbInit()
 {
     LOGI("Init rdb store, userId_ = %{public}d, bundleName_ = %{public}s", userId_, bundleName_.c_str());
@@ -103,8 +123,8 @@ int32_t CloudDiskRdbStore::RdbInit()
         LOGE("Create Default Database Path is failed, errCode = %{public}d", errCode);
         return E_PATH;
     }
-    config_.SetName(move(name));
-    config_.SetPath(move(databasePath));
+    config_.SetName(name);
+    config_.SetPath(databasePath);
     config_.SetReadConSize(CONNECT_SIZE);
     config_.SetScalarFunction("cloud_sync_func", ARGS_SIZE, CloudSyncTriggerFunc);
     errCode = 0;
@@ -113,8 +133,13 @@ int32_t CloudDiskRdbStore::RdbInit()
     if (rdbStore_ == nullptr) {
         LOGE("GetRdbStore is failed, userId_ = %{public}d, bundleName_ = %{public}s, errCode = %{public}d",
              userId_, bundleName_.c_str(), errCode);
-        return E_RDB;
-    }
+        if (errCode == NativeRdb::E_SQLITE_CORRUPT) {
+            if (ReBuildDatabase(databasePath)) {
+                LOGE("clouddisk db image is malformed, ReBuild failed");
+            }
+        }
+        return errCode;
+    } else if (errCode == NativeRdb::E_SQLITE_CORRUPT) { DatabaseRestore(); }
     return E_OK;
 }
 
@@ -129,6 +154,29 @@ void CloudDiskRdbStore::Stop()
 shared_ptr<RdbStore> CloudDiskRdbStore::GetRaw()
 {
     return rdbStore_;
+}
+
+void CloudDiskRdbStore::DatabaseRestore()
+{
+    if (rdbStore_ == nullptr) {
+        LOGE("rdbStore_ is nullptr");
+        return;
+    }
+    LOGI("clouddisk db image is malformed, need to restore");
+    auto fileName = "/data/service/el1/public/cloudfile/" +
+        to_string(userId_) + "/" + system::GetParameter(FILEMANAGER_KEY, "") + "/backup/clouddisk_backup.db";
+    int32_t ret = -1;
+    if (access(fileName.c_str(), F_OK) == 0) {
+        {
+            lock_guard<mutex> lock(backupMutex_);
+            ret = rdbStore_->Restore(fileName);
+        }
+        if (ret != 0) {
+            LOGE("cloudisk restore failed, ret %{public}d", ret);
+        }
+    } else {
+        LOGE("clouddisk backup db is not exist");
+    }
 }
 
 int32_t CloudDiskRdbStore::LookUp(const std::string &parentCloudId,

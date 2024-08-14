@@ -18,6 +18,7 @@
 #include "data_syncer_rdb_col.h"
 #include "data_syncer_rdb_store.h"
 #include "result_set.h"
+#include "tasks/database_backup_task.h"
 #include "tasks/optimize_storage_task.h"
 #include "tasks/periodic_check_task.h"
 #include "tasks/save_subscription_task.h"
@@ -63,6 +64,7 @@ void CycleTaskRunner::InitTasks()
     cycleTasks_.push_back(std::make_shared<OptimizeStorageTask>(dataSyncManager_));
     cycleTasks_.push_back(std::make_shared<SaveSubscriptionTask>(dataSyncManager_));
     cycleTasks_.push_back(std::make_shared<ReportStatisticsTask>(dataSyncManager_));
+    cycleTasks_.push_back(std::make_shared<DatabaseBackupTask>(dataSyncManager_));
 
     //do periodic check task last
     cycleTasks_.push_back(std::make_shared<PeriodicCheckTask>(dataSyncManager_));
