@@ -213,7 +213,7 @@ int32_t SoftBusHandler::CopySendFile(int32_t socketId,
     }
     auto fileList = OHOS::Storage::DistributedFile::Utils::GetFilePath(physicalPath);
     if (fileList.empty()) {
-        LOGE("GetFilePath failed or file is empty, path %{public]s", physicalPath.c_str());
+        LOGE("GetFilePath failed or file is empty, path %{public}s", physicalPath.c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     const char *src[MAX_SIZE] = {};
@@ -223,7 +223,7 @@ int32_t SoftBusHandler::CopySendFile(int32_t socketId,
 
     auto fileNameList = SoftBusSessionListener::GetFileName(fileList, physicalPath, dstPath);
     if (fileNameList.empty()) {
-        LOGE("GetFileName failed, path %{public]s %{public]s", physicalPath.c_str(), dstPath.c_str());
+        LOGE("GetFileName failed, path %{public}s %{public}s", physicalPath.c_str(), dstPath.c_str());
         return FileManagement::ERR_BAD_VALUE;
     }
     const char *dst[MAX_SIZE] = {};

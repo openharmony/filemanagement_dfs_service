@@ -151,7 +151,7 @@ void SoftBusFileReceiveListener::OnReceiveFileReport(int32_t sessionId, FileStat
 
 void SoftBusFileReceiveListener::OnReceiveFileShutdown(int32_t sessionId, ShutdownReason reason)
 {
-    LOGE("OnReceiveFileShutdown, sessionId is %{public}d, reason %{public}d", sessionId, reason);
+    LOGI("OnReceiveFileShutdown, sessionId is %{public}d", sessionId);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");
