@@ -39,7 +39,12 @@ public:
     int32_t CreateSessionServer(const std::string &packageName, const std::string &sessionName,
         DFS_CHANNEL_ROLE role, const std::string physicalPath);
     int32_t OpenSession(const std::string &mySessionName, const std::string &peerSessionName,
-        const std::string &peerDevId, DFS_CHANNEL_ROLE role);
+                         const std::string &peerDevId, int32_t &socketId);
+    int32_t CopySendFile(int32_t socketId,
+                         const std::string &sessionName,
+                         const std::string &srcUri,
+                         const std::string &dstUri);
+
     void ChangeOwnerIfNeeded(int32_t sessionId, const std::string sessionName);
     void CloseSession(int32_t sessionId, const std::string sessionName);
     void CloseSessionWithSessionName(const std::string sessionName);

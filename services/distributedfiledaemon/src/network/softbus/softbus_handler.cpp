@@ -37,6 +37,7 @@ const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
 const int32_t INVALID_SESSION_ID = -1;
 const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
+constexpr size_t MAX_SIZE = 500;
 std::mutex SoftBusHandler::clientSessNameMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
 std::mutex SoftBusHandler::serverIdMapMutex_;
@@ -88,7 +89,7 @@ SoftBusHandler::SoftBusHandler()
 {
     ISocketListener fileSendListener;
     fileSendListener.OnBind = nullptr;
-    fileSendListener.OnShutdown = DistributedFile::SoftBusSessionListener::OnSessionClosed;
+    fileSendListener.OnShutdown = DistributedFile::SoftBusFileSendListener::OnSendFileShutdown;
     fileSendListener.OnFile = DistributedFile::SoftBusFileSendListener::OnFile;
     fileSendListener.OnBytes = nullptr;
     fileSendListener.OnMessage = nullptr;
@@ -96,8 +97,8 @@ SoftBusHandler::SoftBusHandler()
     sessionListener_[DFS_CHANNLE_ROLE_SOURCE] = fileSendListener;
 
     ISocketListener fileReceiveListener;
-    fileReceiveListener.OnBind = SoftBusHandler::OnSinkSessionOpened;
-    fileReceiveListener.OnShutdown = DistributedFile::SoftBusSessionListener::OnSessionClosed;
+    fileReceiveListener.OnBind = DistributedFile::SoftBusFileReceiveListener::OnCopyReceiveBind;
+    fileReceiveListener.OnShutdown = DistributedFile::SoftBusFileReceiveListener::OnReceiveFileShutdown;
     fileReceiveListener.OnFile = DistributedFile::SoftBusFileReceiveListener::OnFile;
     fileReceiveListener.OnBytes = nullptr;
     fileReceiveListener.OnMessage = nullptr;
@@ -140,7 +141,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
 
     int32_t ret = Listen(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[role]);
     if (ret != E_OK) {
-        LOGE("Listen socket error for sessionName:%s", sessionName.c_str());
+        LOGE("Listen socket error for sessionName:%{public}s", sessionName.c_str());
         Shutdown(socketId);
         return FileManagement::ERR_BAD_VALUE;
     }
@@ -154,7 +155,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
 }
 
 int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std::string &peerSessionName,
-    const std::string &peerDevId, DFS_CHANNEL_ROLE role)
+                                     const std::string &peerDevId, int32_t &socketId)
 {
     if (mySessionName.empty() || peerSessionName.empty() || peerDevId.empty()) {
         LOGI("The parameter is empty");
@@ -173,17 +174,17 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         .pkgName = const_cast<char*>(SERVICE_NAME.c_str()),
         .dataType = DATA_TYPE_FILE,
     };
-    int32_t socketId = Socket(clientInfo);
+    socketId = Socket(clientInfo);
     if (socketId < E_OK) {
         LOGE("Create OpenSoftbusChannel Socket error");
         return FileManagement::ERR_BAD_VALUE;
     }
-    int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[role]);
+    int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[DFS_CHANNLE_ROLE_SOURCE]);
     if (ret != E_OK) {
         LOGE("Bind SocketClient error");
         Shutdown(socketId);
         RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_FAIL);
-        return FileManagement::ERR_BAD_VALUE;
+        return ret;
     }
     {
         std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
@@ -195,7 +196,50 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     }
     RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_SUCCESS);
     LOGI("OpenSession success socketId = %{public}d", socketId);
-    return socketId;
+    return E_OK;
+}
+
+int32_t SoftBusHandler::CopySendFile(int32_t socketId,
+                                     const std::string &sessionName,
+                                     const std::string &srcUri,
+                                     const std::string &dstPath)
+{
+    LOGI("CopySendFile socketId = %{public}d", socketId);
+
+    std::string physicalPath = SoftBusSessionListener::GetRealPath(srcUri);
+    if (physicalPath.empty()) {
+        LOGE("GetRealPath failed");
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    auto fileList = OHOS::Storage::DistributedFile::Utils::GetFilePath(physicalPath);
+    if (fileList.empty()) {
+        LOGE("GetFilePath failed or file is empty, path %{public]s", physicalPath.c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    const char *src[MAX_SIZE] = {};
+    for (size_t i = 0; i < fileList.size() && fileList.size() < MAX_SIZE; i++) {
+        src[i] = fileList.at(i).c_str();
+    }
+
+    auto fileNameList = SoftBusSessionListener::GetFileName(fileList, physicalPath, dstPath);
+    if (fileNameList.empty()) {
+        LOGE("GetFileName failed, path %{public]s %{public]s", physicalPath.c_str(), dstPath.c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    const char *dst[MAX_SIZE] = {};
+    for (size_t i = 0; i < fileNameList.size() && fileList.size() < MAX_SIZE; i++) {
+        dst[i] = fileNameList.at(i).c_str();
+    }
+
+    LOGI("Enter SendFile.");
+    auto ret = ::SendFile(socketId, src, dst, static_cast<uint32_t>(fileList.size()));
+    if (ret != E_OK) {
+        LOGE("SendFile failed, sessionId = %{public}d", socketId);
+        RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_FAIL);
+        return ret;
+    }
+    RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_SUCCESS);
+    return E_OK;
 }
 
 void SoftBusHandler::ChangeOwnerIfNeeded(int32_t sessionId, const std::string sessionName)

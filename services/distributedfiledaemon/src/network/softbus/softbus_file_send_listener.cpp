@@ -62,14 +62,6 @@ void SoftBusFileSendListener::OnSendFileProcess(int32_t sessionId, uint64_t byte
 {
     LOGI("OnSendFileProcess, sessionId = %{public}d bytesUpload = %{public}" PRIu64 "bytesTotal = %{public}" PRIu64 "",
          sessionId, bytesUpload, bytesTotal);
-    std::string sessionName = GetLocalSessionName(sessionId);
-    if (sessionName.empty()) {
-        LOGE("sessionName is empty");
-        return;
-    }
-    if (bytesUpload == bytesTotal) {
-        SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
-    }
 }
 
 void SoftBusFileSendListener::OnSendFileFinished(int32_t sessionId)
@@ -91,19 +83,23 @@ void SoftBusFileSendListener::OnFileTransError(int32_t sessionId, int32_t errorC
         LOGE("sessionName is empty");
         return;
     }
-    TransManager::GetInstance().NotifyFileFailed(sessionName, errorCode);
     SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
 }
 
 void SoftBusFileSendListener::OnSendFileReport(int32_t sessionId, FileStatusList statusList, int32_t errorCode)
 {
     LOGE("OnSendFileReport");
+}
+
+void SoftBusFileSendListener::OnSendFileShutdown(int32_t sessionId, ShutdownReason reason)
+{
+    LOGE("OnSendFileShutdown, sessionId is %{public}d, reason %{public}d", sessionId, reason);
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");
         return;
     }
-    TransManager::GetInstance().NotifyFileFailed(sessionName, errorCode);
+    SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
 }
 } // namespace DistributedFile
 } // namespace Storage

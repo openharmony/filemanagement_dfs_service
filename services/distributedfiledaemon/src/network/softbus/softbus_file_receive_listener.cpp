@@ -76,9 +76,16 @@ void SoftBusFileReceiveListener::SetRecvPath(const std::string &physicalPath)
     LOGI("SetRecvPath physicalPath: %{public}s", GetAnonyString(physicalPath).c_str());
     if (!AppFileService::SandboxHelper::CheckValidPath(physicalPath)) {
         LOGE("invalid path.");
+        path_ = "";
         return;
     }
     path_ = physicalPath;
+}
+
+void SoftBusFileReceiveListener::OnCopyReceiveBind(int32_t socketId, PeerSocketInfo info)
+{
+    LOGI("OnCopyReceiveBind begin, socketId %{public}d", socketId);
+    SoftBusHandler::OnSinkSessionOpened(socketId, info);
 }
 
 std::string SoftBusFileReceiveListener::GetLocalSessionName(int32_t sessionId)
@@ -140,6 +147,17 @@ void SoftBusFileReceiveListener::OnReceiveFileReport(int32_t sessionId, FileStat
         return;
     }
     TransManager::GetInstance().NotifyFileFailed(sessionName, errorCode);
+}
+
+void SoftBusFileReceiveListener::OnReceiveFileShutdown(int32_t sessionId, ShutdownReason reason)
+{
+    LOGE("OnReceiveFileShutdown, sessionId is %{public}d, reason %{public}d", sessionId, reason);
+    std::string sessionName = GetLocalSessionName(sessionId);
+    if (sessionName.empty()) {
+        LOGE("sessionName is empty");
+        return;
+    }
+    SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
 }
 } // namespace DistributedFile
 } // namespace Storage

@@ -33,7 +33,7 @@ public:
     };
 
     static SoftBusSessionPool &GetInstance();
-    std::string GenerateSessionName();
+    std::string GenerateSessionName(const SessionInfo &sessionInfo);
     void AddSessionInfo(const std::string &sessionName, const SessionInfo &sessionInfo);
     void DeleteSessionInfo(const std::string &sessionName);
     bool GetSessionInfo(const std::string &sessionName, SessionInfo &sessionInfo);
