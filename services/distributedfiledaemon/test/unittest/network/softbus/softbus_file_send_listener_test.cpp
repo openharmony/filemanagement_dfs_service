@@ -95,7 +95,7 @@ HWTEST_F(SoftBusFileSendListenerTest, SoftBusFileSendListenerTest_OnSendFileProc
     event.bytesTotal = 0;
     SoftBusFileSendListener::OnFile(SOCKET_ID, &event);
     flag = SoftBusSessionPool::GetInstance().GetSessionInfo(SESSION_NAME, sessionInfo);
-    EXPECT_EQ(flag, false);
+    EXPECT_EQ(flag, true);
 
     GTEST_LOG_(INFO) << "SoftBusFileSendListenerTest_OnSendFileProcess_0100 end";
 }

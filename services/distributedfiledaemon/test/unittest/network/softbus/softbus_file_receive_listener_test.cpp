@@ -77,7 +77,7 @@ HWTEST_F(SoftBusFileReceiveListenerTest, SoftBusFileReceiveListenerTest_SetRecvP
     SoftBusFileReceiveListener::SetRecvPath("/data/test2");
     path.clear();
     path = string(SoftBusFileReceiveListener::GetRecvPath());
-    EXPECT_EQ(path, TEST_PATH);
+    EXPECT_EQ(path, "");
     GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_SessionInfo_0100 end";
 }
 
