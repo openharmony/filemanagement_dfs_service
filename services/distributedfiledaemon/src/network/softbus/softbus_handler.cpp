@@ -319,6 +319,8 @@ void SoftBusHandler::RemoveNetworkId(int32_t socketId)
         LOGE("socketId not find, socket is %{public}d", socketId);
         return;
     }
+    AllConnectManager::GetInstance().PublishServiceState(it->second,
+        ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
     networkIdMap_.erase(it->first);
 }
 
