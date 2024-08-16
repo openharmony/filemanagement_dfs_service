@@ -696,7 +696,7 @@ int32_t Daemon::PushAsset(int32_t userId,
     }
     AssetCallbackManager::GetInstance().AddSendCallback(taskId, sendCallback);
     auto pushData = std::make_shared<PushAssetData>(userId, assetObj);
-    auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_REQUEST_SEND_FILE, pushData, 0);
+    auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
     bool isSucc = eventHandler_->SendEvent(msgEvent, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     if (!isSucc) {
         LOGE("Daemon event handler post push asset event fail.");

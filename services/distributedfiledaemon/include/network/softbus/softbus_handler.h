@@ -67,7 +67,7 @@ private:
     std::map<DFS_CHANNEL_ROLE, ISocketListener> sessionListener_;
 
     static std::mutex networkIdMapMutex_;
-    static std::map<int32_t , std::string> networkIdMap_;
+    static std::map<int32_t, std::string> networkIdMap_;
 };
 } // namespace DistributedFile
 } // namespace Storage
