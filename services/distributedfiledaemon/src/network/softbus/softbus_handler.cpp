@@ -155,7 +155,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
 }
 
 int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std::string &peerSessionName,
-                                     const std::string &peerDevId, int32_t &socketId)
+    const std::string &peerDevId, int32_t &socketId)
 {
     if (mySessionName.empty() || peerSessionName.empty() || peerDevId.empty()) {
         LOGI("The parameter is empty");
