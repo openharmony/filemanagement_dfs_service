@@ -50,8 +50,8 @@ public:
 HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_SessionInfo_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_SessionInfo_0100 start";
-    string sessionName1 = "test1";
-    string sessionName2 = "DistributedFileService0";
+    string sessionName1 = "DistributedFileService0";
+    string sessionName2 = "DistributedFileService1";
     SoftBusSessionPool::SessionInfo sessionInfo1{.sessionId = SESSION_ID_ONE,
                                                  .srcUri = "file://com.demo.a/test/1",
                                                  .dstPath = "/data/test/1",
@@ -60,12 +60,10 @@ HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_SessionInfo_0100, TestSi
                                                  .srcUri = "file://com.demo.a/test/2",
                                                  .dstPath = "/data/test/2",
                                                  .uid = UID_TWO};
-    SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName1, sessionInfo1);
-    string sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName();
+    string sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo1);
+    EXPECT_EQ(sessionName, sessionName1);
+    sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo2);
     EXPECT_EQ(sessionName, sessionName2);
-    SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName2, sessionInfo2);
-    sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName();
-    EXPECT_EQ(sessionName, "DistributedFileService1");
     SoftBusSessionPool::SessionInfo sessionInfo;
     bool flag = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName1, sessionInfo);
     EXPECT_EQ(flag, true);
@@ -97,21 +95,22 @@ HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_SessionInfo_0100, TestSi
 HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_GenerateSessionName_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_GenerateSessionName_0100 start";
-    string sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName();
+    SoftBusSessionPool::SessionInfo sessionInfo;
+    string sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo);
     EXPECT_EQ(sessionName, "DistributedFileService0");
     SoftBusSessionPool::SessionInfo sessionInfo1{.sessionId = SESSION_ID_ONE,
                                                  .srcUri = "file://com.demo.a/test/1",
                                                  .dstPath = "/data/test/1",
                                                  .uid = UID_ONE};
-    for (int32_t i = 0; i < SESSION_COUNT - 1; i++) {
+    for (int32_t i = 1; i < SESSION_COUNT - 1; i++) {
         std::string testName = std::string(SESSION_NAME_PREFIX) + std::to_string(i);
         SoftBusSessionPool::GetInstance().AddSessionInfo(testName, sessionInfo1);
     }
     
-    sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName();
+    sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo1);
     EXPECT_EQ(sessionName, "DistributedFileService9");
     SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo1);
-    sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName();
+    sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo1);
     EXPECT_EQ(sessionName, "");
 
     for (int32_t i = 0; i < SESSION_COUNT; i++) {
@@ -119,7 +118,7 @@ HWTEST_F(SoftbusSessionPoolTest, SoftbusSessionPoolTest_GenerateSessionName_0100
         SoftBusSessionPool::GetInstance().DeleteSessionInfo(testName);
     }
 
-    sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName();
+    sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo1);
     EXPECT_EQ(sessionName, "DistributedFileService0");
     GTEST_LOG_(INFO) << "SoftbusSessionPoolTest_GenerateSessionName_0100 end";
 }

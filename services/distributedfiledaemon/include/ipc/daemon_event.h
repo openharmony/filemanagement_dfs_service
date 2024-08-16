@@ -17,12 +17,14 @@
 
 #include "asset/asset_obj.h"
 #include "asset/i_asset_send_callback.h"
+#include "block_object.h"
 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 typedef enum {
     DEAMON_EXECUTE_PUSH_ASSET = 1,
+    DEAMON_EXECUTE_REQUEST_SEND_FILE,
 } DaemonEventType;
 
 struct PushAssetData {
@@ -33,6 +35,27 @@ struct PushAssetData {
 
     int32_t userId_;
     const sptr<AssetObj> assetObj_;
+};
+
+struct RequestSendFileData {
+    RequestSendFileData(const std::string &srcUri,
+                        const std::string &dstPath,
+                        const std::string &dstDeviceId,
+                        const std::string &sessionName,
+                        const std::shared_ptr<BlockObject<int32_t>> &requestSendFileBlock)
+        : srcUri_(srcUri),
+          dstPath_(dstPath),
+          dstDeviceId_(dstDeviceId),
+          sessionName_(sessionName),
+          requestSendFileBlock_(requestSendFileBlock)
+    {
+    }
+
+    const std::string srcUri_;
+    const std::string dstPath_;
+    const std::string dstDeviceId_;
+    const std::string sessionName_;
+    const std::shared_ptr<BlockObject<int32_t>> requestSendFileBlock_;
 };
 
 } // namespace DistributedFile

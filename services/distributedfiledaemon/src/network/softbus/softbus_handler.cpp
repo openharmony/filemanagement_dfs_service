@@ -37,19 +37,20 @@ const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
 const int32_t INVALID_SESSION_ID = -1;
 const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
+constexpr size_t MAX_SIZE = 500;
 std::mutex SoftBusHandler::clientSessNameMapMutex_;
 std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
 std::mutex SoftBusHandler::serverIdMapMutex_;
 std::map<std::string, int32_t> SoftBusHandler::serverIdMap_;
 std::mutex SoftBusHandler::networkIdMapMutex_;
-std::map<std::string, std::string> SoftBusHandler::networkIdMap_;
+std::map<int32_t, std::string> SoftBusHandler::networkIdMap_;
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     AllConnectManager::GetInstance().PublishServiceState(info.networkId,
         ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
     {
         std::lock_guard<std::mutex> lock(networkIdMapMutex_);
-        networkIdMap_.insert(std::make_pair(info.networkId, info.name));
+        networkIdMap_.insert(std::make_pair(sessionId, info.networkId));
     }
     std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
     SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, info.name));
@@ -88,7 +89,7 @@ SoftBusHandler::SoftBusHandler()
 {
     ISocketListener fileSendListener;
     fileSendListener.OnBind = nullptr;
-    fileSendListener.OnShutdown = DistributedFile::SoftBusSessionListener::OnSessionClosed;
+    fileSendListener.OnShutdown = DistributedFile::SoftBusFileSendListener::OnSendFileShutdown;
     fileSendListener.OnFile = DistributedFile::SoftBusFileSendListener::OnFile;
     fileSendListener.OnBytes = nullptr;
     fileSendListener.OnMessage = nullptr;
@@ -96,8 +97,8 @@ SoftBusHandler::SoftBusHandler()
     sessionListener_[DFS_CHANNLE_ROLE_SOURCE] = fileSendListener;
 
     ISocketListener fileReceiveListener;
-    fileReceiveListener.OnBind = SoftBusHandler::OnSinkSessionOpened;
-    fileReceiveListener.OnShutdown = DistributedFile::SoftBusSessionListener::OnSessionClosed;
+    fileReceiveListener.OnBind = DistributedFile::SoftBusFileReceiveListener::OnCopyReceiveBind;
+    fileReceiveListener.OnShutdown = DistributedFile::SoftBusFileReceiveListener::OnReceiveFileShutdown;
     fileReceiveListener.OnFile = DistributedFile::SoftBusFileReceiveListener::OnFile;
     fileReceiveListener.OnBytes = nullptr;
     fileReceiveListener.OnMessage = nullptr;
@@ -140,7 +141,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
 
     int32_t ret = Listen(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[role]);
     if (ret != E_OK) {
-        LOGE("Listen socket error for sessionName:%s", sessionName.c_str());
+        LOGE("Listen socket error for sessionName:%{public}s", sessionName.c_str());
         Shutdown(socketId);
         return FileManagement::ERR_BAD_VALUE;
     }
@@ -154,7 +155,7 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
 }
 
 int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std::string &peerSessionName,
-    const std::string &peerDevId, DFS_CHANNEL_ROLE role)
+    const std::string &peerDevId, int32_t &socketId)
 {
     if (mySessionName.empty() || peerSessionName.empty() || peerDevId.empty()) {
         LOGI("The parameter is empty");
@@ -173,17 +174,17 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         .pkgName = const_cast<char*>(SERVICE_NAME.c_str()),
         .dataType = DATA_TYPE_FILE,
     };
-    int32_t socketId = Socket(clientInfo);
+    socketId = Socket(clientInfo);
     if (socketId < E_OK) {
         LOGE("Create OpenSoftbusChannel Socket error");
         return FileManagement::ERR_BAD_VALUE;
     }
-    int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[role]);
+    int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[DFS_CHANNLE_ROLE_SOURCE]);
     if (ret != E_OK) {
         LOGE("Bind SocketClient error");
         Shutdown(socketId);
         RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_FAIL);
-        return FileManagement::ERR_BAD_VALUE;
+        return ret;
     }
     {
         std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
@@ -191,11 +192,54 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     }
     {
         std::lock_guard<std::mutex> lock(networkIdMapMutex_);
-        networkIdMap_.insert(std::make_pair(peerDevId, mySessionName));
+        networkIdMap_.insert(std::make_pair(socketId, peerDevId));
     }
     RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_SUCCESS);
     LOGI("OpenSession success socketId = %{public}d", socketId);
-    return socketId;
+    return E_OK;
+}
+
+int32_t SoftBusHandler::CopySendFile(int32_t socketId,
+                                     const std::string &sessionName,
+                                     const std::string &srcUri,
+                                     const std::string &dstPath)
+{
+    LOGI("CopySendFile socketId = %{public}d", socketId);
+
+    std::string physicalPath = SoftBusSessionListener::GetRealPath(srcUri);
+    if (physicalPath.empty()) {
+        LOGE("GetRealPath failed");
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    auto fileList = OHOS::Storage::DistributedFile::Utils::GetFilePath(physicalPath);
+    if (fileList.empty()) {
+        LOGE("GetFilePath failed or file is empty, path %{public}s", physicalPath.c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    const char *src[MAX_SIZE] = {};
+    for (size_t i = 0; i < fileList.size() && fileList.size() < MAX_SIZE; i++) {
+        src[i] = fileList.at(i).c_str();
+    }
+
+    auto fileNameList = SoftBusSessionListener::GetFileName(fileList, physicalPath, dstPath);
+    if (fileNameList.empty()) {
+        LOGE("GetFileName failed, path %{public}s %{public}s", physicalPath.c_str(), dstPath.c_str());
+        return FileManagement::ERR_BAD_VALUE;
+    }
+    const char *dst[MAX_SIZE] = {};
+    for (size_t i = 0; i < fileNameList.size() && fileList.size() < MAX_SIZE; i++) {
+        dst[i] = fileNameList.at(i).c_str();
+    }
+
+    LOGI("Enter SendFile.");
+    auto ret = ::SendFile(socketId, src, dst, static_cast<uint32_t>(fileList.size()));
+    if (ret != E_OK) {
+        LOGE("SendFile failed, sessionId = %{public}d", socketId);
+        RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_FAIL);
+        return ret;
+    }
+    RadarDotsSendFile("OpenSession", sessionName, sessionName, ret, Utils::StageRes::STAGE_SUCCESS);
+    return E_OK;
 }
 
 void SoftBusHandler::ChangeOwnerIfNeeded(int32_t sessionId, const std::string sessionName)
@@ -240,7 +284,7 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
         }
     }
     Shutdown(sessionId);
-    RemoveNetworkId(sessionName);
+    RemoveNetworkId(sessionId);
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
 }
 
@@ -266,41 +310,65 @@ void SoftBusHandler::CloseSessionWithSessionName(const std::string sessionName)
     TransManager::GetInstance().DeleteTransTask(sessionName);
     CloseSession(sessionId, sessionName);
 }
-void SoftBusHandler::RemoveNetworkId(const std::string &sessionName)
+void SoftBusHandler::RemoveNetworkId(int32_t socketId)
 {
     LOGI("RemoveNetworkId begin");
     std::lock_guard<std::mutex> lock(networkIdMapMutex_);
-    if (networkIdMap_.empty()) {
-        LOGE("networkIdMap_ is empty");
+    auto it = networkIdMap_.find(socketId);
+    if (it == networkIdMap_.end()) {
+        LOGE("socketId not find, socket is %{public}d", socketId);
         return;
     }
-    for (auto it : networkIdMap_) {
-        if (it.second == sessionName) {
-            AllConnectManager::GetInstance().PublishServiceState(it.first,
-                ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
-            networkIdMap_.erase(it.first);
-            return;
-        }
-    }
+    AllConnectManager::GetInstance().PublishServiceState(it->second,
+        ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
+    networkIdMap_.erase(it->first);
 }
 
-void SoftBusHandler::CloseSessionWithNetworkId(const std::string &peerNetworkId)
+std::vector<int32_t> SoftBusHandler::GetsocketIdFromPeerNetworkId(const std::string &peerNetworkId)
 {
-    LOGI("CloseSessionWithNetworkId begin");
     if (peerNetworkId.empty()) {
         LOGE("peerNetworkId is empty");
-        return;
+        return {};
     }
-
-    std::string sessionName;
-    {
-        std::lock_guard<std::mutex> lock(networkIdMapMutex_);
-        auto it = networkIdMap_.find(peerNetworkId);
-        if (it != networkIdMap_.end()) {
-            sessionName = it->second;
+    std::vector<int32_t> socketIdList;
+    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
+    for (auto item : networkIdMap_) {
+        if (item.second == peerNetworkId) {
+            socketIdList.emplace_back(item.first);
         }
     }
-    CloseSessionWithSessionName(sessionName);
+
+    return socketIdList;
+}
+
+bool SoftBusHandler::IsService(std::string &sessionName)
+{
+    std::lock_guard<std::mutex> lock(serverIdMapMutex_);
+    auto it = serverIdMap_.find(sessionName);
+    if (it == serverIdMap_.end()) {
+        return false;
+    }
+    return true;
+}
+
+void SoftBusHandler::CopyOnStop(const std::string &peerNetworkId)
+{
+    auto socketIdList = GetsocketIdFromPeerNetworkId(peerNetworkId);
+
+    for (auto socketId : socketIdList) {
+        std::string sessionName = GetSessionName(socketId);
+        if (sessionName.empty()) {
+            LOGE("sessionName is empty");
+            continue;
+        }
+
+        if (IsService(sessionName)) {
+            TransManager::GetInstance().NotifyFileFailed(sessionName, E_DFS_CANCEL_SUCCESS);
+            TransManager::GetInstance().DeleteTransTask(sessionName);
+        }
+
+        CloseSession(socketId, sessionName);
+    }
 }
 } // namespace DistributedFile
 } // namespace Storage
