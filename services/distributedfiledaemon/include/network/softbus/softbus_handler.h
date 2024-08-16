@@ -20,6 +20,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "transport/socket.h"
 #include "transport/trans_type.h"
@@ -48,13 +49,16 @@ public:
     void ChangeOwnerIfNeeded(int32_t sessionId, const std::string sessionName);
     void CloseSession(int32_t sessionId, const std::string sessionName);
     void CloseSessionWithSessionName(const std::string sessionName);
-    void CloseSessionWithNetworkId(const std::string &peerNetworkId);
     static std::string GetSessionName(int32_t sessionId);
     static void OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info);
     static bool IsSameAccount(const std::string &networkId);
-    void RemoveNetworkId(const std::string &sessionName);
+    void RemoveNetworkId(int32_t socketId);
+    void CopyOnStop(const std::string &peerNetworkId);
 
 private:
+    std::vector<int32_t> GetsocketIdFromPeerNetworkId(const std::string &peerNetworkId);
+    bool IsService(std::string &sessionName);
+
     static std::mutex clientSessNameMapMutex_;
     static std::map<int32_t, std::string> clientSessNameMap_;
     static std::mutex serverIdMapMutex_;
@@ -63,7 +67,7 @@ private:
     std::map<DFS_CHANNEL_ROLE, ISocketListener> sessionListener_;
 
     static std::mutex networkIdMapMutex_;
-    static std::map<std::string, std::string> networkIdMap_;
+    static std::map<int32_t , std::string> networkIdMap_;
 };
 } // namespace DistributedFile
 } // namespace Storage

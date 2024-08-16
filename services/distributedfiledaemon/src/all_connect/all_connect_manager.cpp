@@ -240,7 +240,7 @@ int32_t AllConnectManager::OnStop(const char *peerNetworkId)
 {
     LOGI("OnStop begin, peerNetworkId:%{public}s", Utils::GetAnonyString(peerNetworkId).c_str());
     std::thread([peerNetworkId]() {
-        SoftBusHandler::GetInstance().CloseSessionWithNetworkId(peerNetworkId);
+        SoftBusHandler::GetInstance().CopyOnStop(peerNetworkId);
     }).detach();
     return FileManagement::ERR_OK;
 }
