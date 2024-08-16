@@ -159,11 +159,6 @@ void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const 
 
 void NetworkAgentTemplate::GetSessionProcess(NotifyParam &param)
 {
-    if (!sessionPool_.IsCidExist(param.remoteCid)) {
-        LOGI("cid: %{public}s is already not exist.", Utils::GetAnonyString(param.remoteCid).c_str());
-        return;
-    }
-
     auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, NotifyParam>>(
         &NetworkAgentTemplate::GetSessionProcessInner, param);
     cmd->UpdateOption({.tryTimes_ = 1});
