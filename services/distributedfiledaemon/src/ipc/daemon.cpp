@@ -478,7 +478,8 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         return E_GET_PHYSICAL_PATH_FAILED;
     }
 
-    LOGI("physicalPath %{public}s", GetAnonyString(physicalPath).c_str());
+    LOGI("physicalPath %{public}s, userId %{public}s", GetAnonyString(physicalPath).c_str(),
+         std::to_string(hapTokenInfo.userID).c_str());
     info.dstPhysicalPath = physicalPath;
     ret = CheckCopyRule(physicalPath, dstUri, hapTokenInfo, isSrcFile, info);
     if (ret != E_OK) {
