@@ -43,7 +43,7 @@ std::map<int32_t, std::string> SoftBusHandler::clientSessNameMap_;
 std::mutex SoftBusHandler::serverIdMapMutex_;
 std::map<std::string, int32_t> SoftBusHandler::serverIdMap_;
 std::mutex SoftBusHandler::networkIdMapMutex_;
-std::map<int32_t , std::string> SoftBusHandler::networkIdMap_;
+std::map<int32_t, std::string> SoftBusHandler::networkIdMap_;
 void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
 {
     AllConnectManager::GetInstance().PublishServiceState(info.networkId,
