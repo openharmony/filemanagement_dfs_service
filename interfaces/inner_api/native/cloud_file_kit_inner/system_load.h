@@ -23,7 +23,9 @@
 #include "sync_state_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
-constexpr int32_t SYSTEMLOADLEVEL = ResourceSchedule::ResType::SystemloadLevel::NORMAL;
+constexpr int32_t SYSTEMLOADLEVEL_WARM = ResourceSchedule::ResType::SystemloadLevel::MEDIUM;
+constexpr int32_t SYSTEMLOADLEVEL_OVERHEATED = ResourceSchedule::ResType::SystemloadLevel::OVERHEATED;
+constexpr int32_t SYSTEMLOADLEVEL_NORMAL = ResourceSchedule::ResType::SystemloadLevel::NORMAL;
 
 class SystemLoadStatus {
 public:
@@ -31,7 +33,8 @@ public:
     virtual ~SystemLoadStatus() = default;
     static void RegisterSystemloadCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void GetSystemloadLevel();
-    static bool IsLoadStatusOkay();
+    static bool IsLoadStatusUnderHeat();
+    static bool IsLoadStatusUnderWarm();
     static void InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void Setload(int32_t load);
     static inline int32_t loadstatus_ = 0;

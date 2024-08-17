@@ -17,6 +17,7 @@
 
 #include "gallery_download_file_stat.h"
 #include "iservice_registry.h"
+#include "parameters.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -101,6 +102,12 @@ void TaskStateManager::CancelUnloadTask()
 
 void TaskStateManager::DelayUnloadTask()
 {
+    string systemLoadSync = system::GetParameter(temperatureSysparamSync, "");
+    string systemLoadThumb = system::GetParameter(temperatureSysparamThumb, "");
+    if (systemLoadSync == "true" || systemLoadThumb == "true") {
+        LOGE("temperatureSysparam is true, don't stop");
+        return;
+    }
     LOGI("delay unload task begin");
     auto task = [this]() {
         LOGI("do unload task");
