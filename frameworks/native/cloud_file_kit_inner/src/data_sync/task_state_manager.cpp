@@ -106,12 +106,6 @@ void TaskStateManager::DelayUnloadTask()
     const std::string temperatureSysparamThumb = "persist.kernel.cloudsync.temperature_abnormal_thumb";
     string systemLoadSync = system::GetParameter(temperatureSysparamSync, "");
     string systemLoadThumb = system::GetParameter(temperatureSysparamThumb, "");
-    if (systemLoadSync == "true" || systemLoadThumb == "true") {
-        LOGE("temperatureSysparam is true, don't stop");
-        CancelUnloadTask();
-        return;
-    }
-
     LOGI("delay unload task begin");
     auto task = [this]() {
         LOGI("do unload task");

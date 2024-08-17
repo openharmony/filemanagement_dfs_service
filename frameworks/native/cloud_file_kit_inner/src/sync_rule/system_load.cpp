@@ -78,6 +78,7 @@ void SystemLoadStatus::InitSystemload(std::shared_ptr<CloudFile::DataSyncManager
     RegisterSystemloadCallback(dataSyncManager);
 }
 
+<<<<<<< HEAD
 bool SystemLoadStatus::IsLoadStatusUnderHot(STOPPED_TYPE process)
 {
     if (loadstatus_ > SYSTEMLOADLEVEL_HOT) {
@@ -88,6 +89,19 @@ bool SystemLoadStatus::IsLoadStatusUnderHot(STOPPED_TYPE process)
             LOGI("SetParameter TEMPERATURE_SYSPARAM_SYNC true");
             system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "true");
         }
+=======
+bool SystemLoadStatus::IsLoadStatusUnderHeat()
+{
+    if (loadstatus_ > SYSTEMLOADLEVEL_OVERHEATED) {
+        return false;
+    }
+    return true;
+}
+
+bool SystemLoadStatus::IsLoadStatusUnderWarm()
+{
+    if (loadstatus_ > SYSTEMLOADLEVEL_WARM) {
+>>>>>>> 051f84ad (system load)
         return false;
     }
     return true;
