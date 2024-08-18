@@ -28,8 +28,6 @@ using namespace std;
 
 const int32_t DELAY_TIME = 90000; // ms
 
-static string MEDIA_LIBRARY_DATA_STOPFLAG = "persist.kernel.medialibrarydata.stopflag";
-
 TaskStateManager &TaskStateManager::GetInstance()
 {
     static TaskStateManager instance;
@@ -104,6 +102,12 @@ void TaskStateManager::CancelUnloadTask()
 
 void TaskStateManager::DelayUnloadTask()
 {
+    string systemLoadSync = system::GetParameter(temperatureSysparamSync, "");
+    string systemLoadThumb = system::GetParameter(temperatureSysparamThumb, "");
+    if (systemLoadSync == "true" || systemLoadThumb == "true") {
+        LOGE("temperatureSysparam is true, don't stop");
+        return;
+    }
     LOGI("delay unload task begin");
     auto task = [this]() {
         LOGI("do unload task");
@@ -120,7 +124,7 @@ void TaskStateManager::DelayUnloadTask()
             LOGE("get samgr failed");
             return;
         }
-        system::SetParameter(MEDIA_LIBRARY_DATA_STOPFLAG, "1");
+        system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_END);
         int32_t ret = samgrProxy->UnloadSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
         if (ret != ERR_OK) {
             LOGE("remove system ability failed");

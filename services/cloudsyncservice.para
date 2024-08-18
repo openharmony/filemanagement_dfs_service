@@ -14,4 +14,6 @@
 persist.kernel.cloudsync.network_unavailable = false
 persist.kernel.cloudsync.battery_level_low = false
 persist.kernel.cloudsync.status = 0
+persist.kernel.cloudsync.temperature_abnormal_sync = false
+persist.kernel.cloudsync.temperature_abnormal_thumb = false
 persist.kernel.medialibrarydata.stopflag = 0

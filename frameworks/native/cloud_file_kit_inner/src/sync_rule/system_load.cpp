@@ -38,9 +38,12 @@ void SystemLoadStatus::RegisterSystemloadCallback(std::shared_ptr<CloudFile::Dat
 void SystemLoadListener::OnSystemloadLevel(int32_t level)
 {
     SystemLoadStatus::Setload(level);
-    if (level >= SYSTEMLOADLEVEL) {
+    if (level > SYSTEMLOADLEVEL_OVERHEATED) {
         LOGI("systemloadlevel over temperature");
-    } else if (dataSyncManager_) {
+    } else if (level > SYSTEMLOADLEVEL_WARM) {
+        LOGE("systemloadlevel over warm");
+    } else if (level <= SYSTEMLOADLEVEL_NORMAL && dataSyncManager_) {
+        dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SYSTEM_LOAD_TRIGGER);
         dataSyncManager_->DownloadThumb();
     }
 }
@@ -62,9 +65,17 @@ void SystemLoadStatus::InitSystemload(std::shared_ptr<CloudFile::DataSyncManager
     RegisterSystemloadCallback(dataSyncManager);
 }
 
-bool SystemLoadStatus::IsLoadStatusOkay()
+bool SystemLoadStatus::IsLoadStatusUnderHeat()
 {
-    if (loadstatus_ > SYSTEMLOADLEVEL) {
+    if (loadstatus_ > SYSTEMLOADLEVEL_OVERHEATED) {
+        return false;
+    }
+    return true;
+}
+
+bool SystemLoadStatus::IsLoadStatusUnderWarm()
+{
+    if (loadstatus_ > SYSTEMLOADLEVEL_WARM) {
         return false;
     }
     return true;

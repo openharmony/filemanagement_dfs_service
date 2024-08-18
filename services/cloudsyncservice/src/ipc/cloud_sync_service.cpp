@@ -47,7 +47,6 @@ using namespace OHOS;
 using namespace CloudFile;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
-static string MEDIA_LIBRARY_DATA_STOPFLAG = "persist.kernel.medialibrarydata.stopflag";
 
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
@@ -140,7 +139,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     LOGI("Start service successfully");
     Init();
     LOGI("init service successfully");
-    system::SetParameter(MEDIA_LIBRARY_DATA_STOPFLAG, "0");
+    system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_START);
     TaskStateManager::GetInstance().StartTask();
     // 跟随进程生命周期
     ffrt::submit([startReason, this]() {
@@ -151,7 +150,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
 void CloudSyncService::OnActive(const SystemAbilityOnDemandReason& startReason)
 {
     LOGI("active service successfully");
-    system::SetParameter(MEDIA_LIBRARY_DATA_STOPFLAG, "0");
+    system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_START);
     TaskStateManager::GetInstance().StartTask();
     ffrt::submit([startReason, this]() {
         this->HandleStartReason(startReason);
