@@ -29,6 +29,7 @@ int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
 
 int32_t DataSyncManager::TriggerStopSync(const std::string &bundleName,
                                          const int32_t userId,
+                                         bool forceFlag,
                                          SyncTriggerType triggerType)
 {
     return E_OK;

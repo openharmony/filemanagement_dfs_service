@@ -159,7 +159,7 @@ int32_t CloudSyncServiceProxy::CleanCacheInner(const std::string &uri)
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName)
+int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName, bool forceFlag)
 {
     return E_OK;
 }

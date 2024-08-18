@@ -16,3 +16,4 @@ persist.kernel.cloudsync.battery_level_low = dfs:samgr:0640
 persist.kernel.cloudsync.status = dfs:user_data_rw:0640
 persist.kernel.cloudsync.temperature_abnormal_sync = dfs:user_data_rw:0640
 persist.kernel.cloudsync.temperature_abnormal_thumb = dfs:user_data_rw:0640
+persist.kernel.medialibrarydata.stopflag = dfs:user_data_rw:0640

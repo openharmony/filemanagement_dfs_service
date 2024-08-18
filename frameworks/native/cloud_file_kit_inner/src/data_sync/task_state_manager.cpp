@@ -124,6 +124,7 @@ void TaskStateManager::DelayUnloadTask()
             LOGE("get samgr failed");
             return;
         }
+        system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_END);
         int32_t ret = samgrProxy->UnloadSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
         if (ret != ERR_OK) {
             LOGE("remove system ability failed");

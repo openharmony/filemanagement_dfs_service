@@ -143,7 +143,7 @@ int32_t CloudSyncManagerImpl::TriggerSync(const std::string &bundleName, const i
     return CloudSyncServiceProxy->TriggerSyncInner(bundleName, userId);
 }
 
-int32_t CloudSyncManagerImpl::StopSync(const std::string &bundleName)
+int32_t CloudSyncManagerImpl::StopSync(const std::string &bundleName, bool forceFlag)
 {
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
@@ -151,7 +151,7 @@ int32_t CloudSyncManagerImpl::StopSync(const std::string &bundleName)
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return CloudSyncServiceProxy->StopSyncInner(bundleName);
+    return CloudSyncServiceProxy->StopSyncInner(bundleName, forceFlag);
 }
 
 int32_t CloudSyncManagerImpl::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
