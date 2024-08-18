@@ -20,6 +20,9 @@
 #include "ffrt_inner.h"
 
 namespace OHOS::FileManagement::CloudSync {
+static const std::string CLOUD_FILE_SERVICE_SA_STATUS_FLAG = "persist.kernel.medialibrarydata.stopflag";
+static const std::string CLOUD_FILE_SERVICE_SA_START = "0";
+static const std::string CLOUD_FILE_SERVICE_SA_END = "1";
 enum class TaskType : uint64_t {
     SYNC_TASK = 1,
     DOWNLOAD_TASK = 1 << 1,

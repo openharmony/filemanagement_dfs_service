@@ -194,7 +194,8 @@ int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessagePa
     }
 
     string bundleName = data.ReadString();
-    int32_t res = StopSyncInner(bundleName);
+    bool forceFlag = data.ReadBool();
+    int32_t res = StopSyncInner(bundleName, forceFlag);
     reply.WriteInt32(res);
     LOGI("End StopSyncInner");
     return E_OK;
