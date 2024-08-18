@@ -17,6 +17,7 @@
 
 #include "gallery_download_file_stat.h"
 #include "iservice_registry.h"
+#include "parameters.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -26,6 +27,8 @@ namespace CloudSync {
 using namespace std;
 
 const int32_t DELAY_TIME = 90000; // ms
+
+static string MEDIA_LIBRARY_DATA_STOPFLAG = "persist.kernel.medialibrarydata.stopflag";
 
 TaskStateManager &TaskStateManager::GetInstance()
 {
@@ -117,6 +120,7 @@ void TaskStateManager::DelayUnloadTask()
             LOGE("get samgr failed");
             return;
         }
+        system::SetParameter(MEDIA_LIBRARY_DATA_STOPFLAG, "1");
         int32_t ret = samgrProxy->UnloadSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
         if (ret != ERR_OK) {
             LOGE("remove system ability failed");

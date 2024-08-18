@@ -33,7 +33,7 @@ public:
     int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override;
     int32_t StartSyncInner(bool forceFlag, const std::string &bundleName = "") override;
     int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) override;
-    int32_t StopSyncInner(const std::string &bundleName = "") override;
+    int32_t StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
     int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;

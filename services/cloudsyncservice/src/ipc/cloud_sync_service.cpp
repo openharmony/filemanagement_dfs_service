@@ -47,6 +47,7 @@ using namespace OHOS;
 using namespace CloudFile;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
+static string MEDIA_LIBRARY_DATA_STOPFLAG = "persist.kernel.medialibrarydata.stopflag";
 
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
@@ -139,6 +140,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     LOGI("Start service successfully");
     Init();
     LOGI("init service successfully");
+    system::SetParameter(MEDIA_LIBRARY_DATA_STOPFLAG, "0");
     TaskStateManager::GetInstance().StartTask();
     // 跟随进程生命周期
     ffrt::submit([startReason, this]() {
@@ -149,6 +151,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
 void CloudSyncService::OnActive(const SystemAbilityOnDemandReason& startReason)
 {
     LOGI("active service successfully");
+    system::SetParameter(MEDIA_LIBRARY_DATA_STOPFLAG, "0");
     TaskStateManager::GetInstance().StartTask();
     ffrt::submit([startReason, this]() {
         this->HandleStartReason(startReason);
@@ -355,7 +358,7 @@ int32_t CloudSyncService::TriggerSyncInner(const std::string &bundleName, const 
         SyncTriggerType::APP_TRIGGER);
 }
 
-int32_t CloudSyncService::StopSyncInner(const string &bundleName)
+int32_t CloudSyncService::StopSyncInner(const string &bundleName, bool forceFlag)
 {
     string targetBundleName = bundleName;
     string callerBundleName = "";
@@ -365,7 +368,7 @@ int32_t CloudSyncService::StopSyncInner(const string &bundleName)
         return ret;
     }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    return dataSyncManager_->TriggerStopSync(targetBundleName, callerUserId, SyncTriggerType::APP_TRIGGER);
+    return dataSyncManager_->TriggerStopSync(targetBundleName, callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
 }
 
 int32_t CloudSyncService::GetSyncTimeInner(int64_t &syncTime, const string &bundleName)
@@ -404,7 +407,7 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
         return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     } else {
         system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_SWITCHOFF);
-        return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
+        return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     }
 }
 
