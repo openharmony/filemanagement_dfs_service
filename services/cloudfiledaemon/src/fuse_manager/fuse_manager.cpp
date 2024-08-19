@@ -1011,12 +1011,9 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
 
     wSesLock.lock();
-    while (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
-        if (static_cast<uint64_t>(cacheIndex * MAX_READ_SIZE) > cInode->mBase->size) {
-            wSesLock.unlock();
-            return;
-        }
-        cacheIndex++;
+    if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
+        wSesLock.unlock();
+        return;
     }
     auto memInfo = std::make_shared<ReadCacheInfo>();
     memInfo->flags = PG_READAHEAD;
@@ -1025,6 +1022,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     wSesLock.unlock();
 
     readArgs->offset = cacheIndex * MAX_READ_SIZE;
+    readArgs->buf.reset(new char[MAX_READ_SIZE], [](char *ptr) { delete[] ptr; });
     *readArgs->readResult =
         readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
 
@@ -1229,13 +1227,9 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
         if (IsVideoType(params.cInode->mBase->name) && params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
             continue;
         }
-        auto readArgsCache = make_shared<ReadArguments>(MAX_READ_SIZE, cacheIndex * MAX_READ_SIZE, req->ctx.pid);
+        auto readArgsCache = make_shared<ReadArguments>(0, cacheIndex * MAX_READ_SIZE, req->ctx.pid);
         if (!readArgsCache) {
             LOGE("Init readArgsCache failed");
-            break;
-        }
-        if (!readArgsCache->buf) {
-            LOGE("cache buffer is null");
             break;
         }
         ffrt::submit([readArgsCache, params, data] {
