@@ -17,7 +17,7 @@ import("//build/test.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_fuzztest("DaemonStubFuzzTest") {
-  module_out_path = "dfs_service/dfs_service_daemon"
+  module_out_path = "distributed_file_system/dfs_service_deamon"
   fuzz_config_file = "${distributedfile_path}/test/fuzztest/daemonstub_fuzzer"
   include_dirs = [
     "${distributedfile_path}/services/distributedfiledaemon/include",
