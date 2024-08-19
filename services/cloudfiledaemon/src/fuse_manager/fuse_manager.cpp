@@ -367,7 +367,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
                                                   parentName + "/" + name;
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
 
-    LOGD("parent: %{private}s, name: %s", parentName.c_str(), name);
+    LOGD("parent: %{private}s, name: %s", GetAnonyString(parentName).c_str(), GetAnonyString(name).c_str());
 
     child = FindNode(data, childName);
     if (!child) {
