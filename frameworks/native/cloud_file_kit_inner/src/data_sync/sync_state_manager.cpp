@@ -33,9 +33,9 @@ Action SyncStateManager::UpdateSyncState(SyncState newState)
 bool SyncStateManager::CheckAndSetPending(bool forceFlag, SyncTriggerType triggerType)
 {
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
-    if (state_ != SyncState::SYNCING &&
-        state_ != SyncState::CLEANING &&
-        state_ != SyncState::DISABLE_CLOUD) {
+    if (!CheckCleaningFlag() &&
+        !CheckDisableCloudFlag() &&
+        state_ != SyncState::SYNCING) {
         state_ = SyncState::SYNCING;
         nextAction_ = Action::STOP;
         isForceSync_ = forceFlag;
@@ -55,21 +55,45 @@ bool SyncStateManager::CheckAndSetPending(bool forceFlag, SyncTriggerType trigge
     return true;
 }
 
-void SyncStateManager::SetDisableCloudFlag()
+bool SyncStateManager::CheckCleaningFlag()
 {
-    std::unique_lock<std::shared_mutex> lck(syncMutex_);
-    state_ = SyncState::DISABLE_CLOUD;
-    nextAction_ = Action::STOP;
+    return syncSignal.test(static_cast<uint32_t>(SignalPos::CLEANING));
 }
 
 void SyncStateManager::SetCleaningFlag()
 {
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
-    if (state_ == SyncState::DISABLE_CLOUD) {
+    if (syncSignal.test(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD))) {
         return;
     }
-    state_ = SyncState::CLEANING;
+    syncSignal.set(static_cast<uint32_t>(SignalPos::CLEANING));
     nextAction_ = Action::STOP;
+}
+
+Action SyncStateManager::ClearCleaningFlag()
+{
+    syncSignal.reset(static_cast<uint32_t>(SignalPos::CLEANING));
+    stopSyncFlag_ = false;
+    return nextAction_;
+}
+
+bool SyncStateManager::CheckDisableCloudFlag()
+{
+    return syncSignal.test(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD));
+}
+
+void SyncStateManager::SetDisableCloudFlag()
+{
+    std::unique_lock<std::shared_mutex> lck(syncMutex_);
+    syncSignal.set(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD));
+    nextAction_ = Action::STOP;
+}
+
+Action SyncStateManager::ClearDisableCloudFlag()
+{
+    syncSignal.reset(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD));
+    stopSyncFlag_ = false;
+    return nextAction_;
 }
 
 bool SyncStateManager::GetStopSyncFlag()
