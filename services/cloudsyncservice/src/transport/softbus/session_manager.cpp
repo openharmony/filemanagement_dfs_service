@@ -46,13 +46,6 @@ void SessionManager::CreateServer()
         LOGE("create session server failed");
         return;
     }
-
-    auto res = SoftbusAdapter::GetInstance().SetFileReceiveListener(SERVICE_NAME.c_str(), SESSION_NAME.c_str());
-    if (res != E_OK) {
-        SetFileRecvListenerFlag_ = false;
-    } else {
-        SetFileRecvListenerFlag_ = true;
-    }
     SoftbusAdapter::GetInstance().RegisterSessionListener(SESSION_NAME.c_str(), shared_from_this());
 }
 
@@ -64,10 +57,6 @@ void SessionManager::OnUserUnlocked()
     }
     /* setfileReceiveListener again when user unlocked to avoid register fall when user locked */
     LOGI("UserUnlocked, SetFileReceiveListener again");
-    auto ret = SoftbusAdapter::GetInstance().SetFileReceiveListener(SERVICE_NAME.c_str(), SESSION_NAME.c_str());
-    if (ret == E_OK) {
-        LOGI("SetFileReceiveListener success");
-    }
 }
 
 void SessionManager::RemoveServer()
@@ -148,19 +137,16 @@ void SessionManager::ReleaseSession(SoftbusSession::DataType type, const std::st
     sendSession->Stop();
 }
 
-int SessionManager::OnSessionOpened(int sesssionId, int result)
+void SessionManager::OnSessionOpened(int socket, int result)
 {
     if (result != E_OK) {
         LOGE("OnSessionOpened failed:%{public}d", result);
-        return -1;
     }
-
-    return E_OK;
 }
 
-void SessionManager::OnSessionClosed(int sessionId)
+void SessionManager::OnSessionClosed(int32_t socket)
 {
-    RemoveSendSession(sessionId);
+    RemoveSendSession(socket);
     if (dataHandler_ != nullptr) {
         dataHandler_->OnSessionClosed();
     }
