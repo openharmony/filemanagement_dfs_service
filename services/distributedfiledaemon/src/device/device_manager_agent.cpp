@@ -158,11 +158,6 @@ void DeviceManagerAgent::ReconnectOnlineDevices()
         if (net == nullptr) {
             continue;
         }
-        auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate>>(&NetworkAgentTemplate::ConnectOnlineDevices);
-        cmd->UpdateOption({
-            .tryTimes_ = MAX_RETRY_COUNT,
-        });
-        net->Recv(move(cmd));
     }
 }
 
@@ -242,11 +237,6 @@ void DeviceManagerAgent::OnDeviceReady(const DistributedHardware::DmDeviceInfo &
         LOGI("OnDeviceReady end");
         return;
     }
-
-    auto cmd =
-        make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::ConnectDeviceAsync, info);
-    cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
-    it->second->Recv(move(cmd));
     LOGI("OnDeviceReady end");
 }
 
@@ -269,10 +259,6 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
         LOGI("OnDeviceOffline end");
         return;
     }
-
-    auto cmd =
-        make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(&NetworkAgentTemplate::DisconnectDevice, info);
-    it->second->Recv(move(cmd));
 
     auto networkId = std::string(deviceInfo.networkId);
     auto deviceId = std::string(deviceInfo.deviceId);
@@ -789,24 +775,6 @@ void DeviceManagerAgent::OnDeviceChanged(const DistributedHardware::DmDeviceInfo
     int32_t oldNetworkType = type_->second;
     int32_t newNetworkType = type_->second = deviceInfo.networkType;
     LOGI("oldNetworkType %{public}d, newNetworkType %{public}d", oldNetworkType, newNetworkType);
-    if (IsWifiNetworkType(newNetworkType) && !IsWifiNetworkType(oldNetworkType)) {
-        LOGI("Wifi connect");
-        auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>(
-            &NetworkAgentTemplate::ConnectDeviceAsync, info);
-        cmd->UpdateOption({.tryTimes_ = MAX_RETRY_COUNT});
-        it->second->Recv(move(cmd));
-        LOGI("OnDeviceInfoChanged end");
-        return;
-    }
-
-    if (!IsWifiNetworkType(newNetworkType) && IsWifiNetworkType(oldNetworkType)) {
-        LOGI("Wifi disconnect");
-        auto cmd = make_unique<DfsuCmd<NetworkAgentTemplate, const DeviceInfo>>
-            (&NetworkAgentTemplate::DisconnectDevice, info);
-        it->second->Recv(move(cmd));
-        LOGI("OnDeviceInfoChanged end");
-        return;
-    }
     LOGI("OnDeviceInfoChanged end");
 }
 
