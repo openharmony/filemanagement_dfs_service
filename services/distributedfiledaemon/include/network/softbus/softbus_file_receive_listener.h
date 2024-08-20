@@ -26,12 +26,14 @@ namespace Storage {
 namespace DistributedFile {
 class SoftBusFileReceiveListener {
 public:
+    static void OnCopyReceiveBind(int32_t socketId, PeerSocketInfo info);
     static void OnFile(int32_t socket, FileEvent *event);
     static void OnReceiveFileStarted(int32_t sessionId, int32_t fileCnt);
     static void OnReceiveFileProcess(int32_t sessionId, uint64_t bytesUpload, uint64_t bytesTotal);
     static void OnReceiveFileFinished(int32_t sessionId, int32_t fileCnt);
     static void OnFileTransError(int32_t sessionId, int32_t errorCode);
     static void OnReceiveFileReport(int32_t sessionId, FileStatusList statusList, int32_t errorCode);
+    static void OnReceiveFileShutdown(int32_t sessionId, ShutdownReason reason);
     static std::string GetLocalSessionName(int32_t socket);
     static void SetRecvPath(const std::string &physicalPath);
     static const char* GetRecvPath();

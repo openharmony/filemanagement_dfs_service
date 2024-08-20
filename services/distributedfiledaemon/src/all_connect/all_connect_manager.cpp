@@ -238,9 +238,10 @@ int32_t AllConnectManager::ApplyResult(int32_t errorcode, int32_t result, const 
 
 int32_t AllConnectManager::OnStop(const char *peerNetworkId)
 {
-    LOGI("OnStop begin, peerNetworkId:%{public}s", Utils::GetAnonyString(peerNetworkId).c_str());
-    std::thread([peerNetworkId]() {
-        SoftBusHandler::GetInstance().CloseSessionWithNetworkId(peerNetworkId);
+    std::string pNetworkId(peerNetworkId);
+    LOGI("OnStop begin, peerNetworkId:%{public}s", Utils::GetAnonyString(pNetworkId).c_str());
+    std::thread([pNetworkId]() {
+        SoftBusHandler::GetInstance().CopyOnStop(pNetworkId);
     }).detach();
     return FileManagement::ERR_OK;
 }
