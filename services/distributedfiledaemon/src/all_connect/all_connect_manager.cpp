@@ -225,9 +225,10 @@ int32_t AllConnectManager::UnRegisterLifecycleCallback()
 
 int32_t AllConnectManager::ApplyResult(int32_t errorcode, int32_t result, const char *reason)
 {
+    (void)reason;
     LOGI("ApplyResult begin");
     if (result != PASS) {
-        LOGE("Apply Result is Reject, errorcode is %{}d, reason is %{public}s", errorcode, reason);
+        LOGE("Apply Result is Reject, errorcode is %{public}d", errorcode);
         applyResultBlock_->SetValue(false);
         return FileManagement::ERR_APPLY_RESULT;
     }
@@ -237,9 +238,10 @@ int32_t AllConnectManager::ApplyResult(int32_t errorcode, int32_t result, const 
 
 int32_t AllConnectManager::OnStop(const char *peerNetworkId)
 {
-    LOGI("OnStop begin, peerNetworkId:%{public}s", Utils::GetAnonyString(peerNetworkId).c_str());
-    std::thread([peerNetworkId]() {
-        SoftBusHandler::GetInstance().CloseSessionWithNetworkId(peerNetworkId);
+    std::string pNetworkId(peerNetworkId);
+    LOGI("OnStop begin, peerNetworkId:%{public}s", Utils::GetAnonyString(pNetworkId).c_str());
+    std::thread([pNetworkId]() {
+        SoftBusHandler::GetInstance().CopyOnStop(pNetworkId);
     }).detach();
     return FileManagement::ERR_OK;
 }

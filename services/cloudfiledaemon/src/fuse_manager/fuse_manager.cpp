@@ -48,6 +48,7 @@
 #include "datetime_ex.h"
 #include "dfs_error.h"
 #include "directory_ex.h"
+#include "fdsan.h"
 #include "ffrt_inner.h"
 #include "fuse_operations.h"
 #include "hitrace_meter.h"
@@ -82,7 +83,7 @@ static const unsigned int MAX_IDLE_THREADS = 10;
 static const unsigned int READ_CACHE_SLEEP = 10 * 1000;
 static const unsigned int CACHE_PAGE_NUM = 2;
 static const unsigned int HMDFS_IOC = 0xf2;
-static const std::chrono::seconds READ_TIMEOUT_S = 20s;
+static const std::chrono::seconds READ_TIMEOUT_S = 16s;
 static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
 
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
@@ -366,7 +367,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
                                                   parentName + "/" + name;
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
 
-    LOGD("parent: %{private}s, name: %s", parentName.c_str(), name);
+    LOGD("parent: %{private}s, name: %s", GetAnonyString(parentName).c_str(), GetAnonyString(name).c_str());
 
     child = FindNode(data, childName);
     if (!child) {
@@ -403,7 +404,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
 static void CloudLookup(fuse_req_t req, fuse_ino_t parent,
                         const char *name)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     struct fuse_entry_param e;
     int err;
 
@@ -446,7 +447,7 @@ static void CloudForget(fuse_req_t req, fuse_ino_t ino,
 static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
                          struct fuse_file_info *fi)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     struct stat buf;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     (void) fi;
@@ -524,10 +525,11 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
         LOGE("Failed to open local file, errno: %{public}d", errno);
         return 0;
     }
+    auto fdsan = new fdsan_fd(fd);
     string cloudMergeViewPath = GetCloudMergeViewPath(data->userId, cInode->path);
     if (remove(cloudMergeViewPath.c_str()) < 0) {
         LOGE("Failed to update kernel dentry cache, errno: %{public}d", errno);
-        close(fd);
+        delete fdsan;
         return 0;
     }
 
@@ -535,12 +537,12 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
     ForceCreateDirectory(parentPath.string());
     if (rename(tmpPath.c_str(), localPath.c_str()) < 0) {
         LOGE("Failed to rename tmpPath to localPath, errno: %{public}d", errno);
-        close(fd);
+        delete fdsan;
         return -errno;
     }
     MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
     cInode->mBase->hasDownloaded = true;
-    fi->fh = static_cast<uint64_t>(fd);
+    fi->fh = reinterpret_cast<uint64_t>(fdsan);
     return 0;
 }
 
@@ -573,7 +575,7 @@ static uint64_t UTCTimeMilliSeconds()
 static void DownloadThmOrLcd(shared_ptr<CloudInode> cInode, shared_ptr<CloudError> err, shared_ptr<bool> openFinish,
     shared_ptr<ffrt::condition_variable> cond)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     auto session = cInode->readSession;
     if (!session) {
         LOGE("readSession is nullptr");
@@ -598,10 +600,11 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
 {
     string cachePath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE +
                        CLOUD_CACHE_DIR + cInode->path;
-    int filePageSize = cInode->mBase->size / MAX_READ_SIZE + 1;
+    int filePageSize = static_cast<int32_t>(cInode->mBase->size / MAX_READ_SIZE + 1);
     CLOUD_CACHE_STATUS *tmp = new CLOUD_CACHE_STATUS[filePageSize]();
     std::unique_ptr<CLOUD_CACHE_STATUS[]> mp(tmp);
     if (access(cachePath.c_str(), F_OK) != 0) {
+        cInode->cacheFileIndex = std::move(mp);
         string parentPath = filesystem::path(cachePath).parent_path().string();
         if (!ForceCreateDirectory(parentPath)) {
             LOGE("failed to create parent dir");
@@ -616,7 +619,6 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
             LOGE("failed to truncate file, ret: %{public}d", errno);
         }
         close(fd);
-        cInode->cacheFileIndex = std::move(mp);
         return;
     }
 
@@ -670,7 +672,7 @@ static void UpdateReadStat(shared_ptr<CloudInode> cInode, uint64_t startTime)
 static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
                       struct fuse_file_info *fi)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     fi->fh = UINT64_MAX;
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
@@ -740,7 +742,9 @@ static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *
     cInode->sessionRefCount--;
     if (cInode->sessionRefCount == 0) {
         if (fi->fh != UINT64_MAX) {
-            close(fi->fh);
+            auto fdsan = reinterpret_cast<fdsan_fd *>(fi->fh);
+            delete fdsan;
+            fi->fh = UINT64_MAX;
         }
         if (cInode->mBase->fileType == FILE_TYPE_CONTENT && (!cInode->readSession->Close(false))) {
             LOGE("Failed to close readSession");
@@ -913,7 +917,13 @@ static void SaveCacheToFile(shared_ptr<ReadArguments> readArgs,
 {
     string cachePath =
         LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE + CLOUD_CACHE_DIR + cInode->path;
-    int fd = open(cachePath.c_str(), O_RDWR);
+    char *realPaths = realpath(cachePath.c_str(), nullptr);
+    if (realPaths == nullptr) {
+        LOGE("realpath failed");
+        return;
+    }
+    int fd = open(realPaths, O_RDWR);
+    free(realPaths);
     if (fd < 0) {
         LOGE("Failed to open cache file, err: %{public}d", errno);
         return;
@@ -932,7 +942,7 @@ static void CloudReadOnCloudFile(pid_t pid,
                                  shared_ptr<CloudInode> cInode,
                                  shared_ptr<CloudFile::CloudAssetReadSession> readSession)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     LOGI("PRead CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu", GetAnonyString(cInode->path).c_str(),
          readArgs->size, static_cast<unsigned long>(readArgs->offset));
 
@@ -990,7 +1000,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
                                  shared_ptr<CloudFile::CloudAssetReadSession> readSession,
                                  int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     usleep(READ_CACHE_SLEEP);
     LOGI("Preread CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu",
         GetAnonyString(cInode->path).c_str(), readArgs->size, static_cast<unsigned long>(readArgs->offset));
@@ -999,12 +1009,9 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
 
     wSesLock.lock();
-    while (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
-        if (static_cast<uint64_t>(cacheIndex * MAX_READ_SIZE) > cInode->mBase->size) {
-            wSesLock.unlock();
-            return;
-        }
-        cacheIndex++;
+    if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
+        wSesLock.unlock();
+        return;
     }
     auto memInfo = std::make_shared<ReadCacheInfo>();
     memInfo->flags = PG_READAHEAD;
@@ -1013,6 +1020,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     wSesLock.unlock();
 
     readArgs->offset = cacheIndex * MAX_READ_SIZE;
+    readArgs->buf.reset(new char[MAX_READ_SIZE], [](char *ptr) { delete[] ptr; });
     *readArgs->readResult =
         readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
 
@@ -1039,7 +1047,13 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t size,
     off_t off, struct fuse_file_info *fi)
 {
-    auto readSize = pread(fi->fh, buf.get(), size, off);
+    if (fi->fh == UINT64_MAX) {
+        LOGE("Invalid fh in fuse_file_info");
+        fuse_reply_err(req, EBADF);
+        return;
+    }
+    auto fdsan = reinterpret_cast<fdsan_fd *>(fi->fh);
+    auto readSize = pread(fdsan->get(), buf.get(), size, off);
     if (readSize < 0) {
         LOGE("Failed to read local file, errno: %{public}d", errno);
         fuse_reply_err(req, errno);
@@ -1142,7 +1156,13 @@ static ssize_t ReadCacheFile(shared_ptr<ReadArguments> readArgs, const string &p
 {
     string cachePath =
         LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD_CACHE + CLOUD_CACHE_DIR + path;
-    int fd = open(cachePath.c_str(), O_RDONLY);
+    char *realPaths = realpath(cachePath.c_str(), nullptr);
+    if (realPaths == nullptr) {
+        LOGE("realpath failed");
+        return -1;
+    }
+    int fd = open(realPaths, O_RDONLY);
+    free(realPaths);
     if (fd < 0) {
         return fd;
     }
@@ -1199,24 +1219,21 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
         return false;
     }
     // no prefetch when contains O_NOFOLLOW
-    if (flags & O_NOFOLLOW) {
+    unsigned int unflags = static_cast<unsigned int>(flags);
+    if (unflags & O_NOFOLLOW) {
         return true;
     }
 
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     for (uint32_t i = 1; i <= CACHE_PAGE_NUM; i++) {
-        int64_t cacheIndex =
-            (params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset) / MAX_READ_SIZE + i;
+        int64_t cacheIndex = static_cast<int64_t>(
+            (params.readArgsTail ? params.readArgsTail->offset : params.readArgsHead->offset) / MAX_READ_SIZE + i);
         if (IsVideoType(params.cInode->mBase->name) && params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
             continue;
         }
-        auto readArgsCache = make_shared<ReadArguments>(MAX_READ_SIZE, cacheIndex * MAX_READ_SIZE, req->ctx.pid);
+        auto readArgsCache = make_shared<ReadArguments>(0, cacheIndex * MAX_READ_SIZE, req->ctx.pid);
         if (!readArgsCache) {
             LOGE("Init readArgsCache failed");
-            break;
-        }
-        if (!readArgsCache->buf) {
-            LOGE("cache buffer is null");
             break;
         }
         ffrt::submit([readArgsCache, params, data] {
@@ -1229,7 +1246,7 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
 static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                       struct fuse_file_info *fi)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_FILEMANAGEMENT, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     shared_ptr<char> buf = nullptr;
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);

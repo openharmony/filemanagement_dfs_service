@@ -29,6 +29,7 @@ int32_t DataSyncManager::TriggerStartSync(const std::string &bundleName,
 
 int32_t DataSyncManager::TriggerStopSync(const std::string &bundleName,
                                          const int32_t userId,
+                                         bool forceFlag,
                                          SyncTriggerType triggerType)
 {
     return E_OK;
@@ -60,7 +61,7 @@ int32_t DataSyncManager::IsSkipSync(const std::string &bundleName, const int32_t
 
 int32_t DataSyncManager::StartDownloadFile(const std::string &bundleName,
                                            const int32_t userId,
-                                           const std::vector<std::string> pathVec)
+                                           const std::string path)
 {
     return E_OK;
 }
@@ -135,11 +136,7 @@ int32_t DataSyncManager::SaveSubscription(const std::string &bundleName, const i
     return E_OK;
 }
 
-int32_t DataSyncManager::ReportDownloadStat(const std::string &bundleName, const int32_t userId)
-{
-    return E_OK;
-}
-int32_t DataSyncManager::ReportReadFileStat(const std::string &bundleName, const int32_t userId)
+int32_t DataSyncManager::ReportEntry(const std::string &bundleName, const int32_t userId)
 {
     return E_OK;
 }

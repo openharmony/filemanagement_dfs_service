@@ -43,15 +43,15 @@ public:
     int32_t RegisterCallbackInner(const sptr<IRemoteObject> &remoteObject, const std::string &bundleName = "") override;
     int32_t StartSyncInner(bool forceFlag, const std::string &bundleName = "") override;
     int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) override;
-    int32_t StopSyncInner(const std::string &bundleName = "") override;
+    int32_t StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
     int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
     int32_t NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) override;
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     int32_t DisableCloud(const std::string &accoutId) override;
-    int32_t StartDownloadFile(const std::vector<std::string> &pathVec) override;
-    int32_t StartFileCache(const std::vector<std::string> &uriVec) override;
+    int32_t StartDownloadFile(const std::string &path) override;
+    int32_t StartFileCache(const std::string &uri) override;
     int32_t StopDownloadFile(const std::string &path, bool needClean = false) override;
     int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) override;
     int32_t UnregisterDownloadFileCallback() override;

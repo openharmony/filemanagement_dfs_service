@@ -20,6 +20,9 @@
 #include "ffrt_inner.h"
 
 namespace OHOS::FileManagement::CloudSync {
+static const std::string CLOUD_FILE_SERVICE_SA_STATUS_FLAG = "persist.kernel.medialibrarydata.stopflag";
+static const std::string CLOUD_FILE_SERVICE_SA_START = "0";
+static const std::string CLOUD_FILE_SERVICE_SA_END = "1";
 enum class TaskType : uint64_t {
     SYNC_TASK = 1,
     DOWNLOAD_TASK = 1 << 1,
@@ -49,6 +52,8 @@ private:
     ffrt::queue queue_;
     ffrt::task_handle unloadTaskHandle_;
     ffrt::mutex unloadTaskMutex_;
+    const std::string temperatureSysparamSync = "persist.kernel.cloudsync.temperature_abnormal_sync";
+    const std::string temperatureSysparamThumb = "persist.kernel.cloudsync.temperature_abnormal_thumb";
 };
 }
 #endif // OHOS_FILEMGMT_TASK_STATE_MANAGER_H

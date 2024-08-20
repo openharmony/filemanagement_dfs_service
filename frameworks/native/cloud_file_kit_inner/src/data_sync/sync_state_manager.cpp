@@ -65,6 +65,9 @@ void SyncStateManager::SetDisableCloudFlag()
 void SyncStateManager::SetCleaningFlag()
 {
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
+    if (state_ == SyncState::DISABLE_CLOUD) {
+        return;
+    }
     state_ = SyncState::CLEANING;
     nextAction_ = Action::STOP;
 }

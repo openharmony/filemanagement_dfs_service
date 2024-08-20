@@ -250,7 +250,7 @@ int32_t CloudSyncServiceProxy::CleanCacheInner(const std::string &uri)
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName)
+int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName, bool forceFlag)
 {
     LOGI("StopSync");
     MessageParcel data;
@@ -270,6 +270,11 @@ int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName)
 
     if (!data.WriteString(bundleName)) {
         LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteBool(forceFlag)) {
+        LOGE("Failed to send the forceFlag");
         return E_INVAL_ARG;
     }
 
@@ -511,7 +516,7 @@ int32_t CloudSyncServiceProxy::NotifyEventChange(
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::StartDownloadFile(const std::vector<std::string> &uriVec)
+int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 {
 #ifdef SUPPORT_MEDIA_LIBRARY
     LOGI("StartDownloadFile Start");
@@ -524,23 +529,21 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::vector<std::string> 
         return E_BROKEN_IPC;
     }
 
-    std::vector<std::string> pathVec;
-    for (int i = 0; i < uriVec.size(); i++) {
-        string path = uriVec[i];
-        if (uriVec[i].find("file://media") == 0) {
-            OHOS::Media::MediaFileUri mediaUri(uriVec[i]);
-            path = mediaUri.GetFilePath();
+    string path = uri;
+    if (uri.find("file://media") == 0) {
+        OHOS::Media::MediaFileUri mediaUri(uri);
+        path = mediaUri.GetFilePath();
 
-            CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-            uriMgr.AddPathToUri(path, uriVec[i]);
+        CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
+        if (uriMgr.AddPathToUri(path, uri) == E_STOP) {
+            return E_OK;
         }
-        pathVec.push_back(path);
-
-        LOGI("StartDownloadFile Start, uriVec[i]: %{public}s, path: %{public}s",
-            GetAnonyString(uriVec[i]).c_str(), GetAnonyString(path).c_str());
     }
 
-    if (!data.WriteStringVector(pathVec)) {
+    LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s",
+         GetAnonyString(uri).c_str(), GetAnonyString(path).c_str());
+
+    if (!data.WriteString(path)) {
         LOGE("Failed to send the cloud id");
         return E_INVAL_ARG;
     }
@@ -564,7 +567,7 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::vector<std::string> 
 #endif
 }
 
-int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &uriVec)
+int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
 {
     LOGI("StartFileCache Start");
     MessageParcel data;
@@ -576,11 +579,15 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &ur
         return E_BROKEN_IPC;
     }
 
-    if (!data.WriteStringVector(uriVec)) {
+    if (!data.WriteString(uri)) {
         LOGE("Failed to send the cloud id");
         return E_INVAL_ARG;
     }
 
+    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
+    if (uriMgr.AddPathToUri(uri, uri) == E_STOP) {
+        return E_OK;
+    }
     auto remote = Remote();
     if (!remote) {
         LOGE("remote is nullptr");
@@ -639,6 +646,8 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool nee
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
+    CloudDownloadUriManager& uriMgr = CloudDownloadUriManager::GetInstance();
+    uriMgr.RemoveUri(path);
     LOGI("StopDownloadFile Success");
     return reply.ReadInt32();
 }

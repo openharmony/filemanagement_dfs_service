@@ -26,13 +26,14 @@ SoftBusSessionPool &SoftBusSessionPool::GetInstance()
     return instance;
 }
 
-std::string SoftBusSessionPool::GenerateSessionName()
+std::string SoftBusSessionPool::GenerateSessionName(const SessionInfo &sessionInfo)
 {
     std::lock_guard<std::mutex> createSessionMutex(sessionMutex_);
     for (int32_t i = 0; i < SESSION_COUNT; i++) {
         std::string sessionName = std::string(SESSION_NAME_PREFIX) + std::to_string(i);
         auto it = sessionMap_.find(sessionName);
         if (it == sessionMap_.end()) {
+            sessionMap_.insert(std::pair<std::string, SessionInfo>(sessionName, sessionInfo));
             return sessionName;
         }
     }

@@ -53,6 +53,7 @@ ohos_shared_library("cloudsync_sa") {
     "src/cycle_task/tasks/periodic_check_task.cpp",
     "src/cycle_task/tasks/report_statistics_task.cpp",
     "src/cycle_task/tasks/save_subscription_task.cpp",
+    "src/cycle_task/tasks/database_backup_task.cpp",
   ]
 
   transport = [
@@ -83,6 +84,7 @@ ohos_shared_library("cloudsync_sa") {
   ]
 
   deps = [
+    "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
@@ -158,6 +160,7 @@ ohos_static_library("cloudsync_sa_static") {
     "src/cycle_task/tasks/periodic_check_task.cpp",
     "src/cycle_task/tasks/report_statistics_task.cpp",
     "src/cycle_task/tasks/save_subscription_task.cpp",
+    "src/cycle_task/tasks/database_backup_task.cpp",
   ]
 
   transport = [

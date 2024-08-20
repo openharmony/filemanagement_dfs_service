@@ -161,7 +161,7 @@ int SoftbusAdapter::OnReceiveFileProcess(int sessionId,
     LOGD(
         "File receive process sessionId = %{public}d, first file:%{public}s, bytesUpload:%{public}" PRIu64 ", "
         "bytesTotal:%{public}" PRIu64 "",
-        sessionId, firstFile, bytesUpload, bytesTotal);
+        sessionId, GetAnonyString(firstFile).c_str(), bytesUpload, bytesTotal);
     return E_OK;
 }
 

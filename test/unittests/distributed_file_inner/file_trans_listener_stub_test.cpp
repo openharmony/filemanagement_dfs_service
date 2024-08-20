@@ -124,6 +124,74 @@ HWTEST_F(FileTransListenerStubTest, FileTransListenerStub_OnRemoteRequest_0200, 
 }
 
 /**
+ * @tc.name: FileTransListenerStub_OnRemoteRequest_0300
+ * @tc.desc: The execution of the OnRemoteRequest success.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileTransListenerStubTest, FileTransListenerStub_OnRemoteRequest_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileTransListenerStub_OnRemoteRequest_0300 Start";
+    uint32_t code = static_cast<uint32_t>(FileTransListenerInterfaceCode::FILE_TRANS_LISTENER_ON_FAILED);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    EXPECT_CALL(*messageParcelMock_, ReadInterfaceToken()).WillOnce(Return(IFileTransListener::GetDescriptor()));
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mockStub_, OnFailed(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    auto ret = mockStub_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "FileTransListenerStub_OnRemoteRequest_0300 End";
+}
+
+/**
+ * @tc.name: FileTransListenerStub_OnRemoteRequest_0400
+ * @tc.desc: The execution of the OnRemoteRequest success.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileTransListenerStubTest, FileTransListenerStub_OnRemoteRequest_0400, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileTransListenerStub_OnRemoteRequest_0400 Start";
+    uint32_t code = static_cast<uint32_t>(FileTransListenerInterfaceCode::FILE_TRANS_LISTENER_ON_FAILED);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    EXPECT_CALL(*messageParcelMock_, ReadInterfaceToken()).WillOnce(Return(IFileTransListener::GetDescriptor()));
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mockStub_, OnFailed(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    auto ret = mockStub_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "FileTransListenerStub_OnRemoteRequest_0300 End";
+}
+
+/**
+ * @tc.name: FileTransListenerStub_OnRemoteRequest_0500
+ * @tc.desc: The execution of the OnRemoteRequest success.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(FileTransListenerStubTest, FileTransListenerStub_OnRemoteRequest_0500, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "FileTransListenerStub_OnRemoteRequest_0500 Start";
+    uint32_t code = static_cast<uint32_t>(FileTransListenerInterfaceCode::FILE_TRANS_LISTENER_ON_FINISHED);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    EXPECT_CALL(*messageParcelMock_, ReadInterfaceToken()).WillOnce(Return(IFileTransListener::GetDescriptor()));
+    EXPECT_CALL(*messageParcelMock_, ReadString(_)).WillOnce(Return(true));
+    EXPECT_CALL(*mockStub_, OnFinished(_)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    auto ret = mockStub_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "FileTransListenerStub_OnRemoteRequest_0500 End";
+}
+
+/**
  * @tc.name: FileTransListenerStub_HandleOnFileReceive_0100
  * @tc.desc: verify HandleOnFileReceive.
  * @tc.type: FUNC

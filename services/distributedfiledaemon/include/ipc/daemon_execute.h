@@ -35,6 +35,12 @@ public:
 
 private:
     void ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &event);
+    void ExecuteRequestSendFile(const AppExecFwk::InnerEvent::Pointer &event);
+    int32_t RequestSendFileInner(const std::string &srcUri,
+                                const std::string &dstPath,
+                                const std::string &dstDeviceId,
+                                const std::string &sessionName);
+
     std::vector<std::string> GetFileList(const std::vector<std::string> &uris,
                                          int32_t userId,
                                          const std::string &srcBundleName);

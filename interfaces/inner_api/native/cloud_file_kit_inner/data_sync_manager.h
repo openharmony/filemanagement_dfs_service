@@ -32,7 +32,8 @@ public:
                                      const int32_t userId,
                                      bool forceFlag,
                                      SyncTriggerType triggerType);
-    virtual int32_t TriggerStopSync(const std::string &bundleName, const int32_t userId, SyncTriggerType triggerType);
+    virtual int32_t TriggerStopSync(const std::string &bundleName, const int32_t userId,
+                                    bool forceFlag, SyncTriggerType triggerType);
     virtual int32_t TriggerRecoverySync(SyncTriggerType triggerType);
     virtual void RegisterCloudSyncCallback(const std::string &bundleName,
                                            const std::string &callerBundleName,
@@ -40,9 +41,7 @@ public:
                                            const sptr<CloudSync::ICloudSyncCallback> &callback);
     virtual void UnRegisterCloudSyncCallback(const std::string &bundleName, const std::string &callerBundleName);
     virtual int32_t IsSkipSync(const std::string &bundleName, const int32_t userId, bool forceFlag);
-    virtual int32_t StartDownloadFile(const std::string &bundleName,
-                                      const int32_t userId,
-                                      const std::vector<std::string> pathVec);
+    virtual int32_t StartDownloadFile(const std::string &bundleName, const int32_t userId, const std::string path);
     virtual int32_t StopDownloadFile(const std::string &bundleName,
                                      const int32_t userId,
                                      const std::string path,
@@ -61,8 +60,7 @@ public:
     virtual int32_t DisableCloud(const int32_t userId);
     virtual int32_t GetUserId(int32_t &userId);
     virtual int32_t SaveSubscription(const std::string &bundleName, const int32_t userId);
-    virtual int32_t ReportDownloadStat(const std::string &bundleName, const int32_t userId);
-    virtual int32_t ReportReadFileStat(const std::string &bundleName, const int32_t userId);
+    virtual int32_t ReportEntry(const std::string &bundleName, const int32_t userId);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

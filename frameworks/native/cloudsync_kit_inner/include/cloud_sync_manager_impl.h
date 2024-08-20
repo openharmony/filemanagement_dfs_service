@@ -37,7 +37,7 @@ public:
     int32_t StartSync(const std::string &bundleName = "") override;
     int32_t StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback) override;
     int32_t TriggerSync(const std::string &bundleName, const int32_t &userId) override;
-    int32_t StopSync(const std::string &bundleName = "") override;
+    int32_t StopSync(const std::string &bundleName = "", bool forceFlag = false) override;
     int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) override;
     int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) override;
     int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) override;
@@ -45,9 +45,7 @@ public:
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     int32_t DisableCloud(const std::string &accoutId) override;
     int32_t StartDownloadFile(const std::string &uri) override;
-    int32_t StartDownloadFile(const std::vector<std::string> &uriVec) override;
     int32_t StartFileCache(const std::string &uri) override;
-    int32_t StartFileCache(const std::vector<std::string> &uriVec) override;
     int32_t StopDownloadFile(const std::string &uri, bool needClean = false) override;
     int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) override;
     int32_t UnregisterDownloadFileCallback() override;
@@ -57,13 +55,15 @@ public:
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
         SystemAbilityStatusChange(std::shared_ptr<CloudSyncCallback> callback,
-            std::shared_ptr<CloudDownloadCallback> downloadCallback)
-            : callback_(callback), downloadCallback_(downloadCallback) {};
+            std::shared_ptr<CloudDownloadCallback> downloadCallback,
+            std::string bundleName)
+            : callback_(callback), downloadCallback_(downloadCallback), bundleName_(bundleName) {};
         void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId);
         void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId);
     private:
         std::shared_ptr<CloudSyncCallback> callback_;
         std::shared_ptr<CloudDownloadCallback> downloadCallback_;
+        std::string bundleName_ = "";
     };
 private:
     CloudSyncManagerImpl() = default;
@@ -76,7 +76,7 @@ private:
     sptr<CloudSyncManagerImpl::SystemAbilityStatusChange> listener_;
     std::mutex subscribeMutex_;
     std::mutex callbackMutex_;
-    void SubscribeListener();
+    void SubscribeListener(std::string bundleName = "");
 };
 } // namespace OHOS::FileManagement::CloudSync
 

@@ -17,6 +17,7 @@
 
 #include "gallery_download_file_stat.h"
 #include "iservice_registry.h"
+#include "parameters.h"
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -101,6 +102,12 @@ void TaskStateManager::CancelUnloadTask()
 
 void TaskStateManager::DelayUnloadTask()
 {
+    string systemLoadSync = system::GetParameter(temperatureSysparamSync, "");
+    string systemLoadThumb = system::GetParameter(temperatureSysparamThumb, "");
+    if (systemLoadSync == "true" || systemLoadThumb == "true") {
+        LOGE("temperatureSysparam is true, don't stop");
+        return;
+    }
     LOGI("delay unload task begin");
     auto task = [this]() {
         LOGI("do unload task");
@@ -117,6 +124,7 @@ void TaskStateManager::DelayUnloadTask()
             LOGE("get samgr failed");
             return;
         }
+        system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_END);
         int32_t ret = samgrProxy->UnloadSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID);
         if (ret != ERR_OK) {
             LOGE("remove system ability failed");

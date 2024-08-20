@@ -67,6 +67,7 @@ const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
 constexpr int32_t CHECK_SESSION_DELAY_TIME_TWICE = 5000000;
 constexpr mode_t DEFAULT_UMASK = 0002;
+constexpr int32_t BLOCK_INTERVAL_SEND_FILE = 8 * 1000;
 }
 
 REGISTER_SYSTEM_ABILITY_BY_ID(Daemon, FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
@@ -354,32 +355,20 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &sessionName)
 {
     LOGI("RequestSendFile begin dstDeviceId: %{public}s", Utils::GetAnonyString(dstDeviceId).c_str());
-    auto resourceReq = AllConnectManager::GetInstance().BuildResourceRequest();
-    int32_t ret = AllConnectManager::GetInstance().ApplyAdvancedResource(dstDeviceId, resourceReq.get());
-    if (ret != E_OK) {
-        LOGE("ApplyAdvancedResource fail, ret is %{public}d", ret);
-        return ERR_APPLY_RESULT;
+
+    auto requestSendFileBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
+    auto requestSendFileData = std::make_shared<RequestSendFileData>(
+        srcUri, dstPath, dstDeviceId, sessionName, requestSendFileBlock);
+    auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_REQUEST_SEND_FILE, requestSendFileData, 0);
+    bool isSucc = eventHandler_->SendEvent(msgEvent, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    if (!isSucc) {
+        LOGE("Daemon event handler post push asset event fail.");
+        return E_EVENT_HANDLER;
     }
 
-    auto sessionId = SoftBusHandler::GetInstance().OpenSession(sessionName.c_str(), sessionName.c_str(),
-        dstDeviceId.c_str(), DFS_CHANNLE_ROLE_SOURCE);
-    if (sessionId <= 0) {
-        LOGE("OpenSession failed");
-        return E_SOFTBUS_SESSION_FAILED;
-    }
-
-    AllConnectManager::GetInstance().PublishServiceState(dstDeviceId,
-        ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
-
-    LOGI("RequestSendFile OpenSession success");
-    SoftBusSessionPool::SessionInfo sessionInfo{.sessionId = sessionId, .srcUri = srcUri, .dstPath = dstPath};
-    SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo);
-    PeerSocketInfo info = {
-        .name = const_cast<char*>(sessionName.c_str()),
-        .networkId = const_cast<char*>(dstDeviceId.c_str()),
-    };
-    DistributedFile::SoftBusSessionListener::OnSessionOpened(sessionId, info);
-    return E_OK;
+    auto ret = requestSendFileBlock->GetValue();
+    LOGI("RequestSendFile end, ret is %{public}d", ret);
+    return ret;
 }
 
 int32_t Daemon::PrepareSession(const std::string &srcUri,
@@ -411,7 +400,8 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         return ret;
     }
 
-    auto sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName();
+    SoftBusSessionPool::SessionInfo sessionInfo{.dstPath = physicalPath, .uid = IPCSkeleton::GetCallingUid()};
+    auto sessionName = SoftBusSessionPool::GetInstance().GenerateSessionName(sessionInfo);
     if (sessionName.empty()) {
         LOGE("SessionServer exceed max");
         return E_SOFTBUS_SESSION_FAILED;
@@ -427,6 +417,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
     physicalPath.clear();
     if (info.authority == FILE_MANAGER_AUTHORITY || info.authority == MEDIA_AUTHORITY) {
+        LOGI("authority is media or docs");
         physicalPath = "??" + info.dstPhysicalPath;
     }
     ret = Copy(srcUri, physicalPath, daemon, sessionName);
@@ -442,8 +433,6 @@ void Daemon::StoreSessionAndListener(const std::string &physicalPath,
                                      const std::string &sessionName,
                                      const sptr<IFileTransListener> &listener)
 {
-    SoftBusSessionPool::SessionInfo sessionInfo{.dstPath = physicalPath, .uid = IPCSkeleton::GetCallingUid()};
-    SoftBusSessionPool::GetInstance().AddSessionInfo(sessionName, sessionInfo);
     TransManager::GetInstance().AddTransTask(sessionName, listener);
 }
 
@@ -478,7 +467,8 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
         return E_GET_PHYSICAL_PATH_FAILED;
     }
 
-    LOGI("physicalPath %{public}s", GetAnonyString(physicalPath).c_str());
+    LOGI("physicalPath %{public}s, userId %{public}s", GetAnonyString(physicalPath).c_str(),
+         std::to_string(hapTokenInfo.userID).c_str());
     info.dstPhysicalPath = physicalPath;
     ret = CheckCopyRule(physicalPath, dstUri, hapTokenInfo, isSrcFile, info);
     if (ret != E_OK) {

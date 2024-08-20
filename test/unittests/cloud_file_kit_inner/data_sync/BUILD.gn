@@ -92,6 +92,7 @@ ohos_unittest("task_state_manager_test") {
 
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync/task_state_manager.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
     "task_state_manager_test.cpp",
   ]
 
@@ -99,6 +100,7 @@ ohos_unittest("task_state_manager_test") {
     "${innerkits_native_path}/cloud_file_kit_inner",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync",
     "commonlibrary/c_utils/base/include/",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
   ]
 
   deps = [

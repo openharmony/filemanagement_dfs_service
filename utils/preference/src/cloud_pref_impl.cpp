@@ -60,7 +60,10 @@ CloudPrefImpl::CloudPrefImpl(const std::string& fileName)
 void CloudPrefImpl::SetString(const std::string& key, const std::string& value)
 {
     pref_->PutString(key, value);
-    pref_->Flush();
+    int ret = pref_->FlushSync();
+    if (ret) {
+        LOGE("CloudPrefImpl: SetString has error, ret = %{public}d", ret);
+    }
 }
 
 void CloudPrefImpl::GetString(const std::string& key, std::string &value)
@@ -71,7 +74,10 @@ void CloudPrefImpl::GetString(const std::string& key, std::string &value)
 void CloudPrefImpl::SetLong(const std::string& key, const int64_t value)
 {
     pref_->PutLong(key, value);
-    pref_->Flush();
+    int ret = pref_->FlushSync();
+    if (ret) {
+        LOGE("CloudPrefImpl: SetLong has error, ret = %{public}d", ret);
+    }
 }
 
 void CloudPrefImpl::GetLong(const std::string& key, int64_t &value)
@@ -82,7 +88,10 @@ void CloudPrefImpl::GetLong(const std::string& key, int64_t &value)
 void CloudPrefImpl::SetInt(const std::string& key, const int value)
 {
     pref_->PutInt(key, value);
-    pref_->Flush();
+    int ret = pref_->FlushSync();
+    if (ret) {
+        LOGE("CloudPrefImpl: SetInt has error, ret = %{public}d", ret);
+    }
 }
 
 void CloudPrefImpl::GetInt(const std::string& key, int32_t &value)
@@ -93,7 +102,10 @@ void CloudPrefImpl::GetInt(const std::string& key, int32_t &value)
 void CloudPrefImpl::SetBool(const std::string& key, const bool& value)
 {
     pref_->PutBool(key, value);
-    pref_->Flush();
+    int ret = pref_->FlushSync();
+    if (ret) {
+        LOGE("CloudPrefImpl: SetBool has error, ret = %{public}d", ret);
+    }
 }
 
 void CloudPrefImpl::GetBool(const std::string& key, bool& value)
@@ -110,6 +122,9 @@ void CloudPrefImpl::Clear()
 void CloudPrefImpl::Delete(const std::string& key)
 {
     pref_->Delete(key);
-    pref_->FlushSync();
+    int ret = pref_->FlushSync();
+    if (ret) {
+        LOGE("CloudPrefImpl: Delete has error, ret = %{public}d", ret);
+    }
 }
 } // namespace OHOS::FileManagement::CloudSync

@@ -20,20 +20,31 @@
 
 namespace OHOS::FileManagement::CloudSync {
 
-void SystemLoadStatus::RegisterSystemloadCallback()
+void SystemLoadListener::SetDataSycner(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+{
+    dataSyncManager_ = dataSyncManager;
+}
+
+void SystemLoadStatus::RegisterSystemloadCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     sptr<SystemLoadListener> loadListener = new (std::nothrow) SystemLoadListener();
     if (loadListener == nullptr) {
         return;
     }
+    loadListener->SetDataSycner(dataSyncManager);
     ResourceSchedule::ResSchedClient::GetInstance().RegisterSystemloadNotifier(loadListener);
 }
 
 void SystemLoadListener::OnSystemloadLevel(int32_t level)
 {
     SystemLoadStatus::Setload(level);
-    if (level >= SYSTEMLOADLEVEL) {
+    if (level > SYSTEMLOADLEVEL_OVERHEATED) {
         LOGI("systemloadlevel over temperature");
+    } else if (level > SYSTEMLOADLEVEL_WARM) {
+        LOGE("systemloadlevel over warm");
+    } else if (level <= SYSTEMLOADLEVEL_NORMAL && dataSyncManager_) {
+        dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SYSTEM_LOAD_TRIGGER);
+        dataSyncManager_->DownloadThumb();
     }
 }
 
@@ -48,15 +59,23 @@ void SystemLoadStatus::Setload(int32_t load)
     loadstatus_ = load;
 }
 
-void SystemLoadStatus::InitSystemload()
+void SystemLoadStatus::InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     GetSystemloadLevel();
-    RegisterSystemloadCallback();
+    RegisterSystemloadCallback(dataSyncManager);
 }
 
-bool SystemLoadStatus::IsLoadStatusOkay()
+bool SystemLoadStatus::IsLoadStatusUnderHeat()
 {
-    if (loadstatus_ > SYSTEMLOADLEVEL) {
+    if (loadstatus_ > SYSTEMLOADLEVEL_OVERHEATED) {
+        return false;
+    }
+    return true;
+}
+
+bool SystemLoadStatus::IsLoadStatusUnderWarm()
+{
+    if (loadstatus_ > SYSTEMLOADLEVEL_WARM) {
         return false;
     }
     return true;

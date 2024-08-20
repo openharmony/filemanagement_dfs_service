@@ -90,6 +90,26 @@ CloudDiskRdbStore::~CloudDiskRdbStore()
     Stop();
 }
 
+int32_t CloudDiskRdbStore::ReBuildDatabase(const string &databasePath)
+{
+    LOGI("database need to be rebuilded");
+    int32_t errCode = RdbHelper::DeleteRdbStore(databasePath);
+    if (errCode != NativeRdb::E_OK) {
+        LOGE("Delete CloudDisk Database is failed, err = %{public}d", errCode);
+        return errCode;
+    }
+    errCode = 0;
+    CloudDiskDataCallBack rdbDataCallBack;
+    rdbStore_ = RdbHelper::GetRdbStore(config_, CLOUD_DISK_RDB_VERSION, rdbDataCallBack, errCode);
+    if (rdbStore_ == nullptr) {
+        LOGE("ReGetRdbStore is failed, userId_ = %{public}d, bundleName_ = %{public}s, errCode = %{public}d",
+             userId_, bundleName_.c_str(), errCode);
+        return errCode;
+    }
+    DatabaseRestore();
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::RdbInit()
 {
     LOGI("Init rdb store, userId_ = %{public}d, bundleName_ = %{public}s", userId_, bundleName_.c_str());
@@ -103,8 +123,8 @@ int32_t CloudDiskRdbStore::RdbInit()
         LOGE("Create Default Database Path is failed, errCode = %{public}d", errCode);
         return E_PATH;
     }
-    config_.SetName(move(name));
-    config_.SetPath(move(databasePath));
+    config_.SetName(name);
+    config_.SetPath(databasePath);
     config_.SetReadConSize(CONNECT_SIZE);
     config_.SetScalarFunction("cloud_sync_func", ARGS_SIZE, CloudSyncTriggerFunc);
     errCode = 0;
@@ -113,8 +133,13 @@ int32_t CloudDiskRdbStore::RdbInit()
     if (rdbStore_ == nullptr) {
         LOGE("GetRdbStore is failed, userId_ = %{public}d, bundleName_ = %{public}s, errCode = %{public}d",
              userId_, bundleName_.c_str(), errCode);
-        return E_RDB;
-    }
+        if (errCode == NativeRdb::E_SQLITE_CORRUPT) {
+            if (ReBuildDatabase(databasePath)) {
+                LOGE("clouddisk db image is malformed, ReBuild failed");
+            }
+        }
+        return errCode;
+    } else if (errCode == NativeRdb::E_SQLITE_CORRUPT) { DatabaseRestore(); }
     return E_OK;
 }
 
@@ -129,6 +154,29 @@ void CloudDiskRdbStore::Stop()
 shared_ptr<RdbStore> CloudDiskRdbStore::GetRaw()
 {
     return rdbStore_;
+}
+
+void CloudDiskRdbStore::DatabaseRestore()
+{
+    if (rdbStore_ == nullptr) {
+        LOGE("rdbStore_ is nullptr");
+        return;
+    }
+    LOGI("clouddisk db image is malformed, need to restore");
+    auto fileName = "/data/service/el1/public/cloudfile/" +
+        to_string(userId_) + "/" + system::GetParameter(FILEMANAGER_KEY, "") + "/backup/clouddisk_backup.db";
+    int32_t ret = -1;
+    if (access(fileName.c_str(), F_OK) == 0) {
+        {
+            lock_guard<mutex> lock(backupMutex_);
+            ret = rdbStore_->Restore(fileName);
+        }
+        if (ret != 0) {
+            LOGE("cloudisk restore failed, ret %{public}d", ret);
+        }
+    } else {
+        LOGE("clouddisk backup db is not exist");
+    }
 }
 
 int32_t CloudDiskRdbStore::LookUp(const std::string &parentCloudId,
@@ -336,6 +384,7 @@ static int32_t CreateDentry(MetaBase &metaBase, uint32_t userId, const std::stri
         m.mode = metaBase.mode;
         m.position = metaBase.position;
         m.fileType = metaBase.fileType;
+        m.noUpload = metaBase.noUpload;
     };
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, parentCloudId);
     int32_t ret = metaFile->DoLookupAndUpdate(fileName, callback);
@@ -368,7 +417,7 @@ static void HandleCreateValue(ValuesBucket &fileInfo, const std::string &cloudId
 }
 
 int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string &parentCloudId,
-    const std::string &fileName)
+    const std::string &fileName, bool noNeedUpload)
 {
     int32_t ret = CheckName(fileName);
     if (ret != E_OK) {
@@ -384,6 +433,13 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
         LOGE("create parameter is invalid");
         return E_INVAL_ARG;
     }
+
+    MetaBase metaBase(fileName, cloudId);
+    if (noNeedUpload) {
+        fileInfo.PutInt(FileColumn::NO_NEED_UPLOAD, NO_UPLOAD);
+        metaBase.noUpload = NO_UPLOAD;
+    }
+
     int64_t fileTimeAdded = UTCTimeMilliSeconds();
     fileInfo.PutLong(FileColumn::FILE_TIME_ADDED, fileTimeAdded);
     HandleCreateValue(fileInfo, cloudId, parentCloudId, fileName, bundleName_);
@@ -405,7 +461,7 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
         LOGE("insert new file record in DB is failed, ret = %{public}d", ret);
         return ret;
     }
-    MetaBase metaBase(fileName, cloudId);
+    
     UpdateMetabase(metaBase, fileTimeAdded, &statInfo);
     ret = CreateDentry(metaBase, userId_, bundleName_, fileName, parentCloudId);
     if (ret != E_OK) {
@@ -417,7 +473,7 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
 }
 
 int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &parentCloudId,
-    const std::string &directoryName)
+    const std::string &directoryName, bool noNeedUpload)
 {
     int32_t ret = CheckName(directoryName);
     if (ret != E_OK) {
@@ -433,6 +489,13 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
         LOGE("make directory parameter is invalid");
         return E_INVAL_ARG;
     }
+
+    MetaBase metaBase(directoryName, cloudId);
+    if (noNeedUpload) {
+        dirInfo.PutInt(FileColumn::NO_NEED_UPLOAD, NO_UPLOAD);
+        metaBase.noUpload = NO_UPLOAD;
+    }
+
     dirInfo.PutString(FileColumn::CLOUD_ID, cloudId);
     dirInfo.PutString(FileColumn::FILE_NAME, directoryName);
     int64_t fileTimeAdded = UTCTimeMilliSeconds();
@@ -458,7 +521,7 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
         LOGE("insert new directory record in DB is failed, ret = %{public}d", ret);
         return ret;
     }
-    MetaBase metaBase(directoryName, cloudId);
+
     metaBase.atime = static_cast<uint64_t>(fileTimeAdded);
     metaBase.mtime = static_cast<uint64_t>(fileTimeEdited);
     metaBase.mode = S_IFDIR | STAT_MODE_DIR;
@@ -845,7 +908,7 @@ int32_t CloudDiskRdbStore::GetExtAttrValue(const std::string &cloudId, const std
         return E_RDB;
     }
 
-    nlohmann::json jsonObj = nlohmann::json::parse(res);
+    nlohmann::json jsonObj = nlohmann::json::parse(res, nullptr, false);
     if (jsonObj.is_discarded()) {
         LOGE("get ext jsonObj parse failed");
         return E_RDB;
@@ -923,7 +986,7 @@ static int32_t ExtAttributeSetValue(const std::string &key, const std::string &v
     if (xattrList.empty()) {
         jsonObj = nlohmann::json({{key, value}});
     } else {
-        jsonObj = nlohmann::json::parse(xattrList);
+        jsonObj = nlohmann::json::parse(xattrList, nullptr, false);
         if (jsonObj.is_discarded()) {
             LOGE("ext jsonObj parse failed");
             return E_RDB;
@@ -1548,6 +1611,25 @@ static void VersionRemoveCloudSyncFuncTrigger(RdbStore &store)
     }
 }
 
+static void VersionAddThmFlag(RdbStore &store)
+{
+    const string addThmFlag = FileColumn::ADD_THM_FLAG;
+    int32_t ret = store.ExecuteSql(addThmFlag);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add thm_flag fail, err %{public}d", ret);
+    }
+    const string addLcdFlag = FileColumn::ADD_LCD_FLAG;
+    ret = store.ExecuteSql(addLcdFlag);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add lcd_flag fail, err %{public}d", ret);
+    }
+    const string addUploadFlag = FileColumn::ADD_UPLOAD_FLAG;
+    ret = store.ExecuteSql(addUploadFlag);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add no_need_upload fail, err %{public}d", ret);
+    }
+}
+
 static int32_t GetMetaBaseData(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
 {
     RETURN_ON_ERR(CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, info.cloudId, resultSet));
@@ -1773,6 +1855,9 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
 
     if (oldVersion < VERSION_ADD_ATTRIBUTE) {
         VersionAddAttribute(store);
+    }
+    if (oldVersion < VERSION_ADD_THM_FLAG) {
+        VersionAddThmFlag(store);
     }
     return NativeRdb::E_OK;
 }

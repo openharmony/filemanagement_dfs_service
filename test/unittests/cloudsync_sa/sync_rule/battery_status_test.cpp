@@ -82,6 +82,26 @@ HWTEST_F(BatteryStatusTest, IsAllowUploadTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: IsAllowUploadTest001
+ * @tc.desc: Verify the IsAllowUpload function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusTest, IsAllowUploadTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsAllowUploadTest002 Start";
+    try {
+        batteryStatus_->SetChargingStatus(false);
+        bool ret = batteryStatus_->IsAllowUpload(true);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsAllowUploadTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsAllowUploadTest002 End";
+}
+
+/**
  * @tc.name: IsBatteryCapcityOkayTest001
  * @tc.desc: Verify the IsBatteryCapcityOkay function
  * @tc.type: FUNC
@@ -89,15 +109,35 @@ HWTEST_F(BatteryStatusTest, IsAllowUploadTest001, TestSize.Level1)
  */
 HWTEST_F(BatteryStatusTest, IsBatteryCapcityOkayTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest Start";
+    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest001 Start";
     try {
         batteryStatus_->SetChargingStatus(true);
         bool ret = batteryStatus_->IsBatteryCapcityOkay();
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest FAILED";
+        GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest End";
+    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest001 End";
+}
+
+/**
+ * @tc.name: IsBatteryCapcityOkayTest002
+ * @tc.desc: Verify the IsBatteryCapcityOkay function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusTest, IsBatteryCapcityOkayTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest Start";
+    try {
+        batteryStatus_->SetChargingStatus(false);
+        bool ret = batteryStatus_->IsBatteryCapcityOkay();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest002 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

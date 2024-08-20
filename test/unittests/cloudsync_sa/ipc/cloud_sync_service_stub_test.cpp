@@ -35,15 +35,15 @@ public:
     MOCK_METHOD1(UnRegisterCallbackInner, int32_t(const std::string &bundleName));
     MOCK_METHOD2(StartSyncInner, int32_t(bool forceFlag, const std::string &bundleName));
     MOCK_METHOD2(TriggerSyncInner, int32_t(const std::string &bundleName, const int32_t &userId));
-    MOCK_METHOD1(StopSyncInner, int32_t(const std::string &bundleName));
+    MOCK_METHOD2(StopSyncInner, int32_t(const std::string &bundleName, bool forceFlag));
     MOCK_METHOD3(ChangeAppSwitch, int32_t(const std::string &accoutId, const std::string &bundleName, bool status));
     MOCK_METHOD2(Clean, int32_t(const std::string &accountId, const CleanOptions &cleanOptions));
     MOCK_METHOD2(NotifyDataChange, int32_t(const std::string &accoutId, const std::string &bundleName));
     MOCK_METHOD3(NotifyEventChange, int32_t(int32_t userId, const std::string &eventId, const std::string &extraData));
     MOCK_METHOD2(EnableCloud, int32_t(const std::string &accoutId, const SwitchDataObj &switchData));
     MOCK_METHOD1(DisableCloud, int32_t(const std::string &accoutId));
-    MOCK_METHOD1(StartDownloadFile, int32_t(const std::vector<std::string> &pathVec));
-    MOCK_METHOD1(StartFileCache, int32_t(const std::vector<std::string> &pathVec));
+    MOCK_METHOD1(StartDownloadFile, int32_t(const std::string &path));
+    MOCK_METHOD1(StartFileCache, int32_t(const std::string &path));
     MOCK_METHOD2(StopDownloadFile, int32_t(const std::string &path, bool needClean));
     MOCK_METHOD1(RegisterDownloadFileCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
     MOCK_METHOD0(UnregisterDownloadFileCallback, int32_t());
@@ -234,14 +234,17 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopSyncInnerTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "HandleStopSyncInner Start";
     try {
         string bundleName = "";
+        bool forceFlag = false;
         MockService service;
-        EXPECT_CALL(service, StopSyncInner(bundleName)).WillOnce(Return(E_OK));
+        EXPECT_CALL(service, StopSyncInner(bundleName, forceFlag)).WillOnce(Return(E_OK));
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_TRUE(data.WriteString(bundleName));
+
+        EXPECT_TRUE(data.WriteBool(forceFlag));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
                             static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_SYNC), data,

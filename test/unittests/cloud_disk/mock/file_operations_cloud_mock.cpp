@@ -286,7 +286,7 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
     string path = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
     shared_ptr<CloudDiskRdbStore> rdbStore =
         databaseManager.GetRdbStore(parentInode->bundleName, data->userId);
-    err = rdbStore->Create(cloudId, parentInode->cloudId, name);
+    err = rdbStore->Create(cloudId, parentInode->cloudId, name, false);
     if (err != 0) {
         close(fd);
         RemoveLocalFile(path);

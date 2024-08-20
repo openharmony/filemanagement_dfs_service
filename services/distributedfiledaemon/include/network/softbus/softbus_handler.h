@@ -20,6 +20,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "transport/socket.h"
 #include "transport/trans_type.h"
@@ -39,17 +40,25 @@ public:
     int32_t CreateSessionServer(const std::string &packageName, const std::string &sessionName,
         DFS_CHANNEL_ROLE role, const std::string physicalPath);
     int32_t OpenSession(const std::string &mySessionName, const std::string &peerSessionName,
-        const std::string &peerDevId, DFS_CHANNEL_ROLE role);
+        const std::string &peerDevId, int32_t &socketId);
+    int32_t CopySendFile(int32_t socketId,
+                         const std::string &sessionName,
+                         const std::string &srcUri,
+                         const std::string &dstUri);
+
     void ChangeOwnerIfNeeded(int32_t sessionId, const std::string sessionName);
     void CloseSession(int32_t sessionId, const std::string sessionName);
     void CloseSessionWithSessionName(const std::string sessionName);
-    void CloseSessionWithNetworkId(const std::string &peerNetworkId);
     static std::string GetSessionName(int32_t sessionId);
     static void OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info);
     static bool IsSameAccount(const std::string &networkId);
-    void RemoveNetworkId(const std::string &sessionName);
+    void RemoveNetworkId(int32_t socketId);
+    void CopyOnStop(const std::string &peerNetworkId);
 
 private:
+    std::vector<int32_t> GetsocketIdFromPeerNetworkId(const std::string &peerNetworkId);
+    bool IsService(std::string &sessionName);
+
     static std::mutex clientSessNameMapMutex_;
     static std::map<int32_t, std::string> clientSessNameMap_;
     static std::mutex serverIdMapMutex_;
@@ -58,7 +67,7 @@ private:
     std::map<DFS_CHANNEL_ROLE, ISocketListener> sessionListener_;
 
     static std::mutex networkIdMapMutex_;
-    static std::map<std::string, std::string> networkIdMap_;
+    static std::map<int32_t, std::string> networkIdMap_;
 };
 } // namespace DistributedFile
 } // namespace Storage
