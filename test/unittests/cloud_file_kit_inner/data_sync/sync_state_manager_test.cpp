@@ -26,9 +26,13 @@ public:
     MOCK_METHOD1(UpdateSyncState, Action(SyncState newState));
     MOCK_METHOD2(CheckAndSetPending, bool(bool forceFlag, SyncTriggerType triggerType));
     MOCK_METHOD0(SetCleaningFlag, void());
+    MOCK_METHOD0(ClearCleaningFlag, Action(SyncState newState));
+    MOCK_METHOD0(CheckCleaningFlag, bool());
     MOCK_METHOD0(GetStopSyncFlag, bool());
     MOCK_METHOD0(SetStopSyncFlag, void());
     MOCK_METHOD0(SetDisableCloudFlag, void());
+    MOCK_METHOD0(ClearDisableCloudFlag, Action(SyncState newState));
+    MOCK_METHOD0(CheckDisableCloudFlag, bool());
     MOCK_METHOD0(GetSyncState, void());
     MOCK_METHOD0(GetForceFlag, bool());
 };
