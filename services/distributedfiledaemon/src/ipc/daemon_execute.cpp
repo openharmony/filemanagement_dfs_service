@@ -27,6 +27,8 @@
 #include "utils_directory.h"
 #include "utils_log.h"
 
+#include "all_connect/all_connect_manager.h"
+#include "network/softbus/softbus_handler.h"
 
 namespace OHOS {
 namespace Storage {
@@ -38,6 +40,7 @@ DaemonExecute::DaemonExecute()
 {
     LOGI("DaemonExecute begin.");
     executeFuncMap_[DEAMON_EXECUTE_PUSH_ASSET] = &DaemonExecute::ExecutePushAsset;
+    executeFuncMap_[DEAMON_EXECUTE_REQUEST_SEND_FILE] = &DaemonExecute::ExecuteRequestSendFile;
 }
 
 void DaemonExecute::ProcessEvent(const AppExecFwk::InnerEvent::Pointer &event)
@@ -109,6 +112,68 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
         SoftBusHandlerAsset::GetInstance().RemoveFile(sendFileName, !isSingleFile);
         return;
     }
+}
+
+void DaemonExecute::ExecuteRequestSendFile(const AppExecFwk::InnerEvent::Pointer &event)
+{
+    if (event == nullptr) {
+        LOGI("eventhandler fail.");
+        return;
+    }
+    auto requestSendFileData = event->GetSharedObject<RequestSendFileData>();
+    if (requestSendFileData == nullptr) {
+        LOGE("requestSendFileData is nullptr.");
+        return;
+    }
+
+    auto requestSendFileBlock  = requestSendFileData->requestSendFileBlock_;
+    if (requestSendFileBlock == nullptr) {
+        LOGE("requestSendFileBlock is nullptr.");
+        return;
+    }
+    std::string srcUri = requestSendFileData->srcUri_;
+    std::string dstPath  = requestSendFileData->dstPath_;
+    std::string dstDeviceId  = requestSendFileData->dstDeviceId_;
+    std::string sessionName  = requestSendFileData->sessionName_;
+    if (srcUri.empty() || dstDeviceId.empty() || sessionName.empty()) {
+        LOGE("params empty. %{public}s, %{public}s", sessionName.c_str(), Utils::GetAnonyString(dstDeviceId).c_str());
+        requestSendFileBlock->SetValue(ERR_BAD_VALUE);
+        return;
+    }
+
+    requestSendFileBlock->SetValue(RequestSendFileInner(srcUri, dstPath, dstDeviceId, sessionName));
+}
+
+int32_t DaemonExecute::RequestSendFileInner(const std::string &srcUri,
+                                            const std::string &dstPath,
+                                            const std::string &dstDeviceId,
+                                            const std::string &sessionName)
+{
+    LOGI("RequestSendFile begin dstDeviceId: %{public}s", Utils::GetAnonyString(dstDeviceId).c_str());
+    auto resourceReq = AllConnectManager::GetInstance().BuildResourceRequest();
+    int32_t ret = AllConnectManager::GetInstance().ApplyAdvancedResource(dstDeviceId, resourceReq.get());
+    if (ret != E_OK) {
+        LOGE("ApplyAdvancedResource fail, ret is %{public}d", ret);
+        return ERR_APPLY_RESULT;
+    }
+
+    int32_t socketId;
+    ret = SoftBusHandler::GetInstance().OpenSession(sessionName, sessionName, dstDeviceId, socketId);
+    if (ret != E_OK) {
+        LOGE("OpenSession failed, ret is %{public}d", ret);
+        return E_SOFTBUS_SESSION_FAILED;
+    }
+    AllConnectManager::GetInstance().PublishServiceState(dstDeviceId,
+                                                         ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
+    LOGI("RequestSendFile OpenSession success");
+
+    ret = SoftBusHandler::GetInstance().CopySendFile(socketId, sessionName, srcUri, dstPath);
+    if (ret != E_OK) {
+        LOGE("CopySendFile failed, ret is %{public}d", ret);
+        SoftBusHandler::GetInstance().CloseSession(socketId, sessionName);
+        return ret;
+    }
+    return E_OK;
 }
 
 std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::string> &uris,

@@ -31,6 +31,8 @@ public:
     static void OnSendFileFinished(int32_t sessionId);
     static void OnFileTransError(int32_t sessionId, int32_t errorCode);
     static void OnSendFileReport(int32_t sessionId, FileStatusList statusList, int32_t errorCode);
+    static void OnSendFileShutdown(int32_t sessionId, ShutdownReason reason);
+
     static std::string GetLocalSessionName(int32_t sessionId);
 
 private:
