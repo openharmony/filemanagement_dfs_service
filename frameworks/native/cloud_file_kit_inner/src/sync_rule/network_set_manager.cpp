@@ -33,10 +33,10 @@ const std::string CLOUDDRIVE_KEY = "persist.kernel.bundle_name.clouddrive";
 const std::string PHOTOS_BUNDLE_NAME = "com.ohos.photos";
 const std::string BUNDLE_NAME_KEY = "key";
 const std::string BUNDLE_NAME_VALUE = "value";
-auto clouddriveBundleName = system::GetParameter(CLOUDDRIVE_KEY, "");
+auto driveBundleName = system::GetParameter(CLOUDDRIVE_KEY, "");
 auto photoQueryUri = PHOTO_NET_CONT + "&key=photo_network_connection_status";
-auto queryUri = QUERY_URI + clouddriveBundleName + "/cloud_sp?key=" + SWITCH_STATUS_KEY;
-DataShare::CreateOptions options;
+auto commonQueryUri = QUERY_URI + driveBundleName + "/cloud_sp?key=" + SWITCH_STATUS_KEY;
+DataShare::CreateOptions commonOptions;
 
 int32_t NetworkSetManager::QueryCellularConnect(int32_t userId, const std::string &bundleName)
 {
@@ -160,8 +160,8 @@ bool NetworkSetManager::GetConfigParams(const std::string &bundleName, int32_t u
 void NetworkSetManager::UnregisterObserver(const std::string &bundleName, const int32_t userId, const int32_t type)
 {
     LOGI("UnregisterObserver start");
-    options.enabled_ = true;
-    auto dataShareHelper = DataShare::DataShareHelper::Creator(QUERY_URI, options);
+    commonOptions.enabled_ = true;
+    auto dataShareHelper = DataShare::DataShareHelper::Creator(QUERY_URI, commonOptions);
     if (dataShareHelper == nullptr) {
         LOGE("dataShareHelper = nullptr");
         return;
@@ -169,7 +169,7 @@ void NetworkSetManager::UnregisterObserver(const std::string &bundleName, const 
     sptr<MobileNetworkObserver> dataObserver(new (std::nothrow) MobileNetworkObserver(bundleName,
     userId, type));
     if (type == CELLULARCONNECT) {
-        Uri observerUri(queryUri);
+        Uri observerUri(commonQueryUri);
         dataShareHelper->UnregisterObserver(observerUri, dataObserver);
     } else {
         Uri observerUri(photoQueryUri);
@@ -181,15 +181,15 @@ void NetworkSetManager::UnregisterObserver(const std::string &bundleName, const 
 
 void NetworkSetManager::RegisterObserver(const std::string &bundleName, const int32_t userId, const int32_t type)
 {
-    options.enabled_ = true;
-    auto dataShareHelper = DataShare::DataShareHelper::Creator(QUERY_URI, options);
+    commonOptions.enabled_ = true;
+    auto dataShareHelper = DataShare::DataShareHelper::Creator(QUERY_URI, commonOptions);
     if (dataShareHelper == nullptr) {
         LOGE("dataShareHelper = nullptr");
         return;
     }
     sptr<MobileNetworkObserver> dataObserver(new (std::nothrow) MobileNetworkObserver(bundleName, userId, type));
     if (type == CELLULARCONNECT) {
-        Uri observerUri(queryUri);
+        Uri observerUri(commonQueryUri);
         dataShareHelper->RegisterObserver(observerUri, dataObserver);
     } else {
         Uri observerUri(photoQueryUri);
