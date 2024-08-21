@@ -30,7 +30,6 @@ config("public_config") {
 
 config("optimize-size") {
   cflags = [
-    "-fvisibility=hidden",
     "-fdata-sections",
     "-ffunction-sections",
     "-Oz",
