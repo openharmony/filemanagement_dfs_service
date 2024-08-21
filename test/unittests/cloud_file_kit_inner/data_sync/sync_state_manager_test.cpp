@@ -436,7 +436,7 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_019, TestSize.Level1)
 
         Action action = syncStateManager.ClearDisableCloudFlag();
         EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
-        EXPECT_TRUE(!syncStateManager.CheckDisableCloudFlag())
+        EXPECT_TRUE(!syncStateManager.CheckDisableCloudFlag());
 
         bool ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::TASK_TRIGGER);
         syncState = syncStateManager.GetSyncState();
