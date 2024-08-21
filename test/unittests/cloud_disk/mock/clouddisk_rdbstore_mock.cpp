@@ -55,6 +55,9 @@ int32_t CloudDiskRdbStore::GetAttr(const std::string &cloudId, CloudDiskFileInfo
 int32_t CloudDiskRdbStore::SetAttr(const std::string &fileName, const std::string &parentCloudId,
     const std::string &cloudId, const unsigned long long &size)
 {
+    if (cloudId == "") {
+        return 1;
+    }
     return E_OK;
 }
 
@@ -84,18 +87,27 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
 int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::string &key, std::string &value,
     const CacheNode &node, const std::string &extAttrKey)
 {
+    if (cloudId == "rootId") {
+        return 1;
+    }
     return E_OK;
 }
 
 int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::string &key, const std::string &value,
     const std::string &name, const std::string &parentCloudId)
 {
+    if (value == "") {
+        return 1;
+    }
     return E_OK;
 }
 
 int32_t CloudDiskRdbStore::Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
     const std::string &newParentCloudId, const std::string &newFileName)
 {
+    if (oldFileName == "mock" || newFileName == "mock") {
+        return 1;
+    }
     return E_OK;
 }
 
