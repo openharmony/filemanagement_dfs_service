@@ -69,7 +69,7 @@ config("optimize-size") {
 
 ohos_shared_library("libdistributedfileutils") {
   branch_protector_ret = "pac_ret"
-  configs = [ ":optimize-size" ]
+  config = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -96,7 +96,7 @@ ohos_shared_library("libdistributedfileutils") {
     "work/src/async_work.cpp",
   ]
 
-  configs += [ "//build/config/compiler:exceptions" ]
+  configs = [ "//build/config/compiler:exceptions" ]
   public_configs = [ ":utils_public_config" ]
 
   defines = [
@@ -148,7 +148,7 @@ config("dentry_public_config") {
 
 ohos_shared_library("libdistributedfiledentry") {
   branch_protector_ret = "pac_ret"
-  configs = [ ":optimize-size" ]
+  config = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -202,7 +202,7 @@ config("utils_lite_public_config") {
 
 ohos_shared_library("libdistributedfileutils_lite") {
   branch_protector_ret = "pac_ret"
-  configs = [ ":optimize-size" ]
+  config = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -226,7 +226,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
     "system/src/utils_directory.cpp",
   ]
 
-  configs += [ "//build/config/compiler:exceptions" ]
+  configs = [ "//build/config/compiler:exceptions" ]
   public_configs = [ ":utils_lite_public_config" ]
 
   defines = [

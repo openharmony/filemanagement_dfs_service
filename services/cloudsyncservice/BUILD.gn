@@ -27,7 +27,7 @@ config("optimize-size") {
 }
 ohos_shared_library("cloudsync_sa") {
   branch_protector_ret = "pac_ret"
-  configs = [ ":optimize-size" ]
+  config = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -118,6 +118,8 @@ ohos_shared_library("cloudsync_sa") {
   if (cloudsync_service_resource_schedule) {
     external_deps += [ "resource_schedule_service:ressched_client" ]
   }
+
+  configs = [ ":optimize-size" ]
 
   use_exceptions = true
   part_name = "dfs_service"

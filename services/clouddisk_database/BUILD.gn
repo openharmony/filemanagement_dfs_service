@@ -43,7 +43,7 @@ config("optimize-size") {
 
 ohos_shared_library("clouddisk_database") {
   branch_protector_ret = "pac_ret"
-  configs = [ ":optimize-size" ]
+  config = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -63,7 +63,7 @@ ohos_shared_library("clouddisk_database") {
     "src/file_column.cpp",
   ]
 
-  configs += [ ":clouddisk_database_config" ]
+  configs = [ ":clouddisk_database_config" ]
   public_configs = [ ":clouddisk_database_public_config" ]
 
   cflags = [
