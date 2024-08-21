@@ -63,9 +63,6 @@ bool SyncStateManager::CheckCleaningFlag()
 void SyncStateManager::SetCleaningFlag()
 {
     std::unique_lock<std::shared_mutex> lck(syncMutex_);
-    if (syncSignal.test(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD))) {
-        return;
-    }
     syncSignal.set(static_cast<uint32_t>(SignalPos::CLEANING));
     nextAction_ = Action::STOP;
 }
