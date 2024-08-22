@@ -16,7 +16,6 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 config("optimize-size") {
   cflags = [
-    "-fvisibility=hidden",
     "-fdata-sections",
     "-ffunction-sections",
     "-Oz",
