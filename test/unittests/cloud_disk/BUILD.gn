@@ -67,14 +67,13 @@ ohos_unittest("file_operations_cloud_test") {
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${services_path}/clouddisk_database/include",
     "${services_path}/cloudfiledaemon/include/cloud_disk/",
-    "//third_party/libfuse/include",
-    "//third_party/libfuse/lib",
     "mock",
   ]
 
   sources = [
     "${distributedfile_path}/test/mock/clouddisk_notify_mock.cpp",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/file_operations_helper_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/database_manager.cpp",

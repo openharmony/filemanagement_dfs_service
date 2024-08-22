@@ -77,3 +77,8 @@ int fuse_reply_attr(fuse_req_t req, const struct stat *attr, double attr_timeout
 {
     return Assistant::ins->fuse_reply_attr(req, attr, attr_timeout);
 }
+
+int fuse_reply_entry(fuse_req_t req, const struct fuse_entry_param *e)
+{
+    return Assistant::ins->fuse_reply_entry(req, e);
+}
