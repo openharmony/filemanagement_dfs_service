@@ -45,7 +45,7 @@ void SoftBusAssetSendListener::OnFile(int32_t socket, FileEvent *event)
 
 void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt)
 {
-    LOGE("Push asset finished, socketId is %{public}d", socketId);
+    LOGI("Push asset finished, socketId is %{public}d", socketId);
     if (fileCnt == 0) {
         LOGE("fileList has no file");
         return;
