@@ -69,7 +69,6 @@ void SyncStateManager::SetCleaningFlag()
 Action SyncStateManager::ClearCleaningFlag()
 {
     syncSignal.reset(static_cast<uint32_t>(SignalPos::CLEANING));
-    stopSyncFlag_ = false;
     return nextAction_;
 }
 
@@ -87,7 +86,6 @@ void SyncStateManager::SetDisableCloudFlag()
 Action SyncStateManager::ClearDisableCloudFlag()
 {
     syncSignal.reset(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD));
-    stopSyncFlag_ = false;
     return nextAction_;
 }
 
@@ -113,4 +111,3 @@ bool SyncStateManager::GetForceFlag() const
     return isForceSync_;
 }
 } // namespace OHOS::FileManagement::CloudSync
-
