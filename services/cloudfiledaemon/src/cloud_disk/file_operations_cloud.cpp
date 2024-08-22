@@ -173,7 +173,7 @@ static int32_t LookupRecycledFile(struct CloudDiskFuseData *data, const char *na
         RECYCLE_CLOUD_ID);
     int ret = metaFile->DoLookup(metaBase);
     if (ret != 0) {
-        LOGE("file %{public}s not found in recyclebin", name);
+        LOGE("file %{public}s not found in recyclebin", GetAnonyString(name).c_str());
         return EINVAL;
     }
     int64_t inodeId = static_cast<int64_t>(CloudFileUtils::DentryHash(metaBase.cloudId));
@@ -224,7 +224,7 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
         parentInode->cloudId);
     int32_t ret = metaFile->DoLookup(metaBase);
     if (ret != 0) {
-        LOGE("lookup dentry failed, name:%{public}s, ret = %{public}d", name, ret);
+        LOGE("lookup dentry failed, name:%{public}s, ret = %{public}d", GetAnonyString(name).c_str(), ret);
         return ENOENT;
     }
     string key = std::to_string(parent) + name;
@@ -982,7 +982,7 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
     struct fuse_entry_param e;
     err = DoCloudLookup(req, parent, name, &e);
     if (err != 0) {
-        LOGE("Failed to find dir %{private}s", name);
+        LOGE("Failed to find dir %{private}s", GetAnonyString(name).c_str());
         fuse_reply_err(req, err);
     } else {
         fuse_reply_entry(req, &e);
@@ -1008,7 +1008,7 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
         parentInode->bundleName, parentInode->cloudId);
     int32_t ret = metaFile->DoLookup(metaBase);
     if (ret != 0) {
-        LOGE("lookup denty failed, name:%{public}s", name);
+        LOGE("lookup denty failed, name:%{public}s", GetAnonyString(name).c_str());
         return EINVAL;
     }
     string cloudId = metaBase.cloudId;
@@ -1128,7 +1128,7 @@ void FileOperationsCloud::Rename(fuse_req_t req, fuse_ino_t parent, const char *
     int32_t err = rdbStore->Rename(parentInode->cloudId, name, newParentInode->cloudId, newName);
     if (err != 0) {
         fuse_reply_err(req, err);
-        LOGE("Failed to Rename DB name:%{private}s err:%{public}d", name, err);
+        LOGE("Failed to Rename DB name:%{private}s err:%{public}d", GetAnonyString(name).c_str(), err);
         return;
     }
     bool isDir = false;

@@ -152,7 +152,7 @@ void FileTransferManager::OnMessageHandle(const std::string &senderNetworkId,
 
 void FileTransferManager::OnFileRecvHandle(const std::string &senderNetworkId, const char *filePath, int result)
 {
-    LOGE("received file, file path:%{public}s, result:%{public}d", filePath, result);
+    LOGE("received file, file path:%{public}s, result:%{public}d", GetAnonyString(filePath).c_str(), result);
     DecTransTaskCount(); // allways dec task count when finsh one task
     if (filePath != nullptr) {
         FinishTransTask(string(filePath), result);
