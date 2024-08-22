@@ -59,6 +59,8 @@ public:
 
 private:
     mutable std::shared_mutex syncMutex_;
+    mutable std::shared_mutex cleanMutex_;
+    mutable std::shared_mutex disableCloudMutex_;
     SyncState state_{SyncState::INIT};
     Action nextAction_{Action::STOP};
     //pos0: is_cleaning, pos1: is_disable_cloud
