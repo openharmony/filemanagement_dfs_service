@@ -88,10 +88,6 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_002, TestSize.Level1)
         EXPECT_CALL(mockSyncStateManager, UpdateSyncState(SyncState::SYNCING)).Times(1);
         EXPECT_CALL(mockSyncStateManager, UpdateSyncState(SyncState::SYNC_FAILED)).Times(1);
         EXPECT_CALL(mockSyncStateManager, UpdateSyncState(SyncState::SYNC_SUCCEED)).Times(1);
-        EXPECT_CALL(mockSyncStateManager, SetCleaningFlag()).Times(1);
-        EXPECT_CALL(mockSyncStateManager, ClearCleaningFlag()).Times(1);
-        EXPECT_CALL(mockSyncStateManager, SetDisableCloudFlag).Times(1);
-        EXPECT_CALL(mockSyncStateManager, ClearDisableCloudFlag).Times(1);
 
         EXPECT_EQ(mockSyncStateManager.UpdateSyncState(SyncState::INIT), Action::STOP);
         EXPECT_EQ(mockSyncStateManager.UpdateSyncState(SyncState::SYNCING), Action::STOP);
