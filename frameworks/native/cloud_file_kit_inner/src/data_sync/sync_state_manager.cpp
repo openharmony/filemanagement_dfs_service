@@ -62,14 +62,12 @@ bool SyncStateManager::CheckCleaningFlag()
 
 void SyncStateManager::SetCleaningFlag()
 {
-    std::unique_lock<std::shared_mutex> lck(cleanMutex_);
     syncSignal.set(static_cast<uint32_t>(SignalPos::CLEANING));
     nextAction_ = Action::STOP;
 }
 
 Action SyncStateManager::ClearCleaningFlag()
 {
-    std::unique_lock<std::shared_mutex> lck(cleanMutex_);
     syncSignal.reset(static_cast<uint32_t>(SignalPos::CLEANING));
     stopSyncFlag_ = false;
     return nextAction_;
@@ -82,14 +80,12 @@ bool SyncStateManager::CheckDisableCloudFlag()
 
 void SyncStateManager::SetDisableCloudFlag()
 {
-    std::unique_lock<std::shared_mutex> lck(disableCloudMutex_);
     syncSignal.set(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD));
     nextAction_ = Action::STOP;
 }
 
 Action SyncStateManager::ClearDisableCloudFlag()
 {
-    std::unique_lock<std::shared_mutex> lck(disableCloudMutex_);
     syncSignal.reset(static_cast<uint32_t>(SignalPos::DISABLE_CLOUD));
     stopSyncFlag_ = false;
     return nextAction_;
