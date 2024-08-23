@@ -446,7 +446,6 @@ int32_t CloudSyncService::EnableCloud(const std::string &accoutId, const SwitchD
 
 int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions &cleanOptions)
 {
-    LOGI("Clean accountId is: %{public}s", accountId.c_str());
     for (auto &iter : cleanOptions.appActionsData) {
         LOGD("Clean key is: %s, value is: %d", iter.first.c_str(), iter.second);
     }
