@@ -38,24 +38,24 @@ namespace {
     static const int32_t MOCK2 = 2;
     static const int32_t MOCK3 = 3;
     static const int32_t MOCK4 = 4;
+    static const int32_t MOCKUSERID0 = 100;
+    static const int32_t MOCKUSERID1 = 1;
 }
 
 string FileOperationsHelper::GetCloudDiskRootPath(int32_t userId)
 {
-    return LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CLOUD;
+    if (userId == MOCKUSERID0 || userId == MOCKUSERID1) {
+        return "/data";
+    }
+    return "";
 }
 
 string FileOperationsHelper::GetCloudDiskLocalPath(int32_t userId, string fileName)
 {
-    if (fileName == "data") {
-        return LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) +
-               LOCAL_PATH_HMDFS_CLOUD_DATA;
-    } else if (fileName == "/") {
-        return GetCloudDiskRootPath(userId);
-    } else {
-        return LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) +
-               LOCAL_PATH_HMDFS_CLOUD_DATA + fileName;
+    if (userId == MOCKUSERID0) {
+        return "/data";
     }
+    return "";
 }
 
 void FileOperationsHelper::GetInodeAttr(shared_ptr<CloudDiskInode> ino, struct stat *statBuf)
@@ -103,6 +103,8 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::FindCloudDiskInode(struct Cloud
         ptr = nullptr;
     } else if (key == MOCK0) {
         ptr->parent = -1;
+        ptr->layer = CLOUD_DISK_INODE_FIRST_LAYER;
+        ptr->path = "";
     } else if (key == MOCK1) {
         ptr->parent = 0;
     } else if (key == MOCK2) {
@@ -150,17 +152,13 @@ shared_ptr<CloudDiskFile> FileOperationsHelper::FindCloudDiskFile(struct CloudDi
 
 int64_t FileOperationsHelper::FindLocalId(struct CloudDiskFuseData *data, const std::string &key)
 {
-    int64_t ret = -1;
-    shared_lock<shared_mutex> rLock(data->localIdLock, std::defer_lock);
-    rLock.lock();
-    auto it = data->localIdCache.find(key);
-    if (it != data->localIdCache.end()) {
-        ret = it->second;
-    } else {
-        ret = -1;
+    if (key == "1mock" || key == "0mock") {
+        return -1;
     }
-    rLock.unlock();
-    return ret;
+    if (data->userId == 1) {
+        return -1;
+    }
+    return 0;
 }
 
 void FileOperationsHelper::AddDirEntry(fuse_req_t req, std::string &buf, size_t &size, const char *name,
@@ -188,41 +186,9 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::GenerateCloudDiskInode(struct C
                                                                         const string &fileName,
                                                                         const string &path)
 {
-    std::unique_lock<std::shared_mutex> cWLock(data->cacheLock, std::defer_lock);
-    std::unique_lock<std::shared_mutex> lWLock(data->localIdLock, std::defer_lock);
     shared_ptr<CloudDiskInode> child = make_shared<CloudDiskInode>();
-    int32_t err = stat(path.c_str(), &child->stat);
-    if (err != 0) {
-        LOGE("GenerateCloudDiskInode %{public}s error, err: %{public}d", path.c_str(), errno);
+    if (data->userId == 1) {
         return nullptr;
-    }
-    child->stat.st_mode |= STAT_MODE_DIR;
-    auto parentInode = FindCloudDiskInode(data, parent);
-    if (parentInode == nullptr) {
-        LOGE("parent inode not found");
-        return nullptr;
-    }
-    child->refCount++;
-    child->parent = parent;
-    child->path = path;
-    child->layer = GetNextLayer(parentInode, parent);
-    int64_t localId = GetFixedLayerRootId(child->layer);
-    if (child->layer >= CLOUD_DISK_INODE_FIRST_LAYER) {
-        std::lock_guard<std::shared_mutex> bWLock(data->bundleNameIdLock);
-        data->bundleNameId++;
-        localId = data->bundleNameId + BUNDLE_NAME_OFFSET;
-    }
-    child->stat.st_ino = static_cast<uint64_t>(localId);
-    child->ops = make_shared<FileOperationsLocal>();
-    cWLock.lock();
-    data->inodeCache[localId] = child;
-    cWLock.unlock();
-    lWLock.lock();
-    data->localIdCache[path] = localId;
-    lWLock.unlock();
-    if (child->layer == CLOUD_DISK_INODE_FIRST_LAYER) {
-        child->bundleName = fileName;
-        child->ops = make_shared<FileOperationsCloud>();
     }
     return child;
 }
