@@ -18,18 +18,21 @@
 
 #include <atomic>
 #include <shared_mutex>
+#include <bitset>
 
 #include "data_sync_const.h"
 namespace OHOS::FileManagement::CloudSync {
 enum class SyncState : int32_t {
     INIT = 0,
     SYNCING,
-    CLEANING,
     SYNC_FAILED,
     SYNC_SUCCEED,
-    CLEAN_SUCCEED,
+};
+
+enum class SignalPos: int32_t {
+    CLEANING = 0,
     DISABLE_CLOUD,
-    DISABLE_CLOUD_SUCCEED,
+    END,
 };
 
 enum class Action : int32_t {
@@ -44,9 +47,13 @@ public:
     Action UpdateSyncState(SyncState newState);
     bool CheckAndSetPending(bool forceFlag, SyncTriggerType triggerType);
     void SetCleaningFlag();
+    Action ClearCleaningFlag();
+    bool CheckCleaningFlag();
     bool GetStopSyncFlag();
     void SetStopSyncFlag();
     void SetDisableCloudFlag();
+    Action ClearDisableCloudFlag();
+    bool CheckDisableCloudFlag();
     SyncState GetSyncState() const;
     bool GetForceFlag() const;
 
@@ -54,6 +61,8 @@ private:
     mutable std::shared_mutex syncMutex_;
     SyncState state_{SyncState::INIT};
     Action nextAction_{Action::STOP};
+    //pos0: is_cleaning, pos1: is_disable_cloud
+    std::bitset<static_cast<unsigned long>(SignalPos::END)> syncSignal;
     std::atomic_bool isForceSync_{false};
     std::atomic_bool stopSyncFlag_{false};
 };
