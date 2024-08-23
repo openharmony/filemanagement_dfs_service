@@ -328,14 +328,12 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
         LOGE("bad metafile fd");
         return EINVAL;
     }
-
     off_t pos = 0;
     uint32_t level = 0;
     uint32_t bitPos = 0;
     uint32_t namehash = 0;
     unsigned long bidx;
     HmdfsDentryGroup dentryBlk = {0};
-
     std::unique_lock<std::mutex> lock(mtx_);
     FileRangeLock fileLock(fd_, 0, 0);
     namehash = CloudDisk::CloudFileUtils::DentryHash(base.name);
