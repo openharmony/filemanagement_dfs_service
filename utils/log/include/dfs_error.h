@@ -27,6 +27,7 @@ constexpr int STORAGE_SERVICE_SYS_CAP_TAG = 13600000;
 constexpr int DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG = 22400000;
 
 enum CloudSyncServiceErrCode : ErrCode {
+    E_GET_SIZE_ERROR = -1,
     E_OK = 0,
     E_SEVICE_DIED,
     E_INVAL_ARG,
@@ -63,7 +64,6 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_LOCAL_STORAGE_FULL,
     E_OSACCOUNT,
     E_USER_LOCKED,
-    E_GET_SIZE_ERROR,
 
     E_IPC_READ_FAILED,
     E_IPC_WRITE_FAILED,
