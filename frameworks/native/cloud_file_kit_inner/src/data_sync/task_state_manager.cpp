@@ -102,6 +102,8 @@ void TaskStateManager::CancelUnloadTask()
 
 void TaskStateManager::DelayUnloadTask()
 {
+    const std::string temperatureSysparamSync = "persist.kernel.cloudsync.temperature_abnormal_sync";
+    const std::string temperatureSysparamThumb = "persist.kernel.cloudsync.temperature_abnormal_thumb";
     string systemLoadSync = system::GetParameter(temperatureSysparamSync, "");
     string systemLoadThumb = system::GetParameter(temperatureSysparamThumb, "");
     if (systemLoadSync == "true" || systemLoadThumb == "true") {
