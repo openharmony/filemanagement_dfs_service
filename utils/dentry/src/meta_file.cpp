@@ -286,8 +286,6 @@ static bool UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
     de->namelen = name.length();
     errno_t ret = memcpy_s(d.fileName[bitPos], slots * DENTRY_NAME_LEN, name.c_str(), name.length());
     if (ret != EOK) {
-        return;
-    } else {
         LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", slots * DENTRY_NAME_LEN, name.length());
         return false;
     }
@@ -295,7 +293,8 @@ static bool UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
     de->fileType = base.fileType;
     de->size = base.size;
     de->mode = base.mode;
-    if (memcpy_s(de->recordId, CLOUD_RECORD_ID_LEN, base.cloudId.c_str(), base.cloudId.length())) {
+    ret = memcpy_s(de->recordId, CLOUD_RECORD_ID_LEN, base.cloudId.c_str(), base.cloudId.length());
+    if (ret != EOK) {
         LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", CLOUD_RECORD_ID_LEN, base.cloudId.length());
         return false;
     }
