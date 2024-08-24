@@ -18,6 +18,7 @@
 
 #include "directory_ex.h"
 #include "meta_file.h"
+#include "dfs_error.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -362,5 +363,76 @@ HWTEST_F(CloudDiskDentryMetaFileTest, RemoveFromRecycleDentryfileTest001, TestSi
         GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfileTest001 ERROR";
     }
     GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfileTest001 End";
+}
+
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_GetDentryFilePath_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DfsService_GetDentryFilePath_001 Start";
+    try {
+        CloudDiskMetaFile mFile(100, "/", "id1");
+        string cacheFilePath = mFile.GetDentryFilePath();
+        EXPECT_EQ((cacheFilePath != ""), true);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DfsService_GetDentryFilePath_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DfsService_GetDentryFilePath_001 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndUpdate_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DfsService_DoLookupAndUpdate_001 Start";
+    try {
+        string fileName = "testLongLongfileName";
+        string cloudId = "testLongLongfileName";
+        unsigned long long size = 0x6b6b6b6b00000000;
+        MetaBase metaBase(fileName, cloudId);
+        metaBase.size = size;
+        auto callback = [&metaBase] (MetaBase &m) {
+            m.size = metaBase.size;
+        };
+        
+        auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(TEST_USER_ID, "/o/p/q/r/s/t", "id1");
+        int32_t ret = metaFile->DoLookupAndUpdate(fileName, callback);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DfsService_DoLookupAndUpdate_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DfsService_DoLookupAndUpdate_001 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoChildUpdate_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DfsService_DoChildUpdate_001 Start";
+    try {
+        string name = "testName";
+        CloudDiskMetaFile mFile(100, "/", "id1");
+        CloudDiskMetaFile::CloudDiskMetaFileCallBack updateFunc;
+
+        int32_t ret = mFile.DoChildUpdate(name, updateFunc);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DfsService_DoChildUpdate_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DfsService_DoChildUpdate_001 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndRemove_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DfsService_DoLookupAndRemove_001 Start";
+    try {
+        CloudDiskMetaFile mFile(100, "com.ohos.photos", "rootId");
+        MetaBase mBase1(".trash", "rootId");
+
+        int32_t ret = mFile.DoLookupAndRemove(mBase1);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DfsService_DoLookupAndRemove_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DfsService_DoLookupAndRemove_001 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

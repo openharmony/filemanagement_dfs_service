@@ -76,6 +76,7 @@ ohos_unittest("dentry_meta_file_clouddisk_test") {
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
