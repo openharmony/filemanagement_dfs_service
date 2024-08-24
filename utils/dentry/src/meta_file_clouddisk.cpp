@@ -355,12 +355,11 @@ int32_t CloudDiskMetaFile::DoCreate(const MetaBase &base)
     off_t pos = 0;
     uint32_t level = 0;
     uint32_t bitPos = 0;
-    uint32_t namehash = 0;
     unsigned long bidx = 0;
     HmdfsDentryGroup dentryBlk = {0};
     std::unique_lock<std::mutex> lock(mtx_);
     FileRangeLock fileLock(fd_, 0, 0);
-    namehash = CloudDisk::CloudFileUtils::DentryHash(base.name);
+    uint32_t namehash = CloudDisk::CloudFileUtils::DentryHash(base.name);
     bool found = false;
     while (!found) {
         if (level == MAX_BUCKET_LEVEL) {
@@ -374,8 +373,7 @@ int32_t CloudDiskMetaFile::DoCreate(const MetaBase &base)
         }
         for (; bidx < endBlock; bidx++) {
             pos = GetDentryGroupPos(bidx);
-            int size = FileUtils::ReadFile(fd_, pos, DENTRYGROUP_SIZE, &dentryBlk);
-            if (size != DENTRYGROUP_SIZE) {
+            if (FileUtils::ReadFile(fd_, pos, DENTRYGROUP_SIZE, &dentryBlk) != DENTRYGROUP_SIZE) {
                 return ENOENT;
             }
             bitPos = RoomForFilename(dentryBlk.bitmap, GetDentrySlots(base.name.length()), DENTRY_PER_GROUP);
