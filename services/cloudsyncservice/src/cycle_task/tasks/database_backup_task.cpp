@@ -35,8 +35,13 @@ int32_t DatabaseBackupTask::RunTaskForBundle(int32_t userId, std::string bundleN
     auto directoryName = "/data/service/el1/public/cloudfile/" +
         to_string(userId) + "/" + bundleName + "/backup";
     if (access(directoryName.c_str(), F_OK) != 0) {
-        if (mkdir(directoryName.c_str(), STAT_MODE_DIR) != 0) {
-            LOGE("mkdir backup failed :%{public}s err:%{public}d", directoryName.c_str(), errno);
+        if (errno == ENOENT) {
+            if (mkdir(directoryName.c_str(), STAT_MODE_DIR) != 0) {
+                LOGE("mkdir backup failed :%{public}s err:%{public}d", GetAnonyString(directoryName).c_str(), errno);
+                return errno;
+            }
+        } else {
+            LOGE("access backup dir failed :%{public}s err:%{public}d", GetAnonyString(directoryName).c_str(), errno);
             return errno;
         }
     }
