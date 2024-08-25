@@ -39,8 +39,8 @@ SoftbusAdapter &SoftbusAdapter::GetInstance()
 int32_t SoftbusAdapter::CreateSessionServer(const char *packageName, const char *sessionName)
 {
     SocketInfo info = {
-        .name = const_cast<char*>(sessionName),
-        .pkgName = const_cast<char*>(packageName),
+        .name = strdup(sessionName),
+        .pkgName = strdup(packageName),
     };
     int socket = ::Socket(info);
     if (socket <= 0) {
@@ -81,7 +81,7 @@ int32_t SoftbusAdapter::RemoveSessionServer(const char *packageName, const char 
     std::string val = std::string(sessionName) + std::string(packageName);
     int32_t socket = SoftbusAdapter::GetInstance().GetSocketNameFromMap(val);
     string existSessionName = SoftbusAdapter::GetInstance().GetSessionNameFromMap(socket);
-    if (existSessionName.c_str() != sessionName) {
+    if (strcmp(existSessionName.c_str(), sessionName) != 0) {
         LOGE("Failed to RemoveSessionServer sessionName:%{public}s", sessionName);
         return ERR_BAD_VALUE;
     }
@@ -210,7 +210,7 @@ int SoftbusAdapter::OpenSession(char *sessionName,
         .name = sessionName,
         .peerName = sessionName,
         .peerNetworkId = peerDeviceId,
-        .pkgName = const_cast<char*>(SERVICE_NAME.c_str()),
+        .pkgName = strdup(SERVICE_NAME.c_str()),
         .dataType = dataType,
     };
     int32_t socket = Socket(info);
