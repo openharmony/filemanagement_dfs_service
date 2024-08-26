@@ -398,12 +398,12 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         child->mBase = make_shared<MetaBase>(mBase);
         child->path = childName;
         child->parent = parent;
-        auto xcollieId = XcollieCallback::SetTimer("CloudFileDaemon_CloudLookup", LOOKUP_TIMEOUT_S,
+        auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudLookup", LOOKUP_TIMEOUT_S,
             XcollieCallback, child.get(), false);
         wLock.lock();
         data->inodeCache[child->path] = child;
         wLock.unlock();
-        XCollieCallback::CancelTimer(xcollieId);
+        XCollieHelper::CancelTimer(xcollieId);
     } else if (*(child->mBase) != mBase) {
         LOGW("invalidate %s", childName.c_str());
         child->mBase = make_shared<MetaBase>(mBase);
@@ -438,12 +438,12 @@ static void PutNode(struct FuseData *data, shared_ptr<CloudInode> node, uint64_t
          GetAnonyString(node->path).c_str(), (long long)num,  node->refCount.load());
     if (node->refCount == 0) {
         LOGD("node released: %s", GetAnonyString(node->path).c_str());
-        auto xcollieId = XcollieCallback::SetTimer("CloudFileDaemon_CloudForget", FORGET_TIMEOUT_S,
+        auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudForget", FORGET_TIMEOUT_S,
             XcollieCallback, node.get(), false);
         wLock.lock();
         data->inodeCache.erase(node->path);
         wLock.unlock();
-        XCollieCallback::CancelTimer(xcollieId);
+        XCollieHelper::CancelTimer(xcollieId);
     }
 }
 
