@@ -1071,7 +1071,7 @@ static void InitReadSlice(size_t size, off_t off, ReadSlice &readSlice)
         readSlice.sizeHead = static_cast<size_t>(readSlice.offTail - readSlice.offHead);
         readSlice.sizeTail = MAX_READ_SIZE;
     } else {
-        readSlice.sizeHead = static_cast<size_t>(readSlice.offHead + MAX_READ_SIZE - readSlice.offHead);
+        readSlice.sizeHead = static_cast<size_t>(readSlice.offTail + MAX_READ_SIZE - readSlice.offHead);
     }
     if ((static_cast<off_t>(size) + off) % MAX_READ_SIZE == 0) {
         readSlice.offTail -= MAX_READ_SIZE;
