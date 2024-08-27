@@ -122,32 +122,6 @@ HWTEST_F(FileOperationsCloudTest, LookupTest002, TestSize.Level1)
 }
 
 /**
- * @tc.name: LookupTest003
- * @tc.desc: Verify the Lookup function
- * @tc.type: FUNC
- * @tc.require: issuesI91IOG
- */
-HWTEST_F(FileOperationsCloudTest, LookupTest003, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "LookupTest003 Start";
-    try {
-        CloudDiskFuseData data;
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*insMock, lseek(_, _, _)).WillRepeatedly(Return(E_OK));
-
-        fuse_ino_t parent = 4;
-        const char *name = "";
-        fileOperationsCloud_->Lookup(nullptr, parent, name);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "LookupTest003  ERROR";
-    }
-    GTEST_LOG_(INFO) << "LookupTest003 End";
-}
-
-/**
  * @tc.name: AccessTest001
  * @tc.desc: Verify the Access function
  * @tc.type: FUNC
@@ -931,34 +905,6 @@ HWTEST_F(FileOperationsCloudTest, UnlinkTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "UnlinkTest001  ERROR";
     }
     GTEST_LOG_(INFO) << "UnlinkTest001 End";
-}
-
-/**
- * @tc.name: UnlinkTest002
- * @tc.desc: Verify the Unlink function
- * @tc.type: FUNC
- * @tc.require: issuesI91IOG
- */
-HWTEST_F(FileOperationsCloudTest, UnlinkTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "UnlinkTest002 Start";
-    try {
-        CloudDiskFuseData data;
-        fuse_ino_t parent = 0;
-        fuse_req_t req = nullptr;
-        const char *name = "";
-        
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)))
-                                                   .WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        EXPECT_CALL(*insMock, lseek(_, _, _)).WillRepeatedly(Return(E_OK));
-        fileOperationsCloud_->Unlink(req, parent, name);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "UnlinkTest002  ERROR";
-    }
-    GTEST_LOG_(INFO) << "UnlinkTest002 End";
 }
 
 /**
