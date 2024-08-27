@@ -16,6 +16,7 @@
 #include "periodic_check_task.h"
 #include "parameters.h"
 #include "screen_status.h"
+#include "system_load.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -31,9 +32,10 @@ PeriodicCheckTask::PeriodicCheckTask(std::shared_ptr<CloudFile::DataSyncManager>
 
 int32_t PeriodicCheckTask::RunTaskForBundle(int32_t userId, std::string bundleName)
 {
-    if (ScreenStatus::IsScreenOn() || !BatteryStatus::IsCharging()) {
-        LOGI("PeriodicCheckTask stopped becasue screen on");
-        return E_PENDING;
+    if (ScreenStatus::IsScreenOn() || !BatteryStatus::IsCharging()
+        || !SystemLoadStatus::IsLoadStatusUnderHot()) {
+        LOGI("PeriodicCheckTask::RunTaskForBundle isScreenOn or not charging");
+        return E_STOP;
     }
     int32_t ret = dataSyncManager_->TriggerStartSync(bundleName, userId, false, SyncTriggerType::TASK_TRIGGER);
     if (ret != E_OK) {

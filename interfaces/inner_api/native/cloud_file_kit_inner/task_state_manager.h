@@ -52,8 +52,6 @@ private:
     ffrt::queue queue_;
     ffrt::task_handle unloadTaskHandle_;
     ffrt::mutex unloadTaskMutex_;
-    const std::string temperatureSysparamSync = "persist.kernel.cloudsync.temperature_abnormal_sync";
-    const std::string temperatureSysparamThumb = "persist.kernel.cloudsync.temperature_abnormal_thumb";
 };
 }
 #endif // OHOS_FILEMGMT_TASK_STATE_MANAGER_H

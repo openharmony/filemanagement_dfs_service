@@ -15,6 +15,7 @@
 #include "system_load.h"
 
 #include "dfs_error.h"
+#include "parameters.h"
 #include "utils_log.h"
 #include "res_sched_client.h"
 
@@ -38,13 +39,20 @@ void SystemLoadStatus::RegisterSystemloadCallback(std::shared_ptr<CloudFile::Dat
 void SystemLoadListener::OnSystemloadLevel(int32_t level)
 {
     SystemLoadStatus::Setload(level);
-    if (level > SYSTEMLOADLEVEL_OVERHEATED) {
-        LOGI("systemloadlevel over temperature");
-    } else if (level > SYSTEMLOADLEVEL_WARM) {
-        LOGE("systemloadlevel over warm");
-    } else if (level <= SYSTEMLOADLEVEL_NORMAL && dataSyncManager_) {
-        dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SYSTEM_LOAD_TRIGGER);
-        dataSyncManager_->DownloadThumb();
+    if (level > SYSTEMLOADLEVEL_HOT) {
+        LOGI("OnSystemloadLevel over warm");
+    } else if (level <= SYSTEMLOADLEVEL_WARM && dataSyncManager_) {
+        std::string systemLoadSync = system::GetParameter(TEMPERATURE_SYSPARAM_SYNC, "");
+        std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
+        LOGI("OnSystemloadLevel is noraml, level:%{public}d", level);
+        if (systemLoadSync == "true") {
+            system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "false");
+            dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SYSTEM_LOAD_TRIGGER);
+        }
+        if (systemLoadThumb == "true") {
+            system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "false");
+            dataSyncManager_->DownloadThumb();
+        }
     }
 }
 
@@ -65,17 +73,13 @@ void SystemLoadStatus::InitSystemload(std::shared_ptr<CloudFile::DataSyncManager
     RegisterSystemloadCallback(dataSyncManager);
 }
 
-bool SystemLoadStatus::IsLoadStatusUnderHeat()
+bool SystemLoadStatus::IsLoadStatusUnderHot(bool setFlag)
 {
-    if (loadstatus_ > SYSTEMLOADLEVEL_OVERHEATED) {
-        return false;
-    }
-    return true;
-}
-
-bool SystemLoadStatus::IsLoadStatusUnderWarm()
-{
-    if (loadstatus_ > SYSTEMLOADLEVEL_WARM) {
+    if (loadstatus_ > SYSTEMLOADLEVEL_HOT) {
+        if (setFlag) {
+            LOGI("SetSystemloadLevel TEMPERATURE_SYSPARAM_THUMB true");
+            system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "true");
+        }
         return false;
     }
     return true;
