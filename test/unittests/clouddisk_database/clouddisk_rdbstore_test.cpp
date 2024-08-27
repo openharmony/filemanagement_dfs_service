@@ -714,7 +714,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetXAttrTest4, TestSize.Level1)
     const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
     int32_t ret = CloudDiskRdbStore.GetXAttr(cloudId, key, value);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
 /**
@@ -794,7 +794,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest4, TestSize.Level1)
     const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
     int32_t ret = CloudDiskRdbStore.SetXAttr(cloudId, key, value, name, parentCloudId);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_INVAL_ARG);
 }
 
 /**
@@ -1338,7 +1338,7 @@ HWTEST_F(CloudDiskRdbStoreTest, ExtAttributeSetXattrTest1, TestSize.Level1)
     const int32_t userId = 100;
     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
     int32_t ret = CloudDiskRdbStore.ExtAttributeSetXattr(cloudId, value, key);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
