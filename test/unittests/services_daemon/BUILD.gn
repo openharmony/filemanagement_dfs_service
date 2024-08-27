@@ -74,6 +74,11 @@ ohos_unittest("fuse_manager_test") {
     "LOG_TAG=\"CloudFileDaemon\"",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
   use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
@@ -202,6 +207,11 @@ ohos_unittest("cloud_daemon_test") {
     "LOG_DOMAIN=0xD004308",
     "LOG_TAG=\"CloudFileDaemon\"",
   ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
 
   use_exceptions = true
   part_name = "dfs_service"
