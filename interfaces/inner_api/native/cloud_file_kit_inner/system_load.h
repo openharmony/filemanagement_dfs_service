@@ -23,16 +23,19 @@
 #include "sync_state_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
-constexpr int32_t SYSTEMLOADLEVEL = ResourceSchedule::ResType::SystemloadLevel::WARNING;
+constexpr int32_t SYSTEMLOADLEVEL_HOT = ResourceSchedule::ResType::SystemloadLevel::HIGH;
+constexpr int32_t SYSTEMLOADLEVEL_WARM = ResourceSchedule::ResType::SystemloadLevel::MEDIUM;
+const std::string TEMPERATURE_SYSPARAM_SYNC = "persist.kernel.cloudsync.temperature_abnormal_sync";
+const std::string TEMPERATURE_SYSPARAM_THUMB = "persist.kernel.cloudsync.temperature_abnormal_thumb";
 
 class SystemLoadStatus {
 public:
     SystemLoadStatus() = default;
     virtual ~SystemLoadStatus() = default;
-    static void RegisterSystemloadCallback();
+    static void RegisterSystemloadCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void GetSystemloadLevel();
-    static bool IsLoadStatusOkay();
-    static void InitSystemload();
+    static bool IsLoadStatusUnderHot(bool setFlag = false);
+    static void InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void Setload(int32_t load);
     static inline int32_t loadstatus_ = 0;
 };
@@ -41,6 +44,9 @@ class SystemLoadListener : public ResourceSchedule::ResSchedSystemloadNotifierCl
 public:
     SystemLoadListener() = default;
     void OnSystemloadLevel(int32_t level) override;
+    void SetDataSycner(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
+private:
+    std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_ = nullptr;
 };
 } // OHOS
 

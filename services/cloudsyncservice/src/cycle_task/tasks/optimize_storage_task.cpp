@@ -15,6 +15,7 @@
 
 #include "optimize_storage_task.h"
 #include "cloud_file_kit.h"
+#include "system_load.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -27,6 +28,10 @@ OptimizeStorageTask::OptimizeStorageTask(std::shared_ptr<CloudFile::DataSyncMana
 
 int32_t OptimizeStorageTask::RunTaskForBundle(int32_t userId, std::string bundleName)
 {
+    if (!SystemLoadStatus::IsLoadStatusUnderHot()) {
+        LOGE("OptimizeStorageTask::RunTaskForBundle system load is over hot");
+        return E_STOP;
+    }
     auto instance = CloudFile::CloudFileKit::GetInstance();
     if (instance == nullptr) {
         LOGE("get cloud file helper instance failed");
