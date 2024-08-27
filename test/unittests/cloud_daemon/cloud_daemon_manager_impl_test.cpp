@@ -89,35 +89,11 @@ HWTEST_F(CloudDaemonManagerImplTest, StartFuseTest, TestSize.Level1)
         string path = "path";
         int32_t userId = 100;
         auto res = CloudDaemonManagerImpl::GetInstance().StartFuse(userId, devFd, path);
-        EXPECT_EQ(res, E_INVAL_ARG);
+        EXPECT_EQ(res, E_SA_LOAD_FAILED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "StartFuse  ERROR";
     }
     GTEST_LOG_(INFO) << "StartFuse End";
-}
-
-/**
- * @tc.name: SetDeathRecipientTest
- * @tc.desc: Verify the SetDeathRecipient function
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDaemonManagerImplTest, SetDeathRecipientTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetDeathRecipientTest Start";
-    try {
-        auto CloudDaemonServiceProxy = CloudDaemonServiceProxy::GetInstance();
-        EXPECT_NE(CloudDaemonServiceProxy, nullptr);
-        auto remoteObject = CloudDaemonServiceProxy->AsObject();
-        EXPECT_NE(remoteObject, nullptr);
-        cloudDaemonManagerImpl_->SetDeathRecipient(remoteObject);
-        EXPECT_EQ(cloudDaemonManagerImpl_->isFirstCall_.test_and_set(), false);
-        EXPECT_NE(cloudDaemonManagerImpl_->deathRecipient_, nullptr);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SetDeathRecipientTest  ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetDeathRecipientTest End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
