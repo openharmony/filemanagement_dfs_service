@@ -44,6 +44,10 @@ public:
     {
         return 0;
     }
+    int Close()
+    {
+        return 0;
+    }
 };
 
 }

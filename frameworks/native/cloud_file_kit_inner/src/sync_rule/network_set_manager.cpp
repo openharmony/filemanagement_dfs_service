@@ -61,16 +61,20 @@ int32_t NetworkSetManager::QueryCellularConnect(int32_t userId, const std::strin
         return E_RDB;
     }
     if (resultSet->GoToFirstRow() != E_OK) {
+        resultSet->Close();
         return E_RDB;
     }
     int32_t columnIndex = 0;
     if (resultSet->GetColumnIndex(BUNDLE_NAME_VALUE, columnIndex) != E_OK) {
+        resultSet->Close();
         return E_RDB;
     }
     int64_t status = -1;
     if (resultSet->GetLong(columnIndex, status) != E_OK) {
+        resultSet->Close();
         return E_RDB;
     }
+    resultSet->Close();
     std::string queryKey = std::to_string(userId) + "/" + bundleName;
     if (status == 1) {
         cellularNetMap_.EnsureInsert(queryKey, true);
@@ -104,16 +108,20 @@ int32_t NetworkSetManager::QueryNetConnect(int32_t userId, const std::string &bu
         return E_RDB;
     }
     if (resultSet->GoToFirstRow() != E_OK) {
+        resultSet->Close();
         return E_RDB;
     }
     int32_t columnIndex = 0;
     if (resultSet->GetColumnIndex(BUNDLE_NAME_VALUE, columnIndex) != E_OK) {
+        resultSet->Close();
         return E_RDB;
     }
     std::string val;
     if (resultSet->GetString(columnIndex, val) != E_OK) {
+        resultSet->Close();
         return E_RDB;
     }
+    resultSet->Close();
     std::string queryKey = std::to_string(userId) + "/" + bundleName;
     if (val == "on") {
         netMap_.EnsureInsert(queryKey, true);
