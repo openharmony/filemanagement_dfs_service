@@ -228,8 +228,8 @@ ohos_unittest("clouddisk_notify_test") {
     "${distributedfile_path}/services/clouddisk_database/src/clouddisk_rdb_utils.cpp",
     "${distributedfile_path}/services/clouddisk_database/src/clouddisk_sync_helper.cpp",
     "${distributedfile_path}/services/clouddisk_database/src/file_column.cpp",
-    "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_notify_utils_mock.cpp",
     "${distributedfile_path}/test/unittests/cloud_disk/mock/clouddisk_rdbstore_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_notify_utils_mock.cpp",
     "clouddisk_notify_test.cpp",
   ]
 
