@@ -375,7 +375,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         LOGD("new child %s", GetAnonyString(child->path).c_str());
     }
     MetaBase mBase(name);
-    err = MetaFile(data->userId, GetCloudInode(data, parent)->path).DoLookup(mBase);
+    err = MetaFile(data->userId, parentName).DoLookup(mBase);
     if (err) {
         LOGE("lookup %s error, err: %{public}d", childName.c_str(), err);
         return err;
