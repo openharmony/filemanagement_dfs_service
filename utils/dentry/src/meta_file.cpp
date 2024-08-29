@@ -275,7 +275,7 @@ static uint32_t RoomForFilename(const uint8_t bitmap[], size_t slots, uint32_t m
     return 0;
 }
 
-static void UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nameHash, uint32_t bitPos)
+static bool UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nameHash, uint32_t bitPos)
 {
     HmdfsDentry *de;
     const std::string name = base.name;
@@ -286,16 +286,17 @@ static void UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
     de->namelen = name.length();
     errno_t ret = memcpy_s(d.fileName[bitPos], slots * DENTRY_NAME_LEN, name.c_str(), name.length());
     if (ret != EOK) {
-        return;
-    } else {
         LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", slots * DENTRY_NAME_LEN, name.length());
+        return false;
     }
     de->mtime = base.mtime;
     de->fileType = base.fileType;
     de->size = base.size;
     de->mode = base.mode;
-    if (memcpy_s(de->recordId, CLOUD_RECORD_ID_LEN, base.cloudId.c_str(), base.cloudId.length())) {
+    ret = memcpy_s(de->recordId, CLOUD_RECORD_ID_LEN, base.cloudId.c_str(), base.cloudId.length());
+    if (ret != EOK) {
         LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", CLOUD_RECORD_ID_LEN, base.cloudId.length());
+        return false;
     }
 
     for (uint32_t i = 0; i < slots; i++) {
@@ -304,6 +305,7 @@ static void UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
             (de + i)->namelen = 0;
         }
     }
+    return true;
 }
 
 int32_t MetaFile::HandleFileByFd(unsigned long &endBlock, uint32_t &level)
@@ -330,13 +332,12 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
     off_t pos = 0;
     uint32_t level = 0;
     uint32_t bitPos = 0;
-    uint32_t namehash = 0;
     unsigned long bidx;
     HmdfsDentryGroup dentryBlk = {0};
 
     std::unique_lock<std::mutex> lock(mtx_);
     FileRangeLock fileLock(fd_, 0, 0);
-    namehash = CloudDisk::CloudFileUtils::DentryHash(base.name);
+    uint32_t namehash = CloudDisk::CloudFileUtils::DentryHash(base.name);
 
     bool found = false;
     while (!found) {
@@ -353,8 +354,7 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
 
         for (; bidx < endBlock; bidx++) {
             pos = GetDentryGroupPos(bidx);
-            int size = FileUtils::ReadFile(fd_, pos, DENTRYGROUP_SIZE, &dentryBlk);
-            if (size != DENTRYGROUP_SIZE) {
+            if (FileUtils::ReadFile(fd_, pos, DENTRYGROUP_SIZE, &dentryBlk) != DENTRYGROUP_SIZE) {
                 return ENOENT;
             }
             bitPos = RoomForFilename(dentryBlk.bitmap, GetDentrySlots(base.name.length()), DENTRY_PER_GROUP);
@@ -367,7 +367,10 @@ int32_t MetaFile::DoCreate(const MetaBase &base)
     }
 
     pos = GetDentryGroupPos(bidx);
-    UpdateDentry(dentryBlk, base, namehash, bitPos);
+    if (!UpdateDentry(dentryBlk, base, namehash, bitPos)) {
+        LOGI("UpdateDentry fail, stop write.");
+        return EINVAL;
+    }
     int size = FileUtils::WriteFile(fd_, &dentryBlk, pos, DENTRYGROUP_SIZE);
     if (size != DENTRYGROUP_SIZE) {
         LOGI("WriteFile failed, size %{public}d != %{public}d", size, DENTRYGROUP_SIZE);
