@@ -27,6 +27,7 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 using namespace CloudFile;
+using Want = OHOS::AAFwk::Want;
 
 class BatteryStatusListenerTest : public testing::Test {
 public:
@@ -96,5 +97,109 @@ HWTEST_F(BatteryStatusListenerTest, OnStatusAbnormalTest, TestSize.Level1)
         GTEST_LOG_(INFO) << " OnStatusAbnormalTest FAILED";
     }
     GTEST_LOG_(INFO) << "OnStatusAbnormalTest End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest001 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_OKAY);
+        EventFwk::CommonEventData eventData(want);
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
+        auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
+            batteryStatusListener);
+        subscriber->OnReceiveEvent(eventData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnReceiveEventTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest001 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest002 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_CHARGING);
+        EventFwk::CommonEventData eventData(want);
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
+        auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
+            batteryStatusListener);
+        subscriber->OnReceiveEvent(eventData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnReceiveEventTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest002 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest003 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_DISCHARGING);
+        EventFwk::CommonEventData eventData(want);
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
+        auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
+            batteryStatusListener);
+        subscriber->OnReceiveEvent(eventData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnReceiveEventTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest003 End";
+}
+
+/**
+ * @tc.name: OnReceiveEventTest
+ * @tc.desc: Verify the OnReceiveEvent function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnReceiveEventTest004 Start";
+    try {
+        Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED);
+        EventFwk::CommonEventData eventData(want);
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
+        auto subscriber = std::make_shared<BatteryStatusSubscriber>(EventFwk::CommonEventSubscribeInfo(),
+            batteryStatusListener);
+        subscriber->OnReceiveEvent(eventData);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnReceiveEventTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnReceiveEventTest004 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

@@ -64,7 +64,11 @@ ohos_unittest("battery_status_listener_test") {
     "samgr:samgr_proxy",
   ]
 
-  defines = [ "private=public" ]
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_TEST\"",
+  ]
   if (cloudsync_service_resource_schedule) {
     external_deps += [ "resource_schedule_service:ressched_client" ]
     defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
