@@ -1,0 +1,154 @@
+/*
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef OHOS_CLOUD_SYNC_SERVICE_CLOUD_FILE_FAULT_EVENT_H
+#define OHOS_CLOUD_SYNC_SERVICE_CLOUD_FILE_FAULT_EVENT_H
+
+#include "cloud_file_log.h"
+#include "hisysevent.h"
+
+#define CLOUD_SYNC_FAULT_REPORT(...) CloudFile::CloudSyncFaultReport(__FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define CLOUD_FILE_FAULT_REPORT(...) CloudFile::CloudFileFaultReport(__FUNCTION__, __LINE__, ##__VA_ARGS__)
+
+namespace OHOS {
+namespace FileManagement {
+namespace CloudFile {
+#define CLOUD_SYNC_SYS_EVENT(eventName, type, ...)                                  \
+    HiSysEventWrite(HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT, eventName, type, \
+                    ##__VA_ARGS__)
+
+struct CloudSyncFaultEvent {
+    std::string bundleName_;
+    uint32_t faultScenario_;
+    uint32_t faultType_;
+    int32_t faultErrorCode_;
+    std::string message_;
+};
+
+struct CloudFileFaultEvent {
+    std::string bundleName_;
+    uint32_t faultOperation_;
+    uint32_t faultType_;
+    int32_t faultErrorCode_;
+    std::string message_;
+};
+
+enum class FaultScenarioCode {
+    CLOUD_FULL_SYNC = 100,
+    CLOUD_INC_SYNC = 200,
+    CLOUD_CHECK_SYNC = 300,
+    CLOUD_SWITCH_CLOSE = 400,
+    CLOUD_LOAD_VIDEO_CACHE = 500,
+    CLOUD_DOWNLOAD_FILE = 600,
+    CLOUD_DOWNLOAD_THUM = 700,
+    CLOUD_OPTIMMIZE_STORAGE = 800,
+    CLOUD_PROCESS_EXIT_START = 900,
+    CLOUD_ACCOUNT_EXIT = 1000
+};
+
+enum class FaultOperation {
+    LOOKUP = 100,
+    FORGET = 200,
+    GETATTR = 300,
+    OPEN = 400,
+    READ = 500,
+    READDIR = 600,
+    RELEASE = 700,
+    FORGETMULTI = 800,
+    IOCTL = 900
+};
+
+enum class FaultType {
+    /* file fault type */
+    FILE = 10000000,
+    DENTRY_FILE = 10000001,
+    INODE_FILE = 10000002,
+
+    /* driverkit fault type */
+    DRIVERKIT = 20000000,
+    DRIVERKIT_NETWORK = 20000001,
+    DRIVERKIT_SERVER = 20000002,
+    DRIVERKIT_LOCAL = 20000003,
+    DRIVERKIT_DATABASE = 20000004,
+    DRIVERKIT_READSESSION = 20000005,
+
+    /* timeout fault type */
+    TIMEOUT = 30000000,
+    OPEN_CLOUD_FILE_TIMEOUT = 30000001,
+    CLOUD_READ_FILE_TIMEOUT = 30000002,
+    CLOUD_FILE_LOOKUP_TIMEOUT = 30000003,
+    CLOUD_FILE_FORGET_TIMEOUT = 30000004,
+
+    /* temperature fault type */
+    TEMPERATURE = 40000000,
+
+    /* database fault type */
+    DATABASE = 50000000,
+    QUERY_DATABASE = 50000001,
+    INSERT_DATABASE = 50000002,
+    DELETE_DATABASE = 50000003,
+    MODIFY_DATABASE = 50000004,
+
+    /* consistency fault type */
+    CONSISTENCY = 60000000,
+    FILE_CONSISTENCY = 60000001,
+    META_CONSISTENCY = 60000002,
+
+    /* process fault type */
+    PROCESS = 70000000
+};
+
+int32_t CloudSyncFaultReport(const std::string &funcName,
+                             const int lineNum,
+                             const CloudSyncFaultEvent &event)
+{
+    int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_FILE_SYNC_FAULT",
+        HiviewDFX::HiSysEvent::EventType::FAULT,
+        "bundle_name", event.bundleName_,
+        "fault_scenario", event.faultScenario_,
+        "fault_type", event.faultType_,
+        "fault_error_code", event.faultErrorCode_,
+        "function_name", funcName + ":" + std::to_string(lineNum),
+        "message", event.message_);
+    if (ret != E_OK) {
+        LOGE("report CLOUD_FILE_SYNC_FAULT error %{public}d", ret);
+    }
+    LOGE("%{public}s", event.message_.c_str());
+    return event.faultErrorCode_;
+}
+
+int32_t CloudFileFaultReport(const std::string &funcName,
+                             const int lineNum,
+                             const CloudFileFaultEvent &event)
+{
+    int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_FILE_ACCESS_FAULT",
+        HiviewDFX::HiSysEvent::EventType::FAULT,
+        "bundle_name", event.bundleName_,
+        "fault_operation", event.faultOperation_,
+        "fault_type", event.faultType_,
+        "fault_error_code", event.faultErrorCode_,
+        "function_name", funcName + ":" + std::to_string(lineNum),
+        "message", event.message_);
+    if (ret != E_OK) {
+        LOGE("report CLOUD_FILE_ACCESS_FAULT error %{public}d", ret);
+    }
+    LOGE("%{public}s", event.message_.c_str());
+    return event.faultErrorCode_;
+}
+
+} // namespace CloudFile
+} // namespace FileManagement
+} // namespace OHOS
+
+#endif // OHOS_CLOUD_SYNC_SERVICE_CLOUD_FILE_FAULT_EVENT_H
