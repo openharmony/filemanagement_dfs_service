@@ -28,6 +28,25 @@ namespace FileManagement::CloudDisk {
 namespace Test {
 using namespace testing::ext;
 using namespace std;
+const int32_t MOCKUSERID = 0;
+const int32_t MOCK1 = 1;
+const int32_t MOCK2 = 2;
+
+std::shared_ptr<CloudDiskInode> MockFunc(CloudDiskFuseData* data, int64_t inode)
+{
+    if (data->userId == MOCKUSERID) {
+        return nullptr;
+    }
+    std::shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+    if (data->userId == MOCK1) {
+        inoPtr->parent = FUSE_ROOT_ID;
+    }
+    if (data->userId == MOCK2) {
+        inoPtr->parent = 0;
+        inoPtr->fileName = "";
+    }
+    return inoPtr;
+}
 
 class CloudDiskNotifyUtilsTest : public testing::Test {
 public:
@@ -67,12 +86,13 @@ HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetNotifyData Start";
     CloudDiskNotifyUtils CloudDiskNotifyUtils;
-    CloudDiskFuseData* data = nullptr;
-    FindCloudDiskInodeFunc func;
-    fuse_ino_t ino = 1;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    FindCloudDiskInodeFunc func = MockFunc;
+    fuse_ino_t ino = FUSE_ROOT_ID;
     NotifyData notifyData;
     int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, ino, notifyData);
     EXPECT_EQ(ret, E_INVAL_ARG);
+    delete data;
     GTEST_LOG_(INFO) << "GetNotifyData End";
 }
 
@@ -86,12 +106,14 @@ HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetNotifyData Start";
     CloudDiskNotifyUtils CloudDiskNotifyUtils;
-    CloudDiskFuseData* data = nullptr;
-    FindCloudDiskInodeFunc func;
-    shared_ptr<CloudDiskInode> inoPtr = nullptr;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    data->userId = MOCKUSERID;
+    FindCloudDiskInodeFunc func = MockFunc;
+    fuse_ino_t ino = 0;
     NotifyData notifyData;
-    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, inoPtr, notifyData);
+    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, ino, notifyData);
     EXPECT_EQ(ret, E_INVAL_ARG);
+    delete data;
     GTEST_LOG_(INFO) << "GetNotifyData End";
 }
 
@@ -105,13 +127,14 @@ HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest003, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetNotifyData Start";
     CloudDiskNotifyUtils CloudDiskNotifyUtils;
-    CloudDiskFuseData* data = nullptr;
-    FindCloudDiskInodeFunc func;
-    shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
-    inoPtr->parent = 1;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    data->userId = MOCK1;
+    FindCloudDiskInodeFunc func = MockFunc;
+    fuse_ino_t ino = 0;
     NotifyData notifyData;
-    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, inoPtr, notifyData);
+    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, ino, notifyData);
     EXPECT_EQ(ret, E_OK);
+    delete data;
     GTEST_LOG_(INFO) << "GetNotifyData End";
 }
 
@@ -125,13 +148,14 @@ HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest004, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetNotifyData Start";
     CloudDiskNotifyUtils CloudDiskNotifyUtils;
-    CloudDiskFuseData* data = nullptr;
-    FindCloudDiskInodeFunc func;
-    shared_ptr<CloudDiskInode> inoPtr = nullptr;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    data->userId = MOCK2;
+    FindCloudDiskInodeFunc func = MockFunc;
+    fuse_ino_t ino = 0;
     NotifyData notifyData;
-    string name = "test";
-    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, inoPtr, name, notifyData);
-    EXPECT_EQ(ret, E_INVAL_ARG);
+    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, ino, notifyData);
+    EXPECT_EQ(ret, E_OK);
+    delete data;
     GTEST_LOG_(INFO) << "GetNotifyData End";
 }
 
@@ -145,15 +169,140 @@ HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest005, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetNotifyData Start";
     CloudDiskNotifyUtils CloudDiskNotifyUtils;
-    CloudDiskFuseData* data = nullptr;
-    FindCloudDiskInodeFunc func;
-    shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
-    inoPtr->parent = 1;
-    inoPtr->fileName = "test";
-    NotifyData notifyData;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    data->userId = MOCKUSERID;
+    FindCloudDiskInodeFunc func = MockFunc;
+    fuse_ino_t parent = 0;
     string name = "test";
-    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, inoPtr, name, notifyData);
+    NotifyData notifyData;
+    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, parent, name, notifyData);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+    delete data;
+    GTEST_LOG_(INFO) << "GetNotifyData End";
+}
+
+/**
+ * @tc.name: GetNotifyDataTest006
+ * @tc.desc: Verify the GetNotifyData function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetNotifyData Start";
+    CloudDiskNotifyUtils CloudDiskNotifyUtils;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    data->userId = MOCK2;
+    FindCloudDiskInodeFunc func = MockFunc;
+    fuse_ino_t parent = 0;
+    string name = "test";
+    NotifyData notifyData;
+    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, parent, name, notifyData);
     EXPECT_EQ(ret, E_OK);
+    delete data;
+    GTEST_LOG_(INFO) << "GetNotifyData End";
+}
+
+/**
+ * @tc.name: GetNotifyDataTest007
+ * @tc.desc: Verify the GetNotifyData function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetNotifyData Start";
+    CloudDiskNotifyUtils CloudDiskNotifyUtils;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    FindCloudDiskInodeFunc func = MockFunc;
+    NotifyData notifyData;
+    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, nullptr, notifyData);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+    delete data;
+    GTEST_LOG_(INFO) << "GetNotifyData End";
+}
+
+/**
+ * @tc.name: GetNotifyDataTest008
+ * @tc.desc: Verify the GetNotifyData function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetNotifyData Start";
+    CloudDiskNotifyUtils CloudDiskNotifyUtils;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    FindCloudDiskInodeFunc func = MockFunc;
+    shared_ptr<CloudDiskInode> inoPtr = make_shared<CloudDiskInode>();
+    NotifyData notifyData;
+    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, inoPtr, notifyData);
+    EXPECT_EQ(ret, E_OK);
+    delete data;
+    GTEST_LOG_(INFO) << "GetNotifyData End";
+}
+
+/**
+ * @tc.name: GetNotifyDataTest009
+ * @tc.desc: Verify the GetNotifyData function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetNotifyData Start";
+    CloudDiskNotifyUtils CloudDiskNotifyUtils;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    FindCloudDiskInodeFunc func = MockFunc;
+    string name = "test";
+    NotifyData notifyData;
+    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, nullptr, name, notifyData);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+    delete data;
+    GTEST_LOG_(INFO) << "GetNotifyData End";
+}
+
+/**
+ * @tc.name: GetNotifyDataTest010
+ * @tc.desc: Verify the GetNotifyData function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetNotifyData Start";
+    CloudDiskNotifyUtils CloudDiskNotifyUtils;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    FindCloudDiskInodeFunc func = MockFunc;
+    shared_ptr<CloudDiskInode> pInoPtr = make_shared<CloudDiskInode>();
+    pInoPtr->fileName = "test";
+    string name = "test";
+    NotifyData notifyData;
+    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, pInoPtr, name, notifyData);
+    EXPECT_EQ(ret, E_OK);
+    delete data;
+    GTEST_LOG_(INFO) << "GetNotifyData End";
+}
+
+/**
+ * @tc.name: GetNotifyDataTest011
+ * @tc.desc: Verify the GetNotifyData function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetNotifyData Start";
+    CloudDiskNotifyUtils CloudDiskNotifyUtils;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    FindCloudDiskInodeFunc func = MockFunc;
+    shared_ptr<CloudDiskInode> pInoPtr = make_shared<CloudDiskInode>();
+    pInoPtr->fileName = "";
+    string name = "test";
+    NotifyData notifyData;
+    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, pInoPtr, name, notifyData);
+    EXPECT_EQ(ret, E_OK);
+    delete data;
     GTEST_LOG_(INFO) << "GetNotifyData End";
 }
 
