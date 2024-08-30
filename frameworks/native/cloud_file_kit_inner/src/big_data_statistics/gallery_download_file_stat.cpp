@@ -172,15 +172,15 @@ static std::vector<uint64_t> StringToVector(std::string line)
     return vec;
 }
 
-static inline std::vector<uint64_t> SumTwoVector(std::vector<uint64_t> dataOne, std::vector<uint64_t> dataTwo)
+static inline void SumTwoVector(std::vector<uint64_t> &dataOne, std::vector<uint64_t> dataTwo)
 {
     if (dataOne.size() != dataTwo.size()) {
-        return dataOne;
+        return;
     }
     for (size_t i = 0; i < dataOne.size(); i++) {
         dataOne[i] += dataTwo[i];
     }
-    return dataOne;
+    return;
 }
 
 static inline DownloadFileStatInfo SumTwoDownloadFileStat(DownloadFileStatInfo dataOne, DownloadFileStatInfo dataTwo)
@@ -286,6 +286,8 @@ void GalleryDownloadFileStat::Report()
         "video_download_speed", stat_.videoDownloadSpeed);
     if (ret != E_OK) {
         LOGE("report CLOUD_SYNC_DOWNLOAD_FILE_STAT error %{public}d", ret);
+    } else {
+        ClearDownloadFileStat();
     }
     ret = unlink(path.c_str());
     if (ret != 0) {
