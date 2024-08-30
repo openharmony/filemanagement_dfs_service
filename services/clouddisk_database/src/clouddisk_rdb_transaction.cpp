@@ -25,14 +25,14 @@ constexpr int32_t E_HAS_DB_ERROR = -222;
 constexpr int32_t E_OK = 0;
 
 constexpr int RDB_TRANSACTION_WAIT_MS = 1000;
-std::mutex TransactionOperations::transactionMutex_;
-std::condition_variable TransactionOperations::transactionCV_;
-std::atomic<bool> TransactionOperations::isInTransaction_(false);
+atomic<bool> TransactionOperations::isInTransactionMap_[RDB_NUM] = {false, false};
+mutex TransactionOperations::transactionMutexMap_[RDB_NUM] = {mutex(), mutex()};
+condition_variable TransactionOperations::transactionCvMap_[RDB_NUM] = {condition_variable(), condition_variable()};
 constexpr int32_t MAX_TRY_TIMES = 5;
 constexpr int32_t TRANSACTION_WAIT_INTERVAL = 50; // in milliseconds.
 
 TransactionOperations::TransactionOperations(
-    const shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore) : rdbStore_(rdbStore) {}
+    const shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore, int32_t idx) : rdbStore_(rdbStore), idx_(idx) {}
 
 TransactionOperations::~TransactionOperations()
 {
@@ -71,23 +71,23 @@ void TransactionOperations::Finish()
 
 int32_t TransactionOperations::BeginTransaction()
 {
-    if (rdbStore_ == nullptr) {
+    if (rdbStore_ == nullptr || idx_ >= RDB_NUM) {
         LOGE("Pointer rdbStore_ is nullptr. Maybe it didn't init successfully.");
         return E_HAS_DB_ERROR;
     }
     LOGI("Start transaction");
 
-    unique_lock<mutex> cvLock(transactionMutex_);
-    if (isInTransaction_.load()) {
-        transactionCV_.wait_for(cvLock, chrono::milliseconds(RDB_TRANSACTION_WAIT_MS),
-            [this] () { return !(isInTransaction_.load()); });
+    unique_lock<mutex> cvLock(transactionMutexMap_[idx_]);
+    if (isInTransactionMap_[idx_].load()) {
+        transactionCvMap_[idx_].wait_for(cvLock, chrono::milliseconds(RDB_TRANSACTION_WAIT_MS),
+            [this] () { return !(isInTransactionMap_[idx_].load()); });
     }
 
     int curTryTime = 0;
     while (curTryTime < MAX_TRY_TIMES) {
         if (rdbStore_->IsInTransaction()) {
             this_thread::sleep_for(chrono::milliseconds(TRANSACTION_WAIT_INTERVAL));
-            if (isInTransaction_.load() || rdbStore_->IsInTransaction()) {
+            if (isInTransactionMap_[idx_].load() || rdbStore_->IsInTransaction()) {
                 curTryTime++;
                 LOGI("RdbStore is in transaction, try %{public}d times...", curTryTime);
                 continue;
@@ -101,11 +101,11 @@ int32_t TransactionOperations::BeginTransaction()
             continue;
         } else if (errCode != NativeRdb::E_OK) {
             LOGE("Start Transaction failed, errCode=%{public}d", errCode);
-            isInTransaction_.store(false);
-            transactionCV_.notify_one();
+            isInTransactionMap_[idx_].store(false);
+            transactionCvMap_[idx_].notify_one();
             return E_HAS_DB_ERROR;
         } else {
-            isInTransaction_.store(true);
+            isInTransactionMap_[idx_].store(true);
             return E_OK;
         }
     }
@@ -116,19 +116,19 @@ int32_t TransactionOperations::BeginTransaction()
 
 int32_t TransactionOperations::TransactionCommit()
 {
-    if (rdbStore_ == nullptr) {
+    if (rdbStore_ == nullptr || idx_ >= RDB_NUM) {
         return E_HAS_DB_ERROR;
     }
     LOGI("Try commit transaction");
 
-    if (!(isInTransaction_.load()) || !(rdbStore_->IsInTransaction())) {
+    if (!(isInTransactionMap_[idx_].load()) || !(rdbStore_->IsInTransaction())) {
         LOGE("no transaction now");
         return E_HAS_DB_ERROR;
     }
 
     int32_t errCode = rdbStore_->Commit();
-    isInTransaction_.store(false);
-    transactionCV_.notify_all();
+    isInTransactionMap_[idx_].store(false);
+    transactionCvMap_[idx_].notify_all();
     if (errCode != NativeRdb::E_OK) {
         LOGE("commit failed, errCode=%{public}d", errCode);
         return E_HAS_DB_ERROR;
@@ -139,19 +139,19 @@ int32_t TransactionOperations::TransactionCommit()
 
 int32_t TransactionOperations::TransactionRollback()
 {
-    if (rdbStore_ == nullptr) {
+    if (rdbStore_ == nullptr || idx_ >= RDB_NUM) {
         return E_HAS_DB_ERROR;
     }
     LOGI("Try rollback transaction");
 
-    if (!(isInTransaction_.load()) || !(rdbStore_->IsInTransaction())) {
+    if (!(isInTransactionMap_[idx_].load()) || !(rdbStore_->IsInTransaction())) {
         LOGE("no transaction now");
         return E_HAS_DB_ERROR;
     }
 
     int32_t errCode = rdbStore_->RollBack();
-    isInTransaction_.store(false);
-    transactionCV_.notify_all();
+    isInTransactionMap_[idx_].store(false);
+    transactionCvMap_[idx_].notify_all();
     if (errCode != NativeRdb::E_OK) {
         LOGE("rollback failed, errCode=%{public}d", errCode);
         return E_HAS_DB_ERROR;
