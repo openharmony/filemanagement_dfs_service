@@ -1287,10 +1287,13 @@ static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, fuse_ino_t ino)
         return ENOENT;
     }
     inoPtr->stat.st_size = statInfo.st_size;
+    inPotr->stat.st_mtim = statInfo.st_mtim;
     MetaBase metaBase(inoPtr->fileName);
+    metaBase.mtime = static_cast<uint64_t>(CloudFileUtils::Timespec2Milliseconds(statInfo.st_mtim));
     metaBase.size = static_cast<uint64_t>(statInfo.st_size);
     auto callback = [&metaBase] (MetaBase &m) {
         m.size = metaBase.size;
+        m.mtime = metaBase.mtime
     };
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
         static_cast<int64_t>(inoPtr->parent));
