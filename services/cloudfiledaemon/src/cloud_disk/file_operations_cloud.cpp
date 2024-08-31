@@ -1281,7 +1281,7 @@ static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, shared_ptr<CloudDi
         LOGE("filePath %{private}s is invalid", GetAnonyString(filePath).c_str());
         return ENOENT;
     }
-    inoPtr->stat = statInfo;
+    inoPtr->stat.st_size = statInfo.st_size;
     MetaBase metaBase(inoPtr->fileName);
     metaBase.size = static_cast<uint64_t>(statInfo.st_size);
     auto callback = [&metaBase] (MetaBase &m) {
