@@ -1307,7 +1307,7 @@ static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, fuse_ino_t ino)
         return ret;
     }
     inoPtr->stat.st_size = metaBase.size;
-    inPotr->stat.st_mtim = metaBase.mtime / MILLISECOND_TO_SECONDS_TIMES;
+    inoPtr->stat.st_mtime = metaBase.mtime / MILLISECOND_TO_SECONDS_TIMES;
     return 0;
 }
 
