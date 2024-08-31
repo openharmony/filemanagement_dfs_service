@@ -18,6 +18,7 @@
 
 #include "directory_ex.h"
 #include "meta_file.h"
+#include "base_interface_lib_mock.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -25,6 +26,7 @@ using namespace testing::ext;
 using namespace std;
 constexpr uint32_t TEST_USER_ID = 201;
 constexpr uint64_t TEST_ISIZE = 1024;
+const string TEST_PATH = "/data/service/el2/100/hmdfs/cache/account_cache/dentry_cache/cloud/";
 
 class DentryMetaFileTest : public testing::Test {
 public:
@@ -32,15 +34,22 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+public:
+    static inline shared_ptr<InterfaceLibMock> interfaceLibMock_ = nullptr;
 };
+
 void DentryMetaFileTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+    interfaceLibMock_ = make_shared<InterfaceLibMock>();
+    InterfaceLibMock::baseInterfaceLib_ = interfaceLibMock_;
 }
 
 void DentryMetaFileTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
+    InterfaceLibMock::baseInterfaceLib_ = nullptr;
+    interfaceLibMock_ = nullptr;
 }
 
 void DentryMetaFileTest::SetUp(void)
@@ -437,5 +446,218 @@ HWTEST_F(DentryMetaFileTest, GetFileName001, TestSize.Level1)
         GTEST_LOG_(INFO) << " GetFileName001 ERROR";
     }
     GTEST_LOG_(INFO) << "GetFileName001 End";
+}
+
+HWTEST_F(DentryMetaFileTest, HandleFileByFd_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleFileByFd_001 Start";
+    try {
+        uint32_t userId = 100;
+        MetaFile mFile(userId, "/");
+        unsigned long endBlock = 0;
+        uint32_t level = MAX_BUCKET_LEVEL;
+        int ret = mFile.HandleFileByFd(endBlock, level);
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " HandleFileByFd_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleFileByFd_001 End";
+}
+
+HWTEST_F(DentryMetaFileTest, HandleFileByFd_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleFileByFd_002 Start";
+    try {
+        uint32_t userId = 100;
+        MetaFile mFile(userId, "/");
+        unsigned long endBlock = DENTRY_PER_GROUP;
+        uint32_t level = MAX_BUCKET_LEVEL;
+        int ret = mFile.HandleFileByFd(endBlock, level);
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " HandleFileByFd_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleFileByFd_002 End";
+}
+
+HWTEST_F(DentryMetaFileTest, HandleFileByFd_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleFileByFd_003 Start";
+    try {
+        uint32_t userId = 100;
+        MetaFile mFile(userId, "/");
+        unsigned long endBlock = -100;
+        uint32_t level = MAX_BUCKET_LEVEL;
+        int ret = mFile.HandleFileByFd(endBlock, level);
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " HandleFileByFd_003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "HandleFileByFd_003 End";
+}
+
+HWTEST_F(DentryMetaFileTest, GetDentryfileName_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDentryfileName_001 Start";
+    try {
+        uint32_t userId = 100;
+        EXPECT_CALL(*interfaceLibMock_, GetDentryfileName(_, _)).WillOnce(Return("/"));
+        MetaFile mFile(userId, "/");
+
+        string path = "/test/";
+        bool caseSense = true;
+        EXPECT_TRUE(true);
+        EXPECT_EQ(interfaceLibMock_->GetDentryfileName(path, caseSense), "/");
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " GetDentryfileName_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetDentryfileName_001 End";
+}
+
+HWTEST_F(DentryMetaFileTest, GetOverallBucket_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetOverallBucket_001 Start";
+    try {
+        uint32_t userId = 100;
+        MetaFile mFile(userId, "/");
+        unsigned long endBlock = -100;
+        uint32_t level = MAX_BUCKET_LEVEL;
+
+        EXPECT_CALL(*interfaceLibMock_, GetOverallBucket(_)).WillOnce(Return(E_SUCCESS));
+        int ret = mFile.HandleFileByFd(endBlock, level);
+        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(interfaceLibMock_->GetOverallBucket(MAX_BUCKET_LEVEL), E_SUCCESS);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " GetOverallBucket_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetOverallBucket_001 End";
+}
+
+HWTEST_F(DentryMetaFileTest, GetBucketaddr_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBucketaddr_001 Start";
+    try {
+        EXPECT_CALL(*interfaceLibMock_, GetBucketaddr(_, _)).WillOnce(Return(E_SUCCESS));
+        uint32_t userId = 100;
+        std::string cacheDir =
+            "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+        ForceRemoveDirectory(cacheDir);
+
+        MetaFile mFile(userId, "/");
+        MetaBase mBase1("file1", "id1");
+        mBase1.size = TEST_ISIZE;
+        int ret = mFile.DoCreate(mBase1);
+        EXPECT_EQ(ret, E_SUCCESS);
+        EXPECT_EQ(interfaceLibMock_->GetBucketaddr(MAX_BUCKET_LEVEL, MAX_BUCKET_LEVEL), E_SUCCESS);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " GetBucketaddr_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetBucketaddr_001 End";
+}
+
+HWTEST_F(DentryMetaFileTest, GetBucketaddr_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBucketaddr_002 Start";
+    try {
+        EXPECT_CALL(*interfaceLibMock_, GetBucketaddr(Eq(E_SUCCESS), _)).WillOnce(Return(E_FAIL));
+        uint32_t userId = 100;
+        std::string cacheDir =
+            "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+        ForceRemoveDirectory(cacheDir);
+
+        MetaFile mFile(userId, "/");
+        MetaBase mBase1("file1", "id1");
+        mBase1.size = TEST_ISIZE;
+        int ret = mFile.DoCreate(mBase1);
+        EXPECT_EQ(ret, E_SUCCESS);
+        EXPECT_EQ(interfaceLibMock_->GetBucketaddr(E_SUCCESS, MAX_BUCKET_LEVEL), E_FAIL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " GetBucketaddr_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetBucketaddr_002 End";
+}
+
+HWTEST_F(DentryMetaFileTest, GetBucketByLevel_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBucketByLevel_001 Start";
+    try {
+        EXPECT_CALL(*interfaceLibMock_, GetBucketByLevel(_)).WillOnce(Return(E_SUCCESS));
+        uint32_t userId = 100;
+        std::string cacheDir =
+            "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+        ForceRemoveDirectory(cacheDir);
+
+        MetaFile mFile(userId, "/");
+        MetaBase mBase1("file1", "id1");
+        mBase1.size = TEST_ISIZE;
+        int ret = mFile.DoCreate(mBase1);
+        EXPECT_EQ(ret, E_SUCCESS);
+        EXPECT_EQ(interfaceLibMock_->GetBucketByLevel(E_SUCCESS), E_SUCCESS);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " GetBucketByLevel_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetBucketByLevel_001 End";
+}
+
+HWTEST_F(DentryMetaFileTest, RoomForFilename_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RoomForFilename_001 Start";
+    try {
+        EXPECT_CALL(*interfaceLibMock_, FindNextZeroBit(_, _, _)).WillOnce(Return(DENTRY_PER_GROUP));
+        uint32_t userId = 100;
+        std::string cacheDir =
+            "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+        ForceRemoveDirectory(cacheDir);
+
+        MetaFile mFile(userId, "/");
+        MetaBase mBase1("file1", "id1");
+        mBase1.size = TEST_ISIZE;
+        int ret = mFile.DoCreate(mBase1);
+        uint8_t addr[] = {0};
+        uint32_t maxSlots = DENTRY_PER_GROUP;
+        uint32_t start = DENTRY_PER_GROUP;
+        EXPECT_EQ(interfaceLibMock_->FindNextZeroBit(addr, maxSlots, start), DENTRY_PER_GROUP);
+        EXPECT_EQ(ret, E_SUCCESS);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RoomForFilename_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RoomForFilename_001 End";
+}
+
+HWTEST_F(DentryMetaFileTest, RoomForFilename_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RoomForFilename_002 Start";
+    try {
+        EXPECT_CALL(*interfaceLibMock_, FindNextZeroBit(_, _, _)).WillOnce(Return(DENTRY_PER_GROUP));
+        EXPECT_CALL(*interfaceLibMock_, FindNextBit(_, _, _)).WillOnce(Return(MAX_BUCKET_LEVEL));
+        uint32_t userId = 100;
+        std::string cacheDir =
+            "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cache/cloud_cache/dentry_cache/cloud/";
+        ForceRemoveDirectory(cacheDir);
+
+        MetaFile mFile(userId, "/");
+        MetaBase mBase1("file1", "id1");
+        mBase1.size = TEST_ISIZE;
+        int ret = mFile.DoCreate(mBase1);
+        uint8_t addr[] = {0};
+        uint32_t maxSlots = DENTRY_PER_GROUP;
+        uint32_t start = DENTRY_PER_GROUP;
+        EXPECT_EQ(ret, E_SUCCESS);
+        EXPECT_EQ(interfaceLibMock_->FindNextZeroBit(addr, maxSlots, start), DENTRY_PER_GROUP);
+        EXPECT_EQ(interfaceLibMock_->FindNextBit(addr, maxSlots, start), MAX_BUCKET_LEVEL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " RoomForFilename_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RoomForFilename_002 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test

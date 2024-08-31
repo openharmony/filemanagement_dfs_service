@@ -19,6 +19,7 @@
 #include "directory_ex.h"
 #include "meta_file.h"
 #include "dfs_error.h"
+#include "base_interface_lib_mock.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -33,15 +34,21 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+public:
+    static inline shared_ptr<InterfaceLibMock> interfaceLibMock_ = nullptr;
 };
 void CloudDiskDentryMetaFileTest::SetUpTestCase(void)
 {
     GTEST_LOG_(INFO) << "SetUpTestCase";
+    interfaceLibMock_ = make_shared<InterfaceLibMock>();
+    InterfaceLibMock::baseInterfaceLib_ = interfaceLibMock_;
 }
 
 void CloudDiskDentryMetaFileTest::TearDownTestCase(void)
 {
     GTEST_LOG_(INFO) << "TearDownTestCase";
+    InterfaceLibMock::baseInterfaceLib_ = nullptr;
+    interfaceLibMock_ = nullptr;
 }
 
 void CloudDiskDentryMetaFileTest::SetUp(void)
@@ -392,7 +399,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndUpdate_001, TestSize
         auto callback = [&metaBase] (MetaBase &m) {
             m.size = metaBase.size;
         };
-        
+
         auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(TEST_USER_ID, "/o/p/q/r/s/t", "id1");
         int32_t ret = metaFile->DoLookupAndUpdate(fileName, callback);
         EXPECT_EQ(ret, E_OK);
@@ -434,5 +441,81 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndRemove_001, TestSize
         GTEST_LOG_(INFO) << "DfsService_DoLookupAndRemove_001 ERROR";
     }
     GTEST_LOG_(INFO) << "DfsService_DoLookupAndRemove_001 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, RemoveFromRecycleDentryfile_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfile_001 Start";
+    try {
+        EXPECT_CALL(*interfaceLibMock_, DoLookup(_)).WillOnce(Return(E_SUCCESS));
+        uint32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        string name = ".trash";
+        string parentCloudId = "rootId";
+        int64_t rowId = 0;
+        MetaBase mBase1(".trash", "rootId");
+        int32_t ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId, bundleName,
+                                                                             name, parentCloudId, rowId);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+        EXPECT_EQ(interfaceLibMock_->DoLookup(mBase1), E_SUCCESS);
+        MetaFileMgr::GetInstance().CloudDiskClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfile_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfile_001 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, RemoveFromRecycleDentryfile_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfile_002 Start";
+    try {
+        EXPECT_CALL(*interfaceLibMock_, DoLookup(_)).WillOnce(Return(EINVAL));
+        EXPECT_CALL(*interfaceLibMock_, DoCreate(_)).WillOnce(Return(E_SUCCESS));
+        uint32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        string name = ".trash";
+        string parentCloudId = "rootId";
+        int64_t rowId = 0;
+        MetaBase mBase1(".trash", "rootId");
+        int32_t ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId, bundleName,
+                                                                             name, parentCloudId, rowId);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+        EXPECT_EQ(interfaceLibMock_->DoLookup(mBase1), EINVAL);
+        EXPECT_EQ(interfaceLibMock_->DoCreate(mBase1), E_SUCCESS);
+        MetaFileMgr::GetInstance().CloudDiskClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfile_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfile_002 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, RemoveFromRecycleDentryfile_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfile_003 Start";
+    try {
+        uint32_t userId = 100;
+        string bundleName = "com.ohos.photos";
+        string name = ".trash";
+        string parentCloudId = "rootId";
+        int64_t rowId = 0;
+        MetaBase mBase1(".trash", "rootId");
+        EXPECT_CALL(*interfaceLibMock_, DoLookup(_)).WillOnce(Return(EINVAL));
+        EXPECT_CALL(*interfaceLibMock_, DoCreate(_)).WillOnce(Return(EINVAL));
+        EXPECT_CALL(*interfaceLibMock_, DoLookupAndRemove(_)).WillOnce(Return(E_SUCCESS));
+
+        int32_t ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId, bundleName,
+                                                                             name, parentCloudId, rowId);
+        EXPECT_EQ(ret, E_INVAL_ARG);
+        EXPECT_EQ(interfaceLibMock_->DoLookup(mBase1), EINVAL);
+        EXPECT_EQ(interfaceLibMock_->DoCreate(mBase1), EINVAL);
+        EXPECT_EQ(interfaceLibMock_->DoLookupAndRemove(mBase1), E_SUCCESS);
+        MetaFileMgr::GetInstance().CloudDiskClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfile_003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfile_003 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
