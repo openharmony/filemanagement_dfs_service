@@ -1253,11 +1253,11 @@ static void UpdateCloudDiskInode(shared_ptr<CloudDiskRdbStore> rdbStore, shared_
 }
 
 static void UpdateCloudStore(CloudDiskFuseData *data, const std::string &fileName, const std::string &parentCloudId,
-    int32_t userId, shared_ptr<CloudDiskInode> inoPtr)
+    int fileDirty, shared_ptr<CloudDiskInode> inoPtr)
 {
     HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, userId);
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
     int32_t dirtyType;
     int res = rdbStore->GetDirtyType(inoPtr->cloudId, dirtyType);
     if (res != 0) {
@@ -1268,7 +1268,7 @@ static void UpdateCloudStore(CloudDiskFuseData *data, const std::string &fileNam
         LOGE("write file fail");
     }
     CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
-        NotifyOpsType::DAEMON_WRITE, inoPtr}, {dirtyType});
+        NotifyOpsType::DAEMON_WRITE, inoPtr}, {dirtyType, false, fileDirty});
     UpdateCloudDiskInode(rdbStore, inoPtr);
 }
 
@@ -1302,17 +1302,17 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
 }
 
 static void UploadLocalFile(CloudDiskFuseData *data, const std::string &fileName, const std::string &parentCloudId,
-    int32_t userId, shared_ptr<CloudDiskInode> inoPtr)
+    int fileDirty, shared_ptr<CloudDiskInode> inoPtr)
 {
     HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     MetaBase metaBase(fileName);
-    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, inoPtr->bundleName, parentCloudId);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId, inoPtr->bundleName, parentCloudId);
     int32_t ret = metaFile->DoLookup(metaBase);
     if (ret != 0) {
         LOGE("local file get location from dentryfile fail, ret = %{public}d", ret);
     } else if (metaBase.position == LOCAL) {
         DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, userId);
+        auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
         int32_t dirtyType;
         ret = rdbStore->GetDirtyType(inoPtr->cloudId, dirtyType);
         if (ret != 0) {
@@ -1323,7 +1323,7 @@ static void UploadLocalFile(CloudDiskFuseData *data, const std::string &fileName
             LOGE("write file fail");
         }
         CloudDiskNotify::GetInstance().TryNotify({data, FileOperationsHelper::FindCloudDiskInode,
-            NotifyOpsType::DAEMON_WRITE, inoPtr}, {dirtyType});
+            NotifyOpsType::DAEMON_WRITE, inoPtr}, {dirtyType, false, fileDirty});
         UpdateCloudDiskInode(rdbStore, inoPtr);
     }
 }
@@ -1357,9 +1357,9 @@ void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
         if (filePtr->type == CLOUD_DISK_FILE_TYPE_LOCAL) {
             close(filePtr->fd);
             if (filePtr->fileDirty != CLOUD_DISK_FILE_UNKNOWN) {
-                UpdateCloudStore(data, inoPtr->fileName, parentCloudId, data->userId, inoPtr);
+                UpdateCloudStore(data, inoPtr->fileName, parentCloudId, filePtr->fileDirty, inoPtr);
             } else {
-                UploadLocalFile(data, inoPtr->fileName, parentCloudId, data->userId, inoPtr);
+                UploadLocalFile(data, inoPtr->fileName, parentCloudId, filePtr->fileDirty, inoPtr);
             }
         } else if (filePtr->type == CLOUD_DISK_FILE_TYPE_CLOUD &&
             filePtr->readSession != nullptr) {

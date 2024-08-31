@@ -52,6 +52,7 @@ struct NotifyData {
     bool isDir;
     NotifyType type = NotifyType::NOTIFY_NONE;
     bool isLocalOperation = false;
+    std::string extraUri = "";
 };
 
 struct CacheNode {
