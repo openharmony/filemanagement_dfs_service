@@ -1272,6 +1272,45 @@ static void UpdateCloudStore(CloudDiskFuseData *data, const std::string &fileNam
     UpdateCloudDiskInode(rdbStore, inoPtr);
 }
 
+static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, fuse_ino_t ino)
+{
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+    if (inoPtr == nullptr) {
+        LOGE("inode not found");
+        return ENOMEM;
+    }
+    string filePath = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
+    struct stat statInfo {};
+    int32_t ret = stat(filePath.c_str(), &statInfo);
+    if (ret) {
+        LOGE("filePath %{public}s is invalid", GetAnonyString(filePath).c_str());
+        return ret;
+    }
+    MetaBase metaBase(inoPtr->fileName);
+    metaBase.mtime = static_cast<uint64_t>(CloudFileUtils::Timespec2Milliseconds(statInfo.st_mtim));
+    metaBase.size = static_cast<uint64_t>(statInfo.st_size);
+    auto callback = [&metaBase] (MetaBase &m) {
+        m.size = metaBase.size;
+        m.mtime = metaBase.mtime;
+    };
+    auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
+        static_cast<int64_t>(inoPtr->parent));
+    if (parentInode == nullptr) {
+        LOGE("fail to find parent inode");
+        return ENOMEM;
+    }
+    string parentCloudId = parentInode->cloudId;
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId, inoPtr->bundleName, parentCloudId);
+    ret = metaFile->DoChildUpdate(inoPtr->fileName, callback);
+    if (ret != 0) {
+        LOGE("update new dentry failed, ret = %{public}d", ret);
+        return ret;
+    }
+    inoPtr->stat.st_size = metaBase.size;
+    inoPtr->stat.st_mtime = metaBase.mtime / MILLISECOND_TO_SECONDS_TIMES;
+    return 0;
+}
+
 void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_bufvec *bufv,
                                    off_t off, struct fuse_file_info *fi)
 {
@@ -1297,6 +1336,10 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
         fuse_reply_err(req, -res);
     } else {
         if (filePtr != nullptr) { filePtr->fileDirty = CLOUD_DISK_FILE_WRITE; }
+        int32_t ret = UpdateCacheDentrySize(data, ino);
+        if (ret != 0) {
+            LOGE("write size in cache and dentry fail, ret = %{public}d", ret);
+        }
         fuse_reply_write(req, (size_t) res);
     }
 }
