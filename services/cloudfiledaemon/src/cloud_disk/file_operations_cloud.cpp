@@ -1306,8 +1306,8 @@ static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, fuse_ino_t ino)
         LOGE("update new dentry failed, ret = %{public}d", ret);
         return ret;
     }
-    inoPtr->stat.st_size = statInfo.st_size;
-    inPotr->stat.st_mtim = statInfo.st_mtim;
+    inoPtr->stat.st_size = metaBase.size;
+    inPotr->stat.st_mtim = metaBase.mtime / MILLISECOND_TO_SECONDS_TIMES;
     return 0;
 }
 
