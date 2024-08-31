@@ -1310,12 +1310,6 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
     struct fuse_bufvec out_buf = FUSE_BUFVEC_INIT(fuse_buf_size(bufv));
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto filePtr = FileOperationsHelper::FindCloudDiskFile(data, fi->fh);
-    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
-    if (inoPtr == nullptr) {
-        LOGE("inode not found");
-        fuse_reply_err(req, EINVAL);
-        return;
-    }
     if (filePtr == nullptr) {
         fuse_reply_err(req, EINVAL);
         LOGE("file not found");
@@ -1334,6 +1328,12 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
         fuse_reply_err(req, -res);
     } else {
         if (filePtr != nullptr) { filePtr->fileDirty = CLOUD_DISK_FILE_WRITE; }
+        auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+        if (inoPtr == nullptr) {
+            LOGE("inode not found");
+            fuse_reply_err(req, EINVAL);
+            return;
+        }
         int32_t ret = UpdateCacheDentrySize(data, inoPtr);
         if (ret != 0) {
             LOGE("write size in cache and dentry fail.");
