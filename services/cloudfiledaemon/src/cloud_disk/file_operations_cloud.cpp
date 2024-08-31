@@ -1290,7 +1290,6 @@ static int32_t UpdateCacheDentrySize(fuse_req_t req, shared_ptr<CloudDiskInode> 
     };
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inoPtr->parent));
     if (parentInode == nullptr) {
-        fuse_reply_err(req, EINVAL);
         LOGE("fail to find parent inode");
         return ENOMEM;
     }
