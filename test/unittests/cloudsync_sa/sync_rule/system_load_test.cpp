@@ -120,42 +120,65 @@ HWTEST_F(SytemLoadTest, OnSystemloadLevelTest002, TestSize.Level1)
 }
 
 /**
- * @tc.name: IsLoadStatusOkayTest001
- * @tc.desc: Verify the IsLoadStatusOkay function
+ * @tc.name: IsLoadStatusUnderHotTest001
+ * @tc.desc: Verify the IsLoadStatusUnderHot function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, IsLoadStatusOkayTest001, TestSize.Level1)
+HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsLoadStatusOkayTest001 Start";
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
     try {
         SystemLoadStatus_->Setload(10);
-        bool ret = SystemLoadStatus_->IsLoadStatusUnderHeat();
+        bool setFlag = true;
+        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(setFlag);
         EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsLoadStatusOkayTest001 FAILED";
+        GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "IsLoadStatusOkayTest001 End";
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 End";
 }
 
 /**
- * @tc.name: IsLoadStatusOkayTest002
- * @tc.desc: Verify the IsLoadStatusOkay function
+ * @tc.name: IsLoadStatusUnderHotTest002
+ * @tc.desc: Verify the IsLoadStatusUnderHot function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, IsLoadStatusOkayTest002, TestSize.Level1)
+HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsLoadStatusOkayTest002 Start";
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
+    try {
+        SystemLoadStatus_->Setload(10);
+        bool setFlag = false;
+        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(setFlag);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 End";
+}
+
+/**
+ * @tc.name: IsLoadStatusUnderHotTest003
+ * @tc.desc: Verify the IsLoadStatusUnderHot function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
     try {
         SystemLoadStatus_->Setload(1);
-        bool ret = SystemLoadStatus_->IsLoadStatusUnderHeat();
+        bool setFlag = false;
+        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(setFlag);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsLoadStatusOkayTest002 FAILED";
+        GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "IsLoadStatusOkayTest002 End";
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
