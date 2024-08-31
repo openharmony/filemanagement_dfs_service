@@ -1278,7 +1278,7 @@ static int32_t UpdateCacheDentrySize(fuse_req_t req, shared_ptr<CloudDiskInode> 
     string filePath = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
     struct stat statInfo = {};
     int32_t ret = stat(filePath.c_str(), &statInfo);
-    if (ret){
+    if (ret) {
         LOGE("filePath %{private}s is invalid", GetAnonyString(filePath).c_str());
         return ENOENT;
     }
@@ -1289,7 +1289,7 @@ static int32_t UpdateCacheDentrySize(fuse_req_t req, shared_ptr<CloudDiskInode> 
         m.size = metaBase.size;
     };
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inoPtr->parent));
-    if (parentInode == nullptr){
+    if (parentInode == nullptr) {
         fuse_reply_err(req, EINVAL);
         LOGE("fail to find parent inode");
         return ENOMEM;
