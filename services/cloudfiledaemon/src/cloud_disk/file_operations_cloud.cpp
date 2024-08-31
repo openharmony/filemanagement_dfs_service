@@ -1277,14 +1277,14 @@ static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, fuse_ino_t ino)
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (inoPtr == nullptr) {
         LOGE("inode not found");
-        return EINVAL;
+        return ENOMEM;
     }
     string filePath = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
     struct stat statInfo {};
     int32_t ret = stat(filePath.c_str(), &statInfo);
     if (ret) {
-        LOGE("filePath %{private}s is invalid", GetAnonyString(filePath).c_str());
-        return ENOENT;
+        LOGE("filePath %{public}s is invalid", GetAnonyString(filePath).c_str());
+        return ret;
     }
     inoPtr->stat.st_size = statInfo.st_size;
     inPotr->stat.st_mtim = statInfo.st_mtim;
@@ -1338,7 +1338,7 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
         if (filePtr != nullptr) { filePtr->fileDirty = CLOUD_DISK_FILE_WRITE; }
         int32_t ret = UpdateCacheDentrySize(data, ino);
         if (ret != 0) {
-            LOGE("write size in cache and dentry fail.");
+            LOGE("write size in cache and dentry fail, ret = %{public}d", ret);
         }
         fuse_reply_write(req, (size_t) res);
     }
