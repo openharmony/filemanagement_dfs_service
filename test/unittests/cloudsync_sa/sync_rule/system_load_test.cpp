@@ -70,7 +70,7 @@ HWTEST_F(SytemLoadTest, RegisterSystemloadCallbackTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterSystemloadCallbackTest Start";
     try {
-        shared_ptr<CloudFile::DataSyncManager> dataSyncManager = make_shared<CloudFile::DataSyncManager>();
+        std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager;
         SystemLoadStatus_->RegisterSystemloadCallback(dataSyncManager);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -106,54 +106,79 @@ HWTEST_F(SytemLoadTest, OnSystemloadLevelTest001, TestSize.Level1)
  */
 HWTEST_F(SytemLoadTest, OnSystemloadLevelTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "OnSystemloadLevelTest002 Start";
+    GTEST_LOG_(INFO) << "OnSystemloadLevelTest001 Start";
     try {
         int32_t level = 1;
+        std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager;
+        SystemLoadListener_->dataSyncManager_ = make_shared<CloudFile::DataSyncManager>();
         SystemLoadListener_->OnSystemloadLevel(level);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnSystemloadLevelTest002 FAILED";
+        GTEST_LOG_(INFO) << "OnSystemloadLevelTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "OnSystemloadLevelTest002 End";
+    GTEST_LOG_(INFO) << "OnSystemloadLevelTest001 End";
 }
 
 /**
- * @tc.name: IsLoadStatusOkayTest001
- * @tc.desc: Verify the IsLoadStatusOkay function
+ * @tc.name: IsLoadStatusUnderHotTest001
+ * @tc.desc: Verify the IsLoadStatusUnderHot function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, IsLoadStatusOkayTest001, TestSize.Level1)
+HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsLoadStatusOkayTest001 Start";
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
     try {
         SystemLoadStatus_->Setload(10);
-        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot();
+        bool setFlag = true;
+        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(setFlag);
         EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsLoadStatusOkayTest001 FAILED";
+        GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "IsLoadStatusOkayTest001 End";
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 End";
 }
 
 /**
- * @tc.name: IsLoadStatusOkayTest002
- * @tc.desc: Verify the IsLoadStatusOkay function
+ * @tc.name: IsLoadStatusUnderHotTest002
+ * @tc.desc: Verify the IsLoadStatusUnderHot function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(SytemLoadTest, IsLoadStatusOkayTest002, TestSize.Level1)
+HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsLoadStatusOkayTest002 Start";
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
+    try {
+        SystemLoadStatus_->Setload(10);
+        bool setFlag = false;
+        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(setFlag);
+        EXPECT_EQ(ret, false);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 End";
+}
+
+/**
+ * @tc.name: IsLoadStatusUnderHotTest003
+ * @tc.desc: Verify the IsLoadStatusUnderHot function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
     try {
         SystemLoadStatus_->Setload(1);
-        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot();
+        bool setFlag = false;
+        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(setFlag);
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsLoadStatusOkayTest002 FAILED";
+        GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 FAILED";
     }
-    GTEST_LOG_(INFO) << "IsLoadStatusOkayTest002 End";
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
