@@ -1272,23 +1272,23 @@ static void UpdateCloudStore(CloudDiskFuseData *data, const std::string &fileNam
     UpdateCloudDiskInode(rdbStore, inoPtr);
 }
 
-static int32_t UpdateCacheDentrySize(fuse_req_t req, shared_ptr<CloudDiskInode> inoPtr)
+static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, shared_ptr<CloudDiskInode> inoPtr)
 {
-    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     string filePath = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
-    struct stat statInfo = {};
+    struct stat statInfo {};
     int32_t ret = stat(filePath.c_str(), &statInfo);
     if (ret) {
         LOGE("filePath %{private}s is invalid", GetAnonyString(filePath).c_str());
         return ENOENT;
     }
-    inoPtr->stat.st_size = statInfo.st_size;
+    inoPtr->stat = statInfo;
     MetaBase metaBase(inoPtr->fileName);
     metaBase.size = static_cast<uint64_t>(statInfo.st_size);
-    auto callback = [&metaBase](MetaBase &m) {
+    auto callback = [&metaBase] (MetaBase &m) {
         m.size = metaBase.size;
     };
-    auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(inoPtr->parent));
+    auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
+        static_cast<int64_t>(inoPtr->parent));
     if (parentInode == nullptr) {
         LOGE("fail to find parent inode");
         return ENOMEM;
@@ -1297,7 +1297,7 @@ static int32_t UpdateCacheDentrySize(fuse_req_t req, shared_ptr<CloudDiskInode> 
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId, inoPtr->bundleName, parentCloudId);
     ret = metaFile->DoChildUpdate(inoPtr->fileName, callback);
     if (ret != 0) {
-        LOGE("update ne dentry failed, ret = %{public}d", ret);
+        LOGE("update new dentry failed, ret = %{public}d", ret);
         return ret;
     }
     return 0;
@@ -1309,8 +1309,13 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
     HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     struct fuse_bufvec out_buf = FUSE_BUFVEC_INIT(fuse_buf_size(bufv));
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     auto filePtr = FileOperationsHelper::FindCloudDiskFile(data, fi->fh);
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+    if (inoPtr == nullptr) {
+        LOGE("inode not found");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
     if (filePtr == nullptr) {
         fuse_reply_err(req, EINVAL);
         LOGE("file not found");
@@ -1329,7 +1334,7 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
         fuse_reply_err(req, -res);
     } else {
         if (filePtr != nullptr) { filePtr->fileDirty = CLOUD_DISK_FILE_WRITE; }
-        int32_t ret = UpdateCacheDentrySize(req, inoPtr);
+        int32_t ret = UpdateCacheDentrySize(data, inoPtr);
         if (ret != 0) {
             LOGE("write size in cache and dentry fail.");
         }
