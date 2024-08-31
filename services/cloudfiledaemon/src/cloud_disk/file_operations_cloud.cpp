@@ -1286,8 +1286,6 @@ static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, fuse_ino_t ino)
         LOGE("filePath %{public}s is invalid", GetAnonyString(filePath).c_str());
         return ret;
     }
-    inoPtr->stat.st_size = statInfo.st_size;
-    inPotr->stat.st_mtim = statInfo.st_mtim;
     MetaBase metaBase(inoPtr->fileName);
     metaBase.mtime = static_cast<uint64_t>(CloudFileUtils::Timespec2Milliseconds(statInfo.st_mtim));
     metaBase.size = static_cast<uint64_t>(statInfo.st_size);
@@ -1308,6 +1306,8 @@ static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, fuse_ino_t ino)
         LOGE("update new dentry failed, ret = %{public}d", ret);
         return ret;
     }
+    inoPtr->stat.st_size = statInfo.st_size;
+    inPotr->stat.st_mtim = statInfo.st_mtim;
     return 0;
 }
 
