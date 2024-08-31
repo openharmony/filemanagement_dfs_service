@@ -622,7 +622,7 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
 }
 
 static void UploadLocalFile(CloudDiskFuseData *data, const std::string &fileName, const std::string &parentCloudId,
-    int32_t userId, shared_ptr<CloudDiskInode> inoPtr)
+    int fileDirty, shared_ptr<CloudDiskInode> inoPtr)
 {
     return;
 }

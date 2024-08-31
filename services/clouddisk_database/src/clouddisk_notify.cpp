@@ -145,19 +145,21 @@ static void HandleRecycleRestore(const NotifyParamDisk &paramDisk)
         LOGE("Get origin notify data fail");
         return;
     }
-    trashNotifyData.isDir = originNotifyData.isDir;
+
+    NotifyData notifyData;
+    notifyData.type = NotifyType::NOTIFY_RENAMED;
+    notifyData.isDir = originNotifyData.isDir;
+
     if (paramDisk.opsType == NotifyOpsType::DAEMON_RECYCLE) {
-        trashNotifyData.type = NotifyType::NOTIFY_ADDED;
-        originNotifyData.type = NotifyType::NOTIFY_DELETED;
+        notifyData.uri = trashNotifyData.uri;
+        notifyData.extraUri = originNotifyData.uri;
     }
     if (paramDisk.opsType == NotifyOpsType::DAEMON_RESTORE) {
-        trashNotifyData.type = NotifyType::NOTIFY_DELETED;
-        originNotifyData.type = NotifyType::NOTIFY_ADDED;
+        notifyData.uri = originNotifyData.uri;
+        notifyData.extraUri = trashNotifyData.uri;
     }
-    trashNotifyData.isLocalOperation = true;
-    originNotifyData.isLocalOperation = true;
-    CloudDiskNotify::GetInstance().AddNotify(trashNotifyData);
-    CloudDiskNotify::GetInstance().AddNotify(originNotifyData);
+    notifyData.isLocalOperation = true;
+    CloudDiskNotify::GetInstance().AddNotify(notifyData);
 }
 
 static void HandleWrite(const NotifyParamDisk &paramDisk, const ParamDiskOthers &paramOthers)
@@ -166,9 +168,12 @@ static void HandleWrite(const NotifyParamDisk &paramDisk, const ParamDiskOthers 
     if (GetDataInner(paramDisk, notifyData) != E_OK) {
         return;
     }
-    notifyData.type = NotifyType::NOTIFY_MODIFIED;
+
     if (paramOthers.dirtyType == static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD)) {
         notifyData.type = NotifyType::NOTIFY_ADDED;
+    }
+    if (paramOthers.fileDirty == CLOUD_DISK_FILE_WRITE) {
+        notifyData.type = NotifyType::NOTIFY_FILE_CHANGED;
     }
     notifyData.isLocalOperation = true;
     CloudDiskNotify::GetInstance().AddNotify(notifyData);
@@ -200,10 +205,10 @@ static void HandleUnlink(const NotifyParamDisk &paramDisk)
 
 static void HandleRename(const NotifyParamDisk &paramDisk, const ParamDiskOthers &paramOthers)
 {
-    NotifyData notifyData;
+    NotifyData oldNotifyData;
     NotifyData newNotifyData;
     int32_t ret = CloudDiskNotifyUtils::GetNotifyData(paramDisk.data, paramDisk.func, paramDisk.ino,
-        paramDisk.name, notifyData);
+        paramDisk.name, oldNotifyData);
     if (ret != E_OK) {
         LOGE("get notify data fail, name: %{public}s", GetAnonyString(paramDisk.name).c_str());
         return;
@@ -214,14 +219,13 @@ static void HandleRename(const NotifyParamDisk &paramDisk, const ParamDiskOthers
         LOGE("get new notify data fail, name: %{public}s", GetAnonyString(paramDisk.newName).c_str());
         return;
     }
+    NotifyData notifyData;
+    notifyData.uri = newNotifyData.uri;
+    notifyData.extraUri = oldNotifyData.uri;
     notifyData.isDir = paramOthers.isDir;
-    newNotifyData.isDir = paramOthers.isDir;
-    notifyData.type = notifyData.isDir ? NotifyType::NOTIFY_DELETED : NotifyType::NOTIFY_NONE;
-    newNotifyData.type = NotifyType::NOTIFY_RENAMED;
+    notifyData.type = NotifyType::NOTIFY_RENAMED;
     notifyData.isLocalOperation = true;
-    newNotifyData.isLocalOperation = true;
     CloudDiskNotify::GetInstance().AddNotify(notifyData);
-    CloudDiskNotify::GetInstance().AddNotify(newNotifyData);
 }
 
 void CloudDiskNotify::TryNotify(const NotifyParamDisk &paramDisk, const ParamDiskOthers &paramOthers)
@@ -424,6 +428,7 @@ void CloudDiskNotify::AddNotify(NotifyData notifyData)
         parcel.WriteUint32(1);
         parcel.WriteBool(notifyData.isDir);
         parcel.WriteBool(notifyData.isLocalOperation);
+        parcel.WriteString(notifyData.extraUri);
         uintptr_t buf = parcel.GetData();
         if (parcel.GetDataSize() == 0) {
             LOGE("parcel.getDataSize fail");
