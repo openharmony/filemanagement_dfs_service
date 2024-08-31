@@ -1272,8 +1272,14 @@ static void UpdateCloudStore(CloudDiskFuseData *data, const std::string &fileNam
     UpdateCloudDiskInode(rdbStore, inoPtr);
 }
 
-static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, shared_ptr<CloudDiskInode> inoPtr)
+static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, fuse_ino_t ino)
 {
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+    if (inoPtr == nullptr) {
+        LOGE("inode not found");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
     string filePath = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
     struct stat statInfo {};
     int32_t ret = stat(filePath.c_str(), &statInfo);
@@ -1328,13 +1334,7 @@ void FileOperationsCloud::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_b
         fuse_reply_err(req, -res);
     } else {
         if (filePtr != nullptr) { filePtr->fileDirty = CLOUD_DISK_FILE_WRITE; }
-        auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
-        if (inoPtr == nullptr) {
-            LOGE("inode not found");
-            fuse_reply_err(req, EINVAL);
-            return;
-        }
-        int32_t ret = UpdateCacheDentrySize(data, inoPtr);
+        int32_t ret = UpdateCacheDentrySize(data, ino);
         if (ret != 0) {
             LOGE("write size in cache and dentry fail.");
         }
