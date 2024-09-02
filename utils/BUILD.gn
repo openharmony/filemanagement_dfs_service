@@ -166,6 +166,11 @@ ohos_shared_library("libdistributedfiledentry") {
 
   public_configs = [ ":dentry_public_config" ]
 
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+    "-fstack-protector-strong",
+  ]
+
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
