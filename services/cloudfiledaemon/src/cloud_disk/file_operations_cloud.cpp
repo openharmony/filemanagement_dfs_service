@@ -71,6 +71,10 @@ static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
     HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
         static_cast<int64_t>(parent));
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        return;
+    }
     childInode->stat = parentInode->stat;
     childInode->stat.st_ino = static_cast<uint64_t>(inodeId);
     childInode->stat.st_mtime = metaBase.mtime / MILLISECOND_TO_SECONDS_TIMES;
@@ -230,6 +234,10 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
     string key = std::to_string(parent) + name;
     int64_t inodeId = static_cast<int64_t>(CloudFileUtils::DentryHash(metaBase.cloudId));
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
+    if (inoPtr == nullptr) {
+        LOGE("inoPtr inode not found");
+        return EINVAL;
+    }
     auto child = UpdateChildCache(data, inodeId, inoPtr);
     child->refCount++;
     InitInodeAttr(data, parent, child.get(), metaBase, inodeId);
@@ -471,7 +479,10 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
         reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
         static_cast<int64_t>(parent));
-
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        return EINVAL;
+    }
     string cloudId;
     int32_t err = GenerateCloudId(data->userId, cloudId, parentInode->bundleName);
     if (err != 0) {
@@ -1433,6 +1444,11 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
     }
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
         static_cast<int64_t>(inoPtr->parent));
+    if (parentInode == nullptr) {
+        LOGE("parent inode not found");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
     if (static_cast<unsigned int>(valid) & FUSE_SET_ATTR_SIZE) {
         DatabaseManager &databaseManager = DatabaseManager::GetInstance();
         auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
