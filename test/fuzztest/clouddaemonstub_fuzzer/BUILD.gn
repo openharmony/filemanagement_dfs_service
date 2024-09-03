@@ -22,6 +22,7 @@ ohos_fuzztest("CloudDaemonStubFuzzTest") {
       "${distributedfile_path}/test/fuzztest/clouddaemonstub_fuzzer"
   include_dirs = [
     "${services_path}/cloudfiledaemon/include/ipc",
+    "${services_path}/cloudfiledaemon/include",
     "${utils_path}/log/include",
     "${innerkits_native_path}/cloud_daemon_kit_inner",
   ]
@@ -31,9 +32,16 @@ ohos_fuzztest("CloudDaemonStubFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "${distributedfile_path}/test/fuzztest/clouddaemonstub_fuzzer/clouddaemonstub_fuzzer.cpp" ]
+  sources = [
+    "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon_stub.cpp",
+    "${distributedfile_path}/test/fuzztest/clouddaemonstub_fuzzer/clouddaemonstub_fuzzer.cpp",
+  ]
 
-  deps = [ "${services_path}/cloudfiledaemon:cloudfiledaemon" ]
+  deps = [
+    "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+  ]
 
   external_deps = [
     "c_utils:utils",
