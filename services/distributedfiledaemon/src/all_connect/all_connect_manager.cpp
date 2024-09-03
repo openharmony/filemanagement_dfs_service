@@ -75,6 +75,8 @@ int32_t AllConnectManager::UnInitAllConnectManager()
     if (ret != FileManagement::ERR_OK) {
         LOGE("UnInitAllConnectManagerfailed, unregister lifecycle callback error, ret %{public}d", ret);
     }
+
+    std::lock_guard<std::mutex> lock(allConnectLock_);
     dlclose(dllHandle_);
     dllHandle_ = nullptr;
     return FileManagement::ERR_OK;

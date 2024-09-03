@@ -133,8 +133,8 @@ void SoftbusAgent::JoinDomain()
 
 void SoftbusAgent::QuitDomain()
 {
+    std::lock_guard<std::mutex> lock(serverIdMapMutex_);
     if (!serverIdMap_.empty()) {
-        std::lock_guard<std::mutex> lock(serverIdMapMutex_);
         for (auto it = serverIdMap_.begin(); it != serverIdMap_.end(); it++) {
             if ((it->first).find(sessionName_) != std::string::npos) {
                 int32_t serverId = serverIdMap_[sessionName_];
