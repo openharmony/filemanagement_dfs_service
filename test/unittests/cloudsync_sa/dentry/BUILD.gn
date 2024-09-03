@@ -17,9 +17,15 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 ohos_unittest("dentry_meta_file_test") {
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "dentry_meta_file_test.cpp" ]
+  sources = [
+    "./mock/base_interface_lib_mock.cpp",
+    "dentry_meta_file_test.cpp",
+  ]
 
-  include_dirs = [ "${utils_path}/dentry/include" ]
+  include_dirs = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/dentry/mock/",
+    "${utils_path}/dentry/include",
+  ]
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
@@ -70,9 +76,15 @@ ohos_unittest("dentry_meta_file_clouddisk_test") {
   }
   module_out_path = "filemanagement/dfs_service"
 
-  sources = [ "dentry_meta_file_clouddisk_test.cpp" ]
+  sources = [
+    "./mock/base_interface_lib_mock.cpp",
+    "dentry_meta_file_clouddisk_test.cpp",
+  ]
 
-  include_dirs = [ "${utils_path}/dentry/include" ]
+  include_dirs = [
+    "${distributedfile_path}/test/unittests/cloudsync_sa/dentry/mock/",
+    "${utils_path}/dentry/include",
+  ]
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
