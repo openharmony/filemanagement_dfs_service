@@ -18,6 +18,7 @@
 
 #include "system_load.h"
 #include "dfs_error.h"
+#include "parameters.h"
 #include "utils_log.h"
 #include "res_sched_client.h"
 
@@ -117,6 +118,50 @@ HWTEST_F(SytemLoadTest, OnSystemloadLevelTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnSystemloadLevelTest001 FAILED";
     }
     GTEST_LOG_(INFO) << "OnSystemloadLevelTest001 End";
+}
+
+/**
+ * @tc.name: OnSystemloadLevelTest003
+ * @tc.desc: Verify the OnSystemloadLevel function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, OnSystemloadLevelTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnSystemloadLevelTest003 Start";
+    try {
+        int32_t level = 1;
+        system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "true");
+        auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
+        SystemLoadListener_->SetDataSycner(dataSyncManager);
+        SystemLoadListener_->OnSystemloadLevel(level);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnSystemloadLevelTest003 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnSystemloadLevelTest003 End";
+}
+
+/**
+ * @tc.name: OnSystemloadLevelTest004
+ * @tc.desc: Verify the OnSystemloadLevel function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, OnSystemloadLevelTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnSystemloadLevelTest004 Start";
+    try {
+        int32_t level = 1;
+        system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "true");
+        auto dataSyncManager = std::make_shared<CloudFile::DataSyncManager>();
+        SystemLoadListener_->SetDataSycner(dataSyncManager);
+        SystemLoadListener_->OnSystemloadLevel(level);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnSystemloadLevelTest004 FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnSystemloadLevelTest004 End";
 }
 
 /**
