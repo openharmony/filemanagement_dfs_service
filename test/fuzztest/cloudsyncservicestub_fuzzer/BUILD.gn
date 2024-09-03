@@ -51,7 +51,7 @@ ohos_fuzztest("CloudSyncServiceStubFuzzTest") {
     "--coverage",
   ]
   sources = [
-    "${distributedfile_path}/services/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp", 
+    "${distributedfile_path}/services/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
     "${distributedfile_path}/test/fuzztest/cloudsyncservicestub_fuzzer/cloudsyncservicestub_fuzzer.cpp",
   ]
 
