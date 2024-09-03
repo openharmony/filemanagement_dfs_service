@@ -50,7 +50,10 @@ ohos_fuzztest("CloudSyncServiceStubFuzzTest") {
     "-flto",
     "--coverage",
   ]
-  sources = [ "${distributedfile_path}/test/fuzztest/cloudsyncservicestub_fuzzer/cloudsyncservicestub_fuzzer.cpp" ]
+  sources = [
+    "${distributedfile_path}/services/cloudsyncservice/src/ipc/cloud_sync_service_stub.cpp",
+    "${distributedfile_path}/test/fuzztest/cloudsyncservicestub_fuzzer/cloudsyncservicestub_fuzzer.cpp",
+  ]
 
   deps = [
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
