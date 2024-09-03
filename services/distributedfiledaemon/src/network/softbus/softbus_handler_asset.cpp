@@ -124,8 +124,8 @@ void SoftBusHandlerAsset::CreateAssetLocalSessionServer()
 void SoftBusHandlerAsset::DeleteAssetLocalSessionServer()
 {
     LOGI("DeleteAssetLocalSessionServer Enter.");
+    std::lock_guard<std::mutex> lock(serverIdMapMutex_);
     if (!serverIdMap_.empty()) {
-        std::lock_guard<std::mutex> lock(serverIdMapMutex_);
         auto it = serverIdMap_.find(ASSET_LOCAL_SESSION_NAME);
         if (it == serverIdMap_.end()) {
             LOGI("%s: Session already delete.", ASSET_LOCAL_SESSION_NAME.c_str());
