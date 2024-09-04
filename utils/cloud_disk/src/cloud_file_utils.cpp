@@ -245,12 +245,12 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
     }
     uint32_t writeOpenCnt = 0;
     int ret = ioctl(fd, HMDFS_IOC_GET_WRITEOPEN_CNT, &writeOpenCnt);
-    close(fd);
     if (ret < 0) {
         LOGE("ioctl failed, errno:%{public}d", errno);
         return false;
     }
 
+    close(fd);
     return writeOpenCnt != 0;
 }
 } // namespace CloudDisk
