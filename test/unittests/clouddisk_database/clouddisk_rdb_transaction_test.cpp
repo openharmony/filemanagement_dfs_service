@@ -67,7 +67,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, StartTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Start Start";
     auto rdb = nullptr;
-    auto transaction = make_shared<TransactionOperations>(rdb);
+    auto transaction = make_shared<TransactionOperations>(rdb, CLOUD_RDB_IDX);
     int32_t ret = transaction->Start();
     EXPECT_EQ(ret, E_HAS_DB_ERROR);
     GTEST_LOG_(INFO) << "Start End";
@@ -83,7 +83,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, StartTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Start Start";
     auto rdb = std::make_shared<RdbStoreMock>();
-    auto transaction = make_shared<TransactionOperations>(rdb);
+    auto transaction = make_shared<TransactionOperations>(rdb, CLOUD_RDB_IDX);
     int32_t ret = transaction->Start();
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "Start End";
@@ -99,7 +99,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, FinishTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Finish Start";
     auto rdb = nullptr;
-    auto transaction = make_shared<TransactionOperations>(rdb);
+    auto transaction = make_shared<TransactionOperations>(rdb, CLOUD_RDB_IDX);
     transaction->Finish();
     GTEST_LOG_(INFO) << "Finish End";
 }
@@ -114,7 +114,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, FinishTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "Finish Start";
     auto rdb = std::make_shared<RdbStoreMock>();
-    auto transaction = make_shared<TransactionOperations>(rdb);
+    auto transaction = make_shared<TransactionOperations>(rdb, CLOUD_RDB_IDX);
     transaction->Finish();
     GTEST_LOG_(INFO) << "Finish End";
 }
@@ -129,7 +129,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, BeginTransactionTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BeginTransaction Start";
     auto rdb = nullptr;
-    auto transaction = make_shared<TransactionOperations>(rdb);
+    auto transaction = make_shared<TransactionOperations>(rdb, CLOUD_RDB_IDX);
     int32_t ret = transaction->BeginTransaction();
     EXPECT_EQ(ret, E_HAS_DB_ERROR);
     GTEST_LOG_(INFO) << "BeginTransaction End";
@@ -145,7 +145,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, BeginTransactionTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BeginTransaction Start";
     auto rdb = std::make_shared<RdbStoreMock>();
-    auto transaction = make_shared<TransactionOperations>(rdb);
+    auto transaction = make_shared<TransactionOperations>(rdb, CLOUD_RDB_IDX);
     int32_t ret = transaction->BeginTransaction();
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "BeginTransaction End";
@@ -161,7 +161,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, TransactionCommitTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TransactionCommit Start";
     auto rdb = nullptr;
-    auto transaction = make_shared<TransactionOperations>(rdb);
+    auto transaction = make_shared<TransactionOperations>(rdb, CLOUD_RDB_IDX);
     int32_t ret = transaction->TransactionCommit();
     EXPECT_EQ(ret, E_HAS_DB_ERROR);
     GTEST_LOG_(INFO) << "TransactionCommit End";
@@ -177,7 +177,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, TransactionCommitTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TransactionCommit Start";
     auto rdb = std::make_shared<RdbStoreMock>();
-    auto transaction = make_shared<TransactionOperations>(rdb);
+    auto transaction = make_shared<TransactionOperations>(rdb, CLOUD_RDB_IDX);
     int32_t ret = transaction->TransactionCommit();
     EXPECT_EQ(ret, E_HAS_DB_ERROR);
     GTEST_LOG_(INFO) << "TransactionCommit End";
@@ -193,7 +193,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, TransactionRollbackTest001, TestSize.Level
 {
     GTEST_LOG_(INFO) << "TransactionRollback Start";
     auto rdb = nullptr;
-    auto transaction = make_shared<TransactionOperations>(rdb);
+    auto transaction = make_shared<TransactionOperations>(rdb, CLOUD_RDB_IDX);
     int32_t ret = transaction->TransactionRollback();
     EXPECT_EQ(ret, E_HAS_DB_ERROR);
     GTEST_LOG_(INFO) << "TransactionRollback End";
@@ -209,7 +209,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, TransactionRollbackTest002, TestSize.Level
 {
     GTEST_LOG_(INFO) << "TransactionRollback Start";
     auto rdb = std::make_shared<RdbStoreMock>();
-    auto transaction = make_shared<TransactionOperations>(rdb);
+    auto transaction = make_shared<TransactionOperations>(rdb, CLOUD_RDB_IDX);
     int32_t ret = transaction->TransactionRollback();
     EXPECT_EQ(ret, E_HAS_DB_ERROR);
     GTEST_LOG_(INFO) << "TransactionRollback End";
