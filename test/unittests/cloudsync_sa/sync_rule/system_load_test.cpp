@@ -175,8 +175,7 @@ HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
     try {
         SystemLoadStatus_->Setload(10);
-        bool setFlag = true;
-        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(setFlag);
+        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot();
         EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -196,8 +195,7 @@ HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
     try {
         SystemLoadStatus_->Setload(10);
-        bool setFlag = false;
-        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(setFlag);
+        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot();
         EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -217,8 +215,7 @@ HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 Start";
     try {
         SystemLoadStatus_->Setload(1);
-        bool setFlag = false;
-        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(setFlag);
+        bool ret = SystemLoadStatus_->IsLoadStatusUnderHot();
         EXPECT_EQ(ret, true);
     } catch (...) {
         EXPECT_TRUE(false);
