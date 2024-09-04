@@ -179,7 +179,7 @@ std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
     }
     char realPath[PATH_MAX] = { 0x00 };
     if (realpath(physicalPath.c_str(), realPath) == nullptr) {
-        LOGE("realpath failed with %{public}d, path %{puiblic}s", errno, physicalPath.c_str());
+        LOGE("realpath failed, error: %{public}d, path is %{public}s", errno, GetAnonyString(physicalPath).c_str());
         return "";
     }
     return physicalPath;
