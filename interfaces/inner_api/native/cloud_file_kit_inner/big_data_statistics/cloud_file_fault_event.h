@@ -15,34 +15,22 @@
 #ifndef OHOS_CLOUD_SYNC_SERVICE_CLOUD_FILE_FAULT_EVENT_H
 #define OHOS_CLOUD_SYNC_SERVICE_CLOUD_FILE_FAULT_EVENT_H
 
-#include "cloud_file_log.h"
 #include "hisysevent.h"
 
-#define CLOUD_SYNC_FAULT_REPORT(...) CloudFile::CloudSyncFaultReport(__FUNCTION__, __LINE__, ##__VA_ARGS__)
-#define CLOUD_FILE_FAULT_REPORT(...) CloudFile::CloudFileFaultReport(__FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define CLOUD_SYNC_FAULT_REPORT(...) \
+    CloudFile::CloudFileFaultEvent::CloudSyncFaultReport(__FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define CLOUD_FILE_FAULT_REPORT(...) \
+    CloudFile::CloudFileFaultEvent::CloudFileFaultReport(__FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudFile {
+
+#ifndef CLOUD_SYNC_SYS_EVENT
 #define CLOUD_SYNC_SYS_EVENT(eventName, type, ...)                                  \
     HiSysEventWrite(HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT, eventName, type, \
                     ##__VA_ARGS__)
-
-struct CloudSyncFaultEvent {
-    std::string bundleName_;
-    uint32_t faultScenario_;
-    uint32_t faultType_;
-    int32_t faultErrorCode_;
-    std::string message_;
-};
-
-struct CloudFileFaultEvent {
-    std::string bundleName_;
-    uint32_t faultOperation_;
-    uint32_t faultType_;
-    int32_t faultErrorCode_;
-    std::string message_;
-};
+#endif
 
 enum class FaultScenarioCode {
     CLOUD_FULL_SYNC = 100,
@@ -109,44 +97,32 @@ enum class FaultType {
     PROCESS = 70000000
 };
 
-int32_t CloudSyncFaultReport(const std::string &funcName,
-                             const int lineNum,
-                             const CloudSyncFaultEvent &event)
-{
-    int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_FILE_SYNC_FAULT",
-        HiviewDFX::HiSysEvent::EventType::FAULT,
-        "bundle_name", event.bundleName_,
-        "fault_scenario", event.faultScenario_,
-        "fault_type", event.faultType_,
-        "fault_error_code", event.faultErrorCode_,
-        "function_name", funcName + ":" + std::to_string(lineNum),
-        "message", event.message_);
-    if (ret != E_OK) {
-        LOGE("report CLOUD_FILE_SYNC_FAULT error %{public}d", ret);
-    }
-    LOGE("%{public}s", event.message_.c_str());
-    return event.faultErrorCode_;
-}
+struct CloudSyncFaultInfo {
+    std::string bundleName_;
+    FaultScenarioCode faultScenario_;
+    FaultType faultType_;
+    int32_t faultErrorCode_;
+    std::string message_;
+};
 
-int32_t CloudFileFaultReport(const std::string &funcName,
-                             const int lineNum,
-                             const CloudFileFaultEvent &event)
-{
-    int32_t ret = CLOUD_SYNC_SYS_EVENT("CLOUD_FILE_ACCESS_FAULT",
-        HiviewDFX::HiSysEvent::EventType::FAULT,
-        "bundle_name", event.bundleName_,
-        "fault_operation", event.faultOperation_,
-        "fault_type", event.faultType_,
-        "fault_error_code", event.faultErrorCode_,
-        "function_name", funcName + ":" + std::to_string(lineNum),
-        "message", event.message_);
-    if (ret != E_OK) {
-        LOGE("report CLOUD_FILE_ACCESS_FAULT error %{public}d", ret);
-    }
-    LOGE("%{public}s", event.message_.c_str());
-    return event.faultErrorCode_;
-}
+struct CloudFileFaultInfo {
+    std::string bundleName_;
+    FaultOperation faultOperation_;
+    FaultType faultType_;
+    int32_t faultErrorCode_;
+    std::string message_;
+};
 
+class CloudFileFaultEvent {
+public:
+    static int32_t CloudSyncFaultReport(const std::string &funcName,
+                                        const int lineNum,
+                                        const CloudSyncFaultInfo &event);
+
+    static int32_t CloudFileFaultReport(const std::string &funcName,
+                                        const int lineNum,
+                                        const CloudFileFaultInfo &event);
+};
 } // namespace CloudFile
 } // namespace FileManagement
 } // namespace OHOS
