@@ -234,6 +234,7 @@ static int32_t DoCloudLookup(fuse_req_t req, fuse_ino_t parent, const char *name
     string key = std::to_string(parent) + name;
     int64_t inodeId = static_cast<int64_t>(CloudFileUtils::DentryHash(metaBase.cloudId));
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, inodeId);
+    // if inoPtr is nullptr, UpdateChildCache will create it
     auto child = UpdateChildCache(data, inodeId, inoPtr);
     child->refCount++;
     InitInodeAttr(data, parent, child.get(), metaBase, inodeId);

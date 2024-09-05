@@ -316,10 +316,7 @@ static void HandleUpdateRecycle(const NotifyParamService &paramService, const Pa
         return;
     }
     NotifyData trashNotifyData;
-    if (GetTrashNotifyData(paramService.node, paramOthers, trashNotifyData) != E_OK) {
-        LOGE("Get trash notify data fail");
-        return;
-    }
+    GetTrashNotifyData(paramService.node, paramOthers, trashNotifyData);
     if (TrashUriAddRowId(rdbStore, paramService.cloudId, trashNotifyData.uri) != E_OK) {
         return;
     }
