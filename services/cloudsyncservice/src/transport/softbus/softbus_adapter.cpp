@@ -39,8 +39,8 @@ SoftbusAdapter &SoftbusAdapter::GetInstance()
 int32_t SoftbusAdapter::CreateSessionServer(const char *packageName, const char *sessionName)
 {
     SocketInfo info = {
-        .name = strdup(sessionName),
-        .pkgName = strdup(packageName),
+        .name = const_cast<char*>(sessionName),
+        .pkgName = const_cast<char*>(packageName),
     };
     int socket = ::Socket(info);
     if (socket <= 0) {
@@ -62,8 +62,8 @@ int32_t SoftbusAdapter::CreateSessionServer(const char *packageName, const char 
         .OnBind = SoftbusAdapter::OnBind,
         .OnShutdown = SoftbusAdapter::OnShutdown,
         .OnBytes = SoftbusAdapter::OnBytes,
-        .OnFile = SoftbusAdapter::OnFile,
         .OnMessage = nullptr,
+        .OnFile = SoftbusAdapter::OnFile,
         .OnStream = nullptr,
     };
 
@@ -210,7 +210,7 @@ int SoftbusAdapter::OpenSession(char *sessionName,
         .name = sessionName,
         .peerName = sessionName,
         .peerNetworkId = peerDeviceId,
-        .pkgName = strdup(SERVICE_NAME.c_str()),
+        .pkgName = const_cast<char*>(SERVICE_NAME.c_str()),
         .dataType = dataType,
     };
     int32_t socket = Socket(info);
