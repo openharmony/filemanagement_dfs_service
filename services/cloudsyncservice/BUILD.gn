@@ -232,7 +232,8 @@ ohos_static_library("cloudsync_sa_static") {
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
-  deps += [ "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter" ]
+  deps +=
+      [ "${distributedfile_path}/adapter/cloud_adapter_example:cloud_adapter" ]
 
   if (cloudsync_service_resource_schedule) {
     external_deps += [ "resource_schedule_service:ressched_client" ]
