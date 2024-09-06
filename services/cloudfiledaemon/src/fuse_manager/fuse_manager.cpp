@@ -564,7 +564,13 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
         delete fdsan;
         return -errno;
     }
-    MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
+    auto parentInode = GetCloudInode(data, cInode->parent);
+    if (parentInode == nullptr) {
+        LOGE("fail to find parent inode");
+        delete fdsan;
+        return ENOMEM;
+    }
+    MetaFile(data->userId, parentInode->path).DoRemove(*(cInode->mBase));
     cInode->mBase->hasDownloaded = true;
     fi->fh = reinterpret_cast<uint64_t>(fdsan);
     return 0;
