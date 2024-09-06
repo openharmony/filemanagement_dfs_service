@@ -933,13 +933,14 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest010, TestSize.Level1)
     try {
         CloudDiskFuseData data;
         fuse_req_t req = nullptr;
-        fuse_ino_t ino = 2;
-        string name = CLOUD_CLOUD_RECYCLE_XATTR;
-        const char *value = "test";
+        fuse_ino_t ino = -1;
+        string name = IS_FAVORITE_XATTR;
+        const char *value = "";
         size_t size = 0;
         int flags = 0;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         fileOperationsCloud_->SetXattr(req, ino, name.c_str(), value, size, flags);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -961,7 +962,7 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest011, TestSize.Level1)
     try {
         CloudDiskFuseData data;
         fuse_req_t req = nullptr;
-        fuse_ino_t ino = -1;
+        fuse_ino_t ino = 0;
         string name = IS_FAVORITE_XATTR;
         const char *value = "";
         size_t size = 0;
@@ -992,7 +993,7 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest012, TestSize.Level1)
         fuse_req_t req = nullptr;
         fuse_ino_t ino = 0;
         string name = IS_FAVORITE_XATTR;
-        const char *value = "";
+        const char *value = "test";
         size_t size = 0;
         int flags = 0;
 
@@ -1019,9 +1020,9 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest013, TestSize.Level1)
     try {
         CloudDiskFuseData data;
         fuse_req_t req = nullptr;
-        fuse_ino_t ino = 0;
-        string name = IS_FAVORITE_XATTR;
-        const char *value = "test";
+        fuse_ino_t ino = -1;
+        string name = IS_FILE_STATUS_XATTR;
+        const char *value = "";
         size_t size = 0;
         int flags = 0;
 
@@ -1048,7 +1049,7 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest014, TestSize.Level1)
     try {
         CloudDiskFuseData data;
         fuse_req_t req = nullptr;
-        fuse_ino_t ino = -1;
+        fuse_ino_t ino = 0;
         string name = IS_FILE_STATUS_XATTR;
         const char *value = "";
         size_t size = 0;
@@ -1079,7 +1080,7 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest015, TestSize.Level1)
         fuse_req_t req = nullptr;
         fuse_ino_t ino = 0;
         string name = IS_FILE_STATUS_XATTR;
-        const char *value = "";
+        const char *value = "test";
         size_t size = 0;
         int flags = 0;
 
@@ -1092,35 +1093,6 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest015, TestSize.Level1)
         GTEST_LOG_(INFO) << "SetXattrTest015 ERROR";
     }
     GTEST_LOG_(INFO) << "SetXattrTest015 End";
-}
-
-/**
- * @tc.name: SetXattrTest016
- * @tc.desc: Verify the SetXattr function
- * @tc.type: FUNC
- * @tc.require: issuesI91IOG
- */
-HWTEST_F(FileOperationsCloudTest, SetXattrTest016, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SetXattrTest016 Start";
-    try {
-        CloudDiskFuseData data;
-        fuse_req_t req = nullptr;
-        fuse_ino_t ino = 0;
-        string name = IS_FILE_STATUS_XATTR;
-        const char *value = "test";
-        size_t size = 0;
-        int flags = 0;
-
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
-        fileOperationsCloud_->SetXattr(req, ino, name.c_str(), value, size, flags);
-        EXPECT_TRUE(true);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SetXattrTest016 ERROR";
-    }
-    GTEST_LOG_(INFO) << "SetXattrTest016 End";
 }
 
 /**
