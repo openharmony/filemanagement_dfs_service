@@ -237,7 +237,7 @@ bool ForceRemoveDirectoryDeepFirst(const string& path)
     bool ret = true;
     DIR *dir = opendir(path.c_str());
     if (dir == nullptr) {
-        LOGE("opendir failed, path = %{public}s", GetAnonyString(path).c_str());
+        LOGE("opendir failed, path = %{public}s, err:%{public}d", GetAnonyString(path).c_str(), errno);
         return false;
     }
 
@@ -259,7 +259,8 @@ bool ForceRemoveDirectoryDeepFirst(const string& path)
         } else if (access(subPath.c_str(), F_OK) == 0) {
             if (remove(subPath.c_str()) != 0) {
                 closedir(dir);
-                LOGE("remove failed, subPath = %{public}s", GetAnonyString(subPath).c_str());
+                LOGE("remove failed, subPath = %{public}s, err:%{public}d",
+                    GetAnonyString(subPath).c_str(), errno);
                 return false;
             }
         }
@@ -269,7 +270,8 @@ bool ForceRemoveDirectoryDeepFirst(const string& path)
     string currentPath = ExcludeTrailingPathDelimiter(path);
     if (access(currentPath.c_str(), F_OK) == 0) {
         if (remove(currentPath.c_str()) != 0) {
-            LOGE("remove failed, currentPath = %{public}s", GetAnonyString(currentPath).c_str());
+            LOGE("remove failed, currentPath = %{public}s, err:%{public}d",
+                GetAnonyString(currentPath).c_str(), errno);
             return false;
         }
     }
