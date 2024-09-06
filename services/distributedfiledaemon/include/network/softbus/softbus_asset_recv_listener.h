@@ -35,7 +35,7 @@ public:
 
     static void OnRecvAssetStart(int32_t socketId, const char **fileList, int32_t fileCnt);
     static void OnRecvAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt);
-    static void OnRecvAssetError(int32_t socketId, int32_t errorCode);
+    static void OnRecvAssetError(int32_t socketId, int32_t errorCode, const char **fileList, int32_t fileCnt);
 
     static void OnAssetRecvBind(int32_t sessionId, PeerSocketInfo info);
     static void OnRecvShutdown(int32_t sessionId, ShutdownReason reason);
