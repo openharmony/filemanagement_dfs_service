@@ -34,6 +34,9 @@ static const int32_t LOCAL_ID_OFFSET = 100;
 int32_t CloudDiskRdbUtils::GetInt(const string &key, int32_t &val,
                                   const shared_ptr<ResultSet> resultSet)
 {
+    if (val == -1) {
+        return E_RDB;
+    }
     return E_OK;
 }
 
