@@ -39,8 +39,8 @@ public:
     static void RemoveFileMap(const std::string &taskId);
 
 private:
-    static std::mutex TaskIsSingleFileMapMutex_;
-    static std::map<std::string, bool> TaskIsSingleFileMap_;
+    static std::mutex taskIsSingleFileMapMutex_;
+    static std::map<std::string, bool> taskIsSingleFileMap_;
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
 };
 } // namespace DistributedFile
