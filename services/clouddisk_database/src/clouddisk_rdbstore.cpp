@@ -165,8 +165,8 @@ void CloudDiskRdbStore::DatabaseRestore()
     LOGI("clouddisk db image is malformed, need to restore");
     auto fileName = "/data/service/el1/public/cloudfile/" +
         to_string(userId_) + "/" + system::GetParameter(FILEMANAGER_KEY, "") + "/backup/clouddisk_backup.db";
-    int32_t ret = -1;
     if (access(fileName.c_str(), F_OK) == 0) {
+        int32_t ret = -1;
         {
             lock_guard<mutex> lock(backupMutex_);
             ret = rdbStore_->Restore(fileName);
