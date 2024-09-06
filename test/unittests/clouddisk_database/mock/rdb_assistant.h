@@ -25,7 +25,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace OHOS::FileManagement::CloudDisk{
+namespace OHOS::FileManagement::CloudDisk {
 using namespace std;
 using namespace NativeRdb;
 
