@@ -57,9 +57,6 @@ struct HmdfsDentry {
     uint64_t mtime{0};
     uint64_t atime{0};
     uint8_t recordId[CLOUD_RECORD_ID_LEN]{0};
-    uint8_t flags{0};
-    /* reserved bytes for long term extend, total 60 bytes */
-    uint8_t reserved[DENTRY_RESERVED_LENGTH];
 };
 
 struct HmdfsDentryGroup {
@@ -69,39 +66,24 @@ struct HmdfsDentryGroup {
     uint8_t fileName[DENTRY_PER_GROUP][DENTRY_NAME_LEN];
     uint8_t reserved[DENTRY_GROUP_RESERVED];
 };
-static_assert(sizeof(HmdfsDentryGroup) == DENTRYGROUP_SIZE);
-
-struct HmdfsDcacheHeader {
-    uint64_t dcacheCrtime{0};
-    uint64_t dcacheCrtimeNsec{0};
-
-    uint64_t dentryCtime{0};
-    uint64_t dentryCtimeNsec{0};
-
-    uint64_t dentryCount{0};
-};
 #pragma pack(pop)
 
 void MetaHelper::SetFileType(struct HmdfsDentry *de, uint8_t fileType)
 {
-    de->flags &= 0x3;
-    de->flags |= (fileType << FILE_TYPE_OFFSET);
 }
 
 void MetaHelper::SetPosition(struct HmdfsDentry *de, uint8_t position)
 {
-    de->flags &= 0xFC;
-    de->flags |= position;
 }
 
 uint8_t MetaHelper::GetFileType(const struct HmdfsDentry *de)
 {
-    return (de->flags & 0xFC) >> FILE_TYPE_OFFSET;
+    return 0;
 }
 
 uint8_t MetaHelper::GetPosition(const struct HmdfsDentry *de)
 {
-    return de->flags & 0x3;
+    return 0;
 }
 
 static std::string GetCloudDiskDentryFileByPath(uint32_t userId, const std::string &bundleName,
@@ -118,16 +100,6 @@ static std::string GetCloudDiskDentryFileByPath(uint32_t userId, const std::stri
 
 CloudDiskMetaFile::CloudDiskMetaFile(uint32_t userId, const std::string &bundleName, const std::string &cloudId)
 {
-    userId_ = userId;
-    bundleName_ = bundleName;
-    cloudId_ = cloudId;
-    cacheFile_ = GetCloudDiskDentryFileByPath(userId_, bundleName_, cloudId_);
-    fd_ = UniqueFd{open(cacheFile_.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)};
-    LOGD("CloudDiskMetaFile cloudId=%{public}s, path=%{public}s", cloudId_.c_str(), GetAnonyString(cacheFile_).c_str());
-    LOGD("CloudDiskMetaFile fd=%{public}d, errno :%{public}d", fd_.Get(), errno);
-
-    HmdfsDcacheHeader header{};
-    (void)FileUtils::ReadFile(fd_, 0, sizeof(header), &header);
 }
 
 std::string CloudDiskMetaFile::GetDentryFilePath()
