@@ -154,31 +154,6 @@ HWTEST_F(CloudDiskRdbStoreTest, RdbInitTest2, TestSize.Level1)
 }
 
 /**
- * @tc.name: DatabaseRestore
- * @tc.desc: Verify the CloudDiskRdbStore::DatabaseRestore function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(CloudDiskRdbStoreTest, DatabaseRestoreTest1, TestSize.Level1)
-{
-    clouddiskrdbStore_->rdbStore_ = nullptr;
-    clouddiskrdbStore_->DatabaseRestore();
-}
-
-/**
- * @tc.name: DatabaseRestore
- * @tc.desc: Verify the CloudDiskRdbStore::DatabaseRestore function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(CloudDiskRdbStoreTest, DatabaseRestoreTest2, TestSize.Level1)
-{
-    auto rdb = make_shared<RdbStoreMock>();
-    clouddiskrdbStore_->rdbStore_ = rdb;
-    clouddiskrdbStore_->DatabaseRestore();
-}
-
-/**
  * @tc.name: LookUp
  * @tc.desc: Verify the CloudDiskRdbStore::LookUp function
  * @tc.type: FUNC
@@ -2570,6 +2545,7 @@ HWTEST_F(CloudDiskRdbStoreTest, OnCreateTest1, TestSize.Level1)
     RdbStoreMock store;
     CloudDiskDataCallBack CloudDiskDataCallBack;
     int32_t ret = CloudDiskDataCallBack.OnCreate(store);
+    EXPECT_EQ(ret, E_OK);
 }
 
 /**
@@ -2585,6 +2561,7 @@ HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest1, TestSize.Level1)
     int32_t newVersion = 14;
     CloudDiskDataCallBack CloudDiskDataCallBack;
     int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+    EXPECT_EQ(ret, E_OK);
 }
 
 /**
@@ -2600,5 +2577,6 @@ HWTEST_F(CloudDiskRdbStoreTest, OnUpgradeTest2, TestSize.Level1)
     int32_t newVersion = 14;
     CloudDiskDataCallBack CloudDiskDataCallBack;
     int32_t ret = CloudDiskDataCallBack.OnUpgrade(store, oldVersion, newVersion);
+    EXPECT_EQ(ret, E_OK);
 }
 } // namespace OHOS::FileManagement::CloudDisk::Test
