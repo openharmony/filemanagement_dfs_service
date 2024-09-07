@@ -23,7 +23,8 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-bool SoftBusAssetSendListener::isSingleFile_;
+std::mutex SoftBusAssetSendListener::taskIsSingleFileMapMutex_;
+std::map<std::string, bool> SoftBusAssetSendListener::taskIsSingleFileMap_;
 void SoftBusAssetSendListener::OnFile(int32_t socket, FileEvent *event)
 {
     if (event == nullptr) {
@@ -59,7 +60,8 @@ void SoftBusAssetSendListener::OnSendAssetFinished(int32_t socketId, const char 
     AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_OK);
     SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
     AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
-    SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], !SoftBusAssetSendListener::isSingleFile_);
+    SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], GetIsZipFile(taskId));
+    RemoveFileMap(taskId);
 }
 
 void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId,
@@ -81,12 +83,45 @@ void SoftBusAssetSendListener::OnSendAssetError(int32_t socketId,
     AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_SEND_FILE);
     SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
     AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
-    SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], !SoftBusAssetSendListener::isSingleFile_);
+    SoftBusHandlerAsset::GetInstance().RemoveFile(fileList[0], GetIsZipFile(taskId));
+    RemoveFileMap(taskId);
 }
 
 void SoftBusAssetSendListener::OnSendShutdown(int32_t sessionId, ShutdownReason reason)
 {
     LOGI("OnSessionClosed, sessionId = %{public}d, reason = %{public}d", sessionId, reason);
+}
+void SoftBusAssetSendListener::AddFileMap(const std::string &taskId, bool isSingleFile)
+{
+    std::lock_guard<std::mutex> lock(taskIsSingleFileMapMutex_);
+    auto it = taskIsSingleFileMap_.find(taskId);
+    if (it != taskIsSingleFileMap_.end()) {
+        LOGE("taskId already exist, %{public}s", taskId.c_str());
+        return;
+    }
+    taskIsSingleFileMap_.insert(std::make_pair(taskId, isSingleFile));
+}
+
+bool SoftBusAssetSendListener::GetIsZipFile(const std::string &taskId)
+{
+    std::lock_guard<std::mutex> lock(taskIsSingleFileMapMutex_);
+    auto it = taskIsSingleFileMap_.find(taskId);
+    if (it == taskIsSingleFileMap_.end()) {
+        LOGI("taskId not exist, %{public}s", taskId.c_str());
+        return false;
+    }
+    return !it->second;
+}
+
+void SoftBusAssetSendListener::RemoveFileMap(const std::string &taskId)
+{
+    std::lock_guard<std::mutex> lock(taskIsSingleFileMapMutex_);
+    auto it = taskIsSingleFileMap_.find(taskId);
+    if (it == taskIsSingleFileMap_.end()) {
+        LOGI("taskId not exist, %{public}s", taskId.c_str());
+        return;
+    }
+    taskIsSingleFileMap_.erase(it);
 }
 
 } // namespace DistributedFile

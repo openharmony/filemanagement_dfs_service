@@ -52,7 +52,7 @@ void SoftbusAssetRecvListener::OnFile(int32_t socket, FileEvent *event)
             OnRecvAssetFinished(socket, event->files, event->fileCnt);
             break;
         case FILE_EVENT_RECV_ERROR:
-            OnRecvAssetError(socket, event->errorCode);
+            OnRecvAssetError(socket, event->errorCode, event->files, event->fileCnt);
             break;
         default:
             LOGI("Other situations");
@@ -140,7 +140,8 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
     SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
 }
 
-void SoftbusAssetRecvListener::OnRecvAssetError(int32_t socketId, int32_t errorCode)
+void SoftbusAssetRecvListener::OnRecvAssetError(int32_t socketId, int32_t errorCode,
+                                                const char **fileList, int32_t fileCnt)
 {
     LOGE("OnRecvAssetError, sessionId = %{public}d, errorCode = %{public}d", socketId, errorCode);
     auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
@@ -148,10 +149,13 @@ void SoftbusAssetRecvListener::OnRecvAssetError(int32_t socketId, int32_t errorC
         LOGE("get srcNetworkId fail");
         return;
     }
-    sptr<AssetObj> nullAssetObj (new (std::nothrow) AssetObj());
+    sptr<AssetObj> assetObj (new (std::nothrow) AssetObj());
+    if (fileCnt != 0) {
+        std::string firstFilePath(path_ + fileList[0]);
+        SoftBusHandlerAsset::GetInstance().GenerateAssetObjInfo(socketId, firstFilePath, assetObj);
+    }
 
-    AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, nullAssetObj,
-                                                                FileManagement::ERR_BAD_VALUE);
+    AssetCallbackManager::GetInstance().NotifyAssetRecvFinished(srcNetworkId, assetObj, FileManagement::ERR_BAD_VALUE);
     SoftBusHandlerAsset::GetInstance().RemoveClientInfo(socketId);
 }
 
@@ -189,7 +193,7 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
             LOGE("get asset flag fail, file name is %{public}s", GetAnonyString(oldPath).c_str());
             return false;
         }
-        newPath = newPath.substr(0, pos);
+        newPath.resize(pos);
         try {
             SoftBusHandlerAsset::GetInstance().MkDirRecurse(newPath, S_IRWXU | S_IRWXG | S_IXOTH);
             std::filesystem::rename(oldPath.c_str(), newPath.c_str());

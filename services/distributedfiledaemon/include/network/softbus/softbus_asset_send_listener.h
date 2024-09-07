@@ -18,6 +18,8 @@
 
 #include <cstdint>
 #include <string>
+#include <map>
+#include <mutex>
 
 #include "transport/socket.h"
 #include "transport/trans_type.h"
@@ -30,9 +32,15 @@ public:
     static void OnFile(int32_t socket, FileEvent *event);
     static void OnSendAssetFinished(int32_t socketId, const char **fileList, int32_t fileCnt);
     static void OnSendAssetError(int32_t socketId, const char **fileList, int32_t fileCnt, int32_t errorCode);
-    static bool isSingleFile_;
     static void OnSendShutdown(int32_t sessionId, ShutdownReason reason);
+
+    static void AddFileMap(const std::string &taskId, bool isSingleFile);
+    static bool GetIsZipFile(const std::string &taskId);
+    static void RemoveFileMap(const std::string &taskId);
+
 private:
+    static std::mutex taskIsSingleFileMapMutex_;
+    static std::map<std::string, bool> taskIsSingleFileMap_;
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
 };
 } // namespace DistributedFile

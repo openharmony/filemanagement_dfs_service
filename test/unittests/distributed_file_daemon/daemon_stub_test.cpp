@@ -435,7 +435,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest012, TestSize.Level1)
         int ret = daemonStub_->OnRemoteRequest(
             static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK), data,
             reply, option);
-        EXPECT_EQ(ret, E_IPC_READ_FAILED);
+        EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest012 ERROR";
@@ -461,7 +461,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest013, TestSize.Level1)
         int ret = daemonStub_->OnRemoteRequest(
             static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK),
             data, reply, option);
-        EXPECT_EQ(ret, E_IPC_READ_FAILED);
+        EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest013 ERROR";
@@ -487,7 +487,7 @@ HWTEST_F(DaemonStubTest, DaemonStubOnRemoteRequestTest014, TestSize.Level1)
         int ret = daemonStub_->OnRemoteRequest(
             static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET), data,
             reply, option);
-        EXPECT_EQ(ret, E_INVAL_ARG);
+        EXPECT_EQ(ret, E_PERMISSION_DENIED);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "DaemonStubOnRemoteRequestTest014 ERROR";
