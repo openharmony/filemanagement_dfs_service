@@ -19,7 +19,7 @@
 
 namespace OHOS {
 namespace NativePreferences {
-
+#define TEST_PATH "/data/service/el1/public/cloudfile/123/test_key/"
 class PreferencesHelperMock : public Preferences {
 public:
     MOCK_METHOD2(Get, PreferencesValue(const std::string &key, const PreferencesValue &defValue));
@@ -56,6 +56,11 @@ std::shared_ptr<Preferences> PreferencesHelper::GetPreferences(const Options &op
     if (options.filePath == "") {
         return nullptr;
     }
+
+    if (options.filePath == TEST_PATH) {
+        return nullptr;
+    }
+
     std::shared_ptr<PreferencesHelperMock> pref = std::make_shared<PreferencesHelperMock>();
     return pref;
 }

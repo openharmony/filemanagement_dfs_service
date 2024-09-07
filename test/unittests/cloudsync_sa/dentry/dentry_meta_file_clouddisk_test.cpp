@@ -518,4 +518,81 @@ HWTEST_F(CloudDiskDentryMetaFileTest, RemoveFromRecycleDentryfile_003, TestSize.
     }
     GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfile_003 End";
 }
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DoCreate_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoCreate_001 Start";
+    try {
+        CloudDiskMetaFile mFile(100, "", "");
+        MetaBase mBase1("file1", "id1");
+        int32_t ret = mFile.DoCreate(mBase1);
+        EXPECT_EQ(ret, E_EINVAL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DoCreate_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoCreate_001 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DoRemove_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoRemove_001 Start";
+    try {
+        CloudDiskMetaFile mFile(100, "", "");
+        MetaBase mBase1("file1", "id1");
+        int32_t ret = mFile.DoRemove(mBase1);
+        EXPECT_EQ(ret, E_EINVAL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DoRemove_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoRemove_001 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DoLookup_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoLookup_001 Start";
+    try {
+        CloudDiskMetaFile mFile(100, "", "");
+        MetaBase mBase1("file1", "id1");
+        int32_t ret = mFile.DoLookup(mBase1);
+        EXPECT_EQ(ret, E_EINVAL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DoLookup_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoLookup_001 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DoUpdate_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoUpdate_001 Start";
+    try {
+        CloudDiskMetaFile mFile(100, "", "");
+        MetaBase mBase1("file1", "id1");
+        int32_t ret = mFile.DoUpdate(mBase1);
+        EXPECT_EQ(ret, E_EINVAL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DoUpdate_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoUpdate_001 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, LoadChildren_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadChildren_001 Start";
+    try {
+        CloudDiskMetaFile mFile(100, "", "");
+        MetaBase mBase1("file1", "id1");
+        std::vector<MetaBase> bases;
+        bases.push_back(mBase1);
+        int32_t ret = mFile.LoadChildren(bases);
+        EXPECT_EQ(ret, E_EINVAL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "LoadChildren_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "LoadChildren_001 End";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
