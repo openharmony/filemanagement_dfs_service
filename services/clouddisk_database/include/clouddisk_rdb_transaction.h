@@ -31,7 +31,7 @@ enum TRANS_DB_IDX {
     PHOTO_RDB_IDX = 0,
     CLOUDDISK_RDB_IDX = 1,
 };
-+static constexpr uint32_t RDB_NUM = 2;
+static constexpr uint32_t RDB_NUM = 2;
 /**
  * This class is used for database transaction creation, commit, and rollback
  * The usage of class is as follows:
