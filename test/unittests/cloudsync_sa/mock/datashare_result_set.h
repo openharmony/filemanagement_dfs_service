@@ -20,31 +20,31 @@ namespace OHOS {
 namespace DataShare {
 class DataShareResultSet {
 public:
-    int GetColumnIndex(const std::string &columnName, int &columnIndex)
+    static int GetColumnIndex(const std::string &columnName, int &columnIndex)
     {
         return 0;
     }
-    int GetString(int columnIndex, std::string &value)
+    static int GetString(int columnIndex, std::string &value)
     {
         return 0;
     }
-    int GetLong(int columnIndex, int64_t &value)
+    static int GetLong(int columnIndex, int64_t &value)
     {
         return 0;
     }
-    int GetInt(int columnIndex, int &value)
+    static int GetInt(int columnIndex, int &value)
     {
         return 0;
     }
-    int GoToFirstRow()
+    static int GoToFirstRow()
     {
         return 0;
     }
-    int GoToNextRow()
+    static int GoToNextRow()
     {
         return 0;
     }
-    int Close()
+    static int Close()
     {
         return 0;
     }
