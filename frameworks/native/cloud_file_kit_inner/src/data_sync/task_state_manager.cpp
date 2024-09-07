@@ -110,6 +110,7 @@ void TaskStateManager::DelayUnloadTask()
         LOGE("temperatureSysparam is true, don't stop");
         return;
     }
+
     LOGI("delay unload task begin");
     auto task = [this]() {
         LOGI("do unload task");

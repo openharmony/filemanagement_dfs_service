@@ -32,7 +32,7 @@ constexpr int32_t MAX_TRY_TIMES = 5;
 constexpr int32_t TRANSACTION_WAIT_INTERVAL = 50; // in milliseconds.
 
 TransactionOperations::TransactionOperations(
-    const shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore) : rdbStore_(rdbStore) {}
+    const shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore, TRANS_DB_IDX idx) : rdbStore_(rdbStore), idx_(idx) {}
 
 TransactionOperations::~TransactionOperations()
 {

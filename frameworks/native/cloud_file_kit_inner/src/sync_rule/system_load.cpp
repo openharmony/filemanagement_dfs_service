@@ -44,12 +44,14 @@ void SystemLoadListener::OnSystemloadLevel(int32_t level)
     } else if (level <= SYSTEMLOADLEVEL_WARM && dataSyncManager_) {
         std::string systemLoadSync = system::GetParameter(TEMPERATURE_SYSPARAM_SYNC, "");
         std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
-        LOGI("OnSystemloadLevel is noraml, level:%{public}d", level);
+        LOGI("OnSystemloadLevel is normal, level:%{public}d", level);
         if (systemLoadSync == "true") {
+            LOGI("SetParameter TEMPERATURE_SYSPARAM_SYNC false");
             system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "false");
             dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SYSTEM_LOAD_TRIGGER);
         }
         if (systemLoadThumb == "true") {
+            LOGI("SetParameter TEMPERATURE_SYSPARAM_THUMB false");
             system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "false");
             dataSyncManager_->DownloadThumb();
         }
@@ -73,12 +75,15 @@ void SystemLoadStatus::InitSystemload(std::shared_ptr<CloudFile::DataSyncManager
     RegisterSystemloadCallback(dataSyncManager);
 }
 
-bool SystemLoadStatus::IsLoadStatusUnderHot(bool setFlag)
+bool SystemLoadStatus::IsLoadStatusUnderHot(STOPPED_TYPE process)
 {
     if (loadstatus_ > SYSTEMLOADLEVEL_HOT) {
-        if (setFlag) {
-            LOGI("SetSystemloadLevel TEMPERATURE_SYSPARAM_THUMB true");
+        if (process == STOPPED_IN_THUMB) {
+            LOGI("SetParameter TEMPERATURE_SYSPARAM_THUMB true");
             system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "true");
+        } else if (process == STOPPED_IN_SYNC) {
+            LOGI("SetParameter TEMPERATURE_SYSPARAM_SYNC true");
+            system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "true");
         }
         return false;
     }
