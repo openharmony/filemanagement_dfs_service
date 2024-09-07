@@ -35,6 +35,7 @@ public:
     virtual int32_t TriggerStopSync(const std::string &bundleName, const int32_t userId,
                                     bool forceFlag, SyncTriggerType triggerType);
     virtual int32_t TriggerRecoverySync(SyncTriggerType triggerType);
+    virtual int32_t ResetCursor(const std::string &bundleName, const int32_t &userId);
     virtual void RegisterCloudSyncCallback(const std::string &bundleName,
                                            const std::string &callerBundleName,
                                            const int32_t userId,
