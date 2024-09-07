@@ -40,6 +40,11 @@ int32_t DataSyncManager::TriggerRecoverySync(SyncTriggerType triggerType)
     return E_OK;
 }
 
+int32_t DataSyncManager::ResetCursor(const std::string &bundleName, const int32_t &userId)
+{
+    return E_OK;
+}
+
 void DataSyncManager::RegisterCloudSyncCallback(const std::string &bundleName,
                                                 const std::string &callerBundleName,
                                                 const int32_t userId,

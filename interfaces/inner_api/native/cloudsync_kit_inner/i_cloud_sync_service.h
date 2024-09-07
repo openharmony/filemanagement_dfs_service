@@ -33,6 +33,7 @@ public:
     virtual int32_t StartSyncInner(bool forceFlag, const std::string &bundleName = "") = 0;
     virtual int32_t TriggerSyncInner(const std::string &bundleName, const int32_t &userId) = 0;
     virtual int32_t StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) = 0;
+    virtual int32_t ResetCursor(const std::string &bundleName = "") = 0;
     virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
     virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;
     virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
