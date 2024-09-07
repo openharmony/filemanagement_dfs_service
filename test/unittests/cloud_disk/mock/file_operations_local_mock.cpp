@@ -29,59 +29,6 @@ static const int32_t BUNDLE_NAME_OFFSET = 1000000000;
 static const int32_t STAT_MODE_DIR = 0771;
 static const float LOOKUP_TIMEOUT = 60.0;
 
-static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
-                             struct fuse_entry_param *e)
-{
-    int32_t err = 0;
-    bool createFlag = false;
-    struct CloudDiskFuseData *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
-    string path = FileOperationsHelper::GetCloudDiskLocalPath(data->userId, name);
-    std::unique_lock<std::shared_mutex> cWLock(data->cacheLock, std::defer_lock);
-    string key = std::to_string(parent) + name;
-    int64_t localId = FileOperationsHelper::FindLocalId(data, key);
-    auto child = FileOperationsHelper::FindCloudDiskInode(data, localId);
-    if (child == nullptr) {
-        child = make_shared<CloudDiskInode>();
-        createFlag = true;
-        LOGD("new child %{public}s", name);
-    }
-    std::unique_lock<std::shared_mutex> lWLock(data->localIdLock, std::defer_lock);
-    child->refCount++;
-    if (createFlag) {
-        err = stat(path.c_str(), &child->stat);
-        if (err != 0) {
-            LOGE("lookup %{public}s error, err: %{public}d", path.c_str(), errno);
-            return errno;
-        }
-        child->stat.st_mode |= STAT_MODE_DIR;
-        child->parent = parent;
-        child->path = path;
-        auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parent));
-        child->layer = FileOperationsHelper::GetNextLayer(parentInode, parent);
-        localId = FileOperationsHelper::GetFixedLayerRootId(child->layer);
-        if (child->layer >= CLOUD_DISK_INODE_FIRST_LAYER) {
-            std::lock_guard<std::shared_mutex> bWLock(data->bundleNameIdLock);
-            data->bundleNameId++;
-            localId = data->bundleNameId + BUNDLE_NAME_OFFSET;
-        }
-        child->stat.st_ino = static_cast<uint64_t>(localId);
-        child->ops = make_shared<FileOperationsLocal>();
-        cWLock.lock();
-        data->inodeCache[localId] = child;
-        cWLock.unlock();
-        lWLock.lock();
-        data->localIdCache[key] = localId;
-        lWLock.unlock();
-    }
-    if (child->layer >= CLOUD_DISK_INODE_FIRST_LAYER) {
-        child->bundleName = name;
-        child->ops = make_shared<FileOperationsCloud>();
-    }
-    e->ino = static_cast<fuse_ino_t>(localId);
-    FileOperationsHelper::GetInodeAttr(child, &e->attr);
-    return 0;
-}
-
 void FileOperationsLocal::Lookup(fuse_req_t req, fuse_ino_t parent, const char *name) {}
 
 void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
