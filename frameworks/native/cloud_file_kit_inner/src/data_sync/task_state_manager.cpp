@@ -108,6 +108,7 @@ void TaskStateManager::DelayUnloadTask()
     string systemLoadThumb = system::GetParameter(temperatureSysparamThumb, "");
     if (systemLoadSync == "true" || systemLoadThumb == "true") {
         LOGE("temperatureSysparam is true, don't stop");
+        CancelUnloadTask();
         return;
     }
 

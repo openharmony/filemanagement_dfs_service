@@ -90,6 +90,7 @@ void ForceCreateDirectory(const std::string &path, mode_t mode);
 void ForceCreateDirectory(const std::string &path, mode_t mode, uid_t uid, gid_t gid);
 
 void ForceRemoveDirectory(const std::string &path);
+bool ForceRemoveDirectoryDeepFirst(const std::string& path);
 bool IsFile(const std::string &path);
 bool IsFolder(const std::string &name);
 std::vector<std::string> GetFilePath(const std::string &name);

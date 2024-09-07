@@ -25,9 +25,9 @@ constexpr int32_t E_HAS_DB_ERROR = -222;
 constexpr int32_t E_OK = 0;
 
 constexpr int RDB_TRANSACTION_WAIT_MS = 1000;
-std::mutex TransactionOperations::transactionMutex_;
-std::condition_variable TransactionOperations::transactionCV_;
-std::atomic<bool> TransactionOperations::isInTransaction_(false);
+atomic<bool> TransactionOperations::isInTransactionMap_[RDB_NUM] = {false, false};
+mutex TransactionOperations::transactionMutexMap_[RDB_NUM] = {mutex(), mutex()};
+condition_variable TransactionOperations::transactionCvMap_[RDB_NUM] = {condition_variable(), condition_variable()};
 constexpr int32_t MAX_TRY_TIMES = 5;
 constexpr int32_t TRANSACTION_WAIT_INTERVAL = 50; // in milliseconds.
 

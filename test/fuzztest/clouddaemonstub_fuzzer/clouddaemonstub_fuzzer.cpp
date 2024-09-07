@@ -36,6 +36,8 @@ using namespace OHOS::FileManagement;
 
 const std::u16string CLOUD_DEAMON_TOKEN = u"ohos.filemanagement.distributedfile.clouddaemon";
 
+namespace FileManagement {
+namespace CloudFile {
 class CloudDaemonStubImpl : public CloudDaemonStub {
 public:
     CloudDaemonStubImpl() = default;
@@ -45,6 +47,8 @@ public:
         return E_OK;
     }
 };
+}
+}
 
 void HandleStartFuseInnerFuzzTest(
     std::shared_ptr<CloudDaemonStub> cloudDaemonStubStr,

@@ -82,7 +82,7 @@ static const unsigned int MAX_IDLE_THREADS = 10;
 static const unsigned int READ_CACHE_SLEEP = 10 * 1000;
 static const unsigned int CACHE_PAGE_NUM = 2;
 static const unsigned int HMDFS_IOC = 0xf2;
-static const std::chrono::seconds READ_TIMEOUT_S = 8s;
+static const std::chrono::seconds READ_TIMEOUT_S = 20s;
 static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
 
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
@@ -375,7 +375,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         LOGD("new child %s", GetAnonyString(child->path).c_str());
     }
     MetaBase mBase(name);
-    err = MetaFile(data->userId, GetCloudInode(data, parent)->path).DoLookup(mBase);
+    err = MetaFile(data->userId, parentName).DoLookup(mBase);
     if (err) {
         LOGE("lookup %s error, err: %{public}d", childName.c_str(), err);
         return err;
@@ -607,13 +607,7 @@ static void LoadCacheFileIndex(shared_ptr<CloudInode> cInode, int32_t userId)
             LOGE("failed to create parent dir");
             return;
         }
-        char *realPaths = realpath(cachePath.c_str(), nullptr);
-        if (realPaths == nullptr) {
-            LOGE("realpath failed");
-            return;
-        }
-        int fd = open(realPaths, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-        free(realPaths);
+        int fd = open(cachePath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         if (fd < 0) {
             LOGE("failed to open cache file, ret: %{public}d", errno);
             return;
@@ -1011,12 +1005,9 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
 
     wSesLock.lock();
-    while (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
-        if (static_cast<uint64_t>(cacheIndex * MAX_READ_SIZE) > cInode->mBase->size) {
-            wSesLock.unlock();
-            return;
-        }
-        cacheIndex++;
+    if (cInode->readCacheMap.find(cacheIndex) != cInode->readCacheMap.end()) {
+        wSesLock.unlock();
+        return;
     }
     auto memInfo = std::make_shared<ReadCacheInfo>();
     memInfo->flags = PG_READAHEAD;
@@ -1025,6 +1016,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     wSesLock.unlock();
 
     readArgs->offset = cacheIndex * MAX_READ_SIZE;
+    readArgs->buf.reset(new char[MAX_READ_SIZE], [](char *ptr) { delete[] ptr; });
     *readArgs->readResult =
         readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
 
@@ -1069,7 +1061,7 @@ static void InitReadSlice(size_t size, off_t off, ReadSlice &readSlice)
         readSlice.sizeHead = static_cast<size_t>(readSlice.offTail - readSlice.offHead);
         readSlice.sizeTail = MAX_READ_SIZE;
     } else {
-        readSlice.sizeHead = static_cast<size_t>(readSlice.offHead + MAX_READ_SIZE - readSlice.offHead);
+        readSlice.sizeHead = static_cast<size_t>(readSlice.offTail + MAX_READ_SIZE - readSlice.offHead);
     }
     if ((static_cast<off_t>(size) + off) % MAX_READ_SIZE == 0) {
         readSlice.offTail -= MAX_READ_SIZE;
@@ -1229,13 +1221,9 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
         if (IsVideoType(params.cInode->mBase->name) && params.cInode->cacheFileIndex.get()[cacheIndex] == HAS_CACHED) {
             continue;
         }
-        auto readArgsCache = make_shared<ReadArguments>(MAX_READ_SIZE, cacheIndex * MAX_READ_SIZE, req->ctx.pid);
+        auto readArgsCache = make_shared<ReadArguments>(0, cacheIndex * MAX_READ_SIZE, req->ctx.pid);
         if (!readArgsCache) {
             LOGE("Init readArgsCache failed");
-            break;
-        }
-        if (!readArgsCache->buf) {
-            LOGE("cache buffer is null");
             break;
         }
         ffrt::submit([readArgsCache, params, data] {

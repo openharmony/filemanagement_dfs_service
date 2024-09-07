@@ -62,9 +62,9 @@ private:
     bool isFinish = false;
     TRANS_DB_IDX idx_ = CLOUDDISK_RDB_IDX;
 
-    static std::mutex transactionMutex_;
-    static std::condition_variable transactionCV_;
-    static std::atomic<bool> isInTransaction_;
+    static std::atomic<bool> isInTransactionMap_[RDB_NUM];
+    static std::mutex transactionMutexMap_[RDB_NUM];
+    static std::condition_variable transactionCvMap_[RDB_NUM];
 };
 } // namespace CloudDisk
 } // namespace FileManagement
