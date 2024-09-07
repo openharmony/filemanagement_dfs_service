@@ -370,6 +370,19 @@ int32_t CloudSyncService::StopSyncInner(const string &bundleName, bool forceFlag
     return dataSyncManager_->TriggerStopSync(targetBundleName, callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
 }
 
+int32_t CloudSyncService::ResetCursor(const string &bundleName)
+{
+    string targetBundleName = bundleName;
+    string callerBundleName = "";
+    int32_t ret = GetTargetBundleName(targetBundleName, callerBundleName);
+    if (ret != E_OK) {
+        LOGE("get bundle name failed: %{public}d", ret);
+        return ret;
+    }
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    return dataSyncManager_->ResetCursor(targetBundleName, callerUserId);
+}
+
 int32_t CloudSyncService::GetSyncTimeInner(int64_t &syncTime, const string &bundleName)
 {
     string targetBundleName = bundleName;
