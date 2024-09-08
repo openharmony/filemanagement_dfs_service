@@ -300,7 +300,10 @@ void CloudSyncManagerImpl::SetDeathRecipient(const sptr<IRemoteObject> &remoteOb
             isFirstCall_.clear();
         };
         deathRecipient_ = sptr(new SvcDeathRecipient(deathCallback));
-        remoteObject->AddDeathRecipient(deathRecipient_);
+        if (!remoteObject->AddDeathRecipient(deathRecipient_)) {
+            LOGE("add death recipient failed");
+            isFirstCall_.clear();
+        }
     }
 }
 
@@ -379,22 +382,38 @@ void CloudSyncManagerImpl::SubscribeListener(std::string bundleName)
 void CloudSyncManagerImpl::SystemAbilityStatusChange::OnAddSystemAbility(int32_t systemAbilityId,
     const std::string &deviceId)
 {
-    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
-    if (!CloudSyncServiceProxy) {
-        LOGE("proxy is null");
+    const uint32_t RETRY_TIMES = 3;
+    const uint32_t SLEEP_TIME = 20 * 1000;
+    uint32_t retryCount = 0;
+    LOGI("saId %{public}d loaded", systemAbilityId);
+    do {
+        usleep(SLEEP_TIME);
+        auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+        if (!CloudSyncServiceProxy) {
+            LOGE("proxy is null");
+            continue;
+        }
+        if (downloadCallback_) {
+            auto ret = CloudSyncServiceProxy->RegisterDownloadFileCallback(
+                sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback_)));
+            if (ret != E_OK) {
+                LOGW("register download callback failed, try time is %{public}d", retryCount);
+                continue;
+            }
+            CloudSyncManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+        }
+        if (callback_) {
+            auto ret = CloudSyncServiceProxy->RegisterCallbackInner(
+                sptr(new (std::nothrow) CloudSyncCallbackClient(callback_)), bundleName_);
+            if (ret != E_OK) {
+                LOGW("register callback failed, try time is %{public}d", retryCount);
+                continue;
+            }
+            CloudSyncManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+        }
         return;
-    }
-    if (downloadCallback_) {
-        CloudSyncServiceProxy->RegisterDownloadFileCallback(
-            sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback_)));
-        CloudSyncManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    }
-    if (callback_) {
-        CloudSyncServiceProxy->RegisterCallbackInner(sptr(new (std::nothrow) CloudSyncCallbackClient(callback_)),
-                                                     bundleName_);
-        CloudSyncManagerImpl::GetInstance().SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    }
-    return;
+    } while (++retryCount < RETRY_TIMES);
+    LOGE("register callback failed, try too many times");
 }
 
 void CloudSyncManagerImpl::SystemAbilityStatusChange::OnRemoveSystemAbility(int32_t systemAbilityId,
