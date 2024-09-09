@@ -1076,11 +1076,6 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t size,
     off_t off, struct fuse_file_info *fi)
 {
-    if (fi->fh == UINT64_MAX) {
-        LOGE("Invalid fh in fuse_file_info");
-        fuse_reply_err(req, EBADF);
-        return;
-    }
     auto fdsan = reinterpret_cast<fdsan_fd *>(fi->fh);
     auto readSize = pread(fdsan->get(), buf.get(), size, off);
     if (readSize < 0) {
@@ -1308,7 +1303,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         LOGE("buffer is null");
         return;
     }
-    if (cInode->mBase->hasDownloaded) {
+    if (cInode->mBase->hasDownloaded && fi->fh != UINT64_MAX) {
         CloudReadOnLocalFile(req, buf, size, off, fi);
         return;
     }
