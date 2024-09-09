@@ -457,6 +457,10 @@ static int32_t GetParentUpload(shared_ptr<CloudDiskInode> parentInode, struct Cl
                                bool &parentNoUpload)
 {
     auto grandparentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parentInode->parent));
+    if (grandparentInode == nullptr) {
+        LOGE("grandparentInode not found");
+        return EINVAL;
+    }
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
         grandparentInode->bundleName, grandparentInode->cloudId);
     MetaBase metaBase(parentInode->fileName);
