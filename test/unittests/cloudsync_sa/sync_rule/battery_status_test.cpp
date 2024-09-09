@@ -15,7 +15,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
+#include "battersrvclient_mock.h"
 #include "battery_status.h"
 #include "utils_log.h"
 
@@ -23,6 +23,8 @@ namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
 using namespace testing::ext;
 using namespace std;
+constexpr int32_t STOP_CAPACITY_LIMIT = 10;
+constexpr int32_t PAUSE_CAPACITY_LIMIT = 15;
 
 class BatteryStatusMock final : public BatteryStatus {
 public:
@@ -37,15 +39,20 @@ public:
     void SetUp();
     void TearDown();
     shared_ptr<BatteryStatusMock> batteryStatus_ = nullptr;
+    static inline shared_ptr<BatterySrvClientMock> dfsBatterySrvClient_ = nullptr;
 };
 
 void BatteryStatusTest::SetUpTestCase(void)
 {
+    dfsBatterySrvClient_ = make_shared<BatterySrvClientMock>();
+    BatterySrvClientMock::dfsBatterySrvClient = dfsBatterySrvClient_;
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
 void BatteryStatusTest::TearDownTestCase(void)
 {
+    BatterySrvClientMock::dfsBatterySrvClient = nullptr;
+    dfsBatterySrvClient_ = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
@@ -99,6 +106,54 @@ HWTEST_F(BatteryStatusTest, IsAllowUploadTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "IsAllowUploadTest002 FAILED";
     }
     GTEST_LOG_(INFO) << "IsAllowUploadTest002 End";
+}
+
+/**
+ * @tc.name: IsAllowUploadTest003
+ * @tc.desc: Verify the IsAllowUpload function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusTest, IsAllowUploadTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsAllowUploadTest003 Start";
+    EXPECT_CALL(*dfsBatterySrvClient_, GetCapacity()).WillOnce(Return(STOP_CAPACITY_LIMIT - 1));
+    batteryStatus_->SetChargingStatus(false);
+    bool ret = batteryStatus_->IsAllowUpload(false);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "IsAllowUploadTest003 End";
+}
+
+/**
+ * @tc.name: IsAllowUploadTest004
+ * @tc.desc: Verify the IsAllowUpload function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusTest, IsAllowUploadTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsAllowUploadTest004 Start";
+    EXPECT_CALL(*dfsBatterySrvClient_, GetCapacity()).WillOnce(Return(PAUSE_CAPACITY_LIMIT - 1));
+    batteryStatus_->SetChargingStatus(false);
+    bool ret = batteryStatus_->IsAllowUpload(false);
+    EXPECT_FALSE(ret);
+    GTEST_LOG_(INFO) << "IsAllowUploadTest004 End";
+}
+
+/**
+ * @tc.name: IsAllowUploadTest004
+ * @tc.desc: Verify the IsAllowUpload function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusTest, IsAllowUploadTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsAllowUploadTest005 Start";
+    EXPECT_CALL(*dfsBatterySrvClient_, GetCapacity()).WillOnce(Return(PAUSE_CAPACITY_LIMIT - 1));
+    batteryStatus_->SetChargingStatus(false);
+    bool ret = batteryStatus_->IsAllowUpload(true);
+    EXPECT_TRUE(ret);
+    GTEST_LOG_(INFO) << "IsAllowUploadTest005 End";
 }
 
 /**
