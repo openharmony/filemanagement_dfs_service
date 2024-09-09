@@ -32,6 +32,8 @@ namespace CloudFile {
                     ##__VA_ARGS__)
 #endif
 
+#define MINIMUM_FAULT_REPORT_INTERVAL 3600
+
 enum class FaultScenarioCode {
     CLOUD_FULL_SYNC = 100,
     CLOUD_INC_SYNC = 200,
@@ -94,7 +96,13 @@ enum class FaultType {
     META_CONSISTENCY = 60000002,
 
     /* process fault type */
-    PROCESS = 70000000
+    PROCESS = 70000000,
+
+    /* cloud sync error */
+    CLOUD_SYNC_ERROR = 80000000,
+
+    /* inner error */
+    INNER_ERROR = 90000000
 };
 
 struct CloudSyncFaultInfo {
@@ -112,6 +120,28 @@ struct CloudFileFaultInfo {
     int32_t faultErrorCode_;
     std::string message_;
 };
+
+const std::vector<FaultType> PERIODIC_REPORT_FAULT_TYPE = { FaultType::OPEN_CLOUD_FILE_TIMEOUT,
+                                                            FaultType::CLOUD_READ_FILE_TIMEOUT,
+                                                            FaultType::CLOUD_FILE_LOOKUP_TIMEOUT,
+                                                            FaultType::CLOUD_FILE_FORGET_TIMEOUT };
+
+class CloudFaultReportStatus {
+public:
+    static CloudFaultReportStatus &GetInstance();
+
+    bool IsAllowToReport(const FaultType &faultType);
+
+private:
+    CloudFaultReportStatus();
+
+    CloudFaultReportStatus(const CloudFaultReportStatus&) = delete;
+
+    CloudFaultReportStatus& operator=(const CloudFaultReportStatus&) = delete;
+
+    std::mutex timeMapLock_;
+    std::unordered_map<FaultType, uint64_t> lastTimeMap_;
+} ;
 
 class CloudFileFaultEvent {
 public:
