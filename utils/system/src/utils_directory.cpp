@@ -231,6 +231,54 @@ void ForceRemoveDirectory(const string &path)
     }
 }
 
+bool ForceRemoveDirectoryDeepFirst(const string& path)
+{
+    string subPath;
+    bool ret = true;
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        LOGE("opendir failed, path = %{public}s, err:%{public}d", GetAnonyString(path).c_str(), errno);
+        return false;
+    }
+
+    while (true) {
+        struct dirent *ptr = readdir(dir);
+        if (ptr == nullptr) {
+            break;
+        }
+
+        // current dir OR parent dir
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+            continue;
+        }
+        subPath = IncludeTrailingPathDelimiter(path) + string(ptr->d_name);
+        if (ptr->d_type == DT_DIR) {
+            if (!ForceRemoveDirectoryDeepFirst(subPath)) {
+                ret = false;
+            }
+        } else if (access(subPath.c_str(), F_OK) == 0) {
+            if (remove(subPath.c_str()) != 0) {
+                closedir(dir);
+                LOGE("remove failed, subPath = %{public}s, err:%{public}d",
+                    GetAnonyString(subPath).c_str(), errno);
+                return false;
+            }
+        }
+    }
+    closedir(dir);
+
+    string currentPath = ExcludeTrailingPathDelimiter(path);
+    if (access(currentPath.c_str(), F_OK) == 0) {
+        if (remove(currentPath.c_str()) != 0) {
+            LOGE("remove failed, currentPath = %{public}s, err:%{public}d",
+                GetAnonyString(currentPath).c_str(), errno);
+            return false;
+        }
+    }
+
+    return ret && (access(path.c_str(), F_OK) != 0);
+}
+
 bool IsFile(const std::string &path)
 {
     if (path.empty()) {
