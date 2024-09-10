@@ -55,34 +55,26 @@ void CycleTaskDerivedFuzzTest(const uint8_t *data, size_t size)
     bundleNames.insert(bundleName);
     auto bundleNamesPtr = make_shared<std::set<std::string>>(bundleNames);
     shared_ptr<CycleTask> saveSubscriptionTaskPtr = make_shared<SaveSubscriptionTask>(dataSyncManager);
-    if (saveSubscriptionTaskPtr != nullptr) {
-        saveSubscriptionTaskPtr->SetRunnableBundleNames(bundleNamesPtr);
-        saveSubscriptionTaskPtr->RunTask(userId);
-        saveSubscriptionTaskPtr->RunTaskForBundle(userId, bundleName);
-    }
+    saveSubscriptionTaskPtr->SetRunnableBundleNames(bundleNamesPtr);
+    saveSubscriptionTaskPtr->RunTask(userId);
+    saveSubscriptionTaskPtr->RunTaskForBundle(userId, bundleName);
 
     shared_ptr<CycleTask> optimizeStorageTaskPtr = make_shared<OptimizeStorageTask>(dataSyncManager);
-    if (optimizeStorageTaskPtr != nullptr) {
-        optimizeStorageTaskPtr->SetRunnableBundleNames(bundleNamesPtr);
-        optimizeStorageTaskPtr->RunTask(userId);
-        optimizeStorageTaskPtr->RunTaskForBundle(userId, bundleName);
-    }
+    optimizeStorageTaskPtr->SetRunnableBundleNames(bundleNamesPtr);
+    optimizeStorageTaskPtr->RunTask(userId);
+    optimizeStorageTaskPtr->RunTaskForBundle(userId, bundleName);
 
     shared_ptr<CycleTask> reportStatisticsTaskPtr = make_shared<ReportStatisticsTask>(dataSyncManager);
-    if (reportStatisticsTaskPtr != nullptr) {
-        reportStatisticsTaskPtr->SetRunnableBundleNames(bundleNamesPtr);
-        reportStatisticsTaskPtr->RunTask(userId);
-        reportStatisticsTaskPtr->RunTaskForBundle(userId, bundleName);
-    }
+    reportStatisticsTaskPtr->SetRunnableBundleNames(bundleNamesPtr);
+    reportStatisticsTaskPtr->RunTask(userId);
+    reportStatisticsTaskPtr->RunTaskForBundle(userId, bundleName);
 
     shared_ptr<CycleTask> periodicCheckTaskPtr = make_shared<PeriodicCheckTask>(dataSyncManager);
-    if (periodicCheckTaskPtr != nullptr) {
-        periodicCheckTaskPtr->SetRunnableBundleNames(bundleNamesPtr);
-        periodicCheckTaskPtr->RunTask(userId);
-        periodicCheckTaskPtr->RunTaskForBundle(userId, bundleName);
-        periodicCheckTaskPtr->GetTaskName();
-        periodicCheckTaskPtr->GetDataSyncManager();
-    }
+    periodicCheckTaskPtr->SetRunnableBundleNames(bundleNamesPtr);
+    periodicCheckTaskPtr->RunTask(userId);
+    periodicCheckTaskPtr->RunTaskForBundle(userId, bundleName);
+    periodicCheckTaskPtr->GetTaskName();
+    periodicCheckTaskPtr->GetDataSyncManager();
 }
 } // namespace OHOS
 

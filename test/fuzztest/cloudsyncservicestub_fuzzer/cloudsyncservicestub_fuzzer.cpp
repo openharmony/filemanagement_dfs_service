@@ -683,9 +683,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::NativeTokenGet(true);
     auto cloudSyncServiceStubStr =
         std::make_shared<OHOS::FileManagement::CloudSync::CloudSyncService>(OHOS::SERVICE_SA_ID);
-    if (cloudSyncServiceStubStr == nullptr) {
-        return false;
-    }
     if (cloudSyncServiceStubStr->dataSyncManager_ == nullptr) {
         cloudSyncServiceStubStr->dataSyncManager_ =
             std::make_shared<OHOS::FileManagement::CloudFile::DataSyncManager>();
