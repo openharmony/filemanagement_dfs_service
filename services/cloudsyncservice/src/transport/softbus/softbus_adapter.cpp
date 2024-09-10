@@ -63,8 +63,8 @@ int32_t SoftbusAdapter::CreateSessionServer(const char *packageName, const char 
         .OnShutdown = SoftbusAdapter::OnShutdown,
         .OnBytes = SoftbusAdapter::OnBytes,
         .OnMessage = nullptr,
-        .OnFile = SoftbusAdapter::OnFile,
         .OnStream = nullptr,
+        .OnFile = SoftbusAdapter::OnFile,
     };
 
     int32_t ret = ::Listen(socket, serverQos, QOS_COUNT, &listener);
