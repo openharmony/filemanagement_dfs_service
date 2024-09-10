@@ -466,6 +466,7 @@ void DeviceManagerAgent::RemoveNetworkIdByOne(uint32_t tokenId, const std::strin
 
 void DeviceManagerAgent::RemoveNetworkIdForAllToken(const std::string &networkId)
 {
+    std::lock_guard<std::mutex> lock(networkIdMapMutex_);
     if (networkId.empty()) {
         LOGE("networkId is empty");
         return;
