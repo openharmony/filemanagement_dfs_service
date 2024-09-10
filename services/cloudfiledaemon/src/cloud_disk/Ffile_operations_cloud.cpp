@@ -1503,8 +1503,7 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
         }
         if (res == -1) {
             LOGE("truncate failed, err: %{public}d", errno);
-            res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId,
-                inoPtr->stat.st_size);
+            res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId,inoPtr->stat.st_size);
             if (res != 0) {
                 LOGE("update rdb size failed, res: %{public}d", res);
                 fuse_reply_err(req, ENOSYS);
