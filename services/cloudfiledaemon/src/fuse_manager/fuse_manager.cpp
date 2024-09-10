@@ -43,6 +43,7 @@
 
 #include "cloud_daemon_statistic.h"
 #include "cloud_disk_inode.h"
+#include "cloud_file_fault_event.h"
 #include "cloud_file_kit.h"
 #include "clouddisk_type_const.h"
 #include "datetime_ex.h"
@@ -241,34 +242,71 @@ static string GetLocalTmpPath(int32_t userId, const string &relativePath)
     return GetLocalPath(userId, relativePath) + PATH_TEMP_SUFFIX;
 }
 
-static int HandleCloudError(CloudError error)
+static int HandleCloudError(CloudError error, FaultOperation faultOperation)
 {
     int ret = 0;
+    FaultType faultType = FaultType::DRIVERKIT;
     switch (error) {
         case CloudError::CK_NO_ERROR:
             ret = 0;
             break;
         case CloudError::CK_NETWORK_ERROR:
             ret = -ENOTCONN;
+            faultType = FaultType::DRIVERKIT_NETWORK;
             break;
         case CloudError::CK_SERVER_ERROR:
             ret = -EIO;
+            faultType = FaultType::DRIVERKIT_SERVER;
             break;
         case CloudError::CK_LOCAL_ERROR:
             ret = -EINVAL;
+            faultType = FaultType::DRIVERKIT_LOCAL;
             break;
         default:
             ret = -EIO;
             break;
     }
+    if (ret < 0) {
+        string msg = "handle cloud failed, ret code: " + to_string(ret);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, faultOperation,
+            faultType, ret, msg});
+    }
     return ret;
 }
 
 #ifdef HICOLLIE_ENABLE
-static void XcollieCallback(void *node)
+
+struct XcollieInput {
+    CloudInode *node_;
+    FaultOperation faultOperation_;
+};
+
+static void XcollieCallback(void *xcollie)
 {
-    auto inode = reinterpret_cast<CloudInode *>(node);
-    LOGI("In XcollieCallback, path: %{public}s", GetAnonyString(inode->path).c_str());
+    auto xcollieInput = reinterpret_cast<XcollieInput *>(xcollie);
+    if (xcollieInput == nullptr) {
+        return;
+    }
+    CloudInode *inode = xcollieInput->node_;
+    if (inode == nullptr) {
+        return;
+    }
+
+    FaultType faultType = FaultType::TIMEOUT;
+    switch (xcollieInput->faultOperation_) {
+        case FaultOperation::LOOKUP:
+            faultType = FaultType::CLOUD_FILE_LOOKUP_TIMEOUT;
+            break;
+        case FaultOperation::FORGET:
+            faultType = FaultType::CLOUD_FILE_FORGET_TIMEOUT;
+            break;
+        default:
+            break;
+    }
+    
+    string msg = "In XcollieCallback, path:" + GetAnonyString((inode->path).c_str());
+    CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, xcollieInput->faultOperation_,
+        faultType, EWOULDBLOCK, msg});
 }
 #endif
 
@@ -364,18 +402,11 @@ static void GetMetaAttr(struct FuseData *data, shared_ptr<CloudInode> ino, struc
     }
 }
 
-static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
-                         struct fuse_entry_param *e)
+static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_entry_param *e,
+    FuseData *data, string& parentName)
 {
-    int err = 0;
     shared_ptr<CloudInode> child;
     bool create = false;
-    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
-    string parentName = CloudPath(data, parent);
-    if (parentName == "") {
-        LOGE("parent name is empty");
-        return ENOENT;
-    }
     string childName = (parent == FUSE_ROOT_ID) ? parentName + name : parentName + "/" + name;
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
 
@@ -388,9 +419,9 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         LOGD("new child %s", GetAnonyString(child->path).c_str());
     }
     MetaBase mBase(name);
-    err = MetaFile(data->userId, parentName).DoLookup(mBase);
+    int err = MetaFile(data->userId, parentName).DoLookup(mBase);
     if (err) {
-        LOGE("lookup %s error, err: %{public}d", childName.c_str(), err);
+        LOGE("lookup %s error, err: %{public}d", GetAnonyString(childName).c_str(), err);
         return err;
     }
 
@@ -400,8 +431,9 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         child->path = childName;
         child->parent = parent;
 #ifdef HICOLLIE_ENABLE
+        XcollieInput xcollieInput{child.get(), FaultOperation::LOOKUP};
         auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudLookup", LOOKUP_TIMEOUT_S,
-            XcollieCallback, child.get(), false);
+            XcollieCallback, &xcollieInput, false);
 #endif
         wLock.lock();
         data->inodeCache[child->path] = child;
@@ -418,6 +450,20 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
     GetMetaAttr(data, child, &e->attr);
     e->ino = reinterpret_cast<fuse_ino_t>(child.get());
     return 0;
+}
+
+static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
+                         struct fuse_entry_param *e)
+{
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    string parentName = CloudPath(data, parent);
+    if (parentName == "") {
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::LOOKUP,
+            FaultType::FILE, ENOENT, "parent name is empty"});
+        return ENOENT;
+    }
+
+    return CloudDoLookupHelper(parent, name, e, data, parentName);
 }
 
 static void CloudLookup(fuse_req_t req, fuse_ino_t parent,
@@ -444,8 +490,9 @@ static void PutNode(struct FuseData *data, shared_ptr<CloudInode> node, uint64_t
     if (node->refCount == 0) {
         LOGD("node released: %s", GetAnonyString(node->path).c_str());
 #ifdef HICOLLIE_ENABLE
+        XcollieInput xcollieInput{node.get(), FaultOperation::FORGET};
         auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudForget", FORGET_TIMEOUT_S,
-            XcollieCallback, node.get(), false);
+            XcollieCallback, &xcollieInput, false);
 #endif
         wLock.lock();
         data->inodeCache.erase(node->path);
@@ -479,8 +526,9 @@ static void CloudGetAttr(fuse_req_t req, fuse_ino_t ino,
     LOGD("getattr, %s", GetAnonyString(CloudPath(data, ino)).c_str());
     shared_ptr<CloudInode> node = GetCloudInode(data, ino);
     if (!node || !node->mBase) {
-        LOGE("Failed to get cloud inode.");
         fuse_reply_err(req, ENOMEM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::GETATTR,
+            FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
     GetMetaAttr(data, node, &buf);
@@ -579,14 +627,15 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
 static int HandleOpenResult(CloudFile::CloudError ckError, struct FuseData *data,
     shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
 {
-    auto ret = HandleCloudError(ckError);
+    auto ret = HandleCloudError(ckError, FaultOperation::OPEN);
     if (ret < 0) {
-        LOGE("open fali");
         return ret;
     }
     if (cInode->mBase->fileType != FILE_TYPE_CONTENT) {
         ret = CloudOpenOnLocal(data, cInode, fi);
         if (ret < 0) {
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::OPEN,
+                FaultType::INODE_FILE, ret, "inner error"});
             return ret;
         }
     }
@@ -685,7 +734,9 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
         return *openFinish;
     });
     if (!waitStatus) {
-        LOGE("download %{public}s timeout", GetAnonyString(cInode->path).c_str());
+        string msg = "init session timeout, path: " + GetAnonyString((cInode->path).c_str());
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::OPEN,
+                FaultType::OPEN_CLOUD_FILE_TIMEOUT, ENETUNREACH, msg});
         return -ENETUNREACH;
     }
     return HandleOpenResult(*error, data, cInode, fi);
@@ -699,17 +750,9 @@ static void UpdateReadStat(shared_ptr<CloudInode> cInode, uint64_t startTime)
     readStat.UpdateOpenTimeStat(cInode->mBase->fileType, (endTime > startTime) ? (endTime - startTime) : 0);
 }
 
-static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
-                      struct fuse_file_info *fi)
+static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi,
+    struct FuseData *data, shared_ptr<CloudInode>& cInode)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
-    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
-    fi->fh = UINT64_MAX;
-    shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
-    if (!cInode) {
-        fuse_reply_err(req, ENOMEM);
-        return;
-    }
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId);
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
@@ -746,9 +789,10 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
         }
     }
     if (!cInode->readSession) {
-        LOGE("readSession is null or fix size fail");
         fuse_inval(data->se, cInode->parent, ino, cInode->mBase->name);
         fuse_reply_err(req, EPERM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::OPEN,
+            FaultType::DRIVERKIT, EPERM, "readSession is null or fix size fail"});
     } else {
         cInode->sessionRefCount++;
         LOGI("open success, sessionRefCount: %{public}d", cInode->sessionRefCount.load());
@@ -757,12 +801,31 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
     wSesLock.unlock();
 }
 
+static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
+                      struct fuse_file_info *fi)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
+    struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
+    fi->fh = UINT64_MAX;
+    shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
+    if (!cInode) {
+        fuse_reply_err(req, ENOMEM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::OPEN,
+            FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
+        return;
+    }
+    
+    CloudOpenHelper(req, ino, fi, data, cInode);
+}
+
 static void CloudRelease(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi)
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     if (!cInode) {
         fuse_reply_err(req, ENOMEM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::RELEASE,
+            FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
@@ -831,13 +894,17 @@ static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *inBuf)
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     if (!cInode || !cInode->readSession) {
-        fuse_reply_err(req, EPERM);
+        fuse_reply_err(req, ENOMEM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::IOCTL,
+            FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
 
     const struct HmdfsHasCache *ioctlData = reinterpret_cast<const struct HmdfsHasCache *>(inBuf);
     if (!ioctlData) {
         fuse_reply_err(req, EINVAL);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::IOCTL,
+            FaultType::FILE, EINVAL, "invalid argument in ioctl"});
         return;
     }
     if (cInode->readSession->HasCache(ioctlData->offset, ioctlData->readSize)) {
@@ -859,6 +926,8 @@ static void CancelRead(fuse_req_t req, fuse_ino_t ino)
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     if (!cInode) {
         fuse_reply_err(req, ENOMEM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
     LOGI("Cancel read for pid: %{public}d", req->ctx.pid);
@@ -894,6 +963,8 @@ static void ResetRead(fuse_req_t req, fuse_ino_t ino)
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     if (!cInode) {
         fuse_reply_err(req, ENOMEM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
     LOGI("Reset read for pid: %{public}d", req->ctx.pid);
@@ -1079,8 +1150,10 @@ static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t s
     auto fdsan = reinterpret_cast<fdsan_fd *>(fi->fh);
     auto readSize = pread(fdsan->get(), buf.get(), size, off);
     if (readSize < 0) {
-        LOGE("Failed to read local file, errno: %{public}d", errno);
         fuse_reply_err(req, errno);
+        string msg = "Failed to read local file, errno: " + to_string(errno);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::FILE, errno, msg});
         return;
     }
     fuse_reply_buf(req, buf.get(), min(size, static_cast<size_t>(readSize)));
@@ -1107,14 +1180,15 @@ static bool FixData(fuse_req_t req, shared_ptr<char> buf, size_t size, size_t si
     shared_ptr<ReadArguments> readArgs)
 {
     if (*readArgs->readResult < 0) {
-        LOGE("Pread failed, readResult: %{public}ld", static_cast<long>(*readArgs->readResult));
         fuse_reply_err(req, ENOMEM);
+        string msg = "Pread failed, readResult: " + to_string(*readArgs->readResult);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::DRIVERKIT, ENOMEM, msg});
         return false;
     }
 
-    auto ret = HandleCloudError(*readArgs->ckError);
+    auto ret = HandleCloudError(*readArgs->ckError, FaultOperation::READ);
     if (ret < 0) {
-        LOGE("Pread failed, clouderror: %{public}d", -ret);
         fuse_reply_err(req, -ret);
         return false;
     }
@@ -1122,8 +1196,10 @@ static bool FixData(fuse_req_t req, shared_ptr<char> buf, size_t size, size_t si
     int32_t copyRet = memcpy_s(buf.get() + sizeDone, min(size - sizeDone, static_cast<size_t>(*readArgs->readResult)),
                                readArgs->buf.get(), min(size - sizeDone, static_cast<size_t>(*readArgs->readResult)));
     if (copyRet != 0) {
-        LOGE("Parcel data copy failed, err=%{public}d", copyRet);
         fuse_reply_err(req, ENETUNREACH);
+        string msg = "Parcel data copy failed, err=" + to_string(copyRet);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::FILE, copyRet, msg});
         return false;
     }
     return true;
@@ -1206,7 +1282,8 @@ static bool DoReadSlice(fuse_req_t req,
     }
     if (!readArgs->buf) {
         fuse_reply_err(req, ENOMEM);
-        LOGE("buffer is null");
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::FILE, ENOMEM, "buffer is null"});
         return false;
     }
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
@@ -1226,6 +1303,8 @@ static bool DoReadSlice(fuse_req_t req,
     LOGI("DoReadSlice from cloud: %{public}ld", static_cast<long>(cacheIndex));
     if (needCheck && !CheckAndWait(req->ctx.pid, cInode, readArgs->offset)) {
         fuse_reply_err(req, ENETUNREACH);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::CLOUD_READ_FILE_TIMEOUT, ENETUNREACH, "network timeout"});
         return false;
     }
     ffrt::submit([req, readArgs, cInode, readSession, data] {
@@ -1267,6 +1346,22 @@ static bool DoCloudRead(fuse_req_t req, int flags, DoCloudReadParams params)
     return true;
 }
 
+static bool CloudReadHelper(fuse_req_t req, size_t size, shared_ptr<CloudInode> cInode)
+{
+    if (CheckReadIsCanceled(req->ctx.pid, cInode)) {
+        LOGI("read is cancelled");
+        fuse_reply_err(req, EIO);
+        return false;
+    }
+    if (size > MAX_READ_SIZE) {
+        fuse_reply_err(req, EINVAL);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::FILE, EINVAL, "input size exceeds MAX_READ_SIZE"});
+        return false;
+    }
+    return true;
+}
+
 static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
                       struct fuse_file_info *fi)
 {
@@ -1276,31 +1371,28 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
     shared_ptr<CloudInode> cInode = GetCloudInode(data, ino);
     if (!cInode) {
         fuse_reply_err(req, ENOMEM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
     LOGI("CloudRead: %{public}s, size=%{public}zd, off=%{public}lu",
          GetAnonyString(CloudPath(data, ino)).c_str(), size, (unsigned long)off);
 
-    if (CheckReadIsCanceled(req->ctx.pid, cInode)) {
-        LOGI("read is cancelled");
-        fuse_reply_err(req, EIO);
-        return;
-    }
-    if (size > MAX_READ_SIZE) {
-        LOGE("input size exceeds MAX_READ_SIZE");
-        fuse_reply_err(req, EINVAL);
+    if (!CloudReadHelper(req, size, cInode)) {
         return;
     }
     auto dkReadSession = cInode->readSession;
     if (!dkReadSession) {
-        LOGE("readSession is nullptr");
         fuse_reply_err(req, EPERM);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::FILE, EPERM, "readSession is nullptr"});
         return;
     }
     buf.reset(new char[size], [](char *ptr) { delete[] ptr; });
     if (!buf) {
         fuse_reply_err(req, ENOMEM);
-        LOGE("buffer is null");
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::FILE, ENOMEM, "buffer is null"});
         return;
     }
     if (cInode->mBase->hasDownloaded && fi->fh != UINT64_MAX) {
