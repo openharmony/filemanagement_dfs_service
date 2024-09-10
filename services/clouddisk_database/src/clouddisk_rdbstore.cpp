@@ -242,7 +242,7 @@ int32_t CloudDiskRdbStore::SetAttr(const std::string &fileName, const std::strin
     setAttr.PutLong(FileColumn::FILE_SIZE, static_cast<int64_t>(size));
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(cloudId);
-    TransactionOperations rdbTransaction(rdbStore_);
+    TransactionOperations rdbTransaction(rdbStore_, CLOUD_RDB_IDX);
     int32_t ret = rdbTransaction.Start();
     if (ret != E_OK) {
         LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
@@ -445,7 +445,7 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
         LOGE("file path is invalid, cannot create file record");
         return E_PATH;
     }
-    TransactionOperations rdbTransaction(rdbStore_);
+    TransactionOperations rdbTransaction(rdbStore_, CLOUD_RDB_IDX);
     ret = rdbTransaction.Start();
     if (ret != E_OK) {
         LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
@@ -498,7 +498,7 @@ int32_t CloudDiskRdbStore::MkDir(const std::string &cloudId, const std::string &
     dirInfo.PutLong(FileColumn::OPERATE_TYPE, static_cast<int64_t>(OperationType::NEW));
     dirInfo.PutInt(FileColumn::FILE_STATUS, FileStatus::TO_BE_UPLOADED);
     dirInfo.PutString(FileColumn::ROOT_DIRECTORY, bundleName_);
-    TransactionOperations rdbTransaction(rdbStore_);
+    TransactionOperations rdbTransaction(rdbStore_, CLOUD_RDB_IDX);
     ret = rdbTransaction.Start();
     if (ret != E_OK) {
         LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
@@ -584,7 +584,7 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
     int32_t changedRows = -1;
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(cloudId);
-    TransactionOperations rdbTransaction(rdbStore_);
+    TransactionOperations rdbTransaction(rdbStore_, CLOUD_RDB_IDX);
     ret = rdbTransaction.Start();
     if (ret != E_OK) {
         LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
@@ -625,7 +625,7 @@ int32_t CloudDiskRdbStore::LocationSetXattr(const std::string &name, const std::
     int32_t changedRows = -1;
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(cloudId);
-    TransactionOperations rdbTransaction(rdbStore_);
+    TransactionOperations rdbTransaction(rdbStore_, CLOUD_RDB_IDX);
     int32_t ret = rdbTransaction.Start();
     if (ret != E_OK) {
         LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
@@ -730,7 +730,7 @@ int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::s
     int32_t changedRows = -1;
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(cloudId);
-    TransactionOperations rdbTransaction(rdbStore_);
+    TransactionOperations rdbTransaction(rdbStore_, CLOUD_RDB_IDX);
     ret = rdbTransaction.Start();
     if (ret != E_OK) {
         LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
@@ -1002,7 +1002,7 @@ int32_t CloudDiskRdbStore::ExtAttributeSetXattr(const std::string &cloudId, cons
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(cloudId);
 
-    TransactionOperations rdbTransaction(rdbStore_);
+    TransactionOperations rdbTransaction(rdbStore_, CLOUD_RDB_IDX);
     int32_t ret = rdbTransaction.Start();
     if (ret != E_OK) {
         LOGE("Ext rdbstore begin transaction failed, ret = %{public}d", ret);

@@ -245,7 +245,7 @@ napi_value CloudFileNapi::Stop(napi_env env, napi_callback_info info)
 {
     LOGI("Stop begin");
     NFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
+    if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::THREE)) {
         LOGE("Stop Number of arguments unmatched");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
@@ -256,9 +256,18 @@ napi_value CloudFileNapi::Stop(napi_env env, napi_callback_info info)
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
-
-    auto cbExec = [uri = string(uri.get()), env = env]() -> NError {
-        int32_t ret = CloudSyncManager::GetInstance().StopDownloadFile(uri);
+    bool needClean = false;
+    bool needCleanIgnore;
+    size_t maxArgSize = static_cast<size_t>(NARG_CNT::TWO);
+    if (funcArg.GetArgc() >= NARG_CNT::TWO) {
+        NVal ui(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
+        if (ui.TypeIs(napi_boolean)) {
+            std::tie(needCleanIgnore, needClean) = NVal(env, funcArg[NARG_POS::SECOND]).ToBool();
+            maxArgSize = static_cast<size_t>(NARG_CNT::THREE);
+        }
+    }
+    auto cbExec = [uri = string(uri.get()), env = env, needClean = needClean]() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().StopDownloadFile(uri, needClean);
         if (ret != E_OK) {
             LOGE("Stop Download failed! ret = %{public}d", ret);
             return NError(Convert2JsErrNum(ret));
@@ -275,7 +284,7 @@ napi_value CloudFileNapi::Stop(napi_env env, napi_callback_info info)
     };
 
     string procedureName = "cloudFileDownload";
-    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, maxArgSize);
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 

@@ -56,6 +56,7 @@ struct CacheNode {
     std::string parentCloudId;
     std::string fileName;
     std::string isDir;
+    bool isRecycled = false;
 };
 
 } // namespace CloudDisk

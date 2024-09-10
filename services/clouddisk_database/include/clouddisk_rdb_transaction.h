@@ -27,6 +27,9 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
 static constexpr int32_t SQLITE3_DATABASE_LOCKER = -5;
+static constexpr int32_t PHOTO_RDB_IDX = 0;
+static constexpr int32_t CLOUD_RDB_IDX = 1;
+static constexpr int32_t RDB_NUM = 2;
 /**
  * This class is used for database transaction creation, commit, and rollback
  * The usage of class is as follows:
@@ -42,7 +45,7 @@ static constexpr int32_t SQLITE3_DATABASE_LOCKER = -5;
  */
 class TransactionOperations {
 public:
-    TransactionOperations(const std::shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore);
+    TransactionOperations(const std::shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore, int32_t idx);
     ~TransactionOperations();
     int32_t Start();
     void Finish();
@@ -55,10 +58,11 @@ private:
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
     bool isStart = false;
     bool isFinish = false;
+    int32_t idx_ = CLOUD_RDB_IDX;
 
-    static std::mutex transactionMutex_;
-    static std::condition_variable transactionCV_;
-    static std::atomic<bool> isInTransaction_;
+    static std::atomic<bool> isInTransactionMap_[RDB_NUM];
+    static std::mutex transactionMutexMap_[RDB_NUM];
+    static std::condition_variable transactionCvMap_[RDB_NUM];
 };
 } // namespace CloudDisk
 } // namespace FileManagement
