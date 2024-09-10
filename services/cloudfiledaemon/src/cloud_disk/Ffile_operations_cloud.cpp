@@ -1476,8 +1476,7 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (inoPtr == nullptr) {
         LOGE("get an invalid inode!");
-        fuse_reply_err(req, EINVAL);
-        return;
+        return (void) fuse_reply_err(req, EINVAL);
     }
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data,
         static_cast<int64_t>(inoPtr->parent));
@@ -1487,8 +1486,7 @@ void FileOperationsCloud::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *a
         int32_t res = rdbStore->SetAttr(inoPtr->fileName, parentInode->cloudId, inoPtr->cloudId, attr->st_size);
         if (res != 0) {
             LOGE("update rdb size failed, res: %{public}d", res);
-            fuse_reply_err(req, ENOSYS);
-            return;
+            return (void) fuse_reply_err(req, ENOSYS);
         }
         if (fi) {
             auto filePtr = FileOperationsHelper::FindCloudDiskFile(data, fi->fh);
