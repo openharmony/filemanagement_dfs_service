@@ -26,7 +26,7 @@ namespace {
 CloudPrefImpl::CloudPrefImpl(const int32_t userId, const std::string& bundleName, const std::string& tableName)
 {
     /* the file name varies from different userId and bundle name */
-    std::string userIdDir = CLOUDFILE_DIR + std::to_string(userId);
+    std::string userIdDir = "/data/service/el2/" + std::to_string(userId) + "/hmdfs/cloudfile_manager";
     if (access(userIdDir.c_str(), F_OK) != 0) {
         if (mkdir(userIdDir.c_str(), STAT_MODE_DIR) != 0) {
             LOGE("CloudPrefImpl: mkdir failed");

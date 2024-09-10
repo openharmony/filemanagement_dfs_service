@@ -461,12 +461,10 @@ static void CloudForget(fuse_req_t req, fuse_ino_t ino,
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> node = GetCloudInode(data, ino);
-    if (!node) {
-        fuse_reply_err(req, ENOMEM);
-        return;
+    if (node) {
+        LOGD("forget %s, nlookup: %lld", GetAnonyString(node->path).c_str(), (long long)nlookup);
+        PutNode(data, node, nlookup);
     }
-    LOGD("forget %s, nlookup: %lld", GetAnonyString(node->path).c_str(), (long long)nlookup);
-    PutNode(data, node, nlookup);
     fuse_reply_none(req);
 }
 
@@ -566,7 +564,13 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
         delete fdsan;
         return -errno;
     }
-    MetaFile(data->userId, GetCloudInode(data, cInode->parent)->path).DoRemove(*(cInode->mBase));
+    auto parentInode = GetCloudInode(data, cInode->parent);
+    if (parentInode == nullptr) {
+        LOGE("fail to find parent inode");
+        delete fdsan;
+        return ENOMEM;
+    }
+    MetaFile(data->userId, parentInode->path).DoRemove(*(cInode->mBase));
     cInode->mBase->hasDownloaded = true;
     fi->fh = reinterpret_cast<uint64_t>(fdsan);
     return 0;
@@ -814,7 +818,6 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
     for (size_t i = 0; i < count; i++) {
         shared_ptr<CloudInode> node = GetCloudInode(data, forgets[i].ino);
         if (!node) {
-            fuse_reply_err(req, ENOMEM);
             continue;
         }
         LOGD("forget (i=%zu) %s, nlookup: %lld", i, GetAnonyString(node->path).c_str(), (long long)forgets[i].nlookup);
@@ -1073,11 +1076,6 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
 static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t size,
     off_t off, struct fuse_file_info *fi)
 {
-    if (fi->fh == UINT64_MAX) {
-        LOGE("Invalid fh in fuse_file_info");
-        fuse_reply_err(req, EBADF);
-        return;
-    }
     auto fdsan = reinterpret_cast<fdsan_fd *>(fi->fh);
     auto readSize = pread(fdsan->get(), buf.get(), size, off);
     if (readSize < 0) {
@@ -1305,7 +1303,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
         LOGE("buffer is null");
         return;
     }
-    if (cInode->mBase->hasDownloaded) {
+    if (cInode->mBase->hasDownloaded && fi->fh != UINT64_MAX) {
         CloudReadOnLocalFile(req, buf, size, off, fi);
         return;
     }

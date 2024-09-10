@@ -257,16 +257,16 @@ napi_value CloudFileNapi::Stop(napi_env env, napi_callback_info info)
         return nullptr;
     }
     bool needClean = false;
-    bool needCleanIgnore;
     size_t maxArgSize = static_cast<size_t>(NARG_CNT::TWO);
     if (funcArg.GetArgc() >= NARG_CNT::TWO) {
         NVal ui(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
         if (ui.TypeIs(napi_boolean)) {
+            bool needCleanIgnore;
             std::tie(needCleanIgnore, needClean) = NVal(env, funcArg[NARG_POS::SECOND]).ToBool();
             maxArgSize = static_cast<size_t>(NARG_CNT::THREE);
         }
     }
-    auto cbExec = [uri = string(uri.get()), env = env, needClean = needClean]() -> NError {
+    auto cbExec = [uri = string(uri.get()), env = env, needClean]() -> NError {
         int32_t ret = CloudSyncManager::GetInstance().StopDownloadFile(uri, needClean);
         if (ret != E_OK) {
             LOGE("Stop Download failed! ret = %{public}d", ret);

@@ -34,23 +34,26 @@ public:
     void ProcessEvent(const AppExecFwk::InnerEvent::Pointer &event);
 
 private:
+    using ExecuteFunc = void (DaemonExecute::*)(const AppExecFwk::InnerEvent::Pointer &event);
     void ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &event);
     void ExecuteRequestSendFile(const AppExecFwk::InnerEvent::Pointer &event);
     int32_t RequestSendFileInner(const std::string &srcUri,
-                                const std::string &dstPath,
-                                const std::string &dstDeviceId,
-                                const std::string &sessionName);
+                                 const std::string &dstPath,
+                                 const std::string &dstDeviceId,
+                                 const std::string &sessionName);
 
+private:
+    std::string GetZipName(const std::string &relativePath);
     std::vector<std::string> GetFileList(const std::vector<std::string> &uris,
                                          int32_t userId,
                                          const std::string &srcBundleName);
     int32_t HandleZip(const std::vector<std::string> &fileList,
-                      const std::string &srcBundleName,
+                      const sptr<AssetObj> &assetObj,
                       std::string &sendFileName,
                       bool &isSingleFile);
     void HandlePushAssetFail(int32_t socketId, const sptr<AssetObj> &assetObj);
 
-    using ExecuteFunc = void (DaemonExecute::*)(const AppExecFwk::InnerEvent::Pointer &event);
+private:
     std::mutex executeFuncMapMutex_;
     std::map<uint32_t, ExecuteFunc> executeFuncMap_;
 };

@@ -15,7 +15,12 @@
 
 #include "daemon_execute.h"
 
+#include <chrono>
+#include <ctime>
+#include <filesystem>
 #include <memory>
+#include <random>
+#include <regex>
 
 #include "asset_callback_manager.h"
 #include "dfs_error.h"
@@ -35,7 +40,6 @@ namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::AppFileService;
 using namespace OHOS::FileManagement;
-const std::string ZIP_FILENAME = "pushData.zip";
 DaemonExecute::DaemonExecute()
 {
     LOGI("DaemonExecute begin.");
@@ -97,7 +101,7 @@ void DaemonExecute::ExecutePushAsset(const AppExecFwk::InnerEvent::Pointer &even
 
     std::string sendFileName;
     bool isSingleFile;
-    ret = HandleZip(fileList, assetObj->srcBundleName_, sendFileName, isSingleFile);
+    ret = HandleZip(fileList, assetObj, sendFileName, isSingleFile);
     if (ret != E_OK) {
         LOGE("zip files fail. socketId is %{public}d", socketId);
         HandlePushAssetFail(socketId, assetObj);
@@ -176,11 +180,30 @@ int32_t DaemonExecute::RequestSendFileInner(const std::string &srcUri,
     return E_OK;
 }
 
+std::string DaemonExecute::GetZipName(const std::string &relativePath)
+{
+    auto cppnow = std::chrono::system_clock::now();
+    auto cppnow_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(cppnow);
+    auto value = std::to_string(cppnow_ms.time_since_epoch().count());
+
+    std::random_device rd;
+    std::string random = std::to_string(rd());
+    std::string zipName = value + "_" + random + ".zip";
+
+    while (std::filesystem::exists(relativePath + zipName)) {
+        random = std::to_string(rd());
+        zipName = value + "_" + random + ".zip";
+    }
+    LOGI("zipName is %{public}s", zipName.c_str());
+    return zipName;
+}
+
 std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::string> &uris,
                                                     int32_t userId,
                                                     const std::string &srcBundleName)
 {
     std::vector<std::string> fileList;
+    std::regex pattern("/mnt/hmdfs/\\d{3,}/account/device_view/local/data/.*");
     for (const auto &uri : uris) {
         size_t pos = uri.find(srcBundleName);
         if (pos == std::string::npos) {
@@ -198,10 +221,12 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
             LOGE("invalid path : %{public}s", GetAnonyString(physicalPath).c_str());
             return {};
         }
-
         if (OHOS::Storage::DistributedFile::Utils::IsFolder(physicalPath)) {
             LOGE("uri is folder are not supported now.");
             return {};
+        }
+        if (!std::regex_match(physicalPath, pattern)) {
+            LOGE("physicalPath is not hmdfs path.");
         }
         fileList.emplace_back(physicalPath);
     }
@@ -210,30 +235,30 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
 }
 
 int32_t DaemonExecute::HandleZip(const std::vector<std::string> &fileList,
-                                 const std::string &srcBundleName,
+                                 const sptr<AssetObj> &assetObj,
                                  std::string &sendFileName,
                                  bool &isSingleFile)
 {
     if (fileList.size() > 1) {
-        size_t pos = fileList[0].find(srcBundleName);
+        size_t pos = fileList[0].find(assetObj->srcBundleName_);
         if (pos == std::string::npos) {
             LOGE("srcBundleName not find in uri.");
             return E_ZIP;
         }
-        std::string relativePath = fileList[0].substr(0, pos + srcBundleName.length()) + "/";
-        sendFileName = relativePath + ZIP_FILENAME;
+        std::string relativePath = fileList[0].substr(0, pos + assetObj->srcBundleName_.length()) + "/";
+        sendFileName = relativePath + GetZipName(relativePath);
         int32_t ret = SoftBusHandlerAsset::GetInstance().CompressFile(fileList, relativePath, sendFileName);
         if (ret != E_OK) {
             LOGE("zip ffiles fail.");
             return E_ZIP;
         }
         isSingleFile = false;
-        SoftBusAssetSendListener::isSingleFile_ = false;
+        SoftBusAssetSendListener::AddFileMap(assetObj->srcBundleName_ + assetObj->sessionId_, false);
         return E_OK;
     } else {
         sendFileName = fileList[0];
         isSingleFile = true;
-        SoftBusAssetSendListener::isSingleFile_ = true;
+        SoftBusAssetSendListener::AddFileMap(assetObj->srcBundleName_ + assetObj->sessionId_, true);
         return E_OK;
     }
 }
@@ -244,6 +269,7 @@ void DaemonExecute::HandlePushAssetFail(int32_t socketId, const sptr<AssetObj> &
     AssetCallbackManager::GetInstance().NotifyAssetSendResult(taskId, assetObj, FileManagement::E_EVENT_HANDLER);
     SoftBusHandlerAsset::GetInstance().closeAssetBind(socketId);
     AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
+    SoftBusAssetSendListener::RemoveFileMap(taskId);
 }
 } // namespace DistributedFile
 } // namespace Storage

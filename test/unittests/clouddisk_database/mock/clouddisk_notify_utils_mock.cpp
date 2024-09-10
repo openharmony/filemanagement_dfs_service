@@ -138,21 +138,9 @@ int32_t CloudDiskNotifyUtils::GetUriFromCache(const string &bundleName,
                                               const CacheNode &cacheNode,
                                               string &uri)
 {
-    CacheNode tmpCacheNode;
-    PutCacheNode(cacheNode.cloudId, cacheNode);
-    uri = cacheNode.fileName;
-    tmpCacheNode = cacheNode;
-    int32_t ret;
-    while (tmpCacheNode.parentCloudId != rootId) {
-        ret = GetCacheNode(tmpCacheNode.parentCloudId, tmpCacheNode);
-        if (ret != E_OK) {
-            return ret;
-        }
-        uri = tmpCacheNode.fileName + BACKFLASH + uri;
+    if (uri == "mock") {
+        return E_RDB;
     }
-    string realPrefix = CLOUDDISK_URI_PREFIX;
-    realPrefix.replace(realPrefix.find(BUNDLENAME_FLAG), BUNDLENAME_FLAG.length(), bundleName);
-    uri = realPrefix + BACKFLASH + uri;
     return E_OK;
 }
 } // namespace OHOS::FileManagement::CloudDisk

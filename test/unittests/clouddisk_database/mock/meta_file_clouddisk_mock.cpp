@@ -145,6 +145,9 @@ int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskM
 
 int32_t CloudDiskMetaFile::DoChildUpdate(const std::string &name, CloudDiskMetaFileCallBack callback)
 {
+    if (name == "mock") {
+        return E_RDB;
+    }
     return E_OK;
 }
 
@@ -507,6 +510,9 @@ int32_t CloudDiskMetaFile::DoUpdate(const MetaBase &base)
 int32_t CloudDiskMetaFile::DoRename(MetaBase &metaBase, const std::string &newName,
     std::shared_ptr<CloudDiskMetaFile> newMetaFile)
 {
+    if (newName == "mock") {
+        return EINVAL;
+    }
     return E_OK;
 }
 
@@ -558,12 +564,18 @@ int32_t MetaFileMgr::CreateRecycleDentry(uint32_t userId, const std::string &bun
 int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName, const std::string &name,
     const std::string &parentCloudId, int64_t rowId)
 {
+    if (parentCloudId == "mock") {
+        return E_RDB;
+    }
     return E_OK;
 }
 
 int32_t MetaFileMgr::RemoveFromRecycleDentryfile(uint32_t userId, const std::string &bundleName,
     const std::string &name, const std::string &parentCloudId, int64_t rowId)
 {
+    if (parentCloudId == "mock") {
+        return E_RDB;
+    }
     return E_OK;
 }
 } // namespace FileManagement

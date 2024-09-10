@@ -27,6 +27,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace OHOS::FileManagement;
 const int32_t UID = 1009;
+const int32_t DATA_UID = 3012;
 DaemonStub::DaemonStub()
 {
     opToInterfaceMap_[static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_OPEN_P2P_CONNECTION)] =
@@ -325,6 +326,11 @@ int32_t DaemonStub::HandleCancelCopyTask(MessageParcel &data, MessageParcel &rep
 int32_t DaemonStub::HandleRegisterRecvCallback(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin RegisterRecvCallback");
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != DATA_UID) {
+        LOGE("Permission denied, caller is not data!");
+        return E_PERMISSION_DENIED;
+    }
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[RegisterRecvCallback] DATASYNC permission denied");
         return E_PERMISSION_DENIED;
@@ -350,6 +356,11 @@ int32_t DaemonStub::HandleRegisterRecvCallback(MessageParcel &data, MessageParce
 int32_t DaemonStub::HandleUnRegisterRecvCallback(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin UnRegisterRecvCallback");
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != DATA_UID) {
+        LOGE("Permission denied, caller is not data!");
+        return E_PERMISSION_DENIED;
+    }
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[UnRegisterRecvCallback] DATASYNC permission denied");
         return E_PERMISSION_DENIED;
@@ -375,6 +386,11 @@ int32_t DaemonStub::HandleUnRegisterRecvCallback(MessageParcel &data, MessagePar
 int32_t DaemonStub::HandlePushAsset(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin PushAsset");
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != DATA_UID) {
+        LOGE("Permission denied, caller is not data!");
+        return E_PERMISSION_DENIED;
+    }
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_DISTRIBUTED_DATASYNC)) {
         LOGE("[PushAsset] DATASYNC permission denied");
         return E_PERMISSION_DENIED;

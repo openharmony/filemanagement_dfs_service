@@ -177,6 +177,7 @@ ohos_unittest("cloud_status_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/cloud_status.cpp",
+    "${distributedfile_path}/test/mock/cloud_file_kit_mock.cpp",
     "${distributedfile_path}/utils/log/src/dfs_error.cpp",
     "cloud_status_test.cpp",
   ]
@@ -186,6 +187,7 @@ ohos_unittest("cloud_status_test") {
     "${services_path}/cloudsyncservice/include",
     "${media_library_path}/frameworks/utils/include",
     "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${distributedfile_path}/test/mock",
   ]
 
   deps = [
@@ -221,6 +223,7 @@ ohos_unittest("battery_status_test") {
   module_out_path = "filemanagement/dfs_service"
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/battery_status.cpp",
+    "${distributedfile_path}/test/mock/battersrvclient_mock.cpp",
     "battery_status_test.cpp",
   ]
 
@@ -234,6 +237,7 @@ ohos_unittest("battery_status_test") {
     "${image_framework_path}/mock/native/include/log",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
+    "${distributedfile_path}/test/mock",
   ]
 
   deps = [
@@ -252,6 +256,7 @@ ohos_unittest("battery_status_test") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "netmanager_base:net_conn_manager_if",
+    "power_manager:powermgr_client",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -262,6 +267,12 @@ ohos_unittest("battery_status_test") {
     "LOG_DOMAIN=0xD004310",
     "LOG_TAG=\"CLOUD_SYNC_TEST\"",
   ]
+
+  if (cloudsync_service_power) {
+    external_deps += [ "battery_manager:batterysrv_client" ]
+
+    defines += [ "SUPPORT_POWER" ]
+  }
 
   use_exceptions = true
 }

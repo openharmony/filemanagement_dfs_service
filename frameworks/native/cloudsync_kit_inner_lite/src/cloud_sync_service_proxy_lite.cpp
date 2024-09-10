@@ -164,6 +164,11 @@ int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName, bool
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::ResetCursor(const std::string &bundleName)
+{
+    return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId,
                                                const std::string &bundleName,
                                                bool status)

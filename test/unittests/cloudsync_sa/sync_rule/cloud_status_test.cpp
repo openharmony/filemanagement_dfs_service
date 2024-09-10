@@ -18,6 +18,7 @@
 
 #include "cloud_status.h"
 #include "dfs_error.h"
+#include "cloud_file_kit_mock.cpp"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -30,6 +31,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline shared_ptr<CloudFileKitMock> ability = make_shared<CloudFileKitMock>();
 };
 void CloudStatusTest::SetUpTestCase(void)
 {
@@ -38,6 +40,7 @@ void CloudStatusTest::SetUpTestCase(void)
 
 void CloudStatusTest::TearDownTestCase(void)
 {
+    ability = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
@@ -64,6 +67,40 @@ HWTEST_F(CloudStatusTest, GetCurrentCloudInfo001, TestSize.Level1)
     const int32_t userId = 1;
     auto ret = cloudStatus.GetCurrentCloudInfo(bundleName, userId);
     EXPECT_EQ(ret, E_NULLPTR);
+}
+
+/**
+ * @tc.name: GetCurrentCloudInfo002
+ * @tc.desc: Verify the CloudStatus::GetCurrentCloudInfo function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudStatusTest, GetCurrentCloudInfo002, TestSize.Level1)
+{
+    CloudStatus cloudStatus;
+    const string bundleName = "ohos.com.test";
+    const int32_t userId = 1;
+    CloudFile::CloudFileKit::instance_ = ability.get();
+    EXPECT_CALL(*ability, GetCloudUserInfo(_, _)).WillOnce(Return(E_RDB));
+    auto ret = cloudStatus.GetCurrentCloudInfo(bundleName, userId);
+    EXPECT_EQ(ret, E_RDB);
+}
+
+/**
+ * @tc.name: GetCurrentCloudInfo003
+ * @tc.desc: Verify the CloudStatus::GetCurrentCloudInfo function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(CloudStatusTest, GetCurrentCloudInfo003, TestSize.Level1)
+{
+    CloudStatus cloudStatus;
+    const string bundleName = "ohos.com.test";
+    const int32_t userId = 1;
+    CloudFile::CloudFileKit::instance_ = ability.get();
+    EXPECT_CALL(*ability, GetAppSwitchStatus(_, _, _)).WillOnce(Return(E_RDB));
+    auto ret = cloudStatus.GetCurrentCloudInfo(bundleName, userId);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**

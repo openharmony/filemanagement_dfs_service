@@ -26,7 +26,6 @@
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
-static constexpr int32_t SQLITE3_DATABASE_LOCKER = -5;
 enum TRANS_DB_IDX {
     PHOTO_RDB_IDX = 0,
     CLOUDDISK_RDB_IDX = 1,
