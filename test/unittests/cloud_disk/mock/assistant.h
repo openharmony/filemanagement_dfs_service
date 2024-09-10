@@ -39,14 +39,14 @@ public:
     virtual int fuse_reply_xattr(fuse_req_t, size_t) = 0;
     virtual int fuse_reply_attr(fuse_req_t, const struct stat *, double) = 0;
     virtual int fuse_reply_entry(fuse_req_t, const struct fuse_entry_param *) = 0;
-    int access(const char *name, int type)
+    static int access(const char *name, int type)
     {
         if (strcmp(name, "mock") == 0) {
             return 0;
         }
         return 1;
     }
-    int open(const char *file, int oflag)
+    static int open(const char *file, int oflag)
     {
         return 0;
     }
