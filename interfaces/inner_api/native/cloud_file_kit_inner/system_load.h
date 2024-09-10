@@ -28,13 +28,19 @@ constexpr int32_t SYSTEMLOADLEVEL_WARM = ResourceSchedule::ResType::SystemloadLe
 const std::string TEMPERATURE_SYSPARAM_SYNC = "persist.kernel.cloudsync.temperature_abnormal_sync";
 const std::string TEMPERATURE_SYSPARAM_THUMB = "persist.kernel.cloudsync.temperature_abnormal_thumb";
 
+enum STOPPED_TYPE {
+    STOPPED_IN_SYNC = 0,
+    STOPPED_IN_THUMB = 1,
+    STOPPED_IN_OTHER = 2,
+};
+
 class SystemLoadStatus {
 public:
     SystemLoadStatus() = default;
     virtual ~SystemLoadStatus() = default;
     static void RegisterSystemloadCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void GetSystemloadLevel();
-    static bool IsLoadStatusUnderHot(bool setFlag = false);
+    static bool IsLoadStatusUnderHot(STOPPED_TYPE process = STOPPED_IN_OTHER);
     static void InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void Setload(int32_t load);
     static inline int32_t loadstatus_ = 0;

@@ -111,6 +111,7 @@ void TaskStateManager::DelayUnloadTask()
         CancelUnloadTask();
         return;
     }
+
     LOGI("delay unload task begin");
     auto task = [this]() {
         LOGI("do unload task");
