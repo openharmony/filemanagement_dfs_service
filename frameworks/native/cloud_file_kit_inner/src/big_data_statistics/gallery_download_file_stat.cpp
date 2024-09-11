@@ -149,7 +149,7 @@ void GalleryDownloadFileStat::UpdateDownloadStat(uint32_t mediaType, uint64_t si
     UpdateDownloadSpeedStat(mediaType, size, duration);
 }
 
-static std::string VectorToString(std::vector<uint64_t> &vec)
+static std::string VectorToString(const std::vector<uint64_t> &vec)
 {
     std::ostringstream oss;
     for (size_t i = 0; i < vec.size(); ++i) {
