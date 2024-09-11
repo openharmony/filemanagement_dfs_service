@@ -23,7 +23,6 @@ namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
 //rdb
-const std::string DATA_SERVICE_EL1_PUBLIC_CLOUDFILE = "/data/service/el1/public/cloudfile/";
 const std::string CLOUD_DISK_DATABASE_NAME = "clouddisk.db";
 //rdb version
 const int32_t CLOUD_DISK_RDB_VERSION = 13;

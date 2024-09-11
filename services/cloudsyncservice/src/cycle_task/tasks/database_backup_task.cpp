@@ -32,8 +32,8 @@ DatabaseBackupTask::DatabaseBackupTask(std::shared_ptr<CloudFile::DataSyncManage
 int32_t DatabaseBackupTask::RunTaskForBundle(int32_t userId, std::string bundleName)
 {
     LOGI("%{public}s backup database entry", bundleName.c_str());
-    auto directoryName = "/data/service/el1/public/cloudfile/" +
-        to_string(userId) + "/" + bundleName + "/backup";
+    auto directoryName = "/data/service/el2/" + to_string(userId_) +
+        "/hmdfs/cloudfile_manager/" + bundleName + "/backup";
     if (access(directoryName.c_str(), F_OK) != 0) {
         if (errno == ENOENT) {
             if (mkdir(directoryName.c_str(), STAT_MODE_DIR) != 0) {

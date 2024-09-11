@@ -14,6 +14,12 @@
  */
 
 #include "parameters.h"
+#include "parameter.h"
+
+int WaitParameter(const char *key, const char *value, int timeout)
+{
+    return 0;
+}
 
 namespace OHOS {
 namespace system {

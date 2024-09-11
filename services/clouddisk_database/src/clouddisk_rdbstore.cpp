@@ -33,6 +33,7 @@
 #include "file_column.h"
 #include "ffrt_inner.h"
 #include "nlohmann/json.hpp"
+#include "parameter.h"
 #include "parameters.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
@@ -112,10 +113,13 @@ int32_t CloudDiskRdbStore::ReBuildDatabase(const string &databasePath)
 
 int32_t CloudDiskRdbStore::RdbInit()
 {
+    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_SERVICE) != 0) {
+        LOGE("wait move error");
+        return EBUSY;
+    }
     LOGI("Init rdb store, userId_ = %{public}d, bundleName_ = %{public}s", userId_, bundleName_.c_str());
-    string baseDir = DATA_SERVICE_EL1_PUBLIC_CLOUDFILE;
-    string customDir = baseDir.append(to_string(userId_))
-        .append("/").append(system::GetParameter(FILEMANAGER_KEY, ""));
+    string baseDir = "/data/service/el2/" + to_string(userId_) + "/hmdfs/cloudfile_manager/";
+    string customDir = baseDir.append(system::GetParameter(FILEMANAGER_KEY, ""));
     string name = CLOUD_DISK_DATABASE_NAME;
     int32_t errCode = 0;
     string databasePath = RdbSqlUtils::GetDefaultDatabasePath(customDir, CLOUD_DISK_DATABASE_NAME, errCode);
@@ -163,8 +167,8 @@ void CloudDiskRdbStore::DatabaseRestore()
         return;
     }
     LOGI("clouddisk db image is malformed, need to restore");
-    auto fileName = "/data/service/el1/public/cloudfile/" +
-        to_string(userId_) + "/" + system::GetParameter(FILEMANAGER_KEY, "") + "/backup/clouddisk_backup.db";
+    auto fileName = "/data/service/el2/" + to_string(userId_) + "/hmdfs/cloudfile_manager/" +
+        system::GetParameter(FILEMANAGER_KEY, "") + "/backup/clouddisk_backup.db";
     int32_t ret = -1;
     if (access(fileName.c_str(), F_OK) == 0) {
         {
