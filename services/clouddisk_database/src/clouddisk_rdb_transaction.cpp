@@ -71,7 +71,7 @@ void TransactionOperations::Finish()
 
 int32_t TransactionOperations::BeginTransaction()
 {
-    if (rdbStore_ == nullptr || idx_ >= RDB_NUM) {
+    if (rdbStore_ == nullptr) {
         LOGE("Pointer rdbStore_ is nullptr. Maybe it didn't init successfully.");
         return E_HAS_DB_ERROR;
     }
@@ -95,7 +95,8 @@ int32_t TransactionOperations::BeginTransaction()
         }
 
         int32_t errCode = rdbStore_->BeginTransaction();
-        if (errCode == SQLITE3_DATABASE_LOCKER) {
+        if (errCode == NativeRdb::E_SQLITE_LOCKED || errCode == NativeRdb::E_DATABASE_BUSY ||
+            errCode == NativeRdb::E_SQLITE_BUSY) {
             curTryTime++;
             LOGE("Sqlite database file is locked! try %{public}d times...", curTryTime);
             continue;
@@ -116,7 +117,7 @@ int32_t TransactionOperations::BeginTransaction()
 
 int32_t TransactionOperations::TransactionCommit()
 {
-    if (rdbStore_ == nullptr || idx_ >= RDB_NUM) {
+    if (rdbStore_ == nullptr) {
         return E_HAS_DB_ERROR;
     }
     LOGI("Try commit transaction");
@@ -139,7 +140,7 @@ int32_t TransactionOperations::TransactionCommit()
 
 int32_t TransactionOperations::TransactionRollback()
 {
-    if (rdbStore_ == nullptr || idx_ >= RDB_NUM) {
+    if (rdbStore_ == nullptr) {
         return E_HAS_DB_ERROR;
     }
     LOGI("Try rollback transaction");
