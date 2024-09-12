@@ -387,7 +387,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndUpdate_001, TestSize
     try {
         string fileName = "testLongLongfileName";
         string cloudId = "testLongLongfileName";
-        unsigned long long size = 0x6b6b6b6b00000000;
+        uint64_t size = 0x6b6b6b6b00000000;
         MetaBase metaBase(fileName, cloudId);
         metaBase.size = size;
         auto callback = [&metaBase] (MetaBase &m) {
@@ -512,5 +512,118 @@ HWTEST_F(CloudDiskDentryMetaFileTest, LoadChildren_001, TestSize.Level1)
         GTEST_LOG_(INFO) << "LoadChildren_001 ERROR";
     }
     GTEST_LOG_(INFO) << "LoadChildren_001 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoLookupAndUpdate_002 Start";
+    try {
+        string fileName = "";
+        string cloudId = "id1";
+        uint64_t size = 0x6b6b6b6b00000000;
+        MetaBase metaBase(fileName, cloudId);
+        metaBase.size = size;
+        auto callback = [&metaBase] (MetaBase &m) {
+            m.size = metaBase.size;
+        };
+
+        auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(100, "/o/p/q/r/s/t", "id1");
+        int32_t ret = metaFile->DoLookupAndUpdate(fileName, callback);
+        EXPECT_EQ(ret, E_SUCCESS);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DoLookupAndUpdate_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoLookupAndUpdate_002 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoLookupAndUpdate_003 Start";
+    try {
+        uint64_t size = 0x6b6b6b6b000000ff;
+        CloudDiskMetaFile mFile(100, "", "");
+        MetaBase metaBase("file1", "id1");
+        metaBase.size = size;
+        auto callback = [&metaBase] (MetaBase &m) {
+            m.size = metaBase.size;
+        };
+
+        int32_t ret = mFile.DoUpdate(metaBase);
+        EXPECT_EQ(ret, E_EINVAL);
+        ret = mFile.DoLookupAndUpdate("file1", callback);
+        EXPECT_EQ(ret, E_EINVAL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DoLookupAndUpdate_003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoLookupAndUpdate_003 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoLookupAndUpdate_004 Start";
+    try {
+        uint64_t size = 0x6b6b6b6b0000006f;
+        CloudDiskMetaFile mFile(100, "/", "id1");
+        MetaBase metaBase("file1", "id1");
+        metaBase.size = size;
+        auto callback = [&metaBase] (MetaBase &m) {
+            m.size = metaBase.size;
+        };
+
+        int32_t ret = mFile.DoUpdate(metaBase);
+        EXPECT_EQ(ret, E_SUCCESS);
+        ret = mFile.DoLookupAndUpdate("file1", callback);
+        EXPECT_EQ(ret, E_SUCCESS);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DoLookupAndUpdate_004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoLookupAndUpdate_004 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DoRename_001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoRename_001 Start";
+    try {
+        CloudDiskMetaFile mFile(100, "", "");
+        MetaBase mBase1("file1", "id1");
+        std::shared_ptr<CloudDiskMetaFile> newMetaFile =
+            make_shared<CloudDiskMetaFile>(TEST_USER_ID, "/", "id1");
+
+        int ret = mFile.DoCreate(mBase1);
+        ret = mFile.DoRename(mBase1, "id2", newMetaFile);
+        EXPECT_EQ(ret, E_EINVAL);
+        MetaBase mBase2("id2");
+        ret = mFile.DoLookup(mBase2);
+        EXPECT_EQ(ret, E_EINVAL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DoRename_001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoRename_001 End";
+}
+
+HWTEST_F(CloudDiskDentryMetaFileTest, DoRename_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoRename_002 Start";
+    try {
+        CloudDiskMetaFile mFile(100, "", "");
+        MetaBase mBase1("file1", "id1");
+        std::shared_ptr<CloudDiskMetaFile> newMetaFile =
+            make_shared<CloudDiskMetaFile>(TEST_USER_ID, "", "");
+
+        int ret = mFile.DoCreate(mBase1);
+        ret = mFile.DoRename(mBase1, "id2", newMetaFile);
+        EXPECT_EQ(ret, E_EINVAL);
+        MetaBase mBase2("id2");
+        ret = mFile.DoLookup(mBase2);
+        EXPECT_EQ(ret, E_EINVAL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DoRename_002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoRename_002 End";
 }
 } // namespace OHOS::FileManagement::CloudSync::Test
