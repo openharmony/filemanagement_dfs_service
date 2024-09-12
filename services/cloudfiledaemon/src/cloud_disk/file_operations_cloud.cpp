@@ -1091,8 +1091,7 @@ void FileOperationsCloud::RmDir(fuse_req_t req, fuse_ino_t parent, const char *n
     auto parentInode = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(parent));
     if (parentInode == nullptr) {
         LOGE("parent inode not found");
-        fuse_reply_err(req, EINVAL);
-        return;
+        return (void) fuse_reply_err(req, EINVAL);
     }
     auto parentMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
         parentInode->bundleName, parentInode->cloudId);

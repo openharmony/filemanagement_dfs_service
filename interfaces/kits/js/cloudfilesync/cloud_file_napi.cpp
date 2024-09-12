@@ -266,6 +266,9 @@ napi_value CloudFileNapi::Stop(napi_env env, napi_callback_info info)
             maxArgSize = static_cast<size_t>(NARG_CNT::THREE);
         }
     }
+    if (funcArg.GetArgc() == NARG_CNT::THREE) {
+        maxArgSize = static_cast<size_t>(NARG_CNT::THREE);
+    }
     auto cbExec = [uri = string(uri.get()), env = env, needClean = needClean]() -> NError {
         int32_t ret = CloudSyncManager::GetInstance().StopDownloadFile(uri, needClean);
         if (ret != E_OK) {

@@ -247,7 +247,6 @@ bool ForceRemoveDirectoryDeepFirst(const string& path)
             break;
         }
 
-        // current dir OR parent dir
         if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
             continue;
         }
