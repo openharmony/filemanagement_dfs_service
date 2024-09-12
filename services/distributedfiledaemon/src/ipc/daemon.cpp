@@ -360,10 +360,17 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
     auto requestSendFileData = std::make_shared<RequestSendFileData>(
         srcUri, dstPath, dstDeviceId, sessionName, requestSendFileBlock);
     auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_REQUEST_SEND_FILE, requestSendFileData, 0);
-    bool isSucc = eventHandler_->SendEvent(msgEvent, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
-    if (!isSucc) {
-        LOGE("Daemon event handler post push asset event fail.");
-        return E_EVENT_HANDLER;
+    {
+        std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+        if (eventHandler_ == nullptr) {
+            LOGE("eventHandler has not find");
+            return E_EVENT_HANDLER;
+        }
+        bool isSucc = eventHandler_->SendEvent(msgEvent, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        if (!isSucc) {
+            LOGE("Daemon event handler post push asset event fail.");
+            return E_EVENT_HANDLER;
+        }
     }
 
     auto ret = requestSendFileBlock->GetValue();
@@ -539,8 +546,10 @@ int32_t Daemon::CheckCopyRule(std::string &physicalPath,
 
 int32_t Daemon::GetRemoteCopyInfo(const std::string &srcUri, bool &isSrcFile, bool &srcIsDir)
 {
+    LOGI("GetRemoteCopyInfo begin.");
     auto physicalPath = SoftBusSessionListener::GetRealPath(srcUri);
     if (physicalPath.empty()) {
+        LOGE("GetRemoteCopyInfo GetRealPath failed.");
         return E_SOFTBUS_SESSION_FAILED;
     }
     isSrcFile = Utils::IsFile(physicalPath);
@@ -598,7 +607,7 @@ int32_t Daemon::Copy(const std::string &srcUri,
 
 int32_t Daemon::CancelCopyTask(const std::string &sessionName)
 {
-    LOGD("Cancel copy task in. sessionName = %{public}s", sessionName.c_str());
+    LOGI("Cancel copy task in. sessionName = %{public}s", sessionName.c_str());
     SoftBusSessionPool::SessionInfo sessionInfo{};
     bool isExist = SoftBusSessionPool::GetInstance().GetSessionInfo(sessionName, sessionInfo);
     if (!isExist) {
@@ -697,9 +706,17 @@ int32_t Daemon::PushAsset(int32_t userId,
     AssetCallbackManager::GetInstance().AddSendCallback(taskId, sendCallback);
     auto pushData = std::make_shared<PushAssetData>(userId, assetObj);
     auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
+
+    std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+    if (eventHandler_ == nullptr) {
+        LOGE("eventHandler has not find");
+        AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
+        return E_EVENT_HANDLER;
+    }
     bool isSucc = eventHandler_->SendEvent(msgEvent, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     if (!isSucc) {
         LOGE("Daemon event handler post push asset event fail.");
+        AssetCallbackManager::GetInstance().RemoveSendCallback(taskId);
         return E_EVENT_HANDLER;
     }
     return E_OK;
