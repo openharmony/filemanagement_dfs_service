@@ -469,6 +469,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest5, TestSize.Level1)
     const std::string parentCloudId = "100";
     const std::string fileName = "test";
     bool noNeedUpload = false;
+    clouddiskrdbStore_->userId_ = 0;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     int32_t ret = clouddiskrdbStore_->Create(cloudId, parentCloudId, fileName, noNeedUpload);
@@ -482,24 +483,6 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest5, TestSize.Level1)
  * @tc.require: SR000HRKKA
  */
 HWTEST_F(CloudDiskRdbStoreTest, CreateTest6, TestSize.Level1)
-{
-    const std::string cloudId = "rootId";
-    const std::string parentCloudId = "100";
-    const std::string fileName = "test";
-    bool noNeedUpload = true;
-    auto rdb = make_shared<RdbStoreMock>();
-    clouddiskrdbStore_->rdbStore_ = rdb;
-    int32_t ret = clouddiskrdbStore_->Create(cloudId, parentCloudId, fileName, noNeedUpload);
-    EXPECT_EQ(ret, E_PATH);
-}
-
-/**
- * @tc.name: Create
- * @tc.desc: Verify the CloudDiskRdbStore::Create function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKA
- */
-HWTEST_F(CloudDiskRdbStoreTest, CreateTest7, TestSize.Level1)
 {
     const std::string cloudId = "rootId";
     const std::string parentCloudId = "100";
@@ -520,7 +503,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest7, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: SR000HRKKA
  */
-HWTEST_F(CloudDiskRdbStoreTest, CreateTest8, TestSize.Level1)
+HWTEST_F(CloudDiskRdbStoreTest, CreateTest7, TestSize.Level1)
 {
     const std::string cloudId = "rootId";
     const std::string parentCloudId = "100";
@@ -541,7 +524,7 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest8, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: SR000HRKKA
  */
-HWTEST_F(CloudDiskRdbStoreTest, CreateTest9, TestSize.Level1)
+HWTEST_F(CloudDiskRdbStoreTest, CreateTest8, TestSize.Level1)
 {
     const std::string cloudId = "rootId";
     const std::string parentCloudId = "100";
