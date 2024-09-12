@@ -1101,9 +1101,10 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
                                  int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
+    if (static_cast<uint64_t>(readArgs->offset) > cInode->mBase->size) {
+        return;
+    }
     usleep(READ_CACHE_SLEEP);
-    LOGI("Preread CloudFile, path: %{public}s, size: %{public}zd, off: %{public}lu",
-        GetAnonyString(cInode->path).c_str(), readArgs->size, static_cast<unsigned long>(readArgs->offset));
     uint64_t startTime = UTCTimeMilliSeconds();
     int64_t cacheIndex = readArgs->offset / MAX_READ_SIZE;
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
@@ -1116,11 +1117,12 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
     auto memInfo = std::make_shared<ReadCacheInfo>();
     memInfo->flags = PG_READAHEAD;
     cInode->readCacheMap[cacheIndex] = memInfo;
-    LOGI("To do preread cloudfile, offset: %{public}ld*4M", static_cast<long>(cacheIndex));
     wSesLock.unlock();
 
-    readArgs->offset = cacheIndex * MAX_READ_SIZE;
+    readArgs->size = MAX_READ_SIZE;
     readArgs->buf.reset(new char[MAX_READ_SIZE], [](char *ptr) { delete[] ptr; });
+    LOGI("To do preread cloudfile path: %{public}s, size: %{public}zd, offset: %{public}ld*4M",
+         GetAnonyString(cInode->path).c_str(), readArgs->size, static_cast<long>(cacheIndex));
     *readArgs->readResult =
         readSession->PRead(readArgs->offset, readArgs->size, readArgs->buf.get(), *readArgs->ckError);
 
