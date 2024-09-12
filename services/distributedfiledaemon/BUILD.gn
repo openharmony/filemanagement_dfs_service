@@ -30,6 +30,11 @@ ohos_shared_library("libdistributedfiledaemon") {
     "${distributedfile_path}/services/distributedfiledaemon/include/ipc",
   ]
 
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+    "-fstack-protector-strong",
+  ]
+
   sources = [
     "src/all_connect/all_connect_manager.cpp",
     "src/device/device_info.cpp",
@@ -147,6 +152,11 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
   configs = [ ":private_config" ]
 
   public_configs = [ ":public_config" ]
+
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+    "-fstack-protector-strong",
+  ]
 
   external_deps = [
     "c_utils:utils",

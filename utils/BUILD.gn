@@ -99,6 +99,11 @@ ohos_shared_library("libdistributedfileutils") {
   configs = [ "//build/config/compiler:exceptions" ]
   public_configs = [ ":utils_public_config" ]
 
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+    "-fstack-protector-strong",
+  ]
+
   defines = [
     "LOG_DOMAIN=0xD004308",
     "LOG_TAG=\"distributedfile_utils\"",
@@ -167,6 +172,11 @@ ohos_shared_library("libdistributedfiledentry") {
 
   public_configs = [ ":dentry_public_config" ]
 
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+    "-fstack-protector-strong",
+  ]
+
   deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
@@ -228,6 +238,11 @@ ohos_shared_library("libdistributedfileutils_lite") {
 
   configs = [ "//build/config/compiler:exceptions" ]
   public_configs = [ ":utils_lite_public_config" ]
+
+  cflags = [
+    "-D_FORTIFY_SOURCE=2",
+    "-fstack-protector-strong",
+  ]
 
   defines = [
     "LOG_DOMAIN=0xD004308",
