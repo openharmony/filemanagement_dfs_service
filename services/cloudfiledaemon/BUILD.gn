@@ -16,7 +16,6 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 config("optimize-size") {
   cflags = [
-    "-fvisibility=hidden",
     "-fdata-sections",
     "-ffunction-sections",
     "-Oz",
@@ -29,7 +28,7 @@ config("optimize-size") {
 
 ohos_shared_library("cloudfiledaemon") {
   branch_protector_ret = "pac_ret"
-  config = [ ":optimize-size" ]
+  configs = [ ":optimize-size" ]
   sanitize = {
     integer_overflow = true
     ubsan = true
@@ -58,7 +57,7 @@ ohos_shared_library("cloudfiledaemon") {
 
   sources += cloud_disk
 
-  configs = [ "${utils_path}:compiler_configs" ]
+  configs += [ "${utils_path}:compiler_configs" ]
 
   defines = [ "LOG_TAG=\"CloudFileDaemon\"" ]
 
