@@ -1208,8 +1208,8 @@ int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &pos
         RETURN_ON_ERR(UnlinkLocal(cloudId));
     } else {
         RETURN_ON_ERR(UnlinkSynced(cloudId));
-        CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     }
+    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     return E_OK;
 }
 
