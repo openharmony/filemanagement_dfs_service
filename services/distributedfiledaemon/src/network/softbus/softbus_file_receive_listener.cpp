@@ -157,7 +157,9 @@ void SoftBusFileReceiveListener::OnReceiveFileShutdown(int32_t sessionId, Shutdo
         LOGE("sessionName is empty");
         return;
     }
-    SoftBusHandler::GetInstance().CloseSessionWithSessionName(sessionName);
+    TransManager::GetInstance().NotifyFileFailed(sessionName, E_SOFTBUS_SESSION_FAILED);
+    TransManager::GetInstance().DeleteTransTask(sessionName);
+    SoftBusHandler::GetInstance().CloseSession(sessionId, sessionName);
 }
 } // namespace DistributedFile
 } // namespace Storage

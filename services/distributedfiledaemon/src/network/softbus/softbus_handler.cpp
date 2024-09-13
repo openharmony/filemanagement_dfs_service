@@ -167,16 +167,7 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
         {.qos = QOS_TYPE_MAX_LATENCY,        .value = DFS_QOS_TYPE_MAX_LATENCY},
         {.qos = QOS_TYPE_MIN_LATENCY,        .value = DFS_QOS_TYPE_MIN_LATENCY},
     };
-    SocketInfo clientInfo = {
-        .name = const_cast<char*>((mySessionName.c_str())),
-        .peerName = const_cast<char*>(peerSessionName.c_str()),
-        .peerNetworkId = const_cast<char*>(peerDevId.c_str()),
-        .pkgName = const_cast<char*>(SERVICE_NAME.c_str()),
-        .dataType = DATA_TYPE_FILE,
-    };
-    socketId = Socket(clientInfo);
-    if (socketId < E_OK) {
-        LOGE("Create OpenSoftbusChannel Socket error");
+    if (!CreatSocketId(mySessionName, peerSessionName, peerDevId, socketId)) {
         return FileManagement::ERR_BAD_VALUE;
     }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener_[DFS_CHANNLE_ROLE_SOURCE]);
@@ -197,6 +188,37 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     RadarDotsOpenSession("OpenSession", mySessionName, peerSessionName, ret, Utils::StageRes::STAGE_SUCCESS);
     LOGI("OpenSession success socketId = %{public}d", socketId);
     return E_OK;
+}
+
+bool SoftBusHandler::CreatSocketId(const std::string &mySessionName, const std::string &peerSessionName,
+    const std::string &peerDevId, int32_t &socketId)
+{
+    SocketInfo clientInfo = {
+        .name = const_cast<char*>((mySessionName.c_str())),
+        .peerName = const_cast<char*>(peerSessionName.c_str()),
+        .peerNetworkId = const_cast<char*>(peerDevId.c_str()),
+        .pkgName = const_cast<char*>(SERVICE_NAME.c_str()),
+        .dataType = DATA_TYPE_FILE,
+    };
+    socketId = Socket(clientInfo);
+    do {
+        {
+            std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
+            auto it = clientSessNameMap_.find(socketId);
+            if (it == clientSessNameMap_.end()) {
+                break;
+            }
+        }
+        std::unique_lock<std::mutex> lk(cvMutex_);
+        cv_.wait(lk, [&] { return isShutdown_; });
+        isShutdown_ = false;
+        socketId = Socket(clientInfo);
+    } while (false);
+    if (socketId < E_OK) {
+        LOGE("Create OpenSoftbusChannel Socket error");
+        return false;
+    }
+    return true;
 }
 
 int32_t SoftBusHandler::CopySendFile(int32_t socketId,
@@ -276,6 +298,7 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
             LOGI("RemoveSessionServer success.");
         }
     }
+    Shutdown(sessionId);
     if (!clientSessNameMap_.empty()) {
         std::lock_guard<std::mutex> lock(clientSessNameMapMutex_);
         auto it = clientSessNameMap_.find(sessionId);
@@ -283,7 +306,8 @@ void SoftBusHandler::CloseSession(int32_t sessionId, const std::string sessionNa
             clientSessNameMap_.erase(it->first);
         }
     }
-    Shutdown(sessionId);
+    isShutdown_ = true;
+    cv_.notify_all();
     RemoveNetworkId(sessionId);
     SoftBusSessionPool::GetInstance().DeleteSessionInfo(sessionName);
 }
