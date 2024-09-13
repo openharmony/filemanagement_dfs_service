@@ -61,9 +61,7 @@ private:
     std::vector<int32_t> GetsocketIdFromPeerNetworkId(const std::string &peerNetworkId);
     bool IsService(std::string &sessionName);
 
-    bool isShutdown_ = { false };
-    std::mutex cvMutex_;
-    std::condition_variable cv_;
+    std::mutex socketMutex_;
     static std::mutex clientSessNameMapMutex_;
     static std::map<int32_t, std::string> clientSessNameMap_;
     static std::mutex serverIdMapMutex_;
