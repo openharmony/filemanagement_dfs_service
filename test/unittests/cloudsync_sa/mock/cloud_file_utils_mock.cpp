@@ -80,7 +80,7 @@ string CloudFileUtils::GetLocalFilePath(string cloudId, string bundleName, int32
     if (userId == 0) {
         return "mock";
     }
-    return "";
+    return "/data";
 }
 
 string CloudFileUtils::GetPathWithoutTmp(const string &path)
