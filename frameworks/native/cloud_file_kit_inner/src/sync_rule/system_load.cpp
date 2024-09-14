@@ -16,6 +16,7 @@
 
 #include "dfs_error.h"
 #include "parameters.h"
+#include "task_state_manager.h"
 #include "utils_log.h"
 #include "res_sched_client.h"
 
@@ -47,10 +48,12 @@ void SystemLoadListener::OnSystemloadLevel(int32_t level)
         LOGI("OnSystemloadLevel is noraml, level:%{public}d", level);
         if (systemLoadSync == "true") {
             system::SetParameter(TEMPERATURE_SYSPARAM_SYNC, "false");
+            TaskStateManager::GetInstance().StartTask();
             dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SYSTEM_LOAD_TRIGGER);
         }
         if (systemLoadThumb == "true") {
             system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "false");
+            TaskStateManager::GetInstance().StartTask();
             dataSyncManager_->DownloadThumb();
         }
     }
