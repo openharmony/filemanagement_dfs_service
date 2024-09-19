@@ -134,9 +134,9 @@ void CycleTaskRunner::SetRunableBundleNames()
     }
 
     for (auto task_data  : cycleTasks_) {
-            task_data->SetRunnableBundleNames(runnableBundleNames);
-        }
+        task_data->SetRunnableBundleNames(runnableBundleNames);
     }
+}
 } // namespace CloudSync
 } // namespace FileManagement
 } // namespace OHOS
