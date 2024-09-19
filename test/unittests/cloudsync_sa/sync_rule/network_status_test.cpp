@@ -24,6 +24,8 @@
 #include "net_conn_callback_observer.h"
 #include "network_status.h"
 #include "utils_log.h"
+#include "net_conn_client_mock.h"
+#include "net_handle.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -37,14 +39,19 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline shared_ptr<NetConnClientMock> dfsNetConnClient_ = nullptr;
 };
 void NetworkStatusTest::SetUpTestCase(void)
 {
+    dfsNetConnClient_ = make_shared<NetConnClientMock>();
+    NetConnClientMock::dfsNetConnClient = dfsNetConnClient_;
     GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
 void NetworkStatusTest::TearDownTestCase(void)
 {
+    NetConnClientMock::dfsNetConnClient = nullptr;
+    dfsNetConnClient_ = nullptr;
     GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
@@ -79,22 +86,35 @@ HWTEST_F(NetworkStatusTest, RegisterNetConnCallbackTest001, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetDefaultNetTest
+ * @tc.name: GetDefaultNetTest001
  * @tc.desc: Verify the GetDefaultNet function
  * @tc.type: FUNC
  * @tc.require: I6JPKG
  */
-HWTEST_F(NetworkStatusTest, GetDefaultNetTest, TestSize.Level1)
+HWTEST_F(NetworkStatusTest, GetDefaultNetTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetDefaultNetTest Start";
-    try {
-        int32_t ret = NetworkStatus::GetDefaultNet();
-        EXPECT_EQ(ret, E_GET_NETWORK_MANAGER_FAILED);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " GetDefaultNetTest FAILED";
-    }
-    GTEST_LOG_(INFO) << "GetDefaultNetTest End";
+    GTEST_LOG_(INFO) << "GetDefaultNetTest001 Start";
+    EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).WillOnce(Return(E_GET_NETWORK_MANAGER_FAILED));
+    NetworkStatus netStatus;
+    int32_t ret = netStatus.GetDefaultNet();
+    EXPECT_EQ(ret, E_GET_NETWORK_MANAGER_FAILED);
+    GTEST_LOG_(INFO) << "GetDefaultNetTest001 End";
+}
+
+/**
+ * @tc.name: GetDefaultNetTest002
+ * @tc.desc: Verify the GetDefaultNet function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(NetworkStatusTest, GetDefaultNetTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetDefaultNetTest002 Start";
+    EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).WillOnce(Return(NetManagerStandard::NETMANAGER_SUCCESS));
+    NetworkStatus netStatus;
+    int32_t ret = netStatus.GetDefaultNet();
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "GetDefaultNetTest002 End";
 }
 
 /**
