@@ -241,12 +241,14 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
     int fd = open(realPaths, O_RDONLY);
     if (fd < 0) {
         LOGE("open failed, errno:%{public}d", errno);
+        close(fd);
         return false;
     }
     uint32_t writeOpenCnt = 0;
     int ret = ioctl(fd, HMDFS_IOC_GET_WRITEOPEN_CNT, &writeOpenCnt);
     if (ret < 0) {
         LOGE("ioctl failed, errno:%{public}d", errno);
+        close(fd);
         return false;
     }
 
