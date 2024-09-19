@@ -56,9 +56,12 @@ public:
     void CopyOnStop(const std::string &peerNetworkId);
 
 private:
+    bool CreatSocketId(const std::string &mySessionName, const std::string &peerSessionName,
+        const std::string &peerDevId, int32_t &socketId);
     std::vector<int32_t> GetsocketIdFromPeerNetworkId(const std::string &peerNetworkId);
     bool IsService(std::string &sessionName);
 
+    std::mutex socketMutex_;
     static std::mutex clientSessNameMapMutex_;
     static std::map<int32_t, std::string> clientSessNameMap_;
     static std::mutex serverIdMapMutex_;
