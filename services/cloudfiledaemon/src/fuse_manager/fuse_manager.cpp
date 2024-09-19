@@ -434,12 +434,10 @@ static void CloudForget(fuse_req_t req, fuse_ino_t ino,
 {
     struct FuseData *data = static_cast<struct FuseData *>(fuse_req_userdata(req));
     shared_ptr<CloudInode> node = GetCloudInode(data, ino);
-    if (!node) {
-        fuse_reply_err(req, ENOMEM);
-        return;
+    if (node) {
+        LOGD("forget %s, nlookup: %lld", GetAnonyString(node->path).c_str(), (long long)nlookup);
+        PutNode(data, node, nlookup);
     }
-    LOGD("forget %s, nlookup: %lld", GetAnonyString(node->path).c_str(), (long long)nlookup);
-    PutNode(data, node, nlookup);
     fuse_reply_none(req);
 }
 
@@ -790,7 +788,6 @@ static void CloudForgetMulti(fuse_req_t req, size_t count,
     for (size_t i = 0; i < count; i++) {
         shared_ptr<CloudInode> node = GetCloudInode(data, forgets[i].ino);
         if (!node) {
-            fuse_reply_err(req, ENOMEM);
             continue;
         }
         LOGD("forget (i=%zu) %s, nlookup: %lld", i, GetAnonyString(node->path).c_str(), (long long)forgets[i].nlookup);
