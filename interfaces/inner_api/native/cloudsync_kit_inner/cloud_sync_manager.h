@@ -68,7 +68,7 @@ public:
      *
      * @return int32_t 同步返回执行结果
      */
-    virtual int32_t StopSync(const std::string &bundleName = "") = 0;
+    virtual int32_t StopSync(const std::string &bundleName = "", bool forceFlag = false) = 0;
     /**
      * @brief 切换应用云同步开关
      *

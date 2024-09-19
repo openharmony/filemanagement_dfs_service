@@ -61,7 +61,7 @@ public:
         return E_OK;
     }
 
-    int32_t StopSyncInner(const std::string &bundleName = "") override
+    int32_t StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) override
     {
         return E_OK;
     }

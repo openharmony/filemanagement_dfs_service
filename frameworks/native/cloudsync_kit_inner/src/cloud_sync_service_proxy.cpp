@@ -250,7 +250,7 @@ int32_t CloudSyncServiceProxy::CleanCacheInner(const std::string &uri)
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName)
+int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName, bool forceFlag)
 {
     LOGI("StopSync");
     MessageParcel data;
@@ -270,6 +270,11 @@ int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName)
 
     if (!data.WriteString(bundleName)) {
         LOGE("Failed to send the bundle name");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteBool(forceFlag)) {
+        LOGE("Failed to send the forceFlag");
         return E_INVAL_ARG;
     }
 

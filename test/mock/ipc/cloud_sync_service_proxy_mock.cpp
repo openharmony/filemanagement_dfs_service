@@ -37,7 +37,7 @@ int32_t CloudSyncServiceProxy::StartSyncInner(bool forceFlag, const std::string 
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName)
+int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName, bool forceFlag)
 {
     return E_OK;
 }
