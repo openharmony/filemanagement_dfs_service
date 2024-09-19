@@ -1421,7 +1421,6 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     }
 
     fuse_session_destroy(se);
-    close(devFd);
     return ret;
 }
 
