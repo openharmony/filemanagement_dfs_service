@@ -966,21 +966,25 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
     const CacheNode &node, const std::string &extAttrKey)
 {
     int32_t num = CheckXattr(key);
+    int32_t ret;
     switch (num) {
         case CLOUD_LOCATION:
-            return LocationGetXattr(node.fileName, key, value, node.parentCloudId);
+            ret = LocationGetXattr(node.fileName, key, value, node.parentCloudId);
             break;
         case IS_FAVORITE:
-            return FavoriteGetXattr(cloudId, key, value);
+            ret = FavoriteGetXattr(cloudId, key, value);
             break;
         case FILE_SYNC_STATUS:
-            return FileStatusGetXattr(cloudId, key, value);
+            ret = FileStatusGetXattr(cloudId, key, value);
             break;
         case IS_EXT_ATTR:
-            return GetExtAttrValue(cloudId, extAttrKey, value);
+            ret = GetExtAttrValue(cloudId, extAttrKey, value);
+            break;
+        default:
+            ret = ENOSYS;
+            break;
     }
-    
-    return E_INVAL_ARG;
+    return ret;
 }
 
 static int32_t ExtAttributeSetValue(const std::string &key, const std::string &value,
@@ -1042,21 +1046,25 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
     const std::string &name, const std::string &parentCloudId)
 {
     int32_t num = CheckXattr(key);
+    int32_t ret;
     switch (num) {
         case CLOUD_LOCATION:
-            return LocationSetXattr(name, parentCloudId, cloudId, value);
+            ret = LocationSetXattr(name, parentCloudId, cloudId, value);
             break;
         case CLOUD_RECYCLE:
-            return RecycleSetXattr(name, parentCloudId, cloudId, value);
+            ret = RecycleSetXattr(name, parentCloudId, cloudId, value);
             break;
         case IS_FAVORITE:
-            return FavoriteSetXattr(cloudId, value);
+            ret = FavoriteSetXattr(cloudId, value);
             break;
         case IS_EXT_ATTR:
-            return ExtAttributeSetXattr(cloudId, value, name);
+            ret = ExtAttributeSetXattr(cloudId, value, name);
+            break;
+        default:
+            ret = ENOSYS;
+            break;
     }
-    
-    return E_INVAL_ARG;
+    return ret;
 }
 
 static void FileRename(ValuesBucket &values, const int32_t &position, const std::string &newFileName)
@@ -1230,6 +1238,7 @@ int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &pos
 
 int32_t CloudDiskRdbStore::GetDirtyType(const std::string &cloudId, int32_t &dirtyType)
 {
+    RDBPTR_IS_NULLPTR(rdbStore_);
     AbsRdbPredicates predicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
     predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
     auto resultSet = rdbStore_->QueryByStep(predicates, {FileColumn::DIRTY_TYPE});
@@ -1284,7 +1293,7 @@ int32_t CloudDiskRdbStore::GetCurNode(const std::string &cloudId, CacheNode &cur
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::GetParentNode(const std::string parentCloudId, std::string &nextCloudId,
+int32_t CloudDiskRdbStore::GetParentNode(const std::string &parentCloudId, std::string &nextCloudId,
     std::string &fileName)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);

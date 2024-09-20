@@ -69,7 +69,7 @@ struct NotifyParamService {
 };
 
 struct ParamServiceOther {
-    int32_t userId;
+    int32_t userId = 0;
     std::string bundleName;
     std::vector<NotifyData> notifyDataList = {};
 };

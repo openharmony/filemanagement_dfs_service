@@ -48,7 +48,7 @@ const std::string DK_IS_DIRECTORY = "type";
 
 struct NotifyData {
     std::string uri;
-    bool isDir;
+    bool isDir = false;
     NotifyType type = NotifyType::NOTIFY_NONE;
     bool isLocalOperation = false;
     std::string extraUri = "";

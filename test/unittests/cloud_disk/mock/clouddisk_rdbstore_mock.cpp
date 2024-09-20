@@ -219,7 +219,7 @@ int32_t CloudDiskRdbStore::GetCurNode(const std::string &cloudId, CacheNode &cur
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::GetParentNode(const std::string parentCloudId, std::string &nextCloudId,
+int32_t CloudDiskRdbStore::GetParentNode(const std::string &parentCloudId, std::string &nextCloudId,
     std::string &fileName)
 {
     return E_OK;

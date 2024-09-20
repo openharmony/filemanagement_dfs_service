@@ -36,6 +36,10 @@ static const uint32_t STAT_MODE_DIR = 0771;
 int32_t CloudDiskRdbUtils::GetInt(const string &key, int32_t &val,
                                   const shared_ptr<ResultSet> resultSet)
 {
+    if (resultSet == nullptr) {
+        LOGE("result set is nullptr");
+        return E_RDB;
+    }
     int32_t index;
     int32_t err = resultSet->GetColumnIndex(key, index);
     if (err != E_OK) {
@@ -53,6 +57,10 @@ int32_t CloudDiskRdbUtils::GetInt(const string &key, int32_t &val,
 int32_t CloudDiskRdbUtils::GetLong(const string &key, int64_t &val,
                                    const shared_ptr<ResultSet> resultSet)
 {
+    if (resultSet == nullptr) {
+        LOGE("result set is nullptr");
+        return E_RDB;
+    }
     int32_t index;
     int32_t err = resultSet->GetColumnIndex(key, index);
     if (err != E_OK) {
@@ -70,6 +78,10 @@ int32_t CloudDiskRdbUtils::GetLong(const string &key, int64_t &val,
 int32_t CloudDiskRdbUtils::GetString(const string &key, string &val,
                                      const shared_ptr<ResultSet> resultSet)
 {
+    if (resultSet == nullptr) {
+        LOGE("result set is nullptr");
+        return E_RDB;
+    }
     int32_t index;
     int32_t err = resultSet->GetColumnIndex(key, index);
     if (err != E_OK) {
