@@ -330,10 +330,12 @@ static shared_ptr<CloudDatabase> GetDatabase(struct FuseData *data)
 
 static shared_ptr<CloudInode> FindNode(struct FuseData *data, string path)
 {
-    shared_ptr<CloudInode> ret;
+    shared_ptr<CloudInode> ret = nullptr;
     std::shared_lock<std::shared_mutex> rLock(data->cacheLock, std::defer_lock);
     rLock.lock();
-    ret = data->inodeCache[path];
+    if (data->inodeCache.count(path) != 0) {
+        ret = data->inodeCache.at(path);
+    }
     rLock.unlock();
     return ret;
 }
