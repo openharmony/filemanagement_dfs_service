@@ -133,6 +133,7 @@ ohos_shared_library("cloudfile_kit") {
 config("cloudfile_kit_lite_public_config") {
   include_dirs = [
     ".",
+    "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",
     "${innerkits_native_path}/cloudsync_kit_inner",
   ]
 }
@@ -148,6 +149,8 @@ ohos_shared_library("cloudfile_kit_core") {
     debug = false
   }
 
+  big_data_statistics = [ "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp" ]
+
   sources = [
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_asset_read_session.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/cloud_assets_downloader.cpp",
@@ -157,6 +160,8 @@ ohos_shared_library("cloudfile_kit_core") {
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync_manager.cpp",
   ]
 
+  sources += big_data_statistics
+
   defines = [
     "LOG_DOMAIN=0xD004311",
     "LOG_TAG=\"CLOUD_FILE_KIT\"",
@@ -164,7 +169,10 @@ ohos_shared_library("cloudfile_kit_core") {
 
   public_configs = [ ":cloudfile_kit_lite_public_config" ]
 
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+  ]
 
   deps = [ "${utils_path}:libdistributedfileutils_lite" ]
 
