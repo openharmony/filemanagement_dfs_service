@@ -18,12 +18,13 @@
 
 #include <atomic>
 #include <functional>
+#include <list>
+#include <map>
 #include <memory>
 #include <mutex>
-#include <map>
 #include <string>
-#include <vector>
 #include <sys/stat.h>
+#include <vector>
 
 #include "unique_fd.h"
 
@@ -35,6 +36,8 @@ const std::string RECYCLE_CLOUD_ID = ".trash";
 const std::string ROOT_CLOUD_ID = "rootId";
 const unsigned int STAT_MODE_DIR = 0771;
 constexpr int32_t LOCAL = 1;
+constexpr uint32_t MAX_META_FILE_NUM = 100;
+constexpr uint32_t MAX_CLOUDDISK_META_FILE_NUM = 150;
 
 struct MetaBase;
 class MetaFile {
@@ -115,6 +118,10 @@ enum {
     POSITION_LOCAL_AND_CLOUD = POSITION_LOCAL | POSITION_CLOUD,
 };
 
+typedef std::pair<uint32_t, std::string> MetaFileKey;
+typedef std::pair<MetaFileKey, std::shared_ptr<CloudDiskMetaFile>> CloudDiskMetaFileListEle;
+typedef std::pair<MetaFileKey, std::shared_ptr<MetaFile>> MetaFileListEle;
+
 class MetaFileMgr {
 public:
     static MetaFileMgr& GetInstance();
@@ -140,8 +147,10 @@ private:
 
     std::recursive_mutex mtx_{};
     std::mutex cloudDiskMutex_{};
-    std::map<std::pair<uint32_t, std::string>, std::shared_ptr<MetaFile>> metaFiles_;
-    std::map<std::pair<uint32_t, std::string>, std::shared_ptr<CloudDiskMetaFile>> cloudDiskMetaFile_;
+    std::list<MetaFileListEle> metaFileList_;
+    std::map<MetaFileKey, std::list<MetaFileListEle>::iterator> metaFiles_;
+    std::list<CloudDiskMetaFileListEle> cloudDiskMetaFileList_;
+    std::map<MetaFileKey, std::list<CloudDiskMetaFileListEle>::iterator> cloudDiskMetaFile_;
 };
 
 struct MetaBase {
