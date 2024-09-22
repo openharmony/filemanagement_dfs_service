@@ -674,12 +674,21 @@ std::shared_ptr<MetaFile> MetaFileMgr::GetMetaFile(uint32_t userId, const std::s
 {
     std::shared_ptr<MetaFile> mFile = nullptr;
     std::lock_guard<std::recursive_mutex> lock(mtx_);
-    
-    if (metaFiles_.find({userId, path}) != metaFiles_.end()) {
-        mFile = metaFiles_[{userId, path}];
+
+    MetaFileKey key(userId, path);
+    auto it = metaFiles_.find(key);
+    if (it != metaFiles_.end()) {
+        metaFileList_.splice(metaFileList_.begin(), metaFileList_, it->second);
+        mFile = it->second->second;
     } else {
+        if (metaFiles_.size() == MAX_META_FILE_NUM) {
+            auto deleteKey = metaFileList_.back().first;
+            metaFiles_.erase(deleteKey);
+            metaFileList_.pop_back();
+        }
         mFile = std::make_shared<MetaFile>(userId, path);
-        metaFiles_[{userId, path}] = mFile;
+        metaFileList_.emplace_front(key, mFile);
+        metaFiles_[key] = metaFileList_.begin();
     }
     return mFile;
 }
@@ -688,6 +697,7 @@ void MetaFileMgr::ClearAll()
 {
     std::lock_guard<std::recursive_mutex> lock(mtx_);
     metaFiles_.clear();
+    metaFileList_.clear();
 }
 
 std::string MetaFileMgr::RecordIdToCloudId(const std::string hexStr)
