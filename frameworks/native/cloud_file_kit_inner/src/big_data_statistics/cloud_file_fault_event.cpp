@@ -39,7 +39,7 @@ bool CloudFaultReportStatus::IsAllowToReport(const FaultType &faultType)
     if (lastTimeMap_.find(faultType) != lastTimeMap_.end()) {
         struct timespec t;
         clock_gettime(CLOCK_REALTIME, &t);
-        uint64_t currentTime_ = t.tv_sec;
+        int64_t currentTime_ = t.tv_sec;
         if (lastTimeMap_[faultType] == 0 ||
             (currentTime_ > lastTimeMap_[faultType] &&
              currentTime_ - lastTimeMap_[faultType] > MINIMUM_FAULT_REPORT_INTERVAL)) {
