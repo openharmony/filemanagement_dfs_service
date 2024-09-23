@@ -85,6 +85,10 @@ bool CycleTask::IsEligibleToRun(std::time_t currentTime, std::string bundleName)
 
 void CycleTask::RunTask(int32_t userId)
 {
+    if (runnableBundleNames_ == nullptr) {
+        LOGE("runnableBundleNames_ is nullptr");
+        return;
+    }
     userId_ = userId;
     std::time_t currentTime = std::time(nullptr);
     for (const auto &bundleName : *runnableBundleNames_) {
