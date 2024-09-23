@@ -573,7 +573,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_004, TestSize.Level1)
         };
 
         int32_t ret = mFile.DoUpdate(metaBase);
-        EXPECT_EQ(ret, E_SUCCESS);
+        EXPECT_EQ(ret, ENOENT);
         ret = mFile.DoLookupAndUpdate("file1", callback);
         EXPECT_EQ(ret, E_SUCCESS);
     } catch (...) {

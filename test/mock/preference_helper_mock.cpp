@@ -19,7 +19,7 @@
 
 namespace OHOS {
 namespace NativePreferences {
-#define TEST_PATH "/data/service/el1/public/cloudfile/123/test_key/"
+#define TEST_PATH "/data/service/el2/123/hmdfs/cloudfile_manager/test_key/"
 class PreferencesHelperMock : public Preferences {
 public:
     MOCK_METHOD2(Get, PreferencesValue(const std::string &key, const PreferencesValue &defValue));
