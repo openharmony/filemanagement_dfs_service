@@ -140,7 +140,7 @@ private:
     CloudFaultReportStatus& operator=(const CloudFaultReportStatus&) = delete;
 
     std::mutex timeMapLock_;
-    std::unordered_map<FaultType, uint64_t> lastTimeMap_;
+    std::unordered_map<FaultType, int64_t> lastTimeMap_;
 } ;
 
 class CloudFileFaultEvent {
