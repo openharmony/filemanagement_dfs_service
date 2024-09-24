@@ -159,10 +159,55 @@ ohos_unittest("plugin_loader_test") {
   use_exceptions = true
 }
 
+ohos_unittest("async_work_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [ "./work/async_work_test.cpp" ]
+
+  include_dirs = [
+    "${utils_path}/work/include",
+    "${utils_path}/work/src",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "${utils_path}:libdistributedfileutils_lite",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:uri_permission_mgr",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "device_manager:devicemanagersdk",
+    "ffrt:libffrt",
+    "file_api:filemgmt_libhilog",
+    "file_api:filemgmt_libn",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "ipc:ipc_core",
+    "napi:ace_napi",
+    "preferences:native_preferences",
+  ]
+
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"UTILS\"",
+  ]
+
+  use_exceptions = true
+}
+
 group("utils_test") {
   testonly = true
 
   deps = [
+    ":async_work_test",
     ":cloud_file_utils_test",
     ":cloud_pref_impl_test",
     ":plugin_loader_test",
