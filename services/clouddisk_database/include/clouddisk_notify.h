@@ -41,7 +41,7 @@ public:
     int32_t GetDeleteNotifyData(const vector<NativeRdb::ValueObject> &deleteIds,
                                 vector<NotifyData> &notifyDataList,
                                 const ParamServiceOther &paramOthers);
-    void AddNotify(const NotifyData notifyData);
+    void AddNotify(const NotifyData &notifyData);
     void NotifyChangeOuter();
 
 private:

@@ -75,7 +75,7 @@ public:
     /* clouddisk syncer */
     int32_t GetDirtyType(const std::string &cloudId, int32_t &fileStatus);
     int32_t GetCurNode(const std::string &cloudId, CacheNode &curNode);
-    int32_t GetParentNode(const std::string parentCloudId, std::string &nextCloudId, std::string &fileName);
+    int32_t GetParentNode(const std::string &parentCloudId, std::string &nextCloudId, std::string &fileName);
     int32_t GetUriFromDB(const std::string &parentCloudId, std::string &uri);
     int32_t GetNotifyUri(const CacheNode &cacheNode, std::string &uri);
     int32_t GetNotifyData(const CacheNode &cacheNode, NotifyData &notifyData);

@@ -48,7 +48,7 @@ int32_t CloudDiskNotify::GetDeleteNotifyData(const vector<NativeRdb::ValueObject
     return 0;
 }
 
-void CloudDiskNotify::AddNotify(NotifyData notifyData) {}
+void CloudDiskNotify::AddNotify(const NotifyData &notifyData) {}
 
 void CloudDiskNotify::NotifyChangeOuter() {}
 } // namespace OHOS::FileManagement::CloudDisk

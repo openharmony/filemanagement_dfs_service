@@ -407,7 +407,7 @@ int32_t CloudDiskNotify::GetDeleteNotifyData(const vector<NativeRdb::ValueObject
     return E_OK;
 }
 
-void CloudDiskNotify::AddNotify(NotifyData notifyData)
+void CloudDiskNotify::AddNotify(const NotifyData &notifyData)
 {
     LOGD("push cur notify into list type: %{public}d, uri: %{public}s, isDir: %{public}d", notifyData.type,
          GetAnonyString(notifyData.uri).c_str(), notifyData.isDir);
