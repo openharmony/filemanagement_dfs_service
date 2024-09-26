@@ -154,11 +154,4 @@ bool NetworkStatus::CheckNetwork(const std::string &bundleName, const int32_t us
     LOGI("CheckNetwork off");
     return false;
 }
-
-void NetworkStatus::OnNetworkAvail()
-{
-    if (netStatus_ == NetConnStatus::NO_NETWORK) {
-        netStatus_ = NetConnStatus::NETWORK_AVAIL;
-    }
-}
 } // namespace OHOS::FileManagement::CloudSync
