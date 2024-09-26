@@ -26,6 +26,8 @@ ohos_unittest("data_syncer_rdb_store_test") {
     "${services_path}/cloudsyncservice/",
     "${innerkits_native_path}/cloud_file_kit_inner",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync",
+    "${distributedfile_path}/test/unittests/clouddisk_database/include",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock",
   ]
 
   deps = [
