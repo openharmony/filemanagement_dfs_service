@@ -25,6 +25,7 @@
 namespace OHOS::FileManagement::CloudSync {
 constexpr int32_t SYSTEMLOADLEVEL_HOT = ResourceSchedule::ResType::SystemloadLevel::HIGH;
 constexpr int32_t SYSTEMLOADLEVEL_WARM = ResourceSchedule::ResType::SystemloadLevel::MEDIUM;
+constexpr int32_t SYSTEMLOADLEVEL_NORMAL = ResourceSchedule::ResType::SystemloadLevel::NORMAL;
 const std::string TEMPERATURE_SYSPARAM_SYNC = "persist.kernel.cloudsync.temperature_abnormal_sync";
 const std::string TEMPERATURE_SYSPARAM_THUMB = "persist.kernel.cloudsync.temperature_abnormal_thumb";
 
@@ -41,6 +42,7 @@ public:
     static void RegisterSystemloadCallback(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void GetSystemloadLevel();
     static bool IsLoadStatusUnderHot(STOPPED_TYPE process = STOPPED_IN_OTHER);
+    static bool IsLoadStatusUnderNormal(STOPPED_TYPE process);
     static void InitSystemload(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
     static void Setload(int32_t load);
     static inline int32_t loadstatus_ = 0;
