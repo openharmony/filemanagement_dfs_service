@@ -432,28 +432,6 @@ HWTEST_F(NetworkStatusTest, OnNetworkAvailTest001, TestSize.Level1)
     try {
         NetworkStatus networkStatus;
         networkStatus.SetNetConnStatus(NetworkStatus::WIFI_CONNECT);
-        networkStatus.OnNetworkAvail();
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "OnNetworkAvailTest FAILED";
-    }
-    GTEST_LOG_(INFO) << "OnNetworkAvailTest End";
-}
-
-/**
- * @tc.name: OnNetworkAvailTest002
- * @tc.desc: Verify the OnNetworkAvail function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(NetworkStatusTest, OnNetworkAvailTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "OnNetworkAvailTest Start";
-    try {
-        NetworkStatus networkStatus;
-        networkStatus.SetNetConnStatus(NetworkStatus::NO_NETWORK);
-        networkStatus.OnNetworkAvail();
-        EXPECT_EQ(networkStatus.netStatus_, NetworkStatus::NETWORK_AVAIL);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "OnNetworkAvailTest FAILED";

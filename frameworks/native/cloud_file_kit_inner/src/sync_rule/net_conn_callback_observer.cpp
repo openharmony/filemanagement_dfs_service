@@ -29,17 +29,29 @@ NetConnCallbackObserver::NetConnCallbackObserver(std::shared_ptr<CloudFile::Data
 int32_t NetConnCallbackObserver::NetAvailable(sptr<NetHandle> &netHandle)
 {
     LOGI("network is available");
-    NetworkStatus::OnNetworkAvail();
-    dataSyncManager_->TriggerRecoverySync(triggerType_);
-    dataSyncManager_->DownloadThumb();
-    dataSyncManager_->CacheVideo();
     return E_OK;
 }
 
 int32_t NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandle,
     const sptr<NetAllCapabilities> &netAllCap)
 {
+    NetworkStatus::NetConnStatus oldStatus = NetworkStatus::GetNetConnStatus();
     NetworkStatus::SetNetConnStatus(*netAllCap);
+    if (oldStatus != NetworkStatus::NO_NETWORK) {
+        return E_OK;
+    }
+    NetworkStatus::NetConnStatus newStatus = NetworkStatus::GetNetConnStatus();
+    if (newStatus == NetworkStatus::WIFI_CONNECT) {
+        LOGI("NetCapabilitiesChanged wifi connected");
+        dataSyncManager_->TriggerRecoverySync(triggerType_);
+        dataSyncManager_->DownloadThumb();
+        dataSyncManager_->CacheVideo();
+    } else if (newStatus == NetworkStatus::CELLULAR_CONNECT) {
+        LOGI("NetCapabilitiesChanged cellular connected");
+        dataSyncManager_->TriggerRecoverySync(triggerType_);
+    } else {
+        LOGI("NetCapabilitiesChanged newStatus:%{public}d", newStatus);
+    }
     return E_OK;
 }
 
