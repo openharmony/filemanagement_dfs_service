@@ -37,7 +37,8 @@ public:
     virtual int32_t GetAppSwitchStatus(const std::string &bundleName, const int32_t userId, bool &switchStatus);
     virtual int32_t ResolveNotificationEvent(const int32_t userId,
                                              const std::string &extraData,
-                                             std::string &appBundleName);
+                                             std::string &appBundleName,
+                                             std::string &prepareTraceId);
     virtual int32_t GetAppConfigParams(const int32_t userId,
                                        const std::string &bundleName,
                                        std::map<std::string, std::string> &param);
