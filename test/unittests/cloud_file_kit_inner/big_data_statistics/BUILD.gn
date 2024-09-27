@@ -44,7 +44,43 @@ ohos_unittest("gallery_download_file_stat_test") {
   use_exceptions = true
 }
 
+ohos_unittest("cloud_file_fault_event_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp",
+    "cloud_file_fault_event_test.cpp",
+  ]
+
+  include_dirs = [
+    "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"cloud_file_kit_inner_test\"",
+  ]
+  use_exceptions = true
+}
+
 group("big_data_statistics_test") {
   testonly = true
-  deps = [ ":gallery_download_file_stat_test" ]
+  deps = [
+    ":cloud_file_fault_event_test",
+    ":gallery_download_file_stat_test",
+  ]
 }
