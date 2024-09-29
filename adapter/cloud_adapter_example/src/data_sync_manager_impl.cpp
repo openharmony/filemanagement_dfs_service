@@ -21,7 +21,8 @@ using namespace std;
 int32_t DataSyncManagerImpl::TriggerStartSync(const std::string &bundleName,
                                               const int32_t userId,
                                               bool forceFlag,
-                                              SyncTriggerType triggerType)
+                                              SyncTriggerType triggerType,
+                                              std::string prepareTraceId)
 {
     return E_OK;
 }

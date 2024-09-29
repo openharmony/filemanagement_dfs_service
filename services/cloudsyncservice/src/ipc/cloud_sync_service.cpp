@@ -438,13 +438,15 @@ int32_t CloudSyncService::NotifyEventChange(int32_t userId, const std::string &e
     }
 
     string appBundleName;
-    auto ret = instance->ResolveNotificationEvent(userId, extraData, appBundleName);
+    string prepareTraceId;
+    auto ret = instance->ResolveNotificationEvent(userId, extraData, appBundleName, prepareTraceId);
     if (ret != E_OK) {
         LOGE("ResolveNotificationEvent failed, ret:%{public}d", ret);
         return E_CLOUD_SDK;
     }
 
-    return dataSyncManager_->TriggerStartSync(appBundleName, userId, false, SyncTriggerType::CLOUD_TRIGGER);
+    return dataSyncManager_->TriggerStartSync(appBundleName, userId, false,
+        SyncTriggerType::CLOUD_TRIGGER, prepareTraceId);
 }
 
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
