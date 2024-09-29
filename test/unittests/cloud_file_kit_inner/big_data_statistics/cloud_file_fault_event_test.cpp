@@ -71,16 +71,6 @@ HWTEST_F(CloudFileFultEventTest, IsAllowToReporttTest_001, TestSize.Level1)
 {
     FaultType faultType = FaultType::OPEN_CLOUD_FILE_TIMEOUT;
     EXPECT_TRUE(status.IsAllowToReport(faultType));
-}
-
-HWTEST_F(CloudFileFultEventTest, IsAllowToReporttTest_002, TestSize.Level1)
-{
-    FaultType faultType = FaultType::OPEN_CLOUD_FILE_TIMEOUT;
-    status.IsAllowToReport(faultType);
-    struct timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    status.lastTimeMap_[faultType] = t.tv_sec;
-
     EXPECT_FALSE(status.IsAllowToReport(faultType));
 }
 
