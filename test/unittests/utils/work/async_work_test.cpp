@@ -62,18 +62,22 @@ void AsyncWorkTest::TearDown(void)
  */
 HWTEST_F(AsyncWorkTest, GetPromiseOrCallBackWorkTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetPromiseOrCallBackWorkTest001 Start";
-    try {
-        napi_env env = nullptr;
-        napi_callback_info info = nullptr;
-        LibN::NFuncArg funcArg(env, info);
+    napi_env env = nullptr;
+    napi_callback_info info = nullptr;
+    LibN::NFuncArg funcArg(env, info);
 
-        LibN::GetPromiseOrCallBackWork(env, funcArg, 1);
-        LibN::GetPromiseOrCallBackWork(env, funcArg, 0);
-    } catch (...) {
-        EXPECT_FALSE(false);
-        GTEST_LOG_(INFO) << " GetPromiseOrCallBackWorkTest001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "GetPromiseOrCallBackWorkTest001 End";
+    std::unique_ptr<LibN::NAsyncWork> asyncWork = LibN::GetPromiseOrCallBackWork(env, funcArg, 1);
+    EXPECT_NE(asyncWork, nullptr);
 }
+
+HWTEST_F(AsyncWorkTest, GetPromiseOrCallBackWorkTest002, TestSize.Level1)
+{
+    napi_env env = nullptr;
+    napi_callback_info info = nullptr;
+    LibN::NFuncArg funcArg(env, info);
+
+    std::unique_ptr<LibN::NAsyncWork> asyncWork = LibN::GetPromiseOrCallBackWork(env, funcArg, 0);
+    EXPECT_EQ(asyncWork, nullptr);
+}
+
 }
