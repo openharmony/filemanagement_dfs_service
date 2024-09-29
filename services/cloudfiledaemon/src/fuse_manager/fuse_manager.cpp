@@ -237,9 +237,10 @@ static string GetLocalPath(int32_t userId, const string &relativePath)
     return HMDFS_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX + relativePath;
 }
 
-static string GetLocalTmpPath(int32_t userId, const string &relativePath)
+static string GetCacheTmpPath(int32_t userId, const string &relativePath)
 {
-    return GetLocalPath(userId, relativePath) + PATH_TEMP_SUFFIX;
+    return HMDFS_PATH_PREFIX + to_string(userId) + LOCAL_PATH_SUFFIX + "/services/drivekit_cache/" +
+        relativePath + PATH_TEMP_SUFFIX;
 }
 
 static int HandleCloudError(CloudError error, FaultOperation faultOperation)
@@ -562,7 +563,7 @@ static string GetAssetPath(shared_ptr<CloudInode> cInode, struct FuseData *data)
 {
     string path;
     filesystem::path parentPath;
-    path = GetLocalTmpPath(data->userId, cInode->path);
+    path = GetCacheTmpPath(data->userId, cInode->path);
     parentPath = filesystem::path(path).parent_path();
     ForceCreateDirectory(parentPath.string());
     LOGD("fileType: %d, create dir: %s, relative path: %s",
@@ -583,7 +584,7 @@ static void fuse_inval(fuse_session *se, fuse_ino_t parentIno, fuse_ino_t childI
 static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
 {
     string localPath = GetLocalPath(data->userId, cInode->path);
-    string tmpPath = GetLocalTmpPath(data->userId, cInode->path);
+    string tmpPath = GetCacheTmpPath(data->userId, cInode->path);
     char resolvedPath[PATH_MAX + 1] = {'\0'};
     char *realPath = realpath(tmpPath.c_str(), resolvedPath);
     if (realPath == nullptr) {
