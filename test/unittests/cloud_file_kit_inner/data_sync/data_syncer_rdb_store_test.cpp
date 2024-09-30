@@ -19,6 +19,7 @@
 #include "dfs_error.h"
 #include "file_column.h"
 #include "data_syncer_rdb_col.h"
+#include "rdb_assistant.h"
 
 namespace OHOS::FileManagement::CloudSync::Test {
 using namespace testing;
@@ -303,5 +304,36 @@ HWTEST_F(DataSyncerRdbStoreTest, DataSyncerRdbStoreTest_012, TestSize.Level1)
         GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_012 ERROR";
     }
     GTEST_LOG_(INFO) << "DataSyncerRdbStoreTest_012 End";
+}
+
+
+HWTEST_F(DataSyncerRdbStoreTest, OnUpgradeTest, TestSize.Level1)
+{
+    CloudDisk::RdbStoreMock store;
+    DataSyncerRdbCallBack callback;
+    int32_t oldVersion = 1;
+    int32_t newVersion = 2;
+    int32_t result = callback.OnUpgrade(store, oldVersion, newVersion);
+    EXPECT_EQ(result, E_OK);
+}
+
+HWTEST_F(DataSyncerRdbStoreTest, OnCreateTest01, TestSize.Level1)
+{
+    CloudDisk::RdbStoreMock store;
+    DataSyncerRdbCallBack callback;
+    EXPECT_CALL(store, ExecuteSql(_, _)).WillOnce(Return(E_RDB));
+    int32_t result = callback.OnCreate(store);
+    EXPECT_EQ(result, E_RDB);
+}
+
+HWTEST_F(DataSyncerRdbStoreTest, OnCreateTest02, TestSize.Level1)
+{
+    CloudDisk::RdbStoreMock store;
+    DataSyncerRdbCallBack callback;
+    EXPECT_CALL(store, ExecuteSql(_, _))
+        .WillOnce(Return(E_OK))
+        .WillOnce(Return(E_OK));
+    int32_t result = callback.OnCreate(store);
+    EXPECT_EQ(result, E_RDB);
 }
 }
