@@ -65,29 +65,26 @@ int32_t DataSyncManager::IsSkipSync(const std::string &bundleName, const int32_t
     return E_OK;
 }
 
-int32_t DataSyncManager::StartDownloadFile(const std::string &bundleName,
-                                           const int32_t userId,
+int32_t DataSyncManager::StartDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
                                            const std::string path)
 {
     return E_OK;
 }
 
-int32_t DataSyncManager::StopDownloadFile(const std::string &bundleName,
-                                          const int32_t userId,
+int32_t DataSyncManager::StopDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
                                           const std::string path,
                                           bool needClean)
 {
     return E_OK;
 }
 
-int32_t DataSyncManager::RegisterDownloadFileCallback(const std::string &bundleName,
-                                                      const int32_t userId,
+int32_t DataSyncManager::RegisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo,
                                                       const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback)
 {
     return E_OK;
 }
 
-int32_t DataSyncManager::UnregisterDownloadFileCallback(const std::string &bundleName, const int32_t userId)
+int32_t DataSyncManager::UnregisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo)
 {
     return E_OK;
 }

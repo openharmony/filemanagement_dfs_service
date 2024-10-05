@@ -120,6 +120,12 @@ int32_t DfsuAccessTokenHelper::GetUserId()
     return uid / BASE_USER_RANGE;
 }
 
+int32_t DfsuAccessTokenHelper::GetPid()
+{
+    auto pid = IPCSkeleton::GetCallingPid();
+    return pid;
+}
+
 bool DfsuAccessTokenHelper::CheckUriPermission(const std::string &uriStr)
 {
     auto tokenId = IPCSkeleton::GetCallingTokenID();
