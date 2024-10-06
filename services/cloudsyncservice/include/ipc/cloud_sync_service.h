@@ -83,6 +83,8 @@ private:
     void PreInit();
     void Init();
     void HandleStartReason(const SystemAbilityOnDemandReason &startReason);
+    int32_t GetBundleNameUserInfo(BundleNameUserInfo &bundleNameUserInfo);
+    void GetBundleNameUserInfo(const std::string &uriStr, BundleNameUserInfo &bundleNameUserInfo);
 
     class LoadRemoteSACallback : public SystemAbilityLoadCallbackStub {
     public:
