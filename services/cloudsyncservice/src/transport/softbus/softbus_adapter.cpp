@@ -48,9 +48,12 @@ int32_t SoftbusAdapter::CreateSessionServer(const char *packageName, const char 
         return ERR_BAD_VALUE;
     }
     std::string saveKey = std::string(sessionName) + std::string(packageName);
-    auto sessionAndPackage = sessionAndPackageMap_.find(socket);
-    if (sessionAndPackage == sessionAndPackageMap_.end()) {
-        sessionAndPackageMap_.insert({socket, saveKey});
+    {
+        lock_guard<mutex> lock(sessionMutex_);
+        auto sessionAndPackage = sessionAndPackageMap_.find(socket);
+        if (sessionAndPackage == sessionAndPackageMap_.end()) {
+            sessionAndPackageMap_.insert({socket, saveKey});
+        }
     }
     QosTV serverQos[] = {
         { .qos = QOS_TYPE_MIN_BW,            .value = MIN_BW},
@@ -218,9 +221,12 @@ int SoftbusAdapter::OpenSession(char *sessionName,
         return ERR_BAD_VALUE;
     }
     std::string saveKey = std::string(sessionName) + std::string(SERVICE_NAME);
-    auto sessionAndPackage = sessionAndPackageMap_.find(socket);
-    if (sessionAndPackage == sessionAndPackageMap_.end()) {
-        sessionAndPackageMap_.insert({socket, saveKey});
+    {
+        lock_guard<mutex> lock(sessionMutex_);
+        auto sessionAndPackage = sessionAndPackageMap_.find(socket);
+        if (sessionAndPackage == sessionAndPackageMap_.end()) {
+            sessionAndPackageMap_.insert({socket, saveKey});
+        }
     }
     QosTV clientQos[] = {
         { .qos = QOS_TYPE_MIN_BW,            .value = MIN_BW},
