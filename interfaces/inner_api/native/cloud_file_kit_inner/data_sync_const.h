@@ -47,8 +47,11 @@ enum class ThumbState : int32_t {
 };
 
 struct LocalInfo {
+    std::string parentCloudId;
+    std::string fileName;
     int64_t mdirtyTime;
     int64_t fdirtyTime;
+    int64_t recycledTime;
 };
 
 struct BundleNameUserInfo {
