@@ -20,6 +20,7 @@
 
 #include "daemon_stub.h"
 #include "distributed_file_daemon_ipc_interface_code.h"
+#include "ipc_skeleton.h"
 #include "message_option.h"
 #include "message_parcel.h"
 #include "securec.h"
@@ -190,6 +191,7 @@ void HandleRequestSendFileFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
                                    const uint8_t *data,
                                    size_t size)
 {
+    OHOS::UID = DAEMON_UID;
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REQUEST_SEND_FILE);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
@@ -205,6 +207,7 @@ void HandleGetRemoteCopyInfoFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
                                      const uint8_t *data,
                                      size_t size)
 {
+    OHOS::UID = DAEMON_UID;
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_GET_REMOTE_COPY_INFO);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
@@ -218,6 +221,7 @@ void HandleGetRemoteCopyInfoFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr,
 
 void HandlePushAssetFuzzTest(std::shared_ptr<DaemonStub> daemonStubPtr, const uint8_t *data, size_t size)
 {
+    OHOS::UID = DATA_UID;
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_PUSH_ASSET);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
@@ -233,6 +237,7 @@ void HandleRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStubPt
                                         const uint8_t *data,
                                         size_t size)
 {
+    OHOS::UID = DATA_UID;
     uint32_t code = static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_REGISTER_ASSET_CALLBACK);
     MessageParcel datas;
     datas.WriteInterfaceToken(DaemonStub::GetDescriptor());
@@ -248,6 +253,7 @@ void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStub
                                           const uint8_t *data,
                                           size_t size)
 {
+    OHOS::UID = DATA_UID;
     uint32_t code =
         static_cast<uint32_t>(DistributedFileDaemonInterfaceCode::DISTRIBUTED_FILE_UN_REGISTER_ASSET_CALLBACK);
     MessageParcel datas;
