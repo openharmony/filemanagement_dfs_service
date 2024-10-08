@@ -17,4 +17,3 @@ persist.kernel.cloudsync.status = 0
 persist.kernel.cloudsync.temperature_abnormal_sync = false
 persist.kernel.cloudsync.temperature_abnormal_thumb = false
 persist.kernel.medialibrarydata.stopflag = 0
-persist.kernel.move.finish = false

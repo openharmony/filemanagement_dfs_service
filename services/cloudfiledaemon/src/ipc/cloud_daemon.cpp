@@ -28,7 +28,6 @@
 #include "plugin_loader.h"
 #include "dfs_error.h"
 #include "fuse_manager/fuse_manager.h"
-#include "utils_directory.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -113,37 +112,6 @@ void CloudDaemon::OnStart()
     LOGI("Start service successfully");
 }
 
-void HandleStartMove(int32_t userId)
-{
-    const std::string filemanagerKey = "persist.kernel.bundle_name.filemanager";
-    string subList[] = {"com.ohos.photos", system::GetParameter(filemanagerKey, "")};
-    string srcBase = "/data/service/el1/public/cloudfile/" + to_string(userId);
-    string dstBase = "/data/service/el2/" + to_string(userId) + "/hmdfs/cloudfile_manager";
-    const auto copyOptions = filesystem::copy_options::overwrite_existing | filesystem::copy_options::recursive;
-    for (auto sub : subList) {
-        string srcPath = srcBase + '/' + sub;
-        string dstPath = dstBase + '/' + sub;
-        if (access(srcPath.c_str(), F_OK) != 0) {
-            LOGI("srcPath %{public}s not found", GetAnonyString(srcPath).c_str());
-            continue;
-        }
-        LOGI("Begin to move path: %{public}s", GetAnonyString(srcPath).c_str());
-        error_code errCode;
-        filesystem::copy(srcPath, dstPath, copyOptions, errCode);
-        if (errCode.value() != 0) {
-            LOGE("copy failed path: %{public}s, errCode: %{public}d",
-                GetAnonyString(srcPath).c_str(), errCode.value());
-        }
-        LOGI("End move path: %{public}s", GetAnonyString(srcPath).c_str());
-        bool ret = Storage::DistributedFile::Utils::ForceRemoveDirectoryDeepFirst(srcPath);
-        if (!ret) {
-            LOGE("remove failed path: %{public}s", GetAnonyString(srcPath).c_str());
-        }
-    }
-    const string moveFile = "persist.kernel.move.finish";
-    system::SetParameter(moveFile, "true");
-}
-
 void CloudDaemon::OnStop()
 {
     LOGI("Begin to stop");
@@ -186,11 +154,6 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
         if (chown(dentryPath.c_str(), OID_DFS, OID_DFS) != 0) {
             LOGE("chown cachepath error %{public}d", errno);
         }
-    }
-    if (path.find("cloud_fuse") != string::npos) {
-        std::thread([userId]() {
-            HandleStartMove(userId);
-        }).detach();
     }
     return E_OK;
 }
