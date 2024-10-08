@@ -26,6 +26,19 @@
 #include "securec.h"
 
 namespace OHOS {
+constexpr pid_t DATA_UID = 3012;
+constexpr pid_t DAEMON_UID = 1009;
+static pid_t UID = DAEMON_UID;
+#ifdef CONFIG_IPC_SINGLE
+using namespace IPC_SINGLE;
+#endif
+pid_t IPCSkeleton::GetCallingUid()
+{
+    return UID;
+}
+}
+
+namespace OHOS {
 
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
