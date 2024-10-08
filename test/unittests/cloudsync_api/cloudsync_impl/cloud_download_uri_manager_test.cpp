@@ -81,7 +81,7 @@ HWTEST_F(CloudDownloadUriManagerTest, AddPathToUriTest001, TestSize.Level1)
     const std::string uri = "file://data/file/test";
     CloudDownloadUriManager mUriMgr;
     mUriMgr.AddPathToUri(path, uri);
-    EXPECT_EQ(mUriMgr.pathMap_[path], uri);
+    EXPECT_EQ(mUriMgr.pathUriMap_[path], uri);
 }
 
 /**
@@ -95,7 +95,7 @@ HWTEST_F(CloudDownloadUriManagerTest, AddPathToUriTest002, TestSize.Level1)
     const std::string path = "file://data/file";
     const std::string uri = "file://data/file/test";
     CloudDownloadUriManager mUriMgr;
-    mUriMgr.pathMap_[path] = uri;
+    mUriMgr.pathUriMap_[path] = uri;
     auto ret = mUriMgr.AddPathToUri(path, uri);
     EXPECT_EQ(ret, E_STOP);
 }
@@ -112,10 +112,10 @@ HWTEST_F(CloudDownloadUriManagerTest, RemoveUriTest001, TestSize.Level1)
     const std::string uri = "file://data/file/test1";
     CloudDownloadUriManager mUriMgr;
     mUriMgr.AddPathToUri(path, uri);
-    EXPECT_EQ(mUriMgr.pathMap_[path], uri);
+    EXPECT_EQ(mUriMgr.pathUriMap_[path], uri);
     mUriMgr.RemoveUri(path);
-    auto ret = mUriMgr.pathMap_.find(path);
-    EXPECT_EQ(ret, mUriMgr.pathMap_.end());
+    auto ret = mUriMgr.pathUriMap_.find(path);
+    EXPECT_EQ(ret, mUriMgr.pathUriMap_.end());
 }
 
 /**
@@ -129,8 +129,8 @@ HWTEST_F(CloudDownloadUriManagerTest, RemoveUriTest002, TestSize.Level1)
     const std::string path = "file://data/file";
     CloudDownloadUriManager mUriMgr;
     mUriMgr.RemoveUri(path);
-    auto ret = mUriMgr.pathMap_.find(path);
-    EXPECT_EQ(ret, mUriMgr.pathMap_.end());
+    auto ret = mUriMgr.pathUriMap_.find(path);
+    EXPECT_EQ(ret, mUriMgr.pathUriMap_.end());
 }
 
 /**
@@ -160,7 +160,7 @@ HWTEST_F(CloudDownloadUriManagerTest, GetUriTest002, TestSize.Level1)
     const std::string uri = "file://data/file/test2";
     CloudDownloadUriManager mUriMgr;
     mUriMgr.AddPathToUri(path, uri);
-    EXPECT_EQ(mUriMgr.pathMap_[path], uri);
+    EXPECT_EQ(mUriMgr.pathUriMap_[path], uri);
     string uriStr = mUriMgr.GetUri(path);
     EXPECT_EQ(uriStr, uri);
 }

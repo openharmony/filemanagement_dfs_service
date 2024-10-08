@@ -26,9 +26,9 @@ CloudDownloadUriManager& CloudDownloadUriManager::GetInstance()
 
 void CloudDownloadUriManager::RemoveUri(const std::string& path)
 {
-    if (pathMap_.find(path) != pathMap_.end()) {
+    if (pathUriMap_.find(path) != pathUriMap_.end()) {
         LOGI("download_file : remove path [ %{public}s ] success", GetAnonyString(path).c_str());
-        pathMap_.erase(path);
+        pathUriMap_.erase(path);
     }
 }
 

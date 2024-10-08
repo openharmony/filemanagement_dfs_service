@@ -45,7 +45,18 @@ struct DownloadProgressObj : public Parcelable {
     int32_t downloadErrorType;
     int64_t downloadedSize;
     int64_t totalSize;
+
+    // member for batch download(same downloadId)
+    int64_t batchDownloadSize;
+    int64_t batchTotalSize;
+    int64_t batchSuccNum;
+    int64_t batchFailNum;
+    int64_t batchTotalNum;
+    Status batchState;
+
+    bool ReadBatchFromParcel(Parcel &parcel);
     bool ReadFromParcel(Parcel &parcel);
+    bool MarshallingBatch(Parcel &parcel) const;
     bool Marshalling(Parcel &parcel) const override;
     static DownloadProgressObj *Unmarshalling(Parcel &parcel);
     std::string to_string();

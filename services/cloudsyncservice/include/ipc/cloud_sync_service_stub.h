@@ -45,6 +45,7 @@ private:
     int32_t HandleStartDownloadFile(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStartFileCache(MessageParcel &data, MessageParcel &reply);
     int32_t HandleStopDownloadFile(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleStopFileCache(MessageParcel &data, MessageParcel &reply);
     int32_t HandleRegisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply);
     int32_t HandleUnregisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply);
     int32_t HandleUploadAsset(MessageParcel &data, MessageParcel &reply);

@@ -86,6 +86,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStartFileCache(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_RESET_CURSOR)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleResetCursor(data, reply); };
+        opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_FILE_CACHE)] =
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStopFileCache(data, reply); };
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -367,13 +369,24 @@ int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, Messa
 int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleStartFileCache");
-    string path = data.ReadString();
-    if (!DfsuAccessTokenHelper::CheckUriPermission(path) &&
-        !DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
-        LOGE("permission denied");
-        return E_PERMISSION_DENIED;
+
+    std::vector<std::string> pathVec;
+    if (!data.ReadStringVector(&pathVec)) {
+        LOGE("Failed to get the cloud id.");
+        return E_INVAL_ARG;
     }
-    int32_t res = StartDownloadFile(path);
+
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
+        for (int i = 0; i < pathVec.size(); i++) {
+            if (!DfsuAccessTokenHelper::CheckUriPermission(pathVec[i])) {
+                LOGE("permission denied");
+                return E_PERMISSION_DENIED;
+            }
+        }
+    }
+    int64_t downloadId = 0;
+    int32_t res = StartFileCache(pathVec, downloadId);
+    reply.WriteInt64(downloadId);
     reply.WriteInt32(res);
     LOGI("End HandleStartFileCache");
     return E_OK;
@@ -399,13 +412,26 @@ int32_t CloudSyncServiceStub::HandleStopDownloadFile(MessageParcel &data, Messag
     return E_OK;
 }
 
-int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
+int32_t CloudSyncServiceStub::HandleStopFileCache(MessageParcel &data, MessageParcel &reply)
 {
-    LOGI("Begin HandleRegisterDownloadFileCallback");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+    LOGI("Begin HandleStopFileCache");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
+
+    int64_t downloadId = data.ReadInt64();
+    bool needClean = data.ReadBool();
+
+    int32_t res = StopFileCache(downloadId, needClean);
+    reply.WriteInt32(res);
+    LOGI("End HandleStopFileCache");
+    return E_OK;
+}
+
+int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleRegisterDownloadFileCallback");
     if (!DfsuAccessTokenHelper::IsSystemApp()) {
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
@@ -422,10 +448,6 @@ int32_t CloudSyncServiceStub::HandleRegisterDownloadFileCallback(MessageParcel &
 int32_t CloudSyncServiceStub::HandleUnregisterDownloadFileCallback(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleUnregisterDownloadFileCallback");
-    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
-        LOGE("permission denied");
-        return E_PERMISSION_DENIED;
-    }
     if (!DfsuAccessTokenHelper::IsSystemApp()) {
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;

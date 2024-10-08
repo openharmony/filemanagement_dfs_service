@@ -19,14 +19,24 @@
 #include "cloud_file_napi.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudFileCacheNapi final : public CloudFileNapi {
+class CloudFileCacheNapi final : public CloudFileNExporter {
 public:
-    CloudFileCacheNapi(napi_env env, napi_value exports) : CloudFileNapi(env, exports) {}
+    CloudFileCacheNapi(napi_env env, napi_value exports) : CloudFileNExporter(env, exports) {}
     ~CloudFileCacheNapi() = default;
 
-    static napi_value StartFileCache(napi_env env, napi_callback_info info);
     bool Export() override;
+    std::string GetClassName() override;
+    static napi_value StartFileCache(napi_env env, napi_callback_info info);
+    static napi_value StartBatchFileCache(napi_env env, napi_callback_info info);
+    static napi_value StopFileCache(napi_env env, napi_callback_info info);
+    static napi_value StopBatchFileCache(napi_env env, napi_callback_info info);
+    static napi_value On(napi_env env, napi_callback_info info);
+    static napi_value Off(napi_env env, napi_callback_info info);
     static napi_value CleanCloudFileCache(napi_env env, napi_callback_info info);
+
+private:
+    static inline std::shared_ptr<CloudDownloadCallbackImpl> callback_;
+    inline static std::string className_ = "CloudFileCache";
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_DOWNLOAD_NAPI_H
