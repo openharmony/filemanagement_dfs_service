@@ -234,6 +234,7 @@ HWTEST_F(NetworkStatusTest, GetAndRegisterNetworkTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetAndRegisterNetworkTest Start";
     try {
+        EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).WillOnce(Return(E_OK));
         auto dataSyncManager = std::make_shared<DataSyncManager>();
         int32_t ret = NetworkStatus::GetAndRegisterNetwork(dataSyncManager);
         EXPECT_EQ(ret, E_GET_NETWORK_MANAGER_FAILED);
@@ -254,6 +255,7 @@ HWTEST_F(NetworkStatusTest, InitNetworkTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "InitNetworkTest Start";
     try {
+        EXPECT_CALL(*dfsNetConnClient_, GetDefaultNet(_)).WillOnce(Return(E_OK)).WillRepeatedly(Return(E_OK));
         auto dataSyncManager = std::make_shared<DataSyncManager>();
         NetworkStatus::InitNetwork(dataSyncManager);
         EXPECT_TRUE(true);

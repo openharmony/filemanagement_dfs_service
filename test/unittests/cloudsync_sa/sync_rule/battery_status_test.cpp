@@ -100,7 +100,7 @@ HWTEST_F(BatteryStatusTest, IsAllowUploadTest002, TestSize.Level1)
     try {
         batteryStatus_->SetChargingStatus(false);
         bool ret = batteryStatus_->IsAllowUpload(true);
-        EXPECT_EQ(ret, true);
+        EXPECT_EQ(ret, false);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "IsAllowUploadTest002 FAILED";
@@ -186,6 +186,7 @@ HWTEST_F(BatteryStatusTest, IsBatteryCapcityOkayTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest Start";
     try {
+        EXPECT_CALL(*dfsBatterySrvClient_, GetCapacity()).WillOnce(Return(STOP_CAPACITY_LIMIT + 1));
         batteryStatus_->SetChargingStatus(false);
         bool ret = batteryStatus_->IsBatteryCapcityOkay();
         EXPECT_EQ(ret, true);

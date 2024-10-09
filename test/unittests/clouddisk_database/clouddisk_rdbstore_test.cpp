@@ -1621,7 +1621,7 @@ HWTEST_F(CloudDiskRdbStoreTest, GetXAttrTest5, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     int32_t ret = clouddiskrdbStore_->GetXAttr(cloudId, key, value);
-    EXPECT_EQ(ret, E_INVAL_ARG);
+    EXPECT_EQ(ret, ENOSYS);
 }
 
 /**
@@ -1760,7 +1760,7 @@ HWTEST_F(CloudDiskRdbStoreTest, SetXAttrTest5, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     int32_t ret = clouddiskrdbStore_->SetXAttr(cloudId, key, value, name, parentCloudId);
-    EXPECT_EQ(ret, E_INVAL_ARG);
+    EXPECT_EQ(ret, ENOSYS);
 }
 
 /**

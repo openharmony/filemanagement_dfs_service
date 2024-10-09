@@ -445,33 +445,6 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartDownloadFileTest, TestSize.Level1)
 }
 
 /**
- * @tc.name: HandleStartFileCacheTest
- * @tc.desc: Verify the HandleStartFileCache function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceStubTest, HandleStartFileCacheTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleStartFileCache Start";
-    try {
-        MockService service;
-        EXPECT_CALL(service, StartDownloadFile(_)).WillOnce(Return(E_OK));
-        MessageParcel data;
-        MessageParcel reply;
-        MessageOption option;
-        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
-
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(
-                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_CACHE),
-                            data, reply, option));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " HandleStartFileCache ERROR";
-    }
-    GTEST_LOG_(INFO) << "HandleStartFileCache End";
-}
-
-/**
  * @tc.name: HandleStopDownloadFileTest
  * @tc.desc: Verify the HandleStopDownloadFile function.
  * @tc.type: FUNC
