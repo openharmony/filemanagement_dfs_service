@@ -26,6 +26,7 @@
 #include "cloud_status.h"
 #include "utils_log.h"
 #include "os_account_manager.h"
+#include "parameter.h"
 #include <memory>
 
 namespace OHOS {
@@ -53,6 +54,12 @@ CycleTaskRunner::CycleTaskRunner(std::shared_ptr<CloudFile::DataSyncManager> dat
 
 void CycleTaskRunner::StartTask()
 {
+    constexpr int32_t MOVE_FILE_TIME_SERVICE = 5;
+    int status = WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_SERVICE);
+    if (status != 0) {
+        LOGE("wait move error, return value %{public}d.", status);
+        return;
+    }
     for (const auto &task_data : cycleTasks_) {
         task_data->RunTask(userId_);
     }
