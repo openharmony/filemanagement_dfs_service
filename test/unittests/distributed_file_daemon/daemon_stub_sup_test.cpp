@@ -33,7 +33,9 @@ namespace {
     bool g_getCallingUidTrue = true;
     bool g_checkUriPermissionTrue = true;
     bool g_checkCallerPermissionTrue = true;
-    const pid_t UID = 1009;
+    constexpr pid_t DATA_UID = 3012;
+    constexpr pid_t DAEMON_UID = 1009;
+    static pid_t UID = DAEMON_UID;
 }
 
 namespace OHOS {
@@ -317,6 +319,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandlePrepareSessionTest002, TestSize.
 HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRequestSendFileTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleRequestSendFileTest001 Start";
+    UID = DAEMON_UID;
     MessageParcel data;
     MessageParcel reply;
 
@@ -361,6 +364,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRequestSendFileTest001, TestSize
 HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleGetRemoteCopyInfoTest001 Start";
+    UID = DAEMON_UID;
     MessageParcel data;
     MessageParcel reply;
     g_getCallingUidTrue = false;
@@ -414,6 +418,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoTest001, TestSi
 HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleGetRemoteCopyInfoTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleGetRemoteCopyInfoTest002 Start";
+    UID = DAEMON_UID;
     MessageParcel data;
     MessageParcel reply;
     
@@ -458,6 +463,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleCancelCopyTaskTest001, TestSize.
 HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRegisterRecvCallback001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleRegisterRecvCallback001 Start";
+    UID = DATA_UID;
     MessageParcel data;
     MessageParcel reply;
     g_checkCallerPermissionTrue = false;
@@ -493,6 +499,7 @@ HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleRegisterRecvCallback001, TestSiz
 HWTEST_F(DaemonStubSupPTest, DaemonStubSupHandleUnRegisterRecvCallback001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonStubSupHandleUnRegisterRecvCallback001 Start";
+    UID = DATA_UID;
     MessageParcel data;
     MessageParcel reply;
     g_checkCallerPermissionTrue = false;

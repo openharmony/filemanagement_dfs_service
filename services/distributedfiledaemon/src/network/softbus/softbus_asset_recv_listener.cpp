@@ -189,7 +189,7 @@ bool SoftbusAssetRecvListener::MoveAsset(const std::vector<std::string> &fileLis
             LOGE("get asset flag fail, file name is %{public}s", GetAnonyString(oldPath).c_str());
             return false;
         }
-        newPath = newPath.substr(0, pos);
+        newPath.resize(pos);
         try {
             SoftBusHandlerAsset::GetInstance().MkDirRecurse(newPath, S_IRWXU | S_IRWXG | S_IXOTH);
             std::filesystem::rename(oldPath.c_str(), newPath.c_str());

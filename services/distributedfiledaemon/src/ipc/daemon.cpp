@@ -686,16 +686,8 @@ int32_t Daemon::PushAsset(int32_t userId,
                           const sptr<IAssetSendCallback> &sendCallback)
 {
     LOGI("Daemon::PushAsset begin.");
-    if (assetObj == nullptr) {
-        LOGE("assetObj is nullptr.");
-        return E_NULLPTR;
-    }
-    if (assetObj->srcBundleName_ != assetObj->dstBundleName_) {
-        LOGE("Different bundleName are not supported now.");
-        return E_SEND_FILE;
-    }
-    if (sendCallback == nullptr) {
-        LOGE("sendCallback is nullptr.");
+    if (assetObj == nullptr || sendCallback == nullptr) {
+        LOGE("param is nullptr.");
         return E_NULLPTR;
     }
     auto taskId = assetObj->srcBundleName_ + assetObj->sessionId_;
