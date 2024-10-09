@@ -178,6 +178,17 @@ struct CloudInode {
         std::unique_lock<std::mutex> flock(it->second->mutex);
         return it->second->flags & PG_READAHEAD;
     }
+
+    bool IsReadFinished(int64_t index)
+    {
+        std::shared_lock lock(sessionLock);
+        auto it = readCacheMap.find(index);
+        if (it == readCacheMap.end()) {
+            return false;
+        }
+        std::unique_lock<std::mutex> flock(it->second->mutex);
+        return it->second->flags & PG_UPTODATE;
+    }
 };
 
 struct DoCloudReadParams {
@@ -808,11 +819,13 @@ static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *inBuf)
     }
 
     const struct HmdfsHasCache *ioctlData = reinterpret_cast<const struct HmdfsHasCache *>(inBuf);
-    if (!ioctlData) {
+    if (!ioctlData || ioctlData->offset < 0 || ioctlData->readSize < 0) {
         fuse_reply_err(req, EINVAL);
         return;
     }
-    if (cInode->readSession->HasCache(ioctlData->offset, ioctlData->readSize)) {
+    int64_t headIndex = ioctlData->offset / MAX_READ_SIZE;
+    int64_t tailIndex = (ioctlData->offset + ioctlData->readSize - 1) / MAX_READ_SIZE;
+    if (cInode->IsReadFinished(headIndex) && cInode->IsReadFinished(tailIndex)) {
         fuse_reply_ioctl(req, 0, NULL, 0);
     } else {
         fuse_reply_err(req, EIO);
