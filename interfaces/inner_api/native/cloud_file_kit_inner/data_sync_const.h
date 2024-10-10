@@ -64,6 +64,7 @@ const int32_t POSITION_LOCAL = 1;
 const int32_t POSITION_CLOUD = 2;
 const int32_t POSITION_BOTH = 3;
 
+const int32_t NO_THM_TO_DOWNLOAD = 2;
 const int32_t TO_DOWNLOAD_THM = 1;
 const int32_t DOWNLOADED_THM = 0;
 
