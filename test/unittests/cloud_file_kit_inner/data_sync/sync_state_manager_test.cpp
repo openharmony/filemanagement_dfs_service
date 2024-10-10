@@ -26,9 +26,13 @@ public:
     MOCK_METHOD1(UpdateSyncState, Action(SyncState newState));
     MOCK_METHOD2(CheckAndSetPending, bool(bool forceFlag, SyncTriggerType triggerType));
     MOCK_METHOD0(SetCleaningFlag, void());
+    MOCK_METHOD0(ClearCleaningFlag, Action());
+    MOCK_METHOD0(CheckCleaningFlag, bool());
     MOCK_METHOD0(GetStopSyncFlag, bool());
     MOCK_METHOD0(SetStopSyncFlag, void());
     MOCK_METHOD0(SetDisableCloudFlag, void());
+    MOCK_METHOD0(ClearDisableCloudFlag, Action());
+    MOCK_METHOD0(CheckDisableCloudFlag, bool());
     MOCK_METHOD0(GetSyncState, void());
     MOCK_METHOD0(GetForceFlag, bool());
 };
@@ -82,21 +86,15 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_002, TestSize.Level1)
     try {
         EXPECT_CALL(mockSyncStateManager, UpdateSyncState(SyncState::INIT)).Times(1);
         EXPECT_CALL(mockSyncStateManager, UpdateSyncState(SyncState::SYNCING)).Times(1);
-        EXPECT_CALL(mockSyncStateManager, UpdateSyncState(SyncState::CLEANING)).Times(1);
         EXPECT_CALL(mockSyncStateManager, UpdateSyncState(SyncState::SYNC_FAILED)).Times(1);
         EXPECT_CALL(mockSyncStateManager, UpdateSyncState(SyncState::SYNC_SUCCEED)).Times(1);
-        EXPECT_CALL(mockSyncStateManager, UpdateSyncState(SyncState::CLEAN_SUCCEED)).Times(1);
-        EXPECT_CALL(mockSyncStateManager, UpdateSyncState(SyncState::DISABLE_CLOUD)).Times(1);
-        EXPECT_CALL(mockSyncStateManager, UpdateSyncState(SyncState::DISABLE_CLOUD_SUCCEED)).Times(1);
 
         EXPECT_EQ(mockSyncStateManager.UpdateSyncState(SyncState::INIT), Action::STOP);
         EXPECT_EQ(mockSyncStateManager.UpdateSyncState(SyncState::SYNCING), Action::STOP);
-        EXPECT_EQ(mockSyncStateManager.UpdateSyncState(SyncState::CLEANING), Action::STOP);
         EXPECT_EQ(mockSyncStateManager.UpdateSyncState(SyncState::SYNC_FAILED), Action::STOP);
         EXPECT_EQ(mockSyncStateManager.UpdateSyncState(SyncState::SYNC_SUCCEED), Action::STOP);
-        EXPECT_EQ(mockSyncStateManager.UpdateSyncState(SyncState::CLEAN_SUCCEED), Action::STOP);
-        EXPECT_EQ(mockSyncStateManager.UpdateSyncState(SyncState::DISABLE_CLOUD), Action::STOP);
-        EXPECT_EQ(mockSyncStateManager.UpdateSyncState(SyncState::DISABLE_CLOUD_SUCCEED), Action::STOP);
+        EXPECT_EQ(mockSyncStateManager.ClearCleaningFlag(), Action::STOP);
+        EXPECT_EQ(mockSyncStateManager.ClearDisableCloudFlag(), Action::STOP);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SyncStateManagerTest_002 ERROR";
@@ -221,17 +219,9 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_009, TestSize.Level1)
         EXPECT_EQ(ret, 0);
         ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::SYNCING);
         EXPECT_EQ(ret, 0);
-        ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::CLEANING);
-        EXPECT_EQ(ret, 0);
         ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::SYNC_FAILED);
         EXPECT_EQ(ret, 0);
         ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::SYNC_SUCCEED);
-        EXPECT_EQ(ret, 0);
-        ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::CLEAN_SUCCEED);
-        EXPECT_EQ(ret, 0);
-        ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::DISABLE_CLOUD);
-        EXPECT_EQ(ret, 0);
-        ret = (int32_t)syncStateManager.UpdateSyncState(SyncState::DISABLE_CLOUD_SUCCEED);
         EXPECT_EQ(ret, 0);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -314,12 +304,9 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_013, TestSize.Level1)
     try {
         SyncStateManager syncStateManager;
         bool forceFlag = false;
-
-        Action action = syncStateManager.UpdateSyncState(SyncState::CLEANING);
-        EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
-        SyncState syncState = syncStateManager.GetSyncState();
-        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::CLEANING));
         
+        syncStateManager.SetCleaningFlag();
+        EXPECT_TRUE(syncStateManager.CheckCleaningFlag());
         bool ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::TASK_TRIGGER);
         EXPECT_TRUE(ret);
 
@@ -344,10 +331,8 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_014, TestSize.Level1)
         SyncStateManager syncStateManager;
         bool forceFlag = false;
 
-        Action action = syncStateManager.UpdateSyncState(SyncState::DISABLE_CLOUD);
-        EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
-        SyncState syncState = syncStateManager.GetSyncState();
-        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::DISABLE_CLOUD));
+        syncStateManager.SetDisableCloudFlag();
+        EXPECT_TRUE(syncStateManager.CheckDisableCloudFlag());
         
         bool ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::TASK_TRIGGER);
         EXPECT_TRUE(ret);
@@ -424,14 +409,10 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_018, TestSize.Level1)
     try {
         SyncStateManager syncStateManager;
         syncStateManager.SetDisableCloudFlag();
-        SyncState syncState = syncStateManager.GetSyncState();
-        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::DISABLE_CLOUD));
+        EXPECT_TRUE(syncStateManager.CheckDisableCloudFlag());
 
-        Action action = syncStateManager.UpdateSyncState(SyncState::CLEANING);
-        EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
-
-        syncState = syncStateManager.GetSyncState();
-        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::CLEANING));
+        syncStateManager.SetCleaningFlag();
+        EXPECT_TRUE(syncStateManager.CheckCleaningFlag());
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "SyncStateManagerTest_018 ERROR";
@@ -448,10 +429,9 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_019, TestSize.Level1)
         bool forceFlag = true;
         EXPECT_FALSE(syncStateManager.GetForceFlag());
 
-        Action action = syncStateManager.UpdateSyncState(SyncState::DISABLE_CLOUD_SUCCEED);
+        Action action = syncStateManager.ClearDisableCloudFlag();
         EXPECT_EQ(static_cast<int32_t>(action), static_cast<int32_t>(Action::STOP));
-        syncState = syncStateManager.GetSyncState();
-        EXPECT_EQ(static_cast<int32_t>(syncState), static_cast<int32_t>(SyncState::DISABLE_CLOUD_SUCCEED));
+        EXPECT_TRUE(!syncStateManager.CheckDisableCloudFlag());
 
         bool ret = syncStateManager.CheckAndSetPending(forceFlag, SyncTriggerType::TASK_TRIGGER);
         syncState = syncStateManager.GetSyncState();
