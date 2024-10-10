@@ -59,6 +59,10 @@ CloudPrefImpl::CloudPrefImpl(const std::string& fileName)
 
 void CloudPrefImpl::SetString(const std::string& key, const std::string& value)
 {
+    if (pref_ == nullptr) {
+        LOGE("CloudPrefImpl: perf_ is null")
+        return;
+    }
     pref_->PutString(key, value);
     int ret = pref_->FlushSync();
     if (ret) {
@@ -68,11 +72,19 @@ void CloudPrefImpl::SetString(const std::string& key, const std::string& value)
 
 void CloudPrefImpl::GetString(const std::string& key, std::string &value)
 {
+    if (pref_ == nullptr) {
+        LOGE("CloudPrefImpl: perf_ is null")
+        return;
+    }
     value = pref_->GetString(key, "");
 }
 
 void CloudPrefImpl::SetLong(const std::string& key, const int64_t value)
 {
+    if (pref_ == nullptr) {
+        LOGE("CloudPrefImpl: perf_ is null")
+        return;
+    }
     pref_->PutLong(key, value);
     int ret = pref_->FlushSync();
     if (ret) {
@@ -82,11 +94,19 @@ void CloudPrefImpl::SetLong(const std::string& key, const int64_t value)
 
 void CloudPrefImpl::GetLong(const std::string& key, int64_t &value)
 {
+    if (pref_ == nullptr) {
+        LOGE("CloudPrefImpl: perf_ is null")
+        return;
+    }
     value = pref_->GetLong(key, 0);
 }
 
 void CloudPrefImpl::SetInt(const std::string& key, const int value)
 {
+    if (pref_ == nullptr) {
+        LOGE("CloudPrefImpl: perf_ is null")
+        return;
+    }
     pref_->PutInt(key, value);
     int ret = pref_->FlushSync();
     if (ret) {
@@ -96,11 +116,19 @@ void CloudPrefImpl::SetInt(const std::string& key, const int value)
 
 void CloudPrefImpl::GetInt(const std::string& key, int32_t &value)
 {
+    if (pref_ == nullptr) {
+        LOGE("CloudPrefImpl: perf_ is null")
+        return;
+    }
     value = pref_->GetInt(key, 0);
 }
 
 void CloudPrefImpl::SetBool(const std::string& key, const bool& value)
 {
+    if (pref_ == nullptr) {
+        LOGE("CloudPrefImpl: perf_ is null")
+        return;
+    }
     pref_->PutBool(key, value);
     int ret = pref_->FlushSync();
     if (ret) {
@@ -110,17 +138,29 @@ void CloudPrefImpl::SetBool(const std::string& key, const bool& value)
 
 void CloudPrefImpl::GetBool(const std::string& key, bool& value)
 {
+    if (pref_ == nullptr) {
+        LOGE("CloudPrefImpl: perf_ is null")
+        return;
+    }
     value = pref_->GetBool(key, false);
 }
 
 void CloudPrefImpl::Clear()
 {
+    if (pref_ == nullptr) {
+        LOGE("CloudPrefImpl: perf_ is null")
+        return;
+    }
     pref_->Clear();
     NativePreferences::PreferencesHelper::DeletePreferences(fileName_);
 }
 
 void CloudPrefImpl::Delete(const std::string& key)
 {
+    if (pref_ == nullptr) {
+        LOGE("CloudPrefImpl: perf_ is null")
+        return;
+    }
     pref_->Delete(key);
     int ret = pref_->FlushSync();
     if (ret) {
