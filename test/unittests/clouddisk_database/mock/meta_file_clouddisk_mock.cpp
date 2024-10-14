@@ -518,13 +518,16 @@ void MetaFileMgr::Clear(uint32_t userId, const std::string &bundleName,
     const std::string &cloudId)
 {
     std::lock_guard<std::mutex> lock(cloudDiskMutex_);
-    cloudDiskMetaFile_.erase({userId, cloudId + bundleName});
+    MetaFileKey key(userId, cloudId + bundleName);
+    cloudDiskMetaFile_.erase(key);
+    cloudDiskMetaFileList_.remove_if([key](CloudDiskMetaFileListEle &item) { return item.first == key; });
 }
 
 void MetaFileMgr::CloudDiskClearAll()
 {
     std::lock_guard<std::mutex> lock(cloudDiskMutex_);
     cloudDiskMetaFile_.clear();
+    cloudDiskMetaFileList_.clear();
 }
 
 std::shared_ptr<CloudDiskMetaFile> MetaFileMgr::GetCloudDiskMetaFile(uint32_t userId, const std::string &bundleName,
@@ -532,11 +535,20 @@ std::shared_ptr<CloudDiskMetaFile> MetaFileMgr::GetCloudDiskMetaFile(uint32_t us
 {
     std::shared_ptr<CloudDiskMetaFile> mFile = nullptr;
     std::lock_guard<std::mutex> lock(cloudDiskMutex_);
-    if (cloudDiskMetaFile_.find({userId, cloudId + bundleName}) != cloudDiskMetaFile_.end()) {
-        mFile = cloudDiskMetaFile_[{userId, cloudId + bundleName}];
+    MetaFileKey key(userId, cloudId + bundleName);
+    auto it = cloudDiskMetaFile_.find(key);
+    if (it != cloudDiskMetaFile_.end()) {
+        cloudDiskMetaFileList_.splice(cloudDiskMetaFileList_.begin(), cloudDiskMetaFileList_, it->second);
+        mFile = it->second->second;
     } else {
+        if (cloudDiskMetaFile_.size() == MAX_META_FILE_NUM) {
+            auto deleteKey = cloudDiskMetaFileList_.back().first;
+            cloudDiskMetaFile_.erase(deleteKey);
+            cloudDiskMetaFileList_.pop_back();
+        }
         mFile = std::make_shared<CloudDiskMetaFile>(userId, bundleName, cloudId);
-        cloudDiskMetaFile_[{userId, cloudId + bundleName}] = mFile;
+        cloudDiskMetaFileList_.emplace_front(key, mFile);
+        cloudDiskMetaFile_[key] = cloudDiskMetaFileList_.begin();
     }
     return mFile;
 }
