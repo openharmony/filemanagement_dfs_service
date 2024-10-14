@@ -207,12 +207,18 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
     return E_OK;
 }
 
-int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
+int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &uriVec,
+                                              int64_t &downloadId)
 {
     return E_OK;
 }
 
 int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool needClean)
+{
+    return E_OK;
+}
+
+int32_t CloudSyncServiceProxy::StopFileCache(const int64_t &downloadId,  bool needClean)
 {
     return E_OK;
 }

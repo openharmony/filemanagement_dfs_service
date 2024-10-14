@@ -109,9 +109,10 @@ int32_t CloudSyncService::GetBundleNameUserInfo(BundleNameUserInfo &bundleNameUs
     return E_OK;
 }
 
-void CloudSyncService::GetBundleNameUserInfo(const std::string &uriStr, BundleNameUserInfo &bundleNameUserInfo)
+void CloudSyncService::GetBundleNameUserInfo(const std::vector<std::string> &uriVec,
+                                             BundleNameUserInfo &bundleNameUserInfo)
 {
-    Uri uri(uriStr);
+    Uri uri(uriVec[0]);
     string bundleName = uri.GetAuthority();
     bundleNameUserInfo.bundleName = bundleName;
 
@@ -514,11 +515,17 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
 
     return E_OK;
 }
-int32_t CloudSyncService::StartFileCache(const std::string &uriStr)
+int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
+                                         int64_t &downloadId)
 {
     BundleNameUserInfo bundleNameUserInfo;
-    GetBundleNameUserInfo(uriStr, bundleNameUserInfo);
-    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriStr);
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        LOGE("GetBundleNameUserInfo failed.");
+        return ret;
+    }
+    LOGI("start StartFileCache");
+    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId);
 }
 
 int32_t CloudSyncService::StartDownloadFile(const std::string &path)
@@ -528,8 +535,11 @@ int32_t CloudSyncService::StartDownloadFile(const std::string &path)
     if (ret != E_OK) {
         return ret;
     }
+    std::vector<std::string> pathVec;
+    pathVec.push_back(path);
+    int64_t downloadId = 0;
     LOGI("start StartDownloadFile");
-    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, path);
+    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, pathVec, downloadId);
 }
 
 int32_t CloudSyncService::StopDownloadFile(const std::string &path, bool needClean)
@@ -541,6 +551,17 @@ int32_t CloudSyncService::StopDownloadFile(const std::string &path, bool needCle
     }
     LOGI("start StopDownloadFile");
     return dataSyncManager_->StopDownloadFile(bundleNameUserInfo, path, needClean);
+}
+
+int32_t CloudSyncService::StopFileCache(const int64_t &downloadId,  bool needClean)
+{
+    BundleNameUserInfo bundleNameUserInfo;
+    int ret = GetBundleNameUserInfo(bundleNameUserInfo);
+    if (ret != E_OK) {
+        return ret;
+    }
+    LOGI("start StopFileCache");
+    return dataSyncManager_->StopFileCache(bundleNameUserInfo, downloadId, needClean);
 }
 
 int32_t CloudSyncService::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)

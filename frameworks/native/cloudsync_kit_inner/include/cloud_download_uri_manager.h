@@ -27,14 +27,19 @@ public:
     static CloudDownloadUriManager &GetInstance();
 
     int32_t AddPathToUri(const std::string& path, const std::string& uri);
+    int32_t AddDownloadIdToPath(int64_t &downloadId, std::vector<std::string> &pathVec);
     std::string GetUri(const std::string& path);
     void RemoveUri(const std::string& path);
+    void CheckDownloadIdPathMap(int64_t &downloadId);
+    void RemoveUri(const int64_t &downloadId);
     void Reset();
 
 private:
     CloudDownloadUriManager() = default;
-    std::mutex mutex_;
-    std::map<std::string, std::string> pathMap_;
+    std::mutex pathUriMutex_;
+    std::mutex downloadIdPathMutex_;
+    std::map<std::string, std::string> pathUriMap_;
+    std::map<uint64_t, std::vector<std::string>> downloadIdPathMap_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

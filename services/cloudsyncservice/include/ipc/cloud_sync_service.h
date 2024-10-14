@@ -52,8 +52,10 @@ public:
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     int32_t DisableCloud(const std::string &accoutId) override;
     int32_t StartDownloadFile(const std::string &path) override;
-    int32_t StartFileCache(const std::string &uri) override;
+    int32_t StartFileCache(const std::vector<std::string> &uriVec,
+                           int64_t &downloadId) override;
     int32_t StopDownloadFile(const std::string &path, bool needClean = false) override;
+    int32_t StopFileCache(const int64_t &downloadId,  bool needClean = false) override;
     int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) override;
     int32_t UnregisterDownloadFileCallback() override;
     int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) override;
@@ -84,7 +86,7 @@ private:
     void Init();
     void HandleStartReason(const SystemAbilityOnDemandReason &startReason);
     int32_t GetBundleNameUserInfo(BundleNameUserInfo &bundleNameUserInfo);
-    void GetBundleNameUserInfo(const std::string &uriStr, BundleNameUserInfo &bundleNameUserInfo);
+    void GetBundleNameUserInfo(const std::vector<std::string> &uriVec, BundleNameUserInfo &bundleNameUserInfo);
 
     class LoadRemoteSACallback : public SystemAbilityLoadCallbackStub {
     public:

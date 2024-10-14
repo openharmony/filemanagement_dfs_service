@@ -20,18 +20,24 @@
 #include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
+class CloudFileNExporter : public LibN::NExporter {
+public:
+    CloudFileNExporter(napi_env env, napi_value exports) : NExporter(env, exports) {}
+    ~CloudFileNExporter() = default;
+
+    static napi_value Constructor(napi_env env, napi_callback_info info);
+    bool ToExport(std::vector<napi_property_descriptor> props);
+};
 
 class CloudDownloadCallbackImpl;
-class CloudFileNapi : public LibN::NExporter {
+class CloudFileNapi : public CloudFileNExporter {
 public:
-    CloudFileNapi(napi_env env, napi_value exports);
+    CloudFileNapi(napi_env env, napi_value exports) : CloudFileNExporter(env, exports) {}
     ~CloudFileNapi() = default;
 
     bool Export() override;
-    bool ToExport(std::vector<napi_property_descriptor> props);
     virtual void SetClassName(std::string classname);
     std::string GetClassName() override;
-    static napi_value Constructor(napi_env env, napi_callback_info info);
     static napi_value Start(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
@@ -45,7 +51,7 @@ private:
 class CloudDownloadCallbackImpl : public CloudDownloadCallback,
                                   public std::enable_shared_from_this<CloudDownloadCallbackImpl> {
 public:
-    CloudDownloadCallbackImpl(napi_env env, napi_value fun);
+    CloudDownloadCallbackImpl(napi_env env, napi_value fun, bool isBatch = false);
     ~CloudDownloadCallbackImpl() = default;
     void OnDownloadProcess(const DownloadProgressObj &progress) override;
     void DeleteReference();
@@ -53,19 +59,22 @@ public:
     class UvChangeMsg {
     public:
         UvChangeMsg(std::shared_ptr<CloudDownloadCallbackImpl> CloudDownloadCallbackIn,
-                    DownloadProgressObj downloadProgress)
-            : CloudDownloadCallback_(CloudDownloadCallbackIn), downloadProgress_(downloadProgress)
+                    DownloadProgressObj downloadProgress,
+                    bool isBatch)
+            : CloudDownloadCallback_(CloudDownloadCallbackIn), downloadProgress_(downloadProgress), isBatch_(isBatch)
         {
         }
         ~UvChangeMsg() {}
         std::weak_ptr<CloudDownloadCallbackImpl> CloudDownloadCallback_;
         DownloadProgressObj downloadProgress_;
+        bool isBatch_;
     };
 
 private:
     static void OnComplete(UvChangeMsg *msg);
     napi_env env_;
     napi_ref cbOnRef_ = nullptr;
+    bool isBatch_;
 };
 } // namespace OHOS::FileManagement::CloudSync
 #endif // OHOS_FILEMGMT_CLOUD_FILE_NAPI_H

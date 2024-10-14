@@ -64,6 +64,7 @@ int32_t CloudDownloadCallbackStub::HandleOnProcess(MessageParcel &data, MessageP
 
         if (progress->state != DownloadProgressObj::RUNNING) {
             uriMgr.RemoveUri(path);
+            uriMgr.CheckDownloadIdPathMap(progress->downloadId);
         }
     }
 

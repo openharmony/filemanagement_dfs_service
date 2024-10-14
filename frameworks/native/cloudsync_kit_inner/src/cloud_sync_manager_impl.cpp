@@ -25,6 +25,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 constexpr int32_t MIN_USER_ID = 100;
+constexpr int32_t MAX_FILE_CACHE_NUM = 400;
 CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 {
     static CloudSyncManagerImpl instance;
@@ -227,15 +228,36 @@ int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri)
 
 int32_t CloudSyncManagerImpl::StartFileCache(const std::string &uri)
 {
-    LOGI("StartDownloadCache start");
+    LOGI("StartFileCache start");
+    int64_t downloadId = 0;
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    int32_t ret = CloudSyncServiceProxy->StartFileCache(uri);
-    LOGI("StartDownloadCache ret %{public}d", ret);
+    std::vector<std::string> uriVec;
+    uriVec.push_back(uri);
+    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId);
+    LOGI("StartFileCache ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uriVec, int64_t &downloadId)
+{
+    LOGI("StartFileCache batch start");
+    if ((uriVec.size() > MAX_FILE_CACHE_NUM) || (uriVec.size() == 0)) {
+        LOGE("StartFileCache parameter is invalid, uriVec size is %{public}zu", uriVec.size());
+        return E_INVAL_ARG;
+    }
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId);
+    LOGI("StartFileCache ret %{public}d", ret);
     return ret;
 }
 
@@ -250,6 +272,20 @@ int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri,  bool nee
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->StopDownloadFile(uri, needClean);
     LOGI("StopDownloadFile ret %{public}d", ret);
+    return ret;
+}
+
+int32_t CloudSyncManagerImpl::StopFileCache(const int64_t &downloadId,  bool needClean)
+{
+    LOGI("StopFileCache start");
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->StopFileCache(downloadId, needClean);
+    LOGI("StopFileCache ret %{public}d", ret);
     return ret;
 }
 
