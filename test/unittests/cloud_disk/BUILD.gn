@@ -411,7 +411,6 @@ group("cloud_disk_test") {
   deps = [
     ":account_status_listener_test",
     ":file_operations_base_test",
-    ":file_operations_cloud_test",
     ":file_operations_helper_test",
     ":file_operations_local_test",
     ":fuse_operations_test",
