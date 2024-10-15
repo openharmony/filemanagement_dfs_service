@@ -245,10 +245,14 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::string &uri)
 
 int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uriVec, int64_t &downloadId)
 {
-    LOGI("StartFileCache batch start");
-    if ((uriVec.size() > MAX_FILE_CACHE_NUM) || (uriVec.size() == 0)) {
-        LOGE("StartFileCache parameter is invalid, uriVec size is %{public}zu", uriVec.size());
+    LOGI("StartFileCache batch start, uriVec size: %{public}zu", uriVec.size());
+    if (uriVec.empty()) {
+        LOGE("StartFileCache, uri list is empty");
         return E_INVAL_ARG;
+    }
+    if (uriVec.size() > MAX_FILE_CACHE_NUM) {
+        LOGE("StartFileCache, the size of uri list exceeded the maximum limit, size: %{public}zu", uriVec.size());
+        return E_EXCEED_MAX_SIZE;
     }
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
     if (!CloudSyncServiceProxy) {
@@ -257,7 +261,7 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uri
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId);
-    LOGI("StartFileCache ret %{public}d", ret);
+    LOGI("StartFileCache batch ret %{public}d", ret);
     return ret;
 }
 
