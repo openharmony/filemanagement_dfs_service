@@ -430,7 +430,7 @@ int32_t CloudSyncService::NotifyEventChange(int32_t userId, const std::string &e
         return E_CLOUD_SDK;
     }
 
-     return dataSyncManager_->TriggerStartSync(appBundleName, userId, false,
+    return dataSyncManager_->TriggerStartSync(appBundleName, userId, false,
         SyncTriggerType::CLOUD_TRIGGER, prepareTraceId);
 }
 
