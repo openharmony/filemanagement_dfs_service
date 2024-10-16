@@ -24,7 +24,8 @@ public:
     virtual int32_t TriggerStartSync(const std::string &bundleName,
                                      const int32_t userId,
                                      bool forceFlag,
-                                     SyncTriggerType triggerType);
+                                     SyncTriggerType triggerType,
+                                     std::string prepareTraceId = "");
 };
 } // namespace OHOS::FileManagement::CloudFile
 
