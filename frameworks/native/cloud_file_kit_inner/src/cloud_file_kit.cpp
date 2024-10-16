@@ -47,7 +47,8 @@ int32_t CloudFileKit::GetAppSwitchStatus(const std::string &bundleName, const in
 
 int32_t CloudFileKit::ResolveNotificationEvent(const int32_t userId,
                                                const std::string &extraData,
-                                               std::string &appBundleName)
+                                               std::string &appBundleName,
+                                               std::string &prepareTraceId)
 {
     appBundleName = "com.ohos.photos";
     return E_OK;

@@ -26,7 +26,8 @@ public:
     int32_t GetAppSwitchStatus(const std::string &bundleName, const int32_t userId, bool &switchStatus) override;
     int32_t ResolveNotificationEvent(const int32_t userId,
                                      const std::string &extraData,
-                                     std::string &appBundleName) override;
+                                     std::string &appBundleName,
+                                     std::string &prepareTraceId) override;
 
     std::shared_ptr<DataSyncManager> GetDataSyncManager() override;
     std::shared_ptr<CloudAssetsDownloader> GetCloudAssetsDownloader(const int32_t userId,
