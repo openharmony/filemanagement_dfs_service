@@ -706,6 +706,11 @@ void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::
         return;
     }
 
+    if (!jsonObject.is_array()) {
+        LOGE("this json type is error.");
+        return;
+    }
+
     std::vector<GroupInfo> groupList;
     groupList = jsonObject.get<std::vector<GroupInfo>>();
     for (auto &a : groupList) {

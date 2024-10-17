@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <string>
 
 #include "daemon_stub.h"
 #include "distributed_file_daemon_ipc_interface_code.h"
@@ -24,6 +25,10 @@
 #include "message_option.h"
 #include "message_parcel.h"
 #include "securec.h"
+#include "accesstoken_kit.h"
+#include "utils_log.h"
+#include "nativetoken_kit.h"
+#include "token_setproc.h"
 
 namespace OHOS {
 constexpr pid_t DATA_UID = 3012;
@@ -278,6 +283,39 @@ void HandleUnRegisterRecvCallbackFuzzTest(std::shared_ptr<DaemonStub> daemonStub
 
     daemonStubPtr->OnRemoteRequest(code, datas, reply, option);
 }
+
+void SetAccessTokenPermission()
+{
+    uint64_t tokenId;
+    const char *perms[1];
+    perms[0] = "ohos.permission.DISTRIBUTED_DATASYNC";
+
+    NativeTokenInfoParams infoInstance = {
+        .dcapsNum = 0,
+        .permsNum = 1,
+        .aclsNum = 0,
+        .dcaps = nullptr,
+        .perms = perms,
+        .acls = nullptr,
+        .processName = "distributdFileDaemonstubFuzzer",
+        .aplStr = "system_basic",
+    };
+    tokenId = GetAccessTokenId(&infoInstance);
+    if (tokenId == 0) {
+        LOGE("Get Acess Token Id Failed");
+        return;
+    }
+    int ret = SetSelfTokenID(tokenId);
+    if (ret != 0) {
+        LOGE("Set Acess Token Id Failed");
+        return;
+    }
+    ret = Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
+    if (ret < 0) {
+        LOGE("Reload Native Token Info Failed");
+        return;
+    }
+}
 } // namespace OHOS
 
 /* Fuzzer entry point */
@@ -292,7 +330,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (size < OHOS::U32_AT_SIZE || size > OHOS::FOO_MAX_LEN) {
         return 0;
     }
-
+    OHOS::SetAccessTokenPermission();
     auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
     OHOS::HandleOpenP2PConnectionFuzzTest(daemonStubPtr, data, size);
     OHOS::HandleCloseP2PConnectionFuzzTest(daemonStubPtr, data, size);
