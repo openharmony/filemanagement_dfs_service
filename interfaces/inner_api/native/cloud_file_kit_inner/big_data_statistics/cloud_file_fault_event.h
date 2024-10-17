@@ -56,7 +56,8 @@ enum class FaultOperation {
     READDIR = 600,
     RELEASE = 700,
     FORGETMULTI = 800,
-    IOCTL = 900
+    IOCTL = 900,
+    UNLINK = 1000
 };
 
 enum class FaultType {
