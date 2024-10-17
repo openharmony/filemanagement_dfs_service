@@ -116,6 +116,7 @@ config("private_config") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/utils/log/include",
+    "${media_library_path}/frameworks/utils/include",
     "${services_path}/distributedfiledaemon/include",
   ]
 }
