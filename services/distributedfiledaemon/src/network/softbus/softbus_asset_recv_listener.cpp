@@ -69,6 +69,7 @@ const char* SoftbusAssetRecvListener::GetRecvPath()
     if (pos == std::string::npos) {
         return "";
     }
+
     path_ = path.replace(pos, USRT_ID_FLAG.length(), std::to_string(userId));
     const char* recvPath = path_.c_str();
     LOGI("SoftbusAssetRecvListener GetRecvPath: %{public}s", recvPath);
