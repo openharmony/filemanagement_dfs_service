@@ -62,7 +62,6 @@ void FileOperationBaseTest::TearDown(void)
     GTEST_LOG_(INFO) << "TearDown";
 }
 
-
 /**
  * @tc.name: ForgetTest001
  * @tc.desc: Verify the Forget function
