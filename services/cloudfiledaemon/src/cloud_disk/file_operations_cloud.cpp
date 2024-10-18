@@ -401,6 +401,7 @@ void FileOperationsCloud::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_
         auto filePtr = InitFileAttr(data, fi);
         filePtr->type = CLOUD_DISK_FILE_TYPE_LOCAL;
         filePtr->fd = fd;
+        filePtr->isWriteOpen = (flags & O_RDWR) | (flags & O_WRONLY);
         fuse_reply_open(req, fi);
     } else {
         CloudOpen(req, inoPtr, fi, path);
@@ -1445,7 +1446,7 @@ void FileOperationsCloud::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
             close(filePtr->fd);
             if (filePtr->fileDirty != CLOUD_DISK_FILE_UNKNOWN) {
                 UpdateCloudStore(data, inoPtr->fileName, parentCloudId, filePtr->fileDirty, inoPtr);
-            } else {
+            } else if (filePtr->isWriteOpen) {
                 UploadLocalFile(data, inoPtr->fileName, parentCloudId, filePtr->fileDirty, inoPtr);
             }
         } else if (filePtr->type == CLOUD_DISK_FILE_TYPE_CLOUD &&

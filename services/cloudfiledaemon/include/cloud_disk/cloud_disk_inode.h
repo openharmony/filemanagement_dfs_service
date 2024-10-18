@@ -77,6 +77,7 @@ struct CloudDiskFile {
     int32_t fd{-1};
     std::atomic<int> refCount{0};
     std::shared_ptr<CloudFile::CloudAssetReadSession> readSession{nullptr};
+    bool isWriteOpen{false};
 };
 
 struct CloudDiskFuseData {
