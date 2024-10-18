@@ -150,7 +150,7 @@ HWTEST_F(FileOperationBaseTest, ForgetMultiTest002, TestSize.Level1)
         struct fuse_forget_data forgets;
         forgets.ino = 2;
 
-        fileoperationBase_->ForgetMulti(req, 1, forgets);
+        fileoperationBase_->ForgetMulti(req, 1, &forgets);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
@@ -176,7 +176,7 @@ HWTEST_F(FileOperationBaseTest, ForgetMultiTest003, TestSize.Level1)
         struct fuse_forget_data forgets;
         forgets.ino = 2;
 
-        fileoperationBase_->ForgetMulti(req, 1, forgets);
+        fileoperationBase_->ForgetMulti(req, 1, &forgets);
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
