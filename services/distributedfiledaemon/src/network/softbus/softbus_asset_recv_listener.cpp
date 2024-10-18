@@ -69,6 +69,7 @@ const char* SoftbusAssetRecvListener::GetRecvPath()
     if (pos == std::string::npos) {
         return "";
     }
+
     path_ = path.replace(pos, USRT_ID_FLAG.length(), std::to_string(userId));
     const char* recvPath = path_.c_str();
     LOGI("SoftbusAssetRecvListener GetRecvPath: %{public}s", recvPath);
@@ -142,7 +143,7 @@ void SoftbusAssetRecvListener::OnRecvAssetFinished(int32_t socketId, const char 
 
 void SoftbusAssetRecvListener::OnRecvAssetError(int32_t socketId, int32_t errorCode)
 {
-    LOGI("OnRecvFileFinished, sessionId = %{public}d, errorCode = %{public}d", socketId, errorCode);
+    LOGE("OnRecvAssetError, sessionId = %{public}d, errorCode = %{public}d", socketId, errorCode);
     auto srcNetworkId = SoftBusHandlerAsset::GetInstance().GetClientInfo(socketId);
     if (srcNetworkId.empty()) {
         LOGE("get srcNetworkId fail");
@@ -169,7 +170,7 @@ int32_t SoftbusAssetRecvListener::GetCurrentUserId()
         LOGE("query active os account id failed, ret = %{public}d", ret);
         return FileManagement::E_GET_USER_ID;
     }
-    LOGI("DeviceManagerAgent::GetCurrentUserId end.");
+    LOGI("GetCurrentUserId end.");
     return userIds[0];
 }
 

@@ -194,9 +194,8 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
             LOGE("invalid uri, ret = %{public}d", ret);
             return {};
         }
-        LOGI("physicalPath %{public}s", GetAnonyString(physicalPath).c_str());
         if (!SandboxHelper::CheckValidPath(physicalPath)) {
-            LOGE("invalid path.");
+            LOGE("invalid path : %{public}s", GetAnonyString(physicalPath).c_str());
             return {};
         }
 
@@ -206,6 +205,7 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
         }
         fileList.emplace_back(physicalPath);
     }
+    LOGI("GetFileList success, file num is %{public}s", std::to_string(fileList.size()).c_str());
     return fileList;
 }
 

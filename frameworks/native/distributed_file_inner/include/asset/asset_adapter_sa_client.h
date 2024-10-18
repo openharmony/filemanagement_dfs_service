@@ -33,6 +33,7 @@ public:
     int32_t RemoveListener(const sptr<IAssetRecvCallback> &listener);
     bool CheckSystemAbilityStatus();
     void OnAddSystemAbility();
+
 private:
     AssetAdapterSaClient();
     std::vector<sptr<IAssetRecvCallback>> listeners_;
