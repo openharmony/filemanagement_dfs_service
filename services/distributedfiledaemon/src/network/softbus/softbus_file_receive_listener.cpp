@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 
+#include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "network/softbus/softbus_handler.h"
 #include "sandbox_helper.h"
@@ -76,6 +77,9 @@ void SoftBusFileReceiveListener::SetRecvPath(const std::string &physicalPath)
     LOGI("SetRecvPath physicalPath: %{public}s", GetAnonyString(physicalPath).c_str());
     if (!AppFileService::SandboxHelper::CheckValidPath(physicalPath)) {
         LOGE("invalid path.");
+        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::CREAT_VALID_PATH_ERROR, RadarReporter::PACKAGE_NAME, RadarReporter::appFileService);
         path_ = "";
         return;
     }
@@ -128,6 +132,10 @@ void SoftBusFileReceiveListener::OnReceiveFileFinished(int32_t sessionId, int32_
 void SoftBusFileReceiveListener::OnFileTransError(int32_t sessionId, int32_t errorCode)
 {
     LOGE("OnFileTransError");
+    RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
+        RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+        RadarReporter::FILE_TRANS_ERROR, RadarReporter::PACKAGE_NAME,
+        RadarReporter::dSoftBus + std::to_string(errorCode));
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");

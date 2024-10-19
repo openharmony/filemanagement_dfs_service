@@ -30,6 +30,7 @@
 #include "common_event_support.h"
 #include "connection_detector.h"
 #include "device/device_manager_agent.h"
+#include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "i_file_dfs_listener.h"
@@ -37,8 +38,8 @@
 #include "iremote_object.h"
 #include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
-#include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_handler_asset.h"
+#include "network/softbus/softbus_handler.h"
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
@@ -168,6 +169,8 @@ void Daemon::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &d
 int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &deviceInfo)
 {
     LOGI("OpenP2PConnection networkId %{public}s", Utils::GetAnonyString(deviceInfo.networkId).c_str());
+    RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_SUCCESS,
+        RadarReporter::BIZ_STATE, RadarReporter::DFX_BEGIN);
     auto path = ConnectionDetector::ParseHmdfsPath();
     stringstream ss;
     ss << ConnectionDetector::MocklispHash(path);
@@ -189,6 +192,8 @@ int32_t Daemon::OpenP2PConnection(const DistributedHardware::DmDeviceInfo &devic
         LOGI("OpenP2PConnection check connection status failed, start to clean up");
         CloseP2PConnection(deviceInfo);
     }
+    RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_SUCCESS,
+        RadarReporter::BIZ_STATE, RadarReporter::DFX_END);
     return ret;
 }
 
@@ -459,6 +464,9 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     auto ret = daemon->GetRemoteCopyInfo(srcUri, isSrcFile, isSrcDir);
     if (ret != E_OK) {
         LOGE("GetRemoteCopyInfo failed, ret = %{public}d", ret);
+        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::GET_REMOTE_COPY_INFO_ERROR);
         return E_SOFTBUS_SESSION_FAILED;
     }
 
@@ -466,6 +474,10 @@ int32_t Daemon::GetRealPath(const std::string &srcUri,
     int result = AccessTokenKit::GetHapTokenInfo(IPCSkeleton::GetCallingTokenID(), hapTokenInfo);
     if (result != Security::AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOGE("GetHapTokenInfo failed, errCode = %{public}d", result);
+        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::GET_HAP_TOKEN_INFO_ERROR, RadarReporter::PACKAGE_NAME,
+            RadarReporter::accessTokenKit + to_string(result));
         return E_GET_USER_ID;
     }
     ret = SandboxHelper::GetPhysicalPath(dstUri, std::to_string(hapTokenInfo.userID), physicalPath);
@@ -569,6 +581,9 @@ sptr<IDaemon> Daemon::GetRemoteSA(const std::string &remoteDeviceId)
     auto object = sam->GetSystemAbility(FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, remoteDeviceId);
     if (object == nullptr) {
         LOGE("GetSystemAbility failed");
+        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::GET_SYSTEM_ABILITY_ERROR, RadarReporter::PACKAGE_NAME, RadarReporter::saMgr);
         return nullptr;
     }
     auto daemon = iface_cast<IDaemon>(object);
@@ -600,6 +615,9 @@ int32_t Daemon::Copy(const std::string &srcUri,
     auto ret = daemon->RequestSendFile(srcUri, dstPath, localDeviceInfo.networkId, sessionName);
     if (ret != E_OK) {
         LOGE("RequestSendFile failed, ret = %{public}d", ret);
+        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::REQUEST_SEND_FILE_ERROR, RadarReporter::PACKAGE_NAME, ret);
         return E_SA_LOAD_FAILED;
     }
     return E_OK;
