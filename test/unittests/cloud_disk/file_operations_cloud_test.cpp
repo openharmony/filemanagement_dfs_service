@@ -2484,7 +2484,7 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest007, TestSize.Level1)
  */
 HWTEST_F(FileOperationsCloudTest, SetAttrTest008, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SetAttrTest008 Start";
+    GTEST_LOG_(INFO) << "SetAttrTest007 Start";
     try {
         CloudDiskFuseData data;
         fuse_req_t req = nullptr;
@@ -2498,9 +2498,9 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest008, TestSize.Level1)
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "SetAttrTest007 ERROR";
+        GTEST_LOG_(INFO) << "SetAttrTest008 ERROR";
     }
-    GTEST_LOG_(INFO) << "SetAttrTest007 End";
+    GTEST_LOG_(INFO) << "SetAttrTest008 End";
 }
 
 /**
