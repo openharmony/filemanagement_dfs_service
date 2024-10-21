@@ -17,13 +17,14 @@
 #define OHOS_FILEMGMT_I_SOFTBUS_LISTENER_H
 
 #include <string>
+#include "socket.h"
 
 namespace OHOS::FileManagement::CloudSync {
 class ISoftbusListener {
 public:
     virtual ~ISoftbusListener() = default;
-    virtual int OnSessionOpened(int sesssionId, int result) = 0;
-    virtual void OnSessionClosed(int sessionId) = 0;
+    virtual void OnSessionOpened(int socket, int result) = 0;
+    virtual void OnSessionClosed(int socket) = 0;
     virtual void OnDataReceived(const std::string &senderNetworkId,
                                 int receiverSessionId,
                                 const void *data,

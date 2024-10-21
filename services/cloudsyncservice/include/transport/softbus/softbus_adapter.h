@@ -24,6 +24,7 @@
 
 #include "nocopyable.h"
 #include "session.h"
+#include "socket.h"
 
 #include "i_softbus_listener.h"
 
@@ -34,29 +35,28 @@ public:
 
     int32_t CreateSessionServer(const char *packageName, const char *sessionName);
     int32_t RemoveSessionServer(const char *packageName, const char *sessionName);
-    int SetFileReceiveListener(const char *packageName, const char *sessionName);
 
-    int OpenSession(const char *sessionName,
-                    const char *peerDeviceId,
-                    const char *groupId,
-                    const SessionAttribute *attr);
+    int OpenSession(char *sessionName,
+                    char *peerDeviceId,
+                    char *groupId,
+                    TransDataType dataType);
 
-    int OpenSessionByP2P(const char *sessionName, const char *peerDeviceId, const char *groupId, bool isFileType);
+    int OpenSessionByP2P(char *sessionName, char *peerDeviceId, char *groupId, bool isFileType);
     void CloseSession(int sessionId);
 
-    static int OnSessionOpened(int sessionId, int result);
-    static void OnSessionClosed(int sessionId);
-    static void OnBytesReceived(int sessionId, const void *data, unsigned int dataLen);
-    static int OnReceiveFileStarted(int sessionId, const char *files, int fileCnt);
+    static void OnBind(int socket, PeerSocketInfo info);
+    static void OnShutdown(int32_t socket, ShutdownReason reason);
+    static void OnFile(int32_t socket, FileEvent *event);
+    static void OnBytes(int sessionId, const void *data, unsigned int dataLen);
     static int OnReceiveFileProcess(int sessionId, const char *firstFile, uint64_t bytesUpload, uint64_t bytesTotal);
     static void OnReceiveFileFinished(int sessionId, const char *files, int fileCnt);
-    static void OnFileTransError(int sessionId);
+    static const char* GetRecvPath();
 
     int SendBytes(int sessionId, const void *data, unsigned int dataLen);
     int SendFile(int sessionId, const std::vector<std::string> &sFileList, const std::vector<std::string> &dFileList);
-    std::string GetSessionNameById(int sessionId);
     std::string GetSessionNameFromMap(int sessionId);
     std::string GetPeerNetworkId(int sessionId);
+    int32_t GetSocketNameFromMap(std::string sessionAndPack);
     bool IsFromServer(int sessionId);
 
     void RegisterSessionListener(std::string sessionName, std::shared_ptr<ISoftbusListener> listener);
@@ -64,7 +64,7 @@ public:
 
     std::shared_ptr<ISoftbusListener> GetListener(std::string sessionName);
     bool IsSessionOpened(int sessionId);
-    void AcceptSesion(int sessionId, const std::string &sessionName);
+    void AcceptSesion(int sessionId, const std::string &sessionName, const std::string &networkId);
     void RemoveSesion(int sessionId);
 
 private:
@@ -75,6 +75,9 @@ private:
     std::mutex sessionMutex_;
     std::unordered_map<int32_t, bool> sessionOpenedMap_;
     std::unordered_map<int32_t, std::string> sessionNameMap_;
+    std::unordered_map<int32_t, std::string> networkIdMap_;
+    std::unordered_map<int32_t, std::string> sessionAndPackageMap_;
+    static constexpr const int QOS_COUNT = 3;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
