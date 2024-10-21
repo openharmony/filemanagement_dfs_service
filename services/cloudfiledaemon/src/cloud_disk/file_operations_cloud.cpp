@@ -22,6 +22,7 @@
 
 #include "account_status.h"
 #include "cloud_disk_inode.h"
+#include "cloud_file_fault_event.h"
 #include "cloud_file_kit.h"
 #include "cloud_file_utils.h"
 #include "clouddisk_rdb_transaction.h"
@@ -1079,8 +1080,7 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
         return ENOSYS;
     }
     DatabaseManager &databaseManager = DatabaseManager::GetInstance();
-    shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName,
-                                                                         data->userId);
+    shared_ptr<CloudDiskRdbStore> rdbStore = databaseManager.GetRdbStore(parentInode->bundleName, data->userId);
     MetaBase metaBase(name);
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId,
         parentInode->bundleName, parentInode->cloudId);
@@ -1102,7 +1102,11 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
         string localPath = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
         LOGI("unlink %{public}s", GetAnonyString(localPath).c_str());
         ret = unlink(localPath.c_str());
-        if (ret != 0) {
+        if (errno == ENOENT) {
+            std::string errMsg = "doCloudUnlink, unlink local file ret ENOENT.";
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{parentInode->bundleName, CloudFile::FaultOperation::UNLINK,
+                CloudFile::FaultType::DENTRY_FILE, errno, errMsg});
+        } else if (ret != 0) {
             LOGE("Failed to unlink cloudId:%{private}s, errno:%{public}d", cloudId.c_str(), errno);
             (void)metaFile->DoCreate(metaBase);
             return ret;
