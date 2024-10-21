@@ -2484,7 +2484,7 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest007, TestSize.Level1)
  */
 HWTEST_F(FileOperationsCloudTest, SetAttrTest008, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "SetAttrTest007 Start";
+    GTEST_LOG_(INFO) << "SetAttrTest008 Start";
     try {
         CloudDiskFuseData data;
         fuse_req_t req = nullptr;
