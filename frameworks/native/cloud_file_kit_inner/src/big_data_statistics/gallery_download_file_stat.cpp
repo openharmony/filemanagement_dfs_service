@@ -286,8 +286,6 @@ void GalleryDownloadFileStat::Report()
         "video_download_speed", stat_.videoDownloadSpeed);
     if (ret != E_OK) {
         LOGE("report CLOUD_SYNC_DOWNLOAD_FILE_STAT error %{public}d", ret);
-    } else {
-        ClearDownloadFileStat();
     }
     ret = unlink(path.c_str());
     if (ret != 0) {
