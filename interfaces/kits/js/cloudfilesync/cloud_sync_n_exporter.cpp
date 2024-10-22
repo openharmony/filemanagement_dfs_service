@@ -118,6 +118,8 @@ void InitErrorType(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("BATTERY_LEVEL_WARNING", NVal::CreateInt32(env, BATTERY_LEVEL_WARNING).val_),
         DECLARE_NAPI_STATIC_PROPERTY("CLOUD_STORAGE_FULL", NVal::CreateInt32(env, CLOUD_STORAGE_FULL).val_),
         DECLARE_NAPI_STATIC_PROPERTY("LOCAL_STORAGE_FULL", NVal::CreateInt32(env, LOCAL_STORAGE_FULL).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("DEVICE_TEMPERATURE_TOO_HIGH",
+            NVal::CreateInt32(env, DEVICE_TEMPERATURE_TOO_HIGH).val_),
     };
     napi_value obj = nullptr;
     napi_create_object(env, &obj);
