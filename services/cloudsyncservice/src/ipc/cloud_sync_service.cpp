@@ -26,6 +26,7 @@
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "directory_ex.h"
+#include "ffrt_inner.h"
 #include "ipc/download_asset_callback_manager.h"
 #include "meta_file.h"
 #include "net_conn_callback_observer.h"
@@ -47,11 +48,30 @@ using namespace OHOS;
 using namespace CloudFile;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
+constexpr int FFRT_WORKER_EFFECT_LEN = 2;
+constexpr int MAX_THREAD_NUM = 2;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(CloudSyncService, FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, false);
 
+void SetFfrtWorkerNum()
+{
+    LOGI("begin set ffrt worker num");
+    ffrt_worker_num_param qosConfig;
+    if (memset_s(&qosConfig, sizeof(qosConfig), -1, sizeof(qosConfig)) == EOK) {
+        qosConfig.effectLen = FFRT_WORKER_EFFECT_LEN;
+        qosConfig.qosConfigArray[0].qos = ffrt_qos_deadline_request;
+        qosConfig.qosConfigArray[0].hardLimit = MAX_THREAD_NUM;
+        qosConfig.qosConfigArray[1].qos = ffrt_qos_user_initiated;
+        qosConfig.qosConfigArray[1].hardLimit = MAX_THREAD_NUM;
+        if (ffrt_set_qos_worker_num(&qosConfig) == E_OK) {
+            LOGI("set ffrt qos param success !");
+        }
+    }
+}
+
 CloudSyncService::CloudSyncService(int32_t saID, bool runOnCreate) : SystemAbility(saID, runOnCreate)
 {
+    SetFfrtWorkerNum();
 }
 
 void CloudSyncService::PublishSA()
