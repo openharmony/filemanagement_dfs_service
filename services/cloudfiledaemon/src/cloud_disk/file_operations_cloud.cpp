@@ -1285,7 +1285,6 @@ static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, fuse_ino_t ino)
         return ENOMEM;
     }
     string filePath = CloudFileUtils::GetLocalFilePath(inoPtr->cloudId, inoPtr->bundleName, data->userId);
-
     struct stat statInfo {};
     int32_t ret = stat(filePath.c_str(), &statInfo);
     if (ret) {
@@ -1308,7 +1307,6 @@ static int32_t UpdateCacheDentrySize(CloudDiskFuseData *data, fuse_ino_t ino)
     string parentCloudId = parentInode->cloudId;
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(data->userId, inoPtr->bundleName, parentCloudId);
     ret = metaFile->DoChildUpdate(inoPtr->fileName, callback);
-
     if (ret != 0) {
         LOGE("update new dentry failed, ret = %{public}d", ret);
         return ret;
