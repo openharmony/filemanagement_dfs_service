@@ -83,7 +83,7 @@ static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
 
     childInode->bundleName = parentInode->bundleName;
     childInode->fileName = metaBase.name;
-    childInode->layer = FileOperationsHelper::GetNextLayer(parentInode, parentInode->parent);
+    childInode->layer = FileOperationsHelper::GetNextLayer(parentInode, parent);
     childInode->parent = parent;
     childInode->cloudId = metaBase.cloudId;
     childInode->ops = make_shared<FileOperationsCloud>();
