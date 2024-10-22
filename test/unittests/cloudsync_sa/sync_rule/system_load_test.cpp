@@ -223,4 +223,19 @@ HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest003, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 End";
 }
+
+HWTEST_F(SytemLoadTest, IsLoadStatusUnderNormalTest001, TestSize.Level1)
+{
+    SystemLoadStatus_->Setload(SYSTEMLOADLEVEL_NORMAL);
+    bool ret = SystemLoadStatus_->IsLoadStatusUnderNormal(STOPPED_TYPE::STOPPED_IN_SYNC);
+    EXPECT_TRUE(ret);
+}
+
+HWTEST_F(SytemLoadTest, IsLoadStatusUnderNormalTest002, TestSize.Level1)
+{
+    SystemLoadStatus_->Setload(SYSTEMLOADLEVEL_NORMAL + 1);
+    bool ret = SystemLoadStatus_->IsLoadStatusUnderNormal(STOPPED_TYPE::STOPPED_IN_SYNC);
+    EXPECT_FALSE(ret);
+}
+
 } // namespace OHOS::FileManagement::CloudSync::Test

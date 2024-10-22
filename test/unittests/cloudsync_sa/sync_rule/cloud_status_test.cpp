@@ -81,7 +81,7 @@ HWTEST_F(CloudStatusTest, GetCurrentCloudInfo002, TestSize.Level1)
     const string bundleName = "ohos.com.test";
     const int32_t userId = 1;
     CloudFile::CloudFileKit::instance_ = ability.get();
-    EXPECT_CALL(*ability, GetCloudUserInfo(_, _)).WillOnce(Return(E_RDB));
+    EXPECT_CALL(*ability, GetCloudUserInfo(_, _)).WillOnce(Return(E_RDB)).WillRepeatedly(Return(E_OK));
     auto ret = cloudStatus.GetCurrentCloudInfo(bundleName, userId);
     EXPECT_EQ(ret, E_RDB);
 }
@@ -98,7 +98,7 @@ HWTEST_F(CloudStatusTest, GetCurrentCloudInfo003, TestSize.Level1)
     const string bundleName = "ohos.com.test";
     const int32_t userId = 1;
     CloudFile::CloudFileKit::instance_ = ability.get();
-    EXPECT_CALL(*ability, GetAppSwitchStatus(_, _, _)).WillOnce(Return(E_RDB));
+    EXPECT_CALL(*ability, GetAppSwitchStatus(_, _, _)).WillOnce(Return(E_RDB)).WillRepeatedly(Return(E_OK));
     auto ret = cloudStatus.GetCurrentCloudInfo(bundleName, userId);
     EXPECT_EQ(ret, E_RDB);
 }

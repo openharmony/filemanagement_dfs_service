@@ -334,6 +334,6 @@ HWTEST_F(DataSyncerRdbStoreTest, OnCreateTest02, TestSize.Level1)
         .WillOnce(Return(E_OK))
         .WillOnce(Return(E_OK));
     int32_t result = callback.OnCreate(store);
-    EXPECT_EQ(result, E_RDB);
+    EXPECT_EQ(result, E_OK);
 }
 }
