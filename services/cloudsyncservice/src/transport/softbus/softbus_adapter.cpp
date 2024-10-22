@@ -25,8 +25,10 @@
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
-constexpr int SESSION_NAME_SIZE_MAX = 256;
-constexpr int NETWORK_ID_SIZE_MAX = 65;
+constexpr int MIN_BW = 1024 * 1024 * 40;
+constexpr int MAX_WAIT_TIMEOUT = 10000;
+constexpr int MIN_LATENCY = 1000;
+const string SERVICE_NAME = "OHOS.Filemanagement.Dfs.ICloudSyncService";
 
 SoftbusAdapter &SoftbusAdapter::GetInstance()
 {
@@ -36,17 +38,41 @@ SoftbusAdapter &SoftbusAdapter::GetInstance()
 
 int32_t SoftbusAdapter::CreateSessionServer(const char *packageName, const char *sessionName)
 {
-    ISessionListener sessionListener = {
-        .OnSessionOpened = SoftbusAdapter::OnSessionOpened,
-        .OnSessionClosed = SoftbusAdapter::OnSessionClosed,
-        .OnBytesReceived = SoftbusAdapter::OnBytesReceived,
-        .OnMessageReceived = nullptr,
-        .OnStreamReceived = nullptr,
+    SocketInfo info = {
+        .name = const_cast<char*>(sessionName),
+        .pkgName = const_cast<char*>(packageName),
+    };
+    int socket = ::Socket(info);
+    if (socket <= 0) {
+        LOGE("Failed to CreateSessionServer ret:%{public}d, sessionName:%{public}s", socket, sessionName);
+        return ERR_BAD_VALUE;
+    }
+    std::string saveKey = std::string(sessionName) + std::string(packageName);
+    {
+        lock_guard<mutex> lock(sessionMutex_);
+        auto sessionAndPackage = sessionAndPackageMap_.find(socket);
+        if (sessionAndPackage == sessionAndPackageMap_.end()) {
+            sessionAndPackageMap_.insert({socket, saveKey});
+        }
+    }
+    QosTV serverQos[] = {
+        { .qos = QOS_TYPE_MIN_BW,            .value = MIN_BW},
+        { .qos = QOS_TYPE_MAX_WAIT_TIMEOUT,      .value = MAX_WAIT_TIMEOUT },
+        { .qos = QOS_TYPE_MIN_LATENCY,       .value = MIN_LATENCY},
     };
 
-    int ret = ::CreateSessionServer(packageName, sessionName, &sessionListener);
+    ISocketListener listener = {
+        .OnBind = SoftbusAdapter::OnBind,
+        .OnShutdown = SoftbusAdapter::OnShutdown,
+        .OnBytes = SoftbusAdapter::OnBytes,
+        .OnMessage = nullptr,
+        .OnStream = nullptr,
+        .OnFile = SoftbusAdapter::OnFile,
+    };
+
+    int32_t ret = ::Listen(socket, serverQos, QOS_COUNT, &listener);
     if (ret != 0) {
-        LOGE("Failed to CreateSessionServer ret:%{public}d, sessionName:%{public}s", ret, sessionName);
+        LOGE("Failed to CreateSessionServer sessionName:%{public}s", sessionName);
         return ret;
     }
     LOGD("Succeed to CreateSessionServer, sessionName:%{public}s", sessionName);
@@ -55,46 +81,23 @@ int32_t SoftbusAdapter::CreateSessionServer(const char *packageName, const char 
 
 int32_t SoftbusAdapter::RemoveSessionServer(const char *packageName, const char *sessionName)
 {
-    int ret = ::RemoveSessionServer(packageName, sessionName);
-    if (ret != 0) {
-        LOGE("Failed to RemoveSessionServer ret:%{public}d, sessionName:%{public}s", ret, sessionName);
-        return ret;
+    std::string val = std::string(sessionName) + std::string(packageName);
+    int32_t socket = SoftbusAdapter::GetInstance().GetSocketNameFromMap(val);
+    string existSessionName = SoftbusAdapter::GetInstance().GetSessionNameFromMap(socket);
+    if (strcmp(existSessionName.c_str(), sessionName) != 0) {
+        LOGE("Failed to RemoveSessionServer sessionName:%{public}s", sessionName);
+        return ERR_BAD_VALUE;
     }
+    SoftbusAdapter::GetInstance().RemoveSesion(socket);
+    ::Shutdown(socket);
     LOGD("Succeed to RemoveSessionServer, sessionName:%{public}s", sessionName);
     return E_OK;
 }
 
-int SoftbusAdapter::OnSessionOpened(int sessionId, int result)
+void SoftbusAdapter::OnBind(int socket, PeerSocketInfo info)
 {
-    LOGD("Session opened, sessionId:%{public}d, result:%{public}d, Is %{public}s side", sessionId, result,
-         SoftbusAdapter::GetInstance().IsFromServer(sessionId) == true ? "Server" : "Client");
-    string sessionName = SoftbusAdapter::GetInstance().GetSessionNameById(sessionId);
-    if (sessionName.empty()) {
-        LOGE("get session name failed");
-        return E_INVAL_ARG;
-    }
-
-    auto listener = SoftbusAdapter::GetInstance().GetListener(sessionName);
-    if (!listener) {
-        LOGD("UnRegisterListener for session %{public}d", sessionId);
-        return E_OK;
-    }
-
-    auto ret = listener->OnSessionOpened(sessionId, result);
-    if (ret != E_OK) {
-        LOGE("session opened failed");
-        return ret;
-    }
-
-    SoftbusAdapter::GetInstance().AcceptSesion(sessionId, sessionName);
-
-    return E_OK;
-}
-
-void SoftbusAdapter::OnSessionClosed(int sessionId)
-{
-    LOGD("Session OnSessionClosed, sessionId:%{public}d", sessionId);
-    string sessionName = SoftbusAdapter::GetInstance().GetSessionNameFromMap(sessionId);
+    string sessionName = info.name;
+    string networkId = info.networkId;
     if (sessionName.empty()) {
         LOGE("get session name failed");
         return;
@@ -102,24 +105,43 @@ void SoftbusAdapter::OnSessionClosed(int sessionId)
 
     auto listener = SoftbusAdapter::GetInstance().GetListener(sessionName);
     if (!listener) {
-        LOGD("UnRegisterListener for session %{public}d", sessionId);
+        LOGD("UnRegisterListener for session %{public}d", socket);
         return;
     }
 
-    listener->OnSessionClosed(sessionId);
-    SoftbusAdapter::GetInstance().RemoveSesion(sessionId);
+    listener->OnSessionOpened(socket, 0);
+    SoftbusAdapter::GetInstance().AcceptSesion(socket, sessionName, networkId);
 }
 
-void SoftbusAdapter::OnBytesReceived(int sessionId, const void *data, unsigned int dataLen)
+void SoftbusAdapter::OnShutdown(int32_t socket, ShutdownReason reason)
 {
-    LOGD("OnBytesReceived invoked, dataLen:%{public}d", dataLen);
-    string sessionName = SoftbusAdapter::GetInstance().GetSessionNameById(sessionId);
+    LOGD("Session OnShutdown, sessionId:%{public}d, reason:%{public}d", socket, reason);
+    string sessionName = SoftbusAdapter::GetInstance().GetSessionNameFromMap(socket);
     if (sessionName.empty()) {
         LOGE("get session name failed");
         return;
     }
 
-    string peerDeviceId = SoftbusAdapter::GetInstance().GetPeerNetworkId(sessionId);
+    auto listener = SoftbusAdapter::GetInstance().GetListener(sessionName);
+    if (!listener) {
+        LOGD("UnRegisterListener for session %{public}d", socket);
+        return;
+    }
+
+    listener->OnSessionClosed(socket);
+    SoftbusAdapter::GetInstance().RemoveSesion(socket);
+}
+
+void SoftbusAdapter::OnBytes(int socket, const void *data, unsigned int dataLen)
+{
+    LOGD("OnBytes invoked, dataLen:%{public}d", dataLen);
+    string sessionName = SoftbusAdapter::GetInstance().GetSessionNameFromMap(socket);
+    if (sessionName.empty()) {
+        LOGE("get session name failed");
+        return;
+    }
+
+    string peerDeviceId = SoftbusAdapter::GetInstance().GetPeerNetworkId(socket);
     if (peerDeviceId.empty()) {
         LOGE("get peerDeviceId name failed");
         return;
@@ -127,18 +149,11 @@ void SoftbusAdapter::OnBytesReceived(int sessionId, const void *data, unsigned i
 
     auto listener = SoftbusAdapter::GetInstance().GetListener(sessionName);
     if (!listener) {
-        LOGD("UnRegisterListener for session %{public}d", sessionId);
+        LOGD("UnRegisterListener for session %{public}d", socket);
         return;
     }
 
-    listener->OnDataReceived(peerDeviceId, sessionId, data, dataLen);
-}
-
-int SoftbusAdapter::OnReceiveFileStarted(int sessionId, const char *files, int fileCnt)
-{
-    LOGD("File receive start sessionId = %{public}d, first file:%{public}s, fileCnt:%{public}d", sessionId,
-         GetAnonyString(files).c_str(), fileCnt);
-    return E_OK;
+    listener->OnDataReceived(peerDeviceId, socket, data, dataLen);
 }
 
 int SoftbusAdapter::OnReceiveFileProcess(int sessionId,
@@ -155,8 +170,8 @@ int SoftbusAdapter::OnReceiveFileProcess(int sessionId,
 
 void SoftbusAdapter::OnReceiveFileFinished(int sessionId, const char *files, int fileCnt)
 {
-    LOGD("OnReceiveFileFinished invoked, files:%{public}s, fileCnt:%{public}d", GetAnonyString(files).c_str(), fileCnt);
-    string sessionName = SoftbusAdapter::GetInstance().GetSessionNameById(sessionId);
+    LOGD("OnReceiveFileFinished invoked, files:%{public}s, fileCnt:%{public}d", files, fileCnt);
+    string sessionName = SoftbusAdapter::GetInstance().GetSessionNameFromMap(sessionId);
     if (sessionName.empty()) {
         LOGE("get session name failed");
         return;
@@ -177,56 +192,74 @@ void SoftbusAdapter::OnReceiveFileFinished(int sessionId, const char *files, int
     listener->OnFileReceived(peerNetworkId, files, E_OK);
 }
 
-void SoftbusAdapter::OnFileTransError(int sessionId)
+const char* SoftbusAdapter::GetRecvPath()
 {
-    LOGD("OnFileTransError sessionId=%{public}d", sessionId);
+    return "/mnt/hmdfs/100/account/device_view/local/data/";
 }
 
-int SoftbusAdapter::SetFileReceiveListener(const char *packageName, const char *sessionName)
+void SoftbusAdapter::OnFile(int32_t socket, FileEvent *event)
 {
-    const char *rootDir = "/mnt/hmdfs/100/account/device_view/local/data";
-    IFileReceiveListener fileReceiveListener = {
-        .OnReceiveFileStarted = SoftbusAdapter::OnReceiveFileStarted,
-        .OnReceiveFileProcess = SoftbusAdapter::OnReceiveFileProcess,
-        .OnReceiveFileFinished = SoftbusAdapter::OnReceiveFileFinished,
-        .OnFileTransError = nullptr,
+    if (event->type == FILE_EVENT_RECV_UPDATE_PATH) {
+        event->UpdateRecvPath = GetRecvPath;
+    }
+}
+
+int SoftbusAdapter::OpenSession(char *sessionName,
+                                char *peerDeviceId,
+                                char *groupId,
+                                TransDataType dataType)
+{
+    SocketInfo info = {
+        .name = sessionName,
+        .peerName = sessionName,
+        .peerNetworkId = peerDeviceId,
+        .pkgName = const_cast<char*>(SERVICE_NAME.c_str()),
+        .dataType = dataType,
+    };
+    int32_t socket = Socket(info);
+    if (socket <= 0) {
+        return ERR_BAD_VALUE;
+    }
+    std::string saveKey = std::string(sessionName) + std::string(SERVICE_NAME);
+    {
+        lock_guard<mutex> lock(sessionMutex_);
+        auto sessionAndPackage = sessionAndPackageMap_.find(socket);
+        if (sessionAndPackage == sessionAndPackageMap_.end()) {
+            sessionAndPackageMap_.insert({socket, saveKey});
+        }
+    }
+    QosTV clientQos[] = {
+        { .qos = QOS_TYPE_MIN_BW,            .value = MIN_BW},
+        { .qos = QOS_TYPE_MAX_WAIT_TIMEOUT,      .value = MAX_WAIT_TIMEOUT },
+        { .qos = QOS_TYPE_MIN_LATENCY,       .value = MIN_LATENCY},
     };
 
-    int ret = ::SetFileReceiveListener(packageName, sessionName, &fileReceiveListener, rootDir);
+    ISocketListener listener = {
+        .OnBind = SoftbusAdapter::OnBind,
+        .OnShutdown = SoftbusAdapter::OnShutdown,
+        .OnBytes = SoftbusAdapter::OnBytes,
+        .OnFile = SoftbusAdapter::OnFile,
+    };
+    SoftbusAdapter::GetInstance().AcceptSesion(socket, sessionName, peerDeviceId);
+    int32_t ret = ::Bind(socket, clientQos, QOS_COUNT, &listener);
     if (ret != 0) {
-        LOGE("Failed to SetFileReceiveListener ret:%{public}d, sessionName:%{public}s", ret, sessionName);
+        ::Shutdown(socket);
     }
-    LOGD("Succeed to SetFileReceiveListener, sessionName:%{public}s", sessionName);
     return ret;
 }
 
-int SoftbusAdapter::OpenSession(const char *sessionName,
-                                const char *peerDeviceId,
-                                const char *groupId,
-                                const SessionAttribute *attr)
-{
-    return ::OpenSession(sessionName, sessionName, peerDeviceId, groupId, attr);
-}
-
-int SoftbusAdapter::OpenSessionByP2P(const char *sessionName,
-                                     const char *peerDeviceId,
-                                     const char *groupId,
+int SoftbusAdapter::OpenSessionByP2P(char *sessionName,
+                                     char *peerDeviceId,
+                                     char *groupId,
                                      bool isFileType)
 {
-    SessionAttribute attr{};
+    TransDataType dataType;
     if (isFileType) {
-        attr.dataType = TYPE_FILE;
+        dataType = DATA_TYPE_FILE;
     } else {
-        attr.dataType = TYPE_BYTES;
+        dataType = DATA_TYPE_BYTES;
     }
-
-    int index = 0;
-    attr.linkType[index++] = LINK_TYPE_WIFI_P2P;
-    attr.linkType[index++] = LINK_TYPE_WIFI_WLAN_5G;
-    attr.linkType[index++] = LINK_TYPE_WIFI_WLAN_2G;
-    attr.linkTypeNum = index;
-
-    return OpenSession(sessionName, peerDeviceId, groupId, &attr);
+    return OpenSession(sessionName, peerDeviceId, groupId, dataType);
 }
 
 void SoftbusAdapter::CloseSession(int sessionId)
@@ -257,16 +290,6 @@ int SoftbusAdapter::SendFile(int sessionId,
     return ::SendFile(sessionId, sourceFileList.data(), destFileList.data(), sourceFileList.size());
 }
 
-std::string SoftbusAdapter::GetSessionNameById(int sessionId)
-{
-    char buff[SESSION_NAME_SIZE_MAX] = "";
-    int ret = ::GetMySessionName(sessionId, buff, sizeof(buff));
-    if (ret != E_OK) {
-        return "";
-    }
-    return string(buff);
-}
-
 /* should use this interface when session closed */
 std::string SoftbusAdapter::GetSessionNameFromMap(int sessionId)
 {
@@ -278,23 +301,27 @@ std::string SoftbusAdapter::GetSessionNameFromMap(int sessionId)
     return "";
 }
 
-std::string SoftbusAdapter::GetPeerNetworkId(int sessionId)
+int32_t SoftbusAdapter::GetSocketNameFromMap(std::string sessionAndPack)
 {
-    char buff[NETWORK_ID_SIZE_MAX] = "";
-    int ret = ::GetPeerDeviceId(sessionId, buff, sizeof(buff));
-    if (ret != E_OK) {
-        return "";
+    lock_guard<mutex> lock(sessionMutex_);
+    int32_t socket = -1;
+    for (const auto& pair : sessionAndPackageMap_) {
+        if (pair.second == sessionAndPack) {
+            socket = pair.first;
+            break;
+        }
     }
-    return string(buff);
+    return socket;
 }
 
-bool SoftbusAdapter::IsFromServer(int sessionId)
+std::string SoftbusAdapter::GetPeerNetworkId(int sessionId)
 {
-    auto isClientSide = ::GetSessionSide(sessionId);
-    if (isClientSide) {
-        return false;
+    lock_guard<mutex> lock(sessionMutex_);
+    auto iter = networkIdMap_.find(sessionId);
+    if (iter != networkIdMap_.end()) {
+        return iter->second;
     }
-    return true;
+    return "";
 }
 
 void SoftbusAdapter::RegisterSessionListener(std::string sessionName, std::shared_ptr<ISoftbusListener> listener)
@@ -328,7 +355,7 @@ bool SoftbusAdapter::IsSessionOpened(int sessionId)
     return iter->second;
 }
 
-void SoftbusAdapter::AcceptSesion(int sessionId, const std::string &sessionName)
+void SoftbusAdapter::AcceptSesion(int sessionId, const std::string &sessionName, const std::string &networkId)
 {
     lock_guard<mutex> lock(sessionMutex_);
     auto iter = sessionOpenedMap_.find(sessionId);
@@ -339,6 +366,11 @@ void SoftbusAdapter::AcceptSesion(int sessionId, const std::string &sessionName)
     auto sessionNameMap = sessionNameMap_.find(sessionId);
     if (sessionNameMap == sessionNameMap_.end()) {
         sessionNameMap_.insert({sessionId, sessionName});
+    }
+
+    auto networkIdMap = networkIdMap_.find(sessionId);
+    if (networkIdMap == networkIdMap_.end()) {
+        networkIdMap_.insert({sessionId, networkId});
     }
 }
 
@@ -353,6 +385,11 @@ void SoftbusAdapter::RemoveSesion(int sessionId)
     auto sessionNameMap = sessionNameMap_.find(sessionId);
     if (sessionNameMap != sessionNameMap_.end()) {
         sessionNameMap_.erase(sessionNameMap);
+    }
+
+    auto networkIdMap = networkIdMap_.find(sessionId);
+    if (networkIdMap != networkIdMap_.end()) {
+        networkIdMap_.erase(networkIdMap);
     }
 }
 } // namespace OHOS::FileManagement::CloudSync

@@ -51,7 +51,8 @@ int32_t SoftbusSession::Start()
     if (sessionId_ == INVALID_SESSION_ID) {
         LOGI("open session with device: %{public}s", ToBeAnonymous(peerDeviceId_).c_str());
         int session = SoftbusAdapter::GetInstance().OpenSessionByP2P(
-            sessionName_.c_str(), peerDeviceId_.c_str(), GROUP_TYPE_P2P.c_str(), (type_ == DataType::TYPE_FILE));
+            const_cast<char *>(sessionName_.c_str()), const_cast<char *>(peerDeviceId_.c_str()),
+            const_cast<char *>(GROUP_TYPE_P2P.c_str()), (type_ == DataType::TYPE_FILE));
         if (session < 0) {
             LOGE("open session failed");
             return E_OPEN_SESSION;
@@ -63,7 +64,6 @@ int32_t SoftbusSession::Start()
         }
         sessionId_ = session;
     }
-
     return E_OK;
 }
 
