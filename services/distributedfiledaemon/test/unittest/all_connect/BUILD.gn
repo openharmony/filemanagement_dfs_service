@@ -76,6 +76,7 @@ ohos_unittest("all_connect_manager_test") {
     "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "os_account:os_account_innerkits",
   ]
 

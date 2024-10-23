@@ -165,7 +165,7 @@ int32_t DaemonExecute::RequestSendFileInner(const std::string &srcUri,
     ret = SoftBusHandler::GetInstance().OpenSession(sessionName, sessionName, dstDeviceId, socketId);
     if (ret != E_OK) {
         LOGE("OpenSession failed, ret is %{public}d", ret);
-        return E_SOFTBUS_SESSION_FAILED;
+        return ret;
     }
     AllConnectManager::GetInstance().PublishServiceState(dstDeviceId,
                                                          ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);

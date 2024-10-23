@@ -21,11 +21,12 @@
 #include <unordered_set>
 
 #include "device_auth.h"
+#include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfsu_exception.h"
 #include "ipc/i_daemon.h"
-#include "iservice_registry.h"
 #include "iremote_object.h"
+#include "iservice_registry.h"
 #include "mountpoint/mount_manager.h"
 #include "network/devsl_dispatcher.h"
 #include "network/softbus/softbus_agent.h"
@@ -825,6 +826,9 @@ int32_t DeviceManagerAgent::IsSupportedDevice(const DistributedHardware::DmDevic
 
     if (infoTemp.extraData.empty()) {
         LOGE("extraData is empty");
+        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_FAILED,
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::GET_SAME_ACCOUNT_ERROR, RadarReporter::PACKAGE_NAME, RadarReporter::deviceManager);
         return FileManagement::ERR_BAD_VALUE;
     }
     nlohmann::json entraDataJson = nlohmann::json::parse(infoTemp.extraData, nullptr, false);
