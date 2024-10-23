@@ -46,9 +46,9 @@ static constexpr uint32_t RDB_NUM = 2;
  */
 class TransactionOperations {
 public:
-    TransactionOperations(const std::shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore, TRANS_DB_IDX idx);
+    TransactionOperations(const std::shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore);
     ~TransactionOperations();
-    int32_t Start();
+    std::pair<int32_t, std::shared_ptr<NativeRdb::Transaction>> Start();
     void Finish();
 
 private:
@@ -57,13 +57,10 @@ private:
     int32_t TransactionRollback();
 
     std::shared_ptr<OHOS::NativeRdb::RdbStore> rdbStore_;
+    std::shared_ptr<OHOS::NativeRdb::Transaction> transaction_;
+
     bool isStart = false;
     bool isFinish = false;
-    TRANS_DB_IDX idx_ = CLOUDDISK_RDB_IDX;
-
-    static std::atomic<bool> isInTransactionMap_[RDB_NUM];
-    static std::mutex transactionMutexMap_[RDB_NUM];
-    static std::condition_variable transactionCvMap_[RDB_NUM];
 };
 } // namespace CloudDisk
 } // namespace FileManagement

@@ -15,6 +15,7 @@
 
 #include "clouddisk_rdb_transaction.h"
 #include "utils_log.h"
+#include <utility>
 
 namespace OHOS {
 namespace FileManagement {
@@ -25,14 +26,11 @@ constexpr int32_t E_HAS_DB_ERROR = -222;
 constexpr int32_t E_OK = 0;
 
 constexpr int RDB_TRANSACTION_WAIT_MS = 1000;
-atomic<bool> TransactionOperations::isInTransactionMap_[RDB_NUM] = {false, false};
-mutex TransactionOperations::transactionMutexMap_[RDB_NUM] = {mutex(), mutex()};
-condition_variable TransactionOperations::transactionCvMap_[RDB_NUM] = {condition_variable(), condition_variable()};
 constexpr int32_t MAX_TRY_TIMES = 5;
 constexpr int32_t TRANSACTION_WAIT_INTERVAL = 50; // in milliseconds.
 
 TransactionOperations::TransactionOperations(
-    const shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore, TRANS_DB_IDX idx) : rdbStore_(rdbStore) {}
+    const shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore) : rdbStore_(rdbStore) {}
 
 TransactionOperations::~TransactionOperations()
 {
@@ -42,9 +40,9 @@ TransactionOperations::~TransactionOperations()
     }
 }
 
-int32_t TransactionOperations::Start()
+std::pair<int32_t, std::shared_ptr<NativeRdb::Transaction>> TransactionOperations::Start()
 {
-    return E_OK;
+    return make_pair(E_OK, nullptr);
 }
 
 void TransactionOperations::Finish()
