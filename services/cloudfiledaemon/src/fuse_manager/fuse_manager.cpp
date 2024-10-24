@@ -508,6 +508,9 @@ static void PutNode(struct FuseData *data, shared_ptr<CloudInode> node, uint64_t
         auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudForget", FORGET_TIMEOUT_S,
             XcollieCallback, &xcollieInput, false);
 #endif
+        if (node->mBase != nullptr && (node->mBase->mode & S_IFDIR)) {
+            LOGW("PutNode directory inode, path is %{public}s", GetAnonyString(node->path).c_str());
+        }
         wLock.lock();
         data->inodeCache.erase(node->path);
         wLock.unlock();
