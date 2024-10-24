@@ -644,7 +644,7 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &ur
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_CACHE), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the request, errno %{public}d", ret);
-        return E_BROKEN_IPC;
+        return ret;
     }
 
     downloadId = reply.ReadInt64();
@@ -740,7 +740,7 @@ int32_t CloudSyncServiceProxy::StopFileCache(const int64_t &downloadId,  bool ne
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_FILE_CACHE), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
-        return E_BROKEN_IPC;
+        return ret;
     }
     CloudDownloadUriManager& uriMgr = CloudDownloadUriManager::GetInstance();
     uriMgr.RemoveUri(downloadId);
@@ -780,7 +780,7 @@ int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteOb
         reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
-        return E_BROKEN_IPC;
+        return ret;
     }
     LOGI("RegisterDownloadFileCallback Success");
     return reply.ReadInt32();
@@ -808,7 +808,7 @@ int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
         reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
-        return E_BROKEN_IPC;
+        return ret;
     }
     LOGI("UnregisterDownloadFileCallback Success");
     return reply.ReadInt32();

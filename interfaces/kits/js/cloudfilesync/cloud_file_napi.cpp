@@ -29,9 +29,9 @@ using namespace FileManagement::LibN;
 using namespace std;
 const int32_t ARGS_ONE = 1;
 
-napi_value CloudFileNExporter::Constructor(napi_env env, napi_callback_info info)
+napi_value CloudFileNapi::Constructor(napi_env env, napi_callback_info info)
 {
-    LOGI("CloudFileNExporter::Constructor begin");
+    LOGI("CloudFileNapi::Constructor begin");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
         LOGE("Start Number of arguments unmatched");
@@ -39,7 +39,7 @@ napi_value CloudFileNExporter::Constructor(napi_env env, napi_callback_info info
         return nullptr;
     }
 
-    LOGI("CloudFileNExporter::Constructor end");
+    LOGI("CloudFileNapi::Constructor end");
     return funcArg.GetThisVar();
 }
 
@@ -118,12 +118,13 @@ void CloudDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
         obj.AddProp("state", NVal::CreateInt32(env, (int32_t)msg->downloadProgress_.batchState).val_);
         obj.AddProp("downloadedSize", NVal::CreateInt64(env, msg->downloadProgress_.batchDownloadSize).val_);
         obj.AddProp("totalSize", NVal::CreateInt64(env, msg->downloadProgress_.batchTotalSize).val_);
-        obj.AddProp("downloadedNum", NVal::CreateInt64(env, msg->downloadProgress_.batchSuccNum).val_);
+        obj.AddProp("successfulNum", NVal::CreateInt64(env, msg->downloadProgress_.batchSuccNum).val_);
         obj.AddProp("failedNum", NVal::CreateInt64(env, msg->downloadProgress_.batchFailNum).val_);
         obj.AddProp("totalNum", NVal::CreateInt64(env, msg->downloadProgress_.batchTotalNum).val_);
     }
-
+    obj.AddProp("taskId", NVal::CreateInt64(env, msg->downloadProgress_.downloadId).val_);
     obj.AddProp("error", NVal::CreateInt32(env, (int32_t)msg->downloadProgress_.downloadErrorType).val_);
+
     napi_value retVal = nullptr;
     napi_value global = nullptr;
     napi_get_global(env, &global);
@@ -299,7 +300,7 @@ napi_value CloudFileNapi::Stop(napi_env env, napi_callback_info info)
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
-bool CloudFileNExporter::ToExport(std::vector<napi_property_descriptor> props)
+bool CloudFileNapi::ToExport(std::vector<napi_property_descriptor> props)
 {
     std::string className = GetClassName();
     auto [succ, classValue] =

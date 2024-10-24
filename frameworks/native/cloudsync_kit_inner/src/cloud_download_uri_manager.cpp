@@ -45,7 +45,8 @@ int32_t CloudDownloadUriManager::AddDownloadIdToPath(int64_t &downloadId, std::v
     std::lock_guard<std::mutex> lock(downloadIdPathMutex_);
     if (downloadIdPathMap_.find(downloadId) == downloadIdPathMap_.end()) {
         downloadIdPathMap_[downloadId] = pathVec;
-        LOGI("download_file : AddDownloadIdToPath add downloadId %{public}lld", static_cast<long long>(downloadId));
+        LOGI("download_file : AddDownloadIdToPath add downloadId %{public}lld, downloadIdPathMap_ size is %{pulibc}zu",
+            static_cast<long long>(downloadId), downloadIdPathMap_.size());
     }
     return E_OK;
 }
