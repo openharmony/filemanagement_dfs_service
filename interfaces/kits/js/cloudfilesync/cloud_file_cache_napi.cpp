@@ -28,27 +28,35 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
 
-bool RegisterManager::AddRegisterInfo(shared_ptr<RegisterInfoArg> info)
+bool RegisterManager::HasEvent(const string &eventType)
 {
-    unique_lock<mutex> mutex_;
+    unique_lock<mutex> registerMutex_;
     bool hasEvent = false;
     for (auto &iter : registerInfo_) {
-        if (iter->eventType == info->eventType) {
+        if (iter->eventType == eventType) {
             hasEvent = true;
             break;
         }
     }
-    if (!hasEvent) {
-        registerInfo_.insert(info);
-        return true;
+    return hasEvent;
+}
+
+bool RegisterManager::AddRegisterInfo(shared_ptr<RegisterInfoArg> info)
+{
+    if (HasEvent(info->eventType)) {
+        return false;
     }
-    return false;
+    {
+        unique_lock<mutex> registerMutex_;
+        registerInfo_.insert(info);
+    }
+    return true;
 }
 
 bool RegisterManager::RemoveRegisterInfo(const string &eventType)
 {
+    unique_lock<mutex> registerMutex_;
     bool isFound = false;
-    unique_lock<mutex> mutex_;
     for (auto iter = registerInfo_.begin(); iter != registerInfo_.end();) {
         if ((*iter)->eventType == eventType) {
             isFound = true;
@@ -406,7 +414,7 @@ napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    if (!fileCacheEntity->registerMgr.RemoveRegisterInfo(eventType)) {
+    if (!fileCacheEntity->registerMgr.HasEvent(eventType)) {
         LOGE("Batch-Off no callback is registered for this event type: %{public}s.", eventType.c_str());
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
@@ -416,6 +424,12 @@ napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
     if (ret != E_OK) {
         LOGE("Failed to unregister callback, error: %{public}d", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
+        return nullptr;
+    }
+
+    if (!fileCacheEntity->registerMgr.RemoveRegisterInfo(eventType)) {
+        LOGE("Batch-Off remove callback is failed, event type: %{public}s.", eventType.c_str());
+        NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
