@@ -27,6 +27,7 @@ ohos_unittest("distributed_file_daemon_proxy_test") {
   module_out_path = "storage_distributed_file_manager/distributedfiledaemon"
 
   sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
     "${distributedfile_path}/test/mock/message_parcel_mock.cpp",
     "distributed_file_daemon_proxy_test.cpp",
@@ -34,6 +35,8 @@ ohos_unittest("distributed_file_daemon_proxy_test") {
 
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include/asset",
+    "${distributedfile_path}/services/distributedfiledaemon/test/unittest/ipc",
     "${distributedfile_path}/test/mock",
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
     "include",
@@ -229,6 +232,7 @@ ohos_unittest("asset_send_callback_stub_test") {
   include_dirs = [
     "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
     "${distributedfile_path}/test/unittests/distributed_file_daemon/include",
+    "${distributedfile_path}/test/unittests/ipc",
     "include",
     "${services_path}/distributedfiledaemon/include/",
     "${services_path}/distributedfiledaemon/include/ipc",

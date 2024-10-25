@@ -18,11 +18,14 @@
 #include <gtest/gtest.h>
 #include <sys/stat.h>
 
+#include "asset_recv_callback_mock.h"
+#include "asset_send_callback_mock.h"
 #include "dfs_error.h"
 #include "distributed_file_daemon_manager_impl.h"
 #include "distributed_file_daemon_proxy.h"
 #include "ipc/hmdfs_info.h"
 #include "i_daemon_mock.h"
+#include "file_dfs_listener_mock.h"
 #include "utils_log.h"
 
 namespace OHOS::Storage::DistributedFile {
@@ -140,6 +143,49 @@ HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionTest, TestSize.Leve
 }
 
 /**
+ * @tc.name: OpenP2PConnectionExTest
+ * @tc.desc: Verify the OpenP2PConnectionEx function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, OpenP2PConnectionExTest, TestSize.Level1)
+{
+    auto remoteReverseObj = sptr(new FileDfsListenerMock());
+    GTEST_LOG_(INFO) << "OpenP2PConnectionExTest Start";
+    try {
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        auto res = distributedDaemonManagerImpl_->OpenP2PConnectionEx("test", remoteReverseObj);
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OpenP2PConnectionExTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "OpenP2PConnectionExTest End";
+}
+
+/**
+ * @tc.name: CloseP2PConnectionEx
+ * @tc.desc: Verify the CloseP2PConnectionEx function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, CloseP2PConnectionExTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CloseP2PConnectionEx Start";
+    try {
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        auto res = distributedDaemonManagerImpl_->CloseP2PConnectionEx("test");
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CloseP2PConnectionEx ERROR";
+    }
+    GTEST_LOG_(INFO) << "CloseP2PConnectionEx End";
+}
+
+/**
  * @tc.name: PrepareSessionTest
  * @tc.desc: Verify the PrepareSession function
  * @tc.type: FUNC
@@ -169,6 +215,125 @@ HWTEST_F(DistributedDaemonManagerImplTest, PrepareSessionTest, TestSize.Level1)
         GTEST_LOG_(INFO) << "PrepareSessionTest  ERROR";
     }
     GTEST_LOG_(INFO) << "PrepareSessionTest End";
+}
+
+/**
+ * @tc.name: RequestSendFileTest
+ * @tc.desc: Verify the RequestSendFile function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, RequestSendFileTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RequestSendFileTest Start";
+    try {
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        auto res = distributedDaemonManagerImpl_->RequestSendFile("uri", "path", "deviceId", "test");
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RequestSendFileTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "RequestSendFileTest End";
+}
+
+/**
+ * @tc.name: GetRemoteCopyInfoTest
+ * @tc.desc: Verify the GetRemoteCopyInfo function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, GetRemoteCopyInfoTest, TestSize.Level1)
+{
+    bool isFile = false;
+    bool isDir = false;
+    GTEST_LOG_(INFO) << "GetRemoteCopyInfoTest Start";
+    try {
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        auto res = distributedDaemonManagerImpl_->GetRemoteCopyInfo("test", isFile, isDir);
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetRemoteCopyInfoTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetRemoteCopyInfoTest End";
+}
+
+/**
+ * @tc.name: PushAssetTest
+ * @tc.desc: Verify the PushAsset function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, PushAssetTest, TestSize.Level1)
+{
+    sptr<AssetObj> assetObj = nullptr;
+    int32_t userId = 800;
+    GTEST_LOG_(INFO) << "PushAssetTest Start";
+    try {
+        sptr<IAssetSendCallbackMock> errPtr = nullptr;
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        auto res = distributedDaemonManagerImpl_->PushAsset(userId, assetObj, nullptr);
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PushAssetTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "PushAssetTest End";
+}
+
+/**
+ * @tc.name: RegisterAssetCallbackTest
+ * @tc.desc: Verify the RegisterAssetCallback function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, RegisterAssetCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RegisterAssetCallbackTest Start";
+    try {
+        sptr<IAssetRecvCallbackMock> errPtr = nullptr;
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        auto res = distributedDaemonManagerImpl_->RegisterAssetCallback(errPtr);
+        EXPECT_EQ(res, E_NULLPTR);
+        auto callbackMock = sptr(new IAssetRecvCallbackMock());
+        res = distributedDaemonManagerImpl_->RegisterAssetCallback(callbackMock);
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RegisterAssetCallbackTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "RegisterAssetCallbackTest End";
+}
+
+/**
+ * @tc.name: UnRegisterAssetCallbackTest
+ * @tc.desc: Verify the UnRegisterAssetCallback function
+ * @tc.type: FUNC
+ * @tc.require: I7M6L1
+ */
+HWTEST_F(DistributedDaemonManagerImplTest, UnRegisterAssetCallbackTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnRegisterAssetCallbackTest Start";
+    try {
+        sptr<IAssetRecvCallbackMock> errPtr = nullptr;
+        auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
+        EXPECT_NE(distributedFileDaemonProxy, nullptr);
+        auto res = distributedDaemonManagerImpl_->UnRegisterAssetCallback(errPtr);
+        EXPECT_EQ(res, E_NULLPTR);
+
+        auto callbackMock = sptr(new IAssetRecvCallbackMock());
+        res = distributedDaemonManagerImpl_->UnRegisterAssetCallback(callbackMock);
+        EXPECT_NE(res, E_SA_LOAD_FAILED);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnRegisterAssetCallbackTest ERROR";
+    }
+    GTEST_LOG_(INFO) << "UnRegisterAssetCallbackTest End";
 }
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile
