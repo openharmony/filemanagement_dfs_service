@@ -39,6 +39,7 @@ public:
     virtual int fuse_reply_xattr(fuse_req_t, size_t) = 0;
     virtual int fuse_reply_attr(fuse_req_t, const struct stat *, double) = 0;
     virtual int fuse_reply_entry(fuse_req_t, const struct fuse_entry_param *) = 0;
+    virtual int fuse_reply_create(fuse_req_t, const struct fuse_entry_param *, const struct fuse_file_info *) = 0;
     static int access(const char *name, int type)
     {
         if (strcmp(name, "mock") == 0) {
@@ -69,6 +70,7 @@ public:
     MOCK_METHOD2(fuse_reply_xattr, int(fuse_req_t, size_t));
     MOCK_METHOD3(fuse_reply_attr, int(fuse_req_t, const struct stat *, double));
     MOCK_METHOD2(fuse_reply_entry, int(fuse_req_t, const struct fuse_entry_param *));
+    MOCK_METHOD3(fuse_reply_create, int(fuse_req_t, const struct fuse_entry_param *, const struct fuse_file_info *));
 
 public:
     MOCK_METHOD3(lseek, off_t(int, off_t, int));

@@ -73,6 +73,8 @@ int32_t CloudDiskRdbStore::SetAttr(const std::string &fileName, const std::strin
 {
     if (cloudId == "") {
         return 1;
+    } else if (size == 1) {
+        return 1;
     }
     return E_OK;
 }
