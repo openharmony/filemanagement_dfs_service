@@ -61,8 +61,10 @@ public:
     ~RegisterManager() = default;
     bool AddRegisterInfo(std::shared_ptr<RegisterInfoArg> info);
     bool RemoveRegisterInfo(const std::string &eventType);
+    bool HasEvent(const std::string &eventType);
+
 private:
-    std::mutex mutex_;
+    std::mutex registerMutex_;
     std::unordered_set<std::shared_ptr<RegisterInfoArg>> registerInfo_;
 };
 
