@@ -75,7 +75,7 @@ constexpr int32_t LOCAL_AND_CLOUD = 3;
 constexpr int32_t FILE = 0;
 constexpr int32_t DIRECTORY = 1;
 constexpr int32_t MOVE_FILE_TIME_DAEMON = 1;
-constexpr int32_t MOVE_FILE_TIME_SERVICE = 5;
+constexpr int32_t MOVE_FILE_TIME_SERVICE = 3;
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS
