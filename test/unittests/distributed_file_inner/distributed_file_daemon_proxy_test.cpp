@@ -17,6 +17,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "asset_recv_callback_mock.h"
+#include "asset_send_callback_mock.h"
 #include "dfs_error.h"
 #include "file_dfs_listener_mock.h"
 #include "message_parcel_mock.h"
@@ -210,6 +212,12 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_OpenP2PConnection
     EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(E_INVAL_ARG));
     ret = proxy_->OpenP2PConnectionEx("test", remoteReverseObj);
     EXPECT_EQ(ret, E_INVAL_ARG);
+
+    sptr<FileDfsListenerMock> errPtr = nullptr;
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteString(_)).WillOnce(Return(true));
+    ret = proxy_->OpenP2PConnectionEx("test", errPtr);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
     GTEST_LOG_(INFO) << "DistributedFileDaemon_OpenP2PConnectionEx_0200 End";
 }
 
@@ -601,5 +609,202 @@ HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_CancelCopyTask_01
     ret = proxy_->CancelCopyTask("test");
     EXPECT_EQ(ret, E_INVAL_ARG);
     GTEST_LOG_(INFO) << "DistributedFileDaemon_CancelCopyTask_0100 End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_PushAsset_0100
+ * @tc.desc: verify PushAsset.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_PushAsset_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_PushAsset_0100 Start";
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+    sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
+    auto callbackMock = sptr(new IAssetSendCallbackMock());
+    auto ret = proxy_->PushAsset(100, assetObj, callbackMock);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(false));
+    ret = proxy_->PushAsset(100, assetObj, callbackMock);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(false));
+    ret = proxy_->PushAsset(100, assetObj, callbackMock);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    sptr<IAssetSendCallbackMock> errPtr = nullptr;
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
+    ret = proxy_->PushAsset(100, assetObj, errPtr);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(false));
+    ret = proxy_->PushAsset(100, assetObj, callbackMock);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->PushAsset(100, assetObj, callbackMock);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_PushAsset_0100 End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_PushAsset_0200
+ * @tc.desc: verify PushAsset.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_PushAsset_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_PushAsset_0200 Start";
+    auto assetObj (new (std::nothrow) AssetObj());
+    auto callbackmock = sptr(new IAssetSendCallbackMock());
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(E_OK));
+    auto ret = proxy_->PushAsset(100, assetObj, callbackmock);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_PushAsset_0200 End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_PushAsset_0300
+ * @tc.desc: verify PushAsset.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_PushAsset_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_PushAsset_0300 Start";
+    auto assetObj (new (std::nothrow) AssetObj());
+    auto callbackmock = sptr(new IAssetSendCallbackMock());
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteInt32(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteParcelable(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    auto testProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
+    auto ret = testProxy->PushAsset(100, assetObj, callbackmock);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_PushAsset_0300 End";
+}
+
+/**
+ * @tc.name: DistributedFileDaemon_RegisterAssetCallback_0100
+ * @tc.desc: verify RegisterAssetCallback.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_RegisterAssetCallback_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_RegisterAssetCallback_0100 Start";
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+    auto recvCallback = sptr(new IAssetRecvCallbackMock());
+    auto ret = proxy_->RegisterAssetCallback(recvCallback);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    sptr<IAssetRecvCallbackMock> errCallBack = nullptr;
+    ret = proxy_->RegisterAssetCallback(errCallBack);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(false));
+    ret = proxy_->RegisterAssetCallback(recvCallback);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->RegisterAssetCallback(recvCallback);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(E_OK));
+    ret = proxy_->RegisterAssetCallback(recvCallback);
+    EXPECT_EQ(ret, E_OK);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    auto testProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
+    ret = testProxy->RegisterAssetCallback(recvCallback);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_RegisterAssetCallback_0100 End";
+}
+
+
+/**
+ * @tc.name: DistributedFileDaemon_UnRegisterAssetCallback_0100
+ * @tc.desc: verify UnRegisterAssetCallback.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DistributedFileDaemonProxyTest, DistributedFileDaemon_UnRegisterAssetCallback_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UnRegisterAssetCallback_0100 Start";
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(false));
+    auto recvCallback = sptr(new IAssetRecvCallbackMock());
+    auto ret = proxy_->UnRegisterAssetCallback(recvCallback);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    sptr<IAssetRecvCallbackMock> errCallBack = nullptr;
+    ret = proxy_->UnRegisterAssetCallback(errCallBack);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(false));
+    ret = proxy_->UnRegisterAssetCallback(recvCallback);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_INVAL_ARG));
+    ret = proxy_->UnRegisterAssetCallback(recvCallback);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*messageParcelMock_, ReadInt32()).WillOnce(Return(E_OK));
+    ret = proxy_->UnRegisterAssetCallback(recvCallback);
+    EXPECT_EQ(ret, E_OK);
+
+    EXPECT_CALL(*messageParcelMock_, WriteInterfaceToken(_)).WillOnce(Return(true));
+    EXPECT_CALL(*messageParcelMock_, WriteRemoteObject(An<const sptr<IRemoteObject>&>()))
+        .WillOnce(Return(true));
+    auto testProxy = make_shared<DistributedFileDaemonProxy>(nullptr);
+    ret = testProxy->UnRegisterAssetCallback(recvCallback);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    GTEST_LOG_(INFO) << "DistributedFileDaemon_UnRegisterAssetCallback_0100 End";
 }
 }
