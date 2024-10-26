@@ -390,9 +390,6 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
                                HmdfsInfo &info)
 {
     LOGI("PrepareSession begin srcDeviceId: %{public}s", Utils::GetAnonyString(srcDeviceId).c_str());
-    AllConnectManager::GetInstance().PublishServiceState(srcDeviceId,
-        ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
-
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
         LOGE("ListenerCallback is nullptr");
