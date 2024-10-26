@@ -339,9 +339,15 @@ void SoftBusHandler::RemoveNetworkId(int32_t socketId)
         LOGE("socketId not find, socket is %{public}d", socketId);
         return;
     }
-    AllConnectManager::GetInstance().PublishServiceState(it->second,
-        ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
+    std::string peerNetworkId = it->second;
     networkIdMap_.erase(it->first);
+    for (auto &item : networkIdMap_) {
+        if (item.second == peerNetworkId) {
+            return;
+        }
+    }
+    AllConnectManager::GetInstance().PublishServiceState(peerNetworkId,
+        ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
 }
 
 std::vector<int32_t> SoftBusHandler::GetsocketIdFromPeerNetworkId(const std::string &peerNetworkId)
