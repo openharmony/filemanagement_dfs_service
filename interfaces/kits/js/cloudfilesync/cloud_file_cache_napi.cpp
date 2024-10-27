@@ -28,6 +28,84 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
 
+bool RegisterManager::HasEvent(const string &eventType)
+{
+    unique_lock<mutex> registerMutex_;
+    bool hasEvent = false;
+    for (auto &iter : registerInfo_) {
+        if (iter->eventType == eventType) {
+            hasEvent = true;
+            break;
+        }
+    }
+    return hasEvent;
+}
+
+bool RegisterManager::AddRegisterInfo(shared_ptr<RegisterInfoArg> info)
+{
+    if (HasEvent(info->eventType)) {
+        return false;
+    }
+    {
+        unique_lock<mutex> registerMutex_;
+        registerInfo_.insert(info);
+    }
+    return true;
+}
+
+bool RegisterManager::RemoveRegisterInfo(const string &eventType)
+{
+    unique_lock<mutex> registerMutex_;
+    bool isFound = false;
+    for (auto iter = registerInfo_.begin(); iter != registerInfo_.end();) {
+        if ((*iter)->eventType == eventType) {
+            isFound = true;
+            iter = registerInfo_.erase(iter);
+        } else {
+            iter++;
+        }
+    }
+    return isFound;
+}
+
+napi_value CloudFileCacheNapi::Constructor(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        LOGE("Start Number of arguments unmatched");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    auto fileCacheEntity = make_unique<FileCacheEntity>();
+    if (!NClass::SetEntityFor<FileCacheEntity>(env, funcArg.GetThisVar(), move(fileCacheEntity))) {
+        LOGE("Failed to set file cache entity.");
+        NError(E_UNKNOWN_ERR).ThrowErr(env);
+        return nullptr;
+    }
+    return funcArg.GetThisVar();
+}
+
+bool CloudFileCacheNapi::ToExport(std::vector<napi_property_descriptor> props)
+{
+    std::string className = GetClassName();
+    auto [succ, classValue] = NClass::DefineClass(exports_.env_, className, Constructor, std::move(props));
+    if (!succ) {
+        NError(E_UNKNOWN_ERR).ThrowErr(exports_.env_);
+        LOGE("Failed to define GallerySync class");
+        return false;
+    }
+
+    succ = NClass::SaveClass(exports_.env_, className, classValue);
+    if (!succ) {
+        NError(E_UNKNOWN_ERR).ThrowErr(exports_.env_);
+        LOGE("Failed to save GallerySync class");
+        return false;
+    }
+
+    return exports_.AddProp(className, classValue);
+}
+
 napi_value CloudFileCacheNapi::CleanCloudFileCache(napi_env env, napi_callback_info info)
 {
     LOGI("CleanCache start");
@@ -70,7 +148,6 @@ bool CloudFileCacheNapi::Export()
 
 napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("Start begin");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         LOGE("Start Number of arguments unmatched");
@@ -108,7 +185,6 @@ napi_value CloudFileCacheNapi::StartFileCache(napi_env env, napi_callback_info i
 
 napi_value CloudFileCacheNapi::StopFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("Stop begin");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::THREE)) {
         LOGE("Stop Number of arguments unmatched");
@@ -141,7 +217,6 @@ napi_value CloudFileCacheNapi::StopFileCache(napi_env env, napi_callback_info in
             LOGE("Stop Download failed! ret = %{public}d", ret);
             return NError(Convert2JsErrNum(ret));
         }
-        LOGI("Stop Download Success!");
         return NError(ERRNO_NOERR);
     };
 
@@ -164,7 +239,6 @@ struct FileCacheArg {
 
 napi_value CloudFileCacheNapi::StartBatchFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("Batch start file cache start.");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         LOGE("Start Number of arguments unmatched");
@@ -185,9 +259,9 @@ napi_value CloudFileCacheNapi::StartBatchFileCache(napi_env env, napi_callback_i
         int32_t ret = CloudSyncManager::GetInstance().StartFileCache(fileUris->uriList, fileUris->downloadId);
         if (ret != E_OK) {
             LOGE("Batch start file cache failed! ret = %{public}d", ret);
+            ret = (ret == E_CLOUD_SDK) ? E_UNKNOWN_ERR : ret;
             return NError(Convert2JsErrNum(ret));
         }
-        LOGI("Batch start file cache successful!");
         return NError(ERRNO_NOERR);
     };
 
@@ -205,7 +279,6 @@ napi_value CloudFileCacheNapi::StartBatchFileCache(napi_env env, napi_callback_i
 
 napi_value CloudFileCacheNapi::StopBatchFileCache(napi_env env, napi_callback_info info)
 {
-    LOGI("Batch stop file cache start.");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::THREE)) {
         LOGE("Start Number of arguments unmatched");
@@ -214,7 +287,7 @@ napi_value CloudFileCacheNapi::StopBatchFileCache(napi_env env, napi_callback_in
     }
 
     auto [succ, downloadId] = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
-    if (!succ) {
+    if (!succ || downloadId <= 0) {
         LOGE("Start get download ID parameter failed!");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
@@ -239,9 +312,9 @@ napi_value CloudFileCacheNapi::StopBatchFileCache(napi_env env, napi_callback_in
         int32_t ret = CloudSyncManager::GetInstance().StopFileCache(downloadId, needClean);
         if (ret != E_OK) {
             LOGE("Batch stop file cache failed! ret = %{public}d", ret);
+            ret = (ret == E_CLOUD_SDK) ? E_UNKNOWN_ERR : ret;
             return NError(Convert2JsErrNum(ret));
         }
-        LOGI("Batch stop file cache successful!");
         return NError(ERRNO_NOERR);
     };
 
@@ -259,7 +332,6 @@ napi_value CloudFileCacheNapi::StopBatchFileCache(napi_env env, napi_callback_in
 
 napi_value CloudFileCacheNapi::On(napi_env env, napi_callback_info info)
 {
-    LOGI("Batch-On begin");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         LOGE("Batch-On Number of arguments unmatched");
@@ -268,7 +340,7 @@ napi_value CloudFileCacheNapi::On(napi_env env, napi_callback_info info)
     }
     auto [succProgress, progress, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
     string eventType(progress.get());
-    if (!succProgress || (eventType != "progress" && eventType != "multiProgress")) {
+    if (!succProgress || (eventType != PROGRESS && eventType != MULTI_PROGRESS)) {
         LOGE("Batch-On get progress failed!");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
@@ -280,20 +352,32 @@ napi_value CloudFileCacheNapi::On(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    if (callback_ != nullptr) {
-        LOGI("Batch-On callback already exist");
-        return NVal::CreateUndefined(env).val_;
+    auto fileCacheEntity = NClass::GetEntityOf<FileCacheEntity>(env, funcArg.GetThisVar());
+    if (!fileCacheEntity) {
+        LOGE("Failed to get file cache entity.");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
     }
 
-    if (eventType == "progress") {
-        callback_ = make_shared<CloudDownloadCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
-    } else if (eventType == "multiProgress") {
-        callback_ = make_shared<CloudDownloadCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_, true);
+    auto arg = make_shared<RegisterInfoArg>();
+    arg->eventType = eventType;
+    if (eventType == PROGRESS) {
+        arg->callback = make_shared<CloudDownloadCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_);
+    } else {
+        arg->callback =
+            make_shared<CloudDownloadCallbackImpl>(env, NVal(env, funcArg[(int)NARG_POS::SECOND]).val_, true);
     }
 
-    int32_t ret = CloudSyncManager::GetInstance().RegisterDownloadFileCallback(callback_);
+    if (!fileCacheEntity->registerMgr.AddRegisterInfo(arg)) {
+        LOGE("Batch-On register callback fail, callback already exist");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    int32_t ret = CloudSyncManager::GetInstance().RegisterDownloadFileCallback(arg->callback);
     if (ret != E_OK) {
         LOGE("Failed to register callback, error: %{public}d", ret);
+        (void)fileCacheEntity->registerMgr.RemoveRegisterInfo(eventType);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
         return nullptr;
     }
@@ -303,7 +387,6 @@ napi_value CloudFileCacheNapi::On(napi_env env, napi_callback_info info)
 
 napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
 {
-    LOGI("Off begin");
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::ONE, NARG_CNT::TWO)) {
         LOGE("Off Number of arguments unmatched");
@@ -312,7 +395,7 @@ napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
     }
     auto [succProgress, progress, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
     string eventType(progress.get());
-    if (!succProgress || (eventType != "progress" && eventType != "multiProgress")) {
+    if (!succProgress || (eventType != PROGRESS && eventType != MULTI_PROGRESS)) {
         LOGE("Batch-Off get progress failed!");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
@@ -324,18 +407,32 @@ napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    /* callback_ may be nullptr */
+    auto fileCacheEntity = NClass::GetEntityOf<FileCacheEntity>(env, funcArg.GetThisVar());
+    if (!fileCacheEntity) {
+        LOGE("Failed to get file cache entity.");
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
+    if (!fileCacheEntity->registerMgr.HasEvent(eventType)) {
+        LOGE("Batch-Off no callback is registered for this event type: %{public}s.", eventType.c_str());
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
+    }
+
     int32_t ret = CloudSyncManager::GetInstance().UnregisterDownloadFileCallback();
     if (ret != E_OK) {
         LOGE("Failed to unregister callback, error: %{public}d", ret);
         NError(Convert2JsErrNum(ret)).ThrowErr(env);
         return nullptr;
     }
-    if (callback_ != nullptr) {
-        /* napi delete reference */
-        callback_->DeleteReference();
-        callback_ = nullptr;
+
+    if (!fileCacheEntity->registerMgr.RemoveRegisterInfo(eventType)) {
+        LOGE("Batch-Off remove callback is failed, event type: %{public}s.", eventType.c_str());
+        NError(E_PARAMS).ThrowErr(env);
+        return nullptr;
     }
+
     return NVal::CreateUndefined(env).val_;
 }
 

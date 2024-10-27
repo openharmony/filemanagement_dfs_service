@@ -291,6 +291,7 @@ std::string DownloadProgressObj::to_string()
     ss << " total: " << totalSize;
     ss << " downloadErrorType: " << downloadErrorType;
 
+    ss << " downloadId: " << downloadId;
     ss << " batchState: " << batchState;
     ss << " batchDownloadSize: " << batchDownloadSize;
     ss << " batchTotalSize: " << batchTotalSize;

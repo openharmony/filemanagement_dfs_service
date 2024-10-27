@@ -48,11 +48,12 @@ class TransactionOperations {
 public:
     TransactionOperations(const std::shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore);
     ~TransactionOperations();
-    std::pair<int32_t, std::shared_ptr<NativeRdb::Transaction>> Start();
+    std::pair<int32_t, std::shared_ptr<NativeRdb::Transaction>> Start(
+        NativeRdb::Transaction::TransactionType type = NativeRdb::Transaction::EXCLUSIVE);
     void Finish();
 
 private:
-    int32_t BeginTransaction();
+    int32_t BeginTransaction(NativeRdb::Transaction::TransactionType type);
     int32_t TransactionCommit();
     int32_t TransactionRollback();
 

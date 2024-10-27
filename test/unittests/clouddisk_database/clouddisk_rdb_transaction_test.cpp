@@ -130,7 +130,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, BeginTransactionTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "BeginTransaction Start";
     auto rdb = nullptr;
     auto transaction = make_shared<TransactionOperations>(rdb);
-    int32_t ret = transaction->BeginTransaction();
+    int32_t ret = transaction->BeginTransaction(NativeRdb::Transaction::EXCLUSIVE);
     EXPECT_EQ(ret, E_HAS_DB_ERROR);
     GTEST_LOG_(INFO) << "BeginTransaction End";
 }
@@ -146,7 +146,7 @@ HWTEST_F(CloudDiskRdbTransactionTest, BeginTransactionTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "BeginTransaction Start";
     auto rdb = std::make_shared<RdbStoreMock>();
     auto transaction = make_shared<TransactionOperations>(rdb);
-    int32_t ret = transaction->BeginTransaction();
+    int32_t ret = transaction->BeginTransaction(NativeRdb::Transaction::EXCLUSIVE);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "BeginTransaction End";
 }

@@ -119,6 +119,11 @@ void HandleStartMove(int32_t userId)
     string subList[] = {"com.ohos.photos", system::GetParameter(filemanagerKey, "")};
     string srcBase = "/data/service/el1/public/cloudfile/" + to_string(userId);
     string dstBase = "/data/service/el2/" + to_string(userId) + "/hmdfs/cloudfile_manager";
+    string removePath = srcBase + "/" + subList[1] + "/backup";
+    bool ret = Storage::DistributedFile::Utils::ForceRemoveDirectoryDeepFirst(removePath);
+    if (!ret) {
+        LOGE("remove failed path: %{public}s", GetAnonyString(removePath).c_str());
+    }
     const auto copyOptions = filesystem::copy_options::overwrite_existing | filesystem::copy_options::recursive;
     for (auto sub : subList) {
         string srcPath = srcBase + '/' + sub;

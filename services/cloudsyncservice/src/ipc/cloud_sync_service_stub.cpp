@@ -14,10 +14,10 @@
  */
 #include "ipc/cloud_sync_service_stub.h"
 #include "cloud_file_sync_service_interface_code.h"
-#include "task_state_manager.h"
 #include "dfs_error.h"
 #include "dfsu_access_token_helper.h"
 #include "dfsu_memory_guard.h"
+#include "task_state_manager.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -56,13 +56,13 @@ CloudSyncServiceStub::CloudSyncServiceStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_FILE_CALLBACK)] =
         [this](MessageParcel &data, MessageParcel &reply) {
-                return this->HandleRegisterDownloadFileCallback(data, reply);
-            };
+            return this->HandleRegisterDownloadFileCallback(data, reply);
+        };
     opToInterfaceMap_[static_cast<uint32_t>(
         CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UNREGISTER_DOWNLOAD_FILE_CALLBACK)] =
         [this](MessageParcel &data, MessageParcel &reply) {
-                return this->HandleUnregisterDownloadFileCallback(data, reply);
-            };
+            return this->HandleUnregisterDownloadFileCallback(data, reply);
+        };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_UPLOAD_ASSET)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleUploadAsset(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_FILE)] =
@@ -74,8 +74,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
     opToInterfaceMap_[static_cast<uint32_t>(
         CloudFileSyncServiceInterfaceCode::SERVICE_CMD_REGISTER_DOWNLOAD_ASSET_CALLBACK)] =
         [this](MessageParcel &data, MessageParcel &reply) {
-                return this->HandleRegisterDownloadAssetCallback(data, reply);
-            };
+            return this->HandleRegisterDownloadAssetCallback(data, reply);
+        };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DELETE_ASSET)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDeleteAsset(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_GET_SYNC_TIME)] =
@@ -86,7 +86,7 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStartFileCache(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_RESET_CURSOR)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleResetCursor(data, reply); };
-        opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_FILE_CACHE)] =
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_FILE_CACHE)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStopFileCache(data, reply); };
 }
 
@@ -216,7 +216,7 @@ int32_t CloudSyncServiceStub::HandleResetCursor(MessageParcel &data, MessageParc
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
- 
+
     string bundleName = data.ReadString();
     int32_t res = ResetCursor(bundleName);
     reply.WriteInt32(res);
@@ -300,7 +300,7 @@ int32_t CloudSyncServiceStub::HandleNotifyEventChange(MessageParcel &data, Messa
     int32_t userId = data.ReadInt32();
     string eventIdStr = data.ReadString();
     string extraDataStr = data.ReadString();
-    
+
     int32_t res = NotifyEventChange(userId, eventIdStr, extraDataStr);
     reply.WriteInt32(res);
     LOGI("End NotifyEventChange");
@@ -369,7 +369,10 @@ int32_t CloudSyncServiceStub::HandleStartDownloadFile(MessageParcel &data, Messa
 int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleStartFileCache");
-
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
     std::vector<std::string> pathVec;
     if (!data.ReadStringVector(&pathVec)) {
         LOGE("Failed to get the cloud id.");
@@ -415,11 +418,14 @@ int32_t CloudSyncServiceStub::HandleStopDownloadFile(MessageParcel &data, Messag
 int32_t CloudSyncServiceStub::HandleStopFileCache(MessageParcel &data, MessageParcel &reply)
 {
     LOGI("Begin HandleStopFileCache");
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
         LOGE("permission denied");
         return E_PERMISSION_DENIED;
     }
-
     int64_t downloadId = data.ReadInt64();
     bool needClean = data.ReadBool();
 
@@ -559,7 +565,7 @@ int32_t CloudSyncServiceStub::HandleDownloadAsset(MessageParcel &data, MessagePa
         LOGE("object of AssetInfoObj is nullptr");
         return E_INVAL_ARG;
     }
-    int32_t res = DownloadAsset(taskId, userId, bundleName, networkId, * assetInfoObj);
+    int32_t res = DownloadAsset(taskId, userId, bundleName, networkId, *assetInfoObj);
     reply.WriteInt32(res);
     LOGI("End DownloadAsset");
     return E_OK;
@@ -614,7 +620,7 @@ int32_t CloudSyncServiceStub::HandleGetSyncTime(MessageParcel &data, MessageParc
         LOGE("caller hap is not system hap");
         return E_PERMISSION_SYSTEM;
     }
-	
+
     int64_t syncTime = 0;
     string bundleName = data.ReadString();
     int32_t res = GetSyncTimeInner(syncTime, bundleName);

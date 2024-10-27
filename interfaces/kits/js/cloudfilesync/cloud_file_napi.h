@@ -20,24 +20,17 @@
 #include "filemgmt_libn.h"
 
 namespace OHOS::FileManagement::CloudSync {
-class CloudFileNExporter : public LibN::NExporter {
-public:
-    CloudFileNExporter(napi_env env, napi_value exports) : NExporter(env, exports) {}
-    ~CloudFileNExporter() = default;
-
-    static napi_value Constructor(napi_env env, napi_callback_info info);
-    bool ToExport(std::vector<napi_property_descriptor> props);
-};
-
 class CloudDownloadCallbackImpl;
-class CloudFileNapi : public CloudFileNExporter {
+class CloudFileNapi : public LibN::NExporter {
 public:
-    CloudFileNapi(napi_env env, napi_value exports) : CloudFileNExporter(env, exports) {}
+    CloudFileNapi(napi_env env, napi_value exports) : NExporter(env, exports) {}
     ~CloudFileNapi() = default;
 
     bool Export() override;
+    bool ToExport(std::vector<napi_property_descriptor> props);
     virtual void SetClassName(std::string classname);
     std::string GetClassName() override;
+    static napi_value Constructor(napi_env env, napi_callback_info info);
     static napi_value Start(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);

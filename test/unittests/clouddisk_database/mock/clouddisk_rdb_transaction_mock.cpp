@@ -15,7 +15,6 @@
 
 #include "clouddisk_rdb_transaction.h"
 #include "utils_log.h"
-#include <utility>
 
 namespace OHOS {
 namespace FileManagement {
@@ -40,7 +39,8 @@ TransactionOperations::~TransactionOperations()
     }
 }
 
-std::pair<int32_t, std::shared_ptr<NativeRdb::Transaction>> TransactionOperations::Start()
+std::pair<int32_t, std::shared_ptr<NativeRdb::Transaction>> TransactionOperations::Start(
+    NativeRdb::Transaction::TransactionType type)
 {
     return make_pair(E_OK, nullptr);
 }
@@ -49,7 +49,8 @@ void TransactionOperations::Finish()
 {
 }
 
-int32_t TransactionOperations::BeginTransaction()
+int32_t TransactionOperations::BeginTransaction(
+    NativeRdb::Transaction::TransactionType type)
 {
     return E_OK;
 }

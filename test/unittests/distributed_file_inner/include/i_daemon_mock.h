@@ -43,6 +43,10 @@ public:
         const std::string &, const std::string &));
     MOCK_METHOD3(GetRemoteCopyInfo, int32_t(const std::string &srcUri, bool &isFile, bool &isDir));
     MOCK_METHOD1(CancelCopyTask, int32_t(const std::string &sessionName));
+    MOCK_METHOD3(PushAsset, int32_t(int32_t userId, const sptr<AssetObj> &assetObj,
+        const sptr<IAssetSendCallback> &sendCallback));
+    MOCK_METHOD1(RegisterAssetCallback, int32_t(const sptr<IAssetRecvCallback> &recvCallback));
+    MOCK_METHOD1(UnRegisterAssetCallback, int32_t(const sptr<IAssetRecvCallback> &recvCallback));
 };
 } // namespace OHOS::Storage::DistributedFile
 

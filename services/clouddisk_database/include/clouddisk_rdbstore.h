@@ -26,6 +26,7 @@
 #include "clouddisk_db_const.h"
 #include "file_column.h"
 #include "meta_file.h"
+#include "transaction.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -58,6 +59,8 @@ public:
     int32_t Unlink(const std::string &cloudId, const int32_t &position);
     int32_t RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
+    int32_t GetRowIdAndPosition(std::shared_ptr<NativeRdb::Transaction> transaction,
+        const std::string &cloudId, int64_t &rowId, int32_t &position);
     int32_t LocationSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
     int32_t FavoriteSetXattr(const std::string &cloudId, const std::string &value);
