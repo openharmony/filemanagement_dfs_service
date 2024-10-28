@@ -54,20 +54,65 @@ void DownloadAssetCallbackManagerTest::TearDown(void)
 }
 
 /**
- * @tc.name: GetInstanceTest
- * @tc.desc: Verify the GetInstance function.
+ * @tc.name: AddCallbackTest001
+ * @tc.desc: Verify the AddCallback function.
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(DownloadAssetCallbackManagerTest, GetInstanceTest, TestSize.Level1)
+HWTEST_F(DownloadAssetCallbackManagerTest, AddCallbackTest001, TestSize.Level1)
 {
+    GTEST_LOG_(INFO) << "AddCallbackTest Start";
     try {
-        DownloadAssetCallbackManager::GetInstance();
+        DownloadAssetCallbackManager callbackManager;
+        callbackManager.AddCallback(nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "AddCallbackTest FAILED";
     }
+    GTEST_LOG_(INFO) << "AddCallbackTest End";
 }
 
+/**
+ * @tc.name: AddCallbackTest002
+ * @tc.desc: Verify the AddCallback function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(DownloadAssetCallbackManagerTest, AddCallbackTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddCallbackTest Start";
+    try {
+        DownloadAssetCallbackManager callbackManager;
+        sptr<IDownloadAssetCallback> callback;
+        callbackManager.AddCallback(callback);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "AddCallbackTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "AddCallbackTest End";
+}
+
+/**
+ * @tc.name: OnDownloadFinshedTest001
+ * @tc.desc: Verify the OnDownloadFinshed function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(DownloadAssetCallbackManagerTest, OnDownloadFinshedTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnDownloadFinshedTest Start";
+    try {
+        uint64_t taskId = 100;
+        std::string uri = "";
+        int32_t result = 1;
+        DownloadAssetCallbackManager callbackManager;
+        callbackManager.OnDownloadFinshed(taskId, uri, result);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnDownloadFinshedTest FAILED";
+    }
+    GTEST_LOG_(INFO) << "OnDownloadFinshedTest End";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS

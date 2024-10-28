@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,45 +12,132 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
 #include "battery_status.h"
+#include "utils_log.h"
 
-namespace OHOS::FileManagement::CloudSync {
-constexpr int32_t DEFAULT_BATTERY_CAPCITY = 100;
+namespace OHOS::FileManagement::CloudSync::Test {
+using namespace testing;
+using namespace testing::ext;
+using namespace std;
 
-void BatteryStatus::SetChargingStatus(bool status)
+class BatteryStatusMock final : public BatteryStatus {
+public:
+    BatteryStatusMock() : BatteryStatus() {}
+    MOCK_METHOD0(GetCapacity, int32_t());
+};
+
+class BatteryStatusTest : public testing::Test {
+public:
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
+    shared_ptr<BatteryStatusMock> batteryStatus_ = nullptr;
+};
+
+void BatteryStatusTest::SetUpTestCase(void)
 {
+    GTEST_LOG_(INFO) << "SetUpTestCase";
 }
 
-void BatteryStatus::GetInitChargingStatus()
+void BatteryStatusTest::TearDownTestCase(void)
 {
+    GTEST_LOG_(INFO) << "TearDownTestCase";
 }
 
-int32_t BatteryStatus::GetCapacity()
+void BatteryStatusTest::SetUp(void)
 {
-    int32_t capacity = DEFAULT_BATTERY_CAPCITY;
-    return capacity;
+    GTEST_LOG_(INFO) << "SetUp";
+    batteryStatus_ = make_shared<BatteryStatusMock>();
 }
 
-bool BatteryStatus::IsAllowUpload(bool forceFlag)
+void BatteryStatusTest::TearDown(void)
 {
-    return true;
+    GTEST_LOG_(INFO) << "TearDown";
+    batteryStatus_ = nullptr;
 }
 
-bool BatteryStatus::IsBatteryCapcityOkay()
+/**
+ * @tc.name: IsAllowUploadTest001
+ * @tc.desc: Verify the IsAllowUpload function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusTest, IsAllowUploadTest001, TestSize.Level1)
 {
-    if (level_ == LEVEL_TOO_LOW) {
-        return false;
+    GTEST_LOG_(INFO) << "IsAllowUploadTest001 Start";
+    try {
+        batteryStatus_->SetChargingStatus(true);
+        bool ret = batteryStatus_->IsAllowUpload(true);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsAllowUploadTest001 FAILED";
     }
-    return true;
+    GTEST_LOG_(INFO) << "IsAllowUploadTest001 End";
 }
 
-BatteryStatus::CapacityLevel BatteryStatus::GetCapacityLevel()
+/**
+ * @tc.name: IsAllowUploadTest001
+ * @tc.desc: Verify the IsAllowUpload function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusTest, IsAllowUploadTest002, TestSize.Level1)
 {
-    return level_;
+    GTEST_LOG_(INFO) << "IsAllowUploadTest002 Start";
+    try {
+        batteryStatus_->SetChargingStatus(false);
+        bool ret = batteryStatus_->IsAllowUpload(true);
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsAllowUploadTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsAllowUploadTest002 End";
 }
 
-bool BatteryStatus::IsCharging()
+/**
+ * @tc.name: IsBatteryCapcityOkayTest001
+ * @tc.desc: Verify the IsBatteryCapcityOkay function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusTest, IsBatteryCapcityOkayTest001, TestSize.Level1)
 {
-    return true;
+    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest001 Start";
+    try {
+        batteryStatus_->SetChargingStatus(true);
+        bool ret = batteryStatus_->IsBatteryCapcityOkay();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest001 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest001 End";
 }
-} // namespace OHOS::FileManagement::CloudSync
+
+/**
+ * @tc.name: IsBatteryCapcityOkayTest002
+ * @tc.desc: Verify the IsBatteryCapcityOkay function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(BatteryStatusTest, IsBatteryCapcityOkayTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest Start";
+    try {
+        batteryStatus_->SetChargingStatus(false);
+        bool ret = batteryStatus_->IsBatteryCapcityOkay();
+        EXPECT_EQ(ret, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest002 FAILED";
+    }
+    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest002 End";
+}
+} // namespace OHOS::FileManagement::CloudSync::Test
