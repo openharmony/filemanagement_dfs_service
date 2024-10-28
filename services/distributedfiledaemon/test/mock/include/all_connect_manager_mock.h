@@ -1,0 +1,52 @@
+/*
+* Copyright (c) 2024 Huawei Device Co., Ltd.
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+ */
+
+#ifndef FILEMANAGEMENT_DFS_SERVICE_ALL_CONNECT_MANAGER_MOCK_H
+#define FILEMANAGEMENT_DFS_SERVICE_ALL_CONNECT_MANAGER_MOCK_H
+
+#include <gmock/gmock.h>
+#include "all_connect/all_connect_manager.h"
+
+namespace OHOS {
+namespace Storage {
+namespace DistributedFile {
+class IAllConnectManagerMock {
+public:
+    virtual ~IAllConnectManagerMock() = default;
+
+    virtual int32_t InitAllConnectManager() = 0;
+    virtual int32_t UnInitAllConnectManager() = 0;
+    virtual int32_t PublishServiceState(const std::string &peerNetworkId,
+                                        ServiceCollaborationManagerBussinessStatus state) = 0;
+    virtual int32_t ApplyAdvancedResource(const std::string &peerNetworkId,
+                                          ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest) = 0;
+    virtual std::shared_ptr<ServiceCollaborationManager_ResourceRequestInfoSets> BuildResourceRequest() = 0;
+
+public:
+    static inline std::shared_ptr<IAllConnectManagerMock> iAllConnectManagerMock_ = nullptr;
+};
+
+class AllConnectManagerMock : public IAllConnectManagerMock {
+public:
+    MOCK_METHOD0(InitAllConnectManager, int32_t());
+    MOCK_METHOD0(UnInitAllConnectManager, int32_t());
+    MOCK_METHOD2(PublishServiceState, int32_t(const std::string &peerNetworkId,
+                                              ServiceCollaborationManagerBussinessStatus state));
+    MOCK_METHOD2(ApplyAdvancedResource, int32_t(const std::string &peerNetworkId,
+                                                ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest));
+    MOCK_METHOD0(BuildResourceRequest, std::shared_ptr<ServiceCollaborationManager_ResourceRequestInfoSets>());
+};
+
+#endif // FILEMANAGEMENT_DFS_SERVICE_ALL_CONNECT_MANAGER_MOCK_H
