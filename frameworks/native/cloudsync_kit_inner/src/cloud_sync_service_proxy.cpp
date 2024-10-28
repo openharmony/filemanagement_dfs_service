@@ -742,8 +742,7 @@ int32_t CloudSyncServiceProxy::StopFileCache(const int64_t &downloadId,  bool ne
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return ret;
     }
-    CloudDownloadUriManager& uriMgr = CloudDownloadUriManager::GetInstance();
-    uriMgr.RemoveUri(downloadId);
+    // if StopFileCache finished, we need call RemoveUri later
     LOGI("StopFileCache Success");
     return reply.ReadInt32();
 }
