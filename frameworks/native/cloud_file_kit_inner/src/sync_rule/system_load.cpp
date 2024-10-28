@@ -42,7 +42,7 @@ void SystemLoadListener::OnSystemloadLevel(int32_t level)
     SystemLoadStatus::Setload(level);
     if (level > SYSTEMLOADLEVEL_HOT) {
         LOGI("OnSystemloadLevel over warm");
-    } else if (level <= SYSTEMLOADLEVEL_WARM && dataSyncManager_) {
+    } else if (dataSyncManager_) {
         std::string systemLoadSync = system::GetParameter(TEMPERATURE_SYSPARAM_SYNC, "");
         std::string systemLoadThumb = system::GetParameter(TEMPERATURE_SYSPARAM_THUMB, "");
         LOGI("OnSystemloadLevel is normal, level:%{public}d", level);
