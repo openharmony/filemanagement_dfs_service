@@ -548,6 +548,36 @@ HWTEST_F(FileOperationsCloudTest, MkNodTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: MkNodTest002
+ * @tc.desc: Verify the MkNod function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, MkNodTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MkNodTest002 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        uint64_t parent = -1;
+        const char *name = "";
+        mode_t mode = 0;
+        dev_t rdev = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)))
+                                                   .WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_entry(_, _)).WillOnce(Return(E_OK)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->MkNod(req, parent, name, mode, rdev);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "MkNodTest002  ERROR";
+    }
+    GTEST_LOG_(INFO) << "MkNodTest002 End";
+}
+
+/**
  * @tc.name: CreateTest001
  * @tc.desc: Verify the Create function
  * @tc.type: FUNC
@@ -574,6 +604,37 @@ HWTEST_F(FileOperationsCloudTest, CreateTest001, TestSize.Level1)
         GTEST_LOG_(INFO) << "CreateTest001  ERROR";
     }
     GTEST_LOG_(INFO) << "CreateTest001 End";
+}
+
+/**
+ * @tc.name: CreateTest002
+ * @tc.desc: Verify the Create function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, CreateTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "CreateTest002 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 5;
+        const char *name = "";
+        mode_t mode = 0;
+        struct fuse_file_info fi;
+        fi.fh = 4;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)))
+                                                   .WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_create(_, _, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Create(req, parent, name, mode, &fi);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "CreateTest002  ERROR";
+    }
+    GTEST_LOG_(INFO) << "CreateTest002 End";
 }
 
 /**
@@ -2501,6 +2562,60 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest008, TestSize.Level1)
         GTEST_LOG_(INFO) << "SetAttrTest008 ERROR";
     }
     GTEST_LOG_(INFO) << "SetAttrTest008 End";
+}
+
+/**
+ * @tc.name: SetAttrTest009
+ * @tc.desc: Verify the SetAttr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetAttrTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetAttrTest009 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 6;
+        struct stat attr;
+        int valid = 13;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->SetAttr(req, ino, &attr, valid, nullptr);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetAttrTest009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetAttrTest009 End";
+}
+
+/**
+ * @tc.name: SetAttrTest010
+ * @tc.desc: Verify the SetAttr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetAttrTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetAttrTest010 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 7;
+        struct stat attr;
+        int valid = 13;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->SetAttr(req, ino, &attr, valid, nullptr);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetAttrTest010 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetAttrTest010 End";
 }
 
 /**

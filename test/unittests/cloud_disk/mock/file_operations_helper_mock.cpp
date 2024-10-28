@@ -38,8 +38,12 @@ namespace {
     static const int32_t MOCK2 = 2;
     static const int32_t MOCK3 = 3;
     static const int32_t MOCK4 = 4;
+    static const int32_t MOCK5 = 5;
+    static const int32_t MOCK6 = 6;
+    static const int32_t MOCK7 = 7;
     static const int32_t MOCKUSERID0 = 100;
     static const int32_t MOCKUSERID1 = 1;
+    static const int32_t STATSIZE = 1;
 }
 
 string FileOperationsHelper::GetCloudDiskRootPath(int32_t userId)
@@ -121,6 +125,13 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::FindCloudDiskInode(struct Cloud
         ptr->parent = 0;
         ptr->cloudId = "";
         ptr->fileName = "test";
+    } else if (key == MOCK5) {
+        ptr = nullptr;
+    } else if (key == MOCK6) {
+        ptr->parent = MOCK5;
+    } else if (key == MOCK7) {
+        ptr->parent = MOCK7;
+        ptr->stat.st_size = STATSIZE;
     }
     return ptr;
 }
@@ -146,6 +157,8 @@ shared_ptr<CloudDiskFile> FileOperationsHelper::FindCloudDiskFile(struct CloudDi
         make_shared<CloudFile::CloudAssetReadSession>(recordType, recordId, assetKey, assetPath);
     } else if (key == MOCK3) {
         ptr -> refCount = 0;
+    } else if (key == MOCK4) {
+        ptr = nullptr;
     }
     return ptr;
 }

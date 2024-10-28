@@ -82,3 +82,8 @@ int fuse_reply_entry(fuse_req_t req, const struct fuse_entry_param *e)
 {
     return Assistant::ins->fuse_reply_entry(req, e);
 }
+
+int fuse_reply_create(fuse_req_t req, const struct fuse_entry_param *e, const struct fuse_file_info *f)
+{
+    return Assistant::ins->fuse_reply_create(req, e, f);
+}
