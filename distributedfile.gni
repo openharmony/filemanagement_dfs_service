@@ -29,6 +29,7 @@ image_framework_path = "//foundation/multimedia/image_framework"
 clouddisk_database_path = "${services_path}/clouddisk_database"
 
 declare_args() {
+  support_same_account = true
   if (defined(global_parts_info) &&
       defined(global_parts_info.powermgr_battery_manager)) {
     cloudsync_service_power = true
@@ -55,5 +56,10 @@ declare_args() {
     cloudsync_service_hicollie_enable = true
   } else {
     cloudsync_service_hicollie_enable = false
+  }
+
+  if (!defined(global_parts_info) || !defined(
+          global_parts_info.distributedhardware_distributed_hardware_adapter)) {
+    support_same_account = false
   }
 }

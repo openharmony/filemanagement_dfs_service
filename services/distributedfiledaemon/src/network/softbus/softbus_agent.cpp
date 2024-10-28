@@ -41,7 +41,9 @@ using namespace std;
 const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
+#ifdef SUPPORT_SAME_ACCOUNT
 const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
+#endif
 SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTemplate(mountPoint)
 {
     auto spt = mountPoint.lock();
@@ -58,6 +60,7 @@ SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTempla
 
 bool SoftbusAgent::IsSameAccount(const std::string &networkId)
 {
+#ifdef SUPPORT_SAME_ACCOUNT
     std::vector<DistributedHardware::DmDeviceInfo> deviceList;
     DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(IDaemon::SERVICE_NAME, "", deviceList);
     if (deviceList.size() == 0 || deviceList.size() > MAX_ONLINE_DEVICE_SIZE) {
@@ -70,6 +73,9 @@ bool SoftbusAgent::IsSameAccount(const std::string &networkId)
         }
     }
     return false;
+#else
+    return true;
+#endif
 }
 
 int32_t SoftbusAgent::JudgeNetworkTypeIsWifi(const DeviceInfo &info)
@@ -159,6 +165,10 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
 {
     LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d",
         Utils::GetAnonyString(info.GetCid()).c_str(), linkType);
+    if (!IsSameAccount(info.GetCid())) {
+        LOGI("The source and sink device is not same account, not support.");
+        return FileManagement::E_INVAL_ARG;
+    }
     ISocketListener sessionListener = {
         .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
         .OnShutdown = SoftbusSessionDispatcher::OnSessionClosed,
@@ -181,10 +191,6 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
     int32_t socketId = Socket(clientInfo);
     if (socketId < FileManagement::E_OK) {
         LOGE("Create OpenSoftbusChannel Socket error");
-        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_FAILED,
-            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
-            RadarReporter::CREAT_SOCKET_ERROR, RadarReporter::PACKAGE_NAME,
-            RadarReporter::dSoftBus + to_string(socketId));
         return FileManagement::E_CONTEXT;
     }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener);
@@ -211,6 +217,10 @@ void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType
 {
     LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d",
         Utils::GetAnonyString(info.GetCid()).c_str(), linkType);
+    if (!IsSameAccount(info.GetCid())) {
+        LOGI("The source and sink device is not same account, not support.");
+        return;
+    }
     if (JudgeNetworkTypeIsWifi(info)) {
         LOGI("networktype is not wifi");
         return;
