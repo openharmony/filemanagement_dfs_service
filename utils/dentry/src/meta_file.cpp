@@ -284,10 +284,7 @@ static void UpdateDentry(HmdfsDentryGroup &d, const MetaBase &base, uint32_t nam
     de = &d.nsl[bitPos];
     de->hash = nameHash;
     de->namelen = name.length();
-    errno_t ret = memcpy_s(d.fileName[bitPos], slots * DENTRY_NAME_LEN, name.c_str(), name.length());
-    if (ret != EOK) {
-        return;
-    } else {
+    if (memcpy_s(d.fileName[bitPos], slots * DENTRY_NAME_LEN, name.c_str(), name.length())) {
         LOGE("memcpy_s failed, dstLen = %{public}d, srcLen = %{public}zu", slots * DENTRY_NAME_LEN, name.length());
     }
     de->mtime = base.mtime;
