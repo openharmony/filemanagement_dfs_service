@@ -49,6 +49,11 @@ ohos_unittest("cloud_pref_impl_test") {
 
   defines = [ "private=public" ]
 
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"UTILS\"",
+  ]
+
   use_exceptions = true
 }
 
@@ -145,9 +150,10 @@ ohos_unittest("plugin_loader_test") {
     "hilog:libhilog",
   ]
 
-  defines = [
-    "private=public",
-    "LOG_TAG=\"utils_test\"",
+  defines = [ "private=public" ]
+  defines += [
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"UTILS\"",
   ]
 
   use_exceptions = true

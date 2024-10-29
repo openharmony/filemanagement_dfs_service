@@ -319,6 +319,55 @@ ohos_unittest("network_set_manager_test") {
   use_exceptions = true
 }
 
+ohos_unittest("system_load_test") {
+  module_out_path = "filemanagement/dfs_service"
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/system_load.cpp",
+    "system_load_test.cpp",
+  ]
+
+  include_dirs = [
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner",
+    "${innerkits_native_path}/cloud_file_kit_inner",
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/sync_rule",
+    "${utils_path}/log/include",
+    "${image_framework_path}/mock/native/include/log",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${media_library_path}/frameworks/utils/include",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "data_share:datashare_consumer",
+    "dfs_service:cloudsync_kit_inner",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "netmanager_base:net_conn_manager_if",
+    "relational_store:native_rdb",
+    "resource_schedule_service:ressched_client",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [ "private=public" ]
+
+  use_exceptions = true
+}
+
 group("cloudsync_sa_sync_rule_test") {
   testonly = true
   deps = [
@@ -327,5 +376,6 @@ group("cloudsync_sa_sync_rule_test") {
     ":cloud_status_test",
     ":network_set_manager_test",
     ":network_status_test",
+    ":system_load_test",
   ]
 }

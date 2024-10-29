@@ -147,4 +147,38 @@ HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_EndsWith_011, TestSize.Level1)
     string ending = "test@@text##";
     EXPECT_EQ(CloudFileUtils::EndsWith(fullString, ending), false);
 }
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_DentryHash_012, TestSize.Level1)
+{
+    try {
+        string inputStr = ".";
+        EXPECT_EQ(CloudFileUtils::DentryHash(inputStr), 0);
+
+        inputStr = "..";
+        EXPECT_EQ(CloudFileUtils::DentryHash(inputStr), 0);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << " DfsService_CloudDisk_DentryHash_012 ERROR";
+    }
+}
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_LocalWriteOpen_013, TestSize.Level1)
+{
+    string dfsPath = "./";
+    EXPECT_EQ(CloudFileUtils::LocalWriteOpen(dfsPath), false);
+
+    dfsPath = "testPath";
+    EXPECT_EQ(CloudFileUtils::LocalWriteOpen(dfsPath), false);
+}
+
+HWTEST_F(CloudFileUtilsTest, DfsService_CloudDisk_GetCloudId_014, TestSize.Level1)
+{
+    string dfsPath = "/data/service/el1/public/cloudfile";
+    string cloudId = CloudFileUtils::GetCloudId(dfsPath);
+    EXPECT_EQ((cloudId == ""), true);
+
+    dfsPath = "/data/service/el1/public/cloudfile/cloud_data_statistic";
+    cloudId = CloudFileUtils::GetCloudId(dfsPath);
+    EXPECT_EQ((cloudId == ""), true);
+}
 } // OHOS
