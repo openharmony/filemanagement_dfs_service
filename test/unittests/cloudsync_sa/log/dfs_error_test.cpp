@@ -61,7 +61,7 @@ HWTEST_F(DfsErrorTest, Convert2JsErrNumTest, TestSize.Level1)
     try {
         int32_t errNum = -1;
         int32_t ret = Convert2JsErrNum(errNum);
-        EXPECT_EQ(ret, errNum);
+        EXPECT_EQ(ret, E_UNKNOWN_ERR);
         errNum = E_PERMISSION_DENIED;
         ret = Convert2JsErrNum(errNum);
         EXPECT_EQ(ret, E_PERMISSION);
