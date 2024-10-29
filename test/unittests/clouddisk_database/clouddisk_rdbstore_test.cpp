@@ -1065,7 +1065,7 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest5, TestSize.Level1)
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->RecycleSetXattr(name, parentCloudId, cloudId, value);
-    EXPECT_EQ(ret, EINVAL);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
