@@ -78,6 +78,12 @@ int32_t DataSyncerRdbStore::Insert(int32_t userId, const std::string &bundleName
     {
         std::lock_guard<std::mutex> lck(rdbMutex_);
         int64_t rowId;
+        if (rdb_ == nullptr) {
+            if (RdbInit() != E_OK) {
+                LOGE("Data Syner init rdb failed");
+                return E_RDB;
+            }
+        }
         ret = rdb_->Insert(rowId, DATA_SYNCER_TABLE, values);
     }
     if (ret != E_OK) {
@@ -106,6 +112,12 @@ int32_t DataSyncerRdbStore::UpdateSyncState(int32_t userId, const string &bundle
     }
     string whereClause = USER_ID + " = ? AND " + BUNDLE_NAME + " = ?";
     vector<string> whereArgs = { to_string(userId), bundleName };
+    if (rdb_ == nullptr) {
+        if (RdbInit() != E_OK) {
+            LOGE("Data Syner init rdb failed");
+            return E_RDB;
+        }
+    }
     int32_t ret = rdb_->Update(updateRows, DATA_SYNCER_TABLE, values, whereClause, whereArgs);
     if (ret != E_OK) {
         LOGE("update sync state failed: %{public}d", ret);
@@ -164,7 +176,7 @@ int32_t DataSyncerRdbStore::QueryDataSyncer(int32_t userId, std::shared_ptr<Nati
 int32_t DataSyncerRdbStore::Query(NativeRdb::AbsRdbPredicates predicates,
     std::shared_ptr<NativeRdb::ResultSet> &resultSet)
 {
-    while (rdb_ == nullptr) {
+    if (rdb_ == nullptr) {
         if (RdbInit() != E_OK) {
             LOGE("Data Syner init rdb failed");
             return E_RDB;
