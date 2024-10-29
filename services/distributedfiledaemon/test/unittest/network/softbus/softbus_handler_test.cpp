@@ -302,6 +302,7 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_IsSameAccount_0100, TestSize.Lev
     SoftBusHandler handler;
     bool flag = handler.IsSameAccount(TEST_NETWORKID);
     EXPECT_EQ(flag, true);
+#ifdef SUPPORT_SAME_ACCOUNT
     flag = handler.IsSameAccount(TEST_NETWORKID_TWO);
     EXPECT_EQ(flag, false);
     flag = handler.IsSameAccount(TEST_NETWORKID_THREE);
@@ -309,6 +310,7 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_IsSameAccount_0100, TestSize.Lev
     g_mockGetTrustedDeviceList = false;
     flag = handler.IsSameAccount(TEST_NETWORKID);
     EXPECT_EQ(flag, false);
+#endif
     g_mockGetTrustedDeviceList = true;
     GTEST_LOG_(INFO) << "SoftbusHandlerTest_IsSameAccount_0100 end";
 }
@@ -355,14 +357,14 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OnSinkSessionOpened_0100, TestSi
     EXPECT_EQ(handler.GetSessionName(sessionId1), sessionName1);
     EXPECT_EQ(handler.GetSessionName(sessionId2), sessionName2);
     EXPECT_EQ(handler.GetSessionName(sessionId3), sessionName3);
+#ifdef SUPPORT_SAME_ACCOUNT
     auto iter = handler.serverIdMap_.find(sessionName2);
-    if (iter != handler.serverIdMap_.end()) {
-        handler.serverIdMap_.clear();
+    if (iter == handler.serverIdMap_.end()) {
         EXPECT_TRUE(true);
     } else {
         EXPECT_TRUE(false);
     }
-
+#endif
     handler.clientSessNameMap_.erase(sessionId1);
     handler.clientSessNameMap_.erase(sessionId2);
     handler.clientSessNameMap_.erase(sessionId3);

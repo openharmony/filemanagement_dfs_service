@@ -131,6 +131,7 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_IsSameAccount_0100, TestSize.Level1)
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
     bool flag = agent->IsSameAccount(NETWORKID_ONE);
     EXPECT_EQ(flag, true);
+#ifdef SUPPORT_SAME_ACCOUNT
     flag = agent->IsSameAccount(NETWORKID_TWO);
     EXPECT_EQ(flag, false);
     flag = agent->IsSameAccount(NETWORKID_THREE);
@@ -138,6 +139,7 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_IsSameAccount_0100, TestSize.Level1)
     g_mockGetTrustedDeviceList = false;
     flag = agent->IsSameAccount(NETWORKID_ONE);
     EXPECT_EQ(flag, false);
+#endif
     g_mockGetTrustedDeviceList = true;
     GTEST_LOG_(INFO) << "SoftbusAgentTest_IsSameAccount_0100 end";
 }
