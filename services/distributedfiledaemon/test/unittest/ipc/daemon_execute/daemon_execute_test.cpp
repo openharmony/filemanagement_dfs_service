@@ -157,7 +157,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_001, TestSize.Level1)
     daemonExecute_->ExecutePushAsset(event);
 
     assetObj->uris_.clear();
-    assetObj->uris_.push_back("file://com.huawei.hmos.example/data/storage/el2/distributedfiles/docs/1.txt");
+    assetObj->uris_.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/1.txt");
     assetObj->srcBundleName_ = "com.example.app";
     g_getPhysicalPath = E_OK;
     g_checkValidPath = true;
