@@ -203,7 +203,7 @@ void DaemonTest::SetUpTestCase(void)
     softBusHandlerMock_ = std::make_shared<SoftBusHandlerMock>();
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = softBusHandlerMock_;
 
-    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example";
+    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (!std::filesystem::exists(path)) {
         std::filesystem::create_directory(path);
         std::filesystem::create_directory(path + "/docs");
@@ -232,7 +232,7 @@ void DaemonTest::TearDownTestCase(void)
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = nullptr;
     softBusHandlerMock_ = nullptr;
 
-    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example";
+    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (std::filesystem::exists(path)) {
         std::filesystem::remove_all(path);
     }
@@ -748,7 +748,6 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_002, TestSize.Level1)
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     SoftBusSessionPool::GetInstance().sessionMap_.clear();
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
-    g_getLocalDeviceInfo = E_OK;
     hmdfsInfo.authority = MEDIA_AUTHORITY;
     EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_OK);
@@ -758,7 +757,6 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_002, TestSize.Level1)
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     SoftBusSessionPool::GetInstance().sessionMap_.clear();
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
-    g_getLocalDeviceInfo = E_OK;
     hmdfsInfo.authority = "test";
     EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_OK);
@@ -800,7 +798,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRealPath_001, TestSize.Level1)
     g_checkValidPath = true;
     g_physicalPath = "test@test/test";
     info.dirExistFlag = true;
-    std::string dstUri = "file://com.huawei.hmos.example/data/storage/el2/distributedfiles/images/1.png";
+    std::string dstUri = "file://com.example.app/data/storage/el2/distributedfiles/images/1.png";
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_GetRealPath_001 end";
@@ -823,7 +821,7 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_001, TestSize.Level1)
     EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, true, info), E_GET_PHYSICAL_PATH_FAILED);
 
     g_isFolder = false;
-    physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1.txt";
+    physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt";
     info.dirExistFlag = false;
     g_checkValidPath = false;
     EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, true, info), E_GET_PHYSICAL_PATH_FAILED);
@@ -834,7 +832,7 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_001, TestSize.Level1)
     EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, false, info), E_GET_PHYSICAL_PATH_FAILED);
 
     g_isFolder = true;
-    physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1.txt";
+    physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt";
     info.dirExistFlag = true;
     g_checkValidPath = false;
     EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, true, info), E_GET_PHYSICAL_PATH_FAILED);
@@ -868,13 +866,13 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_002, TestSize.Level1)
     HmdfsInfo info;
 
     g_isFolder = true;
-    physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1.txt";
+    physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt";
     info.dirExistFlag = true;
     std::string dstUri = "file://docs/data/storage/el2/distributedfiles/images/1.png";
     EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK);
 
     g_isFolder = true;
-    physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1@.txt";
+    physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1@.txt";
     info.dirExistFlag = true;
     dstUri = "file://docs/data/storage/el2/distributedfiles/images/1.png";
     EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK);
@@ -896,7 +894,7 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_002, TestSize.Level1)
     info.dirExistFlag = true;
     hapTokenInfo.userID = 100;
     g_checkValidPath = false;
-    dstUri = "file://com.huawei.hmco.example/data/storage/el2/distributedfiles/images/1.png";
+    dstUri = "file://com.example.app/data/storage/el2/distributedfiles/images/1.png";
     EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info),
               E_GET_PHYSICAL_PATH_FAILED); // 4 7 15 18
 
@@ -905,7 +903,7 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_002, TestSize.Level1)
     info.dirExistFlag = true;
     hapTokenInfo.userID = 100;
     g_checkValidPath = true;
-    dstUri = "file://com.huawei.hmco.example/data/storage/el2/distributedfiles/images/1.png";
+    dstUri = "file://com.example.app/data/storage/el2/distributedfiles/images/1.png";
     EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK); // 4 7 15 19
     GTEST_LOG_(INFO) << "DaemonTest_CheckCopyRule_002 end";
 }
@@ -1035,8 +1033,8 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     daemon_->StartEventHandler();
     int32_t userId = 100;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
-    assetObj->uris_.push_back("file://com.huawei.hmos.example/data/storage/el2/distributedfiles/docs/1.txt");
-    assetObj->srcBundleName_ = "com.huawei.hmos.example";
+    assetObj->uris_.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/1.txt");
+    assetObj->srcBundleName_ = "com.example.app";
     auto assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
     g_getPhysicalPath = E_OK;
     g_checkValidPath = true;

@@ -82,7 +82,7 @@ void DaemonExecuteTest::SetUpTestCase(void)
     softBusHandlerMock_ = std::make_shared<SoftBusHandlerMock>();
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = softBusHandlerMock_;
 
-    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example";
+    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (!std::filesystem::exists(path)) {
         std::filesystem::create_directory(path);
         std::filesystem::create_directory(path + "/docs");
@@ -101,7 +101,7 @@ void DaemonExecuteTest::TearDownTestCase(void)
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = nullptr;
     softBusHandlerMock_ = nullptr;
 
-    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example";
+    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app";
     if (std::filesystem::exists(path)) {
         std::filesystem::remove_all(path);
     }
@@ -158,11 +158,11 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_001, TestSize.Level1)
 
     assetObj->uris_.clear();
     assetObj->uris_.push_back("file://com.huawei.hmos.example/data/storage/el2/distributedfiles/docs/1.txt");
-    assetObj->srcBundleName_ = "com.huawei.hmos.example";
+    assetObj->srcBundleName_ = "com.example.app";
     g_getPhysicalPath = E_OK;
     g_checkValidPath = true;
     g_isFolder = false;
-    g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1.txt";
+    g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt";
     pushData = std::make_shared<PushAssetData>(userId, assetObj);
     event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
@@ -173,7 +173,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_001, TestSize.Level1)
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillOnce(Return(E_OK));
     daemonExecute_->ExecutePushAsset(event);
 
-    assetObj->uris_.push_back("file://com.huawei.hmos.example/data/storage/el2/distributedfiles/docs/2.txt");
+    assetObj->uris_.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/2.txt");
     pushData = std::make_shared<PushAssetData>(userId, assetObj);
     event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
@@ -274,12 +274,12 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_GetFileList_001, TestSize.Level1)
     std::string srcBundleName;
 
     uris.push_back("test");
-    srcBundleName = "com.huawei.hmos.example";
+    srcBundleName = "com.example.app";
     auto ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     EXPECT_TRUE(ret.empty());
 
     uris.clear();
-    uris.push_back("file://com.huawei.hmos.example/data/storage/el2/distributedfiles/docs/1.txt");
+    uris.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/1.txt");
     g_getPhysicalPath = -1;
     ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     EXPECT_TRUE(ret.empty());
@@ -299,7 +299,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_GetFileList_001, TestSize.Level1)
     ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     EXPECT_TRUE(!ret.empty());
 
-    g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1.txt";
+    g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt";
     ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     EXPECT_TRUE(!ret.empty());
     GTEST_LOG_(INFO) << "DaemonExecute_GetFileList_001 end";
@@ -319,14 +319,14 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_HandleZip_001, TestSize.Level1)
     std::string sendFileName;
     bool isSingleFile;
 
-    fileList.emplace_back("/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1.txt");
+    fileList.emplace_back("/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/1.txt");
     EXPECT_EQ(daemonExecute_->HandleZip(fileList, assetObj, sendFileName, isSingleFile), E_OK);
 
-    fileList.emplace_back("/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/2.txt");
-    assetObj->srcBundleName_ = "com.huawei.hmos.examplesa";
+    fileList.emplace_back("/mnt/hmdfs/100/account/device_view/local/data/com.example.app/docs/2.txt");
+    assetObj->srcBundleName_ = "com.example.appsa";
     EXPECT_EQ(daemonExecute_->HandleZip(fileList, assetObj, sendFileName, isSingleFile), E_ZIP);
 
-    assetObj->srcBundleName_ = "com.huawei.hmos.example";
+    assetObj->srcBundleName_ = "com.example.app";
     EXPECT_CALL(*softBusHandlerAssetMock_, CompressFile(_, _, _)).WillOnce(Return(-1));
     EXPECT_EQ(daemonExecute_->HandleZip(fileList, assetObj, sendFileName, isSingleFile), E_ZIP);
 

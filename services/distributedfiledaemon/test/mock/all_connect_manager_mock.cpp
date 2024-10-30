@@ -36,7 +36,6 @@ int32_t AllConnectManager::InitAllConnectManager()
 int32_t AllConnectManager::UnInitAllConnectManager()
 {
     return 0;
-
 }
 
 int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,

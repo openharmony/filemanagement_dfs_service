@@ -19,6 +19,10 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace std;
+const int32_t FIRST = 1;
+const int32_t SECOND = 2;
+const int32_t THIRD = 3;
+const int32_t FOURTH = 4;
 DeviceManagerAgent::DeviceManagerAgent() : DfsuActor<DeviceManagerAgent>(this,
     std::numeric_limits<uint32_t>::max()) {}
 
@@ -218,19 +222,19 @@ int32_t DeviceManagerAgent::FindListenerByObject(const wptr<IRemoteObject> &remo
     }
     auto ret = IDeviceManagerAgentMock::iDeviceManagerAgentMock_->FindListenerByObject(remote, tokenId, listener);
     switch (ret) {
-        case 1:
+        case FIRST:
             tokenId = 0;
             listener = nullptr;
             break;
-        case 2:
+        case SECOND:
             tokenId = 1;
             listener = nullptr;
             break;
-        case 3:
+        case THIRD:
             tokenId = 0;
             listener = IDeviceManagerAgentMock::iDeviceManagerAgentMock_->GetDfsListener();
             break;
-        case 4:
+        case FOURTH:
             tokenId = 1;
             listener = IDeviceManagerAgentMock::iDeviceManagerAgentMock_->GetDfsListener();
             break;

@@ -53,7 +53,6 @@ std::string SoftBusSessionListener::GetBundleName(const std::string &uri)
 {
 
     return "test";
-
 }
 
 std::string SoftBusSessionListener::GetSandboxPath(const std::string &uri)
