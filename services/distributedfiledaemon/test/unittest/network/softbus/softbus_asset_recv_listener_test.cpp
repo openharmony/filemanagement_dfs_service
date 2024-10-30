@@ -15,9 +15,9 @@
 #include "network/softbus/softbus_asset_recv_listener.h"
 
 #include <memory>
-#include <unistd.h>
-
+#include <fcntl.h>
 #include "gtest/gtest.h"
+#include <unistd.h>
 
 #include "asset_obj.h"
 #include "dfs_error.h"
@@ -144,6 +144,9 @@ HWTEST_F(SoftbusAssetRecvListenerTest, SoftbusAssetRecvListenerTest_OnFile_0300,
         SoftbusAssetRecvListener::OnFile(socket, &event);
         EXPECT_EQ(SoftBusHandlerAsset::GetInstance().GetClientInfo(socket), "");
         EXPECT_TRUE(true);
+
+        event.type = FILE_EVENT_BUTT;
+        SoftbusAssetRecvListener::OnFile(socket, &event);
     } catch (...) {
         EXPECT_TRUE(false);
     }
