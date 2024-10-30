@@ -1019,7 +1019,6 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest3, TestSize.Level1)
     const std::string value = "0";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_RDB));
 
     int32_t ret = clouddiskrdbStore_->RecycleSetXattr(name, parentCloudId, cloudId, value);
     EXPECT_EQ(ret, E_RDB);
@@ -1039,7 +1038,6 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest4, TestSize.Level1)
     const std::string value = "0";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_OK));
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
 
@@ -1062,13 +1060,12 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest5, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_OK));
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->RecycleSetXattr(name, parentCloudId, cloudId, value);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
@@ -1086,7 +1083,6 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest6, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_OK));
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
