@@ -45,7 +45,7 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
     return ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_->AssetBind(dstNetworkId, socketId);
 }
 
-int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& sendFile, bool isSingleFile)
+int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string &sendFile, bool isSingleFile)
 {
     if (ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_ == nullptr) {
         return -1;
@@ -157,7 +157,7 @@ int32_t SoftBusHandlerAsset::MkDir(const std::string &path, mode_t mode)
     return 0;
 }
 
-bool SoftBusHandlerAsset::MkDirRecurse(const std::string& path, mode_t mode)
+bool SoftBusHandlerAsset::MkDirRecurse(const std::string &path, mode_t mode)
 {
     if (ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_ == nullptr) {
         return -1;

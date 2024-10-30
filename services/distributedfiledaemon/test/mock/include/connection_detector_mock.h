@@ -24,6 +24,7 @@ namespace Storage {
 namespace DistributedFile {
 class IConnectionDetectorMock {
 public:
+    IConnectionDetectorMock() = default;
     virtual ~IConnectionDetectorMock() = default;
     virtual bool GetConnectionStatus(const std::string &targetDir, const std::string &networkId) = 0;
     virtual int32_t RepeatGetConnectionStatus(const std::string &targetDir, const std::string &networkId) = 0;

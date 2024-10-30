@@ -24,6 +24,7 @@ namespace Storage {
 namespace DistributedFile {
 class ISoftBusSessionListenerMock {
 public:
+    ISoftBusSessionListenerMock() = default;
     virtual ~ISoftBusSessionListenerMock() = default;
     virtual std::string GetBundleName(const std::string &uri);
     virtual std::string GetRealPath(const std::string &srcUri);

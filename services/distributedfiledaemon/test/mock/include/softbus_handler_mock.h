@@ -23,6 +23,7 @@ namespace Storage {
 namespace DistributedFile {
 class ISoftBusHandlerMock {
 public:
+    ISoftBusHandlerMock() = default;
     virtual ~ISoftBusHandlerMock() = default;
 
     virtual int32_t CreateSessionServer(const std::string &packageName, const std::string &sessionName,

@@ -24,8 +24,8 @@ namespace Storage {
 namespace DistributedFile {
 class DfsSystemAbilityManagerClient {
 public:
-    virtual SystemAbilityManagerClient &GetInstance() = 0;
     virtual sptr<ISystemAbilityManager> GetSystemAbilityManager() = 0;
+
 public:
     DfsSystemAbilityManagerClient() = default;
     virtual ~DfsSystemAbilityManagerClient() = default;
@@ -34,7 +34,6 @@ public:
 
 class DfsSystemAbilityManagerClientMock : public DfsSystemAbilityManagerClient {
 public:
-    MOCK_METHOD0(GetInstance, SystemAbilityManagerClient &());
     MOCK_METHOD0(GetSystemAbilityManager, sptr<ISystemAbilityManager>());
 };
 } // namespace DistributedFile

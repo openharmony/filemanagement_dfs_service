@@ -24,6 +24,7 @@ namespace Storage {
 namespace DistributedFile {
 class IDeviceManagerAgentMock {
 public:
+    IDeviceManagerAgentMock() = default;
     virtual ~IDeviceManagerAgentMock() = default;
     virtual int32_t IsSupportedDevice(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
     virtual int32_t OnDeviceP2POnline(const DistributedHardware::DmDeviceInfo &deviceInfo) = 0;
@@ -31,7 +32,7 @@ public:
     virtual int32_t AddRemoteReverseObj(uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj) = 0;
     virtual int32_t RemoveRemoteReverseObj(bool clear, uint32_t callingTokenId) = 0;
     virtual int32_t FindListenerByObject(const wptr<IRemoteObject> &remote, uint32_t &tokenId,
-                                         sptr<IFileDfsListener>& listener) = 0;
+                                         sptr<IFileDfsListener> &listener) = 0;
     virtual std::string GetDeviceIdByNetworkId(const std::string &networkId) = 0;
     virtual int32_t MountDfsDocs(const std::string &networkId, const std::string &deviceId) = 0;
     virtual int32_t UMountDfsDocs(const std::string &networkId, const std::string &deviceId, bool needClear) = 0;

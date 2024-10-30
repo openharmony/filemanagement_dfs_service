@@ -211,7 +211,7 @@ int32_t DeviceManagerAgent::RemoveRemoteReverseObj(bool clear, uint32_t callingT
 }
 
 int32_t DeviceManagerAgent::FindListenerByObject(const wptr<IRemoteObject> &remote,
-                                                 uint32_t &tokenId, sptr<IFileDfsListener>& listener)
+                                                 uint32_t &tokenId, sptr<IFileDfsListener> &listener)
 {
     if (IDeviceManagerAgentMock::iDeviceManagerAgentMock_ == nullptr) {
         return -1;

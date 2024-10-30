@@ -24,6 +24,7 @@ namespace Storage {
 namespace DistributedFile {
 class IAllConnectManagerMock {
 public:
+    IAllConnectManagerMock() = default;
     virtual ~IAllConnectManagerMock() = default;
     virtual int32_t ApplyAdvancedResource(const std::string &peerNetworkId,
                                           ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest) = 0;

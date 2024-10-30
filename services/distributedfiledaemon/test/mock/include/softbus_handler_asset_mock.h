@@ -24,10 +24,11 @@ namespace Storage {
 namespace DistributedFile {
 class ISoftBusHandlerAssetMock {
 public:
+    ISoftBusHandlerAssetMock() = default;
     virtual ~ISoftBusHandlerAssetMock() = default;
 
     virtual int32_t AssetBind(const std::string &dstNetworkId, int32_t &socketId) = 0;
-    virtual int32_t AssetSendFile(int32_t socketId, const std::string& sendFile, bool isSingleFile) = 0;
+    virtual int32_t AssetSendFile(int32_t socketId, const std::string &sendFile, bool isSingleFile) = 0;
     virtual std::string GetClientInfo(int32_t socketId) = 0;
     virtual sptr<AssetObj> GetAssetObj(int32_t socketId) = 0;
     virtual int32_t GenerateAssetObjInfo(int32_t socketId,
@@ -41,7 +42,7 @@ public:
                                  const std::string &zipFileName) = 0;
     virtual std::vector<std::string> DecompressFile(const std::string &unZipFileName,
                                                     const std::string &relativePath) = 0;
-    virtual bool MkDirRecurse(const std::string& path, mode_t mode) = 0;
+    virtual bool MkDirRecurse(const std::string &path, mode_t mode) = 0;
 
 public:
     static inline std::shared_ptr<ISoftBusHandlerAssetMock> iSoftBusHandlerAssetMock_ = nullptr;
