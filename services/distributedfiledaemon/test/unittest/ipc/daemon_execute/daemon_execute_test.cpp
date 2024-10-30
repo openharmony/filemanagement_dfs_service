@@ -1,28 +1,56 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include <filesystem>
 #include <fstream>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
-#include "dfs_error.h"
+#include "all_connect_manager_mock.h"
 #include "daemon_execute.h"
+#include "dfs_error.h"
+#include "sandbox_helper.h"
 #include "softbus_handler_asset_mock.h"
 #include "softbus_handler_mock.h"
-#include "all_connect_manager_mock.h"
+
+namespace {
+std::string g_physicalPath;
+int32_t g_getPhysicalPath = 0;
+bool g_checkValidPath = false;
+bool g_isFolder;
+} // namespace
+
+namespace OHOS::AppFileService {
+int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::string &userId, std::string &physicalPath)
+{
+    physicalPath = g_physicalPath;
+    return g_getPhysicalPath;
+}
+
+bool SandboxHelper::CheckValidPath(const std::string &filePath)
+{
+    return g_checkValidPath;
+}
+} // namespace OHOS::AppFileService
+
+namespace OHOS::Storage::DistributedFile::Utils {
+bool IsFolder(const std::string &name)
+{
+    return g_isFolder;
+}
+} // namespace OHOS::Storage::DistributedFile::Utils
 
 namespace OHOS::Storage::DistributedFile::Test {
 using namespace OHOS::FileManagement;
@@ -54,9 +82,10 @@ void DaemonExecuteTest::SetUpTestCase(void)
     softBusHandlerMock_ = std::make_shared<SoftBusHandlerMock>();
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = softBusHandlerMock_;
 
-    std::string path =  "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs";
+    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example";
     if (!std::filesystem::exists(path)) {
         std::filesystem::create_directory(path);
+        std::filesystem::create_directory(path + "/docs");
     }
     std::ofstream file1(path + "/1.txt");
     std::ofstream file2(path + "/2.txt");
@@ -67,8 +96,12 @@ void DaemonExecuteTest::TearDownTestCase(void)
     GTEST_LOG_(INFO) << "TearDownTestCase";
     ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_ = nullptr;
     softBusHandlerAssetMock_ = nullptr;
+    IAllConnectManagerMock::iAllConnectManagerMock_ = nullptr;
+    allConnectManagerMock_ = nullptr;
+    ISoftBusHandlerMock::iSoftBusHandlerMock_ = nullptr;
+    softBusHandlerMock_ = nullptr;
 
-    std::string path =  "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example";
+    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example";
     if (std::filesystem::exists(path)) {
         std::filesystem::remove_all(path);
     }
@@ -85,26 +118,6 @@ void DaemonExecuteTest::TearDown(void)
     GTEST_LOG_(INFO) << "TearDown";
     daemonExecute_ = nullptr;
 }
-
-// /**
-//  * @tc.name: DaemonExecute_ProcessEvent_001
-//  * @tc.desc: verify ProcessEvent.
-//  * @tc.type: FUNC
-//  * @tc.require: I7TDJK
-//  */
-// HWTEST_F(DaemonExecuteTest, DaemonExecute_ProcessEvent_001, TestSize.Level1)
-// {
-//     auto eventptr = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, nullptr, 0);
-//     eventptr.reset(nullptr);
-//     daemonExecute_->ProcessEvent(eventptr);
-
-//     auto event = AppExecFwk::InnerEvent::Get(999, nullptr, 0);
-//     daemonExecute_->ProcessEvent(event);
-
-//     event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, nullptr, 0);
-//     daemonExecute_->ProcessEvent(event);
-// }
-
 
 /**
  * @tc.name: DaemonExecute_ExecutePushAsset_001
@@ -146,6 +159,10 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_ExecutePushAsset_001, TestSize.Level1)
     assetObj->uris_.clear();
     assetObj->uris_.push_back("file://com.huawei.hmos.example/data/storage/el2/distributedfiles/docs/1.txt");
     assetObj->srcBundleName_ = "com.huawei.hmos.example";
+    g_getPhysicalPath = E_OK;
+    g_checkValidPath = true;
+    g_isFolder = false;
+    g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1.txt";
     pushData = std::make_shared<PushAssetData>(userId, assetObj);
     event = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PUSH_ASSET, pushData, 0);
     EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
@@ -225,11 +242,12 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_RequestSendFileInner_001, TestSize.Lev
     std::string dstDeviceId;
     std::string sessionName;
     EXPECT_CALL(*allConnectManagerMock_, ApplyAdvancedResource(_, _)).WillOnce(Return(-1));
-    EXPECT_EQ(daemonExecute_->RequestSendFileInner(srcUri, dstPath, dstDeviceId, sessionName), -1);
+    EXPECT_EQ(daemonExecute_->RequestSendFileInner(srcUri, dstPath, dstDeviceId, sessionName), ERR_APPLY_RESULT);
 
     EXPECT_CALL(*allConnectManagerMock_, ApplyAdvancedResource(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerMock_, OpenSession(_, _, _, _)).WillOnce(Return(-1));
-    EXPECT_EQ(daemonExecute_->RequestSendFileInner(srcUri, dstPath, dstDeviceId, sessionName), -1);
+    EXPECT_EQ(daemonExecute_->RequestSendFileInner(srcUri, dstPath, dstDeviceId, sessionName),
+              E_SOFTBUS_SESSION_FAILED);
 
     EXPECT_CALL(*allConnectManagerMock_, ApplyAdvancedResource(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerMock_, OpenSession(_, _, _, _)).WillOnce(Return(E_OK));
@@ -257,32 +275,32 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_GetFileList_001, TestSize.Level1)
     std::string srcBundleName;
 
     uris.push_back("test");
-    srcBundleName = "srcBundleName";
+    srcBundleName = "com.huawei.hmos.example";
     auto ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     EXPECT_TRUE(ret.empty());
 
     uris.clear();
-    uris.push_back("file://com.huawei.hmos.example/data/storage/el2/distributeles/docs/1.txt");
-    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
-    EXPECT_TRUE(ret.empty());
-
-    uris.clear();
-    uris.push_back("file://com.huawei.hmos.example/data/storage/el2/distributedfiles/docs/a/1.txt");
-    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
-    EXPECT_TRUE(ret.empty());
-
-    uris.clear();
-    uris.push_back("file://com.huawei.hmos.example/data/storage/el2/distributedfiles/docs");
-    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
-    EXPECT_TRUE(ret.empty());
-
-    uris.clear();
-    uris.push_back("file://com.huawei.hmos.example/data/storage/el2/distributedfiles/docs");
-    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
-    EXPECT_TRUE(ret.empty());
-
-    uris.clear();
     uris.push_back("file://com.huawei.hmos.example/data/storage/el2/distributedfiles/docs/1.txt");
+    g_getPhysicalPath = -1;
+    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
+    EXPECT_TRUE(ret.empty());
+
+    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
+    g_getPhysicalPath = E_OK;
+    g_checkValidPath = false;
+    EXPECT_TRUE(ret.empty());
+
+    g_checkValidPath = true;
+    g_isFolder = true;
+    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
+    EXPECT_TRUE(ret.empty());
+
+    g_isFolder = false;
+    g_physicalPath = "test";
+    ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
+    EXPECT_TRUE(!ret.empty());
+
+    g_physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1.txt";
     ret = daemonExecute_->GetFileList(uris, userId, srcBundleName);
     EXPECT_TRUE(!ret.empty());
     GTEST_LOG_(INFO) << "DaemonExecute_GetFileList_001 end";
@@ -317,4 +335,4 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_HandleZip_001, TestSize.Level1)
     EXPECT_EQ(daemonExecute_->HandleZip(fileList, assetObj, sendFileName, isSingleFile), E_OK);
     GTEST_LOG_(INFO) << "DaemonExecute_HandleZip_001 end";
 }
-}
+} // namespace OHOS::Storage::DistributedFile::Test

@@ -24,6 +24,7 @@ config("module_private_config") {
     "${distributedfile_path}/test/mock",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
+    "${services_path}/distributedfiledaemon/test/mock/include",
     "//third_party/json/include",
   ]
 }

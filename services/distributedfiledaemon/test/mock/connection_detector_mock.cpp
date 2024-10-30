@@ -48,10 +48,6 @@ bool ConnectionDetector::GetConnectionStatus(const std::string &targetDir, const
 
 uint64_t ConnectionDetector::MocklispHash(const string &str)
 {
-    // if (IConnectionDetectorMock::iConnectionDetectorMock_ == nullptr) {
-    //     return 0;
-    // }
-    // return IConnectionDetectorMock::iConnectionDetectorMock_->MocklispHash(str);
     return 1;
 }
 
@@ -70,10 +66,6 @@ int32_t ConnectionDetector::GetCurrentUserId()
 
 std::string ConnectionDetector::ParseHmdfsPath()
 {
-    // if (IConnectionDetectorMock::iConnectionDetectorMock_ == nullptr) {
-    //     return "";
-    // }
-    // return IConnectionDetectorMock::iConnectionDetectorMock_->ParseHmdfsPath();
     return "";
 }
 } // namespace DistributedFile

@@ -53,7 +53,6 @@ public:
     MOCK_METHOD1(GetSessionName, std::string(int32_t sessionId));
     MOCK_METHOD1(IsSameAccount, bool(const std::string &networkId));
 };
-
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

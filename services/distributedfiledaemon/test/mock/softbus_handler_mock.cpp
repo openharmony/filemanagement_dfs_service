@@ -57,7 +57,8 @@ int32_t SoftBusHandler::OpenSession(const std::string &mySessionName, const std:
     if (ISoftBusHandlerMock::iSoftBusHandlerMock_ == nullptr) {
         return -1;
     }
-    return ISoftBusHandlerMock::iSoftBusHandlerMock_->OpenSession(mySessionName, peerSessionName, peerDevId, socketId);
+    return ISoftBusHandlerMock::iSoftBusHandlerMock_->OpenSession(mySessionName,
+        peerSessionName, peerDevId, socketId);
 }
 
 bool SoftBusHandler::CreatSocketId(const std::string &mySessionName, const std::string &peerSessionName,

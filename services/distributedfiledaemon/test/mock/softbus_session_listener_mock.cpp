@@ -51,10 +51,9 @@ std::string SoftBusSessionListener::GetLocalUri(const std::string &uri)
 
 std::string SoftBusSessionListener::GetBundleName(const std::string &uri)
 {
-    if (ISoftBusSessionListenerMock::iSoftBusSessionListenerMock_ == nullptr) {
-        return {};
-    }
-    return ISoftBusSessionListenerMock::iSoftBusSessionListenerMock_->GetBundleName(uri);
+
+    return "test";
+
 }
 
 std::string SoftBusSessionListener::GetSandboxPath(const std::string &uri)
@@ -65,7 +64,7 @@ std::string SoftBusSessionListener::GetSandboxPath(const std::string &uri)
 std::string SoftBusSessionListener::GetRealPath(const std::string &srcUri)
 {
     if (ISoftBusSessionListenerMock::iSoftBusSessionListenerMock_ == nullptr) {
-        return {};
+        return "";
     }
     return ISoftBusSessionListenerMock::iSoftBusSessionListenerMock_->GetRealPath(srcUri);
 }

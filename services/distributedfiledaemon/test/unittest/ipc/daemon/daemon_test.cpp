@@ -1,43 +1,45 @@
 /*
-* Copyright (c) 2024 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
+#include <unistd.h>
 
-#include "daemon_execute.h"
-#include "daemon.h"
-#include "system_ability_definition.h"
-#include "dfs_error.h"
-#include "i_file_trans_listener.h"
-#include "dfsu_access_token_helper.h"
-#include "connection_detector_mock.h"
-#include "device_manager_agent_mock.h"
-#include "system_ability_manager_client_mock.h"
-#include "daemon_mock.h"
-#include "softbus_session_listener_mock.h"
-#include "sandbox_helper.h"
-#include "ipc_skeleton.h"
-#include "network/softbus/softbus_session_listener.h"
-#include "softbus_session_pool.h"
+#include "asset_callback_manager.h"
 #include "asset_recv_callback_mock.h"
 #include "asset_send_callback_mock.h"
+#include "common_event_manager.h"
+#include "connection_detector_mock.h"
+#include "daemon.h"
+#include "daemon_execute.h"
+#include "daemon_mock.h"
+#include "device_manager_agent_mock.h"
+#include "device_manager_impl.h"
+#include "dfs_error.h"
+#include "dfsu_access_token_helper.h"
+#include "i_file_trans_listener.h"
+#include "ipc_skeleton.h"
+#include "network/softbus/softbus_session_listener.h"
+#include "sandbox_helper.h"
 #include "softbus_handler_asset_mock.h"
 #include "softbus_handler_mock.h"
-#include "asset_callback_manager.h"
-#include "common_event_manager.h"
+#include "softbus_session_listener_mock.h"
+#include "softbus_session_pool.h"
+#include "system_ability_definition.h"
+#include "system_ability_manager_client_mock.h"
 
 namespace {
 bool g_checkCallerPermission = true;
@@ -52,7 +54,8 @@ pid_t g_getCallingUid = 100;
 bool g_publish;
 bool g_subscribeCommonEvent;
 bool g_unSubscribeCommonEvent;
-}
+int32_t g_getLocalDeviceInfo;
+} // namespace
 
 namespace {
 const std::string FILE_MANAGER_AUTHORITY = "docs";
@@ -61,7 +64,7 @@ const int32_t E_PERMISSION_DENIED_NAPI = 201;
 const int32_t E_INVAL_ARG_NAPI = 401;
 const int32_t E_CONNECTION_FAILED = 13900045;
 const int32_t E_UNMOUNT = 13600004;
-}
+} // namespace
 
 namespace OHOS::FileManagement {
 bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionName)
@@ -85,8 +88,7 @@ int AccessTokenKit::GetHapTokenInfo(AccessTokenID callerToken, HapTokenInfo &hap
 } // namespace OHOS::Security::AccessToken
 
 namespace OHOS::AppFileService {
-int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::string &userId,
-                                       std::string &physicalPath)
+int32_t SandboxHelper::GetPhysicalPath(const std::string &fileUri, const std::string &userId, std::string &physicalPath)
 {
     physicalPath = g_physicalPath;
     return g_getPhysicalPath;
@@ -109,6 +111,13 @@ bool CommonEventManager::UnSubscribeCommonEvent(const std::shared_ptr<CommonEven
     return g_unSubscribeCommonEvent;
 }
 } // namespace OHOS::EventFwk
+
+namespace OHOS::DistributedHardware {
+int32_t DeviceManagerImpl::GetLocalDeviceInfo(const std::string &pkgName, DmDeviceInfo &info)
+{
+    return g_getLocalDeviceInfo;
+}
+} // namespace OHOS::DistributedHardware
 
 namespace OHOS {
 #ifdef CONFIG_IPC_SINGLE
@@ -155,7 +164,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    std::shared_ptr<Daemon> daemon_;
+    sptr<Daemon> daemon_;
 
 public:
     static inline std::shared_ptr<ConnectionDetectorMock> connectionDetectorMock_ = nullptr;
@@ -194,12 +203,17 @@ void DaemonTest::SetUpTestCase(void)
     softBusHandlerMock_ = std::make_shared<SoftBusHandlerMock>();
     ISoftBusHandlerMock::iSoftBusHandlerMock_ = softBusHandlerMock_;
 
-    std::string path =  "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs";
+    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example";
     if (!std::filesystem::exists(path)) {
         std::filesystem::create_directory(path);
+        std::filesystem::create_directory(path + "/docs");
     }
-    std::ofstream file(path + "/1.txt");
-    std::ofstream file1(path + "/1@.txt");
+    std::string path2 = "/mnt/hmdfs/100/account/device_view/local/files/Docs/Download/111";
+    if (std::filesystem::exists(path2)) {
+        std::filesystem::remove_all(path2);
+    }
+    std::ofstream file(path + "/docs/1.txt");
+    std::ofstream file1(path + "/docs/1@.txt");
 }
 
 void DaemonTest::TearDownTestCase(void)
@@ -211,8 +225,14 @@ void DaemonTest::TearDownTestCase(void)
     deviceManagerAgentMock_ = nullptr;
     DfsSystemAbilityManagerClient::smc = nullptr;
     smc_ = nullptr;
+    ISoftBusSessionListenerMock::iSoftBusSessionListenerMock_ = nullptr;
+    softBusSessionListenerMock_ = nullptr;
+    ISoftBusHandlerAssetMock::iSoftBusHandlerAssetMock_ = nullptr;
+    softBusHandlerAssetMock_ = nullptr;
+    ISoftBusHandlerMock::iSoftBusHandlerMock_ = nullptr;
+    softBusHandlerMock_ = nullptr;
 
-    std::string path =  "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example";
+    std::string path = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example";
     if (std::filesystem::exists(path)) {
         std::filesystem::remove_all(path);
     }
@@ -223,7 +243,7 @@ void DaemonTest::SetUp(void)
     GTEST_LOG_(INFO) << "SetUp";
     int32_t saID = FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID;
     bool runOnCreate = true;
-    daemon_ = std::make_shared<Daemon>(saID, runOnCreate);
+    daemon_ = new (std::nothrow) Daemon(saID, runOnCreate);
 }
 
 void DaemonTest::TearDown(void)
@@ -241,6 +261,7 @@ void DaemonTest::TearDown(void)
 HWTEST_F(DaemonTest, DaemonTest_PublishSA_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_PublishSA_001 begin";
+
     daemon_->registerToService_ = true;
     try {
         daemon_->PublishSA();
@@ -248,21 +269,30 @@ HWTEST_F(DaemonTest, DaemonTest_PublishSA_001, TestSize.Level1)
     } catch (...) {
         EXPECT_TRUE(false);
     }
-
-    daemon_->registerToService_ = false;
-    g_publish = false;
-    try {
-        daemon_->PublishSA();
-        EXPECT_TRUE(false);
-    } catch (...) {
-        EXPECT_TRUE(true);
-    }
-
     daemon_->registerToService_ = false;
     g_publish = true;
     try {
         daemon_->PublishSA();
         EXPECT_EQ(daemon_->registerToService_, true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+    }
+}
+
+/**
+ * @tc.name: DaemonTest_PublishSA_002
+ * @tc.desc: verify PublishSA.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_PublishSA_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_PublishSA_001 begin";
+    daemon_->registerToService_ = false;
+    g_publish = false;
+    try {
+        daemon_->PublishSA();
+        EXPECT_TRUE(false);
     } catch (...) {
         EXPECT_TRUE(true);
     }
@@ -394,7 +424,7 @@ HWTEST_F(DaemonTest, DaemonTest_OnRemoveSystemAbility_001, TestSize.Level1)
     }
 
     g_unSubscribeCommonEvent = true;
-    daemon_->RegisterOsAccount();;
+    daemon_->RegisterOsAccount();
     try {
         daemon_->OnRemoveSystemAbility(COMMON_EVENT_SERVICE_ID, "");
         EXPECT_TRUE(true);
@@ -428,6 +458,7 @@ HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnection_001, TestSize.Level1)
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(0));
     EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), ERR_BAD_VALUE);
+    sleep(1);
 
     EXPECT_CALL(*connectionDetectorMock_, GetConnectionStatus(_, _)).WillOnce(Return(false));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
@@ -447,14 +478,16 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionCount_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionCount_001 begin";
     DistributedHardware::DmDeviceInfo deviceInfo;
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK))
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
+        .WillOnce(Return(E_OK))
         .WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), E_OK);
+    EXPECT_EQ(daemon_->ConnectionCount(deviceInfo), E_OK);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(ERR_BAD_VALUE))
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
+        .WillOnce(Return(ERR_BAD_VALUE))
         .WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), ERR_BAD_VALUE);
+    EXPECT_EQ(daemon_->ConnectionCount(deviceInfo), ERR_BAD_VALUE);
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionCount_001 end";
 }
 
@@ -471,10 +504,12 @@ HWTEST_F(DaemonTest, DaemonTest_CleanUp_001, TestSize.Level1)
     EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((E_OK)));
     EXPECT_EQ(daemon_->CleanUp(deviceInfo, "", 100), E_OK);
+    sleep(1);
 
     EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((E_OK)));
     EXPECT_EQ(daemon_->CleanUp(deviceInfo, "", 100), E_OK);
+    sleep(1);
     GTEST_LOG_(INFO) << "DaemonTest_CleanUp_001 end";
 }
 
@@ -489,18 +524,21 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionAndMount_001 begin";
     DistributedHardware::DmDeviceInfo deviceInfo;
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(ERR_BAD_VALUE))
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
+        .WillOnce(Return(ERR_BAD_VALUE))
         .WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "", 100), ERR_BAD_VALUE);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK))
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
+        .WillOnce(Return(E_OK))
         .WillOnce(Return(E_OK));
     g_checkCallerPermission = false;
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "", 100), E_OK);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK))
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
+        .WillOnce(Return(E_OK))
         .WillOnce(Return(E_OK));
     g_checkCallerPermission = true;
     EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
@@ -508,7 +546,8 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
     EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "", 100), ERR_BAD_VALUE);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK))
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
+        .WillOnce(Return(E_OK))
         .WillOnce(Return(E_OK));
     g_checkCallerPermission = true;
     EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
@@ -539,15 +578,18 @@ HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnectionEx_001, TestSize.Level1)
     std::string networkId = "test";
     EXPECT_CALL(*deviceManagerAgentMock_, AddRemoteReverseObj(_, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(ERR_BAD_VALUE))
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
+        .WillOnce(Return(ERR_BAD_VALUE))
         .WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->OpenP2PConnectionEx(networkId, listener), E_CONNECTION_FAILED);
+    sleep(1);
 
     EXPECT_CALL(*deviceManagerAgentMock_, AddRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK))
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
+        .WillOnce(Return(E_OK))
         .WillOnce(Return(E_OK));
     g_checkCallerPermission = true;
     EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
@@ -584,14 +626,16 @@ HWTEST_F(DaemonTest, DaemonTest_CloseP2PConnectionEx_001, TestSize.Level1)
     EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->CloseP2PConnectionEx(networkId), E_OK);
+    sleep(1);
 
     g_checkCallerPermission = false;
     EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->CloseP2PConnectionEx(networkId), E_OK);
+    sleep(1);
     GTEST_LOG_(INFO) << "DaemonTest_CloseP2PConnectionEx_001 end";
 }
 
@@ -624,13 +668,13 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
     HmdfsInfo hmdfsInfo;
     EXPECT_EQ(daemon_->PrepareSession("", "", "", nullptr, hmdfsInfo), E_NULLPTR);
 
-    auto listener = sptr<IRemoteObject>(new FileTransListenerMock());
-    auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+    sptr<IRemoteObject> listener = new (std::nothrow) FileTransListenerMock();
+    sptr<ISystemAbilityManagerMock> sysAbilityManager = new (std::nothrow) ISystemAbilityManagerMock();
     EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
     EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(nullptr));
     EXPECT_EQ(daemon_->PrepareSession("", "", "", listener, hmdfsInfo), E_SA_LOAD_FAILED);
 
-    auto daemon = (new (std::nothrow) DaemonMock());
+    sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
     EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
@@ -670,9 +714,10 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_002, TestSize.Level1)
     HmdfsInfo hmdfsInfo;
     hmdfsInfo.dirExistFlag = true;
     std::string dstUri = "file://docs/data/storage/el2/distributedfiles/images/1.png";
-    auto listener = sptr<IRemoteObject>(new FileTransListenerMock());
-    auto daemon = (new (std::nothrow) DaemonMock());
-    auto sysAbilityManager = sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
+    sptr<IRemoteObject> listener = sptr<IRemoteObject>(new FileTransListenerMock());
+    sptr<DaemonMock> daemon = (new (std::nothrow) DaemonMock());
+    sptr<ISystemAbilityManagerMock> sysAbilityManager =
+        sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
     EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
     EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
@@ -684,15 +729,26 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_002, TestSize.Level1)
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     SoftBusSessionPool::GetInstance().sessionMap_.clear();
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
+    g_getLocalDeviceInfo = ERR_BAD_VALUE;
     hmdfsInfo.authority = FILE_MANAGER_AUTHORITY;
-    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_SOFTBUS_SESSION_FAILED);
+    EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_GET_DEVICE_ID);
 
     EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
     EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     SoftBusSessionPool::GetInstance().sessionMap_.clear();
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
+    g_getLocalDeviceInfo = E_OK;
+    hmdfsInfo.authority = FILE_MANAGER_AUTHORITY;
+    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
+    EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_SA_LOAD_FAILED);
+
+    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
+    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
+    EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
+    SoftBusSessionPool::GetInstance().sessionMap_.clear();
+    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
+    g_getLocalDeviceInfo = E_OK;
     hmdfsInfo.authority = MEDIA_AUTHORITY;
     EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_OK);
@@ -702,6 +758,7 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_002, TestSize.Level1)
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
     SoftBusSessionPool::GetInstance().sessionMap_.clear();
     EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
+    g_getLocalDeviceInfo = E_OK;
     hmdfsInfo.authority = "test";
     EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_OK);
@@ -721,7 +778,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRealPath_001, TestSize.Level1)
     HmdfsInfo info;
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, nullptr), E_INVAL_ARG_NAPI);
 
-    auto daemon = new (std::nothrow) DaemonMock();
+    sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->GetRealPath("", "", physicalPath, info, daemon), E_SOFTBUS_SESSION_FAILED);
 
@@ -763,37 +820,37 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_001, TestSize.Level1)
     HmdfsInfo info;
 
     g_isFolder = false;
-    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, true, info), E_GET_PHYSICAL_PATH_FAILED); // 1 5
+    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, true, info), E_GET_PHYSICAL_PATH_FAILED);
 
     g_isFolder = false;
     physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1.txt";
     info.dirExistFlag = false;
     g_checkValidPath = false;
-    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, true, info), E_GET_PHYSICAL_PATH_FAILED); // 1 6 10 12 13
+    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, true, info), E_GET_PHYSICAL_PATH_FAILED);
 
     g_isFolder = false;
     physicalPath = "test";
     info.dirExistFlag = false;
-    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, false, info), E_GET_PHYSICAL_PATH_FAILED); // 3 8 11
+    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, false, info), E_GET_PHYSICAL_PATH_FAILED);
 
     g_isFolder = true;
     physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1.txt";
     info.dirExistFlag = true;
     g_checkValidPath = false;
-    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, true, info), E_GET_PHYSICAL_PATH_FAILED); // 2 9 12 13
+    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, "", hapTokenInfo, true, info), E_GET_PHYSICAL_PATH_FAILED);
 
     g_isFolder = true;
     physicalPath = "te@st";
     info.dirExistFlag = true;
     std::string dstUri = "file://docs/data/storage/el2/distributedfiles/images/1.png";
-    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK); // 4 7 16 21
+    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK);
 
     g_isFolder = false;
     physicalPath = "tes@t/test";
     info.dirExistFlag = false;
     g_checkValidPath = true;
     dstUri = "file://media/data/storage/el2/distributedfiles/images/1.png";
-    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK); // 2 8 12 14 17 21
+    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_CheckCopyRule_001 end";
 }
 
@@ -814,25 +871,25 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_002, TestSize.Level1)
     physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1.txt";
     info.dirExistFlag = true;
     std::string dstUri = "file://docs/data/storage/el2/distributedfiles/images/1.png";
-    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK); // 4 9 16 22
+    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK);
 
     g_isFolder = true;
     physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/1@.txt";
     info.dirExistFlag = true;
     dstUri = "file://docs/data/storage/el2/distributedfiles/images/1.png";
-    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK); // 4 9 16 23
+    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK);
 
     g_isFolder = true;
-    physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/111";
+    physicalPath = "/mnt/hmdfs/100/account/device_view/local/files/Docs/Download/111";
     info.dirExistFlag = true;
     dstUri = "file://docs/data/storage/el2/distributedfiles/images/1.png";
-    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK); // 4 9 16 20 25
+    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_OK);
 
     g_isFolder = true;
-    physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/com.huawei.hmos.example/docs/111";
+    physicalPath = "/mnt/hmdfs/100/account/device_view/local/data/docs/111";
     info.dirExistFlag = true;
     dstUri = "file://docs/data/storage/el2/distributedfiles/images/1.png";
-    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_GET_PHYSICAL_PATH_FAILED); // 4 9 16 20 24
+    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_GET_PHYSICAL_PATH_FAILED);
 
     g_isFolder = true;
     physicalPath = "te@st";
@@ -840,7 +897,8 @@ HWTEST_F(DaemonTest, DaemonTest_CheckCopyRule_002, TestSize.Level1)
     hapTokenInfo.userID = 100;
     g_checkValidPath = false;
     dstUri = "file://com.huawei.hmco.example/data/storage/el2/distributedfiles/images/1.png";
-    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info), E_GET_PHYSICAL_PATH_FAILED); // 4 7 15 18
+    EXPECT_EQ(daemon_->CheckCopyRule(physicalPath, dstUri, hapTokenInfo, false, info),
+              E_GET_PHYSICAL_PATH_FAILED); // 4 7 15 18
 
     g_isFolder = true;
     physicalPath = "te@st";
@@ -888,7 +946,7 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteSA_001, TestSize.Level1)
     EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(nullptr));
     EXPECT_TRUE(daemon_->GetRemoteSA("") == nullptr);
 
-    auto daemon = new (std::nothrow) DaemonMock();
+    sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
     EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
     EXPECT_FALSE(daemon_->GetRemoteSA("") == nullptr);
@@ -904,9 +962,13 @@ HWTEST_F(DaemonTest, DaemonTest_GetRemoteSA_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_Copy_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_Copy_001 begin";
+    g_getLocalDeviceInfo = ERR_BAD_VALUE;
+    EXPECT_EQ(daemon_->Copy("", "", nullptr, ""), E_GET_DEVICE_ID);
+
+    g_getLocalDeviceInfo = E_OK;
     EXPECT_EQ(daemon_->Copy("", "", nullptr, ""), E_INVAL_ARG_NAPI);
 
-    auto daemon = new (std::nothrow) DaemonMock();
+    sptr<DaemonMock> daemon = new (std::nothrow) DaemonMock();
     EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->Copy("", "", daemon, ""), E_SA_LOAD_FAILED);
 
@@ -925,7 +987,7 @@ HWTEST_F(DaemonTest, DaemonTest_CancelCopyTask_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CancelCopyTask_001 begin";
     SoftBusSessionPool::GetInstance().DeleteSessionInfo("test");
-    EXPECT_EQ(daemon_->CancelCopyTask("test"), E_INVAL_ARG_NAPI);
+    EXPECT_EQ(daemon_->CancelCopyTask("test"), E_INVAL_ARG);
 
     SoftBusSessionPool::SessionInfo sessionInfo{.uid = 100};
     g_getCallingUid = 101;
@@ -958,11 +1020,33 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_001, TestSize.Level1)
     assetObj->srcBundleName_ = "test";
     daemon_->eventHandler_ = nullptr;
     EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_EVENT_HANDLER);
-
-    daemon_->StartEventHandler();
-    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_001 end";
+}
+
+/**
+ * @tc.name: DaemonTest_PushAsset_002
+ * @tc.desc: verify PushAsset.
+ * @tc.type: FUNC
+ * @tc.require: I7TDJK
+ */
+HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DaemonTest_PushAsset_002 begin";
+    daemon_->StartEventHandler();
+    int32_t userId = 100;
+    sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
+    assetObj->uris_.push_back("file://com.huawei.hmos.example/data/storage/el2/distributedfiles/docs/1.txt");
+    assetObj->srcBundleName_ = "com.huawei.hmos.example";
+    auto assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
+    g_getPhysicalPath = E_OK;
+    g_checkValidPath = true;
+    g_isFolder = false;
+    EXPECT_CALL(*softBusHandlerAssetMock_, AssetBind(_, _)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*softBusHandlerAssetMock_, AssetSendFile(_, _, _)).WillOnce(Return(E_OK));
+    EXPECT_EQ(daemon_->PushAsset(userId, assetObj, assetSendCallback), E_OK);
+    sleep(1);
+    AssetCallbackManager::GetInstance().RemoveSendCallback(assetObj->srcBundleName_);
+    GTEST_LOG_(INFO) << "DaemonTest_PushAsset_002 end";
 }
 
 /**
@@ -1021,42 +1105,38 @@ HWTEST_F(DaemonTest, DaemonTest_StartEventHandler_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_DfsListenerDeathRecipient_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_DfsListenerDeathRecipient_001 begin";
-    sptr<Daemon::DfsListenerDeathRecipient> dfsListenerDeathRecipient_;
-    auto daemon = new (std::nothrow) DaemonMock();
+    sptr<Daemon::DfsListenerDeathRecipient> dfsListenerDeathRecipient =
+        new (std::nothrow) Daemon::DfsListenerDeathRecipient();
+    sptr<Daemon> daemon = new (std::nothrow) Daemon(FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
 
     EXPECT_CALL(*deviceManagerAgentMock_, FindListenerByObject(_, _, _)).WillOnce(Return(1));
-    dfsListenerDeathRecipient_->OnRemoteDied(daemon);
+    dfsListenerDeathRecipient->OnRemoteDied(daemon);
 
     EXPECT_CALL(*deviceManagerAgentMock_, FindListenerByObject(_, _, _)).WillOnce(Return(2));
-    dfsListenerDeathRecipient_->OnRemoteDied(daemon);
+    dfsListenerDeathRecipient->OnRemoteDied(daemon);
 
     auto listener = sptr<IFileDfsListener>(new FileDfsListenerMock());
     EXPECT_CALL(*deviceManagerAgentMock_, FindListenerByObject(_, _, _)).WillOnce(Return(3));
     EXPECT_CALL(*deviceManagerAgentMock_, GetDfsListener()).WillOnce(Return(listener));
-    dfsListenerDeathRecipient_->OnRemoteDied(daemon);
+    dfsListenerDeathRecipient->OnRemoteDied(daemon);
 
     EXPECT_CALL(*deviceManagerAgentMock_, FindListenerByObject(_, _, _)).WillOnce(Return(4));
     EXPECT_CALL(*deviceManagerAgentMock_, GetDfsListener()).WillOnce(Return(listener));
     EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(ERR_BAD_VALUE));
-    dfsListenerDeathRecipient_->OnRemoteDied(daemon);
-
-    EXPECT_CALL(*deviceManagerAgentMock_, FindListenerByObject(_, _, _)).WillOnce(Return(4));
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDfsListener()).WillOnce(Return(listener));
-    EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
     std::unordered_set<std::string> set1;
     EXPECT_CALL(*deviceManagerAgentMock_, GetNetworkIds(_)).WillOnce(Return(set1));
-    dfsListenerDeathRecipient_->OnRemoteDied(daemon);
+    dfsListenerDeathRecipient->OnRemoteDied(daemon);
 
     EXPECT_CALL(*deviceManagerAgentMock_, FindListenerByObject(_, _, _)).WillOnce(Return(4));
     EXPECT_CALL(*deviceManagerAgentMock_, GetDfsListener()).WillOnce(Return(listener));
     EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
     std::unordered_set<std::string> set2{"", "test01", "test02"};
     EXPECT_CALL(*deviceManagerAgentMock_, GetNetworkIds(_)).WillOnce(Return(set2));
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return(""))
-        .WillOnce(Return("test"));
+    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("")).WillOnce(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(E_OK));
-    dfsListenerDeathRecipient_->OnRemoteDied(daemon);
+    dfsListenerDeathRecipient->OnRemoteDied(daemon);
+    sleep(1);
     GTEST_LOG_(INFO) << "DaemonTest_DfsListenerDeathRecipient_001 end";
 }
 } // namespace Test

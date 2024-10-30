@@ -42,14 +42,11 @@ int32_t AllConnectManager::UnInitAllConnectManager()
 int32_t AllConnectManager::PublishServiceState(const std::string &peerNetworkId,
                                                ServiceCollaborationManagerBussinessStatus state)
 {
-    if (IAllConnectManagerMock::iAllConnectManagerMock_ == nullptr) {
-        return -1;
-    }
-    return IAllConnectManagerMock::iAllConnectManagerMock_->PublishServiceState(peerNetworkId, state);
+    return 0;
 }
 
 int32_t AllConnectManager::ApplyAdvancedResource(const std::string &peerNetworkId,
-                                                 ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest)
+    ServiceCollaborationManager_ResourceRequestInfoSets *resourceRequest)
 {
     if (IAllConnectManagerMock::iAllConnectManagerMock_ == nullptr) {
         return -1;

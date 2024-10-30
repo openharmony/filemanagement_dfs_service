@@ -12,24 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef OHOS_STORAGE_FILE_DFS_IASSET_SEND_CALLBACK_MOCK_H
-#define OHOS_STORAGE_FILE_DFS_IASSET_SEND_CALLBACK_MOCK_H
-#include "i_asset_send_callback.h"
+#ifndef OHOS_STORAGE_FILE_DFS_IASSET_RECV_CALLBACK_MOCK_H
+#define OHOS_STORAGE_FILE_DFS_IASSET_RECV_CALLBACK_MOCK_H
 
 #include <gmock/gmock.h>
 
+#include "asset/asset_obj.h"
+#include "asset/i_asset_recv_callback.h"
 #include "iremote_stub.h"
 
-#include "asset_obj.h"
 namespace OHOS::Storage::DistributedFile {
-class IAssetSendCallbackMock : public IRemoteStub<IAssetSendCallback> {
+class IAssetRecvCallbackMock : public IRemoteStub<IAssetRecvCallback> {
 public:
     int code_ = 0;
-    IAssetSendCallbackMock() : code_(0) {}
-    virtual ~IAssetSendCallbackMock() {}
+    IAssetRecvCallbackMock() : code_(0) {}
+    virtual ~IAssetRecvCallbackMock() {}
 
     MOCK_METHOD4(SendRequest, int(uint32_t, MessageParcel &, MessageParcel &, MessageOption &));
-    MOCK_METHOD2(OnSendResult, int32_t(const sptr<AssetObj> &assetObj, int32_t result));
+    MOCK_METHOD4(OnStart,
+                 int32_t(const std::string &srcNetworkId,
+                         const std::string &dstNetworkId,
+                         const std::string &sessionId,
+                         const std::string &dstBundleName));
+    MOCK_METHOD3(OnFinished, int32_t(const std::string &srcNetworkId, const sptr<AssetObj> &assetObj, int32_t result));
 };
-}
+} // namespace OHOS::Storage::DistributedFile
 #endif
