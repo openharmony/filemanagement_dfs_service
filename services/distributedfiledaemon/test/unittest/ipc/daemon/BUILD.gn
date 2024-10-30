@@ -46,7 +46,6 @@ ohos_unittest("daemon_test") {
   ]
 
   sources = [
-    "daemon_test.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
     "${services_path}/distributedfiledaemon/src/ipc/daemon.cpp",
@@ -66,6 +65,7 @@ ohos_unittest("daemon_test") {
     "${services_path}/distributedfiledaemon/test/mock/softbus_handler_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/softbus_session_listener_mock.cpp",
     "${services_path}/distributedfiledaemon/test/mock/system_ability_manager_client_mock.cpp",
+    "daemon_test.cpp",
   ]
 
   configs = [
