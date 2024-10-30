@@ -1009,7 +1009,7 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_PushAsset_001 begin";
     int32_t userId = 100;
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
-    auto assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
+    sptr<IAssetSendCallback> assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
     EXPECT_EQ(daemon_->PushAsset(userId, nullptr, nullptr), E_NULLPTR);
     EXPECT_EQ(daemon_->PushAsset(userId, assetObj, nullptr), E_NULLPTR);
     EXPECT_EQ(daemon_->PushAsset(userId, nullptr, assetSendCallback), E_NULLPTR);
@@ -1035,7 +1035,7 @@ HWTEST_F(DaemonTest, DaemonTest_PushAsset_002, TestSize.Level1)
     sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
     assetObj->uris_.push_back("file://com.example.app/data/storage/el2/distributedfiles/docs/1.txt");
     assetObj->srcBundleName_ = "com.example.app";
-    auto assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
+    sptr<IAssetSendCallback> assetSendCallback = new (std::nothrow) IAssetSendCallbackMock();
     g_getPhysicalPath = E_OK;
     g_checkValidPath = true;
     g_isFolder = false;
@@ -1058,7 +1058,7 @@ HWTEST_F(DaemonTest, DaemonTest_RegisterAssetCallback_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_RegisterAssetCallback_001 begin";
     EXPECT_EQ(daemon_->RegisterAssetCallback(nullptr), E_NULLPTR);
 
-    auto assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();
+    sptr<IAssetRecvCallback> assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();
     EXPECT_EQ(daemon_->RegisterAssetCallback(assetRecvCallback), E_OK);
     AssetCallbackManager::GetInstance().RemoveRecvCallback(assetRecvCallback);
     GTEST_LOG_(INFO) << "DaemonTest_RegisterAssetCallback_001 end";
@@ -1075,7 +1075,7 @@ HWTEST_F(DaemonTest, DaemonTest_UnRegisterAssetCallback_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DaemonTest_UnRegisterAssetCallback_001 begin";
     EXPECT_EQ(daemon_->UnRegisterAssetCallback(nullptr), E_NULLPTR);
 
-    auto assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();
+    sptr<IAssetRecvCallback> assetRecvCallback = new (std::nothrow) IAssetRecvCallbackMock();
     EXPECT_EQ(daemon_->UnRegisterAssetCallback(assetRecvCallback), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_UnRegisterAssetCallback_001 end";
 }
