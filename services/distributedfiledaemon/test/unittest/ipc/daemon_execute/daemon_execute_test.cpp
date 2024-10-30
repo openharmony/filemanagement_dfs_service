@@ -246,8 +246,7 @@ HWTEST_F(DaemonExecuteTest, DaemonExecute_RequestSendFileInner_001, TestSize.Lev
 
     EXPECT_CALL(*allConnectManagerMock_, ApplyAdvancedResource(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerMock_, OpenSession(_, _, _, _)).WillOnce(Return(-1));
-    EXPECT_EQ(daemonExecute_->RequestSendFileInner(srcUri, dstPath, dstDeviceId, sessionName),
-              E_SOFTBUS_SESSION_FAILED);
+    EXPECT_EQ(daemonExecute_->RequestSendFileInner(srcUri, dstPath, dstDeviceId, sessionName), -1);
 
     EXPECT_CALL(*allConnectManagerMock_, ApplyAdvancedResource(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*softBusHandlerMock_, OpenSession(_, _, _, _)).WillOnce(Return(E_OK));
