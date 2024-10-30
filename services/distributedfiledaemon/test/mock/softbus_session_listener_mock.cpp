@@ -51,7 +51,6 @@ std::string SoftBusSessionListener::GetLocalUri(const std::string &uri)
 
 std::string SoftBusSessionListener::GetBundleName(const std::string &uri)
 {
-
     return "test";
 }
 
