@@ -87,6 +87,7 @@ static const unsigned int MAX_IDLE_THREADS = 10;
 static const unsigned int READ_CACHE_SLEEP = 10 * 1000;
 static const unsigned int CACHE_PAGE_NUM = 2;
 static const unsigned int HMDFS_IOC = 0xf2;
+static const unsigned int FUSE_BUFFER_SIZE = 512 * 1024;
 static const std::chrono::seconds READ_TIMEOUT_S = 16s;
 static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
 static const unsigned int LOOKUP_TIMEOUT_S = 1;
@@ -1546,6 +1547,7 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
 
     LOGI("fuse_session_new success, userId: %{public}d", userId);
     se->fd = devFd;
+    se->bufsize = FUSE_BUFFER_SIZE;
     se->mountpoint = strdup(path.c_str());
     if (se->mountpoint == nullptr) {
         return -ENOMEM;
