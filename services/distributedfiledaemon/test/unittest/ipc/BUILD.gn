@@ -24,6 +24,7 @@ config("module_private_config") {
     "${distributedfile_path}/test/mock",
     "${services_path}/distributedfiledaemon/include",
     "${services_path}/distributedfiledaemon/include/ipc",
+    "${services_path}/distributedfiledaemon/test/mock/include",
     "//third_party/json/include",
   ]
 }
@@ -155,5 +156,7 @@ group("unittest") {
     ":asset_callback_manager_test",
     ":asset_recv_callback_proxy_test",
     ":asset_send_callback_proxy_test",
+    "daemon:daemon_test",
+    "daemon_execute:daemon_execute_test",
   ]
 }

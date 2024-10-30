@@ -1,0 +1,93 @@
+# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+module_output_path = "storage_distributed_file_manager/distributedfiledaemon"
+
+config("module_private_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/include",
+    "${distributedfile_path}/test/mock",
+    "${services_path}/distributedfiledaemon/include",
+    "${services_path}/distributedfiledaemon/include/ipc",
+    "//third_party/json/include",
+  ]
+}
+
+ohos_unittest("daemon_execute_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    integer_overflow = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus",
+    "${distributedfile_path}/services/distributedfiledaemon/test/mock/include",
+  ]
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/asset_callback_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/daemon_execute.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_asset_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/test/mock/all_connect_manager_mock.cpp",
+    "${services_path}/distributedfiledaemon/test/mock/softbus_handler_asset_mock.cpp",
+    "${services_path}/distributedfiledaemon/test/mock/softbus_handler_mock.cpp",
+    "daemon_execute_test.cpp",
+  ]
+
+  configs = [
+    ":module_private_config",
+    "${utils_path}:compiler_configs",
+  ]
+
+  deps = [
+    "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:zuri",
+    "access_token:libaccesstoken_sdk",
+    "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
+    "device_manager:devicemanagersdk",
+    "dsoftbus:softbus_client",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "os_account:os_account_innerkits",
+    "zlib:shared_libz",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_TAG=\"distributedfile_daemon\"",
+  ]
+}
+
+group("unittest") {
+  testonly = true
+  deps = [ ":daemon_execute_test" ]
+}

@@ -78,6 +78,8 @@ group("dfs_test_moudule") {
     "${services_path}/distributedfiledaemon/test/unittest/ipc:asset_callback_manager_test",
     "${services_path}/distributedfiledaemon/test/unittest/ipc:asset_recv_callback_proxy_test",
     "${services_path}/distributedfiledaemon/test/unittest/ipc:asset_send_callback_proxy_test",
+    "${services_path}/distributedfiledaemon/test/unittest/ipc/daemon:daemon_test",
+    "${services_path}/distributedfiledaemon/test/unittest/ipc/daemon_execute:daemon_execute_test",
     "${services_path}/distributedfiledaemon/test/unittest/mountpoint:mount_manager_test",
     "${services_path}/distributedfiledaemon/test/unittest/mountpoint:mount_point_test",
     "test/moduletest:DistributedFileDaemonServiceTest",
