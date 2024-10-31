@@ -46,6 +46,9 @@ int32_t CloudDiskRdbUtils::GetLong(const string &key, int64_t &val,
 int32_t CloudDiskRdbUtils::GetString(const string &key, string &val,
                                      const shared_ptr<ResultSet> resultSet)
 {
+    if (val == "mock") {
+        return E_RDB;
+    }
     return E_OK;
 }
 
@@ -75,6 +78,9 @@ static void FillFileInfo(const RowEntity &rowEntity, CloudDiskFileInfo &info)
 int32_t CloudDiskRdbUtils::ResultSetToFileInfo(const shared_ptr<ResultSet> resultSet,
                                                CloudDiskFileInfo &info)
 {
+    if (info.name == "mock") {
+        return E_RDB;
+    }
     return E_OK;
 }
 
@@ -86,6 +92,9 @@ size_t CloudDiskRdbUtils::FuseDentryAlignSize(const char *name)
 int32_t CloudDiskRdbUtils::ResultSetToFileInfos(const shared_ptr<ResultSet> resultSet,
                                                 vector<CloudDiskFileInfo> &infos)
 {
+    if (infos.empty()) {
+        return E_RDB;
+    }
     return E_OK;
 }
 }
