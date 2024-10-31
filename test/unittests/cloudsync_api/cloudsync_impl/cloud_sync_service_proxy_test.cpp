@@ -899,7 +899,7 @@ HWTEST_F(CloudSyncServiceProxyTest, RegisterDownloadFileCallback002, TestSize.Le
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
 
     int result = proxy_->RegisterDownloadFileCallback(remote_);
-    EXPECT_EQ(result, -1);
+    EXPECT_EQ(result, E_BROKEN_IPC);
     GTEST_LOG_(INFO) << "RegisterDownloadFileCallback End";
 }
 
@@ -931,7 +931,7 @@ HWTEST_F(CloudSyncServiceProxyTest, UnregisterDownloadFileCallback001, TestSize.
     EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
     int result = proxy_->UnregisterDownloadFileCallback();
 
-    EXPECT_EQ(result, -1);
+    EXPECT_EQ(result, E_BROKEN_IPC);
     GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback End";
 }
 

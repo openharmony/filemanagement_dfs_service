@@ -21,7 +21,7 @@ int32_t Convert2JsErrNum(int32_t errNum)
     if (errCodeTable.find(errNum) != errCodeTable.end()) {
         return errCodeTable.at(errNum);
     } else {
-        return E_UNKNOWN_ERR;
+        return errNum;
     }
 }
 } // namespace OHOS::FileManagement
