@@ -18,6 +18,7 @@
 
 #include "cloud_file_sync_service_interface_code.h"
 #include "cloud_sync_service_stub.h"
+#include "dfsu_access_token_helper_mock.h"
 #include "i_cloud_sync_service.h"
 #include "service_callback_mock.h"
 
@@ -44,8 +45,9 @@ public:
     MOCK_METHOD2(EnableCloud, int32_t(const std::string &accoutId, const SwitchDataObj &switchData));
     MOCK_METHOD1(DisableCloud, int32_t(const std::string &accoutId));
     MOCK_METHOD1(StartDownloadFile, int32_t(const std::string &path));
-    MOCK_METHOD1(StartFileCache, int32_t(const std::string &path));
+    MOCK_METHOD2(StartFileCache, int32_t(const std::vector<std::string> &pathVec, int64_t &downloadId));
     MOCK_METHOD2(StopDownloadFile, int32_t(const std::string &path, bool needClean));
+    MOCK_METHOD2(StopFileCache, int32_t(const int64_t &downloadId, bool needClean));
     MOCK_METHOD1(RegisterDownloadFileCallback, int32_t(const sptr<IRemoteObject> &downloadCallback));
     MOCK_METHOD0(UnregisterDownloadFileCallback, int32_t());
     MOCK_METHOD3(UploadAsset, int32_t(const int32_t userId, const std::string &request, std::string &result));
@@ -74,15 +76,20 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static inline shared_ptr<DfsuAccessTokenMock> dfsuAccessToken_ = nullptr;
 };
 
 void CloudSyncServiceStubTest::SetUpTestCase(void)
 {
+    dfsuAccessToken_ = make_shared<DfsuAccessTokenMock>();
+    DfsuAccessTokenMock::dfsuAccessToken = dfsuAccessToken_;
     std::cout << "SetUpTestCase" << std::endl;
 }
 
 void CloudSyncServiceStubTest::TearDownTestCase(void)
 {
+    DfsuAccessTokenMock::dfsuAccessToken = nullptr;
+    dfsuAccessToken_ = nullptr;
     std::cout << "TearDownTestCase" << std::endl;
 }
 
@@ -112,6 +119,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleUnRegisterCallbackInnerTest, TestSize.L
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         sptr<CloudSyncCallbackMock> remote = sptr(new CloudSyncCallbackMock());
@@ -146,6 +155,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleRegisterCallbackInnerTest, TestSize.Lev
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         sptr<CloudSyncCallbackMock> remote = sptr(new CloudSyncCallbackMock());
@@ -180,6 +191,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartSyncInnerTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         bool forceFlag = true;
@@ -212,6 +225,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleTriggerSyncInnerTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -241,6 +256,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopSyncInnerTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_TRUE(data.WriteString(bundleName));
@@ -272,6 +289,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleChangeAppSwitchTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -298,6 +317,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleCleandTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_INVAL_ARG, service.OnRemoteRequest(
@@ -325,6 +346,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleNotifyDataChangeTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -352,6 +375,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleNotifyEventChangeTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -379,6 +404,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleDisableCloudTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -405,6 +432,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleEnableCloudTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_INVAL_ARG, service.OnRemoteRequest(
@@ -432,6 +461,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartDownloadFileTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -442,33 +473,6 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStartDownloadFileTest, TestSize.Level1)
         GTEST_LOG_(INFO) << " HandleStartDownloadFile ERROR";
     }
     GTEST_LOG_(INFO) << "HandleStartDownloadFile End";
-}
-
-/**
- * @tc.name: HandleStartFileCacheTest
- * @tc.desc: Verify the HandleStartFileCache function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudSyncServiceStubTest, HandleStartFileCacheTest, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "HandleStartFileCache Start";
-    try {
-        MockService service;
-        EXPECT_CALL(service, StartDownloadFile(_)).WillOnce(Return(E_OK));
-        MessageParcel data;
-        MessageParcel reply;
-        MessageOption option;
-        EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
-
-        EXPECT_EQ(E_OK, service.OnRemoteRequest(
-                            static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_CACHE),
-                            data, reply, option));
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << " HandleStartFileCache ERROR";
-    }
-    GTEST_LOG_(INFO) << "HandleStartFileCache End";
 }
 
 /**
@@ -486,6 +490,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleStopDownloadFileTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -513,6 +519,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleRegisterDownloadFileCallbackTest, TestS
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -541,6 +548,7 @@ HWTEST_F(CloudSyncServiceStubTest, HandleUnregisterDownloadFileCallbackTest, Tes
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -569,6 +577,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleUploadAssetTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -595,6 +605,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleDownloadFileTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_INVAL_ARG, service.OnRemoteRequest(
@@ -621,6 +633,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleDownloadAssetTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_INVAL_ARG, service.OnRemoteRequest(
@@ -647,6 +661,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleRegisterDownloadAssetCallbackTest, Test
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -674,6 +690,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleDeleteAssetTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(
@@ -702,6 +720,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleGetSyncTimeTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_TRUE(data.WriteString(bundleName));
@@ -731,6 +751,8 @@ HWTEST_F(CloudSyncServiceStubTest, HandleCleanCacheTest, TestSize.Level1)
         MessageParcel data;
         MessageParcel reply;
         MessageOption option;
+        EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+        EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
         EXPECT_TRUE(data.WriteInterfaceToken(ICloudSyncService::GetDescriptor()));
 
         EXPECT_EQ(E_OK, service.OnRemoteRequest(

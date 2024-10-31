@@ -41,6 +41,36 @@ bool SwitchDataObj::Marshalling(Parcel &parcel) const
     return true;
 }
 
+bool DownloadProgressObj::MarshallingBatch(Parcel &parcel) const
+{
+    if (!parcel.WriteInt64(batchDownloadSize)) {
+        LOGE("failed to write batchDownloadSize");
+        return false;
+    }
+    if (!parcel.WriteInt64(batchTotalSize)) {
+        LOGE("failed to write batchTotalSize");
+        return false;
+    }
+    if (!parcel.WriteInt64(batchSuccNum)) {
+        LOGE("failed to write batchSuccNum");
+        return false;
+    }
+    if (!parcel.WriteInt64(batchFailNum)) {
+        LOGE("failed to write batchFailNum");
+        return false;
+    }
+    if (!parcel.WriteInt64(batchTotalNum)) {
+        LOGE("failed to write batchTotalNum");
+        return false;
+    }
+    if (!parcel.WriteInt32(batchState)) {
+        LOGE("failed to write batchState");
+        return false;
+    }
+
+    return true;
+}
+
 bool DownloadProgressObj::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteString(path)) {
@@ -63,6 +93,15 @@ bool DownloadProgressObj::Marshalling(Parcel &parcel) const
         LOGE("failed to write downloadErrorType");
         return false;
     }
+    if (!parcel.WriteInt64(downloadId)) {
+        LOGE("failed to write downloadId");
+        return false;
+    }
+
+    if (!MarshallingBatch(parcel)) {
+        return false;
+    }
+
     return true;
 }
 
@@ -174,30 +213,71 @@ bool CleanOptions::ReadFromParcel(Parcel &parcel)
     return true;
 }
 
+bool DownloadProgressObj::ReadBatchFromParcel(Parcel &parcel)
+{
+    if (!parcel.ReadInt64(batchDownloadSize)) {
+        LOGE("failed to read batchDownloadSize");
+        return false;
+    }
+    if (!parcel.ReadInt64(batchTotalSize)) {
+        LOGE("failed to read batchTotalSize");
+        return false;
+    }
+    if (!parcel.ReadInt64(batchSuccNum)) {
+        LOGE("failed to read batchSuccNum");
+        return false;
+    }
+    if (!parcel.ReadInt64(batchFailNum)) {
+        LOGE("failed to read batchFailNum");
+        return false;
+    }
+    if (!parcel.ReadInt64(batchTotalNum)) {
+        LOGE("failed to read batchTotalNum");
+        return false;
+    }
+    int32_t tempBatchState = 0;
+    if (!parcel.ReadInt32(tempBatchState)) {
+        LOGE("failed to read download batchState");
+        return false;
+    }
+    batchState = static_cast<Status>(tempBatchState);
+
+    return true;
+}
+
 bool DownloadProgressObj::ReadFromParcel(Parcel &parcel)
 {
     if (!parcel.ReadString(path)) {
-        LOGE("failed to write download path");
+        LOGE("failed to read download path");
         return false;
     }
     int32_t tempState = 0;
     if (!parcel.ReadInt32(tempState)) {
-        LOGE("failed to write download state");
+        LOGE("failed to read download state");
         return false;
     }
     state = static_cast<Status>(tempState);
     if (!parcel.ReadInt64(downloadedSize)) {
-        LOGE("failed to write downloadedSize");
+        LOGE("failed to read downloadedSize");
         return false;
     }
     if (!parcel.ReadInt64(totalSize)) {
-        LOGE("failed to write totalSize");
+        LOGE("failed to read totalSize");
         return false;
     }
     if (!parcel.ReadInt32(downloadErrorType)) {
-        LOGE("failed to write downloadErrorType");
+        LOGE("failed to read downloadErrorType");
         return false;
     }
+    if (!parcel.ReadInt64(downloadId)) {
+        LOGE("failed to read downloadId");
+        return false;
+    }
+
+    if (!ReadBatchFromParcel(parcel)) {
+        return false;
+    }
+
     return true;
 }
 
@@ -209,8 +289,15 @@ std::string DownloadProgressObj::to_string()
     ss << " state: " << state;
     ss << " downloaded: " << downloadedSize;
     ss << " total: " << totalSize;
-    ss << " downloadErrorType: " << downloadErrorType << "]";
+    ss << " downloadErrorType: " << downloadErrorType;
 
+    ss << " downloadId: " << downloadId;
+    ss << " batchState: " << batchState;
+    ss << " batchDownloadSize: " << batchDownloadSize;
+    ss << " batchTotalSize: " << batchTotalSize;
+    ss << " batchSuccNum: " << batchSuccNum;
+    ss << " batchFailNum: " << batchFailNum;
+    ss << " batchTotalNum: " << batchTotalNum << "]";
     return ss.str();
 }
 

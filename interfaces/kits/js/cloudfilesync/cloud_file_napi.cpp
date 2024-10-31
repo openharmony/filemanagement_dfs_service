@@ -17,19 +17,17 @@
 
 #include <sys/types.h>
 
-#include "cloud_sync_manager.h"
+#include "async_work.h"
 #include "cloud_file_napi.h"
+#include "cloud_sync_manager.h"
 #include "dfs_error.h"
 #include "utils_log.h"
-#include "async_work.h"
 #include "uv.h"
 
 namespace OHOS::FileManagement::CloudSync {
 using namespace FileManagement::LibN;
 using namespace std;
 const int32_t ARGS_ONE = 1;
-
-CloudFileNapi::CloudFileNapi(napi_env env, napi_value exports) : NExporter(env, exports) {}
 
 napi_value CloudFileNapi::Constructor(napi_env env, napi_callback_info info)
 {
@@ -83,11 +81,12 @@ napi_value CloudFileNapi::Start(napi_env env, napi_callback_info info)
     return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbCompl).val_;
 }
 
-CloudDownloadCallbackImpl::CloudDownloadCallbackImpl(napi_env env, napi_value fun) : env_(env)
+CloudDownloadCallbackImpl::CloudDownloadCallbackImpl(napi_env env, napi_value fun, bool isBatch) : env_(env)
 {
     if (fun != nullptr) {
         napi_create_reference(env_, fun, 1, &cbOnRef_);
     }
+    isBatch_ = isBatch;
 }
 
 void CloudDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
@@ -109,11 +108,23 @@ void CloudDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
         return;
     }
     NVal obj = NVal::CreateObject(env);
-    obj.AddProp("state", NVal::CreateInt32(env, (int32_t)msg->downloadProgress_.state).val_);
-    obj.AddProp("processed", NVal::CreateInt64(env, (int64_t)msg->downloadProgress_.downloadedSize).val_);
-    obj.AddProp("size", NVal::CreateInt64(env, (int64_t)msg->downloadProgress_.totalSize).val_);
-    obj.AddProp("uri", NVal::CreateUTF8String(env, msg->downloadProgress_.path).val_);
+    if (!msg->isBatch_) {
+        obj.AddProp("state", NVal::CreateInt32(env, (int32_t)msg->downloadProgress_.state).val_);
+        obj.AddProp("processed", NVal::CreateInt64(env, msg->downloadProgress_.downloadedSize).val_);
+        obj.AddProp("size", NVal::CreateInt64(env, msg->downloadProgress_.totalSize).val_);
+        obj.AddProp("uri", NVal::CreateUTF8String(env, msg->downloadProgress_.path).val_);
+    } else {
+        LOGI("Batch download callback items");
+        obj.AddProp("state", NVal::CreateInt32(env, (int32_t)msg->downloadProgress_.batchState).val_);
+        obj.AddProp("downloadedSize", NVal::CreateInt64(env, msg->downloadProgress_.batchDownloadSize).val_);
+        obj.AddProp("totalSize", NVal::CreateInt64(env, msg->downloadProgress_.batchTotalSize).val_);
+        obj.AddProp("successfulNum", NVal::CreateInt64(env, msg->downloadProgress_.batchSuccNum).val_);
+        obj.AddProp("failedNum", NVal::CreateInt64(env, msg->downloadProgress_.batchFailNum).val_);
+        obj.AddProp("totalNum", NVal::CreateInt64(env, msg->downloadProgress_.batchTotalNum).val_);
+    }
+    obj.AddProp("taskId", NVal::CreateInt64(env, msg->downloadProgress_.downloadId).val_);
     obj.AddProp("error", NVal::CreateInt32(env, (int32_t)msg->downloadProgress_.downloadErrorType).val_);
+
     napi_value retVal = nullptr;
     napi_value global = nullptr;
     napi_get_global(env, &global);
@@ -138,7 +149,7 @@ void CloudDownloadCallbackImpl::OnDownloadProcess(const DownloadProgressObj &pro
         return;
     }
 
-    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(shared_from_this(), progress);
+    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(shared_from_this(), progress, isBatch_);
     if (msg == nullptr) {
         delete work;
         return;
@@ -177,7 +188,7 @@ napi_value CloudFileNapi::On(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto [succProgress, progress, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
-    if (!(succProgress && std::string(progress.get()) == "progress")) {
+    if (!succProgress || std::string(progress.get()) != "progress") {
         LOGE("On get progress failed!");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
@@ -215,18 +226,19 @@ napi_value CloudFileNapi::Off(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto [succProgress, progress, ignore] = NVal(env, funcArg[NARG_POS::FIRST]).ToUTF8String();
-    if (!(succProgress && std::string(progress.get()) == "progress")) {
+    if (!succProgress || std::string(progress.get()) != "progress") {
         LOGE("Off get progress failed!");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
-    if (funcArg.GetArgc() == (uint)NARG_CNT::TWO &&!NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
+    if (funcArg.GetArgc() == (uint)NARG_CNT::TWO && !NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_function)) {
         LOGE("Argument type mismatch");
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
 
+    /* callback_ may be nullptr */
     int32_t ret = CloudSyncManager::GetInstance().UnregisterDownloadFileCallback();
     if (ret != E_OK) {
         LOGE("UnregisterDownloadFileCallback error, ret: %{public}d", ret);

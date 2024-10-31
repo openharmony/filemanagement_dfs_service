@@ -41,8 +41,10 @@ public:
     virtual int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) = 0;
     virtual int32_t DisableCloud(const std::string &accoutId) = 0;
     virtual int32_t StartDownloadFile(const std::string &path) = 0;
-    virtual int32_t StartFileCache(const std::string &path) = 0;
+    virtual int32_t StartFileCache(const std::vector<std::string> &pathVec,
+                                   int64_t &downloadId) = 0;
     virtual int32_t StopDownloadFile(const std::string &path, bool needClean = false) = 0;
+    virtual int32_t StopFileCache(const int64_t &downloadId,  bool needClean = false) = 0;
     virtual int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) = 0;
     virtual int32_t UnregisterDownloadFileCallback() = 0;
     virtual int32_t UploadAsset(const int32_t userId, const std::string &request, std::string &result) = 0;

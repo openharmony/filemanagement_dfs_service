@@ -27,6 +27,7 @@ ohos_unittest("cloud_sync_service_stub_test") {
     "${services_path}/cloudsyncservice/include/ipc",
     "${services_path}/cloudsyncservice/include",
     "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock",
   ]
 
   deps = [

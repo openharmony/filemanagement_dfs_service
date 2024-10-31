@@ -513,7 +513,7 @@ HWTEST_F(CloudSyncCommonTest, ReadFromParcel007, TestSize.Level1)
 
         downloadProgressObj.totalSize = 1;
         res = downloadProgressObj.ReadFromParcel(parcel);
-        EXPECT_TRUE(res);
+        EXPECT_TRUE(!res);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << " ReadFromParcel007 FAILED";
@@ -534,7 +534,9 @@ HWTEST_F(CloudSyncCommonTest, to_string, TestSize.Level1)
         DownloadProgressObj downloadProgressObj;
         auto res = downloadProgressObj.to_string();
         std::string expectStr =
-        "DownloadProgressObj [path: ******** state: 0 downloaded: 0 total: 0 downloadErrorType: 0]";
+        "DownloadProgressObj [path: ******** state: 0 downloaded: 0 total: 0 downloadErrorType: 0 "
+        "downloadId: 0 batchState: 0 batchDownloadSize: 0 batchTotalSize: 0 "
+        "batchSuccNum: 0 batchFailNum: 0 batchTotalNum: 0]";
         EXPECT_EQ(res, expectStr);
     } catch (...) {
         EXPECT_TRUE(false);

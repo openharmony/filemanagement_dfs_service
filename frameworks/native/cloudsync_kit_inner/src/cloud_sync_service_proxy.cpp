@@ -600,7 +600,8 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 #endif
 }
 
-int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
+int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &uriVec,
+                                              int64_t &downloadId)
 {
     LOGI("StartFileCache Start");
     MessageParcel data;
@@ -612,15 +613,28 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
         return E_BROKEN_IPC;
     }
 
-    if (!data.WriteString(uri)) {
+    std::vector<std::string> pathVec;
+    for (unsigned long i = 0; i < uriVec.size(); i++) {
+        string path = uriVec[i];
+#ifdef SUPPORT_MEDIA_LIBRARY
+        if (uriVec[i].find("file://media") == 0) {
+            OHOS::Media::MediaFileUri mediaUri(uriVec[i]);
+            path = mediaUri.GetFilePath();
+        }
+#endif
+        CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
+        uriMgr.AddPathToUri(path, uriVec[i]);
+        pathVec.push_back(path);
+
+        LOGI("StartFileCache Start, uriVec[%{public}ld]: %{public}s, path: %{public}s",
+             i, GetAnonyString(uriVec[i]).c_str(), GetAnonyString(path).c_str());
+    }
+
+    if (!data.WriteStringVector(pathVec)) {
         LOGE("Failed to send the cloud id");
         return E_INVAL_ARG;
     }
 
-    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-    if (uriMgr.AddPathToUri(uri, uri) == E_STOP) {
-        return E_OK;
-    }
     auto remote = Remote();
     if (!remote) {
         LOGE("remote is nullptr");
@@ -630,9 +644,16 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::string &uri)
         static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_CACHE), data, reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the request, errno %{public}d", ret);
-        return E_BROKEN_IPC;
+        return ret;
     }
-    LOGI("StartFileCache Success");
+
+    downloadId = reply.ReadInt64();
+
+    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
+    uriMgr.AddDownloadIdToPath(downloadId, pathVec);
+
+    LOGI("StartFileCache Success, downloadId: %{public}lld", static_cast<long long>(downloadId));
+
     return reply.ReadInt32();
 }
 
@@ -682,6 +703,47 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool nee
     CloudDownloadUriManager& uriMgr = CloudDownloadUriManager::GetInstance();
     uriMgr.RemoveUri(path);
     LOGI("StopDownloadFile Success");
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::StopFileCache(const int64_t &downloadId,  bool needClean)
+{
+    LOGI("StopFileCache Start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    LOGI("StopFileCache Start, downloadId: %{public}lld, needClean: %{public}d",
+         static_cast<long long>(downloadId), needClean);
+
+    if (!data.WriteInt64(downloadId)) {
+        LOGE("Failed to send the cloud id");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteBool(needClean)) {
+        LOGE("Failed to send the needClean flag");
+        return E_INVAL_ARG;
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_STOP_FILE_CACHE), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
+        return ret;
+    }
+    // if StopFileCache finished, we need call RemoveUri later
+    LOGI("StopFileCache Success");
     return reply.ReadInt32();
 }
 
