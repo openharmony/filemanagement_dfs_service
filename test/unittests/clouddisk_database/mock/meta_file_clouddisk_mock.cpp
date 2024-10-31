@@ -137,6 +137,9 @@ std::string CloudDiskMetaFile::GetDentryFilePath()
 
 int32_t CloudDiskMetaFile::DoLookupAndUpdate(const std::string &name, CloudDiskMetaFileCallBack callback)
 {
+    if (name == "mock") {
+        return E_RDB;
+    }
     return E_OK;
 }
 
@@ -490,6 +493,9 @@ int32_t CloudDiskMetaFile::DoRemove(const MetaBase &base)
 
 int32_t CloudDiskMetaFile::DoLookup(MetaBase &base)
 {
+    if (base.name == "mock") {
+        return EINVAL;
+    }
     return E_OK;
 }
 
@@ -555,7 +561,10 @@ std::shared_ptr<CloudDiskMetaFile> MetaFileMgr::GetCloudDiskMetaFile(uint32_t us
 
 int32_t MetaFileMgr::CreateRecycleDentry(uint32_t userId, const std::string &bundleName)
 {
-    return 0;
+    if (bundleName != "com.ohos.photos") {
+        return EINVAL;
+    }
+    return E_OK;
 }
 
 int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName, const std::string &name,
