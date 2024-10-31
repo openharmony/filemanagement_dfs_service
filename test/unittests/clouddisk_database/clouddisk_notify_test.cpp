@@ -71,9 +71,13 @@ HWTEST_F(CloudDiskNotifyTest, TryNotifyTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "TryNotify Start";
     CloudDiskNotify CloudDiskNotify;
     NotifyParamDisk paramDisk;
-    paramDisk.opsType = NotifyOpsType::DAEMON_MKDIR;
+    paramDisk.inoPtr = nullptr;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_SETATTR;
     ParamDiskOthers paramOthers;
     CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
     GTEST_LOG_(INFO) << "TryNotify End";
 }
 
@@ -88,9 +92,14 @@ HWTEST_F(CloudDiskNotifyTest, TryNotifyTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "TryNotify Start";
     CloudDiskNotify CloudDiskNotify;
     NotifyParamDisk paramDisk;
-    paramDisk.opsType = NotifyOpsType::DAEMON_RMDIR;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 10;
+    paramDisk.opsType = NotifyOpsType::DAEMON_SETATTR;
     ParamDiskOthers paramOthers;
     CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
     GTEST_LOG_(INFO) << "TryNotify End";
 }
 
@@ -105,9 +114,13 @@ HWTEST_F(CloudDiskNotifyTest, TryNotifyTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "TryNotify Start";
     CloudDiskNotify CloudDiskNotify;
     NotifyParamDisk paramDisk;
-    paramDisk.opsType = NotifyOpsType::DAEMON_UNLINK;
+    paramDisk.inoPtr = nullptr;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_SETXATTR;
     ParamDiskOthers paramOthers;
     CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
     GTEST_LOG_(INFO) << "TryNotify End";
 }
 
@@ -122,8 +135,450 @@ HWTEST_F(CloudDiskNotifyTest, TryNotifyTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "TryNotify Start";
     CloudDiskNotify CloudDiskNotify;
     NotifyParamDisk paramDisk;
-    paramDisk.opsType = NotifyOpsType::OPS_NONE;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 10;
+    paramDisk.opsType = NotifyOpsType::DAEMON_SETXATTR;
     ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest005
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    paramDisk.inoPtr = nullptr;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 10;
+    paramDisk.opsType = NotifyOpsType::DAEMON_RECYCLE;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest006
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    ino->bundleName = "";
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 0;
+    paramDisk.opsType = NotifyOpsType::DAEMON_RECYCLE;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest007
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    ino->bundleName = "com.ohos.photos";
+    ino->cloudId = "mock";
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_RECYCLE;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest008
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    ino->bundleName = "com.ohos.photos";
+    ino->cloudId = "rootId";
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 10;
+    paramDisk.opsType = NotifyOpsType::DAEMON_RECYCLE;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest009
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    ino->bundleName = "com.ohos.photos";
+    ino->cloudId = "rootId";
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_RECYCLE;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest010
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    ino->bundleName = "com.ohos.photos";
+    ino->cloudId = "rootId";
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_RESTORE;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest011
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    paramDisk.name = "";
+    paramDisk.opsType = NotifyOpsType::DAEMON_MKDIR;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest012
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    paramDisk.name = "test";
+    paramDisk.inoPtr = nullptr;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 10;
+    paramDisk.opsType = NotifyOpsType::DAEMON_MKDIR;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest013
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    paramDisk.name = "test";
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_MKDIR;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest014
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest014, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    paramDisk.name = "";
+    paramDisk.opsType = NotifyOpsType::DAEMON_RMDIR;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest015
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest015, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    paramDisk.name = "test";
+    paramDisk.inoPtr = nullptr;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 10;
+    paramDisk.opsType = NotifyOpsType::DAEMON_RMDIR;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest016
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest016, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    paramDisk.name = "test";
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_RMDIR;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest017
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest017, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    paramDisk.name = "test";
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_UNLINK;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest018
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest018, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 10;
+    paramDisk.opsType = NotifyOpsType::DAEMON_RENAME;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest019
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest019, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    paramDisk.newName = "mock";
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_RENAME;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest020
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest020, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    paramDisk.newName = "test";
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_RENAME;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest021
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest021, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 10;
+    paramDisk.opsType = NotifyOpsType::DAEMON_WRITE;
+    ParamDiskOthers paramOthers;
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest022
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest022, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_WRITE;
+    ParamDiskOthers paramOthers;
+    paramOthers.dirtyType = static_cast<int32_t>(DirtyType::TYPE_NO_NEED_UPLOAD);
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest023
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest023, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    shared_ptr<CloudDiskInode> ino = make_shared<CloudDiskInode>();
+    paramDisk.inoPtr = ino;
+    paramDisk.data = new CloudDiskFuseData();
+    paramDisk.data->userId = 100;
+    paramDisk.opsType = NotifyOpsType::DAEMON_WRITE;
+    ParamDiskOthers paramOthers;
+    paramOthers.dirtyType = static_cast<int32_t>(DirtyType::TYPE_NEW);
+    CloudDiskNotify.TryNotify(paramDisk, paramOthers);
+    delete paramDisk.data;
+    GTEST_LOG_(INFO) << "TryNotify End";
+}
+
+/**
+ * @tc.name: TryNotifyTest024
+ * @tc.desc: Verify the TryNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyTest024, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotify Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamDisk paramDisk;
+    ParamDiskOthers paramOthers;
+    paramOthers.dirtyType = static_cast<int32_t>(DirtyType::TYPE_NEW);
     CloudDiskNotify.TryNotify(paramDisk, paramOthers);
     GTEST_LOG_(INFO) << "TryNotify End";
 }
@@ -139,6 +594,8 @@ HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "TryNotifyService Start";
     CloudDiskNotify CloudDiskNotify;
     NotifyParamService paramService;
+    paramService.node.isRecycled = true;
+    paramService.cloudId = "mock";
     paramService.opsType = NotifyOpsType::SERVICE_INSERT;
     ParamServiceOther paramOthers;
     CloudDiskNotify.TryNotifyService(paramService, paramOthers);
@@ -156,7 +613,9 @@ HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest002, TestSize.Level1)
     GTEST_LOG_(INFO) << "TryNotifyService Start";
     CloudDiskNotify CloudDiskNotify;
     NotifyParamService paramService;
-    paramService.opsType = NotifyOpsType::SERVICE_UPDATE;
+    paramService.node.isRecycled = true;
+    paramService.cloudId = "rootId";
+    paramService.opsType = NotifyOpsType::SERVICE_INSERT;
     ParamServiceOther paramOthers;
     CloudDiskNotify.TryNotifyService(paramService, paramOthers);
     GTEST_LOG_(INFO) << "TryNotifyService End";
@@ -173,7 +632,9 @@ HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "TryNotifyService Start";
     CloudDiskNotify CloudDiskNotify;
     NotifyParamService paramService;
-    paramService.opsType = NotifyOpsType::SERVICE_DELETE;
+    paramService.node.isRecycled = false;
+    paramService.node.cloudId = "mock";
+    paramService.opsType = NotifyOpsType::SERVICE_INSERT;
     ParamServiceOther paramOthers;
     CloudDiskNotify.TryNotifyService(paramService, paramOthers);
     GTEST_LOG_(INFO) << "TryNotifyService End";
@@ -190,7 +651,8 @@ HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "TryNotifyService Start";
     CloudDiskNotify CloudDiskNotify;
     NotifyParamService paramService;
-    paramService.opsType = NotifyOpsType::SERVICE_DELETE_BATCH;
+    paramService.cloudId = "mock";
+    paramService.opsType = NotifyOpsType::SERVICE_UPDATE;
     ParamServiceOther paramOthers;
     CloudDiskNotify.TryNotifyService(paramService, paramOthers);
     GTEST_LOG_(INFO) << "TryNotifyService End";
@@ -203,6 +665,174 @@ HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest004, TestSize.Level1)
  * @tc.require: I6H5MH
  */
 HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotifyService Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamService paramService;
+    paramService.cloudId = "rootId";
+    paramService.node.fileName = "mock";
+    paramService.opsType = NotifyOpsType::SERVICE_UPDATE;
+    ParamServiceOther paramOthers;
+    CloudDiskNotify.TryNotifyService(paramService, paramOthers);
+    GTEST_LOG_(INFO) << "TryNotifyService End";
+}
+
+/**
+ * @tc.name: TryNotifyServiceTest006
+ * @tc.desc: Verify the TryNotifyService function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotifyService Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamService paramService;
+    paramService.cloudId = "rootId";
+    paramService.opsType = NotifyOpsType::SERVICE_UPDATE;
+    ParamServiceOther paramOthers;
+    CloudDiskNotify.TryNotifyService(paramService, paramOthers);
+    GTEST_LOG_(INFO) << "TryNotifyService End";
+}
+
+/**
+ * @tc.name: TryNotifyServiceTest007
+ * @tc.desc: Verify the TryNotifyService function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotifyService Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamService paramService;
+    paramService.cloudId = "mock";
+    paramService.opsType = NotifyOpsType::SERVICE_UPDATE_RECYCLE;
+    ParamServiceOther paramOthers;
+    CloudDiskNotify.TryNotifyService(paramService, paramOthers);
+    GTEST_LOG_(INFO) << "TryNotifyService End";
+}
+
+/**
+ * @tc.name: TryNotifyServiceTest008
+ * @tc.desc: Verify the TryNotifyService function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotifyService Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamService paramService;
+    paramService.cloudId = "rootId";
+    paramService.node.cloudId = "mock";
+    paramService.opsType = NotifyOpsType::SERVICE_UPDATE_RECYCLE;
+    ParamServiceOther paramOthers;
+    CloudDiskNotify.TryNotifyService(paramService, paramOthers);
+    GTEST_LOG_(INFO) << "TryNotifyService End";
+}
+
+/**
+ * @tc.name: TryNotifyServiceTest009
+ * @tc.desc: Verify the TryNotifyService function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotifyService Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamService paramService;
+    paramService.cloudId = "rootId";
+    paramService.node.cloudId = "rootId";
+    paramService.node.isRecycled = false;
+    paramService.opsType = NotifyOpsType::SERVICE_UPDATE_RECYCLE;
+    ParamServiceOther paramOthers;
+    CloudDiskNotify.TryNotifyService(paramService, paramOthers);
+    GTEST_LOG_(INFO) << "TryNotifyService End";
+}
+
+/**
+ * @tc.name: TryNotifyServiceTest010
+ * @tc.desc: Verify the TryNotifyService function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotifyService Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamService paramService;
+    paramService.cloudId = "rootId";
+    paramService.node.cloudId = "rootId";
+    paramService.node.isRecycled = true;
+    paramService.opsType = NotifyOpsType::SERVICE_UPDATE_RECYCLE;
+    ParamServiceOther paramOthers;
+    CloudDiskNotify.TryNotifyService(paramService, paramOthers);
+    GTEST_LOG_(INFO) << "TryNotifyService End";
+}
+
+/**
+ * @tc.name: TryNotifyServiceTest011
+ * @tc.desc: Verify the TryNotifyService function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotifyService Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamService paramService;
+    paramService.cloudId = "";
+    paramService.opsType = NotifyOpsType::SERVICE_DELETE;
+    ParamServiceOther paramOthers;
+    CloudDiskNotify.TryNotifyService(paramService, paramOthers);
+    GTEST_LOG_(INFO) << "TryNotifyService End";
+}
+
+/**
+ * @tc.name: TryNotifyServiceTest012
+ * @tc.desc: Verify the TryNotifyService function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotifyService Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamService paramService;
+    paramService.cloudId = "rootId";
+    paramService.opsType = NotifyOpsType::SERVICE_DELETE;
+    ParamServiceOther paramOthers;
+    CloudDiskNotify.TryNotifyService(paramService, paramOthers);
+    GTEST_LOG_(INFO) << "TryNotifyService End";
+}
+
+/**
+ * @tc.name: TryNotifyServiceTest013
+ * @tc.desc: Verify the TryNotifyService function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TryNotifyService Start";
+    CloudDiskNotify CloudDiskNotify;
+    NotifyParamService paramService;
+    paramService.cloudId = "rootId";
+    paramService.opsType = NotifyOpsType::SERVICE_DELETE_BATCH;
+    ParamServiceOther paramOthers;
+    CloudDiskNotify.TryNotifyService(paramService, paramOthers);
+    GTEST_LOG_(INFO) << "TryNotifyService End";
+}
+
+/**
+ * @tc.name: TryNotifyServiceTest014
+ * @tc.desc: Verify the TryNotifyService function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, TryNotifyServiceTest014, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "TryNotifyService Start";
     CloudDiskNotify CloudDiskNotify;
@@ -224,6 +854,10 @@ HWTEST_F(CloudDiskNotifyTest, GetDeleteNotifyDataTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetDeleteNotifyData Start";
     CloudDiskNotify CloudDiskNotify;
     vector<NativeRdb::ValueObject> deleteIds;
+    NativeRdb::ValueObject mock0;
+    NativeRdb::ValueObject mock1;
+    deleteIds.push_back(mock0);
+    deleteIds.push_back(mock1);
     vector<NotifyData> notifyDataList;
     ParamServiceOther paramOthers;
     paramOthers.bundleName = "com.ohos.photos";
@@ -263,6 +897,36 @@ HWTEST_F(CloudDiskNotifyTest, AddNotifyTest002, TestSize.Level1)
     notifyData.type == NotifyType::NOTIFY_ADDED;
     CloudDiskNotify.AddNotify(notifyData);
     GTEST_LOG_(INFO) << "AddNotify End";
+}
+
+/**
+ * @tc.name: NotifyChangeOuterTest001
+ * @tc.desc: Verify the AddNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, NotifyChangeOuterTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyChangeOuter Start";
+    CloudDiskNotify CloudDiskNotify;
+    CloudDiskNotify.NotifyChangeOuter();
+    GTEST_LOG_(INFO) << "NotifyChangeOuter End";
+}
+
+/**
+ * @tc.name: NotifyChangeOuterTest002
+ * @tc.desc: Verify the AddNotify function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyTest, NotifyChangeOuterTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "NotifyChangeOuter Start";
+    CacheNotifyInfo nf;
+    CloudDiskNotify CloudDiskNotify;
+    CloudDiskNotify.nfList_.push_back(nf);
+    CloudDiskNotify.NotifyChangeOuter();
+    GTEST_LOG_(INFO) << "NotifyChangeOuter End";
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync

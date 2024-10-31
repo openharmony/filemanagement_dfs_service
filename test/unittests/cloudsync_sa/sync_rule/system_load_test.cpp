@@ -70,7 +70,7 @@ HWTEST_F(SytemLoadTest, RegisterSystemloadCallbackTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RegisterSystemloadCallbackTest Start";
     try {
-        shared_ptr<CloudFile::DataSyncManager> dataSyncManager = make_shared<CloudFile::DataSyncManager>();
+        std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager;
         SystemLoadStatus_->RegisterSystemloadCallback(dataSyncManager);
     } catch (...) {
         EXPECT_TRUE(false);
