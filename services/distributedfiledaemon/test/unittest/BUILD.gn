@@ -1216,6 +1216,7 @@ ohos_unittest("softbus_session_listener_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
 
   module_out_path = module_output_path
@@ -1223,7 +1224,14 @@ ohos_unittest("softbus_session_listener_test") {
   include_dirs = [ "${distributedfile_path}/services/distributedfiledaemon/include/network/softbus" ]
 
   sources = [
+    "${distributedfile_path}/test/mock/socket_mock.cpp",
+    "${services_path}/distributedfiledaemon/src/all_connect/all_connect_manager.cpp",
+    "${services_path}/distributedfiledaemon/src/ipc/trans_mananger.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_receive_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_file_send_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_handler.cpp",
     "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_listener.cpp",
+    "${services_path}/distributedfiledaemon/src/network/softbus/softbus_session_pool.cpp",
     "network/softbus/softbus_session_listener_test.cpp",
   ]
 
@@ -1234,6 +1242,7 @@ ohos_unittest("softbus_session_listener_test") {
 
   deps = [
     "${utils_path}:libdistributedfileutils",
+    "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -1242,8 +1251,10 @@ ohos_unittest("softbus_session_listener_test") {
     "access_token:libaccesstoken_sdk",
     "app_file_service:sandbox_helper_native",
     "c_utils:utils",
+    "device_manager:devicemanagersdk",
     "dsoftbus:softbus_client",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "os_account:os_account_innerkits",
   ]
 
