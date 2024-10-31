@@ -97,6 +97,11 @@ ohos_shared_library("cloudfiledaemon") {
     "samgr:samgr_proxy",
   ]
 
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
   use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"

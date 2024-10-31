@@ -50,6 +50,9 @@
 #include "directory_ex.h"
 #include "ffrt_inner.h"
 #include "fuse_operations.h"
+#ifdef HICOLLIE_ENABLE
+#include "xcollie_helper.h"
+#endif
 #include "hitrace_meter.h"
 #include "meta_file.h"
 #include "securec.h"
@@ -84,6 +87,8 @@ static const unsigned int CACHE_PAGE_NUM = 2;
 static const unsigned int HMDFS_IOC = 0xf2;
 static const std::chrono::seconds READ_TIMEOUT_S = 20s;
 static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
+static const unsigned int LOOKUP_TIMEOUT_S = 1;
+static const unsigned int FORGET_TIMEOUT_S = 1;
 
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
 #define HMDFS_IOC_CANCEL_READ _IO(HMDFS_IOC, 8)
@@ -269,6 +274,12 @@ static int HandleCloudError(CloudError error)
     return ret;
 }
 
+static void XcollieCallback(void *node)
+{
+    auto inode = reinterpret_cast<CloudInode *>(node);
+    LOGI("In XcollieCallback, path: %{public}s", GetAnonyString(inode->path).c_str());
+}
+
 static shared_ptr<CloudDatabase> GetDatabase(struct FuseData *data)
 {
     if (!data->database) {
@@ -399,9 +410,12 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         child->mBase = make_shared<MetaBase>(mBase);
         child->path = childName;
         child->parent = parent;
+        auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudLookup", LOOKUP_TIMEOUT_S,
+            XcollieCallback, child.get(), false);
         wLock.lock();
         data->inodeCache[child->path] = child;
         wLock.unlock();
+        XCollieHelper::CancelTimer(xcollieId);
     } else if (*(child->mBase) != mBase) {
         LOGW("invalidate %s", childName.c_str());
         child->mBase = make_shared<MetaBase>(mBase);
@@ -436,9 +450,12 @@ static void PutNode(struct FuseData *data, shared_ptr<CloudInode> node, uint64_t
          GetAnonyString(node->path).c_str(), (long long)num,  node->refCount.load());
     if (node->refCount == 0) {
         LOGD("node released: %s", GetAnonyString(node->path).c_str());
+        auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudForget", FORGET_TIMEOUT_S,
+            XcollieCallback, node.get(), false);
         wLock.lock();
         data->inodeCache.erase(node->path);
         wLock.unlock();
+        XCollieHelper::CancelTimer(xcollieId);
     }
 }
 
