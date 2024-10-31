@@ -245,7 +245,7 @@ int SoftbusAdapter::OpenSession(char *sessionName,
     if (ret != 0) {
         ::Shutdown(socket);
     }
-    return ret;
+    return socket;
 }
 
 int SoftbusAdapter::OpenSessionByP2P(char *sessionName,
