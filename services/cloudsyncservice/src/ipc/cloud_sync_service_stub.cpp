@@ -380,8 +380,8 @@ int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageP
     }
 
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
-        for (int i = 0; i < pathVec.size(); i++) {
-            if (!DfsuAccessTokenHelper::CheckUriPermission(pathVec[i])) {
+        for (auto &uri : pathVec) {
+            if (!DfsuAccessTokenHelper::CheckUriPermission(uri)) {
                 LOGE("permission denied");
                 return E_PERMISSION_DENIED;
             }

@@ -779,7 +779,7 @@ int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteOb
         reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
-        return ret;
+        return E_BROKEN_IPC;
     }
     LOGI("RegisterDownloadFileCallback Success");
     return reply.ReadInt32();
@@ -807,7 +807,7 @@ int32_t CloudSyncServiceProxy::UnregisterDownloadFileCallback()
         reply, option);
     if (ret != E_OK) {
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
-        return ret;
+        return E_BROKEN_IPC;
     }
     LOGI("UnregisterDownloadFileCallback Success");
     return reply.ReadInt32();
