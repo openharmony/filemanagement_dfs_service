@@ -353,6 +353,7 @@ ohos_unittest("system_load_test") {
     "common_event_service:cesfwk_innerkits",
     "data_share:datashare_consumer",
     "dfs_service:cloudsync_kit_inner",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "init:libbegetutil",
