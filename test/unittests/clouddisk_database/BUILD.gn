@@ -536,6 +536,7 @@ group("clouddisk_database_test") {
     ":clouddisk_notify_utils_test",
     ":clouddisk_rdb_transaction_test",
     ":clouddisk_rdb_utils_test",
+    ":clouddisk_rdbstore_test",
     ":clouddisk_sync_helper_test",
   ]
 }
