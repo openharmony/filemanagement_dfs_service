@@ -18,6 +18,7 @@
 #include <sstream>
 
 #include "device_manager.h"
+#include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dfsu_exception.h"
 #include "dm_device_info.h"
@@ -180,11 +181,18 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
     int32_t socketId = Socket(clientInfo);
     if (socketId < FileManagement::E_OK) {
         LOGE("Create OpenSoftbusChannel Socket error");
+        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_FAILED,
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::CREAT_SOCKET_ERROR, RadarReporter::PACKAGE_NAME,
+            RadarReporter::dSoftBus + to_string(socketId));
         return FileManagement::E_CONTEXT;
     }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener);
     if (ret != FileManagement::E_OK) {
         LOGE("Bind SocketClient error");
+        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_BUILD__LINK, RadarReporter::DFX_FAILED,
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::BIND_SOCKET_ERROR, RadarReporter::PACKAGE_NAME, RadarReporter::dSoftBus + to_string(ret));
         Shutdown(socketId);
         return FileManagement::E_CONTEXT;
     }
