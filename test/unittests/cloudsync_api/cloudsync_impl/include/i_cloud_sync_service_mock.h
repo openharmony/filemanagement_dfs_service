@@ -61,7 +61,12 @@ public:
         return E_OK;
     }
 
-    int32_t StopSyncInner(const std::string &bundleName = "") override
+    int32_t StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) override
+    {
+        return E_OK;
+    }
+
+    int32_t ResetCursor(const std::string &bundleName = "") override
     {
         return E_OK;
     }
@@ -105,6 +110,10 @@ public:
         return E_OK;
     }
     int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
+    {
+        return E_OK;
+    }
+    int32_t StopFileCache(const int64_t &downloadId,  bool needClean = false)
     {
         return E_OK;
     }
