@@ -415,7 +415,7 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
         return E_SOFTBUS_SESSION_FAILED;
     }
     info.sessionName = sessionName;
-    Daemon::StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
+    StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
 
     auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
     auto prepareSessionData = std::make_shared<PrepareSessionData>(

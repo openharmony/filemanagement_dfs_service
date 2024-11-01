@@ -19,6 +19,7 @@
 #include "asset/i_asset_send_callback.h"
 #include "block_object.h"
 #include "hmdfs_info.h"
+#include "i_daemon.h"
 
 namespace OHOS {
 namespace Storage {

@@ -203,23 +203,22 @@ void DaemonExecute::ExecutePrepareSession(const AppExecFwk::InnerEvent::Pointer 
         LOGE("prepareSessionBlock is nullptr.");
         return;
     }
-    int32_t callingUid = prepareSessionData->callingUid_;
     std::string srcUri = prepareSessionData->srcUri_;
-    std::string dstUri  = prepareSessionData->dstUri_;
-    std::string srcDeviceId  = prepareSessionData->srcDeviceId_;
-    sptr<IRemoteObject> listener  = prepareSessionData->listener_;
+    std::string physicalPath  = prepareSessionData->physicalPath_;
+    std::string sessionName  = prepareSessionData->sessionName_;
+    sptr<IDaemon> daemon  = prepareSessionData->daemon_;
     HmdfsInfo &info = prepareSessionData->info_;
 
-    prepareSessionBlock->SetValue(PrepareSessionInner(callingUid, srcUri, dstUri, srcDeviceId, listener, info));
+    prepareSessionBlock->SetValue(PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info));
 }
 
-int32_t DaemonExecute::PrepareSessionInner((const std::string &srcUri,
-                                            const std::string &physicalPath,
-                                            const std::string &sessionName,
-                                            const sptr<IDaemon> &daemon,
-                                            HmdfsInfo &info)
+int32_t DaemonExecute::PrepareSessionInner(const std::string &srcUri,
+                                           std::string &physicalPath,
+                                           const std::string &sessionName,
+                                           const sptr<IDaemon> &daemon,
+                                           HmdfsInfo &info)
 {
-    LOGI("RequestSendFile begin.");
+    LOGI("PrepareSessionInner begin.");
     auto socketId = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName,
                                                                       DFS_CHANNLE_ROLE_SINK, physicalPath);
     if (socketId <= 0) {
@@ -232,7 +231,7 @@ int32_t DaemonExecute::PrepareSessionInner((const std::string &srcUri,
         LOGI("authority is media or docs");
         physicalPath = "??" + info.dstPhysicalPath;
     }
-    ret = Daemon::Copy(srcUri, physicalPath, daemon, sessionName);
+    auto ret = Daemon::Copy(srcUri, physicalPath, daemon, sessionName);
     if (ret != E_OK) {
         LOGE("Remote copy failed,ret = %{public}d", ret);
         Daemon::DeleteSessionAndListener(sessionName, socketId);
