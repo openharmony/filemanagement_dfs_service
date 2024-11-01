@@ -85,6 +85,12 @@ public:
     int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
     int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) override;
 
+    static int32_t Copy(const std::string &srcUri,
+                        const std::string &dstPath,
+                        const sptr<IDaemon> &daemon,
+                        const std::string &sessionName);
+    static void DeleteSessionAndListener(const std::string &sessionName, const int32_t socketId);
+
 private:
     Daemon();
     ServiceRunningState state_ { ServiceRunningState::STATE_NOT_START };
@@ -108,11 +114,6 @@ private:
                           HapTokenInfo &hapTokenInfo,
                           const bool &isSrcFile,
                           HmdfsInfo &info);
-    int32_t Copy(const std::string &srcUri,
-                 const std::string &dstPath,
-                 const sptr<IDaemon> &daemon,
-                 const std::string &sessionName);
-    void DeleteSessionAndListener(const std::string &sessionName, const int32_t socketId);
 
     class DfsListenerDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

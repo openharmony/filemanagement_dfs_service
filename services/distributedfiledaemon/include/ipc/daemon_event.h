@@ -18,6 +18,7 @@
 #include "asset/asset_obj.h"
 #include "asset/i_asset_send_callback.h"
 #include "block_object.h"
+#include "hmdfs_info.h"
 
 namespace OHOS {
 namespace Storage {
@@ -25,6 +26,7 @@ namespace DistributedFile {
 typedef enum {
     DEAMON_EXECUTE_PUSH_ASSET = 1,
     DEAMON_EXECUTE_REQUEST_SEND_FILE,
+    DEAMON_EXECUTE_PREPARE_SESSION,
 } DaemonEventType;
 
 struct PushAssetData {
@@ -56,6 +58,30 @@ struct RequestSendFileData {
     const std::string dstDeviceId_;
     const std::string sessionName_;
     const std::shared_ptr<BlockObject<int32_t>> requestSendFileBlock_;
+};
+
+struct PrepareSessionData {
+    PrepareSessionData(const std::string &srcUri,
+                       const std::string &physicalPath,
+                       const std::string &sessionName,
+                       const sptr<IDaemon> daemon,
+                       HmdfsInfo &info,
+                       const std::shared_ptr<BlockObject<int32_t>> &prepareSessionBlock)
+        : srcUri_(srcUri),
+          physicalPath_(physicalPath),
+          sessionName_(sessionName),
+          daemon_(daemon),
+          info_(info),
+          prepareSessionBlock_(prepareSessionBlock)
+    {
+    }
+
+    const std::string srcUri_;
+    const std::string physicalPath_;
+    const std::string sessionName_;
+    const sptr<IDaemon> daemon_;
+    HmdfsInfo &info_;
+    const std::shared_ptr<BlockObject<int32_t>> prepareSessionBlock_;
 };
 
 } // namespace DistributedFile
