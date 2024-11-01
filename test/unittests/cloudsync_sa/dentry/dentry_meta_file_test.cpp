@@ -79,6 +79,22 @@ HWTEST_F(DentryMetaFileTest, MetaFileHandleFileByFd002, TestSize.Level1)
     uint32_t userId = 100;
     MetaFile mFile(userId, "/");
     unsigned long endBlock = 0;
+    uint32_t level = 64;
+    int ret = mFile.HandleFileByFd(endBlock, level);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: MetaFileHandleFileByFd003
+ * @tc.desc: Verify the MetaFile::HandleFileByFd function
+ * @tc.type: FUNC
+ * @tc.require: SR000HRKKA
+ */
+HWTEST_F(DentryMetaFileTest, MetaFileHandleFileByFd003, TestSize.Level1)
+{
+    uint32_t userId = 100;
+    MetaFile mFile(userId, "/");
+    unsigned long endBlock = 0;
     uint32_t level = 0;
     int ret = mFile.HandleFileByFd(endBlock, level);
     EXPECT_EQ(ret, 0);
@@ -241,6 +257,49 @@ HWTEST_F(DentryMetaFileTest, MetaFileRemove002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: LoadChildren001
+ * @tc.desc: Verify the LoadChildren
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DentryMetaFileTest, LoadChildren001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadChildren001 Start";
+    try {
+        uint32_t userId = 100;
+        MetaFile mFile(userId, "/");
+        std::vector<MetaBase> bases;
+        int ret = mFile.LoadChildren(bases);
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "LoadChildren001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "LoadChildren001 End";
+}
+
+/**
+ * @tc.name: LoadChildren002
+ * @tc.desc: Verify the LoadChildren
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DentryMetaFileTest, LoadChildren002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LoadChildren002 Start";
+    try {
+        MetaFile mFile(TEST_USER_ID, "/");
+        std::vector<MetaBase> bases;
+        int ret = mFile.LoadChildren(bases);
+        EXPECT_EQ(ret, EINVAL);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "LoadChildren002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "LoadChildren002 End";
+}
+
+/**
  * @tc.name: MetaFileMgr001
  * @tc.desc: Verify the MetaFileMgr
  * @tc.type: FUNC
@@ -284,6 +343,48 @@ HWTEST_F(DentryMetaFileTest, MetaFileMgr002, TestSize.Level1)
         GTEST_LOG_(INFO) << " MetaFileMgr002 ERROR";
     }
     GTEST_LOG_(INFO) << "MetaFileMgr002 End";
+}
+
+/**
+ * @tc.name:RecordIdToCloudId001
+ * @tc.desc: Verify the RecordIdToCloudId
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DentryMetaFileTest, RecordIdToCloudId001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecordIdToCloudId001 Start";
+    try {
+        std::string hexStr = "";
+        string ret = MetaFileMgr::GetInstance().RecordIdToCloudId(hexStr);
+        EXPECT_EQ(ret, "");
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "RecordIdToCloudId001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RecordIdToCloudId001 End";
+}
+
+/**
+ * @tc.name:RecordIdToCloudId002
+ * @tc.desc: Verify the RecordIdToCloudId
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(DentryMetaFileTest, RecordIdToCloudId002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RecordIdToCloudId002 Start";
+    try {
+        std::string hexStr = "test";
+        string ret = MetaFileMgr::GetInstance().RecordIdToCloudId(hexStr);
+        EXPECT_EQ(ret, "");
+        MetaFileMgr::GetInstance().ClearAll();
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "RecordIdToCloudId002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RecordIdToCloudId002 End";
 }
 
 /**

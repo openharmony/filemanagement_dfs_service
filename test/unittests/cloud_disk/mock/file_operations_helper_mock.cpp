@@ -33,6 +33,11 @@ namespace {
     static const int32_t BUNDLE_NAME_OFFSET = 1000000000;
     static const int32_t STAT_MODE_DIR = 0771;
     static const int32_t NULL_PTR = -1;
+    static const int32_t MOCK0 = 0;
+    static const int32_t MOCK1 = 1;
+    static const int32_t MOCK2 = 2;
+    static const int32_t MOCK3 = 3;
+    static const int32_t MOCK4 = 4;
 }
 
 string FileOperationsHelper::GetCloudDiskRootPath(int32_t userId)
@@ -96,6 +101,24 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::FindCloudDiskInode(struct Cloud
     shared_ptr<CloudDiskInode> ptr = make_shared<CloudDiskInode>();
     if (key == NULL_PTR) {
         ptr = nullptr;
+    } else if (key == MOCK0) {
+        ptr->parent = -1;
+    } else if (key == MOCK1) {
+        ptr->parent = 0;
+    } else if (key == MOCK2) {
+        ptr->parent = 0;
+        ptr->bundleName = "com.ohos.photos";
+        ptr->cloudId = "mock";
+        ptr->fileName = "mock";
+    } else if (key == MOCK3) {
+        ptr->parent = 0;
+        ptr->cloudId = "mock";
+        ptr->fileName = "test";
+    } else if (key == MOCK4) {
+        ptr->bundleName = "com.ohos.photos";
+        ptr->parent = 0;
+        ptr->cloudId = "";
+        ptr->fileName = "test";
     }
     return ptr;
 }
@@ -109,6 +132,18 @@ shared_ptr<CloudDiskFile> FileOperationsHelper::FindCloudDiskFile(struct CloudDi
     ptr -> fileDirty = CLOUD_DISK_FILE_CREATE;
     if (key == NULL_PTR) {
         ptr = nullptr;
+    } else if (key == MOCK0) {
+        ptr -> fileDirty = CLOUD_DISK_FILE_UNKNOWN;
+    } else if (key == MOCK1) {
+        string recordType = "";
+        string recordId = "";
+        string assetKey = "";
+        string assetPath = "";
+        ptr -> type = CLOUD_DISK_FILE_TYPE_CLOUD;
+        ptr -> readSession =
+        make_shared<CloudFile::CloudAssetReadSession>(recordType, recordId, assetKey, assetPath);
+    } else if (key == MOCK3) {
+        ptr -> refCount = 0;
     }
     return ptr;
 }
