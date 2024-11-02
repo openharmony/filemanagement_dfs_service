@@ -84,6 +84,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleCleanCache(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_START_FILE_CACHE)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStartFileCache(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_RESET_CURSOR)] =
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleResetCursor(data, reply); };
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -194,9 +196,29 @@ int32_t CloudSyncServiceStub::HandleStopSyncInner(MessageParcel &data, MessagePa
     }
 
     string bundleName = data.ReadString();
-    int32_t res = StopSyncInner(bundleName);
+    bool forceFlag = data.ReadBool();
+    int32_t res = StopSyncInner(bundleName, forceFlag);
     reply.WriteInt32(res);
     LOGI("End StopSyncInner");
+    return E_OK;
+}
+
+int32_t CloudSyncServiceStub::HandleResetCursor(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin ResetCursor");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+ 
+    string bundleName = data.ReadString();
+    int32_t res = ResetCursor(bundleName);
+    reply.WriteInt32(res);
+    LOGI("End ResetCursor");
     return E_OK;
 }
 

@@ -85,10 +85,12 @@ static const unsigned int MAX_IDLE_THREADS = 10;
 static const unsigned int READ_CACHE_SLEEP = 10 * 1000;
 static const unsigned int CACHE_PAGE_NUM = 2;
 static const unsigned int HMDFS_IOC = 0xf2;
-static const std::chrono::seconds READ_TIMEOUT_S = 20s;
+static const std::chrono::seconds READ_TIMEOUT_S = 16s;
 static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
+#ifdef HICOLLIE_ENABLE
 static const unsigned int LOOKUP_TIMEOUT_S = 1;
 static const unsigned int FORGET_TIMEOUT_S = 1;
+#endif
 
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
 #define HMDFS_IOC_CANCEL_READ _IO(HMDFS_IOC, 8)
@@ -274,11 +276,13 @@ static int HandleCloudError(CloudError error)
     return ret;
 }
 
+#ifdef HICOLLIE_ENABLE
 static void XcollieCallback(void *node)
 {
     auto inode = reinterpret_cast<CloudInode *>(node);
     LOGI("In XcollieCallback, path: %{public}s", GetAnonyString(inode->path).c_str());
 }
+#endif
 
 static shared_ptr<CloudDatabase> GetDatabase(struct FuseData *data)
 {
@@ -386,8 +390,7 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         LOGE("parent name is empty");
         return ENOENT;
     }
-    string childName = (parent == FUSE_ROOT_ID) ? parentName + name :
-                                                  parentName + "/" + name;
+    string childName = (parent == FUSE_ROOT_ID) ? parentName + name :parentName + "/" + name;
     std::unique_lock<std::shared_mutex> wLock(data->cacheLock, std::defer_lock);
 
     LOGD("parent: %{private}s, name: %s", GetAnonyString(parentName).c_str(), GetAnonyString(name).c_str());
@@ -410,12 +413,16 @@ static int CloudDoLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
         child->mBase = make_shared<MetaBase>(mBase);
         child->path = childName;
         child->parent = parent;
+#ifdef HICOLLIE_ENABLE
         auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudLookup", LOOKUP_TIMEOUT_S,
             XcollieCallback, child.get(), false);
+#endif
         wLock.lock();
         data->inodeCache[child->path] = child;
         wLock.unlock();
+#ifdef HICOLLIE_ENABLE
         XCollieHelper::CancelTimer(xcollieId);
+#endif
     } else if (*(child->mBase) != mBase) {
         LOGW("invalidate %s", childName.c_str());
         child->mBase = make_shared<MetaBase>(mBase);
@@ -450,12 +457,16 @@ static void PutNode(struct FuseData *data, shared_ptr<CloudInode> node, uint64_t
          GetAnonyString(node->path).c_str(), (long long)num,  node->refCount.load());
     if (node->refCount == 0) {
         LOGD("node released: %s", GetAnonyString(node->path).c_str());
+#ifdef HICOLLIE_ENABLE
         auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudForget", FORGET_TIMEOUT_S,
             XcollieCallback, node.get(), false);
+#endif
         wLock.lock();
         data->inodeCache.erase(node->path);
         wLock.unlock();
+#ifdef HICOLLIE_ENABLE
         XCollieHelper::CancelTimer(xcollieId);
+#endif
     }
 }
 

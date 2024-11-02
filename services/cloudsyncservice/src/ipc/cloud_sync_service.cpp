@@ -139,6 +139,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
     LOGI("Start service successfully");
     Init();
     LOGI("init service successfully");
+    system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_START);
     TaskStateManager::GetInstance().StartTask();
     // 跟随进程生命周期
     ffrt::submit([startReason, this]() {
@@ -149,6 +150,7 @@ void CloudSyncService::OnStart(const SystemAbilityOnDemandReason& startReason)
 void CloudSyncService::OnActive(const SystemAbilityOnDemandReason& startReason)
 {
     LOGI("active service successfully");
+    system::SetParameter(CLOUD_FILE_SERVICE_SA_STATUS_FLAG, CLOUD_FILE_SERVICE_SA_START);
     TaskStateManager::GetInstance().StartTask();
     ffrt::submit([startReason, this]() {
         this->HandleStartReason(startReason);
@@ -355,7 +357,7 @@ int32_t CloudSyncService::TriggerSyncInner(const std::string &bundleName, const 
         SyncTriggerType::APP_TRIGGER);
 }
 
-int32_t CloudSyncService::StopSyncInner(const string &bundleName)
+int32_t CloudSyncService::StopSyncInner(const string &bundleName, bool forceFlag)
 {
     string targetBundleName = bundleName;
     string callerBundleName = "";
@@ -365,7 +367,20 @@ int32_t CloudSyncService::StopSyncInner(const string &bundleName)
         return ret;
     }
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
-    return dataSyncManager_->TriggerStopSync(targetBundleName, callerUserId, SyncTriggerType::APP_TRIGGER);
+    return dataSyncManager_->TriggerStopSync(targetBundleName, callerUserId, forceFlag, SyncTriggerType::APP_TRIGGER);
+}
+
+int32_t CloudSyncService::ResetCursor(const string &bundleName)
+{
+    string targetBundleName = bundleName;
+    string callerBundleName = "";
+    int32_t ret = GetTargetBundleName(targetBundleName, callerBundleName);
+    if (ret != E_OK) {
+        LOGE("get bundle name failed: %{public}d", ret);
+        return ret;
+    }
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    return dataSyncManager_->ResetCursor(targetBundleName, callerUserId);
 }
 
 int32_t CloudSyncService::GetSyncTimeInner(int64_t &syncTime, const string &bundleName)
@@ -404,7 +419,7 @@ int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std
         return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     } else {
         system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_SWITCHOFF);
-        return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, SyncTriggerType::CLOUD_TRIGGER);
+        return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     }
 }
 
