@@ -48,12 +48,9 @@ int32_t SoftbusAdapter::CreateSessionServer(const char *packageName, const char 
         return ERR_BAD_VALUE;
     }
     std::string saveKey = std::string(sessionName) + std::string(packageName);
-    {
-        lock_guard<mutex> lock(sessionMutex_);
-        auto sessionAndPackage = sessionAndPackageMap_.find(socket);
-        if (sessionAndPackage == sessionAndPackageMap_.end()) {
-            sessionAndPackageMap_.insert({socket, saveKey});
-        }
+    auto sessionAndPackage = sessionAndPackageMap_.find(socket);
+    if (sessionAndPackage == sessionAndPackageMap_.end()) {
+        sessionAndPackageMap_.insert({socket, saveKey});
     }
     QosTV serverQos[] = {
         { .qos = QOS_TYPE_MIN_BW,            .value = MIN_BW},
@@ -66,8 +63,8 @@ int32_t SoftbusAdapter::CreateSessionServer(const char *packageName, const char 
         .OnShutdown = SoftbusAdapter::OnShutdown,
         .OnBytes = SoftbusAdapter::OnBytes,
         .OnMessage = nullptr,
-        .OnStream = nullptr,
         .OnFile = SoftbusAdapter::OnFile,
+        .OnStream = nullptr,
     };
 
     int32_t ret = ::Listen(socket, serverQos, QOS_COUNT, &listener);
@@ -84,7 +81,7 @@ int32_t SoftbusAdapter::RemoveSessionServer(const char *packageName, const char 
     std::string val = std::string(sessionName) + std::string(packageName);
     int32_t socket = SoftbusAdapter::GetInstance().GetSocketNameFromMap(val);
     string existSessionName = SoftbusAdapter::GetInstance().GetSessionNameFromMap(socket);
-    if (strcmp(existSessionName.c_str(), sessionName) != 0) {
+    if (strcmp(sessionName, existSessionName.c_str()) != 0) {
         LOGE("Failed to RemoveSessionServer sessionName:%{public}s", sessionName);
         return ERR_BAD_VALUE;
     }
@@ -221,12 +218,9 @@ int SoftbusAdapter::OpenSession(char *sessionName,
         return ERR_BAD_VALUE;
     }
     std::string saveKey = std::string(sessionName) + std::string(SERVICE_NAME);
-    {
-        lock_guard<mutex> lock(sessionMutex_);
-        auto sessionAndPackage = sessionAndPackageMap_.find(socket);
-        if (sessionAndPackage == sessionAndPackageMap_.end()) {
-            sessionAndPackageMap_.insert({socket, saveKey});
-        }
+    auto sessionAndPackage = sessionAndPackageMap_.find(socket);
+    if (sessionAndPackage == sessionAndPackageMap_.end()) {
+        sessionAndPackageMap_.insert({socket, saveKey});
     }
     QosTV clientQos[] = {
         { .qos = QOS_TYPE_MIN_BW,            .value = MIN_BW},
