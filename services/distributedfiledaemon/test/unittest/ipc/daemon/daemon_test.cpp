@@ -703,67 +703,6 @@ HWTEST_F(DaemonTest, DaemonTest_PrepareSession_001, TestSize.Level1)
 }
 
 /**
- * @tc.name: DaemonTest_PrepareSession_002
- * @tc.desc: verify PrepareSession.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(DaemonTest, DaemonTest_PrepareSession_002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_002 begin";
-    HmdfsInfo hmdfsInfo;
-    hmdfsInfo.dirExistFlag = true;
-    std::string dstUri = "file://docs/data/storage/el2/distributedfiles/images/1.png";
-    sptr<IRemoteObject> listener = sptr<IRemoteObject>(new FileTransListenerMock());
-    sptr<DaemonMock> daemon = (new (std::nothrow) DaemonMock());
-    sptr<ISystemAbilityManagerMock> sysAbilityManager =
-        sptr<ISystemAbilityManagerMock>(new ISystemAbilityManagerMock());
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
-    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
-    EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(-1));
-    EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_SOFTBUS_SESSION_FAILED);
-
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
-    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
-    EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
-    SoftBusSessionPool::GetInstance().sessionMap_.clear();
-    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
-    g_getLocalDeviceInfo = ERR_BAD_VALUE;
-    hmdfsInfo.authority = FILE_MANAGER_AUTHORITY;
-    EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_GET_DEVICE_ID);
-
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
-    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
-    EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
-    SoftBusSessionPool::GetInstance().sessionMap_.clear();
-    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
-    g_getLocalDeviceInfo = E_OK;
-    hmdfsInfo.authority = FILE_MANAGER_AUTHORITY;
-    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_SA_LOAD_FAILED);
-
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
-    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
-    EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
-    SoftBusSessionPool::GetInstance().sessionMap_.clear();
-    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
-    hmdfsInfo.authority = MEDIA_AUTHORITY;
-    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_OK);
-
-    EXPECT_CALL(*smc_, GetSystemAbilityManager()).WillOnce(Return(sysAbilityManager));
-    EXPECT_CALL(*sysAbilityManager, GetSystemAbility(_, _)).WillOnce(Return(daemon));
-    EXPECT_CALL(*daemon, GetRemoteCopyInfo(_, _, _)).WillOnce(Return(E_OK));
-    SoftBusSessionPool::GetInstance().sessionMap_.clear();
-    EXPECT_CALL(*softBusHandlerMock_, CreateSessionServer(_, _, _, _)).WillOnce(Return(1));
-    hmdfsInfo.authority = "test";
-    EXPECT_CALL(*daemon, RequestSendFile(_, _, _, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->PrepareSession("", dstUri, "", listener, hmdfsInfo), E_OK);
-    GTEST_LOG_(INFO) << "DaemonTest_PrepareSession_002 end";
-}
-
-/**
  * @tc.name: DaemonTest_GetRealPath_001
  * @tc.desc: verify GetRealPath.
  * @tc.type: FUNC

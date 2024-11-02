@@ -41,7 +41,12 @@ private:
                                  const std::string &dstPath,
                                  const std::string &dstDeviceId,
                                  const std::string &sessionName);
-
+    void ExecutePrepareSession(const AppExecFwk::InnerEvent::Pointer &event);
+    int32_t PrepareSessionInner(const std::string &srcUri,
+                                std::string &physicalPath,
+                                const std::string &sessionName,
+                                const sptr<IDaemon> &daemon,
+                                HmdfsInfo &info);
 private:
     std::string GetZipName(const std::string &relativePath);
     std::vector<std::string> GetFileList(const std::vector<std::string> &uris,
