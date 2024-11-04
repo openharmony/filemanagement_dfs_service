@@ -237,6 +237,29 @@ HWTEST_F(CloudDiskRdbUtilsTest, GetLongTest004, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetLongTest005
+ * @tc.desc: Verify the GetLong function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbUtilsTest, GetLongTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLong Start";
+    try {
+        const string key = FileColumn::FILE_SIZE;
+        int64_t value;
+        std::shared_ptr<ResultSetMock> resultSet = nullptr;
+
+        int32_t ret = CloudDiskRdbUtils::GetLong(key, value, resultSet);
+        EXPECT_EQ(ret, E_RDB);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetLong ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetLong End";
+}
+
+/**
  * @tc.name: GetStringTest001
  * @tc.desc: Verify the GetString function.
  * @tc.type: FUNC
@@ -317,6 +340,29 @@ HWTEST_F(CloudDiskRdbUtilsTest, GetStringTest004, TestSize.Level1)
         std::shared_ptr<ResultSetMock> resultSet = std::make_shared<ResultSetMock>();
         EXPECT_CALL(*resultSet, GetColumnIndex(_, _)).WillOnce(Return(E_OK));
         EXPECT_CALL(*resultSet, GetString(_, _)).WillOnce(Return(E_RDB));
+        int32_t ret = CloudDiskRdbUtils::GetString(key, value, resultSet);
+        EXPECT_EQ(ret, E_RDB);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetString ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetString End";
+}
+
+/**
+ * @tc.name: GetStringTest005
+ * @tc.desc: Verify the GetString function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbUtilsTest, GetStringTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetString Start";
+    try {
+        const string key = FileColumn::FILE_NAME;
+        string value;
+        std::shared_ptr<ResultSetMock> resultSet = nullptr;
+        
         int32_t ret = CloudDiskRdbUtils::GetString(key, value, resultSet);
         EXPECT_EQ(ret, E_RDB);
     } catch(...) {
