@@ -22,11 +22,13 @@
 namespace OHOS {
 namespace DistributedHardware {
 using namespace OHOS::Storage::DistributedFile;
+#ifndef NORMAL_MOCK
 const std::string NETWORKID_ONE = "45656596896323231";
 const std::string NETWORKID_TWO = "45656596896323232";
 const std::string NETWORKID_THREE = "45656596896323233";
 constexpr int32_t NETWORKTYPE_WITH_WIFI = 2;
 constexpr int32_t NETWORKTYPE_NONE_WIFI = 4;
+#endif
 DeviceManagerImpl &DeviceManagerImpl::GetInstance()
 {
     GTEST_LOG_(INFO) << "GetInstance start";
@@ -314,6 +316,14 @@ int32_t DeviceManagerImpl::UnBindDevice(const std::string &pkgName, const std::s
     return 0;
 }
 
+#ifdef NORMAL_MOCK
+int32_t DeviceManagerImpl::GetNetworkTypeByNetworkId(const std::string &pkgName,
+                                                     const std::string &netWorkId,
+                                                     int32_t &netWorkType)
+{
+    return DfsDeviceManagerImpl::dfsDeviceManagerImpl->GetNetworkTypeByNetworkId(pkgName, netWorkId, netWorkType);
+}
+#else
 int32_t DeviceManagerImpl::GetNetworkTypeByNetworkId(const std::string &pkgName,
                                                      const std::string &netWorkId,
                                                      int32_t &netWorkType)
@@ -331,5 +341,6 @@ int32_t DeviceManagerImpl::GetNetworkTypeByNetworkId(const std::string &pkgName,
     netWorkType = NETWORKTYPE_NONE_WIFI;
     return DM_OK;
 }
+#endif
 } // namespace DistributedHardware
 } // namespace OHOS

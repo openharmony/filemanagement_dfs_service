@@ -15,6 +15,8 @@
 
 #include "socket_mock.h"
 
+#include "inner_socket.h"
+
 using namespace OHOS::Storage::DistributedFile;
 int32_t Socket(SocketInfo info)
 {
@@ -39,4 +41,9 @@ void Shutdown(int32_t socket)
 int SendFile(int32_t socket, const char *sFileList[], const char *dFileList[], uint32_t fileCnt)
 {
     return DfsSocket::dfsSocket->SendFile(socket, sFileList, dFileList, fileCnt);
+}
+
+int32_t DfsBind(int32_t socket, const ISocketListener *listener)
+{
+    return DfsSocket::dfsSocket->DfsBind(socket, listener);
 }

@@ -37,6 +37,10 @@ public:
         const std::string &extra, std::shared_ptr<DeviceStateCallback> callback) = 0;
     virtual int32_t UnRegisterDevStateCallback(const std::string &pkgName) = 0;
     virtual int32_t GetLocalDeviceInfo(const std::string &pkgName, DmDeviceInfo &info) = 0;
+    #ifdef NORMAL_MOCK
+    virtual int32_t GetNetworkTypeByNetworkId(const std::string &pkgName, const std::string &netWorkId,
+        int32_t &netWorkType) = 0;
+    #endif
 public:
     virtual int32_t GetLocalNodeDeviceInfo(const char *pkgName, NodeBasicInfo *info) = 0;
 public:
@@ -55,6 +59,10 @@ public:
     MOCK_METHOD1(UnRegisterDevStateCallback, int32_t(const std::string &pkgName));
     MOCK_METHOD2(GetLocalNodeDeviceInfo, int32_t(const char *pkgName, NodeBasicInfo *info));
     MOCK_METHOD2(GetLocalDeviceInfo, int32_t(const std::string &pkgName, DmDeviceInfo &info));
+    #ifdef NORMAL_MOCK
+    MOCK_METHOD3(GetNetworkTypeByNetworkId, int32_t(const std::string &pkgName, const std::string &netWorkId,
+        int32_t &netWorkType));
+    #endif
 };
 }
 #endif
