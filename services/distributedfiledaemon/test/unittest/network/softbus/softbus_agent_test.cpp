@@ -14,17 +14,18 @@
  */
 #include "network/softbus/softbus_agent.h"
 
+#include "gtest/gtest.h"
 #include <memory>
 #include <unistd.h>
 
-#include "gtest/gtest.h"
-
 #include "device_manager_impl.h"
 #include "dm_constants.h"
+#include "softbus_error_code.h"
 
 #include "network/softbus/softbus_session_dispatcher.h"
 #include "network/softbus/softbus_session.h"
 #include "utils_log.h"
+#include "socket_mock.h"
 
 using namespace std;
 namespace {
@@ -48,13 +49,13 @@ int32_t DeviceManagerImpl::GetTrustedDeviceList(const std::string &pkgName, cons
     }
 
     DmDeviceInfo testInfo;
-    (void)memcpy_s(testInfo.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
+    (void)memcpy_s(testInfo.networkId, DM_MAX_DEVICE_ID_LEN - 1,
                    NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
     testInfo.authForm = DmAuthForm::IDENTICAL_ACCOUNT;
     deviceList.push_back(testInfo);
 
     DmDeviceInfo testInfo1;
-    (void)memcpy_s(testInfo1.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
+    (void)memcpy_s(testInfo1.networkId, DM_MAX_DEVICE_ID_LEN - 1,
                    NETWORKID_TWO.c_str(), NETWORKID_TWO.size());
     testInfo1.authForm = DmAuthForm::PEER_TO_PEER;
     deviceList.push_back(testInfo1);
@@ -82,6 +83,7 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 namespace Test {
+using namespace testing;
 using namespace testing::ext;
 constexpr int USER_ID = 100;
 constexpr int MAX_RETRY_COUNT = 7;
@@ -89,11 +91,26 @@ static const string SAME_ACCOUNT = "account";
 
 class SoftbusAgentTest : public testing::Test {
 public:
-    static void SetUpTestCase(void) {};
-    static void TearDownTestCase(void) {};
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
     void SetUp() {};
     void TearDown() {};
+    static inline shared_ptr<SocketMock> socketMock_ = nullptr;
 };
+
+void SoftbusAgentTest::SetUpTestCase(void)
+{
+    GTEST_LOG_(INFO) << "SetUpTestCase";
+    socketMock_ = make_shared<SocketMock>();
+    SocketMock::dfsSocket = socketMock_;
+}
+
+void SoftbusAgentTest::TearDownTestCase(void)
+{
+    GTEST_LOG_(INFO) << "TearDownTestCase";
+    SocketMock::dfsSocket = nullptr;
+    socketMock_ = nullptr;
+}
 
 /**
  * @tc.name: SoftbusAgentTest_SoftbusAgent_0100
@@ -272,13 +289,56 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_JoinDomain_0100, TestSize.Level1)
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
     bool res = true;
     try {
+        EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
         agent->JoinDomain();
+        EXPECT_NE(SoftbusSessionDispatcher::busNameToAgent_.find(agent->sessionName_),
+            SoftbusSessionDispatcher::busNameToAgent_.end());
+        EXPECT_EQ(agent->serverIdMap_.find(agent->sessionName_),
+            agent->serverIdMap_.end());
+        SoftbusSessionDispatcher::busNameToAgent_.erase(agent->sessionName_);
+
+        EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+        EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(0));
+        agent->JoinDomain();
+        EXPECT_NE(agent->serverIdMap_.find(agent->sessionName_),
+            agent->serverIdMap_.end());
+        agent->serverIdMap_.erase(agent->sessionName_);
+        SoftbusSessionDispatcher::busNameToAgent_.erase(agent->sessionName_);
+        GTEST_LOG_(INFO) << "3";
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());
     }
     EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_JoinDomain_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_JoinDomain_0200
+ * @tc.desc: Verify the Start function.
+ * @tc.type: FUNC
+ * @tc.require: I9JXPR
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_JoinDomain_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_JoinDomain_0200 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    bool res = true;
+    try {
+        EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(1));
+        EXPECT_CALL(*socketMock_, Listen(_, _, _, _)).WillOnce(Return(-1));
+        agent->JoinDomain();
+    } catch (...) {
+        res = false;
+        EXPECT_NE(SoftbusSessionDispatcher::busNameToAgent_.find(agent->sessionName_),
+            SoftbusSessionDispatcher::busNameToAgent_.end());
+        SoftbusSessionDispatcher::busNameToAgent_.erase(agent->sessionName_);
+    }
+    EXPECT_FALSE(res);
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_JoinDomain_0200 end";
 }
 
 /**
@@ -296,12 +356,13 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_Stop_0100, TestSize.Level1)
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
     bool res = true;
     try {
+        SoftbusSessionDispatcher::busNameToAgent_.erase(agent->sessionName_);
         agent->Stop();
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());
     }
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_Stop_0100 end";
 }
 
@@ -565,11 +626,32 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectDeviceByP2PAsync_0100, TestSi
         .deviceName = "testdevname",
         .deviceTypeId = 1,
     };
+    (void)memcpy_s(info.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
+                   NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
+    g_mockGetTrustedDeviceList = true;
     DeviceInfo devInfo(info);
+    int32_t socketId = 1;
 
     bool res = true;
     try {
+        EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
         agent->ConnectDeviceByP2PAsync(devInfo);
+        EXPECT_FALSE(agent->FindSession(socketId));
+        EXPECT_EQ(SoftbusSessionDispatcher::idMap_.find(socketId), SoftbusSessionDispatcher::idMap_.end());
+
+        EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(socketId));
+        EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(-1));
+        agent->ConnectDeviceByP2PAsync(devInfo);
+        EXPECT_FALSE(agent->FindSession(socketId));
+        EXPECT_EQ(SoftbusSessionDispatcher::idMap_.find(socketId), SoftbusSessionDispatcher::idMap_.end());
+
+        EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(socketId));
+        EXPECT_CALL(*socketMock_, Bind(_, _, _, _)).WillOnce(Return(0));
+        agent->ConnectDeviceByP2PAsync(devInfo);
+        EXPECT_TRUE(agent->FindSession(socketId));
+        EXPECT_NE(SoftbusSessionDispatcher::idMap_.find(socketId), SoftbusSessionDispatcher::idMap_.end());
+        agent->sessionPool_.occupySession_.erase(socketId);
+        SoftbusSessionDispatcher::idMap_.erase(socketId);
     } catch (const exception &e) {
         res = false;
         LOGE("%{public}s", e.what());
@@ -628,6 +710,95 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_IsContinueRetry_0100, TestSize.Level
         EXPECT_TRUE(false);
     }
     GTEST_LOG_(INFO) << "SoftbusAgentTest_IsContinueRetry_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_OpenApSession_0100
+ * @tc.desc: Verify the OpenApSession function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OpenApSession_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_IsContinueRetry_0100 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    DistributedHardware::DmDeviceInfo info = {
+        .deviceId = "testdevid",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+    };
+    DeviceInfo devInfo(info);
+    int32_t socketId = 1;
+    try {
+        g_mockGetNetworkTypeByNetworkId = false;
+        agent->OpenApSession(devInfo, 2);
+        EXPECT_FALSE(agent->FindSession(socketId));
+        EXPECT_EQ(SoftbusSessionDispatcher::idMap_.find(socketId), SoftbusSessionDispatcher::idMap_.end());
+
+        g_mockGetNetworkTypeByNetworkId = true;
+        g_mockNetworkTypWIFI = true;
+        EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(-1));
+        agent->OpenApSession(devInfo, 2);
+        EXPECT_FALSE(agent->FindSession(socketId));
+        EXPECT_EQ(SoftbusSessionDispatcher::idMap_.find(socketId), SoftbusSessionDispatcher::idMap_.end());
+
+        EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(socketId));
+        EXPECT_CALL(*socketMock_, DfsBind(_, _)).WillOnce(Return(SOFTBUS_TRANS_SOCKET_IN_USE));
+        agent->OpenApSession(devInfo, 2);
+        EXPECT_FALSE(agent->FindSession(socketId));
+        EXPECT_EQ(SoftbusSessionDispatcher::idMap_.find(socketId), SoftbusSessionDispatcher::idMap_.end());
+
+        EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(socketId));
+        EXPECT_CALL(*socketMock_, DfsBind(_, _)).WillOnce(Return(-1));
+        agent->OpenApSession(devInfo, 2);
+        EXPECT_FALSE(agent->FindSession(socketId));
+        EXPECT_EQ(SoftbusSessionDispatcher::idMap_.find(socketId), SoftbusSessionDispatcher::idMap_.end());
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OpenApSession_0100 end";
+}
+
+/**
+ * @tc.name: SoftbusAgentTest_OpenApSession_0200
+ * @tc.desc: Verify the OpenApSession function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7SP3A
+ */
+HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OpenApSession_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OpenApSession_0200 start";
+    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
+    shared_ptr<MountPoint> smp = move(mp);
+    weak_ptr<MountPoint> wmp(smp);
+    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
+    DistributedHardware::DmDeviceInfo info = {
+        .deviceId = "testdevid",
+        .deviceName = "testdevname",
+        .deviceTypeId = 1,
+    };
+    DeviceInfo devInfo(info);
+    int32_t socketId = 1;
+    try {
+        g_mockGetNetworkTypeByNetworkId = true;
+        g_mockNetworkTypWIFI = true;
+
+        EXPECT_CALL(*socketMock_, Socket(_)).WillOnce(Return(socketId));
+        EXPECT_CALL(*socketMock_, DfsBind(_, _)).WillOnce(Return(0));
+        agent->OpenApSession(devInfo, 2);
+        EXPECT_TRUE(agent->FindSession(socketId));
+        EXPECT_NE(SoftbusSessionDispatcher::idMap_.find(socketId), SoftbusSessionDispatcher::idMap_.end());
+        agent->sessionPool_.occupySession_.erase(socketId);
+        SoftbusSessionDispatcher::idMap_.erase(socketId);
+    } catch (const exception &e) {
+        LOGE("%{public}s", e.what());
+        EXPECT_TRUE(false);
+    }
+    GTEST_LOG_(INFO) << "SoftbusAgentTest_OpenApSession_0200 end";
 }
 } // namespace Test
 } // namespace DistributedFile
