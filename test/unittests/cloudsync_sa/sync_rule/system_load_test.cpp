@@ -224,6 +224,38 @@ HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest003, TestSize.Level1)
     GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest001 End";
 }
 
+/**
+ * @tc.name: IsLoadStatusUnderHotTest004
+ * @tc.desc: Verify the IsLoadStatusUnderHot function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest004 Start";
+    SystemLoadStatus_->Setload(10);
+    STOPPED_TYPE process = STOPPED_IN_THUMB;
+    bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(process);
+    EXPECT_EQ(ret, false);
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest004 End";
+}
+
+/**
+ * @tc.name: IsLoadStatusUnderHotTest005
+ * @tc.desc: Verify the IsLoadStatusUnderHot function
+ * @tc.type: FUNC
+ * @tc.require: I6JPKG
+ */
+HWTEST_F(SytemLoadTest, IsLoadStatusUnderHotTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest005 Start";
+    SystemLoadStatus_->Setload(10);
+    STOPPED_TYPE process = STOPPED_IN_SYNC;
+    bool ret = SystemLoadStatus_->IsLoadStatusUnderHot(process);
+    EXPECT_EQ(ret, false);
+    GTEST_LOG_(INFO) << "IsLoadStatusUnderHotTest005 End";
+}
+
 HWTEST_F(SytemLoadTest, IsLoadStatusUnderNormalTest001, TestSize.Level1)
 {
     SystemLoadStatus_->Setload(SYSTEMLOADLEVEL_NORMAL);

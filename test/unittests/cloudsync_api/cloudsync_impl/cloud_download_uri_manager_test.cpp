@@ -134,6 +134,26 @@ HWTEST_F(CloudDownloadUriManagerTest, RemoveUriTest002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RemoveUriTest003
+ * @tc.desc: Verify the RemoveUri function.
+ * @tc.type: FUNC
+ * @tc.require: issueI7UYAL
+ */
+HWTEST_F(CloudDownloadUriManagerTest, RemoveUriTest003, TestSize.Level1)
+{
+    int64_t downloadId = 3;
+    const std::string path = "file://data/file";
+    CloudDownloadUriManager mUriMgr;
+    (mUriMgr.downloadIdPathMap_)[3].push_back(path);
+    (mUriMgr.pathUriMap_)[path] = "test2";
+    mUriMgr.RemoveUri(downloadId);
+    auto ret1 = mUriMgr.pathUriMap_.find(path);
+    EXPECT_EQ(ret1, mUriMgr.pathUriMap_.end());
+    auto ret2 = mUriMgr.downloadIdPathMap_.find(downloadId);
+    EXPECT_EQ(ret2, mUriMgr.downloadIdPathMap_.end());
+}
+
+/**
  * @tc.name: GetUriTest001
  * @tc.desc: Verify the GetUri function.
  * @tc.type: FUNC
@@ -163,6 +183,43 @@ HWTEST_F(CloudDownloadUriManagerTest, GetUriTest002, TestSize.Level1)
     EXPECT_EQ(mUriMgr.pathUriMap_[path], uri);
     string uriStr = mUriMgr.GetUri(path);
     EXPECT_EQ(uriStr, uri);
+}
+
+/**
+ * @tc.name: CheckDownloadIdPathMap001
+ * @tc.desc: Verify the CheckDownloadIdPathMap function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDownloadUriManagerTest, CheckDownloadIdPathMap001, TestSize.Level1)
+{
+    int64_t downloadId = 1;
+    const std::string path = "file://data/file";
+    CloudDownloadUriManager mUriMgr;
+    (mUriMgr.downloadIdPathMap_)[1].push_back(path);
+    mUriMgr.CheckDownloadIdPathMap(downloadId);
+    auto ret = mUriMgr.downloadIdPathMap_.find(downloadId);
+    EXPECT_EQ(ret, mUriMgr.downloadIdPathMap_.end());
+}
+
+/**
+ * @tc.name: CheckDownloadIdPathMap002
+ * @tc.desc: Verify the CheckDownloadIdPathMap function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDownloadUriManagerTest, CheckDownloadIdPathMap002, TestSize.Level1)
+{
+    int64_t downloadId = 1;
+    const std::string path = "fild://data/file";
+    CloudDownloadUriManager mUriMgr;
+    (mUriMgr.downloadIdPathMap_)[1].push_back(path);
+    (mUriMgr.pathUriMap_)[path] = "test2";
+    mUriMgr.CheckDownloadIdPathMap(downloadId);
+    auto ret1 = mUriMgr.downloadIdPathMap_.find(downloadId);
+    EXPECT_NE(ret1, mUriMgr.downloadIdPathMap_.end());
+    auto ret2 = mUriMgr.pathUriMap_.find(path);
+    EXPECT_NE(ret2, mUriMgr.pathUriMap_.end());
 }
 } // namespace Test
 } // namespace FileManagement::CloudSync {

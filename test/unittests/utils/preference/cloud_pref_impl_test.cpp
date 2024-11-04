@@ -744,4 +744,181 @@ HWTEST_F(CloudPrefImplTest, Delete_003, TestSize.Level0)
     }
     GTEST_LOG_(INFO) << "Delete_003 End";
 }
+
+/**
+ * @tc.name: SetStringTest001
+ * @tc.desc: Verify the SetString function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, SetStringTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetStringTest001 Start";
+    std::string key;
+    std::string value;
+    cloudPtr_->pref_ = nullptr;
+    cloudPtr_->SetString(key, value);
+    EXPECT_EQ(cloudPtr_->pref_, nullptr);
+    
+    GTEST_LOG_(INFO) << "SetStringTest001 End";
+}
+
+/**
+ * @tc.name: GetStringTest001
+ * @tc.desc: Verify the GetString function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, GetStringTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetStringTest001 Start";
+    std::string key;
+    std::string value;
+    cloudPtr_->pref_ = nullptr;
+    cloudPtr_->GetString(key, value);
+    EXPECT_EQ(cloudPtr_->pref_, nullptr);
+    
+    GTEST_LOG_(INFO) << "GetStringTest001 End";
+}
+
+/**
+ * @tc.name: SetLongTest001
+ * @tc.desc: Verify the SetLong function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, SetLongTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetLongTest001 Start";
+    std::string key;
+    int64_t value = 0;
+    cloudPtr_->pref_ = nullptr;
+    cloudPtr_->SetLong(key, value);
+    EXPECT_EQ(cloudPtr_->pref_, nullptr);
+    
+    GTEST_LOG_(INFO) << "SetLongTest001 End";
+}
+
+/**
+ * @tc.name: GetLongTest001
+ * @tc.desc: Verify the GetLong function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, GetLongTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetLongTest001 Start";
+    std::string key;
+    int64_t value = 0;
+    cloudPtr_->pref_ = nullptr;
+    cloudPtr_->GetLong(key, value);
+    EXPECT_EQ(cloudPtr_->pref_, nullptr);
+    
+    GTEST_LOG_(INFO) << "GetLongTest001 End";
+}
+
+/**
+ * @tc.name: SetIntTest001
+ * @tc.desc: Verify the SetInt function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, SetIntTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetIntTest001 Start";
+    std::string key;
+    int value = 0;
+    cloudPtr_->pref_ = nullptr;
+    cloudPtr_->SetInt(key, value);
+    EXPECT_EQ(cloudPtr_->pref_, nullptr);
+    
+    GTEST_LOG_(INFO) << "SetIntTest001 End";
+}
+
+/**
+ * @tc.name: GetIntTest001
+ * @tc.desc: Verify the GetInt function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, GetIntTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetIntTest001 Start";
+    std::string key;
+    int32_t value = 0;
+    cloudPtr_->pref_ = nullptr;
+    cloudPtr_->GetInt(key, value);
+    EXPECT_EQ(cloudPtr_->pref_, nullptr);
+    
+    GTEST_LOG_(INFO) << "GetIntTest001 End";
+}
+
+/**
+ * @tc.name: SetBoolTest001
+ * @tc.desc: Verify the SetBool function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, SetBoolTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetBoolTest001 Start";
+    std::string key;
+    bool value = true;
+    cloudPtr_->pref_ = nullptr;
+    cloudPtr_->SetBool(key, value);
+    EXPECT_EQ(cloudPtr_->pref_, nullptr);
+    
+    GTEST_LOG_(INFO) << "SetBoolTest001 End";
+}
+
+/**
+ * @tc.name: GetBoolTest001
+ * @tc.desc: Verify the GetBool function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, GetBoolTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBoolTest001 Start";
+    std::string key;
+    bool value = true;
+    cloudPtr_->pref_ = nullptr;
+    cloudPtr_->GetBool(key, value);
+    EXPECT_EQ(cloudPtr_->pref_, nullptr);
+    
+    GTEST_LOG_(INFO) << "GetBoolTest001 End";
+}
+
+/**
+ * @tc.name: ClearTest001
+ * @tc.desc: Verify the Clear function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, ClearTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ClearTest001 Start";
+    cloudPtr_->pref_ = nullptr;
+    cloudPtr_->Clear();
+    EXPECT_EQ(cloudPtr_->pref_, nullptr);
+    
+    GTEST_LOG_(INFO) << "ClearTest001 End";
+}
+
+/**
+ * @tc.name: DeleteTest001
+ * @tc.desc: Verify the Delete function
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudPrefImplTest, DeleteTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DeleteTest001 Start";
+    cloudPtr_->pref_ = nullptr;
+    std::string key;
+    cloudPtr_->Delete(key);
+    EXPECT_EQ(cloudPtr_->pref_, nullptr);
+    
+    GTEST_LOG_(INFO) << "DeleteTest001 End";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
