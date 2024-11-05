@@ -13,19 +13,21 @@
  * limitations under the License.
  */
 
-#include "dfsu_access_token_helper.h"
 #include "accesstoken_kit.h"
+#include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
+#include "dfsu_access_token_helper.h"
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
-#include "uri.h"
 #include "uri_permission_manager_client.h"
+#include "uri.h"
 #include "utils_log.h"
 #include "want.h"
 
 namespace OHOS::FileManagement {
 using namespace std;
 using namespace Security::AccessToken;
+using namespace Storage::DistributedFile;
 constexpr int32_t ROOT_UID = 0;
 constexpr int32_t BASE_USER_RANGE = 200000;
 bool DfsuAccessTokenHelper::CheckCallerPermission(const std::string &permissionName)
@@ -138,6 +140,9 @@ bool DfsuAccessTokenHelper::CheckUriPermission(const std::string &uriStr)
     auto &uriPermissionClient = AAFwk::UriPermissionManagerClient::GetInstance();
     if (bundleName != uri.GetAuthority() &&
         !uriPermissionClient.VerifyUriPermission(uri, AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION, tokenId)) {
+        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::CHECK_URI_PREMISSION_ERROR, RadarReporter::PACKAGE_NAME, RadarReporter::uriPermMgr);
         LOGE("uri permission denied");
         return false;
     }

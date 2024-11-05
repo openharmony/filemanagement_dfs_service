@@ -19,6 +19,7 @@
 
 #include "all_connect/all_connect_manager.h"
 #include "device_manager.h"
+#include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dm_device_info.h"
 #include "network/softbus/softbus_file_receive_listener.h"
@@ -131,6 +132,10 @@ int32_t SoftBusHandler::CreateSessionServer(const std::string &packageName, cons
     int32_t socketId = Socket(serverInfo);
     if (socketId < E_OK) {
         LOGE("Create Socket fail socketId, socketId = %{public}d", socketId);
+        RADAR_REPORT(RadarReporter::DFX_SET_DFS, RadarReporter::DFX_SET_BIZ_SCENE, RadarReporter::DFX_FAILED,
+            RadarReporter::BIZ_STATE, RadarReporter::DFX_END, RadarReporter::ERROR_CODE,
+            RadarReporter::CREAT_SOCKET_ERROR, RadarReporter::PACKAGE_NAME,
+            RadarReporter::dSoftBus + std::to_string(socketId));
         return FileManagement::ERR_BAD_VALUE;
     }
     QosTV qos[] = {
