@@ -54,6 +54,12 @@ struct LocalInfo {
     int64_t recycledTime;
 };
 
+struct BundleNameUserInfo {
+    std::string bundleName;
+    int32_t userId;
+    int32_t pid;
+};
+
 const int32_t POSITION_LOCAL = 1;
 const int32_t POSITION_CLOUD = 2;
 const int32_t POSITION_BOTH = 3;

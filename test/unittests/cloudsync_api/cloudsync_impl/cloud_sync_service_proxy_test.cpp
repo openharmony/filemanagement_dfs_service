@@ -575,8 +575,10 @@ HWTEST_F(CloudSyncServiceProxyTest, StartFileCache001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "StartFileCache Start";
     string uri = "";
-
-    int result = proxy_->StartFileCache(uri);
+    std::vector<std::string> uriVec;
+    uriVec.push_back(uri);
+    int64_t downloadId = 0;
+    int result = proxy_->StartFileCache(uriVec, downloadId);
     EXPECT_EQ(result, E_OK);
     GTEST_LOG_(INFO) << "StartFileCache End";
 }

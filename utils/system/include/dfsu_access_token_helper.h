@@ -34,6 +34,7 @@ public:
     static int32_t GetBundleNameByToken(uint32_t tokenId, std::string &bundleName);
     static bool IsSystemApp();
     static int32_t GetUserId();
+    static int32_t GetPid();
 };
 } // namespace OHOS::FileManagement
 
