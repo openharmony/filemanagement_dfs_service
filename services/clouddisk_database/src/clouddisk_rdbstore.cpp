@@ -1018,19 +1018,27 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
 static int32_t ExtAttributeSetValue(const std::string &key, const std::string &value,
     ValuesBucket &setXAttr, std::string &xattrList, int32_t pos)
 {
-    nlohmann::json jsonObj;
-    if (xattrList.empty()) {
-        jsonObj = nlohmann::json({{key, value}});
-    } else {
-        jsonObj = nlohmann::json::parse(xattrList, nullptr, false);
-        if (jsonObj.is_discarded()) {
-            LOGE("ext jsonObj parse failed");
-            return E_RDB;
-        }
+    auto jsonObj = nlohmann::json::parse(xattrList, nullptr, false);
+    if (jsonObj.is_discarded() || (!jsonObj.is_object())) {
+        LOGD("jsonObj is discarded");
+        jsonObj = nlohmann::json::object();
+    }
 
+    auto it = jsonObj.find(key);
+    if (it == jsonObj.end()) {
+        jsonObj.emplace(key, value);
+    } else {
         jsonObj[key] = value;
     }
-    std::string jsonValue = jsonObj.dump();
+
+    std::string jsonValue;
+    try {
+        jsonValue = jsonObj.dump();
+    } catch (nlohmann::json::type_error& err) {
+        LOGE("failed to dump json object, reason: %{public}s", err.what());
+        return E_INVAL_ARG;
+    }
+
     setXAttr.PutString(FileColumn::ATTRIBUTE, jsonValue);
     if (pos != LOCAL) {
         setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
