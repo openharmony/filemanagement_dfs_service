@@ -576,9 +576,15 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
         LOGE("write parameter is invalid");
         return E_INVAL_ARG;
     }
+    TransactionOperations rdbTransaction(rdbStore_);
+    auto [ret, transaction] = rdbTransaction.Start();
+    if (ret != E_OK) {
+        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
+        return ret;
+    }
     string filePath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
     struct stat statInfo {};
-    int32_t ret = stat(filePath.c_str(), &statInfo);
+    ret = stat(filePath.c_str(), &statInfo);
     if (ret) {
         LOGE("filePath %{private}s is invalid", GetAnonyString(filePath).c_str());
         return E_PATH;
@@ -592,13 +598,6 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
     ValuesBucket write;
     HandleWriteValue(write, position, statInfo);
     int32_t changedRows = -1;
-    TransactionOperations rdbTransaction(rdbStore_);
-    std::shared_ptr<Transaction> transaction;
-    std::tie(ret, transaction) = rdbTransaction.Start();
-    if (ret != E_OK) {
-        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
-        return ret;
-    }
     NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
     predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
     std::tie(ret, changedRows) = transaction->Update(write, predicates);
