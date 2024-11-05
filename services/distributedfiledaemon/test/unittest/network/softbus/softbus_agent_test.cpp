@@ -730,6 +730,8 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OpenApSession_0100, TestSize.Level1)
         .deviceName = "testdevname",
         .deviceTypeId = 1,
     };
+    (void)memcpy_s(info.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
+                   NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
     DeviceInfo devInfo(info);
     int32_t socketId = 1;
     try {
@@ -781,6 +783,8 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_OpenApSession_0200, TestSize.Level1)
         .deviceName = "testdevname",
         .deviceTypeId = 1,
     };
+    (void)memcpy_s(info.networkId, DM_MAX_DEVICE_NAME_LEN - 1,
+                   NETWORKID_ONE.c_str(), NETWORKID_ONE.size());
     DeviceInfo devInfo(info);
     int32_t socketId = 1;
     try {
