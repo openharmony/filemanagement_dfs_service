@@ -33,6 +33,7 @@
 #include "file_column.h"
 #include "ffrt_inner.h"
 #include "nlohmann/json.hpp"
+#include "parameter.h"
 #include "parameters.h"
 #include "rdb_errno.h"
 #include "rdb_sql_utils.h"
@@ -112,6 +113,10 @@ int32_t CloudDiskRdbStore::ReBuildDatabase(const string &databasePath)
 
 int32_t CloudDiskRdbStore::RdbInit()
 {
+    if (WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_DAEMON) != 0) {
+        LOGE("wait move error");
+        return EBUSY;
+    }
     LOGI("Init rdb store, userId_ = %{public}d, bundleName_ = %{public}s", userId_, bundleName_.c_str());
     string baseDir = "/data/service/el2/" + to_string(userId_) + "/hmdfs/cloudfile_manager/";
     string customDir = baseDir.append(system::GetParameter(FILEMANAGER_KEY, ""));
