@@ -358,7 +358,6 @@ int32_t CloudDiskMetaFile::DoCreate(const MetaBase &base)
     unsigned long bidx = 0;
     HmdfsDentryGroup dentryBlk = {0};
     std::unique_lock<std::mutex> lock(mtx_);
-    FileRangeLock fileLock(fd_, 0, 0);
     uint32_t namehash = CloudDisk::CloudFileUtils::DentryHash(base.name);
     bool found = false;
     while (!found) {
@@ -503,7 +502,6 @@ int32_t CloudDiskMetaFile::DoRemove(const MetaBase &base)
     }
 
     std::unique_lock<std::mutex> lock(mtx_);
-    FileRangeLock fileLock(fd_, 0, 0);
     DcacheLookupCtx ctx;
     InitDcacheLookupCtx(&ctx, base, fd_);
     HmdfsDentry *de = FindDentry(&ctx);
@@ -536,7 +534,6 @@ int32_t CloudDiskMetaFile::DoLookup(MetaBase &base)
     }
 
     std::unique_lock<std::mutex> lock(mtx_);
-    FileRangeLock fileLock(fd_, 0, 0);
     struct DcacheLookupCtx ctx;
     InitDcacheLookupCtx(&ctx, base, fd_);
     struct HmdfsDentry *de = FindDentry(&ctx);
@@ -564,7 +561,6 @@ int32_t CloudDiskMetaFile::DoUpdate(const MetaBase &base)
     }
 
     std::unique_lock<std::mutex> lock(mtx_);
-    FileRangeLock fileLock(fd_, 0, 0);
     struct DcacheLookupCtx ctx;
     InitDcacheLookupCtx(&ctx, base, fd_);
     struct HmdfsDentry *de = FindDentry(&ctx);
@@ -645,7 +641,6 @@ int32_t CloudDiskMetaFile::LoadChildren(std::vector<MetaBase> &bases)
     }
 
     std::lock_guard<std::mutex> lock(mtx_);
-    FileRangeLock fileLock(fd_, 0, 0);
     struct stat fileStat;
     int ret = fstat(fd_, &fileStat);
     if (ret != E_OK) {

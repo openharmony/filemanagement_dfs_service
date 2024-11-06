@@ -29,19 +29,6 @@ public:
     static int64_t ReadFile(int fd, off_t offset, size_t size, void *data);
     static int64_t WriteFile(int fd, const void *data, off_t offset, size_t size);
 };
-
-class FileRangeLock {
-public:
-    FileRangeLock(int fd, off_t offset, size_t size);
-    ~FileRangeLock();
-
-private:
-    int fd_{-1};
-    off_t offset_{0};
-    size_t size_{0};
-    bool lockFailed_{false};
-    int xcollieId_{0};
-};
 } // namespace FileManagement
 } // namespace OHOS
 
