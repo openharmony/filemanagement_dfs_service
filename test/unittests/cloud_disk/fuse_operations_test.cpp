@@ -486,7 +486,7 @@ HWTEST_F(FuseOperationsTest, OpenTest, TestSize.Level1)
         struct fuse_file_info fi;
         fi.fh = 1;
 
-        fuseoperations_->Open(req, ino, fi);
+        fuseoperations_->Open(req, ino, &fi);
         EXPECT_NE(ino, FUSE_ROOT_ID);
         EXPECT_NE((data.inodeCache)[0], nullptr);
     } catch (...) {
@@ -747,8 +747,6 @@ HWTEST_F(FuseOperationsTest, ForgetMultiTest02, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "ForgetMultiTest02 End";
 }
-
-
 
 /**
  * @tc.name:MkNodTest001
