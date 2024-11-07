@@ -78,7 +78,6 @@ ohos_shared_library("cloudfiledaemon") {
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
-    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
     "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
     "${utils_path}:libdistributedfileutils_lite",
   ]
