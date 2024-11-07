@@ -287,6 +287,7 @@ static int HandleCloudError(CloudError error, FaultOperation faultOperation)
 }
 
 #ifdef HICOLLIE_ENABLE
+
 struct XcollieInput {
     CloudInode *node_;
     FaultOperation faultOperation_;
@@ -315,7 +316,7 @@ static void XcollieCallback(void *xcollie)
             break;
     }
     
-    string msg = "In XcollieCallback, path:" + GetAnonyString((inode->path).c_str());
+    string msg = "In XcollieCallback, path:" + GetAnonyString(inode->path);
     CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, xcollieInput->faultOperation_,
         faultType, EWOULDBLOCK, msg});
 }
@@ -452,9 +453,7 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
         data->inodeCache[child->path] = child;
         wLock.unlock();
 #ifdef HICOLLIE_ENABLE
-#ifdef HICOLLIE_ENABLE
         XCollieHelper::CancelTimer(xcollieId);
-#endif
 #endif
     } else if (*(child->mBase) != mBase) {
         LOGW("invalidate %s", childName.c_str());
@@ -751,7 +750,7 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
         return *openFinish;
     });
     if (!waitStatus) {
-        string msg = "init session timeout, path: " + GetAnonyString((cInode->path).c_str());
+        string msg = "init session timeout, path: " + GetAnonyString(cInode->path);
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::OPEN,
                 FaultType::OPEN_CLOUD_FILE_TIMEOUT, ENETUNREACH, msg});
         return -ENETUNREACH;
@@ -1169,8 +1168,9 @@ static void CloudReadOnLocalFile(fuse_req_t req,  shared_ptr<char> buf, size_t s
     auto readSize = pread(fi->fh, buf.get(), size, off);
     if (readSize < 0) {
         fuse_reply_err(req, errno);
-        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::IOCTL,
-            FaultType::FILE, EINVAL, "invalid argument in ioctl"});
+        string msg = "Failed to read local file, errno: " + to_string(errno);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
+            FaultType::FILE, errno, msg});
         return;
     }
     fuse_reply_buf(req, buf.get(), min(size, static_cast<size_t>(readSize)));
