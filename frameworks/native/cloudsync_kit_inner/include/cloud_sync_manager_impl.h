@@ -57,20 +57,16 @@ public:
 
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
-        SystemAbilityStatusChange(std::shared_ptr<CloudSyncCallback> callback,
-            std::shared_ptr<CloudDownloadCallback> downloadCallback,
-            std::string bundleName)
-            : callback_(callback), downloadCallback_(downloadCallback), bundleName_(bundleName) {};
+        SystemAbilityStatusChange(const std::string &bundleName) : bundleName_(bundleName) {};
         void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId);
         void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId);
     private:
-        std::shared_ptr<CloudSyncCallback> callback_;
-        std::shared_ptr<CloudDownloadCallback> downloadCallback_;
         std::string bundleName_ = "";
     };
 private:
     CloudSyncManagerImpl() = default;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
+    bool ResetProxyCallback(uint32_t retryCount, const std::string &bundleName);
 
     std::atomic_flag isFirstCall_{false};
     sptr<SvcDeathRecipient> deathRecipient_;
@@ -78,6 +74,7 @@ private:
     std::shared_ptr<CloudDownloadCallback> downloadCallback_;
     sptr<CloudSyncManagerImpl::SystemAbilityStatusChange> listener_;
     std::mutex subscribeMutex_;
+    std::mutex downloadMutex_;
     std::mutex callbackMutex_;
     void SubscribeListener(std::string bundleName = "");
 };
