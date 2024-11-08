@@ -354,9 +354,6 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OnSinkSessionOpened_0100, TestSi
     handler.OnSinkSessionOpened(sessionId2, info2);
     handler.OnSinkSessionOpened(sessionId3, info3);
 
-    EXPECT_EQ(handler.GetSessionName(sessionId1), sessionName1);
-    EXPECT_EQ(handler.GetSessionName(sessionId2), sessionName2);
-    EXPECT_EQ(handler.GetSessionName(sessionId3), sessionName3);
 #ifdef SUPPORT_SAME_ACCOUNT
     auto iter = handler.serverIdMap_.find(sessionName2);
     if (iter == handler.serverIdMap_.end()) {
@@ -364,6 +361,10 @@ HWTEST_F(SoftbusHandlerTest, SoftbusHandlerTest_OnSinkSessionOpened_0100, TestSi
     } else {
         EXPECT_TRUE(false);
     }
+#else
+    EXPECT_EQ(handler.GetSessionName(sessionId1), sessionName1);
+    EXPECT_EQ(handler.GetSessionName(sessionId2), sessionName2);
+    EXPECT_EQ(handler.GetSessionName(sessionId3), sessionName3);
 #endif
     handler.clientSessNameMap_.erase(sessionId1);
     handler.clientSessNameMap_.erase(sessionId2);
