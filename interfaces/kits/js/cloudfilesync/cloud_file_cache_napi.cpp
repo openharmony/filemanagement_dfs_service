@@ -428,7 +428,7 @@ napi_value CloudFileCacheNapi::Off(napi_env env, napi_callback_info info)
     }
 
     if (!fileCacheEntity->registerMgr.RemoveRegisterInfo(eventType)) {
-        LOGE("Batch-Off remove callback is failed, event type: %{public}s.", eventType.c_str());
+        LOGE("Batch-Off no callback is registered for this event type: %{public}s.", eventType.c_str());
         NError(E_PARAMS).ThrowErr(env);
         return nullptr;
     }
