@@ -58,6 +58,7 @@ public:
     int32_t Unlink(const std::string &cloudId, const int32_t &position);
     int32_t RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
+    int32_t GetRowIdAndPosition(const std::string &cloudId, int64_t &rowId, int32_t &position);
     int32_t LocationSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
     int32_t FavoriteSetXattr(const std::string &cloudId, const std::string &value);
