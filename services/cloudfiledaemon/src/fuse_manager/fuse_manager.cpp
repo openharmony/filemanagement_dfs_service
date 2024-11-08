@@ -45,6 +45,7 @@
 #include "cloud_disk_inode.h"
 #include "cloud_file_fault_event.h"
 #include "cloud_file_kit.h"
+#include "cloud_file_utils.h"
 #include "clouddisk_type_const.h"
 #include "datetime_ex.h"
 #include "dfs_error.h"
@@ -215,7 +216,7 @@ struct FuseData {
     int userId;
     shared_ptr<CloudInode> rootNode{nullptr};
     /* store CloudInode by path */
-    map<string, shared_ptr<CloudInode>> inodeCache;
+    map<uint64_t, shared_ptr<CloudInode>> inodeCache;
     std::shared_mutex cacheLock;
     shared_ptr<CloudFile::CloudDatabase> database;
     struct fuse_session *se;
@@ -340,13 +341,13 @@ static shared_ptr<CloudDatabase> GetDatabase(struct FuseData *data)
     return data->database;
 }
 
-static shared_ptr<CloudInode> FindNode(struct FuseData *data, string path)
+static shared_ptr<CloudInode> FindNode(struct FuseData *data, const int64_t &cloudId)
 {
     shared_ptr<CloudInode> ret = nullptr;
     std::shared_lock<std::shared_mutex> rLock(data->cacheLock, std::defer_lock);
     rLock.lock();
-    if (data->inodeCache.count(path) != 0) {
-        ret = data->inodeCache.at(path);
+    if (data->inodeCache.count(cloudId) != 0) {
+        ret = data->inodeCache.at(cloudId);
     }
     rLock.unlock();
     return ret;
@@ -378,12 +379,12 @@ static shared_ptr<CloudInode> GetCloudInode(struct FuseData *data, fuse_ino_t in
     if (ino == FUSE_ROOT_ID) {
         return GetRootInode(data, ino);
     } else {
-        struct CloudInode *inoPtr = reinterpret_cast<struct CloudInode *>(ino);
-        if (inoPtr == nullptr) {
-            LOGE("inoPtr is nullptr");
-            return nullptr;
+        uint64_t cloudId = static_cast<uint64_t>(ino);
+        auto ret = FindNode(data, cloudId);
+        if (ret == nullptr) {
+            LOGE("get inode from cache failed.");
         }
-        return FindNode(data, inoPtr->path);
+        return ret;
     }
 }
 
@@ -400,7 +401,7 @@ static string CloudPath(struct FuseData *data, fuse_ino_t ino)
 
 static void GetMetaAttr(struct FuseData *data, shared_ptr<CloudInode> ino, struct stat *stbuf)
 {
-    stbuf->st_ino = reinterpret_cast<fuse_ino_t>(ino.get());
+    stbuf->st_ino = static_cast<fuse_ino_t>(CloudDisk::CloudFileUtils::DentryHash(ino->mBase->cloudId));
     stbuf->st_uid = OID_USER_DATA_RW;
     stbuf->st_gid = OID_USER_DATA_RW;
     stbuf->st_mtime = static_cast<int64_t>(ino->mBase->mtime);
@@ -426,19 +427,19 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
 
     LOGD("parent: %{private}s, name: %s", GetAnonyString(parentName).c_str(), GetAnonyString(name).c_str());
 
-    child = FindNode(data, childName);
-    if (!child) {
-        child = make_shared<CloudInode>();
-        create = true;
-        LOGD("new child %s", GetAnonyString(child->path).c_str());
-    }
     MetaBase mBase(name);
     int err = MetaFile(data->userId, parentName).DoLookup(mBase);
     if (err) {
         LOGE("lookup %s error, err: %{public}d", GetAnonyString(childName).c_str(), err);
         return err;
     }
-
+    uint64_t cloudId = static_cast<uint64_t>(CloudDisk::CloudFileUtils::DentryHash(mBase.cloudId));
+    child = FindNode(data, cloudId);
+    if (!child) {
+        child = make_shared<CloudInode>();
+        create = true;
+        LOGD("new child %s", GetAnonyString(childName).c_str());
+    }
     child->refCount++;
     if (create) {
         child->mBase = make_shared<MetaBase>(mBase);
@@ -450,7 +451,7 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
             XcollieCallback, &xcollieInput, false);
 #endif
         wLock.lock();
-        data->inodeCache[child->path] = child;
+        data->inodeCache[cloudId] = child;
         wLock.unlock();
 #ifdef HICOLLIE_ENABLE
         XCollieHelper::CancelTimer(xcollieId);
@@ -462,7 +463,7 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
     LOGD("lookup success, child: %{private}s, refCount: %lld", GetAnonyString(child->path).c_str(),
          static_cast<long long>(child->refCount));
     GetMetaAttr(data, child, &e->attr);
-    e->ino = reinterpret_cast<fuse_ino_t>(child.get());
+    e->ino = static_cast<fuse_ino_t>(cloudId);
     return 0;
 }
 
@@ -511,8 +512,9 @@ static void PutNode(struct FuseData *data, shared_ptr<CloudInode> node, uint64_t
         if (node->mBase != nullptr && (node->mBase->mode & S_IFDIR)) {
             LOGW("PutNode directory inode, path is %{public}s", GetAnonyString(node->path).c_str());
         }
+        uint64_t cloudId = static_cast<uint64_t>(CloudDisk::CloudFileUtils::DentryHash(node->mBase->cloudId));
         wLock.lock();
-        data->inodeCache.erase(node->path);
+        data->inodeCache.erase(cloudId);
         wLock.unlock();
 #ifdef HICOLLIE_ENABLE
         XCollieHelper::CancelTimer(xcollieId);
