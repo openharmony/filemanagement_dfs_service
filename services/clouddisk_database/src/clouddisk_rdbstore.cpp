@@ -670,9 +670,13 @@ int32_t CloudDiskRdbStore::GetRowId(const std::string &cloudId, int64_t &rowId)
     return E_OK;
 }
 
-static int32_t RecycleSetValue(int32_t val, ValuesBucket &setXAttr)
+static int32_t RecycleSetValue(int32_t val, ValuesBucket &setXAttr, int32_t position)
 {
-    setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+    if (position != LOCAL) {
+        setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+    } else {
+        setXAttr.PutInt(FileColumn::OPERATE_TYPE, static_cast<int32_t>(OperationType::NEW));
+    }
     if (val == 0) {
         setXAttr.PutInt(FileColumn::OPERATE_TYPE, static_cast<int32_t>(OperationType::RESTORE));
         setXAttr.PutLong(FileColumn::FILE_TIME_RECYCLED, CANCEL_STATE);
@@ -722,18 +726,25 @@ int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::s
         return EINVAL;
     }
     int32_t val = std::stoi(value);
-    ValuesBucket setXAttr;
-    int32_t ret = RecycleSetValue(val, setXAttr);
-    if (ret != E_OK) {
-        return ret;
-    }
+    int64_t rowId = 0;
+    int32_t position = -1;
     int32_t changedRows = -1;
     vector<ValueObject> bindArgs;
     bindArgs.emplace_back(cloudId);
     TransactionOperations rdbTransaction(rdbStore_, CLOUDDISK_RDB_IDX);
-    ret = rdbTransaction.Start();
+    int32_t ret = rdbTransaction.Start();
     if (ret != E_OK) {
         LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
+        return ret;
+    }
+    ret = GetRowIdAndPosition(cloudId, rowId, position);
+    if (ret != E_OK) {
+        LOGE("get rowId and position fail, ret %{public}d", ret);
+        return E_RDB;
+    }
+    ValuesBucket setXAttr;
+    ret = RecycleSetValue(val, setXAttr, position);
+    if (ret != E_OK) {
         return ret;
     }
     ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setXAttr,
@@ -741,12 +752,6 @@ int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::s
     if (ret != E_OK) {
         LOGE("set xAttr location fail, ret %{public}d", ret);
         return E_RDB;
-    }
-    int64_t rowId = 0;
-    ret = GetRowId(cloudId, rowId);
-    if (ret != E_OK) {
-        LOGE("get rowId fail, ret %{public}d", ret);
-        return ret;
     }
     if (val == 0) {
         ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId_, bundleName_, name,
@@ -761,6 +766,34 @@ int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::s
     }
     rdbTransaction.Finish();
     CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::GetRowIdAndPosition(const std::string &cloudId, int64_t &rowId, int32_t &position)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    CLOUDID_IS_NULL(cloudId);
+    AbsRdbPredicates getRowIdAndPositionPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    getRowIdAndPositionPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(getRowIdAndPositionPredicates, {FileColumn::ROW_ID, FileColumn::POSITION});
+    if (resultSet == nullptr) {
+        LOGE("get nullptr result set");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("getRowIdAndPositionPredicates result set go to next row failed");
+        return E_RDB;
+    }
+    int32_t ret = CloudDiskRdbUtils::GetLong(FileColumn::ROW_ID, rowId, resultSet);
+    if (ret != E_OK) {
+        LOGE("get rowId failed");
+        return ret;
+    }
+    ret = CloudDiskRdbUtils::GetInt(FileColumn::POSITION, position, resultSet);
+    if (ret != E_OK) {
+        LOGE("get position failed");
+        return ret;
+    }
     return E_OK;
 }
 
