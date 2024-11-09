@@ -125,6 +125,8 @@ void CloudDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
     obj.AddProp("taskId", NVal::CreateInt64(env, msg->downloadProgress_.downloadId).val_);
     obj.AddProp("error", NVal::CreateInt32(env, (int32_t)msg->downloadProgress_.downloadErrorType).val_);
 
+    LOGI("OnComplete callback start for taskId: %{public}lld",
+         static_cast<long long>(msg->downloadProgress_.downloadId));
     napi_value retVal = nullptr;
     napi_value global = nullptr;
     napi_get_global(env, &global);
@@ -138,8 +140,9 @@ void CloudDownloadCallbackImpl::OnComplete(UvChangeMsg *msg)
 void CloudDownloadCallbackImpl::OnDownloadProcess(const DownloadProgressObj &progress)
 {
     uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
+    napi_status status = napi_get_uv_event_loop(env_, &loop);
+    if (status != napi_ok) {
+        LOGE("Failed to get uv event loop");
         return;
     }
 
@@ -151,6 +154,7 @@ void CloudDownloadCallbackImpl::OnDownloadProcess(const DownloadProgressObj &pro
 
     UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(shared_from_this(), progress, isBatch_);
     if (msg == nullptr) {
+        LOGE("Failed to create uv message object");
         delete work;
         return;
     }
