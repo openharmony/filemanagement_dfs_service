@@ -341,7 +341,7 @@ static shared_ptr<CloudDatabase> GetDatabase(struct FuseData *data)
     return data->database;
 }
 
-static shared_ptr<CloudInode> FindNode(struct FuseData *data, const int64_t &cloudId)
+static shared_ptr<CloudInode> FindNode(struct FuseData *data, const uint64_t &cloudId)
 {
     shared_ptr<CloudInode> ret = nullptr;
     std::shared_lock<std::shared_mutex> rLock(data->cacheLock, std::defer_lock);
@@ -438,7 +438,7 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
     if (!child) {
         child = make_shared<CloudInode>();
         create = true;
-        LOGD("new child %s", GetAnonyString(childName).c_str());
+        LOGD("new child %{public}s", GetAnonyString(childName).c_str());
     }
     child->refCount++;
     if (create) {
