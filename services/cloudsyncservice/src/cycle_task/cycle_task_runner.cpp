@@ -54,6 +54,10 @@ CycleTaskRunner::CycleTaskRunner(std::shared_ptr<CloudFile::DataSyncManager> dat
 
 void CycleTaskRunner::StartTask()
 {
+#ifdef EMULATOR
+    return;
+#endif
+
     constexpr int32_t MOVE_FILE_TIME_SERVICE = 5;
     int status = WaitParameter("persist.kernel.move.finish", "true", MOVE_FILE_TIME_SERVICE);
     if (status != 0) {

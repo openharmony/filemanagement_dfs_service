@@ -243,6 +243,10 @@ ohos_static_library("cloudsync_sa_static") {
     defines += [ "SUPPORT_POWER" ]
   }
 
+  if (is_emulator) {
+    defines += [ "EMULATOR" ]
+  }
+
   use_exceptions = true
   part_name = "dfs_service"
   subsystem_name = "filemanagement"
