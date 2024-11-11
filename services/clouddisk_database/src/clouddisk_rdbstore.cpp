@@ -1258,15 +1258,19 @@ int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &cloudId)
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &position)
+int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &noUpload)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
         LOGE("Unlink parameters is invalid");
         return E_INVAL_ARG;
     }
-    RETURN_ON_ERR(UnlinkSynced(cloudId));
-    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    if (noUpload == NO_UPLOAD) {
+        RETURN_ON_ERR(UnlinkLocal(cloudId));
+    } else {
+        RETURN_ON_ERR(UnlinkSynced(cloudId));
+        CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    }
     return E_OK;
 }
 
