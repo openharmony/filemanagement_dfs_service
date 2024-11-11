@@ -113,6 +113,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/clouddisk_rdb_utils_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/meta_file_clouddisk_mock.cpp",
     "${distributedfile_path}/test/unittests/clouddisk_database/mock/rdb_mock.cpp",
+    "${distributedfile_path}/test/unittests/clouddisk_database/mock/transaction_mock.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/cloud_file_utils_mock.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/base_column.cpp",
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/src/media_column.cpp",

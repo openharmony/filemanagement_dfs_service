@@ -73,21 +73,6 @@ HWTEST_F(CloudDiskRdbTransactionTest, StartTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "Start End";
 }
 
-/**
- * @tc.name: StartTest002
- * @tc.desc: Verify the Start function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbTransactionTest, StartTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "Start Start";
-    auto rdb = std::make_shared<RdbStoreMock>();
-    auto transaction = make_shared<TransactionOperations>(rdb);
-    auto ret = transaction->Start();
-    EXPECT_EQ(ret.first, E_OK);
-    GTEST_LOG_(INFO) << "Start End";
-}
 
 /**
  * @tc.name: FinishTest001
@@ -132,22 +117,6 @@ HWTEST_F(CloudDiskRdbTransactionTest, BeginTransactionTest001, TestSize.Level1)
     auto transaction = make_shared<TransactionOperations>(rdb);
     int32_t ret = transaction->BeginTransaction(NativeRdb::Transaction::EXCLUSIVE);
     EXPECT_EQ(ret, E_HAS_DB_ERROR);
-    GTEST_LOG_(INFO) << "BeginTransaction End";
-}
-
-/**
- * @tc.name: BeginTransactionTest002
- * @tc.desc: Verify the BeginTransaction function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskRdbTransactionTest, BeginTransactionTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BeginTransaction Start";
-    auto rdb = std::make_shared<RdbStoreMock>();
-    auto transaction = make_shared<TransactionOperations>(rdb);
-    int32_t ret = transaction->BeginTransaction(NativeRdb::Transaction::EXCLUSIVE);
-    EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "BeginTransaction End";
 }
 

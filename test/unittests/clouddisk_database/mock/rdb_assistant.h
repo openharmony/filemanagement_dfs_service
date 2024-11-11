@@ -172,6 +172,7 @@ public:
     MOCK_CONST_METHOD0(IsMemoryRdb, bool());
     MOCK_METHOD2(Restore, int(const std::string &backupPath, const std::vector<uint8_t> &newKey));
     MOCK_METHOD1(GetRebuilt, int(RebuiltType &rebuilt));
+    MOCK_METHOD1(CreateTransaction, std::pair<int32_t, std::shared_ptr<Transaction>>(int32_t type));
 };
 
 class Assistant {
