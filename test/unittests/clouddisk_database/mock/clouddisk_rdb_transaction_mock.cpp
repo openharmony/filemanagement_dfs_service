@@ -42,7 +42,8 @@ TransactionOperations::~TransactionOperations()
 std::pair<int32_t, std::shared_ptr<NativeRdb::Transaction>> TransactionOperations::Start(
     NativeRdb::Transaction::TransactionType type)
 {
-    return make_pair(E_OK, nullptr);
+    auto [errCode, transaction] = rdbStore_->CreateTransaction(type);
+    return make_pair(errCode, transaction);
 }
 
 void TransactionOperations::Finish()

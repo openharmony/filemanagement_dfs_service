@@ -23,6 +23,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
+#include "transaction_mock.cpp"
 
 namespace OHOS::FileManagement::CloudDisk::Test {
 using namespace testing;
@@ -305,7 +306,10 @@ HWTEST_F(CloudDiskRdbStoreTest, SetAttrTest3, TestSize.Level1)
     const unsigned long long size = 0;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_RDB));
+    
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
 
     int32_t ret = clouddiskrdbStore_->SetAttr(fileName, parentCloudId, cloudId, size);
     EXPECT_EQ(ret, E_RDB);
@@ -325,7 +329,10 @@ HWTEST_F(CloudDiskRdbStoreTest, SetAttrTest4, TestSize.Level1)
     const unsigned long long size = 0;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_OK));
+    
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
 
     int32_t ret = clouddiskrdbStore_->SetAttr(fileName, parentCloudId, cloudId, size);
     EXPECT_EQ(ret, E_RDB);
@@ -345,10 +352,13 @@ HWTEST_F(CloudDiskRdbStoreTest, SetAttrTest5, TestSize.Level1)
     const unsigned long long size = 0;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_OK));
+
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
 
     int32_t ret = clouddiskrdbStore_->SetAttr(fileName, parentCloudId, cloudId, size);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
@@ -491,7 +501,10 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest6, TestSize.Level1)
     clouddiskrdbStore_->userId_ = 1;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Insert(_, _, _)).WillOnce(Return(E_RDB));
+
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
 
     int32_t ret = clouddiskrdbStore_->Create(cloudId, parentCloudId, fileName, noNeedUpload);
     EXPECT_EQ(ret, E_RDB);
@@ -512,7 +525,10 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest7, TestSize.Level1)
     clouddiskrdbStore_->userId_ = 1;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Insert(_, _, _)).WillOnce(Return(E_OK));
+
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
 
     int32_t ret = clouddiskrdbStore_->Create(cloudId, parentCloudId, fileName, noNeedUpload);
     EXPECT_EQ(ret, E_RDB);
@@ -533,10 +549,13 @@ HWTEST_F(CloudDiskRdbStoreTest, CreateTest8, TestSize.Level1)
     clouddiskrdbStore_->userId_ = 1;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Insert(_, _, _)).WillOnce(Return(E_OK));
+    
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
 
     int32_t ret = clouddiskrdbStore_->Create(cloudId, parentCloudId, fileName, noNeedUpload);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
@@ -607,7 +626,10 @@ HWTEST_F(CloudDiskRdbStoreTest, MkDirTest4, TestSize.Level1)
     bool noNeedUpload = false;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Insert(_, _, _)).WillOnce(Return(E_RDB));
+    
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
     
     int32_t ret = clouddiskrdbStore_->MkDir(cloudId, parentCloudId, directoryName, noNeedUpload);
     EXPECT_EQ(ret, E_RDB);
@@ -627,7 +649,10 @@ HWTEST_F(CloudDiskRdbStoreTest, MkDirTest5, TestSize.Level1)
     bool noNeedUpload = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Insert(_, _, _)).WillOnce(Return(E_OK));
+
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
     
     int32_t ret = clouddiskrdbStore_->MkDir(cloudId, parentCloudId, directoryName, noNeedUpload);
     EXPECT_EQ(ret, E_RDB);
@@ -647,10 +672,13 @@ HWTEST_F(CloudDiskRdbStoreTest, MkDirTest6, TestSize.Level1)
     bool noNeedUpload = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Insert(_, _, _)).WillOnce(Return(E_OK));
+
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Insert(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
     
     int32_t ret = clouddiskrdbStore_->MkDir(cloudId, parentCloudId, directoryName, noNeedUpload);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
@@ -702,8 +730,10 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest3, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     clouddiskrdbStore_->userId_ = 1;
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_RDB));
 
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
     int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_RDB);
 }
@@ -722,7 +752,9 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest4, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     clouddiskrdbStore_->userId_ = 1;
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_OK));
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
 
     int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
     EXPECT_EQ(ret, E_RDB);
@@ -742,10 +774,12 @@ HWTEST_F(CloudDiskRdbStoreTest, WriteTest5, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     clouddiskrdbStore_->userId_ = 1;
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_OK));
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
 
     int32_t ret = clouddiskrdbStore_->Write(fileName, parentCloudId, cloudId);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
@@ -780,7 +814,9 @@ HWTEST_F(CloudDiskRdbStoreTest, LocationSetXattrTest2, TestSize.Level1)
     const std::string value = "1";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_RDB));
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
 
     int32_t ret = clouddiskrdbStore_->LocationSetXattr(name, parentCloudId, cloudId, value);
     EXPECT_EQ(ret, E_RDB);
@@ -800,7 +836,9 @@ HWTEST_F(CloudDiskRdbStoreTest, LocationSetXattrTest3, TestSize.Level1)
     const std::string value = "1";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_OK));
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
 
     int32_t ret = clouddiskrdbStore_->LocationSetXattr(name, parentCloudId, cloudId, value);
     EXPECT_EQ(ret, E_RDB);
@@ -820,10 +858,12 @@ HWTEST_F(CloudDiskRdbStoreTest, LocationSetXattrTest4, TestSize.Level1)
     const std::string value = "1";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_OK));
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
 
     int32_t ret = clouddiskrdbStore_->LocationSetXattr(name, parentCloudId, cloudId, value);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, E_RDB);
 }
 
 /**
@@ -1001,6 +1041,8 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest2, TestSize.Level1)
     const std::string value = "2";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     int32_t ret = clouddiskrdbStore_->RecycleSetXattr(name, parentCloudId, cloudId, value);
     EXPECT_EQ(ret, E_RDB);
 }
@@ -1019,7 +1061,8 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest3, TestSize.Level1)
     const std::string value = "0";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     int32_t ret = clouddiskrdbStore_->RecycleSetXattr(name, parentCloudId, cloudId, value);
     EXPECT_EQ(ret, E_RDB);
 }
@@ -1038,7 +1081,9 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest4, TestSize.Level1)
     const std::string value = "0";
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
-    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
 
     int32_t ret = clouddiskrdbStore_->RecycleSetXattr(name, parentCloudId, cloudId, value);
@@ -1060,7 +1105,9 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest5, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
@@ -1083,7 +1130,9 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest6, TestSize.Level1)
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
-    EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
@@ -1635,8 +1684,10 @@ HWTEST_F(CloudDiskRdbStoreTest, ExtAttributeSetXattrTest1, TestSize.Level1)
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_RDB));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_RDB, 0)));
     
     int32_t ret = clouddiskrdbStore_->ExtAttributeSetXattr(cloudId, value, key);
     EXPECT_EQ(ret, E_RDB);
@@ -1658,7 +1709,9 @@ HWTEST_F(CloudDiskRdbStoreTest, ExtAttributeSetXattrTest2, TestSize.Level1)
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
     An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
-    EXPECT_CALL(*rdb, Update(_, _, _, _, An<const std::vector<ValueObject> &>())).WillOnce(Return(E_OK));
+    auto transaction = make_shared<TransactionMock>();
+    EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
+    EXPECT_CALL(*transaction, Update(_, _, _)).WillOnce(Return(std::make_pair(E_OK, 0)));
     
     int32_t ret = clouddiskrdbStore_->ExtAttributeSetXattr(cloudId, value, key);
     EXPECT_EQ(ret, E_OK);
