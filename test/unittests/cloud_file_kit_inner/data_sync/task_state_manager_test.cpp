@@ -370,4 +370,22 @@ HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_016, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "TaskStateManagerTest_016 End";
 }
+
+HWTEST_F(TaskStateManagerTest, TaskStateManagerTest_017, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_017 Start";
+    try {
+        TaskStateManager taskStateManager;
+        string bundleName = "testBundleName";
+        TaskType task = TaskType::SYNC_TASK;
+        
+        taskStateManager.CompleteTask(bundleName, task);
+        auto ret = taskStateManager.taskMaps_.find(bundleName);
+        EXPECT_EQ(ret, taskStateManager.taskMaps_.end());
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "TaskStateManagerTest_017 ERROR";
+    }
+    GTEST_LOG_(INFO) << "TaskStateManagerTest_017 End";
+}
 }

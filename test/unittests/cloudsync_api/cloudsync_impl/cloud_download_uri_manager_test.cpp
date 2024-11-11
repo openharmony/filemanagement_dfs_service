@@ -221,6 +221,21 @@ HWTEST_F(CloudDownloadUriManagerTest, CheckDownloadIdPathMap002, TestSize.Level1
     auto ret2 = mUriMgr.pathUriMap_.find(path);
     EXPECT_NE(ret2, mUriMgr.pathUriMap_.end());
 }
+
+/**
+ * @tc.name: AddDownloadIdToPathTest
+ * @tc.desc: Verify the AddDownloadIdToPath function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDownloadUriManagerTest, AddDownloadIdToPathTest, TestSize.Level1)
+{
+    std::vector<std::string> pathVec = {"file://data/file"};
+    int64_t downloadId = 0;
+    CloudDownloadUriManager mUriMgr;
+    auto ret = mUriMgr.AddDownloadIdToPath(downloadId, pathVec);
+    EXPECT_EQ(ret, E_OK);
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync {
 } // namespace OHOS
