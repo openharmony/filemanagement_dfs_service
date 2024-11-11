@@ -221,7 +221,7 @@ HWTEST_F(BatteryStatusTest, IsBatteryCapcityOkayTest002, TestSize.Level1)
  */
 HWTEST_F(BatteryStatusTest, IsBatteryCapcityOkayTest003, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest Start";
+    GTEST_LOG_(INFO) << "IsBatteryCapcityOkayTest003 Start";
     try {
         EXPECT_CALL(*dfsBatterySrvClient_, GetCapacity()).WillOnce(Return(STOP_CAPACITY_LIMIT - 1));
         batteryStatus_->SetChargingStatus(false);
