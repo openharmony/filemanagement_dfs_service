@@ -27,6 +27,7 @@ namespace CloudSync {
 using namespace std;
 
 const int32_t DELAY_TIME = 90000; // ms
+const int32_t SYSTEM_LOAD_DELAY_TIME = 300000; // ms
 
 TaskStateManager &TaskStateManager::GetInstance()
 {
@@ -107,11 +108,16 @@ void TaskStateManager::DelayUnloadTask()
     string systemLoadSync = system::GetParameter(temperatureSysparamSync, "");
     string systemLoadThumb = system::GetParameter(temperatureSysparamThumb, "");
     LOGI("delay unload task begin");
-    auto task = [this]() {
+    auto delayTime = DELAY_TIME;
+    if (systemLoadSync == "true" || systemLoadThumb == "true") {
+        LOGE("temperatureSysparam is true, unload task in 5 minutes");
+        delayTime = SYSTEM_LOAD_DELAY_TIME;
+    }
+    auto task = [self = shared_from_this()]() {
         LOGI("do unload task");
         {
-            std::lock_guard<ffrt::mutex> lock(unloadTaskMutex_);
-            unloadTaskHandle_ = nullptr;
+            std::lock_guard<ffrt::mutex> lock(self->unloadTaskMutex_);
+            self->unloadTaskHandle_ = nullptr;
         }
 
         /* for big data statistics */
@@ -132,7 +138,7 @@ void TaskStateManager::DelayUnloadTask()
 
     CancelUnloadTask();
     std::lock_guard<ffrt::mutex> lock(unloadTaskMutex_);
-    std::chrono::milliseconds ms(DELAY_TIME);
+    std::chrono::milliseconds ms(delayTime);
     auto us = std::chrono::duration_cast<std::chrono::microseconds>(ms);
     unloadTaskHandle_ = queue_.submit_h(task, ffrt::task_attr().delay(us.count()));
 }
