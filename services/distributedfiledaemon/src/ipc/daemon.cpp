@@ -360,7 +360,6 @@ int32_t Daemon::RequestSendFile(const std::string &srcUri,
                                 const std::string &sessionName)
 {
     LOGI("RequestSendFile begin dstDeviceId: %{public}s", Utils::GetAnonyString(dstDeviceId).c_str());
-
     auto requestSendFileBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
     auto requestSendFileData = std::make_shared<RequestSendFileData>(
         srcUri, dstPath, dstDeviceId, sessionName, requestSendFileBlock);
@@ -390,9 +389,6 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
                                HmdfsInfo &info)
 {
     LOGI("PrepareSession begin srcDeviceId: %{public}s", Utils::GetAnonyString(srcDeviceId).c_str());
-    AllConnectManager::GetInstance().PublishServiceState(srcDeviceId,
-        ServiceCollaborationManagerBussinessStatus::SCM_IDLE);
-
     auto listenerCallback = iface_cast<IFileTransListener>(listener);
     if (listenerCallback == nullptr) {
         LOGE("ListenerCallback is nullptr");
@@ -420,24 +416,26 @@ int32_t Daemon::PrepareSession(const std::string &srcUri,
     }
     info.sessionName = sessionName;
     StoreSessionAndListener(physicalPath, sessionName, listenerCallback);
-    auto socketId = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName,
-        DFS_CHANNLE_ROLE_SINK, physicalPath);
-    if (socketId <= 0) {
-        LOGE("CreateSessionServer failed, ret = %{public}d", ret);
-        DeleteSessionAndListener(sessionName, socketId);
-        return E_SOFTBUS_SESSION_FAILED;
+
+    auto prepareSessionBlock = std::make_shared<BlockObject<int32_t>>(BLOCK_INTERVAL_SEND_FILE, ERR_BAD_VALUE);
+    auto prepareSessionData = std::make_shared<PrepareSessionData>(
+        srcUri, physicalPath, sessionName, daemon, info, prepareSessionBlock);
+    auto msgEvent = AppExecFwk::InnerEvent::Get(DEAMON_EXECUTE_PREPARE_SESSION, prepareSessionData, 0);
+    {
+        std::lock_guard<std::mutex> lock(eventHandlerMutex_);
+        if (eventHandler_ == nullptr) {
+            LOGE("eventHandler has not find");
+            return E_EVENT_HANDLER;
+        }
+        bool isSucc = eventHandler_->SendEvent(msgEvent, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        if (!isSucc) {
+            LOGE("Daemon event handler post Prepare Session event fail.");
+            return E_EVENT_HANDLER;
+        }
     }
-    physicalPath.clear();
-    if (info.authority == FILE_MANAGER_AUTHORITY || info.authority == MEDIA_AUTHORITY) {
-        LOGI("authority is media or docs");
-        physicalPath = "??" + info.dstPhysicalPath;
-    }
-    ret = Copy(srcUri, physicalPath, daemon, sessionName);
-    if (ret != E_OK) {
-        LOGE("Remote copy failed,ret = %{public}d", ret);
-        DeleteSessionAndListener(sessionName, socketId);
-        return ret;
-    }
+
+    ret = prepareSessionBlock->GetValue();
+    LOGI("PrepareSession end, ret is %{public}d", ret);
     return ret;
 }
 
