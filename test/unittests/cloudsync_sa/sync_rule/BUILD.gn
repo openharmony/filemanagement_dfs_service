@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Copyright (C) 2023-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -385,6 +385,123 @@ ohos_unittest("system_load_test") {
   use_exceptions = true
 }
 
+ohos_unittest("screen_status_listener_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+  module_out_path = "filemanagement/dfs_service"
+  sources = [
+    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/screen_status_listener.cpp",
+    "screen_status_listener_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/sync_rule",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${utils_path}/log/include",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "netmanager_base:net_conn_manager_if",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_TEST\"",
+  ]
+  if (cloudsync_service_resource_schedule) {
+    external_deps += [ "resource_schedule_service:ressched_client" ]
+    defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
+  }
+  use_exceptions = true
+}
+
+ohos_unittest("user_status_listener_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
+  }
+  module_out_path = "filemanagement/dfs_service"
+  sources = [
+    "${distributedfile_path}/services/cloudsyncservice/src/sync_rule/user_status_listener.cpp",
+    "user_status_listener_test.cpp",
+  ]
+
+  include_dirs = [
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/sync_rule",
+    "${services_path}/cloudsyncservice/include/transport/softbus",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+    "${distributedfile_path}/adapter/cloud_adapter_example/include",
+    "${utils_path}/log/include",
+  ]
+
+  deps = [
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${services_path}/cloudsyncservice:cloudsync_sa_static",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "netmanager_base:net_conn_manager_if",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004310",
+    "LOG_TAG=\"CLOUD_SYNC_TEST\"",
+  ]
+  if (cloudsync_service_resource_schedule) {
+    external_deps += [ "resource_schedule_service:ressched_client" ]
+    defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
+  }
+  use_exceptions = true
+}
+
 group("cloudsync_sa_sync_rule_test") {
   testonly = true
   deps = [
@@ -393,6 +510,8 @@ group("cloudsync_sa_sync_rule_test") {
     ":cloud_status_test",
     ":network_set_manager_test",
     ":network_status_test",
+    ":screen_status_listener_test",
     ":system_load_test",
+    ":user_status_listener_test",
   ]
 }
