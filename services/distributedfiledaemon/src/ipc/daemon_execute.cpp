@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "asset_callback_manager.h"
+#include "daemon.h"
 #include "dfs_error.h"
 #include "network/softbus/softbus_asset_send_listener.h"
 #include "network/softbus/softbus_handler_asset.h"
@@ -36,11 +37,16 @@ namespace DistributedFile {
 using namespace OHOS::AppFileService;
 using namespace OHOS::FileManagement;
 const std::string ZIP_FILENAME = "pushData.zip";
+namespace {
+const std::string FILE_MANAGER_AUTHORITY = "docs";
+const std::string MEDIA_AUTHORITY = "media";
+}
 DaemonExecute::DaemonExecute()
 {
     LOGI("DaemonExecute begin.");
     executeFuncMap_[DEAMON_EXECUTE_PUSH_ASSET] = &DaemonExecute::ExecutePushAsset;
     executeFuncMap_[DEAMON_EXECUTE_REQUEST_SEND_FILE] = &DaemonExecute::ExecuteRequestSendFile;
+    executeFuncMap_[DEAMON_EXECUTE_PREPARE_SESSION] = &DaemonExecute::ExecutePrepareSession;
 }
 
 void DaemonExecute::ProcessEvent(const AppExecFwk::InnerEvent::Pointer &event)
@@ -174,6 +180,60 @@ int32_t DaemonExecute::RequestSendFileInner(const std::string &srcUri,
         return ret;
     }
     return E_OK;
+}
+
+void DaemonExecute::ExecutePrepareSession(const AppExecFwk::InnerEvent::Pointer &event)
+{
+    if (event == nullptr) {
+        LOGI("eventhandler fail.");
+        return;
+    }
+    auto prepareSessionData = event->GetSharedObject<PrepareSessionData>();
+    if (prepareSessionData == nullptr) {
+        LOGE("prepareSessionData is nullptr.");
+        return;
+    }
+
+    auto prepareSessionBlock  = prepareSessionData->prepareSessionBlock_;
+    if (prepareSessionBlock == nullptr) {
+        LOGE("prepareSessionBlock is nullptr.");
+        return;
+    }
+    std::string srcUri = prepareSessionData->srcUri_;
+    std::string physicalPath  = prepareSessionData->physicalPath_;
+    std::string sessionName  = prepareSessionData->sessionName_;
+    sptr<IDaemon> daemon  = prepareSessionData->daemon_;
+    HmdfsInfo &info = prepareSessionData->info_;
+
+    prepareSessionBlock->SetValue(PrepareSessionInner(srcUri, physicalPath, sessionName, daemon, info));
+}
+
+int32_t DaemonExecute::PrepareSessionInner(const std::string &srcUri,
+                                           std::string &physicalPath,
+                                           const std::string &sessionName,
+                                           const sptr<IDaemon> &daemon,
+                                           HmdfsInfo &info)
+{
+    LOGI("PrepareSessionInner begin.");
+    auto socketId = SoftBusHandler::GetInstance().CreateSessionServer(IDaemon::SERVICE_NAME, sessionName,
+                                                                      DFS_CHANNLE_ROLE_SINK, physicalPath);
+    if (socketId <= 0) {
+        LOGE("CreateSessionServer failed, socketId = %{public}d", socketId);
+        Daemon::DeleteSessionAndListener(sessionName, socketId);
+        return E_SOFTBUS_SESSION_FAILED;
+    }
+    physicalPath.clear();
+    if (info.authority == FILE_MANAGER_AUTHORITY || info.authority == MEDIA_AUTHORITY) {
+        LOGI("authority is media or docs");
+        physicalPath = "??" + info.dstPhysicalPath;
+    }
+    auto ret = Daemon::Copy(srcUri, physicalPath, daemon, sessionName);
+    if (ret != E_OK) {
+        LOGE("Remote copy failed,ret = %{public}d", ret);
+        Daemon::DeleteSessionAndListener(sessionName, socketId);
+        return ret;
+    }
+    return ret;
 }
 
 std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::string> &uris,
