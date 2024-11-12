@@ -588,6 +588,186 @@ HWTEST_F(CloudSyncServiceTest, DeleteAssetTest002, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "DeleteAssetTest002 end";
 }
+
+/**
+ * @tc.name:SetDeathRecipientTest001
+ * @tc.desc:Verify the SetDeathRecipient function.
+ * @tc.type:FUNC
+ * @tc.require: IB3SLT
+ */
+HWTEST_F(CloudSyncServiceTest, SetDeathRecipientTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest001 start";
+    try {
+        EXPECT_NE(g_servicePtr_, nullptr);
+        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
+        g_servicePtr_->SetDeathRecipient(callback);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetDeathRecipientTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "SetDeathRecipientTest001 end";
+}
+
+/**
+ * @tc.name: OnStartTest001
+ * @tc.desc: Verify the OnStart function.
+ * @tc.type: FUNC
+ * @tc.require: IB3SLT
+ */
+HWTEST_F(CloudSyncServiceTest, OnStartTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnStartTest001 start";
+    try {
+        EXPECT_NE(g_servicePtr_, nullptr);
+        SystemAbilityOnDemandReason startReason;
+        g_servicePtr_->OnStart(startReason);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnStartTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "OnStartTest001 end";
+}
+
+/**
+ * @tc.name: OnActiveTest001
+ * @tc.desc: Verify the OnActive function.
+ * @tc.type: FUNC
+ * @tc.require: IB3SLT
+ */
+HWTEST_F(CloudSyncServiceTest, OnActiveTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnActiveTest001 start";
+    try {
+        EXPECT_NE(g_servicePtr_, nullptr);
+        SystemAbilityOnDemandReason startReason;
+        g_servicePtr_->OnActive(startReason);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnActiveTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "OnActiveTest001 end";
+}
+
+/**
+ * @tc.name: HandleStartReasonTest001
+ * @tc.desc: Verify the HandleStartReason function.
+ * @tc.type: FUNC
+ * @tc.require: IB3SLT
+ */
+HWTEST_F(CloudSyncServiceTest, HandleStartReasonTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleStartReasonTest001 start";
+    try {
+        EXPECT_NE(g_servicePtr_, nullptr);
+        SystemAbilityOnDemandReason startReason;
+        g_servicePtr_->HandleStartReason(startReason);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleStartReason failed";
+    }
+    GTEST_LOG_(INFO) << "HandleStartReasonTest001 end";
+}
+
+/**
+ * @tc.name: PreInitTest001
+ * @tc.desc: Verify the PreInit function.
+ * @tc.type: FUNC
+ * @tc.require: IB3SLT
+ */
+HWTEST_F(CloudSyncServiceTest, PreInitTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PreInitTest001 start";
+    try {
+        EXPECT_NE(g_servicePtr_, nullptr);
+        g_servicePtr_->PreInit();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "PreInitTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "PreInitTest001 end";
+}
+
+/**
+ * @tc.name: InitTest001
+ * @tc.desc: Verify the Init function.
+ * @tc.type: FUNC
+ * @tc.require: IB3SLT
+ */
+HWTEST_F(CloudSyncServiceTest, InitTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "InitTest001 start";
+    try {
+        EXPECT_NE(g_servicePtr_, nullptr);
+        g_servicePtr_->Init();
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "InitTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "InitTest001 end";
+}
+
+/**
+ * @tc.name: GetBundleNameUserInfoTest001
+ * @tc.desc: Verify the GetBundleNameUserInfo function.
+ * @tc.type: FUNC
+ * @tc.require: IB3SLT
+ */
+HWTEST_F(CloudSyncServiceTest, GetBundleNameUserInfoTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest001 start";
+    try {
+        EXPECT_NE(g_servicePtr_, nullptr);
+        BundleNameUserInfo userInfo;
+        int32_t ret = g_servicePtr_->GetBundleNameUserInfo(userInfo);
+        EXPECT_EQ(ret, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest001 end";
+}
+
+/**
+ * @tc.name: GetBundleNameUserInfoTest002
+ * @tc.desc: Verify the GetBundleNameUserInfo function.
+ * @tc.type: FUNC
+ * @tc.require: IB3SLT
+ */
+HWTEST_F(CloudSyncServiceTest, GetBundleNameUserInfoTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest002 start";
+    try {
+        EXPECT_NE(g_servicePtr_, nullptr);
+        std::vector<std::string> uriVec = {""};
+        BundleNameUserInfo userInfo;
+        g_servicePtr_->GetBundleNameUserInfo(uriVec, userInfo);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest002 failed";
+    }
+    GTEST_LOG_(INFO) << "GetBundleNameUserInfoTest002 end";
+}
+
+/**
+ * @tc.name: OnLoadSACompleteForRemoteTest001
+ * @tc.desc: Verify the OnLoadSACompleteForRemote function.
+ * @tc.type: FUNC
+ * @tc.require: IB3SLT
+ */
+HWTEST_F(CloudSyncServiceTest, OnLoadSACompleteForRemoteTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnLoadSACompleteForRemoteTest001 start";
+    try {
+        sptr<CloudSyncCallbackMock> callback = sptr(new CloudSyncCallbackMock());
+        CloudSyncService::LoadRemoteSACallback callBack;
+        callBack.OnLoadSACompleteForRemote("test", 0, callback);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "OnLoadSACompleteForRemoteTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "OnLoadSACompleteForRemoteTest001 end";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
