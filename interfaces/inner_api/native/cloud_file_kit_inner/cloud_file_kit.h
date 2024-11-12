@@ -34,6 +34,7 @@ public:
 
     virtual ~CloudFileKit() = default;
     virtual int32_t GetCloudUserInfo(const int32_t userId, CloudUserInfo &userInfo);
+    virtual uint64_t GetRemainSpace(const int32_t userId);
     virtual int32_t GetAppSwitchStatus(const std::string &bundleName, const int32_t userId, bool &switchStatus);
     virtual int32_t ResolveNotificationEvent(const int32_t userId,
                                              const std::string &extraData,
