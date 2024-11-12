@@ -568,9 +568,7 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
         path = mediaUri.GetFilePath();
 
         CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-        if (uriMgr.AddPathToUri(path, uri) == E_STOP) {
-            return E_OK;
-        }
+        uriMgr.AddPathToUri(path, uri);
     }
 
     LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s",
