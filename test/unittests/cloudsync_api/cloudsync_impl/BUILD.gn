@@ -530,6 +530,7 @@ ohos_unittest("cloud_sync_service_proxy_lite_test") {
   ]
 
   deps = [
+    "${innerkits_native_path}/cloudsync_kit_inner:cloudsync_kit_inner_lite",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
