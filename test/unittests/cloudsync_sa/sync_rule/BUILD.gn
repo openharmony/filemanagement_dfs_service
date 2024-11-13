@@ -292,7 +292,6 @@ ohos_unittest("network_set_manager_test") {
 
   module_out_path = "filemanagement/dfs_service"
   sources = [
-    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/sync_rule/network_set_manager.cpp",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/datashare_helper.cpp",
     "network_set_manager_test.cpp",
   ]

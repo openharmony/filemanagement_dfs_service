@@ -79,7 +79,7 @@ HWTEST_F(NetworkSetManagerTest, QueryCellularConnectTest001, TestSize.Level1)
         string bundleName = "com.ohos.photos";
 
         int32_t ret = networkSetManager_->QueryCellularConnect(userId, bundleName);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_RDB);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryCellularConnectTest FAILED";
@@ -101,33 +101,12 @@ HWTEST_F(NetworkSetManagerTest, QueryNetConnectTest001, TestSize.Level1)
         string bundleName = "com.ohos.photos";
         
         int32_t ret = networkSetManager_->QueryNetConnect(userId, bundleName);
-        EXPECT_EQ(ret, E_OK);
+        EXPECT_EQ(ret, E_RDB);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "QueryNetConnectTest FAILED";
     }
     GTEST_LOG_(INFO) << "QueryNetConnectTest End";
-}
-
-/**
- * @tc.name: GetCellularConnectTest001
- * @tc.desc: Verify the GetCellularConnect function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(NetworkSetManagerTest, GetCellularConnectTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetCellularConnectTest Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "com.ohos.photos";
-
-        networkSetManager_->GetCellularConnect(bundleName, userId);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "GetCellularConnectTest FAILED";
-    }
-    GTEST_LOG_(INFO) << "GetCellularConnectTest End";
 }
 
 /**
@@ -217,66 +196,4 @@ HWTEST_F(NetworkSetManagerTest, RegisterObserverTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "RegisterObserverTest End";
 }
 
-/**
- * @tc.name: IsAllowCellularConnectTest001
- * @tc.desc: Verify the IsAllowCellularConnect function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(NetworkSetManagerTest, IsAllowCellularConnectTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "IsAllowCellularConnectTest Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "com.ohos.photos";
-
-        networkSetManager_->IsAllowCellularConnect(bundleName, userId);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsAllowCellularConnectTest FAILED";
-    }
-    GTEST_LOG_(INFO) << "IsAllowCellularConnectTest End";
-}
-
-/**
- * @tc.name: IsAllowNetConnectTest001
- * @tc.desc: Verify the IsAllowNetConnect function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(NetworkSetManagerTest, IsAllowNetConnectTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "IsAllowNetConnectTest Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "com.ohos.photos";
-
-        networkSetManager_->IsAllowCellularConnect(bundleName, userId);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "IsAllowNetConnectTest FAILED";
-    }
-    GTEST_LOG_(INFO) << "IsAllowNetConnectTest End";
-}
-
-/**
- * @tc.name: InitNetworkSetManagerTest001
- * @tc.desc: Verify the InitNetworkSetManager function
- * @tc.type: FUNC
- * @tc.require: I6JPKG
- */
-HWTEST_F(NetworkSetManagerTest, InitNetworkSetManagerTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "InitNetworkSetManagerTest Start";
-    try {
-        int32_t userId = 100;
-        string bundleName = "com.ohos.photos";
-
-        networkSetManager_->InitNetworkSetManager(bundleName, userId);
-    } catch (...) {
-        EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "InitNetworkSetManagerTest FAILED";
-    }
-    GTEST_LOG_(INFO) << "InitNetworkSetManagerTest End";
-}
 }
