@@ -378,6 +378,7 @@ int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageP
         LOGE("Failed to get the cloud id.");
         return E_INVAL_ARG;
     }
+    int32_t fieldkey = data.ReadInt32();
 
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
         for (auto &uri : pathVec) {
@@ -388,7 +389,7 @@ int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageP
         }
     }
     int64_t downloadId = 0;
-    int32_t res = StartFileCache(pathVec, downloadId);
+    int32_t res = StartFileCache(pathVec, downloadId, fieldkey);
     reply.WriteInt64(downloadId);
     reply.WriteInt32(res);
     LOGI("End HandleStartFileCache");

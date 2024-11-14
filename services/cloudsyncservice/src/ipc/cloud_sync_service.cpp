@@ -516,7 +516,7 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
     return E_OK;
 }
 int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
-                                         int64_t &downloadId)
+                                         int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey)
 {
     BundleNameUserInfo bundleNameUserInfo;
     int ret = GetBundleNameUserInfo(bundleNameUserInfo);
@@ -525,7 +525,7 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
         return ret;
     }
     LOGI("start StartFileCache");
-    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId);
+    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey);
 }
 
 int32_t CloudSyncService::StartDownloadFile(const std::string &path)
