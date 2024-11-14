@@ -446,4 +446,22 @@ HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_019, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "SyncStateManagerTest_019 End";
 }
+
+HWTEST_F(SyncStateManagerTest, SyncStateManagerTest_020, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_020";
+    try {
+        SyncStateManager syncStateManager;
+        bool forceFlag = false;
+        syncStateManager.state_ = SyncState::SYNCING;
+        SyncTriggerType triggerType = SyncTriggerType::SYSTEM_LOAD_TRIGGER;
+
+        syncStateManager.CheckAndSetPending(forceFlag, triggerType);
+        EXPECT_EQ(syncStateManager.nextAction_, Action::START);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SyncStateManagerTest_020 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SyncStateManagerTest_020 End";
+}
 }
