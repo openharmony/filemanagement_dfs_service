@@ -55,7 +55,7 @@ public:
         const std::string &name = "", const std::string &parentCloudId = "");
     int32_t Rename(const std::string &oldParentCloudId, const std::string &oldFileName,
         const std::string &newParentCloudId, const std::string &newFileName);
-    int32_t Unlink(const std::string &cloudId, const int32_t &position);
+    int32_t Unlink(const std::string &cloudId, const int32_t &noUpload);
     int32_t RecycleSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
     int32_t GetRowIdAndPosition(const std::string &cloudId, int64_t &rowId, int32_t &position);

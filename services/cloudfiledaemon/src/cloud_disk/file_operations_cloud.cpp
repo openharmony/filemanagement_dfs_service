@@ -1054,6 +1054,7 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
     string cloudId = metaBase.cloudId;
     int32_t isDirectory = S_ISDIR(metaBase.mode);
     int32_t position = metaBase.position;
+    int32_t noUpload = metaBase.noUpload;
     ret = metaFile->DoRemove(metaBase);
     if (ret != 0) {
         LOGE("remove dentry failed, ret = %{public}d", ret);
@@ -1074,10 +1075,9 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
             return ret;
         }
     }
-    function<void()> rdbUnlink = [rdbStore, cloudId, position] {
-        int32_t err = rdbStore->Unlink(cloudId, position);
-        if (err != 0) {
-            LOGE("Failed to unlink DB cloudId:%{private}s err:%{public}d", cloudId.c_str(), err);
+    function<void()> rdbUnlink = [rdbStore, cloudId, noUpload] {
+        if (rdbStore->Unlink(cloudId, noUpload) != 0) {
+            LOGE("Failed to unlink DB cloudId:%{private}s", cloudId.c_str());
         }
     };
     ffrt::thread(rdbUnlink).detach();

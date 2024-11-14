@@ -388,6 +388,7 @@ static int32_t CreateDentry(MetaBase &metaBase, uint32_t userId, const std::stri
         m.mode = metaBase.mode;
         m.position = metaBase.position;
         m.fileType = metaBase.fileType;
+        m.noUpload = metaBase.noUpload;
     };
     auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, parentCloudId);
     int32_t ret = metaFile->DoLookupAndUpdate(fileName, callback);
@@ -1230,14 +1231,14 @@ int32_t CloudDiskRdbStore::UnlinkLocal(const std::string &cloudId)
     return E_OK;
 }
 
-int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &position)
+int32_t CloudDiskRdbStore::Unlink(const std::string &cloudId, const int32_t &noUpload)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
     if (cloudId.empty() || cloudId == ROOT_CLOUD_ID) {
         LOGE("Unlink parameters is invalid");
         return E_INVAL_ARG;
     }
-    if (position == LOCAL) {
+    if (noUpload == NO_UPLOAD) {
         RETURN_ON_ERR(UnlinkLocal(cloudId));
     } else {
         RETURN_ON_ERR(UnlinkSynced(cloudId));
