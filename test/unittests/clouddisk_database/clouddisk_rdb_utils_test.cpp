@@ -151,7 +151,7 @@ HWTEST_F(CloudDiskRdbUtilsTest, GetIntTest004, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require: I6H5MH
  */
-HWTEST_F(CloudDiskRdbUtilsTest, GetIntTest004, TestSize.Level1)
+HWTEST_F(CloudDiskRdbUtilsTest, GetIntTest005, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "GetInt Start";
     try {
