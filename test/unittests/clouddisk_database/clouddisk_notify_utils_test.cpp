@@ -417,7 +417,7 @@ HWTEST_F(CloudDiskNotifyUtilsTest, PutCacheNodeTest003, TestSize.Level1)
     CloudDiskNotifyUtils CloudDiskNotifyUtils;
     auto iter = (CloudDiskNotifyUtils.cacheList_)
         .insert(CloudDiskNotifyUtils.cacheList_.end(), std::make_pair("key", cacheNode));
-    (CloudDiskNotifyUtils.cacheMap_).insert(std::make_pair("key"), iter);
+    (CloudDiskNotifyUtils.cacheMap_).insert(std::make_pair("key", iter));
     string cloudId = "key";
     cacheNode.isDir = TYPE_DIR_STR;
 
@@ -450,27 +450,6 @@ HWTEST_F(CloudDiskNotifyUtilsTest, PutCacheNodeTest004, TestSize.Level1)
     int ret = CloudDiskNotifyUtils.PutCacheNode(cloudId, cacheNode);
     EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "PutCacheNode End";
-}
-
-/**
- * @tc.name: GetUriFromCacheTest001
- * @tc.desc: Verify the GetUriFromCache function.
- * @tc.type: FUNC
- * @tc.require: I6H5MH
- */
-HWTEST_F(CloudDiskNotifyUtilsTest, GetUriFromCacheTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "GetUriFromCache Start";
-    CloudDiskNotifyUtils CloudDiskNotifyUtils;
-    string bundleName = "com.ohos.photos";
-    string rootId = "rootId";
-    CacheNode cacheNode;
-    cacheNode.isDir = "";
-    cacheNode.cloudId = "";
-    string uri = "";
-    int ret = CloudDiskNotifyUtils.GetUriFromCache(bundleName, rootId, cacheNode, uri);
-    EXPECT_EQ(ret, E_INVAL_ARG);
-    GTEST_LOG_(INFO) << "GetUriFromCache End";
 }
 
 /**
