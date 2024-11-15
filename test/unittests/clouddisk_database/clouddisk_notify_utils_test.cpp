@@ -422,6 +422,8 @@ HWTEST_F(CloudDiskNotifyUtilsTest, PutCacheNodeTest003, TestSize.Level1)
     cacheNode.isDir = TYPE_DIR_STR;
 
     CloudDiskNotifyUtils.PutCacheNode(cloudId, cacheNode);
+    auto res = CloudDiskNotifyUtils.cacheMap_.find("key");
+    EXPECT_EQ(cloudId, res->first);
     GTEST_LOG_(INFO) << "PutCacheNode End";
 }
 
@@ -447,8 +449,8 @@ HWTEST_F(CloudDiskNotifyUtilsTest, PutCacheNodeTest004, TestSize.Level1)
     string cloudId = "key";
     cacheNode.isDir = TYPE_DIR_STR;
 
-    int ret = CloudDiskNotifyUtils.PutCacheNode(cloudId, cacheNode);
-    EXPECT_EQ(ret, E_OK);
+    CloudDiskNotifyUtils.PutCacheNode(cloudId, cacheNode);
+    EXPECT_EQ(CloudDiskNotifyUtils.cacheMap_.size(), CloudDiskNotifyUtils::maxCacheCnt_);
     GTEST_LOG_(INFO) << "PutCacheNode End";
 }
 
@@ -487,7 +489,7 @@ HWTEST_F(CloudDiskNotifyUtilsTest, GetUriFromCacheTest002, TestSize.Level1)
     string rootId = "same";
     CacheNode cacheNode;
     cacheNode.isDir = "";
-    cacheNode.parentcloudId = "same";
+    cacheNode.parentCloudId = "same";
     string uri = "";
     int ret = CloudDiskNotifyUtils.GetUriFromCache(bundleName, rootId, cacheNode, uri);
     EXPECT_EQ(ret, E_OK);
