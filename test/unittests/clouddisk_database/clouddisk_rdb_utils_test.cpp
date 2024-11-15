@@ -145,6 +145,26 @@ HWTEST_F(CloudDiskRdbUtilsTest, GetIntTest004, TestSize.Level1)
     GTEST_LOG_(INFO) << "GetInt End";
 }
 
+/**
+ * @tc.name: GetIntTest005
+ * @tc.desc: Verify the GetInt function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskRdbUtilsTest, GetIntTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInt Start";
+    try {
+        const string key = FileColumn::IS_DIRECTORY;
+        int32_t value;
+        int32_t ret = CloudDiskRdbUtils::GetInt(key, value, nullptr);
+        EXPECT_EQ(ret, E_RDB);
+    } catch(...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " GetInt ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetInt End";
+}
 
 /**
  * @tc.name: GetLongTest001
