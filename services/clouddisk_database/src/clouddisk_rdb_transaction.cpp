@@ -38,7 +38,7 @@ TransactionOperations::~TransactionOperations()
     }
 }
 
-template<typename Func>
+template <typename Func>
 int32_t RetryTransaction(Func func, int maxAttempts, int waitTimeMs)
 {
     int curTryTime = 0;
@@ -56,13 +56,15 @@ int32_t RetryTransaction(Func func, int maxAttempts, int waitTimeMs)
     return E_HAS_DB_ERROR;
 }
 
-std::pair<int32_t, std::shared_ptr<NativeRdb::Transaction>>
-    TransactionOperations::Start(NativeRdb::Transaction::TransactionType type)
+std::pair<int32_t, std::shared_ptr<NativeRdb::Transaction>> TransactionOperations::Start(
+    NativeRdb::Transaction::TransactionType type)
 {
     if (isStart || isFinish) {
         LOGE("start transaction failed, transaction has been started.");
         return make_pair(E_HAS_DB_ERROR, nullptr);
     }
+
+    LOGI("TransactionOperations::Start");
     int32_t errCode = BeginTransaction(type);
     if (errCode == E_OK) {
         isStart = true;
@@ -75,11 +77,14 @@ void TransactionOperations::Finish()
     if (!isStart || isFinish) {
         return;
     }
+
+    if (!isFinish) {
+        LOGI("TransactionOperations::Finish");
+        int32_t ret = TransactionCommit();
         if (ret == E_OK) {
             isFinish = true;
             isStart = false;
             transaction_.reset();
-
             return;
         }
         LOGE("TransactionCommit failed, errCode=%{public}d, try to rollback", ret);
