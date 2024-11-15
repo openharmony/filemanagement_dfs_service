@@ -106,6 +106,11 @@ private:
 };
 
 enum {
+    NEED_UPLOAD = 0,
+    NO_UPLOAD,
+};
+
+enum {
     FILE_TYPE_CONTENT = 0,
     FILE_TYPE_THUMBNAIL,
     FILE_TYPE_LCD,
@@ -171,6 +176,7 @@ struct MetaBase {
     uint32_t mode{S_IFREG};
     uint8_t position{POSITION_LOCAL};
     uint8_t fileType{FILE_TYPE_CONTENT};
+    uint8_t noUpload{NEED_UPLOAD};
     std::string name{};
     std::string cloudId{};
     off_t nextOff{0};
