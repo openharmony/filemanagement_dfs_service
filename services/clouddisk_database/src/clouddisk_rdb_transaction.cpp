@@ -23,16 +23,12 @@ using namespace std;
 
 constexpr int32_t E_HAS_DB_ERROR = -222;
 constexpr int32_t E_OK = 0;
-
-constexpr int RDB_TRANSACTION_WAIT_MS = 1000;
-atomic<bool> TransactionOperations::isInTransactionMap_[RDB_NUM] = {false, false};
-mutex TransactionOperations::transactionMutexMap_[RDB_NUM] = {mutex(), mutex()};
-condition_variable TransactionOperations::transactionCvMap_[RDB_NUM] = {condition_variable(), condition_variable()};
-constexpr int32_t MAX_TRY_TIMES = 5;
-constexpr int32_t TRANSACTION_WAIT_INTERVAL = 50; // in milliseconds.
+constexpr int32_t CREATE_TRANSATION_MAX_TRY_TIMES = 30;
+constexpr int32_t COMMIT_MAX_TRY_TIMES = 3;
+constexpr int32_t TRANSACTION_WAIT_INTERVAL = 50;
 
 TransactionOperations::TransactionOperations(
-    const shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore, TRANS_DB_IDX idx) : rdbStore_(rdbStore), idx_(idx) {}
+    const shared_ptr<OHOS::NativeRdb::RdbStore> &rdbStore) : rdbStore_(rdbStore) {}
 
 TransactionOperations::~TransactionOperations()
 {
@@ -42,123 +38,112 @@ TransactionOperations::~TransactionOperations()
     }
 }
 
-int32_t TransactionOperations::Start()
+template<typename Func>
+int32_t RetryTransaction(Func func, int maxAttempts, int waitTimeMs)
+{
+    int curTryTime = 0;
+    while (curTryTime < maxAttempts) {
+        int32_t errCode = func();
+        if (errCode != NativeRdb::E_OK) {
+            curTryTime++;
+            LOGE("try %{public}d times...", curTryTime);
+            this_thread::sleep_for(chrono::milliseconds(waitTimeMs));
+            continue;
+        }
+        return E_OK;
+    }
+    LOGE("Transaction operation still failed after try %{public}d times, abort.", maxAttempts);
+    return E_HAS_DB_ERROR;
+}
+
+std::pair<int32_t, std::shared_ptr<NativeRdb::Transaction>>
+    TransactionOperations::Start(NativeRdb::Transaction::TransactionType type)
 {
     if (isStart || isFinish) {
-        return 0;
+        LOGE("start transaction failed, transaction has been started.");
+        return make_pair(E_HAS_DB_ERROR, nullptr);
     }
-    LOGI("TransactionOperations::Start");
-    int32_t errCode = BeginTransaction();
-    if (errCode == 0) {
+    int32_t errCode = BeginTransaction(type);
+    if (errCode == E_OK) {
         isStart = true;
     }
-    return errCode;
+    return make_pair(errCode, transaction_);
 }
 
 void TransactionOperations::Finish()
 {
-    if (!isStart) {
+    if (!isStart || isFinish) {
         return;
     }
-    if (!isFinish) {
-        LOGI("TransactionOperations::Finish");
-        int32_t ret = TransactionCommit();
-        if (ret == 0) {
+        if (ret == E_OK) {
             isFinish = true;
+            isStart = false;
+            transaction_.reset();
+
+            return;
+        }
+        LOGE("TransactionCommit failed, errCode=%{public}d, try to rollback", ret);
+        ret = TransactionRollback();
+        if (ret != E_OK) {
+            LOGE("TransactionRollback failed, errCode=%{public}d", ret);
         }
     }
 }
 
-int32_t TransactionOperations::BeginTransaction()
+int32_t TransactionOperations::BeginTransaction(NativeRdb::Transaction::TransactionType type)
 {
     if (rdbStore_ == nullptr) {
         LOGE("Pointer rdbStore_ is nullptr. Maybe it didn't init successfully.");
         return E_HAS_DB_ERROR;
     }
     LOGI("Start transaction");
-
-    unique_lock<mutex> cvLock(transactionMutexMap_[idx_]);
-    if (isInTransactionMap_[idx_].load()) {
-        transactionCvMap_[idx_].wait_for(cvLock, chrono::milliseconds(RDB_TRANSACTION_WAIT_MS),
-            [this] () { return !(isInTransactionMap_[idx_].load()); });
-    }
-
     int curTryTime = 0;
-    while (curTryTime < MAX_TRY_TIMES) {
-        if (rdbStore_->IsInTransaction()) {
-            this_thread::sleep_for(chrono::milliseconds(TRANSACTION_WAIT_INTERVAL));
-            if (isInTransactionMap_[idx_].load() || rdbStore_->IsInTransaction()) {
-                curTryTime++;
-                LOGI("RdbStore is in transaction, try %{public}d times...", curTryTime);
-                continue;
-            }
-        }
-
-        int32_t errCode = rdbStore_->BeginTransaction();
+    while (curTryTime < CREATE_TRANSATION_MAX_TRY_TIMES) {
+        int32_t errCode = E_OK;
+        std::tie(errCode, transaction_) = rdbStore_->CreateTransaction(type);
         if (errCode == NativeRdb::E_SQLITE_LOCKED || errCode == NativeRdb::E_DATABASE_BUSY ||
             errCode == NativeRdb::E_SQLITE_BUSY) {
             curTryTime++;
             LOGE("Sqlite database file is locked! try %{public}d times...", curTryTime);
+            this_thread::sleep_for(chrono::milliseconds(TRANSACTION_WAIT_INTERVAL));
             continue;
         } else if (errCode != NativeRdb::E_OK) {
             LOGE("Start Transaction failed, errCode=%{public}d", errCode);
-            isInTransactionMap_[idx_].store(false);
-            transactionCvMap_[idx_].notify_one();
-            return E_HAS_DB_ERROR;
-        } else {
-            isInTransactionMap_[idx_].store(true);
+            return errCode;
+        }
+        if (transaction_ != nullptr) {
+            isStart = true;
             return E_OK;
         }
     }
-
-    LOGE("RdbStore is still in transaction after try %{public}d times, abort.", MAX_TRY_TIMES);
+    LOGE("RdbStore is still in transaction after try %{public}d times, abort.", CREATE_TRANSATION_MAX_TRY_TIMES);
     return E_HAS_DB_ERROR;
 }
 
 int32_t TransactionOperations::TransactionCommit()
 {
-    if (rdbStore_ == nullptr) {
+    if (transaction_ == nullptr) {
         return E_HAS_DB_ERROR;
     }
     LOGI("Try commit transaction");
 
-    if (!(isInTransactionMap_[idx_].load()) || !(rdbStore_->IsInTransaction())) {
-        LOGE("no transaction now");
-        return E_HAS_DB_ERROR;
-    }
-
-    int32_t errCode = rdbStore_->Commit();
-    isInTransactionMap_[idx_].store(false);
-    transactionCvMap_[idx_].notify_all();
-    if (errCode != NativeRdb::E_OK) {
-        LOGE("commit failed, errCode=%{public}d", errCode);
-        return E_HAS_DB_ERROR;
-    }
-
-    return E_OK;
+    return RetryTransaction(
+        [this]() {
+            return transaction_->Commit();
+        }, COMMIT_MAX_TRY_TIMES, TRANSACTION_WAIT_INTERVAL);
 }
 
 int32_t TransactionOperations::TransactionRollback()
 {
-    if (rdbStore_ == nullptr) {
+    if (transaction_ == nullptr) {
         return E_HAS_DB_ERROR;
     }
     LOGI("Try rollback transaction");
 
-    if (!(isInTransactionMap_[idx_].load()) || !(rdbStore_->IsInTransaction())) {
-        LOGE("no transaction now");
-        return E_HAS_DB_ERROR;
-    }
-
-    int32_t errCode = rdbStore_->RollBack();
-    isInTransactionMap_[idx_].store(false);
-    transactionCvMap_[idx_].notify_all();
-    if (errCode != NativeRdb::E_OK) {
-        LOGE("rollback failed, errCode=%{public}d", errCode);
-        return E_HAS_DB_ERROR;
-    }
-
-    return E_OK;
+    return RetryTransaction(
+        [this]() {
+            return transaction_->Rollback();
+        }, COMMIT_MAX_TRY_TIMES, TRANSACTION_WAIT_INTERVAL);
 }
 } // namespace CloudDisk
 } // namespace FileManagement
