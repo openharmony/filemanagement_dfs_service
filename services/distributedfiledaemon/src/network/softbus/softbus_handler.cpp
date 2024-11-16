@@ -58,15 +58,19 @@ void SoftBusHandler::OnSinkSessionOpened(int32_t sessionId, PeerSocketInfo info)
             LOGI("RemoveSessionServer success.");
         }
         Shutdown(sessionId);
+        return;
     }
-    AllConnectManager::GetInstance().PublishServiceState(info.networkId,
-        ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
+    {
+        std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
+        SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, info.name));
+    }
     {
         std::lock_guard<std::mutex> lock(networkIdMapMutex_);
         networkIdMap_.insert(std::make_pair(sessionId, info.networkId));
     }
-    std::lock_guard<std::mutex> lock(SoftBusHandler::clientSessNameMapMutex_);
-    SoftBusHandler::clientSessNameMap_.insert(std::make_pair(sessionId, info.name));
+
+    AllConnectManager::GetInstance().PublishServiceState(info.networkId,
+        ServiceCollaborationManagerBussinessStatus::SCM_CONNECTED);
 }
 
 bool SoftBusHandler::IsSameAccount(const std::string &networkId)
