@@ -997,7 +997,7 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
         case IS_EXT_ATTR:
             return GetExtAttrValue(cloudId, extAttrKey, value);
     }
-    
+
     return E_INVAL_ARG;
 }
 
@@ -1071,7 +1071,7 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
         case IS_EXT_ATTR:
             return ExtAttributeSetXattr(cloudId, value, name);
     }
-    
+
     return E_INVAL_ARG;
 }
 
