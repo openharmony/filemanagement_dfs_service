@@ -31,6 +31,7 @@ using namespace std;
 const int32_t MOCKUSERID = 0;
 const int32_t MOCK1 = 1;
 const int32_t MOCK2 = 2;
+const int32_t MOCK3 = 3;
 
 std::shared_ptr<CloudDiskInode> MockFunc(CloudDiskFuseData* data, int64_t inode)
 {
@@ -44,6 +45,9 @@ std::shared_ptr<CloudDiskInode> MockFunc(CloudDiskFuseData* data, int64_t inode)
     if (data->userId == MOCK2) {
         inoPtr->parent = 0;
         inoPtr->fileName = "";
+    }
+    if (data->userId == MOCK3) {
+        inoPtr->fileName = "MOCK3";
     }
     return inoPtr;
 }
@@ -204,6 +208,28 @@ HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest006, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetNotifyDataTest01
+ * @tc.desc: Verify the GetNotifyData function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyUtilsTest, GetNotifyDataTest01, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetNotifyData Start";
+    CloudDiskNotifyUtils CloudDiskNotifyUtils;
+    CloudDiskFuseData* data = new CloudDiskFuseData();
+    data->userId = MOCK3;
+    FindCloudDiskInodeFunc func = MockFunc;
+    fuse_ino_t parent = 0;
+    string name = "test";
+    NotifyData notifyData;
+    int ret = CloudDiskNotifyUtils.GetNotifyData(data, func, parent, name, notifyData);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+    delete data;
+    GTEST_LOG_(INFO) << "GetNotifyData End";
+}
+
+/**
  * @tc.name: GetNotifyDataTest007
  * @tc.desc: Verify the GetNotifyData function.
  * @tc.type: FUNC
@@ -324,6 +350,27 @@ HWTEST_F(CloudDiskNotifyUtilsTest, GetCacheNodeTest001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetCacheNodeTest002
+ * @tc.desc: Verify the GetCacheNode function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyUtilsTest, GetCacheNodeTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetCacheNode Start";
+    CacheNode cacheNode;
+    CloudDiskNotifyUtils CloudDiskNotifyUtils;
+    auto iter = (CloudDiskNotifyUtils.cacheList_)
+        .insert(CloudDiskNotifyUtils.cacheList_.end(), std::make_pair("key", cacheNode));
+    (CloudDiskNotifyUtils.cacheMap_).insert(std::make_pair("key", iter));
+    string cloudId = "key";
+
+    int ret = CloudDiskNotifyUtils.GetCacheNode(cloudId, cacheNode);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "GetCacheNode End";
+}
+
+/**
  * @tc.name: PutCacheNodeTest001
  * @tc.desc: Verify the PutCacheNode function.
  * @tc.type: FUNC
@@ -358,6 +405,56 @@ HWTEST_F(CloudDiskNotifyUtilsTest, PutCacheNodeTest002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: PutCacheNodeTest003
+ * @tc.desc: Verify the PutCacheNode function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyUtilsTest, PutCacheNodeTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PutCacheNode Start";
+    CacheNode cacheNode;
+    CloudDiskNotifyUtils CloudDiskNotifyUtils;
+    auto iter = (CloudDiskNotifyUtils.cacheList_)
+        .insert(CloudDiskNotifyUtils.cacheList_.end(), std::make_pair("key", cacheNode));
+    (CloudDiskNotifyUtils.cacheMap_).insert(std::make_pair("key", iter));
+    string cloudId = "key";
+    cacheNode.isDir = TYPE_DIR_STR;
+
+    CloudDiskNotifyUtils.PutCacheNode(cloudId, cacheNode);
+    auto res = CloudDiskNotifyUtils.cacheMap_.find("key");
+    EXPECT_EQ(cloudId, res->first);
+    GTEST_LOG_(INFO) << "PutCacheNode End";
+}
+
+/**
+ * @tc.name: PutCacheNodeTest004
+ * @tc.desc: Verify the PutCacheNode function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyUtilsTest, PutCacheNodeTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "PutCacheNode Start";
+    CacheNode cacheNode;
+    CloudDiskNotifyUtils CloudDiskNotifyUtils;
+    for (int i = 0; i < CloudDiskNotifyUtils::maxCacheCnt_ - 2; ++i) {
+        std::stringstream ss;
+        ss << i;
+        string str = ss.str();
+        auto iter = (CloudDiskNotifyUtils.cacheList_)
+            .insert(CloudDiskNotifyUtils.cacheList_.end(), std::make_pair(str, cacheNode));
+        (CloudDiskNotifyUtils.cacheMap_).insert(std::make_pair(str, iter));
+    }
+    string cloudId = "key";
+    cacheNode.isDir = TYPE_DIR_STR;
+
+    CloudDiskNotifyUtils.PutCacheNode(cloudId, cacheNode);
+    EXPECT_EQ(CloudDiskNotifyUtils.cacheMap_.size(), CloudDiskNotifyUtils::maxCacheCnt_);
+    GTEST_LOG_(INFO) << "PutCacheNode End";
+}
+
+/**
  * @tc.name: GetUriFromCacheTest001
  * @tc.desc: Verify the GetUriFromCache function.
  * @tc.type: FUNC
@@ -375,6 +472,27 @@ HWTEST_F(CloudDiskNotifyUtilsTest, GetUriFromCacheTest001, TestSize.Level1)
     string uri = "";
     int ret = CloudDiskNotifyUtils.GetUriFromCache(bundleName, rootId, cacheNode, uri);
     EXPECT_EQ(ret, E_INVAL_ARG);
+    GTEST_LOG_(INFO) << "GetUriFromCache End";
+}
+
+/**
+ * @tc.name: GetUriFromCacheTest002
+ * @tc.desc: Verify the GetUriFromCache function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudDiskNotifyUtilsTest, GetUriFromCacheTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetUriFromCache Start";
+    CloudDiskNotifyUtils CloudDiskNotifyUtils;
+    string bundleName = "com.ohos.photos";
+    string rootId = "same";
+    CacheNode cacheNode;
+    cacheNode.isDir = "";
+    cacheNode.parentCloudId = "same";
+    string uri = "";
+    int ret = CloudDiskNotifyUtils.GetUriFromCache(bundleName, rootId, cacheNode, uri);
+    EXPECT_EQ(ret, E_OK);
     GTEST_LOG_(INFO) << "GetUriFromCache End";
 }
 } // namespace Test
