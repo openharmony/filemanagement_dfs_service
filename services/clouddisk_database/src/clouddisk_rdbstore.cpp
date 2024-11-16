@@ -567,9 +567,15 @@ int32_t CloudDiskRdbStore::Write(const std::string &fileName, const std::string 
         LOGE("write parameter is invalid");
         return E_INVAL_ARG;
     }
+    TransactionOperations rdbTransaction(rdbStore_);
+    auto [ret, transaction] = rdbTransaction.Start();
+    if (ret != E_OK) {
+        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
+        return ret;
+    }
     string filePath = CloudFileUtils::GetLocalFilePath(cloudId, bundleName_, userId_);
     struct stat statInfo {};
-    int32_t ret = stat(filePath.c_str(), &statInfo);
+    ret = stat(filePath.c_str(), &statInfo);
     if (ret) {
         LOGE("filePath %{private}s is invalid", GetAnonyString(filePath).c_str());
         return E_PATH;
