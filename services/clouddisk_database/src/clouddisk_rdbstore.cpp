@@ -630,8 +630,9 @@ int32_t CloudDiskRdbStore::LocationSetXattr(const std::string &name, const std::
         LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
         return ret;
     }
-    ret = rdbStore_->Update(changedRows, FileColumn::FILES_TABLE, setXAttr,
-        FileColumn::CLOUD_ID + " = ?", bindArgs);
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    std::tie(ret, changedRows) = transaction->Update(setXAttr, predicates);
     if (ret != E_OK) {
         LOGE("set xAttr location fail, ret %{public}d", ret);
         return E_RDB;
