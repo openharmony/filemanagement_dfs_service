@@ -29,6 +29,7 @@ namespace Test {
 using namespace testing::ext;
 using namespace testing;
 using namespace std;
+constexpr int32_t MAX_FILE_CACHE_NUM = 400;
 
 class CloudSyncManagerImplTest : public testing::Test {
 public:
@@ -548,6 +549,54 @@ HWTEST_F(CloudSyncManagerImplTest, CleanCacheTest, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "CleanCacheTest End";
 }
+
+HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest, TestSize.Level1)
+{
+    string bundleName = "com.ohos.photos";
+    int res = CloudSyncManagerImpl::GetInstance().ResetCursor(bundleName);
+    EXPECT_EQ(res, E_OK);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, StartFileCacheTest001, TestSize.Level1)
+{
+    std::vector<std::string> uriVec;
+    int64_t downloadId = 0;
+    int32_t res = CloudSyncManagerImpl::GetInstance().StartFileCache(uriVec, downloadId);
+    EXPECT_EQ(res, E_INVAL_ARG);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, StartFileCacheTest002, TestSize.Level1)
+{
+    std::vector<std::string> uriVec(MAX_FILE_CACHE_NUM + 1, "uri");
+    int64_t downloadId = 0;
+    int32_t res = CloudSyncManagerImpl::GetInstance().StartFileCache(uriVec, downloadId);
+    EXPECT_EQ(res, E_EXCEED_MAX_SIZE);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, StartFileCacheTest003, TestSize.Level1)
+{
+    std::vector<std::string> uriVec = {"uri"};
+    int64_t downloadId = 0;
+    int32_t res = CloudSyncManagerImpl::GetInstance().StartFileCache(uriVec, downloadId);
+    EXPECT_EQ(res, E_OK);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, StopFileCacheTest, TestSize.Level1)
+{
+    int64_t downloadId = 0;
+    bool needClean = true;
+    int32_t res = CloudSyncManagerImpl::GetInstance().StopFileCache(downloadId, needClean);
+    EXPECT_EQ(res, E_OK);
+}
+
+HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest, TestSize.Level1)
+{
+    uint32_t retryCount = 3;
+    string bundleName = "testBundle";
+    auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName);
+    EXPECT_EQ(res, E_OK);
+}
+
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
