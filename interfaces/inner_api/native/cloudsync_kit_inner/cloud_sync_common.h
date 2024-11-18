@@ -16,12 +16,19 @@
 #ifndef OHOS_FILEMGMT_CLOUD_SYNC_COMMON_H
 #define OHOS_FILEMGMT_CLOUD_SYNC_COMMON_H
 
+#include <bitset>
 #include <map>
 
 #include "parcel.h"
 #include "cloud_sync_asset_manager.h"
 
 namespace OHOS::FileManagement::CloudSync {
+#define FIELD_KEY_MAX_SIZE 4
+enum FieldKey {
+    FIELDKEY_CONTENT = 1 << 0,
+    FIELDKEY_THUMB = 1 << 1,
+    FIELDKEY_LCD = 1 << 2,
+};
 
 struct DownloadProgressObj : public Parcelable {
     enum Status : int32_t {

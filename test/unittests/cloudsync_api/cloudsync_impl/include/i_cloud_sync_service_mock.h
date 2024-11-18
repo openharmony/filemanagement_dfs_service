@@ -101,7 +101,8 @@ public:
     {
         return E_OK;
     }
-    int32_t StartFileCache(const std::vector<std::string> &pathVec, int64_t &downloadId)
+    int32_t StartFileCache(const std::vector<std::string> &pathVec, int64_t &downloadId,
+                           std::bitset<FIELD_KEY_MAX_SIZE> fieldkey)
     {
         return E_OK;
     }

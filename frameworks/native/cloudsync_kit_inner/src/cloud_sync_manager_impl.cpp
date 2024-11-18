@@ -243,7 +243,8 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::string &uri)
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uriVec, int64_t &downloadId)
+int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uriVec,
+                                             int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey)
 {
     LOGI("StartFileCache batch start, uriVec size: %{public}zu", uriVec.size());
     if (uriVec.empty()) {
@@ -260,7 +261,7 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uri
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId);
+    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId, fieldkey);
     LOGI("StartFileCache batch ret %{public}d", ret);
     return ret;
 }

@@ -15,6 +15,7 @@
 #ifndef OHOS_CLOUD_FILE_DATA_SYNC_MANAGER_H
 #define OHOS_CLOUD_FILE_DATA_SYNC_MANAGER_H
 
+#include <bitset>
 #include <memory>
 
 #include "data_sync_const.h"
@@ -46,7 +47,8 @@ public:
     virtual int32_t IsSkipSync(const std::string &bundleName, const int32_t userId, bool forceFlag);
     virtual int32_t StartDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
                                       const std::vector<std::string> pathVec,
-                                      int64_t &downloadId);
+                                      int64_t &downloadId,
+                                      std::bitset<FIELD_KEY_MAX_SIZE> fieldkey = CloudSync::FIELDKEY_CONTENT);
     virtual int32_t StopDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
                                      const std::string path,
                                      bool needClean = false);
