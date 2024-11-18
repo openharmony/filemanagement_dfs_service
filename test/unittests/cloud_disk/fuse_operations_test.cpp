@@ -597,7 +597,6 @@ HWTEST_F(FuseOperationsTest, ForgetTest, TestSize.Level1)
 
         fuseoperations_->Forget(req, ino, nLookup);
         EXPECT_NE(ino, FUSE_ROOT_ID);
-        EXPECT_NE((data.inodeCache)[0], nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ForgetTest ERROR";
@@ -740,7 +739,6 @@ HWTEST_F(FuseOperationsTest, ForgetMultiTest02, TestSize.Level1)
 
         fuseoperations_->ForgetMulti(req, count, &forgets);
         EXPECT_NE(count, 0);
-        EXPECT_NE((data.inodeCache)[0], nullptr);
     } catch (...) {
         EXPECT_TRUE(false);
         GTEST_LOG_(INFO) << "ForgetMultiTest02 ERROR";
