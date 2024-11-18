@@ -114,11 +114,20 @@ struct NameList {
 
 static void Deleter(struct NameList *arg)
 {
-    for (int i = 0; i < arg->direntNum; i++) {
-        free((arg->namelist)[i]);
-        (arg->namelist)[i] = nullptr;
+    if (arg == nullptr) {
+        return;
     }
-    free(arg->namelist);
+
+    if (arg->namelist != nullptr) {
+        for (int i = 0; i < arg->direntNum; i++) {
+            free((arg->namelist)[i]);
+            (arg->namelist)[i] = nullptr;
+        }
+        free(arg->namelist);
+        arg->namelist = nullptr;
+    }
+    delete arg;
+    arg = nullptr;
 }
 
 bool ConnectionDetector::CheckValidDir(const std::string &path)
@@ -148,6 +157,10 @@ bool ConnectionDetector::GetConnectionStatus(const std::string &targetDir, const
         return false;
     }
     int num = scandir(SYS_HMDFS_PATH.c_str(), &(pNameList->namelist), FilterFunc, alphasort);
+    if (num < 0) {
+        LOGE("Failed to scandir.");
+        return false;
+    }
     pNameList->direntNum = num;
     for (int i = 0; i < num; i++) {
         if ((pNameList->namelist[i])->d_name != targetDir) {
