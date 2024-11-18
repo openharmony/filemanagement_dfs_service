@@ -34,7 +34,7 @@ enum class TaskType : uint64_t {
     DISABLE_CLOUD_TASK = 1 << 7,
     CACHE_VIDEO_TASK = 1 << 8,
 };
-class TaskStateManager : public NoCopyable, public std::enable_shared_from_this<TaskStateManager> {
+class TaskStateManager : public NoCopyable {
 public:
     static TaskStateManager &GetInstance();
     ~TaskStateManager() = default;
