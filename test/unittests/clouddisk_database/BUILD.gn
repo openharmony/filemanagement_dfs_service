@@ -73,6 +73,7 @@ ohos_unittest("clouddisk_rdb_utils_test") {
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
     "power_manager:powermgr_client",
+    "preferences:native_preferences",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -182,6 +183,7 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "libfuse:libfuse",
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
+    "preferences:native_preferences",
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
@@ -512,6 +514,7 @@ ohos_unittest("clouddisk_notify_utils_test") {
     "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
     "power_manager:powermgr_client",
+    "preferences:native_preferences",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

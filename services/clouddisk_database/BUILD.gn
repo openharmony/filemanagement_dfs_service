@@ -91,6 +91,7 @@ ohos_shared_library("clouddisk_database") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
+    "preferences:native_preferences",
     "relational_store:native_rdb",
   ]
 
