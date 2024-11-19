@@ -52,6 +52,7 @@ struct LocalInfo {
     int64_t mdirtyTime;
     int64_t fdirtyTime;
     int64_t recycledTime;
+    int64_t rowId;
 };
 
 struct BundleNameUserInfo {
