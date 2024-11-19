@@ -44,6 +44,12 @@ int32_t CloudStatus::GetCurrentCloudInfo(const std::string &bundleName, const in
     return E_OK;
 }
 
+uint64_t CloudStatus::GetCurrentRemainSpace(const int32_t userId)
+{
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    return instance->GetRemainSpace(userId);
+}
+
 bool CloudStatus::IsCloudStatusOkay(const std::string &bundleName, const int32_t userId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
