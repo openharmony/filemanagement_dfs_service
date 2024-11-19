@@ -302,19 +302,19 @@ int32_t CloudSyncManagerImpl::RegisterDownloadFileCallback(
         LOGE("proxy is null");
         return E_SA_LOAD_FAILED;
     }
-    int32_t ret = E_OK;
     {
         unique_lock<mutex> lock(downloadMutex_);
-        ret = CloudSyncServiceProxy->RegisterDownloadFileCallback(
-            sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback)));
-        LOGI("RegisterDownloadFileCallback ret %{public}d", ret);
-        if (ret == E_OK) {
+        auto dlCallback = sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback));
+        if (dlCallback == nullptr ||
+            CloudSyncServiceProxy->RegisterDownloadFileCallback(dlCallback) != E_OK) {
+            LOGE("register download callback failed");
+        } else  {
             downloadCallback_ = downloadCallback;
         }
     }
     SubscribeListener();
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    return ret;
+    return E_OK;
 }
 
 int32_t CloudSyncManagerImpl::UnregisterDownloadFileCallback()
@@ -440,9 +440,9 @@ bool CloudSyncManagerImpl::ResetProxyCallback(uint32_t retryCount, const string 
     {
         unique_lock<mutex> downloadLock(downloadMutex_);
         if (downloadCallback_ != nullptr) {
-            auto ret = cloudSyncServiceProxy->RegisterDownloadFileCallback(
-                sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback_)));
-            if (ret != E_OK) {
+            auto dlCallback = sptr(new (std::nothrow) CloudDownloadCallbackClient(downloadCallback_));
+            if (dlCallback == nullptr ||
+                cloudSyncServiceProxy->RegisterDownloadFileCallback(dlCallback) != E_OK) {
                 LOGW("register download callback failed, try time is %{public}d", retryCount);
             } else {
                 hasCallback = true;
@@ -450,9 +450,9 @@ bool CloudSyncManagerImpl::ResetProxyCallback(uint32_t retryCount, const string 
         }
     }
     if (callback_ != nullptr) {
-        auto ret = cloudSyncServiceProxy->RegisterCallbackInner(
-            sptr(new (std::nothrow) CloudSyncCallbackClient(callback_)), bundleName);
-        if (ret != E_OK) {
+        auto callback = sptr(new (std::nothrow) CloudSyncCallbackClient(callback_));
+        if (callback == nullptr ||
+            cloudSyncServiceProxy->RegisterCallbackInner(callback, bundleName) != E_OK) {
             LOGW("register callback failed, try time is %{public}d", retryCount);
         } else {
             hasCallback = true;
