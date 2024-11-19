@@ -263,7 +263,6 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
                                                     const std::string &srcBundleName)
 {
     std::vector<std::string> fileList;
-    std::regex pattern("/mnt/hmdfs/\\d{3,}/account/device_view/local/data/.*");
     for (const auto &uri : uris) {
         size_t pos = uri.find(srcBundleName);
         if (pos == std::string::npos) {
@@ -285,9 +284,7 @@ std::vector<std::string> DaemonExecute::GetFileList(const std::vector<std::strin
             LOGE("uri is folder are not supported now.");
             return {};
         }
-        if (!std::regex_match(physicalPath, pattern)) {
-            LOGE("physicalPath is not hmdfs path.");
-        }
+
         fileList.emplace_back(physicalPath);
     }
     LOGI("GetFileList success, file num is %{public}s", std::to_string(fileList.size()).c_str());
