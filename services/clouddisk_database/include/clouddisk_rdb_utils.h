@@ -41,8 +41,9 @@ public:
 
 #define RETURN_ON_ERR(ret)    \
     do {    \
-        if ((ret) != E_OK) {    \
-            return ret;    \
+        int32_t res = ret;    \
+        if ((res) != E_OK) {    \
+            return res;    \
         }    \
     } while (0)
 } // namespace OHOS::FileManagement::CloudDisk
