@@ -594,7 +594,7 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest, TestSize.Level1)
     uint32_t retryCount = 3;
     string bundleName = "testBundle";
     auto res = CloudSyncManagerImpl::GetInstance().ResetProxyCallback(retryCount, bundleName);
-    EXPECT_EQ(res, E_OK);
+    EXPECT_EQ(res, true);
 }
 
 } // namespace Test
