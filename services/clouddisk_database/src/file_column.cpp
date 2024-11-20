@@ -160,7 +160,8 @@ const std::vector<std::string> FileColumn::DISK_ON_UPLOAD_COLUMNS = {
     FILE_NAME,
     FILE_TIME_EDITED,
     META_TIME_EDITED,
-    FILE_TIME_RECYCLED
+    FILE_TIME_RECYCLED,
+    ROW_ID
 };
 
 const std::vector<std::string> FileColumn::EXT_ATTR_QUERY_COLUMNS = {
