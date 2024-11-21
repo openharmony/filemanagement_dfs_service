@@ -202,4 +202,25 @@ HWTEST_F(BatteryStatusListenerTest, OnReceiveEventTest004, TestSize.Level1)
     }
     GTEST_LOG_(INFO) << "OnReceiveEventTest004 End";
 }
+
+/**
+ * @tc.name: OnPowerConnectedTest001
+ * @tc.desc: Verify the OnPowerConnected function
+ * @tc.type: FUNC
+ * @tc.require: IB3SWZ
+ */
+HWTEST_F(BatteryStatusListenerTest, OnPowerConnectedTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "OnPowerConnectedTest001 start";
+    try {
+        auto dataSyncManager = std::make_shared<DataSyncManager>();
+        auto batteryStatusListener = std::make_shared<BatteryStatusListener>(dataSyncManager);
+        batteryStatusListener->OnPowerConnected();
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << " OnPowerConnectedTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "OnPowerConnectedTest001 end";
+}
 } // namespace OHOS::FileManagement::CloudSync::Test
