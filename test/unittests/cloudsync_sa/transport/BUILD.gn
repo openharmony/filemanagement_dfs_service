@@ -1,0 +1,181 @@
+# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/filemanagement/dfs_service/distributedfile.gni")
+
+ohos_unittest("cloud_sync_service_transport_manager_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
+    "${distributedfile_path}/test/mock/cloudsyncservice/transport/softbus_adapter_mock.cpp",
+    "${distributedfile_path}/test/mock/cloudsyncservice/transport/softbus_session_mock.cpp",
+    "${distributedfile_path}/test/mock/socket_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_manager.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_proxy.cpp",
+    "${services_path}/cloudsyncservice/src/transport/file_transfer_manager.cpp",
+    "${services_path}/cloudsyncservice/src/transport/message_handler.cpp",
+    "${services_path}/cloudsyncservice/src/transport/softbus/session_manager.cpp",
+    "file_transfer_manager_test.cpp",
+    "message_handler_test.cpp",
+    "softbus/session_manager_test.cpp",
+  ]
+
+  include_dirs = [
+    "${clouddisk_database_path}/include",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/mock/cloudsyncservice/transport",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/transport",
+    "${services_path}/cloudsyncservice/include/transport/softbus",
+    "${services_path}/cloudfiledaemon/include/cloud_disk",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+  ]
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "dfs_service:cloudsync_kit_inner",
+    "dsoftbus:softbus_client",
+    "ffrt:libffrt",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_single",
+    "libfuse:libfuse",
+    "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+  if (cloudsync_service_resource_schedule) {
+    external_deps += [ "resource_schedule_service:ressched_client" ]
+    defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
+  }
+  use_exceptions = true
+}
+
+ohos_unittest("cloud_sync_service_transport_softbus_test") {
+  module_out_path = "filemanagement/dfs_service"
+
+  sources = [
+    "${distributedfile_path}/frameworks/native/cloudsync_kit_inner/src/cloud_sync_common.cpp",
+    "${distributedfile_path}/test/mock/socket_mock.cpp",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/parameters.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_manager.cpp",
+    "${services_path}/cloudsyncservice/src/ipc/download_asset_callback_proxy.cpp",
+    "${services_path}/cloudsyncservice/src/transport/file_transfer_manager.cpp",
+    "${services_path}/cloudsyncservice/src/transport/message_handler.cpp",
+    "${services_path}/cloudsyncservice/src/transport/softbus/session_manager.cpp",
+    "${services_path}/cloudsyncservice/src/transport/softbus/softbus_adapter.cpp",
+    "${services_path}/cloudsyncservice/src/transport/softbus/softbus_session.cpp",
+    "softbus/softbus_adapter_test.cpp",
+    "softbus/softbus_session_test.cpp",
+  ]
+
+  include_dirs = [
+    "${clouddisk_database_path}/include",
+    "${distributedfile_path}/test/mock",
+    "${distributedfile_path}/test/unittests/cloudsync_api/cloudsync_impl/include",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
+    "${services_path}/cloudsyncservice/include",
+    "${services_path}/cloudsyncservice/include/transport",
+    "${services_path}/cloudsyncservice/include/transport/softbus",
+    "${services_path}/cloudfiledaemon/include/cloud_disk",
+    "${innerkits_native_path}/cloudsync_kit_inner",
+  ]
+
+  deps = [
+    "${clouddisk_database_path}:clouddisk_database",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit",
+    "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:dataobs_manager",
+    "app_file_service:sandbox_helper_native",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "dfs_service:cloudsync_kit_inner",
+    "dsoftbus:softbus_client",
+    "ffrt:libffrt",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_single",
+    "libfuse:libfuse",
+    "netmanager_base:net_conn_manager_if",
+    "os_account:os_account_innerkits",
+    "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  defines = [
+    "private=public",
+    "LOG_DOMAIN=0xD004307",
+    "LOG_TAG=\"CLOUDSYNC_TEST\"",
+  ]
+
+  if (cloudsync_service_hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+  if (cloudsync_service_resource_schedule) {
+    external_deps += [ "resource_schedule_service:ressched_client" ]
+    defines += [ "CLOUDSYNC_SERVICE_RESOURCE_SCHEDULE" ]
+  }
+  use_exceptions = true
+}
+
+group("cloudsync_sa_transport_test") {
+  testonly = true
+  deps = [
+    ":cloud_sync_service_transport_manager_test",
+    ":cloud_sync_service_transport_softbus_test",
+  ]
+}
