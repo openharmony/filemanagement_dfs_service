@@ -53,3 +53,24 @@ ohos_prebuilt_etc("cloudsyncservice.para.dac") {
   module_install_dir = "etc/param"
   subsystem_name = "filemanagement"
 }
+
+ohos_prebuilt_etc("clouddaemon_etc") {
+  source = "clouddaemon.cfg"
+  relative_install_dir = "init"
+  part_name = "dfs_service"
+  subsystem_name = "filemanagement"
+}
+
+ohos_prebuilt_etc("clouddaemon.para") {
+  source = "clouddaemon.para"
+  part_name = "dfs_service"
+  module_install_dir = "etc/param"
+  subsystem_name = "filemanagement"
+}
+
+ohos_prebuilt_etc("clouddaemon.para.dac") {
+  source = "clouddaemon.para.dac"
+  part_name = "dfs_service"
+  module_install_dir = "etc/param"
+  subsystem_name = "filemanagement"
+}
