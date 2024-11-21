@@ -31,6 +31,7 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
 constexpr int LOAD_SA_TIMEOUT_MS = 4000;
+const std::string MEDIA_URL = "file://media";
 
 int32_t CloudSyncServiceProxy::UnRegisterCallbackInner(const std::string &bundleName)
 {
@@ -563,7 +564,7 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
     }
 
     string path = uri;
-    if (uri.find("file://media") == 0) {
+    if (uri.find(MEDIA_URL) == 0) {
         OHOS::Media::MediaFileUri mediaUri(uri);
         path = mediaUri.GetFilePath();
 
@@ -615,7 +616,7 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &ur
     for (unsigned long i = 0; i < uriVec.size(); i++) {
         string path = uriVec[i];
 #ifdef SUPPORT_MEDIA_LIBRARY
-        if (uriVec[i].find("file://media") == 0) {
+        if (uriVec[i].find(MEDIA_URL) == 0) {
             OHOS::Media::MediaFileUri mediaUri(uriVec[i]);
             path = mediaUri.GetFilePath();
         }
@@ -674,7 +675,7 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool nee
 
     string path = uri;
 #ifdef SUPPORT_MEDIA_LIBRARY
-    if (uri.find("file://media") == 0) {
+    if (uri.find(MEDIA_URL) == 0) {
         OHOS::Media::MediaFileUri Muri(uri);
         path = Muri.GetFilePath();
     }
