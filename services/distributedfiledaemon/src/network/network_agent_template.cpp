@@ -141,8 +141,10 @@ bool NetworkAgentTemplate::FindSession(int32_t sessionId)
 
 void NetworkAgentTemplate::CloseSessionForOneDevice(int32_t fd)
 {
-    sessionPool_.ReleaseSession(fd);
-    LOGI("session closed!");
+    if (fd > 0) {
+        sessionPool_.ReleaseSession(fd);
+        LOGI("session closed");
+    }
 }
 
 void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const std::string backStage)
