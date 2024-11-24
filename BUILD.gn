@@ -26,14 +26,6 @@ group("services_target") {
     "${services_path}/cloudsyncservice:cloudsync_sa",
     "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
   ]
-
-  if (dfs_service_feature_enable_cloud_adapter) {
-    deps += [
-      "${services_path}:clouddaemon.para",
-      "${services_path}:clouddaemon.para.dac",
-      "${services_path}:clouddaemon_etc",
-    ]
-  }
 }
 
 group("cloudsync_kit_inner_target") {

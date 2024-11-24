@@ -149,15 +149,6 @@ void HandleStartMove(int32_t userId)
     system::SetParameter(moveFile, "true");
 }
 
-void HandleDaemonStarted()
-{
-    const string serviceReady = "bootevent.cloudfiledaemon.ready";
-    if (!system::GetBoolParameter(serviceReady, false)) {
-        system::SetParameter(serviceReady, "true");
-        LOGI("set cloudfiledaemon service started true");
-    }
-}
-
 void CloudDaemon::OnStop()
 {
     LOGI("Begin to stop");
@@ -205,8 +196,6 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
         std::thread([userId]() {
             HandleStartMove(userId);
         }).detach();
-    } else {
-        HandleDaemonStarted();
     }
     return E_OK;
 }
