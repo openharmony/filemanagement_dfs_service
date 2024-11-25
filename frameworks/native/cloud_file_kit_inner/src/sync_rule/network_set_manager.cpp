@@ -135,9 +135,17 @@ int32_t NetworkSetManager::QueryNetConnect(int32_t userId, const std::string &bu
 
 void NetworkSetManager::GetCellularConnect(const std::string &bundleName, const int32_t userId)
 {
+    bool preCheckSwitch = false;
+    bool getConnect = cellularNetMap_.Find(std::to_string(userId) + "/" + bundleName, preCheckSwitch);
     if (QueryCellularConnect(userId, bundleName) != E_OK) {
         cellularNetMap_.EnsureInsert(std::to_string(userId) + "/" +
                                      bundleName, GetConfigParams(bundleName, userId));
+    }
+
+    bool endCheckSwitch = false;
+    getConnect = cellularNetMap_.Find(std::to_string(userId) + "/" + bundleName, endCheckSwitch);
+    if (preCheckSwitch && !endCheckSwitch && dataSyncManager_ != nullptr) {
+        dataSyncManager_->StopUploadTask(bundleName, userId);
     }
 }
 
@@ -268,5 +276,10 @@ void NetworkSetManager::InitNetworkSetManager(const std::string &bundleName, con
     RegisterObserver(bundleName, userId, NETCONNECT);
     GetCellularConnect(bundleName, userId);
     GetNetConnect(bundleName, userId);
+}
+
+void NetworkSetManager::InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+{
+    dataSyncManager_ = dataSyncManager;
 }
 }
