@@ -60,7 +60,11 @@ void CloudDaemonStatistic::UpdateOpenSizeStat(uint64_t size)
         LOGE("update open size stat fail, index overflow, index = %{public}u.", index);
         return;
     }
-    openSizeStat_[index]++;
+    if (openSizeStat_[index] < UINT64_MAX) {
+        openSizeStat_[index]++;
+    } else {
+        LOGE("update openSizeStat fail, openSizeStat_[%{pubilc}u] = %{public}zu.", index, openSizeStat_[index]);
+    }
 }
 
 void CloudDaemonStatistic::UpdateOpenTimeStat(uint32_t type, uint64_t time)
@@ -70,7 +74,12 @@ void CloudDaemonStatistic::UpdateOpenTimeStat(uint32_t type, uint64_t time)
         LOGE("update open time stat fail, index overflow, index = %{public}u.", index);
         return;
     }
-    openTimeStat_[type][index]++;
+    if (openTimeStat_[type][index] < UINT64_MAX) {
+        openTimeStat_[type][index]++;
+    } else {
+        LOGE("update openTimeStat fail, openTimeStat_[%{pubilc}u][%{public}u] = %{public}zu.",
+            type, index, openTimeStat_[type][index]);
+    }
 }
 
 void CloudDaemonStatistic::UpdateReadSizeStat(uint64_t size)
@@ -80,7 +89,11 @@ void CloudDaemonStatistic::UpdateReadSizeStat(uint64_t size)
         LOGE("update read size stat fail, index overflow, index = %{public}u.", index);
         return;
     }
-    readSizeStat_[index]++;
+    if (readSizeStat_[index] < UINT64_MAX) {
+        readSizeStat_[index]++;
+    } else {
+        LOGE("update readSizeStat fail, readSizeStat_[%{pubilc}u] = %{public}zu.", index, readSizeStat_[index]);
+    }
 }
 
 void CloudDaemonStatistic::UpdateReadTimeStat(uint64_t size, uint64_t time)
@@ -92,7 +105,12 @@ void CloudDaemonStatistic::UpdateReadTimeStat(uint64_t size, uint64_t time)
             indexSize, indexTime);
         return;
     }
-    readTimeStat_[indexSize][indexTime]++;
+    if (readTimeStat_[indexSize][indexTime] < UINT64_MAX) {
+        readTimeStat_[indexSize][indexTime]++;
+    } else {
+        LOGE("update readTimeStat fail, readTimeStat_[%{pubilc}u][%{public}u] = %{public}zu.",
+            indexSize, indexTime, readTimeStat_[indexSize][indexTime]);
+    }
 }
 
 void CloudDaemonStatistic::AddFileData()
@@ -112,22 +130,38 @@ void CloudDaemonStatistic::AddFileData()
     uint64_t tmpData;
     for (uint32_t i = 0; i < OPEN_SIZE_MAX; i++) {
         statDataFile >> tmpData;
-        openSizeStat_[i] += tmpData;
+        if (tmpData < UINT64_MAX - openSizeStat_[i]) {
+            openSizeStat_[i] += tmpData;
+        } else {
+            LOGE("openSizeStat update fail, overflow, tmpDta = %{public}zu", tmpData);
+        }
     }
     for (uint32_t i = 0; i < FILE_TYPE_MAX; i++) {
         for (uint32_t j = 0; j < OPEN_TIME_MAX; j++) {
             statDataFile >> tmpData;
-            openTimeStat_[i][j] += tmpData;
+            if (tmpData < UINT64_MAX - openTimeStat_[i][j]) {
+                openTimeStat_[i][j] += tmpData;
+            } else {
+                LOGE("openTimeStat update fail, overflow, tmpDta = %{public}zu", tmpData);
+            }
         }
     }
     for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
         statDataFile >> tmpData;
-        readSizeStat_[i] += tmpData;
+        if (tmpData < UINT64_MAX - readSizeStat_[i]) {
+            readSizeStat_[i] += tmpData;
+        } else {
+            LOGE("readSizeStat update fail, overflow, tmpDta = %{public}zu", tmpData);
+        }
     }
     for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
         for (uint32_t j = 0; j < READ_TIME_MAX; j++) {
             statDataFile >> tmpData;
-            readTimeStat_[i][j] += tmpData;
+            if (tmpData < UINT64_MAX - readTimeStat_[i][j]) {
+                readTimeStat_[i][j] += tmpData;
+            } else {
+                LOGE("readTimeStat update fail, overflow, tmpDta = %{public}zu", tmpData);
+            }
         }
     }
     statDataFile.close();
@@ -213,6 +247,7 @@ void CloudDaemonStatistic::ClearStat()
 
 void CloudDaemonStatistic::UpdateStatData()
 {
+    lock_guard<mutex> lock(mutex_);
     AddFileData();
     OutputToFile();
     ClearStat();

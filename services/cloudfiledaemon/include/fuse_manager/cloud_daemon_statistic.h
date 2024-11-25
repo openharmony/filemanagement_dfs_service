@@ -16,6 +16,7 @@
 #ifndef CLOUD_DAEMON_STATISTIC_H
 #define CLOUD_DAEMON_STATISTIC_H
 
+#include <mutex>
 #include <string>
 
 #define FILE_TYPE_MAX 3
@@ -41,6 +42,7 @@ public:
     void UpdateReadSizeStat(uint64_t size);
     void UpdateReadTimeStat(uint64_t size, uint64_t time);
     void UpdateStatData();
+    mutex mutex_;
 private:
     CloudDaemonStatistic() = default;
     ~CloudDaemonStatistic() = default;
