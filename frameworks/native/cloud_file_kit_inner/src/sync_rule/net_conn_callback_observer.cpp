@@ -49,6 +49,7 @@ int32_t NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandl
     } else if (newStatus == NetworkStatus::CELLULAR_CONNECT) {
         LOGI("NetCapabilitiesChanged cellular connected");
         dataSyncManager_->TriggerRecoverySync(triggerType_);
+        NetworkStatus::NetWorkChangeStopUploadTask();
     } else {
         LOGI("NetCapabilitiesChanged newStatus:%{public}d", newStatus);
     }

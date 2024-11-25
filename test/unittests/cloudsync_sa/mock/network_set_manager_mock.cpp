@@ -93,4 +93,12 @@ bool NetworkSetManager::IsAllowNetConnect(const std::string &bundleName, const i
 void NetworkSetManager::InitNetworkSetManager(const std::string &bundleName, const int32_t userId)
 {
 }
+
+void NetworkSetManager::InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+{
+}
+
+void NetworkSetManager::NetWorkChangeStopUploadTask()
+{
+}
 }

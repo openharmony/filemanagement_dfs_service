@@ -58,11 +58,12 @@ public:
     static bool IsAllowCellularConnect(const std::string &bundleName, const int32_t userId);
     static bool IsAllowNetConnect(const std::string &bundleName, const int32_t userId);
     static bool GetConfigParams(const std::string &bundleName, const int32_t userId);
-    static void InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+    static void InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager);
+    static void NetWorkChangeStopUploadTask();
     static inline SafeMap<const std::string, bool> cellularNetMap_;
     static inline SafeMap<const std::string, bool> netMap_;
 private:
-    static inline std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_
+    static inline std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager_;
 };
 } // OHOS
 

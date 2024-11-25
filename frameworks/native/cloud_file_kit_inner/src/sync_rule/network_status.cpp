@@ -96,6 +96,11 @@ int32_t NetworkStatus::GetAndRegisterNetwork(std::shared_ptr<CloudFile::DataSync
     return RegisterNetConnCallback(dataSyncManager);
 }
 
+void NetworkStatus::NetWorkChangeStopUploadTask()
+{
+    NetworkSetManager::NetWorkChangeStopUploadTask();
+}
+
 void NetworkStatus::InitNetwork(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
 {
     int status = WaitParameter("startup.service.ctl.netmanager", NET_MANAGER_ON_STATUS, WAIT_NET_SERVICE_TIME);
