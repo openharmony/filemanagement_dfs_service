@@ -1033,7 +1033,7 @@ void FileOperationsCloud::MkDir(fuse_req_t req, fuse_ino_t parent, const char *n
     string fileName = name;
     bool noNeedUpload;
     int32_t err = 0;
-    if (fileName == ".thumbs" && parentInode->cloudId == ROOT_CLOUD_ID) {
+    if (fileName == ".cloudthumbnails" && parentInode->cloudId == ROOT_CLOUD_ID) {
         noNeedUpload = true;
     } else if (parentInode->cloudId != ROOT_CLOUD_ID) {
         err = GetParentUpload(parentInode, data, noNeedUpload);
