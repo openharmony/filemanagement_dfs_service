@@ -50,8 +50,8 @@ ohos_shared_library("cloudfile_kit") {
   }
 
   big_data_statistics = [
-    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/gallery_download_file_stat.cpp",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/cloud_file_fault_event.cpp",
+    "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/big_data_statistics/gallery_download_file_stat.cpp",
   ]
 
   data_sync = [

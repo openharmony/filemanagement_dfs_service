@@ -91,8 +91,10 @@ static const unsigned int HMDFS_IOC = 0xf2;
 static const unsigned int FUSE_BUFFER_SIZE = 512 * 1024;
 static const std::chrono::seconds READ_TIMEOUT_S = 16s;
 static const std::chrono::seconds OPEN_TIMEOUT_S = 4s;
+#ifdef HICOLLIE_ENABLE
 static const unsigned int LOOKUP_TIMEOUT_S = 1;
 static const unsigned int FORGET_TIMEOUT_S = 1;
+#endif
 
 #define HMDFS_IOC_HAS_CACHE _IOW(HMDFS_IOC, 6, struct HmdfsHasCache)
 #define HMDFS_IOC_CANCEL_READ _IO(HMDFS_IOC, 8)
