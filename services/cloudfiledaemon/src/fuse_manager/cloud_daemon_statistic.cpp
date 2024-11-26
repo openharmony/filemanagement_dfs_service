@@ -53,6 +53,18 @@ static uint32_t GetRangeIndex(uint64_t value, const vector<uint64_t> rangeVector
     return index;
 }
 
+static void CheckOverflow(uint64_t &data, uint64_t addValue)
+{
+    if (data >= UINT64_MAX - addValue) {
+        LOGE("update fail, overflow, data = %{public}llu, addValue = %{public}llu",
+            static_cast<unsigned long long>(data),
+            static_cast<unsigned long long>(addValue));
+        data = 0;
+    } else {
+        data += addValue;
+    }
+}
+
 void CloudDaemonStatistic::UpdateOpenSizeStat(uint64_t size)
 {
     uint32_t index = GetRangeIndex(size / FILE_SIZE_BYTE_TO_KB, OPEN_SIZE_RANGE_VECTOR);
@@ -60,11 +72,7 @@ void CloudDaemonStatistic::UpdateOpenSizeStat(uint64_t size)
         LOGE("update open size stat fail, index overflow, index = %{public}u.", index);
         return;
     }
-    if (openSizeStat_[index] < UINT64_MAX) {
-        openSizeStat_[index]++;
-    } else {
-        LOGE("update openSizeStat fail, openSizeStat_[%{pubilc}u] = %{public}zu.", index, openSizeStat_[index]);
-    }
+    CheckOverflow(openSizeStat_[index], 1);
 }
 
 void CloudDaemonStatistic::UpdateOpenTimeStat(uint32_t type, uint64_t time)
@@ -74,12 +82,7 @@ void CloudDaemonStatistic::UpdateOpenTimeStat(uint32_t type, uint64_t time)
         LOGE("update open time stat fail, index overflow, index = %{public}u.", index);
         return;
     }
-    if (openTimeStat_[type][index] < UINT64_MAX) {
-        openTimeStat_[type][index]++;
-    } else {
-        LOGE("update openTimeStat fail, openTimeStat_[%{pubilc}u][%{public}u] = %{public}zu.",
-            type, index, openTimeStat_[type][index]);
-    }
+    CheckOverflow(openTimeStat_[type][index], 1);
 }
 
 void CloudDaemonStatistic::UpdateReadSizeStat(uint64_t size)
@@ -89,11 +92,7 @@ void CloudDaemonStatistic::UpdateReadSizeStat(uint64_t size)
         LOGE("update read size stat fail, index overflow, index = %{public}u.", index);
         return;
     }
-    if (readSizeStat_[index] < UINT64_MAX) {
-        readSizeStat_[index]++;
-    } else {
-        LOGE("update readSizeStat fail, readSizeStat_[%{pubilc}u] = %{public}zu.", index, readSizeStat_[index]);
-    }
+    CheckOverflow(readSizeStat_[index], 1);
 }
 
 void CloudDaemonStatistic::UpdateReadTimeStat(uint64_t size, uint64_t time)
@@ -105,12 +104,7 @@ void CloudDaemonStatistic::UpdateReadTimeStat(uint64_t size, uint64_t time)
             indexSize, indexTime);
         return;
     }
-    if (readTimeStat_[indexSize][indexTime] < UINT64_MAX) {
-        readTimeStat_[indexSize][indexTime]++;
-    } else {
-        LOGE("update readTimeStat fail, readTimeStat_[%{pubilc}u][%{public}u] = %{public}zu.",
-            indexSize, indexTime, readTimeStat_[indexSize][indexTime]);
-    }
+    CheckOverflow(readTimeStat_[indexSize][indexTime], 1);
 }
 
 void CloudDaemonStatistic::AddFileData()
@@ -130,38 +124,22 @@ void CloudDaemonStatistic::AddFileData()
     uint64_t tmpData;
     for (uint32_t i = 0; i < OPEN_SIZE_MAX; i++) {
         statDataFile >> tmpData;
-        if (tmpData < UINT64_MAX - openSizeStat_[i]) {
-            openSizeStat_[i] += tmpData;
-        } else {
-            LOGE("openSizeStat update fail, overflow, tmpDta = %{public}zu", tmpData);
-        }
+        CheckOverflow(openSizeStat_[i], tmpData);
     }
     for (uint32_t i = 0; i < FILE_TYPE_MAX; i++) {
         for (uint32_t j = 0; j < OPEN_TIME_MAX; j++) {
             statDataFile >> tmpData;
-            if (tmpData < UINT64_MAX - openTimeStat_[i][j]) {
-                openTimeStat_[i][j] += tmpData;
-            } else {
-                LOGE("openTimeStat update fail, overflow, tmpDta = %{public}zu", tmpData);
-            }
+            CheckOverflow(openTimeStat_[i][j], tmpData);
         }
     }
     for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
         statDataFile >> tmpData;
-        if (tmpData < UINT64_MAX - readSizeStat_[i]) {
-            readSizeStat_[i] += tmpData;
-        } else {
-            LOGE("readSizeStat update fail, overflow, tmpDta = %{public}zu", tmpData);
-        }
+        CheckOverflow(readSizeStat_[i], tmpData);
     }
     for (uint32_t i = 0; i < READ_SIZE_MAX; i++) {
         for (uint32_t j = 0; j < READ_TIME_MAX; j++) {
             statDataFile >> tmpData;
-            if (tmpData < UINT64_MAX - readTimeStat_[i][j]) {
-                readTimeStat_[i][j] += tmpData;
-            } else {
-                LOGE("readTimeStat update fail, overflow, tmpDta = %{public}zu", tmpData);
-            }
+            CheckOverflow(readTimeStat_[i][j], tmpData);
         }
     }
     statDataFile.close();
