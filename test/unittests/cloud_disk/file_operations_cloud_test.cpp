@@ -1573,7 +1573,7 @@ HWTEST_F(FileOperationsCloudTest, MkDirTest002, TestSize.Level1)
         CloudDiskFuseData data;
         fuse_req_t req = nullptr;
         fuse_ino_t parent = 0;
-        const char *name = ".thumbs";
+        const char *name = ".cloudthumbnails";
         mode_t mode = 0;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
