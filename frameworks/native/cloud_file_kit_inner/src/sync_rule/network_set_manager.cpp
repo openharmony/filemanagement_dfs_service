@@ -135,9 +135,17 @@ int32_t NetworkSetManager::QueryNetConnect(int32_t userId, const std::string &bu
 
 void NetworkSetManager::GetCellularConnect(const std::string &bundleName, const int32_t userId)
 {
+    bool preCheckSwitch = false;
+    bool getConnect = cellularNetMap_.Find(std::to_string(userId) + "/" + bundleName, preCheckSwitch);
     if (QueryCellularConnect(userId, bundleName) != E_OK) {
         cellularNetMap_.EnsureInsert(std::to_string(userId) + "/" +
                                      bundleName, GetConfigParams(bundleName, userId));
+    }
+
+    bool endCheckSwitch = false;
+    getConnect = cellularNetMap_.Find(std::to_string(userId) + "/" + bundleName, endCheckSwitch);
+    if (preCheckSwitch && !endCheckSwitch && dataSyncManager_ != nullptr) {
+        dataSyncManager_->StopUploadTask(bundleName, userId);
     }
 }
 
@@ -268,5 +276,46 @@ void NetworkSetManager::InitNetworkSetManager(const std::string &bundleName, con
     RegisterObserver(bundleName, userId, NETCONNECT);
     GetCellularConnect(bundleName, userId);
     GetNetConnect(bundleName, userId);
+}
+
+void NetworkSetManager::InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
+{
+    dataSyncManager_ = dataSyncManager;
+}
+
+void NetworkSetManager::NetWorkChangeStopUploadTask()
+{
+    std::map<const std::string, bool> cellularNetMap;
+    auto it = [&](std::string bundleName, bool swichStatus) {
+        cellularNetMap.insert(std::make_pair(bundleName, swichStatus));
+    };
+    cellularNetMap_.Iterate(it);
+
+    for (auto pair = cellularNetMap.begin(); pair != cellularNetMap.end(); ++pair) {
+        const std::string &key = pair->first;
+        if (key.empty()) {
+            continue;
+        }
+        LOGI("bundleName: %{public}s", key.c_str());
+        size_t pos = key.find("com.ohos.photos");
+        if (pos == std::string::npos) {
+            continue;
+        }
+        auto swichStatus = pair->second;
+        if (swichStatus) {
+            continue;
+        }
+
+        pos = key.find("/");
+        if (pos == std::string::npos) {
+            continue;
+        }
+        int32_t userId = std::stoi(key.substr(0, pos));
+        std::string bundleName = key.substr(pos + 1);
+        LOGI("bundleName: %{public}s, userId:%{public}d", key.c_str(), userId);
+        if (dataSyncManager_ != nullptr) {
+            dataSyncManager_->StopUploadTask(bundleName, userId);
+        }
+    }
 }
 }

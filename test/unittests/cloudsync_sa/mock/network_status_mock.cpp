@@ -66,4 +66,8 @@ NetworkStatus::NetConnStatus NetworkStatus::GetNetConnStatus()
 {
     return NetworkStatus::NetConnStatus::WIFI_CONNECT;
 }
+
+void NetworkStatus::NetWorkChangeStopUploadTask()
+{
+}
 } // namespace OHOS::FileManagement::CloudSync

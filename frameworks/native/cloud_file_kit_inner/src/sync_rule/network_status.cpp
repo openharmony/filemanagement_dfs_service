@@ -92,7 +92,13 @@ int32_t NetworkStatus::GetAndRegisterNetwork(std::shared_ptr<CloudFile::DataSync
         return res;
     }
 
+    NetworkSetManager::InitDataSyncManager(dataSyncManager);
     return RegisterNetConnCallback(dataSyncManager);
+}
+
+void NetworkStatus::NetWorkChangeStopUploadTask()
+{
+    NetworkSetManager::NetWorkChangeStopUploadTask();
 }
 
 void NetworkStatus::InitNetwork(std::shared_ptr<CloudFile::DataSyncManager> dataSyncManager)
