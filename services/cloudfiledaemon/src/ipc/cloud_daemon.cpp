@@ -115,6 +115,8 @@ void CloudDaemon::OnStart()
 
 void HandleStartMove(int32_t userId)
 {
+    const string moveFile = "persist.kernel.move.finish";
+    system::SetParameter(moveFile, "false");
     const std::string filemanagerKey = "persist.kernel.bundle_name.filemanager";
     string subList[] = {"com.ohos.photos", system::GetParameter(filemanagerKey, "")};
     string srcBase = "/data/service/el1/public/cloudfile/" + to_string(userId);
@@ -145,7 +147,6 @@ void HandleStartMove(int32_t userId)
             LOGE("remove failed path: %{public}s", GetAnonyString(srcPath).c_str());
         }
     }
-    const string moveFile = "persist.kernel.move.finish";
     system::SetParameter(moveFile, "true");
 }
 
