@@ -62,7 +62,17 @@ enum class FaultOperation {
     FORGETMULTI = 800,
     IOCTL = 900,
     UNLINK = 1000,
-    SETATTR = 1100
+    SETATTR = 1100,
+    SETEXTATTR = 1200,
+    MKNOD = 1300,
+    MKDIR = 1400,
+    GETEXTATTR = 1500,
+    CREATE = 1600,
+    WRITE = 1700,
+    RENAME = 1800,
+    RMDIR = 1900,
+    SESSION = 2000,
+    DOWNLOAD = 2100
 };
 
 enum class FaultType {

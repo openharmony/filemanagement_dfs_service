@@ -22,12 +22,13 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
-#include "iremote_object.h"
-#include "system_ability_definition.h"
-#include "parameters.h"
-#include "plugin_loader.h"
+#include "cloud_file_fault_event.h"
 #include "dfs_error.h"
 #include "fuse_manager/fuse_manager.h"
+#include "iremote_object.h"
+#include "parameters.h"
+#include "plugin_loader.h"
+#include "system_ability_definition.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 #ifdef HICOLLIE_ENABLE
@@ -167,6 +168,15 @@ void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
     accountStatusListener_->Start();
 }
 
+void CloudDaemon::ExecuteStartFuse(int32_t userId, int32_t devFd, const std::string& path)
+{
+    std::thread([=]() {
+        int32_t ret = FuseManager::GetInstance().StartFuse(userId, devFd, path);
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+            CloudFile::FaultType::FILE, ret, "start fuse, ret = " + std::to_string(ret)});
+        }).detach();
+}
+
 int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
 #ifdef HICOLLIE_ENABLE
@@ -174,10 +184,7 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
     int32_t xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_StartFuse", TIMEOUT_S, nullptr, nullptr, true);
 #endif
     LOGI("Start Fuse");
-    std::thread([=]() {
-        int32_t ret = FuseManager::GetInstance().StartFuse(userId, devFd, path);
-        LOGI("start fuse result %d", ret);
-        }).detach();
+    ExecuteStartFuse(userId, devFd, path);
 
     string dentryPath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_CACHE_CLOUD;
     if (access(dentryPath.c_str(), F_OK) != 0) {
@@ -186,24 +193,29 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
 #ifdef HICOLLIE_ENABLE
             XCollieHelper::CancelTimer(xcollieId);
 #endif
-            LOGE("create accout_cache path error %{public}d", errno);
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+                CloudFile::FaultType::FILE, errno, "create accout_cache path error " + std::to_string(errno)});
             return E_PATH;
         }
         if (chmod(cachePath.c_str(), STAT_MODE_DIR_DENTRY_CACHE) != 0) {
-            LOGE("chmod cachepath error %{public}d", errno);
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+                CloudFile::FaultType::FILE, errno, "chmod cachepath error " + std::to_string(errno)});
         }
         if (chown(cachePath.c_str(), OID_DFS, OID_DFS) != 0) {
-            LOGE("chown cachepath error %{public}d", errno);
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+                CloudFile::FaultType::FILE, errno, "chown cachepath error " + std::to_string(errno)});
         }
         if (mkdir(dentryPath.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
 #ifdef HICOLLIE_ENABLE
             XCollieHelper::CancelTimer(xcollieId);
 #endif
-            LOGE("create dentrypath %{public}d", errno);
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+                CloudFile::FaultType::FILE, errno, "create dentrypath " + std::to_string(errno)});
             return E_PATH;
         }
         if (chown(dentryPath.c_str(), OID_DFS, OID_DFS) != 0) {
-            LOGE("chown cachepath error %{public}d", errno);
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SESSION,
+                CloudFile::FaultType::FILE, errno, "chown cachepath error " + std::to_string(errno)});
         }
     }
     if (path.find("cloud_fuse") != string::npos) {
