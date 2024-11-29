@@ -241,6 +241,7 @@ ohos_unittest("fuse_operations_test") {
     "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/database_manager.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_cloud.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
     "fuse_operations_test.cpp",
