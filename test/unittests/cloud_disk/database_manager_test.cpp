@@ -62,7 +62,7 @@ void DatabaseManagerTest::TearDown(void)
  */
 HWTEST_F(DatabaseManagerTest, GetRdbStoreTest001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "GetRdbStoreTest001 Start";
+    GTEST_LOG_(INFO) << "GetRdbStoreTest001 start";
     try {
         const std::string bundleName = "GetRdbStoreTest";
         const int32_t userId = 123456789;
@@ -70,9 +70,31 @@ HWTEST_F(DatabaseManagerTest, GetRdbStoreTest001, TestSize.Level1)
         EXPECT_TRUE(true);
     } catch (...) {
         EXPECT_TRUE(false);
-        GTEST_LOG_(INFO) << "GetRdbStoreTest001  ERROR";
+        GTEST_LOG_(INFO) << "GetRdbStoreTest001 failed";
     }
-    GTEST_LOG_(INFO) << "GetRdbStoreTest001 End";
+    GTEST_LOG_(INFO) << "GetRdbStoreTest001 end";
 }
 
+/**
+ * @tc.name: GetInstanceTest001
+ * @tc.desc: Verify the GetInstance function
+ * @tc.type: FUNC
+ * @tc.require: issuesIB4SSZ
+ */
+HWTEST_F(DatabaseManagerTest, GetInstanceTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetInstanceTest001 start";
+    try{
+        DatabaseManager &instance1 = databaseManager_->GetInstance();
+        DatabaseManager &instance2 = databaseManager_->GetInstance();
+        EXPECT_EQ(&instance1, &instance2);
+        static DatabaseManager instanceStatic;
+        EXPECT_NE(&instanceStatic, &instance1);
+    }
+    catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetInstanceTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "GetInstanceTest001 end";
+}
 } // namespace OHOS::FileManagement::CloudDisk::Test
