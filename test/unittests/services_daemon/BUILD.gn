@@ -21,14 +21,17 @@ ohos_unittest("fuse_manager_test") {
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/cloud_daemon_statistic.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/fuse_manager/fuse_manager.cpp",
     "fuse_manager_test.cpp",
+    "mock/libfuse_mock.cpp",
+    "mock/system_function_mock.cpp",
   ]
-
   cloud_disk = [
     "${services_path}/cloudfiledaemon/src/cloud_disk/database_manager.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_base.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_cloud.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_local.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
+    "${distributedfile_path}/services/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
   ]
 
   sources += cloud_disk
@@ -43,6 +46,7 @@ ohos_unittest("fuse_manager_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
+    "${distributedfile_path}/test/unittests/services_daemon/mock",
   ]
 
   deps = [
@@ -58,6 +62,7 @@ ohos_unittest("fuse_manager_test") {
   external_deps = [
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "ffrt:libffrt",
     "hilog:libhilog",
@@ -73,6 +78,7 @@ ohos_unittest("fuse_manager_test") {
     "private=public",
     "LOG_DOMAIN=0xD004308",
     "LOG_TAG=\"CloudFileDaemon\"",
+    "strdup=StrdupMock",
   ]
 
   if (cloudsync_service_hicollie_enable) {
@@ -157,6 +163,7 @@ ohos_unittest("cloud_daemon_test") {
     "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon.cpp",
     "${distributedfile_path}/services/cloudfiledaemon/src/ipc/cloud_daemon_stub.cpp",
     "cloud_daemon_test.cpp",
+    "mock/system_function_mock.cpp",
   ]
 
   cloud_disk = [
@@ -165,6 +172,9 @@ ohos_unittest("cloud_daemon_test") {
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_cloud.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/file_operations_local.cpp",
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
+    "${distributedfile_path}/services/cloudfiledaemon/src/cloud_disk/file_operations_helper.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/account_status.cpp",
+    "${services_path}/cloudfiledaemon/src/cloud_disk/account_status_listener.cpp",
   ]
 
   sources += cloud_disk
@@ -178,11 +188,25 @@ ohos_unittest("cloud_daemon_test") {
     "${media_library_path}/frameworks/innerkitsimpl/media_library_helper/include",
     "${media_library_path}/interfaces/inner_api/media_library_helper/include",
     "${media_library_path}/frameworks/utils/include",
+    "${distributedfile_path}/test/unittests/services_daemon/mock",
+    "${distributedfile_path}/services/cloudfiledaemon/include/fuse_manager",
+    "${distributedfile_path}/interfaces/inner_api/native",
+    "${distributedfile_path}/interfaces/inner_api/native/cloud_file_kit_inner/big_data_statistics",
+    "${utils_path}/cloud_disk/include",
+    "${utils_path}/dentry/include",
+    "${utils_path}/log/include",
+    "${utils_path}/system/include",
+    "${innerkits_native_path}/cloud_daemon_kit_inner",
+    "${innerkits_native_path}/cloud_file_kit_inner/big_data_statistics",
+    "${services_path}/cloudfiledaemon/include/fuse_manager/",
+    "${services_path}/cloudfiledaemon/include/ipc/",
+    "${services_path}/cloudsyncservice/include/data_sync/",
   ]
 
   deps = [
     "${clouddisk_database_path}:clouddisk_database",
     "${innerkits_native_path}/cloud_daemon_kit_inner:cloud_daemon_kit_inner",
+    "${innerkits_native_path}/cloud_file_kit_inner:cloudfile_kit_core",
     "${utils_path}:libdistributedfiledentry",
     "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
@@ -193,9 +217,11 @@ ohos_unittest("cloud_daemon_test") {
     "ability_base:zuri",
     "ability_runtime:dataobs_manager",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
+    "init:libbegetutil",
     "ipc:ipc_single",
     "libfuse:libfuse",
     "relational_store:native_rdb",
@@ -207,6 +233,7 @@ ohos_unittest("cloud_daemon_test") {
     "private=public",
     "LOG_DOMAIN=0xD004308",
     "LOG_TAG=\"CloudFileDaemon\"",
+    "access=AccessMock",
   ]
 
   if (cloudsync_service_hicollie_enable) {
@@ -267,6 +294,7 @@ group("services_daemon_test") {
   deps = [
     ":cloud_daemon_statistic_test",
     ":cloud_daemon_stub_test",
+    ":cloud_daemon_test",
     ":fuse_manager_test",
   ]
 }

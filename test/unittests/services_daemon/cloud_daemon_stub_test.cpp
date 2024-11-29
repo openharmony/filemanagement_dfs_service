@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -129,6 +129,27 @@ HWTEST_F(CloudDaemonStubTest, OnRemoteRequestTest003, TestSize.Level1)
         GTEST_LOG_(INFO) << "OnRemoteRequestTest  ERROR";
     }
     GTEST_LOG_(INFO) << "OnRemoteRequestTest End";
+}
+
+/**
+ * @tc.name: HandleStartFuseInnerTest001
+ * @tc.desc: Verify the HandleStartFuseInner function
+ * @tc.type: FUNC
+ * @tc.require: issuesIB538J
+ */
+HWTEST_F(CloudDaemonStubTest, HandleStartFuseInnerTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleStartFuseInnerTest start";
+    try {
+        MessageParcel data;
+        MessageParcel reply;
+        int ret = cloudDaemonStub_->HandleStartFuseInner(data, reply);
+        EXPECT_EQ(ret, 0);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "HandleStartFuseInnerTest failed";
+    }
+    GTEST_LOG_(INFO) << "HandleStartFuseInnerTest end";
 }
 
 } // namespace OHOS::FileManagement::CloudSync::Test
