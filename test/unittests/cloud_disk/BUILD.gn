@@ -245,7 +245,6 @@ ohos_unittest("fuse_operations_test") {
     "${services_path}/cloudfiledaemon/src/cloud_disk/fuse_operations.cpp",
     "fuse_operations_test.cpp",
     "mock/clouddisk_rdbstore_mock.cpp",
-    "mock/file_operations_cloud_mock.cpp",
     "mock/file_operations_local_mock.cpp",
     "mock/libfuse_mock.cpp",
     "mock/system_function_mock.cpp",
