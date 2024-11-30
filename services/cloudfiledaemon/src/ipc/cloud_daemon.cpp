@@ -30,6 +30,9 @@
 #include "fuse_manager/fuse_manager.h"
 #include "utils_directory.h"
 #include "utils_log.h"
+#ifdef HICOLLIE_ENABLE
+#include "xcollie_helper.h"
+#endif
 
 namespace OHOS {
 namespace FileManagement {
@@ -166,6 +169,10 @@ void CloudDaemon::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
 
 int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
+#ifdef HICOLLIE_ENABLE
+    const int32_t TIMEOUT_S = 2;
+    int32_t xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_StartFuse", TIMEOUT_S, nullptr, nullptr, true);
+#endif
     LOGI("Start Fuse");
     std::thread([=]() {
         int32_t ret = FuseManager::GetInstance().StartFuse(userId, devFd, path);
@@ -176,6 +183,9 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
     if (access(dentryPath.c_str(), F_OK) != 0) {
         string cachePath = LOCAL_PATH_DATA_SERVICE_EL2 + to_string(userId) + LOCAL_PATH_HMDFS_DENTRY_CACHE;
         if (mkdir(cachePath.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
+#ifdef HICOLLIE_ENABLE
+            XCollieHelper::CancelTimer(xcollieId);
+#endif
             LOGE("create accout_cache path error %{public}d", errno);
             return E_PATH;
         }
@@ -186,6 +196,9 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
             LOGE("chown cachepath error %{public}d", errno);
         }
         if (mkdir(dentryPath.c_str(), STAT_MODE_DIR) != 0 && errno != EEXIST) {
+#ifdef HICOLLIE_ENABLE
+            XCollieHelper::CancelTimer(xcollieId);
+#endif
             LOGE("create dentrypath %{public}d", errno);
             return E_PATH;
         }
@@ -198,6 +211,9 @@ int32_t CloudDaemon::StartFuse(int32_t userId, int32_t devFd, const string &path
             HandleStartMove(userId);
         }).detach();
     }
+#ifdef HICOLLIE_ENABLE
+    XCollieHelper::CancelTimer(xcollieId);
+#endif
     return E_OK;
 }
 } // namespace CloudFile
