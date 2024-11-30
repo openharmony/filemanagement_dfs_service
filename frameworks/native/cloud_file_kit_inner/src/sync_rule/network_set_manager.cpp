@@ -144,7 +144,7 @@ void NetworkSetManager::GetCellularConnect(const std::string &bundleName, const 
 
     bool endCheckSwitch = false;
     getConnect = cellularNetMap_.Find(std::to_string(userId) + "/" + bundleName, endCheckSwitch);
-    if (preCheckSwitch && !endCheckSwitch && dataSyncManager_ != nullptr) {
+    if (netStatus_ != WIFI_CONNECT && preCheckSwitch && !endCheckSwitch && dataSyncManager_ != nullptr) {
         dataSyncManager_->StopUploadTask(bundleName, userId);
     }
 }
@@ -297,7 +297,7 @@ void NetworkSetManager::NetWorkChangeStopUploadTask()
             continue;
         }
         LOGI("bundleName: %{public}s", key.c_str());
-        size_t pos = key.find("com.ohos.photos");
+        size_t pos = key.find(PHOTOS_BUNDLE_NAME);
         if (pos == std::string::npos) {
             continue;
         }
@@ -310,12 +310,25 @@ void NetworkSetManager::NetWorkChangeStopUploadTask()
         if (pos == std::string::npos) {
             continue;
         }
-        int32_t userId = std::stoi(key.substr(0, pos));
-        std::string bundleName = key.substr(pos + 1);
-        LOGI("bundleName: %{public}s, userId:%{public}d", key.c_str(), userId);
-        if (dataSyncManager_ != nullptr) {
-            dataSyncManager_->StopUploadTask(bundleName, userId);
+
+        try {
+            int32_t userId = std::stoi(key.substr(0, pos));
+            std::string bundleName = key.substr(pos + 1);
+            LOGI("bundleName: %{public}s, userId:%{public}d", key.c_str(), userId);
+            if (dataSyncManager_ != nullptr) {
+                dataSyncManager_->StopUploadTask(bundleName, userId);
+            }
+        } catch (const std::invalid_argument& e) {
+            LOGE("Invalid argument");
+        } catch (const std::out_of_range& e) {
+            LOGE("Out of range");
         }
     }
+}
+
+void NetworkSetManager::SetNetConnStatus(NetworkSetManager::NetConnStatus netStatus)
+{
+    netStatus_ = netStatus;
+    LOGI("netStatus type:%{public}d", netStatus);
 }
 }
