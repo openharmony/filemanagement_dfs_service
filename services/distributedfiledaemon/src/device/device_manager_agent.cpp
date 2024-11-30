@@ -680,7 +680,7 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
 
 void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::string &networkId)
 {
-    auto network = FindNetworkBaseTrustRelation(true);
+    auto network = FindNetworkBaseTrustRelation(false);
     if (network != nullptr) {
         cidNetTypeRecord_.insert({ networkId, network });
         cidNetworkType_.insert({ networkId, GetNetworkType(networkId) });
