@@ -70,6 +70,7 @@ public:
     virtual int32_t GetUserId(int32_t &userId);
     virtual int32_t SaveSubscription(const std::string &bundleName, const int32_t userId);
     virtual int32_t ReportEntry(const std::string &bundleName, const int32_t userId);
+    virtual int32_t ChangeAppSwitch(const std::string &bundleName, const int32_t userId, bool status);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

@@ -447,18 +447,27 @@ int32_t CloudSyncService::CleanCacheInner(const std::string &uri)
 int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    LOGI("ChangeAppSwitch, bundleName: %{private}s, status: %{public}d, callerUserId: %{public}d",
+         bundleName.c_str(), status, callerUserId);
 
     /* update app switch status */
-    auto ret = CloudStatus::ChangeAppSwitch(bundleName, callerUserId, status);
+    int32_t ret = CloudStatus::ChangeAppSwitch(bundleName, callerUserId, status);
     if (ret != E_OK) {
+        LOGE("CloudStatus::ChangeAppSwitch failed, ret: %{public}d", ret);
         return ret;
     }
     if (status) {
-        return dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+        ret = dataSyncManager_->TriggerStartSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     } else {
         system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_SWITCHOFF);
-        return dataSyncManager_->TriggerStopSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
+        ret = dataSyncManager_->TriggerStopSync(bundleName, callerUserId, false, SyncTriggerType::CLOUD_TRIGGER);
     }
+    if (ret != E_OK) {
+        LOGE("dataSyncManager Trigger failed, status: %{public}d", status);
+        return ret;
+    }
+
+    return dataSyncManager_->ChangeAppSwitch(bundleName, callerUserId, status);
 }
 
 int32_t CloudSyncService::NotifyDataChange(const std::string &accoutId, const std::string &bundleName)
@@ -489,6 +498,7 @@ int32_t CloudSyncService::NotifyEventChange(int32_t userId, const std::string &e
 
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
 {
+    LOGI("DisableCloud start");
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();
     system::SetParameter(CLOUDSYNC_STATUS_KEY, CLOUDSYNC_STATUS_LOGOUT);
     return dataSyncManager_->DisableCloud(callerUserId);
