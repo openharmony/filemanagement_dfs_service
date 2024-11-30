@@ -680,56 +680,11 @@ void from_json(const nlohmann::json &jsonObject, GroupInfo &groupInfo)
 
 void DeviceManagerAgent::QueryRelatedGroups(const std::string &udid, const std::string &networkId)
 {
-    auto hichainDevGroupMgr_ = GetGmInstance();
-    if (hichainDevGroupMgr_ == nullptr) {
-        LOGE("failed to get hichain device group manager");
-        return;
+    auto network = FindNetworkBaseTrustRelation(true);
+    if (network != nullptr) {
+        cidNetTypeRecord_.insert({ networkId, network });
+        cidNetworkType_.insert({ networkId, GetNetworkType(networkId) });
     }
-
-    char *returnGroupVec = nullptr;
-    uint32_t groupNum = 0;
-    int ret = hichainDevGroupMgr_->getRelatedGroups(ANY_OS_ACCOUNT, IDaemon::SERVICE_NAME.c_str(), udid.c_str(),
-        &returnGroupVec, &groupNum);
-    if (ret != 0 || returnGroupVec == nullptr) {
-        LOGE("failed to get related groups, ret %{public}d", ret);
-        return;
-    }
-
-    if (groupNum == 0) {
-        LOGE("failed to get related groups, groupNum is %{public}u", groupNum);
-        return;
-    }
-
-    std::string groups = std::string(returnGroupVec);
-    nlohmann::json jsonObject = nlohmann::json::parse(groups, nullptr, false); // transform from cjson to cppjson
-    if (jsonObject.is_discarded()) {
-        LOGE("returnGroupVec parse failed");
-        return;
-    }
-
-    if (!jsonObject.is_array()) {
-        LOGE("this json type is error.");
-        return;
-    }
-
-    std::vector<GroupInfo> groupList;
-    groupList = jsonObject.get<std::vector<GroupInfo>>();
-    for (auto &a : groupList) {
-        LOGI("group info:[groupName] %{public}s, [groupId] %{public}s,[groupOwner] %{public}s,[groupType] %{public}d,",
-            Utils::GetAnonyString(a.groupName).c_str(),
-            Utils::GetAnonyString(a.groupId).c_str(), a.groupOwner.c_str(), a.groupType);
-    }
-
-    unique_lock<mutex> lock(mpToNetworksMutex_);
-    for (const auto &group : groupList) {
-        auto network = FindNetworkBaseTrustRelation(CheckIsAccountless(group));
-        if (network != nullptr) {
-            cidNetTypeRecord_.insert({ networkId, network });
-            cidNetworkType_.insert({ networkId, GetNetworkType(networkId) });
-        }
-    }
-
-    return;
 }
 
 bool DeviceManagerAgent::CheckIsAccountless(const GroupInfo &group)
