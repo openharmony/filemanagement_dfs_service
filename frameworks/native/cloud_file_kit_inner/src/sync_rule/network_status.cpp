@@ -124,6 +124,7 @@ void NetworkStatus::InitNetwork(std::shared_ptr<CloudFile::DataSyncManager> data
 void NetworkStatus::SetNetConnStatus(NetworkStatus::NetConnStatus netStatus)
 {
     netStatus_ = netStatus;
+    NetworkSetManager::SetNetConnStatus(static_cast<NetworkSetManager::NetConnStatus>(netStatus));
     return;
 }
 
