@@ -14,6 +14,8 @@
  */
 #include "network_set_manager.h"
 
+#include <charconv>
+
 #include "accesstoken_kit.h"
 #include "cloud_file_kit.h"
 #include "datashare_errno.h"
@@ -283,6 +285,12 @@ void NetworkSetManager::InitDataSyncManager(std::shared_ptr<CloudFile::DataSyncM
     dataSyncManager_ = dataSyncManager;
 }
 
+static bool ConvertToInt(const std::string &str, int32_t &value)
+{
+    auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
+    return ec == std::errc{} && ptr == str.data() + str.size();
+}
+
 void NetworkSetManager::NetWorkChangeStopUploadTask()
 {
     std::map<const std::string, bool> cellularNetMap;
@@ -311,17 +319,15 @@ void NetworkSetManager::NetWorkChangeStopUploadTask()
             continue;
         }
 
-        try {
-            int32_t userId = std::stoi(key.substr(0, pos));
-            std::string bundleName = key.substr(pos + 1);
-            LOGI("bundleName: %{public}s, userId:%{public}d", key.c_str(), userId);
-            if (dataSyncManager_ != nullptr) {
-                dataSyncManager_->StopUploadTask(bundleName, userId);
-            }
-        } catch (const std::invalid_argument& e) {
-            LOGE("Invalid argument");
-        } catch (const std::out_of_range& e) {
-            LOGE("Out of range");
+        int32_t userId;
+        if (!ConvertToInt(key.substr(0, pos), userId)) {
+            continue;
+        }
+
+        std::string bundleName = key.substr(pos + 1);
+        LOGI("bundleName: %{public}s, userId:%{public}d", key.c_str(), userId);
+        if (dataSyncManager_ != nullptr) {
+            dataSyncManager_->StopUploadTask(bundleName, userId);
         }
     }
 }
