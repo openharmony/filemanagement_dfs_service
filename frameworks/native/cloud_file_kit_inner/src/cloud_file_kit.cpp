@@ -39,9 +39,9 @@ int32_t CloudFileKit::GetCloudUserInfo(const int32_t userId, CloudUserInfo &user
     return E_OK;
 }
 
-uint64_t CloudFileKit::GetRemainSpace(const int32_t userId)
+std::pair<uint64_t, uint64_t> CloudFileKit::GetSpaceInfo(const int32_t userId)
 {
-    return E_OK;
+    return make_pair(0, 0);
 }
 
 int32_t CloudFileKit::GetAppSwitchStatus(const std::string &bundleName, const int32_t userId, bool &switchStatus)

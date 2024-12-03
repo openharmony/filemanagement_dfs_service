@@ -26,7 +26,7 @@ namespace OHOS::FileManagement::CloudSync {
 class CloudStatus {
 public:
     static int32_t GetCurrentCloudInfo(const std::string &bundleName, const int32_t userId);
-    static uint64_t GetCurrentRemainSpace(const int32_t userId);
+    static std::pair<uint64_t, uint64_t> GetCurrentSpaceInfo(const int32_t userId);
     static bool IsCloudStatusOkay(const std::string &bundleName, const int32_t userId);
     static int32_t ChangeAppSwitch(const std::string &bundleName, const int32_t userId, bool appSwitchStatus);
     static bool IsAccountIdChanged(const std::string &accountId);

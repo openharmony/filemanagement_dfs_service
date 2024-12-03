@@ -57,6 +57,8 @@ public:
      * BATTERY_LEVEL_WARNING                电量警告
      * CLOUD_STORAGE_FULL                   云空间满
      * LOCAL_STORAGE_FULL                   本地空间满
+     * DEVICE_TEMPERATURE_TOO_HIGH          设备温度过高
+     * BUSINESS_MODE_CHANGED                商业模式变更
      */
     virtual void OnSyncStateChanged(CloudSyncState state, ErrorType error) {};
 };

@@ -65,6 +65,7 @@ enum CloudSyncServiceErrCode : ErrCode {
     E_UNKNOWN,
     E_CLOUD_STORAGE_FULL,
     E_LOCAL_STORAGE_FULL,
+    E_BUSINESS_MODE_CHANGED,
     E_OSACCOUNT,
     E_USER_LOCKED,
     E_GET_SIZE_ERROR,
