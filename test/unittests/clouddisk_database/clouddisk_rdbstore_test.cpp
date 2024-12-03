@@ -876,10 +876,11 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRowIdTest1, TestSize.Level1)
 {
     const std::string cloudId = "100";
     int64_t rowId = 100;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
 
     int32_t ret = clouddiskrdbStore_->GetRowId(cloudId, rowId);
     EXPECT_EQ(ret, E_RDB);
@@ -895,11 +896,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRowIdTest2, TestSize.Level1)
 {
     const std::string cloudId = "100";
     int64_t rowId = 100;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(1));
 
     int32_t ret = clouddiskrdbStore_->GetRowId(cloudId, rowId);
@@ -916,11 +918,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetRowIdTest3, TestSize.Level1)
 {
     const std::string cloudId = "100";
     int64_t rowId = 100;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->GetRowId(cloudId, rowId);
@@ -937,10 +940,11 @@ HWTEST_F(CloudDiskRdbStoreTest, GetParentCloudIdTestTest1, TestSize.Level1)
 {
     const std::string cloudId = "100";
     std::string parentCloudId = "mock";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
 
     int32_t ret = clouddiskrdbStore_->GetParentCloudId(cloudId, parentCloudId);
     EXPECT_EQ(ret, E_RDB);
@@ -956,11 +960,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetParentCloudIdTestTest2, TestSize.Level1)
 {
     const std::string cloudId = "100";
     std::string parentCloudId = "mock";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
 
     int32_t ret = clouddiskrdbStore_->GetParentCloudId(cloudId, parentCloudId);
@@ -977,11 +982,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetParentCloudIdTestTest3, TestSize.Level1)
 {
     const std::string cloudId = "100";
     std::string parentCloudId = "mock";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->GetParentCloudId(cloudId, parentCloudId);
@@ -998,11 +1004,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetParentCloudIdTestTest4, TestSize.Level1)
 {
     const std::string cloudId = "100";
     std::string parentCloudId = "test";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->GetParentCloudId(cloudId, parentCloudId);
@@ -1079,12 +1086,13 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest4, TestSize.Level1)
     const std::string parentCloudId = "100";
     const std::string cloudId = "100";
     const std::string value = "0";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
 
     int32_t ret = clouddiskrdbStore_->RecycleSetXattr(name, parentCloudId, cloudId, value);
     EXPECT_EQ(ret, E_RDB);
@@ -1102,13 +1110,14 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest5, TestSize.Level1)
     const std::string parentCloudId = "100";
     const std::string cloudId = "100";
     const std::string value = "0";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->RecycleSetXattr(name, parentCloudId, cloudId, value);
@@ -1127,13 +1136,14 @@ HWTEST_F(CloudDiskRdbStoreTest, RecycleSetXattrTest6, TestSize.Level1)
     const std::string parentCloudId = "mock";
     const std::string cloudId = "100";
     const std::string value = "1";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*transaction, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->RecycleSetXattr(name, parentCloudId, cloudId, value);
@@ -1293,10 +1303,11 @@ HWTEST_F(CloudDiskRdbStoreTest, FavoriteGetXattrTest2, TestSize.Level1)
     const std::string cloudId = "cloudId";
     const std::string key = IS_FAVORITE_XATTR;
     std::string value = "";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
     
     int32_t ret = clouddiskrdbStore_->FavoriteGetXattr(cloudId, key, value);
     EXPECT_EQ(ret, E_RDB);
@@ -1313,11 +1324,12 @@ HWTEST_F(CloudDiskRdbStoreTest, FavoriteGetXattrTest3, TestSize.Level1)
     const std::string cloudId = "cloudId";
     const std::string key = IS_FAVORITE_XATTR;
     std::string value = "";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
     
     int32_t ret = clouddiskrdbStore_->FavoriteGetXattr(cloudId, key, value);
@@ -1335,11 +1347,12 @@ HWTEST_F(CloudDiskRdbStoreTest, FavoriteGetXattrTest4, TestSize.Level1)
     const std::string cloudId = "cloudId";
     const std::string key = IS_FAVORITE_XATTR;
     std::string value = "";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     
     int32_t ret = clouddiskrdbStore_->FavoriteGetXattr(cloudId, key, value);
@@ -1374,10 +1387,11 @@ HWTEST_F(CloudDiskRdbStoreTest, FileStatusGetXattrTest2, TestSize.Level1)
     const std::string cloudId = "cloudId";
     const std::string key = IS_FILE_STATUS_XATTR;
     std::string value = "";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
 
     int32_t ret = clouddiskrdbStore_->FileStatusGetXattr(cloudId, key, value);
     EXPECT_EQ(ret, E_RDB);
@@ -1394,11 +1408,12 @@ HWTEST_F(CloudDiskRdbStoreTest, FileStatusGetXattrTest3, TestSize.Level1)
     const std::string cloudId = "cloudId";
     const std::string key = IS_FILE_STATUS_XATTR;
     std::string value = "";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
 
     int32_t ret = clouddiskrdbStore_->FileStatusGetXattr(cloudId, key, value);
@@ -1416,11 +1431,12 @@ HWTEST_F(CloudDiskRdbStoreTest, FileStatusGetXattrTest4, TestSize.Level1)
     const std::string cloudId = "cloudId";
     const std::string key = IS_FILE_STATUS_XATTR;
     std::string value = "";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->FileStatusGetXattr(cloudId, key, value);
@@ -1453,10 +1469,11 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrValueTest2, TestSize.Level1)
     const std::string cloudId = "100";
     const std::string key = "100";
     std::string value = "100";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
 
     int32_t ret = clouddiskrdbStore_->GetExtAttrValue(cloudId, key, value);
     EXPECT_EQ(ret, E_RDB);
@@ -1488,10 +1505,11 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest2, TestSize.Level1)
     const std::string cloudId = "100";
     std::string value = "mock";
     int32_t pos = 0;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
     
     int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
     EXPECT_EQ(ret, E_RDB);
@@ -1507,11 +1525,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest3, TestSize.Level1)
     const std::string cloudId = "100";
     std::string value = "";
     int32_t pos = 0;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
     
     int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
@@ -1528,11 +1547,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest4, TestSize.Level1)
     const std::string cloudId = "100";
     std::string value = "mock";
     int32_t pos = 0;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     
     int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
@@ -1549,11 +1569,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest5, TestSize.Level1)
     const std::string cloudId = "100";
     std::string value = "";
     int32_t pos = -1;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     
     int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
@@ -1570,11 +1591,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetExtAttrTest6, TestSize.Level1)
     const std::string cloudId = "100";
     std::string value = "";
     int32_t pos = 1;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     
     int32_t ret = clouddiskrdbStore_->GetExtAttr(cloudId, value, pos);
@@ -1679,11 +1701,12 @@ HWTEST_F(CloudDiskRdbStoreTest, ExtAttributeSetXattrTest1, TestSize.Level1)
     const std::string cloudId = "root";
     const std::string key = "user.cloud.test1";
     const std::string value = "1";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
@@ -1703,11 +1726,12 @@ HWTEST_F(CloudDiskRdbStoreTest, ExtAttributeSetXattrTest2, TestSize.Level1)
     const std::string cloudId = "root";
     const std::string key = "user.cloud.test1";
     const std::string value = "1";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     auto transaction = make_shared<TransactionMock>();
     EXPECT_CALL(*rdb, CreateTransaction(_)).WillOnce(Return(std::make_pair(E_OK, transaction)));
@@ -1912,10 +1936,11 @@ HWTEST_F(CloudDiskRdbStoreTest, GetHasChildTest1, TestSize.Level1)
 {
     const std::string cloudId = "100";
     bool hasChild = true;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
     int32_t ret = clouddiskrdbStore_->GetHasChild(cloudId, hasChild);
     EXPECT_EQ(ret, E_RDB);
 }
@@ -1930,11 +1955,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetHasChildTest2, TestSize.Level1)
 {
     const std::string cloudId = "100";
     bool hasChild = true;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
     int32_t ret = clouddiskrdbStore_->GetHasChild(cloudId, hasChild);
     EXPECT_EQ(ret, E_OK);
@@ -1950,11 +1976,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetHasChildTest3, TestSize.Level1)
 {
     const std::string cloudId = "100";
     bool hasChild = true;
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     int32_t ret = clouddiskrdbStore_->GetHasChild(cloudId, hasChild);
     EXPECT_EQ(ret, E_OK);
@@ -2088,10 +2115,11 @@ HWTEST_F(CloudDiskRdbStoreTest, GetDirtyTypeTest1, TestSize.Level1)
 {
     int32_t dirtyType = 0;
     std::string cloudId = "100";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
     
     int32_t ret = clouddiskrdbStore_->GetDirtyType(cloudId, dirtyType);
     EXPECT_EQ(ret, E_RDB);
@@ -2107,11 +2135,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetDirtyTypeTest2, TestSize.Level1)
 {
     int32_t dirtyType = 0;
     std::string cloudId = "100";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
 
     int32_t ret = clouddiskrdbStore_->GetDirtyType(cloudId, dirtyType);
@@ -2128,11 +2157,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetDirtyTypeTest3, TestSize.Level1)
 {
     int32_t dirtyType = -1;
     std::string cloudId = "100";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->GetDirtyType(cloudId, dirtyType);
@@ -2149,11 +2179,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetDirtyTypeTest4, TestSize.Level1)
 {
     int32_t dirtyType = 1;
     std::string cloudId = "100";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
 
     int32_t ret = clouddiskrdbStore_->GetDirtyType(cloudId, dirtyType);
@@ -2186,10 +2217,11 @@ HWTEST_F(CloudDiskRdbStoreTest, GetCurNodeTest2, TestSize.Level1)
 {
     CacheNode curNode;
     std::string cloudId = "100";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
     
     int32_t ret = clouddiskrdbStore_->GetCurNode(cloudId, curNode);
     EXPECT_EQ(ret, E_RDB);
@@ -2205,11 +2237,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetCurNodeTest3, TestSize.Level1)
 {
     CacheNode curNode;
     std::string cloudId = "100";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
     
     int32_t ret = clouddiskrdbStore_->GetCurNode(cloudId, curNode);
@@ -2226,11 +2259,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetCurNodeTest4, TestSize.Level1)
 {
     CacheNode curNode;
     std::string cloudId = "100";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetRow(_)).WillRepeatedly(Return(E_RDB));
     
@@ -2248,11 +2282,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetCurNodeTest5, TestSize.Level1)
 {
     CacheNode curNode;
     std::string cloudId = "100";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetRow(_)).WillRepeatedly(Return(E_OK));
     
@@ -2289,10 +2324,11 @@ HWTEST_F(CloudDiskRdbStoreTest, GetParentNodeTest2, TestSize.Level1)
     const std::string parentCloudId = "100";
     std::string nextCloudId = "100";
     std::string fileName = "test";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
     
     int32_t ret = clouddiskrdbStore_->GetParentNode(parentCloudId, nextCloudId, fileName);
     EXPECT_EQ(ret, E_RDB);
@@ -2309,11 +2345,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetParentNodeTest3, TestSize.Level1)
     const std::string parentCloudId = "100";
     std::string nextCloudId = "100";
     std::string fileName = "test";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_RDB));
     
     int32_t ret = clouddiskrdbStore_->GetParentNode(parentCloudId, nextCloudId, fileName);
@@ -2331,11 +2368,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetParentNodeTest4, TestSize.Level1)
     const std::string parentCloudId = "100";
     std::string nextCloudId = "100";
     std::string fileName = "test";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetRow(_)).WillRepeatedly(Return(E_RDB));
     
@@ -2354,11 +2392,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetParentNodeTest5, TestSize.Level1)
     const std::string parentCloudId = "100";
     std::string nextCloudId = "100";
     std::string fileName = "test";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetRow(_)).WillRepeatedly(Return(E_OK));
     
@@ -2393,10 +2432,11 @@ HWTEST_F(CloudDiskRdbStoreTest, GetUriFromDBTest2, TestSize.Level1)
 {
     const std::string parentCloudId = "100";
     std::string uri = "100";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
     
     int32_t ret = clouddiskrdbStore_->GetUriFromDB(parentCloudId, uri);
     EXPECT_EQ(ret, E_RDB);
@@ -2412,11 +2452,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetUriFromDBTest3, TestSize.Level1)
 {
     const std::string parentCloudId = "100";
     std::string uri = "100";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     std::shared_ptr<ResultSetMock> rset = std::make_shared<ResultSetMock>();
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(rset)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(rset)));
     EXPECT_CALL(*rset, GoToNextRow()).WillRepeatedly(Return(E_OK));
     EXPECT_CALL(*rset, GetRow(_)).WillRepeatedly(Return(E_OK));
     
@@ -2486,11 +2527,12 @@ HWTEST_F(CloudDiskRdbStoreTest, GetNotifyUriTest4, TestSize.Level1)
     CacheNode cacheNode;
     cacheNode.parentCloudId = "root";
     std::string uri = "mock";
+    bool preCount = true;
     auto rdb = make_shared<RdbStoreMock>();
     clouddiskrdbStore_->rdbStore_ = rdb;
     clouddiskrdbStore_->rootId_ = "rootId";
     EXPECT_CALL(*rdb, QueryByStep(An<const AbsRdbPredicates &>(),
-    An<const std::vector<std::string> &>())).WillOnce(Return(ByMove(nullptr)));
+    An<const std::vector<std::string> &>(), preCount)).WillOnce(Return(ByMove(nullptr)));
 
     int32_t ret = clouddiskrdbStore_->GetNotifyUri(cacheNode, uri);
     EXPECT_EQ(ret, E_RDB);

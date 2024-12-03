@@ -34,8 +34,9 @@ public:
     MOCK_METHOD3(Delete, std::pair<int32_t, int32_t>(const std::string &table, const std::string &whereClause,
                  const Values &args));
     MOCK_METHOD1(Delete, std::pair<int32_t, int32_t>(const AbsRdbPredicates &predicates));
-    MOCK_METHOD2(QueryByStep, std::shared_ptr<ResultSet>(const std::string &sql, const Values &args));
-    MOCK_METHOD2(QueryByStep, std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates, const Fields &columns));
+    MOCK_METHOD3(QueryByStep, std::shared_ptr<ResultSet>(const std::string &sql, const Values &args, bool preCount));
+    MOCK_METHOD3(QueryByStep, std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates, const Fields &columns,
+                 bool preCount));
     MOCK_METHOD2(Execute, std::pair<int32_t, ValueObject>(const std::string &sql, const Values &args));
 };
 }

@@ -128,12 +128,13 @@ public:
                                                      const std::vector<ValueObject> &bindArgs));
     MOCK_METHOD2(QueryByStep,
                  std::shared_ptr<ResultSet>(const std::string &sql, const std::vector<std::string> &selectionArgs));
-    MOCK_METHOD2(QueryByStep,
-                 std::shared_ptr<ResultSet>(const std::string &sql, const std::vector<ValueObject> &bindArgs));
+    MOCK_METHOD3(QueryByStep,
+                 std::shared_ptr<ResultSet>(const std::string &sql, const std::vector<ValueObject> &bindArgs,
+                 bool preCount));
 
-    MOCK_METHOD2(QueryByStep,
+    MOCK_METHOD3(QueryByStep,
                  std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates,
-                                            const std::vector<std::string> &columns));
+                                            const std::vector<std::string> &columns, bool preCount));
 
     MOCK_METHOD4(RemoteQuery,
                  std::shared_ptr<ResultSet>(const std::string &device,
@@ -198,9 +199,9 @@ public:
                                                      const std::string &whereClause,
                                                      const Values &args));
     MOCK_METHOD1(Delete, std::pair<int32_t, int32_t>(const AbsRdbPredicates &predicates));
-    MOCK_METHOD2(QueryByStep, std::shared_ptr<ResultSet>(const std::string &sql, const Values &args));
-    MOCK_METHOD2(QueryByStep, std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates,
-                                                         const Fields &columns));
+    MOCK_METHOD3(QueryByStep, std::shared_ptr<ResultSet>(const std::string &sql, const Values &args, bool preCount));
+    MOCK_METHOD3(QueryByStep, std::shared_ptr<ResultSet>(const AbsRdbPredicates &predicates,
+                                                         const Fields &columns, bool preCount));
     MOCK_METHOD2(Execute, std::pair<int32_t, ValueObject>(const std::string &sql, const Values &args));
 };
 } // namespace OHOS::FileManagement::CloudSync::Test
