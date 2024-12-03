@@ -101,6 +101,7 @@ ohos_unittest("task_state_manager_test") {
   include_dirs = [
     "${innerkits_native_path}/cloud_file_kit_inner",
     "${distributedfile_path}/frameworks/native/cloud_file_kit_inner/src/data_sync",
+    "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
     "commonlibrary/c_utils/base/include/",
     "${distributedfile_path}/test/unittests/cloudsync_sa/mock/",
   ]
