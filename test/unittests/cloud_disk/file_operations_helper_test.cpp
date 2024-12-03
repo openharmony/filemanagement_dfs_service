@@ -68,6 +68,31 @@ void FuseOperationsHelperTest::TearDown(void)
 }
 
 /**
+ * @tc.name: AddDirEntryTest001
+ * @tc.desc: Verify the AddDirEntry function
+ * @tc.type: FUNC
+ * @tc.require: issuesIB4SSZ
+ */
+HWTEST_F(FuseOperationsHelperTest, AddDirEntryPathTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "AddDirEntryTest001 start";
+    try {
+        fuse_req_t req = nullptr;
+        std::string buffer = "";
+        size_t size = 0;
+        const char *name = "testAddDir";
+        auto ino = std::make_shared<CloudDiskInode>();
+        fuseoperationshelper_->AddDirEntry(req, buffer, size, name, ino);
+        EXPECT_GT(size, 0);
+        EXPECT_EQ(buffer.size(), size);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "AddDirEntryTest001 failed";
+    }
+    GTEST_LOG_(INFO) << "AddDirEntryTest001 end";
+}
+
+/**
  * @tc.name: GetCloudDiskLocalPathTest001
  * @tc.desc: Verify the GetCloudDiskLocalPath function
  * @tc.type: FUNC
