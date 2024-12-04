@@ -30,7 +30,7 @@
 namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
-constexpr int LOAD_SA_TIMEOUT_MS = 4000;
+constexpr int LOAD_SA_TIMEOUT_MS = 2000;
 const std::string MEDIA_URL = "file://media";
 
 int32_t CloudSyncServiceProxy::UnRegisterCallbackInner(const std::string &bundleName)
