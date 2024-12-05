@@ -290,12 +290,12 @@ int32_t Daemon::OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsL
     }
     remoteReverseObj->AsObject()->AddDeathRecipient(dfsListenerDeathRecipient_);
     auto deviceManager = DeviceManagerAgent::GetInstance();
-    if (networkId.empty()) {
-        LOGE("Daemon::OpenP2PConnectionEx networkId is null");
+    if (networkId.empty() || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
+        LOGE("Daemon::OpenP2PConnectionEx networkId length is invalid.");
         return E_INVAL_ARG_NAPI;
     }
     DistributedHardware::DmDeviceInfo deviceInfo{};
-    auto res = strcpy_s(deviceInfo.networkId, networkId.size() + 1, networkId.c_str());
+    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (res != NO_ERROR) {
         LOGE("OpenP2PConnectionEx strcpy failed, res = %{public}d", res);
         return E_INVAL_ARG_NAPI;
@@ -322,8 +322,8 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
     }
     auto deviceManager = DeviceManagerAgent::GetInstance();
     auto callingTokenId = IPCSkeleton::GetCallingTokenID();
-    if (networkId.empty()) {
-        LOGE("[OpenP2PConnectionEx] networkId is null");
+    if (networkId.empty() || networkId.length() >= DM_MAX_DEVICE_ID_LEN) {
+        LOGE("Daemon::CloseP2PConnectionEx networkId length is invalid.");
         return E_INVAL_ARG_NAPI;
     }
     std::string deviceId = deviceManager->GetDeviceIdByNetworkId(networkId);
@@ -340,7 +340,7 @@ int32_t Daemon::CloseP2PConnectionEx(const std::string &networkId)
         }
     }
     DistributedHardware::DmDeviceInfo deviceInfo{};
-    auto res = strcpy_s(deviceInfo.networkId, networkId.size() + 1, networkId.c_str());
+    auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, networkId.c_str());
     if (res != NO_ERROR) {
         LOGE("strcpy failed, res = %{public}d", res);
         return E_INVAL_ARG_NAPI;
@@ -682,7 +682,7 @@ void Daemon::DfsListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &
         }
         deviceManager->UMountDfsDocs(*it, deviceId, false);
         DistributedHardware::DmDeviceInfo deviceInfo{};
-        auto res = strcpy_s(deviceInfo.networkId, it->size() + 1, it->c_str());
+        auto res = strcpy_s(deviceInfo.networkId, DM_MAX_DEVICE_ID_LEN, it->c_str());
         if (res != 0) {
             LOGE("strcpy failed, res = %{public}d", res);
             return;
