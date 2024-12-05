@@ -262,7 +262,7 @@ HWTEST_F(SoftbusAssetRecvListenerTest, SoftbusAssetRecvListenerTest_HandleSingle
 {
     GTEST_LOG_(INFO) << "SoftbusAssetRecvListenerTest_HandleSingleFile_0100 start";
     string fileName = "demoA/ASSET_TEMP/test.asset_single?";
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
     assetObj->dstBundleName_ = "demoB";
     EXPECT_EQ(SoftbusAssetRecvListener::HandleSingleFile(2, fileName, assetObj), ERR_BAD_VALUE);
 
@@ -281,7 +281,7 @@ HWTEST_F(SoftbusAssetRecvListenerTest, SoftbusAssetRecvListenerTest_HandleZipFil
 {
     GTEST_LOG_(INFO) << "SoftbusAssetRecvListenerTest_HandleZipFile_0100 start";
     string fileName = "test";
-    sptr<AssetObj> assetObj = new (std::nothrow) AssetObj();
+    sptr<AssetObj> assetObj(new (std::nothrow) AssetObj());
     assetObj->dstBundleName_ = "demoB";
     EXPECT_EQ(SoftbusAssetRecvListener::HandleZipFile(2, fileName, assetObj), ERR_BAD_VALUE);
 
