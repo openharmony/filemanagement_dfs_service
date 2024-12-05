@@ -1128,7 +1128,7 @@ static void CloudReadOnCacheFile(shared_ptr<ReadArguments> readArgs,
                                  int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
-    if (static_cast<uint64_t>(readArgs->offset) > cInode->mBase->size) {
+    if (static_cast<uint64_t>(readArgs->offset) >= cInode->mBase->size) {
         return;
     }
     usleep(READ_CACHE_SLEEP);
