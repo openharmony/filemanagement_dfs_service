@@ -580,6 +580,7 @@ void DeviceManagerAgent::RemoveMountDfsCount(const std::string &deviceId)
 
 void DeviceManagerAgent::NotifyRemoteReverseObj(const std::string &networkId, int32_t status)
 {
+    std::lock_guard<std::mutex> lock(appCallConnectMutex_);
     for (auto it = appCallConnect_.begin(); it != appCallConnect_.end(); ++it) {
         auto onstatusReverseProxy = it->second;
         if (onstatusReverseProxy == nullptr) {
