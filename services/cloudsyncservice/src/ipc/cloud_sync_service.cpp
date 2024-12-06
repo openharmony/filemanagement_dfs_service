@@ -526,7 +526,9 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
     return E_OK;
 }
 int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
-                                         int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey)
+                                         int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
+                                         bool isCallbackValid,
+                                         const sptr<IRemoteObject> &downloadCallback)
 {
     BundleNameUserInfo bundleNameUserInfo;
     int ret = GetBundleNameUserInfo(bundleNameUserInfo);
@@ -535,7 +537,8 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
         return ret;
     }
     LOGI("start StartFileCache");
-    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey);
+    auto downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
+    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb);
 }
 
 int32_t CloudSyncService::StartDownloadFile(const std::string &path)
@@ -549,7 +552,8 @@ int32_t CloudSyncService::StartDownloadFile(const std::string &path)
     pathVec.push_back(path);
     int64_t downloadId = 0;
     LOGI("start StartDownloadFile");
-    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, pathVec, downloadId);
+    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, pathVec, downloadId,
+                                               CloudSync::FIELDKEY_CONTENT, nullptr);
 }
 
 int32_t CloudSyncService::StopDownloadFile(const std::string &path, bool needClean)
