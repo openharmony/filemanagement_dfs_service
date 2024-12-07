@@ -1065,7 +1065,7 @@ int32_t DoCloudUnlink(fuse_req_t req, fuse_ino_t parent, const char *name)
         string localPath = CloudFileUtils::GetLocalFilePath(cloudId, parentInode->bundleName, data->userId);
         LOGI("unlink %{public}s", GetAnonyString(localPath).c_str());
         ret = unlink(localPath.c_str());
-        if (errno == ENOENT) {
+        if (ret != 0 && errno == ENOENT) {
             std::string errMsg = "doCloudUnlink, unlink local file ret ENOENT.";
             CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{parentInode->bundleName, CloudFile::FaultOperation::UNLINK,
                 CloudFile::FaultType::DENTRY_FILE, errno, errMsg});
