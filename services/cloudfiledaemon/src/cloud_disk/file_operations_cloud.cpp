@@ -506,7 +506,7 @@ int32_t DoCreatFile(fuse_req_t req, fuse_ino_t parent, const char *name,
             LOGE("Failed to get parent no upload");
             close(fd);
             RemoveLocalFile(path);
-            return err;
+            return -err;
         }
     }
 
