@@ -456,7 +456,7 @@ int32_t CloudDiskRdbStore::Create(const std::string &cloudId, const std::string 
     auto [rdbRet, transaction] = rdbTransaction.Start();
     if (rdbRet != E_OK) {
         LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
-        return rdbRet;
+        return E_RDB;
     }
     int64_t outRowId = 0;
     std::tie(rdbRet, outRowId) = transaction->Insert(FileColumn::FILES_TABLE, fileInfo);
