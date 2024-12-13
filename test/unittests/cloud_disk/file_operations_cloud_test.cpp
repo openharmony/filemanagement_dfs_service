@@ -96,7 +96,6 @@ HWTEST_F(FileOperationsCloudTest, LookupTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "LookupTest001 End";
 }
 
-
 /**
  * @tc.name: LookupTest002
  * @tc.desc: Verify the Lookup function
@@ -120,6 +119,131 @@ HWTEST_F(FileOperationsCloudTest, LookupTest002, TestSize.Level1)
         GTEST_LOG_(INFO) << "LookupTest002  ERROR";
     }
     GTEST_LOG_(INFO) << "LookupTest002 End";
+}
+
+/**
+ * @tc.name: LookupTest003
+ * @tc.desc: Verify the Lookup function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, LookupTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LookupTest003 Start";
+    try {
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_entry(_, _)).WillOnce(Return(E_OK));
+
+        fuse_ino_t parent = 4;
+        const char *name = ".trash";
+        fileOperationsCloud_->Lookup(nullptr, parent, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LookupTest003  ERROR";
+    }
+    GTEST_LOG_(INFO) << "LookupTest003 End";
+}
+
+/**
+ * @tc.name: LookupTest004
+ * @tc.desc: Verify the Lookup function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, LookupTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LookupTest004 Start";
+    try {
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        fuse_ino_t parent = 4;
+        const char *name = "mock";
+        fileOperationsCloud_->Lookup(nullptr, parent, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LookupTest004  ERROR";
+    }
+    GTEST_LOG_(INFO) << "LookupTest004 End";
+}
+
+/**
+ * @tc.name: LookupTest005
+ * @tc.desc: Verify the Lookup function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, LookupTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LookupTest005 Start";
+    try {
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_entry(_, _)).WillOnce(Return(E_OK));
+
+        fuse_ino_t parent = 4;
+        const char *name = "";
+        fileOperationsCloud_->Lookup(nullptr, parent, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LookupTest005  ERROR";
+    }
+    GTEST_LOG_(INFO) << "LookupTest005 End";
+}
+
+/**
+ * @tc.name: LookupTest006
+ * @tc.desc: Verify the Lookup function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, LookupTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LookupTest006 Start";
+    try {
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+
+        fuse_ino_t parent = 2;
+        const char *name = "mock";
+        fileOperationsCloud_->Lookup(nullptr, parent, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LookupTest006  ERROR";
+    }
+    GTEST_LOG_(INFO) << "LookupTest006 End";
+}
+
+/**
+ * @tc.name: LookupTest007
+ * @tc.desc: Verify the Lookup function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, LookupTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "LookupTest007 Start";
+    try {
+        CloudDiskFuseData data;
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_entry(_, _)).WillOnce(Return(E_OK));
+        
+        fuse_ino_t parent = 2;
+        const char *name = "";
+        fileOperationsCloud_->Lookup(nullptr, parent, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "LookupTest007  ERROR";
+    }
+    GTEST_LOG_(INFO) << "LookupTest007 End";
 }
 
 /**
