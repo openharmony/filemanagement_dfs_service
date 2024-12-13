@@ -478,6 +478,7 @@ ohos_unittest("user_status_listener_test") {
     "ability_base:want",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "dsoftbus:softbus_client",
     "googletest:gmock",
     "googletest:gtest",
     "hilog:libhilog",
