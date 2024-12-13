@@ -1098,3 +1098,603 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest015, TestSize.Level1)
  * @tc.name: SetXattrTest016
  * @tc.desc: Verify the SetXattr function
  * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, SetXattrTest016, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "SetXattrTest016 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        string name = IS_FILE_STATUS_XATTR;
+        const char *value = "test";
+        size_t size = 0;
+        int flags = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->SetXattr(req, ino, name.c_str(), value, size, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "SetXattrTest016 ERROR";
+    }
+    GTEST_LOG_(INFO) << "SetXattrTest016 End";
+}
+
+/**
+ * @tc.name: GetXattrTest001
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest001 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = -1;
+        size_t size = 0;
+        string name = HMDFS_PERMISSION_XATTR;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest001  ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest001 End";
+}
+
+/**
+ * @tc.name: GetXattrTest002
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest002 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        size_t size = 0;
+        string name = HMDFS_PERMISSION_XATTR;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_xattr(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest002  ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest002 End";
+}
+
+/**
+ * @tc.name: GetXattrTest003
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest003 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        size_t size = 0;
+        string name = CLOUD_CLOUD_ID_XATTR;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_xattr(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest003  ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest003 End";
+}
+
+/**
+ * @tc.name: GetXattrTest004
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest004 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        size_t size = 0;
+        string name = IS_FAVORITE_XATTR;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest004 End";
+}
+
+/**
+ * @tc.name: GetXattrTest005
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest005, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest005 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 2;
+        size_t size = 0;
+        string name = IS_FAVORITE_XATTR;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_xattr(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest005 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest005 End";
+}
+
+/**
+ * @tc.name: GetXattrTest006
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest006, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest006 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        size_t size = 0;
+        string name = IS_FILE_STATUS_XATTR;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest006 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest006 End";
+}
+
+/**
+ * @tc.name: GetXattrTest007
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest007, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest007 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 2;
+        size_t size = 0;
+        string name = IS_FILE_STATUS_XATTR;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_xattr(_, _)).WillOnce(Return(E_OK)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest007 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest007 End";
+}
+
+/**
+ * @tc.name: GetXattrTest008
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest008, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest008 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        size_t size = 0;
+        string name = CLOUD_FILE_LOCATION;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest008 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest008 End";
+}
+
+/**
+ * @tc.name: GetXattrTest009
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest009, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest009 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 1;
+        size_t size = 0;
+        string name = CLOUD_FILE_LOCATION;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest009 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest009 End";
+}
+
+/**
+ * @tc.name: GetXattrTest010
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest010, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest010 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 2;
+        size_t size = 0;
+        string name = CLOUD_FILE_LOCATION;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest010 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest010 End";
+}
+
+/**
+ * @tc.name: GetXattrTest011
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest011, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest011 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 0;
+        size_t size = 0;
+        string name = CLOUD_CLOUD_RECYCLE_XATTR;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest011 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest011 End";
+}
+
+/**
+ * @tc.name: GetXattrTest012
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest012, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest012 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 2;
+        size_t size = 0;
+        string name = CLOUD_CLOUD_RECYCLE_XATTR;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+                EXPECT_CALL(*insMock, fuse_reply_xattr(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest012 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest012 End";
+}
+
+/**
+ * @tc.name: GetXattrTest013
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest013, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest013 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 2;
+        size_t size = 1;
+        string name = CLOUD_CLOUD_RECYCLE_XATTR;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest013 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest013 End";
+}
+
+/**
+ * @tc.name: GetXattrTest014
+ * @tc.desc: Verify the GetXattr function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, GetXattrTest014, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "GetXattrTest014 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t ino = 2;
+        size_t size = 1;
+        string name = HMDFS_PERMISSION_XATTR;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_buf(_, _, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "GetXattrTest014 ERROR";
+    }
+    GTEST_LOG_(INFO) << "GetXattrTest014 End";
+}
+
+/**
+ * @tc.name: MkDirTest001
+ * @tc.desc: Verify the MkDir function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, MkDirTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MkDirTest001 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = -1;
+        const char *name = nullptr;
+        mode_t mode = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->MkDir(req, parent, name, mode);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "MkDirTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MkDirTest001 End";
+}
+
+/**
+ * @tc.name: MkDirTest002
+ * @tc.desc: Verify the MkDir function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, MkDirTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MkDirTest002 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 0;
+        const char *name = ".thumbs";
+        mode_t mode = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->MkDir(req, parent, name, mode);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "MkDirTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MkDirTest002 End";
+}
+
+/**
+ * @tc.name: MkDirTest003
+ * @tc.desc: Verify the MkDir function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, MkDirTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MkDirTest003 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 3;
+        const char *name = "";
+        mode_t mode = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->MkDir(req, parent, name, mode);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "MkDirTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MkDirTest003 End";
+}
+
+/**
+ * @tc.name: MkDirTest004
+ * @tc.desc: Verify the MkDir function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, MkDirTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "MkDirTest004 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 2;
+        const char *name = "";
+        mode_t mode = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->MkDir(req, parent, name, mode);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "MkDirTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "MkDirTest004 End";
+}
+
+/**
+ * @tc.name: RmDirTest001
+ * @tc.desc: Verify the RmDir function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RmDirTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RmDirTest001 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = -1;
+        const char *name = nullptr;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->RmDir(req, parent, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RmDirTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RmDirTest001 End";
+}
+
+/**
+ * @tc.name: RmDirTest002
+ * @tc.desc: Verify the RmDir function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RmDirTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RmDirTest002 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 0;
+        const char *name = "mock";
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->RmDir(req, parent, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RmDirTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RmDirTest002 End";
+}
+
+/**
+ * @tc.name: RmDirTest003
+ * @tc.desc: Verify the RmDir function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RmDirTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RmDirTest003 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        fuse_ino_t parent = 0;
+        const char *name = "test";
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)))
+                                                   .WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->RmDir(req, parent, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RmDirTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RmDirTest003 End";
+}
+
+/**
+ * @tc.name: UnlinkTest001
+ * @tc.desc: Verify the Unlink function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, UnlinkTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnlinkTest001 Start";
+    try {
+        CloudDiskFuseData data;
