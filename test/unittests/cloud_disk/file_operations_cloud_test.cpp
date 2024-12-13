@@ -1698,3 +1698,301 @@ HWTEST_F(FileOperationsCloudTest, UnlinkTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "UnlinkTest001 Start";
     try {
         CloudDiskFuseData data;
+        fuse_ino_t parent = -1;
+        fuse_req_t req = nullptr;
+        const char *name = "";
+        
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)))
+                                                   .WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Unlink(req, parent, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnlinkTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "UnlinkTest001 End";
+}
+
+/**
+ * @tc.name: UnlinkTest002
+ * @tc.desc: Verify the Unlink function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, UnlinkTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnlinkTest002 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = -1;
+        fuse_req_t req = nullptr;
+        const char *name = "mock";
+        
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)))
+                                                   .WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Unlink(req, parent, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnlinkTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "UnlinkTest002 End";
+}
+
+/**
+ * @tc.name: UnlinkTest003
+ * @tc.desc: Verify the Unlink function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, UnlinkTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "UnlinkTest003 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = 0;
+        fuse_req_t req = nullptr;
+        const char *name = "test";
+        
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)))
+                                                   .WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, lseek(_, _, _)).WillRepeatedly(Return(E_OK));
+        fileOperationsCloud_->Unlink(req, parent, name);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "UnlinkTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "UnlinkTest003 End";
+}
+
+/**
+ * @tc.name: RenameTest001
+ * @tc.desc: Verify the Rename function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RenameTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameTest001 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = 0;
+        fuse_ino_t newParent = 0;
+        fuse_req_t req = nullptr;
+        const char *name = "";
+        const char *newName = "";
+        unsigned int flags = 1;
+
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameTest001 End";
+}
+
+/**
+ * @tc.name: RenameTest002
+ * @tc.desc: Verify the Rename function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RenameTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameTest002 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = -1;
+        fuse_ino_t newParent = -1;
+        fuse_req_t req = nullptr;
+        const char *name = "";
+        const char *newName = "";
+        unsigned int flags = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameTest002 End";
+}
+
+/**
+ * @tc.name: RenameTest003
+ * @tc.desc: Verify the Rename function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RenameTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameTest003 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = 2;
+        fuse_ino_t newParent = 2;
+        fuse_req_t req = nullptr;
+        const char *name = "mock";
+        const char *newName = "mock";
+        unsigned int flags = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameTest003 End";
+}
+
+/**
+ * @tc.name: RenameTest004
+ * @tc.desc: Verify the Rename function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, RenameTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RenameTest004 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_ino_t parent = 2;
+        fuse_ino_t newParent = 2;
+        fuse_req_t req = nullptr;
+        const char *name = "test";
+        const char *newName = "test";
+        unsigned int flags = 0;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Rename(req, parent, name, newParent, newName, flags);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "RenameTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "RenameTest004 End";
+}
+
+/**
+ * @tc.name: ReadTest001
+ * @tc.desc: Verify the ReadDir function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, ReadTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadTest001 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        CloudDiskInode ino;
+        size_t size = 5 * 1024 *1024;
+        off_t off = 0;
+        struct fuse_file_info fi;
+
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Read(req, reinterpret_cast<fuse_ino_t>(&ino), size, off, &fi);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReadTest001 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ReadTest001 End";
+}
+
+/**
+ * @tc.name: ReadTest002
+ * @tc.desc: Verify the ReadDir function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, ReadTest002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadTest002 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        CloudDiskInode ino;
+        size_t size = 1024;
+        off_t off = 0;
+        struct fuse_file_info fi;
+        fi.fh = -1;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Read(req, reinterpret_cast<fuse_ino_t>(&ino), size, off, &fi);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReadTest002 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ReadTest002 End";
+}
+
+/**
+ * @tc.name: ReadTest003
+ * @tc.desc: Verify the ReadDir function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, ReadTest003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadTest003 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        CloudDiskInode ino;
+        size_t size = 1024;
+        off_t off = 0;
+        struct fuse_file_info fi;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_data(_, _, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Read(req, reinterpret_cast<fuse_ino_t>(&ino), size, off, &fi);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReadTest003 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ReadTest003 End";
+}
+
+/**
+ * @tc.name: ReadTest004
+ * @tc.desc: Verify the ReadDir function
+ * @tc.type: FUNC
+ * @tc.require: issuesI91IOG
+ */
+HWTEST_F(FileOperationsCloudTest, ReadTest004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "ReadTest004 Start";
+    try {
+        CloudDiskFuseData data;
+        fuse_req_t req = nullptr;
+        CloudDiskInode ino;
+        size_t size = 1024;
+        off_t off = 0;
+        struct fuse_file_info fi;
+        fi.fh = 1;
+
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
+        EXPECT_CALL(*insMock, fuse_reply_buf(_, _, _)).WillOnce(Return(E_OK));
+        fileOperationsCloud_->Read(req, reinterpret_cast<fuse_ino_t>(&ino), size, off, &fi);
+        EXPECT_TRUE(true);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "ReadTest004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "ReadTest004 End";
+}
