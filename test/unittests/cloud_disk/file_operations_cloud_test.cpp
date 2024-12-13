@@ -96,6 +96,7 @@ HWTEST_F(FileOperationsCloudTest, LookupTest001, TestSize.Level1)
     GTEST_LOG_(INFO) << "LookupTest001 End";
 }
 
+
 /**
  * @tc.name: LookupTest002
  * @tc.desc: Verify the Lookup function
