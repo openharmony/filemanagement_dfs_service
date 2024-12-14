@@ -48,7 +48,8 @@ enum XATTR_CODE {
     HMDFS_PERMISSION,
     CLOUD_LOCATION,
     CLOUD_RECYCLE,
-    IS_FAVORITE
+    IS_FAVORITE,
+    HAS_THM
 };
 namespace {
     static const uint32_t STAT_NLINK_REG = 1;
@@ -740,6 +741,8 @@ int32_t CheckXattr(const char *name)
         return CLOUD_RECYCLE;
     } else if (CloudFileUtils::CheckIsFavorite(name)) {
         return IS_FAVORITE;
+    } else if (CloudFileUtils::CheckIsHasLCD(name) || CloudFileUtils::CheckIsHasTHM(name)) {
+        return HAS_THM;
     } else {
         LOGD("no definition Xattr name:%{public}s", name);
         return ERROR_CODE;
@@ -844,6 +847,32 @@ void HandleFavorite(fuse_req_t req, fuse_ino_t ino, const char *name,
     fuse_reply_err(req, 0);
 }
 
+void HandleHasTHM(fuse_req_t req, fuse_ino_t ino, const char *name,
+                  const char *value)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_CLOUD_FILE, __PRETTY_FUNCTION__);
+    auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+    auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
+    if (inoPtr == nullptr) {
+        fuse_reply_err(req, EINVAL);
+        std::string errMsg = "inode not found";
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{"", CloudFile::FaultOperation::SETATTR,
+                CloudFile::FaultType::DENTRY_FILE, EINVAL, errMsg});
+        return;
+    }
+    DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+    auto rdbStore = databaseManager.GetRdbStore(inoPtr->bundleName, data->userId);
+    int32_t err = rdbStore->SetXAttr(inoPtr->cloudId, name, value);
+    if (err != 0) {
+        std::string errMsg = "set has thm fail " + to_string(err);
+            CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{inoPtr->bundleName, CloudFile::FaultOperation::SETATTR,
+                CloudFile::FaultType::DENTRY_FILE, EINVAL, errMsg});
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
+    fuse_reply_err(req, 0);
+}
+
 void HandleExtAttribute(fuse_req_t req, fuse_ino_t ino, const char *name, const char *value)
 {
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
@@ -888,6 +917,9 @@ void FileOperationsCloud::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *n
             break;
         case IS_FAVORITE:
             HandleFavorite(req, ino, name, value);
+            break;
+        case HAS_THM:
+            HandleHasTHM(req, ino, name, value);
             break;
         default:
             HandleExtAttribute(req, ino, name, value);

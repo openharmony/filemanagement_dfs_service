@@ -63,6 +63,8 @@ public:
         const std::string &cloudId, int64_t &rowId, int32_t &position);
     int32_t LocationSetXattr(const std::string &name, const std::string &parentCloudId,
         const std::string &cloudId, const std::string &value);
+    int32_t HasTHMSetXattr(const std::string &name, const std::string &key,
+        const std::string &cloudId, const std::string &value);
     int32_t FavoriteSetXattr(const std::string &cloudId, const std::string &value);
     int32_t LocationGetXattr(const std::string &name, const std::string &key, std::string &value,
         const std::string &parentCloudId);

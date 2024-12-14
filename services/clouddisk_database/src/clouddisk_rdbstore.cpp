@@ -29,6 +29,7 @@
 #include "clouddisk_rdb_utils.h"
 #include "clouddisk_sync_helper.h"
 #include "clouddisk_type_const.h"
+#include "data_sync_const.h"
 #include "dfs_error.h"
 #include "file_column.h"
 #include "ffrt_inner.h"
@@ -50,7 +51,8 @@ enum XATTR_CODE {
     CLOUD_RECYCLE,
     IS_FAVORITE,
     FILE_SYNC_STATUS,
-    IS_EXT_ATTR
+    IS_EXT_ATTR,
+    HAS_THM
 };
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static constexpr int32_t CHECK_QUERY_LIMIT = 2000;
@@ -372,6 +374,8 @@ static int32_t CreateFile(const std::string &fileName, const std::string &filePa
     fileInfo.PutLong(FileColumn::FILE_SIZE, statInfo->st_size);
     fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, CloudFileUtils::Timespec2Milliseconds(statInfo->st_mtim));
     fileInfo.PutLong(FileColumn::META_TIME_EDITED, CloudFileUtils::Timespec2Milliseconds(statInfo->st_mtim));
+    fileInfo.PutLong(FileColumn::LCD_FLAG, NO_THM_TO_DOWNLOAD);
+    fileInfo.PutLong(FileColumn::THM_FLAG, NO_THM_TO_DOWNLOAD);
     FillFileType(fileName, fileInfo);
     return E_OK;
 }
@@ -664,6 +668,54 @@ int32_t CloudDiskRdbStore::LocationSetXattr(const std::string &name, const std::
     return E_OK;
 }
 
+int32_t CloudDiskRdbStore::HasTHMSetXattr(const std::string &name, const std::string &key,
+    const std::string &cloudId, const std::string &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (!all_of(value.begin(), value.end(), ::isdigit)) {
+        return E_INVAL_ARG;
+    }
+    int32_t val = std::stoi(value);
+    if (val != 0 && val != 1) {
+        LOGE("setxattr unknown value");
+        return E_INVAL_ARG;
+    }
+
+    ValuesBucket setXAttr;
+    if (val == 0) {
+        if (key == CLOUD_HAS_LCD) {
+            setXAttr.PutInt(FileColumn::LCD_FLAG, NO_THM_TO_DOWNLOAD);
+        } else {
+            setXAttr.PutInt(FileColumn::THM_FLAG, NO_THM_TO_DOWNLOAD);
+        }
+    } else {
+        if (key == CLOUD_HAS_LCD) {
+            setXAttr.PutInt(FileColumn::LCD_FLAG, DOWNLOADED_THM);
+        } else {
+            setXAttr.PutInt(FileColumn::THM_FLAG, DOWNLOADED_THM);
+        }
+    }
+    int32_t dirtyType;
+    TransactionOperations rdbTransaction(rdbStore_);
+    auto [ret, transaction] = rdbTransaction.Start();
+    RETURN_ON_ERR(GetDirtyType(cloudId, dirtyType));
+    if (dirtyType == static_cast<int32_t>(DirtyType::TYPE_SYNCED)) {
+        setXAttr.PutInt(FileColumn::DIRTY_TYPE, static_cast<int32_t>(DirtyType::TYPE_MDIRTY));
+    }
+    int32_t changedRows = -1;
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    std::tie(ret, changedRows) = transaction->Update(setXAttr, predicates);
+    if (ret != E_OK) {
+        LOGE("set xAttr thm_flag fail, ret %{public}d", ret);
+        return E_RDB;
+    }
+    rdbTransaction.Finish();
+    CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
+    return E_OK;
+}
+
+
 int32_t CloudDiskRdbStore::GetRowId(const std::string &cloudId, int64_t &rowId)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
@@ -854,6 +906,8 @@ int32_t CheckXattr(const std::string &key)
         return FILE_SYNC_STATUS;
     } else if (key == CLOUD_EXT_ATTR) {
         return IS_EXT_ATTR;
+    } else if (key == CLOUD_HAS_LCD || key == CLOUD_HAS_THM) {
+        return HAS_THM;
     } else {
         return ERROR_CODE;
     }
@@ -1097,6 +1151,9 @@ int32_t CloudDiskRdbStore::SetXAttr(const std::string &cloudId, const std::strin
             break;
         case IS_EXT_ATTR:
             ret = ExtAttributeSetXattr(cloudId, value, name);
+            break;
+        case HAS_THM:
+            ret = HasTHMSetXattr(name, key, cloudId, value);
             break;
         default:
             ret = ENOSYS;
