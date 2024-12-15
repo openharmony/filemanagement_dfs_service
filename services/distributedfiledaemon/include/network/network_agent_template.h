@@ -49,7 +49,7 @@ public:
           kernerlTalker_(std::make_shared<KernelTalker>(
               mountPoint,
               [&](NotifyParam &param) { GetSessionProcess(param); },
-              [&](int32_t fd) { CloseSessionForOneDevice(fd); })),
+              [&](const std::string &cid) { CloseSessionForOneDevice(cid); })),
           sessionPool_(kernerlTalker_)
     {
     }
@@ -58,14 +58,11 @@ public:
     void Stop();
     void ConnectOnlineDevices();
     void DisconnectAllDevices();
-    void ConnectDeviceAsync(const DeviceInfo info);
-    void DisconnectDevice(const DeviceInfo info);
     void DisconnectDeviceByP2P(const DeviceInfo info);
     void DisconnectDeviceByP2PHmdfs(const DeviceInfo info);
-    void OccupySession(int32_t sessionId, uint8_t linkType);
-    bool FindSession(int32_t sessionId);
     void AcceptSession(std::shared_ptr<BaseSession> session, const std::string backStage);
     void ConnectDeviceByP2PAsync(const DeviceInfo info);
+    bool FindSocketId(int32_t socketId);
     std::shared_ptr<MountPoint> GetMountPoint()
     {
         return mountPoint_.lock();
@@ -76,7 +73,6 @@ protected:
     virtual void StopTopHalf() = 0;
     virtual void StopBottomHalf() = 0;
     virtual int32_t OpenSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
-    virtual void OpenApSession(const DeviceInfo &info, const uint8_t &linkType) = 0;
     virtual void CloseSession(std::shared_ptr<BaseSession> session) = 0;
 
     std::weak_ptr<MountPoint> mountPoint_;
@@ -85,8 +81,8 @@ private:
     void HandleAllNotify(int fd);
     void NotifyHandler(NotifyParam &param);
     void GetSessionProcess(NotifyParam &param);
-    void GetSession(const std::string &cid, uint8_t linkType);
-    void CloseSessionForOneDevice(int32_t fd);
+    void GetSession(const std::string &cid);
+    void CloseSessionForOneDevice(const std::string &cid);
     void GetSessionProcessInner(NotifyParam param);
 
     std::mutex taskMut_;

@@ -32,23 +32,20 @@ class SessionPool final : protected NoCopyable {
 public:
     explicit SessionPool(std::shared_ptr<KernelTalker> &talker) : talker_(talker) {}
     ~SessionPool() = default;
-    void OccupySession(int32_t sessionId, uint8_t linkType);
-    bool FindSession(int32_t sessionId);
     void HoldSession(std::shared_ptr<BaseSession> session, const std::string backStage);
-    uint8_t ReleaseSession(const int32_t fd);
-    void ReleaseSession(const std::string &cid, const uint8_t linkType);
+    void ReleaseSession(const int32_t fd);
+    void ReleaseSession(const std::string &cid, bool releaseServer);
     void ReleaseAllSession();
-    bool DeviceConnectCountOnly(std::shared_ptr<BaseSession> session);
-    bool DeviceDisconnectCountOnly(const std::string &cid, const uint8_t linkType, bool needErase);
-
+    bool CheckIfGetSession(const int32_t fd);
+    void SinkOffline(const std::string &cid);
+    bool FindSocketId(int32_t socketId);
 private:
     std::recursive_mutex sessionPoolLock_;
     std::list<std::shared_ptr<BaseSession>> usrSpaceSessionPool_;
     std::shared_ptr<KernelTalker> &talker_;
-    std::map<int32_t, uint8_t> occupySession_;
-    std::unordered_map<std::string, int32_t> deviceConnectCount_;
 
     void AddSessionToPool(std::shared_ptr<BaseSession> session);
+    bool FindCid(const std::string &cid);
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -72,6 +72,7 @@ bool SoftbusAgent::IsSameAccount(const std::string &networkId)
             return (deviceInfo.authForm == DistributedHardware::DmAuthForm::IDENTICAL_ACCOUNT);
         }
     }
+    LOGI("The source and sink device is not same account, not support.");
     return false;
 #else
     return true;
@@ -163,10 +164,8 @@ void SoftbusAgent::StopBottomHalf() {}
 
 int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkType)
 {
-    LOGI("Start to OpenSession, cid:%{public}s, linkType:%{public}d",
-        Utils::GetAnonyString(info.GetCid()).c_str(), linkType);
+    LOGI("Start to OpenSession, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
     if (!IsSameAccount(info.GetCid())) {
-        LOGI("The source and sink device is not same account, not support.");
         return FileManagement::E_INVAL_ARG;
     }
     ISocketListener sessionListener = {
@@ -193,6 +192,10 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
         LOGE("Create OpenSoftbusChannel Socket error");
         return FileManagement::E_CONTEXT;
     }
+    if (FindSocketId(socketId)) {
+        LOGW("Has find socketId:%{public}d", socketId);
+        return FileManagement::E_OK;
+    }
     int32_t ret = Bind(socketId, qos, sizeof(qos) / sizeof(qos[0]), &sessionListener);
     if (ret != FileManagement::E_OK) {
         LOGE("Bind SocketClient error");
@@ -202,66 +205,12 @@ int32_t SoftbusAgent::OpenSession(const DeviceInfo &info, const uint8_t &linkTyp
         Shutdown(socketId);
         return FileManagement::E_CONTEXT;
     }
-    OccupySession(socketId, linkType);
-    PeerSocketInfo peerSocketInfo = {
-        .name = const_cast<char*>(sessionName_.c_str()),
-        .networkId = const_cast<char*>(info.GetCid().c_str()),
-    };
-    SoftbusSessionDispatcher::OnSessionOpened(socketId, peerSocketInfo);
-    LOGI("Success to OpenSession, socketId:%{public}d, linkType:%{public}d, cid:%{public}s",
-        socketId, linkType, Utils::GetAnonyString(info.GetCid()).c_str());
+    auto session = make_shared<SoftbusSession>(socketId, info.GetCid());
+    session->DisableSessionListener();
+    session->SetFromServer(false);
+    AcceptSession(session, "Client");
+    LOGI("Suc OpenSession socketId:%{public}d, cid:%{public}s", socketId, Utils::GetAnonyString(info.GetCid()).c_str());
     return FileManagement::E_OK;
-}
-
-void SoftbusAgent::OpenApSession(const DeviceInfo &info, const uint8_t &linkType)
-{
-    LOGI("Start to OpenApSession, cid:%{public}s, linkType:%{public}d",
-        Utils::GetAnonyString(info.GetCid()).c_str(), linkType);
-    if (!IsSameAccount(info.GetCid())) {
-        LOGI("The source and sink device is not same account, not support.");
-        return;
-    }
-    if (JudgeNetworkTypeIsWifi(info)) {
-        LOGI("networktype is not wifi");
-        return;
-    }
-    ISocketListener sessionListener = {
-        .OnBind = SoftbusSessionDispatcher::OnSessionOpened,
-        .OnShutdown = SoftbusSessionDispatcher::OnSessionClosed,
-        .OnBytes = nullptr,
-        .OnMessage = nullptr,
-        .OnStream = nullptr,
-    };
-    SocketInfo clientInfo = {
-        .name = const_cast<char*>((sessionName_.c_str())),
-        .peerName = const_cast<char*>(sessionName_.c_str()),
-        .peerNetworkId = const_cast<char*>(info.GetCid().c_str()),
-        .pkgName = const_cast<char*>(IDaemon::SERVICE_NAME.c_str()),
-        .dataType = DATA_TYPE_BYTES,
-    };
-    int32_t socketId = Socket(clientInfo);
-    if (socketId < FileManagement::E_OK) {
-        LOGE("Create OpenApSoftbusChannel Socket error");
-        return;
-    }
-    int32_t ret = DfsBind(socketId, &sessionListener);
-    if (ret == SOFTBUS_TRANS_SOCKET_IN_USE) {
-        LOGI("Bind Socket in use cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-        return;
-    }
-    if (ret != FileManagement::E_OK) {
-        LOGE("Bind SocketClient error cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-        Shutdown(socketId);
-        return;
-    }
-    OccupySession(socketId, linkType);
-    PeerSocketInfo peerSocketInfo = {
-        .name = const_cast<char*>(sessionName_.c_str()),
-        .networkId = const_cast<char*>(info.GetCid().c_str()),
-    };
-    SoftbusSessionDispatcher::OnSessionOpened(socketId, peerSocketInfo);
-    LOGI("Success to OpenApSession, socketId:%{public}d, linkType:%{public}d, cid:%{public}s",
-        socketId, linkType, Utils::GetAnonyString(info.GetCid()).c_str());
 }
 
 void SoftbusAgent::CloseSession(shared_ptr<BaseSession> session)
@@ -292,26 +241,9 @@ void SoftbusAgent::OnSessionOpened(const int32_t sessionId, PeerSocketInfo info)
     LOGI("OnSessionOpened sessionId = %{public}d", sessionId);
     std::string peerDeviceId = info.networkId;
     auto session = make_shared<SoftbusSession>(sessionId, peerDeviceId);
-    auto cid = session->GetCid();
-
-    DeviceInfo deviceInfo;
-    deviceInfo.SetCid(cid);
-    auto retriedTimesMap = OpenSessionRetriedTimesMap_.find(cid);
-    if (retriedTimesMap != OpenSessionRetriedTimesMap_.end()) {
-        OpenSessionRetriedTimesMap_.erase(cid);
-    }
     session->DisableSessionListener();
-    if (FindSession(sessionId)) {
-        std::string client = "Client";
-        AcceptSession(session, client);
-    } else {
-        std::string client = "Server";
-        AcceptSession(session, client);
-    }
-
-    if (!FindSession(sessionId)) {
-        OccupySession(sessionId, 0);
-    }
+    session->SetFromServer(true);
+    AcceptSession(session, "Server");
 }
 
 void SoftbusAgent::OnSessionClosed(int32_t sessionId, const std::string peerDeviceId)
