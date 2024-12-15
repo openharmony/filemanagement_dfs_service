@@ -25,6 +25,7 @@ const uint32_t MAX_QUERY_TIMES = 1024;
 const string BUNDLENAME_FLAG = "<BundleName>";
 const string CLOUDDISK_URI_PREFIX = "file://<BundleName>/data/storage/el2/cloud";
 const string BACKFLASH = "/";
+const string ROOT_CLOUD_ID = "rootId";
 const int32_t CloudDiskNotifyUtils::maxCacheCnt_;
 list<pair<string, CacheNode>> CloudDiskNotifyUtils::cacheList_;
 unordered_map<string, list<pair<string, CacheNode>>::iterator> CloudDiskNotifyUtils::cacheMap_;
@@ -162,7 +163,7 @@ int32_t CloudDiskNotifyUtils::GetUriFromCache(const string &bundleName,
     uri = cacheNode.fileName;
     tmpCacheNode = cacheNode;
     int32_t ret;
-    while (tmpCacheNode.parentCloudId != rootId) {
+    while (tmpCacheNode.parentCloudId != rootId && tmpCacheNode.parentCloudId != ROOT_CLOUD_ID) {
         ret = GetCacheNode(tmpCacheNode.parentCloudId, tmpCacheNode);
         if (ret != E_OK) {
             return ret;
