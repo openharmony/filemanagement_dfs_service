@@ -1112,7 +1112,7 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest016, TestSize.Level1)
         size_t size = 0;
         int flags = 0;
 
-        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void *>(&data)));
+        EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
         EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
         fileOperationsCloud_->SetXattr(req, ino, name.c_str(), value, size, flags);
         EXPECT_TRUE(true);
