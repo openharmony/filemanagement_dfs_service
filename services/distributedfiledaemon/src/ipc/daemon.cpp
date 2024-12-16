@@ -59,6 +59,7 @@ using namespace OHOS::Storage::DistributedFile;
 using HapTokenInfo = OHOS::Security::AccessToken::HapTokenInfo;
 using AccessTokenKit = OHOS::Security::AccessToken::AccessTokenKit;
 
+
 namespace {
 const string FILE_MANAGER_AUTHORITY = "docs";
 const string MEDIA_AUTHORITY = "media";
