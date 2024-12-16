@@ -41,7 +41,6 @@ protected:
     void StopTopHalf() override;
     void StopBottomHalf() override;
     int32_t OpenSession(const DeviceInfo &info, const uint8_t &linkType) override;
-    void OpenApSession(const DeviceInfo &info, const uint8_t &linkType) override;
     void CloseSession(std::shared_ptr<BaseSession> session) override;
 
 private:
@@ -49,7 +48,6 @@ private:
     std::map<std::string, int32_t> serverIdMap_;
     bool IsContinueRetry(const std::string &cid);
     std::map<std::string, int32_t> OpenSessionRetriedTimesMap_;
-
     std::string sessionName_;
 };
 } // namespace DistributedFile

@@ -63,6 +63,11 @@ bool SoftbusSession::IsFromServer() const
     return IsServerSide_;
 }
 
+void SoftbusSession::SetFromServer(bool isServer)
+{
+    IsServerSide_ = isServer;
+}
+
 string SoftbusSession::GetCid() const
 {
     return cid_;

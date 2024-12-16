@@ -28,7 +28,6 @@ namespace {
 constexpr int32_t DEVICE_OS_TYPE_OH = 10;
 constexpr int OPEN_SESSSION_DELAY_TIME = 100;
 constexpr int32_t NOTIFY_GET_SESSION_WAITING_TIME = 2;
-constexpr int32_t WAITING_REMOTE_SA_ONLINE = 5;
 constexpr const char* PARAM_KEY_OS_TYPE = "OS_TYPE";
 } // namespace
 
@@ -46,13 +45,6 @@ void NetworkAgentTemplate::Stop()
     StopTopHalf();
     StopBottomHalf();
     kernerlTalker_->WaitForPollThreadExited();
-}
-
-void NetworkAgentTemplate::ConnectDeviceAsync(const DeviceInfo info)
-{
-    LOGI("ConnectDeviceAsync Enter");
-    std::this_thread::sleep_for(std::chrono::seconds(WAITING_REMOTE_SA_ONLINE));
-    OpenApSession(info, LINK_TYPE_AP);
 }
 
 void NetworkAgentTemplate::ConnectDeviceByP2PAsync(const DeviceInfo info)
@@ -110,41 +102,22 @@ void NetworkAgentTemplate::DisconnectAllDevices()
     sessionPool_.ReleaseAllSession();
 }
 
-void NetworkAgentTemplate::DisconnectDevice(const DeviceInfo info)
-{
-    LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-    sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_AP);
-}
-
 void NetworkAgentTemplate::DisconnectDeviceByP2P(const DeviceInfo info)
 {
-    LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-    sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_P2P);
+    LOGI("CloseP2P, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
+    sessionPool_.ReleaseSession(info.GetCid(), false);
 }
 
 void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
 {
     LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
-    sessionPool_.DeviceDisconnectCountOnly(info.GetCid(), LINK_TYPE_P2P, true);
-    sessionPool_.ReleaseSession(info.GetCid(), LINK_TYPE_P2P);
+    sessionPool_.ReleaseSession(info.GetCid(), true);
 }
 
-void NetworkAgentTemplate::OccupySession(int32_t sessionId, uint8_t linkType)
+void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 {
-    sessionPool_.OccupySession(sessionId, linkType);
-}
-
-bool NetworkAgentTemplate::FindSession(int32_t sessionId)
-{
-    return sessionPool_.FindSession(sessionId);
-}
-
-void NetworkAgentTemplate::CloseSessionForOneDevice(int32_t fd)
-{
-    if (fd > 0) {
-        sessionPool_.ReleaseSession(fd);
-        LOGI("session closed");
-    }
+    LOGI("NOTIFY_OFFLINE, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
+    sessionPool_.ReleaseSession(cid, true);
 }
 
 void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const std::string backStage)
@@ -152,6 +125,11 @@ void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const 
     auto cid = session->GetCid();
     LOGI("AcceptSesion, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
     sessionPool_.HoldSession(session, backStage);
+}
+
+bool NetworkAgentTemplate::FindSocketId(int32_t socketId)
+{
+    return sessionPool_.FindSocketId(socketId);
 }
 
 void NetworkAgentTemplate::GetSessionProcess(NotifyParam &param)
@@ -167,39 +145,36 @@ void NetworkAgentTemplate::GetSessionProcessInner(NotifyParam param)
     string cidStr(param.remoteCid, CID_MAX_LEN);
     int fd = param.fd;
     LOGI("NOTIFY_GET_SESSION, old fd %{public}d, remote cid %{public}s", fd, Utils::GetAnonyString(cidStr).c_str());
-    uint8_t linkType = sessionPool_.ReleaseSession(fd);
-    GetSession(cidStr, linkType);
+    bool ifGetSession = sessionPool_.CheckIfGetSession(fd);
+    sessionPool_.ReleaseSession(fd);
+    if (ifGetSession) {
+        GetSession(cidStr);
+    } else {
+        sessionPool_.SinkOffline(cidStr);
+    }
 }
 
-void NetworkAgentTemplate::GetSession(const string &cid, uint8_t linkType)
+void NetworkAgentTemplate::GetSession(const string &cid)
 {
     std::this_thread::sleep_for(std::chrono::seconds(NOTIFY_GET_SESSION_WAITING_TIME));
     DeviceInfo deviceInfo;
     deviceInfo.SetCid(cid);
-    if (linkType == LINK_TYPE_AP) {
-        try {
-            OpenApSession(deviceInfo, LINK_TYPE_AP);
-        } catch (const DfsuException &e) {
-            LOGE("reget session failed, code: %{public}d", e.code());
+    try {
+        if (OpenSession(deviceInfo, LINK_TYPE_P2P) == FileManagement::E_OK) {
+            return;
         }
-    } else if (linkType == LINK_TYPE_P2P) {
-        try {
-            if (OpenSession(deviceInfo, LINK_TYPE_P2P) == FileManagement::E_OK) {
-                return;
-            }
-            LOGE("reget session failed");
-            auto deviceManager = DeviceManagerAgent::GetInstance();
-            deviceManager->RemoveNetworkIdForAllToken(cid);
-            auto deviceId = deviceManager->GetDeviceIdByNetworkId(cid);
-            if (!deviceId.empty()) {
-                deviceManager->UMountDfsDocs(cid, deviceId, true);
-            }
-            sessionPool_.DeviceDisconnectCountOnly(cid, linkType, true);
-            deviceManager->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
-            deviceManager->RemoveRemoteReverseObj(true, 0);
-        } catch (const DfsuException &e) {
-            LOGE("reget session failed, code: %{public}d", e.code());
+        LOGE("reget session failed");
+        sessionPool_.SinkOffline(cid);
+        auto deviceManager = DeviceManagerAgent::GetInstance();
+        deviceManager->RemoveNetworkIdForAllToken(cid);
+        auto deviceId = deviceManager->GetDeviceIdByNetworkId(cid);
+        if (!deviceId.empty()) {
+            deviceManager->UMountDfsDocs(cid, deviceId, true);
         }
+        deviceManager->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
+        deviceManager->RemoveRemoteReverseObj(true, 0);
+    } catch (const DfsuException &e) {
+        LOGE("reget session failed, code: %{public}d", e.code());
     }
 }
 } // namespace DistributedFile
