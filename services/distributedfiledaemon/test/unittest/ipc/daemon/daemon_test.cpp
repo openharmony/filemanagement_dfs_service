@@ -22,6 +22,7 @@
 #include "asset_recv_callback_mock.h"
 #include "asset_send_callback_mock.h"
 #include "common_event_manager.h"
+#include "connect_count/connect_count.h"
 #include "connection_detector_mock.h"
 #include "daemon.h"
 #include "daemon_execute.h"
@@ -451,16 +452,10 @@ HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnection_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnection_001 begin";
     DistributedHardware::DmDeviceInfo deviceInfo;
-    EXPECT_CALL(*connectionDetectorMock_, GetConnectionStatus(_, _)).WillOnce(Return(true));
-    EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), E_OK);
-
-    EXPECT_CALL(*connectionDetectorMock_, GetConnectionStatus(_, _)).WillOnce(Return(false));
+    ConnectCount::GetInstance()->RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(0));
     EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), ERR_BAD_VALUE);
-    sleep(1);
 
-    EXPECT_CALL(*connectionDetectorMock_, GetConnectionStatus(_, _)).WillOnce(Return(false));
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
     EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
     EXPECT_EQ(daemon_->OpenP2PConnection(deviceInfo), E_OK);
@@ -477,17 +472,13 @@ HWTEST_F(DaemonTest, DaemonTest_ConnectionCount_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionCount_001 begin";
     DistributedHardware::DmDeviceInfo deviceInfo;
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->ConnectionCount(deviceInfo), E_OK);
-
+    ConnectCount::GetInstance()->RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
-        .WillOnce(Return(ERR_BAD_VALUE))
-        .WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->ConnectionCount(deviceInfo), ERR_BAD_VALUE);
+
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
+    EXPECT_EQ(daemon_->ConnectionCount(deviceInfo), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionCount_001 end";
 }
 
@@ -501,14 +492,13 @@ HWTEST_F(DaemonTest, DaemonTest_CleanUp_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_CleanUp_001 begin";
     DistributedHardware::DmDeviceInfo deviceInfo;
-    EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(ERR_BAD_VALUE));
+    ConnectCount::GetInstance()->RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((E_OK)));
-    EXPECT_EQ(daemon_->CleanUp(deviceInfo, "", 100), E_OK);
+    EXPECT_EQ(daemon_->CleanUp(deviceInfo), E_OK);
     sleep(1);
 
-    EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((E_OK)));
-    EXPECT_EQ(daemon_->CleanUp(deviceInfo, "", 100), E_OK);
+    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return((ERR_BAD_VALUE)));
+    EXPECT_EQ(daemon_->CleanUp(deviceInfo), ERR_BAD_VALUE);
     sleep(1);
     GTEST_LOG_(INFO) << "DaemonTest_CleanUp_001 end";
 }
@@ -522,37 +512,27 @@ HWTEST_F(DaemonTest, DaemonTest_CleanUp_001, TestSize.Level1)
 HWTEST_F(DaemonTest, DaemonTest_ConnectionAndMount_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionAndMount_001 begin";
-    DistributedHardware::DmDeviceInfo deviceInfo;
+    DistributedHardware::DmDeviceInfo deviceInfo = {.networkId = "test"};
+    sptr<IFileDfsListener> remoteReverseObj = nullptr;
+    ConnectCount::GetInstance()->RemoveAllConnect();
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
-        .WillOnce(Return(ERR_BAD_VALUE))
-        .WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "", 100), ERR_BAD_VALUE);
+    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", 100, remoteReverseObj), ERR_BAD_VALUE);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK));
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
     g_checkCallerPermission = false;
-    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "", 100), E_OK);
+    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", 100, remoteReverseObj), E_OK);
 
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK));
     g_checkCallerPermission = true;
     EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "", 100), ERR_BAD_VALUE);
+    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", 100, remoteReverseObj), ERR_BAD_VALUE);
 
     EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK));
-    g_checkCallerPermission = true;
+    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _)).WillOnce(Return(E_OK));
     EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "", 100), E_OK);
+    EXPECT_EQ(daemon_->ConnectionAndMount(deviceInfo, "test", 100, remoteReverseObj), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_ConnectionAndMount_001 end";
 }
 
@@ -574,27 +554,6 @@ HWTEST_F(DaemonTest, DaemonTest_OpenP2PConnectionEx_001, TestSize.Level1)
 
     auto listener = sptr<IFileDfsListener>(new FileDfsListenerMock());
     EXPECT_EQ(daemon_->OpenP2PConnectionEx("", listener), E_INVAL_ARG_NAPI);
-
-    std::string networkId = "test";
-    EXPECT_CALL(*deviceManagerAgentMock_, AddRemoteReverseObj(_, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
-        .WillOnce(Return(ERR_BAD_VALUE))
-        .WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->OpenP2PConnectionEx(networkId, listener), E_CONNECTION_FAILED);
-    sleep(1);
-
-    EXPECT_CALL(*deviceManagerAgentMock_, AddRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POnline(_)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*connectionDetectorMock_, RepeatGetConnectionStatus(_, _))
-        .WillOnce(Return(E_OK))
-        .WillOnce(Return(E_OK));
-    g_checkCallerPermission = true;
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
-    EXPECT_CALL(*deviceManagerAgentMock_, MountDfsDocs(_, _)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->OpenP2PConnectionEx(networkId, listener), E_OK);
     GTEST_LOG_(INFO) << "DaemonTest_OpenP2PConnectionEx_001 end";
 }
 
@@ -621,21 +580,6 @@ HWTEST_F(DaemonTest, DaemonTest_CloseP2PConnectionEx_001, TestSize.Level1)
     EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
     EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(ERR_BAD_VALUE));
     EXPECT_EQ(daemon_->CloseP2PConnectionEx(networkId), E_UNMOUNT);
-
-    g_checkCallerPermission = true;
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
-    EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(ERR_BAD_VALUE));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->CloseP2PConnectionEx(networkId), E_OK);
-    sleep(1);
-
-    g_checkCallerPermission = false;
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("test"));
-    EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(E_OK));
-    EXPECT_EQ(daemon_->CloseP2PConnectionEx(networkId), E_OK);
-    sleep(1);
     GTEST_LOG_(INFO) << "DaemonTest_CloseP2PConnectionEx_001 end";
 }
 
@@ -1031,50 +975,6 @@ HWTEST_F(DaemonTest, DaemonTest_StartEventHandler_001, TestSize.Level1)
     daemon_->daemonExecute_ = std::make_shared<DaemonExecute>();
     daemon_->StartEventHandler();
     GTEST_LOG_(INFO) << "DaemonTest_StartEventHandler_001 end";
-}
-
-/**
- * @tc.name: DaemonTest_DfsListenerDeathRecipient_001
- * @tc.desc: verify DfsListenerDeathRecipient::OnRemoteDied.
- * @tc.type: FUNC
- * @tc.require: I7TDJK
- */
-HWTEST_F(DaemonTest, DaemonTest_DfsListenerDeathRecipient_001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DaemonTest_DfsListenerDeathRecipient_001 begin";
-    sptr<Daemon::DfsListenerDeathRecipient> dfsListenerDeathRecipient =
-        new (std::nothrow) Daemon::DfsListenerDeathRecipient();
-    sptr<Daemon> daemon = new (std::nothrow) Daemon(FILEMANAGEMENT_DISTRIBUTED_FILE_DAEMON_SA_ID, true);
-
-    EXPECT_CALL(*deviceManagerAgentMock_, FindListenerByObject(_, _, _)).WillOnce(Return(1));
-    dfsListenerDeathRecipient->OnRemoteDied(daemon);
-
-    EXPECT_CALL(*deviceManagerAgentMock_, FindListenerByObject(_, _, _)).WillOnce(Return(2));
-    dfsListenerDeathRecipient->OnRemoteDied(daemon);
-
-    auto listener = sptr<IFileDfsListener>(new FileDfsListenerMock());
-    EXPECT_CALL(*deviceManagerAgentMock_, FindListenerByObject(_, _, _)).WillOnce(Return(3));
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDfsListener()).WillOnce(Return(listener));
-    dfsListenerDeathRecipient->OnRemoteDied(daemon);
-
-    EXPECT_CALL(*deviceManagerAgentMock_, FindListenerByObject(_, _, _)).WillOnce(Return(4));
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDfsListener()).WillOnce(Return(listener));
-    EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(ERR_BAD_VALUE));
-    std::unordered_set<std::string> set1;
-    EXPECT_CALL(*deviceManagerAgentMock_, GetNetworkIds(_)).WillOnce(Return(set1));
-    dfsListenerDeathRecipient->OnRemoteDied(daemon);
-
-    EXPECT_CALL(*deviceManagerAgentMock_, FindListenerByObject(_, _, _)).WillOnce(Return(4));
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDfsListener()).WillOnce(Return(listener));
-    EXPECT_CALL(*deviceManagerAgentMock_, RemoveRemoteReverseObj(_, _)).WillOnce(Return(E_OK));
-    std::unordered_set<std::string> set2{"", "test01", "test02"};
-    EXPECT_CALL(*deviceManagerAgentMock_, GetNetworkIds(_)).WillOnce(Return(set2));
-    EXPECT_CALL(*deviceManagerAgentMock_, GetDeviceIdByNetworkId(_)).WillOnce(Return("")).WillOnce(Return("test"));
-    EXPECT_CALL(*deviceManagerAgentMock_, UMountDfsDocs(_, _, _)).WillOnce(Return(E_OK));
-    EXPECT_CALL(*deviceManagerAgentMock_, OnDeviceP2POffline(_)).WillOnce(Return(E_OK));
-    dfsListenerDeathRecipient->OnRemoteDied(daemon);
-    sleep(1);
-    GTEST_LOG_(INFO) << "DaemonTest_DfsListenerDeathRecipient_001 end";
 }
 } // namespace Test
 } // namespace OHOS::Storage::DistributedFile

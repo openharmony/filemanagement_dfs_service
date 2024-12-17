@@ -15,6 +15,7 @@
 
 #include "network/network_agent_template.h"
 
+#include "connect_count/connect_count.h"
 #include "device/device_manager_agent.h"
 #include "dfs_error.h"
 #include "dfsu_exception.h"
@@ -100,6 +101,7 @@ void NetworkAgentTemplate::ConnectOnlineDevices()
 void NetworkAgentTemplate::DisconnectAllDevices()
 {
     sessionPool_.ReleaseAllSession();
+    ConnectCount::GetInstance()->RemoveAllConnect();
 }
 
 void NetworkAgentTemplate::DisconnectDeviceByP2P(const DeviceInfo info)
@@ -112,12 +114,16 @@ void NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs(const DeviceInfo info)
 {
     LOGI("DeviceOffline, cid:%{public}s", Utils::GetAnonyString(info.GetCid()).c_str());
     sessionPool_.ReleaseSession(info.GetCid(), true);
+    ConnectCount::GetInstance()->NotifyRemoteReverseObj(info.GetCid(), ON_STATUS_OFFLINE);
+    ConnectCount::GetInstance()->RemoveConnect(info.GetCid());
 }
 
 void NetworkAgentTemplate::CloseSessionForOneDevice(const string &cid)
 {
     LOGI("NOTIFY_OFFLINE, cid:%{public}s", Utils::GetAnonyString(cid).c_str());
     sessionPool_.ReleaseSession(cid, true);
+    ConnectCount::GetInstance()->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
+    ConnectCount::GetInstance()->RemoveConnect(cid);
 }
 
 void NetworkAgentTemplate::AcceptSession(shared_ptr<BaseSession> session, const std::string backStage)
@@ -165,14 +171,13 @@ void NetworkAgentTemplate::GetSession(const string &cid)
         }
         LOGE("reget session failed");
         sessionPool_.SinkOffline(cid);
+        ConnectCount::GetInstance()->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
+        ConnectCount::GetInstance()->RemoveConnect(cid);
         auto deviceManager = DeviceManagerAgent::GetInstance();
-        deviceManager->RemoveNetworkIdForAllToken(cid);
         auto deviceId = deviceManager->GetDeviceIdByNetworkId(cid);
         if (!deviceId.empty()) {
             deviceManager->UMountDfsDocs(cid, deviceId, true);
         }
-        deviceManager->NotifyRemoteReverseObj(cid, ON_STATUS_OFFLINE);
-        deviceManager->RemoveRemoteReverseObj(true, 0);
     } catch (const DfsuException &e) {
         LOGE("reget session failed, code: %{public}d", e.code());
     }

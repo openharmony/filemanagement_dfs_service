@@ -267,7 +267,6 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
         deviceId = GetDeviceIdByNetworkId(networkId);
     }
     if (!networkId.empty()) {
-        NotifyRemoteReverseObj(networkId, ON_STATUS_OFFLINE);
         UMountDfsDocs(networkId, deviceId, true);
     }
 
@@ -275,10 +274,6 @@ void DeviceManagerAgent::OnDeviceOffline(const DistributedHardware::DmDeviceInfo
         &NetworkAgentTemplate::DisconnectDeviceByP2PHmdfs, info);
     it->second->Recv(move(cmd2));
 
-    if (RemoveRemoteReverseObj(true, 0) != 0) {
-        LOGI("RemoveRemoteReverseObj fail");
-    }
-    RemoveNetworkIdForAllToken(networkId);
     cidNetTypeRecord_.erase(info.cid_);
     cidNetworkType_.erase(info.cid_);
     LOGI("OnDeviceOffline end");
