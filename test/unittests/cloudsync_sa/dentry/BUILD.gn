@@ -67,7 +67,6 @@ ohos_unittest("dentry_meta_file_clouddisk_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "${distributedfile_path}/cfi_blocklist.txt"
   }
   module_out_path = "filemanagement/dfs_service"
 
@@ -77,6 +76,7 @@ ohos_unittest("dentry_meta_file_clouddisk_test") {
 
   deps = [
     "${utils_path}:libdistributedfiledentry",
+    "${utils_path}:libdistributedfileutils",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -93,5 +93,9 @@ ohos_unittest("dentry_meta_file_clouddisk_test") {
 
 group("cloudsync_sa_dentry_test") {
   testonly = true
-  deps = [ ":dentry_file_utils_test" ]
+  deps = [
+    ":dentry_file_utils_test",
+    ":dentry_meta_file_clouddisk_test",
+    ":dentry_meta_file_test",
+  ]
 }
