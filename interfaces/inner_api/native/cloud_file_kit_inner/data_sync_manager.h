@@ -49,7 +49,8 @@ public:
     virtual int32_t StartDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
                                       const std::vector<std::string> pathVec,
                                       int64_t &downloadId,
-                                      std::bitset<FIELD_KEY_MAX_SIZE> fieldkey = CloudSync::FIELDKEY_CONTENT);
+                                      std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
+                                      const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback);
     virtual int32_t StopDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
                                      const std::string path,
                                      bool needClean = false);

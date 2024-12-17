@@ -43,7 +43,9 @@ public:
     virtual int32_t StartDownloadFile(const std::string &path) = 0;
     virtual int32_t StartFileCache(const std::vector<std::string> &pathVec,
                                    int64_t &downloadId,
-                                   std::bitset<FIELD_KEY_MAX_SIZE> fieldkey = FIELDKEY_CONTENT) = 0;
+                                   std::bitset<FIELD_KEY_MAX_SIZE> fieldkey = FIELDKEY_CONTENT,
+                                   bool isCallbackValid = false,
+                                   const sptr<IRemoteObject> &downloadCallback = nullptr) = 0;
     virtual int32_t StopDownloadFile(const std::string &path, bool needClean = false) = 0;
     virtual int32_t StopFileCache(const int64_t &downloadId,  bool needClean = false) = 0;
     virtual int32_t RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback) = 0;
