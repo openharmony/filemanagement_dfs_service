@@ -261,22 +261,18 @@ static string GetCacheTmpPath(int32_t userId, const string &relativePath)
 static int HandleCloudError(CloudError error, FaultOperation faultOperation)
 {
     int ret = 0;
-    FaultType faultType = FaultType::DRIVERKIT;
     switch (error) {
         case CloudError::CK_NO_ERROR:
             ret = 0;
             break;
         case CloudError::CK_NETWORK_ERROR:
             ret = -ENOTCONN;
-            faultType = FaultType::DRIVERKIT_NETWORK;
             break;
         case CloudError::CK_SERVER_ERROR:
             ret = -EIO;
-            faultType = FaultType::DRIVERKIT_SERVER;
             break;
         case CloudError::CK_LOCAL_ERROR:
             ret = -EINVAL;
-            faultType = FaultType::DRIVERKIT_LOCAL;
             break;
         default:
             ret = -EIO;
@@ -285,7 +281,7 @@ static int HandleCloudError(CloudError error, FaultOperation faultOperation)
     if (ret < 0) {
         string msg = "handle cloud failed, ret code: " + to_string(ret);
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, faultOperation,
-            faultType, ret, msg});
+            FaultType::WARNING, ret, msg});
     }
     return ret;
 }
@@ -929,7 +925,7 @@ static void HasCache(fuse_req_t req, fuse_ino_t ino, const void *inBuf)
     if (!ioctlData || ioctlData->offset < 0 || ioctlData->readSize < 0) {
         fuse_reply_err(req, EINVAL);
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::IOCTL,
-            FaultType::FILE, EINVAL, "invalid argument in ioctl"});
+            FaultType::WARNING, EINVAL, "invalid argument in ioctl"});
         return;
     }
     int64_t headIndex = ioctlData->offset / MAX_READ_SIZE;
@@ -1212,7 +1208,7 @@ static bool FixData(fuse_req_t req, shared_ptr<char> buf, size_t size, size_t si
         fuse_reply_err(req, ENOMEM);
         string msg = "Pread failed, readResult: " + to_string(*readArgs->readResult);
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
-            FaultType::DRIVERKIT, ENOMEM, msg});
+            FaultType::WARNING, ENOMEM, msg});
         return false;
     }
 
@@ -1385,7 +1381,7 @@ static bool CloudReadHelper(fuse_req_t req, size_t size, shared_ptr<CloudInode> 
     if (size > MAX_READ_SIZE) {
         fuse_reply_err(req, EINVAL);
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
-            FaultType::FILE, EINVAL, "input size exceeds MAX_READ_SIZE"});
+            FaultType::WARNING, EINVAL, "input size exceeds MAX_READ_SIZE"});
         return false;
     }
     return true;

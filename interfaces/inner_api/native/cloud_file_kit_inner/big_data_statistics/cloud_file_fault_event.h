@@ -103,7 +103,10 @@ enum class FaultType {
     CLOUD_SYNC_ERROR = 80000000,
 
     /* inner error */
-    INNER_ERROR = 90000000
+    INNER_ERROR = 90000000,
+
+    /* warning */
+    WARNING = 100000000
 };
 
 struct CloudSyncFaultInfo {
@@ -122,7 +125,9 @@ struct CloudFileFaultInfo {
     std::string message_;
 };
 
-const std::vector<FaultType> PERIODIC_REPORT_FAULT_TYPE = { FaultType::OPEN_CLOUD_FILE_TIMEOUT,
+const std::vector<FaultType> PERIODIC_REPORT_FAULT_TYPE = { FaultType::WARNING,
+                                                            FaultType::TIMEOUT,
+                                                            FaultType::OPEN_CLOUD_FILE_TIMEOUT,
                                                             FaultType::CLOUD_READ_FILE_TIMEOUT,
                                                             FaultType::CLOUD_FILE_LOOKUP_TIMEOUT,
                                                             FaultType::CLOUD_FILE_FORGET_TIMEOUT };
