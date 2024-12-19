@@ -58,6 +58,7 @@ public:
     static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value OnCallback(napi_env env, napi_callback_info info);
     static napi_value OffCallback(napi_env env, napi_callback_info info);
+    static napi_value GetFileSyncState(napi_env env, napi_callback_info info);
     static napi_value RegisterChange(napi_env env, napi_callback_info info);
     static napi_value UnregisterChange(napi_env env, napi_callback_info info);
 
