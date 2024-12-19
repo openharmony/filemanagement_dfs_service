@@ -135,7 +135,7 @@ int32_t ConnectCount::FindCallingTokenIdForListerner(const sptr<IRemoteObject> &
 {
     std::lock_guard lock(connectMutex_);
     for (auto &connect : connectList_) {
-        if ((connect->listener)->AsObject() == listener) {
+        if (connect->listener != nullptr && (connect->listener)->AsObject() == listener) {
             callingTokenId =  connect->callingTokenId;
             return FileManagement::E_OK;
         }
