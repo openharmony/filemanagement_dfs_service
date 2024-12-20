@@ -39,7 +39,9 @@ namespace {
 
 constexpr unsigned HMDFS_IOC = 0xf2;
 constexpr unsigned WRITEOPEN_CMD = 0x02;
+constexpr unsigned CLOUD_ENABLE_CMD = 0x0b;
 #define HMDFS_IOC_GET_WRITEOPEN_CNT _IOR(HMDFS_IOC, WRITEOPEN_CMD, uint32_t)
+#define HMDFS_IOC_SET_CLOUD_GENERATION _IOR(HMDFS_IOC, CLOUD_ENABLE_CMD, uint32_t)
 const string CloudFileUtils::TMP_SUFFIX = ".temp.download";
 
 bool CloudFileUtils::IsDotDotdot(const std::string &name)
@@ -252,6 +254,29 @@ bool CloudFileUtils::LocalWriteOpen(const string &dfsPath)
 
     close(fd);
     return writeOpenCnt != 0;
+}
+
+bool CloudFileUtils::ClearCache(const string &dfsPath)
+{
+    auto resolvedPath = realpath(dfsPath.c_str(), NULL);
+    if (resolvedPath == NULL) {
+        LOGE("realpath failed");
+        return false;
+    }
+    int fd = open(resolvedPath, O_RDONLY);
+    free(resolvedPath);
+    if (fd < 0) {
+        LOGE("open failed, errno:%{public}d", errno);
+        return false;
+    }
+    int ret = ioctl(fd, HMDFS_IOC_SET_CLOUD_GENERATION);
+    if (ret < 0) {
+        LOGE("ioctl failed, errno:%{public}d", errno);
+        close(fd);
+        return false;
+    }
+    close(fd);
+    return true;
 }
 } // namespace CloudDisk
 } // namespace FileManagement

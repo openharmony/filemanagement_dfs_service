@@ -63,6 +63,7 @@ public:
     static uint32_t GetBucketId(std::string cloudId);
     static int64_t Timespec2Milliseconds(const struct timespec &time);
     static bool LocalWriteOpen(const std::string &dfsPath);
+    static bool ClearCache(const std::string &dfsPath);
     static uint32_t DentryHash(const std::string &cloudId);
     static void TeaTransform(uint32_t buf[4], uint32_t const in[]);
     static void Str2HashBuf(const char *msg, size_t len, uint32_t *buf, int num);
