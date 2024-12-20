@@ -55,6 +55,7 @@ napi_value CloudSyncExport(napi_env env, napi_value exports)
     InitDownloadErrorType(env, exports);
     InitState(env, exports);
     InitFileSyncState(env, exports);
+    InitCloudSyncApi(env, exports);
     InitNotifyType(env, exports);
     InitCloudSyncFuncs(env, exports);
 
@@ -100,6 +101,12 @@ void InitFileSyncState(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_PROPERTY("DOWNLOADING", NVal::CreateInt32(env, FILESYNCSTATE_DOWNLOADING).val_),
         DECLARE_NAPI_STATIC_PROPERTY("COMPLETED", NVal::CreateInt32(env, FILESYNCSTATE_COMPLETED).val_),
         DECLARE_NAPI_STATIC_PROPERTY("STOPPED", NVal::CreateInt32(env, FILESYNCSTATE_STOPPED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("FILESYNCSTATE_TO_BE_UPLOADED",
+                                     NVal::CreateInt32(env, FILESYNCSTATE_TO_BE_UPLOADED).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("FILESYNCSTATE_UPLOAD_FAILURE",
+                                     NVal::CreateInt32(env, FILESYNCSTATE_UPLOAD_FAILURE).val_),
+        DECLARE_NAPI_STATIC_PROPERTY("FILESYNCSTATE_UPLOAD_SUCCESS",
+                                     NVal::CreateInt32(env, FILESYNCSTATE_UPLOAD_SUCCESS).val_),
     };
     napi_value obj = nullptr;
     napi_create_object(env, &obj);
@@ -147,6 +154,14 @@ void InitDownloadErrorType(napi_env env, napi_value exports)
     napi_create_object(env, &obj);
     napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
     napi_set_named_property(env, exports, propertyName, obj);
+}
+
+void InitCloudSyncApi(napi_env env, napi_value exports)
+{
+    static napi_property_descriptor desc[] = {
+        DECLARE_NAPI_FUNCTION("getFileSyncState", CloudSyncNapi::GetFileSyncState),
+    };
+    napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
 }
 
 void InitNotifyType(napi_env env, napi_value exports)
