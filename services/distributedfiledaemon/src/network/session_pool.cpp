@@ -91,11 +91,12 @@ void SessionPool::ReleaseSession(const std::string &cid, bool releaseServer)
         sessions.push_back(*iter);
         iter = usrSpaceSessionPool_.erase(iter);
     }
-    if (!FindCid(cid)) {
-        talker_->SinkOfflineCmdToKernel(cid);
-    }
     for (auto session : sessions) {
         session->Release();
+    }
+
+    if (!FindCid(cid)) {
+        talker_->SinkOfflineCmdToKernel(cid);
     }
 }
 
