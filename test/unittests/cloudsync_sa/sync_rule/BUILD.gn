@@ -479,6 +479,7 @@ ohos_unittest("user_status_listener_test") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "dsoftbus:softbus_client",
+    "ffrt:libffrt",
     "googletest:gmock",
     "googletest:gtest",
     "hilog:libhilog",
