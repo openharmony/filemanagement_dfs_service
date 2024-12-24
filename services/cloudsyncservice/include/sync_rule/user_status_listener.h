@@ -33,6 +33,7 @@ public:
     void AddObserver(std::shared_ptr<IUserStatusObserver> observer);
     void NotifyUserUnlocked();
     void DoCleanVideoCache();
+    void DoUnloadSA();
 
 private:
     std::shared_ptr<EventFwk::CommonEventSubscriber> commonEventSubscriber_ = nullptr;
