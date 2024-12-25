@@ -47,7 +47,9 @@ public:
     int32_t DisableCloud(const std::string &accoutId) override;
     int32_t StartDownloadFile(const std::string &uri) override;
     int32_t StartFileCache(const std::string &uri) override;
-    int32_t StartFileCache(const std::vector<std::string> &uriVec, int64_t &downloadId) override;
+    int32_t StartFileCache(const std::vector<std::string> &uriVec, int64_t &downloadId,
+                           std::bitset<FIELD_KEY_MAX_SIZE> fieldkey = FIELDKEY_CONTENT,
+                           const std::shared_ptr<CloudDownloadCallback> downloadCallback = nullptr) override;
     int32_t StopDownloadFile(const std::string &uri, bool needClean = false) override;
     int32_t StopFileCache(const int64_t &downloadId, bool needClean = false) override;
     int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) override;
