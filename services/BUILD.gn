@@ -16,9 +16,11 @@ import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_sa_profile("distributedfile_sa_profile") {
   sources = [
-    "5201.json",
     "5204.json",
   ]
+  if (dfs_service_feature_enable_dist_file_daemon) {
+    sources += [ "5201.json" ]
+  }
   if (dfs_service_feature_enable_cloud_adapter) {
     sources += [ "5205.json" ]
   }
