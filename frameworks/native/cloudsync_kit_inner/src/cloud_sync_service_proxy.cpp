@@ -598,8 +598,40 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 #endif
 }
 
+int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
+                                                         const std::vector<std::string> &pathVec,
+                                                         std::bitset<FIELD_KEY_MAX_SIZE> &fieldkey,
+                                                         bool &isCallbackValid,
+                                                         const sptr<IRemoteObject> &downloadCallback)
+{
+    if (!data.WriteStringVector(pathVec)) {
+        LOGE("Failed to send the cloud id");
+        return E_INVAL_ARG;
+    }
+    int32_t intValue = static_cast<int32_t>(fieldkey.to_ulong());
+    if (!data.WriteInt32(intValue)) {
+        LOGE("Failed to send the fieldkey");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteBool(isCallbackValid)) {
+        LOGE("Failed to send the isCallbackValid flag");
+        return E_INVAL_ARG;
+    }
+
+    if (isCallbackValid) {
+        if (!data.WriteRemoteObject(downloadCallback)) {
+            LOGE("Failed to send the callback stub");
+            return E_INVAL_ARG;
+        }
+    }
+    return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &uriVec,
-                                              int64_t &downloadId)
+                                              int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
+                                              bool isCallbackValid,
+                                              const sptr<IRemoteObject> &downloadCallback)
 {
     LOGI("StartFileCache Start");
     MessageParcel data;
@@ -628,9 +660,10 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &ur
              i, GetAnonyString(uriVec[i]).c_str(), GetAnonyString(path).c_str());
     }
 
-    if (!data.WriteStringVector(pathVec)) {
-        LOGE("Failed to send the cloud id");
-        return E_INVAL_ARG;
+    auto retParcel = StartFileCacheWriteParcel(data, pathVec, fieldkey, isCallbackValid, downloadCallback);
+    if (retParcel != E_OK) {
+        LOGE("StartFileCacheWriteParcel failed");
+        return retParcel;
     }
 
     auto remote = Remote();
