@@ -16,11 +16,14 @@
 #define OHOS_CLOUD_SYNC_SERVICE_CLOUD_FILE_FAULT_EVENT_H
 
 #include "hisysevent.h"
+#include <map>
 
 #define CLOUD_SYNC_FAULT_REPORT(...) \
     CloudFile::CloudFileFaultEvent::CloudSyncFaultReport(__FUNCTION__, __LINE__, ##__VA_ARGS__)
 #define CLOUD_FILE_FAULT_REPORT(...) \
     CloudFile::CloudFileFaultEvent::CloudFileFaultReport(__FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define CLOUD_SYNC_CACHE_REPORT(...) \
+    CloudFile::CloudFileFaultEvent::CloudSyncCacheReport(__FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 namespace OHOS {
 namespace FileManagement {
@@ -35,6 +38,7 @@ namespace CloudFile {
 #define MINIMUM_FAULT_REPORT_INTERVAL 3600
 
 enum class FaultScenarioCode {
+    CLOUD_INIT = 000,
     CLOUD_FULL_SYNC = 100,
     CLOUD_INC_SYNC = 200,
     CLOUD_CHECK_SYNC = 300,
@@ -125,6 +129,14 @@ struct CloudFileFaultInfo {
     std::string message_;
 };
 
+struct CloudCacheFaultInfo {
+    std::string bundleName_;
+    FaultType faultType_;
+    int32_t faultErrorCode_;
+    std::string message_;
+    bool terminate_ = false;
+};
+
 const std::vector<FaultType> PERIODIC_REPORT_FAULT_TYPE = { FaultType::WARNING,
                                                             FaultType::TIMEOUT,
                                                             FaultType::OPEN_CLOUD_FILE_TIMEOUT,
@@ -158,7 +170,12 @@ public:
     static int32_t CloudFileFaultReport(const std::string &funcName,
                                         const int lineNum,
                                         const CloudFileFaultInfo &event);
+
+    static int32_t CloudSyncCacheReport(const std::string &funcName,
+                                        const int lineNum,
+                                        const CloudCacheFaultInfo &event);
 };
+
 } // namespace CloudFile
 } // namespace FileManagement
 } // namespace OHOS
