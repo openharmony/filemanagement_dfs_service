@@ -589,21 +589,21 @@ int32_t MetaFile::DoRename(const MetaBase &oldBase, const std::string &newName)
     MetaBase base{oldBase.name};
     int32_t ret = DoLookup(base);
     if (ret) {
-        LOGE("ret = %{public}d, lookup %s failed", ret, base.name.c_str());
+        LOGE("ret = %{public}d, lookup %s failed", ret, GetAnonyString(base.name).c_str());
         return ret;
     }
 
     base.name = newName;
     ret = DoCreate(base);
     if (ret) {
-        LOGE("ret = %{public}d, create %s failed", ret, base.name.c_str());
+        LOGE("ret = %{public}d, create %s failed", ret, GetAnonyString(base.name).c_str());
         return ret;
     }
 
     base.name = oldBase.name;
     ret = DoRemove(oldBase);
     if (ret) {
-        LOGE("ret = %{public}d, remove %s failed", ret, oldBase.name.c_str());
+        LOGE("ret = %{public}d, remove %s failed", ret, GetAnonyString(oldBase.name).c_str());
         base.name = newName;
         (void)DoRemove(base);
         return ret;

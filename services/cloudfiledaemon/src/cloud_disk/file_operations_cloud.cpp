@@ -468,7 +468,7 @@ static int32_t GetParentUpload(shared_ptr<CloudDiskInode> parentInode, struct Cl
     MetaBase metaBase(parentInode->fileName);
     auto ret = metaFile->DoLookup(metaBase);
     if (ret != 0) {
-        LOGE("file %{public}s not found", parentInode->fileName.c_str());
+        LOGE("file %{public}s not found", GetAnonyString(parentInode->fileName).c_str());
         return ret;
     }
     parentNoUpload = (metaBase.noUpload == NO_UPLOAD);

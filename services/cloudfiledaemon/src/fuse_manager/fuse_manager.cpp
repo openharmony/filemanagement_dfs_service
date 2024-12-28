@@ -458,7 +458,7 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
         XCollieHelper::CancelTimer(xcollieId);
 #endif
     } else if (*(child->mBase) != mBase) {
-        LOGW("invalidate %s", childName.c_str());
+        LOGW("invalidate %s", GetAnonyString(childName).c_str());
         child->mBase = make_shared<MetaBase>(mBase);
     }
     LOGD("lookup success, child: %{private}s, refCount: %lld", GetAnonyString(child->path).c_str(),
