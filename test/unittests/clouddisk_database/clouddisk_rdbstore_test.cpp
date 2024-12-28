@@ -955,23 +955,6 @@ HWTEST_F(CloudDiskRdbStoreTest, UnlinkTest3, TestSize.Level1)
     EXPECT_EQ(ret, E_RDB);
 }
 
-// /**
-//  * @tc.name: GetDirtyType
-//  * @tc.desc: Verify the CloudDiskRdbStore::GetDirtyType function
-//  * @tc.type: FUNC
-//  * @tc.require: SR000HRKKA
-//  */
-// HWTEST_F(CloudDiskRdbStoreTest, GetDirtyTypeTest1, TestSize.Level1)
-// {
-//     int32_t dirtyType = 0;
-//     std::string cloudId = "100";
-//     const int32_t userId = 100;
-//     const std::string bundleName = "com.ohos.photos";
-//     CloudDiskRdbStore CloudDiskRdbStore(bundleName, userId);
-//     int32_t ret = CloudDiskRdbStore.GetDirtyType(cloudId, dirtyType);
-//     EXPECT_EQ(ret, E_RDB);
-// }
-
 /**
  * @tc.name: GetCurNode
  * @tc.desc: Verify the CloudDiskRdbStore::GetCurNode function
