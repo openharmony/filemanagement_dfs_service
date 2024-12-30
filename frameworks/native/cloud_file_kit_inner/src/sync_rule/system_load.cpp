@@ -40,7 +40,7 @@ void SystemLoadStatus::RegisterSystemloadCallback(std::shared_ptr<CloudFile::Dat
 void SystemLoadListener::OnSystemloadLevel(int32_t level)
 {
     SystemLoadStatus::Setload(level);
-    if (level > SYSTEMLOADLEVEL_HOT) {
+    if (level >= SYSTEMLOADLEVEL_HOT) {
         LOGI("OnSystemloadLevel over warm");
     } else if (dataSyncManager_) {
         std::string systemLoadSync = system::GetParameter(TEMPERATURE_SYSPARAM_SYNC, "");
