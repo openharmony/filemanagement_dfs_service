@@ -27,7 +27,7 @@ group("services_target") {
   ]
 
   if (dfs_service_feature_enable_dist_file_daemon) {
-    deps += ["${services_path}/distributedfiledaemon:libdistributedfiledaemon"]
+    deps += [ "${services_path}/distributedfiledaemon:libdistributedfiledaemon" ]
   }
 }
 
