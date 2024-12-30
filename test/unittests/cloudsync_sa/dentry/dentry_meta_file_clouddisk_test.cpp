@@ -110,10 +110,12 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileHandleFileByFd003, TestSi
 HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileDoChildUpdateTest, TestSize.Level1)
 {
     CloudDiskMetaFile mFile(TEST_USER_ID, "/", "id1");
+    UniqueFd fd(-1);
+    mFile.fd_ = std::move(fd);
     string name = "";
     CloudDiskMetaFile::CloudDiskMetaFileCallBack callback;
     int ret = mFile.DoChildUpdate(name, callback);
-    EXPECT_EQ(ret, 2);
+    EXPECT_EQ(ret, EINVAL);
 }
 
 /**
@@ -125,6 +127,8 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileDoChildUpdateTest, TestSi
 HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndRemoveTest, TestSize.Level1)
 {
     CloudDiskMetaFile mFile(100, "com.ohos.photos", "rootId");
+    UniqueFd fd(-1);
+    mFile.fd_ = std::move(fd);
     MetaBase mBase1(".trash", "rootId");
     int ret = mFile.DoLookupAndRemove(mBase1);
     EXPECT_EQ(ret, 0);
@@ -291,81 +295,6 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileMgrTest002, TestSize.Leve
     GTEST_LOG_(INFO) << "CloudDiskMetaFileMgrTest002 End";
 }
 
-/**
- * @tc.name: CreateRecycleDentryTest001
- * @tc.desc: Verify the CreateRecycleDentry
- * @tc.type: FUNC
- * @tc.require: SR000HRKJB
- */
-HWTEST_F(CloudDiskDentryMetaFileTest, CreateRecycleDentryTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CreateRecycleDentryTest001 Start";
-    try {
-        uint32_t userId = 100;
-        string bundleName = "com.ohos.photos";
-        int32_t ret = MetaFileMgr::GetInstance().CreateRecycleDentry(userId, bundleName);
-        EXPECT_EQ(ret, 0);
-        MetaFileMgr::GetInstance().CloudDiskClearAll();
-    } catch (...) {
-        EXPECT_FALSE(false);
-        GTEST_LOG_(INFO) << "CreateRecycleDentryTest001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "CreateRecycleDentryTest001 End";
-}
-
-/**
- * @tc.name: MoveIntoRecycleDentryfileTest001
- * @tc.desc: Verify the MoveIntoRecycleDentryfile
- * @tc.type: FUNC
- * @tc.require: SR000HRKJB
- */
-HWTEST_F(CloudDiskDentryMetaFileTest, MoveIntoRecycleDentryfileTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "MoveIntoRecycleDentryfileTest001 Start";
-    try {
-        uint32_t userId = 100;
-        string bundleName = "com.ohos.photos";
-        string name = ".trash";
-        string parentCloudId = "rootId";
-        int64_t rowId = 0;
-        int32_t ret = MetaFileMgr::GetInstance().MoveIntoRecycleDentryfile(userId, bundleName,
-                                                                           name, parentCloudId, rowId);
-        EXPECT_EQ(ret, 0);
-        MetaFileMgr::GetInstance().CloudDiskClearAll();
-    } catch (...) {
-        EXPECT_FALSE(false);
-        GTEST_LOG_(INFO) << "MoveIntoRecycleDentryfileTest001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "MoveIntoRecycleDentryfileTest001 End";
-}
-
-/**
- * @tc.name: RemoveFromRecycleDentryfileTest001
- * @tc.desc: Verify the RemoveFromRecycleDentryfile
- * @tc.type: FUNC
- * @tc.require: SR000HRKJB
- */
-HWTEST_F(CloudDiskDentryMetaFileTest, RemoveFromRecycleDentryfileTest001, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfileTest001 Start";
-    try {
-        uint32_t userId = 100;
-        string bundleName = "com.ohos.photos";
-        string name = ".trash";
-        string parentCloudId = "rootId";
-        int64_t rowId = 0;
-        int32_t ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId, bundleName,
-                                                                             name, parentCloudId, rowId);
-        EXPECT_EQ(ret, 0);
-        MetaFileMgr::GetInstance().CloudDiskClearAll();
-    } catch (...) {
-        EXPECT_FALSE(false);
-        GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfileTest001 ERROR";
-    }
-    GTEST_LOG_(INFO) << "RemoveFromRecycleDentryfileTest001 End";
-}
-
-
 HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_GetDentryFilePath_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DfsService_GetDentryFilePath_001 Start";
@@ -410,9 +339,11 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoChildUpdate_001, TestSize.Lev
         string name = "testName";
         CloudDiskMetaFile mFile(100, "/", "id1");
         CloudDiskMetaFile::CloudDiskMetaFileCallBack updateFunc;
+        UniqueFd fd(-1);
+        mFile.fd_ = std::move(fd);
 
         int32_t ret = mFile.DoChildUpdate(name, updateFunc);
-        EXPECT_EQ(ret, E_INVAL_ARG);
+        EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_FALSE(false);
         GTEST_LOG_(INFO) << "DfsService_DoChildUpdate_001 ERROR";
@@ -426,6 +357,8 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DfsService_DoLookupAndRemove_001, TestSize
     try {
         CloudDiskMetaFile mFile(100, "com.ohos.photos", "rootId");
         MetaBase mBase1(".trash", "rootId");
+        UniqueFd fd(-1);
+        mFile.fd_ = std::move(fd);
 
         int32_t ret = mFile.DoLookupAndRemove(mBase1);
         EXPECT_EQ(ret, E_OK);

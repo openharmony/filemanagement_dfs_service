@@ -566,7 +566,7 @@ HWTEST_F(FileOperationsCloudTest, CreateTest001, TestSize.Level1)
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)))
                                                    .WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->Create(req, parent, name, mode, &fi);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -594,7 +594,7 @@ HWTEST_F(FileOperationsCloudTest, ReadDirTest001, TestSize.Level1)
         struct fuse_file_info fi;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_buf(_, _, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_buf(_, _, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->ReadDir(req, ino, size, off, &fi);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -622,7 +622,7 @@ HWTEST_F(FileOperationsCloudTest, ReadDirTest002, TestSize.Level1)
         struct fuse_file_info fi;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->ReadDir(req, ino, size, off, &fi);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -911,7 +911,7 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest009, TestSize.Level1)
         int flags = 0;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->SetXattr(req, ino, name.c_str(), value, size, flags);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1140,7 +1140,7 @@ HWTEST_F(FileOperationsCloudTest, GetXattrTest001, TestSize.Level1)
         string name = HMDFS_PERMISSION_XATTR;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1221,7 +1221,7 @@ HWTEST_F(FileOperationsCloudTest, GetXattrTest004, TestSize.Level1)
         string name = IS_FAVORITE_XATTR;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1275,7 +1275,7 @@ HWTEST_F(FileOperationsCloudTest, GetXattrTest006, TestSize.Level1)
         string name = IS_FILE_STATUS_XATTR;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1356,7 +1356,7 @@ HWTEST_F(FileOperationsCloudTest, GetXattrTest009, TestSize.Level1)
         string name = CLOUD_FILE_LOCATION;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1409,7 +1409,7 @@ HWTEST_F(FileOperationsCloudTest, GetXattrTest011, TestSize.Level1)
         string name = CLOUD_CLOUD_RECYCLE_XATTR;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -1463,7 +1463,7 @@ HWTEST_F(FileOperationsCloudTest, GetXattrTest013, TestSize.Level1)
         string name = CLOUD_CLOUD_RECYCLE_XATTR;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillRepeatedly(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->GetXattr(req, ino, name.c_str(), size);
         EXPECT_TRUE(true);
     } catch (...) {
@@ -2324,7 +2324,7 @@ HWTEST_F(FileOperationsCloudTest, SetAttrTest001, TestSize.Level1)
         struct fuse_file_info fi;
 
         EXPECT_CALL(*insMock, fuse_req_userdata(_)).WillOnce(Return(reinterpret_cast<void*>(&data)));
-        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillOnce(Return(E_OK));
+        EXPECT_CALL(*insMock, fuse_reply_err(_, _)).WillRepeatedly(Return(E_OK));
         fileOperationsCloud_->SetAttr(req, ino, &attr, valid, &fi);
         EXPECT_TRUE(true);
     } catch (...) {

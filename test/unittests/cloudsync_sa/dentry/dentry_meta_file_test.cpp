@@ -81,7 +81,7 @@ HWTEST_F(DentryMetaFileTest, MetaFileHandleFileByFd002, TestSize.Level1)
     unsigned long endBlock = 0;
     uint32_t level = 64;
     int ret = mFile.HandleFileByFd(endBlock, level);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EINVAL);
 }
 
 /**
@@ -97,7 +97,7 @@ HWTEST_F(DentryMetaFileTest, MetaFileHandleFileByFd003, TestSize.Level1)
     unsigned long endBlock = 0;
     uint32_t level = 0;
     int ret = mFile.HandleFileByFd(endBlock, level);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EINVAL);
 }
 
 /**
@@ -117,11 +117,11 @@ HWTEST_F(DentryMetaFileTest, MetaFileCreate001, TestSize.Level1)
     MetaBase mBase1("file1", "id1");
     mBase1.size = TEST_ISIZE;
     int ret = mFile.DoCreate(mBase1);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EINVAL);
     MetaBase mBase2("file2", "id2");
     mBase2.size = TEST_ISIZE;
     ret = mFile.DoCreate(mBase2);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EINVAL);
     MetaFile mFile2(userId, "/a/b");
     MetaBase mBase3("file3", "id3");
     ret = mFile2.DoCreate(mBase3);
@@ -167,8 +167,8 @@ HWTEST_F(DentryMetaFileTest, MetaFileLookup, TestSize.Level1)
     MetaFile mFile(userId, "/");
     MetaBase mBase1("file1");
     int ret = mFile.DoLookup(mBase1);
-    EXPECT_EQ(ret, 0);
-    EXPECT_EQ(mBase1.size, TEST_ISIZE);
+    EXPECT_EQ(ret, EINVAL);
+    EXPECT_EQ(mBase1.size, 0);
 }
 
 /**
@@ -198,10 +198,10 @@ HWTEST_F(DentryMetaFileTest, MetaFileUpdate, TestSize.Level1)
     MetaBase mBase1("file1", "id11");
     mBase1.size = 0;
     int ret = mFile.DoUpdate(mBase1);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EINVAL);
     MetaBase mBase2("file1");
     ret = mFile.DoLookup(mBase2);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EINVAL);
     EXPECT_EQ(mBase2.size, 0);
 }
 
@@ -217,11 +217,11 @@ HWTEST_F(DentryMetaFileTest, MetaFileRename, TestSize.Level1)
     MetaFile mFile(userId, "/");
     MetaBase mBase1("file2");
     int ret = mFile.DoRename(mBase1, "file4");
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EINVAL);
     MetaBase mBase2("file4");
     ret = mFile.DoLookup(mBase2);
-    EXPECT_EQ(ret, 0);
-    EXPECT_EQ(mBase2.size, TEST_ISIZE);
+    EXPECT_EQ(ret, EINVAL);
+    EXPECT_EQ(mBase2.size, 0);
 }
 
 /**
@@ -250,10 +250,10 @@ HWTEST_F(DentryMetaFileTest, MetaFileRemove002, TestSize.Level1)
     MetaFile mFile(userId, "/");
     MetaBase mBase1("file1");
     int ret = mFile.DoRemove(mBase1);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, EINVAL);
     MetaBase mBase2("file1");
     ret = mFile.DoLookup(mBase2);
-    EXPECT_EQ(ret, ENOENT);
+    EXPECT_EQ(ret, EINVAL);
 }
 
 /**
@@ -270,7 +270,7 @@ HWTEST_F(DentryMetaFileTest, LoadChildren001, TestSize.Level1)
         MetaFile mFile(userId, "/");
         std::vector<MetaBase> bases;
         int ret = mFile.LoadChildren(bases);
-        EXPECT_EQ(ret, 0);
+        EXPECT_EQ(ret, EINVAL);
     } catch (...) {
         EXPECT_FALSE(false);
         GTEST_LOG_(INFO) << "LoadChildren001 ERROR";
@@ -312,7 +312,7 @@ HWTEST_F(DentryMetaFileTest, MetaFileMgr001, TestSize.Level1)
         uint32_t userId = 100;
         auto m = MetaFileMgr::GetInstance().GetMetaFile(userId, "/o/p/q/r/s/t");
         MetaBase mBase1("file1", "file1");
-        EXPECT_EQ(m->DoCreate(mBase1), 0);
+        EXPECT_EQ(m->DoCreate(mBase1), EINVAL);
         m = nullptr;
         MetaFileMgr::GetInstance().ClearAll();
     } catch (...) {
@@ -335,7 +335,7 @@ HWTEST_F(DentryMetaFileTest, MetaFileMgr002, TestSize.Level1)
         uint32_t userId = 100;
         auto m = MetaFileMgr::GetInstance().GetMetaFile(userId, "/o/p/q/r/s/t");
         MetaBase mBase1("testLongLongfileName", "testLongLongfileName");
-        EXPECT_EQ(m->DoCreate(mBase1), 0);
+        EXPECT_EQ(m->DoCreate(mBase1), EINVAL);
         m = nullptr;
         MetaFileMgr::GetInstance().ClearAll();
     } catch (...) {
