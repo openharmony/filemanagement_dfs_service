@@ -24,8 +24,12 @@ group("services_target") {
     "${services_path}/clouddisk_database:clouddisk_database",
     "${services_path}/cloudfiledaemon:cloudfiledaemon",
     "${services_path}/cloudsyncservice:cloudsync_sa",
-    "${services_path}/distributedfiledaemon:libdistributedfiledaemon",
   ]
+
+  if (dfs_service_feature_enable_dist_file_daemon) {
+    deps +=
+        [ "${services_path}/distributedfiledaemon:libdistributedfiledaemon" ]
+  }
 }
 
 group("cloudsync_kit_inner_target") {

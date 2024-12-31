@@ -37,6 +37,7 @@ declare_args() {
     cloudsync_service_power = false
   }
   dfs_service_feature_enable_cloud_adapter = false
+  dfs_service_feature_enable_dist_file_daemon = true
   if (defined(global_parts_info) &&
       defined(global_parts_info.multimedia_media_library)) {
     cloudsync_service_media_library = true
