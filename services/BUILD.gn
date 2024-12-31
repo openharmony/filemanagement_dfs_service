@@ -15,9 +15,7 @@ import("//build/ohos/sa_profile/sa_profile.gni")
 import("//foundation/filemanagement/dfs_service/distributedfile.gni")
 
 ohos_sa_profile("distributedfile_sa_profile") {
-  sources = [
-    "5204.json",
-  ]
+  sources = [ "5204.json" ]
   if (dfs_service_feature_enable_dist_file_daemon) {
     sources += [ "5201.json" ]
   }
