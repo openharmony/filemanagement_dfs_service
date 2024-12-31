@@ -38,6 +38,7 @@ public:
 private:
     void RemoveMPInfo(const int id);
     void AddMPInfo(const int id, const std::string &relativePath);
+    int32_t GetCurrentUserId();
 
     std::mutex serializer_;
     std::unordered_map<int, std::vector<std::shared_ptr<MountPoint>>> mountPoints_;

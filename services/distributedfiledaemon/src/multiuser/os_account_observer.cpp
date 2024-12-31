@@ -19,6 +19,7 @@
 #include "common_event_support.h"
 #include "device/device_manager_agent.h"
 #include "dfsu_mount_argument_descriptors.h"
+#include "os_account_manager.h"
 #include "utils_log.h"
 
 namespace OHOS {
@@ -27,7 +28,7 @@ namespace DistributedFile {
 using namespace std;
 namespace {
 static const std::string SAME_ACCOUNT = "account";
-static constexpr int DEFAULT_ACCOUNT = 100;
+const int32_t INVALID_USER_ID = -1;
 } // namespace
 
 OsAccountObserver::OsAccountObserver(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
@@ -35,11 +36,15 @@ OsAccountObserver::OsAccountObserver(const EventFwk::CommonEventSubscribeInfo &s
 {
     LOGI("init first to create network of default user");
     lock_guard<mutex> lock(serializer_);
-    curUsrId = DEFAULT_ACCOUNT;
+    curUsrId = GetCurrentUserId();
+    if (curUsrId == INVALID_USER_ID) {
+        LOGE("GetCurrentUserId Fail");
+        return;
+    }
     AddMPInfo(curUsrId, SAME_ACCOUNT);
     auto dm = DeviceManagerAgent::GetInstance();
     dm->Recv(make_unique<DfsuCmd<DeviceManagerAgent>>(&DeviceManagerAgent::InitDeviceInfos));
-    LOGI("init first to create network of user %{public}d, done", DEFAULT_ACCOUNT);
+    LOGI("init first to create network of user %{public}d, done", curUsrId);
 }
 
 OsAccountObserver::~OsAccountObserver()
@@ -92,6 +97,17 @@ void OsAccountObserver::RemoveMPInfo(const int id)
     mountPoints_.erase(iter);
 
     LOGE("remove mount info of user id %{public}d", id);
+}
+
+int32_t OsAccountObserver::GetCurrentUserId()
+{
+    std::vector<int32_t> userIds{};
+    auto ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(userIds);
+    if (ret != NO_ERROR || userIds.empty()) {
+        LOGE("query active os account id failed, ret = %{public}d", ret);
+        return INVALID_USER_ID;
+    }
+    return userIds[0];
 }
 } // namespace DistributedFile
 } // namespace Storage

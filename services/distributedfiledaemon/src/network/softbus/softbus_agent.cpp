@@ -41,21 +41,13 @@ using namespace std;
 const int32_t DFS_QOS_TYPE_MIN_BW = 90 * 1024 * 1024;
 const int32_t DFS_QOS_TYPE_MAX_LATENCY = 10000;
 const int32_t DFS_QOS_TYPE_MIN_LATENCY = 2000;
+const std::string SESSION_NAME = "DistributedFileService/mnt/hmdfs/100/account";
 #ifdef SUPPORT_SAME_ACCOUNT
 const uint32_t MAX_ONLINE_DEVICE_SIZE = 10000;
 #endif
 SoftbusAgent::SoftbusAgent(weak_ptr<MountPoint> mountPoint) : NetworkAgentTemplate(mountPoint)
 {
-    auto spt = mountPoint.lock();
-    if (spt == nullptr) {
-        LOGE("mountPoint is not exist! bad weak_ptr");
-        sessionName_ = "";
-        return;
-    }
-
-    string path = spt->GetMountArgument().GetFullDst();
-    SoftbusSessionName sessionName(path);
-    sessionName_ = sessionName.ToString();
+    sessionName_ = SESSION_NAME;
 }
 
 bool SoftbusAgent::IsSameAccount(const std::string &networkId)
