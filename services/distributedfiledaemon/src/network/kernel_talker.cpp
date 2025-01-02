@@ -229,7 +229,7 @@ void KernelTalker::NotifyHandler(NotifyParam &param)
             GetSessionCallback_(param);
             break;
         case NOTIFY_OFFLINE:
-            CloseSessionCallback_(param.fd);
+            CloseSessionCallback_(cidStr);
             break;
         default:
             LOGI("cmd %{public}d not support now", cmd);

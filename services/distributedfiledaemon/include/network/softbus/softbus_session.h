@@ -38,6 +38,7 @@ public:
     std::array<char, KEY_SIZE_MAX> GetKey() const override;
     void Release() const override;
     void DisableSessionListener() const override;
+    void SetFromServer(bool isServer);
 
 private:
     int32_t sessionId_;
