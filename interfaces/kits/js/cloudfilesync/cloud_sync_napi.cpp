@@ -840,6 +840,7 @@ napi_value ChangeListenerNapi::SolveOnChange(napi_env env, const AAFwk::ChangeIn
         int ret = memcpy_s(data, changeInfo.size_, changeInfo.data_, changeInfo.size_);
         if (ret != 0) {
             LOGE("Parcel data copy failed, err = %{public}d", ret);
+            free(data);
             return nullptr;
         }
         shared_ptr<MessageParcel> parcel = make_shared<MessageParcel>();
