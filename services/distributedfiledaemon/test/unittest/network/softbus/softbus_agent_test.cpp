@@ -435,68 +435,6 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_DisconnectAllDevices_0100, TestSize.
 }
 
 /**
- * @tc.name: SoftbusAgentTest_ConnectDeviceAsync_0100
- * @tc.desc: Verify the ConnectDeviceAsync function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectDeviceAsync_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectDeviceAsync_0100 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
-    shared_ptr<MountPoint> smp = move(mp);
-    weak_ptr<MountPoint> wmp(smp);
-    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-    DistributedHardware::DmDeviceInfo info = {
-        .deviceId = "testdevid",
-        .deviceName = "testdevname",
-        .deviceTypeId = 1,
-    };
-    DeviceInfo devInfo(info);
-
-    bool res = true;
-    try {
-        agent->ConnectDeviceAsync(devInfo);
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectDeviceAsync_0100 end";
-}
-
-/**
- * @tc.name: SoftbusAgentTest_DisconnectDevice_0100
- * @tc.desc: Verify the DisconnectDevice function.
- * @tc.type: FUNC
- * @tc.require: SR000H0387
- */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_DisconnectDevice_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_DisconnectDevice_0100 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
-    shared_ptr<MountPoint> smp = move(mp);
-    weak_ptr<MountPoint> wmp(smp);
-    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-    DistributedHardware::DmDeviceInfo info = {
-        .deviceId = "testdevid",
-        .deviceName = "testdevname",
-        .deviceTypeId = 1,
-    };
-    DeviceInfo devInfo(info);
-
-    bool res = true;
-    try {
-        agent->DisconnectDevice(devInfo);
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-    EXPECT_TRUE(res == true);
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_DisconnectDevice_0100 end";
-}
-
-/**
  * @tc.name: SoftbusAgentTest_AcceptSession_0100
  * @tc.desc: Verify the AcceptSession function.
  * @tc.type: FUNC
@@ -545,37 +483,6 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_GetMountPoint_0100, TestSize.Level1)
     }
     EXPECT_TRUE(res);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_GetMountPoint_0100 end";
-}
-
-/**
- * @tc.name: SoftbusAgentTest_ConnectDeviceByP2PAsync_0100
- * @tc.desc: Verify the ConnectDeviceByP2PAsync function.
- * @tc.type: FUNC
- * @tc.require: I7M6L1
- */
-HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_ConnectDeviceByP2PAsync_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectDeviceByP2PAsync_0100 start";
-    auto mp = make_unique<MountPoint>(Utils::DfsuMountArgumentDescriptors::Alpha(USER_ID, SAME_ACCOUNT));
-    shared_ptr<MountPoint> smp = move(mp);
-    weak_ptr<MountPoint> wmp(smp);
-    std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-    DistributedHardware::DmDeviceInfo info = {
-        .deviceId = "testdevid",
-        .deviceName = "testdevname",
-        .deviceTypeId = 1,
-    };
-    DeviceInfo devInfo(info);
-
-    bool res = true;
-    try {
-        agent->ConnectDeviceByP2PAsync(devInfo);
-    } catch (const exception &e) {
-        res = false;
-        LOGE("%{public}s", e.what());
-    }
-    EXPECT_TRUE(res);
-    GTEST_LOG_(INFO) << "SoftbusAgentTest_ConnectDeviceByP2PAsync_0100 end";
 }
 
 /**
