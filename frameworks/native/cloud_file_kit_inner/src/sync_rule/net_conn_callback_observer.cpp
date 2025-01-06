@@ -37,10 +37,11 @@ int32_t NetConnCallbackObserver::NetCapabilitiesChange(sptr<NetHandle> &netHandl
 {
     NetworkStatus::NetConnStatus oldStatus = NetworkStatus::GetNetConnStatus();
     NetworkStatus::SetNetConnStatus(*netAllCap);
-    if (oldStatus != NetworkStatus::NO_NETWORK) {
+    NetworkStatus::NetConnStatus newStatus = NetworkStatus::GetNetConnStatus();
+    if (oldStatus == newStatus) {
+        LOGI("net status is not change, status is %{public}d", static_cast<int32_t>(newStatus));
         return E_OK;
     }
-    NetworkStatus::NetConnStatus newStatus = NetworkStatus::GetNetConnStatus();
     if (newStatus == NetworkStatus::WIFI_CONNECT) {
         LOGI("NetCapabilitiesChanged wifi connected");
         dataSyncManager_->TriggerRecoverySync(triggerType_);
