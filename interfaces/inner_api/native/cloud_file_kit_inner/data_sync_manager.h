@@ -50,13 +50,15 @@ public:
                                       const std::vector<std::string> pathVec,
                                       int64_t &downloadId,
                                       std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
-                                      const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback);
+                                      const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback,
+                                      int32_t timeout = -1);
     virtual int32_t StopDownloadFile(const BundleNameUserInfo &bundleNameUserInfo,
                                      const std::string path,
                                      bool needClean = false);
     virtual int32_t StopFileCache(const BundleNameUserInfo &bundleNameUserInfo,
                                   const int64_t &downloadId,
-                                  bool needClean);
+                                  bool needClean,
+                                  int32_t timeout = -1);
     virtual int32_t RegisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo,
                                                  const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback);
     virtual int32_t UnregisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo);

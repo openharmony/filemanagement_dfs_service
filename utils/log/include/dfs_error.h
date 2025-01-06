@@ -86,6 +86,9 @@ enum CloudSyncServiceErrCode : ErrCode {
     /* eventhandler */
     E_EVENT_HANDLER,
     E_ZIP,
+
+    /* download timeout */
+    E_TIMEOUT,
 };
 
 enum DFSErrCode {
