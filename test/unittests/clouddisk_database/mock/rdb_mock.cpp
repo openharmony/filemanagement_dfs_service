@@ -25,7 +25,7 @@ std::shared_ptr<RdbStore> RdbHelper::GetRdbStore(
     return Assistant::ins->GetRdbStore(config, version, openCallback, errCode);
 }
 
-int RdbHelper::DeleteRdbStore(const std::string &dbFileName)
+int RdbHelper::DeleteRdbStore(const std::string &dbFileName, bool shouldClose)
 {
     return Assistant::ins->DeleteRdbStore(dbFileName);
 }
