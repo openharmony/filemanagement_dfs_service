@@ -63,10 +63,9 @@ public:
     int32_t OpenP2PConnectionEx(const std::string &networkId, sptr<IFileDfsListener> remoteReverseObj) override;
     int32_t CloseP2PConnectionEx(const std::string &networkId) override;
     int32_t ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceInfo);
-    int32_t CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo,
-                    const std::string &networkId, uint32_t callingTokenId);
+    int32_t CleanUp(const DistributedHardware::DmDeviceInfo &deviceInfo);
     int32_t ConnectionAndMount(const DistributedHardware::DmDeviceInfo &deviceInfo,
-                               const std::string &networkId, uint32_t callingTokenId);
+        const std::string &networkId, uint32_t callingTokenId, sptr<IFileDfsListener> remoteReverseObj);
     int32_t PrepareSession(const std::string &srcUri,
                            const std::string &dstUri,
                            const std::string &srcDeviceId,
@@ -123,6 +122,7 @@ private:
     };
     static inline sptr<DfsListenerDeathRecipient> dfsListenerDeathRecipient_;
 private:
+    std::mutex connectMutex_;
     std::mutex eventHandlerMutex_;
     std::shared_ptr<DaemonEventHandler> eventHandler_;
     std::shared_ptr<DaemonExecute> daemonExecute_;
