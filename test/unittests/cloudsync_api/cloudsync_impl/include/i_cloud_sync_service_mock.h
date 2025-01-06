@@ -104,7 +104,8 @@ public:
     int32_t StartFileCache(const std::vector<std::string> &pathVec, int64_t &downloadId,
                            std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
                            bool isCallbackValid,
-                           const sptr<IRemoteObject> &downloadCallback)
+                           const sptr<IRemoteObject> &downloadCallback,
+                           int32_t timeout = -1)
     {
         return E_OK;
     }
@@ -112,7 +113,7 @@ public:
     {
         return E_OK;
     }
-    int32_t StopFileCache(const int64_t &downloadId,  bool needClean = false)
+    int32_t StopFileCache(const int64_t &downloadId,  bool needClean = false, int32_t timeout = -1)
     {
         return E_OK;
     }

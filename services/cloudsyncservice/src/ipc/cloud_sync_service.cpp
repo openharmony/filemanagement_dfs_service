@@ -528,7 +528,8 @@ int32_t CloudSyncService::Clean(const std::string &accountId, const CleanOptions
 int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
                                          int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
                                          bool isCallbackValid,
-                                         const sptr<IRemoteObject> &downloadCallback)
+                                         const sptr<IRemoteObject> &downloadCallback,
+                                         int32_t timeout)
 {
     BundleNameUserInfo bundleNameUserInfo;
     int ret = GetBundleNameUserInfo(bundleNameUserInfo);
@@ -538,7 +539,7 @@ int32_t CloudSyncService::StartFileCache(const std::vector<std::string> &uriVec,
     }
     LOGI("start StartFileCache");
     auto downloadCb = iface_cast<ICloudDownloadCallback>(downloadCallback);
-    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb);
+    return dataSyncManager_->StartDownloadFile(bundleNameUserInfo, uriVec, downloadId, fieldkey, downloadCb, timeout);
 }
 
 int32_t CloudSyncService::StartDownloadFile(const std::string &path)
@@ -567,7 +568,7 @@ int32_t CloudSyncService::StopDownloadFile(const std::string &path, bool needCle
     return dataSyncManager_->StopDownloadFile(bundleNameUserInfo, path, needClean);
 }
 
-int32_t CloudSyncService::StopFileCache(const int64_t &downloadId,  bool needClean)
+int32_t CloudSyncService::StopFileCache(const int64_t &downloadId,  bool needClean, int32_t timeout)
 {
     BundleNameUserInfo bundleNameUserInfo;
     int ret = GetBundleNameUserInfo(bundleNameUserInfo);
@@ -575,7 +576,7 @@ int32_t CloudSyncService::StopFileCache(const int64_t &downloadId,  bool needCle
         return ret;
     }
     LOGI("start StopFileCache");
-    return dataSyncManager_->StopFileCache(bundleNameUserInfo, downloadId, needClean);
+    return dataSyncManager_->StopFileCache(bundleNameUserInfo, downloadId, needClean, timeout);
 }
 
 int32_t CloudSyncService::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)

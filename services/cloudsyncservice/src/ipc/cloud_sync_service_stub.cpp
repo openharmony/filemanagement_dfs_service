@@ -387,6 +387,8 @@ int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageP
         downloadCallback = data.ReadRemoteObject();
     }
 
+    int32_t timeout = data.ReadInt32();
+
     if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_AUTH_URI)) {
         for (auto &uri : pathVec) {
             if (!DfsuAccessTokenHelper::CheckUriPermission(uri)) {
@@ -396,7 +398,7 @@ int32_t CloudSyncServiceStub::HandleStartFileCache(MessageParcel &data, MessageP
         }
     }
     int64_t downloadId = 0;
-    int32_t res = StartFileCache(pathVec, downloadId, fieldkey, isCallbackValid, downloadCallback);
+    int32_t res = StartFileCache(pathVec, downloadId, fieldkey, isCallbackValid, downloadCallback, timeout);
     reply.WriteInt64(downloadId);
     reply.WriteInt32(res);
     LOGI("End HandleStartFileCache");
@@ -436,8 +438,9 @@ int32_t CloudSyncServiceStub::HandleStopFileCache(MessageParcel &data, MessagePa
     }
     int64_t downloadId = data.ReadInt64();
     bool needClean = data.ReadBool();
+    int32_t timeout = data.ReadInt32();
 
-    int32_t res = StopFileCache(downloadId, needClean);
+    int32_t res = StopFileCache(downloadId, needClean, timeout);
     reply.WriteInt32(res);
     LOGI("End HandleStopFileCache");
     return E_OK;

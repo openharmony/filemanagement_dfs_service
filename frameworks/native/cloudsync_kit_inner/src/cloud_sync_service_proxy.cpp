@@ -603,7 +603,8 @@ int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
                                                          const std::vector<std::string> &pathVec,
                                                          std::bitset<FIELD_KEY_MAX_SIZE> &fieldkey,
                                                          bool &isCallbackValid,
-                                                         const sptr<IRemoteObject> &downloadCallback)
+                                                         const sptr<IRemoteObject> &downloadCallback,
+                                                         int32_t timeout)
 {
     if (!data.WriteStringVector(pathVec)) {
         LOGE("Failed to send the cloud id");
@@ -626,13 +627,19 @@ int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
             return E_INVAL_ARG;
         }
     }
+
+    if (!data.WriteInt32(timeout)) {
+        LOGE("Faile to send the timeout");
+        return E_INVAL_ARG;
+    }
     return E_OK;
 }
 
 int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &uriVec,
                                               int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
                                               bool isCallbackValid,
-                                              const sptr<IRemoteObject> &downloadCallback)
+                                              const sptr<IRemoteObject> &downloadCallback,
+                                              int32_t timeout)
 {
     LOGI("StartFileCache Start");
     MessageParcel data;
@@ -661,7 +668,7 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &ur
              i, GetAnonyString(uriVec[i]).c_str(), GetAnonyString(path).c_str());
     }
 
-    auto retParcel = StartFileCacheWriteParcel(data, pathVec, fieldkey, isCallbackValid, downloadCallback);
+    auto retParcel = StartFileCacheWriteParcel(data, pathVec, fieldkey, isCallbackValid, downloadCallback, timeout);
     if (retParcel != E_OK) {
         LOGE("StartFileCacheWriteParcel failed");
         return retParcel;
@@ -738,7 +745,7 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool nee
     return reply.ReadInt32();
 }
 
-int32_t CloudSyncServiceProxy::StopFileCache(const int64_t &downloadId,  bool needClean)
+int32_t CloudSyncServiceProxy::StopFileCache(const int64_t &downloadId,  bool needClean, int32_t timeout)
 {
     LOGI("StopFileCache Start");
     MessageParcel data;
@@ -760,6 +767,11 @@ int32_t CloudSyncServiceProxy::StopFileCache(const int64_t &downloadId,  bool ne
 
     if (!data.WriteBool(needClean)) {
         LOGE("Failed to send the needClean flag");
+        return E_INVAL_ARG;
+    }
+
+    if (!data.WriteInt32(timeout)) {
+        LOGE("Failed to send the timeout");
         return E_INVAL_ARG;
     }
 

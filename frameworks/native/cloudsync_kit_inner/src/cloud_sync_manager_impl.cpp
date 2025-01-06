@@ -245,7 +245,8 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::string &uri)
 
 int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uriVec,
                                              int64_t &downloadId, std::bitset<FIELD_KEY_MAX_SIZE> fieldkey,
-                                             const std::shared_ptr<CloudDownloadCallback> downloadCallback)
+                                             const std::shared_ptr<CloudDownloadCallback> downloadCallback,
+                                             int32_t timeout)
 {
     LOGI("StartFileCache batch start, uriVec size: %{public}zu, fieldKey: %{public}llu, Callback is null: %{public}d",
          uriVec.size(), static_cast<unsigned long long>(fieldkey.to_ulong()), (downloadCallback == nullptr));
@@ -275,7 +276,8 @@ int32_t CloudSyncManagerImpl::StartFileCache(const std::vector<std::string> &uri
         }
     }
 
-    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId, fieldkey, isCallbackValid, dlCallback);
+    int32_t ret = CloudSyncServiceProxy->StartFileCache(uriVec, downloadId, fieldkey,
+        isCallbackValid, dlCallback, timeout);
     LOGI("StartFileCache batch ret %{public}d", ret);
     return ret;
 }
@@ -294,7 +296,7 @@ int32_t CloudSyncManagerImpl::StopDownloadFile(const std::string &uri,  bool nee
     return ret;
 }
 
-int32_t CloudSyncManagerImpl::StopFileCache(const int64_t &downloadId,  bool needClean)
+int32_t CloudSyncManagerImpl::StopFileCache(const int64_t &downloadId,  bool needClean, int32_t timeout)
 {
     LOGI("StopFileCache start");
     auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
@@ -303,7 +305,7 @@ int32_t CloudSyncManagerImpl::StopFileCache(const int64_t &downloadId,  bool nee
         return E_SA_LOAD_FAILED;
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
-    int32_t ret = CloudSyncServiceProxy->StopFileCache(downloadId, needClean);
+    int32_t ret = CloudSyncServiceProxy->StopFileCache(downloadId, needClean, timeout);
     LOGI("StopFileCache ret %{public}d", ret);
     return ret;
 }
