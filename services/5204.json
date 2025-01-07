@@ -16,16 +16,16 @@
                 ],
                 "commonevent": [
                     {
-                        "name": "usual.event.wifi.SCAN_FINISHED",
-                        "value": "1"
+                        "name": "usual.event.wifi.CONN_STATE",
+                        "value": "4"
                     },
                     {
                         "name": "usual.event.CHARGING",
                         "conditions": [
                             {
                                 "eventId": "commonevent",
-                                "name": "usual.event.wifi.SCAN_FINISHED",
-                                "value": "1"
+                                "name": "usual.event.wifi.CONN_STATE",
+                                "value": "4"
                             },
                             {
                                 "eventId": "commonevent",
@@ -38,8 +38,8 @@
                         "conditions": [
                             {
                                 "eventId": "commonevent",
-                                "name": "usual.event.wifi.SCAN_FINISHED",
-                                "value": "1"
+                                "name": "usual.event.wifi.CONN_STATE",
+                                "value": "4"
                             }
                         ]
                     },

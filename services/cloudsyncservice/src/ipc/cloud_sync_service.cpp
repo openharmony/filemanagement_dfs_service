@@ -145,7 +145,7 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
         return;
     }
 
-    if (reason == "usual.event.wifi.SCAN_FINISHED") {
+    if (reason == "usual.event.wifi.CONN_STATE") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::NETWORK_AVAIL_TRIGGER);
     } else if (reason == "usual.event.BATTERY_OKAY") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
