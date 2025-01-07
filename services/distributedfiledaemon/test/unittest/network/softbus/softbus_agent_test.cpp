@@ -88,6 +88,7 @@ using namespace testing::ext;
 constexpr int USER_ID = 100;
 constexpr int MAX_RETRY_COUNT = 7;
 static const string SAME_ACCOUNT = "account";
+const string SESSION_NAME = "DistributedFileService/mnt/hmdfs/100/account";
 
 class SoftbusAgentTest : public testing::Test {
 public:
@@ -125,11 +126,11 @@ HWTEST_F(SoftbusAgentTest, SoftbusAgentTest_SoftbusAgent_0100, TestSize.Level1)
     shared_ptr<MountPoint> smp = move(mp);
     weak_ptr<MountPoint> wmp(smp);
     std::shared_ptr<SoftbusAgent> agent = std::make_shared<SoftbusAgent>(wmp);
-    EXPECT_EQ(agent->sessionName_, "DistributedFileService/mnt/hmdfs/100/account");
+    EXPECT_EQ(agent->sessionName_, SESSION_NAME);
 
     weak_ptr<MountPoint> nullwmp;
     std::shared_ptr<SoftbusAgent> agent2 = std::make_shared<SoftbusAgent>(nullwmp);
-    EXPECT_EQ(agent2->sessionName_, "");
+    EXPECT_EQ(agent2->sessionName_, SESSION_NAME);
     GTEST_LOG_(INFO) << "SoftbusAgentTest_SoftbusAgent_0100 end";
 }
 
