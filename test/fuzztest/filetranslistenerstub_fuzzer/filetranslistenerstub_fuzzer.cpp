@@ -24,8 +24,6 @@
 #include "securec.h"
 
 namespace OHOS {
-
-constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 
 using namespace OHOS::Storage::DistributedFile;
@@ -58,24 +56,28 @@ int32_t FileTransListenerStubImpl::OnFinished(const std::string &sessionName)
     return 0;
 }
 
-uint32_t GetU32Data(const char *ptr)
+uint32_t GetU32Data(const uint8_t *ptr, size_t size)
 {
+    /* Validate the length of size */
+    if ((ptr == nullptr) || (size < OHOS::U32_AT_SIZE)) {
+        return 0;
+    }
     // 将第0个数字左移24位，将第1个数字左移16位，将第2个数字左移8位，第3个数字不左移
     return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | (ptr[3]);
 }
 
 bool FileTransListenerStubFuzzTest(
     std::shared_ptr<Storage::DistributedFile::FileTransListenerStub> transListenerStubPtr,
-    std::unique_ptr<char[]> data,
+    const uint8_t *data,
     size_t size)
 {
-    uint32_t code = GetU32Data(data.get());
+    uint32_t code = GetU32Data(data, size);
     if (code == 0) {
         return true;
     }
     MessageParcel datas;
     datas.WriteInterfaceToken(FileTransListenerStub::GetDescriptor());
-    datas.WriteBuffer(data.get(), size);
+    datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
@@ -88,22 +90,7 @@ bool FileTransListenerStubFuzzTest(
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
-    /* Validate the length of size */
-    if (size < OHOS::U32_AT_SIZE || size > OHOS::FOO_MAX_LEN) {
-        return 0;
-    }
-
-    auto str = std::make_unique<char[]>(size + 1);
-    if (memcpy_s(str.get(), size, data, size) != EOK) {
-        return 0;
-    }
-
     auto transListenerStubPtr = std::make_shared<OHOS::Storage::DistributedFile::FileTransListenerStubImpl>();
-    OHOS::FileTransListenerStubFuzzTest(transListenerStubPtr, move(str), size);
+    OHOS::FileTransListenerStubFuzzTest(transListenerStubPtr, data, size);
     return 0;
 }

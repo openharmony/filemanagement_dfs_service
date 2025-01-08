@@ -44,10 +44,6 @@ pid_t IPCSkeleton::GetCallingUid()
 }
 
 namespace OHOS {
-
-constexpr size_t FOO_MAX_LEN = 1024;
-constexpr size_t U32_AT_SIZE = 4;
-
 using namespace OHOS::Storage::DistributedFile;
 
 class DaemonStubImpl : public DaemonStub {
@@ -322,14 +318,6 @@ void SetAccessTokenPermission()
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    if (data == nullptr) {
-        return 0;
-    }
-
-    /* Validate the length of size */
-    if (size < OHOS::U32_AT_SIZE || size > OHOS::FOO_MAX_LEN) {
-        return 0;
-    }
     OHOS::SetAccessTokenPermission();
     auto daemonStubPtr = std::make_shared<OHOS::DaemonStubImpl>();
     OHOS::HandleOpenP2PConnectionFuzzTest(daemonStubPtr, data, size);
