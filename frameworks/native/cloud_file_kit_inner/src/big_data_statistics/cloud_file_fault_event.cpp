@@ -22,6 +22,7 @@
 
 #include "cloud_file_log.h"
 #include "dfs_error.h"
+#include "cloud_report_cacher.h"
 
 namespace OHOS {
 namespace FileManagement {
@@ -96,6 +97,28 @@ int32_t CloudFileFaultEvent::CloudFileFaultReport(const std::string &funcName,
         if (ret != E_OK) {
             LOGE("report CLOUD_FILE_ACCESS_FAULT error %{public}d", ret);
         }
+    }
+    LOGE("%{public}s", event.message_.c_str());
+    return event.faultErrorCode_;
+}
+
+int32_t CloudFileFaultEvent::CloudSyncCacheReport(const std::string &funcName,
+                                                  const int lineNum,
+                                                  const CloudCacheFaultInfo &event)
+{
+    if (CloudFaultReportStatus::GetInstance().IsAllowToReport(event.faultType_)) {
+        struct timespec t;
+        clock_gettime(CLOCK_REALTIME, &t);
+        int64_t currentTime_ = t.tv_sec;
+        CloudReportCacher::GetInstance().PushEvent(event.bundleName_, {
+                "CLOUD_FILE_SYNC_FAULT",
+                currentTime_,
+                static_cast<uint32_t>(event.faultType_),
+                static_cast<uint32_t>(abs(event.faultErrorCode_)),
+                funcName + ":" + std::to_string(lineNum),
+                event.message_,
+                event.terminate_
+            });
     }
     LOGE("%{public}s", event.message_.c_str());
     return event.faultErrorCode_;
