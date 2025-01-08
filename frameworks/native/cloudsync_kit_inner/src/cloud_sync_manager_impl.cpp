@@ -20,6 +20,7 @@
 #include "dfs_error.h"
 #include "system_ability_definition.h"
 #include "iservice_registry.h"
+#include "utils_directory.h"
 #include "utils_log.h"
 
 namespace OHOS::FileManagement::CloudSync {
@@ -502,5 +503,17 @@ void CloudSyncManagerImpl::SystemAbilityStatusChange::OnRemoveSystemAbility(int3
     const std::string &deviceId)
 {
     return;
+}
+
+void CloudSyncManagerImpl::CleanGalleryDentryFile()
+{
+    const std::string photoDir = "/storage/media/cloud/files/Photo";
+    const std::string thumbsDir = "/storage/media/cloud/files/.thumbs/Photo";
+    if (!OHOS::Storage::DistributedFile::Utils::ForceRemoveDirectoryDeepFirst(photoDir)) {
+        LOGW("remove photo dentry dir failed, errno: %{public}d", errno);
+    }
+    if (!OHOS::Storage::DistributedFile::Utils::ForceRemoveDirectoryDeepFirst(thumbsDir)) {
+        LOGW("remove thumbs dentry dir failed, errno: %{public}d", errno);
+    }
 }
 } // namespace OHOS::FileManagement::CloudSync
