@@ -82,6 +82,8 @@ ohos_shared_library("cloudsync_kit_inner") {
     "samgr:samgr_proxy",
   ]
 
+  deps = [ "${utils_path}:libdistributedfiledentry" ]
+
   if (cloudsync_service_media_library) {
     external_deps += [ "media_library:media_library" ]
     defines += [ "SUPPORT_MEDIA_LIBRARY" ]

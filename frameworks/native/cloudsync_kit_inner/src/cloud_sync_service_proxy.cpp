@@ -186,7 +186,6 @@ int32_t CloudSyncServiceProxy::TriggerSyncInner(const std::string &bundleName, c
 int32_t CloudSyncServiceProxy::GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName)
 {
     LOGI("Start GetSyncTimeInner");
-    LOGI("Start Sync");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
