@@ -152,6 +152,7 @@ const std::vector<std::string> FileColumn::PULL_QUERY_COLUMNS = {
     CLOUD_ID, FILE_TIME_RECYCLED, VERSION, DIRTY_TYPE, POSITION,
     FILE_TIME_EDITED, FILE_SHA256, FILE_SIZE, FILE_NAME, PARENT_CLOUD_ID, ROW_ID,
     IS_DIRECTORY, FILE_TIME_ADDED, FILE_TYPE, ROOT_DIRECTORY, DIRECTLY_RECYCLED,
+    THM_FLAG, LCD_FLAG,
 };
 
 const std::vector<std::string> FileColumn::DISK_ON_UPLOAD_COLUMNS = {
@@ -161,7 +162,9 @@ const std::vector<std::string> FileColumn::DISK_ON_UPLOAD_COLUMNS = {
     FILE_TIME_EDITED,
     META_TIME_EDITED,
     FILE_TIME_RECYCLED,
-    ROW_ID
+    ROW_ID,
+    THM_FLAG,
+    LCD_FLAG,
 };
 
 const std::vector<std::string> FileColumn::EXT_ATTR_QUERY_COLUMNS = {
