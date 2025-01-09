@@ -27,7 +27,7 @@ namespace CloudSync {
 using namespace std;
 
 const int32_t DELAY_TIME = 90000; // ms
-const int32_t SYSTEM_LOAD_DELAY_TIME = 300000; // ms
+const int32_t SYSTEM_LOAD_DELAY_TIME = 600000; // ms
 
 TaskStateManager &TaskStateManager::GetInstance()
 {
@@ -110,7 +110,7 @@ void TaskStateManager::DelayUnloadTask()
     LOGI("delay unload task begin");
     auto delayTime = DELAY_TIME;
     if (systemLoadSync == "true" || systemLoadThumb == "true") {
-        LOGE("temperatureSysparam is true, unload task in 5 minutes");
+        LOGE("temperatureSysparam is true, unload task in 10 minutes");
         delayTime = SYSTEM_LOAD_DELAY_TIME;
     }
     auto task = [self = shared_from_this()]() {

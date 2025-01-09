@@ -41,6 +41,16 @@
                         ]
                     },
                     {
+                        "name": "usual.event.SCREEN_OFF",
+                        "conditions": [
+                            {
+                                "eventId": "commonevent",
+                                "name": "persist.kernel.cloudsync.screen_off_enable_download",
+                                "value": "true"
+                            }
+                        ]
+                    },
+                    {
                         "name": "usual.event.wifi.CONN_STATE",
                         "value": "4",
                         "conditions": [
