@@ -36,7 +36,7 @@ static constexpr std::chrono::milliseconds NOTIFY_PROGRESS_DELAY(100);
 FileCopyLocalListener::FileCopyLocalListener(const std::string &srcPath,
     bool isFile, const ProcessCallback &processCallback) : isFile_(isFile), processCallback_(processCallback)
 {
-    if (processCallback == nullptr) {
+    if (processCallback_ == nullptr) {
         return;
     }
 

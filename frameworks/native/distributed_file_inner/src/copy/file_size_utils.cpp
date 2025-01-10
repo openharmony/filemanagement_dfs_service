@@ -107,7 +107,7 @@ int32_t FileSizeUtils::GetDirSize(const std::string &path, uint64_t &size)
     return E_OK;
 }
 
-int32_t FileCopyManager::IsFile(const std::string &path, bool &)
+int32_t FileSizeUtils::IsFile(const std::string &path, bool &)
 {
     struct stat buf {};
     int ret = stat(path.c_str(), &buf);
@@ -118,7 +118,7 @@ int32_t FileCopyManager::IsFile(const std::string &path, bool &)
     return E_OK;
 }
 
-int32_t FileCopyManager::IsDirectory(const std::string &path, bool &result)
+int32_t FileSizeUtils::IsDirectory(const std::string &path, bool &result)
 {
     struct stat buf {};
     int ret = stat(path.c_str(), &buf);

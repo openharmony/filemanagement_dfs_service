@@ -45,7 +45,7 @@ static const std::string DISTRIBUTED_PATH = "/data/storage/el2/distributedfiles/
 
 int32_t TransListener::WaitForCopyResult()
 {
-   std::unique_lock<std::mutex> lock(transListener->cvMutex_);
+   std::unique_lock<std::mutex> lock(cvMutex_);
    cv_.wait(lock, [this]() {
        return copyEvent_.copyResult == SUCCESS || copyEvent_.copyResult == FAILED;
    });
@@ -76,27 +76,13 @@ int32_t TransListener::CreateTmpDir()
     }
     hmdfsInfo_.copyPath = tmpDir;
     return E_OK;
-
-//    auto networkId = GetNetworkIdFromUri(srcUri);
-//    LOGI("dfs PrepareSession begin.");
-//
-//    t_logFunction("lixiang  dfs PrepareSession begin.");
-//    auto ret = Storage::DistributedFile::DistributedFileDaemonManager::GetInstance().PrepareSession(srcUri, destUri,
-//                                                                                                    networkId, transListener, info);
-//    if (ret != ERRNO_NOERR) {
-//        LOGE("PrepareSession failed, ret = %{public}d.", ret);
-//        if (info.authority != FILE_MANAGER_AUTHORITY && info.authority != MEDIA_AUTHORITY) {
-//            RmDir(disSandboxPath);
-//        }
-//        return EIO;
-//    }
-//    return ERRNO_NOERR;
 }
 
 void TransListener::RmTmpDir()
 {
-    if (hmdfsInfo_.authority != FILE_MANAGER_AUTHORITY && hmdfsInfo_.authority != MEDIA_AUTHORITY) {
-        LOGE("docs or media file, no need to rm tmp dir.");
+    if (hmdfsInfo_.authority == FILE_MANAGER_AUTHORITY || hmdfsInfo_.authority == MEDIA_AUTHORITY) {
+        LOGI("docs or media file, no need to rm tmp dir.");
+        return;
     }
 
     LOGI("RmTmpDir path : %{public}s", disSandboxPath_.c_str());
@@ -115,7 +101,7 @@ void TransListener::RmTmpDir()
 int32_t TransListener::CopyToSandBox(const std::string &srcUri)
 {
     if (hmdfsInfo_.authority == FILE_MANAGER_AUTHORITY || hmdfsInfo_.authority == MEDIA_AUTHORITY) {
-        LOGE("docs or media file copy success.");
+        LOGI("docs or media path copy success.");
         return E_OK;
     }
 
@@ -147,7 +133,7 @@ int32_t TransListener::CopyToSandBox(const std::string &srcUri)
     }
     RmTmpDir();
     LOGI("CopyToSandBox success.");
-    return ERRNO_NOERR;
+    return E_OK;
 }
 
 std::string TransListener::CreateDfsCopyPath()
@@ -188,7 +174,7 @@ int32_t TransListener::Cancel()
 int32_t TransListener::OnFileReceive(uint64_t totalBytes, uint64_t processedBytes)
 {
     if (processCallback_ == nullptr) {
-        LOGI("processCallback_ is nullptr");
+        LOGI("processCallback is nullptr");
         return ENOMEM;
     }
     processCallback_(processedBytes, totalBytes);

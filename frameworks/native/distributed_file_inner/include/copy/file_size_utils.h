@@ -37,7 +37,7 @@ public:
     static void Deleter(struct NameList *arg);
     static std::unique_ptr<struct NameList, decltype(FileSizeUtils::Deleter) *> GetDirNameList(const std::string &path);
     static int32_t IsFile(const std::string &path, bool &result);
-    static int32_t IsDirectory(const std::string &path, bool &result)
+    static int32_t IsDirectory(const std::string &path, bool &result);
 
 private:
     

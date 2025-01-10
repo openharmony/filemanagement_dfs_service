@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "copy/file_copy_listener.h"
+#include "copy/file_copy_manager.h"
 
 #include <cstring>
 #include <dirent.h>
@@ -31,11 +31,11 @@
 #include "datashare_helper.h"
 #include "utils_log.h"
 #include "dfs_error.h"
-#include "copy/file_copy_manager.h"
+#include "copy/file_copy_listener.h"
 #include "copy/distributed_file_fd_guard.h"
 #include "copy/file_size_utils.h"
 #include "distributed_file_daemon_proxy.h"
-#include "sanbox_helper.h"
+#include "sandbox_helper.h"
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
@@ -45,7 +45,7 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
-using namespace AppFileService
+using namespace AppFileService;
 using namespace AppFileService::ModuleFileUri;
 using namespace FileManagement;
 static const std::string FILE_PREFIX_NAME = "file://";
@@ -83,7 +83,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     }
 
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
-        infos->destPath, infos->srcUriIsFile, processCallback);
+        infos->srcUriIsFile, processCallback);
     infos->localListener->StartListener();
     auto result = ExecLocal(infos);
     RemoveFileInfos(infos);
@@ -106,10 +106,10 @@ int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCal
     }
     Uri uri(infos->destUri);
     transListener->hmdfsInfo_.authority = uri.GetAuthority();
-    transListener->hmdfsInfo_.sanboxPath = SandboxHelper::Decode(uri.GetPath());
+    transListener->hmdfsInfo_.sandboxPath = SandboxHelper::Decode(uri.GetPath());
     transListener->CreateTmpDir();
 
-    auto netWorkId = transListener->GetNetworkIdFromUri(infos->srcUri);
+    auto networkId = transListener->GetNetworkIdFromUri(infos->srcUri);
     auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
@@ -365,7 +365,6 @@ void FileCopyManager::RemoveFileInfos(std::shared_ptr<FileInfos> infos)
 
 int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri, const std::string &destUri, std::shared_ptr<FileInfos> &infos)
 {
-    auto infos = std::make_shared<FileInfos>();
     infos->srcUri = srcUri;
     infos->destUri = destUri;
 
