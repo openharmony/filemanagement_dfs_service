@@ -145,16 +145,16 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_obj.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_recv_callback_stub.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/asset/asset_send_callback_stub.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/distributed_file_fd_guard.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_listener.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_manager.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_manager.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_copy_listener.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/distributed_file_fd_guard.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/file_size_utils.cpp",
-    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/copy/trans_listener.cpp",
   ]
 
   defines = [ "LOG_TAG=\"distributedfile_daemon\"" ]
@@ -169,16 +169,16 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
   ]
 
   external_deps = [
+    "ability_runtime:abilitykit_native",
+    "app_file_service:fileuri_native",
     "c_utils:utils",
+    "data_share:datashare_consumer",
     "hilog:libhilog",
     "ipc:ipc_single",
     "media_library:media_library",
     "media_library:media_library_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "app_file_service:fileuri_native",
-    "ability_runtime:abilitykit_native",
-    "data_share:datashare_consumer",
   ]
   public_external_deps = [ "device_manager:devicemanagersdk" ]
 

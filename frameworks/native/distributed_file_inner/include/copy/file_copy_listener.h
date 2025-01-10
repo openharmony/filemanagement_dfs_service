@@ -16,19 +16,20 @@
 #ifndef DISTRIBUTED_FILE_COPY_LISTENER_H
 #define DISTRIBUTED_FILE_COPY_LISTENER_H
 
-#include <string>
-#include <map>
-#include <set>
 #include <fcntl.h>
+#include <filesystem>
+
+#include <map>
+#include <memory>
+#include <poll.h>
+#include <set>
+#include <string>
 #include <sys/eventfd.h>
 #include <sys/inotify.h>
 #include <sys/prctl.h>
 #include <sys/types.h>
-#include <filesystem>
-#include <tuple>
-#include <memory>
-#include <poll.h>
 #include <thread>
+#include <tuple>
 
 namespace OHOS {
 namespace Storage {

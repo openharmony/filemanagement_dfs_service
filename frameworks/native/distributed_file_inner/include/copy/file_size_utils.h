@@ -16,9 +16,10 @@
 #ifndef DISTRIBUTED_FILE_SIZE_UTILS_H
 #define DISTRIBUTED_FILE_SIZE_UTILS_H
 
+#include <dirent.h>
 #include <memory>
 #include <string>
-#include <dirent.h>
+
 
 namespace OHOS {
 namespace Storage {

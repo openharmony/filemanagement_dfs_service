@@ -15,20 +15,19 @@
 
 #ifndef DISTRIBUTED_FILE_COPY_MANAGER_H
 #define DISTRIBUTED_FILE_COPY_MANAGER_H
- 
-#include <memory>
+
 #include <chrono>
 #include <condition_variable>
+#include <memory>
 
-#include "iremote_broker.h"
-#include "file_uri.h"
-#include "uv.h"
 #include "copy/distributed_file_fd_guard.h"
 #include "copy/file_copy_listener.h"
 #include "copy/trans_listener.h"
+#include "file_uri.h"
+#include "iremote_broker.h"
 #include "refbase.h"
+#include "uv.h"
 
- 
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {

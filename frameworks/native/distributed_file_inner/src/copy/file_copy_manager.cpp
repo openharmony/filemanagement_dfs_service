@@ -24,18 +24,17 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <memory>
 
-#include "iremote_stub.h"
-#include "file_uri.h"
-#include "datashare_helper.h"
-#include "utils_log.h"
-#include "dfs_error.h"
-#include "copy/file_copy_listener.h"
 #include "copy/distributed_file_fd_guard.h"
+#include "copy/file_copy_listener.h"
 #include "copy/file_size_utils.h"
+#include "datashare_helper.h"
+#include "dfs_error.h"
 #include "distributed_file_daemon_proxy.h"
+#include "file_uri.h"
+#include "iremote_stub.h"
 #include "sandbox_helper.h"
+#include "utils_log.h"
 
 #undef LOG_DOMAIN
 #undef LOG_TAG

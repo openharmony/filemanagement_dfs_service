@@ -17,8 +17,8 @@
 
 #include <sys/stat.h>
 
-#include "utils_log.h"
 #include "dfs_error.h"
+#include "utils_log.h"
 
 #undef LOG_DOMAIN
 #undef LOG_TAG

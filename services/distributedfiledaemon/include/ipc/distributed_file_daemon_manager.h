@@ -16,8 +16,8 @@
 #ifndef DISTRIBUTED_FILE_DAEMON_MANAGER_H
 #define DISTRIBUTED_FILE_DAEMON_MANAGER_H
 
-#include <memory>
 #include <functional>
+#include <memory>
 
 #include "asset/asset_obj.h"
 #include "asset/i_asset_recv_callback.h"
