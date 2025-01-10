@@ -66,7 +66,7 @@ std::shared_ptr<FileCopyManager> FileCopyManager::GetInstance()
 
 int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback)
 {
-    LOGE("[liuxiaowei]FileCopyManager Copy start ");
+    LOGE("FileCopyManager Copy start ");
     if (srcUri.empty() || destUri.empty()) {
         return ERR_BAD_VALUE;
     }
@@ -163,17 +163,16 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
 
 int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
 {
-    LOGI("[liuxiaowei]start ExecLocal");
+    LOGI("start ExecLocal");
     // 文件到文件, 文件到目录的形式由上层改写为文件到文件的形式
     if (infos->srcUriIsFile) {
-        LOGE("[liuxiaowei debug]file to file");
         if (infos->srcPath == infos->destPath) {
-            LOGE("[liuxiaowei]The src and dest is same");
+            LOGE("The src and dest is same");
             return E_OK;
         }
         int32_t ret = CheckOrCreatePath(infos->destPath);
         if (ret != E_OK) {
-            LOGE("[liuxiaowei]check or create fail, error code is %{public}d", ret);
+            LOGE("check or create fail, error code is %{public}d", ret);
             return ret;
         }
         infos->localListener->AddListenerFile(infos->destPath, IN_MODIFY);
@@ -183,11 +182,10 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
     bool destIsDirectory;
     auto ret = FileSizeUtils::IsDirectory(infos->destPath, destIsDirectory);
     if (ret != E_OK) {
-        LOGE("[liuxiaowei]destPath: %{public}s not find, error=%{public}d", infos->destPath.c_str(), ret);
+        LOGE("destPath: %{public}s not find, error=%{public}d", infos->destPath.c_str(), ret);
         return ret;
     }
     if (destIsDirectory) {
-        LOGE("[liuxiaowei debug]dir to dir");
         if (infos->srcPath.back() != '/') {
             infos->srcPath += '/';
         }
@@ -197,13 +195,13 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
         // copyDir
         return CopyDirFunc(infos->srcPath, infos->destPath, infos);
     }
-    LOGI("[liuxiaowei]ExecLocal not support this srcUri and destUri");
+    LOGI("ExecLocal not support this srcUri and destUri");
     return -1;
 }
 
 int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos)
 {
-    LOGI("[liuxiaowei]src = %{public}s, dest = %{public}s", src.c_str(), dest.c_str());
+    LOGI("src = %{public}s, dest = %{public}s", src.c_str(), dest.c_str());
     infos->localListener->AddFile(dest);
     int32_t srcFd = -1;
     int32_t ret = OpenSrcFile(src, infos, srcFd);
@@ -219,7 +217,7 @@ int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &des
     std::shared_ptr<FDGuard> srcFdg = std::make_shared<FDGuard>(srcFd, true);
     std::shared_ptr<FDGuard> destFdg = std::make_shared<FDGuard>(destFd, true);
     if (srcFdg == nullptr || destFdg == nullptr) {
-        LOGE("[liuxiaowei]Failed to request heap memory.");
+        LOGE("Failed to request heap memory.");
         close(srcFd);
         close(destFd);
         return -1;
@@ -263,7 +261,7 @@ int32_t FileCopyManager::SendFileCore(std::shared_ptr<FDGuard> srcFdg,
         }
 
         if (infos->needCancel.load()) {
-            LOGE("[liuxiaowei]need cancel");
+            LOGE("need cancel");
             return FileManagement::E_DFS_CANCEL_SUCCESS; // 204
         }
         
@@ -283,7 +281,7 @@ int32_t FileCopyManager::SendFileCore(std::shared_ptr<FDGuard> srcFdg,
 
 int32_t FileCopyManager::CopyDirFunc(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos)
 {
-    LOGI("[liuxiaowei]CopyDirFunc in, src = %{public}s, dest = %{public}s", src.c_str(), dest.c_str());
+    LOGI("CopyDirFunc in, src = %{public}s, dest = %{public}s", src.c_str(), dest.c_str());
     size_t found = dest.find(src);
     if (found != std::string::npos && found == 0) {
         LOGE("not support copy src to dest");
@@ -377,7 +375,7 @@ int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri, const std::s
     bool isFile;
     auto ret = FileSizeUtils::IsFile(infos->srcPath, isFile);
     if (err != E_OK) {
-        LOGE("[liuxiaowei]srcPath: %{public}s not find, err=%{public}d", infos->srcPath.c_str(), err);
+        LOGE("srcPath: %{public}s not find, err=%{public}d", infos->srcPath.c_str(), err);
         return ret;
     }
     infos->srcUriIsFile = IsMediaUri(infos->srcUri) || isFile;
@@ -476,10 +474,10 @@ int32_t FileCopyManager::CheckOrCreatePath(const std::string &destPath)
 {
     std::error_code errCode;
     if (!std::filesystem::exists(destPath, errCode) && errCode.value() == E_OK) {
-        LOGI("[liuxiaowei]destPath not exist");
+        LOGI("destPath not exist");
         auto file = open(destPath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
         if (file < 0) {
-            LOGE("[liuxiaowei]Error opening file descriptor. errno = %{public}d", errno);
+            LOGE("Error opening file descriptor. errno = %{public}d", errno);
             return errno;
         }
         close(file);
