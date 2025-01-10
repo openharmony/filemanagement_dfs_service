@@ -102,4 +102,9 @@ std::shared_ptr<CloudDatabase> CloudFileKitImpl::GetCloudDatabase(const int32_t 
     }
     return cloudDatabase_;
 }
+
+std::string CloudFileKitImpl::GetPrepareTraceId(const int32_t userId)
+{
+    return "";
+}
 } // namespace OHOS::FileManagement::CloudFile
