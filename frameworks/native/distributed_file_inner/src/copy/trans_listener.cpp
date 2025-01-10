@@ -41,15 +41,13 @@ static const std::string FILE_MANAGER_AUTHORITY = "docs";
 static const std::string MEDIA_AUTHORITY = "media";
 static const std::string DISTRIBUTED_PATH = "/data/storage/el2/distributedfiles/";
 
-
-
 int32_t TransListener::WaitForCopyResult()
 {
-   std::unique_lock<std::mutex> lock(cvMutex_);
-   cv_.wait(lock, [this]() {
-       return copyEvent_.copyResult == SUCCESS || copyEvent_.copyResult == FAILED;
-   });
-   return copyEvent_.copyResult;
+    std::unique_lock<std::mutex> lock(cvMutex_);
+    cv_.wait(lock, [this]() {
+        return copyEvent_.copyResult == SUCCESS || copyEvent_.copyResult == FAILED;
+    });
+    return copyEvent_.copyResult;
 }
 
 int32_t TransListener::CreateTmpDir()

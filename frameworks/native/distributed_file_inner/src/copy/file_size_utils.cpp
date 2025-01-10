@@ -51,7 +51,8 @@ void FileSizeUtils::Deleter(struct NameList *arg)
     arg = nullptr;
 }
 
-std::unique_ptr<struct NameList, decltype(FileSizeUtils::Deleter) *> FileSizeUtils::GetDirNameList(const std::string &path)
+std::unique_ptr<struct NameList, decltype(FileSizeUtils::Deleter) *> FileSizeUtils::GetDirNameList(
+    const std::string &path)
 {
     std::unique_ptr<struct NameList, decltype(Deleter) *> pNameList = { new (std::nothrow) struct NameList, Deleter };
     if (pNameList == nullptr) {

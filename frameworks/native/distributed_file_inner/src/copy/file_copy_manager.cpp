@@ -300,7 +300,8 @@ int32_t FileCopyManager::CopyDirFunc(const std::string &src, const std::string &
     return CopySubDir(src, destStr, infos);
 }
 
-int32_t FileCopyManager::CopySubDir(const std::string &srcPath, const std::string &destPath, std::shared_ptr<FileInfos> infos)
+int32_t FileCopyManager::CopySubDir(const std::string &srcPath,
+    const std::string &destPath, std::shared_ptr<FileInfos> infos)
 {
     std::error_code errCode;
     if (!std::filesystem::exists(destPath, errCode) && errCode.value() == E_OK) {
@@ -317,7 +318,8 @@ int32_t FileCopyManager::CopySubDir(const std::string &srcPath, const std::strin
     return RecurCopyDir(srcPath, destPath, infos);
 }
 
-int32_t FileCopyManager::RecurCopyDir(const std::string &srcPath, const std::string &destPath, std::shared_ptr<FileInfos> infos)
+int32_t FileCopyManager::RecurCopyDir(const std::string &srcPath,
+    const std::string &destPath, std::shared_ptr<FileInfos> infos)
 {
     auto pNameList = FileSizeUtils::GetDirNameList(srcPath);
     if (pNameList == nullptr) {
@@ -360,7 +362,8 @@ void FileCopyManager::RemoveFileInfos(std::shared_ptr<FileInfos> infos)
     }
 }
 
-int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri, const std::string &destUri, std::shared_ptr<FileInfos> &infos)
+int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri,
+    const std::string &destUri, std::shared_ptr<FileInfos> &infos)
 {
     infos->srcUri = srcUri;
     infos->destUri = destUri;
@@ -408,17 +411,17 @@ int32_t FileCopyManager::OpenSrcFile(const std::string &srcPth, std::shared_ptr<
         sptr<FileIoToken> remote = new (std::nothrow) IRemoteStub<FileIoToken>();
         if (!remote) {
             LOGE("Failed to get remote object");
-            return -1;//ENOMEM
+            return -1;
         }
         dataShareHelper = DataShare::DataShareHelper::Creator(remote->AsObject(), MEDIALIBRARY_DATA_URI);
         if (!dataShareHelper) {
             LOGE("Failed to connect to datashare");
-            return -1;//permission
+            return -1;
         }
         srcFd = dataShareHelper->OpenFile(uri, GetModeFromFlags(O_RDONLY));
         if (srcFd < 0) {
             LOGE("Open media uri by data share fail. ret = %{public}d", srcFd);
-            return -1;//EPERM
+            return -1;
         }
     } else {
         srcFd = open(srcPth.c_str(), O_RDONLY);
