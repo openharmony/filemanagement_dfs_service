@@ -16,6 +16,8 @@
 #include "distributed_file_daemon_manager_impl.h"
 
 #include "asset/asset_adapter_sa_client.h"
+#include "copy/file_copy_manager.h"
+#include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "distributed_file_daemon_proxy.h"
 #include "utils_log.h"
@@ -162,6 +164,32 @@ int32_t DistributedFileDaemonManagerImpl::UnRegisterAssetCallback(const sptr<IAs
         return ret;
     }
     return OHOS::FileManagement::E_OK;
+}
+
+int32_t DistributedFileDaemonManagerImpl::GetFileSize(const std::string &path, uint64_t &size)
+{
+    return FileSizeUtils::GetFileSize(path, size);
+}
+
+int32_t DistributedFileDaemonManagerImpl::GetDirSize(const std::string &path, uint64_t &size)
+{
+    return FileSizeUtils::GetDirSize(path, size);
+}
+
+int32_t DistributedFileDaemonManagerImpl::Copy(const std::string &srcUri,
+    const std::string &destUri, ProcessCallback processCallback)
+{
+    return FileCopyManager::GetInstance()->Copy(srcUri, destUri, processCallback);
+}
+
+int32_t DistributedFileDaemonManagerImpl::Cancel(const std::string &srcUri, const std::string &destUri)
+{
+    return FileCopyManager::GetInstance()->Cancel(srcUri, destUri);
+}
+
+int32_t DistributedFileDaemonManagerImpl::Cancel()
+{
+    return FileCopyManager::GetInstance()->Cancel();
 }
 } // namespace DistributedFile
 } // namespace Storage
