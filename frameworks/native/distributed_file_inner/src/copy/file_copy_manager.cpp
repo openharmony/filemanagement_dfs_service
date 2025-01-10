@@ -155,7 +155,7 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
         if ((*item)->transListener != nullptr) {
             ret = (*item)->transListener->Cancel();
         }
-        it = FileInfosVec_.erase(it);
+        item = FileInfosVec_.erase(item);
         return ret;
     }
     return E_OK;
@@ -377,8 +377,8 @@ int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri,
 
     bool isFile;
     auto ret = FileSizeUtils::IsFile(infos->srcPath, isFile);
-    if (err != E_OK) {
-        LOGE("srcPath: %{public}s not find, err=%{public}d", infos->srcPath.c_str(), err);
+    if (ret != E_OK) {
+        LOGE("srcPath: %{public}s not find, err=%{public}d", infos->srcPath.c_str(), ret);
         return ret;
     }
     infos->srcUriIsFile = IsMediaUri(infos->srcUri) || isFile;
