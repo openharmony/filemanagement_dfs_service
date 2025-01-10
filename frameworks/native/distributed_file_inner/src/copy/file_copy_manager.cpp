@@ -379,7 +379,7 @@ int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri, const std::s
     auto ret = FileSizeUtils::IsFile(infos->srcPath, isFile);
     if (err != E_OK) {
         LOGE("[liuxiaowei]srcPath: %{public}s not find, err=%{public}d", infos->srcPath.c_str(), err);
-        return err;
+        return ret;
     }
     infos->srcUriIsFile = IsMediaUri(infos->srcUri) || isFile;
     AddFileInfos(infos);
