@@ -597,6 +597,11 @@ HWTEST_F(CloudSyncManagerImplTest, ResetProxyCallbackTest, TestSize.Level1)
     EXPECT_EQ(res, true);
 }
 
+HWTEST_F(CloudSyncManagerImplTest, DownloadThumbTest, TestSize.Level1)
+{
+    int32_t res = CloudSyncManagerImpl::GetInstance().DownloadThumb();
+    EXPECT_EQ(res, E_OK);
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync
 } // namespace OHOS
