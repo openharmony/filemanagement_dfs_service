@@ -67,6 +67,8 @@ public:
     virtual int32_t DeleteAsset(const int32_t userId, const std::string &uri) = 0;
     virtual int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") = 0;
     virtual int32_t CleanCacheInner(const std::string &uri) = 0;
+    virtual int32_t BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
+        std::vector<std::string> &failCloudId) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

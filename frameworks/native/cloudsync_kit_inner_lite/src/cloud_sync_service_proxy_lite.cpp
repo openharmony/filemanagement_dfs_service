@@ -272,6 +272,12 @@ int32_t CloudSyncServiceProxy::DownloadFiles(const int32_t userId,
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
+    std::vector<std::string> &failCloudId)
+{
+    return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::DownloadAsset(const uint64_t taskId,
                                              const int32_t userId,
                                              const std::string &bundleName,

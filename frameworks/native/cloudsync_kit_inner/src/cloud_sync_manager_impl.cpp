@@ -27,6 +27,7 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int32_t MAX_FILE_CACHE_NUM = 400;
+constexpr int32_t CLEAN_FILE_MAX_SIZE = 30;
 CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 {
     static CloudSyncManagerImpl instance;
@@ -225,6 +226,29 @@ int32_t CloudSyncManagerImpl::StartDownloadFile(const std::string &uri)
     int32_t ret = CloudSyncServiceProxy->StartDownloadFile(uri);
     LOGI("StartDownloadFile ret %{public}d", ret);
     return ret;
+}
+
+int32_t CloudSyncManagerImpl::BatchCleanFile(const std::vector<CleanFileInfo> &fileInfo,
+    std::vector<std::string> &failCloudId)
+{
+    if (fileInfo.size() > CLEAN_FILE_MAX_SIZE) {
+        LOGE("BatchCleanFile size over max limit");
+        return E_INVAL_ARG;
+    }
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    std::vector<CleanFileInfoObj> fileInfoObj;
+    for (const auto &info : fileInfo) {
+        CleanFileInfoObj obj(info);
+        fileInfoObj.emplace_back(obj);
+    }
+    
+    return CloudSyncServiceProxy->BatchCleanFile(fileInfoObj, failCloudId);
 }
 
 int32_t CloudSyncManagerImpl::StartFileCache(const std::string &uri)

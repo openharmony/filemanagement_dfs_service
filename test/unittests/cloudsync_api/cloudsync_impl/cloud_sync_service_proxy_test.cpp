@@ -950,6 +950,60 @@ HWTEST_F(CloudSyncServiceProxyTest, UnregisterDownloadFileCallback002, TestSize.
     EXPECT_EQ(result, E_OK);
     GTEST_LOG_(INFO) << "UnregisterDownloadFileCallback End";
 }
+
+/**
+ * @tc.name: BatchCleanFile001
+ * @tc.desc: Verify the BatchCleanFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, BatchCleanFile001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchCleanFile001 Start";
+    std::vector<CleanFileInfoObj> fileInfoObj;
+    std::vector<std::string> failCloudId;
+    int ret = proxy_->BatchCleanFile(fileInfoObj, failCloudId);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+    GTEST_LOG_(INFO) << "BatchCleanFile001 End";
+}
+
+/**
+ * @tc.name: DeleteFilesInner002
+ * @tc.desc: Verify the BatchCleanFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, BatchCleanFile002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchCleanFile002 Start";
+    CleanFileInfo obj;
+    std::vector<CleanFileInfoObj> fileInfoObj;
+    fileInfoObj.push_back(obj);
+    std::vector<std::string> failCloudId;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
+    int ret = proxy_->BatchCleanFile(fileInfoObj, failCloudId);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    GTEST_LOG_(INFO) << "DownloadFiles002 End";
+}
+
+/**
+ * @tc.name: BatchCleanFile003
+ * @tc.desc: Verify the BatchCleanFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, BatchCleanFile003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchCleanFile003 Start";
+    CleanFileInfo obj;
+    std::vector<CleanFileInfoObj> fileInfoObj;
+    fileInfoObj.push_back(obj);
+    std::vector<std::string> failCloudId;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    int ret = proxy_->BatchCleanFile(fileInfoObj, failCloudId);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "DeleteFilesInner003 End";
+}
 } // namespace Test
 } // namespace FileManagement::CloudSync {
 } // namespace OHOS

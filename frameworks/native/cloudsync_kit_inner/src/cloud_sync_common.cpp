@@ -331,4 +331,38 @@ AssetInfoObj *AssetInfoObj::Unmarshalling(Parcel &parcel)
     }
     return info;
 }
+
+bool CleanFileInfoObj::ReadFromParcel(Parcel &parcel)
+{
+    parcel.ReadString(cloudId);
+    parcel.ReadInt64(size);
+    parcel.ReadInt64(modifiedTime);
+    parcel.ReadString(path);
+    parcel.ReadString(fileName);
+    parcel.ReadStringVector(&attachment);
+    return true;
+}
+
+bool CleanFileInfoObj::Marshalling(Parcel &parcel) const
+{
+    parcel.WriteString(cloudId);
+    parcel.WriteInt64(size);
+    parcel.WriteInt64(modifiedTime);
+    parcel.WriteString(path);
+    parcel.WriteString(fileName);
+    parcel.WriteStringVector(attachment);
+    return true;
+}
+
+CleanFileInfoObj *CleanFileInfoObj::Unmarshalling(Parcel &parcel)
+{
+    CleanFileInfoObj *info = new (std::nothrow) CleanFileInfoObj();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
 } // namespace OHOS::FileManagement::CloudSync

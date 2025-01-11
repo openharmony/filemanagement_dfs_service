@@ -103,5 +103,38 @@ struct AssetInfoObj : public Parcelable {
     {
     }
 };
+
+struct CleanFileInfo {
+    std::string cloudId;
+    int64_t size;
+    int64_t modifiedTime;
+    std::string path;
+    std::string fileName;
+    std::vector<std::string> attachment;
+};
+
+struct  CleanFileInfoObj : public Parcelable {
+    std::string cloudId;
+    int64_t size;
+    int64_t modifiedTime;
+    std::string path;
+    std::string fileName;
+    std::vector<std::string> attachment;
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static CleanFileInfoObj *Unmarshalling(Parcel &parcel);
+
+    CleanFileInfoObj() = default;
+    CleanFileInfoObj(const CleanFileInfo &FileInfo)
+        : cloudId(FileInfo.cloudId),
+          size(FileInfo.size),
+          modifiedTime(FileInfo.size),
+          path(FileInfo.path),
+          fileName(FileInfo.fileName),
+          attachment(FileInfo.attachment)
+    {
+    }
+};
+
 } // namespace OHOS::FileManagement::CloudSync
 #endif

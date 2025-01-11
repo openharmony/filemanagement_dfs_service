@@ -170,6 +170,10 @@ public:
     {
         return E_OK;
     }
+    int32_t BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo, std::vector<std::string> &failCloudId)
+    {
+        return E_OK;
+    }
 };
 
 } // namespace OHOS::FileManagement::CloudSync
