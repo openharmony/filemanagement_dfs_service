@@ -32,6 +32,7 @@ using namespace std;
 
 constexpr int LOAD_SA_TIMEOUT_MS = 2000;
 const std::string MEDIA_URL = "file://media";
+static const int WRITE_SIZE = 30;
 
 int32_t CloudSyncServiceProxy::UnRegisterCallbackInner(const std::string &bundleName)
 {
@@ -1021,6 +1022,47 @@ int32_t CloudSyncServiceProxy::DownloadFiles(const int32_t userId,
         LOGE("Failed to ReadBoolVector");
         return E_INVAL_ARG;
     }
+    return reply.ReadInt32();
+}
+
+int32_t CloudSyncServiceProxy::BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
+    std::vector<std::string> &failCloudId)
+{
+    LOGI("BatchCleanFile");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+
+    if (fileInfo.size() > WRITE_SIZE || fileInfo.size() == 0 || !data.WriteInt32(fileInfo.size())) {
+        LOGE("Failed to send the vector size");
+        return E_INVAL_ARG;
+    }
+
+    for (const auto &obj : fileInfo) {
+        if (!data.WriteParcelable(&obj)) {
+            LOGE("Failed to send the fileInfo");
+            return E_INVAL_ARG;
+        }
+    }
+
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_BATCH_CLEAN_FILE), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
+        return E_BROKEN_IPC;
+    }
+    LOGI("BatchCleanFile Success");
+    reply.ReadStringVector(&failCloudId);
     return reply.ReadInt32();
 }
 

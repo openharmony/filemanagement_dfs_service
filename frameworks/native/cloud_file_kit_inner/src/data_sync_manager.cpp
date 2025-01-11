@@ -165,4 +165,10 @@ int32_t DataSyncManager::ReportEntry(const std::string &bundleName, const int32_
     return E_OK;
 }
 
+int32_t DataSyncManager::BatchCleanFile(const std::vector<CloudSync::CleanFileInfo> &fileInfo,
+    std::vector<std::string> &failCloudId)
+{
+    return E_OK;
+}
+
 } // namespace OHOS::FileManagement::CloudFile

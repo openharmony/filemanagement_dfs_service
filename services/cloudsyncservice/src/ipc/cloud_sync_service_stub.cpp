@@ -90,6 +90,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStopFileCache(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_THUMB)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDownloadThumb(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_BATCH_CLEAN_FILE)] =
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleBatchCleanFile(data, reply); };
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -572,6 +574,40 @@ int32_t CloudSyncServiceStub::HandleDownloadFiles(MessageParcel &data, MessagePa
     reply.WriteBoolVector(assetResultMap);
     reply.WriteInt32(res);
     LOGI("End DownloadFiles");
+    return E_OK;
+}
+
+int32_t CloudSyncServiceStub::HandleBatchCleanFile(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleBatchCleanFile");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+
+    int32_t size = data.ReadInt32();
+    std::vector<CleanFileInfoObj> deleteInfoObj;
+    if (size > READ_SIZE) {
+        return E_INVAL_ARG;
+    }
+    for (int i = 0; i < size; i++) {
+        sptr<CleanFileInfoObj> obj = data.ReadParcelable<CleanFileInfoObj>();
+        if (!obj) {
+            LOGE("object of obj is nullptr");
+            return E_INVAL_ARG;
+        }
+        deleteInfoObj.emplace_back(*obj);
+    }
+
+    std::vector<std::string> failCloudId;
+    int32_t res = BatchCleanFile(deleteInfoObj, failCloudId);
+    reply.WriteStringVector(failCloudId);
+    reply.WriteInt32(res);
+    LOGI("End HandleBatchCleanFile");
     return E_OK;
 }
 

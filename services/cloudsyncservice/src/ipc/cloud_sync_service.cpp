@@ -737,4 +737,17 @@ int32_t CloudSyncService::DeleteAsset(const int32_t userId, const std::string &u
     }
     return E_OK;
 }
+
+int32_t CloudSyncService::BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
+    std::vector<std::string> &failCloudId)
+{
+    std::vector<CleanFileInfo> cleanFilesInfo;
+    for (const auto &obj : fileInfo) {
+        CleanFileInfo tmpFileInfo{obj.cloudId, obj.size, obj.modifiedTime, obj.path, obj.fileName, obj.attachment};
+        cleanFilesInfo.emplace_back(tmpFileInfo);
+    }
+
+    return dataSyncManager_->BatchCleanFile(cleanFilesInfo, failCloudId);
+}
+
 } // namespace OHOS::FileManagement::CloudSync

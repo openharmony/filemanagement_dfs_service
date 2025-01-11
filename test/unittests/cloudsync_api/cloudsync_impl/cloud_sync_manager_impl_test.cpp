@@ -550,6 +550,43 @@ HWTEST_F(CloudSyncManagerImplTest, CleanCacheTest, TestSize.Level1)
     GTEST_LOG_(INFO) << "CleanCacheTest End";
 }
 
+HWTEST_F(CloudSyncManagerImplTest, BatchCleanFileTest1, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchCleanFileTest1 Start";
+    try {
+        CleanFileInfo cleanFileInfo;
+        std::vector<CleanFileInfo> fileInfo;
+        fileInfo.emplace_back(cleanFileInfo);
+        std::vector<std::string> failCloudId;
+        auto res = CloudSyncManagerImpl::GetInstance().BatchCleanFile(fileInfo, failCloudId);
+        EXPECT_EQ(res, E_OK);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BatchCleanFileTest1 FAILED";
+    }
+    GTEST_LOG_(INFO) << "BatchCleanFileTest1 End";
+}
+
+HWTEST_F(CloudSyncManagerImplTest, BatchCleanFileTest2, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchCleanFileTest2 Start";
+    try {
+        CleanFileInfo cleanFileInfo;
+        std::vector<CleanFileInfo> fileInfo;
+        for (int i = 0; i < 31; i++) {
+            cleanFileInfo.cloudId = to_string(i);
+            fileInfo.emplace_back(cleanFileInfo);
+        }
+        std::vector<std::string> failCloudId;
+        auto res = CloudSyncManagerImpl::GetInstance().BatchCleanFile(fileInfo, failCloudId);
+        EXPECT_EQ(res, E_INVAL_ARG);
+    } catch (...) {
+        EXPECT_TRUE(false);
+        GTEST_LOG_(INFO) << "BatchCleanFileTest2 FAILED";
+    }
+    GTEST_LOG_(INFO) << "BatchCleanFileTest2 End";
+}
+
 HWTEST_F(CloudSyncManagerImplTest, ResetCursorTest, TestSize.Level1)
 {
     string bundleName = "com.ohos.photos";

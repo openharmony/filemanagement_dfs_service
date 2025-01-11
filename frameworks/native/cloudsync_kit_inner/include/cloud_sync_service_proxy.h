@@ -73,6 +73,8 @@ public:
     int32_t DeleteAsset(const int32_t userId, const std::string &uri) override;
     int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") override;
     int32_t CleanCacheInner(const std::string &uri) override;
+    int32_t BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
+        std::vector<std::string> &failCloudId) override;
 
     class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
     public:

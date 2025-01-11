@@ -59,6 +59,7 @@ public:
     int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") override;
     int32_t CleanCache(const std::string &uri) override;
     void CleanGalleryDentryFile() override;
+    int32_t BatchCleanFile(const std::vector<CleanFileInfo> &fileInfo, std::vector<std::string> &failCloudId) override;
 
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:
