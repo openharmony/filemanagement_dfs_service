@@ -237,6 +237,11 @@ int32_t CloudSyncServiceProxy::StopFileCache(const int64_t &downloadId,  bool ne
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::DownloadThumb()
+{
+    return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
 {
     return E_OK;

@@ -111,6 +111,7 @@ public:
                                    int32_t timeout = -1) = 0;
     virtual int32_t StopDownloadFile(const std::string &path, bool needClean = false) = 0;
     virtual int32_t StopFileCache(const int64_t &downloadId, bool needClean = false, int32_t timeout = -1) = 0;
+    virtual int32_t DownloadThumb() = 0;
     virtual int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) = 0;
     virtual int32_t UnregisterDownloadFileCallback() = 0;
     virtual int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") = 0;
