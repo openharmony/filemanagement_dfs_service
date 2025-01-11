@@ -19,6 +19,11 @@
 #include "file_trans_listener_interface_code.h"
 #include "utils_log.h"
 
+#undef LOG_DOMAIN
+#undef LOG_TAG
+#define LOG_DOMAIN 0xD001600
+#define LOG_TAG "distributedfile_daemon"
+
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {

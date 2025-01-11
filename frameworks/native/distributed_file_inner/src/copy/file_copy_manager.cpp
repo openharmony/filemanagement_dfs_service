@@ -96,13 +96,14 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
 
 int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCallback &processCallback)
 {
+    LOGI("ExecRemote Copy start ");
     sptr<TransListener> transListener = new (std::nothrow) TransListener();
-    infos->transListener = transListener;
-    transListener->processCallback_ = processCallback;
     if (transListener == nullptr) {
         LOGE("new trans listener failed");
         return ENOMEM;
     }
+    infos->transListener = transListener;
+    transListener->processCallback_ = processCallback;
     Uri uri(infos->destUri);
     transListener->hmdfsInfo_.authority = uri.GetAuthority();
     transListener->hmdfsInfo_.sandboxPath = SandboxHelper::Decode(uri.GetPath());
@@ -112,6 +113,7 @@ int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCal
     auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
+        transListener->RmTmpDir();
         return E_SA_LOAD_FAILED;
     }
     auto ret = distributedFileDaemonProxy->PrepareSession(infos->srcUri, infos->destUri,
@@ -124,13 +126,17 @@ int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCal
 
     auto copyResult = transListener->WaitForCopyResult();
     if (copyResult == FAILED) {
+        transListener->RmTmpDir();
         return transListener->copyEvent_.errorCode;
     }
-    return transListener->CopyToSandBox(infos->srcUri);
+    ret = transListener->CopyToSandBox(infos->srcUri);
+    transListener->RmTmpDir();
+    return ret;
 }
 
 int32_t FileCopyManager::Cancel()
 {
+    LOGI("Cancel all Copy");
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
     for (auto &item : FileInfosVec_) {
         item->needCancel.store(true);
@@ -144,6 +150,7 @@ int32_t FileCopyManager::Cancel()
 
 int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &destUri)
 {
+    LOGI("Cancel Copy");
     std::lock_guard<std::mutex> lock(FileInfosVecMutex_);
     int32_t ret = 0;
     for (auto item = FileInfosVec_.begin(); item != FileInfosVec_.end();) {
@@ -201,7 +208,7 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
 
 int32_t FileCopyManager::CopyFile(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos)
 {
-    LOGI("src = %{public}s, dest = %{public}s", src.c_str(), dest.c_str());
+    LOGI("src = %{private}s, dest = %{private}s", src.c_str(), dest.c_str());
     infos->localListener->AddFile(dest);
     int32_t srcFd = -1;
     int32_t ret = OpenSrcFile(src, infos, srcFd);
@@ -281,7 +288,7 @@ int32_t FileCopyManager::SendFileCore(std::shared_ptr<FDGuard> srcFdg,
 
 int32_t FileCopyManager::CopyDirFunc(const std::string &src, const std::string &dest, std::shared_ptr<FileInfos> infos)
 {
-    LOGI("CopyDirFunc in, src = %{public}s, dest = %{public}s", src.c_str(), dest.c_str());
+    LOGI("CopyDirFunc in, src = %{private}s, dest = %{private}s", src.c_str(), dest.c_str());
     size_t found = dest.find(src);
     if (found != std::string::npos && found == 0) {
         LOGE("not support copy src to dest");

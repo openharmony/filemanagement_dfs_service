@@ -43,6 +43,7 @@ static const std::string DISTRIBUTED_PATH = "/data/storage/el2/distributedfiles/
 
 int32_t TransListener::WaitForCopyResult()
 {
+    LOGI("WaitForCopyResult.");
     std::unique_lock<std::mutex> lock(cvMutex_);
     cv_.wait(lock, [this]() {
         return copyEvent_.copyResult == SUCCESS || copyEvent_.copyResult == FAILED;
@@ -82,8 +83,6 @@ void TransListener::RmTmpDir()
         LOGI("docs or media file, no need to rm tmp dir.");
         return;
     }
-
-    LOGI("RmTmpDir path : %{public}s", disSandboxPath_.c_str());
     std::filesystem::path pathName(disSandboxPath_);
     std::error_code errCode;
     if (std::filesystem::exists(pathName, errCode)) {
@@ -118,18 +117,15 @@ int32_t TransListener::CopyToSandBox(const std::string &srcUri)
         auto fileName = GetFileName(uri.GetPath());
         if (fileName.empty()) {
             LOGE("Get filename failed");
-            RmTmpDir();
             return EIO;
         }
         std::filesystem::copy(disSandboxPath_ + fileName, hmdfsInfo_.sandboxPath,
                               std::filesystem::copy_options::update_existing, errCode);
         if (errCode.value() != 0) {
             LOGE("Copy file failed: errCode: %{public}d", errCode.value());
-            RmTmpDir();
             return EIO;
         }
     }
-    RmTmpDir();
     LOGI("CopyToSandBox success.");
     return E_OK;
 }
