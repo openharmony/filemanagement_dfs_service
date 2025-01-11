@@ -35,6 +35,7 @@ public:
                                                                     const std::string &bundleName) override;
     std::shared_ptr<CloudDatabase> GetCloudDatabase(const int32_t userId, const std::string &bundleName) override;
     std::shared_ptr<CloudSyncHelper> GetCloudSyncHelper(const int32_t userId, const std::string &bundleName) override;
+    std::string GetPrepareTraceId(const int32_t userId) override;
 
 private:
     std::mutex dataSyncManagerMutex_;

@@ -128,6 +128,11 @@ struct ReadSlice {
     off_t offTail{0};
 };
 
+struct ReadSize {
+    size_t size{0};
+    size_t sizeDone{0};
+};
+
 struct ReadArguments {
     size_t size{0};
     off_t offset{0};
@@ -258,7 +263,7 @@ static string GetCacheTmpPath(int32_t userId, const string &relativePath)
         relativePath + PATH_TEMP_SUFFIX;
 }
 
-static int HandleCloudError(CloudError error, FaultOperation faultOperation)
+static int HandleCloudError(CloudError error, FaultOperation faultOperation, string prepareTraceId)
 {
     int ret = 0;
     switch (error) {
@@ -279,8 +284,9 @@ static int HandleCloudError(CloudError error, FaultOperation faultOperation)
             break;
     }
     if (ret < 0) {
-        string msg = "handle cloud failed, ret code: " + to_string(ret);
-        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, faultOperation,
+        string msg = "handle cloud failed, ret code: " + to_string(ret)
+            + " prepareTraceId: " + prepareTraceId;
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
             FaultType::WARNING, ret, msg});
     }
     return ret;
@@ -648,7 +654,11 @@ static int CloudOpenOnLocal(struct FuseData *data, shared_ptr<CloudInode> cInode
 static int HandleOpenResult(CloudFile::CloudError ckError, struct FuseData *data,
     shared_ptr<CloudInode> cInode, struct fuse_file_info *fi)
 {
-    auto ret = HandleCloudError(ckError, FaultOperation::OPEN);
+    string prepareTraceId;
+    if (cInode->readSession) {
+        prepareTraceId = cInode->readSession->GetPrepareTraceId();
+    }
+    auto ret = HandleCloudError(ckError, FaultOperation::OPEN, prepareTraceId);
     if (ret < 0) {
         return ret;
     }
@@ -755,7 +765,9 @@ static int DoCloudOpen(shared_ptr<CloudInode> cInode, struct fuse_file_info *fi,
         return *openFinish;
     });
     if (!waitStatus) {
-        string msg = "init session timeout, path: " + GetAnonyString((cInode->path).c_str());
+        string prepareTraceId = cInode->readSession->GetPrepareTraceId();
+        string msg = "init session timeout, path: " + GetAnonyString((cInode->path).c_str()) +
+            " prepareTraceId: " + prepareTraceId;
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::OPEN,
                 FaultType::OPEN_CLOUD_FILE_TIMEOUT, ENETUNREACH, msg});
         return -ENETUNREACH;
@@ -771,13 +783,27 @@ static void UpdateReadStat(shared_ptr<CloudInode> cInode, uint64_t startTime)
     readStat.UpdateOpenTimeStat(cInode->mBase->fileType, (endTime > startTime) ? (endTime - startTime) : 0);
 }
 
+static string GetPrepareTraceId(int32_t userId)
+{
+    string prepareTraceId;
+    auto instance = CloudFile::CloudFileKit::GetInstance();
+    if (instance == nullptr) {
+        LOGE("get cloud file helper instance failed");
+    } else {
+        prepareTraceId = instance->GetPrepareTraceId(userId);
+        LOGI("get new prepareTraceId %{public}s", prepareTraceId.c_str());
+    }
+    return prepareTraceId;
+}
+
 static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info *fi,
     struct FuseData *data, shared_ptr<CloudInode>& cInode)
 {
     string recordId = MetaFileMgr::GetInstance().CloudIdToRecordId(cInode->mBase->cloudId);
     shared_ptr<CloudFile::CloudDatabase> database = GetDatabase(data);
     std::unique_lock<std::shared_mutex> wSesLock(cInode->sessionLock, std::defer_lock);
-
+    string prepareTraceId = GetPrepareTraceId(data->userId);
+    
     LOGI("%{public}d open %{public}s", req->ctx.pid, GetAnonyString(CloudPath(data, ino)).c_str());
     if (!database) {
         LOGE("database is null");
@@ -796,6 +822,7 @@ static void CloudOpenHelper(fuse_req_t req, fuse_ino_t ino, struct fuse_file_inf
         cInode->readSession = database->NewAssetReadSession("media", recordId, GetAssetKey(cInode->mBase->fileType),
                                                             GetAssetPath(cInode, data));
         if (cInode->readSession) {
+            cInode->readSession->SetPrepareTraceId(prepareTraceId);
             auto ret = DoCloudOpen(cInode, fi, data);
             if (ret == 0) {
                 fuse_reply_open(req, fi);
@@ -835,7 +862,6 @@ static void CloudOpen(fuse_req_t req, fuse_ino_t ino,
             FaultType::INODE_FILE, ENOMEM, "failed to get cloud inode"});
         return;
     }
-    
     CloudOpenHelper(req, ino, fi, data, cInode);
 }
 
@@ -1201,18 +1227,21 @@ static void InitReadSlice(size_t size, off_t off, ReadSlice &readSlice)
     }
 }
 
-static bool FixData(fuse_req_t req, shared_ptr<char> buf, size_t size, size_t sizeDone,
-    shared_ptr<ReadArguments> readArgs)
+static bool FixData(fuse_req_t req, shared_ptr<char> buf, ReadSize sizes,
+    shared_ptr<ReadArguments> readArgs, string prepareTraceId)
 {
+    size_t size = sizes.size;
+    size_t sizeDone = sizes.sizeDone;
     if (*readArgs->readResult < 0) {
         fuse_reply_err(req, ENOMEM);
-        string msg = "Pread failed, readResult: " + to_string(*readArgs->readResult);
+        string msg = "Pread failed, readResult: " + to_string(*readArgs->readResult) +
+            " prepareTraceId: " + prepareTraceId;
         CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::READ,
             FaultType::WARNING, ENOMEM, msg});
         return false;
     }
 
-    auto ret = HandleCloudError(*readArgs->ckError, FaultOperation::READ);
+    auto ret = HandleCloudError(*readArgs->ckError, FaultOperation::READ, prepareTraceId);
     if (ret < 0) {
         fuse_reply_err(req, -ret);
         return false;
@@ -1262,6 +1291,10 @@ static void WaitAndFixData(fuse_req_t req,
                            vector<shared_ptr<ReadArguments>> readArgsList)
 {
     size_t sizeDone = 0;
+    string prepareTraceId;
+    if (cInode->readSession) {
+        prepareTraceId = cInode->readSession->GetPrepareTraceId();
+    }
     for (auto &it : readArgsList) {
         if (!it) {
             continue;
@@ -1269,7 +1302,10 @@ static void WaitAndFixData(fuse_req_t req,
         if (!WaitData(req, cInode, it)) {
             return;
         }
-        if (!FixData(req, buf, size, sizeDone, it)) {
+        ReadSize sizes;
+        sizes.size = size;
+        sizes.sizeDone = sizeDone;
+        if (!FixData(req, buf, sizes, it, prepareTraceId)) {
             return;
         }
         sizeDone += it->size;

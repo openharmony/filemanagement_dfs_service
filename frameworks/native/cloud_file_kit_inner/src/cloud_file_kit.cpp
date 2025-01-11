@@ -98,4 +98,9 @@ std::shared_ptr<CloudSyncHelper> CloudFileKit::GetCloudSyncHelper(const int32_t 
 {
     return make_shared<CloudSyncHelper>(userId, bundleName);
 }
+
+std::string CloudFileKit::GetPrepareTraceId(const int32_t userId)
+{
+    return "";
+}
 } // namespace OHOS::FileManagement::CloudFile

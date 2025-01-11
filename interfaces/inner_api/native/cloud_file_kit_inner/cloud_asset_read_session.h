@@ -31,6 +31,11 @@ public:
     virtual int64_t PRead(int64_t offset, int64_t size, char *buffer, CloudError &error);
     virtual bool Close(bool needRemain = false);
     virtual bool HasCache(int64_t offset, int64_t readSize);
+    void SetPrepareTraceId(std::string prepareTraceId);
+    std::string GetPrepareTraceId();
+
+private:
+    std::string prepareTraceId_;
 };
 } // namespace OHOS::FileManagement::CloudFile
 
