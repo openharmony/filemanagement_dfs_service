@@ -16,8 +16,10 @@
 #include "copy/file_size_utils.h"
 
 #include <sys/stat.h>
+#include <filesystem>
 
 #include "dfs_error.h"
+#include "file_uri.h"
 #include "utils_log.h"
 
 #undef LOG_DOMAIN
@@ -28,9 +30,57 @@
 namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
+using namespace AppFileService;
+using namespace AppFileService::ModuleFileUri;
 using namespace FileManagement;
 static constexpr int DISMATCH = 0;
 static constexpr int MATCH = 1;
+
+int32_t FileSizeUtils::GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)
+{
+    auto path = GetPathFromUri(uri, isSrcUri);
+    if (path.empty()) {
+        return ERR_BAD_VALUE;
+    }
+
+    bool isDirectory;
+    auto ret = IsDirectory(uri, isSrcUri, isDirectory);
+    if (ret != E_OK) {
+        return ret;
+    }
+    if (isDirectory) {
+        return GetDirSize(path, size);
+    } else {
+        return GetFileSize(path, size);
+    }
+}
+
+int32_t FileSizeUtils::IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory)
+{
+    auto path = GetPathFromUri(uri, isSrcUri);
+    if (path.empty()) {
+        return ERR_BAD_VALUE;
+    }
+
+    bool isDir;
+    auto ret = IsDirectory(path, isDir);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    bool isFile;
+    ret = IsFile(path, isFile);
+    if (ret != E_OK) {
+        return ret;
+    }
+
+    if (isDir == isFile) {
+        return ERR_BAD_VALUE;
+    }
+    isDirectory = isDir;
+    return E_OK;
+}
+
 int FileSizeUtils::FilterFunc(const struct dirent *filename)
 {
     if (std::string_view(filename->d_name) == "." || std::string_view(filename->d_name) == "..") {
@@ -130,6 +180,33 @@ int32_t FileSizeUtils::IsDirectory(const std::string &path, bool &result)
     return E_OK;
 }
 
+std::string FileSizeUtils::GetPathFromUri(const std::string &uri, bool isSrcUri)
+{
+    std::string path;
+    FileUri fileUri(uri);
+    if (isSrcUri) {
+        path = GetRealPath(fileUri.GetRealPath());
+    } else {
+        path = GetRealPath(fileUri.GetPath());
+    }
+    return path;
+}
+
+std::string FileSizeUtils::GetRealPath(const std::string &path)
+{
+    std::filesystem::path tempPath(path);
+    std::filesystem::path realPath{};
+    for (const auto& component : tempPath) {
+        if (component == ".") {
+            continue;
+        } else if (component == "..") {
+            realPath = realPath.parent_path();
+        } else {
+            realPath /= component;
+        }
+    }
+    return realPath.string();
+}
 } // namespace DistributedFile
 } // namespace Storage
 } // namespace OHOS

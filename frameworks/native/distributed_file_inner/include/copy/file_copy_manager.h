@@ -23,7 +23,6 @@
 #include "copy/distributed_file_fd_guard.h"
 #include "copy/file_copy_listener.h"
 #include "copy/trans_listener.h"
-#include "file_uri.h"
 #include "iremote_broker.h"
 #include "refbase.h"
 #include "uv.h"
@@ -65,7 +64,7 @@ struct FileInfos {
  
 class FileCopyManager final {
 public:
-    using ProcessCallback = std::function<uint64_t(uint64_t processSize, uint64_t totalSize)>;
+    using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
     static std::shared_ptr<FileCopyManager> GetInstance();
     int32_t Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback);
     int32_t Cancel(const std::string &srcUri, const std::string &destUri);
@@ -94,15 +93,8 @@ private:
     int32_t CreateFileInfos(const std::string &srcUri, const std::string &destUri, std::shared_ptr<FileInfos> &infos);
     int32_t CheckOrCreatePath(const std::string &destPath);
     int MakeDir(const std::string &path);
-
-    // operator of uri or path
-    bool IsFile(const std::string &path);
-    bool IsDirectory(const std::string &path);
     bool IsRemoteUri(const std::string &uri);
     bool IsMediaUri(const std::string &uriPath);
-    std::string GetRealPath(const std::string& path);
-
-    // operator of fileInfos
     void AddFileInfos(std::shared_ptr<FileInfos> infos);
     void RemoveFileInfos(std::shared_ptr<FileInfos> infos);
 };

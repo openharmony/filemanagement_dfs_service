@@ -45,7 +45,6 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 using namespace AppFileService;
-using namespace AppFileService::ModuleFileUri;
 using namespace FileManagement;
 static const std::string FILE_PREFIX_NAME = "file://";
 static const std::string NETWORK_PARA = "?networkid=";
@@ -187,7 +186,7 @@ int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
     }
     
     bool destIsDirectory;
-    auto ret = FileSizeUtils::IsDirectory(infos->destPath, destIsDirectory);
+    auto ret = FileSizeUtils::IsDirectory(infos->destUri, false, destIsDirectory);
     if (ret != E_OK) {
         LOGE("destPath: %{public}s not find, error=%{public}d", infos->destPath.c_str(), ret);
         return ret;
@@ -374,21 +373,16 @@ int32_t FileCopyManager::CreateFileInfos(const std::string &srcUri,
 {
     infos->srcUri = srcUri;
     infos->destUri = destUri;
+    infos->srcPath = FileSizeUtils::GetPathFromUri(srcUri, true);
+    infos->destPath = FileSizeUtils::GetPathFromUri(destUri, false);
 
-    FileUri srcFileUri(infos->srcUri);
-    infos->srcPath = srcFileUri.GetRealPath();
-    infos->srcPath = GetRealPath(infos->srcPath);
-    FileUri dstFileUri(infos->destUri);
-    infos->destPath = dstFileUri.GetPath();
-    infos->destPath = GetRealPath(infos->destPath);
-
-    bool isFile;
-    auto ret = FileSizeUtils::IsFile(infos->srcPath, isFile);
+    bool isDirectory;
+    auto ret = FileSizeUtils::IsDirectory(infos->srcUri, true, isDirectory);
     if (ret != E_OK) {
         LOGE("srcPath: %{public}s not find, err=%{public}d", infos->srcPath.c_str(), ret);
         return ret;
     }
-    infos->srcUriIsFile = IsMediaUri(infos->srcUri) || isFile;
+    infos->srcUriIsFile = IsMediaUri(infos->srcUri) || !isDirectory;
     AddFileInfos(infos);
     return E_OK;
 }
@@ -462,22 +456,6 @@ bool FileCopyManager::IsMediaUri(const std::string &uriPath)
     Uri uri(uriPath);
     std::string bundleName = uri.GetAuthority();
     return bundleName == MEDIA;
-}
- 
-std::string FileCopyManager::GetRealPath(const std::string& path)
-{
-    std::filesystem::path tempPath(path);
-    std::filesystem::path realPath{};
-    for (const auto& component : tempPath) {
-        if (component == ".") {
-            continue;
-        } else if (component == "..") {
-            realPath = realPath.parent_path();
-        } else {
-            realPath /= component;
-        }
-    }
-    return realPath.string();
 }
  
 int32_t FileCopyManager::CheckOrCreatePath(const std::string &destPath)

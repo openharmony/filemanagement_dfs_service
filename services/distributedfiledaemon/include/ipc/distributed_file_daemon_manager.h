@@ -32,7 +32,7 @@ namespace Storage {
 namespace DistributedFile {
 class DistributedFileDaemonManager {
 public:
-    using ProcessCallback = std::function<uint64_t(uint64_t processSize, uint64_t totalSize)>;
+    using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
 public:
     static DistributedFileDaemonManager &GetInstance();
 
@@ -53,8 +53,8 @@ public:
     virtual int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) = 0;
     virtual int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) =0;
 
-    virtual int32_t GetFileSize(const std::string &path, uint64_t &size) = 0;
-    virtual int32_t GetDirSize(const std::string &path, uint64_t &size) = 0;
+    virtual int32_t GetSize(const std::string &uri, bool isSrcUri, uint64_t &size) = 0;
+    virtual int32_t IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory) = 0;
     virtual int32_t Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback processCallback) = 0;
     virtual int32_t Cancel(const std::string &srcUri, const std::string &destUri) = 0;
     virtual int32_t Cancel() = 0;

@@ -171,14 +171,14 @@ int32_t DistributedFileDaemonManagerImpl::UnRegisterAssetCallback(const sptr<IAs
     return OHOS::FileManagement::E_OK;
 }
 
-int32_t DistributedFileDaemonManagerImpl::GetFileSize(const std::string &path, uint64_t &size)
+int32_t DistributedFileDaemonManagerImpl::GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)
 {
-    return FileSizeUtils::GetFileSize(path, size);
+    return FileSizeUtils::GetSize(uri, isSrcUri, size);
 }
 
-int32_t DistributedFileDaemonManagerImpl::GetDirSize(const std::string &path, uint64_t &size)
+int32_t DistributedFileDaemonManagerImpl::IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory)
 {
-    return FileSizeUtils::GetDirSize(path, size);
+    return FileSizeUtils::IsDirectory(uri, isSrcUri, isDirectory);
 }
 
 int32_t DistributedFileDaemonManagerImpl::Copy(const std::string &srcUri,

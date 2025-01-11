@@ -32,17 +32,20 @@ struct NameList {
 
 class FileSizeUtils {
 public:
+    static int32_t GetSize(const std::string &uri, bool isSrcUri, uint64_t &size);
+    static int32_t IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory);
+
+    static std::string GetPathFromUri(const std::string &uri, bool isSrcUri);
     static int32_t GetFileSize(const std::string &path, uint64_t &size);
     static int32_t GetDirSize(const std::string &path, uint64_t &size);
-
     static void Deleter(struct NameList *arg);
     static std::unique_ptr<struct NameList, decltype(FileSizeUtils::Deleter) *> GetDirNameList(const std::string &path);
-    static int32_t IsFile(const std::string &path, bool &result);
-    static int32_t IsDirectory(const std::string &path, bool &result);
 
 private:
-    
     static int FilterFunc(const struct dirent *filename);
+    static std::string GetRealPath(const std::string &path);
+    static int32_t IsFile(const std::string &path, bool &result);
+    static int32_t IsDirectory(const std::string &path, bool &result);
 };
 } // namespace DistributedFile
 } // namespace Storage
