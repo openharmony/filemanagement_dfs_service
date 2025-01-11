@@ -68,6 +68,7 @@ public:
     virtual int32_t BatchCleanFile(const std::vector<CloudSync::CleanFileInfo> &fileInfo,
         std::vector<std::string> &failCloudId);
     virtual int32_t DownloadThumb();
+    virtual int32_t TriggerDownloadThumb();
     virtual int32_t CacheVideo();
     virtual int32_t CleanVideoCache();
     virtual int32_t CleanCache(const std::string &bundleName, const int32_t userId, const std::string &uri);
