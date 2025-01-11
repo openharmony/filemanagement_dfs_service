@@ -75,6 +75,8 @@ public:
     MOCK_METHOD0(DownloadThumb, int32_t());
     MOCK_METHOD2(BatchCleanFile, int32_t(const std::vector<CleanFileInfoObj> &fileInfo,
         std::vector<std::string> &failCloudId));
+    MOCK_METHOD2(BatchDentryFileInsert, int32_t(const std::vector<DentryFileInfoObj> &fileInfo,
+        std::vector<std::string> &failCloudId));
 };
 
 class CloudSyncServiceStubTest : public testing::Test {
@@ -1357,6 +1359,38 @@ HWTEST_F(CloudSyncServiceStubTest, HandleGetSyncTimeTest002, TestSize.Level1)
     int32_t ret = service.HandleGetSyncTime(data, reply);
 
     EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
+}
+
+HWTEST_F(CloudSyncServiceStubTest, HandleBatchDentryFileInsert001, TestSize.Level1)
+{
+    MockService service;
+    MessageParcel data;
+    MessageParcel reply;
+    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(false));
+    int32_t ret = service.HandleBatchDentryFileInsert(data, reply);\
+    EXPECT_EQ(ret, E_PERMISSION_DENIED);
+}
+
+HWTEST_F(CloudSyncServiceStubTest, HandleBatchDentryFileInsert002, TestSize.Level1)
+{
+    MockService service;
+    MessageParcel data;
+    MessageParcel reply;
+    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(false));
+    int32_t ret = service.HandleBatchDentryFileInsert(data, reply);
+    EXPECT_EQ(ret, E_PERMISSION_SYSTEM);
+}
+
+HWTEST_F(CloudSyncServiceStubTest, HandleBatchDentryFileInsert003, TestSize.Level1)
+{
+    MockService service;
+    MessageParcel data;
+    MessageParcel reply;
+    EXPECT_CALL(*dfsuAccessToken_, CheckCallerPermission(_)).WillOnce(Return(true));
+    EXPECT_CALL(*dfsuAccessToken_, IsSystemApp()).WillOnce(Return(true));
+    int32_t ret = service.HandleBatchDentryFileInsert(data, reply);
+    EXPECT_EQ(ret, E_OK);
 }
 
 HWTEST_F(CloudSyncServiceStubTest, HandleCleanCacheTest001, TestSize.Level1)

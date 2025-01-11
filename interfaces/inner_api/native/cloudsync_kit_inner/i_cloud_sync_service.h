@@ -69,6 +69,8 @@ public:
     virtual int32_t CleanCacheInner(const std::string &uri) = 0;
     virtual int32_t BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
         std::vector<std::string> &failCloudId) = 0;
+    virtual int32_t BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
+        std::vector<std::string> &failCloudId) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 

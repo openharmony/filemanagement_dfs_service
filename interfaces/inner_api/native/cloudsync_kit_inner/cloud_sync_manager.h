@@ -119,6 +119,8 @@ public:
     virtual void CleanGalleryDentryFile() = 0;
     virtual int32_t BatchCleanFile(const std::vector<CleanFileInfo> &fileInfo,
         std::vector<std::string> &failCloudId) = 0;
+    virtual int32_t BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
+         std::vector<std::string> &failCloudId) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
