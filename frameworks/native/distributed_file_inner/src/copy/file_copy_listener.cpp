@@ -88,7 +88,9 @@ void FileCopyLocalListener::StartListener()
 
 void FileCopyLocalListener::StopListener()
 {
-    processCallback_(progressSize_, totalSize_);
+    if (processCallback_ != nullptr) {
+        processCallback_(progressSize_, totalSize_);
+    }
     CloseNotifyFd();
     if (notifyHandler_.joinable()) {
         notifyHandler_.join();
@@ -172,7 +174,7 @@ void FileCopyLocalListener::ReadNotifyEvent()
             return;
         }
         auto currentTime = std::chrono::steady_clock::now();
-        if (currentTime >= notifyTime_) {
+        if (currentTime >= notifyTime_ && processCallback_ != nullptr) {
             processCallback_(progressSize_, totalSize_);
             notifyTime_ = currentTime + NOTIFY_PROGRESS_DELAY;
         }
