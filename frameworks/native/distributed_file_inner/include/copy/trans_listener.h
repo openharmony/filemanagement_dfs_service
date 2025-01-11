@@ -46,7 +46,7 @@ public:
     int32_t Cancel();
 
 public:
-    using ProcessCallback = std::function<uint64_t(uint64_t processSize, uint64_t totalSize)>;
+    using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
     ProcessCallback processCallback_;
     HmdfsInfo hmdfsInfo_{};
     CopyEvent copyEvent_;

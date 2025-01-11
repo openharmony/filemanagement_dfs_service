@@ -64,7 +64,7 @@ struct FileInfos {
  
 class FileCopyManager final {
 public:
-    using ProcessCallback = std::function<uint64_t(uint64_t processSize, uint64_t totalSize)>;
+    using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
     static std::shared_ptr<FileCopyManager> GetInstance();
     int32_t Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback &processCallback);
     int32_t Cancel(const std::string &srcUri, const std::string &destUri);

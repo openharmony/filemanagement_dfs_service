@@ -36,7 +36,7 @@ using namespace FileManagement;
 static constexpr int DISMATCH = 0;
 static constexpr int MATCH = 1;
 
-int32_t GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)
+int32_t FileSizeUtils::GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)
 {
     auto path = GetPathFromUri(uri, isSrcUri);
     if (path.empty()) {
@@ -44,7 +44,7 @@ int32_t GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)
     }
 
     bool isDirectory;
-    auto ret = IsDirectory(uri, isSrcUri, size);
+    auto ret = IsDirectory(uri, isSrcUri, isDirectory);
     if (ret != E_OK) {
         return ret;
     }
@@ -55,7 +55,7 @@ int32_t GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)
     }
 }
 
-int32_t IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory)
+int32_t FileSizeUtils::IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory)
 {
     auto path = GetPathFromUri(uri, isSrcUri);
     if (path.empty()) {
@@ -69,7 +69,7 @@ int32_t IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory)
     }
 
     bool isFile;
-    auto ret = IsFile(path, isFile);
+    ret = IsFile(path, isFile);
     if (ret != E_OK) {
         return ret;
     }
@@ -180,11 +180,11 @@ int32_t FileSizeUtils::IsDirectory(const std::string &path, bool &result)
     return E_OK;
 }
 
-std::string GetPathFromUri(const std::string &uri, bool isSrcUri)
+std::string FileSizeUtils::GetPathFromUri(const std::string &uri, bool isSrcUri)
 {
     std::string path;
     FileUri fileUri(uri);
-    id (isSrcUri) {
+    if (isSrcUri) {
         path = GetRealPath(fileUri.GetRealPath());
     } else {
         path = GetRealPath(fileUri.GetPath());
@@ -192,7 +192,7 @@ std::string GetPathFromUri(const std::string &uri, bool isSrcUri)
     return path;
 }
 
-std::string GetRealPath(const std::string &path)
+std::string FileSizeUtils::GetRealPath(const std::string &path)
 {
     std::filesystem::path tempPath(path);
     std::filesystem::path realPath{};

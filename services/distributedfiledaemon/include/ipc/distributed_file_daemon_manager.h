@@ -32,7 +32,7 @@ namespace Storage {
 namespace DistributedFile {
 class DistributedFileDaemonManager {
 public:
-    using ProcessCallback = std::function<uint64_t(uint64_t processSize, uint64_t totalSize)>;
+    using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
 public:
     static DistributedFileDaemonManager &GetInstance();
 

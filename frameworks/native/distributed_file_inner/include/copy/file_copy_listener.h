@@ -40,7 +40,7 @@ struct ReceiveInfo {
     std::map<std::string, uint64_t> fileList; // filename, proceededSize
 };
 
-using ProcessCallback = std::function<uint64_t(uint64_t processSize, uint64_t totalSize)>;
+using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
 class FileCopyLocalListener {
 public:
     FileCopyLocalListener(const FileCopyLocalListener&) = delete;
