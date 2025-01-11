@@ -434,6 +434,18 @@ int32_t CloudSyncService::GetSyncTimeInner(int64_t &syncTime, const string &bund
     return DataSyncerRdbStore::GetInstance().GetLastSyncTime(callerUserId, targetBundleName, syncTime);
 }
 
+int32_t CloudSyncService::BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
+    std::vector<std::string> &failCloudId)
+{
+    std::vector<DentryFileInfo> dentryFileInfo;
+    for (const auto &obj : fileInfo) {
+        DentryFileInfo tmpFileInfo{obj.cloudId, obj.size, obj.modifiedTime, obj.path, obj.fileName, obj.fileType};
+        dentryFileInfo.emplace_back(tmpFileInfo);
+    }
+
+    return dataSyncManager_->BatchDentryFileInsert(dentryFileInfo, failCloudId);
+}
+
 int32_t CloudSyncService::CleanCacheInner(const std::string &uri)
 {
     string bundleName;

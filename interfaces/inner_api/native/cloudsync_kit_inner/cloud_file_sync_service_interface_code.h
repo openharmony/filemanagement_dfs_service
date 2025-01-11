@@ -46,7 +46,8 @@ enum class CloudFileSyncServiceInterfaceCode {
     SERVICE_CMD_RESET_CURSOR,
     SERVICE_CMD_STOP_FILE_CACHE,
     SERVICE_CMD_DOWNLOAD_THUMB,
-    SERVICE_CMD_BATCH_CLEAN_FILE
+    SERVICE_CMD_BATCH_CLEAN_FILE,
+    SERVICE_CMD_DENTRY_FILE_INSERT
 };
 } // namespace OHOS::FileManagement::CloudSync
 

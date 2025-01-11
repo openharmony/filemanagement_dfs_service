@@ -301,6 +301,39 @@ std::string DownloadProgressObj::to_string()
     return ss.str();
 }
 
+bool DentryFileInfoObj::ReadFromParcel(Parcel &parcel)
+{
+    parcel.ReadString(cloudId);
+    parcel.ReadInt64(size);
+    parcel.ReadInt64(modifiedTime);
+    parcel.ReadString(path);
+    parcel.ReadString(fileName);
+    parcel.ReadString(fileType);
+    return true;
+}
+
+bool DentryFileInfoObj::Marshalling(Parcel &parcel) const
+{
+    parcel.WriteString(cloudId);
+    parcel.WriteInt64(size);
+    parcel.WriteInt64(modifiedTime);
+    parcel.WriteString(path);
+    parcel.WriteString(fileName);
+    parcel.WriteString(fileType);
+    return true;
+}
+
+DentryFileInfoObj *DentryFileInfoObj::Unmarshalling(Parcel &parcel)
+{
+    DentryFileInfoObj *info = new (std::nothrow) DentryFileInfoObj();
+    if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
+        LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
 bool AssetInfoObj::ReadFromParcel(Parcel &parcel)
 {
     parcel.ReadString(uri);

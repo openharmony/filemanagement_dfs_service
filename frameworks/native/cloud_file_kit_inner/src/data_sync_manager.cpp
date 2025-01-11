@@ -150,6 +150,12 @@ int32_t DataSyncManager::CleanCache(const std::string &bundleName, const int32_t
     return E_OK;
 }
 
+int32_t DataSyncManager::BatchDentryFileInsert(const std::vector<CloudSync::DentryFileInfo> &fileInfo,
+    std::vector<std::string> &failCloudId)
+{
+    return E_OK;
+}
+
 int32_t DataSyncManager::DisableCloud(const int32_t userId)
 {
     return E_OK;

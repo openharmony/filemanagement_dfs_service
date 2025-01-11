@@ -75,6 +75,8 @@ public:
     int32_t CleanCacheInner(const std::string &uri) override;
     int32_t BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
         std::vector<std::string> &failCloudId) override;
+    int32_t BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
+        std::vector<std::string> &failCloudId) override;
 
     class ServiceProxyLoadCallback : public SystemAbilityLoadCallbackStub {
     public:

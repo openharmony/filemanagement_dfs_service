@@ -80,6 +80,8 @@ public:
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
     int32_t BatchCleanFile(const std::vector<CleanFileInfoObj> &fileInfo,
         std::vector<std::string> &failCloudId) override;
+    int32_t BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
+        std::vector<std::string> &failCloudId) override;
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);
