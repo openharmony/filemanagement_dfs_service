@@ -53,7 +53,8 @@ enum XATTR_CODE {
     IS_FAVORITE,
     FILE_SYNC_STATUS,
     IS_EXT_ATTR,
-    HAS_THM
+    HAS_THM,
+    TIME_RECYCLED
 };
 static constexpr int32_t LOOKUP_QUERY_LIMIT = 1;
 static constexpr int32_t CHECK_QUERY_LIMIT = 2000;
@@ -805,9 +806,9 @@ static string ConvertUriToSrcPath(const string &uriStr)
 int32_t CloudDiskRdbStore::GetSourcePath(const string &attr, const string &parentCloudId, string &sourcePath)
 {
     nlohmann::json jsonObject = nlohmann::json::parse(attr, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        LOGE("handle jsonObject parse failed");
-        return E_RDB;
+    if (jsonObject.is_discarded() || (!jsonObject.is_object())) {
+        LOGD("jsonObject is discarded");
+        jsonObject = nlohmann::json::object();
     }
     if (jsonObject.contains(SRC_PATH_KEY) && jsonObject[SRC_PATH_KEY].is_string()) {
         sourcePath = jsonObject[SRC_PATH_KEY].get<std::string>();
@@ -837,9 +838,9 @@ int32_t CloudDiskRdbStore::SourcePathSetValue(const string &cloudId, const strin
     }
     string filePath = ConvertUriToSrcPath(uri);
     nlohmann::json jsonObject = nlohmann::json::parse(attr, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        LOGE("handle jsonObject parse failed");
-        return E_RDB;
+    if (jsonObject.is_discarded() || (!jsonObject.is_object())) {
+        LOGD("jsonObject is discarded");
+        jsonObject = nlohmann::json::object();
     }
     jsonObject[SRC_PATH_KEY] = filePath;
     string attrStr = jsonObject.dump();
@@ -882,6 +883,55 @@ int32_t CloudDiskRdbStore::RecycleSetXattr(const std::string &name, const std::s
     return EINVAL;
 }
 
+int32_t CloudDiskRdbStore::CheckIsConflict(const string &name, const string &parentCloudId, string &newName)
+{
+    MetaBase metaBase(name);
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, parentCloudId);
+    int32_t ret = metaFile->DoLookup(metaBase);
+    if (ret != E_OK) {
+        if (ret == ENOENT) {
+            LOGI("no conflict file at target dir.");
+            return E_OK;
+        }
+        LOGE("lookup conflict name fail, ret = %{public}d", ret);
+        return ret;
+    }
+
+    RETURN_ON_ERR(MetaFileMgr::GetInstance().GetNewName(metaFile, name, newName));
+
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::RestoreUpdateRdb(const string &cloudId, const struct RestoreInfo &restoreInfo,
+    const ValuesBucket &setXattr)
+{
+    TransactionOperations rdbTransactionUpdate(rdbStore_);
+    auto [ret, transaction] = rdbTransactionUpdate.Start();
+    if (ret != E_OK) {
+        LOGE("rdbstore begin transaction failed, ret = %{public}d", ret);
+        return ret;
+    }
+
+    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
+    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+
+    int32_t changedRows = -1;
+    tie(ret, changedRows) = transaction->Update(setXattr, predicates);
+    if (ret != E_OK) {
+        LOGE("resotre update rdb failed, ret = %{public}d", ret);
+        return E_RDB;
+    }
+
+    ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId_, bundleName_, restoreInfo);
+    if (ret != E_OK) {
+        LOGE("recycled restore set dentry failed, ret = %{public}d", ret);
+        return ret;
+    }
+    rdbTransactionUpdate.Finish();
+
+    return E_OK;
+}
+
 int32_t CloudDiskRdbStore::HandleRestoreXattr(const string &name, const string &parentCloudId, const string &cloudId)
 {
     RDBPTR_IS_NULLPTR(rdbStore_);
@@ -906,30 +956,19 @@ int32_t CloudDiskRdbStore::HandleRestoreXattr(const string &name, const string &
     RETURN_ON_ERR(GetSourcePath(attr, parentCloudId, srcPath));
     RETURN_ON_ERR(UpdateParent(userId_, bundleName_, srcPath, realParentCloudId));
 
+    string newName = name;
+    RETURN_ON_ERR(CheckIsConflict(name, realParentCloudId, newName));
+
     ValuesBucket setXAttr;
     setXAttr.PutString(FileColumn::PARENT_CLOUD_ID, realParentCloudId);
-    ret = RecycleSetValue(TrashOptType::RESTORE, setXAttr, position);
+    setXAttr.PutString(FileColumn::FILE_NAME, newName);
+    RETURN_ON_ERR(RecycleSetValue(TrashOptType::RESTORE, setXAttr, position));
+    struct RestoreInfo restoreInfo = {name, realParentCloudId, newName, rowId};
+    ret = RestoreUpdateRdb(cloudId, restoreInfo, setXAttr);
     if (ret != E_OK) {
+        LOGE("handle restore rdb update fail, ret = %{public}d", ret);
         return ret;
     }
-
-    TransactionOperations rdbTransactionUpdate(rdbStore_);
-    tie(ret, transaction) = rdbTransactionUpdate.Start();
-    NativeRdb::AbsRdbPredicates predicates = NativeRdb::AbsRdbPredicates(FileColumn::FILES_TABLE);
-    predicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
-
-    int32_t changedRows = -1;
-    std::tie(ret, changedRows) = transaction->Update(setXAttr, predicates);
-    if (ret != E_OK) {
-        LOGE("set xAttr location fail, ret %{public}d", ret);
-        return E_RDB;
-    }
-    ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId_, bundleName_, name, realParentCloudId, rowId);
-    if (ret != E_OK) {
-        LOGE("recycle set dentryfile failed, ret = %{public}d", ret);
-        return ret;
-    }
-    rdbTransactionUpdate.Finish();
     CloudDiskSyncHelper::GetInstance().RegisterTriggerSync(bundleName_, userId_);
     return E_OK;
 }
@@ -1055,6 +1094,8 @@ int32_t CheckXattr(const std::string &key)
         return IS_EXT_ATTR;
     } else if (key == CLOUD_HAS_LCD || key == CLOUD_HAS_THM) {
         return HAS_THM;
+    } else if (key == CLOUD_TIME_RECYCLED) {
+        return TIME_RECYCLED;
     } else {
         return ERROR_CODE;
     }
@@ -1127,6 +1168,30 @@ int32_t CloudDiskRdbStore::FileStatusGetXattr(const std::string &cloudId, const 
         return ret;
     }
     value = to_string(fileStatus);
+    return E_OK;
+}
+
+int32_t CloudDiskRdbStore::TimeRecycledGetXattr(const string &cloudId, const string &key, string &value)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    if (cloudId.empty() || cloudId == ROOT_CLOUD_ID || key != CLOUD_TIME_RECYCLED) {
+        LOGE("getxattr parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    AbsRdbPredicates getXAttrPredicates = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    getXAttrPredicates.EqualTo(FileColumn::CLOUD_ID, cloudId);
+    auto resultSet = rdbStore_->QueryByStep(getXAttrPredicates, { FileColumn::FILE_TIME_RECYCLED });
+    if (resultSet == nullptr) {
+        LOGE("get nullptr getxattr result");
+        return E_RDB;
+    }
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("getxattr result set go to next row failed");
+        return E_RDB;
+    }
+    int64_t timeRecycled = 0;
+    CloudDiskRdbUtils::GetLong(FileColumn::FILE_TIME_RECYCLED, timeRecycled, resultSet);
+    value = to_string(timeRecycled);
     return E_OK;
 }
 
@@ -1212,6 +1277,9 @@ int32_t CloudDiskRdbStore::GetXAttr(const std::string &cloudId, const std::strin
             break;
         case IS_EXT_ATTR:
             ret = GetExtAttrValue(cloudId, extAttrKey, value);
+            break;
+        case TIME_RECYCLED:
+            ret = TimeRecycledGetXattr(cloudId, key, value);
             break;
         default:
             ret = ENOSYS;

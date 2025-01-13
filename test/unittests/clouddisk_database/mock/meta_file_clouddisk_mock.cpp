@@ -555,9 +555,9 @@ int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::strin
 }
 
 int32_t MetaFileMgr::RemoveFromRecycleDentryfile(uint32_t userId, const std::string &bundleName,
-    const std::string &name, const std::string &parentCloudId, int64_t rowId)
+    const struct RestoreInfo &restoreInfo)
 {
-    if (parentCloudId == "mock") {
+    if (restoreInfo.parentCloudId == "mock") {
         return E_RDB;
     }
     return E_OK;
