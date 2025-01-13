@@ -47,6 +47,8 @@ public:
     std::string GetNetworkIdFromUri(const std::string &uri);
     int32_t Cancel();
     int32_t GetErrCode() { return copyEvent_.errorCode; };
+public:
+    HmdfsInfo hmdfsInfo_{};
 
 private:
     int32_t CreateTmpDir();
@@ -59,7 +61,7 @@ private:
     std::mutex cvMutex_;
     std::condition_variable cv_;
     ProcessCallback processCallback_;
-    HmdfsInfo hmdfsInfo_{};
+
     CopyEvent copyEvent_;
 };
 } // namespace DistributedFile
