@@ -34,24 +34,23 @@ struct CopyEvent {
 
 class TransListener : public Storage::DistributedFile::FileTransListenerStub {
 public:
+    using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
+    explicit TransListener(const std::string &destUri, ProcessCallback &processCallback);
+    virtual ~TransListener();
+
     int32_t OnFileReceive(uint64_t totalBytes, uint64_t processedBytes) override;
     int32_t OnFinished(const std::string &sessionName) override;
     int32_t OnFailed(const std::string &sessionName, int32_t errorCode) override;
 
-    int32_t CreateTmpDir();
-    void RmTmpDir();
     int32_t WaitForCopyResult();
     int32_t CopyToSandBox(const std::string &srcUri);
     std::string GetNetworkIdFromUri(const std::string &uri);
     int32_t Cancel();
-
-public:
-    using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
-    ProcessCallback processCallback_;
-    HmdfsInfo hmdfsInfo_{};
-    CopyEvent copyEvent_;
+    int32_t GetErrCode() { return copyEvent_.errorCode; };
 
 private:
+    int32_t CreateTmpDir();
+    void RmTmpDir();
     std::string CreateDfsCopyPath();
     std::string GetFileName(const std::string &path);
 
@@ -59,6 +58,9 @@ private:
     std::string disSandboxPath_;
     std::mutex cvMutex_;
     std::condition_variable cv_;
+    ProcessCallback processCallback_;
+    HmdfsInfo hmdfsInfo_{};
+    CopyEvent copyEvent_;
 };
 } // namespace DistributedFile
 } // namespace Storage

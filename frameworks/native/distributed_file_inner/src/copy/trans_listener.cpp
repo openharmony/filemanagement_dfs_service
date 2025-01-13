@@ -41,6 +41,20 @@ static const std::string FILE_MANAGER_AUTHORITY = "docs";
 static const std::string MEDIA_AUTHORITY = "media";
 static const std::string DISTRIBUTED_PATH = "/data/storage/el2/distributedfiles/";
 
+TransListener::TransListener(const std::string &destUri, ProcessCallback &processCallback)
+{
+    processCallback_ = processCallback;
+    Uri uri(destUri);
+    hmdfsInfo_.authority = uri.GetAuthority();
+    hmdfsInfo_.sandboxPath = SandboxHelper::Decode(uri.GetPath());
+    CreateTmpDir();
+}
+
+TransListener::~TransListener()
+{
+    RmTmpDir();
+}
+
 int32_t TransListener::WaitForCopyResult()
 {
     LOGI("WaitForCopyResult.");

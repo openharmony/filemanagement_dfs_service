@@ -77,7 +77,9 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     }
 
     if (IsRemoteUri(infos->srcUri)) {
-        return ExecRemote(infos, processCallback);
+        ret = ExecRemote(infos, processCallback);
+        RemoveFileInfos(infos);
+        return ret;
     }
 
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
@@ -96,41 +98,31 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
 int32_t FileCopyManager::ExecRemote(std::shared_ptr<FileInfos> infos, ProcessCallback &processCallback)
 {
     LOGI("ExecRemote Copy start ");
-    sptr<TransListener> transListener = new (std::nothrow) TransListener();
+    sptr<TransListener> transListener (new (std::nothrow) TransListener(infos->destUri, processCallback));
     if (transListener == nullptr) {
         LOGE("new trans listener failed");
         return ENOMEM;
     }
     infos->transListener = transListener;
-    transListener->processCallback_ = processCallback;
-    Uri uri(infos->destUri);
-    transListener->hmdfsInfo_.authority = uri.GetAuthority();
-    transListener->hmdfsInfo_.sandboxPath = SandboxHelper::Decode(uri.GetPath());
-    transListener->CreateTmpDir();
 
     auto networkId = transListener->GetNetworkIdFromUri(infos->srcUri);
     auto distributedFileDaemonProxy = DistributedFileDaemonProxy::GetInstance();
     if (distributedFileDaemonProxy == nullptr) {
         LOGE("proxy is null");
-        transListener->RmTmpDir();
         return E_SA_LOAD_FAILED;
     }
     auto ret = distributedFileDaemonProxy->PrepareSession(infos->srcUri, infos->destUri,
         networkId, transListener, transListener->hmdfsInfo_);
     if (ret != E_OK) {
         LOGE("PrepareSession failed, ret = %{public}d.", ret);
-        transListener->RmTmpDir();
         return ret;
     }
 
     auto copyResult = transListener->WaitForCopyResult();
     if (copyResult == FAILED) {
-        transListener->RmTmpDir();
-        return transListener->copyEvent_.errorCode;
+        return transListener->GetErrCode();
     }
-    ret = transListener->CopyToSandBox(infos->srcUri);
-    transListener->RmTmpDir();
-    return ret;
+    return transListener->CopyToSandBox(infos->srcUri);
 }
 
 int32_t FileCopyManager::Cancel()
