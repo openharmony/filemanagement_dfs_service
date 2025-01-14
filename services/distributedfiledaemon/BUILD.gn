@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2024 Huawei Device Co., Ltd.
+# Copyright (C) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -153,6 +153,7 @@ ohos_shared_library("distributed_file_daemon_kit_inner") {
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_manager_impl.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/distributed_file_daemon_proxy.cpp",
+    "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_dfs_listener_stub.cpp",
     "${distributedfile_path}/frameworks/native/distributed_file_inner/src/file_trans_listener_stub.cpp",
     "${distributedfile_path}/utils/log/src/utils_log.cpp",
   ]
