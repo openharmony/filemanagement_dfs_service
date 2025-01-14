@@ -164,7 +164,7 @@ void DeleteResFile(std::shared_ptr<FileInfos> infos)
 {
     std::error_code errCode;
     //delete files in remote cancel
-    if (infos->translistener != nullptr) {
+    if (infos->transListener != nullptr) {
         if (std::filesystem::exists(infos->destPath, errCode)) {
             std::filesystem::remove(infos->destPath, errCode);
         }
@@ -174,7 +174,7 @@ void DeleteResFile(std::shared_ptr<FileInfos> infos)
     auto filePaths = infos->localListener->GetFilePath();
     for (auto path : filePaths) {
         if (!std::filesystem::exists(path, errCode)) {
-            LOGE("Failed to find the file, errcode %{public}d", errcode.value());
+            LOGE("Failed to find the file, errcode %{public}d", errCode.value());
             continue;
         }
         std::filesystem::remove(path, errCode);
@@ -183,7 +183,7 @@ void DeleteResFile(std::shared_ptr<FileInfos> infos)
     std::lock_guard<std::mutex> lock(infos->subDirsMutex);
     for (auto subDir : infos->subDirs) {
         if (!std::filesystem::exists(subDir, errCode)) {
-            LOGE("Failed to find the dir, errcode %{public}d", errcode.value());
+            LOGE("Failed to find the dir, errcode %{public}d", errCode.value());
             continue;
         }
         std::filesystem::remove(subDir, errCode);
