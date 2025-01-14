@@ -160,7 +160,7 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
     return E_OK;
 }
 
-void DeleteResFile(std::shared_ptr<FileInfos> infos)
+void FileCopyManager::DeleteResFile(std::shared_ptr<FileInfos> infos)
 {
     std::error_code errCode;
     //delete files in remote cancel
