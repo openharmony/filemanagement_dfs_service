@@ -56,6 +56,11 @@ public:
     void StopListener();
     void AddFile(const std::string &fileName);
     void AddListenerFile(const std::string &destPath, uint32_t mode);
+    std::set<std::string> GetFilePath()
+    {
+        std::lock_guard<std::mutex> lock(filePathsMutex_);
+        return filePaths_;
+    }
     int32_t GetResult() { return errorCode_; };
 
 private:

@@ -153,10 +153,41 @@ int32_t FileCopyManager::Cancel(const std::string &srcUri, const std::string &de
         if ((*item)->transListener != nullptr) {
             ret = (*item)->transListener->Cancel();
         }
+        DeleteResFile(*item);
         item = FileInfosVec_.erase(item);
         return ret;
     }
     return E_OK;
+}
+
+void DeleteResFile(std::shared_ptr<FileInfos> infos)
+{
+    std::error_code errCode;
+    //delete files in remote cancel
+    if (infos->translistener != nullptr) {
+        if (std::filesystem::exists(infos->destPath, errCode)) {
+            std::filesystem::remove(infos->destPath, errCode);
+        }
+    }
+
+    //delete files&dirs in local cancel
+    auto filePaths = infos->localListener->GetFilePath();
+    for (auto path : filePaths) {
+        if (!std::filesystem::exists(path, errCode)) {
+            LOGE("Failed to find the file, errcode %{public}d", errcode.value());
+            continue;
+        }
+        std::filesystem::remove(path, errCode);
+    }
+
+    std::lock_guard<std::mutex> lock(infos->subDirsMutex);
+    for (auto subDir : infos->subDirs) {
+        if (!std::filesystem::exists(subDir, errCode)) {
+            LOGE("Failed to find the dir, errcode %{public}d", errcode.value());
+            continue;
+        }
+        std::filesystem::remove(subDir, errCode);
+    }
 }
 
 int32_t FileCopyManager::ExecLocal(std::shared_ptr<FileInfos> infos)
@@ -311,6 +342,10 @@ int32_t FileCopyManager::CopySubDir(const std::string &srcPath,
     } else if (errCode.value() != E_OK) {
         LOGE("fs exists fail, errcode is %{public}d", errCode.value());
         return errCode.value();
+    }
+    {
+        std::lock_guard<std::mutex> lock(infos->subDirsMutex);
+        infos->subDirs.insert(destPath);
     }
     infos->localListener->AddListenerFile(destPath, IN_MODIFY);
     return RecurCopyDir(srcPath, destPath, infos);
