@@ -48,6 +48,8 @@ struct FileInfos {
     std::shared_ptr<FileCopyLocalListener> localListener = nullptr;
     sptr<TransListener> transListener = nullptr;
     std::atomic_bool needCancel{ false };
+    std::mutex subDirsMutex;
+    std::set<std::string> subDirs;
 
     bool operator==(const FileInfos &infos) const
     {
@@ -97,6 +99,7 @@ private:
     bool IsMediaUri(const std::string &uriPath);
     void AddFileInfos(std::shared_ptr<FileInfos> infos);
     void RemoveFileInfos(std::shared_ptr<FileInfos> infos);
+    void DeleteResFile(std::shared_ptr<FileInfos> infos);
 };
 } // namespace DistributedFile
 } // namespace Storage
