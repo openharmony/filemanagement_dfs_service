@@ -450,8 +450,6 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
     child->refCount++;
     if (create) {
         child->mBase = make_shared<MetaBase>(mBase);
-        child->path = childName;
-        child->parent = parent;
 #ifdef HICOLLIE_ENABLE
         XcollieInput xcollieInput{child.get(), FaultOperation::LOOKUP};
         auto xcollieId = XCollieHelper::SetTimer("CloudFileDaemon_CloudLookup", LOOKUP_TIMEOUT_S,
@@ -467,6 +465,12 @@ static int CloudDoLookupHelper(fuse_ino_t parent, const char *name, struct fuse_
         LOGW("invalidate %s", GetAnonyString(childName).c_str());
         child->mBase = make_shared<MetaBase>(mBase);
     }
+    if (child->path != childName) {
+        CLOUD_FILE_FAULT_REPORT(CloudFileFaultInfo{PHOTOS_BUNDLE_NAME, FaultOperation::LOOKUP,
+            FaultType::INODE_FILE, ENOMEM, "hash collision"});
+    }
+    child->path = childName;
+    child->parent = parent;
     LOGD("lookup success, child: %{private}s, refCount: %lld", GetAnonyString(child->path).c_str(),
          static_cast<long long>(child->refCount));
     GetMetaAttr(data, child, &e->attr);
