@@ -14,16 +14,12 @@
  */
 #include "cloud_sync_service_proxy.h"
 
-#include "cloud_download_uri_manager.h"
 #include "cloud_file_sync_service_interface_code.h"
 
 #include <sstream>
 
 #include "dfs_error.h"
 #include "iservice_registry.h"
-#ifdef SUPPORT_MEDIA_LIBRARY
-#include "media_file_uri.h"
-#endif
 #include "system_ability_definition.h"
 #include "utils_log.h"
 
@@ -31,7 +27,6 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
 constexpr int LOAD_SA_TIMEOUT_MS = 2000;
-const std::string MEDIA_URL = "file://media";
 static const int WRITE_SIZE = 30;
 static const int MAX_WRITE_DENTRY_FILE_SIZE = 500;
 
@@ -594,8 +589,12 @@ int32_t CloudSyncServiceProxy::NotifyEventChange(
 
 int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 {
+    if (uri.empty()) {
+        LOGE("Invalid argument for empty uri");
+        return E_INVAL_ARG;
+    }
 #ifdef SUPPORT_MEDIA_LIBRARY
-    LOGI("StartDownloadFile Start");
+    LOGI("StartDownloadFile Start, uri: %{public}s", GetAnonyString(uri).c_str());
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -605,19 +604,7 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
         return E_BROKEN_IPC;
     }
 
-    string path = uri;
-    if (uri.find(MEDIA_URL) == 0) {
-        OHOS::Media::MediaFileUri mediaUri(uri);
-        path = mediaUri.GetFilePath();
-
-        CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-        uriMgr.AddPathToUri(path, uri);
-    }
-
-    LOGI("StartDownloadFile Start, uri: %{public}s, path: %{public}s",
-         GetAnonyString(uri).c_str(), GetAnonyString(path).c_str());
-
-    if (!data.WriteString(path)) {
+    if (!data.WriteString(uri)) {
         LOGE("Failed to send the cloud id");
         return E_INVAL_ARG;
     }
@@ -642,13 +629,13 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 }
 
 int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
-                                                         const std::vector<std::string> &pathVec,
+                                                         const std::vector<std::string> &uriVec,
                                                          std::bitset<FIELD_KEY_MAX_SIZE> &fieldkey,
-                                                         bool &isCallbackValid,
+                                                         bool isCallbackValid,
                                                          const sptr<IRemoteObject> &downloadCallback,
                                                          int32_t timeout)
 {
-    if (!data.WriteStringVector(pathVec)) {
+    if (!data.WriteStringVector(uriVec)) {
         LOGE("Failed to send the cloud id");
         return E_INVAL_ARG;
     }
@@ -693,24 +680,14 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &ur
         return E_BROKEN_IPC;
     }
 
-    std::vector<std::string> pathVec;
-    for (unsigned long i = 0; i < uriVec.size(); i++) {
-        string path = uriVec[i];
-#ifdef SUPPORT_MEDIA_LIBRARY
-        if (uriVec[i].find(MEDIA_URL) == 0) {
-            OHOS::Media::MediaFileUri mediaUri(uriVec[i]);
-            path = mediaUri.GetFilePath();
+    for (std::size_t i = 0; i < uriVec.size(); ++i) {
+        if (uriVec[i].empty()) {
+            LOGE("Invalid argument for empty uri, index %{public}zu", i);
+            return E_INVAL_ARG;
         }
-#endif
-        CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-        uriMgr.AddPathToUri(path, uriVec[i]);
-        pathVec.push_back(path);
-
-        LOGI("StartFileCache Start, uriVec[%{public}ld]: %{public}s, path: %{public}s",
-             i, GetAnonyString(uriVec[i]).c_str(), GetAnonyString(path).c_str());
     }
 
-    auto retParcel = StartFileCacheWriteParcel(data, pathVec, fieldkey, isCallbackValid, downloadCallback, timeout);
+    auto retParcel = StartFileCacheWriteParcel(data, uriVec, fieldkey, isCallbackValid, downloadCallback, timeout);
     if (retParcel != E_OK) {
         LOGE("StartFileCacheWriteParcel failed");
         return retParcel;
@@ -729,10 +706,6 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &ur
     }
 
     downloadId = reply.ReadInt64();
-
-    CloudDownloadUriManager &uriMgr = CloudDownloadUriManager::GetInstance();
-    uriMgr.AddDownloadIdToPath(downloadId, pathVec);
-
     LOGI("StartFileCache Success, downloadId: %{public}lld", static_cast<long long>(downloadId));
 
     return reply.ReadInt32();
@@ -740,7 +713,11 @@ int32_t CloudSyncServiceProxy::StartFileCache(const std::vector<std::string> &ur
 
 int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool needClean)
 {
-    LOGI("StopDownloadFile Start");
+    if (uri.empty()) {
+        LOGE("Invalid argument for empty uri");
+        return E_INVAL_ARG;
+    }
+    LOGI("StopDownloadFile Start, uri: %{public}s", GetAnonyString(uri).c_str());
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -750,17 +727,7 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool nee
         return E_BROKEN_IPC;
     }
 
-    string path = uri;
-#ifdef SUPPORT_MEDIA_LIBRARY
-    if (uri.find(MEDIA_URL) == 0) {
-        OHOS::Media::MediaFileUri Muri(uri);
-        path = Muri.GetFilePath();
-    }
-#endif
-    LOGI("StopDownloadFile Start, uri: %{public}s, path: %{public}s",
-         GetAnonyString(uri).c_str(), GetAnonyString(path).c_str());
-
-    if (!data.WriteString(path)) {
+    if (!data.WriteString(uri)) {
         LOGE("Failed to send the cloud id");
         return E_INVAL_ARG;
     }
@@ -781,8 +748,6 @@ int32_t CloudSyncServiceProxy::StopDownloadFile(const std::string &uri, bool nee
         LOGE("Failed to send out the requeset, errno: %{public}d", ret);
         return E_BROKEN_IPC;
     }
-    CloudDownloadUriManager& uriMgr = CloudDownloadUriManager::GetInstance();
-    uriMgr.RemoveUri(path);
     LOGI("StopDownloadFile Success");
     return reply.ReadInt32();
 }
@@ -1282,7 +1247,6 @@ void CloudSyncServiceProxy::InvaildInstance()
     LOGI("invalid instance");
     unique_lock<mutex> lock(instanceMutex_);
     serviceProxy_ = nullptr;
-    CloudDownloadUriManager::GetInstance().Reset();
 }
 
 void CloudSyncServiceProxy::ServiceProxyLoadCallback::OnLoadSystemAbilitySuccess(

@@ -14,7 +14,6 @@
  */
 
 #include "cloud_download_callback_stub.h"
-#include "cloud_download_uri_manager.h"
 #include "dfs_error.h"
 #include "utils_log.h"
 
@@ -51,17 +50,6 @@ int32_t CloudDownloadCallbackStub::HandleOnProcess(MessageParcel &data, MessageP
     if (!progress) {
         LOGE("object of DownloadProgressObj is nullptr");
         return E_INVAL_ARG;
-    }
-
-    CloudDownloadUriManager& uriMgr = CloudDownloadUriManager::GetInstance();
-    std::string path = progress->path;
-    std::string uri = uriMgr.GetUri(path);
-    if (uri.empty()) {
-        LOGI("CloudDownloadCallbackStub path %{public}s trans to uri error, skip.", GetAnonyString(path).c_str());
-        return E_OK;
-    } else {
-        progress->path = uri;
-        // if download finished, call need call RemoveUri and CheckDownloadIdPathMap later
     }
 
     OnDownloadProcess(*progress);
