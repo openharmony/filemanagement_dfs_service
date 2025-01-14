@@ -1050,7 +1050,7 @@ static bool CheckAndWait(pid_t pid, shared_ptr<CloudInode> cInode, off_t off)
 {
     int64_t cacheIndex = off / MAX_READ_SIZE;
     if (cInode->IsReadAhead(cacheIndex)) {
-        auto &it = cInode->readCacheMap[cacheIndex];
+        auto it = cInode->readCacheMap[cacheIndex];
         std::unique_lock<std::mutex> lock(it->mutex);
         auto waitStatus = it->cond.wait_for(
             lock, READ_TIMEOUT_S, [&] { return (it->flags & PG_UPTODATE) || CheckReadIsCanceled(pid, cInode); });
