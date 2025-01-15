@@ -134,6 +134,7 @@ int32_t FileCopyManager::Cancel()
         if (item->transListener != nullptr) {
             item->transListener->Cancel();
         }
+        DeleteResFile(item);
     }
     FileInfosVec_.clear();
     return E_OK;
@@ -168,6 +169,7 @@ void FileCopyManager::DeleteResFile(std::shared_ptr<FileInfos> infos)
         if (std::filesystem::exists(infos->destPath, errCode)) {
             std::filesystem::remove(infos->destPath, errCode);
         }
+        return;
     }
 
     //delete files&dirs in local cancel
