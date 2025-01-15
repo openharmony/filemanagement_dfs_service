@@ -40,6 +40,7 @@ constexpr uint32_t MAX_META_FILE_NUM = 100;
 constexpr uint32_t MAX_CLOUDDISK_META_FILE_NUM = 150;
 
 struct MetaBase;
+struct RestoreInfo;
 class MetaFile {
 public:
     MetaFile() = delete;
@@ -94,6 +95,8 @@ public:
     std::string GetDentryFilePath();
 
 private:
+    int32_t GetCreateInfo(const MetaBase &base, uint32_t &bitPos, uint32_t &namehash,
+        unsigned long &bidx, struct HmdfsDentryGroup &dentryBlk);
     std::mutex mtx_{};
     std::string path_{};
     std::string cacheFile_{};
@@ -143,7 +146,9 @@ public:
     int32_t MoveIntoRecycleDentryfile(uint32_t userId, const std::string &bundleName,
         const std::string &name, const std::string &parentCloudId, int64_t rowId);
     int32_t RemoveFromRecycleDentryfile(uint32_t userId, const std::string &bundleName,
-        const std::string &name, const std::string &parentCloudId, int64_t rowId);
+        const struct RestoreInfo &restoreinfo);
+    int32_t GetNewName(std::shared_ptr<CloudDiskMetaFile> metaFile,
+        const std::string &oldName, std::string &newName);
 private:
     MetaFileMgr() = default;
     ~MetaFileMgr() = default;
@@ -230,6 +235,13 @@ struct MetaHelper {
     static uint8_t GetFileType(const struct HmdfsDentry *de);
     static uint8_t GetPosition(const struct HmdfsDentry *de);
     static uint8_t GetNoUpload(const struct HmdfsDentry *de);
+};
+
+struct RestoreInfo {
+    std::string oldName;
+    std::string parentCloudId;
+    std::string newName;
+    int64_t rowId = 0;
 };
 } // namespace FileManagement
 } // namespace OHOS

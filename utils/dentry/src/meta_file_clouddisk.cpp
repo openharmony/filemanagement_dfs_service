@@ -20,6 +20,7 @@
 #include <iomanip>
 #include <sstream>
 #include <sys/stat.h>
+#include <unordered_set>
 
 #include "cloud_file_utils.h"
 #include "dfs_error.h"
@@ -346,56 +347,6 @@ static unsigned long GetBidxFromLevel(uint32_t level, uint32_t namehash)
     return BUCKET_BLOCKS * GetBucketaddr(level, namehash % bucket);
 }
 
-int32_t CloudDiskMetaFile::DoCreate(const MetaBase &base)
-{
-    if (fd_ < 0) {
-        LOGE("bad metafile fd");
-        return EINVAL;
-    }
-    off_t pos = 0;
-    uint32_t level = 0;
-    uint32_t bitPos = 0;
-    unsigned long bidx = 0;
-    HmdfsDentryGroup dentryBlk = {0};
-    std::unique_lock<std::mutex> lock(mtx_);
-    uint32_t namehash = CloudDisk::CloudFileUtils::DentryHash(base.name);
-    bool found = false;
-    while (!found) {
-        if (level == MAX_BUCKET_LEVEL) {
-            return ENOSPC;
-        }
-        bidx = GetBidxFromLevel(level, namehash);
-        unsigned long endBlock = bidx + BUCKET_BLOCKS;
-        int32_t ret = HandleFileByFd(endBlock, level);
-        if (ret != E_OK) {
-            return ret;
-        }
-        for (; bidx < endBlock; bidx++) {
-            pos = GetDentryGroupPos(bidx);
-            if (FileUtils::ReadFile(fd_, pos, DENTRYGROUP_SIZE, &dentryBlk) != DENTRYGROUP_SIZE) {
-                return ENOENT;
-            }
-            bitPos = RoomForFilename(dentryBlk.bitmap, GetDentrySlots(base.name.length()), DENTRY_PER_GROUP);
-            if (bitPos < DENTRY_PER_GROUP) {
-                found = true;
-                break;
-            }
-        }
-        ++level;
-    }
-    pos = GetDentryGroupPos(bidx);
-    if (!UpdateDentry(dentryBlk, base, namehash, bitPos)) {
-        LOGI("UpdateDentry fail, stop write.");
-        return EINVAL;
-    }
-    int size = FileUtils::WriteFile(fd_, &dentryBlk, pos, DENTRYGROUP_SIZE);
-    if (size != DENTRYGROUP_SIZE) {
-        LOGD("WriteFile failed, size %{public}d != %{public}d", size, DENTRYGROUP_SIZE);
-        return EINVAL;
-    }
-    return E_OK;
-}
-
 struct DcacheLookupCtx {
     int fd{-1};
     std::string name{};
@@ -492,6 +443,71 @@ static HmdfsDentry *FindDentry(DcacheLookupCtx *ctx)
         }
     }
     return nullptr;
+}
+
+int32_t CloudDiskMetaFile::GetCreateInfo(const MetaBase &base, uint32_t &bitPos, uint32_t &namehash,
+    unsigned long &bidx, struct HmdfsDentryGroup &dentryBlk)
+{
+    uint32_t level = 0;
+    namehash = CloudDisk::CloudFileUtils::DentryHash(base.name);
+    bool found = false;
+    while (!found) {
+        if (level == MAX_BUCKET_LEVEL) {
+            return ENOSPC;
+        }
+        bidx = GetBidxFromLevel(level, namehash);
+        unsigned long endBlock = bidx + BUCKET_BLOCKS;
+        int32_t ret = HandleFileByFd(endBlock, level);
+        if (ret != E_OK) {
+            return ret;
+        }
+        for (; bidx < endBlock; bidx++) {
+            off_t pos = GetDentryGroupPos(bidx);
+            if (FileUtils::ReadFile(fd_, pos, DENTRYGROUP_SIZE, &dentryBlk) != DENTRYGROUP_SIZE) {
+                return ENOENT;
+            }
+            bitPos = RoomForFilename(dentryBlk.bitmap, GetDentrySlots(base.name.length()), DENTRY_PER_GROUP);
+            if (bitPos < DENTRY_PER_GROUP) {
+                found = true;
+                break;
+            }
+        }
+        ++level;
+    }
+    return E_OK;
+}
+
+int32_t CloudDiskMetaFile::DoCreate(const MetaBase &base)
+{
+    if (fd_ < 0) {
+        LOGE("bad metafile fd");
+        return EINVAL;
+    }
+
+    std::unique_lock<std::mutex> lock(mtx_);
+    DcacheLookupCtx ctx;
+    InitDcacheLookupCtx(&ctx, base, fd_);
+    HmdfsDentry *de = FindDentry(&ctx);
+    if (de != nullptr) {
+        LOGE("this name dentry is exist");
+        return EEXIST;
+    }
+    uint32_t bitPos = 0;
+    unsigned long bidx = 0;
+    HmdfsDentryGroup dentryBlk = {0};
+    uint32_t namehash = 0;
+    GetCreateInfo(base, bitPos, namehash, bidx, dentryBlk);
+    off_t pos = GetDentryGroupPos(bidx);
+    if (!UpdateDentry(dentryBlk, base, namehash, bitPos)) {
+        LOGI("UpdateDentry fail, stop write.");
+        return EINVAL;
+    }
+    int size = FileUtils::WriteFile(fd_, &dentryBlk, pos, DENTRYGROUP_SIZE);
+    if (size != DENTRYGROUP_SIZE) {
+        LOGD("WriteFile failed, size %{public}d != %{public}d", size, DENTRYGROUP_SIZE);
+        return EINVAL;
+    }
+    return E_OK;
 }
 
 int32_t CloudDiskMetaFile::DoRemove(const MetaBase &base)
@@ -745,18 +761,18 @@ int32_t MetaFileMgr::MoveIntoRecycleDentryfile(uint32_t userId, const std::strin
 }
 
 int32_t MetaFileMgr::RemoveFromRecycleDentryfile(uint32_t userId, const std::string &bundleName,
-    const std::string &name, const std::string &parentCloudId, int64_t rowId)
+    const struct RestoreInfo &restoreInfo)
 {
     auto srcMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, RECYCLE_CLOUD_ID);
-    auto dstMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, parentCloudId);
-    std::string uniqueName = name + "_" + std::to_string(rowId);
+    auto dstMetaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId, bundleName, restoreInfo.parentCloudId);
+    std::string uniqueName = restoreInfo.oldName + "_" + std::to_string(restoreInfo.rowId);
     MetaBase metaBase(uniqueName);
     int32_t ret = srcMetaFile->DoLookup(metaBase);
     if (ret != E_OK) {
         LOGE("lookup and update dentry failed, ret = %{public}d", ret);
         return ret;
     }
-    metaBase.name = name;
+    metaBase.name = restoreInfo.newName;
     ret = dstMetaFile->DoCreate(metaBase);
     if (ret != E_OK) {
         LOGE("lookup and remove dentry failed, ret = %{public}d", ret);
@@ -766,9 +782,41 @@ int32_t MetaFileMgr::RemoveFromRecycleDentryfile(uint32_t userId, const std::str
     ret = srcMetaFile->DoLookupAndRemove(metaBase);
     if (ret != E_OK) {
         LOGE("lookup and remove dentry failed, ret = %{public}d", ret);
-        metaBase.name = name;
+        metaBase.name = restoreInfo.newName;
         (void)dstMetaFile->DoLookupAndRemove(metaBase);
         return ret;
+    }
+    return E_OK;
+}
+
+int32_t MetaFileMgr::GetNewName(std::shared_ptr<CloudDiskMetaFile> metaFile, const std::string &oldName,
+    std::string &newName)
+{
+    std::vector<MetaBase> metaBases;
+    int32_t ret = metaFile->LoadChildren(metaBases);
+    if (ret != E_OK) {
+        LOGE("load children dentry fail. ret = %{public}d", ret);
+        return ret;
+    }
+
+    size_t lastDot = oldName.rfind('.');
+    if (lastDot == std::string::npos) {
+        lastDot = oldName.length();
+    }
+    std::string name = oldName.substr(0, lastDot);
+    std::string extension = oldName.substr(lastDot);
+    int32_t renameTimes = 1;
+    std::unordered_set<std::string> fileNames;
+    for (const MetaBase &meta : metaBases) {
+        fileNames.insert(meta.name);
+    }
+    bool conflict = true;
+    while (conflict) {
+        newName = name + "(" + std::to_string(renameTimes) + ")" + extension;
+        if (fileNames.find(newName) == fileNames.end()) {
+            conflict = false;
+        }
+        renameTimes++;
     }
     return E_OK;
 }

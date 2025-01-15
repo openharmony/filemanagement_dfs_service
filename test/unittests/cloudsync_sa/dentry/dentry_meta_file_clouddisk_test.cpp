@@ -355,8 +355,8 @@ HWTEST_F(CloudDiskDentryMetaFileTest, RemoveFromRecycleDentryfileTest001, TestSi
         string name = ".trash";
         string parentCloudId = "rootId";
         int64_t rowId = 0;
-        int32_t ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId, bundleName,
-                                                                             name, parentCloudId, rowId);
+        struct RestoreInfo restoreInfo = {name, parentCloudId, name, rowId};
+        int32_t ret = MetaFileMgr::GetInstance().RemoveFromRecycleDentryfile(userId, bundleName, restoreInfo);
         EXPECT_EQ(ret, 0);
         MetaFileMgr::GetInstance().CloudDiskClearAll();
     } catch (...) {

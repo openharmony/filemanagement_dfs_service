@@ -68,6 +68,7 @@ public:
         const std::string &parentCloudId);
     int32_t FavoriteGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t FileStatusGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
+    int32_t TimeRecycledGetXattr(const std::string &cloudId, const std::string &key, std::string &value);
     int32_t GetHasChild(const std::string &cloudId, bool &hasChild);
     int32_t GetRowId(const std::string &cloudId, int64_t &rowId);
     int32_t GetParentCloudId(const std::string &cloudId, std::string &parentCloudId);
@@ -99,6 +100,9 @@ private:
     int32_t UnlinkSynced(const std::string &cloudId);
     int32_t UnlinkLocal(const std::string &cloudId);
     int32_t ReBuildDatabase(const std::string &databasePath);
+    int32_t CheckIsConflict(const std::string &name, const std::string &parentCloudId, std::string &newName);
+    int32_t RestoreUpdateRdb(const std::string &cloudId, const struct RestoreInfo &restoreInfo,
+        const NativeRdb::ValuesBucket &setXattr);
 
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     NativeRdb::RdbStoreConfig config_{""};
