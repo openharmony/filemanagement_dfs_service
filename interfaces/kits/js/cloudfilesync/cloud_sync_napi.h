@@ -61,6 +61,7 @@ public:
     static napi_value GetFileSyncState(napi_env env, napi_callback_info info);
     static napi_value RegisterChange(napi_env env, napi_callback_info info);
     static napi_value UnregisterChange(napi_env env, napi_callback_info info);
+    static napi_value OptimizeStorage(napi_env env, napi_callback_info info);
 
     static std::string GetBundleName(const napi_env &env, const LibN::NFuncArg &funcArg);
     CloudSyncNapi(napi_env env, napi_value exports) : NExporter(env, exports) {};
