@@ -15,6 +15,7 @@
 #include "fuse_operations.h"
 
 #include "cloud_disk_inode.h"
+#include "cloud_file_fault_event.h"
 #include "file_operations_helper.h"
 #include "file_operations_local.h"
 #include "utils_log.h"
@@ -39,8 +40,9 @@ void FuseOperations::Lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
     }
     auto inoPtr = GetCloudDiskInode(req, parent);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::LOOKUP,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "parent inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("parent inode not found");
         return;
     }
     inoPtr->ops->Lookup(req, parent, name);
@@ -71,8 +73,9 @@ void FuseOperations::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_file_in
     }
     auto inoPtr = GetCloudDiskInode(req, ino);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::GETATTR,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     inoPtr->ops->GetAttr(req, ino, fi);
@@ -87,8 +90,9 @@ void FuseOperations::Open(fuse_req_t req, fuse_ino_t ino, struct fuse_file_info 
     }
     auto inoPtr = GetCloudDiskInode(req, ino);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::OPEN,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     inoPtr->ops->Open(req, ino, fi);
@@ -103,8 +107,9 @@ void FuseOperations::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLookup)
     }
     auto inoPtr = GetCloudDiskInode(req, ino);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::FORGET,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     inoPtr->ops->Forget(req, ino, nLookup);
@@ -117,8 +122,9 @@ void FuseOperations::ForgetMulti(fuse_req_t req, size_t count, struct fuse_forge
     }
     auto inoPtr = GetCloudDiskInode(req, forgets[0].ino);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::FORGETMULTI,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     inoPtr->ops->ForgetMulti(req, count, forgets);
@@ -134,8 +140,9 @@ void FuseOperations::MkNod(fuse_req_t req, fuse_ino_t parent, const char *name,
     }
     auto inoPtr = GetCloudDiskInode(req, parent);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::MKNOD,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "parent inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("parent inode not found");
         return;
     }
     inoPtr->ops->MkNod(req, parent, name, mode, rdev);
@@ -151,8 +158,9 @@ void FuseOperations::Create(fuse_req_t req, fuse_ino_t parent, const char *name,
     }
     auto inoPtr = GetCloudDiskInode(req, parent);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::CREATE,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "parent inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("parent inode not found");
         return;
     }
     inoPtr->ops->Create(req, parent, name, mode, fi);
@@ -169,8 +177,9 @@ void FuseOperations::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, off_t 
     }
     auto inoPtr = GetCloudDiskInode(req, ino);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::READDIR,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     inoPtr->ops->ReadDir(req, ino, size, off, fi);
@@ -186,8 +195,9 @@ void FuseOperations::SetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
     }
     auto inoPtr = GetCloudDiskInode(req, ino);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETEXTATTR,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     inoPtr->ops->SetXattr(req, ino, name, value, size, flags);
@@ -203,8 +213,9 @@ void FuseOperations::GetXattr(fuse_req_t req, fuse_ino_t ino, const char *name,
     }
     auto inoPtr = GetCloudDiskInode(req, ino);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::GETEXTATTR,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     inoPtr->ops->GetXattr(req, ino, name, size);
@@ -219,8 +230,9 @@ void FuseOperations::MkDir(fuse_req_t req, fuse_ino_t parent, const char *name, 
     }
     auto inoPtr = GetCloudDiskInode(req, parent);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::MKDIR,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "parent inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("parent inode not found");
         return;
     }
     inoPtr->ops->MkDir(req, parent, name, mode);
@@ -235,8 +247,9 @@ void FuseOperations::RmDir(fuse_req_t req, fuse_ino_t parent, const char *name)
     }
     auto inoPtr = GetCloudDiskInode(req, parent);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::RMDIR,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "parent inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("parent inode not found");
         return;
     }
     inoPtr->ops->RmDir(req, parent, name);
@@ -251,8 +264,9 @@ void FuseOperations::Unlink(fuse_req_t req, fuse_ino_t parent, const char *name)
     }
     auto inoPtr = GetCloudDiskInode(req, parent);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::UNLINK,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "parent inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("parent inode not found");
         return;
     }
     inoPtr->ops->Unlink(req, parent, name);
@@ -268,8 +282,9 @@ void FuseOperations::Rename(fuse_req_t req, fuse_ino_t parent, const char *name,
     }
     auto inoPtr = GetCloudDiskInode(req, parent);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::RENAME,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "parent inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("parent inode not found");
         return;
     }
     inoPtr->ops->Rename(req, parent, name, newParent, newName, flags);
@@ -285,8 +300,9 @@ void FuseOperations::Read(fuse_req_t req, fuse_ino_t ino, size_t size,
     }
     auto inoPtr = GetCloudDiskInode(req, ino);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::READ,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     inoPtr->ops->Read(req, ino, size, offset, fi);
@@ -302,8 +318,9 @@ void FuseOperations::WriteBuf(fuse_req_t req, fuse_ino_t ino, struct fuse_bufvec
     }
     auto inoPtr = GetCloudDiskInode(req, ino);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::WRITE,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     inoPtr->ops->WriteBuf(req, ino, bufv, off, fi);
@@ -318,8 +335,9 @@ void FuseOperations::Release(fuse_req_t req, fuse_ino_t ino, struct fuse_file_in
     }
     auto inoPtr = GetCloudDiskInode(req, ino);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::RELEASE,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     inoPtr->ops->Release(req, ino, fi);
@@ -334,8 +352,9 @@ void FuseOperations::SetAttr(fuse_req_t req, fuse_ino_t ino, struct stat *attr,
     }
     auto inoPtr = GetCloudDiskInode(req, ino);
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::SETATTR,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     inoPtr->ops->SetAttr(req, ino, attr, valid, fi);

@@ -17,6 +17,7 @@
 #include <cinttypes>
 #include <unistd.h>
 
+#include "cloud_file_fault_event.h"
 #include "file_operations_cloud.h"
 #include "file_operations_local.h"
 #include "securec.h"
@@ -166,13 +167,16 @@ shared_ptr<CloudDiskInode> FileOperationsHelper::GenerateCloudDiskInode(struct C
     shared_ptr<CloudDiskInode> child = make_shared<CloudDiskInode>();
     int32_t err = stat(path.c_str(), &child->stat);
     if (err != 0) {
-        LOGE("GenerateCloudDiskInode %{public}s error, err: %{public}d", GetAnonyString(path).c_str(), errno);
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{child->bundleName, CloudFile::FaultOperation::READDIR,
+            CloudFile::FaultType::INODE_FILE, errno, "GenerateCloudDiskInode " + GetAnonyString(path) + " error" +
+            "err: " + std::to_string(errno)});
         return nullptr;
     }
     child->stat.st_mode |= STAT_MODE_DIR;
     auto parentInode = FindCloudDiskInode(data, parent);
     if (parentInode == nullptr) {
-        LOGE("parent inode not found");
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{child->bundleName, CloudFile::FaultOperation::READDIR,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "parent inode not found"});
         return nullptr;
     }
     child->refCount++;

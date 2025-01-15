@@ -18,12 +18,14 @@
 
 #include <cerrno>
 
+#include "cloud_file_fault_event.h"
 #include "utils_log.h"
 
 namespace OHOS {
 namespace FileManagement {
 namespace CloudDisk {
 using namespace std;
+using namespace OHOS::FileManagement::CloudFile;
 void FileOperationsBase::Lookup(fuse_req_t req, fuse_ino_t parent, const char *name)
 {
     LOGE("Lookup operation is not supported!");
@@ -53,7 +55,8 @@ void FileOperationsBase::Forget(fuse_req_t req, fuse_ino_t ino, uint64_t nLookup
     auto data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     auto node = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (node == nullptr) {
-        LOGE("Forget an invalid inode");
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::FORGET,
+            CloudFile::FaultType::WARNING, EINVAL, "Forget an invalid inode"});
         return (void) fuse_reply_none(req);
     }
     string localIdKey = std::to_string(node->parent) + node->fileName;
@@ -69,7 +72,8 @@ void FileOperationsBase::ForgetMulti(fuse_req_t req, size_t count, struct fuse_f
     for (size_t i = 0; i < count; i++) {
         auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(forgets[i].ino));
         if (inoPtr == nullptr) {
-            LOGE("ForgetMulti got an invalid inode");
+            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::FORGETMULTI,
+                CloudFile::FaultType::WARNING, EINVAL, "ForgetMulti got an invalid inode"});
             continue;
         }
         string localIdKey = std::to_string(inoPtr->parent) + inoPtr->fileName;

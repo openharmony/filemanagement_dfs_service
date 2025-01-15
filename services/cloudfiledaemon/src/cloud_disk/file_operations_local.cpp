@@ -17,6 +17,7 @@
 #include <cerrno>
 #include <dirent.h>
 
+#include "cloud_file_fault_event.h"
 #include "file_operations_cloud.h"
 #include "file_operations_helper.h"
 #include "utils_log.h"
@@ -32,7 +33,6 @@ static const float LOOKUP_TIMEOUT = 60.0;
 static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name,
                              struct fuse_entry_param *e)
 {
-    int32_t err = 0;
     bool createFlag = false;
     struct CloudDiskFuseData *data = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
     string path = FileOperationsHelper::GetCloudDiskLocalPath(data->userId, name);
@@ -48,9 +48,10 @@ static int32_t DoLocalLookup(fuse_req_t req, fuse_ino_t parent, const char *name
     std::unique_lock<std::shared_mutex> lWLock(data->localIdLock, std::defer_lock);
     child->refCount++;
     if (createFlag) {
-        err = stat(path.c_str(), &child->stat);
-        if (err != 0) {
-            LOGE("lookup %{public}s error, err: %{public}d", GetAnonyString(path).c_str(), errno);
+        if (stat(path.c_str(), &child->stat) != 0) {
+            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{child->bundleName, CloudFile::FaultOperation::LOOKUP,
+                CloudFile::FaultType::INODE_FILE, errno, "lookup " + GetAnonyString(path) + " error, err: " +
+                std::to_string(errno)});
             return errno;
         }
         child->stat.st_mode |= STAT_MODE_DIR;
@@ -105,8 +106,10 @@ void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
         struct stat statBuf;
         int err = stat(path.c_str(), &statBuf);
         if (err != 0) {
-            LOGE("lookup %{public}s error, err: %{public}d", GetAnonyString(path).c_str(), err);
-            fuse_reply_err(req, err);
+            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::GETATTR,
+                CloudFile::FaultType::FILE, errno, "lookup " + GetAnonyString(path) + " error, err: " +
+                std::to_string(errno)});
+            fuse_reply_err(req, errno);
             return;
         }
         fuse_reply_attr(req, &statBuf, 0);
@@ -114,8 +117,9 @@ void FileOperationsLocal::GetAttr(fuse_req_t req, fuse_ino_t ino, struct fuse_fi
     }
     auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
     if (inoPtr == nullptr) {
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::GETATTR,
+            CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
         fuse_reply_err(req, EINVAL);
-        LOGE("inode not found");
         return;
     }
     fuse_reply_attr(req, &inoPtr->stat, 0);
@@ -133,15 +137,18 @@ void FileOperationsLocal::ReadDir(fuse_req_t req, fuse_ino_t ino, size_t size, o
     } else {
         auto inoPtr = FileOperationsHelper::FindCloudDiskInode(data, static_cast<int64_t>(ino));
         if (inoPtr == nullptr) {
+            CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::READDIR,
+                CloudFile::FaultType::INODE_FILE, EINVAL, "inode not found"});
             fuse_reply_err(req, EINVAL);
-            LOGE("inode not found");
             return;
         }
         path = inoPtr->path;
     }
     DIR* dir = opendir(path.c_str());
     if (dir == NULL) {
-        LOGE("opendir error %{public}d, path:%{public}s", errno, GetAnonyString(path).c_str());
+        CLOUD_FILE_FAULT_REPORT(CloudFile::CloudFileFaultInfo{"", CloudFile::FaultOperation::READDIR,
+            CloudFile::FaultType::FILE, errno, "opendir error " + std::to_string(errno) + ", path: " +
+            GetAnonyString(path)});
         return;
     }
 
