@@ -77,6 +77,7 @@ public:
         std::vector<std::string> &failCloudId));
     MOCK_METHOD2(BatchDentryFileInsert, int32_t(const std::vector<DentryFileInfoObj> &fileInfo,
         std::vector<std::string> &failCloudId));
+    MOCK_METHOD1(OptimizeStorage, int32_t(const int32_t agingDays));
 };
 
 class CloudSyncServiceStubTest : public testing::Test {

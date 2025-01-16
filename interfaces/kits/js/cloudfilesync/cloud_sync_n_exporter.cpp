@@ -157,6 +157,7 @@ void InitCloudSyncApi(napi_env env, napi_value exports)
 {
     static napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getFileSyncState", CloudSyncNapi::GetFileSyncState),
+        DECLARE_NAPI_FUNCTION("optimizeStorage", CloudSyncNapi::OptimizeStorage),
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
 }
