@@ -1552,8 +1552,8 @@ static bool CheckPathForStartFuse(const string &path)
     return false;
 }
 
-static inline int SetNewSessionInfo(struct fuse_session *se, struct fuse_loop_config &config,
-                                int32_t devFd, const string &path)
+static int SetNewSessionInfo(struct fuse_session *se, struct fuse_loop_config &config,
+                             int32_t devFd, const string &path)
 {
     se->fd = devFd;
     se->bufsize = FUSE_BUFFER_SIZE;
@@ -1568,7 +1568,6 @@ static inline int SetNewSessionInfo(struct fuse_session *se, struct fuse_loop_co
     fuse_session_unmount(se);
     LOGI("fuse_session_unmount");
     if (se->mountpoint) {
-        LOGI("CRCRAc");
         free(se->mountpoint);
         se->mountpoint = nullptr;
     }
