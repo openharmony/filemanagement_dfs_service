@@ -71,6 +71,7 @@ public:
     MOCK_METHOD2(DeleteAsset, int32_t(const int32_t userId, const std::string &uri));
     MOCK_METHOD2(GetSyncTimeInner, int32_t(int64_t &syncTime, const std::string &bundleName));
     MOCK_METHOD1(CleanCacheInner, int32_t(const std::string &uri));
+    MOCK_METHOD1(OptimizeStorage, int32_t(const int32_t agingDays));
 };
 
 class CloudSyncServiceStubTest : public testing::Test {

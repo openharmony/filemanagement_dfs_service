@@ -152,6 +152,11 @@ public:
         return E_OK;
     }
 
+    int32_t OptimizeStorage(const int32_t agingDays)
+    {
+        return E_OK;
+    }
+
     int32_t DownloadAsset(const uint64_t taskId,
                           const int32_t userId,
                           const std::string &bundleName,

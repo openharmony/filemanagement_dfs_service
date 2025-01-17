@@ -35,6 +35,7 @@ public:
     virtual int32_t StopSyncInner(const std::string &bundleName = "", bool forceFlag = false) = 0;
     virtual int32_t ResetCursor(const std::string &bundleName = "") = 0;
     virtual int32_t ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status) = 0;
+    virtual int32_t OptimizeStorage(const int32_t agingDays) = 0;
     virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;
     virtual int32_t NotifyDataChange(const std::string &accoutId, const std::string &bundleName) = 0;
     virtual int32_t NotifyEventChange(int32_t userId, const std::string &eventId, const std::string &extraData) = 0;

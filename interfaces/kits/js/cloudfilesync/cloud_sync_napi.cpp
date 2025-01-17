@@ -34,6 +34,7 @@ const string FILE_SCHEME = "file";
 thread_local unique_ptr<ChangeListenerNapi> g_listObj = nullptr;
 mutex CloudSyncNapi::sOnOffMutex_;
 static mutex obsMutex_;
+const int32_t AGING_DAYS = 30;
 
 class ObserverImpl : public AAFwk::DataAbilityObserverStub {
 public:
@@ -649,6 +650,7 @@ bool CloudSyncNapi::Export()
         NVal::DeclareNapiFunction("off", OffCallback),
         NVal::DeclareNapiFunction("start", Start),
         NVal::DeclareNapiFunction("stop", Stop),
+        NVal::DeclareNapiFunction("optimizeStorage", OptimizeStorage),
     };
     std::string className = GetClassName();
     auto [succ, classValue] =
@@ -667,6 +669,34 @@ bool CloudSyncNapi::Export()
     }
 
     return exports_.AddProp(className, classValue);
+}
+
+napi_value CloudSyncNapi::OptimizeStorage(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO, NARG_CNT::ONE)) {
+        NError(E_PARAMS).ThrowErr(env);
+    }
+
+    auto cbExec = []() -> NError {
+        int32_t ret = CloudSyncManager::GetInstance().OptimizeStorage(AGING_DAYS);
+        if (ret != E_OK) {
+            LOGE("OptimizeStorage error, result: %{public}d", ret);
+            return NError(Convert2JsErrNum(ret));
+        }
+        return NError(ERRNO_NOERR);
+    };
+
+    auto cbComplete = [](napi_env env, NError err) -> NVal {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        return NVal::CreateUndefined(env);
+    };
+
+    std::string procedureName = "OptimizeStorage";
+    auto asyncWork = GetPromiseOrCallBackWork(env, funcArg, static_cast<size_t>(NARG_CNT::TWO));
+    return asyncWork == nullptr ? nullptr : asyncWork->Schedule(procedureName, cbExec, cbComplete).val_;
 }
 
 void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref cbRef)
