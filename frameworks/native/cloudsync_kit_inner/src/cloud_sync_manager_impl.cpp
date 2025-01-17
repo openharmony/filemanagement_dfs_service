@@ -100,6 +100,18 @@ int32_t CloudSyncManagerImpl::GetSyncTime(int64_t &syncTime, const std::string &
     return CloudSyncServiceProxy->GetSyncTimeInner(syncTime, bundleName);
 }
 
+int32_t CloudSyncManagerImpl::OptimizeStorage(const int32_t agingDays)
+{
+    LOGI("OptimizeStorage Start");
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    return CloudSyncServiceProxy->OptimizeStorage(agingDays);
+}
+
 int32_t CloudSyncManagerImpl::StartSync(bool forceFlag, const std::shared_ptr<CloudSyncCallback> callback)
 {
     if (!callback) {
