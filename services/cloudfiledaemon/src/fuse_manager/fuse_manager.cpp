@@ -1504,6 +1504,7 @@ static const struct fuse_lowlevel_ops cloudDiskFuseOps = {
     .write_buf          = CloudDisk::FuseOperations::WriteBuf,
     .forget_multi       = CloudDisk::FuseOperations::ForgetMulti,
     .lseek              = CloudDisk::FuseOperations::Lseek,
+    .ioctl              = CloudDisk::FuseOperations::Ioctl,
 };
 
 static const struct fuse_lowlevel_ops cloudMediaFuseOps = {

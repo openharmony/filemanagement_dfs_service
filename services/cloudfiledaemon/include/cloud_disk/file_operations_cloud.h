@@ -50,6 +50,8 @@ public:
                  int valid, struct fuse_file_info *fi) override;
     void Lseek(fuse_req_t req, fuse_ino_t ino, off_t off, int whence,
                struct fuse_file_info *fi) override;
+    void Ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
+               unsigned flags, const void *inBuf, size_t inBufsz, size_t outBufsz) override;
 };
 } // namespace CloudDisk
 } // namespace FileManagement

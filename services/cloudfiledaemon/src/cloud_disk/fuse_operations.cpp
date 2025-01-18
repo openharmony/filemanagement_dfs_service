@@ -375,6 +375,22 @@ void FuseOperations::Lseek(fuse_req_t req, fuse_ino_t ino, off_t off, int whence
     }
     inoPtr->ops->Lseek(req, ino, off, whence, fi);
 }
+void FuseOperations::Ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
+                           unsigned flags, const void *inBuf, size_t inBufsz, size_t outBufsz)
+{
+    if (ino == FUSE_ROOT_ID) {
+        auto opsPtr = make_shared<FileOperationsLocal>();
+        opsPtr->Ioctl(req, ino, cmd, arg, fi, flags, inBuf, inBufsz, outBufsz);
+        return;
+    }
+    auto inoPtr = GetCloudDiskInode(req, ino);
+    if (inoPtr == nullptr) {
+        LOGE("inode not found");
+        fuse_reply_err(req, ENOENT);
+        return;
+    }
+    inoPtr->ops->Ioctl(req, ino, cmd, arg, fi, flags, inBuf, inBufsz, outBufsz);
+}
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

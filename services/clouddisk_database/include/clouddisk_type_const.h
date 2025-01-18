@@ -26,7 +26,8 @@ enum class DirtyType : int32_t {
     TYPE_FDIRTY,
     TYPE_DELETED,
     TYPE_RETRY,
-    TYPE_NO_NEED_UPLOAD
+    TYPE_NO_NEED_UPLOAD,
+    TYPE_COPY
 };
 
 enum class FileType : int32_t {

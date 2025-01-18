@@ -81,6 +81,7 @@ public:
     using CloudDiskMetaFileCallBack = std::function<void(MetaBase &)>;
     explicit CloudDiskMetaFile(uint32_t userId, const std::string &bundleName, const std::string &cloudId);
 
+    int32_t DoLookupAndCreate(const std::string &name, CloudDiskMetaFileCallBack metaFileCallBack);
     int32_t DoLookupAndUpdate(const std::string &name, CloudDiskMetaFileCallBack updateFunc);
     int32_t DoChildUpdate(const std::string &name, CloudDiskMetaFileCallBack updateFunc);
     int32_t DoLookupAndRemove(MetaBase &metaBase);

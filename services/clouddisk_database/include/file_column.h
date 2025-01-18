@@ -57,6 +57,7 @@ public:
     static const std::string FILE_CATEGORY;
     static const std::string IS_FAVORITE;
     static const std::string NO_NEED_UPLOAD;
+    static const std::string SRC_CLOUD_ID;
 
     // table name
     static const std::string FILES_TABLE;
@@ -91,6 +92,9 @@ public:
 
     static const std::string ADD_UPLOAD_FLAG;
 
+    // Add copy field
+    static const std::string ADD_SRC_CLOUD_ID;
+
     // Query FILES_TABLE for FileSystem
     static const std::vector<std::string> FILE_SYSTEM_QUERY_COLUMNS;
 
@@ -106,6 +110,9 @@ public:
     static const std::vector<std::string> DISK_ON_UPLOAD_COLUMNS;
 
     static const std::vector<std::string> EXT_ATTR_QUERY_COLUMNS;
+
+    // Query FILES_TABLE for CopyFile
+    static const std::vector<std::string> DISK_CLOUD_FOR_COPY;
 };
 } // namespace CloudDisk
 } // namespace FileManagement
