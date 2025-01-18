@@ -221,6 +221,7 @@ void CloudSyncService::HandleStartReason(const SystemAbilityOnDemandReason& star
         dataSyncManager_->CacheVideo();
     } else if (reason == "usual.event.BATTERY_OKAY") {
         dataSyncManager_->TriggerRecoverySync(SyncTriggerType::BATTERY_OK_TRIGGER);
+        dataSyncManager_->DownloadThumb();
     } else if (reason == "usual.event.SCREEN_OFF" || reason == "usual.event.POWER_CONNECTED") {
         dataSyncManager_->DownloadThumb();
         dataSyncManager_->CacheVideo();
