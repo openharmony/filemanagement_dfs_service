@@ -68,6 +68,15 @@ namespace {
     static const unsigned int MAX_READ_SIZE = 4 * 1024 * 1024;
 }
 
+const int32_t MAX_SIZE = 4096;
+constexpr unsigned HMDFS_IOC = 0xf2;
+constexpr unsigned CLOUD_COPY_CMD = 0x0c;
+#define HMDFS_IOC_COPY_FILE _IOW(HMDFS_IOC, CLOUD_COPY_CMD, struct CloudDiskCopy)
+
+struct CloudDiskCopy {
+    char destPath[MAX_SIZE];
+};
+
 static void InitInodeAttr(struct CloudDiskFuseData *data, fuse_ino_t parent,
     struct CloudDiskInode *childInode, const MetaBase &metaBase, const int64_t &inodeId)
 {
@@ -1726,6 +1735,44 @@ void FileOperationsCloud::Lseek(fuse_req_t req, fuse_ino_t ino, off_t off, int w
         fuse_reply_lseek(req, res);
     else
         fuse_reply_err(req, errno);
+}
+
+void FileOperationsCloud::Ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
+                                unsigned flags, const void *inBuf, size_t inBufsz, size_t outBufsz)
+{
+    if (static_cast<unsigned int>(cmd) == HMDFS_IOC_COPY_FILE) {
+        auto dataReq = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
+        auto inoPtr = FileOperationsHelper::FindCloudDiskInode(dataReq, static_cast<int64_t>(ino));
+        if (S_ISDIR(inoPtr->stat.st_mode)) {
+            LOGE("Dir is not supported");
+            fuse_reply_err(req, ENOSYS);
+            return;
+        }
+
+        const struct CloudDiskCopy *dataCopy = reinterpret_cast<const struct CloudDiskCopy *>(inBuf);
+        std::string dest(dataCopy->destPath);
+        std::string destPath = CloudFileUtils::GetRealPath(dest);
+        DatabaseManager &databaseManager = DatabaseManager::GetInstance();
+        shared_ptr<CloudDiskRdbStore> rdbStore =
+            databaseManager.GetRdbStore(inoPtr->bundleName, dataReq->userId);
+
+        std::string destCloudId;
+        int32_t ret = GenerateCloudId(dataReq->userId, destCloudId, inoPtr->bundleName);
+        if (ret != 0) {
+            LOGE("Failed generate cloud id, ret: %{public}d", ret);
+            fuse_reply_err(req, ENOSYS);
+            return;
+        }
+        if ((rdbStore->CopyFile(inoPtr->cloudId, destCloudId, inoPtr->bundleName, dataReq->userId, destPath) != 0)) {
+            fuse_reply_err(req, EIO);
+            return;
+        }
+        fuse_reply_ioctl(req, 0, NULL, 0);
+    } else {
+        LOGE("Invalid argument, cmd is not supported");
+        fuse_reply_err(req, EINVAL);
+        return;
+    }
 }
 } // namespace CloudDisk
 } // namespace FileManagement

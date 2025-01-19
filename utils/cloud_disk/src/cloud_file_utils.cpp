@@ -293,6 +293,22 @@ bool CloudFileUtils::ClearCache(const string &dfsPath)
     close(fd);
     return true;
 }
+
+string CloudFileUtils::GetRealPath(const string &path)
+{
+    filesystem::path tempPath(path);
+    filesystem::path realPath{};
+    for (const auto& component : tempPath) {
+        if (component == ".") {
+            continue;
+        } else if (component == "..") {
+            realPath = realPath.parent_path();
+        } else {
+            realPath /= component;
+        }
+    }
+    return realPath.string();
+}
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

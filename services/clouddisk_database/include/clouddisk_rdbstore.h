@@ -90,6 +90,11 @@ public:
     int32_t GetNotifyUri(const CacheNode &cacheNode, std::string &uri);
     int32_t GetNotifyData(const CacheNode &cacheNode, NotifyData &notifyData);
     int32_t CheckRootIdValid();
+    int32_t InsertCopyData(std::string srcCloudId, std::string destCloudId, std::string destParentCloudId,
+                           std::shared_ptr<NativeRdb::ResultSet> resultSet);
+    int32_t CopyFile(std::string srcCloudId, std::string destCloudId, std::string bundleName,
+                     const int userId, std::string destPath);
+    int32_t CreateDentryFile(MetaBase metaBase, std::string destParentCloudId);
 
     void DatabaseRestore();
 

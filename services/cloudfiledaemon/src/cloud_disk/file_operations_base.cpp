@@ -174,6 +174,12 @@ void FileOperationsBase::Lseek(fuse_req_t req, fuse_ino_t ino, off_t off, int wh
     LOGE("Lseek operation is not supported!");
     fuse_reply_err(req, ENOSYS);
 }
+void FileOperationsBase::Ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *arg, struct fuse_file_info *fi,
+                               unsigned flags, const void *inBuf, size_t inBufsz, size_t outBufsz)
+{
+    LOGE("Ioctl operation is not supported!");
+    fuse_reply_err(req, ENOSYS);
+}
 } // namespace CloudDisk
 } // namespace FileManagement
 } // namespace OHOS

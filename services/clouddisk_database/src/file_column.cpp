@@ -49,6 +49,7 @@ const std::string FileColumn::ROOT_DIRECTORY = "root_directory";
 const std::string FileColumn::ATTRIBUTE = "attribute";
 const std::string FileColumn::FILES_TABLE = "CloudDisk";
 const std::string FileColumn::PARENT_CLOUD_ID_INDEX = "parentCloudId_index";
+const std::string FileColumn::SRC_CLOUD_ID = "src_cloud_id";
 
 const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " +
     FILES_TABLE + " (" +
@@ -79,7 +80,8 @@ const std::string FileColumn::CREATE_FILE_TABLE = "CREATE TABLE IF NOT EXISTS " 
     ATTRIBUTE + " TEXT, " +
     THM_FLAG + " INT DEFAULT 0, " +
     LCD_FLAG + " INT DEFAULT 0, " +
-    NO_NEED_UPLOAD + " INT DEFAULT 0)";
+    NO_NEED_UPLOAD + " INT DEFAULT 0, " +
+    SRC_CLOUD_ID + " TEXT)";
 
 const std::string FileColumn::CREATE_PARENT_CLOUD_ID_INDEX = "CREATE INDEX IF NOT EXISTS " +
     PARENT_CLOUD_ID_INDEX + " ON " + FILES_TABLE +
@@ -108,6 +110,9 @@ const std::string FileColumn::ADD_LCD_FLAG = "ALTER Table " + FILES_TABLE +
 
 const std::string FileColumn::ADD_UPLOAD_FLAG = "ALTER Table " + FILES_TABLE +
     " ADD COLUMN " + NO_NEED_UPLOAD + " INT DEFAULT 0";
+
+const std::string FileColumn::ADD_SRC_CLOUD_ID = "ALTER Table " + FILES_TABLE +
+    " ADD COLUMN " + SRC_CLOUD_ID + " TEXT";
 
 const std::vector<std::string> FileColumn::FILE_SYSTEM_QUERY_COLUMNS = {
     FILE_NAME,
@@ -141,6 +146,39 @@ const std::vector<std::string> FileColumn::DISK_CLOUD_SYNC_COLUMNS = {
     THM_FLAG,
     LCD_FLAG,
     ROW_ID
+};
+
+//File copy requires all fields in the database, and one is added here when adding a new column ...
+const std::vector<std::string> FileColumn::DISK_CLOUD_FOR_COPY = {
+    CLOUD_ID,
+    IS_DIRECTORY,
+    FILE_NAME,
+    PARENT_CLOUD_ID,
+    FILE_SIZE,
+    FILE_SHA256,
+    FILE_TIME_ADDED,
+    FILE_TIME_EDITED,
+    FILE_TIME_RECYCLED,
+    META_TIME_EDITED,
+    FILE_TIME_VISIT,
+    DIRECTLY_RECYCLED,
+    VERSION,
+    OPERATE_TYPE,
+    SYNC_STATUS,
+    POSITION,
+    DIRTY_TYPE,
+    MIME_TYPE,
+    FILE_TYPE,
+    FILE_CATEGORY,
+    IS_FAVORITE,
+    FILE_STATUS,
+    CHECK_FLAG,
+    ROOT_DIRECTORY,
+    ATTRIBUTE,
+    THM_FLAG,
+    LCD_FLAG,
+    NO_NEED_UPLOAD,
+    SRC_CLOUD_ID,
 };
 
 const std::vector<std::string> FileColumn::LOCAL_COLUMNS = {

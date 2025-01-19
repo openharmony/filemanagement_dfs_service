@@ -66,6 +66,7 @@ public:
                                         int32_t userId);
     static std::string GetPathWithoutTmp(const std::string &path);
     static std::string GetCloudId(const std::string &path);
+    static std::string GetRealPath(const std::string &path);
     static uint32_t GetBucketId(std::string cloudId);
     static int64_t Timespec2Milliseconds(const struct timespec &time);
     static bool LocalWriteOpen(const std::string &dfsPath);

@@ -63,6 +63,7 @@ static const uint32_t CANCEL_STATE = 0;
 static const uint32_t MAX_FILE_NAME_SIZE = 246;
 static const uint32_t MAX_QUERY_TIMES = 1024;
 static const uint32_t STAT_MODE_DIR = 0771;
+static const uint32_t STAT_MODE_FILE = 0771;
 static const uint32_t STAT_MODE_REG = 0660;
 const string BUNDLENAME_FLAG = "<BundleName>";
 const string CLOUDDISK_URI_PREFIX = "file://<BundleName>/data/storage/el2/cloud";
@@ -75,6 +76,10 @@ static const string SRC_PATH_KEY = "srcPath";
 static const string LOCAL_PATH_MNT_HMDFS = "/mnt/hmdfs/";
 static const string LOCAL_PATH_CLOUD_DATA = "/cloud/data/";
 static const string FILE_SCHEME = "file";
+static const int32_t DIRECTLY_RECYCLED_COPY = 4;
+static const int32_t VERSION_COPY = 0;
+static const int32_t FLAG_NOT_EXIST = 2;
+static const int32_t FLAG_TO_BE_UPLOAD = 1;
 
 static const std::string CloudSyncTriggerFunc(const std::vector<std::string> &args)
 {
@@ -1953,6 +1958,15 @@ static void VersionAddThmFlag(RdbStore &store)
     }
 }
 
+static void VersionAddSrcCloudId(RdbStore &store)
+{
+    const string addSrcCloudId = FileColumn::ADD_SRC_CLOUD_ID;
+    int32_t ret = store.ExecuteSql(addSrcCloudId);
+    if (ret != NativeRdb::E_OK) {
+        LOGE("add src_cloud_id fail, err %{public}d", ret);
+    }
+}
+
 static int32_t GetMetaBaseData(CloudDiskFileInfo &info, const shared_ptr<ResultSet> resultSet)
 {
     RETURN_ON_ERR(CloudDiskRdbUtils::GetString(FileColumn::CLOUD_ID, info.cloudId, resultSet));
@@ -2182,6 +2196,161 @@ int32_t CloudDiskDataCallBack::OnUpgrade(RdbStore &store, int32_t oldVersion, in
     if (oldVersion < VERSION_ADD_THM_FLAG) {
         VersionAddThmFlag(store);
     }
+    if (oldVersion < VERSION_ADD_SRC_CLOUD_ID) {
+        VersionAddSrcCloudId(store);
+    }
     return NativeRdb::E_OK;
+}
+
+int32_t CloudDiskRdbStore::CreateDentryFile(MetaBase metaBase, std::string destParentCloudId)
+{
+    auto metaFileCallBack = [&metaBase] (MetaBase &m) {
+        m.size = metaBase.size;
+        m.name = metaBase.name;
+        m.cloudId = metaBase.cloudId;
+        m.atime = metaBase.atime;
+        m.mtime = metaBase.mtime;
+        m.fileType = metaBase.fileType;
+        m.mode = metaBase.mode;
+    };
+    auto metaFile = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(userId_, bundleName_, destParentCloudId);
+    int32_t ret = metaFile->DoLookupAndCreate(metaBase.name, metaFileCallBack);
+    if (ret != E_OK) {
+        LOGE("create new dentry failed, ret : %{public}d", ret);
+    }
+    return ret;
+}
+
+static void getCopyValues(std::string srcCloudId, std::string destCloudId, std::string destParentCloudId,
+                          std::shared_ptr<NativeRdb::ResultSet> resultSet, ValuesBucket &fileInfo)
+{
+    int32_t isDirectory;
+    CloudDiskRdbUtils::GetInt(FileColumn::IS_DIRECTORY, isDirectory, resultSet);
+    std::string sha256;
+    CloudDiskRdbUtils::GetString(FileColumn::FILE_SHA256, sha256, resultSet);
+    int64_t fileTimeRecycled;
+    CloudDiskRdbUtils::GetLong(FileColumn::FILE_TIME_RECYCLED, fileTimeRecycled, resultSet);
+    int64_t metaTimeEdited;
+    CloudDiskRdbUtils::GetLong(FileColumn::META_TIME_EDITED, metaTimeEdited, resultSet);
+    int64_t fileTimeVisit;
+    CloudDiskRdbUtils::GetLong(FileColumn::FILE_TIME_VISIT, fileTimeVisit, resultSet);
+    int32_t syncStatus;
+    CloudDiskRdbUtils::GetInt(FileColumn::SYNC_STATUS, syncStatus, resultSet);
+    std::string fileCalegory;
+    CloudDiskRdbUtils::GetString(FileColumn::FILE_CATEGORY, fileCalegory, resultSet);
+    int32_t isFavorite;
+    CloudDiskRdbUtils::GetInt(FileColumn::IS_FAVORITE, isFavorite, resultSet);
+    int32_t checkFlag;
+    CloudDiskRdbUtils::GetInt(FileColumn::CHECK_FLAG, checkFlag, resultSet);
+    std::string rootDirectory;
+    CloudDiskRdbUtils::GetString(FileColumn::ROOT_DIRECTORY, rootDirectory, resultSet);
+    std::string attribute;
+    CloudDiskRdbUtils::GetString(FileColumn::ATTRIBUTE, attribute, resultSet);
+    int32_t thmFlag;
+    CloudDiskRdbUtils::GetInt(FileColumn::THM_FLAG, thmFlag, resultSet);
+    thmFlag = thmFlag == FLAG_NOT_EXIST ? thmFlag : FLAG_TO_BE_UPLOAD;
+    int32_t lcdFlag;
+    CloudDiskRdbUtils::GetInt(FileColumn::LCD_FLAG, lcdFlag, resultSet);
+    lcdFlag = lcdFlag == FLAG_NOT_EXIST ? lcdFlag : FLAG_TO_BE_UPLOAD;
+    int32_t noNeedUpload;
+    CloudDiskRdbUtils::GetInt(FileColumn::NO_NEED_UPLOAD, noNeedUpload, resultSet);
+
+    fileInfo.PutString(FileColumn::CLOUD_ID, destCloudId);
+    fileInfo.PutInt(FileColumn::IS_DIRECTORY, isDirectory);
+    fileInfo.PutString(FileColumn::PARENT_CLOUD_ID, destParentCloudId);
+    fileInfo.PutString(FileColumn::FILE_SHA256, sha256);
+    fileInfo.PutLong(FileColumn::FILE_TIME_RECYCLED, fileTimeRecycled);
+    fileInfo.PutLong(FileColumn::META_TIME_EDITED, metaTimeEdited);
+    fileInfo.PutLong(FileColumn::FILE_TIME_VISIT, fileTimeVisit);
+    fileInfo.PutInt(FileColumn::DIRECTLY_RECYCLED, DIRECTLY_RECYCLED_COPY);
+    fileInfo.PutLong(FileColumn::VERSION, VERSION_COPY);
+    fileInfo.PutLong(FileColumn::OPERATE_TYPE, static_cast<int>(OperationType::COPY));
+    fileInfo.PutInt(FileColumn::SYNC_STATUS, syncStatus);
+    fileInfo.PutInt(FileColumn::POSITION, CLOUD);
+    fileInfo.PutInt(FileColumn::DIRTY_TYPE, static_cast<int>(DirtyType::TYPE_COPY));
+    fileInfo.PutString(FileColumn::FILE_CATEGORY, fileCalegory);
+    fileInfo.PutInt(FileColumn::IS_FAVORITE, isFavorite);
+    fileInfo.PutInt(FileColumn::FILE_STATUS, static_cast<int>(FileStatus::UNKNOW));
+    fileInfo.PutInt(FileColumn::CHECK_FLAG, checkFlag);
+    fileInfo.PutString(FileColumn::ROOT_DIRECTORY, rootDirectory);
+    fileInfo.PutString(FileColumn::ATTRIBUTE, attribute);
+    fileInfo.PutInt(FileColumn::THM_FLAG, thmFlag);
+    fileInfo.PutInt(FileColumn::LCD_FLAG, lcdFlag);
+    fileInfo.PutInt(FileColumn::NO_NEED_UPLOAD, noNeedUpload);
+    fileInfo.PutString(FileColumn::SRC_CLOUD_ID, srcCloudId);
+}
+
+int32_t CloudDiskRdbStore::InsertCopyData(std::string srcCloudId, std::string destCloudId,
+                                          std::string destParentCloudId,
+                                          std::shared_ptr<NativeRdb::ResultSet> resultSet)
+{
+    RDBPTR_IS_NULLPTR(rdbStore_);
+    ValuesBucket fileInfo;
+    int32_t ret;
+    getCopyValues(srcCloudId, destCloudId, destParentCloudId, resultSet, fileInfo);
+    std::string fileName;
+    CloudDiskRdbUtils::GetString(FileColumn::FILE_NAME, fileName, resultSet);
+    fileInfo.PutString(FileColumn::FILE_NAME, fileName);
+    int64_t fileSize;
+    CloudDiskRdbUtils::GetLong(FileColumn::FILE_SIZE, fileSize, resultSet);
+    fileInfo.PutLong(FileColumn::FILE_SIZE, fileSize);
+    int64_t fileTimeAdded = UTCTimeMilliSeconds();
+    fileInfo.PutLong(FileColumn::FILE_TIME_ADDED, fileTimeAdded);
+    int32_t fileType;
+    CloudDiskRdbUtils::GetInt(FileColumn::FILE_TYPE, fileType, resultSet);
+    fileInfo.PutInt(FileColumn::FILE_TYPE, fileType);
+    int64_t fileTimeEdited = UTCTimeMilliSeconds();
+    fileInfo.PutLong(FileColumn::FILE_TIME_EDITED, fileTimeEdited);
+
+    TransactionOperations rdbTransaction(rdbStore_);
+    auto [rdbRet, transaction] = rdbTransaction.Start();
+    if (rdbRet != E_OK) {
+        LOGE("rdbstore begin transaction failed ,ret = %{public}d", rdbRet);
+        return E_RDB;
+    }
+    int64_t outRowId = 0;
+    std::tie(rdbRet, outRowId) = transaction->Insert(FileColumn::FILES_TABLE, fileInfo);
+    if (rdbRet != E_OK) {
+        LOGE("insert new file record in DB failed ,ret = %{public}d", rdbRet);
+        return rdbRet;
+    }
+
+    MetaBase metaBase(fileName, destCloudId);
+    metaBase.size = fileSize;
+    metaBase.fileType = fileType;
+    metaBase.atime = static_cast<uint64_t>(fileTimeAdded);
+    metaBase.mtime = static_cast<uint64_t>(fileTimeEdited);
+    metaBase.mode = metaBase.mode = S_IFREG | STAT_MODE_FILE;
+    ret = CreateDentryFile(metaBase, destParentCloudId);
+    if (ret != E_OK) {
+        LOGE("create new dentry failed, ret = %{public}d", ret);
+        return ret;
+    }
+    rdbTransaction.Finish();
+    return ret;
+}
+
+int32_t CloudDiskRdbStore::CopyFile(std::string srcCloudId, std::string destCloudId, std::string bundleName,
+                                    const int userId, std::string destPath)
+{
+    std::string parentCloudId = CloudFileUtils::GetCloudId(destPath);
+    AbsRdbPredicates getCopyMsg = AbsRdbPredicates(FileColumn::FILES_TABLE);
+    getCopyMsg.EqualTo(FileColumn::CLOUD_ID, srcCloudId);
+    auto resultSet = rdbStore_->QueryByStep(getCopyMsg, FileColumn::DISK_CLOUD_FOR_COPY);
+    if (resultSet == nullptr) {
+        LOGE("Query failed, no such file in rdb");
+        return E_RDB;
+    }
+
+    if (resultSet->GoToNextRow() != E_OK) {
+        LOGE("result set to file info go to next row failed");
+        return E_RDB;
+    }
+
+    int32_t ret = InsertCopyData(srcCloudId, destCloudId, parentCloudId, resultSet);
+    if (ret!= E_OK) {
+        LOGE("Failed to insert copy data to the rdb, ret = %{public}d", ret);
+    }
+    return ret;
 }
 }
