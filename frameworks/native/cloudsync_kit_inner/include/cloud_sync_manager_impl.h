@@ -53,6 +53,7 @@ public:
                            const std::shared_ptr<CloudDownloadCallback> downloadCallback = nullptr) override;
     int32_t StopDownloadFile(const std::string &uri, bool needClean = false) override;
     int32_t StopFileCache(const int64_t &downloadId, bool needClean = false) override;
+    int32_t DownloadThumb() override;
     int32_t RegisterDownloadFileCallback(const std::shared_ptr<CloudDownloadCallback> downloadCallback) override;
     int32_t UnregisterDownloadFileCallback() override;
     int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") override;
