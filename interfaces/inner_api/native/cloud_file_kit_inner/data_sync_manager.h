@@ -57,6 +57,7 @@ public:
     virtual int32_t StopFileCache(const BundleNameUserInfo &bundleNameUserInfo,
                                   const int64_t &downloadId,
                                   bool needClean);
+    virtual int32_t TriggerDownloadThumb();
     virtual int32_t RegisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo,
                                                  const sptr<CloudSync::ICloudDownloadCallback> &downloadCallback);
     virtual int32_t UnregisterDownloadFileCallback(const BundleNameUserInfo &bundleNameUserInfo);

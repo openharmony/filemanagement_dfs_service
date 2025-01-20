@@ -47,6 +47,7 @@ enum class CloudFileSyncServiceInterfaceCode {
     SERVICE_CMD_STOP_FILE_CACHE,
     SERVICE_CMD_OPTIMIZE_STORAGE,
     SERVICE_CMD_DENTRY_FILE_INSERT
+    SERVICE_CMD_DOWNLOAD_THUMB
 };
 } // namespace OHOS::FileManagement::CloudSync
 

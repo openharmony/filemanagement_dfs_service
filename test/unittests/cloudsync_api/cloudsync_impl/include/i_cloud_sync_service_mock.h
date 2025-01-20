@@ -176,6 +176,11 @@ public:
     {
         return E_OK;
     }
+
+    int32_t DownloadThumb()
+    {
+        return E_OK;
+    }
 };
 
 } // namespace OHOS::FileManagement::CloudSync
