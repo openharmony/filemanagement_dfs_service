@@ -149,7 +149,7 @@ void FileOperationsHelper::AddDirEntry(fuse_req_t req, std::string &buf, size_t 
 void FileOperationsHelper::FuseReplyLimited(fuse_req_t req, const char *buf, size_t bufSize,
                                             off_t off, size_t maxSize)
 {
-    if (off < bufSize) {
+    if (off < static_cast<off_t>(bufSize)) {
         size_t size = (bufSize - off) < maxSize ? (bufSize - off) : maxSize;
         fuse_reply_buf(req, buf + off, size);
     } else {
