@@ -43,12 +43,6 @@ public:
     int32_t EnableCloud(const std::string &accoutId, const SwitchDataObj &switchData) override;
     int32_t DisableCloud(const std::string &accoutId) override;
     int32_t StartDownloadFile(const std::string &uri) override;
-    int32_t StartFileCacheWriteParcel(MessageParcel &data,
-                                      const std::vector<std::string> &pathVec,
-                                      std::bitset<FIELD_KEY_MAX_SIZE> &fieldkey,
-                                      bool &isCallbackValid,
-                                      const sptr<IRemoteObject> &downloadCallback,
-                                      int32_t timeout = -1);
     int32_t StartFileCache(const std::vector<std::string> &uriVec,
                            int64_t &downloadId,
                            std::bitset<FIELD_KEY_MAX_SIZE> fieldkey = FIELDKEY_CONTENT,
@@ -89,6 +83,12 @@ public:
     };
 
 private:
+    int32_t StartFileCacheWriteParcel(MessageParcel &data,
+                                      const std::vector<std::string> &uriVec,
+                                      std::bitset<FIELD_KEY_MAX_SIZE> &fieldkey,
+                                      bool isCallbackValid,
+                                      const sptr<IRemoteObject> &downloadCallback,
+                                      int32_t timeout = -1);
     static inline std::mutex proxyMutex_;
     static inline std::mutex instanceMutex_;
     static inline std::mutex downloadMutex_;

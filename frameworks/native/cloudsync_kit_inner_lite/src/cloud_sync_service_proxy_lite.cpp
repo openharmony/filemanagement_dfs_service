@@ -222,7 +222,7 @@ int32_t CloudSyncServiceProxy::StartDownloadFile(const std::string &uri)
 int32_t CloudSyncServiceProxy::StartFileCacheWriteParcel(MessageParcel &data,
                                                          const std::vector<std::string> &pathVec,
                                                          std::bitset<FIELD_KEY_MAX_SIZE> &fieldkey,
-                                                         bool &isCallbackValid,
+                                                         bool isCallbackValid,
                                                          const sptr<IRemoteObject> &downloadCallback,
                                                          int32_t timeout)
 {
