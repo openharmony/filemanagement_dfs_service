@@ -305,6 +305,20 @@ int32_t CloudSyncManagerImpl::StopFileCache(const int64_t &downloadId,  bool nee
     return ret;
 }
 
+int32_t CloudSyncManagerImpl::DownloadThumb()
+{
+    LOGI("DownloadThumb start");
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    int32_t ret = CloudSyncServiceProxy->DownloadThumb();
+    LOGI("DownloadThumb ret %{public}d", ret);
+    return ret;
+}
+
 int32_t CloudSyncManagerImpl::RegisterDownloadFileCallback(
     const std::shared_ptr<CloudDownloadCallback> downloadCallback)
 {

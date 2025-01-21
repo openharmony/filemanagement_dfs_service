@@ -777,6 +777,32 @@ int32_t CloudSyncServiceProxy::StopFileCache(const int64_t &downloadId,  bool ne
     return reply.ReadInt32();
 }
 
+int32_t CloudSyncServiceProxy::DownloadThumb()
+{
+    LOGI("DownloadThumb Start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOGE("Failed to write interface token");
+        return E_BROKEN_IPC;
+    }
+    auto remote = Remote();
+    if (!remote) {
+        LOGE("remote is nullptr");
+        return E_BROKEN_IPC;
+    }
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_THUMB), data, reply, option);
+    if (ret != E_OK) {
+        LOGE("Failed to send out the requeset, errno: %{public}d", ret);
+        return ret;
+    }
+    LOGI("DownloadThumb Success");
+    return reply.ReadInt32();
+}
+
 int32_t CloudSyncServiceProxy::RegisterDownloadFileCallback(const sptr<IRemoteObject> &downloadCallback)
 {
     LOGI("RegisterDownloadFileCallback Start");

@@ -267,6 +267,11 @@ int32_t CloudSyncServiceProxy::DownloadAsset(const uint64_t taskId,
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::DownloadThumb()
+{
+    return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject)
 {
     return E_OK;
