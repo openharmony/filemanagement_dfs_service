@@ -509,8 +509,14 @@ int32_t CloudSyncService::NotifyEventChange(int32_t userId, const std::string &e
         return E_CLOUD_SDK;
     }
 
-    return dataSyncManager_->TriggerStartSync(appBundleName, userId, false,
-        SyncTriggerType::CLOUD_TRIGGER, prepareTraceId);
+    std::thread([this, appBundleName, userId, prepareTraceId]() {
+        dataSyncManager_->TriggerStartSync(appBundleName,
+                                           userId,
+                                           false,
+                                           SyncTriggerType::CLOUD_TRIGGER,
+                                           prepareTraceId);
+    }).detach();
+    return E_OK;
 }
 
 int32_t CloudSyncService::DisableCloud(const std::string &accoutId)
