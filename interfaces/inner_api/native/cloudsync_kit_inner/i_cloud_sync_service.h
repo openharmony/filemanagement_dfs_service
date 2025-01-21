@@ -58,6 +58,7 @@ public:
                                   const std::string &bundleName,
                                   const std::string &networkId,
                                   AssetInfoObj &assetInfoObj) = 0;
+    virtual int32_t DownloadThumb() = 0;
     virtual int32_t RegisterDownloadAssetCallback(const sptr<IRemoteObject> &remoteObject) = 0;
     virtual int32_t DeleteAsset(const int32_t userId, const std::string &uri) = 0;
     virtual int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") = 0;

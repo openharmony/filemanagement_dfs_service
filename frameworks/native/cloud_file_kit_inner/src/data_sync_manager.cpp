@@ -122,6 +122,11 @@ int32_t DataSyncManager::DownloadThumb()
     return E_OK;
 }
 
+int32_t DataSyncManager::TriggerDownloadThumb()
+{
+    return E_OK;
+}
+
 int32_t DataSyncManager::CacheVideo()
 {
     return E_OK;
