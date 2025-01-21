@@ -46,13 +46,19 @@ bool CloudAssetReadSession::HasCache(int64_t offset, int64_t readSize)
     return true;
 }
 
+void CloudAssetReadSession::SentPrepareTraceId(std::string prepareTraceId)
+{
+    return;
+}
+
 void CloudAssetReadSession::SetPrepareTraceId(std::string prepareTraceId)
 {
-    prepareTraceId_ = prepareTraceId;
+    traceId_ = prepareTraceId;
+    SentPrepareTraceId(traceId_);
 }
 
 std::string CloudAssetReadSession::GetPrepareTraceId()
 {
-    return prepareTraceId_;
+    return traceId_;
 }
 } // namespace OHOS::FileManagement::CloudFile
