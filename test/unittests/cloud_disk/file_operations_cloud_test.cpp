@@ -907,7 +907,7 @@ HWTEST_F(FileOperationsCloudTest, SetXattrTest007, TestSize.Level1)
     try {
         CloudDiskFuseData data;
         fuse_req_t req = nullptr;
-        fuse_ino_t ino = 0;
+        fuse_ino_t ino = -1;
         string name = CLOUD_CLOUD_RECYCLE_XATTR;
         const char *value = "";
         size_t size = 0;
