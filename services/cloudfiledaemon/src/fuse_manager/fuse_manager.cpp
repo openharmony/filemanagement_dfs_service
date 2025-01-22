@@ -1553,6 +1553,30 @@ static bool CheckPathForStartFuse(const string &path)
     return false;
 }
 
+static int SetNewSessionInfo(struct fuse_session *se, struct fuse_loop_config &config,
+                             int32_t devFd, const string &path)
+{
+    se->fd = devFd;
+    se->bufsize = FUSE_BUFFER_SIZE;
+    se->mountpoint = strdup(path.c_str());
+    if (se->mountpoint == nullptr) {
+        return -ENOMEM;
+    }
+
+    fuse_daemonize(true);
+    int ret = fuse_session_loop_mt(se, &config);
+
+    fuse_session_unmount(se);
+    LOGI("fuse_session_unmount");
+    if (se->mountpoint) {
+        free(se->mountpoint);
+        se->mountpoint = nullptr;
+    }
+
+    fuse_session_destroy(se);
+    return ret;
+}
+
 int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path)
 {
     LOGI("FuseManager::StartFuse entry");
@@ -1561,14 +1585,24 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
     struct CloudDisk::CloudDiskFuseData cloudDiskData;
     struct FuseData data;
     struct fuse_session *se = nullptr;
-    int ret;
-
     if (fuse_opt_add_arg(&args, path.c_str()) || !CheckPathForStartFuse(path)) {
         LOGE("Mount path invalid");
         return -EINVAL;
     }
-
     if (path.find("cloud_fuse") != string::npos) {
+        fuse_set_log_func([](enum fuse_log_level level, const char *fmt, va_list ap) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-nonliteral"
+            char *str = nullptr;
+            if (vasprintf(&str, fmt, ap) < 0) {
+                LOGE("FUSE: log failed");
+                return ;
+            }
+
+            LOGE("FUSE: %{public}s", str);
+            free(str);
+#pragma clang diagnostic pop
+        });
         se = fuse_session_new(&args, &cloudDiskFuseOps,
                               sizeof(cloudDiskFuseOps), &cloudDiskData);
         if (se == nullptr) {
@@ -1588,26 +1622,8 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         data.se = se;
         config.max_idle_threads = MAX_IDLE_THREADS;
     }
-
     LOGI("fuse_session_new success, userId: %{public}d", userId);
-    se->fd = devFd;
-    se->bufsize = FUSE_BUFFER_SIZE;
-    se->mountpoint = strdup(path.c_str());
-    if (se->mountpoint == nullptr) {
-        return -ENOMEM;
-    }
-
-    fuse_daemonize(true);
-    ret = fuse_session_loop_mt(se, &config);
-
-    fuse_session_unmount(se);
-    LOGI("fuse_session_unmount");
-    if (se->mountpoint) {
-        free(se->mountpoint);
-        se->mountpoint = nullptr;
-    }
-
-    fuse_session_destroy(se);
+    int ret = SetNewSessionInfo(se, config, devFd, path);
     return ret;
 }
 
