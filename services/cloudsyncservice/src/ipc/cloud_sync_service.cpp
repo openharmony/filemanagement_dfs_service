@@ -444,6 +444,20 @@ int32_t CloudSyncService::CleanCacheInner(const std::string &uri)
     return dataSyncManager_->CleanCache(bundleName, callerUserId, uri);
 }
 
+int32_t CloudSyncService::OptimizeStorage(const int32_t agingDays)
+{
+    auto callerUserId = DfsuAccessTokenHelper::GetUserId();
+    std::string bundleName;
+    if (DfsuAccessTokenHelper::GetCallerBundleName(bundleName)) {
+        return E_INVAL_ARG;
+    }
+
+    LOGI("OptimizeStorage, bundleName: %{private}s, agingDays: %{public}d, callerUserId: %{public}d",
+         bundleName.c_str(), agingDays, callerUserId);
+
+    return dataSyncManager_->OptimizeStorage(bundleName, callerUserId, agingDays);
+}
+
 int32_t CloudSyncService::ChangeAppSwitch(const std::string &accoutId, const std::string &bundleName, bool status)
 {
     auto callerUserId = DfsuAccessTokenHelper::GetUserId();

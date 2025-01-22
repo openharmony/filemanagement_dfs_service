@@ -90,6 +90,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleStopFileCache(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DOWNLOAD_THUMB)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDownloadThumb(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_OPTIMIZE_STORAGE)] =
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleOptimizeStorage(data, reply); };
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -223,6 +225,25 @@ int32_t CloudSyncServiceStub::HandleResetCursor(MessageParcel &data, MessageParc
     int32_t res = ResetCursor(bundleName);
     reply.WriteInt32(res);
     LOGI("End ResetCursor");
+    return E_OK;
+}
+
+int32_t CloudSyncServiceStub::HandleOptimizeStorage(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleOptimizeStorage");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+    int32_t agingDays = data.ReadInt32();
+
+    int32_t res = OptimizeStorage(agingDays);
+    reply.WriteInt32(res);
+    LOGI("End HandleOptimizeStorage");
     return E_OK;
 }
 

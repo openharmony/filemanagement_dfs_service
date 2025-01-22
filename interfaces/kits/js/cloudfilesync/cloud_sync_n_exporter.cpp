@@ -55,6 +55,7 @@ napi_value CloudSyncExport(napi_env env, napi_value exports)
     InitDownloadErrorType(env, exports);
     InitState(env, exports);
     InitFileSyncState(env, exports);
+    InitCloudSyncApi(env, exports);
     InitNotifyType(env, exports);
     InitCloudSyncFuncs(env, exports);
 
@@ -145,6 +146,14 @@ void InitDownloadErrorType(napi_env env, napi_value exports)
     napi_create_object(env, &obj);
     napi_define_properties(env, obj, sizeof(desc) / sizeof(desc[0]), desc);
     napi_set_named_property(env, exports, propertyName, obj);
+}
+
+void InitCloudSyncApi(napi_env env, napi_value exports)
+{
+    static napi_property_descriptor desc[] = {
+    DECLARE_NAPI_FUNCTION("optimizeStorage", CloudSyncNapi::OptimizeStorage),
+    };
+    napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
 }
 
 void InitNotifyType(napi_env env, napi_value exports)
