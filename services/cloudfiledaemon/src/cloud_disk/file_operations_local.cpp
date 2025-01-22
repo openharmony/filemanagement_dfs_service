@@ -94,8 +94,7 @@ void FileOperationsLocal::Lookup(fuse_req_t req, fuse_ino_t parent, const char *
     e.attr_timeout = LOOKUP_TIMEOUT;
     e.entry_timeout = LOOKUP_TIMEOUT;
 #ifdef HICOLLIE_ENABLE
-    auto xcollieId = XCollieHelper::SetTimer("CloudDisk_Lookup", LOOKUP_TIMEOUT_S,
-        nullptr, nullptr, false);
+    auto xcollieId = XCollieHelper::SetTimer("CloudDisk_Lookup", LOOKUP_TIMEOUT_S, nullptr, nullptr, false);
 #endif
     err = DoLocalLookup(req, parent, name, &e);
     if (err) {
