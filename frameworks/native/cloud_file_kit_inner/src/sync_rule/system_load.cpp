@@ -53,10 +53,11 @@ void SystemLoadListener::OnSystemloadLevel(int32_t level)
             dataSyncManager_->TriggerRecoverySync(SyncTriggerType::SYSTEM_LOAD_TRIGGER);
         }
         if (systemLoadThumb == "true") {
-            LOGI("SetParameter TEMPERATURE_SYSPARAM_THUMB false");
-            system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "false");
             TaskStateManager::GetInstance().StartTask();
-            dataSyncManager_->DownloadThumb();
+            if (dataSyncManager_->DownloadThumb() == E_OK) {
+                LOGI("SetParameter TEMPERATURE_SYSPARAM_THUMB false");
+                system::SetParameter(TEMPERATURE_SYSPARAM_THUMB, "false");
+            }
         }
     }
 }
