@@ -1592,16 +1592,16 @@ int32_t FuseManager::StartFuse(int32_t userId, int32_t devFd, const string &path
         fuse_set_log_func([](enum fuse_log_level level, const char *fmt, va_list ap) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-nonliteral"
-        char *str = nullptr;
-        if (vasprintf(&str, fmt, ap) < 0) {
-            LOGE("FUSE: log failed");
-            return ;
-        }
+            char *str = nullptr;
+            if (vasprintf(&str, fmt, ap) < 0) {
+                LOGE("FUSE: log failed");
+                return ;
+            }
 
-        LOGE("FUSE: %{public}s", str);
-        free(str);
+            LOGE("FUSE: %{public}s", str);
+            free(str);
 #pragma clang diagnostic pop
-    });
+        });
         se = fuse_session_new(&args, &cloudDiskFuseOps,
                               sizeof(cloudDiskFuseOps), &cloudDiskData);
         if (se == nullptr) {
