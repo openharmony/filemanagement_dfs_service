@@ -177,6 +177,11 @@ int32_t CloudSyncServiceProxy::ChangeAppSwitch(const std::string &accoutId,
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::OptimizeStorage(const int32_t agingDays)
+{
+    return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::Clean(const std::string &accountId, const CleanOptions &cleanOptions)
 {
     return E_OK;

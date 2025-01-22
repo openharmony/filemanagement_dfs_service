@@ -103,6 +103,7 @@ public:
      * @return int32_t 同步返回执行结果
      */
     virtual int32_t Clean(const std::string &accountId, const CleanOptions &cleanOptions) = 0;
+    virtual int32_t OptimizeStorage(const int32_t agingDays) = 0;
     virtual int32_t StartDownloadFile(const std::string &path) = 0;
     virtual int32_t StartFileCache(const std::string &path) = 0;
     virtual int32_t StartFileCache(const std::vector<std::string> &pathVec, int64_t &downloadId,
