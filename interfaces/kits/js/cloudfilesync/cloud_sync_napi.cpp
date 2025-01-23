@@ -867,6 +867,10 @@ napi_value ChangeListenerNapi::SolveOnChange(napi_env env, const AAFwk::ChangeIn
     SetValueArray(env, "uris", changeInfo.uris_, result);
     if (changeInfo.data_ != nullptr && changeInfo.size_ > 0) {
         uint8_t *data = (uint8_t *)malloc(changeInfo.size_);
+        if (!data) {
+            LOGE("Malloc failed");
+            return nullptr;
+        }
         int ret = memcpy_s(data, changeInfo.size_, changeInfo.data_, changeInfo.size_);
         if (ret != 0) {
             LOGE("Parcel data copy failed, err = %{public}d", ret);
