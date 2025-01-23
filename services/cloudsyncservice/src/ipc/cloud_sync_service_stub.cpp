@@ -614,10 +614,11 @@ int32_t CloudSyncServiceStub::HandleBatchCleanFile(MessageParcel &data, MessageP
     }
 
     int32_t size = data.ReadInt32();
-    std::vector<CleanFileInfoObj> deleteInfoObj;
-    if (size > READ_SIZE) {
+    if (size > CLEAN_FILE_MAX_SIZE) {
+        LOGE("size over max limit");
         return E_INVAL_ARG;
     }
+    std::vector<CleanFileInfoObj> deleteInfoObj;
     for (int i = 0; i < size; i++) {
         sptr<CleanFileInfoObj> obj = data.ReadParcelable<CleanFileInfoObj>();
         if (!obj) {

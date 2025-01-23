@@ -27,7 +27,6 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
 constexpr int LOAD_SA_TIMEOUT_MS = 2000;
-static const int WRITE_SIZE = 30;
 static const int MAX_WRITE_DENTRY_FILE_SIZE = 500;
 
 int32_t CloudSyncServiceProxy::UnRegisterCallbackInner(const std::string &bundleName)
@@ -1077,7 +1076,7 @@ int32_t CloudSyncServiceProxy::BatchCleanFile(const std::vector<CleanFileInfoObj
         return E_BROKEN_IPC;
     }
 
-    if (fileInfo.size() > WRITE_SIZE || fileInfo.size() == 0 || !data.WriteInt32(fileInfo.size())) {
+    if (fileInfo.size() > CLEAN_FILE_MAX_SIZE || fileInfo.size() == 0 || !data.WriteInt32(fileInfo.size())) {
         LOGE("Failed to send the vector size");
         return E_INVAL_ARG;
     }
