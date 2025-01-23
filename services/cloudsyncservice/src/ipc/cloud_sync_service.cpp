@@ -306,7 +306,7 @@ int32_t CloudSyncService::LoadRemoteSA(const std::string &deviceId)
     }
     int32_t ret = samgr->LoadSystemAbility(FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, deviceId, cloudSyncLoadCallback);
     if (ret != E_OK) {
-        LOGE("Failed to Load systemAbility, systemAbilityId:%{pulbic}d, ret code:%{pulbic}d",
+        LOGE("Failed to Load systemAbility, systemAbilityId:%{public}d, ret code:%{public}d",
              FILEMANAGEMENT_CLOUD_SYNC_SERVICE_SA_ID, ret);
         return E_SA_LOAD_FAILED;
     }
