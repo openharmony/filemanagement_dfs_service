@@ -83,6 +83,38 @@ struct CleanOptions : public Parcelable {
     static CleanOptions *Unmarshalling(Parcel &parcel);
 };
 
+struct DentryFileInfo {
+    std::string cloudId;
+    int64_t size;
+    int64_t modifiedTime;
+    std::string path;
+    std::string fileName;
+    std::string fileType;
+};
+
+struct  DentryFileInfoObj : public Parcelable {
+    std::string cloudId;
+    int64_t size;
+    int64_t modifiedTime;
+    std::string path;
+    std::string fileName;
+    std::string fileType;
+    bool ReadFromParcel(Parcel &parcel);
+    bool Marshalling(Parcel &parcel) const override;
+    static DentryFileInfoObj *Unmarshalling(Parcel &parcel);
+
+    DentryFileInfoObj() = default;
+    DentryFileInfoObj(const DentryFileInfo &FileInfo)
+        : cloudId(FileInfo.cloudId),
+          size(FileInfo.size),
+          modifiedTime(FileInfo.modifiedTime),
+          path(FileInfo.path),
+          fileName(FileInfo.fileName),
+          fileType(FileInfo.fileType)
+    {
+    }
+};
+
 struct AssetInfoObj : public Parcelable {
     std::string uri;
     std::string recordType;

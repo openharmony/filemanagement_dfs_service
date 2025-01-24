@@ -26,6 +26,7 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int32_t MAX_FILE_CACHE_NUM = 400;
+constexpr int32_t MAX_DENTRY_FILE_SIZE = 500;
 CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 {
     static CloudSyncManagerImpl instance;
@@ -433,6 +434,29 @@ int32_t CloudSyncManagerImpl::CleanCache(const std::string &uri)
     }
     SetDeathRecipient(CloudSyncServiceProxy->AsObject());
     return CloudSyncServiceProxy->CleanCacheInner(uri);
+}
+
+int32_t CloudSyncManagerImpl::BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
+    std::vector<std::string> &failCloudId)
+{
+    if (fileInfo.size() > MAX_DENTRY_FILE_SIZE) {
+        LOGE("BatchDentryFileInsert parameter is invalid");
+        return E_INVAL_ARG;
+    }
+    auto CloudSyncServiceProxy = CloudSyncServiceProxy::GetInstance();
+    if (!CloudSyncServiceProxy) {
+        LOGE("proxy is null");
+        return E_SA_LOAD_FAILED;
+    }
+
+    SetDeathRecipient(CloudSyncServiceProxy->AsObject());
+    std::vector<DentryFileInfoObj> fileInfoObj;
+    for (const auto &info : fileInfo) {
+        DentryFileInfoObj obj(info);
+        fileInfoObj.emplace_back(obj);
+    }
+    
+    return CloudSyncServiceProxy->BatchDentryFileInsert(fileInfoObj, failCloudId);
 }
 
 void CloudSyncManagerImpl::SubscribeListener(std::string bundleName)

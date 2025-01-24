@@ -77,6 +77,8 @@ public:
     int32_t GetSyncTimeInner(int64_t &syncTime, const std::string &bundleName = "") override;
     int32_t CleanCacheInner(const std::string &uri) override;
     void SetDeathRecipient(const sptr<IRemoteObject> &remoteObject);
+    int32_t BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
+        std::vector<std::string> &failCloudId) override;
 
 private:
     std::string GetHmdfsPath(const std::string &uri, int32_t userId);

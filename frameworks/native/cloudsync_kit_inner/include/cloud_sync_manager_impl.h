@@ -57,6 +57,8 @@ public:
     int32_t UnregisterDownloadFileCallback() override;
     int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") override;
     int32_t CleanCache(const std::string &uri) override;
+    int32_t BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
+        std::vector<std::string> &failCloudId) override;
 
     class SystemAbilityStatusChange : public SystemAbilityStatusChangeStub {
     public:

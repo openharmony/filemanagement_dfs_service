@@ -264,6 +264,60 @@ HWTEST_F(CloudSyncServiceProxyTest, GetSyncTimeInner002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: BatchDentryFileInsert001
+ * @tc.desc: Verify the BatchCleanFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, BatchDentryFileInsert001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchDentryFileInsert001 Start";
+    std::vector<DentryFileInfoObj> fileInfoObj;
+    std::vector<std::string> failCloudId;
+    int ret = proxy_->BatchDentryFileInsert(fileInfoObj, failCloudId);
+    EXPECT_EQ(ret, E_INVAL_ARG);
+    GTEST_LOG_(INFO) << "BatchDentryFileInsert001 End";
+}
+
+/**
+ * @tc.name: BatchDentryFileInsert002
+ * @tc.desc: Verify the BatchCleanFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, BatchDentryFileInsert002, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchDentryFileInsert002 Start";
+    DentryFileInfo obj;
+    std::vector<DentryFileInfoObj> fileInfoObj;
+    fileInfoObj.push_back(obj);
+    std::vector<std::string> failCloudId;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(-1));
+    int ret = proxy_->BatchDentryFileInsert(fileInfoObj, failCloudId);
+    EXPECT_EQ(ret, E_BROKEN_IPC);
+    GTEST_LOG_(INFO) << "BatchDentryFileInsert002 End";
+}
+
+/**
+ * @tc.name: BatchDentryFileInsert003
+ * @tc.desc: Verify the BatchCleanFile function.
+ * @tc.type: FUNC
+ * @tc.require: I6H5MH
+ */
+HWTEST_F(CloudSyncServiceProxyTest, BatchDentryFileInsert003, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BatchDentryFileInsert003 Start";
+    DentryFileInfo obj;
+    std::vector<DentryFileInfoObj> fileInfoObj;
+    fileInfoObj.push_back(obj);
+    std::vector<std::string> failCloudId;
+    EXPECT_CALL(*mock_, SendRequest(_, _, _, _)).Times(1).WillOnce(Return(E_OK));
+    int ret = proxy_->BatchDentryFileInsert(fileInfoObj, failCloudId);
+    EXPECT_EQ(ret, E_OK);
+    GTEST_LOG_(INFO) << "BatchDentryFileInsert003 End";
+}
+
+/**
  * @tc.name: CleanCacheInner001
  * @tc.desc: Verify the CleanCacheInner function.
  * @tc.type: FUNC
