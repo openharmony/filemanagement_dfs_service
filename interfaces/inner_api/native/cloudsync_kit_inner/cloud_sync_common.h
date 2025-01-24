@@ -24,6 +24,7 @@
 
 namespace OHOS::FileManagement::CloudSync {
 #define FIELD_KEY_MAX_SIZE 4
+constexpr int32_t CLEAN_FILE_MAX_SIZE = 200;
 enum FieldKey {
     FIELDKEY_CONTENT = 1 << 0,
     FIELDKEY_THUMB = 1 << 1,

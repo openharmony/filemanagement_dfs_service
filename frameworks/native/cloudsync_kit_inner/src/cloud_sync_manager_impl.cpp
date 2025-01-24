@@ -27,7 +27,6 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 constexpr int32_t MIN_USER_ID = 100;
 constexpr int32_t MAX_FILE_CACHE_NUM = 400;
-constexpr int32_t CLEAN_FILE_MAX_SIZE = 30;
 constexpr int32_t MAX_DENTRY_FILE_SIZE = 500;
 CloudSyncManagerImpl &CloudSyncManagerImpl::GetInstance()
 {
