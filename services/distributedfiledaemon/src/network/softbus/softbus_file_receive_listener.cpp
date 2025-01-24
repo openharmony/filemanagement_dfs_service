@@ -16,6 +16,7 @@
 #include "network/softbus/softbus_file_receive_listener.h"
 
 #include <cinttypes>
+#include <thread>
 
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
@@ -30,6 +31,7 @@ namespace Storage {
 namespace DistributedFile {
 using namespace FileManagement;
 std::string SoftBusFileReceiveListener::path_ = "";
+static const int32_t SLEEP_TIME_MS = 10;
 void SoftBusFileReceiveListener::OnFile(int32_t socket, FileEvent *event)
 {
     if (event == nullptr) {
@@ -89,7 +91,9 @@ void SoftBusFileReceiveListener::SetRecvPath(const std::string &physicalPath)
 void SoftBusFileReceiveListener::OnCopyReceiveBind(int32_t socketId, PeerSocketInfo info)
 {
     LOGI("OnCopyReceiveBind begin, socketId %{public}d", socketId);
+    bindSuccess.store(false);
     SoftBusHandler::OnSinkSessionOpened(socketId, info);
+    bindSuccess.store(true);
 }
 
 std::string SoftBusFileReceiveListener::GetLocalSessionName(int32_t sessionId)
@@ -108,6 +112,9 @@ void SoftBusFileReceiveListener::OnReceiveFileProcess(int32_t sessionId, uint64_
 {
     LOGI("OnReceiveFileProcess, sessionId = %{public}d, bytesUpload = %{public}" PRIu64 ","
          "bytesTotal = %{public}" PRIu64 "", sessionId, bytesUpload, bytesTotal);
+    while (!bindSuccess.load()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME_MS));
+    }
     std::string sessionName = GetLocalSessionName(sessionId);
     if (sessionName.empty()) {
         LOGE("sessionName is empty");
