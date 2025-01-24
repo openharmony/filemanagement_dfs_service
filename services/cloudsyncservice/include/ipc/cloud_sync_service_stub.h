@@ -58,6 +58,7 @@ private:
     int32_t HandleDeleteAsset(MessageParcel &data, MessageParcel &reply);
     int32_t HandleGetSyncTime(MessageParcel &data, MessageParcel &reply);
     int32_t HandleCleanCache(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleBatchDentryFileInsert(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace OHOS::FileManagement::CloudSync
 

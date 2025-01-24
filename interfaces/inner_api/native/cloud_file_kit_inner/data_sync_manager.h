@@ -65,6 +65,8 @@ public:
     virtual int32_t CacheVideo();
     virtual int32_t CleanVideoCache();
     virtual int32_t CleanCache(const std::string &bundleName, const int32_t userId, const std::string &uri);
+    virtual int32_t BatchDentryFileInsert(const std::vector<CloudSync::DentryFileInfo> &fileInfo,
+        std::vector<std::string> &failCloudId);
     virtual int32_t DisableCloud(const int32_t userId);
     virtual int32_t GetUserId(int32_t &userId);
     virtual int32_t SaveSubscription(const std::string &bundleName, const int32_t userId);

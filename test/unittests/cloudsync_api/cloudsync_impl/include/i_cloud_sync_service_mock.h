@@ -144,6 +144,13 @@ public:
     {
         return E_OK;
     }
+
+    int32_t BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
+        std::vector<std::string> &failCloudId)
+    {
+        return E_OK;
+    }
+
     int32_t CleanCacheInner(const std::string &uri)
     {
         return E_OK;
