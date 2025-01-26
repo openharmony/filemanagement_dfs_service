@@ -123,7 +123,7 @@ int32_t FileSizeUtils::GetFileSize(const std::string &path, uint64_t &size)
         size = 0;
         return errno;
     }
-    size = buf.st_size;
+    size = static_cast<uint64_t>(buf.st_size);
     return E_OK;
 }
 
@@ -152,7 +152,7 @@ int32_t FileSizeUtils::GetDirSize(const std::string &path, uint64_t &size)
             if (stat(dest.c_str(), &st) == -1) {
                 return errno;
             }
-            size += st.st_size;
+            size += static_cast<uint64_t>(st.st_size);
         }
     }
     return E_OK;
