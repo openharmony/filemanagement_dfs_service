@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -198,7 +198,11 @@ int32_t Daemon::ConnectionCount(const DistributedHardware::DmDeviceInfo &deviceI
 {
     auto path = ConnectionDetector::ParseHmdfsPath();
     stringstream ss;
-    ss << ConnectionDetector::MocklispHash(path);
+    auto st_dev = ConnectionDetector::MocklispHash(path);
+    if (st_dev == FileManagement::ERR_BAD_VALUE) {
+        return st_dev;
+    }
+    ss << st_dev;
     auto targetDir = ss.str();
     auto networkId = std::string(deviceInfo.networkId);
     int32_t ret = 0;
