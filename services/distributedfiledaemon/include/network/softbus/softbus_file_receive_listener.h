@@ -41,6 +41,7 @@ public:
 private:
     static inline const std::string SERVICE_NAME{"ohos.storage.distributedfile.daemon"};
     static std::string path_;
+    static inline std::atomic_bool bindSuccess { false };
 };
 } // namespace DistributedFile
 } // namespace Storage
