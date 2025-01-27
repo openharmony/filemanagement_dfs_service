@@ -53,6 +53,22 @@ static const std::string MEDIA = "media";
 static constexpr size_t MAX_SIZE = 1024 * 1024 * 4;
 std::shared_ptr<FileCopyManager> FileCopyManager::instance_ = nullptr;
 
+static bool CheckPath(std::shared_ptr<FileInfos> &infos)
+{
+    std::string destPath = infos->destPath;
+    if (infos->srcUriIsFile) {
+        auto pos = destPath.rfind("/");
+        if (pos == std::string::npos) {
+            return false;
+        }
+        destPath.resize(pos);
+    }
+    if (!(SandboxHelper::CheckValidPath(infos->srcPath) && SandboxHelper::CheckValidPath(destPath))) {
+        return false;
+    }
+    return true;
+}
+
 std::shared_ptr<FileCopyManager> FileCopyManager::GetInstance()
 {
     static std::once_flag once;
@@ -80,6 +96,12 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
         ret = ExecRemote(infos, processCallback);
         RemoveFileInfos(infos);
         return ret;
+    }
+
+    if (!CheckPath(infos)) {
+        LOGE("invalid srcPath : %{private}s, destPath: %{private}s", GetAnonyString(infos->srcPath).c_str(),
+            GetAnonyString(infos->destPath).c_str());
+        return ERR_BAD_VALUE;
     }
 
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
