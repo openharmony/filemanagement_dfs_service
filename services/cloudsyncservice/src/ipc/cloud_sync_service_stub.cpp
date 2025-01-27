@@ -24,6 +24,7 @@ namespace OHOS::FileManagement::CloudSync {
 using namespace std;
 
 static const int READ_SIZE = 100;
+static const int MAX_READ_DENTRY_FILE_SIZE = 500;
 
 CloudSyncServiceStub::CloudSyncServiceStub()
 {
@@ -92,6 +93,8 @@ CloudSyncServiceStub::CloudSyncServiceStub()
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleDownloadThumb(data, reply); };
     opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_OPTIMIZE_STORAGE)] =
         [this](MessageParcel &data, MessageParcel &reply) { return this->HandleOptimizeStorage(data, reply); };
+    opToInterfaceMap_[static_cast<uint32_t>(CloudFileSyncServiceInterfaceCode::SERVICE_CMD_DENTRY_FILE_INSERT)] =
+        [this](MessageParcel &data, MessageParcel &reply) { return this->HandleBatchDentryFileInsert(data, reply); };
 }
 
 int32_t CloudSyncServiceStub::OnRemoteRequest(uint32_t code,
@@ -666,6 +669,40 @@ int32_t CloudSyncServiceStub::HandleGetSyncTime(MessageParcel &data, MessageParc
     int32_t res = GetSyncTimeInner(syncTime, bundleName);
     reply.WriteInt64(syncTime);
     reply.WriteInt32(res);
+    return E_OK;
+}
+
+int32_t CloudSyncServiceStub::HandleBatchDentryFileInsert(MessageParcel &data, MessageParcel &reply)
+{
+    LOGI("Begin HandleBatchDentryFileInsert");
+    if (!DfsuAccessTokenHelper::CheckCallerPermission(PERM_CLOUD_SYNC)) {
+        LOGE("permission denied");
+        return E_PERMISSION_DENIED;
+    }
+    if (!DfsuAccessTokenHelper::IsSystemApp()) {
+        LOGE("caller hap is not system hap");
+        return E_PERMISSION_SYSTEM;
+    }
+
+    int32_t size = data.ReadInt32();
+    std::vector<DentryFileInfoObj> dentryFileInfoObj;
+    if (size > MAX_READ_DENTRY_FILE_SIZE) {
+        return E_INVAL_ARG;
+    }
+    for (int i = 0; i < size; i++) {
+        sptr<DentryFileInfoObj> obj = data.ReadParcelable<DentryFileInfoObj>();
+        if (!obj) {
+            LOGE("object of obj is nullptr");
+            return E_INVAL_ARG;
+        }
+        dentryFileInfoObj.emplace_back(*obj);
+    }
+
+    std::vector<std::string> failCloudId;
+    int32_t res = BatchDentryFileInsert(dentryFileInfoObj, failCloudId);
+    reply.WriteStringVector(failCloudId);
+    reply.WriteInt32(res);
+    LOGI("End HandleBatchDentryFileInsert");
     return E_OK;
 }
 

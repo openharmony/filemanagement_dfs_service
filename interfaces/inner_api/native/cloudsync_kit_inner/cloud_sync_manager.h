@@ -114,6 +114,8 @@ public:
     virtual int32_t UnregisterDownloadFileCallback() = 0;
     virtual int32_t GetSyncTime(int64_t &syncTime, const std::string &bundleName = "") = 0;
     virtual int32_t CleanCache(const std::string &uri) = 0;
+    virtual int32_t BatchDentryFileInsert(const std::vector<DentryFileInfo> &fileInfo,
+         std::vector<std::string> &failCloudId) = 0;
 };
 } // namespace OHOS::FileManagement::CloudSync
 
