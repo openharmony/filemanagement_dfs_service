@@ -160,6 +160,12 @@ int32_t CloudSyncServiceProxy::CleanCacheInner(const std::string &uri)
     return E_OK;
 }
 
+int32_t CloudSyncServiceProxy::BatchDentryFileInsert(const std::vector<DentryFileInfoObj> &fileInfo,
+    std::vector<std::string> &failCloudId)
+{
+    return E_OK;
+}
+
 int32_t CloudSyncServiceProxy::StopSyncInner(const std::string &bundleName, bool forceFlag)
 {
     return E_OK;
