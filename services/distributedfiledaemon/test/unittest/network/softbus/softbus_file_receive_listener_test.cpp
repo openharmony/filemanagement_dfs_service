@@ -116,6 +116,7 @@ HWTEST_F(SoftBusFileReceiveListenerTest, SoftBusFileReceiveListenerTest_OnFile_0
                            .bytesProcessed = 0,
                            .bytesTotal = 0};
         int32_t socket = 0;
+        SoftBusFileReceiveListener::bindSuccess.store(true);
         SoftBusFileReceiveListener::OnFile(socket, nullptr);
         SoftBusFileReceiveListener::OnFile(socket, &event);
 
