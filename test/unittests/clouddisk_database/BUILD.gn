@@ -83,11 +83,6 @@ ohos_unittest("clouddisk_rdb_utils_test") {
     "LOG_TAG=\"CLOUD_DISK_DATABASE_TEST\"",
   ]
 
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-    defines += [ "SUPPORT_MEDIA_LIBRARY" ]
-  }
-
   use_exceptions = true
 }
 
@@ -191,11 +186,6 @@ ohos_unittest("clouddisk_rdbstore_test") {
     "LOG_DOMAIN=0xD004310",
     "LOG_TAG=\"CLOUDDISK_DATABASE_TEST\"",
   ]
-
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-    defines += [ "SUPPORT_MEDIA_LIBRARY" ]
-  }
 
   if (cloudsync_service_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
@@ -367,11 +357,6 @@ ohos_unittest("clouddisk_rdb_transaction_test") {
     "LOG_TAG=\"CLOUD_DISK_DATABASE_TEST\"",
   ]
 
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-    defines += [ "SUPPORT_MEDIA_LIBRARY" ]
-  }
-
   use_exceptions = true
 }
 
@@ -450,11 +435,6 @@ ohos_unittest("clouddisk_sync_helper_test") {
     "LOG_DOMAIN=0xD004308",
     "LOG_TAG=\"CLOUD_DISK_DATABASE_TEST\"",
   ]
-
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-    defines += [ "SUPPORT_MEDIA_LIBRARY" ]
-  }
 
   use_exceptions = true
 }

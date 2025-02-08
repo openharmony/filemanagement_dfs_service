@@ -154,11 +154,6 @@ ohos_unittest("cloud_sync_service_test") {
     "LOG_TAG=\"CLOUDSYNC_TEST\"",
   ]
 
-  if (cloudsync_service_media_library) {
-    external_deps += [ "media_library:media_library" ]
-    defines += [ "SUPPORT_MEDIA_LIBRARY" ]
-  }
-
   if (cloudsync_service_hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
