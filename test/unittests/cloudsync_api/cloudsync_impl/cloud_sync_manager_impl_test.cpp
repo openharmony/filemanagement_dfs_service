@@ -30,7 +30,7 @@ using namespace testing::ext;
 using namespace testing;
 using namespace std;
 constexpr int32_t MAX_FILE_CACHE_NUM = 400;
-static int32_t CLEAN_FILE_MAX_SIZE = 200;
+static const int32_t CLEAN_FILE_MAX_SIZE = 200;
 
 class CloudSyncManagerImplTest : public testing::Test {
 public:
