@@ -24,6 +24,8 @@
 
 #include <file_ex.h>
 
+#include "dfs_error.h"
+
 namespace {
 bool g_mockQueryActiveOsAccountIds = true;
 bool g_mockQueryActiveOsAccountIdsEmpty = true;
@@ -52,8 +54,6 @@ using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
-constexpr int32_t E_OK = 0;
-constexpr int32_t E_HASH_VALUE = 3556498;
 constexpr int32_t E_ERR = -1;
 
 class ConnectionDetectorTest : public testing::Test {
@@ -109,7 +109,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MocklispHash_001, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_MocklispHash_001_Start";
     string str;
     uint64_t ret = ConnectionDetector::MocklispHash(str);
-    EXPECT_EQ(ret, E_OK);
+    EXPECT_EQ(ret, static_cast<uint64_t>(FileManagement::ERR_BAD_VALUE));
     GTEST_LOG_(INFO) << "DfsService_MocklispHash_001_End";
 }
 
@@ -118,7 +118,7 @@ HWTEST_F(ConnectionDetectorTest, DfsService_MocklispHash_002, TestSize.Level1)
     GTEST_LOG_(INFO) << "DfsService_MocklispHash_002_Start";
     string str = "test";
     uint64_t ret = ConnectionDetector::MocklispHash(str);
-    EXPECT_EQ(ret, E_HASH_VALUE);
+    EXPECT_EQ(ret, static_cast<uint64_t>(FileManagement::ERR_BAD_VALUE));
     GTEST_LOG_(INFO) << "DfsService_MocklispHash_002_End";
 }
 
