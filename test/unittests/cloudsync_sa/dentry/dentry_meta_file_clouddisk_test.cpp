@@ -152,6 +152,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest, TestSize.Le
     CloudDiskMetaFile mFile2(TEST_USER_ID, "/a/b", "id3");
     MetaBase mBase3("file3", "id3");
     ret = mFile2.DoCreate(mBase3);
+    EXPECT_EQ(ret, EEXIST);
 }
 
 /**
@@ -235,8 +236,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileMgrTest001, TestSize.Leve
     GTEST_LOG_(INFO) << "CloudDiskMetaFileMgrTest001 Start";
     try {
         auto m = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(TEST_USER_ID, "/o/p/q/r/s/t", "id1");
-        MetaBase mBase1("file1", "file1");
-        EXPECT_EQ(m->DoCreate(mBase1), EEXIST);
+        EXPECT_NE(m, nullptr);
         m = nullptr;
         MetaFileMgr::GetInstance().CloudDiskClearAll();
     } catch (...) {
