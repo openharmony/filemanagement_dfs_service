@@ -16,6 +16,7 @@
 #ifndef DISTRIBUTED_FILE_DAEMON_MANAGER_H
 #define DISTRIBUTED_FILE_DAEMON_MANAGER_H
 
+#include <functional>
 #include <memory>
 
 #include "asset/asset_obj.h"
@@ -30,6 +31,8 @@ namespace OHOS {
 namespace Storage {
 namespace DistributedFile {
 class DistributedFileDaemonManager {
+public:
+    using ProcessCallback = std::function<void (uint64_t processSize, uint64_t totalSize)>;
 public:
     static DistributedFileDaemonManager &GetInstance();
 
@@ -49,6 +52,12 @@ public:
                               const sptr<IAssetSendCallback> &sendCallback) = 0;
     virtual int32_t RegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) = 0;
     virtual int32_t UnRegisterAssetCallback(const sptr<IAssetRecvCallback> &recvCallback) =0;
+
+    virtual int32_t GetSize(const std::string &uri, bool isSrcUri, uint64_t &size) = 0;
+    virtual int32_t IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory) = 0;
+    virtual int32_t Copy(const std::string &srcUri, const std::string &destUri, ProcessCallback processCallback) = 0;
+    virtual int32_t Cancel(const std::string &srcUri, const std::string &destUri) = 0;
+    virtual int32_t Cancel() = 0;
 };
 } // namespace DistributedFile
 } // namespace Storage

@@ -16,9 +16,16 @@
 #include "distributed_file_daemon_manager_impl.h"
 
 #include "asset/asset_adapter_sa_client.h"
+#include "copy/file_copy_manager.h"
+#include "copy/file_size_utils.h"
 #include "dfs_error.h"
 #include "distributed_file_daemon_proxy.h"
 #include "utils_log.h"
+
+#undef LOG_DOMAIN
+#undef LOG_TAG
+#define LOG_DOMAIN 0xD001600
+#define LOG_TAG "distributedfile_daemon"
 
 namespace OHOS {
 namespace Storage {
@@ -162,6 +169,32 @@ int32_t DistributedFileDaemonManagerImpl::UnRegisterAssetCallback(const sptr<IAs
         return ret;
     }
     return OHOS::FileManagement::E_OK;
+}
+
+int32_t DistributedFileDaemonManagerImpl::GetSize(const std::string &uri, bool isSrcUri, uint64_t &size)
+{
+    return FileSizeUtils::GetSize(uri, isSrcUri, size);
+}
+
+int32_t DistributedFileDaemonManagerImpl::IsDirectory(const std::string &uri, bool isSrcUri, bool &isDirectory)
+{
+    return FileSizeUtils::IsDirectory(uri, isSrcUri, isDirectory);
+}
+
+int32_t DistributedFileDaemonManagerImpl::Copy(const std::string &srcUri,
+    const std::string &destUri, ProcessCallback processCallback)
+{
+    return FileCopyManager::GetInstance()->Copy(srcUri, destUri, processCallback);
+}
+
+int32_t DistributedFileDaemonManagerImpl::Cancel(const std::string &srcUri, const std::string &destUri)
+{
+    return FileCopyManager::GetInstance()->Cancel(srcUri, destUri);
+}
+
+int32_t DistributedFileDaemonManagerImpl::Cancel()
+{
+    return FileCopyManager::GetInstance()->Cancel();
 }
 } // namespace DistributedFile
 } // namespace Storage
