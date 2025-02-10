@@ -514,6 +514,27 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_003, TestSize.Level1)
     GTEST_LOG_(INFO) << "DoLookupAndUpdate_003 End";
 }
 
+HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_004, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "DoLookupAndUpdate_004 Start";
+    try {
+        uint64_t size = 0x6b6b6b6b0000006f;
+        CloudDiskMetaFile mFile(100, "/", "id1");
+        MetaBase metaBase("file1", "id1");
+        metaBase.size = size;
+        auto callback = [&metaBase] (MetaBase &m) {
+            m.size = metaBase.size;
+        };
+
+        int32_t ret = mFile.DoLookupAndUpdate("file1", callback);
+        EXPECT_EQ(ret, E_SUCCESS);
+    } catch (...) {
+        EXPECT_FALSE(false);
+        GTEST_LOG_(INFO) << "DoLookupAndUpdate_004 ERROR";
+    }
+    GTEST_LOG_(INFO) << "DoLookupAndUpdate_004 End";
+}
+
 HWTEST_F(CloudDiskDentryMetaFileTest, DoRename_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DoRename_001 Start";
