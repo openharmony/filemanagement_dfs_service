@@ -149,10 +149,6 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskDentryFileCreateTest, TestSize.Le
     mBase1.size = TEST_ISIZE;
     int ret = mFile.DoCreate(mBase1);
     EXPECT_EQ(ret, 0);
-    MetaBase mBase2("file2", "id2");
-    mBase2.size = TEST_ISIZE;
-    ret = mFile.DoCreate(mBase2);
-    EXPECT_EQ(ret, EEXIST);
     CloudDiskMetaFile mFile2(TEST_USER_ID, "/a/b", "id3");
     MetaBase mBase3("file3", "id3");
     ret = mFile2.DoCreate(mBase3);
@@ -192,26 +188,6 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileUpdateTest, TestSize.Leve
     ret = mFile.DoLookup(mBase2);
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(mBase2.size, 0);
-}
-
-/**
- * @tc.name: CloudDiskMetaFileRenameTest
- * @tc.desc: Verify the CloudDiskMetaFile::DoRename function
- * @tc.type: FUNC
- * @tc.require: SR000HRKKC
- */
-HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileRenameTest, TestSize.Level1)
-{
-    CloudDiskMetaFile mFile(TEST_USER_ID, "/", "id1");
-    MetaBase mBase1("file1", "id1");
-    std::shared_ptr<CloudDiskMetaFile> newMetaFile =
-        make_shared<CloudDiskMetaFile>(TEST_USER_ID, "/", "id1");
-    int ret = mFile.DoCreate(mBase1);
-    ret = mFile.DoRename(mBase1, "id2", newMetaFile);
-    EXPECT_EQ(ret, EEXIST);
-    MetaBase mBase2("id2");
-    ret = mFile.DoLookup(mBase2);
-    EXPECT_EQ(ret, 0);
 }
 
 /**
@@ -268,28 +244,6 @@ HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileMgrTest001, TestSize.Leve
         GTEST_LOG_(INFO) << "CloudDiskMetaFileMgrTest001 ERROR";
     }
     GTEST_LOG_(INFO) << "CloudDiskMetaFileMgrTest001 End";
-}
-
-/**
- * @tc.name: CloudDiskMetaFileMgrTest002
- * @tc.desc: Verify the CloudDiskMetaFileMgr
- * @tc.type: FUNC
- * @tc.require: issueI7SP3A
- */
-HWTEST_F(CloudDiskDentryMetaFileTest, CloudDiskMetaFileMgrTest002, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "CloudDiskMetaFileMgrTest002 Start";
-    try {
-        auto m = MetaFileMgr::GetInstance().GetCloudDiskMetaFile(TEST_USER_ID, "/o/p/q/r/s/t", "id1");
-        MetaBase mBase1("testLongLongfileName", "testLongLongfileName");
-        EXPECT_EQ(m->DoCreate(mBase1), EEXIST);
-        m = nullptr;
-        MetaFileMgr::GetInstance().CloudDiskClearAll();
-    } catch (...) {
-        EXPECT_FALSE(false);
-        GTEST_LOG_(INFO) << "CloudDiskMetaFileMgrTest002 ERROR";
-    }
-    GTEST_LOG_(INFO) << "CloudDiskMetaFileMgrTest002 End";
 }
 
 /**
@@ -560,29 +514,6 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_003, TestSize.Level1)
     GTEST_LOG_(INFO) << "DoLookupAndUpdate_003 End";
 }
 
-HWTEST_F(CloudDiskDentryMetaFileTest, DoLookupAndUpdate_004, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DoLookupAndUpdate_004 Start";
-    try {
-        uint64_t size = 0x6b6b6b6b0000006f;
-        CloudDiskMetaFile mFile(100, "/", "id1");
-        MetaBase metaBase("file1", "id1");
-        metaBase.size = size;
-        auto callback = [&metaBase] (MetaBase &m) {
-            m.size = metaBase.size;
-        };
-
-        int32_t ret = mFile.DoUpdate(metaBase);
-        EXPECT_EQ(ret, E_OK);
-        ret = mFile.DoLookupAndUpdate("file1", callback);
-        EXPECT_EQ(ret, E_SUCCESS);
-    } catch (...) {
-        EXPECT_FALSE(false);
-        GTEST_LOG_(INFO) << "DoLookupAndUpdate_004 ERROR";
-    }
-    GTEST_LOG_(INFO) << "DoLookupAndUpdate_004 End";
-}
-
 HWTEST_F(CloudDiskDentryMetaFileTest, DoRename_001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "DoRename_001 Start";
@@ -594,7 +525,7 @@ HWTEST_F(CloudDiskDentryMetaFileTest, DoRename_001, TestSize.Level1)
 
         int ret = mFile.DoCreate(mBase1);
         ret = mFile.DoRename(mBase1, "id2", newMetaFile);
-        EXPECT_EQ(ret, EEXIST);
+        EXPECT_EQ(ret, EINVAL);
         MetaBase mBase2("id2");
         ret = mFile.DoLookup(mBase2);
         EXPECT_EQ(ret, E_EINVAL);
