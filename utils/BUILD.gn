@@ -128,6 +128,7 @@ ohos_shared_library("libdistributedfileutils") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "napi:ace_napi",
     "preferences:native_preferences",
   ]
@@ -183,6 +184,7 @@ ohos_shared_library("libdistributedfiledentry") {
     "device_manager:devicemanagersdk",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "json:nlohmann_json_static",
   ]
 
   defines = [
@@ -256,6 +258,7 @@ ohos_shared_library("libdistributedfileutils_lite") {
     "ffrt:libffrt",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
+    "json:nlohmann_json_static",
   ]
 
   if (use_musl) {
