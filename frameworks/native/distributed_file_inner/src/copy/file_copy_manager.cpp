@@ -83,7 +83,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
 {
     LOGE("FileCopyManager Copy start ");
     if (srcUri.empty() || destUri.empty()) {
-        return ERR_BAD_VALUE;
+        return E_NOENT;
     }
 
     auto infos = std::make_shared<FileInfos>();
@@ -101,7 +101,7 @@ int32_t FileCopyManager::Copy(const std::string &srcUri, const std::string &dest
     if (!CheckPath(infos)) {
         LOGE("invalid srcPath : %{private}s, destPath: %{private}s", GetAnonyString(infos->srcPath).c_str(),
             GetAnonyString(infos->destPath).c_str());
-        return ERR_BAD_VALUE;
+        return E_NOENT;
     }
 
     infos->localListener = FileCopyLocalListener::GetLocalListener(infos->srcPath,
