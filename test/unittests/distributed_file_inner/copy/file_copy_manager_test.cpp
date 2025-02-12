@@ -70,7 +70,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0001, TestSize.Level1)
     string srcUri = "";
     string destUri = "/data/test/test.txt";
 
-    auto = ret Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener);
     EXPECT_EQ(ret, E_NOENT);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0001 End";
 }
@@ -91,7 +91,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0002, TestSize.Level1)
     ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0002!" << errno;
     close(fd);
 
-    auto = ret Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener);
     EXPECT_EQ(ret, E_OK);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0002 End";
@@ -113,7 +113,7 @@ HWTEST_F(FileCopyManagerTest, FileCopyManager_Copy_0003, TestSize.Level1)
     ASSERT_TRUE(fd != -1) <<"Failed to open file in FileCopyManager_Copy_0003!" << errno;
     close(fd);
 
-    auto = ret Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener);
+    auto ret = Storage::DistributedFile::FileCopyManager::GetInstance()->Copy(srcUri, destUri, listener);
     EXPECT_EQ(ret, E_NOENT);
     ASSERT_EQ(remove(srcPath.c_str()), 0);
     GTEST_LOG_(INFO) << "FileCopyManager_Copy_0003 End";
