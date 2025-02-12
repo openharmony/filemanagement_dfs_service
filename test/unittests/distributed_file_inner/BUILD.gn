@@ -298,16 +298,16 @@ ohos_unittest("file_copy_manager_test") {
   ]
 
   external_deps = [
-    "c_utils:utils",
-    "device_manager:devicemanagersdk",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-    "googletest:gmock_main",
-    "googletest:gtest_main",
     "app_file_service:fileuri_native",
     "app_file_service:sandbox_helper_native",
-    "libuv:uv",
+    "c_utils:utils",
     "data_share:datashare_consumer",
+    "device_manager:devicemanagersdk",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "libuv:uv",
     "samgr:samgr_proxy",
   ]
 

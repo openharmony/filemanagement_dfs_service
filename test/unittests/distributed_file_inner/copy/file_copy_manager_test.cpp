@@ -12,7 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include <copy/file_copy_manager_test.h>
+#include <copy/file_copy_manager.h>
 #include <gtest/gtest.h>
 #include "dfs_error.h"
 
