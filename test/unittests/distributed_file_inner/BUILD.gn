@@ -293,9 +293,7 @@ ohos_unittest("file_copy_manager_test") {
     "${services_path}/distributedfiledaemon/include/ipc",
   ]
 
-  deps = [
-    "${utils_path}:libdistributedfileutils",
-  ]
+  deps = [ "${utils_path}:libdistributedfileutils" ]
 
   external_deps = [
     "app_file_service:fileuri_native",
@@ -329,7 +327,7 @@ group("distributed_file_inner") {
     ":asset_send_callback_stub_test",
     ":distributed_file_daemon_proxy_sup_test",
     ":distributed_file_daemon_proxy_test",
-    ":file_trans_listener_stub_test",
     ":file_copy_manager_test",
+    ":file_trans_listener_stub_test",
   ]
 }
