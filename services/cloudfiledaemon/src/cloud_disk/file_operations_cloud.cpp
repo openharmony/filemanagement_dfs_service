@@ -1744,7 +1744,7 @@ void FileOperationsCloud::Ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *a
         auto inoPtr = FileOperationsHelper::FindCloudDiskInode(dataReq, static_cast<int64_t>(ino));
         if (inoPtr == nullptr) {
             LOGE("Failed to find inode for cloud disk");
-            fuse_reply_err(req, ENOENT);
+            fuse_reply_err(req, EINVAL);
             return;
         }
         if (S_ISDIR(inoPtr->stat.st_mode)) {
