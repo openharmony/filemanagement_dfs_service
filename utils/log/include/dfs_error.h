@@ -27,6 +27,13 @@ constexpr int STORAGE_SERVICE_SYS_CAP_TAG = 13600000;
 constexpr int FILEIO_SYS_CAP_TAG = 13900000;
 constexpr int USER_FILE_MANAGER_SYS_CAP_TAG = 14000000;
 constexpr int DISTRIBUTEDFILE_SERVICE_SYS_CAP_TAG = 22400000;
+constexpr int SOFTBUS_TRANS_FILE_PERMISSION_DENIED = -426114938;
+constexpr int SOFTBUS_TRANS_FILE_DISK_QUOTA_EXCEEDED = -426114937;
+constexpr int SOFTBUS_TRANS_FILE_NO_MEMORY = -426114936;
+constexpr int SOFTBUS_TRANS_FILE_NETWORK_ERROR = -426114935;
+constexpr int SOFTBUS_TRANS_FILE_NOT_FOUND = -426114934;
+constexpr int SOFTBUS_TRANS_FILE_EXISTED = -426114933;
+constexpr int DFS_CANCEL_SUCCESS = 204;
 
 enum CloudSyncServiceErrCode : ErrCode {
     E_OK = 0,
@@ -124,6 +131,106 @@ enum DFSErrCode {
     ERR_DLOPEN,
     ERR_PUBLISH_STATE,
     ERR_ALLCONNECT,
+
+    E_PERM,
+    E_NOENT,
+    E_SRCH,
+    E_INTR,
+    E_IO,
+    E_NXIO,
+    E_2BIG,
+    E_BADF,
+    E_CHILD,
+    E_AGAIN,
+    E_NOMEM,
+    E_ACCES,
+    E_FAULT,
+    E_BUSY,
+    E_EXIST,
+    E_XDEV,
+    E_NODEV,
+    E_NOTDIR,
+    E_ISDIR,
+    E_INVAL,
+    E_NFILE,
+    E_MFILE,
+    E_TXTBSY,
+    E_FBIG,
+    E_NOSPC,
+    E_SPIPE,
+    E_ROFS,
+    E_MLINK,
+    E_DEADLK,
+    E_NAMETOOLONG,
+    E_NOSYS,
+    E_NOTEMPTY,
+    E_LOOP,
+    E_WOULDBLOCK,
+    E_BADR,
+    E_UKERR,
+    E_NETUNREACH,
+    E_CONNECTION_FAIL,
+    E_CONNECTION_ABORT,
+    E_NOTASK,
+    E_UNCANCELED,
+    E_CANCELED,
+};
+
+static inline std::unordered_map<int, int> softbusErr2ErrCodeTable {
+    {SOFTBUS_TRANS_FILE_PERMISSION_DENIED, EPERM},
+    {SOFTBUS_TRANS_FILE_DISK_QUOTA_EXCEEDED, EIO},
+    {SOFTBUS_TRANS_FILE_NO_MEMORY, ENOMEM},
+    {SOFTBUS_TRANS_FILE_NETWORK_ERROR, ENETUNREACH},
+    {SOFTBUS_TRANS_FILE_NOT_FOUND, ENOENT},
+    {SOFTBUS_TRANS_FILE_EXISTED, EEXIST},
+    {DFS_CANCEL_SUCCESS, ECANCELED},
+};
+
+static inline std::unordered_map<int, std::pair<int32_t, std::string>> errCodeTable {
+    { ERR_OK, { ERR_OK, "No error imformation" } },
+    { EPERM, { FILEIO_SYS_CAP_TAG + E_PERM, "Operation not permitted" } },
+    { ENOENT, { FILEIO_SYS_CAP_TAG + E_NOENT, "No such file or directory" } },
+    { ESRCH, { FILEIO_SYS_CAP_TAG + E_SRCH, "No such process" } },
+    { EINTR, { FILEIO_SYS_CAP_TAG + E_INTR, "Interrupted system call" } },
+    { EIO, { FILEIO_SYS_CAP_TAG + E_IO, "I/O error" } },
+    { ENXIO, { FILEIO_SYS_CAP_TAG + E_NXIO, "No such device or address" } },
+    { E2BIG, { FILEIO_SYS_CAP_TAG + E_2BIG, "Arg list too long" } },
+    { EBADF, { FILEIO_SYS_CAP_TAG + E_BADF, "Bad file descriptor" } },
+    { ECHILD, { FILEIO_SYS_CAP_TAG + E_CHILD, "No child processes" } },
+    { EAGAIN, { FILEIO_SYS_CAP_TAG + E_AGAIN, "Try again" } },
+    { ENOMEM, { FILEIO_SYS_CAP_TAG + E_NOMEM, "Out of memory" } },
+    { EACCES, { FILEIO_SYS_CAP_TAG + E_ACCES, "Permission denied" } },
+    { EFAULT, { FILEIO_SYS_CAP_TAG + E_FAULT, "Bad address" } },
+    { EBUSY, { FILEIO_SYS_CAP_TAG + E_BUSY, "Device or resource busy" } },
+    { EEXIST, { FILEIO_SYS_CAP_TAG + E_EXIST, "File exists" } },
+    { EXDEV, { FILEIO_SYS_CAP_TAG + E_XDEV, "Cross-device link" } },
+    { ENODEV, { FILEIO_SYS_CAP_TAG + E_NODEV, "No such device" } },
+    { ENOTDIR, { FILEIO_SYS_CAP_TAG + E_NOTDIR, "Not a directory" } },
+    { EISDIR, { FILEIO_SYS_CAP_TAG + E_ISDIR, "Is a directory" } },
+    { EINVAL, { FILEIO_SYS_CAP_TAG + E_INVAL, "Invalid argument" } },
+    { ENFILE, { FILEIO_SYS_CAP_TAG + E_NFILE, "File table overflow" } },
+    { EMFILE, { FILEIO_SYS_CAP_TAG + E_MFILE, "Too many open files" } },
+    { ETXTBSY, { FILEIO_SYS_CAP_TAG + E_TXTBSY, "Text file busy" } },
+    { EFBIG, { FILEIO_SYS_CAP_TAG + E_FBIG, "File too large" } },
+    { ENOSPC, { FILEIO_SYS_CAP_TAG + E_NOSPC, "No space left on device" } },
+    { ESPIPE, { FILEIO_SYS_CAP_TAG + E_SPIPE, "Illegal seek" } },
+    { EROFS, { FILEIO_SYS_CAP_TAG + E_ROFS, "Read-only file system" } },
+    { EMLINK, { FILEIO_SYS_CAP_TAG + E_MLINK, "Too many links" } },
+    { EDEADLK, { FILEIO_SYS_CAP_TAG + E_DEADLK, "Resource deadlock would occur" } },
+    { ENAMETOOLONG, { FILEIO_SYS_CAP_TAG + E_NAMETOOLONG, "File name too long" } },
+    { ENOSYS, { FILEIO_SYS_CAP_TAG + E_NOSYS, "Function not implemented" } },
+    { ENOTEMPTY, { FILEIO_SYS_CAP_TAG + E_NOTEMPTY, "Directory not empty" } },
+    { ELOOP, { FILEIO_SYS_CAP_TAG + E_LOOP, "Too many symbolic links encountered" } },
+    { EWOULDBLOCK, { FILEIO_SYS_CAP_TAG + E_WOULDBLOCK, "Operation would block" } },
+    { EBADR, { FILEIO_SYS_CAP_TAG + E_BADR, "Invalid request descriptor" } },
+    { UNKROWN_ERR, { FILEIO_SYS_CAP_TAG + E_UKERR, "Unknown error" } },
+    { ENETUNREACH, { FILEIO_SYS_CAP_TAG + E_NETUNREACH, "Network is unreachable" } },
+    { ECONNECTIONFAIL, { FILEIO_SYS_CAP_TAG + E_CONNECTION_FAIL, "Connection failed" } },
+    { ECONNECTIONABORT, { FILEIO_SYS_CAP_TAG + E_CONNECTION_ABORT,
+                        "Software caused connection abort" } },
+    { NO_TASK_ERR, { FILEIO_SYS_CAP_TAG + E_NOTASK, "No task can be canceled" } },
+    { CANCEL_ERR, { FILEIO_SYS_CAP_TAG + E_UNCANCELED, "Failed to cancel" } },
+    { ECANCELED, { FILEIO_SYS_CAP_TAG + E_CANCELED, "Operation canceled" } },
 };
 
 enum IPCErrCode {
