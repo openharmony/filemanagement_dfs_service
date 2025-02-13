@@ -30,6 +30,7 @@ using namespace testing::ext;
 using namespace testing;
 using namespace std;
 constexpr int32_t MAX_FILE_CACHE_NUM = 400;
+static const int32_t CLEAN_FILE_MAX_SIZE = 200;
 
 class CloudSyncManagerImplTest : public testing::Test {
 public:
@@ -573,7 +574,7 @@ HWTEST_F(CloudSyncManagerImplTest, BatchCleanFileTest2, TestSize.Level1)
     try {
         CleanFileInfo cleanFileInfo;
         std::vector<CleanFileInfo> fileInfo;
-        for (int i = 0; i < 31; i++) {
+        for (int i = 0; i < CLEAN_FILE_MAX_SIZE + 1; i++) {
             cleanFileInfo.cloudId = to_string(i);
             fileInfo.emplace_back(cleanFileInfo);
         }
