@@ -1742,6 +1742,11 @@ void FileOperationsCloud::Ioctl(fuse_req_t req, fuse_ino_t ino, int cmd, void *a
     if (static_cast<unsigned int>(cmd) == HMDFS_IOC_COPY_FILE) {
         auto dataReq = reinterpret_cast<struct CloudDiskFuseData *>(fuse_req_userdata(req));
         auto inoPtr = FileOperationsHelper::FindCloudDiskInode(dataReq, static_cast<int64_t>(ino));
+        if (inoPtr == nullptr) {
+            LOGE("Failed to find inode for cloud disk");
+            fuse_reply_err(req, EINVAL);
+            return;
+        }
         if (S_ISDIR(inoPtr->stat.st_mode)) {
             LOGE("Dir is not supported");
             fuse_reply_err(req, ENOSYS);
