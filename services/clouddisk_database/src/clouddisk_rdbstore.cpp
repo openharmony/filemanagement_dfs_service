@@ -2316,7 +2316,7 @@ int32_t CloudDiskRdbStore::InsertCopyData(std::string srcCloudId, std::string de
     }
 
     MetaBase metaBase(fileName, destCloudId);
-    metaBase.size = fileSize;
+    metaBase.size = static_cast<uint64_t>(fileSize);
     metaBase.fileType = fileType;
     metaBase.atime = static_cast<uint64_t>(fileTimeAdded);
     metaBase.mtime = static_cast<uint64_t>(fileTimeEdited);
