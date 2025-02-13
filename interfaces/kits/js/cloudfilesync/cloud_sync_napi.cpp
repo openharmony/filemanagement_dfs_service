@@ -748,43 +748,97 @@ napi_value CloudSyncNapi::GetFileSyncState(napi_env env, napi_callback_info info
 
 void ChangeListenerNapi::OnChange(CloudChangeListener &listener, const napi_ref cbRef)
 {
-    auto task = [this, listener, cbRef]() {
-        if (!listener.changeInfo.uris_.empty()) {
-            if (static_cast<NotifyType>(listener.changeInfo.changeType_) == NotifyType::NOTIFY_NONE) {
-                LOGE("changeInfo.changeType_ is other");
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (loop == nullptr) {
+        return;
+    }
+
+    uv_work_t *work = new (nothrow) uv_work_t;
+    if (work == nullptr) {
+        return;
+    }
+
+    UvChangeMsg *msg = new (std::nothrow) UvChangeMsg(env_, cbRef, listener.changeInfo, listener.strUri);
+    if (msg == nullptr) {
+        delete work;
+        return;
+    }
+    if (!listener.changeInfo.uris_.empty()) {
+        if (static_cast<NotifyType>(listener.changeInfo.changeType_) == NotifyType::NOTIFY_NONE) {
+            LOGE("changeInfo.changeType_ is other");
+            delete msg;
+            delete work;
+            return;
+        }
+        if (msg->changeInfo_.size_ > 0) {
+            msg->data_ = (uint8_t *)malloc(msg->changeInfo_.size_);
+            if (msg->data_ == nullptr) {
+                LOGE("new msg->data failed");
+                delete msg;
+                delete work;
                 return;
             }
+            int copyRet = memcpy_s(msg->data_, msg->changeInfo_.size_, msg->changeInfo_.data_, msg->changeInfo_.size_);
+            if (copyRet != 0) {
+                LOGE("Parcel data copy failed, err = %{public}d", copyRet);
+            }
         }
-        napi_handle_scope scope = nullptr;
-        napi_status status = napi_open_handle_scope(env_, &scope);
-        if (status != napi_ok) {
-            LOGE("Open handle scope fail, status: %{public}d", status);
-            return;
-        }
-
-        napi_value jsCallback = nullptr;
-        status = napi_get_reference_value(env_, cbRef, &jsCallback);
-        if (status != napi_ok) {
-            napi_close_handle_scope(env_, scope);
-            LOGE("Create reference fail, status: %{public}d", status);
-            return;
-        }
-        napi_value retVal = nullptr;
-        napi_value result[ARGS_ONE];
-        result[PARAM0] = ChangeListenerNapi::SolveOnChange(env_, listener.changeInfo);
-        if (result[PARAM0] == nullptr) {
-            napi_close_handle_scope(env_, scope);
-            return;
-        }
-        status = napi_call_function(env_, nullptr, jsCallback, ARGS_ONE, result, &retVal);
-        if (status != napi_ok) {
-            LOGE("CallJs napi_call_function fail, status: %{public}d", status);
-        }
-        napi_close_handle_scope(env_, scope);
-    };
-    if (napi_send_event(env_, task, napi_eprio_high) != napi_ok) {
-        LOGE("OnChange: Failed to SendEvent");
     }
+    work->data = reinterpret_cast<void *>(msg);
+
+    int ret = UvQueueWork(loop, work);
+    if (ret != 0) {
+        LOGE("Failed to execute libuv work queue, ret: %{public}d", ret);
+        delete msg;
+        delete work;
+    }
+}
+
+int32_t ChangeListenerNapi::UvQueueWork(uv_loop_s *loop, uv_work_t *work)
+{
+    return uv_queue_work(
+        loop, work, [](uv_work_t *w) {},
+        [](uv_work_t *w, int s) {
+            // js thread
+            if (w == nullptr) {
+                return;
+            }
+
+            UvChangeMsg *msg = reinterpret_cast<UvChangeMsg *>(w->data);
+            do {
+                if (msg == nullptr) {
+                    LOGE("UvChangeMsg is null");
+                    break;
+                }
+                napi_env env = msg->env_;
+                napi_handle_scope scope = nullptr;
+                napi_open_handle_scope(env, &scope);
+
+                napi_value jsCallback = nullptr;
+                napi_status status = napi_get_reference_value(env, msg->ref_, &jsCallback);
+                if (status != napi_ok) {
+                    napi_close_handle_scope(env, scope);
+                    LOGE("Create reference fail, status: %{public}d", status);
+                    break;
+                }
+                napi_value retVal = nullptr;
+                napi_value result[ARGS_ONE];
+                result[PARAM0] = ChangeListenerNapi::SolveOnChange(env, msg);
+                if (result[PARAM0] == nullptr) {
+                    napi_close_handle_scope(env, scope);
+                    break;
+                }
+                napi_call_function(env, nullptr, jsCallback, ARGS_ONE, result, &retVal);
+                napi_close_handle_scope(env, scope);
+                if (status != napi_ok) {
+                    LOGE("CallJs napi_call_function fail, status: %{public}d", status);
+                    break;
+                }
+            } while (0);
+            delete msg;
+            delete w;
+        });
 }
 
 static napi_status SetValueArray(const napi_env &env, const char *fieldStr, const std::list<Uri> listValue,
@@ -855,40 +909,26 @@ static napi_status SetIsDir(const napi_env &env, const shared_ptr<MessageParcel>
     return status;
 }
 
-napi_value ChangeListenerNapi::SolveOnChange(napi_env env, const AAFwk::ChangeInfo &changeInfo)
+napi_value ChangeListenerNapi::SolveOnChange(napi_env env, UvChangeMsg *msg)
 {
     static napi_value result;
-    if (changeInfo.uris_.empty()) {
+    if (msg->changeInfo_.uris_.empty()) {
         napi_get_undefined(env, &result);
         return result;
     }
     napi_create_object(env, &result);
-    SetValueInt32(env, "type", (int)changeInfo.changeType_, result);
-    SetValueArray(env, "uris", changeInfo.uris_, result);
-    if (changeInfo.data_ != nullptr && changeInfo.size_ > 0) {
-        uint8_t *data = (uint8_t *)malloc(changeInfo.size_);
-        if (!data) {
-            LOGE("Malloc failed");
-            return nullptr;
-        }
-        int ret = memcpy_s(data, changeInfo.size_, changeInfo.data_, changeInfo.size_);
-        if (ret != 0) {
-            LOGE("Parcel data copy failed, err = %{public}d", ret);
-            free(data);
-            return nullptr;
-        }
+    SetValueArray(env, "uris", msg->changeInfo_.uris_, result);
+    if (msg->data_ != nullptr && msg->changeInfo_.size_ > 0) {
         shared_ptr<MessageParcel> parcel = make_shared<MessageParcel>();
-        if (parcel->ParseFrom(reinterpret_cast<uintptr_t>(data), changeInfo.size_)) {
+        if (parcel->ParseFrom(reinterpret_cast<uintptr_t>(msg->data_), msg->changeInfo_.size_)) {
             napi_status status = SetIsDir(env, parcel, result);
             if (status != napi_ok) {
                 LOGE("Set subArray named property error! field: subUris");
                 return nullptr;
             }
-        } else {
-            LOGE("Parse data failed");
-            free(data);
         }
     }
+    SetValueInt32(env, "type", (int)msg->changeInfo_.changeType_, result);
     return result;
 }
 
