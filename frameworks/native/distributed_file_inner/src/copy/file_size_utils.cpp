@@ -62,13 +62,13 @@ int32_t FileSizeUtils::IsDirectory(const std::string &uri, bool isSrcUri, bool &
         return ERR_BAD_VALUE;
     }
 
-    bool isDir;
+    bool isDir = false;
     auto ret = IsDirectory(path, isDir);
     if (ret != E_OK) {
         return ret;
     }
 
-    bool isFile;
+    bool isFile = false;
     ret = IsFile(path, isFile);
     if (ret != E_OK) {
         return ret;
