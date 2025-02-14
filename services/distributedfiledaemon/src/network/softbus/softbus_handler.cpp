@@ -15,6 +15,7 @@
 
 #include "network/softbus/softbus_handler.h"
 
+#include <sys/stat.h>
 #include <utility>
 
 #include "all_connect/all_connect_manager.h"
@@ -22,10 +23,12 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dm_device_info.h"
+#include "inner_socket.h"
 #include "network/softbus/softbus_file_receive_listener.h"
 #include "network/softbus/softbus_file_send_listener.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "trans_mananger.h"
+#include "trans_type_enhanced.h"
 #include "utils_directory.h"
 #include "utils_log.h"
 
