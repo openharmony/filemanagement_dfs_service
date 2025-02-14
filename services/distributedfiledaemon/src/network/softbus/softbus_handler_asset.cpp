@@ -28,15 +28,18 @@
 #include "dfs_error.h"
 #include "dm_device_info.h"
 #include "ipc_skeleton.h"
-#include "inner_socket.h"
 #include "network/softbus/softbus_asset_recv_listener.h"
 #include "network/softbus/softbus_asset_send_listener.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "network/softbus/softbus_session_pool.h"
 #include "refbase.h"
 #include "softbus_bus_center.h"
-#include "trans_type_enhanced.h"
 #include "utils_log.h"
+
+#ifdef SUPPORT_SAME_ACCOUNT
+#include "inner_socket.h"
+#include "trans_type_enhanced.h"
+#endif
 
 namespace OHOS {
 namespace Storage {
@@ -184,6 +187,7 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
 
 void SoftBusHandlerAsset::SetSocketOpt(int32_t socketId, const char **src, uint32_t srcLen)
 {
+#ifdef SUPPORT_SAME_ACCOUNT
     uint64_t totalSize = 0;
     for (uint32_t i = 0; i < srcLen; ++i) {
         const char *file = src[i];
@@ -199,6 +203,7 @@ void SoftBusHandlerAsset::SetSocketOpt(int32_t socketId, const char **src, uint3
     flowInfo.flowQosType = HIGH_THROUGHPUT;
     flowInfo.flowSize = totalSize;
     ::SetSocketOpt(socketId, OPT_LEVEL_SOFTBUS, (OptType)OPT_TYPE_FLOW_INFO, (void *)&flowInfo, sizeof(TransFlowInfo));
+#endlf
 }
 
 int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& sendFile, bool isSingleFile)

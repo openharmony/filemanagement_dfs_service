@@ -23,14 +23,17 @@
 #include "dfs_daemon_event_dfx.h"
 #include "dfs_error.h"
 #include "dm_device_info.h"
-#include "inner_socket.h"
 #include "network/softbus/softbus_file_receive_listener.h"
 #include "network/softbus/softbus_file_send_listener.h"
 #include "network/softbus/softbus_session_listener.h"
 #include "trans_mananger.h"
-#include "trans_type_enhanced.h"
 #include "utils_directory.h"
 #include "utils_log.h"
+
+#ifdef SUPPORT_SAME_ACCOUNT
+#include "inner_socket.h"
+#include "trans_type_enhanced.h"
+#endif
 
 namespace OHOS {
 namespace Storage {
@@ -245,6 +248,7 @@ bool SoftBusHandler::CreatSocketId(const std::string &mySessionName, const std::
 
 void SoftBusHandler::SetSocketOpt(int32_t socketId, const char **src, uint32_t srcLen)
 {
+#ifdef SUPPORT_SAME_ACCOUNT
     uint64_t totalSize = 0;
     for (uint32_t i = 0; i < srcLen; ++i) {
         const char *file = src[i];
@@ -260,6 +264,7 @@ void SoftBusHandler::SetSocketOpt(int32_t socketId, const char **src, uint32_t s
     flowInfo.flowQosType = HIGH_THROUGHPUT;
     flowInfo.flowSize = totalSize;
     ::SetSocketOpt(socketId, OPT_LEVEL_SOFTBUS, (OptType)OPT_TYPE_FLOW_INFO, (void *)&flowInfo, sizeof(TransFlowInfo));
+#endif
 }
 
 int32_t SoftBusHandler::CopySendFile(int32_t socketId,
