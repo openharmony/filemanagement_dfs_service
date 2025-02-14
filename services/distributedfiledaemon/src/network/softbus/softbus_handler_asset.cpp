@@ -203,7 +203,7 @@ void SoftBusHandlerAsset::SetSocketOpt(int32_t socketId, const char **src, uint3
     flowInfo.flowQosType = HIGH_THROUGHPUT;
     flowInfo.flowSize = totalSize;
     ::SetSocketOpt(socketId, OPT_LEVEL_SOFTBUS, (OptType)OPT_TYPE_FLOW_INFO, (void *)&flowInfo, sizeof(TransFlowInfo));
-#endlf
+#endif
 }
 
 int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& sendFile, bool isSingleFile)
