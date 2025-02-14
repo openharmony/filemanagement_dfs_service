@@ -79,6 +79,7 @@ private:
                            bool isSingleFile);
     std::string GetLocalNetworkId();
     int32_t MkDir(const std::string &path, mode_t mode);
+    void SetSocketOpt(int32_t socketId, const char **src, uint32_t srcLen);
 
     bool IsDir(const std::string &path);
     std::string ExtractFile(unzFile unZipFile, const std::string &dir);
