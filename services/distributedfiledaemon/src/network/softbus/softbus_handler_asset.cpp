@@ -179,6 +179,25 @@ int32_t SoftBusHandlerAsset::AssetBind(const std::string &dstNetworkId, int32_t 
     return E_OK;
 }
 
+void SoftBusHandlerAsset::SetSocketOpt(int32_t socketId, const char **src, uint32_t srcLen)
+{
+    uint64_t totalSize = 0;
+    for (uint32_t i = 0; i < srcLen; ++i) {
+        const char *file = src[i];
+        struct stat buf {};
+        if (stat(file, &buf) == -1) {
+            return;
+        }
+        totalSize += buf.st_size;
+    }
+
+    TransFlowInfo flowInfo;
+    flowInfo.sessionType = SHORT_DURATION_SESSION;
+    flowInfo.flowQosType = HIGH_THROUGHPUT;
+    flowInfo.flowSize = totalSize;
+    ::SetSocketOpt(socketId, OPT_LEVEL_SOFTBUS, (OptType)OPT_TYPE_FLOW_INFO, (void *)&flowInfo, sizeof(TransFlowInfo));
+}
+
 int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& sendFile, bool isSingleFile)
 {
     auto assetObj = GetAssetObj(socketId);
@@ -204,6 +223,7 @@ int32_t SoftBusHandlerAsset::AssetSendFile(int32_t socketId, const std::string& 
     dst[0] = dstFile.c_str();
 
     LOGI("AssetSendFile Enter.");
+    SetSocketOpt(socketId, src, 1);
     int32_t ret = ::SendFile(socketId, src, dst, 1);
     if (ret != E_OK) {
         LOGE("SendFile failed, sessionId = %{public}d", socketId);
