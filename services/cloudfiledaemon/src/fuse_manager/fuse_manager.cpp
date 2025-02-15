@@ -1417,7 +1417,7 @@ static void CloudRead(fuse_req_t req, fuse_ino_t ino, size_t size, off_t off,
             FaultType::FILE, ENOMEM, "buffer is null"});
         return;
     }
-    if (cInode->mBase->hasDownloaded && fi->fh ！= UINT64_MAX) {
+    if (cInode->mBase->hasDownloaded && fi->fh != UINT64_MAX) {
         CloudReadOnLocalFile(req, buf, size, off, fi);
         return;
     }
